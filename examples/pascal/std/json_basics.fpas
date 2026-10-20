@@ -3,7 +3,7 @@ program JsonBasics;
 uses Std.Console as Console, Std.Json as Json, Std.Conv as Conv;
 
 begin
-  const Parsed: result of (Json.JsonValue, string) := Json.Parse(
+  const Parsed: result of (Json.JsonValue, Json.JsonError) := Json.Parse(
     '{"name":"Ada","scores":[10,20],"active":true}'
   );
   case Parsed of
@@ -46,7 +46,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Console.WriteLn('JSON error: ' + Message);
+        Console.WriteLn('JSON error: ' + Message.Message());
       end;
   end case;
 end.

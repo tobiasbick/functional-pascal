@@ -93,12 +93,7 @@ end function;
 // - `Port`: `integer` input value used by `ConnectTlsWithCancellation`.
 // - `TimeoutMillis`: `integer` input value used by `ConnectTlsWithCancellation`.
 // - `Token`: `Std.Tasks.CancellationToken` input value used by `ConnectTlsWithCancellation`.
-public function ConnectTlsWithCancellation(
-  Host: string;
-  Port: integer;
-  TimeoutMillis: integer;
-  Token: Tasks.CancellationToken
-): result of (Connection, string);
+public function ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Tasks.CancellationToken): result of (Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -110,12 +105,7 @@ end function;
 // - `Port`: `integer` input value used by `ConnectWithCancellation`.
 // - `TimeoutMillis`: `integer` input value used by `ConnectWithCancellation`.
 // - `Token`: `Std.Tasks.CancellationToken` input value used by `ConnectWithCancellation`.
-public function ConnectWithCancellation(
-  Host: string;
-  Port: integer;
-  TimeoutMillis: integer;
-  Token: Tasks.CancellationToken
-): result of (Connection, string);
+public function ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Tasks.CancellationToken): result of (Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -138,13 +128,7 @@ end function;
 // - `CertificatePath`: `string` input value used by `ListenTls`.
 // - `PrivateKeyPath`: `string` input value used by `ListenTls`.
 // - `HandshakeTimeoutMillis`: `integer` input value used by `ListenTls`.
-public function ListenTls(
-  Host: string;
-  Port: integer;
-  CertificatePath: string;
-  PrivateKeyPath: string;
-  HandshakeTimeoutMillis: integer
-): result of (Listener, string);
+public function ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): result of (Listener, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -174,11 +158,7 @@ end function;
 // - `Connection`: `Std.Net.Connection` input value used by `ReceiveBytesWithCancellation`.
 // - `MaxBytes`: `integer` input value used by `ReceiveBytesWithCancellation`.
 // - `Token`: `Std.Tasks.CancellationToken` input value used by `ReceiveBytesWithCancellation`.
-public function ReceiveBytesWithCancellation(
-  Connection: Connection;
-  MaxBytes: integer;
-  Token: Tasks.CancellationToken
-): result of (array of integer, string);
+public function ReceiveBytesWithCancellation(Connection: Connection; MaxBytes: integer; Token: Tasks.CancellationToken): result of (array of integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -199,11 +179,7 @@ end function;
 // - `Connection`: `Std.Net.Connection` input value used by `SendBytesWithCancellation`.
 // - `Data`: `array of integer` input value used by `SendBytesWithCancellation`.
 // - `Token`: `Std.Tasks.CancellationToken` input value used by `SendBytesWithCancellation`.
-public function SendBytesWithCancellation(
-  Connection: Connection;
-  Data: array of integer;
-  Token: Tasks.CancellationToken
-): result of (integer, string);
+public function SendBytesWithCancellation(Connection: Connection; Data: array of integer; Token: Tasks.CancellationToken): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;

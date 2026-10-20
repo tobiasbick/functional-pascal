@@ -97,7 +97,7 @@ mod tests {
         assert_eq!(read_text.kind, IntrinsicStdSymbolKind::Function);
         assert_eq!(
             read_text.ty.to_string(),
-            "function(Path: string): Result of (string, string)"
+            "function(Path: string): Result of (string, Std.Fs.FsError)"
         );
     }
 

@@ -13,6 +13,8 @@ use std::sync::Arc;
 ///
 /// **Documentation:** `docs/pascal/std/text/toml.md` (from the repository root).
 pub(super) fn register_std_toml(checker: &mut Checker) {
+    let error_ty =
+        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Toml);
     let toml_ref = Ty::Named(s::STD_TOML_VALUE.into());
     let variants = vec![
         EnumVariantTy {
@@ -98,7 +100,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         checker,
         s::STD_TOML_PARSE,
         vec![p("Text", Ty::String)],
-        Ty::Result(Box::new(toml_ty.clone()), Box::new(Ty::String)),
+        Ty::Result(Box::new(toml_ty.clone()), Box::new(error_ty.clone())),
     );
     define_func(
         checker,

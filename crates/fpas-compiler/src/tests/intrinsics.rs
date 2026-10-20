@@ -26,7 +26,7 @@ fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
 #[test]
 fn object_retains_layouts_constructed_by_runtime_intrinsics() {
     let program = parse_ok(
-        "program RuntimeLayouts;\nuses Std.Json as Json;\nbegin\n  const Parsed: result of (Json.JsonValue, string) := Json.Parse('null');\nend.",
+        "program RuntimeLayouts;\nuses Std.Json as Json;\nbegin\n  const Parsed: result of (Json.JsonValue, Json.JsonError) := Json.Parse('null');\nend.",
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
         .expect("runtime aggregate layouts must compile");

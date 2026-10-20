@@ -15,6 +15,25 @@ cargo bench-fpas record "vm-only note" --group vm
 Newest entries are prepended below this header.
 
 
+## 2026-10-20 — AP47.5 typed host and parsing errors
+
+Compared the unchanged pre-migration source archive (`a63232a0f`) with the final
+AP47.5 build using all 72 original workloads in three serial before/after pairs.
+The [complete comparison](ap47-host-parsing.md) records every row, raw timer
+samples, boundaries and regression controls. Sums of row medians were
+10728 → 10727 ms for VM, 2469 → 2317 ms for concurrency, 3425 → 3311 ms for
+tooling and 2922 → 2875 ms for startup. Cloud scatter prevents a general speedup
+claim; no VM row crossed the selected regression gate.
+
+A reproducible scalar-membership slowdown in the first build was repaired with
+an exact Integer array comparison, preserving mixed/structural equality. Its
+final full-suite median is 58 → 10 ms (-82.76%). The initial callback increase
+did not repeat. Final Mandelbrot outliers received isolated controls: render did
+not repeat its increase; paint's +9.95% over eight pairs reversed to -11.11% over
+twelve more, with all twenty yielding 1205.5 → 1189 ms (-1.37%). The report retains
+both series rather than hiding their scatter. Dedicated error workloads remain
+scheduled after AP47.6's original-suite comparison.
+
 ## 2026-10-20 — AP47.4 constructor values and MapError
 
 Compared unchanged AP47.3 (`c3dee7ac7`) with AP47.4 in three paired serial runs

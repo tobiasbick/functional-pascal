@@ -22,8 +22,8 @@ impl Lexer<'_> {
 
             let text = format!("{int_part}.{frac_part}{exp_part}");
             match fpas_numeric::text::real_body(&text) {
-                Some(value) => self.push_tok(Token::Real(value), so, sl, sc),
-                None => self.push_err(
+                Ok(value) => self.push_tok(Token::Real(value), so, sl, sc),
+                Err(_) => self.push_err(
                     LEX_REAL_LITERAL_OVERFLOW,
                     "Real literal is out of range",
                     "Use a smaller value or exponent so it fits in a 64-bit floating-point number.",
@@ -34,8 +34,8 @@ impl Lexer<'_> {
             }
         } else {
             match fpas_numeric::text::integer_magnitude(&int_part) {
-                Some(v) => self.push_tok(Token::Integer(v), so, sl, sc),
-                None => self.push_err(
+                Ok(v) => self.push_tok(Token::Integer(v), so, sl, sc),
+                Err(_) => self.push_err(
                     LEX_INTEGER_LITERAL_OVERFLOW,
                     "Integer literal is too large",
                     "Use a value up to 9223372036854775807, or rewrite the literal as a `Real` value.",
@@ -65,8 +65,8 @@ impl Lexer<'_> {
 
         let hex_str = self.consume_hex_digits();
         match fpas_numeric::text::integer_magnitude(&format!("${hex_str}")) {
-            Some(v) => self.push_tok(Token::Integer(v), so, sl, sc),
-            None => self.push_err(
+            Ok(v) => self.push_tok(Token::Integer(v), so, sl, sc),
+            Err(_) => self.push_err(
                 LEX_INVALID_HEXADECIMAL_LITERAL,
                 "Hex literal is too large",
                 "Use a hexadecimal value up to `$7FFFFFFFFFFFFFFF`.",

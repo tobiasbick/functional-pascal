@@ -2,13 +2,13 @@ program TomlFieldsTypedAccessTest;
 
 uses Std.Toml as Toml, Std.Toml.Fields as TomlFields, Std.Test as Test;
 
-function ErrorText<T>(Value: result of (T, string)): string;
+function ErrorValue<T>(Value: result of (T, TomlFields.FieldError)): TomlFields.FieldError;
 begin
   case Value of
     when Ok(_):
       begin
         Test.Fail('expected an error result');
-        return '';
+        return TomlFields.FieldError.ExpectedTable;
       end;
     when Error(const Message):
       begin
@@ -33,35 +33,47 @@ begin
   );
   Test.AssertEquals(2, TomlFields.ArrayField(Fields, 'mixed').Unwrap().Length());
   Test.AssertEquals(2, TomlFields.StringArrayField(Fields, 'tags').Unwrap().Length());
-  Test.AssertEquals('missing field absent', ErrorText(TomlFields.Field(Fields, 'absent')));
-  Test.AssertEquals(
-    'field port must be a string',
-    ErrorText(TomlFields.StringField(Fields, 'port'))
+  Test.AssertTrue(
+    (TomlFields.FieldError.MissingField('absent')) =
+    (ErrorValue(TomlFields.Field(Fields, 'absent')))
+  );
+  Test.AssertTrue(
+    (TomlFields.FieldError.WrongType('port', 'a string')) =
+    (ErrorValue(TomlFields.StringField(Fields, 'port')))
   );
   // Integer and float keys are not converted into each other.
-  Test.AssertEquals(
-    'field ratio must be an integer',
-    ErrorText(TomlFields.IntegerField(Fields, 'ratio'))
+  Test.AssertTrue(
+    (TomlFields.FieldError.WrongType('ratio', 'an integer')) =
+    (ErrorValue(TomlFields.IntegerField(Fields, 'ratio')))
   );
-  Test.AssertEquals('field port must be a float', ErrorText(TomlFields.FloatField(Fields, 'port')));
-  Test.AssertEquals('field name must be a table', ErrorText(TomlFields.TableField(Fields, 'name')));
-  Test.AssertEquals(
-    'field mixed must be an array of strings',
-    ErrorText(TomlFields.StringArrayField(Fields, 'mixed'))
+  Test.AssertTrue(
+    (TomlFields.FieldError.WrongType('port', 'a float')) =
+    (ErrorValue(TomlFields.FloatField(Fields, 'port')))
+  );
+  Test.AssertTrue(
+    (TomlFields.FieldError.WrongType('name', 'a table')) =
+    (ErrorValue(TomlFields.TableField(Fields, 'name')))
+  );
+  Test.AssertTrue(
+    (TomlFields.FieldError.WrongType('mixed', 'an array of strings')) =
+    (ErrorValue(TomlFields.StringArrayField(Fields, 'mixed')))
   );
   Test.AssertTrue(
     TomlFields.RequireOnlyFields(TomlFields.ParseTable('a = 1').Unwrap(), ['a', 'b']).Unwrap()
   );
-  Test.AssertEquals(
-    'unexpected field c', ErrorText(
-      TomlFields.RequireOnlyFields(
-        TomlFields.ParseTable(
-          'a = 1' + string.Chr(10) +
-          'c = 2'
-        ).Unwrap(), [
-          'a',
-          'b'
-        ]
+  Test.AssertTrue(
+    (TomlFields.FieldError.UnknownField('c')) =
+    (
+      ErrorValue(
+        TomlFields.RequireOnlyFields(
+          TomlFields.ParseTable(
+            'a = 1' + string.Chr(10) +
+            'c = 2'
+          ).Unwrap(), [
+            'a',
+            'b'
+          ]
+        )
       )
     )
   );

@@ -215,3 +215,51 @@ end."#,
             .contains(&serde_json::Value::from("trace_event_limit"))
     );
 }
+
+#[test]
+fn host_and_parser_families_preserve_structural_failures_in_program_images() {
+    let f = Fixture::new(
+        r#"program HostErrors;
+uses Std.Fs as Fs, Std.Proc as Proc, Std.Parse as Parse, Std.Json as Json,
+  Std.Toml as Toml, Std.Json.Fields as JsonFields, Std.Toml.Fields as TomlFields,
+  Std.Crypto as Crypto, Std.Errors as Errors, Std.Test as Test;
+begin
+  Test.AssertTrue(Fs.ReadText('missing') is Error(Fs.FsError.FileNotFound('missing', Errors.HostError.Failure('Std.Fs.ReadText', _, Some(_), Some(_), _))));
+  Test.AssertTrue(Fs.ReadText('invalid.txt') is Error(Fs.FsError.InvalidEncoding('invalid.txt', _)));
+  Test.AssertTrue(Fs.ReadText('large.txt') is Error(Fs.FsError.LimitExceeded('Std.Fs.ReadText', 67108864)));
+  Test.AssertTrue(Fs.ReadText('bad'#0) is Error(Fs.FsError.InvalidArgument('Path', _)));
+  Test.AssertTrue(Fs.CopyFile('invalid.txt', 'bad'#0) is Error(Fs.FsError.InvalidArgument('Target', _)));
+  Test.AssertTrue(Fs.Glob('[') is Error(Fs.FsError.InvalidPattern('[', _)));
+  Test.AssertTrue(Fs.FileSize('directory') is Error(Fs.FsError.InvalidArgument('Path', _)));
+  Test.AssertTrue(Fs.CreateDir('directory') is Error(Fs.FsError.AlreadyExists('directory', _)));
+  Test.AssertTrue(Fs.CopyDirAll('invalid.txt', 'target') is Error(Fs.FsError.InvalidArgument('Source', _)));
+  Test.AssertTrue(Fs.CopyDirAll('directory', 'invalid.txt') is Error(Fs.FsError.AlreadyExists('invalid.txt', _)));
+  Test.AssertTrue(Fs.DeleteDir('directory') is Error(Fs.FsError.NotEmpty('directory', _)));
+  Test.AssertTrue(Fs.ReadDir('invalid.txt') is Error(Fs.FsError.NotDirectory('invalid.txt', _)));
+  const Temporary := Fs.CreateTempFile().Unwrap();
+  discard Fs.DeleteFile(Temporary).Unwrap();
+  Test.AssertTrue(Proc.Run('__fpas_missing_command_ap475__', []) is Error(Proc.ProcError.StartFailed(Errors.HostError.Failure('Std.Proc.Run', _, Some(_), Some(_), _))));
+  Test.AssertTrue(Proc.RunCapture('__fpas_missing_command_ap475__', []) is Error(Proc.ProcError.StartFailed(_)));
+  Test.AssertTrue(Proc.Run('bad'#0, []) is Error(Proc.ProcError.InvalidArgument('Command', _)));
+  Test.AssertTrue(Parse.Real('1.0e9999') is Error(Parse.ParseError.OutOfRange('real', _)));
+  Test.AssertTrue(Parse.Real('1.0e-9999x') is Error(Parse.ParseError.InvalidSyntax('real', _)));
+  Test.AssertTrue(Parse.Bool('1') is Error(Parse.ParseError.InvalidSyntax('boolean', _)));
+  Test.AssertTrue(Json.Parse('{') is Error(Json.JsonError.InvalidSyntax(Some(1), Some(1), _)));
+  Test.AssertTrue(Toml.Parse('x = [') is Error(Toml.TomlError.InvalidSyntax(Some(1), Some(_), _)));
+  Test.AssertTrue(JsonFields.ParseObject('{') is Error(JsonFields.FieldError.ParseFailure(Json.JsonError.InvalidSyntax(Some(1), Some(1), _))));
+  Test.AssertTrue(TomlFields.ParseTable('x = [') is Error(TomlFields.FieldError.ParseFailure(Toml.TomlError.InvalidSyntax(Some(1), Some(_), _))));
+  Test.AssertTrue(JsonFields.ParseObject('[]') is Error(JsonFields.FieldError.ExpectedObject));
+  Test.AssertTrue(Crypto.RandomInt(2, 1) is Error(Crypto.CryptoError.InvalidArgument('Lo', _)));
+  Test.AssertTrue(Crypto.RandomBytes(-1) is Error(Crypto.CryptoError.InvalidArgument('Count', _)));
+end."#,
+    );
+    fs::write(f.0.join("invalid.txt"), [0xff]).expect("invalid UTF-8 fixture");
+    let large = fs::File::create(f.0.join("large.txt")).expect("sparse fixture");
+    large.set_len(67_108_865).expect("sparse file size");
+    fs::create_dir(f.0.join("directory")).expect("directory");
+    fs::write(f.0.join("directory/entry"), "x").expect("directory entry");
+    fs::write(f.0.join("app.fpasprj"), "[project]\nname = 'app'\nkind = 'program'\nmain = 'main.fpas'\n[sources]\ninclude = ['*.fpas']\n").expect("manifest");
+    f.run(&["run", "app.fpasprj"], 0);
+    f.run(&["build", "app.fpasprj"], 0);
+    f.run(&["run", "app.fpascp"], 0);
+}

@@ -37,6 +37,7 @@ impl check::Checker {
                 );
             }
             for exported in &interface.symbols {
+                self.install_native_error_dependencies(&exported.ty);
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
                 }
@@ -73,6 +74,7 @@ impl check::Checker {
                 );
             }
             for exported in &interface.symbols {
+                self.install_native_error_dependencies(&exported.ty);
                 let symbol = interface_symbol_to_sema(exported)?;
                 self.scopes.imports.define_source(
                     &interface.unit_name,

@@ -359,7 +359,7 @@ begin
       end;
     when Error(const Message):
       begin
-        return Error('Invalid HTTP status code: ' + Message);
+        return Error('Invalid HTTP status code: ' + Message.Message());
       end;
   end case;
   var Headers: array of Types.Header := [];

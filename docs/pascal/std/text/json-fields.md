@@ -1,7 +1,7 @@
 # `Std.Json.Fields`
 
 Strict typed access to the fields of parsed JSON objects. Every accessor returns
-`Error(Message)` for a missing field or a value of the wrong JSON kind instead of
+`Error(Cause)` for a missing field or a value of the wrong JSON kind instead of
 requiring a nested `case` per field.
 
 ```pascal id=example-1
@@ -9,7 +9,7 @@ program Example;
 
 uses Std.Console as Console, Std.Json as Json, Std.Json.Fields as JsonFields;
 
-function ReadPort(Text: string): result of (integer, string);
+function ReadPort(Text: string): result of (integer, JsonFields.FieldError);
 begin
   const Fields: dict of string to Json.JsonValue := try JsonFields.ParseObject(Text);
   const Allowed: boolean := try JsonFields.RequireOnlyFields(Fields, ['host', 'port']);
@@ -21,7 +21,7 @@ begin
     when Ok(const Port):
       Console.WriteLn(Port);
     when Error(const Message):
-      Console.WriteLn('invalid configuration: ' + Message);
+      Console.WriteLn('invalid configuration: ' + Message.Message());
   end case;
 end.
 ```
@@ -35,16 +35,16 @@ end.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `ParseObject(Text: string): Result of (dict of string to JsonValue, string)` | parses text whose root must be an object |
-| function | `Field(Fields; Name: string): Result of (JsonValue, string)` | any present field |
-| function | `StringField(Fields; Name: string): Result of (string, string)` | string field |
-| function | `BooleanField(Fields; Name: string): Result of (boolean, string)` | boolean field |
-| function | `NumberField(Fields; Name: string): Result of (real, string)` | number field |
-| function | `IntegerField(Fields; Name: string): Result of (integer, string)` | exact integer in the 64-bit range |
-| function | `ObjectField(Fields; Name: string): Result of (dict of string to JsonValue, string)` | nested object |
-| function | `ArrayField(Fields; Name: string): Result of (array of JsonValue, string)` | array with any element kinds |
-| function | `StringArrayField(Fields; Name: string): Result of (array of string, string)` | array whose elements are all strings |
-| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of (boolean, string)` | rejects unlisted field names |
+| function | `ParseObject(Text: string): Result of (dict of string to JsonValue, JsonFields.FieldError)` | parses text whose root must be an object |
+| function | `Field(Fields; Name: string): Result of (JsonValue, JsonFields.FieldError)` | any present field |
+| function | `StringField(Fields; Name: string): Result of (string, JsonFields.FieldError)` | string field |
+| function | `BooleanField(Fields; Name: string): Result of (boolean, JsonFields.FieldError)` | boolean field |
+| function | `NumberField(Fields; Name: string): Result of (real, JsonFields.FieldError)` | number field |
+| function | `IntegerField(Fields; Name: string): Result of (integer, JsonFields.FieldError)` | exact integer in the 64-bit range |
+| function | `ObjectField(Fields; Name: string): Result of (dict of string to JsonValue, JsonFields.FieldError)` | nested object |
+| function | `ArrayField(Fields; Name: string): Result of (array of JsonValue, JsonFields.FieldError)` | array with any element kinds |
+| function | `StringArrayField(Fields; Name: string): Result of (array of string, JsonFields.FieldError)` | array whose elements are all strings |
+| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of (boolean, JsonFields.FieldError)` | rejects unlisted field names |
 
 `Fields` is always `dict of string to JsonValue`.
 
@@ -87,3 +87,7 @@ fields are present; use the typed accessors for required fields.
 - [`Std.Json`](json.md)
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
+
+## Typed failures
+
+All fallible helpers use `JsonFields.FieldError`: `ParseFailure(Cause: Json.JsonError)`, `ExpectedObject`, `MissingField(Name)`, `WrongType(Name, Expected)`, `InvalidValue(Name, Reason)`, and `UnknownField(Name)`. ParseFailure retains the original parser cause via MapError. Strict unknown-field selection follows existing dictionary iteration order. Numeric validation and helper success shapes are unchanged. Use Message() at an output boundary.

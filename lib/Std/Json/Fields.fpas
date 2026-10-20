@@ -9,30 +9,30 @@ uses Std.Conv as Conv, Std.Json as Json, Std.Math as Math;
 const IntegerUpperBound: real := 9223372036854776000.0;
 const IntegerLowerBound: real := -9223372036854776000.0;
 
-// Builds the type-mismatch error for one field.
-//
-// Parameters:
-// - `Name`: Field name reported in the message.
-// - `Expectation`: Required JSON kind, such as `a string`.
-function MismatchError(Name: string; Expectation: string): string;
-begin
-  return 'field ' + Name + ' must be ' + Expectation;
-end function;
+// Structured failures of strict JSON field access.
+public type FieldError = error
+  ParseFailure(Cause: Json.JsonError) = 'Invalid JSON field';
+  ExpectedObject = 'Invalid JSON field';
+  MissingField(Name: string) = 'Invalid JSON field';
+  WrongType(Name: string; Expected: string) = 'Invalid JSON field';
+  InvalidValue(Name: string; Reason: string) = 'Invalid JSON field';
+  UnknownField(Name: string) = 'Invalid JSON field';
+end error;
 
 // Parses JSON text whose root must be an object and returns its fields.
 //
 // Parameters:
 // - `Text`: JSON document text.
-public function ParseObject(Text: string): result of (dict of string to Json.JsonValue, string);
+public function ParseObject(Text: string): result of (dict of string to Json.JsonValue, FieldError);
 begin
-  case try Json.Parse(Text) of
+  case try Json.Parse(Text).MapError(FieldError.ParseFailure) of
     when Json.JsonValue.Object(const Fields):
       begin
         return Ok(Fields);
       end;
     when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
       begin
-        return Error('JSON root must be an object');
+        return Error(FieldError.ExpectedObject);
       end;
   end case;
 end function;
@@ -42,7 +42,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function Field(Fields: dict of string to Json.JsonValue; Name: string): result of (Json.JsonValue, string);
+public function Field(Fields: dict of string to Json.JsonValue; Name: string): result of (Json.JsonValue, FieldError);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -51,7 +51,7 @@ begin
       end;
     when None:
       begin
-        return Error('missing field ' + Name);
+        return Error(FieldError.MissingField(Name));
       end;
   end case;
 end function;
@@ -61,7 +61,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function StringField(Fields: dict of string to Json.JsonValue; Name: string): result of (string, string);
+public function StringField(Fields: dict of string to Json.JsonValue; Name: string): result of (string, FieldError);
 begin
   case try Field(Fields, Name) of
     when Json.JsonValue.String(const Value):
@@ -70,7 +70,7 @@ begin
       end;
     when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'a string'));
+        return Error(FieldError.WrongType(Name, 'a string'));
       end;
   end case;
 end function;
@@ -80,7 +80,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function BooleanField(Fields: dict of string to Json.JsonValue; Name: string): result of (boolean, string);
+public function BooleanField(Fields: dict of string to Json.JsonValue; Name: string): result of (boolean, FieldError);
 begin
   case try Field(Fields, Name) of
     when Json.JsonValue.Bool(const Value):
@@ -89,7 +89,7 @@ begin
       end;
     when Json.JsonValue.NullValue, Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'a boolean'));
+        return Error(FieldError.WrongType(Name, 'a boolean'));
       end;
   end case;
 end function;
@@ -99,7 +99,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function NumberField(Fields: dict of string to Json.JsonValue; Name: string): result of (real, string);
+public function NumberField(Fields: dict of string to Json.JsonValue; Name: string): result of (real, FieldError);
 begin
   case try Field(Fields, Name) of
     when Json.JsonValue.Number(const Value):
@@ -108,7 +108,7 @@ begin
       end;
     when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'a number'));
+        return Error(FieldError.WrongType(Name, 'a number'));
       end;
   end case;
 end function;
@@ -119,18 +119,18 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function IntegerField(Fields: dict of string to Json.JsonValue; Name: string): result of (integer, string);
+public function IntegerField(Fields: dict of string to Json.JsonValue; Name: string): result of (integer, FieldError);
 begin
   const Value: real := try NumberField(Fields, Name);
   if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
     begin
-      return Error('field ' + Name + ' is outside the integer range');
+      return Error(FieldError.InvalidValue(Name, 'outside the integer range'));
     end;
   end if;
   const IntegerValue: integer := Math.Trunc(Value);
   if Conv.IntToReal(IntegerValue) <> Value then
     begin
-      return Error(MismatchError(Name, 'an integer'));
+      return Error(FieldError.WrongType(Name, 'an integer'));
     end;
   end if;
 
@@ -142,7 +142,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function ObjectField(Fields: dict of string to Json.JsonValue; Name: string): result of (dict of string to Json.JsonValue, string);
+public function ObjectField(Fields: dict of string to Json.JsonValue; Name: string): result of (dict of string to Json.JsonValue, FieldError);
 begin
   case try Field(Fields, Name) of
     when Json.JsonValue.Object(const Value):
@@ -151,7 +151,7 @@ begin
       end;
     when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
       begin
-        return Error(MismatchError(Name, 'an object'));
+        return Error(FieldError.WrongType(Name, 'an object'));
       end;
   end case;
 end function;
@@ -161,7 +161,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function ArrayField(Fields: dict of string to Json.JsonValue; Name: string): result of (array of Json.JsonValue, string);
+public function ArrayField(Fields: dict of string to Json.JsonValue; Name: string): result of (array of Json.JsonValue, FieldError);
 begin
   case try Field(Fields, Name) of
     when Json.JsonValue.ArrayValue(const Items):
@@ -170,7 +170,7 @@ begin
       end;
     when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'an array'));
+        return Error(FieldError.WrongType(Name, 'an array'));
       end;
   end case;
 end function;
@@ -180,7 +180,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function StringArrayField(Fields: dict of string to Json.JsonValue; Name: string): result of (array of string, string);
+public function StringArrayField(Fields: dict of string to Json.JsonValue; Name: string): result of (array of string, FieldError);
 begin
   var Values: array of string := [];
   for Item: Json.JsonValue in try ArrayField(Fields, Name) do
@@ -192,7 +192,7 @@ begin
           end;
         when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
           begin
-            return Error(MismatchError(Name, 'an array of strings'));
+            return Error(FieldError.WrongType(Name, 'an array of strings'));
           end;
       end case;
     end;
@@ -206,13 +206,13 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Allowed`: Every permitted field name.
-public function RequireOnlyFields(Fields: dict of string to Json.JsonValue; Allowed: array of string): result of (boolean, string);
+public function RequireOnlyFields(Fields: dict of string to Json.JsonValue; Allowed: array of string): result of (boolean, FieldError);
 begin
   for Name: string in Fields.Keys() do
     begin
       if not (Name in Allowed) then
         begin
-          return Error('unexpected field ' + Name);
+          return Error(FieldError.UnknownField(Name));
         end;
       end if;
     end;

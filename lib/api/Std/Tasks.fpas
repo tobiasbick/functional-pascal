@@ -228,11 +228,7 @@ end function;
 // - `Queue`: Input value used by `SendCase`.
 // - `Value`: Value consumed or returned by the operation.
 // - `Callback`: Input value used by `SendCase`.
-public function SendCase(
-  Queue: channel of T;
-  Value: T;
-  Callback: procedure(Outcome: result of (boolean, string))
-): WaitCase;
+public function SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of (boolean, string))): WaitCase;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -266,12 +262,7 @@ end function;
 // - `Work`: Input value used by `StartSupervisedTask`.
 // - `RetryLimit`: Input value used by `StartSupervisedTask`.
 // - `BackoffMillis`: Input value used by `StartSupervisedTask`.
-public function StartSupervisedTask<T>(
-  Group: TaskGroup;
-  Work: function(Token: CancellationToken): T;
-  RetryLimit: integer;
-  BackoffMillis: integer
-): task of T;
+public function StartSupervisedTask<T>(Group: TaskGroup; Work: function(Token: CancellationToken): T; RetryLimit: integer; BackoffMillis: integer): task of T;
 begin
   panic('Intrinsic API declaration');
 end function;

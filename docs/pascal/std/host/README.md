@@ -5,6 +5,7 @@ Process arguments, environment, filesystem, paths, subprocesses, and time.
 | Unit | Description |
 |------|-------------|
 | [`Std.Args`](args.md) | Arguments after `--` |
+| [`Std.Errors`](errors.md) | Shared native host causes |
 | [`Std.Env`](env.md) | Environment variables |
 | [`Std.Fs`](fs.md) | File read/write, directories, and glob expansion |
 | [`Std.Path`](path.md) | Pure path manipulation |

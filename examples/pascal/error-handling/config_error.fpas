@@ -1,0 +1,29 @@
+program ConfigErrors;
+
+uses Std.Fs as Fs, Std.Parse as Parse, Std.Test as Test;
+
+type ConfigError = error
+  FileFailure(Cause: Fs.FsError) = 'Cannot load configuration';
+  MissingSetting(Name: string) = 'Missing configuration setting';
+  InvalidSetting(Name: string; Reason: string) = 'Invalid configuration setting';
+end error;
+
+function LoadPort(Path: string): result of (integer, ConfigError);
+begin
+  const Text := try Fs.ReadText(Path).MapError(ConfigError.FileFailure);
+  if Text.Trim() = '' then
+    return Error(ConfigError.MissingSetting('port'));
+  end if;
+
+  return Parse.Int(Text).MapError(
+    function(Cause: Parse.ParseError): ConfigError begin
+      return ConfigError.InvalidSetting('port', Cause.Message());
+    end function
+  );
+end function;
+
+begin
+  Test.AssertTrue(
+    LoadPort('__fpas_missing_config_example__') is Error(ConfigError.FileFailure(Fs.FsError.FileNotFound('__fpas_missing_config_example__', _)))
+  );
+end.

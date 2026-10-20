@@ -9,6 +9,13 @@ use crate::StdError;
 /// Compilers retain these layouts when present because their constructors are not represented by a
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
+    "Std.Errors.HostError",
+    "Std.Fs.FsError",
+    "Std.Proc.ProcError",
+    "Std.Parse.ParseError",
+    "Std.Json.JsonError",
+    "Std.Toml.TomlError",
+    "Std.Crypto.CryptoError",
     "Std.Json.JsonValue",
     "Std.Net.NetworkAddress",
     "Std.Toml.TomlValue",
@@ -21,6 +28,27 @@ pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
 
 /// Constructs aggregate values against the layouts of the executing program.
 pub trait AggregateFactory {
+    /// Construct a native operational error by its shared catalog slot.
+    ///
+    /// # Errors
+    /// Returns an internal diagnostic for missing or invalid layout metadata.
+    fn native_error(
+        &self,
+        family: crate::native_errors::NativeErrorFamily,
+        variant: usize,
+        values: Vec<Value>,
+        location: SourceLocation,
+    ) -> Result<Value, StdError> {
+        let variant = family.variants().get(variant).ok_or_else(|| {
+            crate::error::std_internal_error(
+                "Native error catalog slot is unavailable",
+                "Rebuild the runtime and compiler together.",
+                location,
+            )
+        })?;
+        self.enumeration(family.name(), variant.name, values, location)
+    }
+
     /// Construct one record from values in declaration order.
     ///
     /// # Errors

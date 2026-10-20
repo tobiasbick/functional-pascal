@@ -53,7 +53,7 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 | Area | Hub | Units / topics |
 |------|-----|----------------|
 | Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
-| Host I/O | [host/](host/README.md) | Args, Env, Fs, Path, Proc, Time |
+| Host I/O | [host/](host/README.md) | Args, Env, Errors, Fs, Path, Proc, Time |
 | Networking | [network/](network/README.md) | Net, Server lifetime, URI, UTF-8, HTTP |
 | AI clients | [ai/](ai/README.md) | OpenAI-compatible chat completions |
 | Text | [text/](text/README.md) | Conv, Parse, Json, Json.Fields, Toml, Toml.Fields |

@@ -36,7 +36,7 @@ Numbers are stable references within this assessment, not approved work packages
 | 6 | Numeric output formatting | String `Format` supports `%d`, `%f`, `%s` and `%%`, without selectable decimal precision, scientific notation or numeric field width. `RealToStr` provides exact round-trip text rather than presentation controls. | Go `fmt`; Python formatting |
 | 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
 | 8 | Path helpers | `Path` has five basic operations. Absolute-path checks, relative-path calculation and extension replacement are absent. Resolving a real path through filesystem/symlink state belongs in an effectful API such as `Fs`, preserving the pure `Path` boundary. | Go `path/filepath`; Rust `Path` |
-| 9 | Structured errors | Many filesystem, network, process and parsing APIs return `Error(string)`. Programs cannot reliably branch on stable missing-file, permission, timeout or cancellation cases. [AP47](improve-syntax/ap47-typed-operational-errors/README.md) implements native error declarations, automatic output, typed causes and Message(). Constructor values and explicit `MapError` are implemented; Std migration remains planned and `try` retains its behavior. | Rust `io::ErrorKind`; Go typed errors |
+| 9 | Structured errors | Task and network APIs still return `Error(string)`; host/parsing APIs use native families since AP47.5. Remaining task/network string payloads prevent stable typed decisions for timeout and cancellation. [AP47](improve-syntax/ap47-typed-operational-errors/README.md) implements native error declarations, automatic output, typed causes and Message(). Constructor values and explicit `MapError` are implemented; Host/parsing migration is complete; task/network migration remains planned and `try` retains its behavior. | Rust `io::ErrorKind`; Go typed errors |
 | 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
 | 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
 
@@ -88,8 +88,9 @@ there is no parallel string/typed wrapper family. Existing successes, limits,
 EOF and lifecycle distinctions remain specified at their current owner. No new
 I/O capability is bundled into the error migration. AP47.2's runtime/artifact
 foundation and AP47.3's source syntax, constraints, Message() and executable
-handbook are implemented. AP47.4 delivers constructor values and MapError. Std
-migration remains planned and requires its own implementation authorization.
+handbook are implemented. AP47.4 delivers constructor values and MapError, and
+AP47.5 delivers host/parsing families with migrated callers. Task/network migration
+and final acceptance remain planned and require their own implementation authorization.
 
 ## Additional candidates
 
@@ -148,8 +149,8 @@ than copying every variant from the comparison libraries.
 
 Incremental file I/O and process control need separate designs covering ownership,
 bounds and cancellation. Structured errors have the selected AP47 design and
-delivery plan; AP47.2-AP47.4 implement the foundation, language and mapping slices, while later packages
-still require authorization. The remaining
+delivery plan; AP47.2-AP47.5 implement the foundation, language, mapping and
+host/parsing slices, while AP47.6/AP47.7 still require authorization. The remaining
 candidates should be driven by concrete application needs.
 
 ## Comparison sources

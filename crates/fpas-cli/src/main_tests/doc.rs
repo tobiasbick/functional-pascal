@@ -27,7 +27,7 @@ fn doc_prints_signature_documentation_location_and_handbook() {
     assert!(stderr.is_empty(), "{stderr}");
     assert!(
         stdout.starts_with(
-            "Std.Fs.ReadText (function)\n  function ReadText(Path: string): result of (string, string)\n\n  Reads UTF-8 text.\n"
+            "Std.Fs.ReadText (function)\n  function ReadText(Path: string): result of (string, FsError)\n\n  Reads UTF-8 text.\n"
         ),
         "{stdout}"
     );

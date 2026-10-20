@@ -230,7 +230,8 @@ fn render_types(
 }
 
 fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::EnumTy) {
-    let _ = writeln!(output, "public type {name} = enum");
+    let kind = if value.is_error { "error" } else { "enum" };
+    let _ = writeln!(output, "public type {name} = {kind}");
     for variant in &value.variants {
         let _ = writeln!(output, "  // `{}` enum member.", variant.name);
         if !variant.fields.is_empty() {
@@ -250,7 +251,10 @@ fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::
         if !is_source_identifier(&variant.name) {
             continue;
         }
-        let separator = ";";
+        let separator = variant.message.as_ref().map_or_else(
+            || ";".to_owned(),
+            |message| format!(" = '{}';", message.replace('\'', "''")),
+        );
         if variant.fields.is_empty() {
             let _ = writeln!(output, "  {}{separator}", variant.name);
         } else {
@@ -263,7 +267,7 @@ fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::
             let _ = writeln!(output, "  {}({fields}){separator}", variant.name);
         }
     }
-    output.push_str("end enum;\n");
+    let _ = writeln!(output, "end {kind};");
 }
 
 fn is_source_identifier(name: &str) -> bool {

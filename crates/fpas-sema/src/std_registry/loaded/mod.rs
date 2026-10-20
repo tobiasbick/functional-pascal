@@ -5,6 +5,7 @@ mod console;
 mod conv;
 mod crypto;
 mod env;
+mod errors;
 mod fs;
 mod json;
 mod math;
@@ -41,6 +42,9 @@ pub fn register_loaded_std(checker: &mut Checker) {
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
         fpas_std::STD_UNIT_SERVER => server::register(checker),
+        fpas_std::STD_UNIT_ERRORS => {
+            errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Host);
+        }
         STD_UNIT_ARGS => args::register_std_args(checker),
         STD_UNIT_ENV => env::register_std_env(checker),
         STD_UNIT_PROC => proc::register_std_proc(checker),
@@ -64,5 +68,15 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         _ => unreachable!(
             "register_single_std_unit: unhandled std unit `{unit}` — add a match arm for every entry in fpas_std::STD_UNITS_KNOWN"
         ),
+    }
+}
+
+/// Install only native error metadata referenced by an imported type.
+pub(crate) fn register_error_type(checker: &mut Checker, name: &str) {
+    if let Some(family) = fpas_std::native_errors::NativeErrorFamily::ALL
+        .iter()
+        .find(|family| family.name().eq_ignore_ascii_case(name))
+    {
+        errors::register(checker, *family);
     }
 }

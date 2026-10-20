@@ -8,7 +8,7 @@ program Example;
 uses Std.Console as Console, Std.Toml as Toml;
 
 begin
-  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
+  const Parsed: result of (Toml.TomlValue, Toml.TomlError) := Toml.Parse(
     '[project]' + string.Chr(10) +
     'name = ''demo'''
   );
@@ -32,7 +32,7 @@ Import with `uses Std.Toml as Toml;` and access public symbols as `Toml.Name`. U
 | Kind | Name | Notes |
 | --- | --- | --- |
 | type | `TomlValue` | TOML value tree |
-| function | `Parse(Text: string): Result of (TomlValue, string)` | Parses one TOML document |
+| function | `Parse(Text: string): Result of (TomlValue, Toml.TomlError)` | Parses one TOML document |
 | function | `Stringify(Value: TomlValue): string` | Encodes a TOML value tree |
 
 ### `TomlValue`
@@ -58,10 +58,10 @@ end enum;
 ## `Parse`
 
 ```text
-function Parse(Text: string): Result of (Toml.TomlValue, string);
+function Parse(Text: string): Result of (Toml.TomlValue, Toml.TomlError);
 ```
 
-Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors return `Error(Message)` rather than aborting the program. TOML documents are tables at the root, so successful `Parse` results always have the `TomlValue.Table` variant.
+Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors return `Error(Cause)` rather than aborting the program. TOML documents are tables at the root, so successful `Parse` results always have the `TomlValue.Table` variant.
 
 Strings, signed 64-bit integers, finite floating-point values, booleans, date/time
 values, arrays, tables, inline tables, and arrays of tables are represented.
@@ -69,7 +69,7 @@ TOML `inf` and `nan` values, including nested ones, return Error because FPAS
 real values must be finite. Stringify also rejects nonfinite real payloads.
 
 ```pascal id=example-4 fragment context=body-console-toml
-const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
+const Parsed: result of (Toml.TomlValue, Toml.TomlError) := Toml.Parse(
   'title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' +
   string.Chr(10) +
   'port = 8080'
@@ -80,7 +80,7 @@ case Parsed of
       Console.WriteLn('parsed');
     end if;
   when Error(const Message):
-    Console.WriteLn('TOML error: ' + Message);
+    Console.WriteLn('TOML error: ' + Message.Message());
 end case;
 ```
 
@@ -109,7 +109,7 @@ levels. Before conversion, `Parse` uses the TOML dependency parser's separate,
 shape-dependent recursion budget. Deeply nested arrays can exhaust that budget
 well below 256 levels; the conversion limit is not a promise that every
 shallower TOML input can be parsed. Parser and conversion failures both return
-`Error(Message)`. Invalid `TomlValue` payloads passed to `Stringify` are
+`Error(Cause)`. Invalid `TomlValue` payloads passed to `Stringify` are
 programmer errors and raise a runtime diagnostic with a construction hint.
 
 ## Implementation (contributors)
@@ -126,3 +126,7 @@ programmer errors and raise a runtime diagnostic with a construction hint.
 - [`Std.Toml.Fields`](toml-fields.md) — typed key access for parsed tables
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
+
+## Typed failures
+
+`Toml.TomlError.InvalidSyntax(Line, Column, Detail)` retains parser diagnostics. Line and Column are `Option of integer`, present only when the parser supplies a position (one-based); unsupported/nonfinite document values have no invented position. Stringify keeps its existing non-Result contract and runtime validation.

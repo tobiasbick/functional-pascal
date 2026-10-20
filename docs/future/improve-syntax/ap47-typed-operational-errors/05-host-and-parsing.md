@@ -1,6 +1,6 @@
 # AP47.5: Host, parsing and related Std migration
 
-Status: Planned; implementation not authorized. Depends on AP47.4.
+Status: Complete. Implemented under the user's AP47.5 authorization after AP47.4.
 Selected interfaces: [host/parsing catalog](standard-errors.md#host-and-parsing-cohort).
 Completion: [AP47](README.md#dependencies-and-work-packages).
 
@@ -47,13 +47,13 @@ Rebuild precompiled libraries when public type metadata changes. Do not alter
 Rust compiler-internal error handling just because the same spelling Result is
 used there.
 
-## Actual owners and planned edits
+## Implementation owners
 
 | Path | Responsibility |
 | --- | --- |
-| `crates/fpas-sema/src/std_registry/loaded/`, `src/std_registry/api.rs` | Native families and signatures |
-| `crates/fpas-std/src/std_units/`, `src/fs/`, `src/fs.rs`, `src/proc.rs`, `src/parse.rs`, `src/json.rs`, `src/toml/` | Detection, normalization and typed Result payloads; create focused native-error helpers beside existing owners |
-| `crates/fpas-vm/src/vm/hosted/crypto.rs`, `src/vm/hosted/proc.rs`, `src/vm/layouts.rs` | Host crypto/process outcomes and nominal layout admission once per image |
+| `crates/fpas-sema/src/std_registry/loaded/`, `src/std_registry/api.rs`, `src/interface/install_native_errors.rs` | Native families, signatures and transitive imported error dependencies |
+| `crates/fpas-std/src/native_errors.rs`, `src/std_units/`, `src/fs/`, `src/fs.rs`, `src/proc.rs`, `src/parse.rs`, `src/json.rs`, `src/toml/` | Detection, normalization and typed Result payloads; shared native-error catalog and focused domain adapters |
+| `crates/fpas-vm/src/vm/hosted/crypto.rs`, `src/vm/hosted/proc.rs`, `src/vm/layouts.rs`, `src/vm/layouts/native_errors.rs` | Host crypto/process outcomes and nominal layout admission once per image |
 | `crates/fpas-numeric/src/text.rs`, `src/error.rs`, numeric consumers in lexer/compiler | Structured text failure reasons from the same grammar, preserving existing literal diagnostics and arithmetic error behavior |
 | `lib/api/Std/` | Regenerated native declarations, including new Std.Errors |
 | `lib/Std/Json/Fields.fpas`, `lib/Std/Toml/Fields.fpas` | Source-defined field errors and parser wrapping |
@@ -84,3 +84,39 @@ language/Std suite passes. Run required Rust/workspace checks and benchmark
 comparisons; package-specific measurements are governed by AP47.7. Native
 filesystem/process checks run with the permissions required for their actual
 condition; sandbox-denied host access is not proof of an implementation failure.
+
+
+## Delivery evidence
+
+All 32 selected native Result operations and 20 source JSON/TOML field helpers
+now expose the selected nominal families. Host failures preserve the supplied
+operation/resources and available native domain/code. Parser causes and optional
+positions remain structured. Intentional application/SDK string boundaries use
+explicit Message() mappings. Task/network interfaces remain scheduled for AP47.6.
+
+The VM validates the required native ABI once per image and caches its layouts;
+metadata-only dependencies survive source interface imports. Missing families,
+wrong payload types, duplicate owners and invalid Cause metadata fail admission
+instead of becoming operational errors. Numeric parsing uses the existing shared
+grammar, distinguishing syntax from range only after syntax validation.
+
+A subagent reviewed the implementation and the repairs. Findings concerning
+failed filesystem paths, empty process resources, ABI admission, NUL classification
+and synthetic host causes were fixed and rechecked. Production-path tests cover
+source execution and portable images, parser/field causes, native error details,
+file limits, process failures/nonzero exits and secure entropy backend failure.
+A controlled denied-access check preserved the native permission code. The same
+valid OutOfRange pattern fails on the unchanged control because its payload is
+string, and succeeds after migration. The measured scalar-membership regression
+was repaired with an exact Integer comparison; mixed/nested/empty arrays and
+integer extrema retain their previous membership semantics.
+
+Validation: 4,887 Rust tests passed with 3 ignored; 534 Pascal tests passed with
+1 intentional skip; all 24 affected project/source checks passed. Workspace build,
+strict all-target/all-feature Clippy, both formatters, editor grammar and whitespace
+checks passed. Regenerating all 20 native API files produces identical output.
+The [full-suite comparison](../../../bench/ap47-host-parsing.md) records the
+unchanged 72 workloads, paired samples and regression controls. No VM row
+crosses the selected gate; additional Mandelbrot controls do not establish a
+repeatable slowdown. AP47.6 and
+AP47.7 remain open; AP47 overall is not marked complete.

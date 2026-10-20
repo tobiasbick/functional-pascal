@@ -7,6 +7,17 @@ unit Std.Toml;
 // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
 // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
+// Intrinsic `TomlError` data type.
+public type TomlError = error
+  // `InvalidSyntax` enum member.
+  //
+  // Parameters:
+  // - `Line`: Input line queued for the next read.
+  // - `Column`: `Option of integer` input value used by `InvalidSyntax`.
+  // - `Detail`: `string` input value used by `InvalidSyntax`.
+  InvalidSyntax(Line: option of integer; Column: option of integer; Detail: string) = 'Invalid TOML';
+end error;
+
 // TOML value tree.
 public type TomlValue = enum
   // `String` enum member.
@@ -50,7 +61,7 @@ end enum;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): result of (TomlValue, string);
+public function Parse(Text: string): result of (TomlValue, TomlError);
 begin
   panic('Intrinsic API declaration');
 end function;

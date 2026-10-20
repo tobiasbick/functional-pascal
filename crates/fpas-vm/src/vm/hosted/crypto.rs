@@ -17,7 +17,7 @@ impl Worker {
         &self,
         intrinsic: Intrinsic,
         arguments: &[Value],
-        _location: SourceLocation,
+        location: SourceLocation,
     ) -> Result<Option<Option<Value>>, VmError> {
         let Intrinsic::Crypto(operation) = intrinsic else {
             return Ok(None);
@@ -34,20 +34,62 @@ impl Worker {
         };
         Ok(Some(Some(match result {
             Ok(value) => Value::result_ok(value),
-            Err(message) => Value::result_error(Value::Str(message.into())),
+            Err(error) => {
+                use fpas_std::native_errors::{self, NativeErrorFamily};
+                let (variant, fields) = match error {
+                    CryptoFailure::Argument(name, reason) => {
+                        (0, vec![Value::Str(name.into()), Value::Str(reason.into())])
+                    }
+                    CryptoFailure::Entropy(error) => {
+                        let operation = match operation {
+                            CryptoIntrinsic::RandomBytes => "Std.Crypto.RandomBytes",
+                            CryptoIntrinsic::RandomInt => "Std.Crypto.RandomInt",
+                        };
+                        let cause = native_errors::host(
+                            self.layouts.as_ref(),
+                            operation,
+                            &[],
+                            error.raw_os_error(),
+                            error.to_string(),
+                            location,
+                        )?;
+                        (1, vec![cause])
+                    }
+                };
+                Value::result_error(native_errors::value(
+                    self.layouts.as_ref(),
+                    NativeErrorFamily::Crypto,
+                    variant,
+                    fields,
+                    location,
+                )?)
+            }
         })))
     }
 }
 
-fn random_bytes(count: i64) -> Result<Value, String> {
+#[derive(Debug, PartialEq)]
+enum CryptoFailure {
+    Argument(&'static str, String),
+    Entropy(getrandom::Error),
+}
+
+fn random_bytes(count: i64) -> Result<Value, CryptoFailure> {
+    random_bytes_with(count, getrandom::fill)
+}
+
+fn random_bytes_with(
+    count: i64,
+    fill: impl FnOnce(&mut [u8]) -> Result<(), getrandom::Error>,
+) -> Result<Value, CryptoFailure> {
     if !(0..=MAX_RANDOM_BYTES).contains(&count) {
-        return Err(format!(
-            "Count must be in 0..={MAX_RANDOM_BYTES}, got {count}"
+        return Err(CryptoFailure::Argument(
+            "Count",
+            format!("Count must be in 0..={MAX_RANDOM_BYTES}, got {count}"),
         ));
     }
     let mut bytes = vec![0_u8; count as usize];
-    getrandom::fill(&mut bytes)
-        .map_err(|error| format!("Operating-system random source failed: {error}"))?;
+    fill(&mut bytes).map_err(CryptoFailure::Entropy)?;
     Ok(Value::Array(
         bytes
             .into_iter()
@@ -57,15 +99,16 @@ fn random_bytes(count: i64) -> Result<Value, String> {
     ))
 }
 
-fn random_integer(lo: i64, hi: i64) -> Result<Value, String> {
+fn random_integer(lo: i64, hi: i64) -> Result<Value, CryptoFailure> {
     if lo > hi {
-        return Err(format!(
-            "RandomInt lower bound {lo} must be <= upper bound {hi}"
+        return Err(CryptoFailure::Argument(
+            "Lo",
+            format!("RandomInt lower bound {lo} must be <= upper bound {hi}"),
         ));
     }
     uniform_i64_with(lo, hi, getrandom::u64)
         .map(Value::Integer)
-        .map_err(|error| format!("Operating-system random source failed: {error}"))
+        .map_err(CryptoFailure::Entropy)
 }
 
 fn argument_count(arguments: &[Value], expected: usize, worker: &Worker) -> Result<(), VmError> {
@@ -108,6 +151,19 @@ mod tests {
         assert!(random_bytes(-1).is_err());
         assert!(random_bytes(MAX_RANDOM_BYTES + 1).is_err());
         assert_eq!(random_bytes(0), Ok(Value::Array(Vec::new().into())));
+    }
+
+    #[test]
+    fn entropy_adapter_preserves_the_backend_error_without_fallback() {
+        let error = getrandom::Error::UNSUPPORTED;
+        assert_eq!(
+            random_bytes_with(8, |_| Err(error)),
+            Err(CryptoFailure::Entropy(error))
+        );
+        assert!(matches!(
+            random_bytes_with(-1, |_| panic!("validation must precede entropy")),
+            Err(CryptoFailure::Argument("Count", _))
+        ));
     }
 
     #[test]

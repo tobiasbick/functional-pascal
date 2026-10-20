@@ -500,7 +500,7 @@ Import `uses Std.Parse as Parse;`. Each parser takes `Text: string` and returns
 | `Parse.Bool(Text)` | boolean | Trimmed, case-insensitive true/false |
 | `Parse.HexInt(Text)` | integer | Signed hexadecimal, bare or prefixed with `$`/`0x`/`0X` |
 
-Invalid text returns Error; `Parse.Int(Text).Unwrap()` deliberately aborts.
+Invalid syntax returns `Parse.ParseError.InvalidSyntax`; valid numeric syntax outside the range returns `OutOfRange`. `Parse.Int(Text).Unwrap()` deliberately aborts.
 The parameter label is Text, including calls through matching callable values.
 Std.Conv formats and converts already typed values. See [parsing](std/text/parse.md).
 
@@ -536,7 +536,7 @@ begin
   return Ok(Checked * 2);
 end function;
 
-function IsPositiveText(Text: string): result of (boolean, string);
+function IsPositiveText(Text: string): result of (boolean, Parse.ParseError);
 begin
   const Value := try Parse.Int(Text := Text);
   return Ok(Value > 0);
@@ -566,7 +566,7 @@ begin
     when Error(const Message):
       Test.AssertEquals('positive value required', Message);
   end case;
-  const Read: function(Text: string): result of (integer, string) := Parse.Int;
+  const Read: function(Text: string): result of (integer, Parse.ParseError) := Parse.Int;
   Test.AssertTrue(Read(Text := '42') = Ok(42));
   Test.AssertTrue(Parse.Int('10') = Ok(10));
   Test.AssertTrue(Parse.HexInt('10') = Ok(16));
@@ -1207,3 +1207,5 @@ task operations inside synchronous native callbacks reject with FP5026. Repeatin
 requires the same executable, runtime build/platform, seed, inputs and limits;
 this does not reproduce the normal concurrent worker pool. Inspect
 `schedule.status` and its reasons. DAP/JSONL do not accept the seed flag.
+
+Std Fs/Proc/Parse/Json/Toml/Crypto operations use their nominal error families. JSON/TOML field helpers use their own FieldError family and preserve parser causes with MapError. Host-backed errors retain `Std.Errors.HostError` with operation/resources, optional native code and original detail; use `.Message()` only at an explicit text boundary. Task/network APIs retain their current contracts pending their migration.

@@ -19,7 +19,11 @@ begin
     end;
   end if;
 
-  return Fs.CreateDir(Directory);
+  return Fs.CreateDir(Directory).MapError(
+    function(Cause: Fs.FsError): string begin
+      return Cause.Message();
+    end function
+  );
 end function;
 
 // Resolves a note's existing or identity-derived `.note` path.
@@ -61,14 +65,22 @@ end function;
 public function NotesLoadDirectory(Directory: string): result of (Model.NotesLoad, string);
 begin
   const DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  const Paths: array of string := try Fs.Glob(NoteDirectoryPattern(Directory));
+  const Paths: array of string := try Fs.Glob(NoteDirectoryPattern(Directory)).MapError(
+    function(Cause: Fs.FsError): string begin
+      return Cause.Message();
+    end function
+  );
   var Notes: array of Model.Note := [];
   var IdCounts: dict of string to integer := [:];
   var Issues: array of Model.NoteIssue := [];
   for Index: integer := 0 to Paths.Length() - 1 do
     begin
       const Path: string := Paths[Index];
-      case Fs.ReadText(Path) of
+      case Fs.ReadText(Path).MapError(
+        function(Cause: Fs.FsError): string begin
+          return Cause.Message();
+        end function
+      ) of
         when Ok(const Text):
           begin
             case Format.NoteParse(Text) of
@@ -127,7 +139,11 @@ end function;
 public function NotesSave(Directory: string; NoteValue: Model.Note): result of (boolean, string);
 begin
   const DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  return Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), Format.NoteStringify(NoteValue));
+  return Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), Format.NoteStringify(NoteValue)).MapError(
+    function(Cause: Fs.FsError): string begin
+      return Cause.Message();
+    end function
+  );
 end function;
 
 // Generates an unused timestamp-and-random identity in one directory.

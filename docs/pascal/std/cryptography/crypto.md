@@ -20,10 +20,10 @@ Import with `uses Std.Crypto as Crypto;` and access public symbols as `Crypto.Na
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `RandomBytes(Count: integer): result of (array of integer, string)` | `Count` secure bytes, each in `0..255` |
-| function | `RandomInt(Lo: integer; Hi: integer): result of (integer, string)` | Unbiased secure value in inclusive `[Lo, Hi]` |
+| function | `RandomBytes(Count: integer): result of (array of integer, Crypto.CryptoError)` | `Count` secure bytes, each in `0..255` |
+| function | `RandomInt(Lo: integer; Hi: integer): result of (integer, Crypto.CryptoError)` | Unbiased secure value in inclusive `[Lo, Hi]` |
 
-Both functions request randomness from the operating system. Failure is returned as `Error(Message)` and never falls back to `Std.Random`.
+Both functions request randomness from the operating system. Failure is returned as `Error(Cause)` and never falls back to `Std.Random`.
 
 ## `RandomBytes`
 
@@ -34,7 +34,7 @@ case Crypto.RandomBytes(32) of
   when Ok(const Bytes):
     Console.WriteLn(Bytes.Length());
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 ```
 
@@ -47,7 +47,7 @@ case Crypto.RandomInt(100000, 999999) of
   when Ok(const Code):
     Console.WriteLn(Code);
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 ```
 
@@ -68,3 +68,7 @@ The unit supplies random material; it does not yet supply hashing, password hash
 - [`Std.Random`](../numeric/random.md)
 - [Cryptography index](README.md)
 - [Future cryptography work](../../../future/networked-applications/cryptography.md)
+
+## Typed failures
+
+`CryptoError.InvalidArgument(Name, Reason)` reports the existing Count/bound validation. `EntropyUnavailable(Cause)` retains the secure backend failure as [HostError](../host/errors.md), with a native code only when actually supplied. The runtime never falls back to a pseudorandom generator.

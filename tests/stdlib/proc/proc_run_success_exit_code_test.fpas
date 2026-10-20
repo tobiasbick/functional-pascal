@@ -19,7 +19,7 @@ begin
             end;
           when Error(const FallbackMessage):
             begin
-              Test.Fail(Message + ' / ' + FallbackMessage);
+              Test.Fail(Message.Message() + ' / ' + FallbackMessage.Message());
             end;
         end case;
       end;

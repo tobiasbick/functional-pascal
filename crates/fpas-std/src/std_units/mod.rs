@@ -8,11 +8,11 @@ mod units;
 pub use symbols::std_symbols;
 pub use units::{
     STD_ROOT_SEGMENT, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CONSOLE,
-    STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_DICT, STD_UNIT_ENV, STD_UNIT_FS, STD_UNIT_JSON,
-    STD_UNIT_MATH, STD_UNIT_NET, STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC,
-    STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_SERVER, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST,
-    STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNIT_VERSION, STD_UNITS_INTRINSIC,
-    STD_UNITS_KNOWN,
+    STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_DICT, STD_UNIT_ENV, STD_UNIT_ERRORS, STD_UNIT_FS,
+    STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET, STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH,
+    STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_SERVER, STD_UNIT_STR, STD_UNIT_TASK,
+    STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNIT_VERSION,
+    STD_UNITS_INTRINSIC, STD_UNITS_KNOWN,
 };
 
 use symbols::{
@@ -45,6 +45,7 @@ pub fn is_retired_type_helper_unit(name: &str) -> bool {
 /// Resolves a case-insensitive unit tail such as `console` to its canonical name.
 pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
     const UNITS: &[(&str, &str)] = &[
+        ("errors", STD_UNIT_ERRORS),
         ("server", STD_UNIT_SERVER),
         ("args", STD_UNIT_ARGS),
         ("env", STD_UNIT_ENV),
@@ -86,6 +87,7 @@ pub fn canonical_std_unit_from_segments(root: &str, tail: &str) -> Option<&'stat
 /// Returns the intrinsic symbol names registered for a canonical standard unit.
 pub fn std_unit_symbols(unit: &str) -> &'static [&'static str] {
     match unit {
+        STD_UNIT_ERRORS => &[],
         STD_UNIT_SERVER => STD_SERVER_SYMBOLS,
         STD_UNIT_ARGS => STD_ARGS_SYMBOLS,
         STD_UNIT_ENV => STD_ENV_SYMBOLS,

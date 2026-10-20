@@ -2,32 +2,31 @@
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
+use super::failure::Failure;
 use std::fs;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
 /// Size in bytes of the regular file at `path`; directories are rejected.
-pub(super) fn file_size(path: &Path) -> Result<i64, String> {
-    let metadata = fs::metadata(path).map_err(|error| format!("FileSize failed: {error}"))?;
+pub(super) fn file_size(path: &Path) -> Result<i64, Failure> {
+    let metadata = fs::metadata(path)?;
     if !metadata.is_file() {
-        return Err(
-            "FileSize failed: path is not a regular file.\n  help: Use Fs.IsFile(Path) first."
-                .to_string(),
-        );
+        return Err(Failure::InvalidArgument(
+            "Path",
+            "path is not a regular file".into(),
+        ));
     }
-    i64::try_from(metadata.len()).map_err(|_| "FileSize failed: size exceeds integer".to_string())
+    i64::try_from(metadata.len()).map_err(|_| Failure::LimitExceeded("Std.Fs.FileSize", i64::MAX))
 }
 
 /// Last modification time of `path` in milliseconds since the Unix epoch.
-pub(super) fn modified_time_millis(path: &Path) -> Result<i64, String> {
-    let modified = fs::metadata(path)
-        .and_then(|metadata| metadata.modified())
-        .map_err(|error| format!("ModifiedTime failed: {error}"))?;
+pub(super) fn modified_time_millis(path: &Path) -> Result<i64, Failure> {
+    let modified = fs::metadata(path).and_then(|metadata| metadata.modified())?;
     let millis = match modified.duration_since(UNIX_EPOCH) {
         Ok(after) => i64::try_from(after.as_millis()),
         Err(before) => i64::try_from(before.duration().as_millis()).map(|value| -value),
     };
-    millis.map_err(|_| "ModifiedTime failed: timestamp exceeds integer".to_string())
+    millis.map_err(|_| Failure::LimitExceeded("Std.Fs.ModifiedTime", i64::MAX))
 }
 
 /// `true` when `path` itself is a symbolic link, without following it.
@@ -43,7 +42,7 @@ mod tests {
     fn reports_size_time_and_rejects_directories() {
         let file = super::super::temp::create_temp_file().expect("temp file");
         fs::write(&file, "hello").expect("write");
-        assert_eq!(file_size(Path::new(&file)), Ok(5));
+        assert_eq!(file_size(Path::new(&file)).expect("size"), 5);
         assert!(modified_time_millis(Path::new(&file)).expect("time") > 0);
         assert!(!is_symlink(Path::new(&file)));
         assert!(file_size(&std::env::temp_dir()).is_err());

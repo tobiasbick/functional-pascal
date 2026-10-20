@@ -14,9 +14,9 @@ fn canonical_parsers_have_result_signatures_and_text_parameter_labels() {
     ] {
         check_ok(&format!(
             "program T; uses Std.Parse as Numbers; begin
-            const Direct: Result of ({payload}, string) := Numbers.{parser}('{text}');
-            const Named: Result of ({payload}, string) := Numbers.{parser}(tExT := '{text}');
-            const Reader: function(Text: string): Result of ({payload}, string) := Numbers.{parser};
+            const Direct: Result of ({payload}, Numbers.ParseError) := Numbers.{parser}('{text}');
+            const Named: Result of ({payload}, Numbers.ParseError) := Numbers.{parser}(tExT := '{text}');
+            const Reader: function(Text: string): Result of ({payload}, Numbers.ParseError) := Numbers.{parser};
             const ViaValue := Reader(Text := '{text}'); end."
         ));
         let errors = check_errors(&format!(

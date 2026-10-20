@@ -57,7 +57,7 @@ fn parser_alias_completion_and_signature_help_use_result_and_text() {
         .collect::<BTreeSet<_>>();
     assert_eq!(
         actual,
-        BTreeSet::from(["Int", "Real", "Bool", "HexInt"]),
+        BTreeSet::from(["Int", "Real", "Bool", "HexInt", "ParseError"]),
         "{candidates:#?}"
     );
     for (parser, payload) in [
@@ -86,7 +86,7 @@ fn parser_alias_completion_and_signature_help_use_result_and_text() {
             help.signature
                 .label
                 .to_ascii_lowercase()
-                .ends_with(&format!(": result of ({payload}, string)")),
+                .ends_with(&format!(": result of ({payload}, parseerror)")),
             "{help:#?}"
         );
     }

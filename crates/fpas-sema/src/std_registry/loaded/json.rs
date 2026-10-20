@@ -13,6 +13,8 @@ use std::sync::Arc;
 ///
 /// **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 pub(super) fn register_std_json(checker: &mut Checker) {
+    let error_ty =
+        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Json);
     let json_ref = Ty::Named(s::STD_JSON_VALUE.into());
     let variants = vec![
         EnumVariantTy {
@@ -97,7 +99,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
         checker,
         s::STD_JSON_PARSE,
         vec![p("Text", Ty::String)],
-        Ty::Result(Box::new(json_ty.clone()), Box::new(Ty::String)),
+        Ty::Result(Box::new(json_ty.clone()), Box::new(error_ty.clone())),
     );
     define_func(
         checker,

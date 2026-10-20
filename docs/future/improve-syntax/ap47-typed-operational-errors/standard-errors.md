@@ -1,6 +1,7 @@
 # AP47 standard-library error contract
 
-Status: Selected under delegated planning authority; not implemented.
+Status: Host/parsing families delivered in AP47.5; task/network families remain
+selected for the planned AP47.6 migration.
 Owns Q33/Q34 details for [AP47.5](05-host-and-parsing.md) and
 [AP47.6](06-tasks-and-network.md). Language rules belong to [AP47.1](01-decision.md).
 These are error declarations, not a hierarchy or new reporting records.

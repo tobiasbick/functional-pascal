@@ -63,6 +63,18 @@ fn cancellation_interrupts_pending_write_attempts() {
 fn write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts() {
     let (connections, handle, _peer) = tcp_pair();
     connections.set_timeout(handle, 30).expect("timeout");
+    // Socket timeout getters may return the kernel's rounded duration.
+    let connection = connections.connection(handle).expect("connection");
+    let original_timeouts = {
+        let transport = connection.transport.lock().expect("lock");
+        (
+            transport.write_timeout().expect("timeout"),
+            transport.read_timeout().expect("timeout"),
+        )
+    };
+    for timeout in [original_timeouts.0, original_timeouts.1] {
+        assert!(timeout.is_some_and(|value| value >= Duration::from_millis(30)));
+    }
     let started = Instant::now();
     let result = connections.poll_io(
         handle,
@@ -71,15 +83,14 @@ fn write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts() {
         |_| Err(io::ErrorKind::WouldBlock.into()),
     );
     assert_eq!(result, Err("Network write timed out".into()));
-    let connection = connections.connection(handle).expect("connection");
     let transport = connection.transport.lock().expect("lock");
     assert_eq!(
         transport.write_timeout().expect("timeout"),
-        Some(Duration::from_millis(30))
+        original_timeouts.0
     );
     assert_eq!(
         transport.read_timeout().expect("timeout"),
-        Some(Duration::from_millis(30))
+        original_timeouts.1
     );
 }
 
@@ -123,12 +134,22 @@ fn tcp_backpressure_can_time_out_and_cancel_without_closing() {
     }
     connections.set_timeout(handle, 1000).expect("timeout");
     let checks = AtomicUsize::new(0);
-    assert_eq!(
-        connections
-            .write_with_cancellation(handle, &chunk, || checks.fetch_add(1, Ordering::Relaxed)
-                >= 3),
-        Err("Network write cancelled".into())
-    );
+    // The kernel can accept more data after the first timeout. Partial progress
+    // wins over cancellation, so continue until cancellation is observed.
+    loop {
+        match connections.write_with_cancellation(handle, &chunk, || {
+            checks.fetch_add(1, Ordering::Relaxed) >= 3
+        }) {
+            Ok(count) => {
+                assert!(count > 0 && count <= chunk.len());
+                assert!(checks.load(Ordering::Relaxed) <= 4);
+            }
+            Err(error) => {
+                assert_eq!(error, "Network write cancelled");
+                break;
+            }
+        }
+    }
     connections.close(handle).expect("connection remained open");
 }
 

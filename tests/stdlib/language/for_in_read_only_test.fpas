@@ -211,7 +211,6 @@ begin
   Test.AssertEquals(2, Count);
   Increment();
   Test.AssertEquals(3, Count);
-
   const Messages: channel of integer := Tasks.CreateChannel(1);
   var Channels: array of channel of integer := [Messages];
   for Copy: channel of integer in Channels do

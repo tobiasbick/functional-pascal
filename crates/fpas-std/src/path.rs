@@ -9,6 +9,7 @@ use crate::intrinsic_args::{
     IntrinsicCall, expect_str, pop_array, pop_value, value_as_string_for_join,
 };
 use fpas_bytecode::{Intrinsic, PathIntrinsic, SourceLocation, Value};
+use std::ffi::OsStr;
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
 
 #[cfg(test)]
@@ -145,7 +146,7 @@ fn normalize_path(path: &str) -> String {
         out.push(MAIN_SEPARATOR.to_string());
     }
     for part in parts {
-        out.push(part);
+        push_literal_component(&mut out, OsStr::new(&part));
     }
 
     if out.as_os_str().is_empty() {
@@ -158,6 +159,22 @@ fn normalize_path(path: &str) -> String {
     }
 
     out.to_string_lossy().into_owned()
+}
+
+fn push_literal_component(path: &mut PathBuf, component: &OsStr) {
+    if matches!(
+        Path::new(component).components().next(),
+        Some(Component::Prefix(_))
+    ) {
+        // A normal Windows stream name such as C:stream must not replace the drive.
+        if path.as_os_str().is_empty() {
+            path.push(".");
+        }
+        path.push("");
+        path.as_mut_os_string().push(component);
+    } else {
+        path.push(component);
+    }
 }
 
 #[cfg(test)]

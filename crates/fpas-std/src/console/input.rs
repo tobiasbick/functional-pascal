@@ -116,11 +116,15 @@ impl TextInput {
     }
 
     fn refill(&mut self, location: SourceLocation) -> Result<bool, StdError> {
-        let line = if !self.line_queue.is_empty() {
-            let mut line = self.line_queue.pop_line(location)?;
-            line.push('\n');
-            Some(line)
-        } else if self.eof {
+        if !self.line_queue.is_empty() {
+            let line = self.line_queue.pop_line(location)?;
+            // Queued strings may come from another thread; append their synthetic
+            // terminator here without growing the queued string.
+            self.pending.extend(line.chars());
+            self.pending.push_back('\n');
+            return Ok(true);
+        }
+        let line = if self.eof {
             None
         } else if self.os_stdin {
             read_line_from_stdin(location)?

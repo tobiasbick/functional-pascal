@@ -219,6 +219,10 @@ fn windows_roots_drives_and_unc_shares_are_compared_without_ambient_state() {
         (r"C:\a\..", r"C:\", "."),
         (r"\\server\share\a", r"\\server\share\b", r"..\a"),
         (r"\\?\C:\a", r"\\?\C:\b", r"..\a"),
+        (r"dir\C:stream", "dir", r".\C:stream"),
+        (r"dir\nested\C:stream", "dir", r"nested\C:stream"),
+        (r"C:\dir\D:stream", r"C:\dir", r".\D:stream"),
+        (r"C:\dir\nested\D:stream", r"C:\dir", r"nested\D:stream"),
     ] {
         assert_eq!(relative_to(target, base), Some(expected.into()));
     }

@@ -7,8 +7,8 @@ strings, math, arrays, dictionaries, options, results, tasks, filesystem access,
 HTTP, and OpenAI-compatible chat. The next standard-library work should keep that unit-based shape
 and add focused units instead of merging unrelated APIs into larger buckets.
 
-The [gap review](stdlib-gap-review.md) records the current API assessment excluding
-AI, comparison languages and suggested FPAS 1 candidates. It does not schedule implementation.
+Implemented APIs are documented in the
+[standard library reference](../pascal/std/README.md).
 
 ## Direction
 
@@ -40,7 +40,7 @@ These should wait until the runtime and capability model need them:
 - [`Std.Sqlite`](networked-applications/sqlite.md) for embedded transactional storage.
 - [WebSocket client and server support](networked-applications/websocket.md).
 - [UDP sockets](networked-applications/udp.md) when a concrete datagram use case exists.
-- binary buffers and codecs, once byte-array conventions are stable.
+- Compact byte buffers; bounded binary I/O and Base64/hex codecs already use integer arrays.
 
 The cross-cutting order and acceptance gates for these capabilities are tracked in the
 [networked application platform plan](networked-applications/README.md).

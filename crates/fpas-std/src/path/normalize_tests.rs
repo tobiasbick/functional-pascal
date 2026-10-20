@@ -14,6 +14,7 @@ fn normalize_preserves_absolute_windows_drive_roots() {
         (r"D:\..\..\demo", r"D:\demo"),
         (r"D:\demo\..", r"D:\"),
         (r"\\?\D:\projects\demo", r"\\?\D:\projects\demo"),
+        (r"D:\projects\C:stream", r"D:\projects\C:stream"),
     ] {
         let actual = normalize_path(input);
         assert_eq!(actual, expected, "input: {input}");
@@ -35,6 +36,9 @@ fn normalize_preserves_drive_relative_and_root_relative_paths() {
         (r"D:projects\..\demo", r"D:demo"),
         (r"D:..\demo", r"D:..\demo"),
         (r"\projects\demo", r"\projects\demo"),
+        (r"D:C:stream", r"D:C:stream"),
+        (r"dir\C:stream", r"dir\C:stream"),
+        (r".\C:stream", r".\C:stream"),
     ] {
         let actual = normalize_path(input);
         assert_eq!(actual, expected, "input: {input}");

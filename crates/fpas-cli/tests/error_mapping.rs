@@ -241,8 +241,18 @@ begin
   Test.AssertTrue(Fs.ReadDir('invalid.txt') is Error(Fs.FsError.NotDirectory('invalid.txt', _)));
   const Temporary := Fs.CreateTempFile().Unwrap();
   discard Fs.DeleteFile(Temporary).Unwrap();
-  Test.AssertTrue(Proc.Run('__fpas_missing_command_ap475__', []) is Error(Proc.ProcError.StartFailed(Errors.HostError.Failure('Std.Proc.Run', _, Some(_), Some(_), _))));
+  // An explicit path reaches native process creation instead of Rust's PATH lookup.
+  Test.AssertTrue(Proc.Run('./__fpas_missing_command_ap475__', []) is Error(Proc.ProcError.StartFailed(Errors.HostError.Failure('Std.Proc.Run', _, Some(_), Some(_), _))));
   Test.AssertTrue(Proc.RunCapture('__fpas_missing_command_ap475__', []) is Error(Proc.ProcError.StartFailed(_)));
+  case Proc.Run('', []) of
+    when Error(Proc.ProcError.StartFailed(Errors.HostError.Failure(_, const Resources, _, _, _))):
+      Test.AssertEquals(1, Resources.Length());
+      Test.AssertEquals('', Resources[0]);
+    when Error(_):
+      Test.Fail('empty command must retain its supplied resource');
+    when Ok(_):
+      Test.Fail('empty command must fail to start');
+  end case;
   Test.AssertTrue(Proc.Run('bad'#0, []) is Error(Proc.ProcError.InvalidArgument('Command', _)));
   Test.AssertTrue(Parse.Real('1.0e9999') is Error(Parse.ParseError.OutOfRange('real', _)));
   Test.AssertTrue(Parse.Real('1.0e-9999x') is Error(Parse.ParseError.InvalidSyntax('real', _)));
@@ -299,7 +309,8 @@ begin
   discard Net.Close(Peer).Unwrap();
   Test.AssertTrue(Net.ReceiveBytes(Peer, 1) is Error(Net.NetError.Closed('Std.Net.ReceiveBytes')));
   discard Net.CloseListener(Listener).Unwrap();
-  Test.AssertTrue(Net.Connect(Address.Host, Address.Port, 1000) is Error(Net.NetError.ConnectionRefused(Errors.HostError.Failure('Std.Net.Connect', _, Some(_), Some(_), _))));
+  // Windows can take about two seconds to report a refused loopback connection.
+  Test.AssertTrue(Net.Connect(Address.Host, Address.Port, 5000) is Error(Net.NetError.ConnectionRefused(Errors.HostError.Failure('Std.Net.Connect', _, Some(_), Some(_), _))));
   Test.AssertTrue(Http.Send(Http.Request.Get('ftp://example.test/')) is Error(Http.HttpError.Address(_)));
   const Decoder := Http.CreateSseDecoder(100).Unwrap();
   discard Http.FeedSse(Decoder, [100, 97, 116, 97, 58, 32, 226]).Unwrap();

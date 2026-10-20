@@ -42,9 +42,9 @@ performance acceptance requires a controlled local host.
 
 Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
 see [task APIs](../pascal/std/concurrency/task.md).
-[Stdlib gap 9](stdlib-gap-review.md#direction-for-gap-9-structured-errors)
-tracks the delivered native and source families. Selected Std interfaces support
-typed decisions independent of diagnostic wording.
+The [Std reference](../pascal/std/README.md) documents the delivered native and
+source error families. Selected Std interfaces support typed decisions independent
+of diagnostic wording.
 
 ### Selected language direction
 

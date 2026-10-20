@@ -39,16 +39,6 @@ impl<'a> IntrinsicCall<'a> {
         self.factory
     }
 
-    /// Construct a typed record through the executing runtime.
-    pub(crate) fn record(
-        &self,
-        type_name: &str,
-        values: Vec<Value>,
-        location: SourceLocation,
-    ) -> Result<Value, StdError> {
-        self.factory.record(type_name, values, location)
-    }
-
     /// Construct a typed enum variant through the executing runtime.
     pub(crate) fn enumeration(
         &self,

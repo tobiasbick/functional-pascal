@@ -6,18 +6,28 @@
     reason = "isolated child-process fixtures"
 )]
 
-use std::fs;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
+#[cfg(unix)]
+use std::{
+    fs,
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+    time::Duration,
+};
 
 use super::failure::Kind;
-use super::options::{DEFAULT_OUTPUT, MAX_IO, Options, Request};
+#[cfg(unix)]
+use super::options::DEFAULT_OUTPUT;
+use super::options::{MAX_IO, Options, Request};
+#[cfg(unix)]
 use super::registry::Processes;
 
+#[cfg(unix)]
 struct Fixture(PathBuf);
 
+#[cfg(unix)]
 impl Fixture {
     fn new() -> Self {
         static NEXT: AtomicU64 = AtomicU64::new(1);
@@ -36,6 +46,7 @@ impl Fixture {
     }
 }
 
+#[cfg(unix)]
 impl Drop for Fixture {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);

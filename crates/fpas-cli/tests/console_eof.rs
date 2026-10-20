@@ -37,12 +37,7 @@ impl Fixture {
     fn command(&self, operation: &str) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_fpas"));
         command.current_dir(&self.0).args([operation, "--std-lib"]);
-        command.arg(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../lib")
-                .canonicalize()
-                .expect("source standard library"),
-        );
+        command.arg(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../lib"));
         command
     }
 

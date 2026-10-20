@@ -36,7 +36,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Planning | [AP workflow and templates](improve-syntax/README.md) | Empty package index, reusable decision/implementation work packages, dependencies and completion checks |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
-| Standard library | [Gap review](stdlib-gap-review.md) | API assessment excluding AI, language comparisons and proposed FPAS 1 priorities; no implementation scheduled |
 
 ## Rules
 

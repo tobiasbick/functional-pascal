@@ -2,7 +2,7 @@
 
 use std::path::{Component, Path, PathBuf};
 
-use super::normalize_path;
+use super::{normalize_path, push_literal_component};
 
 pub(super) fn relative_to(target: &str, base: &str) -> Option<String> {
     let target = normalize_path(target);
@@ -34,7 +34,7 @@ pub(super) fn relative_to(target: &str, base: &str) -> Option<String> {
         result.push("..");
     }
     for component in &target[shared..] {
-        result.push(component.as_os_str());
+        push_literal_component(&mut result, component.as_os_str());
     }
     if result.as_os_str().is_empty() {
         result.push(".");

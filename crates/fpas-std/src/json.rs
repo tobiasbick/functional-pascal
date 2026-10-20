@@ -294,12 +294,25 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Json(JsonIntrinsic::Parse) => {
             let text = pop_string(pop_value(call, location)?, location)?;
-            match parse::parse(&text).map_err(|err| err.to_string()) {
+            match parse::parse(&text) {
                 Ok(value) => match json_to_fpas(call, value, location) {
                     Ok(value) => call.push(Value::result_ok(value)),
-                    Err(error) => call.push(Value::result_error(Value::Str(error.message.into()))),
+                    Err(error)
+                        if error.code == fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE =>
+                    {
+                        return Err(error);
+                    }
+                    Err(error) => {
+                        call.push(parse_error(call, None, None, error.message, location)?)
+                    }
                 },
-                Err(message) => call.push(Value::result_error(Value::Str(message.into()))),
+                Err(error) => call.push(parse_error(
+                    call,
+                    (error.line() > 0).then_some(error.line()),
+                    (error.column() > 0).then_some(error.column()),
+                    error.to_string(),
+                    location,
+                )?),
             }
         }
         Intrinsic::Json(JsonIntrinsic::Stringify) => {
@@ -310,4 +323,22 @@ pub(crate) fn run(
         _ => return Ok(None),
     }
     Ok(Some(()))
+}
+
+fn parse_error(
+    call: &IntrinsicCall<'_>,
+    line: Option<usize>,
+    column: Option<usize>,
+    detail: String,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    crate::native_errors::syntax(
+        call.factory(),
+        crate::native_errors::NativeErrorFamily::Json,
+        line,
+        column,
+        detail,
+        location,
+    )
+    .map(Value::result_error)
 }

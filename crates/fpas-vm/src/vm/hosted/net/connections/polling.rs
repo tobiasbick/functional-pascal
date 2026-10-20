@@ -1,5 +1,6 @@
 //! Serialized non-blocking I/O with cancellation and per-operation timeouts.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::io;
 use std::sync::TryLockError;
 use std::time::{Duration, Instant};
@@ -25,7 +26,7 @@ impl NetworkConnections {
         direction: Direction,
         is_cancelled: impl Fn() -> bool,
         mut attempt: impl FnMut(&mut Transport) -> io::Result<usize>,
-    ) -> Result<usize, String> {
+    ) -> Result<usize, Failure> {
         let name = match direction {
             Direction::Read => "read",
             Direction::Write => "write",
@@ -33,7 +34,7 @@ impl NetworkConnections {
         let connection = self.connection(handle)?;
         let mut transport = loop {
             if is_cancelled() {
-                return Err(format!("Network {name} cancelled"));
+                return Err(Failure::Cancelled);
             }
             match connection.transport.try_lock() {
                 Ok(transport) => break transport,
@@ -45,17 +46,25 @@ impl NetworkConnections {
             Direction::Read => transport.read_timeout(),
             Direction::Write => transport.write_timeout(),
         }
-        .map_err(|error| format!("Could not inspect network {name} timeout: {error}"))?;
-        transport
-            .set_nonblocking(true)
-            .map_err(|error| format!("Could not configure cancellable network {name}: {error}"))?;
+        .map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not inspect network {name} timeout: {error}"),
+            )
+        })?;
+        transport.set_nonblocking(true).map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not configure cancellable network {name}: {error}"),
+            )
+        })?;
         let started = Instant::now();
         let result = loop {
             if is_cancelled() {
-                break Err(format!("Network {name} cancelled"));
+                break Err(Failure::Cancelled);
             }
             if timeout.is_some_and(|timeout| started.elapsed() >= timeout) {
-                break Err(format!("Network {name} timed out"));
+                break Err(Failure::deadline(format!("Network {name} timed out")));
             }
             match attempt(&mut transport) {
                 Ok(count) => break Ok(count),
@@ -66,15 +75,21 @@ impl NetworkConnections {
                     std::thread::park_timeout(wait);
                 }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
-                Err(error) => break Err(format!("{} {name} failed: {error}", transport.name())),
+                Err(error) => {
+                    break Err(Failure::io(
+                        &error,
+                        format!("{} {name} failed: {error}", transport.name()),
+                    ));
+                }
             }
         };
         // Never hide bytes already consumed by reporting a later restoration error instead.
         if let Err(error) = transport.set_nonblocking(false) {
             drop(self.close(handle));
             if result.is_err() {
-                return Err(format!(
-                    "Could not restore blocking network {name}: {error}"
+                return Err(Failure::io(
+                    &error,
+                    format!("Could not restore blocking network {name}: {error}"),
                 ));
             }
         }

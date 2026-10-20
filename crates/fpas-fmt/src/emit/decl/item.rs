@@ -220,7 +220,11 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
 }
 
 fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType, comments: &CommentMap) {
-    emitter.write("enum\n");
+    emitter.write(if enum_type.is_error {
+        "error\n"
+    } else {
+        "enum\n"
+    });
     emitter.with_indent(|inner| {
         for member in &enum_type.members {
             emit_enum_member(inner, member, comments);
@@ -230,7 +234,11 @@ fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType, comments: &Commen
         emit_leading_comments(emitter, comments, anchor, false);
     }
     emitter.write_current_indent();
-    emitter.write("end enum");
+    emitter.write(if enum_type.is_error {
+        "end error"
+    } else {
+        "end enum"
+    });
 }
 
 fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember, comments: &CommentMap) {
@@ -251,6 +259,11 @@ fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember, comments: &Comme
     } else if let Some(value) = member.value {
         emitter.write(" = ");
         emitter.write(&value.to_string());
+    }
+    if let Some(message) = &member.message {
+        emitter.write(" = '");
+        emitter.write(&message.replace('\'', "''"));
+        emitter.write("'");
     }
     finish_decl_line(emitter, comments, member.span.offset);
 }

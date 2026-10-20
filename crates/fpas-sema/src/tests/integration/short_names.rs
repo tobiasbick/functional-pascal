@@ -52,7 +52,7 @@ fn short_name_mixed_with_qualified() {
 
 #[test]
 fn required_qualification_hint_lists_each_import_and_leads_to_a_valid_call() {
-    let source = "program T; uses Std.Console as Console, Std.Fs as Fs; begin const Text: result of (string, string) := ReadText('input.txt'); end.";
+    let source = "program T; uses Std.Console as Console, Std.Fs as Fs; begin const Text: result of (string, Fs.FsError) := ReadText('input.txt'); end.";
     let errors = check_errors(source);
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(

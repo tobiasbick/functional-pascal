@@ -1,3 +1,4 @@
+use crate::vm::hosted::net::failure::Failure;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -28,7 +29,7 @@ fn cancellation_after_pending_read_preserves_connection_and_timeout() {
     let checks = AtomicUsize::new(0);
     let result = connections
         .read_with_cancellation(handle, 8, || checks.fetch_add(1, Ordering::Relaxed) >= 3);
-    assert_eq!(result, Err("Network read cancelled".to_string()));
+    assert_eq!(result, Err(Failure::Cancelled));
     let connection = connections.connection(handle).expect("still open");
     assert_eq!(
         connection
@@ -53,7 +54,7 @@ fn pre_cancelled_read_does_not_consume_available_bytes() {
     peer.write_all(b"x").expect("write");
     assert_eq!(
         connections.read_with_cancellation(handle, 1, || true),
-        Err("Network read cancelled".to_string())
+        Err(Failure::Cancelled)
     );
     assert_eq!(
         connections
@@ -71,7 +72,7 @@ fn configured_timeout_bounds_cancellable_read() {
     assert_eq!(
         connections
             .read_with_cancellation(handle, 1, || started.elapsed() >= Duration::from_secs(2)),
-        Err("Network read timed out".to_string())
+        Err(Failure::deadline("Network read timed out"))
     );
     assert!(started.elapsed() < Duration::from_secs(2));
 }
@@ -86,7 +87,7 @@ fn cancellation_is_observed_while_waiting_for_transport_lock() {
         connections.read_with_cancellation(handle, 1, || {
             checks.fetch_add(1, Ordering::Relaxed) >= 2
         }),
-        Err("Network read cancelled".to_string())
+        Err(Failure::Cancelled)
     );
 }
 
@@ -100,10 +101,13 @@ fn eof_and_invalid_size_remain_distinct_from_cancellation() {
             .expect("EOF"),
         Vec::<u8>::new()
     );
-    assert!(
+    assert!(matches!(
         connections
             .read_with_cancellation(handle, 0, || false)
-            .expect_err("size")
-            .contains("read size")
-    );
+            .expect_err("size"),
+        Failure::InvalidArgument {
+            name: "MaxBytes",
+            ..
+        }
+    ));
 }

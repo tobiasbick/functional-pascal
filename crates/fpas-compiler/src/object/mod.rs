@@ -55,7 +55,7 @@ pub fn compile_unit_object_with_support(
     if !analysis.metadata.errors.is_empty() {
         return Err(analysis.metadata.errors.into_iter().map(Box::new).collect());
     }
-    let Some(interface) = analysis.interface else {
+    let Some(mut interface) = analysis.interface else {
         return Err(vec![internal_compiler_error(
             "Semantic analysis succeeded without producing a unit interface.",
             "This is an internal compiler error. Re-run compilation and report the source unit.",
@@ -63,14 +63,21 @@ pub fn compile_unit_object_with_support(
             unit.span.column,
         )]);
     };
-    let lowered = crate::lowering::lower_unit(unit, interfaces, supporting_interfaces)?;
-    let executable =
-        crate::bytecode::compile_program(lowered.program).map_err(|error| vec![error])?;
+    let mut lowered = crate::lowering::lower_unit(unit, interfaces, supporting_interfaces)?;
+    lowered
+        .errors
+        .export_requirements(&mut interface, &lowered.program.functions);
+    let executable = crate::bytecode::compile_for_object(lowered.program, &lowered.errors)
+        .map_err(|error| vec![error])?;
     let owner = unit.name.parts.join(".").to_ascii_lowercase();
     let mut object = RelocatableObject::from_executable(&owner, executable)
         .map_err(|error| object_error(unit.span, error))?;
     object.entry = None;
     object.initializer = Some(0);
+    lowered
+        .errors
+        .apply_object(&mut object, &mut lowered.imports)
+        .map_err(|error| object_error(unit.span, error))?;
     apply_imports(&mut object, lowered.imports).map_err(|error| object_error(unit.span, error))?;
     let owned_layouts = owned_layouts(unit, &owner);
     let retained_layouts = owned_layouts
@@ -98,11 +105,15 @@ pub fn compile_program_object_with_support(
     interfaces: &[UnitInterface],
     supporting_interfaces: &[UnitInterface],
 ) -> Result<RelocatableObject, Vec<CompileError>> {
-    let lowered =
+    let mut lowered =
         crate::lowering::lower_program_with_support(program, interfaces, supporting_interfaces)?;
-    let executable =
-        crate::bytecode::compile_program(lowered.program).map_err(|error| vec![error])?;
+    let executable = crate::bytecode::compile_for_object(lowered.program, &lowered.errors)
+        .map_err(|error| vec![error])?;
     let mut object = RelocatableObject::from_executable(&program.name, executable)
+        .map_err(|error| object_error(program.span, error))?;
+    lowered
+        .errors
+        .apply_object(&mut object, &mut lowered.imports)
         .map_err(|error| object_error(program.span, error))?;
     apply_imports(&mut object, lowered.imports)
         .map_err(|error| object_error(program.span, error))?;

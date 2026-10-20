@@ -88,6 +88,26 @@ pub(in crate::vm) struct GroupRegistry {
     state: Mutex<State>,
 }
 
+/// Admission errors distinguish invalid identities from a live group's ownership policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::vm) enum GroupCloseError {
+    InvalidHandle,
+    WrongOwner,
+}
+impl std::fmt::Display for GroupCloseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::InvalidHandle => "Expected a TaskGroup handle",
+            Self::WrongOwner => "Only the creating task may close a TaskGroup",
+        })
+    }
+}
+impl From<GroupCloseError> for String {
+    fn from(error: GroupCloseError) -> Self {
+        error.to_string()
+    }
+}
+
 impl GroupRegistry {
     /// Return creating-task groups in deterministic registration order for final cleanup.
     pub(in crate::vm) fn owned_groups(&self, owner: u64) -> Vec<u64> {
@@ -189,14 +209,14 @@ impl GroupRegistry {
     }
 
     /// Seal admission and request cooperative cancellation before joining children.
-    pub(in crate::vm) fn begin_close(&self, id: u64, owner: u64) -> Result<(), String> {
-        validate(id)?;
+    pub(in crate::vm) fn begin_close(&self, id: u64, owner: u64) -> Result<(), GroupCloseError> {
+        validate(id).map_err(|_| GroupCloseError::InvalidHandle)?;
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         let Some(group) = state.groups.get_mut(&id) else {
             return Ok(());
         };
         if group.owner != owner {
-            return Err("Only the creating task may close a TaskGroup".into());
+            return Err(GroupCloseError::WrongOwner);
         }
         group.closing = true;
         group.cancellation.cancel();

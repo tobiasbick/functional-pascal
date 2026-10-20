@@ -1,7 +1,7 @@
 # `Std.Toml.Fields`
 
 Strict typed access to the keys of parsed TOML tables. Every accessor returns
-`Error(Message)` for a missing key or a value of the wrong TOML kind instead of
+`Error(Cause)` for a missing key or a value of the wrong TOML kind instead of
 requiring a nested `case` per key.
 
 ```pascal id=example-1
@@ -9,7 +9,7 @@ program Example;
 
 uses Std.Console as Console, Std.Toml as Toml, Std.Toml.Fields as TomlFields;
 
-function ReadPort(Text: string): result of (integer, string);
+function ReadPort(Text: string): result of (integer, TomlFields.FieldError);
 begin
   const Fields: dict of string to Toml.TomlValue := try TomlFields.ParseTable(Text);
   const Allowed: boolean := try TomlFields.RequireOnlyFields(Fields, ['host', 'port']);
@@ -21,7 +21,7 @@ begin
     when Ok(const Port):
       Console.WriteLn(Port);
     when Error(const Message):
-      Console.WriteLn('invalid configuration: ' + Message);
+      Console.WriteLn('invalid configuration: ' + Message.Message());
   end case;
 end.
 ```
@@ -35,32 +35,37 @@ end.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `ParseTable(Text: string): Result of (dict of string to TomlValue, string)` | parses a document and returns its root table |
-| function | `Field(Fields; Name: string): Result of (TomlValue, string)` | any present key |
-| function | `StringField(Fields; Name: string): Result of (string, string)` | string key |
-| function | `IntegerField(Fields; Name: string): Result of (integer, string)` | integer key; floats are rejected |
-| function | `FloatField(Fields; Name: string): Result of (real, string)` | float key; integers are rejected |
-| function | `BooleanField(Fields; Name: string): Result of (boolean, string)` | boolean key |
-| function | `TableField(Fields; Name: string): Result of (dict of string to TomlValue, string)` | nested or inline table |
-| function | `ArrayField(Fields; Name: string): Result of (array of TomlValue, string)` | array with any element kinds |
-| function | `StringArrayField(Fields; Name: string): Result of (array of string, string)` | array whose elements are all strings |
-| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of (boolean, string)` | rejects unlisted key names |
+| function | `ParseTable(Text: string): Result of (dict of string to TomlValue, TomlFields.FieldError)` | parses a document and returns its root table |
+| function | `Field(Fields; Name: string): Result of (TomlValue, TomlFields.FieldError)` | any present key |
+| function | `StringField(Fields; Name: string): Result of (string, TomlFields.FieldError)` | string key |
+| function | `IntegerField(Fields; Name: string): Result of (integer, TomlFields.FieldError)` | integer key; floats are rejected |
+| function | `FloatField(Fields; Name: string): Result of (real, TomlFields.FieldError)` | float key; integers are rejected |
+| function | `BooleanField(Fields; Name: string): Result of (boolean, TomlFields.FieldError)` | boolean key |
+| function | `TableField(Fields; Name: string): Result of (dict of string to TomlValue, TomlFields.FieldError)` | nested or inline table |
+| function | `ArrayField(Fields; Name: string): Result of (array of TomlValue, TomlFields.FieldError)` | array with any element kinds |
+| function | `StringArrayField(Fields; Name: string): Result of (array of string, TomlFields.FieldError)` | array whose elements are all strings |
+| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of (boolean, TomlFields.FieldError)` | rejects unlisted key names |
 
 `Fields` is always `dict of string to TomlValue`. Date/time values are read with `Field`
 and matched as `TomlValue.Datetime`.
 
 ## Errors
 
-Messages are neutral so callers can prefix their own context, such as the configuration
-file path:
+All fallible helpers return `FieldError`. Match its variants to make decisions;
+use `Message()` or direct printing at an output boundary.
 
-| Situation | Message |
-|-----------|---------|
-| missing key | `missing field <name>` |
-| wrong kind | `field <name> must be a string` (or `an integer`, `a float`, `a boolean`, `a table`, `an array`, `an array of strings`) |
-| unlisted key | `unexpected field <name>` |
+| Situation | Variant |
+| --- | --- |
+| invalid TOML text | `ParseFailure(Cause)` with the original `Toml.TomlError` |
+| root is not a table | `ExpectedTable` |
+| missing key | `MissingField(Name)` |
+| wrong kind | `WrongType(Name, Expected)` |
+| unlisted key | `UnknownField(Name)` |
 
-`ParseTable` returns `Std.Toml.Parse` errors unchanged.
+`ParseTable` wraps parser failures with `MapError(FieldError.ParseFailure)`,
+preserving their typed cause. `InvalidValue(Name, Reason)` is also declared for
+field validation; current accessors reject wrong kinds with `WrongType`. Local
+validation failures have no invented parser cause. Unknown-field selection follows existing dictionary iteration order.
 
 ## `RequireOnlyFields`
 

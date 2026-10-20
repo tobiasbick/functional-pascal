@@ -1,6 +1,8 @@
 //! Hosted `Std.Net` intrinsic dispatch.
 
 mod arguments;
+pub(in crate::vm) mod failure;
+use failure::Failure;
 mod connections;
 mod listeners;
 mod tls;
@@ -26,6 +28,7 @@ impl Worker {
         let Intrinsic::Net(operation) = intrinsic else {
             return Ok(None);
         };
+        let result = |value| result(value, self, operation, arguments, location);
         let value = match operation {
             NetIntrinsic::ConnectWithCancellation | NetIntrinsic::ConnectTlsWithCancellation => {
                 require_count(self, arguments, 4)?;
@@ -42,6 +45,7 @@ impl Worker {
                     self.hosted
                         .cancellations
                         .is_cancelled(token)
+                        .map_err(|error| Failure::argument("Token", error))
                         .and_then(|_| {
                             self.hosted.network_connections.connect_with_cancellation(
                                 host,
@@ -57,7 +61,7 @@ impl Worker {
                             )
                         })
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::Connect => {
                 require_count(self, arguments, 3)?;
@@ -69,7 +73,7 @@ impl Worker {
                         .network_connections
                         .connect_tcp(host, port, timeout)
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::ConnectTls => {
                 require_count(self, arguments, 3)?;
@@ -81,7 +85,7 @@ impl Worker {
                         .network_connections
                         .connect_tls(host, port, timeout)
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::Listen => {
                 require_count(self, arguments, 2)?;
@@ -92,7 +96,7 @@ impl Worker {
                         .network_listeners
                         .listen(host, port)
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::ListenTls => {
                 require_count(self, arguments, 5)?;
@@ -106,7 +110,7 @@ impl Worker {
                         .network_listeners
                         .listen_tls(host, port, certificate_path, private_key_path, timeout)
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::ListenerLocalAddress => {
                 require_count(self, arguments, 1)?;
@@ -120,7 +124,7 @@ impl Worker {
                         ],
                         location,
                     )?),
-                    Err(message) => result(Err(message)),
+                    Err(message) => result(Err(message))?,
                 }
             }
             NetIntrinsic::Accept => {
@@ -134,7 +138,7 @@ impl Worker {
                             self.hosted.network_connections.insert_accepted(transport)
                         })
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::AcceptWithCancellation => {
                 require_count(self, arguments, 2)?;
@@ -144,9 +148,10 @@ impl Worker {
                     self.hosted
                         .cancellations
                         .is_cancelled(token)
+                        .map_err(|error| Failure::argument("Token", error))
                         .and_then(|cancelled| {
                             if cancelled {
-                                return Err("Network accept cancelled".to_string());
+                                return Err(Failure::Cancelled);
                             }
                             self.hosted
                                 .network_listeners
@@ -164,13 +169,13 @@ impl Worker {
                                 .is_cancelled(token)
                                 .unwrap_or(true)
                             {
-                                Err("Network accept cancelled".to_string())
+                                Err(Failure::Cancelled)
                             } else {
                                 self.hosted.network_connections.insert_accepted(transport)
                             }
                         })
                         .map(Value::OpaqueHandle),
-                )
+                )?
             }
             NetIntrinsic::CloseListener => {
                 require_count(self, arguments, 1)?;
@@ -180,7 +185,7 @@ impl Worker {
                         .network_listeners
                         .close(handle)
                         .map(|()| Value::Boolean(true)),
-                )
+                )?
             }
             NetIntrinsic::SetTimeout => {
                 require_count(self, arguments, 2)?;
@@ -191,7 +196,7 @@ impl Worker {
                         .network_connections
                         .set_timeout(handle, timeout)
                         .map(|()| Value::Boolean(true)),
-                )
+                )?
             }
             NetIntrinsic::Read | NetIntrinsic::ReadWithCancellation => {
                 let cancellable = operation == NetIntrinsic::ReadWithCancellation;
@@ -200,18 +205,22 @@ impl Worker {
                 let max_bytes = integer(self, &arguments[1], "MaxBytes")?;
                 let read = if cancellable {
                     let token = cancellation_token(self, &arguments[2])?;
-                    self.hosted.cancellations.is_cancelled(token).and_then(|_| {
-                        self.hosted.network_connections.read_with_cancellation(
-                            handle,
-                            max_bytes,
-                            || {
-                                self.hosted
-                                    .cancellations
-                                    .is_cancelled(token)
-                                    .unwrap_or(true)
-                            },
-                        )
-                    })
+                    self.hosted
+                        .cancellations
+                        .is_cancelled(token)
+                        .map_err(|error| Failure::argument("Token", error))
+                        .and_then(|_| {
+                            self.hosted.network_connections.read_with_cancellation(
+                                handle,
+                                max_bytes,
+                                || {
+                                    self.hosted
+                                        .cancellations
+                                        .is_cancelled(token)
+                                        .unwrap_or(true)
+                                },
+                            )
+                        })
                 } else {
                     self.hosted.network_connections.read(handle, max_bytes)
                 };
@@ -222,35 +231,38 @@ impl Worker {
                             .map(|byte| Value::Integer(i64::from(byte)))
                             .collect(),
                     )
-                }))
+                }))?
             }
             NetIntrinsic::Write | NetIntrinsic::WriteWithCancellation => {
                 let cancellable = operation == NetIntrinsic::WriteWithCancellation;
                 require_count(self, arguments, if cancellable { 3 } else { 2 })?;
                 let handle = connection(self, &arguments[0])?;
-                let bytes = bytes(self, &arguments[1])?;
+                let bytes = match bytes(self, &arguments[1])? {
+                    Ok(bytes) => bytes,
+                    Err(error) => return Ok(Some(Some(result(Err(error))?))),
+                };
                 let write = if cancellable {
                     let token = cancellation_token(self, &arguments[2])?;
-                    self.hosted.cancellations.is_cancelled(token).and_then(|_| {
-                        self.hosted.network_connections.write_with_cancellation(
-                            handle,
-                            &bytes,
-                            || {
-                                self.hosted
-                                    .cancellations
-                                    .is_cancelled(token)
-                                    .unwrap_or(true)
-                            },
-                        )
-                    })
+                    self.hosted
+                        .cancellations
+                        .is_cancelled(token)
+                        .map_err(|error| Failure::argument("Token", error))
+                        .and_then(|_| {
+                            self.hosted.network_connections.write_with_cancellation(
+                                handle,
+                                &bytes,
+                                || {
+                                    self.hosted
+                                        .cancellations
+                                        .is_cancelled(token)
+                                        .unwrap_or(true)
+                                },
+                            )
+                        })
                 } else {
                     self.hosted.network_connections.write(handle, &bytes)
                 };
-                result(write.and_then(|count| {
-                    i64::try_from(count)
-                        .map(Value::Integer)
-                        .map_err(|_| "TCP write count exceeds FPAS integer range".to_string())
-                }))
+                result(write.map(|count| Value::Integer(count as i64)))?
             }
             NetIntrinsic::Close => {
                 require_count(self, arguments, 1)?;
@@ -260,16 +272,64 @@ impl Worker {
                         .network_connections
                         .close(handle)
                         .map(|()| Value::Boolean(true)),
-                )
+                )?
             }
         };
         Ok(Some(Some(value)))
     }
 }
 
-fn result(value: Result<Value, String>) -> Value {
+fn result(
+    value: Result<Value, Failure>,
+    worker: &Worker,
+    operation: NetIntrinsic,
+    arguments: &[Value],
+    location: SourceLocation,
+) -> Result<Value, VmError> {
     match value {
-        Ok(value) => Value::result_ok(value),
-        Err(message) => Value::result_error(Value::Str(message.into())),
+        Ok(value) => Ok(Value::result_ok(value)),
+        Err(error) => error_value(worker, error, operation, arguments, location),
     }
+}
+
+#[cold]
+#[inline(never)]
+fn error_value(
+    worker: &Worker,
+    error: Failure,
+    operation: NetIntrinsic,
+    arguments: &[Value],
+    location: SourceLocation,
+) -> Result<Value, VmError> {
+    let count = match operation {
+        NetIntrinsic::Connect
+        | NetIntrinsic::ConnectTls
+        | NetIntrinsic::ConnectWithCancellation
+        | NetIntrinsic::ConnectTlsWithCancellation
+        | NetIntrinsic::Listen
+        | NetIntrinsic::ListenTls => 2,
+        _ => 1,
+    };
+    let mut resources = arguments
+        .iter()
+        .take(count)
+        .filter_map(|value| match value {
+            Value::Str(text) => Some(text.to_string()),
+            Value::Integer(n) => Some(n.to_string()),
+            Value::OpaqueHandle(id) => Some(id.to_string()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    if operation == NetIntrinsic::ListenTls {
+        resources.extend(arguments.iter().skip(2).take(2).filter_map(|v| match v {
+            Value::Str(path) => Some(path.to_string()),
+            _ => None,
+        }));
+    }
+    Ok(Value::result_error(error.into_value(
+        worker.layouts.as_ref(),
+        &Intrinsic::Net(operation).debugger_name(),
+        &resources,
+        location,
+    )?))
 }

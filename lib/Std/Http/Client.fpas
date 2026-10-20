@@ -11,21 +11,29 @@ uses
 // Parameters:
 // - `UriValue`: Parsed absolute request URI.
 // - `TimeoutMillis`: Connection and TLS handshake timeout.
-function OpenConnection(UriValue: Uri.Uri; TimeoutMillis: integer): result of (Net.Connection, string);
+function OpenConnection(UriValue: Uri.Uri; TimeoutMillis: integer): result of (Net.Connection, Types.HttpError);
 begin
   if UriValue.Scheme = 'http' then
     begin
-      return Net.Connect(UriValue.Host, UriValue.Port, TimeoutMillis);
+      return Net.Connect(
+        UriValue.Host,
+        UriValue.Port,
+        TimeoutMillis
+      ).MapError(Types.HttpError.Transport);
     end;
   end if;
 
   if UriValue.Scheme = 'https' then
     begin
-      return Net.ConnectTls(UriValue.Host, UriValue.Port, TimeoutMillis);
+      return Net.ConnectTls(
+        UriValue.Host,
+        UriValue.Port,
+        TimeoutMillis
+      ).MapError(Types.HttpError.Transport);
     end;
   end if;
 
-  return Error('Std.Http supports only http:// and https:// URLs');
+  return Error(Types.HttpError.InvalidArgument('Scheme', 'HTTP requires an http or https URI'));
 end function;
 
 // Closes a connection while deliberately ignoring close errors.
@@ -34,7 +42,7 @@ end function;
 // - `Connection`: Connection to close.
 procedure CloseQuietly(Connection: Net.Connection);
 begin
-  case Net.Close(Connection) of
+  case Net.Close(Connection).MapError(Types.HttpError.Transport) of
     when Ok(_):
       begin
       end;
@@ -48,20 +56,25 @@ end procedure;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-function OpenOnce(RequestValue: Types.Request): result of (Types.StreamResponse, string);
+function OpenOnce(RequestValue: Types.Request): result of (Types.StreamResponse, Types.HttpError);
 begin
-  const UriValue: Uri.Uri := try Uri.Parse(RequestValue.Url);
+  const UriValue: Uri.Uri := try Uri.Parse(RequestValue.Url).MapError(Types.HttpError.Address);
   const Encoded: array of integer := try Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     when Ok(const Connection):
       begin
-        case Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
+        case Net.SetTimeout(
+          Connection,
+          RequestValue.TimeoutMillis
+        ).MapError(Types.HttpError.Transport) of
           when Ok(const Configured):
             begin
               if not Configured then
                 begin
                   CloseQuietly(Connection);
-                  return Error('Network timeout configuration failed');
+                  return Error(
+                    Types.HttpError.InvalidMessage('Network timeout configuration failed')
+                  );
                 end;
               end if;
             end;
@@ -129,23 +142,32 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function OpenStream(RequestValue: Types.Request): result of (Types.StreamResponse, string);
+public function OpenStream(RequestValue: Types.Request): result of (Types.StreamResponse, Types.HttpError);
 begin
   if RequestValue.MaxHeaderBytes < 1 then
     begin
-      return Error('HTTP MaxHeaderBytes must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument('MaxHeaderBytes', 'HTTP MaxHeaderBytes must be positive')
+      );
     end;
   end if;
 
   if RequestValue.MaxResponseBytes < 1 then
     begin
-      return Error('HTTP MaxResponseBytes must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxResponseBytes',
+          'HTTP MaxResponseBytes must be positive'
+        )
+      );
     end;
   end if;
 
   if RequestValue.MaxRedirects < 0 then
     begin
-      return Error('HTTP MaxRedirects must not be negative');
+      return Error(
+        Types.HttpError.InvalidArgument('MaxRedirects', 'HTTP MaxRedirects must not be negative')
+      );
     end;
   end if;
   var Current: Types.Request := RequestValue;
@@ -171,7 +193,11 @@ begin
                               end;
                           end case;
 
-                          return Error('HTTP redirect count exceeds MaxRedirects');
+                          return Error(
+                            Types.HttpError.RedirectFailure(
+                              'HTTP redirect count exceeds MaxRedirects'
+                            )
+                          );
                         end;
                       end if;
                       var Next: Types.Request := Current;
@@ -227,14 +253,14 @@ begin
     end;
   end while;
 
-  return Error('HTTP redirect loop ended unexpectedly');
+  return Error(Types.HttpError.RedirectFailure('HTTP redirect loop ended unexpectedly'));
 end function;
 
 // Sends one request, follows bounded redirects, and buffers the final body.
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function Send(RequestValue: Types.Request): result of (Types.Response, string);
+public function Send(RequestValue: Types.Request): result of (Types.Response, Types.HttpError);
 begin
   case OpenStream(RequestValue) of
     when Ok(const StreamResponseValue):
@@ -277,7 +303,7 @@ begin
           end;
         end while;
 
-        return Error('HTTP response stream ended unexpectedly');
+        return Error(Types.HttpError.UnexpectedEnd('Std.Http.Client.Send'));
       end;
     when Error(const Message):
       begin

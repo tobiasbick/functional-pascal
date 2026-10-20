@@ -51,10 +51,17 @@ pub(super) fn compare_stdout(test_path: &Path, actual: &[String]) -> Result<(), 
     else {
         return Ok(());
     };
+    // A captured WriteLn entry may contain several physical lines, including
+    // automatic native-error output. Golden files compare the printed lines.
+    let actual = actual
+        .iter()
+        .flat_map(|entry| entry.split('\n'))
+        .map(|line| line.trim_end_matches('\r').to_owned())
+        .collect::<Vec<_>>();
     if actual == expected.as_slice() {
         return Ok(());
     }
-    Err(stdout_mismatch(test_path, &expect_path, &expected, actual))
+    Err(stdout_mismatch(test_path, &expect_path, &expected, &actual))
 }
 
 fn stdout_mismatch(

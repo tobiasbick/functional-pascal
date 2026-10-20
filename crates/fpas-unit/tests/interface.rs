@@ -12,11 +12,14 @@ use fpas_unit::interface::{
     RecordType, SymbolKind, TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
 
+#[path = "interface/errors.rs"]
+mod errors;
 #[path = "interface/record_constants.rs"]
 mod record_constants;
 
 fn sample_interface() -> UnitInterface {
     UnitInterface {
+        errors: Default::default(),
         routine_initialization: Vec::new(),
         routine_contracts: Vec::new(),
         routine_param_escapes: Vec::new(),
@@ -55,16 +58,19 @@ fn sample_interface() -> UnitInterface {
                 name: "State".to_string(),
                 qualified_name: "Demo.Api.State".to_string(),
                 ty: InterfaceType::Enum(Box::new(EnumType {
+                    is_error: false,
                     type_parameters: Vec::new(),
                     type_arguments: Vec::new(),
                     name: "Demo.Api.State".to_string(),
                     variants: vec![
                         EnumVariant {
+                            message: None,
                             name: "Idle".to_string(),
                             fields: Vec::new(),
                             backing_value: Some(0),
                         },
                         EnumVariant {
+                            message: None,
                             name: "Failed".to_string(),
                             fields: vec![FieldType {
                                 name: "Message".to_string(),

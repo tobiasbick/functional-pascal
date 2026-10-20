@@ -4,7 +4,9 @@ use crate::types::Ty;
 use fpas_std::std_symbols as s;
 
 pub(super) fn register_std_crypto(checker: &mut Checker) {
-    let error = Box::new(Ty::String);
+    let error_ty =
+        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Crypto);
+    let error = Box::new(error_ty);
     define_func(
         checker,
         s::STD_CRYPTO_RANDOM_BYTES,

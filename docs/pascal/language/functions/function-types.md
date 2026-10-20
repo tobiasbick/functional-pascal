@@ -28,6 +28,30 @@ with parameters `Left` and `Right` may implement this type; calls through the
 receiving value still use `A` and `B`. No runtime lookup of implementation
 parameter names occurs. See [named arguments](parameters.md#named-arguments).
 
+## Payload constructors as functions
+
+A payload enum or native-error constructor is an ordinary noncapturing function
+value. Its fields supply readonly parameters and its result is the declaring
+family. Generic constructor arguments must be inferable from the receiving
+callable signature, including parameters and result. The normal ambiguity
+diagnostic rejects missing evidence.
+
+```pascal id=example-2 run
+program Constructors;
+uses Std.Test as Test;
+type Number = enum
+  Item(Value: integer);
+end enum;
+begin
+  const Make: function(N: integer): Number := Number.Item;
+  Test.AssertTrue(Make(N := 7) is Number.Item(7));
+end.
+```
+
+The receiving callable's labels govern calls, just as for named routines.
+Multiple payload fields require matching arity; there is no currying or automatic
+capture. Fieldless variants remain values and never accept `()`.
+
 ## See also
 
 - [First-class functions](first-class.md)

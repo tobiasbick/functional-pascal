@@ -77,7 +77,12 @@ fn numeric_mixture() -> ValueOperationError {
 
 fn membership(needle: &Value, aggregate: &Value) -> Result<bool, ValueOperationError> {
     match aggregate {
-        Value::Array(values) => Ok(values.iter().any(|value| value == needle)),
+        Value::Array(values) => Ok(match needle {
+            Value::Integer(needle) => values
+                .iter()
+                .any(|value| matches!(value, Value::Integer(value) if value == needle)),
+            _ => values.iter().any(|value| value == needle),
+        }),
         Value::Dict(pairs) => Ok(pairs.iter().any(|(key, _)| key == needle)),
         Value::Str(text) => {
             let Value::Str(value) = needle else {
@@ -99,5 +104,33 @@ fn membership(needle: &Value, aggregate: &Value) -> Result<bool, ValueOperationE
             ),
             "Use `in` with an array, dictionary, or string on the right-hand side.",
         )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn array(values: Vec<Value>) -> Value {
+        Value::Array(values.into())
+    }
+
+    #[test]
+    fn integer_membership_preserves_mixed_and_nested_value_semantics() {
+        let other_types = array(vec![
+            Value::Real(7.0),
+            Value::Str("7".into()),
+            Value::Boolean(true),
+            array(vec![Value::Integer(7)]),
+        ]);
+        assert!(!membership(&Value::Integer(7), &other_types).expect("membership"));
+        assert!(
+            membership(&array(vec![Value::Integer(7)]), &other_types).expect("nested membership")
+        );
+        let integers = array(vec![Value::Integer(i64::MIN), Value::Integer(i64::MAX)]);
+        assert!(membership(&Value::Integer(i64::MIN), &integers).expect("minimum"));
+        assert!(membership(&Value::Integer(i64::MAX), &integers).expect("maximum"));
+        assert!(!membership(&Value::Integer(7), &integers).expect("missing"));
+        assert!(!membership(&Value::Integer(0), &array(Vec::new())).expect("empty membership"));
     }
 }

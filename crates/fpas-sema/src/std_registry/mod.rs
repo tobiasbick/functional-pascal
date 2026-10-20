@@ -15,6 +15,7 @@ pub use api::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };
 pub use builtins::check_builtin_std_call_refs;
+pub(crate) use loaded::{native_error_type, register_error_type};
 pub use loaded::{register_loaded_std, register_single_std_unit};
 pub use native::{
     NativeLowering, NativeOperation, NativeReceiver, native_factory, native_migration_hint,

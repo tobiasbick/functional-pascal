@@ -1,5 +1,7 @@
 //! `Std.Net` symbol names and registry group.
 
+/// Native operational error family.
+pub const STD_NET_ERROR: &str = std_net!("NetError");
 /// Qualified name of the opaque `Std.Net.Connection` record.
 pub const STD_NET_CONNECTION: &str = std_net!("Connection");
 /// Qualified name of the opaque `Std.Net.Listener` record.
@@ -24,6 +26,7 @@ std_symbol!(STD_NET_SEND_WITH_CANCELLATION = std_net!("SendBytesWithCancellation
 std_symbol!(STD_NET_CLOSE = std_net!("Close"));
 
 pub(in crate::std_units) const STD_NET_SYMBOLS: &[&str] = &[
+    STD_NET_ERROR,
     STD_NET_CONNECTION,
     STD_NET_LISTENER,
     STD_NET_NETWORK_ADDRESS,

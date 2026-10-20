@@ -12,6 +12,8 @@ pub enum TypeConstraint {
     Numeric,
     /// Can be converted to a string representation.
     Printable,
+    /// A native error family, implying Printable.
+    Error,
 }
 
 impl TypeConstraint {
@@ -23,6 +25,8 @@ impl TypeConstraint {
             Some(Self::Numeric)
         } else if name.eq_ignore_ascii_case("printable") {
             Some(Self::Printable)
+        } else if name.eq_ignore_ascii_case("error") {
+            Some(Self::Error)
         } else {
             None
         }
@@ -34,6 +38,7 @@ impl TypeConstraint {
             Self::Comparable => "Comparable",
             Self::Numeric => "Numeric",
             Self::Printable => "Printable",
+            Self::Error => "Error",
         }
     }
 
@@ -42,6 +47,7 @@ impl TypeConstraint {
         if let Ty::GenericParam(_, constraint) = ty {
             return constraint.is_some_and(|actual| {
                 actual == self
+                    || (actual == Self::Error && self == Self::Printable)
                     || (actual == Self::Numeric
                         && matches!(self, Self::Comparable | Self::Printable))
             });
@@ -52,6 +58,7 @@ impl TypeConstraint {
             Self::Comparable => ty.is_comparable(),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
             Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),
+            Self::Error => matches!(ty, Ty::Enum(enumeration) if enumeration.is_error),
         }
     }
 }

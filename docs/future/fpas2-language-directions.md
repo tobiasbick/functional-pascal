@@ -1,7 +1,7 @@
 # FPAS 2 language directions
 
-Status: planning only; no implementation is scheduled. Topics are open proposals
-unless their section explicitly records an agreement. The
+Status: proposal collection; delivered topics are recorded in their sections.
+Topics are open proposals unless their section explicitly records an agreement. The
 [typed operational error direction](#1-typed-operational-errors) and
 [numeric design](#21-explicit-width-numeric-types-and-money) are agreed at the
 scope stated in those sections, with their listed open points. Design agreement
@@ -33,118 +33,82 @@ keeps graphics-specific API, platform and deployment questions separate.
 
 ## 1. Typed operational errors
 
-Status: agreed error direction and MapError/try contract. Shared error APIs,
-error type names and representation remain open. No implementation is scheduled.
+Status: Implemented. Native error declarations, typed causes, automatic output,
+constructor values and explicit MapError are described in the current
+[language handbook](../pascal/language/types/errors.md) and
+[Std reference](../pascal/std/README.md). Functional acceptance includes source,
+portable-image, editor and executable documentation checks. Elapsed-time
+performance acceptance requires a controlled local host.
 
-Channel closure, timeout and cancellation are currently different strings inside
-`Result of (T, string)`; see [task APIs](../pascal/std/concurrency/task.md).
-Programs that distinguish them must compare diagnostic text.
+Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
+see [task APIs](../pascal/std/concurrency/task.md).
+[Stdlib gap 9](stdlib-gap-review.md#direction-for-gap-9-structured-errors)
+tracks the delivered native and source families. Selected Std interfaces support
+typed decisions independent of diagnostic wording.
 
-The [standard-library gap review](stdlib-gap-review.md#direction-for-gap-9-structured-errors)
-identifies the same limitation in filesystem, network, process and parsing APIs.
-These APIs need one coordinated error design.
+### Selected language direction
 
-### Agreed direction
+Native nominal error declarations and the Std FsError family are implemented:
 
-- Provide a shared error contract for common context and human-readable reporting.
-  Keep machine-readable error cases independent of diagnostic wording.
-- Standard-library units and application authors can define their own concrete
-  error types using ordinary records and variants, without runtime registration
-  or changes to the FPAS distribution.
-- Build on the shared foundation through composition and variant payloads. This
-  direction does not introduce class inheritance or exception unwinding.
-- Keep concrete error types in public `Result of (T, E)` signatures so callers
-  can distinguish cases through exhaustive matching. A shared reporting contract
-  must preserve those concrete cases and their structured context.
-- Allow an application error to wrap an underlying library error, preserving its
-  original type and payload alongside application-level context. Expected
-  operation failures remain Result data; panic and contract violations retain
-  their existing roles.
-- Evaluate task, filesystem, network, process and parsing APIs together. Select
-  one replacement contract rather than a parallel family of string-error and
-  typed-error wrappers.
-
-An illustrative error model, with error type names and declarations still
-undecided:
-
-```text
-Shared error context: information for display and logging
-Filesystem error: FileNotFound(Path), AccessDenied(Path), ...
-Configuration error: FileFailure(FilesystemError),
-                     MissingSetting(Name), InvalidSetting(Name, Reason)
-
-ReadText: Result of (string, FilesystemError)
-LoadConfig: Result of (Config, ConfigurationError)
+```pascal
+type ConfigError = error
+  FileFailure(Cause: Fs.FsError) = 'Cannot load configuration';
+  MissingSetting(Name: string) = 'Required setting is missing';
+  InvalidSetting(Name: string; Reason: string) = 'Invalid setting';
+end error;
 ```
 
-For example, an application can treat a missing configuration file as a request
-to use defaults, report denied access separately, and distinguish those cases
-from an invalid setting. Wrapping the filesystem error must retain that
-distinction. Displaying or logging any of these errors should use the shared
-contract without requiring each consumer to parse a message.
+Ordinary variant qualification, construction, inference and exhaustive matching
+apply. The compiler supplies automatic output from variant labels and payload
+metadata. A typed Cause retains the original error and is printed as the next
+cause frame. There is no required ErrorContext/Describe/ErrorReport layer,
+custom derivation framework or class inheritance. Optional literal messages add
+readable labels without another interpolation language or formatter callback.
+
+Error is also a built-in generic constraint implying Printable, not a storable
+erased root type. Concrete native or application error types remain in Result.
+One Message() operation and direct Printable output share the same renderer;
+strict string formatting still requires a string. Full syntax, type, Cause and
+output rules are owned by the [current handbook](../pascal/language/types/errors.md).
 
 ### Agreed MapError and try contract
-
-Add one `MapError` operation alongside the existing
-[Result operations](../pascal/language/types/result-operations.md):
 
 ```text
 Value.MapError(F: function(Cause: E): E2): Result of (T, E2)
 ```
 
-- Evaluate the receiver once. For `Ok(Value)`, preserve the success payload and
-  do not call `F`. For `Error(Cause)`, call `F(Cause)` exactly once and return
-  `Error` containing its result.
-- The mapper returns an error value of type `E2`, not another Result. The success
-  type `T` stays unchanged. Mapping supports ordinary user-defined and generic
-  error types, including wrappers that retain the original cause.
-- `Map` transforms success values, `MapError` transforms error values, and
-  `OrElse` attempts recovery by returning a Result. Preserve these distinct roles.
-- Keep the existing [try semantics](../pascal/language/error-handling/try.md):
-  extract an Ok payload or immediately return an Error through a compatible
-  enclosing Result error type. Option propagation remains Some/None as today.
-  Incompatible error types remain a compile-time error; no implicit conversion,
-  subtype conversion or automatic wrapper selection is added.
-- Apply explicit error mapping before `try` when crossing error types. Neither
-  operation catches panic or contract violations; existing exit and cleanup rules
-  continue to apply.
+The receiver and callable expression evaluate once in normal order. Ok preserves
+its success payload without invoking the mapper; Error invokes it once and wraps
+the returned error payload. Callable capture construction has ordinary evaluation
+semantics even on Ok. T is unchanged; general Result payloads remain supported.
+Map transforms success, MapError transforms error, and OrElse supports recovery.
 
-With the illustrative error types above, an ordinary mapping function
-`WrapFileError` accepts a `FilesystemError` and returns
-`ConfigurationError.FileFailure(Cause)`. The intended use is:
+Payload variant constructors are ordinary routine values, consistently for enums
+and errors. The selected use is:
 
-```text
-const Text := try Fs.ReadText(Path).MapError(WrapFileError);
+```pascal
+const Text := try Fs.ReadText(Path).MapError(ConfigError.FileFailure);
 ```
 
-The mapped Result has the configuration error type before `try` propagates it.
-The error mapping and unchanged propagation contract belong to the same design
-package as typed operational errors.
+Extra context uses an ordinary captured callable, not partial application. Try
+retains its [existing semantics](../pascal/language/error-handling/try.md): extract
+Ok or propagate Error through a compatible enclosing error type. Incompatible
+error families remain a static error; no automatic wrapper/subtype conversion is
+added. Option propagation, panic, contracts, cleanup and task ownership remain
+unchanged. Neither native errors nor MapError catch runtime failures.
 
-### Open design work
+### Delivery and scope
 
-- Define the shared context fields and reporting operations, including operation,
-  resource identity, diagnostic text and any native error code. Decide how
-  per-case payloads and nested causes participate in reporting.
-- Select each unit's concrete variants and payloads, including common conditions
-  such as Closed, Timeout and Cancelled. A single closed enumeration must not
-  prevent applications from adding their own domain-specific error cases.
-- Select each API's domain-specific translation and wrapping boundaries and the
-  context retained at those boundaries. Use the agreed `MapError` contract for
-  explicit error mapping before unchanged `try` propagation.
-- Specify migration of existing string-error APIs, platform normalization,
-  exhaustiveness diagnostics and the representation and allocation costs of
-  shared context and nested errors.
+The [Std reference](../pascal/std/README.md) documents domain families and their
+[shared native cause](../pascal/std/host/errors.md), normalization and explicit
+mappings. Selected signatures and their consumers use those concrete families;
+there is no parallel typed/string wrapper API. Source-authored application Result
+errors remain general and require no runtime registration.
 
-Evaluation should cover filesystem missing-file and permission failures, task
-closure/timeout/cancellation, network and process failures, parsing failures,
-and an application-defined configuration error wrapping a library error. Verify
-that changing message wording leaves branching behavior intact. Cover MapError
-success passthrough without invoking the mapper, one receiver evaluation, exactly
-one mapper call on Error, preservation of nested causes, generic mappings and
-unchanged success types. Check propagation after mapping and compile-time
-rejection of incompatible error types without mapping; preserve existing Option,
-panic, contract and cleanup behavior.
+The [compiled-program handbook](../pascal/program-structure/compiled-programs.md)
+documents artifact compatibility. Error metadata adds no polling to ordinary VM
+instruction dispatch. Further language or library capabilities require their
+own design and implementation decision.
 
 ## 2. Uniform first-class operations
 
@@ -548,7 +512,8 @@ controlled readiness rather than timing-dependent expectations.
 ## 18. Validation and typed decoders
 
 [Std.Json.Fields](../pascal/std/text/json-fields.md) already provides strict typed
-field access and rejects unknown fields, returning individual string errors.
+field access and rejects unknown fields using typed `FieldError` variants with
+the original parser cause for parse failures.
 There is no general library of composable validation rules and typed decoders
 with structured, accumulated errors.
 

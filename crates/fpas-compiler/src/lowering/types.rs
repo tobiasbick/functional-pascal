@@ -27,9 +27,10 @@ use scalars::{lower, scalar_type_table};
 /// Interned semantic types and source-visible nominal layout metadata.
 /// See `docs/pascal/language/types/records.md`.
 pub(super) struct TypeTable {
-    definitions: Vec<TypeDefinition>,
+    pub(super) errors: crate::errors::ErrorMetadata,
+    pub(super) definitions: Vec<TypeDefinition>,
     record_layouts: Vec<RecordLayout>,
-    enum_layouts: Vec<EnumLayout>,
+    pub(super) enum_layouts: Vec<EnumLayout>,
     filled_record_layouts: BTreeSet<RecordLayoutId>,
     filled_enum_layouts: BTreeSet<EnumLayoutId>,
     generic_templates: BTreeMap<String, Ty>,
@@ -43,19 +44,34 @@ pub(super) struct TypeTable {
     /// Exact checked declaration types retained after lexical scopes close.
     debug_declarations: std::collections::HashMap<(u32, usize, String), Ty>,
     /// Canonical semantic definitions used to expand recursive source headers.
-    debug_named_types: BTreeMap<String, Ty>,
+    debug_named_types: std::sync::Arc<BTreeMap<String, Ty>>,
 }
 
 impl TypeTable {
     /// Reserve canonical layouts and intern the concrete semantic types used in lowering.
     /// See `docs/pascal/language/types/generics.md`.
-    pub fn from_metadata(metadata: &fpas_sema::AnalysisMetadata) -> Result<Self, CompileError> {
+    pub fn from_metadata(
+        metadata: &fpas_sema::AnalysisMetadata,
+        owner: &str,
+    ) -> Result<Self, CompileError> {
         // The import-free result template is materialized only when a program uses it.
         let named_types = metadata
             .named_types
             .iter()
             .filter(|(name, _)| !name.eq_ignore_ascii_case("ArrayPopResult"));
+        let definitions = std::sync::Arc::new(
+            metadata
+                .named_types
+                .iter()
+                .map(|(name, ty)| (name.to_ascii_lowercase(), ty.clone()))
+                .collect(),
+        );
         let mut table = Self {
+            errors: crate::errors::ErrorMetadata {
+                owner: owner.to_string(),
+                named: std::sync::Arc::clone(&definitions),
+                ..Default::default()
+            },
             definitions: scalar_type_table(),
             record_layouts: Vec::new(),
             enum_layouts: Vec::new(),
@@ -88,11 +104,7 @@ impl TypeTable {
             imported_distinct_names: BTreeMap::new(),
             debug_scalar_names: debug_scalars::collect_names(metadata),
             debug_declarations: metadata.value_declaration_types.clone(),
-            debug_named_types: metadata
-                .named_types
-                .iter()
-                .map(|(name, ty)| (name.to_ascii_lowercase(), ty.clone()))
-                .collect(),
+            debug_named_types: definitions,
         };
         for (name, ty) in named_types.clone() {
             let id = match ty {
@@ -475,7 +487,7 @@ impl TypeTable {
         self.intern_kind(IrType::Cell(inner), span)
     }
 
-    fn intern_kind(
+    pub(super) fn intern_kind(
         &mut self,
         kind: IrType,
         span: fpas_lexer::Span,

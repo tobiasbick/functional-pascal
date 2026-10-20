@@ -1,11 +1,12 @@
 //! Deadline escalation never runs on a VM worker or writes diagnostics.
 
+use super::failure::Failure;
 use super::state::Lifetime;
 use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 
 /// Start host-authorized process escalation independently of VM and output progress.
-pub(super) fn start(lifetime: &Arc<Lifetime>) -> Result<(), String> {
+pub(super) fn start(lifetime: &Arc<Lifetime>) -> Result<(), Failure> {
     let lifetime = Arc::downgrade(lifetime);
     std::thread::Builder::new()
         .name("fpas-shutdown-deadline".into())
@@ -29,5 +30,5 @@ pub(super) fn start(lifetime: &Arc<Lifetime>) -> Result<(), String> {
             }
         })
         .map(|_| ())
-        .map_err(|e| format!("Cannot start shutdown deadline monitor: {e}"))
+        .map_err(Failure::io)
 }

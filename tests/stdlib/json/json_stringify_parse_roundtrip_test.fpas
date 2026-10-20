@@ -3,7 +3,7 @@ program T;
 uses Std.Console as Console, Std.Json as Json;
 
 begin
-  const R: result of (Json.JsonValue, string) := Json.Parse('[false,null,"x"]');
+  const R: result of (Json.JsonValue, Json.JsonError) := Json.Parse('[false,null,"x"]');
   case R of
     when Ok(const V):
       begin
@@ -11,7 +11,7 @@ begin
       end;
     when Error(const E):
       begin
-        Console.WriteLn('error: ' + E);
+        Console.WriteLn('error: ' + E.Message());
       end;
   end case;
 end.

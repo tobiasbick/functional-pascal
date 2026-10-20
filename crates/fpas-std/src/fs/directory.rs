@@ -2,28 +2,29 @@
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md`
 
+use super::failure::Failure;
 use std::fs;
 use std::path::Path;
 
 use crate::limits::MAX_COLLECTION_LEN;
 
-pub(super) fn read_dir_paths(path: &str) -> Result<Vec<String>, String> {
+pub(super) fn read_dir_paths(path: &str) -> Result<Vec<String>, Failure> {
     read_dir_paths_with_limit(Path::new(path), MAX_COLLECTION_LEN as usize)
 }
 
-fn read_dir_paths_with_limit(path: &Path, limit: usize) -> Result<Vec<String>, String> {
+fn read_dir_paths_with_limit(path: &Path, limit: usize) -> Result<Vec<String>, Failure> {
     let mut paths = Vec::new();
-    for entry in fs::read_dir(path).map_err(|error| format!("ReadDir failed: {error}"))? {
-        let entry = entry.map_err(|error| format!("ReadDir entry failed: {error}"))?;
+    for entry in fs::read_dir(path).map_err(|error| Failure::at(path, error))? {
+        let entry = entry.map_err(|error| Failure::at(path, error))?;
         if paths.len() >= limit {
-            return Err(format!(
-                "ReadDir contains more than {limit} entries.\n  help: Use a smaller directory."
-            ));
+            return Err(Failure::LimitExceeded("Std.Fs.ReadDir", limit as i64));
         }
         let entry_path = entry.path();
         let text = entry_path.to_str().ok_or_else(|| {
-            "ReadDir entry path is not UTF-8.\n  help: Rename the entry to a valid UTF-8 name."
-                .to_string()
+            Failure::EncodingAtPath(
+                entry_path.to_string_lossy().into_owned(),
+                "ReadDir entry path is not UTF-8".into(),
+            )
         })?;
         paths.push(text.replace(std::path::MAIN_SEPARATOR, "/"));
     }
@@ -118,6 +119,7 @@ mod tests {
         assert!(
             read_dir_paths_with_limit(&root.0, 10)
                 .expect_err("must reject")
+                .to_string()
                 .contains("not UTF-8")
         );
     }

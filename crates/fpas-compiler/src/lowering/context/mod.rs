@@ -36,6 +36,7 @@ pub(crate) use self::descriptors::{
 };
 
 pub(super) struct LoweringContext {
+    pub(super) enum_member_paths: std::collections::HashSet<(u32, usize)>,
     program_name: String,
     pub(super) source_name: String,
     function_id: FunctionId,
@@ -276,6 +277,7 @@ impl LoweringContext {
             postfix_types: metadata.postfix_types.clone(),
             pattern_types: metadata.pattern_types.clone(),
             enum_members: metadata.enum_members.clone(),
+            enum_member_paths: metadata.enum_member_paths.clone(),
             intrinsic_calls: metadata.intrinsic_calls.clone(),
             named_argument_orders: metadata.named_argument_orders.clone(),
             record_defaults: metadata.record_defaults.clone(),

@@ -21,7 +21,6 @@ begin
   Test.AssertEquals(Root + '/copy/inner/deep.txt', Entries[1]);
   Test.AssertEquals(Root + '/copy/note.txt', Entries[2]);
   Test.AssertTrue((Fs.ReadDirAll(Note) is Error(_)));
-
   const Here: string := Fs.CurrentDir().Unwrap();
   Test.AssertTrue(Fs.IsDir(Here));
   Test.AssertTrue((Fs.SetCurrentDir(Root + '/missing') is Error(_)));

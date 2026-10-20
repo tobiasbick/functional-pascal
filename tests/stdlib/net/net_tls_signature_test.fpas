@@ -4,13 +4,13 @@ program NetTlsSignatureTest;
 uses Std.Net as Net;
 
 // Type-checks the verified TLS client constructor.
-function ConnectTlsSignatureOnly(): result of (Net.Connection, string);
+function ConnectTlsSignatureOnly(): result of (Net.Connection, Net.NetError);
 begin
   return Net.ConnectTls('localhost', 443, 1000);
 end function;
 
 // Type-checks the certificate-configured TLS listener constructor.
-function ListenTlsSignatureOnly(): result of (Net.Listener, string);
+function ListenTlsSignatureOnly(): result of (Net.Listener, Net.NetError);
 begin
   return Net.ListenTls('127.0.0.1', 443, 'certificate.pem', 'private-key.pem', 1000);
 end function;

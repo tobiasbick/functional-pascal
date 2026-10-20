@@ -94,6 +94,19 @@ impl TypeTable {
                     }
                     _ => None,
                 }),
+            Ty::Enum(enumeration) if enumeration.variants.is_empty() => self
+                .debug_named_types
+                .get(&enumeration.name.to_ascii_lowercase())
+                .and_then(|ty| match ty {
+                    Ty::Enum(template) if !template.variants.is_empty() => {
+                        Some(Ty::Enum(if enumeration.type_args.is_empty() {
+                            template.clone()
+                        } else {
+                            std::sync::Arc::new(template.instantiate(enumeration.type_args.clone()))
+                        }))
+                    }
+                    _ => None,
+                }),
             _ => None,
         };
         if let Some(resolved) = resolved {

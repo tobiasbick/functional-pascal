@@ -2,6 +2,7 @@
 //!
 //! Documentation: `docs/pascal/std/network/net.md`.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::sync::atomic::Ordering;
 
 use super::super::{tls::client, transport::Transport};
@@ -14,7 +15,7 @@ impl NetworkConnections {
         host: &str,
         port: i64,
         timeout_millis: i64,
-    ) -> Result<u64, String> {
+    ) -> Result<u64, Failure> {
         let (stream, timeout) = connect_socket(host, port, timeout_millis)?;
         let stream = client::connect(stream, host, timeout, || {
             self.shutdown.load(Ordering::Acquire)

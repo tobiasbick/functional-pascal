@@ -30,14 +30,14 @@ begin
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_): Console.WriteLn('served');
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -93,16 +93,16 @@ begin
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -154,18 +154,18 @@ begin
         when Ok(_): panic('invalid server options were accepted');
         when Error(const Message):
         begin
-          if not ('MaxConcurrentRequests' in Message) then
+          if not (Message is Http.HttpError.InvalidArgument('MaxConcurrentRequests', _)) then
           begin
-            panic(Message);
+            panic(Message.Message());
           end; end if;
         end;
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_): Console.WriteLn('rejected');
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#

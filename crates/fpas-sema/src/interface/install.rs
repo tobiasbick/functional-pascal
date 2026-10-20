@@ -16,6 +16,15 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            self.needs_error_constructors |= !interface.errors.is_empty();
+            interface
+                .errors
+                .validate()
+                .map_err(InterfaceConversionError::new)?;
+            for schema in &interface.errors.schemas {
+                self.imported_error_schemas
+                    .insert(schema.declaration.clone(), schema.clone());
+            }
             for summary in &interface.routine_initialization {
                 self.initialization
                     .imported
@@ -28,6 +37,7 @@ impl check::Checker {
                 );
             }
             for exported in &interface.symbols {
+                self.install_native_error_dependencies(&exported.ty);
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
                 }
@@ -43,6 +53,15 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            self.needs_error_constructors |= !interface.errors.is_empty();
+            interface
+                .errors
+                .validate()
+                .map_err(InterfaceConversionError::new)?;
+            for schema in &interface.errors.schemas {
+                self.imported_error_schemas
+                    .insert(schema.declaration.clone(), schema.clone());
+            }
             for summary in &interface.routine_initialization {
                 self.initialization
                     .imported
@@ -55,6 +74,7 @@ impl check::Checker {
                 );
             }
             for exported in &interface.symbols {
+                self.install_native_error_dependencies(&exported.ty);
                 let symbol = interface_symbol_to_sema(exported)?;
                 self.scopes.imports.define_source(
                     &interface.unit_name,

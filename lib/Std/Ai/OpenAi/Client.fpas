@@ -91,13 +91,13 @@ begin
             end;
           when Error(const Message):
             begin
-              return Error('OpenAI-compatible response body is not UTF-8: ' + Message);
+              return Error('OpenAI-compatible response body is not UTF-8: ' + Message.Message());
             end;
         end case;
       end;
     when Error(const Message):
       begin
-        return Error(Message);
+        return Error(Message.Message());
       end;
   end case;
 end function;

@@ -404,6 +404,7 @@ dependencies = [
  "fpas-parser",
  "fpas-program",
  "fpas-unit",
+ "fpas-vm",
  "mimalloc",
  "process-wrap",
  "serde",
@@ -452,6 +453,7 @@ version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
  "num_enum",
+ "serde",
 ]
 
 [[package]]
@@ -496,6 +498,7 @@ dependencies = [
  "fpas-linker",
  "fpas-numeric",
  "fpas-parser",
+ "fpas-program",
  "fpas-sema",
  "fpas-std",
  "fpas-unit",
@@ -571,8 +574,10 @@ version = "0.0.1"
 dependencies = [
  "fpas-bytecode",
  "fpas-diagnostics",
+ "fpas-program",
  "fpas-unit",
  "fpas-vm",
+ "serde_json",
 ]
 
 [[package]]
@@ -613,6 +618,7 @@ dependencies = [
  "fpas-binary",
  "fpas-bytecode",
  "fpas-vm",
+ "serde_json",
 ]
 
 [[package]]

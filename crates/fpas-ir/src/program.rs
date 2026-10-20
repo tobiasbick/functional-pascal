@@ -226,6 +226,8 @@ pub struct RecordField {
 /// An enum layout known to the IR.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumLayout {
+    /// Checked symbolic native-error family; values use concrete factory layouts.
+    pub error_template: bool,
     /// Stable enum-layout identifier.
     pub id: EnumLayoutId,
     /// Canonical qualified enum name.

@@ -261,12 +261,22 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Toml(TomlIntrinsic::Parse) => {
             let text = pop_string(pop_value(call, location)?, location)?;
-            match toml::from_str::<TomlValue>(&text).map_err(|error| error.to_string()) {
+            match toml::from_str::<TomlValue>(&text) {
                 Ok(value) => match toml_to_fpas(call, value, location) {
                     Ok(value) => call.push(Value::result_ok(value)),
-                    Err(error) => call.push(Value::result_error(Value::Str(error.message.into()))),
+                    Err(error)
+                        if error.code == fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE =>
+                    {
+                        return Err(error);
+                    }
+                    Err(error) => call.push(parse_error(call, None, error.message, location)?),
                 },
-                Err(message) => call.push(Value::result_error(Value::Str(message.into()))),
+                Err(error) => call.push(parse_error(
+                    call,
+                    error.span().map(|span| &text[..span.start]),
+                    error.to_string(),
+                    location,
+                )?),
             }
         }
         Intrinsic::Toml(TomlIntrinsic::Stringify) => {
@@ -289,3 +299,22 @@ pub(crate) fn run(
 
 #[cfg(test)]
 mod tests;
+
+fn parse_error(
+    call: &IntrinsicCall<'_>,
+    prefix: Option<&str>,
+    detail: String,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    let line = prefix.map(|s| s.bytes().filter(|b| *b == b'\n').count() + 1);
+    let column = prefix.map(|s| s.rsplit('\n').next().unwrap_or("").chars().count() + 1);
+    crate::native_errors::syntax(
+        call.factory(),
+        crate::native_errors::NativeErrorFamily::Toml,
+        line,
+        column,
+        detail,
+        location,
+    )
+    .map(Value::result_error)
+}

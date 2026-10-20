@@ -19,7 +19,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end procedure;
@@ -38,7 +38,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end procedure;
@@ -68,7 +68,7 @@ begin
           end;
         when Error(const Message):
           begin
-            panic(Message);
+            panic(Message.Message());
           end;
       end case;
     end;
@@ -81,7 +81,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end function;
@@ -113,7 +113,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end.

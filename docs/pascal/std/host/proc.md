@@ -45,11 +45,13 @@ Requires `uses Std.Proc as Proc;`.
 | Kind | Name | Notes |
 |------|------|-------|
 | record | `ProcessOutput` | captured `ExitCode`, `Stdout`, and `Stderr` |
-| function | `CurrentExecutable(): Result of (string, string)` | returns the absolute path of the running FPAS host executable |
-| function | `Run(Command: string; Args: array of string): Result of (integer, string)` | starts a process, waits for completion, and returns the exit code |
-| function | `RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, string)` | starts a process and captures its exit code and output |
+| function | `CurrentExecutable(): Result of (string, Proc.ProcError)` | returns the absolute path of the running FPAS host executable |
+| function | `Run(Command: string; Args: array of string): Result of (integer, Proc.ProcError)` | starts a process, waits for completion, and returns the exit code |
+| function | `RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, Proc.ProcError)` | starts a process and captures its exit code and output |
 
-Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
+Fallible operations return `Error(Cause)` with a typed `Proc.ProcError`. Host-backed
+variants retain the original native `HostError` cause; operational failures do not
+raise a runtime panic.
 
 ---
 
@@ -66,12 +68,12 @@ with the Unicode replacement character so process completion remains observable.
 
 ---
 
-## `function CurrentExecutable(): Result of (string, string)`
+## `function CurrentExecutable(): Result of (string, Proc.ProcError)`
 
 Returns the absolute path of the executable hosting the running FPAS program.
 This allows a tool launched by `fpas` to invoke that same compiler binary.
 
-Returns `Error(message)` if the host cannot determine its executable path.
+Returns `Error(Cause)` if the host cannot determine its executable path.
 
 ---
 
@@ -83,12 +85,12 @@ Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 
 ---
 
-## `function Run(Command: string; Args: array of string): Result of (integer, string)`
+## `function Run(Command: string; Args: array of string): Result of (integer, Proc.ProcError)`
 
 Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exitCode)`.
 
 ```pascal id=example-2 fragment context=body-console-proc
-const Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
+const Status: result of (integer, Proc.ProcError) := Proc.Run('fpas', ['--version']);
 case Status of
   when Ok(_):
     null;
@@ -97,7 +99,9 @@ case Status of
 end case;
 ```
 
-If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.
+If the process cannot be started, returns `Error(ProcError.StartFailed(Cause))`.
+If the host reports that the process ended without an exit code, returns
+`Error(ProcError.WaitFailed(Cause))` with the original host explanation.
 
 The child inherits standard input and output. Its standard error is inherited too, except under
 `fpas run --diagnostics json`, `fpas test --diagnostics json`, or a native application with `FPAS_DIAGNOSTICS=json`, where each
@@ -106,7 +110,7 @@ stderr line becomes a JSON program-output record; see
 
 ---
 
-## `function RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, string)`
+## `function RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, Proc.ProcError)`
 
 Starts `Command` with `Args`, waits for it to finish, and returns
 `Ok(ProcessOutput)` without writing the child's stdout or stderr to the parent
@@ -126,7 +130,7 @@ end case;
 
 A non-zero exit code is a completed process and therefore remains `Ok`; inspect
 `Output.ExitCode` to distinguish command success from command failure. A spawn
-failure or a process termination without an exit code returns `Error(message)`.
+failure or a process termination without an exit code returns `Error(Cause)`.
 
 ---
 
@@ -144,3 +148,7 @@ failure or a process termination without an exit code returns `Error(message)`.
 
 - [Host I/O index](README.md)
 - [Standard library index](../README.md)
+
+## Typed failures
+
+`ProcError.StartFailed(Cause)` reports launch failure; `WaitFailed(Cause)` reports child wait or missing exit-code failure; `IoFailure(Cause)` covers other hosted I/O. Cause is the original [HostError](errors.md). Invalid NUL-containing command/arguments use `InvalidArgument(Name, Reason)`. A successfully launched child with a nonzero exit code remains an Ok outcome.

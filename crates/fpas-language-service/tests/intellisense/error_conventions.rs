@@ -23,9 +23,13 @@ fn wrapper_completion_contains_only_retained_operations() {
             .iter()
             .map(|candidate| candidate.qualified_name.clone())
             .collect::<BTreeSet<_>>();
-        let expected = ["Map", "AndThen", "OrElse", "Unwrap"]
-            .map(|name| format!("{family}.{name}"))
+        let mut names = vec!["Map", "AndThen", "OrElse", "Unwrap"];
+        if family == "Result" {
+            names.push("MapError");
+        }
+        let expected = names
             .into_iter()
+            .map(|name| format!("{family}.{name}"))
             .collect();
         assert_eq!(actual, expected, "{candidates:#?}");
     }
@@ -53,7 +57,7 @@ fn parser_alias_completion_and_signature_help_use_result_and_text() {
         .collect::<BTreeSet<_>>();
     assert_eq!(
         actual,
-        BTreeSet::from(["Int", "Real", "Bool", "HexInt"]),
+        BTreeSet::from(["Int", "Real", "Bool", "HexInt", "ParseError"]),
         "{candidates:#?}"
     );
     for (parser, payload) in [
@@ -82,7 +86,7 @@ fn parser_alias_completion_and_signature_help_use_result_and_text() {
             help.signature
                 .label
                 .to_ascii_lowercase()
-                .ends_with(&format!(": result of ({payload}, string)")),
+                .ends_with(&format!(": result of ({payload}, parseerror)")),
             "{help:#?}"
         );
     }

@@ -154,7 +154,7 @@ program ReadFile;
 uses Std.Console as Console, Std.Fs as Files;
 
 begin
-  const Text: result of (string, string) := ReadText('input.txt');
+  const Text: result of (string, Files.FsError) := ReadText('input.txt');
 end.
 ```
 

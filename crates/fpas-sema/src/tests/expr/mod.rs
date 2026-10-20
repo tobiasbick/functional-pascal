@@ -220,6 +220,9 @@ fn analysis_metadata_exposes_all_named_results() {
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
     let crate::AnalysisMetadata {
+        enum_member_paths: _,
+        routine_type_arguments: _,
+        method_owner_type_arguments: _,
         source_expr_types: _,
         member_receivers: _,
         declaration_types: _,

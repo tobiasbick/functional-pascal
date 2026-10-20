@@ -1,3 +1,4 @@
+use crate::vm::hosted::net::failure::Failure;
 use std::cell::Cell;
 use std::io::{self, Read, Write};
 use std::net::TcpListener;
@@ -17,7 +18,7 @@ fn pending_attempt_observes_cancellation_without_waiting_for_deadline() {
             Ok(false)
         },
     );
-    assert_eq!(result, Err("Network connect cancelled".into()));
+    assert_eq!(result, Err(Failure::Cancelled));
     assert_eq!(checks.get(), 2);
     assert!(started.elapsed() < Duration::from_secs(1));
 }
@@ -30,7 +31,7 @@ fn pending_attempt_expires_without_restarting_its_budget() {
         || started.elapsed() > Duration::from_secs(2),
         || Ok(false),
     );
-    assert_eq!(result, Err("Network connect timed out".into()));
+    assert_eq!(result, Err(Failure::deadline("Network connect timed out")));
 }
 
 #[test]
@@ -45,7 +46,7 @@ fn cancellation_wins_over_simultaneous_readiness() {
                 Ok(true)
             }
         ),
-        Err("Network connect cancelled".into())
+        Err(Failure::Cancelled)
     );
 }
 
@@ -60,7 +61,13 @@ fn socket_errors_are_not_retried_as_pending() {
             Err(io::ErrorKind::ConnectionRefused.into())
         },
     );
-    assert!(result.expect_err("refused").contains("TCP connect failed"));
+    assert!(matches!(
+        result.expect_err("refused"),
+        Failure::Native {
+            kind: crate::vm::hosted::net::failure::NativeKind::ConnectionRefused,
+            ..
+        }
+    ));
     assert_eq!(checks, 1);
     assert!(!in_progress(&io::ErrorKind::ConnectionRefused.into()));
 }

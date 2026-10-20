@@ -2,6 +2,7 @@
 
 mod constants;
 mod distinct_types;
+mod errors;
 mod projections;
 mod record_construction;
 mod relocation;
@@ -30,6 +31,16 @@ use crate::plan::LinkPlan;
 /// Returns [`LinkError`] before executable publication for invalid objects, symbols,
 /// visibility, ABI/layout mismatches, relocations, overflows, or final verifier rejection.
 pub fn link_objects(
+    units: &[fpas_unit::object::RelocatableObject],
+    program: &fpas_unit::object::RelocatableObject,
+) -> Result<fpas_bytecode::VerifiedExecutable, LinkError> {
+    if let Some((units, program)) = crate::errors::prepare(units, program)? {
+        return link_prepared(&units, &program);
+    }
+    link_prepared(units, program)
+}
+
+fn link_prepared(
     units: &[fpas_unit::object::RelocatableObject],
     program: &fpas_unit::object::RelocatableObject,
 ) -> Result<fpas_bytecode::VerifiedExecutable, LinkError> {
@@ -108,14 +119,32 @@ pub fn link_objects(
         .collect::<Result<Vec<_>, LinkError>>()?;
     let mut linked_enums = Vec::with_capacity(ids.layouts.enum_order.len());
     let mut linked_variants = Vec::new();
+    let error_families = ids
+        .layouts
+        .enum_order
+        .iter()
+        .filter_map(|(object, local)| {
+            objects[*object].enums[*local].error.as_ref().map(|key| {
+                ids.layouts.enums[*object][*local]
+                    .map(|id| (key.clone(), id))
+                    .ok_or(LinkError::Overflow("error instance ID"))
+            })
+        })
+        .collect::<Result<BTreeMap<_, _>, LinkError>>()?;
     for (object, local) in &ids.layouts.enum_order {
         let enumeration = &objects[*object].enums[*local];
         linked_enums.push(EnumLayout {
+            error: enumeration.error.clone(),
             name: strings.intern(&enumeration.name)?,
         });
         let owner = ids.layouts.enums[*object][*local].ok_or(LinkError::Overflow("enum owner"))?;
         for variant in &enumeration.variants {
             linked_variants.push(EnumVariant {
+                error: variant
+                    .error
+                    .as_ref()
+                    .map(|error| errors::variant(error, &error_families, &mut strings))
+                    .transpose()?,
                 owner,
                 name: strings.intern(&variant.name)?,
                 fields: variant
@@ -213,7 +242,7 @@ pub fn link_objects(
             )
             .ok_or(LinkError::Overflow("function code range"))?;
         linked_functions.push(FunctionInfo {
-            name: strings.intern(&function.name)?,
+            name: strings.intern(function.display_name.as_deref().unwrap_or(&function.name))?,
             code: CodeRange::new(
                 InstructionAddress::new(code_start),
                 InstructionAddress::new(end),

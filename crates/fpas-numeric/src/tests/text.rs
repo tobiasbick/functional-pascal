@@ -11,7 +11,7 @@ fn source_bodies_and_signed_input_follow_the_same_grammar_and_bounds() {
         ("9223372036854775807", i64::MAX),
         ("-9223372036854775808", i64::MIN),
     ] {
-        assert_eq!(text::integer(input), Some(expected), "{input}");
+        assert_eq!(text::integer(input), Ok(expected), "{input}");
     }
     for input in [
         "",
@@ -28,7 +28,7 @@ fn source_bodies_and_signed_input_follow_the_same_grammar_and_bounds() {
         "0xFF",
         "1.0",
     ] {
-        assert_eq!(text::integer(input), None, "{input}");
+        assert!(text::integer(input).is_err(), "{input}");
     }
     for (input, expected) in [
         ("FF", 255),
@@ -37,7 +37,7 @@ fn source_bodies_and_signed_input_follow_the_same_grammar_and_bounds() {
         ("-$80_0000_0000_0000_00", i64::MIN),
         ("-8000000000000000", i64::MIN),
     ] {
-        assert_eq!(text::hex_integer(input), Some(expected), "{input}");
+        assert_eq!(text::hex_integer(input), Ok(expected), "{input}");
     }
     for (input, expected) in [
         ("3.14", 314.0 / 100.0),
@@ -47,7 +47,7 @@ fn source_bodies_and_signed_input_follow_the_same_grammar_and_bounds() {
         ("1_024.0e-2", 10.24),
         ("0.0e-9999", 0.0),
     ] {
-        assert_eq!(text::real(input), Some(expected), "{input}");
+        assert_eq!(text::real(input), Ok(expected), "{input}");
     }
     for input in [
         "1e3",
@@ -63,7 +63,7 @@ fn source_bodies_and_signed_input_follow_the_same_grammar_and_bounds() {
         "1.0e_2",
         "1.0e+_2",
     ] {
-        assert_eq!(text::real(input), None, "{input}");
+        assert!(text::real(input).is_err(), "{input}");
         assert!(!text::is_numeric(input), "{input}");
     }
 }
@@ -92,6 +92,39 @@ fn finite_real_formatting_roundtrips_identical_bits_including_signed_zero() {
         assert_eq!(
             text::format_real(value),
             Err(crate::NumericError::NonFiniteReal)
+        );
+    }
+}
+
+#[test]
+fn complete_syntax_precedes_range_classification() {
+    use text::TextError::{InvalidSyntax, OutOfRange};
+    for input in [
+        "9223372036854775808",
+        "999999999999999999999999999999999999",
+        "-9223372036854775809",
+    ] {
+        assert_eq!(text::integer(input), Err(OutOfRange), "{input}");
+        assert_eq!(
+            text::integer(&format!("{input}x")),
+            Err(InvalidSyntax),
+            "{input}"
+        );
+    }
+    for input in ["8000000000000000", "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"] {
+        assert_eq!(text::hex_integer(input), Err(OutOfRange), "{input}");
+        assert_eq!(
+            text::hex_integer(&format!("{input}z")),
+            Err(InvalidSyntax),
+            "{input}"
+        );
+    }
+    for input in ["1.0e9999", "1.0e-9999"] {
+        assert_eq!(text::real(input), Err(OutOfRange), "{input}");
+        assert_eq!(
+            text::real(&format!("{input}x")),
+            Err(InvalidSyntax),
+            "{input}"
         );
     }
 }

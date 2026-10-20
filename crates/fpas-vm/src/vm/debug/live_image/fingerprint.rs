@@ -235,7 +235,7 @@ pub(super) fn enum_layouts(image: &Executable) -> Vec<String> {
     let types: Vec<String> = image
         .enums
         .iter()
-        .map(|layout| string_at(image, layout.name).to_owned())
+        .map(|layout| format!("{}|{:?}", string_at(image, layout.name), layout.error))
         .collect();
     let variants: Vec<String> = image
         .enum_variants
@@ -252,11 +252,23 @@ pub(super) fn enum_layouts(image: &Executable) -> Vec<String> {
                 .map(|ty| type_key(image, *ty))
                 .collect();
             format!(
-                "{}:{}:{}:{}",
+                "{}:{}:{}:{}:{:?}:{:?}:{:?}",
                 enum_name(image, variant.owner),
                 string_at(image, variant.name),
                 fields.join(","),
-                types.join(",")
+                types.join(","),
+                variant.error.as_ref().map(|error| &error.field_types),
+                variant
+                    .error
+                    .as_ref()
+                    .and_then(|error| error.message.map(|id| string_at(image, id))),
+                variant
+                    .error
+                    .as_ref()
+                    .and_then(|error| error.cause.map(|cause| (
+                        cause.field,
+                        image.enums[usize::from(cause.family.get())].error.as_ref()
+                    ))),
             )
         })
         .collect();

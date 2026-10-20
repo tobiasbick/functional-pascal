@@ -76,7 +76,7 @@ begin
   begin
     case Http.Send(Http.Request.Get('http://127.0.0.1:{port}' + Base)) of
       when Ok(_): begin end;
-      when Error(const Message): panic(Message);
+      when Error(const Message): panic(Message.Message());
     end case;
   end; end for;
 end.
@@ -123,7 +123,7 @@ begin
     case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/')) of
       when Ok(_): panic('invalid Content-Length accepted');
       when Error(const Message): begin
-        if not ('Content-Length' in Message) then panic(Message); end if;
+        if not (Message is Http.HttpError.InvalidMessage(_)) then panic(Message.Message()); end if;
       end;
     end case;
   end; end for;

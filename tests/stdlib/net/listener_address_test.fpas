@@ -2,7 +2,7 @@ program ListenerAddressTest;
 
 uses Std.Net as Net, Std.Test as Test;
 
-function ExerciseListener(): result of (boolean, string);
+function ExerciseListener(): result of (boolean, Net.NetError);
 begin
   const First: Net.Listener := try Net.Listen('127.0.0.1', 0);
   const Second: Net.Listener := try Net.Listen('127.0.0.1', 0);
@@ -43,7 +43,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end.

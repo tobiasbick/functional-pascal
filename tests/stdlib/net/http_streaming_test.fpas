@@ -19,7 +19,7 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
 
@@ -38,7 +38,7 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
 
@@ -49,7 +49,7 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
 
@@ -63,7 +63,7 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
 
@@ -74,13 +74,13 @@ begin
             end;
           when Error(const Message):
             begin
-              Test.AssertTrue(('already finished' in Message));
+              Test.AssertTrue((Message is Http.HttpError.InvalidArgument('Decoder', _)));
             end;
         end case;
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 
@@ -94,13 +94,13 @@ begin
             end;
           when Error(const Message):
             begin
-              Test.AssertTrue(('MaxEventBytes' in Message));
+              Test.AssertTrue((Message is Http.HttpError.LimitExceeded(_, _)));
             end;
         end case;
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end.

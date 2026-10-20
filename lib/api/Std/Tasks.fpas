@@ -19,6 +19,36 @@ public type CancellationToken = record
   _IntrinsicHandle: integer;
 end record;
 
+// Intrinsic `TaskError` data type.
+public type TaskError = error
+  // `Closed` enum member.
+  //
+  // Parameters:
+  // - `Operation`: `string` input value used by `Closed`.
+  Closed(Operation: string) = 'Channel is closed';
+  // `Timeout` enum member.
+  //
+  // Parameters:
+  // - `Operation`: `string` input value used by `Timeout`.
+  Timeout(Operation: string) = 'Operation timed out';
+  // `Cancelled` enum member.
+  //
+  // Parameters:
+  // - `Operation`: `string` input value used by `Cancelled`.
+  Cancelled(Operation: string) = 'Operation cancelled';
+  // `InvalidArgument` enum member.
+  //
+  // Parameters:
+  // - `Name`: Name looked up or processed by the operation.
+  // - `Reason`: `string` input value used by `InvalidArgument`.
+  InvalidArgument(Name: string; Reason: string) = 'Task operation failed';
+  // `InvalidGroup` enum member.
+  //
+  // Parameters:
+  // - `Operation`: `string` input value used by `InvalidGroup`.
+  InvalidGroup(Operation: string) = 'Task operation failed';
+end error;
+
 // Child identity, failure kind, message, diagnostic code, and source position.
 public type TaskFailure = record
   public TaskId: integer;
@@ -102,7 +132,7 @@ end function;
 // Parameters:
 // - `Group`: `Std.Tasks.TaskGroup` input value used by `CloseTaskGroupWithTimeout`.
 // - `TimeoutMillis`: `integer` input value used by `CloseTaskGroupWithTimeout`.
-public function CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of (array of TaskFailure, string);
+public function CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of (array of TaskFailure, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -168,7 +198,7 @@ end function;
 //
 // Parameters:
 // - `Queue`: Input value used by `Receive`.
-public function Receive(Queue: channel of T): result of (T, string);
+public function Receive(Queue: channel of T): result of (T, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -178,7 +208,7 @@ end function;
 // Parameters:
 // - `Queue`: Input value used by `ReceiveCase`.
 // - `Callback`: Input value used by `ReceiveCase`.
-public function ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of (T, string))): WaitCase;
+public function ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of (T, TaskError))): WaitCase;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -188,7 +218,7 @@ end function;
 // Parameters:
 // - `Queue`: Input value used by `ReceiveWithCancellation`.
 // - `Token`: Input value used by `ReceiveWithCancellation`.
-public function ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of (T, string);
+public function ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of (T, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -198,7 +228,7 @@ end function;
 // Parameters:
 // - `Queue`: Input value used by `ReceiveWithTimeout`.
 // - `TimeoutMillis`: Input value used by `ReceiveWithTimeout`.
-public function ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of (T, string);
+public function ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of (T, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -217,7 +247,7 @@ end function;
 // Parameters:
 // - `Queue`: Input value used by `Send`.
 // - `Value`: Value consumed or returned by the operation.
-public function Send(Queue: channel of T; Value: T): result of (boolean, string);
+public function Send(Queue: channel of T; Value: T): result of (boolean, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -228,11 +258,7 @@ end function;
 // - `Queue`: Input value used by `SendCase`.
 // - `Value`: Value consumed or returned by the operation.
 // - `Callback`: Input value used by `SendCase`.
-public function SendCase(
-  Queue: channel of T;
-  Value: T;
-  Callback: procedure(Outcome: result of (boolean, string))
-): WaitCase;
+public function SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of (boolean, TaskError))): WaitCase;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -243,7 +269,7 @@ end function;
 // - `Queue`: Input value used by `SendWithCancellation`.
 // - `Value`: Value consumed or returned by the operation.
 // - `Token`: Input value used by `SendWithCancellation`.
-public function SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of (boolean, string);
+public function SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of (boolean, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -254,7 +280,7 @@ end function;
 // - `Queue`: Input value used by `SendWithTimeout`.
 // - `Value`: Value consumed or returned by the operation.
 // - `TimeoutMillis`: Input value used by `SendWithTimeout`.
-public function SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of (boolean, string);
+public function SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of (boolean, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -266,12 +292,7 @@ end function;
 // - `Work`: Input value used by `StartSupervisedTask`.
 // - `RetryLimit`: Input value used by `StartSupervisedTask`.
 // - `BackoffMillis`: Input value used by `StartSupervisedTask`.
-public function StartSupervisedTask<T>(
-  Group: TaskGroup;
-  Work: function(Token: CancellationToken): T;
-  RetryLimit: integer;
-  BackoffMillis: integer
-): task of T;
+public function StartSupervisedTask<T>(Group: TaskGroup; Work: function(Token: CancellationToken): T; RetryLimit: integer; BackoffMillis: integer): task of T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -319,7 +340,7 @@ end function;
 //
 // Parameters:
 // - `Queue`: Input value used by `TryReceive`.
-public function TryReceive(Queue: channel of T): result of (option of T, string);
+public function TryReceive(Queue: channel of T): result of (option of T, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -329,7 +350,7 @@ end function;
 // Parameters:
 // - `Queue`: Input value used by `TrySend`.
 // - `Value`: Value consumed or returned by the operation.
-public function TrySend(Queue: channel of T; Value: T): result of (boolean, string);
+public function TrySend(Queue: channel of T; Value: T): result of (boolean, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -366,7 +387,7 @@ end function;
 // Parameters:
 // - `Tasks`: Task handles to wait for.
 // - `Token`: Input value used by `WaitAnyWithCancellation`.
-public function WaitAnyWithCancellation<T>(Tasks: array of task of T; Token: CancellationToken): result of (integer, string);
+public function WaitAnyWithCancellation<T>(Tasks: array of task of T; Token: CancellationToken): result of (integer, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -376,7 +397,7 @@ end function;
 // Parameters:
 // - `Tasks`: Task handles to wait for.
 // - `TimeoutMillis`: Input value used by `WaitAnyWithTimeout`.
-public function WaitAnyWithTimeout<T>(Tasks: array of task of T; TimeoutMillis: integer): result of (integer, string);
+public function WaitAnyWithTimeout<T>(Tasks: array of task of T; TimeoutMillis: integer): result of (integer, TaskError);
 begin
   panic('Intrinsic API declaration');
 end function;

@@ -1,5 +1,6 @@
 //! Runtime-shared positional aggregate names derived from verified metadata.
 
+mod native_errors;
 use std::sync::Arc;
 
 use fpas_bytecode::{
@@ -10,12 +11,14 @@ use fpas_bytecode::{
 use super::{VmError, diagnostics};
 
 pub(super) struct RuntimeLayouts {
+    native_errors: Vec<Vec<Option<Arc<RuntimeEnumLayout>>>>,
     pub records: Vec<Arc<RuntimeRecordLayout>>,
     pub enum_variants: Vec<Arc<RuntimeEnumLayout>>,
 }
 
 impl RuntimeLayouts {
     pub fn build(executable: &Executable, address: InstructionAddress) -> Result<Self, VmError> {
+        native_errors::validate(executable, address)?;
         let records = executable
             .records
             .iter()
@@ -63,6 +66,19 @@ impl RuntimeLayouts {
                     .map(|field| string(executable, *field, address).map(str::to_owned))
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(Arc::new(RuntimeEnumLayout {
+                    error: variant
+                        .error
+                        .as_ref()
+                        .map(|error| {
+                            fpas_bytecode::RuntimeErrorVariant::from_metadata(
+                                error,
+                                &executable.strings,
+                            )
+                        })
+                        .transpose()
+                        .map_err(|error| {
+                            diagnostics::internal(executable, address, error.to_string())
+                        })?,
                     enumeration: variant.owner,
                     variant_id,
                     type_name,
@@ -71,14 +87,59 @@ impl RuntimeLayouts {
                 }))
             })
             .collect::<Result<Vec<_>, VmError>>()?;
+        let native_errors = fpas_std::native_errors::NativeErrorFamily::ALL
+            .iter()
+            .map(|family| {
+                family
+                    .variants()
+                    .iter()
+                    .map(|variant| {
+                        enum_variants
+                            .iter()
+                            .find(|layout| {
+                                layout.type_name.eq_ignore_ascii_case(family.name())
+                                    && layout.variant.eq_ignore_ascii_case(variant.name)
+                            })
+                            .cloned()
+                    })
+                    .collect()
+            })
+            .collect();
         Ok(Self {
             records,
             enum_variants,
+            native_errors,
         })
     }
 }
 
 impl fpas_std::AggregateFactory for RuntimeLayouts {
+    fn native_error(
+        &self,
+        family: fpas_std::native_errors::NativeErrorFamily,
+        variant: usize,
+        values: Vec<Value>,
+        location: SourceLocation,
+    ) -> Result<Value, fpas_std::StdError> {
+        let layout = self
+            .native_errors
+            .get(family as usize)
+            .and_then(|variants| variants.get(variant))
+            .and_then(Clone::clone)
+            .ok_or_else(|| missing_layout("native error", family.name(), location))?;
+        SharedEnum::try_new(layout, values)
+            .map(Value::Enum)
+            .map_err(|error| {
+                fpas_diagnostics::Diagnostic::error(
+                    fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
+                    error.to_string(),
+                    None,
+                    fpas_diagnostics::SourceSpan::synthetic_from_location(location),
+                )
+                .into()
+            })
+    }
+
     fn record(
         &self,
         type_name: &str,
@@ -128,7 +189,17 @@ impl fpas_std::AggregateFactory for RuntimeLayouts {
                 location,
             ));
         }
-        Ok(Value::Enum(SharedEnum::new(layout, values)))
+        SharedEnum::try_new(layout, values)
+            .map(Value::Enum)
+            .map_err(|error| {
+                fpas_diagnostics::Diagnostic::error(
+                    fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
+                    error.to_string(),
+                    None,
+                    fpas_diagnostics::SourceSpan::synthetic_from_location(location),
+                )
+                .into()
+            })
     }
 }
 
@@ -170,3 +241,6 @@ fn string(
         )
     })
 }
+
+#[cfg(test)]
+mod native_errors_tests;

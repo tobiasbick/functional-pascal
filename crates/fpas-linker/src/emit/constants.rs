@@ -30,6 +30,24 @@ pub(super) fn merge(
     for (object_index, object) in objects.iter().enumerate() {
         for constant in &object.constants {
             let value = match constant {
+                ObjectConstant::ErrorConstructor(request) => {
+                    let name = fpas_unit::errors::constructor_symbol(request)
+                        .map_err(crate::errors::invalid)?;
+                    let resolved = symbols
+                        .resolve_name(objects, &name, SymbolKind::Function)
+                        .ok_or_else(|| {
+                            crate::errors::invalid("unresolved error constructor factory")
+                        })?;
+                    let DefinitionTarget::Function(local) = resolved.target else {
+                        return Err(crate::errors::invalid(
+                            "error constructor is not a function",
+                        ));
+                    };
+                    Constant::Function {
+                        function: function_id(ids, resolved.object, local)?,
+                        task_bound: false,
+                    }
+                }
                 ObjectConstant::Integer(value) => Constant::Integer(*value),
                 ObjectConstant::Real(bits) => Constant::Real(*bits),
                 ObjectConstant::Boolean(value) => Constant::Boolean(*value),

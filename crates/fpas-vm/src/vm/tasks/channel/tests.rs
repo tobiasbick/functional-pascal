@@ -24,7 +24,7 @@ function BlockingRead(ListenerValue: Net.Listener; Token: Tasks.CancellationToke
 begin
   const Client: Net.Connection := Net.Accept(ListenerValue).Unwrap();
   const Configured: boolean := Net.SetTimeout(Client, 1500).Unwrap();
-  const Ignored: result of (array of integer, string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  const Ignored: result of (array of integer, Net.NetError) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   const Closed: boolean := Net.Close(Client).Unwrap();
   return true;
 end function;
@@ -39,12 +39,12 @@ begin scope
   const Second: task of boolean := go BlockingRead(SecondListener, Token);
   const Events: channel of integer := Tasks.CreateChannel(1);
   var Started: integer := Time.TimestampMillis();
-  const Outcome: result of (integer, string) := Tasks.ReceiveWithTimeout(Events, 100);
+  const Outcome: result of (integer, Tasks.TaskError) := Tasks.ReceiveWithTimeout(Events, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline'); end if;
   if (Outcome is Ok(_)) then panic('nothing was sent'); end if;
   Started := Time.TimestampMillis();
   const Full: boolean := Tasks.SendWithTimeout(Events, 1, 100).Unwrap();
-  const Blocked: result of (boolean, string) := Tasks.SendWithTimeout(Events, 2, 100);
+  const Blocked: result of (boolean, Tasks.TaskError) := Tasks.SendWithTimeout(Events, 2, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline'); end if;
   if (Blocked is Ok(_)) then panic('the channel was full'); end if;
   if not Tasks.Wait(First) then panic('first'); end if;
@@ -96,7 +96,7 @@ function Busy(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): bool
 begin
   const Client: Net.Connection := Net.Accept(ListenerValue).Unwrap();
   const Configured: boolean := Net.SetTimeout(Client, 1000).Unwrap();
-  const Ignored: result of (array of integer, string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  const Ignored: result of (array of integer, Net.NetError) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   return true;
 end function;
 function Reader(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;

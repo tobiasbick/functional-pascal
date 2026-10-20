@@ -9,6 +9,7 @@ Structured error handling with `Result` and `Option` for expected failures, and 
 | Bind payloads, handle locally, or select a plain default | Exhaustive `case` |
 | Abort deliberately on Error or None | `Value.Unwrap()` |
 | Transform wrapped success | `Value.Map(F)` |
+| Map a Result error explicitly | `Value.MapError(F)` |
 | Compose a fallible/optional operation | `Value.AndThen(F)` |
 | Recover within a wrapper | `Value.OrElse(F)` |
 
@@ -20,6 +21,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` for `R
 | Topic | Description |
 |-------|-------------|
 | [Result](result.md) | `Result of (T, E)`, `Ok`, `Error` |
+| [Native error families](../types/errors.md) | Nominal error payloads, typed causes and automatic output |
 | [Option](option.md) | `Option of T`, `Some`, `None` |
 | [Try operator](try.md) | Early propagation with `try` |
 | [Combinators](combinators.md) | `Map`, `AndThen`, `OrElse` overview |

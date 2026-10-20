@@ -32,8 +32,8 @@ begin
       when Ok(_): begin end;
       when Error(const Message): begin
         if I = {} then
-        begin if not ('MaxBodyBytes' in Message) then panic(Message); end if; end;
-        else begin if not ('Content-Length' in Message) then panic(Message); end if; end; end if;
+        begin if not (Message is Http.HttpError.LimitExceeded('Std.Http.Server.ReadRequest', _)) then panic(Message.Message()); end if; end;
+        else begin if not (Message is Http.HttpError.InvalidMessage(_)) then panic(Message.Message()); end if; end; end if;
         Text := 'rejected';
       end;
     end case;

@@ -201,10 +201,14 @@ impl Worker {
             .cloned()
             .ok_or_else(|| self.bad_slot("enum variant", u32::from(o.b)))?;
         let values = self.window(o.c, variant.fields.len())?;
-        self.write(
-            register(o.a)?,
-            Value::Enum(SharedEnum::new(variant, values)),
-        )
+        let value = SharedEnum::try_new(variant, values).map_err(|error| {
+            self.aggregate_error_code(
+                fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
+                error.to_string(),
+                "Recompile the program and report this constructor invariant failure.",
+            )
+        })?;
+        self.write(register(o.a)?, Value::Enum(value))
     }
 
     pub fn test_variant(&mut self, o: AbcOperands) -> Result<(), VmError> {

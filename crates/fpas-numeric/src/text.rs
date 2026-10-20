@@ -5,21 +5,35 @@
 
 use crate::{NumericError, real};
 
+/// Failure of the shared numeric text grammar or range policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TextError {
+    /// The complete input does not match the numeric grammar.
+    InvalidSyntax,
+    /// Valid syntax exceeds the supported numeric range.
+    OutOfRange,
+}
+
 /// Maximum lexical integer magnitude, valid only with a negative sign.
 pub const MINIMUM_INTEGER_MAGNITUDE: u64 = 1_u64 << 63;
 
 /// Parses an unsigned decimal or `$` hexadecimal literal body with digit separators.
-pub fn integer_magnitude(text: &str) -> Option<u64> {
+pub fn integer_magnitude(text: &str) -> Result<u64, TextError> {
     let (digits, radix) = text
         .strip_prefix('$')
         .map_or((text, 10), |digits| (digits, 16));
     let mut index = 0;
-    let normalized = digit_run(digits.as_bytes(), &mut index, radix)?;
+    let normalized =
+        digit_run(digits.as_bytes(), &mut index, radix).ok_or(TextError::InvalidSyntax)?;
     if index != digits.len() {
-        return None;
+        return Err(TextError::InvalidSyntax);
     }
-    let value = u64::from_str_radix(&normalized, radix).ok()?;
-    (value <= MINIMUM_INTEGER_MAGNITUDE).then_some(value)
+    let value = u64::from_str_radix(&normalized, radix).map_err(|_| TextError::OutOfRange)?;
+    if value <= MINIMUM_INTEGER_MAGNITUDE {
+        Ok(value)
+    } else {
+        Err(TextError::OutOfRange)
+    }
 }
 
 /// Applies a sign to a lexical magnitude without overflowing at the integer minimum.
@@ -33,32 +47,32 @@ pub fn signed_integer(magnitude: u64, negative: bool) -> Option<i64> {
 }
 
 /// Parses signed integer input after trimming surrounding whitespace.
-pub fn integer(text: &str) -> Option<i64> {
+pub fn integer(text: &str) -> Result<i64, TextError> {
     let (body, negative) = signed_body(text.trim());
-    signed_integer(integer_magnitude(body)?, negative)
+    signed_integer(integer_magnitude(body)?, negative).ok_or(TextError::OutOfRange)
 }
 
 /// Parses the signed hexadecimal text accepted by Parse.HexInt, with an optional $, 0x, or 0X prefix.
-pub fn hex_integer(text: &str) -> Option<i64> {
+pub fn hex_integer(text: &str) -> Result<i64, TextError> {
     let (body, negative) = signed_body(text.trim());
     let digits = body
         .strip_prefix("0x")
         .or_else(|| body.strip_prefix("0X"))
         .or_else(|| body.strip_prefix('$'))
         .unwrap_or(body);
-    signed_integer(integer_magnitude(&format!("${digits}"))?, negative)
+    signed_integer(integer_magnitude(&format!("${digits}"))?, negative).ok_or(TextError::OutOfRange)
 }
 
 /// Parses an unsigned real literal body, requiring a fractional part and a finite result.
-pub fn real_body(text: &str) -> Option<f64> {
+pub fn real_body(text: &str) -> Result<f64, TextError> {
     let bytes = text.as_bytes();
     let mut index = 0;
-    let whole = digit_run(bytes, &mut index, 10)?;
+    let whole = digit_run(bytes, &mut index, 10).ok_or(TextError::InvalidSyntax)?;
     if bytes.get(index) != Some(&b'.') {
-        return None;
+        return Err(TextError::InvalidSyntax);
     }
     index += 1;
-    let fraction = digit_run(bytes, &mut index, 10)?;
+    let fraction = digit_run(bytes, &mut index, 10).ok_or(TextError::InvalidSyntax)?;
     let mut normalized = format!("{whole}.{fraction}");
     if bytes
         .get(index)
@@ -73,33 +87,38 @@ pub fn real_body(text: &str) -> Option<f64> {
             normalized.push(bytes[index] as char);
             index += 1;
         }
-        normalized.push_str(&digit_run(bytes, &mut index, 10)?);
+        normalized.push_str(&digit_run(bytes, &mut index, 10).ok_or(TextError::InvalidSyntax)?);
     }
     if index != bytes.len() {
-        return None;
+        return Err(TextError::InvalidSyntax);
     }
-    let value = real::finite(normalized.parse::<f64>().ok()?).ok()?;
+    let value = real::finite(
+        normalized
+            .parse::<f64>()
+            .map_err(|_| TextError::OutOfRange)?,
+    )
+    .map_err(|_| TextError::OutOfRange)?;
     let nonzero = whole
         .bytes()
         .chain(fraction.bytes())
         .any(|byte| byte != b'0');
     if value == 0.0 && nonzero {
-        None
+        Err(TextError::OutOfRange)
     } else {
-        Some(value)
+        Ok(value)
     }
 }
 
 /// Parses real input with an optional sign and surrounding whitespace, preserving -0.0.
-pub fn real(text: &str) -> Option<f64> {
+pub fn real(text: &str) -> Result<f64, TextError> {
     let (body, negative) = signed_body(text.trim());
     let value = real_body(body)?;
-    Some(if negative { -value } else { value })
+    Ok(if negative { -value } else { value })
 }
 
 /// Reports whether input has either of the shared integer or real text forms.
 pub fn is_numeric(text: &str) -> bool {
-    integer(text).is_some() || real(text).is_some()
+    integer(text).is_ok() || real(text).is_ok()
 }
 
 /// Formats a finite real with a fractional part and a bit-preserving parsing round-trip.

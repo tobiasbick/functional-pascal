@@ -12,11 +12,33 @@ case Net.Connect('127.0.0.1', 8080, 5000) of
       null;
     end;
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 
 end.
 ```
+
+## Operational errors
+
+Every fallible operation returns `NetError`: `Closed(Operation)`,
+`Timeout(Cause: HostError)`, `Cancelled(Operation)`, `InvalidArgument(Name, Reason)`,
+`ResolveFailed(Cause)`, `ConnectionRefused(Cause)`, `ConnectionLost(Cause)`,
+`AddressInUse(Cause)`, `AccessDenied(Cause)`, `TlsFailure(Detail)` or `IoFailure(Cause)`.
+The Cause variants retain [Std.Errors.HostError](../host/errors.md) with the
+qualified attempted operation, supplied resource identifiers, available native
+code/domain and original explanation. DNS classification occurs at resolution;
+I/O classification uses backend categories rather than diagnostic text. TLS
+verification/protocol failures use TlsFailure; transport failures inside TLS
+retain the corresponding native network cause.
+
+Host deadline expiry also uses Timeout with a HostError, with absent native
+code/domain when the backend supplied none. Input validation has no fabricated
+host cause. Resources retain host then port for connect/listen, followed by PEM
+paths for ListenTls; operations on a handle retain that handle's identifier.
+Byte-domain, size, port and timeout validation use InvalidArgument.
+EOF remains `Ok([])`, partial writes remain successful counts, and cancellation
+before progress keeps its existing precedence and ownership. Match variants for
+decisions; use Message() at deliberate text boundaries.
 
 ## Quick reference
 
@@ -25,22 +47,22 @@ end.
 | type | `Connection` | opaque VM-owned TCP or TLS connection |
 | type | `Listener` | opaque VM-owned TCP or TLS listener |
 | type | `NetworkAddress` | record with `Host: string` and `Port: integer` |
-| function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, string)` | resolves and connects |
-| function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, string)` | resolves, connects, and completes a verified TLS handshake |
-| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, string)` | cancellable TCP attempts; OS DNS checked on return |
-| function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, string)` | also observes cancellation during TLS handshake I/O |
-| function | `Listen(Host: string; Port: integer): Result of (Listener, string)` | binds one TCP listener |
-| function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of (Listener, string)` | loads PEM credentials and binds one TLS listener |
-| function | `Accept(Listener): Result of (Connection, string)` | blocks until one client connects |
-| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of (Connection, string)` | blocks until one client connects or cancellation is requested |
-| function | `CloseListener(Listener): Result of (boolean, string)` | invalidates the listener handle |
-| function | `ListenerLocalAddress(Listener): Result of (NetworkAddress, string)` | returns the bound numeric IP address and port |
-| function | `SetTimeout(Connection; TimeoutMillis: integer): Result of (boolean, string)` | sets read/write timeout; zero disables it |
-| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of (array of integer, string)` | empty array means EOF |
-| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of (array of integer, string)` | reads a chunk or reports cancellation; leaves the connection open |
-| function | `SendBytes(Connection; Data: array of integer): Result of (integer, string)` | returns bytes written; partial writes are possible |
-| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Tasks.CancellationToken): Result of (integer, string)` | returns accepted bytes or reports cancellation before progress |
-| function | `Close(Connection): Result of (boolean, string)` | invalidates the handle |
+| function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, NetError)` | resolves and connects |
+| function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, NetError)` | resolves, connects, and completes a verified TLS handshake |
+| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | cancellable TCP attempts; OS DNS checked on return |
+| function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | also observes cancellation during TLS handshake I/O |
+| function | `Listen(Host: string; Port: integer): Result of (Listener, NetError)` | binds one TCP listener |
+| function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of (Listener, NetError)` | loads PEM credentials and binds one TLS listener |
+| function | `Accept(Listener): Result of (Connection, NetError)` | blocks until one client connects |
+| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | blocks until one client connects or cancellation is requested |
+| function | `CloseListener(Listener): Result of (boolean, NetError)` | invalidates the listener handle |
+| function | `ListenerLocalAddress(Listener): Result of (NetworkAddress, NetError)` | returns the bound numeric IP address and port |
+| function | `SetTimeout(Connection; TimeoutMillis: integer): Result of (boolean, NetError)` | sets read/write timeout; zero disables it |
+| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of (array of integer, NetError)` | empty array means EOF |
+| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of (array of integer, NetError)` | reads a chunk or reports cancellation; leaves the connection open |
+| function | `SendBytes(Connection; Data: array of integer): Result of (integer, NetError)` | returns bytes written; partial writes are possible |
+| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Tasks.CancellationToken): Result of (integer, NetError)` | returns accepted bytes or reports cancellation before progress |
+| function | `Close(Connection): Result of (boolean, NetError)` | invalidates the handle |
 
 `ConnectTls` verifies the server certificate and requested hostname through the operating system's
 trust policy. It does not expose an insecure certificate bypass. The returned `Connection` uses the
@@ -60,7 +82,7 @@ Listener handles are closed separately with `CloseListener`. Both accept functio
 I/O block the VM worker that executes them.
 
 `AcceptWithCancellation` observes a `Std.Tasks.CancellationToken`. If cancellation wins before a
-connection is returned, the function returns `Error('Network accept cancelled')`. It leaves the
+connection is returned, the function returns `Error(NetError.Cancelled(Operation))`. It leaves the
 listener open, so another task may accept from it later. `Accept` remains available when the caller
 does not need application-controlled cancellation.
 
@@ -87,7 +109,7 @@ The port remains reserved by the listener; there is no separate probe-and-rebind
 An address queried after `CloseListener` returns `Error`.
 
 ```pascal id=example-2 fragment context=declarations-net
-function InspectListener(): result of (Net.NetworkAddress, string);
+function InspectListener(): result of (Net.NetworkAddress, Net.NetError);
 begin
   const Server: Net.Listener := try Net.Listen('127.0.0.1', 0);
   const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
@@ -112,10 +134,10 @@ policy; cancellation does not bypass certificate or hostname verification.
 - A token already cancelled prevents DNS resolution and socket creation for valid arguments.
 - Cancellation is checked before and after DNS resolution, while each TCP attempt is pending,
   during TLS handshake I/O, and before publishing a handle. Observed cancellation returns
-  `Error('Network connect cancelled')`. Pending sockets are dropped without publishing a handle.
+  `Error(NetError.Cancelled(Operation))`. Pending sockets are dropped without publishing a handle.
 - The new variants use one monotonic budget starting before resolution, shared by all resolved
   addresses and the TLS handshake. Exhaustion observed at a checkpoint returns
-  `Error('Network connect timed out')`. A successful final checkpoint wins over cancellation arriving
+  `Error(NetError.Timeout(Cause))`. A successful final checkpoint wins over cancellation arriving
   immediately afterward. Existing `Connect` and `ConnectTls` retain their timeout behavior.
 - Each address uses one non-blocking TCP attempt. Pending attempts check cancellation and the
   shared deadline between socket readiness checks, parking for at most 10 ms between checks.
@@ -134,11 +156,11 @@ policy; cancellation does not bypass certificate or hostname verification.
 Reads at most `MaxBytes` from an established TCP or TLS connection. The same byte-size limits and
 EOF representation as `ReceiveBytes` apply. Import `Std.Tasks` to create the cancellation source and token.
 
-- Cancellation observed before a read attempt returns `Error('Network read cancelled')` without
+- Cancellation observed before a read attempt returns `Error(NetError.Cancelled(Operation))` without
   closing the connection. A token that is already cancelled does not consume available bytes.
 - A successful read wins over cancellation arriving during that read; its bytes are returned.
 - The read timeout configured by `SetTimeout` bounds the read phase with one monotonic deadline;
-  expiry returns `Error('Network read timed out')`. Zero disables that deadline, not cancellation.
+  expiry returns `Error(NetError.Timeout(Cause))`. Zero disables that deadline, not cancellation.
 - Operations on one connection are serialized. Cancellation is also checked while waiting for
   another operation to release the connection, but the read timeout starts after that wait.
 - Cancellation and timeout preserve TLS state and the configured socket timeouts. Later reads may
@@ -154,10 +176,10 @@ are the same as for `SendBytes`. Import `Std.Tasks` to create the cancellation s
   retry only the remaining suffix. The function does not loop to send the entire input.
 - Accepted bytes take priority over cancellation or timeout arriving during a write attempt. A
   positive count is never replaced by a cancellation error after those bytes have been accepted.
-- Cancellation before an attempt returns `Error('Network write cancelled')`. No bytes from this
+- Cancellation before an attempt returns `Error(NetError.Cancelled(Operation))`. No bytes from this
   call's input have been accepted. The connection stays open; previously accepted data is not undone.
 - The write timeout from `SetTimeout` starts after acquiring the connection lock and uses one
-  monotonic deadline across retries. Expiry before progress returns `Error('Network write timed out')`.
+  monotonic deadline across retries. Expiry before progress returns `Error(NetError.Timeout(Cause))`.
   Zero disables the deadline, not cancellation. Lock waits also observe cancellation.
 - For TLS, accepted bytes can remain buffered locally. `Ok(N)` is not confirmation of delivery to
   the peer. A later operation may advance buffered output even if that later call is cancelled

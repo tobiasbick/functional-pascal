@@ -2,20 +2,9 @@ program ServerFailureTest;
 
 uses Std.Server as Server, Std.Net as Net, Std.Tasks as Tasks, Std.Test as Test;
 
-function BindListener(): result of (Net.Listener, string);
+function BindListener(): result of (Net.Listener, Net.NetError);
 begin
-  for Port: integer := 28200 to 28299 do
-    begin
-      const Opened: result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
-      if (Opened is Ok(_)) then
-        begin
-          return Opened;
-        end;
-      end if;
-    end;
-  end for;
-
-  return Error('no test port available');
+  return Net.Listen('127.0.0.1', 0);
 end function;
 
 begin

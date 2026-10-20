@@ -20,6 +20,8 @@ pub fn return_unit() -> u64 {
 
 pub fn function(name: &str) -> ObjectFunction {
     ObjectFunction {
+        display_name: None,
+        error_constructors: None,
         name: name.to_string(),
         code: vec![return_unit()],
         arity: 0,
@@ -39,6 +41,7 @@ pub fn function(name: &str) -> ObjectFunction {
 
 pub fn unit(public: bool) -> RelocatableObject {
     RelocatableObject {
+        error_schemas: Vec::new(),
         version: OBJECT_VERSION,
         owner: "library.unit".to_string(),
         entry: None,
@@ -77,11 +80,14 @@ pub fn program() -> RelocatableObject {
         .expect("call")
         .word();
     RelocatableObject {
+        error_schemas: Vec::new(),
         version: OBJECT_VERSION,
         owner: "demo".to_string(),
         entry: Some(0),
         initializer: None,
         functions: vec![ObjectFunction {
+            display_name: None,
+            error_constructors: None,
             name: "demo".to_string(),
             code: vec![call, return_unit()],
             arity: 0,

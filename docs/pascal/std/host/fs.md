@@ -9,7 +9,7 @@ uses Std.Fs as Fs, Std.Tasks as Tasks;
 
 begin
   scope
-    const ReadJob: task of result of (string, string) := go Fs.ReadText('input.txt');
+    const ReadJob: task of result of (string, Fs.FsError) := go Fs.ReadText('input.txt');
     const Text: string := Tasks.Wait(ReadJob).Unwrap();
   end scope;
 end.
@@ -23,8 +23,8 @@ Text reads and writes use UTF-8.
 
 **Resource limits:**
 
-- `ReadText` rejects files larger than 64 MiB (`67_108_864` bytes) and returns `Error(message)`.
-- `Glob` rejects patterns that match more than `1_000_000` files and returns `Error(message)`.
+- `ReadText` rejects files larger than 64 MiB (`67_108_864` bytes) and returns `Error(Cause)`.
+- `Glob` rejects patterns that match more than `1_000_000` files and returns `Error(Cause)`.
 
 
 ## Importing and names
@@ -33,17 +33,17 @@ Import with `uses Std.Fs as Fs;` and access public symbols as `Fs.Name`. User en
 
 ---
 
-## `DeleteFile(Path: string): result of (boolean, string)`
+## `DeleteFile(Path: string): result of (boolean, Fs.FsError)`
 
-Deletes one file entry and returns `Ok(true)`. Missing paths, directories, permission failures, and other OS errors return `Error(message)`. It does not recursively delete directories. On Windows and POSIX, a symbolic link is removed without deleting its target; directory links follow the platform file-removal rules and may be rejected. Open files can be unlinked on POSIX, while Windows may reject deletion when a handle does not permit delete sharing. Error messages come from the host OS.
+Deletes one file entry and returns `Ok(true)`. Missing paths, directories, permission failures, and other OS errors return `Error(Cause)`. It does not recursively delete directories. On Windows and POSIX, a symbolic link is removed without deleting its target; directory links follow the platform file-removal rules and may be rejected. Open files can be unlinked on POSIX, while Windows may reject deletion when a handle does not permit delete sharing. Error messages come from the host OS.
 
-## `DeleteDir(Path: string): result of (boolean, string)`
+## `DeleteDir(Path: string): result of (boolean, Fs.FsError)`
 
-Deletes one empty directory and returns `Ok(true)`. Non-empty directories, missing paths, files, permission failures, and other OS errors return `Error(message)`.
+Deletes one empty directory and returns `Ok(true)`. Non-empty directories, missing paths, files, permission failures, and other OS errors return `Error(Cause)`.
 
-## `DeleteDirAll(Path: string): result of (boolean, string)`
+## `DeleteDirAll(Path: string): result of (boolean, Fs.FsError)`
 
-Deletes the directory at `Path` together with all files and subdirectories below it and returns `Ok(true)`. Symbolic links inside the tree are removed without following them. A missing path, a file path, permission failures, and other OS errors return `Error(message)`; entries removed before a failure stay removed.
+Deletes the directory at `Path` together with all files and subdirectories below it and returns `Ok(true)`. Symbolic links inside the tree are removed without following them. A missing path, a file path, permission failures, and other OS errors return `Error(Cause)`; entries removed before a failure stay removed.
 
 ```pascal id=example-delete-dir-all fragment context=body-console-fs
 if Fs.DeleteDirAll('build/output') is Ok(_) then
@@ -51,17 +51,17 @@ if Fs.DeleteDirAll('build/output') is Ok(_) then
 end if;
 ```
 
-## `CopyFile(Source: string; Target: string): result of (boolean, string)`
+## `CopyFile(Source: string; Target: string): result of (boolean, Fs.FsError)`
 
-Copies the contents of the file `Source` to `Target`, creating or replacing `Target`, and returns `Ok(true)`. The parent directory of `Target` must exist. Directories, missing sources, and OS errors return `Error(message)`. The copy is not atomic; use `WriteTextAtomic` when readers must never see a partial file.
+Copies the contents of the file `Source` to `Target`, creating or replacing `Target`, and returns `Ok(true)`. The parent directory of `Target` must exist. Directories, missing sources, and OS errors return `Error(Cause)`. The copy is not atomic; use `WriteTextAtomic` when readers must never see a partial file.
 
-## `Rename(Source: string; Target: string): result of (boolean, string)`
+## `Rename(Source: string; Target: string): result of (boolean, Fs.FsError)`
 
-Renames or moves the file or directory `Source` to `Target` and returns `Ok(true)`. An existing target file is replaced on Unix and Windows; replacing an existing directory follows host rules and may fail. Moving across file systems or volumes returns `Error(message)`.
+Renames or moves the file or directory `Source` to `Target` and returns `Ok(true)`. An existing target file is replaced on Unix and Windows; replacing an existing directory follows host rules and may fail. Moving across file systems or volumes returns `Error(Cause)`.
 
-## `AppendText(Path: string; Text: string): result of (boolean, string)`
+## `AppendText(Path: string; Text: string): result of (boolean, Fs.FsError)`
 
-Appends the UTF-8 bytes of `Text` to the end of `Path`, creating the file when it is missing, and returns `Ok(true)`. A missing parent directory and OS errors return `Error(message)`.
+Appends the UTF-8 bytes of `Text` to the end of `Path`, creating the file when it is missing, and returns `Ok(true)`. A missing parent directory and OS errors return `Error(Cause)`.
 
 ```pascal id=example-append-text fragment context=body-console-fs
 if Fs.AppendText('app.log', 'started') is Error(_) then
@@ -75,34 +75,36 @@ Requires `uses Std.Fs as Fs;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `ReadText(Path: string): Result of (string, string)` | reads UTF-8 text |
-| function | `WriteText(Path: string; Text: string): Result of (boolean, string)` | writes UTF-8 text, returns `Ok(true)` |
-| function | `WriteTextAtomic(Path: string; Text: string): Result of (boolean, string)` | publishes complete UTF-8 text through a same-directory temporary file |
-| function | `AppendText(Path: string; Text: string): Result of (boolean, string)` | appends UTF-8 text, creating a missing file |
-| function | `DeleteFile(Path: string): Result of (boolean, string)` | removes one file entry, returns `Ok(true)` |
-| function | `DeleteDir(Path: string): Result of (boolean, string)` | removes one empty directory, returns `Ok(true)` |
-| function | `DeleteDirAll(Path: string): Result of (boolean, string)` | removes a directory and all of its contents |
-| function | `CopyFile(Source: string; Target: string): Result of (boolean, string)` | copies one file, replacing the target |
-| function | `Rename(Source: string; Target: string): Result of (boolean, string)` | renames or moves a file or directory |
+| function | `ReadText(Path: string): Result of (string, Fs.FsError)` | reads UTF-8 text |
+| function | `WriteText(Path: string; Text: string): Result of (boolean, Fs.FsError)` | writes UTF-8 text, returns `Ok(true)` |
+| function | `WriteTextAtomic(Path: string; Text: string): Result of (boolean, Fs.FsError)` | publishes complete UTF-8 text through a same-directory temporary file |
+| function | `AppendText(Path: string; Text: string): Result of (boolean, Fs.FsError)` | appends UTF-8 text, creating a missing file |
+| function | `DeleteFile(Path: string): Result of (boolean, Fs.FsError)` | removes one file entry, returns `Ok(true)` |
+| function | `DeleteDir(Path: string): Result of (boolean, Fs.FsError)` | removes one empty directory, returns `Ok(true)` |
+| function | `DeleteDirAll(Path: string): Result of (boolean, Fs.FsError)` | removes a directory and all of its contents |
+| function | `CopyFile(Source: string; Target: string): Result of (boolean, Fs.FsError)` | copies one file, replacing the target |
+| function | `Rename(Source: string; Target: string): Result of (boolean, Fs.FsError)` | renames or moves a file or directory |
 | function | `Exists(Path: string): boolean` | `true` when the path exists |
 | function | `IsFile(Path: string): boolean` | `true` for a regular file |
 | function | `IsDir(Path: string): boolean` | `true` for a directory |
-| function | `CreateDir(Path: string): Result of (boolean, string)` | creates one directory, returns `Ok(true)` |
-| function | `CreateDirAll(Path: string): Result of (boolean, string)` | creates a directory and missing parents; an existing directory is `Ok(true)` |
-| function | `Glob(Pattern: string): Result of (array of string, string)` | expands a glob pattern to matching file paths |
-| function | `ReadDir(Path: string): Result of (array of string, string)` | sorted immediate entries, including files and directories |
-| function | `ReadDirAll(Path: string): Result of (array of string, string)` | sorted recursive entries below a directory |
-| function | `CopyDirAll(Source: string; Target: string): Result of (boolean, string)` | copies a directory tree into the target |
-| function | `FileSize(Path: string): Result of (integer, string)` | size of a regular file in bytes |
-| function | `ModifiedTime(Path: string): Result of (integer, string)` | last modification in Unix milliseconds |
+| function | `CreateDir(Path: string): Result of (boolean, Fs.FsError)` | creates one directory, returns `Ok(true)` |
+| function | `CreateDirAll(Path: string): Result of (boolean, Fs.FsError)` | creates a directory and missing parents; an existing directory is `Ok(true)` |
+| function | `Glob(Pattern: string): Result of (array of string, Fs.FsError)` | expands a glob pattern to matching file paths |
+| function | `ReadDir(Path: string): Result of (array of string, Fs.FsError)` | sorted immediate entries, including files and directories |
+| function | `ReadDirAll(Path: string): Result of (array of string, Fs.FsError)` | sorted recursive entries below a directory |
+| function | `CopyDirAll(Source: string; Target: string): Result of (boolean, Fs.FsError)` | copies a directory tree into the target |
+| function | `FileSize(Path: string): Result of (integer, Fs.FsError)` | size of a regular file in bytes |
+| function | `ModifiedTime(Path: string): Result of (integer, Fs.FsError)` | last modification in Unix milliseconds |
 | function | `IsSymLink(Path: string): boolean` | `true` when the path itself is a symbolic link |
-| function | `CurrentDir(): Result of (string, string)` | process working directory |
-| function | `SetCurrentDir(Path: string): Result of (boolean, string)` | changes the process working directory |
+| function | `CurrentDir(): Result of (string, Fs.FsError)` | process working directory |
+| function | `SetCurrentDir(Path: string): Result of (boolean, Fs.FsError)` | changes the process working directory |
 | function | `TempDir(): string` | host temporary directory |
-| function | `CreateTempDir(): Result of (string, string)` | creates a unique temporary directory |
-| function | `CreateTempFile(): Result of (string, string)` | creates a unique empty temporary file |
+| function | `CreateTempDir(): Result of (string, Fs.FsError)` | creates a unique temporary directory |
+| function | `CreateTempFile(): Result of (string, Fs.FsError)` | creates a unique empty temporary file |
 
-Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
+Fallible operations return `Error(Cause)` with a typed `Fs.FsError`. Host-backed
+variants retain the original native `HostError` cause; operational failures do not
+raise a runtime panic.
 
 ---
 
@@ -112,14 +114,14 @@ Filesystem calls block the thread that executes them. When a call runs inside `g
 
 ---
 
-## `function ReadText(Path: string): Result of (string, string)`
+## `function ReadText(Path: string): Result of (string, Fs.FsError)`
 
 Reads the entire file at `Path` as UTF-8 text.
 
-Files larger than 64 MiB return `Error(message)` instead of loading into memory.
+Files larger than 64 MiB return `Error(Cause)` instead of loading into memory.
 
 ```pascal id=example-2 fragment context=body-console-fs
-const Content: result of (string, string) := Fs.ReadText('notes.txt');
+const Content: result of (string, Fs.FsError) := Fs.ReadText('notes.txt');
 case Content of
   when Ok(const Text):
     Console.WriteLn(Text);
@@ -130,7 +132,7 @@ end case;
 
 ---
 
-## `function WriteText(Path: string; Text: string): Result of (boolean, string)`
+## `function WriteText(Path: string; Text: string): Result of (boolean, Fs.FsError)`
 
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
@@ -142,11 +144,11 @@ end if;
 
 ---
 
-## `function WriteTextAtomic(Path: string; Text: string): Result of (boolean, string)`
+## `function WriteTextAtomic(Path: string; Text: string): Result of (boolean, Fs.FsError)`
 
 Writes all UTF-8 bytes to a collision-resistant temporary sibling, flushes that
 file, and then atomically replaces `Path`. The previous file remains at `Path`
-until the replacement commits. A failure returns `Error(message)`, preserves an
+until the replacement commits. A failure returns `Error(Cause)`, preserves an
 existing destination, and removes the temporary file owned by that call.
 Callers therefore never observe a successfully published partially written
 file.
@@ -198,9 +200,9 @@ Console.WriteLn(Fs.IsDir('src'));
 
 ---
 
-## `function CreateDir(Path: string): Result of (boolean, string)`
+## `function CreateDir(Path: string): Result of (boolean, Fs.FsError)`
 
-Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
+Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(Cause)`.
 
 ```pascal id=example-8 fragment context=body-console-fs
 if Fs.CreateDir('build/output') is Ok(_) then
@@ -210,22 +212,22 @@ end if;
 
 ---
 
-## `function CreateDirAll(Path: string): Result of (boolean, string)`
+## `function CreateDirAll(Path: string): Result of (boolean, Fs.FsError)`
 
-Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(message)`. Directories created before a failure are not removed.
+Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(Cause)`. Directories created before a failure are not removed.
 
 ```pascal id=example-9 fragment context=body-console-fs
 case Fs.CreateDirAll('build/output/logs') of
   when Ok(const Created):
     Console.WriteLn('directory ready');
   when Error(const Message):
-    Console.WriteLn('cannot create directory: ' + Message);
+    Console.WriteLn('cannot create directory: ' + Message.Message());
 end case;
 ```
 
 ---
 
-## `function Glob(Pattern: string): Result of (array of string, string)`
+## `function Glob(Pattern: string): Result of (array of string, Fs.FsError)`
 
 Expands `Pattern` against the host filesystem and returns every matching **file** path in stable sorted order. Directory entries are never included.
 
@@ -249,40 +251,40 @@ Behavior:
 - Repository FPAS tests and demos that create files for globbing or I/O round-trips write under `.temp-data/` (gitignored) when run from the repository root. See [`Std.Test`](../testing/test.md).
 - A plain file path without glob metacharacters returns `Ok([Path])` when that file exists, otherwise `Ok([])`.
 - A valid pattern with no file matches returns `Ok([])` rather than an error.
-- Invalid pattern syntax or filesystem failures return `Error(message)`.
-- Patterns that match more than `1_000_000` files return `Error(message)`.
+- Invalid pattern syntax or filesystem failures return `Error(Cause)`.
+- Patterns that match more than `1_000_000` files return `Error(Cause)`.
 - Returned paths use `/` separators for deterministic cross-platform ordering.
 
 Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate. On Windows, drive-relative patterns and separator normalization follow the same rules as the project loader and `fpas fmt` glob expansion.
 
 ---
 
-## `function ReadDir(Path: string): Result of (array of string, string)`
+## `function ReadDir(Path: string): Result of (array of string, Fs.FsError)`
 
 Returns all immediate entry paths, including files, empty directories, and links,
 in stable lexical order with `/` separators. Relative inputs produce relative
 entry paths. The operation does not recurse or follow child directory links.
 An empty directory returns `Ok([])`. Missing directories, file paths, read errors,
-and non-UTF-8 entry paths return `Error(message)` rather than an empty result.
+and non-UTF-8 entry paths return `Error(Cause)` rather than an empty result.
 A call is limited to 1,000,000 entries. `Glob` retains its file-only behavior.
 The call blocks its executing thread and may be run in a `go` task.
 
 ---
 
-## `function ReadDirAll(Path: string): Result of (array of string, string)`
+## `function ReadDirAll(Path: string): Result of (array of string, Fs.FsError)`
 
 Returns every entry below the directory `Path`, recursively, including files,
 directories, and links, in stable lexical order with `/` separators. Directory
 links are listed but not followed. The same limits and errors as `ReadDir`
 apply; the 1,000,000-entry limit covers the whole tree.
 
-## `function CopyDirAll(Source: string; Target: string): Result of (boolean, string)`
+## `function CopyDirAll(Source: string; Target: string): Result of (boolean, Fs.FsError)`
 
 Copies the directory tree `Source` into `Target` and returns `Ok(true)`.
 Missing target directories are created, existing files are replaced, and
 other existing entries in `Target` are kept. A `Source` that is not a
 directory, a `Target` inside `Source`, a symbolic link in the tree, and OS
-errors return `Error(message)`; entries copied before a failure remain.
+errors return `Error(Cause)`; entries copied before a failure remain.
 
 The source/target relationship is checked before creating or writing target entries.
 Relative and absolute targets are resolved through existing filesystem ancestors,
@@ -293,12 +295,12 @@ remaining target directories do not yet exist.
 
 ## Metadata
 
-### `function FileSize(Path: string): Result of (integer, string)`
+### `function FileSize(Path: string): Result of (integer, Fs.FsError)`
 
 Returns the size in bytes of the regular file at `Path`. Directories, missing
-paths, and OS errors return `Error(message)`.
+paths, and OS errors return `Error(Cause)`.
 
-### `function ModifiedTime(Path: string): Result of (integer, string)`
+### `function ModifiedTime(Path: string): Result of (integer, Fs.FsError)`
 
 Returns the last modification time of the file or directory at `Path` in
 milliseconds since the Unix epoch, the same scale as
@@ -322,12 +324,12 @@ Returns `true` when `Path` itself is a symbolic link. Unlike `IsFile` and
 
 ## Working and temporary directories
 
-### `function CurrentDir(): Result of (string, string)`
+### `function CurrentDir(): Result of (string, Fs.FsError)`
 
 Returns the absolute current working directory of the process with `/`
 separators. Relative paths in every `Std.Fs` call resolve against it.
 
-### `function SetCurrentDir(Path: string): Result of (boolean, string)`
+### `function SetCurrentDir(Path: string): Result of (boolean, Fs.FsError)`
 
 Changes the current working directory and returns `Ok(true)`. The working
 directory belongs to the whole process: the change affects all tasks and every
@@ -339,12 +341,12 @@ programs.
 Returns the host temporary directory with `/` separators. The directory is not
 created or checked.
 
-### `function CreateTempDir(): Result of (string, string)`
+### `function CreateTempDir(): Result of (string, Fs.FsError)`
 
 Creates a new, empty, uniquely named directory inside `TempDir()` and returns
 its path. The caller owns it and removes it, for example with `DeleteDirAll`.
 
-### `function CreateTempFile(): Result of (string, string)`
+### `function CreateTempFile(): Result of (string, Fs.FsError)`
 
 Creates a new, empty, uniquely named file inside `TempDir()` and returns its
 path. Creation fails rather than reusing an existing entry. The caller owns the
@@ -385,3 +387,9 @@ end case;
 
 - [Host I/O index](README.md)
 - [Standard library index](../README.md)
+
+## Typed failures
+
+Every Result-returning operation uses `FsError`. Native classifications select `FileNotFound(Path, Cause)`, `AccessDenied(Path, Cause)`, `AlreadyExists(Path, Cause)`, `NotDirectory(Path, Cause)`, `IsDirectory(Path, Cause)`, `NotEmpty(Path, Cause)` or `ReadOnly(Path, Cause)`. Other I/O failures use `IoFailure(Cause)`. Each Cause is the original [HostError](errors.md), including the attempted operation, supplied resources and optional native code. Multi-resource operations retain source then target; when the backend does not identify the failed path, the outer variant uses the attempted primary path. No preflight access check replaces the operation.
+
+Validation uses `InvalidArgument(Name, Reason)`, `InvalidPattern(Pattern, Reason)`, `InvalidEncoding(Path, Detail)` or `LimitExceeded(Operation, Limit)`. Limits and success values remain as above. Branch on variants; render `Cause.Message()` when producing text.

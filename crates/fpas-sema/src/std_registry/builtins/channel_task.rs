@@ -62,7 +62,7 @@ pub(super) fn check_channel_task_builtin_std_call(
             } else {
                 expect_cancellation_token(c, args[1]);
             }
-            Ty::Result(Box::new(Ty::Integer), Box::new(Ty::String))
+            Ty::Result(Box::new(Ty::Integer), Box::new(task_error_type(c)))
         }
         _ => return None,
     };
@@ -126,7 +126,7 @@ fn check_send(
         ChannelWaitArg::Cancellation => expect_cancellation_token(c, args[2]),
         ChannelWaitArg::Timeout => expect_type(c, args[2], &Ty::Integer, "channel send timeout"),
     }
-    channel_result(Ty::Boolean)
+    channel_result(c, Ty::Boolean)
 }
 
 fn check_receive(
@@ -153,7 +153,7 @@ fn check_receive(
     if optional {
         element = Ty::Option(Box::new(element));
     }
-    channel_result(element)
+    channel_result(c, element)
 }
 
 fn check_close_channel(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
@@ -164,8 +164,8 @@ fn check_close_channel(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     Ty::Boolean
 }
 
-fn channel_result(value: Ty) -> Ty {
-    Ty::Result(Box::new(value), Box::new(Ty::String))
+fn channel_result(c: &mut Checker, value: Ty) -> Ty {
+    Ty::Result(Box::new(value), Box::new(task_error_type(c)))
 }
 
 fn expect_channel_arg(c: &mut Checker, expr: &Expr) -> Option<Ty> {
@@ -291,4 +291,8 @@ fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) 
             Ty::Unit
         }
     }
+}
+
+fn task_error_type(c: &mut Checker) -> Ty {
+    crate::std_registry::native_error_type(c, fpas_std::native_errors::NativeErrorFamily::Task)
 }

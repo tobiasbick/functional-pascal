@@ -17,6 +17,25 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
+        Intrinsic::Conv(ConvIntrinsic::ErrorMatchesVariant) => {
+            let expected = crate::intrinsic_args::pop_string(pop_value(call, location)?, location)?;
+            let value = pop_value(call, location)?;
+            let matches = matches!(&value, Value::Enum(value) if value.body().layout.error.is_some()
+                && format!("{}.{}", value.body().layout.type_name, value.body().layout.variant).eq_ignore_ascii_case(&expected));
+            call.push(Value::Boolean(matches));
+        }
+        Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => {
+            let value = pop_value(call, location)?;
+            if !matches!(&value, Value::Enum(value) if value.body().layout.error.is_some()) {
+                return Err(std_runtime_error(
+                    RUNTIME_CONVERSION_FAILURE,
+                    "Message() requires a native error value",
+                    "Use a concrete error family or an Error-constrained receiver.",
+                    location,
+                ));
+            }
+            call.push(Value::Str(value.to_string().into()));
+        }
         Intrinsic::Conv(ConvIntrinsic::IntToStr) => {
             let n = pop_int(pop_value(call, location)?, location)?;
             call.push(Value::Str(format!("{n}").into()));

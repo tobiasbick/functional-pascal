@@ -151,6 +151,17 @@ fn enum_variants(
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             let layout = Arc::new(RuntimeEnumLayout {
+                error: variant
+                    .error
+                    .as_ref()
+                    .map(|error| {
+                        fpas_bytecode::RuntimeErrorVariant::from_metadata(
+                            error,
+                            &executable.strings,
+                        )
+                    })
+                    .transpose()
+                    .map_err(|_| unsupported_metadata())?,
                 enumeration,
                 variant_id,
                 type_name: type_name.to_string(),

@@ -5,6 +5,8 @@ use crate::object::SymbolReference;
 /// Persistent object constant using semantic bit identity.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjectConstant {
+    /// Concrete compiler-supplied constructor, resolved to a shared function at linking.
+    ErrorConstructor(crate::errors::ErrorConstructorRequest),
     /// Signed integer.
     Integer(i64),
     /// Exact IEEE-754 bit pattern.
@@ -118,6 +120,8 @@ pub struct ObjectRecordMethod {
 /// One enum variant and its associated fields.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectEnumVariant {
+    /// Essential error metadata, absent for ordinary enum variants.
+    pub error: Option<super::ObjectErrorVariant>,
     /// Canonical variant name.
     pub name: String,
     /// Canonical associated-field names in declaration order.
@@ -211,6 +215,8 @@ pub enum ObjectDebugType {
 /// Ordered enum layout.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectEnumLayout {
+    /// Concrete semantic identity, absent for ordinary erased enum layouts.
+    pub error: Option<fpas_bytecode::ErrorInstanceKey>,
     /// Canonical type name.
     pub name: String,
     /// Variants in declaration order.

@@ -10,7 +10,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.AssertTrue(('Invalid glob pattern' in Message));
+        Test.AssertTrue(Message is Fs.FsError.InvalidPattern('[unclosed', _));
       end;
   end case;
 end.

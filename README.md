@@ -269,7 +269,7 @@ program ParseExample;
 
 uses Std.Parse as Parse, Std.Console as Console;
 
-function DoubleInput(Text: string): result of (integer, string);
+function DoubleInput(Text: string): result of (integer, Parse.ParseError);
 begin
   const Value := try Parse.Int(Text := Text);
   return Ok(Value * 2);

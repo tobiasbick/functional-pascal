@@ -2,14 +2,13 @@ program CanonicalParsers;
 
 uses Std.Parse as Parse, Std.Conv as Conv, Std.Test as Test;
 
-procedure Invalid(Value: result of (integer, string); Text: string);
+procedure Invalid(Value: result of (integer, Parse.ParseError); Range: boolean);
 begin
-  case Value of
-    when Ok(_):
-      panic('Expected an invalid integer');
-    when Error(const Message):
-      Test.AssertTrue(Text in Message);
-  end case;
+  Test.AssertTrue(
+    if Range then Value is Error(Parse.ParseError.OutOfRange(_, _))
+      else Value is Error(Parse.ParseError.InvalidSyntax(_, _))
+      end if
+  );
 end procedure;
 
 begin
@@ -24,11 +23,11 @@ begin
 
   Test.AssertTrue(Parse.HexInt('-0x8000000000000000') = Ok(-9223372036854775808));
   Test.AssertTrue(Parse.HexInt('+7fff_ffff_ffff_ffff') = Ok(9223372036854775807));
-  Invalid(Parse.Int('0xFF'), '0xFF');
-  Invalid(Parse.Int('1__0'), '1__0');
-  Invalid(Parse.Int('9223372036854775808'), '9223372036854775808');
-  Invalid(Parse.HexInt('8000000000000000'), '8000000000000000');
-  Invalid(Parse.HexInt('xyz'), 'xyz');
+  Invalid(Parse.Int('0xFF'), false);
+  Invalid(Parse.Int('1__0'), false);
+  Invalid(Parse.Int('9223372036854775808'), true);
+  Invalid(Parse.HexInt('8000000000000000'), true);
+  Invalid(Parse.HexInt('xyz'), false);
   Test.AssertTrue(Parse.Bool(Text := ' TrUe ') = Ok(true));
   Test.AssertTrue(Parse.Bool(' FALSE ') = Ok(false));
   Test.AssertTrue(Parse.Bool('1') is Error(_));
@@ -47,11 +46,11 @@ begin
   for Text: string in ['1e3', 'inf', 'NaN', '1.0e-9999', '1.0e9999'] do
     Test.AssertTrue(Parse.Real(Text) is Error(_));
   end for;
-  const Read: function(Text: string): result of (integer, string) := Parse.Int;
+  const Read: function(Text: string): result of (integer, Parse.ParseError) := Parse.Int;
   Test.AssertTrue(Read(Text := '42') = Ok(42));
-  const ReadReal: function(Text: string): result of (real, string) := Parse.Real;
-  const ReadBool: function(Text: string): result of (boolean, string) := Parse.Bool;
-  const ReadHex: function(Text: string): result of (integer, string) := Parse.HexInt;
+  const ReadReal: function(Text: string): result of (real, Parse.ParseError) := Parse.Real;
+  const ReadBool: function(Text: string): result of (boolean, Parse.ParseError) := Parse.Bool;
+  const ReadHex: function(Text: string): result of (integer, Parse.ParseError) := Parse.HexInt;
   Test.AssertTrue(ReadReal('1.0') = Ok(1.0));
   Test.AssertTrue(ReadBool('false') = Ok(false));
   Test.AssertTrue(ReadHex('10') = Ok(16));

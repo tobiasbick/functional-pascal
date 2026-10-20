@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
+use super::failure::Failure;
 use std::fs::{self, OpenOptions};
 use std::io;
 use std::path::Path;
@@ -16,13 +17,13 @@ pub(super) fn temp_dir() -> String {
 }
 
 /// Create a new, uniquely named empty directory below the temporary directory.
-pub(super) fn create_temp_dir() -> Result<String, String> {
-    create_unique("CreateTempDir", |path| fs::create_dir(path))
+pub(super) fn create_temp_dir() -> Result<String, Failure> {
+    create_unique("Std.Fs.CreateTempDir", |path| fs::create_dir(path))
 }
 
 /// Create a new, uniquely named empty file below the temporary directory.
-pub(super) fn create_temp_file() -> Result<String, String> {
-    create_unique("CreateTempFile", |path| {
+pub(super) fn create_temp_file() -> Result<String, Failure> {
+    create_unique("Std.Fs.CreateTempFile", |path| {
         OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -32,9 +33,9 @@ pub(super) fn create_temp_file() -> Result<String, String> {
 }
 
 fn create_unique(
-    operation: &str,
+    operation: &'static str,
     create: impl Fn(&Path) -> io::Result<()>,
-) -> Result<String, String> {
+) -> Result<String, Failure> {
     static NEXT: AtomicU64 = AtomicU64::new(1);
     let root = std::env::temp_dir();
     for _ in 0..MAX_ATTEMPTS {
@@ -49,12 +50,10 @@ fn create_unique(
         match create(&candidate) {
             Ok(()) => return Ok(slash_path(&candidate)),
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
-            Err(error) => return Err(format!("{operation} failed: {error}")),
+            Err(error) => return Err(Failure::at(&candidate, error)),
         }
     }
-    Err(format!(
-        "{operation} failed: no unique name after {MAX_ATTEMPTS} attempts"
-    ))
+    Err(Failure::LimitExceeded(operation, i64::from(MAX_ATTEMPTS)))
 }
 
 fn slash_path(path: &Path) -> String {

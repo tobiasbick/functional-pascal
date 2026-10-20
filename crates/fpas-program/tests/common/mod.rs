@@ -150,9 +150,11 @@ pub fn program_image() -> ProgramImage {
             }],
         }],
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(6),
         }],
         enum_variants: vec![EnumVariant {
+            error: None,
             owner: EnumTypeId::new(0),
             name: StringId::new(7),
             fields: vec![StringId::new(5)],

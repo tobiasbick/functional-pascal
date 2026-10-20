@@ -10,6 +10,14 @@ defines workloads; [benchmark documentation](../../../docs/bench/README.md)
 explains drivers and measurement boundaries. Use `cargo bench-fpas --help` for
 configured groups and `cargo bench-fpas native --help` for native drivers.
 
+## Execution environment
+
+In a cloud environment, run correctness checks only. Do not collect timing
+baselines, compare elapsed times or record cloud results in benchmark history.
+Performance acceptance requires a controlled local host. If only cloud execution
+is available, state that timing acceptance is unverified and continue functional
+verification without creating benchmark reports.
+
 ## Before and after
 
 1. Select workloads that exercise the proposed change. Save a baseline before

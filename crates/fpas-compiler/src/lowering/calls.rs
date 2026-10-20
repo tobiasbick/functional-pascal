@@ -66,7 +66,13 @@ impl LoweringContext {
         let resolves_callable = qualified
             .as_deref()
             .is_some_and(|name| self.selected_callable(name, designator.span).is_some());
-        if !resolves_callable && let Some(fpas_ir::IrType::Enum(layout)) = self.type_kind(result) {
+        let value_call = qualified
+            .as_deref()
+            .is_some_and(|name| self.has_binding(name) || self.has_global(name));
+        if !resolves_callable
+            && !value_call
+            && let Some(fpas_ir::IrType::Enum(layout)) = self.type_kind(result)
+        {
             let name = designator
                 .parts
                 .last()

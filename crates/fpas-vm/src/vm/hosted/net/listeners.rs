@@ -1,8 +1,9 @@
 //! VM-owned TCP listener registry.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::collections::HashMap;
 use std::io;
-use std::net::{SocketAddr, TcpListener};
+use std::net::{SocketAddr, TcpListener, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -57,7 +58,7 @@ impl NetworkListeners {
 
     /// Bind a TCP listener and return its opaque runtime handle.
     /// Port zero requests an OS-assigned port; see `docs/pascal/std/network/net.md`.
-    pub(super) fn listen(&self, host: &str, port: i64) -> Result<u64, String> {
+    pub(super) fn listen(&self, host: &str, port: i64) -> Result<u64, Failure> {
         self.bind(host, port, ListenerMode::Tcp)
     }
 
@@ -70,7 +71,7 @@ impl NetworkListeners {
         certificate_path: &str,
         private_key_path: &str,
         handshake_timeout_millis: i64,
-    ) -> Result<u64, String> {
+    ) -> Result<u64, Failure> {
         let tls = TlsServer::from_pem_files(
             certificate_path,
             private_key_path,
@@ -81,21 +82,43 @@ impl NetworkListeners {
 
     /// Return the bound address of an open TCP or TLS listener.
     /// See `docs/pascal/std/network/net.md`.
-    pub(super) fn local_address(&self, handle: u64) -> Result<SocketAddr, String> {
-        self.listener(handle)?
-            .socket
-            .local_addr()
-            .map_err(|error| format!("Could not read network listener address: {error}"))
+    pub(super) fn local_address(&self, handle: u64) -> Result<SocketAddr, Failure> {
+        self.listener(handle)?.socket.local_addr().map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not read network listener address: {error}"),
+            )
+        })
     }
 
-    fn bind(&self, host: &str, port: i64, mode: ListenerMode) -> Result<u64, String> {
+    fn bind(&self, host: &str, port: i64, mode: ListenerMode) -> Result<u64, Failure> {
         let port = listener_port(port)?;
-        let socket = TcpListener::bind((host, port)).map_err(|error| {
-            format!("Could not bind network listener on {host}:{port}: {error}")
+        let addresses = (host, port)
+            .to_socket_addrs()
+            .map_err(|error| {
+                Failure::resolve(
+                    &error,
+                    format!("Could not resolve listener host '{host}': {error}"),
+                )
+            })?
+            .collect::<Vec<_>>();
+        if addresses.is_empty() {
+            return Err(Failure::no_addresses(format!(
+                "Listener host '{host}' resolved to no addresses"
+            )));
+        }
+        let socket = TcpListener::bind(addresses.as_slice()).map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not bind network listener on {host}:{port}: {error}"),
+            )
         })?;
-        socket
-            .set_nonblocking(true)
-            .map_err(|error| format!("Could not configure network listener: {error}"))?;
+        socket.set_nonblocking(true).map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not configure network listener: {error}"),
+            )
+        })?;
         let handle = self.next_handle.fetch_add(1, Ordering::Relaxed);
         let listener = Arc::new(Listener {
             socket,
@@ -107,14 +130,14 @@ impl NetworkListeners {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         if self.shutdown.load(Ordering::Acquire) {
-            return Err("Network listener cannot be opened after VM shutdown".to_string());
+            return Err(Failure::Closed);
         }
         listeners.insert(handle, listener);
         Ok(handle)
     }
 
     /// Accept one TCP or TLS connection from a listener.
-    pub(super) fn accept(&self, handle: u64) -> Result<Transport, String> {
+    pub(super) fn accept(&self, handle: u64) -> Result<Transport, Failure> {
         self.accept_until_cancelled(handle, || false)
     }
 
@@ -123,7 +146,7 @@ impl NetworkListeners {
         &self,
         handle: u64,
         is_cancelled: impl Fn() -> bool,
-    ) -> Result<Transport, String> {
+    ) -> Result<Transport, Failure> {
         self.accept_until_cancelled(handle, is_cancelled)
     }
 
@@ -131,7 +154,7 @@ impl NetworkListeners {
         &self,
         handle: u64,
         is_cancelled: impl Fn() -> bool,
-    ) -> Result<Transport, String> {
+    ) -> Result<Transport, Failure> {
         let listener = self.listener(handle)?;
         loop {
             ensure_accept_active(&listener, &is_cancelled)?;
@@ -141,17 +164,28 @@ impl NetworkListeners {
                     std::thread::park_timeout(Duration::from_millis(10));
                     continue;
                 }
-                Err(error) => return Err(format!("Network listener accept failed: {error}")),
+                Err(error) => {
+                    return Err(Failure::io(
+                        &error,
+                        format!("Network listener accept failed: {error}"),
+                    ));
+                }
             };
             ensure_accept_active(&listener, &is_cancelled)?;
             // Windows accepted sockets inherit the listener's non-blocking mode; plain reads and
             // TLS handshake timeouts require a blocking socket.
-            stream
-                .set_nonblocking(false)
-                .map_err(|error| format!("Could not configure accepted connection: {error}"))?;
-            stream
-                .set_nodelay(true)
-                .map_err(|error| format!("Could not configure accepted connection: {error}"))?;
+            stream.set_nonblocking(false).map_err(|error| {
+                Failure::io(
+                    &error,
+                    format!("Could not configure accepted connection: {error}"),
+                )
+            })?;
+            stream.set_nodelay(true).map_err(|error| {
+                Failure::io(
+                    &error,
+                    format!("Could not configure accepted connection: {error}"),
+                )
+            })?;
             match &listener.mode {
                 ListenerMode::Tcp => {
                     ensure_accept_active(&listener, &is_cancelled)?;
@@ -170,16 +204,14 @@ impl NetworkListeners {
     }
 
     /// Close and invalidate one listener handle.
-    pub(in crate::vm::hosted) fn close(&self, handle: u64) -> Result<(), String> {
+    pub(in crate::vm::hosted) fn close(&self, handle: u64) -> Result<(), Failure> {
         validate_handle(handle)?;
         let listener = self
             .listeners
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .remove(&handle)
-            .ok_or_else(|| {
-                "Network listener is closed or does not belong to this VM".to_string()
-            })?;
+            .ok_or(Failure::Closed)?;
         listener.close();
         Ok(())
     }
@@ -200,49 +232,57 @@ impl NetworkListeners {
     }
 
     /// Validate a listener before transferring it to a server lifetime.
-    pub(in crate::vm::hosted) fn validate(&self, handle: u64) -> Result<(), String> {
+    pub(in crate::vm::hosted) fn validate(&self, handle: u64) -> Result<(), Failure> {
         self.listener(handle).map(|_| ())
     }
 
-    fn listener(&self, handle: u64) -> Result<Arc<Listener>, String> {
+    fn listener(&self, handle: u64) -> Result<Arc<Listener>, Failure> {
         validate_handle(handle)?;
         self.listeners
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .get(&handle)
             .cloned()
-            .ok_or_else(|| "Network listener is closed or does not belong to this VM".to_string())
+            .ok_or(Failure::Closed)
     }
 }
 
 fn ensure_accept_active(
     listener: &Listener,
     is_cancelled: impl Fn() -> bool,
-) -> Result<(), String> {
+) -> Result<(), Failure> {
     if is_cancelled() {
-        return Err("Network accept cancelled".to_string());
+        return Err(Failure::Cancelled);
     }
     if listener.is_closed() {
-        return Err("Network listener is closed or does not belong to this VM".to_string());
+        return Err(Failure::Closed);
     }
     Ok(())
 }
 
-fn listener_port(port: i64) -> Result<u16, String> {
-    u16::try_from(port)
-        .map_err(|_| format!("Network listener port must be in 0..=65535, got {port}"))
+fn listener_port(port: i64) -> Result<u16, Failure> {
+    u16::try_from(port).map_err(|_| {
+        Failure::argument(
+            "Port",
+            format!("Network listener port must be in 0..=65535, got {port}"),
+        )
+    })
 }
 
-fn validate_handle(handle: u64) -> Result<(), String> {
+fn validate_handle(handle: u64) -> Result<(), Failure> {
     if handle & HANDLE_TAG_MASK == HANDLE_TAG {
         Ok(())
     } else {
-        Err("Value is not a network listener handle".to_string())
+        Err(Failure::argument(
+            "Listener",
+            "Value is not a network listener handle",
+        ))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::Failure;
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
     use std::sync::atomic::{AtomicBool, Ordering};
@@ -333,7 +373,13 @@ mod tests {
             )
             .expect_err("missing TLS files must fail");
 
-        assert!(error.contains("certificate"));
+        assert!(matches!(
+            error,
+            Failure::Native {
+                kind: crate::vm::hosted::net::failure::NativeKind::IoFailure,
+                ..
+            }
+        ));
         TcpListener::bind(("127.0.0.1", port))
             .expect("invalid TLS configuration must not bind the socket");
     }
@@ -365,7 +411,10 @@ mod tests {
             Ok(_) => panic!("closed listener must not accept a connection"),
             Err(error) => error,
         };
-        assert!(error.contains("closed"), "unexpected error: {error}");
+        assert!(
+            matches!(error, Failure::Closed),
+            "unexpected error: {error}"
+        );
     }
 
     #[test]
@@ -399,7 +448,7 @@ mod tests {
             Ok(_) => panic!("cancelled accept must fail"),
             Err(error) => error,
         };
-        assert_eq!(error, "Network accept cancelled");
+        assert_eq!(error, Failure::Cancelled);
         listeners.close(handle).expect("listener remains open");
     }
 
@@ -420,7 +469,7 @@ mod tests {
             Ok(_) => panic!("final cancellation must win"),
             Err(error) => error,
         };
-        assert_eq!(error, "Network accept cancelled");
+        assert_eq!(error, Failure::Cancelled);
         listeners.close(handle).expect("listener remains open");
     }
 }

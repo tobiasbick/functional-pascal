@@ -53,7 +53,7 @@ end function;
 // Parameters:
 // - `Text`: Complete decoded message head.
 // - `MessageKind`: Message label used in diagnostics.
-public function Parse(Text: string; MessageKind: string): result of (array of Types.Header, string);
+public function Parse(Text: string; MessageKind: string): result of (array of Types.Header, Types.HttpError);
 begin
   const Lines: array of string := Text.Split(#13 + #10);
   var Headers: array of Types.Header := [];
@@ -62,22 +62,38 @@ begin
       const Delimiter := Lines[Index].IndexOf(':');
       case Delimiter of
         when None:
-          return Error('Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]);
+          return Error(
+            Types.HttpError.InvalidMessage(
+              'Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]
+            )
+          );
         when Some(const Colon):
           if Colon = 0 then
-            return Error('Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]);
+            return Error(
+              Types.HttpError.InvalidMessage(
+                'Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]
+              )
+            );
           end if;
           const Name: string := (Lines[Index]).Slice(0, Colon);
           const Value: string := (Lines[Index]).Slice(Colon + 1, Lines[Index].Length() - Colon - 1);
           if not Method.IsValidToken(Name) then
             begin
-              return Error('Invalid HTTP ' + MessageKind + ' header name: ' + Name);
+              return Error(
+                Types.HttpError.InvalidMessage(
+                  'Invalid HTTP ' + MessageKind + ' header name: ' + Name
+                )
+              );
             end;
           end if;
 
           if not IsValidValue(Value) then
             begin
-              return Error('HTTP ' + MessageKind + ' header contains an invalid control character');
+              return Error(
+                Types.HttpError.InvalidMessage(
+                  'HTTP ' + MessageKind + ' header contains an invalid control character'
+                )
+              );
             end;
           end if;
 

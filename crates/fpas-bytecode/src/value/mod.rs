@@ -1,6 +1,7 @@
 mod aggregate;
 mod array;
 mod display;
+mod drain;
 mod equal;
 mod function;
 mod managed_heap;
@@ -10,8 +11,8 @@ mod reference;
 mod string;
 
 pub use aggregate::{
-    EnumValue, RecordValue, RuntimeEnumLayout, RuntimeRecordLayout, SharedDict, SharedEnum,
-    SharedRecord,
+    EnumConstructionError, EnumValue, RecordValue, RuntimeEnumLayout, RuntimeErrorVariant,
+    RuntimeRecordLayout, SharedDict, SharedEnum, SharedRecord,
 };
 pub use array::SharedArray;
 use equal::values_equal;
@@ -231,6 +232,7 @@ mod tests {
     fn enumeration(type_name: &str, variant: &str, fields: Vec<Value>) -> Value {
         Value::Enum(SharedEnum::new(
             std::sync::Arc::new(RuntimeEnumLayout {
+                error: None,
                 enumeration: crate::EnumTypeId::new(0),
                 variant_id: crate::EnumVariantId::new(0),
                 type_name: type_name.to_string(),
@@ -357,6 +359,7 @@ mod tests {
 
         let enumeration = Value::Enum(SharedEnum::new(
             std::sync::Arc::new(RuntimeEnumLayout {
+                error: None,
                 enumeration: crate::EnumTypeId::new(0),
                 variant_id: crate::EnumVariantId::new(0),
                 type_name: "Demo.Choice".to_string(),

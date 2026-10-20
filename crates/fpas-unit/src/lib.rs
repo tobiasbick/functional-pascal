@@ -13,6 +13,7 @@
 //! Documentation: `docs/pascal/program-structure/units.md` and
 //! `docs/pascal/program-structure/projects.md`.
 
+pub mod errors;
 mod format;
 mod identity;
 pub mod interface;

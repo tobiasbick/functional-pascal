@@ -4,6 +4,7 @@ mod codec;
 mod conversion;
 mod debug_types;
 mod error;
+mod errors;
 mod from_executable;
 mod function;
 mod metadata;
@@ -19,6 +20,7 @@ use fpas_bytecode::Instruction;
 
 pub use codec::{decode_object, encode_object};
 pub use error::ObjectError;
+pub use errors::{ObjectErrorSchema, ObjectErrorVariant};
 pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
@@ -39,11 +41,13 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 14;
+pub const OBJECT_VERSION: u16 = 16;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct RelocatableObject {
+    /// Error declaration templates retained for concrete source-less callers.
+    pub error_schemas: Vec<ObjectErrorSchema>,
     /// Object schema version.
     pub version: u16,
     /// Canonical owner unit, or root program name.
@@ -113,7 +117,12 @@ impl RelocatableObject {
         }
         for (index, enumeration) in self.enums.iter().enumerate() {
             self.definitions.push(ObjectDefinition {
-                name: canonical(&enumeration.name),
+                name: match &enumeration.error {
+                    Some(key) => {
+                        crate::errors::instance_symbol(key).map_err(ObjectError::Encode)?
+                    }
+                    None => canonical(&enumeration.name),
+                },
                 target: DefinitionTarget::Enum(
                     u32::try_from(index).map_err(|_| ObjectError::Overflow("enum index"))?,
                 ),
@@ -131,6 +140,7 @@ impl RelocatableObject {
     ///
     /// Returns a structured [`ObjectError`] for the first deterministic violation.
     pub fn validate(&self) -> Result<(), ObjectError> {
+        errors::validate(self)?;
         if self.version != OBJECT_VERSION {
             return Err(ObjectError::Version {
                 actual: self.version,
@@ -260,7 +270,7 @@ impl RelocatableObject {
                 function,
                 &self.functions,
                 self.sources.len(),
-                self.debug_types.len(),
+                &self.debug_types,
             )?;
             for (instruction_index, word) in function.code.iter().copied().enumerate() {
                 let instruction = Instruction::from_word(word);

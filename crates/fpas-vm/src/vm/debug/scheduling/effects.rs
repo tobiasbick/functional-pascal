@@ -107,6 +107,8 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
         ) => None,
         Intrinsic::Conv(
             fpas_bytecode::ConvIntrinsic::IntToStr
+            | fpas_bytecode::ConvIntrinsic::ErrorMessage
+            | fpas_bytecode::ConvIntrinsic::ErrorMatchesVariant
             | fpas_bytecode::ConvIntrinsic::RealToStr
             | fpas_bytecode::ConvIntrinsic::IntToReal
             | fpas_bytecode::ConvIntrinsic::BoolToStr
@@ -198,7 +200,8 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
             fpas_bytecode::ResultIntrinsic::Unwrap
             | fpas_bytecode::ResultIntrinsic::Map
             | fpas_bytecode::ResultIntrinsic::AndThen
-            | fpas_bytecode::ResultIntrinsic::OrElse,
+            | fpas_bytecode::ResultIntrinsic::OrElse
+            | fpas_bytecode::ResultIntrinsic::MapError,
         ) => None,
         Intrinsic::Option(
             fpas_bytecode::OptionIntrinsic::Unwrap

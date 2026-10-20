@@ -14,7 +14,7 @@ begin
     ])
   ]);
   const Encoded: string := Toml.Stringify(Source);
-  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(Encoded);
+  const Parsed: result of (Toml.TomlValue, Toml.TomlError) := Toml.Parse(Encoded);
   case Parsed of
     when Ok(const Value):
       begin
@@ -71,7 +71,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 end.

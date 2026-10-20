@@ -11,6 +11,11 @@ documented_intrinsic_enum! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum ConvIntrinsic {
+    /// Automatic native-error text, including typed causes.
+    /// Documentation: `docs/pascal/language/types/errors.md`.
+    ErrorMessage = 700,
+    /// Internal closed-pattern test for a statically checked generic error family.
+    ErrorMatchesVariant = 701,
     IntToStr = 40,
     RealToStr = 42,
     IntToReal = 45,

@@ -33,12 +33,14 @@ end procedure;
 //
 // Parameters:
 // - `StreamValue`: Body-stream handle to resolve.
-function StateIndex(StreamValue: HttpTypes.BodyStream): result of (integer, string);
+function StateIndex(StreamValue: HttpTypes.BodyStream): result of (integer, HttpTypes.HttpError);
 begin
   const Slot: integer := Handles.BodyStreamSlot(StreamValue);
   if (Slot < 1) or (not HasState(Slot)) then
     begin
-      return Error('HTTP body stream handle is invalid');
+      return Error(
+        HttpTypes.HttpError.InvalidArgument('StreamValue', 'HTTP body stream handle is invalid')
+      );
     end;
   end if;
 
@@ -54,7 +56,7 @@ begin
   var State: Types.StreamState := LoadState(Index);
   if State.Open then
     begin
-      case Net.Close(State.Connection) of
+      case Net.Close(State.Connection).MapError(HttpTypes.HttpError.Transport) of
         when Ok(_):
           begin
           end;
@@ -75,7 +77,7 @@ end procedure;
 //
 // Parameters:
 // - `Index`: One-based stream-state slot.
-function ReadNetwork(Index: integer): result of (boolean, string);
+function ReadNetwork(Index: integer): result of (boolean, HttpTypes.HttpError);
 begin
   var State: Types.StreamState := LoadState(Index);
   if not State.Open then
@@ -111,7 +113,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Count`: Required buffered byte count.
-function EnsureBytes(Index: integer; Count: integer): result of (boolean, string);
+function EnsureBytes(Index: integer; Count: integer): result of (boolean, HttpTypes.HttpError);
 begin
   while LoadState(Index).Buffer.Length() < Count do
     begin
@@ -160,7 +162,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadFixed(Index: integer; Maximum: integer): result of (array of integer, string);
+function ReadFixed(Index: integer; Maximum: integer): result of (array of integer, HttpTypes.HttpError);
 begin
   if LoadState(Index).Remaining = 0 then
     begin
@@ -177,7 +179,7 @@ begin
             if not ReadMore then
               begin
                 CloseAt(Index);
-                return Error('HTTP response body is shorter than Content-Length');
+                return Error(HttpTypes.HttpError.UnexpectedEnd('Std.Http.Stream.ReadFixed'));
               end;
             end if;
           end;
@@ -212,7 +214,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadUntilClose(Index: integer; Maximum: integer): result of (array of integer, string);
+function ReadUntilClose(Index: integer; Maximum: integer): result of (array of integer, HttpTypes.HttpError);
 begin
   if LoadState(Index).Buffer.Length() = 0 then
     begin
@@ -241,7 +243,7 @@ end function;
 //
 // Parameters:
 // - `Index`: One-based stream-state slot.
-function ReadChunkSize(Index: integer): result of (integer, string);
+function ReadChunkSize(Index: integer): result of (integer, HttpTypes.HttpError);
 begin
   var LineEnd: integer := Wire.FindLineEnd(LoadState(Index).Buffer, 0);
   while LineEnd < 0 do
@@ -252,7 +254,7 @@ begin
             if not ReadMore then
               begin
                 CloseAt(Index);
-                return Error('HTTP chunk size line is incomplete');
+                return Error(HttpTypes.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunkSize'));
               end;
             end if;
           end;
@@ -269,14 +271,14 @@ begin
   const LineBytes: array of integer := State.Buffer.Slice(0, LineEnd);
   State.Buffer := State.Buffer.Slice(LineEnd + 2, State.Buffer.Length() - LineEnd - 2);
   StoreState(Index, State);
-  case Utf8.Decode(LineBytes) of
+  case Utf8.Decode(LineBytes).MapError(HttpTypes.HttpError.Encoding) of
     when Ok(const Line):
       begin
         return Wire.ParseChunkSize(Line);
       end;
     when Error(const Message):
       begin
-        return Error('HTTP chunk size is not ASCII: ' + Message);
+        return Error(Message);
       end;
   end case;
 end function;
@@ -286,7 +288,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadChunked(Index: integer; Maximum: integer): result of (array of integer, string);
+function ReadChunked(Index: integer; Maximum: integer): result of (array of integer, HttpTypes.HttpError);
 begin
   while true do
     begin
@@ -300,7 +302,9 @@ begin
                     if not ReadMore then
                       begin
                         CloseAt(Index);
-                        return Error('HTTP chunk body is incomplete');
+                        return Error(
+                          HttpTypes.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')
+                        );
                       end;
                     end if;
                   end;
@@ -339,7 +343,9 @@ begin
                 if not Complete then
                   begin
                     CloseAt(Index);
-                    return Error('HTTP chunk is missing its trailing CRLF');
+                    return Error(
+                      HttpTypes.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')
+                    );
                   end;
                 end if;
               end;
@@ -352,7 +358,9 @@ begin
           if (TerminatorState.Buffer[0] <> 13) or (TerminatorState.Buffer[1] <> 10) then
             begin
               CloseAt(Index);
-              return Error('HTTP chunk is missing its trailing CRLF');
+              return Error(
+                HttpTypes.HttpError.InvalidMessage('HTTP chunk is missing its trailing CRLF')
+              );
             end;
           end if;
 
@@ -378,7 +386,12 @@ begin
             if Size > LoadState(Index).Maximum then
               begin
                 CloseAt(Index);
-                return Error('HTTP chunk exceeds MaxResponseBytes');
+                return Error(
+                  HttpTypes.HttpError.LimitExceeded(
+                    'Std.Http.Stream.ReadChunked',
+                    LoadState(Index).Maximum
+                  )
+                );
               end;
             end if;
             var SizeState: Types.StreamState := LoadState(Index);
@@ -413,7 +426,7 @@ public function CreateBody(
   HasBody: boolean;
   BytesReceived: integer;
   Maximum: integer
-): result of (HttpTypes.BodyStream, string);
+): result of (HttpTypes.BodyStream, HttpTypes.HttpError);
 begin
   var Mode: integer := 0;
   var Remaining: integer := 0;
@@ -427,7 +440,7 @@ begin
           end;
         when Error(const Message):
           begin
-            case Net.Close(Connection) of
+            case Net.Close(Connection).MapError(HttpTypes.HttpError.Transport) of
               when Ok(_):
                 begin
                 end;
@@ -468,11 +481,13 @@ end function;
 // Parameters:
 // - `StreamValue`: Open response-body handle.
 // - `MaxBytes`: Maximum decoded bytes to return.
-public function ReadBody(StreamValue: HttpTypes.BodyStream; MaxBytes: integer): result of (array of integer, string);
+public function ReadBody(StreamValue: HttpTypes.BodyStream; MaxBytes: integer): result of (array of integer, HttpTypes.HttpError);
 begin
   if MaxBytes < 1 then
     begin
-      return Error('HTTP stream MaxBytes must be positive');
+      return Error(
+        HttpTypes.HttpError.InvalidArgument('MaxBytes', 'HTTP stream MaxBytes must be positive')
+      );
     end;
   end if;
 
@@ -510,7 +525,7 @@ end function;
 //
 // Parameters:
 // - `StreamValue`: Open response-body handle to close.
-public function CloseBody(StreamValue: HttpTypes.BodyStream): result of (boolean, string);
+public function CloseBody(StreamValue: HttpTypes.BodyStream): result of (boolean, HttpTypes.HttpError);
 begin
   case StateIndex(StreamValue) of
     when Ok(const Index):

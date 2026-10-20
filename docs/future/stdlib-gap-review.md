@@ -1,6 +1,7 @@
 # Standard library gap review
 
-Status: assessment only, reviewed on 2026-10-19. No implementation is scheduled.
+Status: assessment updated on 2026-10-20. Gap 9 is delivered by AP47; other
+candidates remain unscheduled.
 
 This review covers the existing standard library, including native string and
 collection operations, but excludes `Std.Ai.*`. Findings were checked against
@@ -20,11 +21,14 @@ SSE decoding, task groups, cancellation, mixed-source selection, supervised work
 atomic text publication and a source-level TUI. Native arrays and dictionaries
 provide higher-order operations; arrays include stable `SortBy` and `FlatMap`.
 Strings support Unicode scalar indexing and casing, while Console exposes
-grapheme segmentation and display widths. These are not missing capabilities.
+grapheme segmentation and display widths. Native error declarations, typed causes,
+automatic output and explicit MapError are delivered through AP47, including both
+selected Std cohorts and integrated acceptance. These are not missing capabilities.
 
 ## Everyday capability gaps
 
 Numbers are stable references within this assessment, not approved work packages.
+Gap 9 is closed by AP47; its number and historical direction anchor remain stable.
 
 | ID | Area | Current boundary and missing capability | Comparison |
 | --- | --- | --- | --- |
@@ -36,7 +40,6 @@ Numbers are stable references within this assessment, not approved work packages
 | 6 | Numeric output formatting | String `Format` supports `%d`, `%f`, `%s` and `%%`, without selectable decimal precision, scientific notation or numeric field width. `RealToStr` provides exact round-trip text rather than presentation controls. | Go `fmt`; Python formatting |
 | 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
 | 8 | Path helpers | `Path` has five basic operations. Absolute-path checks, relative-path calculation and extension replacement are absent. Resolving a real path through filesystem/symlink state belongs in an effectful API such as `Fs`, preserving the pure `Path` boundary. | Go `path/filepath`; Rust `Path` |
-| 9 | Structured errors | Many filesystem, network, process and parsing APIs return `Error(string)`. Programs cannot reliably branch on a stable error kind such as missing file, permission denied, timeout or cancellation. The [agreed FPAS 2 direction](fpas2-language-directions.md#1-typed-operational-errors) combines a shared error contract with composable concrete error types, explicit `MapError` conversion and unchanged `try`; shared error APIs and concrete variants remain open. | Rust `io::ErrorKind`; Go typed errors |
 | 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
 | 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
 
@@ -55,7 +58,7 @@ Numbers are stable references within this assessment, not approved work packages
   [paths](../pascal/std/host/path.md): gaps 7 and 8.
 - The Result signatures in the filesystem, process,
   [network](../pascal/std/network/net.md) and
-  [parsing](../pascal/std/text/parse.md) APIs: gap 9.
+  [parsing](../pascal/std/text/parse.md) APIs: closed gap 9.
 - [Conversion](../pascal/std/text/conv.md),
   [Crypto](../pascal/std/cryptography/crypto.md),
   [UTF-8](../pascal/std/network/utf8.md) and
@@ -63,33 +66,33 @@ Numbers are stable references within this assessment, not approved work packages
 
 ### Direction for gap 9: structured errors
 
-The agreed direction is a shared error contract for context and reporting,
-combined with concrete error types defined by standard-library units and
-applications. Composition and variant payloads let an application wrap a
-filesystem error alongside its own configuration errors while preserving the
-original machine-readable case. Public Result signatures retain their concrete
-error types; callers can branch exhaustively without inspecting diagnostic text.
+The selected [FPAS 2 direction](fpas2-language-directions.md#1-typed-operational-errors)
+is a native `type T = error ... end error` declaration. Standard-library and
+application error families retain concrete variants and typed payloads in Result.
+Literal message labels, automatic output and a designated typed Cause remove
+per-type reporting functions and preserve the original error under wrappers.
 
-Include `MapError` in the same design package. For `Result of (T, E)`, a mapper
-from `E` to `E2` produces `Result of (T, E2)`: Ok preserves its payload without
-calling the mapper, while Error calls it exactly once and wraps the returned
-error value. The receiver is evaluated once. Unlike recovery through `OrElse`,
-the mapper returns an error value rather than another Result.
+The implemented contract is documented in the
+[language handbook](../pascal/language/types/errors.md) and
+[Std reference](../pascal/std/README.md), including nested callback Results,
+a [shared native HostError leaf](../pascal/std/host/errors.md) and explicit domain
+mappings. Native conditions are classified from structured outcomes, never by
+parsing message strings.
 
-Keep `try` unchanged: it extracts success or immediately propagates an error
-through a compatible enclosing Result error type. Cross-type propagation uses
-explicit `MapError` conversion before `try`, for example
-`try Fs.ReadText(Path).MapError(WrapFileError)` with a function wrapping the
-filesystem cause in an application error. No implicit conversion or automatic
-wrapper selection is added. Option propagation, panic, contracts and cleanup
-retain their existing behavior.
+MapError is the explicit general Result error transformation. Ok preserves its
+payload without calling the mapper; Error calls it once. Constructor values make
+wrapping concise, for example `try Fs.ReadText(Path).MapError(ConfigError.FileFailure)`.
+Try still requires compatible error types after mapping and does not choose a
+wrapper automatically. Option, runtime failures, contracts and cleanup retain
+their existing behavior.
 
-The [FPAS 2 error direction](fpas2-language-directions.md#1-typed-operational-errors)
-owns this design and the
-[MapError/try contract](fpas2-language-directions.md#agreed-maperror-and-try-contract).
-Shared fields, unit-specific variants, per-API domain mappings and migration
-remain open. This agreement does not schedule an implementation or introduce
-object inheritance.
+Selected public signatures are replaced in place with all affected consumers;
+there is no parallel string/typed wrapper family. Existing successes, limits,
+EOF and lifecycle distinctions remain specified at their current owner. No new
+I/O capability is bundled into the error migration. Native error declarations,
+constraints, Message(), constructor values and MapError are implemented, along
+with host/parsing, task/network and layered HTTP families. SDK and TUI boundaries
+that retain strings use explicit Message() mappings.
 
 ## Additional candidates
 
@@ -146,9 +149,10 @@ These candidates provide immediate everyday value without requiring new
 source-language features. Select one canonical API for each operation rather
 than copying every variant from the comparison libraries.
 
-Incremental file I/O, process control and structured errors deserve separate
-designs covering ownership, bounds, cancellation and the public Result types.
-The remaining candidates should be driven by concrete application needs.
+Incremental file I/O and process control need separate designs covering ownership,
+bounds and cancellation. Structured errors and the selected Std migrations are
+implemented. The remaining candidates should be driven by concrete application
+needs.
 
 ## Comparison sources
 

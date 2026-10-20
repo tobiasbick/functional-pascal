@@ -3,8 +3,13 @@
 use super::*;
 
 #[test]
-fn every_stable_intrinsic_id_has_a_canonical_source_call() {
+fn stable_intrinsics_have_only_their_canonical_source_route() {
     for intrinsic in Intrinsic::all() {
+        // Generic error patterns lower directly to this private IR operation.
+        if intrinsic == Intrinsic::Conv(ConvIntrinsic::ErrorMatchesVariant) {
+            assert_eq!(resolve("Std.Errors.MatchesVariant", None), None);
+            continue;
+        }
         let (name, argument_type) = canonical_test_call(intrinsic);
         assert_eq!(
             resolve(&name, argument_type.as_ref()),
@@ -16,6 +21,7 @@ fn every_stable_intrinsic_id_has_a_canonical_source_call() {
 
 fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
     match intrinsic {
+        Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => ("Std.Errors.Message".into(), None),
         Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Net.Utf8.EncodeBytes".into(), None),
         Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
         Intrinsic::Test(TestIntrinsic::AssertEqualsInteger) => {

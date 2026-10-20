@@ -1,0 +1,71 @@
+program MapErrorCallbacks;
+
+uses Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
+
+type Wrapped = error
+  Failed(Text: string);
+end error;
+
+function Work(): integer;
+begin
+  var Calls := 0;
+  const Input: result of (boolean, string) := Error('abc');
+  const Output := Input.MapError(
+    function(Text: string): integer begin
+      Time.Sleep(1);
+      Calls := Calls + 1;
+      const Inner: result of (string, integer) := Error(Text.Length());
+      const Mapped := Inner.MapError(
+        function(N: integer): integer begin
+          Time.Sleep(1);
+          Calls := Calls + 1;
+          return N * 2;
+        end function
+      );
+      return case Mapped of
+        when Ok(_): 0;
+        when Error(const N): N;
+      end case;
+    end function
+  );
+  Test.AssertEquals(2, Calls);
+  return case Output of
+    when Ok(_): 0;
+    when Error(const N): N;
+  end case;
+end function;
+
+begin
+  scope
+    const Pending := go Work();
+    Test.AssertEquals(6, Tasks.Wait(Pending));
+    const Input: result of (integer, string) := Error('direct');
+    const Direct := go Input.MapError(Wrapped.Failed);
+    Test.AssertTrue(Tasks.Wait(Direct) is Error(Wrapped.Failed('direct')));
+  end scope;
+  const Group := Tasks.CreateTaskGroup();
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  const Empty: channel of integer := Tasks.CreateChannel(1);
+  const Done: channel of boolean := Tasks.CreateChannel(1);
+  const Worker := Tasks.StartTaskInGroup(
+    Group, procedure(Token: Tasks.CancellationToken) begin
+      const Input: result of (integer, string) := Error('wait');
+      const Output := Input.MapError(
+        function(Text: string): string begin
+          discard Tasks.Send(Ready, true);
+          discard Tasks.ReceiveWithCancellation(Empty, Token);
+          discard Tasks.Send(Done, Tasks.IsCancellationRequested(Token));
+          return Text;
+        end function
+      );
+      Test.AssertTrue(Output is Error('wait'));
+    end procedure
+  );
+  Test.AssertTrue(Tasks.Receive(Ready).Unwrap());
+  Test.AssertTrue(Tasks.CancelTaskGroup(Group));
+  Test.AssertEquals(0, Tasks.CloseTaskGroup(Group).Length());
+  Test.AssertTrue(Tasks.Receive(Done).Unwrap());
+  discard Tasks.CloseChannel(Ready);
+  discard Tasks.CloseChannel(Empty);
+  discard Tasks.CloseChannel(Done);
+end.

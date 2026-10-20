@@ -91,8 +91,13 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
             underlying: interface_type_to_ty(&distinct.underlying)?,
         })),
         Input::Named(name) => Ty::Named(name.clone()),
-        Input::EnumApplication { name, arguments } => {
+        Input::EnumApplication {
+            name,
+            arguments,
+            is_error,
+        } => {
             let mut enumeration = EnumTy::header(name.clone(), Vec::new());
+            enumeration.is_error = *is_error;
             enumeration.type_args = arguments
                 .iter()
                 .map(interface_type_to_ty)
@@ -236,6 +241,7 @@ fn callable_to_method_kind(
 
 fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceConversionError> {
     Ok(EnumTy {
+        is_error: enum_ty.is_error,
         name: enum_ty.name.clone(),
         type_params: generic_parameters_from_interface(&enum_ty.type_parameters),
         type_args: enum_ty
@@ -248,6 +254,7 @@ fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceCo
             .iter()
             .map(|variant| {
                 Ok(EnumVariantTy {
+                    message: variant.message.clone(),
                     name: variant.name.clone(),
                     fields: variant
                         .fields
@@ -266,5 +273,6 @@ fn constraint_from_interface(constraint: artifact::TypeConstraint) -> TypeConstr
         artifact::TypeConstraint::Comparable => TypeConstraint::Comparable,
         artifact::TypeConstraint::Numeric => TypeConstraint::Numeric,
         artifact::TypeConstraint::Printable => TypeConstraint::Printable,
+        artifact::TypeConstraint::Error => TypeConstraint::Error,
     }
 }

@@ -34,11 +34,11 @@ begin scope
   const T: task of integer := go Parent();
   const Q: channel of integer := Tasks.CreateChannel(1);
   var Seen: integer := 0;
-  const S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: result of (boolean, string))
+  const S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: result of (boolean, Tasks.TaskError))
   begin
     if not R.Unwrap() then panic('send result'); end if;
     Time.Sleep(1);
-    const Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: result of (integer, string))
+    const Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: result of (integer, Tasks.TaskError))
     begin Seen := V.Unwrap(); end procedure);
     if Tasks.Select([Receive]) <> 0 then panic('nested selection'); end if;
   end procedure);
@@ -46,17 +46,17 @@ begin scope
   if Seen <> 42 then panic('callback did not complete'); end if;
   if Tasks.Wait(T) <> 7 then panic('task value lost'); end if;
   const Producer: task of integer := go Produce(Q);
-  const Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of (integer, string))
+  const Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of (integer, Tasks.TaskError))
   begin Seen := R.Unwrap(); end procedure);
   const Fallback: Tasks.WaitCase := Tasks.TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
   if Tasks.Select([Pending, Fallback]) <> 0 then panic('pending receive index'); end if;
   if Seen <> 123 then panic('pending receive value'); end if;
   if Tasks.Wait(Producer) <> 1 then panic('producer result'); end if;
-  const Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of (integer, string))
+  const Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of (integer, Tasks.TaskError))
   begin
     case R of
       when Ok(_): panic('closed channel delivered');
-      when Error(const Message): if Message <> 'Channel is closed' then panic(Message); end if;
+      when Error(const Message): if not (Message is Tasks.TaskError.Closed(_)) then panic(Message.Message()); end if;
     end case;
   end procedure);
   discard Tasks.CloseChannel(Q);

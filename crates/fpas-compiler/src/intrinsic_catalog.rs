@@ -32,6 +32,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.split_once('.')?;
     match unit {
+        "Errors" if member == "Message" => Some(Intrinsic::Conv(ConvIntrinsic::ErrorMessage)),
         "Args" => family!(member, Args, ArgsIntrinsic, [ParamCount, ParamStr]),
         "Console" => resolve_console(member),
         "Str" => resolve_str(member),
@@ -135,7 +136,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Result,
             ResultIntrinsic,
-            [Unwrap, Map, AndThen, OrElse]
+            [Unwrap, Map, MapError, AndThen, OrElse]
         ),
         "Options" => family!(
             member,

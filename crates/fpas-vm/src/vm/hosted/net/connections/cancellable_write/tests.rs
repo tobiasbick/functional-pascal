@@ -1,3 +1,4 @@
+use crate::vm::hosted::net::failure::Failure;
 use std::io::{self, Read};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
@@ -11,7 +12,7 @@ fn pre_cancelled_write_preserves_connection_without_sending_data() {
     let (connections, handle, mut peer) = tcp_pair();
     assert_eq!(
         connections.write_with_cancellation(handle, b"wrong", || true),
-        Err("Network write cancelled".into())
+        Err(Failure::Cancelled)
     );
     assert_eq!(
         connections.write_with_cancellation(handle, b"next", || false),
@@ -55,7 +56,7 @@ fn cancellation_interrupts_pending_write_attempts() {
             Err(io::ErrorKind::WouldBlock.into())
         },
     );
-    assert_eq!(result, Err("Network write cancelled".into()));
+    assert_eq!(result, Err(Failure::Cancelled));
     assert_eq!(attempts, 2);
 }
 
@@ -63,6 +64,18 @@ fn cancellation_interrupts_pending_write_attempts() {
 fn write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts() {
     let (connections, handle, _peer) = tcp_pair();
     connections.set_timeout(handle, 30).expect("timeout");
+    // Socket timeout getters may return the kernel's rounded duration.
+    let connection = connections.connection(handle).expect("connection");
+    let original_timeouts = {
+        let transport = connection.transport.lock().expect("lock");
+        (
+            transport.write_timeout().expect("timeout"),
+            transport.read_timeout().expect("timeout"),
+        )
+    };
+    for timeout in [original_timeouts.0, original_timeouts.1] {
+        assert!(timeout.is_some_and(|value| value >= Duration::from_millis(30)));
+    }
     let started = Instant::now();
     let result = connections.poll_io(
         handle,
@@ -70,16 +83,15 @@ fn write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts() {
         || started.elapsed() >= Duration::from_secs(2),
         |_| Err(io::ErrorKind::WouldBlock.into()),
     );
-    assert_eq!(result, Err("Network write timed out".into()));
-    let connection = connections.connection(handle).expect("connection");
+    assert_eq!(result, Err(Failure::deadline("Network write timed out")));
     let transport = connection.transport.lock().expect("lock");
     assert_eq!(
         transport.write_timeout().expect("timeout"),
-        Some(Duration::from_millis(30))
+        original_timeouts.0
     );
     assert_eq!(
         transport.read_timeout().expect("timeout"),
-        Some(Duration::from_millis(30))
+        original_timeouts.1
     );
 }
 
@@ -92,7 +104,7 @@ fn write_cancellation_interrupts_lock_contention() {
     assert_eq!(
         connections
             .write_with_cancellation(handle, b"x", || checks.fetch_add(1, Ordering::Relaxed) >= 2),
-        Err("Network write cancelled".into())
+        Err(Failure::Cancelled)
     );
 }
 
@@ -116,19 +128,29 @@ fn tcp_backpressure_can_time_out_and_cancel_without_closing() {
                 );
             }
             Err(error) => {
-                assert_eq!(error, "Network write timed out");
+                assert_eq!(error, Failure::deadline("Network write timed out"));
                 break;
             }
         }
     }
     connections.set_timeout(handle, 1000).expect("timeout");
     let checks = AtomicUsize::new(0);
-    assert_eq!(
-        connections
-            .write_with_cancellation(handle, &chunk, || checks.fetch_add(1, Ordering::Relaxed)
-                >= 3),
-        Err("Network write cancelled".into())
-    );
+    // The kernel can accept more data after the first timeout. Partial progress
+    // wins over cancellation, so continue until cancellation is observed.
+    loop {
+        match connections.write_with_cancellation(handle, &chunk, || {
+            checks.fetch_add(1, Ordering::Relaxed) >= 3
+        }) {
+            Ok(count) => {
+                assert!(count > 0 && count <= chunk.len());
+                assert!(checks.load(Ordering::Relaxed) <= 4);
+            }
+            Err(error) => {
+                assert_eq!(error, Failure::Cancelled);
+                break;
+            }
+        }
+    }
     connections.close(handle).expect("connection remained open");
 }
 
@@ -139,12 +161,12 @@ fn empty_and_oversized_writes_keep_the_existing_limits() {
         connections.write_with_cancellation(handle, &[], || false),
         Ok(0)
     );
-    assert!(
+    assert!(matches!(
         connections
             .write_with_cancellation(handle, &vec![0; MAX_IO_BYTES + 1], || false)
-            .expect_err("size")
-            .contains("write size")
-    );
+            .expect_err("size"),
+        Failure::InvalidArgument { name: "Data", .. }
+    ));
 }
 
 #[test]
@@ -164,7 +186,7 @@ fn tls_partial_write_reports_accepted_prefix_without_duplication() {
     );
     assert_eq!(
         connections.write_with_cancellation(handle, b"ef", || true),
-        Err("Network write cancelled".into())
+        Err(Failure::Cancelled)
     );
     assert_eq!(
         connections.write_with_cancellation(handle, b"ef", || false),

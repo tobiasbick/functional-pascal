@@ -195,7 +195,7 @@ begin
           end;
         when Error(const Message):
           begin
-            return Error('Invalid .note TOML header: ' + Message);
+            return Error('Invalid .note TOML header: ' + Message.Message());
           end;
       end case;
   end case;

@@ -3,6 +3,8 @@
 use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 
+use super::super::net::failure::Failure as NetFailure;
+use super::failure::Failure;
 use crate::vm::{TaskScheduler, cancellation::OwnedCancellation, hosted::HostedState};
 
 /// Serialized stop deadline and completion state shared with the watchdog.
@@ -22,7 +24,7 @@ pub(super) struct Lifetime {
     pub(super) scheduler: Weak<TaskScheduler>,
     pub(super) hosted: Weak<HostedState>,
     listeners: Mutex<Vec<u64>>,
-    errors: Mutex<Vec<String>>,
+    errors: Mutex<Vec<(u64, NetFailure)>>,
 }
 
 impl Lifetime {
@@ -91,7 +93,7 @@ impl Lifetime {
                     self.errors
                         .lock()
                         .unwrap_or_else(|e| e.into_inner())
-                        .push(error);
+                        .push((listener, error));
                 }
             }
         }
@@ -103,25 +105,31 @@ impl Lifetime {
     }
 
     /// Transfer a validated listener to this lifetime while it is ready.
-    pub(super) fn own_listener(&self, listener: u64) -> Result<bool, String> {
+    pub(super) fn own_listener(&self, listener: u64) -> Result<bool, Failure> {
         let mut listeners = self.listeners.lock().unwrap_or_else(|e| e.into_inner());
         if !self.ready() {
-            return Err("Server is stopping; no new listener can be admitted".into());
+            return Err(Failure::State);
         }
         if listeners.contains(&listener) {
             return Ok(false);
         }
         if listeners.len() >= 32 {
-            return Err("A server lifetime may own at most 32 listeners".into());
+            return Err(Failure::Argument(
+                "Listener",
+                "A server lifetime may own at most 32 listeners".into(),
+            ));
         }
-        let hosted = self.hosted.upgrade().ok_or("Server VM is closed")?;
-        hosted.network_listeners.validate(listener)?;
+        let hosted = self.hosted.upgrade().ok_or(Failure::State)?;
+        hosted
+            .network_listeners
+            .validate(listener)
+            .map_err(|error| Failure::Listener(listener, error))?;
         listeners.push(listener);
         Ok(true)
     }
 
     /// Snapshot retained listener-cleanup failures.
-    pub(super) fn errors(&self) -> Vec<String> {
+    pub(super) fn errors(&self) -> Vec<(u64, NetFailure)> {
         self.errors
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -137,24 +145,42 @@ impl Lifetime {
     }
 
     /// Disarm escalation after the owner confirms cleanup and closes the group.
-    pub(super) fn finish(&self, caller: u64) -> Result<bool, String> {
+    pub(super) fn finish(&self, caller: u64) -> Result<bool, Failure> {
         if caller != self.owner {
-            return Err("Only the creating task may finish a server lifetime".into());
+            return Err(Failure::State);
         }
         let mut state = self.progress.lock().unwrap_or_else(|e| e.into_inner());
         if state.finished {
             return Ok(true);
         }
         if state.deadline.is_none() {
-            return Err("Call RequestStop before finishing shutdown".into());
+            return Err(Failure::State);
         }
         if !state.effects_finished {
-            return Err("Shutdown incomplete: listener closure is still in progress".into());
+            return Err(
+                if state
+                    .deadline
+                    .is_some_and(|deadline| Instant::now() >= deadline)
+                {
+                    Failure::Timeout
+                } else {
+                    Failure::State
+                },
+            );
         }
         if let Some(scheduler) = self.scheduler.upgrade()
             && scheduler.groups.is_live(self.group)
         {
-            return Err("Shutdown incomplete: close the server task group and retain its failure reports before FinishShutdown".into());
+            return Err(
+                if state
+                    .deadline
+                    .is_some_and(|deadline| Instant::now() >= deadline)
+                {
+                    Failure::Timeout
+                } else {
+                    Failure::State
+                },
+            );
         }
         state.finished = true;
         Ok(true)

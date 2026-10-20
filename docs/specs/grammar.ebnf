@@ -205,9 +205,10 @@ var_def             = identifier ':' type_expr ':=' expression ';' ;
 (* -- Type definitions -- *)
 type_declaration        = 'type' type_def ;
 type_def            = identifier '=' type_body ';'
-                    | identifier data_type_params '=' (record_type | enum_type) ';' ;
+                    | identifier data_type_params '=' (record_type | enum_type | error_type) ';' ;
 type_body           = record_type
                     | enum_type
+                    | error_type
                     | distinct_type
                     | subrange_type
                     | type_expr ;
@@ -224,7 +225,7 @@ type_params         = '<' type_param { ',' type_param } '>' ;
 data_type_params    = 'of' type_param
                     | 'of' '(' type_param ',' type_param { ',' type_param } ')' ;
 type_param          = identifier [ ':' constraint_name ] ;
-constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
+constraint_name     = 'Comparable' | 'Numeric' | 'Printable' | 'Error' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
@@ -310,6 +311,12 @@ enum_type           = 'enum' enum_member { enum_member } 'end' 'enum' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
 enum_fields         = '(' enum_field { ';' enum_field } ')' ;
 enum_field          = identifier ':' type_expr ;
+
+error_type          = 'error' error_member { error_member } 'end' 'error' ;
+error_member        = identifier [ enum_fields ] [ '=' quoted_string ] ';' ;
+(* Error messages are single nonempty string tokens. Cause requires *)
+(* a native error family or Error-constrained parameter; other fields *)
+(* require Printable. Error is not a storable root type.              *)
 
 (* Parentheses require at least one field, and ';' separates fields. *)
 (* Empty field lists and trailing field separators are invalid.     *)

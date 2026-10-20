@@ -1,6 +1,7 @@
 //! Timeout must preserve ownership, results, cancellation state, and the original deadline.
 
 use super::*;
+use crate::vm::tasks::errors::TaskErrorKind;
 use crate::vm::{
     TaskResultPoll,
     tasks::{TaskClock, TaskScheduler},
@@ -31,29 +32,50 @@ fn invalid_timeout_and_wrong_owner_do_not_seal_or_cancel_the_group() {
     let (mut worker, id) = worker_and_group();
     let scheduler = Arc::clone(worker.scheduler_ref().expect("scheduler"));
     let token = scheduler.groups.token(id).expect("token");
-    for invalid in [Value::Integer(-1), Value::Boolean(false)] {
-        assert!(
-            worker
-                .group_intrinsic(
-                    Intrinsic::Task(TaskIntrinsic::CloseTaskGroupWithTimeout),
-                    &[Value::OpaqueHandle(id), invalid],
-                    None
-                )
-                .is_err()
-        );
-        assert!(
-            !worker
-                .hosted
-                .cancellations
-                .is_cancelled(token)
-                .expect("active token")
-        );
-    }
-    worker.task_id = 42;
+    let invalid_timeout = worker
+        .group_intrinsic(
+            Intrinsic::Task(TaskIntrinsic::CloseTaskGroupWithTimeout),
+            &[Value::OpaqueHandle(id), Value::Integer(-1)],
+            None,
+        )
+        .expect("operational argument error")
+        .flatten()
+        .expect("Result");
+    assert_eq!(
+        invalid_timeout,
+        worker
+            .task_input_error("TimeoutMillis", "Timeout must be non-negative")
+            .expect("typed argument")
+    );
     assert!(
         worker
-            .start_group_close(id, Some(Duration::ZERO), None)
+            .group_intrinsic(
+                Intrinsic::Task(TaskIntrinsic::CloseTaskGroupWithTimeout),
+                &[Value::OpaqueHandle(id), Value::Boolean(false)],
+                None
+            )
             .is_err()
+    );
+    assert!(
+        !worker
+            .hosted
+            .cancellations
+            .is_cancelled(token)
+            .expect("active token")
+    );
+    worker.task_id = 42;
+    assert_eq!(
+        worker
+            .start_group_close(id, Some(Duration::ZERO), None)
+            .expect("operational ownership error"),
+        Some(
+            worker
+                .task_outcome_error(
+                    TaskErrorKind::InvalidGroup,
+                    "Std.Tasks.CloseTaskGroupWithTimeout"
+                )
+                .expect("typed ownership error")
+        )
     );
     assert!(
         !worker
@@ -86,9 +108,14 @@ fn repeated_timeouts_retain_children_results_reports_and_token_until_join() {
             worker
                 .start_group_close(id, Some(Duration::ZERO), None)
                 .expect("close"),
-            Some(Value::result_error(Value::Str(
-                "Task group close timed out".into()
-            )))
+            Some(
+                worker
+                    .task_outcome_error(
+                        TaskErrorKind::Timeout,
+                        "Std.Tasks.CloseTaskGroupWithTimeout"
+                    )
+                    .expect("typed timeout")
+            )
         );
         assert_eq!(scheduler.groups.token(id).expect("retained token"), token);
         assert!(
@@ -200,9 +227,14 @@ fn timed_root_close_never_executes_queued_child_code_inline() {
         worker
             .start_group_close(id, Some(Duration::from_millis(2)), None)
             .expect("timeout"),
-        Some(Value::result_error(Value::Str(
-            "Task group close timed out".into()
-        )))
+        Some(
+            worker
+                .task_outcome_error(
+                    TaskErrorKind::Timeout,
+                    "Std.Tasks.CloseTaskGroupWithTimeout"
+                )
+                .expect("typed timeout")
+        )
     );
     assert!(started.elapsed() >= Duration::from_millis(2));
     assert_eq!(scheduler.try_dequeue().expect("child still queued").id, 1);

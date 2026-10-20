@@ -1,3 +1,4 @@
+use crate::vm::hosted::net::failure::Failure;
 use std::cell::RefCell;
 use std::io::Read;
 use std::net::TcpListener;
@@ -13,7 +14,7 @@ fn pre_cancellation_prevents_dns_and_handle_creation() {
     for mode in [ConnectMode::Tcp, ConnectMode::Tls] {
         assert_eq!(
             connections.connect_with_cancellation("invalid\0host", 1, 1000, mode, || true),
-            Err("Network connect cancelled".into())
+            Err(Failure::Cancelled)
         );
     }
     assert!(connections.connections.lock().expect("registry").is_empty());
@@ -33,7 +34,7 @@ fn cancellation_after_resolution_prevents_tcp_attempt() {
             ConnectMode::Tcp,
             || checks.fetch_add(1, Ordering::Relaxed) >= 1
         ),
-        Err("Network connect cancelled".into())
+        Err(Failure::Cancelled)
     );
     assert_eq!(
         listener.accept().expect_err("no TCP attempt").kind(),
@@ -67,7 +68,7 @@ fn cancellation_after_tcp_success_drops_unpublished_socket() {
                 }
             }
         ),
-        Err("Network connect cancelled".into())
+        Err(Failure::Cancelled)
     );
     let mut peer = peer.into_inner().expect("accepted then dropped");
     peer.set_read_timeout(Some(Duration::from_secs(2)))
@@ -128,7 +129,7 @@ fn application_cancellation_interrupts_tls_handshake_without_retained_handle() {
     worker.join().expect("join");
     assert_eq!(
         result.expect("prompt handshake cancellation"),
-        Err("Network connect cancelled".into())
+        Err(Failure::Cancelled)
     );
     assert!(connections.connections.lock().expect("registry").is_empty());
 }
@@ -138,12 +139,9 @@ fn expired_shared_budget_and_cancellation_are_distinct() {
     let expired = Instant::now();
     assert_eq!(
         remaining(expired, || false),
-        Err("Network connect timed out".into())
+        Err(Failure::deadline("Network connect timed out"))
     );
-    assert_eq!(
-        remaining(expired, || true),
-        Err("Network connect cancelled".into())
-    );
+    assert_eq!(remaining(expired, || true), Err(Failure::Cancelled));
 }
 
 #[test]
@@ -158,31 +156,37 @@ fn silent_tls_peer_exhausts_budget_without_publishing_handle() {
         ConnectMode::Tls,
         || false,
     );
-    assert_eq!(result, Err("Network connect timed out".into()));
+    assert_eq!(result, Err(Failure::deadline("Network connect timed out")));
     assert!(connections.connections.lock().expect("registry").is_empty());
 }
 
 #[test]
 fn invalid_arguments_and_resolution_errors_remain_errors() {
     let connections = NetworkConnections::new();
-    assert!(
+    assert!(matches!(
         connections
             .connect_with_cancellation("127.0.0.1", 0, 1000, ConnectMode::Tcp, || false)
-            .expect_err("port")
-            .contains("TCP port")
-    );
-    assert!(
+            .expect_err("port"),
+        Failure::InvalidArgument { name: "Port", .. }
+    ));
+    assert!(matches!(
         connections
             .connect_with_cancellation("127.0.0.1", 1, 0, ConnectMode::Tcp, || false)
-            .expect_err("timeout")
-            .contains("Network timeout")
-    );
-    assert!(
+            .expect_err("timeout"),
+        Failure::InvalidArgument {
+            name: "TimeoutMillis",
+            ..
+        }
+    ));
+    assert!(matches!(
         connections
             .connect_with_cancellation("invalid\0host", 1, 1000, ConnectMode::Tcp, || false)
-            .expect_err("resolution")
-            .contains("Could not resolve")
-    );
+            .expect_err("resolution"),
+        Failure::Native {
+            kind: crate::vm::hosted::net::failure::NativeKind::ResolveFailed,
+            ..
+        }
+    ));
 }
 
 #[test]
@@ -191,6 +195,6 @@ fn shutdown_prevents_resolution_and_publishing() {
     connections.shutdown();
     assert_eq!(
         connections.connect_with_cancellation("invalid\0host", 1, 1000, ConnectMode::Tcp, || false),
-        Err("Network connect cancelled".into())
+        Err(Failure::Cancelled)
     );
 }

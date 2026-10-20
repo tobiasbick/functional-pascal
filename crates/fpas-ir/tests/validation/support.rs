@@ -148,6 +148,7 @@ pub fn scalar_program() -> Program {
             methods: Vec::new(),
         }],
         enum_layouts: vec![EnumLayout {
+            error_template: false,
             id: EnumLayoutId::new(0),
             name: "Choice".to_string(),
             variants: vec![EnumVariant {

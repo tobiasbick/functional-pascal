@@ -13,39 +13,48 @@ use std::sync::Arc;
 ///
 /// **Documentation:** `docs/pascal/std/text/toml.md` (from the repository root).
 pub(super) fn register_std_toml(checker: &mut Checker) {
+    let error_ty =
+        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Toml);
     let toml_ref = Ty::Named(s::STD_TOML_VALUE.into());
     let variants = vec![
         EnumVariantTy {
+            message: None,
             name: "String".into(),
             fields: vec![("Value".into(), Ty::String)],
             backing_value: None,
         },
         EnumVariantTy {
+            message: None,
             name: "Integer".into(),
             fields: vec![("Value".into(), Ty::Integer)],
             backing_value: None,
         },
         EnumVariantTy {
+            message: None,
             name: "Float".into(),
             fields: vec![("Value".into(), Ty::Real)],
             backing_value: None,
         },
         EnumVariantTy {
+            message: None,
             name: "Boolean".into(),
             fields: vec![("Value".into(), Ty::Boolean)],
             backing_value: None,
         },
         EnumVariantTy {
+            message: None,
             name: "Datetime".into(),
             fields: vec![("Value".into(), Ty::String)],
             backing_value: None,
         },
         EnumVariantTy {
+            message: None,
             name: "ArrayValue".into(),
             fields: vec![("Items".into(), Ty::Array(Box::new(toml_ref.clone())))],
             backing_value: None,
         },
         EnumVariantTy {
+            message: None,
             name: "Table".into(),
             fields: vec![(
                 "Fields".into(),
@@ -55,6 +64,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         },
     ];
     let toml_ty = Ty::Enum(Arc::new(EnumTy {
+        is_error: false,
         name: s::STD_TOML_VALUE.into(),
         type_params: Vec::new(),
         type_args: Vec::new(),
@@ -90,7 +100,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         checker,
         s::STD_TOML_PARSE,
         vec![p("Text", Ty::String)],
-        Ty::Result(Box::new(toml_ty.clone()), Box::new(Ty::String)),
+        Ty::Result(Box::new(toml_ty.clone()), Box::new(error_ty.clone())),
     );
     define_func(
         checker,

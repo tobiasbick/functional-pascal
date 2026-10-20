@@ -3,6 +3,7 @@
 mod constants;
 mod distinct_types;
 mod enums;
+mod errors;
 mod globals;
 mod records;
 mod source_map;
@@ -11,6 +12,9 @@ mod strings;
 pub use constants::Constant;
 pub use distinct_types::DistinctTypeName;
 pub use enums::{EnumLayout, EnumVariant};
+pub use errors::{
+    ErrorCause, ErrorInstanceKey, ErrorVariant, IdentityParameter, NominalKind, TypeIdentity,
+};
 pub use globals::{GlobalInfo, GlobalInitializer};
 pub use records::{
     RecordConstructionInfo, RecordField, RecordLayout, RecordMethod, RecordTypeAlias,

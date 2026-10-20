@@ -198,32 +198,38 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
         }],
         enums: vec![
             EnumLayout {
+                error: None,
                 name: StringId::new(17),
             },
             EnumLayout {
+                error: None,
                 name: StringId::new(23),
             },
         ],
         enum_variants: vec![
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(18),
                 fields: Vec::new(),
                 field_types: Vec::new(),
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(19),
                 fields: vec![StringId::new(15)],
                 field_types: vec![DebugTypeId::new(0)],
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(20),
                 fields: vec![StringId::new(21), StringId::new(22)],
                 field_types: vec![DebugTypeId::new(0), DebugTypeId::new(0)],
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(1),
                 name: StringId::new(24),
                 fields: Vec::new(),
@@ -378,9 +384,11 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
         globals: Vec::new(),
         records: Vec::new(),
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(5),
         }],
         enum_variants: vec![EnumVariant {
+            error: None,
             owner: EnumTypeId::new(0),
             name: StringId::new(6),
             fields: vec![StringId::new(7), StringId::new(8)],

@@ -29,6 +29,30 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
     },
     NativeOperation {
         receiver: NativeReceiver::Result,
+        name: "MapError",
+        implementation: "Std.Results.MapError",
+        signature: || {
+            function(
+                vec![p(
+                    "F",
+                    Ty::Function(function(
+                        vec![p("Cause", Ty::GenericParam("E".into(), None))],
+                        Ty::GenericParam("E2".into(), None),
+                        false,
+                    )),
+                )],
+                Ty::Result(
+                    Box::new(Ty::GenericParam("T".into(), None)),
+                    Box::new(Ty::GenericParam("E2".into(), None)),
+                ),
+                false,
+            )
+        },
+        lowering: NativeLowering::Intrinsic,
+        documentation: "Transform the error payload without recovering or flattening",
+    },
+    NativeOperation {
+        receiver: NativeReceiver::Result,
         name: "AndThen",
         implementation: "Std.Results.AndThen",
         signature: || {

@@ -73,14 +73,14 @@ begin
       Console.WriteLn(ResponseValue.StatusCode);
       case Http.BodyText(ResponseValue) of
         when Ok(const Text): Console.WriteLn(Text);
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Http.HeaderValue(ResponseValue, 'content-type') of
         when Some(const Value): Console.WriteLn(Value);
         when None: panic('missing content type');
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -170,7 +170,7 @@ begin
     end;
     when Error(const Message):
     begin
-      panic(Message);
+      panic(Message.Message());
     end;
   end case;
 end procedure;
@@ -192,9 +192,9 @@ begin
     end;
     when Error(const Message):
     begin
-      if not ('RFC 9110 token' in Message) then
+      if not (Message is Http.HttpError.InvalidArgument('Method', _)) then
       begin
-        panic(Message);
+        panic(Message.Message());
       end; end if;
     end;
   end case;

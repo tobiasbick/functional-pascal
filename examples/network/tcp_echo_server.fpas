@@ -48,7 +48,7 @@ begin
           end;
         when Error(const Message):
           begin
-            panic(Message);
+            panic(Message.Message());
           end;
       end case;
     end;
@@ -67,7 +67,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end function;
@@ -96,7 +96,7 @@ begin
           end;
         when Error(const Message):
           begin
-            panic(Message);
+            panic(Message.Message());
           end;
       end case;
     end;
@@ -128,7 +128,7 @@ begin
                   end;
                 when Error(const Message):
                   begin
-                    panic(Message);
+                    panic(Message.Message());
                   end;
               end case;
               const Text: string := ReadLine(ConnectionValue);
@@ -139,13 +139,13 @@ begin
                   end;
                 when Error(const Message):
                   begin
-                    panic(Message);
+                    panic(Message.Message());
                   end;
               end case;
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
 
@@ -156,13 +156,13 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end.

@@ -9,6 +9,10 @@ capture disabled/enabled, covering scalar work, calls, globals, tasks, timer
 suspension and small/large failure reports. Use a quiet local release build for
 performance conclusions; cloud smoke checks establish correctness only.
 
+The [typed error workloads](errors.md) add the `errors` group: construction,
+generic helpers/callables, MapError/case controls, cause rendering and a structural
+deep-image round trip. The configured suite contains 85 workloads.
+
 The `tui_styled_cells` row builds 128-by-44 frames of half-block cells with a concrete RGB
 style per cell, the per-frame path of pixel renderers such as terminal raycasters. A checksum
 over the built cells validates the result.
@@ -61,10 +65,10 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
-The current full-suite starting point is the [2026-10-12 baseline](history.md#2026-10-12--full-suite-baseline).
-Its local snapshot is `.temp-data/bench/baseline-2026-10-12.json`. Compare it with
-`cargo bench-fpas compare baseline-2026-10-12`; older history entries and local
-measurement snapshots were removed when this baseline was selected.
+There is no accepted timing baseline for the current 85-row suite. Capture a
+fresh baseline on a controlled local performance host before comparing elapsed
+times. Historical snapshots with different workload selections cannot be used
+against the expanded suite; group/row validation remains strict.
 
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
 and full-range slices of a 32,768-scalar string. Input construction and warmup
@@ -119,6 +123,10 @@ Use `cargo bench-fpas save mandelbrot-before --group mandelbrot` and
 `cargo bench-fpas compare mandelbrot-before --group mandelbrot`.
 
 ## Prerequisites
+
+Cloud environments support correctness checks only. Do not collect timing
+baselines, publish elapsed-time comparisons or record cloud measurements in
+`history.md`. Use a controlled local host for performance acceptance.
 
 - Quiet machine (avoid heavy background load).
 - Same power settings when comparing runs.
@@ -212,9 +220,9 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
 - `group` — `failure-dump`, `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`,
-  `review`, `local-index`, `source-review`, or `source-navigation` (filter with `--group`)
+  `review`, `local-index`, `source-review`, `source-navigation`, or `errors` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
+- `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, `program-artifact`, and `error-values` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

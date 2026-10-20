@@ -261,7 +261,10 @@ impl Worker {
     ) -> Result<Option<Value>, VmError> {
         if !matches!(
             operation,
-            ResultIntrinsic::Map | ResultIntrinsic::AndThen | ResultIntrinsic::OrElse
+            ResultIntrinsic::Map
+                | ResultIntrinsic::MapError
+                | ResultIntrinsic::AndThen
+                | ResultIntrinsic::OrElse
         ) {
             return Ok(None);
         }
@@ -275,6 +278,9 @@ impl Worker {
             (ResultIntrinsic::Map, Value::ResultOk(inner)) => {
                 Value::result_ok(self.call_callback_sync(callback, std::slice::from_ref(&**inner))?)
             }
+            (ResultIntrinsic::MapError, Value::ResultError(inner)) => Value::result_error(
+                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?,
+            ),
             (ResultIntrinsic::AndThen, Value::ResultOk(inner)) => {
                 self.call_callback_sync(callback, std::slice::from_ref(&**inner))?
             }

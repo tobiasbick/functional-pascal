@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
+use super::failure::Failure;
 use std::fs;
 use std::io;
 use std::path::{Component, Path, PathBuf};
@@ -9,36 +10,31 @@ use std::path::{Component, Path, PathBuf};
 use crate::limits::MAX_COLLECTION_LEN;
 
 /// All entries below `path` in stable lexical order, without following directory links.
-pub(super) fn read_dir_all_paths(path: &str) -> Result<Vec<String>, String> {
+pub(super) fn read_dir_all_paths(path: &str) -> Result<Vec<String>, Failure> {
     let root = Path::new(path);
-    if !root.is_dir() {
-        return Err(format!(
-            "ReadDirAll failed: '{path}' is not a directory.\n  help: Use Fs.IsDir(Path) first."
-        ));
-    }
     let mut paths = Vec::new();
     collect(root, MAX_COLLECTION_LEN as usize, &mut paths)?;
     paths.sort();
     Ok(paths)
 }
 
-fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), String> {
-    for entry in fs::read_dir(dir).map_err(|error| format!("ReadDirAll failed: {error}"))? {
-        let entry = entry.map_err(|error| format!("ReadDirAll entry failed: {error}"))?;
+fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), Failure> {
+    for entry in fs::read_dir(dir).map_err(|error| Failure::at(dir, error))? {
+        let entry = entry.map_err(|error| Failure::at(dir, error))?;
         if paths.len() >= limit {
-            return Err(format!(
-                "ReadDirAll found more than {limit} entries.\n  help: Use a smaller directory tree."
-            ));
+            return Err(Failure::LimitExceeded("Std.Fs.ReadDirAll", limit as i64));
         }
         let entry_path = entry.path();
         let text = entry_path.to_str().ok_or_else(|| {
-            "ReadDirAll entry path is not UTF-8.\n  help: Rename the entry to a valid UTF-8 name."
-                .to_string()
+            Failure::EncodingAtPath(
+                entry_path.to_string_lossy().into_owned(),
+                "ReadDirAll entry path is not UTF-8".into(),
+            )
         })?;
         paths.push(text.replace(std::path::MAIN_SEPARATOR, "/"));
         let file_type = entry
             .file_type()
-            .map_err(|error| format!("ReadDirAll entry failed: {error}"))?;
+            .map_err(|error| Failure::at(&entry.path(), error))?;
         if file_type.is_dir() {
             collect(&entry_path, limit, paths)?;
         }
@@ -48,15 +44,14 @@ fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), Stri
 
 /// Copy the directory tree `source` into `target`, creating directories and replacing files.
 /// Reject targets resolving to the source or one of its descendants before copying.
-pub(super) fn copy_dir_all(source: &Path, target: &Path) -> Result<(), String> {
-    if !source.is_dir() {
-        return Err(format!(
-            "CopyDirAll failed: '{}' is not a directory.\n  help: Use Fs.CopyFile for single files.",
-            source.display()
+pub(super) fn copy_dir_all(source: &Path, target: &Path) -> Result<(), Failure> {
+    if !fs::metadata(source)?.is_dir() {
+        return Err(Failure::InvalidArgument(
+            "Source",
+            "source is not a directory; use CopyFile for single files".into(),
         ));
     }
-    let source_path =
-        fs::canonicalize(source).map_err(|error| format!("CopyDirAll failed: {error}"))?;
+    let source_path = fs::canonicalize(source)?;
     copy_tree(source, target, &source_path)
 }
 
@@ -114,35 +109,46 @@ fn canonicalize_target_prefix(path: &Path) -> io::Result<PathBuf> {
     resolved
 }
 
-fn resolve_copy_target(source_root: &Path, target: &Path) -> Result<PathBuf, String> {
-    let target_path =
-        resolve_target_path(target).map_err(|error| format!("CopyDirAll failed: {error}"))?;
+fn resolve_copy_target(source_root: &Path, target: &Path) -> Result<PathBuf, Failure> {
+    let target_path = resolve_target_path(target).map_err(|error| {
+        if error.kind() == io::ErrorKind::InvalidInput && error.raw_os_error().is_none() {
+            Failure::InvalidArgument("Target", error.to_string())
+        } else {
+            Failure::at(target, error)
+        }
+    })?;
     if target_path.starts_with(source_root) {
-        return Err("CopyDirAll failed: target lies inside the source directory".to_string());
+        return Err(Failure::InvalidArgument(
+            "Target",
+            "CopyDirAll failed: target lies inside the source directory".into(),
+        ));
     }
     Ok(target_path)
 }
 
-fn copy_tree(source: &Path, target: &Path, source_root: &Path) -> Result<(), String> {
-    let target = resolve_copy_target(source_root, target)?;
-    fs::create_dir_all(&target).map_err(|error| format!("CopyDirAll failed: {error}"))?;
-    for entry in fs::read_dir(source).map_err(|error| format!("CopyDirAll failed: {error}"))? {
-        let entry = entry.map_err(|error| format!("CopyDirAll entry failed: {error}"))?;
+fn copy_tree(source: &Path, target: &Path, source_root: &Path) -> Result<(), Failure> {
+    let resolved_target = resolve_copy_target(source_root, target)?;
+    fs::create_dir_all(&resolved_target).map_err(|error| Failure::at(target, error))?;
+    for entry in fs::read_dir(source).map_err(|error| Failure::at(source, error))? {
+        let entry = entry.map_err(|error| Failure::at(source, error))?;
         let file_type = entry
             .file_type()
-            .map_err(|error| format!("CopyDirAll entry failed: {error}"))?;
-        let destination = target.join(entry.file_name());
+            .map_err(|error| Failure::at(&entry.path(), error))?;
+        let destination = resolved_target.join(entry.file_name());
         if file_type.is_symlink() {
-            return Err(format!(
-                "CopyDirAll failed: '{}' is a symbolic link; links are not copied",
-                entry.path().display()
+            return Err(Failure::InvalidArgument(
+                "Source",
+                format!(
+                    "CopyDirAll failed: '{}' is a symbolic link; links are not copied",
+                    entry.path().display()
+                ),
             ));
         } else if file_type.is_dir() {
             copy_tree(&entry.path(), &destination, source_root)?;
         } else {
             let destination = resolve_copy_target(source_root, &destination)?;
             fs::copy(entry.path(), destination)
-                .map_err(|error| format!("CopyDirAll failed: {error}"))?;
+                .map_err(|error| Failure::at(&entry.path(), error))?;
         }
     }
     Ok(())
@@ -199,10 +205,7 @@ mod tests {
         fs::remove_dir_all(&root).expect("remove fixture");
 
         for result in results {
-            assert_eq!(
-                result,
-                Err("CopyDirAll failed: target lies inside the source directory".to_string())
-            );
+            assert!(matches!(result, Err(Failure::InvalidArgument("Target", _))));
         }
         assert_eq!(contents, "keep");
         assert_eq!(entries, 1);
@@ -244,10 +247,7 @@ mod tests {
 
         let result = copy_dir_all(&source, &root.0.join("outside/../src/copy"));
 
-        assert_eq!(
-            result,
-            Err("CopyDirAll failed: target lies inside the source directory".to_string())
-        );
+        assert!(matches!(result, Err(Failure::InvalidArgument("Target", _))));
         assert_eq!(
             fs::read_to_string(target.join("copy")).expect("blocker"),
             "keep"
@@ -306,10 +306,7 @@ mod tests {
 
         let result = copy_dir_all(&source, &alias.join("copy"));
 
-        assert_eq!(
-            result,
-            Err("CopyDirAll failed: target lies inside the source directory".to_string())
-        );
+        assert!(matches!(result, Err(Failure::InvalidArgument("Target", _))));
         assert_eq!(
             fs::read_to_string(target.join("copy")).expect("blocker"),
             "keep"
@@ -330,10 +327,7 @@ mod tests {
 
         let result = copy_dir_all(&source, &target);
 
-        assert_eq!(
-            result,
-            Err("CopyDirAll failed: target lies inside the source directory".to_string())
-        );
+        assert!(matches!(result, Err(Failure::InvalidArgument("Target", _))));
         assert_eq!(
             fs::read_to_string(nested.join("copy")).expect("source file"),
             "keep"
@@ -384,14 +378,19 @@ mod tests {
             ),
             (
                 "unexpected.txt",
-                "CopyDirAll failed: target contains an unresolved symbolic link",
+                "target contains an unresolved symbolic link",
             ),
         ] {
             let link = target.join("value.txt");
             std::os::unix::fs::symlink(source.join(destination), &link)
                 .expect("destination file link");
 
-            assert_eq!(copy_dir_all(&source, &target), Err(message.to_string()));
+            assert_eq!(
+                copy_dir_all(&source, &target)
+                    .expect_err("reject target")
+                    .to_string(),
+                message
+            );
             assert_eq!(
                 fs::read_to_string(source.join("value.txt")).expect("source file"),
                 "original"

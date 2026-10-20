@@ -151,6 +151,8 @@ impl Intrinsic {
     #[must_use]
     pub fn debugger_name(self) -> String {
         match self {
+            Self::Conv(ConvIntrinsic::ErrorMessage) => "Std.Errors.Message".to_string(),
+            Self::Conv(ConvIntrinsic::ErrorMatchesVariant) => "$error.MatchesVariant".to_string(),
             Self::Str(StrIntrinsic::Utf8Encode) => "Std.Net.Utf8.EncodeBytes".to_string(),
             Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
             Self::Http(HttpIntrinsic::ReserveBodyStreamState) => {

@@ -114,7 +114,7 @@ impl Parser {
         }
         match self.current_token() {
             Token::Record => TypeBody::Record(self.parse_record_type(allow_member_visibility)),
-            Token::Enum => TypeBody::Enum(self.parse_enum_type()),
+            Token::Enum | Token::Error => TypeBody::Enum(self.parse_enum_type()),
             Token::Distinct => {
                 self.advance();
                 TypeBody::Distinct(self.parse_type_expr())
@@ -134,32 +134,36 @@ impl Parser {
     }
 
     fn parse_enum_type(&mut self) -> EnumType {
-        self.with_block_closer(Token::Enum, Self::parse_enum_type_inner)
+        let closer = self.current_token().clone();
+        self.with_block_closer(closer, Self::parse_enum_type_inner)
     }
 
     fn parse_enum_type_inner(&mut self) -> EnumType {
         let start = self.current_span();
+        let is_error = self.check(&Token::Error);
+        let closer = if is_error { Token::Error } else { Token::Enum };
         self.advance();
         let mut members = Vec::new();
         if self.check(&Token::End) || self.at_end() {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
-                "Expected at least one enum member",
-                "Add a member such as `Red;` between `enum` and `end enum;`.",
+                "Expected at least one variant",
+                "Add a variant between the declaration opener and its matching `end enum` or `end error`.",
                 self.current_span(),
             );
         }
         while !self.check(&Token::End) && !self.at_end() {
-            members.push(self.parse_enum_member());
+            members.push(self.parse_enum_member(is_error));
         }
-        self.expect_block_end(&Token::Enum);
+        self.expect_block_end(&closer);
         EnumType {
+            is_error,
             members,
             span: self.span_from(start),
         }
     }
 
-    fn parse_enum_member(&mut self) -> EnumMember {
+    fn parse_enum_member(&mut self, is_error: bool) -> EnumMember {
         let start = self.current_span();
         let (name, _) = match self.expect_ident() {
             Some(ident) => ident,
@@ -213,7 +217,35 @@ impl Parser {
             Vec::new()
         };
 
-        let value = if fields.is_empty() && self.eat(&Token::Equal) {
+        let message = if is_error && self.eat(&Token::Equal) {
+            if let Token::Str(text) = self.current_token() {
+                let text = text.clone();
+                if text.is_empty() {
+                    self.error_with_code(
+                        PARSE_EXPECTED_TOKEN,
+                        "An error message must be nonempty",
+                        "Omit `= ''` when the variant needs no literal message.",
+                        self.current_span(),
+                    );
+                }
+                self.advance();
+                Some(text)
+            } else {
+                self.error_with_code(
+                    PARSE_EXPECTED_TOKEN,
+                    "An error variant message must be one nonempty string literal",
+                    "Write `Failed = 'Operation failed';` or omit the message. Error variants have no integer backing values.",
+                    self.current_span(),
+                );
+                if !self.at_end() && !self.check(&Token::Semicolon) && !self.check(&Token::End) {
+                    self.advance();
+                }
+                None
+            }
+        } else {
+            None
+        };
+        let value = if !is_error && fields.is_empty() && self.eat(&Token::Equal) {
             self.parse_enum_member_value()
         } else {
             None
@@ -221,6 +253,7 @@ impl Parser {
 
         self.expect_semi();
         EnumMember {
+            message,
             name,
             value,
             fields,

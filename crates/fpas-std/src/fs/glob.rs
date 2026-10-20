@@ -1,18 +1,18 @@
 //! Stable, bounded glob expansion for `Std.Fs.Glob`.
 
+use super::failure::Failure;
 use std::path::Path;
 
 use glob::glob;
 
 use crate::limits::MAX_GLOB_MATCHES;
 
-pub(super) fn glob_paths(pattern: &str) -> Result<Vec<String>, String> {
+pub(super) fn glob_paths(pattern: &str) -> Result<Vec<String>, Failure> {
     let pattern = pattern.trim();
     if pattern.is_empty() {
-        return Err(
-            "Glob pattern must not be empty.\n  help: Pass a path or glob such as `src/**/*.fpas`."
-                .to_string(),
-        );
+        return Err(Failure::InvalidPattern(
+            "Glob pattern must not be empty".into(),
+        ));
     }
 
     let path = Path::new(pattern);
@@ -26,18 +26,16 @@ pub(super) fn glob_paths(pattern: &str) -> Result<Vec<String>, String> {
 
     let pattern_text = path.to_string_lossy().replace('\\', "/");
     let mut matches = Vec::<String>::new();
-    for entry in glob(&pattern_text).map_err(|error| {
-        format!(
-            "Invalid glob pattern `{pattern}`.\n  help: Use a valid glob such as `src/**/*.fpas`.\n  details: {error}"
-        )
-    })? {
+    for entry in glob(&pattern_text).map_err(|error| Failure::InvalidPattern(error.to_string()))? {
         let entry = entry.map_err(|error| {
-            format!("Error while evaluating glob pattern `{pattern}`.\n  details: {error}")
+            let path = error.path().to_string_lossy().into_owned();
+            Failure::AtPath(path, error.into())
         })?;
         if entry.is_file() {
             if matches.len() >= MAX_GLOB_MATCHES {
-                return Err(format!(
-                    "Glob pattern `{pattern}` matched more than {MAX_GLOB_MATCHES} files.\n  help: Narrow the pattern so fewer files match."
+                return Err(Failure::LimitExceeded(
+                    "Std.Fs.Glob",
+                    MAX_GLOB_MATCHES as i64,
                 ));
             }
             matches.push(normalize_path_string(&entry));

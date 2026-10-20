@@ -7,6 +7,17 @@ unit Std.Json;
 // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
 // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
+// Intrinsic `JsonError` data type.
+public type JsonError = error
+  // `InvalidSyntax` enum member.
+  //
+  // Parameters:
+  // - `Line`: Input line queued for the next read.
+  // - `Column`: `Option of integer` input value used by `InvalidSyntax`.
+  // - `Detail`: `string` input value used by `InvalidSyntax`.
+  InvalidSyntax(Line: option of integer; Column: option of integer; Detail: string) = 'Invalid JSON';
+end error;
+
 // JSON tree representation.
 public type JsonValue = enum
   // `NullValue` enum member.
@@ -38,11 +49,11 @@ public type JsonValue = enum
   Object(Fields: dict of string to JsonValue);
 end enum;
 
-// Parses JSON text; parse failures are `Error(Message)`.
+// Parses JSON text; parse failures are `Error(Cause)`.
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): result of (JsonValue, string);
+public function Parse(Text: string): result of (JsonValue, JsonError);
 begin
   panic('Intrinsic API declaration');
 end function;

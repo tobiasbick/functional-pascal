@@ -102,11 +102,11 @@ begin
   const Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
   begin
     for Item: integer := 1 to 2 do
-      discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of (boolean, string)) begin end procedure)]); end for;
+      discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of (boolean, Tasks.TaskError)) begin end procedure)]); end for;
   end procedure);
   var Total: integer := 0;
   for Item: integer := 1 to 2 do
-    discard Tasks.Select([Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, string))
+    discard Tasks.Select([Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, Tasks.TaskError))
       begin Total := Total + Outcome.Unwrap(); end procedure)]); end for;
   Tasks.Wait(Child);
   if Total <> 3 then panic('delivery lost'); end if;

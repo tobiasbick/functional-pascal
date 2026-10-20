@@ -163,6 +163,10 @@
     "constants": {
       "patterns": [
         {
+          "name": "storage.type.composite.fpas",
+          "match": "(?i:\\berror\\b)(?!\\s*\\()"
+        },
+        {
           "name": "constant.numeric.hex.fpas",
           "match": "\\$[0-9A-Fa-f](?:_?[0-9A-Fa-f])*"
         },

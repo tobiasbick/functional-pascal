@@ -3,7 +3,7 @@ program T;
 uses Std.Console as Console, Std.Json as Json;
 
 begin
-  const R: result of (Json.JsonValue, string) := Json.Parse('{bad json');
+  const R: result of (Json.JsonValue, Json.JsonError) := Json.Parse('{bad json');
   case R of
     when Ok(const V):
       begin

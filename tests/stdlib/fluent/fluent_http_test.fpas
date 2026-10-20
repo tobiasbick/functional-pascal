@@ -4,7 +4,7 @@ uses
   Std.Conv as Conv, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8, Std.Tasks as Tasks,
   Std.Test as Test;
 
-function FetchText(Url: string): result of (string, string);
+function FetchText(Url: string): result of (string, Http.HttpError);
 begin
   return Http.Send(Http.Request.Get(Url)).AndThen(Http.BodyText);
 end function;
@@ -23,14 +23,19 @@ begin
   return ResponseValue;
 end function;
 
-function ExerciseHttp(): result of (boolean, string);
+function ExerciseHttp(): result of (boolean, Http.HttpError);
 begin
   scope
-    const ListenerValue: Net.Listener := try Net.Listen('127.0.0.1', 0);
-    const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(ListenerValue);
+    const ListenerValue: Net.Listener := try Net.Listen(
+      '127.0.0.1',
+      0
+    ).MapError(Http.HttpError.Transport);
+    const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(
+      ListenerValue
+    ).MapError(Http.HttpError.Transport);
     var Options: Http.ServerOptions := Http.ServerOptions.Create();
     Options.MaxRequests := 1;
-    const ServerTask: task of result of (boolean, string) := go Http.Serve(
+    const ServerTask: task of result of (boolean, Http.HttpError) := go Http.Serve(
       ListenerValue,
       Options,
       Handle
@@ -39,7 +44,9 @@ begin
     const Text: string := try FetchText(Url);
     Test.AssertEquals('hello fluent', Text);
     const Served: boolean := try Tasks.Wait(ServerTask);
-    const Closed: boolean := try Net.CloseListener(ListenerValue);
+    const Closed: boolean := try Net.CloseListener(
+      ListenerValue
+    ).MapError(Http.HttpError.Transport);
     return Ok(Served and Closed);
   end scope;
 end function;
@@ -52,7 +59,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 end.

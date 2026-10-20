@@ -4,6 +4,10 @@ type Color = enum
   Red;
 end enum;
 
+type FileError = error
+  Missing(Path: string) = 'File not found';
+end error;
+
 type Point = record
   Value: integer;
 

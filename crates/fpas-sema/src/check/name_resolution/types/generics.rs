@@ -39,6 +39,7 @@ impl Checker {
                             crate::types::TypeConstraint::Numeric =>
                                 "arithmetic operators (+, -, *, /, div, mod)",
                             crate::types::TypeConstraint::Printable => "string conversion",
+                            crate::types::TypeConstraint::Error => "native error values",
                         },
                     ),
                     span,

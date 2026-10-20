@@ -1,6 +1,6 @@
 # `Std.Parse`
 
-Text parsers returning `Result of (T, string)`. Use `case` to handle input
+Text parsers returning `Result of (T, Parse.ParseError)`. Use `case` to handle input
 locally, `try` to propagate a returned error, or `.Unwrap()` for deliberate abort.
 Formatting and conversions of typed values belong to [Std.Conv](conv.md).
 
@@ -10,7 +10,7 @@ program Example;
 uses Std.Console as Console, Std.Parse as Parse;
 
 begin
-  const Parsed: result of (integer, string) := Parse.Int('42');
+  const Parsed: result of (integer, Parse.ParseError) := Parse.Int('42');
   case Parsed of
     when Ok(const Value):
       Console.WriteLn(Value);
@@ -30,24 +30,24 @@ Import with `uses Std.Parse as Parse;` and access public symbols as `Parse.Name`
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `Int(Text: string): Result of (integer, string)` | signed decimal or `$` hex with `_` separators; trims whitespace and checks signed 64-bit bounds |
-| function | `Real(Text: string): Result of (real, string)` | finite fractional/exponent text; preserves signed zero and rejects nonzero underflow to zero |
-| function | `Bool(Text: string): Result of (boolean, string)` | trims whitespace; accepts `true` and `false` case-insensitively |
-| function | `HexInt(Text: string): Result of (integer, string)` | signed hexadecimal text; bare hex or `$`/`0x`/`0X` prefix; checked signed 64-bit bounds |
+| function | `Int(Text: string): Result of (integer, Parse.ParseError)` | signed decimal or `$` hex with `_` separators; trims whitespace and checks signed 64-bit bounds |
+| function | `Real(Text: string): Result of (real, Parse.ParseError)` | finite fractional/exponent text; preserves signed zero and rejects nonzero underflow to zero |
+| function | `Bool(Text: string): Result of (boolean, Parse.ParseError)` | trims whitespace; accepts `true` and `false` case-insensitively |
+| function | `HexInt(Text: string): Result of (integer, Parse.ParseError)` | signed hexadecimal text; bare hex or `$`/`0x`/`0X` prefix; checked signed 64-bit bounds |
 
 ---
 
-## `function Int(Text: string): Result of (integer, string)`
+## `function Int(Text: string): Result of (integer, Parse.ParseError)`
 
 Parses signed decimal or `$` hexadecimal integer text with single `_` separators.
 Surrounding whitespace is ignored. The complete signed 64-bit range is accepted,
 including `-9223372036854775808` and `-$8000000000000000`. Hex is a mathematical
 magnitude, not an unsigned bit-pattern reinterpretation. Returns `Ok(Value)` on
-success or `Error(Message)` on invalid text or overflow. A deliberate abort is
+success or `Error(Cause)` on invalid text or overflow. A deliberate abort is
 `Parse.Int(Text).Unwrap()`.
 
 ```pascal id=example-2 fragment context=body-console-parse
-const R: result of (integer, string) := Parse.Int(' +1_024 ');
+const R: result of (integer, Parse.ParseError) := Parse.Int(' +1_024 ');
 case R of
   when Ok(const Value):
     Console.WriteLn(Value); // 1024
@@ -58,7 +58,7 @@ end case;
 
 ---
 
-## `function Real(Text: string): Result of (real, string)`
+## `function Real(Text: string): Result of (real, Parse.ParseError)`
 
 Parses Pascal real text with an optional sign and surrounding whitespace. The
 text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid,
@@ -71,7 +71,7 @@ including integral reals and either sign of zero. See
 [RealToStr](conv.md#function-realtostrr-real-string).
 
 ```pascal id=example-3 fragment context=body-console-parse
-const R: result of (real, string) := Parse.Real('1_024.0e-2');
+const R: result of (real, Parse.ParseError) := Parse.Real('1_024.0e-2');
 case R of
   when Ok(const Value):
     Console.WriteLn(Value); // 10.24
@@ -82,12 +82,12 @@ end case;
 
 ---
 
-## `function Bool(Text: string): Result of (boolean, string)`
+## `function Bool(Text: string): Result of (boolean, Parse.ParseError)`
 
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal id=example-4 fragment context=body-console-parse
-const R: result of (boolean, string) := Parse.Bool(' FALSE ');
+const R: result of (boolean, Parse.ParseError) := Parse.Bool(' FALSE ');
 case R of
   when Ok(const Value):
     Console.WriteLn(Value); // false
@@ -98,13 +98,13 @@ end case;
 
 ---
 
-## `function HexInt(Text: string): Result of (integer, string)`
+## `function HexInt(Text: string): Result of (integer, Parse.ParseError)`
 
 Parses signed hexadecimal text with single `_` separators and an optional `$`,
 `0x`, or `0X` prefix. Surrounding whitespace is ignored; the sign precedes the
 prefix. Bare hex such as `FF` is accepted. Hex is a mathematical magnitude, not
 an unsigned bit-pattern reinterpretation. The complete signed 64-bit range is
-accepted; invalid text and overflow return Error(Message).
+accepted; invalid text and overflow return Error(Cause).
 
 HexInt and Int have distinct interpretations: `Parse.HexInt('10')` returns
 `Ok(16)`, whereas `Parse.Int('10')` returns `Ok(10)`. General Int requires `$`
@@ -150,7 +150,7 @@ All four parsers have the named parameter Text, accept positional or fully named
 calls, and can be used as ordinary callable values with matching signatures:
 
 ```pascal id=example-8 fragment context=body-parse
-const Read: function(Text: string): result of (integer, string) := Parse.Int;
+const Read: function(Text: string): result of (integer, Parse.ParseError) := Parse.Int;
 const Value := Read(Text := '42');
 ```
 
@@ -168,3 +168,7 @@ const Value := Read(Text := '42');
 
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
+
+## Typed failures
+
+`ParseError.InvalidSyntax(Target, Detail)` reports malformed complete input; `ParseError.OutOfRange(Target, Detail)` reports valid numeric syntax outside the signed 64-bit or finite binary64 range, including nonzero underflow to zero. Syntax is checked before range: an overflowing prefix with invalid trailing text is InvalidSyntax. Target is `integer`, `hexadecimal integer`, `real`, or `boolean`. The accepted grammar is unchanged.

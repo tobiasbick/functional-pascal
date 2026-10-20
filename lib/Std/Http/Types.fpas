@@ -1,7 +1,19 @@
 // HTTP request, response, server, streaming, and SSE data types.
 unit Std.Http.Types;
 
-uses Std.Http.Handles as Handles;
+uses Std.Http.Handles as Handles, Std.Net as Net, Std.Net.Uri as Uri, Std.Net.Utf8 as Utf8;
+
+// HTTP owns protocol decisions and retains typed transport, address and decoding causes.
+public type HttpError = error
+  Transport(Cause: Net.NetError) = 'HTTP operation failed';
+  Address(Cause: Uri.UriError) = 'HTTP operation failed';
+  Encoding(Cause: Utf8.Utf8Error) = 'HTTP operation failed';
+  InvalidMessage(Detail: string) = 'HTTP operation failed';
+  InvalidArgument(Name: string; Reason: string) = 'HTTP operation failed';
+  LimitExceeded(Operation: string; Limit: integer) = 'HTTP operation failed';
+  UnexpectedEnd(Operation: string) = 'HTTP operation failed';
+  RedirectFailure(Detail: string) = 'HTTP operation failed';
+end error;
 
 // One HTTP field name and value.
 public type Header = record

@@ -12,7 +12,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic('decoder ' + Conv.IntToStr(Index) + ' failed: ' + Message);
+        panic('decoder ' + Conv.IntToStr(Index) + ' failed: ' + Message.Message());
       end;
   end case;
 end function;
@@ -45,7 +45,7 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
 
@@ -55,7 +55,7 @@ begin
             end;
           when Error(const Message):
             begin
-              panic(Message);
+              panic(Message.Message());
             end;
         end case;
       end;

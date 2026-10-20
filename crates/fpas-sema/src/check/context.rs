@@ -110,6 +110,12 @@ pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<
 /// inspecting those same allocations.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
+    /// Exact enum-member suffixes, including members used as native receivers.
+    pub enum_member_paths: HashSet<(u32, usize)>,
+    /// Checked substitutions for generic calls and generic routine values.
+    pub routine_type_arguments: HashMap<(u32, usize), Vec<Ty>>,
+    /// Applied record-owner arguments retained separately from method-level inference.
+    pub method_owner_type_arguments: HashMap<(u32, usize), Vec<Ty>>,
     /// Checked source expressions whose stable compiler allocation may be a retained default.
     /// Exact source id, byte start and length keep this fallback bound to its snapshot.
     pub source_expr_types: HashMap<(u32, usize, usize), Ty>,
@@ -182,6 +188,11 @@ pub struct AnalysisMetadata {
 
 /// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
+    pub(crate) needs_error_constructors: bool,
+    pub(crate) imported_error_schemas: BTreeMap<String, fpas_unit::errors::ErrorSchema>,
+    pub(crate) enum_member_paths: HashSet<(u32, usize)>,
+    pub(crate) routine_type_arguments: HashMap<(u32, usize), Vec<Ty>>,
+    pub(crate) method_owner_type_arguments: HashMap<(u32, usize), Vec<Ty>>,
     pub(crate) source_expr_types: HashMap<(u32, usize, usize), Ty>,
     pub(crate) member_receivers: HashMap<(u32, usize), Ty>,
     pub(crate) selection_types: HashMap<(u32, usize), (Span, Ty)>,
@@ -307,6 +318,11 @@ impl Checker {
             pattern_types: HashMap::new(),
             selection_types: HashMap::new(),
             member_receivers: HashMap::new(),
+            routine_type_arguments: HashMap::new(),
+            method_owner_type_arguments: HashMap::new(),
+            enum_member_paths: HashSet::new(),
+            imported_error_schemas: BTreeMap::new(),
+            needs_error_constructors: false,
             source_expr_types: HashMap::new(),
             binding_types: HashMap::new(),
             deferred_constructor_inference: 0,
@@ -345,6 +361,9 @@ impl Checker {
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
+            routine_type_arguments: self.routine_type_arguments,
+            method_owner_type_arguments: self.method_owner_type_arguments,
+            enum_member_paths: self.enum_member_paths,
             source_expr_types: self.source_expr_types,
             member_receivers: self.member_receivers,
             declaration_types: self.scopes.declaration_types(),

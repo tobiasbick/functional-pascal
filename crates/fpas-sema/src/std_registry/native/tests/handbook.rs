@@ -13,7 +13,7 @@ fn handbook_tables_match_every_native_signature_and_factory() {
             NativeReceiver::String => "Text",
             NativeReceiver::Array | NativeReceiver::StringArray => "Items",
             NativeReceiver::Dictionary => "Values",
-            NativeReceiver::Option | NativeReceiver::Result => "Value",
+            NativeReceiver::Option | NativeReceiver::Result | NativeReceiver::Error => "Value",
             NativeReceiver::StringFactory => "string",
             NativeReceiver::ArrayFactory => "array",
         };

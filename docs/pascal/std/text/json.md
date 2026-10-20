@@ -8,7 +8,7 @@ program Example;
 uses Std.Console as Console, Std.Json as Json;
 
 begin
-  const R: result of (Json.JsonValue, string) := Json.Parse('{"ok":true}');
+  const R: result of (Json.JsonValue, Json.JsonError) := Json.Parse('{"ok":true}');
   case R of
     when Ok(const Value):
       Console.WriteLn(Json.Stringify(Value));
@@ -32,7 +32,7 @@ Import with `uses Std.Json as Json;` and access public symbols as `Json.Name`. U
 | Kind | Name | Notes |
 |------|------|-------|
 | type | `JsonValue` | JSON tree representation |
-| function | `Parse(Text: string): Result of (JsonValue, string)` | parses JSON text; parse failures are `Error(Message)` |
+| function | `Parse(Text: string): Result of (JsonValue, Json.JsonError)` | parses JSON text; parse failures are `Error(Cause)` |
 | function | `Stringify(Value: JsonValue): string` | serializes a JSON value to compact JSON text |
 
 ### `JsonValue`
@@ -61,20 +61,20 @@ Arrays use `array of JsonValue`.
 ### `Parse`
 
 ```text
-function Parse(Text: string): Result of (Json.JsonValue, string);
+function Parse(Text: string): Result of (Json.JsonValue, Json.JsonError);
 ```
 
-Object members become dictionary entries in document order. Rejects duplicate object member names with `Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
+Object members become dictionary entries in document order. Rejects duplicate object member names with `Error(Cause)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
 
-Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
+Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Cause)` instead of aborting the program.
 
 ```pascal id=example-4 fragment context=body-console-json
-const R: result of (Json.JsonValue, string) := Json.Parse('[1, true, null]');
+const R: result of (Json.JsonValue, Json.JsonError) := Json.Parse('[1, true, null]');
 case R of
   when Ok(const Value):
     Console.WriteLn(Json.Stringify(Value));
   when Error(const Message):
-    Console.WriteLn('JSON error: ' + Message);
+    Console.WriteLn('JSON error: ' + Message.Message());
 end case;
 ```
 
@@ -104,11 +104,11 @@ Console.WriteLn(Json.Stringify(Value)); // [true,null,"hi",1.5]
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.
 
 FPAS value conversion and `Stringify` have a **256-level** nesting limit;
-conversion failures make `Parse` return `Error(Message)`, and stringification
+conversion failures make `Parse` return `Error(Cause)`, and stringification
 failures raise a runtime error. This is not the effective JSON parser limit:
 `Parse` also uses serde_json's default **128-step recursion budget** and may
 reject nested arrays or objects before reaching the FPAS conversion limit.
-Those parser failures also return `Error(Message)`.
+Those parser failures also return `Error(Cause)`.
 
 ## Implementation (contributors)
 
@@ -124,3 +124,7 @@ Those parser failures also return `Error(Message)`.
 - [`Std.Json.Fields`](json-fields.md) — typed field access for parsed objects
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
+
+## Typed failures
+
+`Json.JsonError.InvalidSyntax(Line, Column, Detail)` retains parser diagnostics. Line and Column are `Option of integer`, present only when the parser supplies a position (one-based); unsupported/nonfinite document values have no invented position. Stringify keeps its existing non-Result contract and runtime validation.

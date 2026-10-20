@@ -75,11 +75,13 @@ fn shared_recursive_alternatives_terminate_from_a_single_seed() {
     let types: Vec<_> = (0..count)
         .map(|i| {
             Ty::Enum(Arc::new(EnumTy {
+                is_error: false,
                 name: format!("E{i}"),
                 type_params: Vec::new(),
                 type_args: Vec::new(),
                 variants: vec![
                     EnumVariantTy {
+                        message: None,
                         name: "More".into(),
                         fields: vec![
                             ("Left".into(), Ty::Named(format!("E{}", (i + 1) % count))),
@@ -88,6 +90,7 @@ fn shared_recursive_alternatives_terminate_from_a_single_seed() {
                         backing_value: None,
                     },
                     EnumVariantTy {
+                        message: None,
                         name: "Stop".into(),
                         fields: if i == count - 1 {
                             Vec::new()
@@ -117,12 +120,14 @@ fn repeated_non_terminating_alternatives_do_not_expand_failure_paths() {
     let types: Vec<_> = (0..count)
         .map(|i| {
             Ty::Enum(Arc::new(EnumTy {
+                is_error: false,
                 name: format!("E{i}"),
                 type_params: Vec::new(),
                 type_args: Vec::new(),
                 variants: ["Left", "Right"]
                     .into_iter()
                     .map(|name| EnumVariantTy {
+                        message: None,
                         name: name.into(),
                         fields: vec![("Next".into(), Ty::Named(format!("E{}", (i + 1) % count)))],
                         backing_value: None,

@@ -109,7 +109,7 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
         .expect("NotesUpdate references")
         .value;
 
-    assert_eq!(references.len(), 35, "{references:?}");
+    assert_eq!(references.len(), 42, "{references:?}");
     assert!(
         references.iter().any(|reference| reference.path.ends_with(
             program
@@ -155,6 +155,20 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
                 .count(),
             2,
             "source review regression references in {fixture}"
+        );
+    }
+    for (fixture, expected) in [
+        ("note_search_selection_test.fpas", 3),
+        ("note_search_dirty_test.fpas", 3),
+        ("note_filter_editing_test.fpas", 1),
+    ] {
+        assert_eq!(
+            references
+                .iter()
+                .filter(|reference| reference.path.ends_with(fixture))
+                .count(),
+            expected,
+            "search regression references in {fixture}"
         );
     }
     assert_eq!(

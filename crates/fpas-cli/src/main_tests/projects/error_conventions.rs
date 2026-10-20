@@ -13,11 +13,11 @@ fn parser_values_and_error_types_survive_independent_unit_reuse() {
         r#"
 unit App.Parsing;
 uses Std.Parse as Numbers;
-public function IntReader(): function(Text: string): Result of (integer, string);
+public function IntReader(): function(Text: string): Result of (integer, Numbers.ParseError);
 begin return Numbers.Int; end function;
-public function ReadInt(Text: string): Result of (integer, string);
+public function ReadInt(Text: string): Result of (integer, Numbers.ParseError);
 begin return Numbers.Int(Text); end function;
-public function Forward(Text: string): Result of (boolean, string);
+public function Forward(Text: string): Result of (boolean, Numbers.ParseError);
 begin const Value := try Numbers.Int(Text); return Ok(Value > 0); end function;
 end unit;
 "#,
@@ -34,7 +34,7 @@ begin
   case Readers.Forward('invalid') of
     when Ok(_): panic('try must propagate');
     when Error(const Message):
-      if not ('invalid' in Message) then panic('error payload'); end if;
+      if not ('invalid' in Message.Message()) then panic('error payload'); end if;
   end case;
   Console.WriteLn('parsers verified');
 end.

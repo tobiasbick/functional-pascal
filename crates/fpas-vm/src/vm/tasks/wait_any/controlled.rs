@@ -4,14 +4,13 @@
 
 use super::super::TaskSuspension;
 use crate::vm::shared::wakeups::WakeSignal;
+use crate::vm::tasks::errors::TaskErrorKind;
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Register, TaskIntrinsic, Value};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
-const CANCELLED: &str = "Task wait was cancelled";
-const TIMED_OUT: &str = "Task wait timed out";
 
 #[cfg(test)]
 mod tests;
@@ -29,7 +28,21 @@ impl Worker {
                 self.task_type_error("task array and timeout or cancellation token", &Value::Unit)
             );
         };
+        if let Value::Array(values) = tasks
+            && let Err(reason) = super::validate_task_count(values.len())
+        {
+            return Ok(Some(Some(self.task_input_error("Tasks", reason)?)));
+        }
         let ids = self.wait_any_ids(tasks)?;
+        if operation == TaskIntrinsic::WaitAnyWithTimeout
+            && matches!(control, Value::Integer(value) if *value < 0)
+        {
+            return Ok(Some(Some(self.task_input_error(
+                "TimeoutMillis",
+                "Timeout must be non-negative",
+            )?)));
+        }
+
         let (timeout, token) = match operation {
             TaskIntrinsic::WaitAnyWithTimeout => (Some(self.wait_timeout(control)?), None),
             TaskIntrinsic::WaitAnyWithCancellation => {
@@ -111,12 +124,22 @@ impl Worker {
         // Validate every identity and preserve task failures before considering control outcomes.
         let result = self.wait_any_result(ids)?;
         if self.wait_token_cancelled(token)? {
-            return Ok(Some(control_error(CANCELLED)));
+            return Ok(Some(self.task_outcome_error(
+                TaskErrorKind::Cancelled,
+                "Std.Tasks.WaitAnyWithCancellation",
+            )?));
         }
         if let Some(value) = result {
             return Ok(Some(Value::result_ok(value)));
         }
-        Ok(expired.then(|| control_error(TIMED_OUT)))
+        if expired {
+            Ok(Some(self.task_outcome_error(
+                TaskErrorKind::Timeout,
+                "Std.Tasks.WaitAnyWithTimeout",
+            )?))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Poll a controlled task wait without resetting its clock deadline.
@@ -144,8 +167,4 @@ impl Worker {
             Ok(false)
         }
     }
-}
-
-fn control_error(message: &str) -> Value {
-    Value::result_error(Value::Str(message.into()))
 }

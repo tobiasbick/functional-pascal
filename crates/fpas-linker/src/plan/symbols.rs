@@ -140,7 +140,7 @@ impl SymbolTable {
         Ok(resolved)
     }
 
-    pub(super) fn resolve_name(
+    pub(crate) fn resolve_name(
         &self,
         objects: &[&RelocatableObject],
         name: &str,
@@ -225,6 +225,9 @@ fn matching_layout_definition(
             let Some(right_layout) = objects[right.0].enums.get(right_index as usize) else {
                 return false;
             };
+            if left_layout.error.is_some() || right_layout.error.is_some() {
+                return matching_error_layout(left_layout, right_layout);
+            }
             left_layout.variants.len() == right_layout.variants.len()
                 && left_layout
                     .variants
@@ -252,6 +255,23 @@ fn matching_layout_definition(
         }
         _ => false,
     }
+}
+
+pub(super) fn matching_error_layout(
+    left: &fpas_unit::object::ObjectEnumLayout,
+    right: &fpas_unit::object::ObjectEnumLayout,
+) -> bool {
+    left.error == right.error
+        && left.error.is_some()
+        && left.name == right.name
+        && left.variants.len() == right.variants.len()
+        && left
+            .variants
+            .iter()
+            .zip(&right.variants)
+            .all(|(left, right)| {
+                left.name == right.name && left.fields == right.fields && left.error == right.error
+            })
 }
 
 fn named_routines_match<T>(left: &[T], right: &[T], fields: impl Fn(&T) -> (&str, &str)) -> bool {

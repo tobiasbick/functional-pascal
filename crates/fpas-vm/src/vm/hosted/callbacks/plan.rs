@@ -28,7 +28,9 @@ pub(super) fn inactive_result(
             require_callback_argument(worker, arguments, "result callback")?;
             match (operation, value) {
                 (ResultIntrinsic::Map | ResultIntrinsic::AndThen, Value::ResultError(_))
-                | (ResultIntrinsic::OrElse, Value::ResultOk(_)) => Ok(Some(value.clone())),
+                | (ResultIntrinsic::OrElse | ResultIntrinsic::MapError, Value::ResultOk(_)) => {
+                    Ok(Some(value.clone()))
+                }
                 (_, Value::ResultOk(_) | Value::ResultError(_)) => Ok(None),
                 _ => Err(worker.callback_type_error("result", Some(value))),
             }
@@ -215,6 +217,10 @@ fn result_operation(
             CallbackArguments::one((**inner).clone()),
             SingleWrapper::ResultOk,
         ),
+        (ResultIntrinsic::MapError, Value::ResultError(inner)) => (
+            CallbackArguments::one((**inner).clone()),
+            SingleWrapper::ResultError,
+        ),
         (ResultIntrinsic::AndThen, Value::ResultOk(inner))
         | (ResultIntrinsic::OrElse, Value::ResultError(inner)) => (
             CallbackArguments::one((**inner).clone()),
@@ -279,7 +285,10 @@ fn require_callback_argument<'a>(
 fn is_result_callback(operation: ResultIntrinsic) -> bool {
     matches!(
         operation,
-        ResultIntrinsic::Map | ResultIntrinsic::AndThen | ResultIntrinsic::OrElse
+        ResultIntrinsic::Map
+            | ResultIntrinsic::MapError
+            | ResultIntrinsic::AndThen
+            | ResultIntrinsic::OrElse
     )
 }
 

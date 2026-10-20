@@ -18,6 +18,7 @@ pub(super) fn run(iterations: usize, depth: usize) -> Result<(), String> {
         });
     }
     let object = RelocatableObject {
+        error_schemas: Vec::new(),
         version: OBJECT_VERSION,
         owner: "benchmark".to_owned(),
         entry: None,

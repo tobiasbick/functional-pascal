@@ -9,6 +9,8 @@ pub enum TypeConstraint {
     Numeric,
     /// Values can be rendered as text.
     Printable,
+    /// Native error families; also guarantee Printable without erasure.
+    Error,
 }
 
 /// One generic parameter in a callable, record, or enum declaration.
@@ -110,6 +112,9 @@ pub struct RecordType {
 /// One enum variant.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct EnumVariant {
+    /// Literal message for a native error variant.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
     /// Source spelling of the variant.
     pub name: String,
     /// Associated-data fields in declaration order.
@@ -121,6 +126,9 @@ pub struct EnumVariant {
 /// Exported enum layout.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct EnumType {
+    /// Native error family, sharing the enum type representation.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub is_error: bool,
     /// Canonical qualified enum name.
     pub name: String,
     /// Generic parameters in declaration order.
@@ -203,6 +211,9 @@ pub enum InterfaceType {
     },
     /// Reference to a generic enum without expanding recursive payloads.
     EnumApplication {
+        /// Native error family, retaining its kind without expanding recursive fields.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        is_error: bool,
         /// Canonical declaration name.
         name: String,
         /// Arguments in declaration order.

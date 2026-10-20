@@ -35,6 +35,8 @@ pub struct BenchSpec {
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BenchDriver {
+    /// Typed error rendering and portable deep Cause checks through the production VM.
+    ErrorValues,
     /// Buffered FPAS HTTP requests against an isolated local fixture.
     HttpBody,
     /// Run an FPAS program through the release CLI.

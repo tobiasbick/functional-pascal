@@ -16,7 +16,7 @@ begin
   var Count: integer := 0;
   const Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   const Q: channel of procedure() := Tasks.CreateChannel(1);
-  Tasks.SendCase(Q, Work, procedure(R: result of (boolean, string)) begin end procedure);
+  Tasks.SendCase(Q, Work, procedure(R: result of (boolean, Tasks.TaskError)) begin end procedure);
 end."#,
     );
     assert!(
@@ -160,7 +160,7 @@ fn go_rejects_task_bound_mutable_closure() {
 #[test]
 fn typed_channel_operations_preserve_the_element_type() {
     check_ok(
-        "program T;\nuses Std.Tasks as Tasks;\nbegin\n  const Messages: channel of integer := Tasks.CreateChannel(1);\n  const Sent: result of (boolean, string) := Tasks.Send(Messages, 42);\n  const Received: result of (integer, string) := Tasks.Receive(Messages);\n  discard Tasks.CloseChannel(Messages);\nend.",
+        "program T;\nuses Std.Tasks as Tasks;\nbegin\n  const Messages: channel of integer := Tasks.CreateChannel(1);\n  const Sent: result of (boolean, Tasks.TaskError) := Tasks.Send(Messages, 42);\n  const Received: result of (integer, Tasks.TaskError) := Tasks.Receive(Messages);\n  discard Tasks.CloseChannel(Messages);\nend.",
     );
 }
 
@@ -181,7 +181,7 @@ fn channel_send_rejects_the_wrong_element_type() {
 #[test]
 fn channel_wait_modes_preserve_element_and_timeout_types() {
     let errors = check_errors(
-        "program T;\nuses Std.Tasks as Tasks;\nbegin\n  const Messages: channel of integer := Tasks.CreateChannel(1);\n  const Pending: result of (option of integer, string) := Tasks.TryReceive(Messages);\n  Tasks.TrySend(Messages, 'wrong');\n  Tasks.SendWithTimeout(Messages, 1, 'soon');\n  Tasks.ReceiveWithTimeout(Messages, 'soon');\nend.",
+        "program T;\nuses Std.Tasks as Tasks;\nbegin\n  const Messages: channel of integer := Tasks.CreateChannel(1);\n  const Pending: result of (option of integer, Tasks.TaskError) := Tasks.TryReceive(Messages);\n  Tasks.TrySend(Messages, 'wrong');\n  Tasks.SendWithTimeout(Messages, 1, 'soon');\n  Tasks.ReceiveWithTimeout(Messages, 'soon');\nend.",
     );
 
     assert_eq!(

@@ -35,6 +35,10 @@ impl<'a> IntrinsicCall<'a> {
         self.result = Some(value);
     }
 
+    pub(crate) fn factory(&self) -> &dyn AggregateFactory {
+        self.factory
+    }
+
     /// Construct a typed record through the executing runtime.
     pub(crate) fn record(
         &self,

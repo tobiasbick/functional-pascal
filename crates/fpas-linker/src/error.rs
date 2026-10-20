@@ -7,6 +7,8 @@ use fpas_diagnostics::{DiagnosticCode, codes};
 /// Register-object linking failure with deterministic, agent-readable context.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LinkError {
+    /// Native-error schemas, instances or constructor requests cannot be linked.
+    ErrorMetadata(String),
     /// An input object failed local validation.
     InvalidObject {
         /// Canonical object owner.
@@ -119,6 +121,9 @@ pub enum LinkError {
 impl fmt::Display for LinkError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ErrorMetadata(reason) => {
+                write!(formatter, "cannot link native error metadata: {reason}")
+            }
             Self::InvalidObject { owner, detail } => write!(
                 formatter,
                 "cannot link invalid register object `{owner}`: {detail}"
@@ -242,7 +247,7 @@ impl LinkError {
                 codes::LINK_INCOMPATIBLE_IMPORT
             }
             Self::Overflow(_) => codes::LINK_LIMIT_EXCEEDED,
-            Self::InvalidExecutable(_) => codes::LINK_INVALID_EXECUTABLE,
+            Self::InvalidExecutable(_) | Self::ErrorMetadata(_) => codes::LINK_INVALID_EXECUTABLE,
         }
     }
 }

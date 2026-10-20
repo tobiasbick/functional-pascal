@@ -49,6 +49,8 @@ mod functions;
 mod intrinsics;
 mod keyword_switch;
 mod local_inference;
+mod native_error_methods;
+mod native_errors;
 mod numeric_contracts;
 mod optimization;
 mod structure;

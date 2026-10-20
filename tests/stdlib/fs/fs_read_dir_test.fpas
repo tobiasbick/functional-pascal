@@ -23,7 +23,7 @@ begin
     Test.AssertTrue((Fs.ReadDir(Root + '/missing') is Error(_)));
     Test.AssertTrue((Fs.ReadDir(Root + '/c-file.txt') is Error(_)));
     Test.AssertTrue((Fs.ReadDir('') is Error(_)));
-    const Job: task of result of (array of string, string) := go Fs.ReadDir(Root);
+    const Job: task of result of (array of string, Fs.FsError) := go Fs.ReadDir(Root);
     const FromTask: array of string := Tasks.Wait(Job).Unwrap();
     Test.AssertEquals(3, FromTask.Length());
     for Index: integer := 0 to 2 do

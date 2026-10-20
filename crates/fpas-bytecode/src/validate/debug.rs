@@ -249,7 +249,7 @@ fn validate_capture_provenance(
             u32::from(function.capture_count),
         ));
     }
-    for source in sources {
+    for (index, source) in sources.iter().enumerate() {
         let binding_index = usize::try_from(source.binding.get()).unwrap_or(usize::MAX);
         let Some(binding) = owner.debug.bindings.get(binding_index) else {
             return Err(provenance(
@@ -285,8 +285,24 @@ fn validate_capture_provenance(
                 binding.ty.get(),
             ));
         }
+        let hidden_callable = binding.hidden
+            && !binding.mutable
+            && !binding.cell_backed
+            && matches!(
+                executable.debug_types.get(binding.ty.get() as usize),
+                Some(crate::DebugType::Function { .. })
+            )
+            && function
+                .debug
+                .bindings
+                .iter()
+                .filter(|binding| binding.kind == crate::DebugBindingKind::Capture)
+                .nth(index)
+                .is_some_and(|binding| binding.hidden);
         match source.kind {
-            DebugCaptureKind::Value if binding.cell_backed || binding.hidden => {
+            DebugCaptureKind::Value
+                if binding.cell_backed || (binding.hidden && !hidden_callable) =>
+            {
                 return Err(provenance(
                     executable,
                     function_id,

@@ -73,7 +73,7 @@ end function;
 function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
 begin
   // A timeout releases the gate even on the old blocking implementation.
-  const Paint: result of (integer, string) := Tasks.ReceiveWithTimeout(Painted, 3000);
+  const Paint: result of (integer, Tasks.TaskError) := Tasks.ReceiveWithTimeout(Painted, 3000);
   discard Tasks.Send(Gate, true);
   return (Paint is Ok(_));
 end function;
@@ -105,7 +105,7 @@ begin
     end for;
 
     Test.AssertTrue(Tasks.Wait(Observer));
-    var Replacement: result of (integer, string) := Tasks.ReceiveWithTimeout(Started, 0);
+    var Replacement: result of (integer, Tasks.TaskError) := Tasks.ReceiveWithTimeout(Started, 0);
     const Deadline: integer := Time.MonotonicMillis() + 5000;
     while (Replacement is Error(_)) and (Time.MonotonicMillis() < Deadline) do
       begin

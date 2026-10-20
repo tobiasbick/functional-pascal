@@ -50,8 +50,9 @@ pub use std_registry::{
     validate_native_catalog,
 };
 pub use types::{
-    DistinctTy, EnumTy, FunctionTy, GenericParamDef, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty,
-    TypeConstraint, array_pop_result, array_pop_result_declaration,
+    DistinctTy, EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, ParamMode, ParamTy,
+    ProcedureTy, RecordTy, Ty, TypeConstraint, array_pop_result, array_pop_result_declaration,
+    error_schema, semantic_type_identity,
 };
 
 use fpas_parser::Program;
@@ -68,6 +69,34 @@ pub fn analyze_with_types(program: &Program) -> AnalysisMetadata {
     let mut checker = check::Checker::new();
     checker.check_program(program);
     checker.finish()
+}
+
+/// Specialize resolved callable types using ordinary inference and constraint rules.
+///
+/// Nominal types and aliases must already be resolved. This does not analyze source
+/// or retain constructor bindings; it returns `None` for incompatible signatures,
+/// violated constraints, or generic parameters that the context cannot determine.
+#[must_use]
+pub fn specialize_callable_type(actual: &Ty, expected: &Ty) -> Option<Ty> {
+    let mut checker = check::Checker::new();
+    let specialized = checker.specialize_expected_callable(
+        actual.clone(),
+        expected,
+        fpas_lexer::Span {
+            offset: 0,
+            length: 0,
+            line: 1,
+            column: 1,
+            source_id: 0,
+        },
+    );
+    let resolved = match &specialized {
+        Ty::Function(function) => function.type_params.is_empty(),
+        Ty::Procedure(procedure) => procedure.type_params.is_empty(),
+        _ => false,
+    };
+    (resolved && checker.errors.is_empty() && specialized.compatible_with(expected))
+        .then_some(specialized)
 }
 
 /// Stable key for looking up [`ExprTypeMap`] entries (address of the `Expr` in the AST).

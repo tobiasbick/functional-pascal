@@ -1,6 +1,8 @@
 //! Convert a verified executable into a relocatable object.
+//! Documentation: `docs/pascal/program-structure/compiled-programs.md`.
 
 use fpas_bytecode::VerifiedExecutable;
+use std::collections::BTreeSet;
 
 use super::conversion::{localize_branch, object_debug_type, relocation_for_instruction};
 use super::{
@@ -163,6 +165,17 @@ impl RelocatableObject {
                 return Err(ObjectError::InvalidTableReference("enum owner"));
             };
             owner.push(ObjectEnumVariant {
+                error: variant
+                    .error
+                    .as_ref()
+                    .map(|error| {
+                        Ok(super::ObjectErrorVariant {
+                            field_types: error.field_types.clone(),
+                            message: error.message.map(strings).transpose()?,
+                            cause: error.cause.map(|cause| cause.field),
+                        })
+                    })
+                    .transpose()?,
                 name: strings(variant.name)?,
                 fields,
                 field_types: variant.field_types.iter().map(|ty| ty.get()).collect(),
@@ -174,15 +187,51 @@ impl RelocatableObject {
             .zip(variants_by_owner)
             .map(|(layout, variants)| {
                 Ok(ObjectEnumLayout {
+                    error: layout.error.clone(),
                     name: strings(layout.name)?,
                     variants,
                 })
             })
             .collect::<Result<Vec<_>, ObjectError>>()?;
 
+        let function_names = executable
+            .functions
+            .iter()
+            .map(|function| strings(function.name))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut reserved_names = function_names
+            .iter()
+            .chain(globals.iter().map(|global| &global.name))
+            .chain(records.iter().map(|record| &record.name))
+            .chain(enums.iter().map(|enumeration| &enumeration.name))
+            .map(|name| canonical(name))
+            .collect::<BTreeSet<_>>();
+        for key in enums
+            .iter()
+            .filter_map(|enumeration| enumeration.error.as_ref())
+        {
+            reserved_names
+                .insert(crate::errors::instance_symbol(key).map_err(ObjectError::Encode)?);
+        }
+        let mut seen_names = BTreeSet::new();
         let mut functions = Vec::with_capacity(executable.functions.len());
         let mut relocations = Vec::new();
         for (function_index, function) in executable.functions.iter().enumerate() {
+            let source_name = &function_names[function_index];
+            let (name, display_name) = if seen_names.insert(canonical(source_name)) {
+                (source_name.clone(), None)
+            } else {
+                // Concrete factories may share a defining display name. Retain the
+                // first symbol for name-based consumers and distinguish later locals.
+                let base = format!("{source_name}.$object.{function_index}");
+                let mut name = base.clone();
+                let mut suffix = 0;
+                while !reserved_names.insert(canonical(&name)) {
+                    suffix += 1;
+                    name = format!("{base}.{suffix}");
+                }
+                (name, Some(source_name.clone()))
+            };
             let start = usize::try_from(function.code.start.get())
                 .map_err(|_| ObjectError::Overflow("function start"))?;
             let end = usize::try_from(function.code.end.get())
@@ -319,7 +368,9 @@ impl RelocatableObject {
                     .collect(),
             };
             functions.push(ObjectFunction {
-                name: strings(function.name)?,
+                display_name,
+                error_constructors: None,
+                name,
                 code: local_code,
                 arity: function.arity,
                 capture_count: function.capture_count,
@@ -351,6 +402,7 @@ impl RelocatableObject {
             })
             .collect::<Result<Vec<_>, ObjectError>>()?;
         let mut object = Self {
+            error_schemas: Vec::new(),
             version: OBJECT_VERSION,
             owner: canonical(&owner.into()),
             entry,

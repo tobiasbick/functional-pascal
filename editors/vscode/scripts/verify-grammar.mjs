@@ -303,11 +303,11 @@ async function verifyDeclarationClosers(grammar) {
   ));
   const increase = new RegExp(configuration.indentationRules.increaseIndentPattern);
   const decrease = new RegExp(configuration.indentationRules.decreaseIndentPattern);
-  for (const kind of ["function", "procedure", "record", "enum", "unit"]) {
+  for (const kind of ["function", "procedure", "record", "enum", "error", "unit"]) {
     const line = `end ${kind};`;
     assertScope(tokenAt(fixture, line, "end"), "keyword.control.fpas");
     assertScope(tokenAt(fixture, line, kind),
-      kind === "record" || kind === "enum"
+      kind === "record" || kind === "enum" || kind === "error"
         ? "storage.type.composite.fpas" : "keyword.declaration.fpas");
     for (const spelling of [line, line.toUpperCase(), line.slice(0, -1)]) {
       assert.ok(decrease.test(spelling), `${spelling} decreases indentation`);

@@ -77,6 +77,7 @@ pub(super) enum SingleWrapper {
     Direct,
     OptionSome,
     ResultOk,
+    ResultError,
     /// Ignore the procedure result and return the selected case index.
     SelectionIndex(i64),
 }
@@ -406,6 +407,7 @@ impl SingleWrapper {
             Self::Direct => value,
             Self::OptionSome => Value::option_some(value),
             Self::ResultOk => Value::result_ok(value),
+            Self::ResultError => Value::result_error(value),
             Self::SelectionIndex(index) => Value::Integer(index),
         }
     }

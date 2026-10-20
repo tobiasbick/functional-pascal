@@ -96,22 +96,22 @@ begin
                 begin
                   case Http.FeedSse(Decoder, Bytes) of
                     when Ok(const Events): PrintEvents(Events);
-                    when Error(const Message): panic(Message);
+                    when Error(const Message): panic(Message.Message());
                   end case;
                 end; end if;
               end;
-              when Error(const Message): panic(Message);
+              when Error(const Message): panic(Message.Message());
             end case;
           end; end while;
           case Http.FinishSse(Decoder) of
             when Ok(const Events): PrintEvents(Events);
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -174,21 +174,21 @@ begin
             panic('unexpected first body fragment');
           end; end if;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Http.ReadStream(ResponseValue.Body, 8) of
         when Ok(_): panic('truncated Content-Length was accepted');
         when Error(const Message):
         begin
-          if not ('shorter than Content-Length' in Message) then
+          if not (Message is Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadFixed')) then
           begin
-            panic(Message);
+            panic(Message.Message());
           end; end if;
         end;
       end case;
       Console.WriteLn('ok');
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -209,4 +209,73 @@ end.
 
     assert_eq!(exit, 0, "stderr: {stderr}");
     assert_eq!(stdout, "ok\n");
+}
+
+#[test]
+fn http_stream_distinguishes_truncated_and_malformed_chunk_terminators() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root");
+    for (name, terminator, expected) in [
+        (
+            "missing",
+            b"".as_slice(),
+            "Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')",
+        ),
+        (
+            "partial",
+            b"\r".as_slice(),
+            "Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')",
+        ),
+        (
+            "malformed",
+            b"xx".as_slice(),
+            "Http.HttpError.InvalidMessage(_)",
+        ),
+    ] {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind chunk terminator fixture");
+        let port = listener.local_addr().expect("chunk fixture address").port();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().expect("accept chunk terminator client");
+            read_request_head(&mut stream);
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n1\r\nx")
+                .expect("write complete chunk payload");
+            stream
+                .write_all(terminator)
+                .expect("write chunk terminator");
+        });
+        let cwd = create_temp_dir(&format!("http-streaming-chunk-{name}"));
+        let source = cwd.join("main.fpas");
+        write_text(
+            &source,
+            &format!(
+                r#"program HttpChunkTerminator;
+uses Std.Console as Console, Std.Http as Http, Std.Test as Test;
+begin
+  const ResponseValue := Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/chunk')).Unwrap();
+  const Bytes := Http.ReadStream(ResponseValue.Body, 8).Unwrap();
+  Test.AssertEquals(1, Bytes.Length());
+  Test.AssertEquals(120, Bytes[0]);
+  Test.AssertTrue(Http.ReadStream(ResponseValue.Body, 8) is Error({expected}));
+  Console.WriteLn('ok');
+end.
+"#
+            ),
+        );
+        let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
+            &[
+                "run".into(),
+                "--std-lib".into(),
+                root.join("lib").to_string_lossy().into_owned(),
+                source.to_string_lossy().into_owned(),
+            ],
+            &cwd,
+        );
+        std::fs::remove_dir_all(&cwd).expect("remove chunk fixture");
+        server.join().expect("chunk terminator fixture must finish");
+        assert_eq!(exit, 0, "case {name}: {stderr}");
+        assert_eq!(stdout, "ok\n", "case {name}");
+    }
 }

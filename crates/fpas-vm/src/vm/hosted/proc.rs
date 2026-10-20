@@ -29,7 +29,9 @@ impl Worker {
             &command,
             &args,
             receiver.as_ref(),
-        ))))
+            self.layouts.as_ref(),
+            location,
+        )?)))
     }
 }
 

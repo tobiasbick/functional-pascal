@@ -162,16 +162,19 @@ fn payload_executable() -> VerifiedExecutable {
         globals: Vec::new(),
         records: Vec::new(),
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(16),
         }],
         enum_variants: vec![
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(17),
                 fields: vec![StringId::new(14)],
                 field_types: vec![DebugTypeId::new(0)],
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(18),
                 fields: vec![StringId::new(19), StringId::new(20)],

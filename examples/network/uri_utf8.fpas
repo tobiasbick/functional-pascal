@@ -14,7 +14,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
   const Bytes: array of integer := Utf8.Encode('Grüße aus FPAS');
@@ -25,7 +25,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic(Message);
+        panic(Message.Message());
       end;
   end case;
 end.

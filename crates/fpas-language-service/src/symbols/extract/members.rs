@@ -99,7 +99,15 @@ pub(super) fn type_children(
                     member.span,
                     Visibility::Public,
                     Some(owner.to_owned()),
-                    format!("enum member {owner}.{}", member.name),
+                    format!(
+                        "{} {owner}.{}",
+                        if value.is_error {
+                            "error variant"
+                        } else {
+                            "enum member"
+                        },
+                        member.name
+                    ),
                     declaration_scope,
                     fields,
                 );

@@ -1,5 +1,6 @@
 //! Bounded TLS handshake I/O shared by client and listener setup.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::io;
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
@@ -12,16 +13,21 @@ pub(super) fn complete(
     timeout: Duration,
     is_cancelled: impl Fn() -> bool,
     mut advance: impl FnMut(&mut TcpStream) -> io::Result<bool>,
-) -> Result<(), String> {
+) -> Result<(), Failure> {
     let interval = timeout.min(POLL_INTERVAL);
     socket
         .set_read_timeout(Some(interval))
         .and_then(|()| socket.set_write_timeout(Some(interval)))
-        .map_err(|error| format!("Could not configure TLS handshake timeout: {error}"))?;
+        .map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not configure TLS handshake timeout: {error}"),
+            )
+        })?;
     let deadline = Instant::now() + timeout;
     loop {
         if is_cancelled() {
-            return Err("Network operation cancelled during TLS handshake".to_string());
+            return Err(Failure::Cancelled);
         }
         match advance(socket) {
             Ok(true) => break,
@@ -31,14 +37,24 @@ pub(super) fn complete(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(format!("TLS handshake failed: {error}")),
+            Err(error) => {
+                return Err(Failure::io(
+                    &error,
+                    format!("TLS handshake failed: {error}"),
+                ));
+            }
         }
         if Instant::now() >= deadline {
-            return Err("TLS handshake timed out".to_string());
+            return Err(Failure::deadline("TLS handshake timed out"));
         }
     }
     socket
         .set_read_timeout(None)
         .and_then(|()| socket.set_write_timeout(None))
-        .map_err(|error| format!("Could not clear TLS handshake timeout: {error}"))
+        .map_err(|error| {
+            Failure::io(
+                &error,
+                format!("Could not clear TLS handshake timeout: {error}"),
+            )
+        })
 }

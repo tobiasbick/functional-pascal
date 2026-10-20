@@ -15,7 +15,7 @@ end.
 
 - The syntax is `channel of type`, and nested type expressions are allowed.
 - A channel accepts only values compatible with its element type.
-- Receiving from `channel of T` returns `result of (T, string)`.
+- Receiving from `channel of T` returns `result of (T, Tasks.TaskError)`.
 - Channel handles may be copied and passed to spawned tasks. Copies refer to the same FIFO queue.
 - A value whose closure state is task-bound cannot be sent through a channel.
 - `CreateChannel` has no value argument from which to infer `T`, so its result must be used where a
@@ -27,7 +27,7 @@ Channels belong to the VM that created them. `CloseChannel` is idempotent. Its f
 close returns `true`; later calls return `false`.
 
 Closing wakes blocked senders and receivers. Values buffered before the close remain available in
-FIFO order. After the buffer is drained, receives return `Error('Channel is closed')`. Sends after
+FIFO order. After the buffer is drained, receives return `Error(Tasks.TaskError.Closed(Operation))`. Sends after
 the close return the same error without accepting the value. VM shutdown closes every channel and
 wakes blocked operations.
 

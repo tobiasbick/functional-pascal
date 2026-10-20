@@ -51,6 +51,18 @@ struct RoutineCallSignature<'a> {
 }
 
 impl Checker {
+    /// Retain owner substitutions after a record application removes those parameters.
+    pub(in crate::check) fn record_method_owner_arguments(
+        &mut self,
+        record: &crate::types::RecordTy,
+        span: Span,
+    ) {
+        if self.needs_error_constructors && !record.type_args.is_empty() {
+            self.method_owner_type_arguments
+                .insert((span.source_id, span.offset), record.type_args.clone());
+        }
+    }
+
     /// Checks arguments and completes missing generic parameters from a result context.
     pub(crate) fn check_function_call_args(
         &mut self,
@@ -286,6 +298,16 @@ impl Checker {
                 format!("argument {}", index + 1)
             };
             self.check_type_compat(&expected, actual, &role, span);
+        }
+        if !type_params.is_empty() && self.needs_error_constructors {
+            let arguments = type_params
+                .iter()
+                .map(|parameter| inferred.get(&parameter.name.to_ascii_lowercase()).cloned())
+                .collect::<Option<Vec<_>>>();
+            if let Some(arguments) = arguments {
+                self.routine_type_arguments
+                    .insert((span.source_id, span.offset), arguments);
+            }
         }
         inferred
     }

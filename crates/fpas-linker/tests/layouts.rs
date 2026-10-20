@@ -208,8 +208,10 @@ fn record_layout_copies_compare_methods() {
 fn enum_layout_copies_compare_variant_field_types() {
     let mut left = unit(false);
     left.enums.push(fpas_unit::object::ObjectEnumLayout {
+        error: None,
         name: "shared.choice".to_string(),
         variants: vec![fpas_unit::object::ObjectEnumVariant {
+            error: None,
             name: "some".to_string(),
             fields: vec!["value".to_string()],
             field_types: vec![0],
@@ -306,8 +308,10 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         }],
     });
     library.enums.push(fpas_unit::object::ObjectEnumLayout {
+        error: None,
         name: "library.unit.choice".to_string(),
         variants: vec![fpas_unit::object::ObjectEnumVariant {
+            error: None,
             name: "some".to_string(),
             fields: vec!["value".to_string()],
             field_types: vec![0],

@@ -168,7 +168,7 @@ begin
       end;
     when Error(const Message):
       begin
-        return Error('Invalid OpenAI-compatible JSON response: ' + Message);
+        return Error('Invalid OpenAI-compatible JSON response: ' + Message.Message());
       end;
   end case;
 end function;

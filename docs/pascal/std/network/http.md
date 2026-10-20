@@ -3,6 +3,32 @@
 An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented in FPAS over
 `Std.Net`.
 
+## Operational errors
+
+All fallible HTTP helpers share `HttpError`, declared in `Std.Http.Types` and
+re-exported by Std.Http. Its variants are `Transport(Cause: NetError)`,
+`Address(Cause: UriError)`, `Encoding(Cause: Utf8Error)`, `InvalidMessage(Detail)`,
+`InvalidArgument(Name, Reason)`, `LimitExceeded(Operation, Limit)`,
+`UnexpectedEnd(Operation)` and `RedirectFailure(Detail)`. Transport/address/encoding
+boundaries preserve their original typed causes through explicit MapError calls;
+protocol integer/chunk grammar failures remain local InvalidMessage decisions.
+Non-2xx statuses are successful response data, and stream EOF remains successful.
+
+SSE Feed buffers partial lines, including split multibyte UTF-8 sequences. Feed
+and Finish use this same HttpError; an actual Decode failure maps to Encoding,
+including IncompleteSequence for a truncated final line. Existing limits,
+end-state changes and final-line processing remain at their original owners.
+
+```pascal id=typed-http-cause run
+program TypedHttpCause;
+uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+begin
+  const Decoder := Http.CreateSseDecoder(100).Unwrap();
+  discard Http.FeedSse(Decoder, [226]).Unwrap();
+  Test.AssertTrue(Http.FinishSse(Decoder) is Error(Http.HttpError.Encoding(Utf8.Utf8Error.IncompleteSequence(0))));
+end.
+```
+
 ## Quick reference
 
 | Kind | Name | Notes |
@@ -11,17 +37,17 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 | type | `Request` | method, URL, headers, byte body, timeout, header/response limits, and redirect limit |
 | static function | `Request.Get/Post/Put/Patch/Delete/Head/Options(Url)` | standard-method request constructors |
 | type | `Response` | status, reason, headers, and byte body |
-| function | `Send(Request): Result of (Response, string)` | sends and buffers one response |
+| function | `Send(Request): Result of (Response, HttpError)` | sends and buffers one response |
 | type | `StreamResponse` | status, reason, headers, and a `BodyStream` handle |
-| function | `OpenStream(Request): Result of (StreamResponse, string)` | returns after the response headers are available |
-| function | `ReadStream(BodyStream; MaxBytes): Result of (array of integer, string)` | pulls decoded body bytes; an empty array means EOF |
-| function | `CloseStream(BodyStream): Result of (boolean, string)` | closes a response before EOF |
+| function | `OpenStream(Request): Result of (StreamResponse, HttpError)` | returns after the response headers are available |
+| function | `ReadStream(BodyStream; MaxBytes): Result of (array of integer, HttpError)` | pulls decoded body bytes; an empty array means EOF |
+| function | `CloseStream(BodyStream): Result of (boolean, HttpError)` | closes a response before EOF |
 | type | `SseDecoder`, `SseEvent` | bounded incremental Server-Sent Events decoding |
 | function | `CreateSseDecoder(MaxEventBytes)` | creates a decoder with a per-event byte limit |
 | function | `FeedSse(Decoder; Bytes)` | returns all complete events in one fragment |
 | function | `FinishSse(Decoder)` | flushes the final line and finishes the decoder |
 | function | `HeaderValue(Response; Name: string): Option of string` | case-insensitive first match |
-| function | `BodyText(Response): Result of (string, string)` | validated UTF-8 decoding |
+| function | `BodyText(Response): Result of (string, HttpError)` | validated UTF-8 decoding |
 | type | `ServerRequest` | accepted method, origin-form target, headers, and body |
 | type | `ServerResponse` | status, reason, headers, body, and `Create` constructor |
 | type | `ServerOptions` | request limits, connection timeout, concurrency, and optional request count |
@@ -40,7 +66,7 @@ case Http.Send(RequestValue) of
   when Ok(const ResponseValue):
     Console.WriteLn(ResponseValue.StatusCode);
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 ```
 
@@ -58,7 +84,7 @@ unwrapping implicitly:
 ```pascal id=example-3 fragment context=header
 uses Std.Http as Http;
 begin
-const TextResult: result of (string, string) := Http.Send(
+const TextResult: result of (string, Http.HttpError) := Http.Send(
   Http.Request.Get('https://example.test/items')
 ).AndThen(Http.BodyText);
 
@@ -119,7 +145,7 @@ case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
               end;
             when Error(const Message):
               begin
-                panic(Message);
+                panic(Message.Message());
               end;
           end case;
         end;
@@ -127,7 +153,7 @@ case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
     end;
   when Error(const Message):
     begin
-      panic(Message);
+      panic(Message.Message());
     end;
 end case;
 ```
@@ -186,7 +212,7 @@ case Net.Listen('127.0.0.1', 8080) of
                 begin
                 end;
               when Error(const Message):
-                panic(Message);
+                panic(Message.Message());
             end case;
 
             case Http.ReadRequest(Connection, 65536, 1048576) of
@@ -199,11 +225,11 @@ case Net.Listen('127.0.0.1', 8080) of
                       begin
                       end;
                     when Error(const Message):
-                      panic(Message);
+                      panic(Message.Message());
                   end case;
                 end;
               when Error(const Message):
-                panic(Message);
+                panic(Message.Message());
             end case;
 
             case Net.Close(Connection) of
@@ -211,15 +237,15 @@ case Net.Listen('127.0.0.1', 8080) of
                 begin
                 end;
               when Error(const Message):
-                panic(Message);
+                panic(Message.Message());
             end case;
           end;
         when Error(const Message):
-          panic(Message);
+          panic(Message.Message());
       end case;
     end;
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 
 end.
@@ -251,11 +277,11 @@ case Net.Listen('127.0.0.1', 8080) of
           begin
           end;
         when Error(const Message):
-          panic(Message);
+          panic(Message.Message());
       end case;
     end;
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 
 end.
@@ -286,11 +312,11 @@ case Net.ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 1000
           begin
           end;
         when Error(const Message):
-          panic(Message);
+          panic(Message.Message());
       end case;
     end;
   when Error(const Message):
-    panic(Message);
+    panic(Message.Message());
 end case;
 ```
 

@@ -101,6 +101,7 @@ The following existing native receiver operations are allowed:
 | `string` | `Length`, `IsEmpty` |
 | `array of T` | `Length`, `IsEmpty` |
 | `dict of K to V` | `Length`, `IsEmpty` |
+| Native error family or `E: Error` | `Message` |
 
 For example, `requires Text.Length() > 0;` checks a string parameter. Resolution
 must select the actual native operation; a user function or record method named

@@ -112,11 +112,11 @@ end function;
 // Parameters:
 // - `Base`: Parsed URI of the current request.
 // - `Location`: Location field value from the redirect response.
-function Resolve(Base: Uri.Uri; Location: string): result of (string, string);
+function Resolve(Base: Uri.Uri; Location: string): result of (string, Types.HttpError);
 begin
   if HttpHeaders.ContainsUnsafeText(Location) then
     begin
-      return Error('HTTP redirect Location contains CR or LF');
+      return Error(Types.HttpError.RedirectFailure('HTTP redirect Location contains CR or LF'));
     end;
   end if;
   const Reference: string := WithoutFragment(Location.Trim());
@@ -156,7 +156,7 @@ begin
     end;
   end if;
 
-  case Uri.Parse(Target) of
+  case Uri.Parse(Target).MapError(Types.HttpError.Address) of
     when Ok(const Parsed):
       begin
         if ('://' in Reference) or Reference.StartsWith('//') then
@@ -169,7 +169,7 @@ begin
       end;
     when Error(const Message):
       begin
-        return Error('Invalid HTTP redirect Location: ' + Message);
+        return Error(Message);
       end;
   end case;
 end function;
@@ -262,10 +262,10 @@ end function;
 // - `Current`: Request that received the redirect response.
 // - `StatusCode`: Redirect response status code.
 // - `Location`: Location field value from the redirect response.
-public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): result of (Types.Request, string);
+public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): result of (Types.Request, Types.HttpError);
 begin
   var Base: Uri.Uri := Uri.Uri(Scheme := '', Host := '', Port := 0, Path := '');
-  case Uri.Parse(Current.Url) of
+  case Uri.Parse(Current.Url).MapError(Types.HttpError.Address) of
     when Ok(const Value):
       begin
         Base := Value;
@@ -287,7 +287,7 @@ begin
       end;
   end case;
   var TargetUri: Uri.Uri := Base;
-  case Uri.Parse(Target) of
+  case Uri.Parse(Target).MapError(Types.HttpError.Address) of
     when Ok(const Value):
       begin
         TargetUri := Value;

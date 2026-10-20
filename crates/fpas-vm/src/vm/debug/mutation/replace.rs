@@ -68,6 +68,24 @@ fn replace_at(
         (MutationPath::EnumField { variant, index }, Value::Enum(enumeration))
             if enumeration.body().layout.variant_id == *variant =>
         {
+            if rest.is_empty()
+                && let Some(cause) = enumeration
+                    .body()
+                    .layout
+                    .error
+                    .as_ref()
+                    .and_then(|error| error.cause)
+                && usize::from(cause.field) == *index
+                && !matches!(&replacement, Value::Enum(value)
+                        if value.body().layout.enumeration == cause.family && value.body().layout.error.is_some())
+            {
+                return Err(DebugSessionError {
+                    kind: DebugErrorKind::EvaluationType,
+                    message: "replacement Cause has a different concrete error family".to_owned(),
+                    hint: "Preserve the declared typed cause when replacing an error payload."
+                        .to_owned(),
+                });
+            }
             enumeration
                 .values_mut()
                 .get_mut(*index)
@@ -120,6 +138,58 @@ mod tests {
     use super::descendant;
     use crate::vm::debug::inspection::MutationPath;
 
+    #[test]
+    fn changing_a_cause_requires_its_exact_family_even_without_debug_types() {
+        use fpas_bytecode::{ErrorCause, RuntimeErrorVariant};
+        let make_leaf = |family| {
+            Value::Enum(
+                SharedEnum::try_new(
+                    Arc::new(RuntimeEnumLayout {
+                        error: Some(RuntimeErrorVariant {
+                            message: None,
+                            cause: None,
+                        }),
+                        enumeration: EnumTypeId::new(family),
+                        variant_id: EnumVariantId::new(family),
+                        type_name: "Example.Leaf".to_owned(),
+                        variant: "Failed".to_owned(),
+                        fields: vec![],
+                    }),
+                    vec![],
+                )
+                .expect("leaf"),
+            )
+        };
+        let wrapper = Value::Enum(
+            SharedEnum::try_new(
+                Arc::new(RuntimeEnumLayout {
+                    error: Some(RuntimeErrorVariant {
+                        message: None,
+                        cause: Some(ErrorCause {
+                            field: 0,
+                            family: EnumTypeId::new(0),
+                        }),
+                    }),
+                    enumeration: EnumTypeId::new(2),
+                    variant_id: EnumVariantId::new(2),
+                    type_name: "Example.Wrapper".to_owned(),
+                    variant: "Failed".to_owned(),
+                    fields: vec!["Cause".to_owned()],
+                }),
+                vec![make_leaf(0)],
+            )
+            .expect("wrapper"),
+        );
+        let path = [MutationPath::EnumField {
+            variant: EnumVariantId::new(2),
+            index: 0,
+        }];
+        let error =
+            descendant(wrapper.clone(), &path, make_leaf(1)).expect_err("wrong Cause family");
+        assert_eq!(error.kind, super::DebugErrorKind::EvaluationType);
+        descendant(wrapper, &path, make_leaf(0)).expect("same-family replacement");
+    }
+
     fn choice(variant_id: u16, variant: &str, values: Vec<Value>) -> Value {
         let fields = if values.len() == 2 {
             vec!["Left".to_string(), "Right".to_string()]
@@ -128,6 +198,7 @@ mod tests {
         };
         Value::Enum(SharedEnum::new(
             Arc::new(RuntimeEnumLayout {
+                error: None,
                 enumeration: EnumTypeId::new(0),
                 variant_id: EnumVariantId::new(variant_id),
                 type_name: "Choice".to_string(),

@@ -203,6 +203,7 @@ pub(super) fn decode_enums(
     for _ in 0..section.item_count {
         enums.push(EnumLayout {
             name: StringId::new(reader.u32("enum_name")?),
+            error: super::errors::decode_key(&mut reader)?,
         });
     }
     reader.ensure_entries(variant_count, 10, "enum_variant_owner")?;
@@ -226,6 +227,7 @@ pub(super) fn decode_enums(
             field_types.push(DebugTypeId::new(reader.u32("enum_variant_field_type")?));
         }
         variants.push(EnumVariant {
+            error: super::errors::decode_variant(&mut reader)?,
             owner,
             name,
             fields,

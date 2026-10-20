@@ -103,5 +103,13 @@ pub(super) fn construct(
         .iter()
         .map(|value| detacher.detach(value))
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(Value::Enum(SharedEnum::new(layout, values)))
+    SharedEnum::try_new(layout, values)
+        .map(Value::Enum)
+        .map_err(|validation| {
+            error(
+                DebugErrorKind::EvaluationType,
+                validation.to_string(),
+                "Pass the original typed error family required by the Cause field.",
+            )
+        })
 }

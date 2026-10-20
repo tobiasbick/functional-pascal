@@ -306,10 +306,11 @@ fn collect_layouts(interfaces: &[UnitInterface], plan: &mut ImportPlan) {
                 )
             }
             InterfaceType::Enum(enumeration)
-                if enumeration
-                    .variants
-                    .iter()
-                    .any(|variant| !variant.fields.is_empty()) =>
+                if !enumeration.is_error
+                    && enumeration
+                        .variants
+                        .iter()
+                        .any(|variant| !variant.fields.is_empty()) =>
             {
                 if providers.contains(&enumeration.name.to_ascii_lowercase()) {
                     (

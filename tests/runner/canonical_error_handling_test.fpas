@@ -133,7 +133,7 @@ begin
   );
   Test.AssertTrue(
     Parse.Int('1').AndThen(
-      function(Value: integer): result of (integer, string) begin
+      function(Value: integer): result of (integer, Parse.ParseError) begin
         return Ok(Value + 1);
       end function
     ) =

@@ -6,7 +6,7 @@ mod close;
 mod registry;
 mod spawn;
 mod teardown;
-pub(in crate::vm) use registry::{ClosedGroup, GroupFailure, GroupRegistry};
+pub(in crate::vm) use registry::{ClosedGroup, GroupCloseError, GroupFailure, GroupRegistry};
 
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Intrinsic, Register, SourceLocation, TaskIntrinsic, Value};
@@ -74,6 +74,12 @@ impl Worker {
             }
             TaskIntrinsic::CloseTaskGroup | TaskIntrinsic::CloseTaskGroupWithTimeout => {
                 let timeout = if operation == TaskIntrinsic::CloseTaskGroupWithTimeout {
+                    if matches!(args[1], Value::Integer(value) if value < 0) {
+                        return Ok(Some(Some(self.task_input_error(
+                            "TimeoutMillis",
+                            "Timeout must be non-negative",
+                        )?)));
+                    }
                     Some(self.wait_timeout(&args[1])?)
                 } else {
                     None
@@ -117,7 +123,7 @@ impl Worker {
     }
 
     /// Report invalid group identities, ownership, worker signatures, or retry bounds.
-    pub(in crate::vm::tasks) fn group_error(&self, message: impl Into<String>) -> VmError {
+    pub(in crate::vm) fn group_error(&self, message: impl Into<String>) -> VmError {
         self.runtime_error(fpas_diagnostics::codes::RUNTIME_INVALID_TASK, message.into(), "Use an open TaskGroup; only its creator may close it, and workers must have immutable captures.")
     }
 }

@@ -12,6 +12,7 @@
 
 mod emit;
 mod error;
+mod errors;
 mod plan;
 
 pub use emit::link_objects;

@@ -6,7 +6,8 @@ use super::super::super::VmError;
 use super::super::super::channels::{ReceiveState, SendState};
 use super::super::super::worker::Worker;
 use super::super::TaskSuspension;
-use super::{CLOSED_ERROR, RECEIVE_CANCELLED_ERROR, SEND_CANCELLED_ERROR, error, ok};
+use super::ok;
+use crate::vm::tasks::errors::TaskErrorKind;
 
 impl Worker {
     /// Send immediately or retain the value and destination until readiness changes.
@@ -25,8 +26,22 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             SendState::Sent => Ok(Some(Some(ok(Value::Boolean(true))))),
-            SendState::Closed => Ok(Some(Some(error(CLOSED_ERROR)))),
-            SendState::Cancelled => Ok(Some(Some(error(SEND_CANCELLED_ERROR)))),
+            SendState::Closed => Ok(Some(Some(self.task_outcome_error(
+                TaskErrorKind::Closed,
+                if token.is_some() {
+                    "Std.Tasks.SendWithCancellation"
+                } else {
+                    "Std.Tasks.Send"
+                },
+            )?))),
+            SendState::Cancelled => Ok(Some(Some(self.task_outcome_error(
+                TaskErrorKind::Cancelled,
+                if token.is_some() {
+                    "Std.Tasks.SendWithCancellation"
+                } else {
+                    "Std.Tasks.Send"
+                },
+            )?))),
             SendState::Pending(value) => {
                 self.task_suspension = Some(TaskSuspension::ChannelSend {
                     handle,
@@ -55,8 +70,22 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             ReceiveState::Received(value) => Ok(Some(Some(ok(value)))),
-            ReceiveState::Closed => Ok(Some(Some(error(CLOSED_ERROR)))),
-            ReceiveState::Cancelled => Ok(Some(Some(error(RECEIVE_CANCELLED_ERROR)))),
+            ReceiveState::Closed => Ok(Some(Some(self.task_outcome_error(
+                TaskErrorKind::Closed,
+                if token.is_some() {
+                    "Std.Tasks.ReceiveWithCancellation"
+                } else {
+                    "Std.Tasks.Receive"
+                },
+            )?))),
+            ReceiveState::Cancelled => Ok(Some(Some(self.task_outcome_error(
+                TaskErrorKind::Cancelled,
+                if token.is_some() {
+                    "Std.Tasks.ReceiveWithCancellation"
+                } else {
+                    "Std.Tasks.Receive"
+                },
+            )?))),
             ReceiveState::Pending => {
                 self.task_suspension = Some(TaskSuspension::ChannelReceive {
                     handle,
@@ -85,8 +114,22 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             SendState::Sent => Some(ok(Value::Boolean(true))),
-            SendState::Closed => Some(error(CLOSED_ERROR)),
-            SendState::Cancelled => Some(error(SEND_CANCELLED_ERROR)),
+            SendState::Closed => Some(self.task_outcome_error(
+                TaskErrorKind::Closed,
+                if token.is_some() {
+                    "Std.Tasks.SendWithCancellation"
+                } else {
+                    "Std.Tasks.Send"
+                },
+            )?),
+            SendState::Cancelled => Some(self.task_outcome_error(
+                TaskErrorKind::Cancelled,
+                if token.is_some() {
+                    "Std.Tasks.SendWithCancellation"
+                } else {
+                    "Std.Tasks.Send"
+                },
+            )?),
             SendState::Pending(value) => {
                 self.task_suspension = Some(TaskSuspension::ChannelSend {
                     handle,
@@ -115,8 +158,22 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             ReceiveState::Received(value) => Some(ok(value)),
-            ReceiveState::Closed => Some(error(CLOSED_ERROR)),
-            ReceiveState::Cancelled => Some(error(RECEIVE_CANCELLED_ERROR)),
+            ReceiveState::Closed => Some(self.task_outcome_error(
+                TaskErrorKind::Closed,
+                if token.is_some() {
+                    "Std.Tasks.ReceiveWithCancellation"
+                } else {
+                    "Std.Tasks.Receive"
+                },
+            )?),
+            ReceiveState::Cancelled => Some(self.task_outcome_error(
+                TaskErrorKind::Cancelled,
+                if token.is_some() {
+                    "Std.Tasks.ReceiveWithCancellation"
+                } else {
+                    "Std.Tasks.Receive"
+                },
+            )?),
             ReceiveState::Pending => {
                 self.task_suspension = Some(TaskSuspension::ChannelReceive {
                     handle,

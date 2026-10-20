@@ -17,7 +17,12 @@ fn parsed_nonfinite_values_are_errors_before_they_enter_fpas_aggregates() {
         let [Value::ResultError(message)] = stack.as_slice() else {
             panic!("nonfinite input must not produce an FPAS value: {text}");
         };
-        assert!(matches!(message.as_ref(), Value::Str(text) if text.contains("not finite")));
+        let Value::Enum(error) = message.as_ref() else {
+            panic!("typed TOML failure");
+        };
+        assert_eq!(error.body().layout.type_name, "Std.Toml.TomlError");
+        assert_eq!(error.body().layout.variant, "InvalidSyntax");
+        assert!(matches!(&error.body().values[2], Value::Str(text) if text.contains("not finite")));
     }
 }
 

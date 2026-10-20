@@ -8,6 +8,10 @@ mod sort_by;
 fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
     let cases = [
         (
+            "program T; type Failure = error Failed; end error; begin const Receiver := Failure.Failed; const Output: string := Receiver.Message(); end.",
+            "program T; type Failure = error Failed; end error; begin const Receiver := Failure.Failed; const Output: string := Receiver.Message(); end.",
+        ),
+        (
             "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.Length(); end.",
             "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.Length(); end.",
         ),
@@ -274,6 +278,10 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
         (
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, integer) := Receiver.OrElse(function(Err: string): Result of (integer, integer) begin return Ok(1); end function); end.",
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, integer) := Receiver.OrElse(F := function(Err: string): Result of (integer, integer) begin return Ok(1); end function); end.",
+        ),
+        (
+            "program T; begin var Receiver: Result of (integer, string) := Error('bad'); const Output: Result of (integer, integer) := Receiver.MapError(function(Cause: string): integer begin return 1; end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Error('bad'); const Output: Result of (integer, integer) := Receiver.MapError(F := function(Cause: string): integer begin return 1; end function); end.",
         ),
         (
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.Unwrap(); end.",

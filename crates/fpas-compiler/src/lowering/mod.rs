@@ -12,6 +12,7 @@ mod context;
 mod contracts;
 mod control_flow;
 mod debug;
+mod errors;
 mod expr;
 mod globals;
 mod imports;
@@ -37,6 +38,8 @@ use self::root::{SourceRoot, lower_analyzed_root};
 
 /// Typed IR and import bindings produced from one source root.
 pub(crate) struct LoweredUnit {
+    /// Essential native-error layouts, independent of optional debugger types.
+    pub errors: crate::errors::ErrorMetadata,
     /// Verified lowered program.
     pub program: Program,
     /// Import bindings to resolve during linking.
@@ -50,6 +53,10 @@ pub(crate) struct LoweredUnit {
 /// Returns all semantic diagnostics, or one structured compiler diagnostic when the source uses a
 /// construct that cannot be lowered.
 pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
+    lower_with_metadata(program).map(|lowered| lowered.program)
+}
+
+pub(crate) fn lower_with_metadata(program: &AstProgram) -> Result<LoweredUnit, Vec<CompileError>> {
     let metadata = fpas_sema::analyze_with_types(program);
     if !metadata.errors.is_empty() {
         return Err(metadata.errors.into_iter().map(Box::new).collect());
@@ -66,7 +73,6 @@ pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
         &[],
         &[],
     )
-    .map(|lowered| lowered.program)
 }
 
 /// Lowers a unit with its direct imports and transitive type support.

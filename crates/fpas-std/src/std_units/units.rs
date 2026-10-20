@@ -12,6 +12,7 @@ macro_rules! standard_unit_names {
 }
 
 standard_unit_names! {
+    STD_UNIT_ERRORS = "Std.Errors";
     STD_UNIT_SERVER = "Std.Server";
     STD_UNIT_ARGS = "Std.Args";
     STD_UNIT_ENV = "Std.Env";
@@ -42,6 +43,7 @@ standard_unit_names! {
 
 /// Standard units supplied entirely by compiler, VM, or runtime intrinsics.
 pub const STD_UNITS_INTRINSIC: &[&str] = &[
+    STD_UNIT_ERRORS,
     STD_UNIT_SERVER,
     STD_UNIT_ARGS,
     STD_UNIT_ENV,
@@ -65,6 +67,7 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
 
 /// Standard units recognized by tooling, including source-defined units.
 pub const STD_UNITS_KNOWN: &[&str] = &[
+    STD_UNIT_ERRORS,
     STD_UNIT_SERVER,
     STD_UNIT_ARGS,
     STD_UNIT_ENV,

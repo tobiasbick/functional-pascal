@@ -1,0 +1,114 @@
+program NativeErrors;
+
+uses Std.Test as Test, Std.Console as Console;
+
+type HostError = error
+  Failure(Code: integer; Detail: string) = 'Host failure';
+end error;
+
+type FsError = error
+  Missing(Path: string; Cause: HostError) = 'File not found';
+  Denied;
+end error;
+
+type ContextError of E: Error = error
+  Failed(Operation: string; Cause: E) = 'Operation failed';
+end error;
+
+type TaggedError of T: Printable = error
+  Tagged(Value: T);
+end error;
+
+type MarkerError of T: Printable = error
+  Failed;
+end error;
+
+function Wrap<E: Error>(Value: E): ContextError of E;
+begin
+  return ContextError.Failed(Cause := Value, Operation := 'load');
+end function;
+
+function RecursiveWrap<E: Error>(Value: E; Depth: integer): ContextError of E;
+begin
+  if Depth = 0 then
+    return Wrap(Value);
+  end if;
+
+  return RecursiveWrap(Value, Depth - 1);
+end function;
+
+function Original<E: Error>(Value: ContextError of E): E;
+begin
+  return case Value of
+    when ContextError.Failed(_, const Cause): Cause;
+  end case;
+end function;
+
+function Describe<E: Error>(Value: E): string;
+ensures (Text): Text = Value.Message();
+begin
+  return Value.Message();
+end function;
+
+function NestedWrapper<E: Error>(Evidence: E): function(Value: E): ContextError of E;
+function Build(Value: E): ContextError of E;
+begin
+  return Wrap(Value);
+end function;
+begin
+  return Build;
+end function;
+
+function Deferred<E: Error>(Value: E): function(): ContextError of E;
+begin
+  return function(): ContextError of E begin
+    return Wrap(Value);
+  end function;
+end function;
+
+function Tag<T: Printable>(Value: T): TaggedError of T;
+begin
+  return TaggedError.Tagged(Value);
+end function;
+
+function Mark<T: Printable>(Value: T): MarkerError of T;
+begin
+  return MarkerError.Failed;
+end function;
+
+begin
+  const Leaf := HostError.Failure(2, 'a"b'#10'next');
+  const Missing := FsError.Missing('settings.toml', Leaf);
+  const Wrapped := RecursiveWrap(Missing, 3);
+  const Bound: function(Value: HostError): ContextError of HostError := Wrap;
+  const Other := Bound(Leaf);
+  const Nested := NestedWrapper(Leaf);
+  const Later := Deferred(Leaf);
+  const Expected := 'NativeErrors.ContextError.Failed: Operation failed'#10 +
+    '  Operation = "load"'#10 +
+    'caused by NativeErrors.FsError.Missing: File not found'#10 +
+    '  Path = "settings.toml"'#10 +
+    'caused by NativeErrors.HostError.Failure: Host failure'#10 +
+    '  Code = 2'#10 +
+    '  Detail = "a\"b\nnext"';
+  Test.AssertEquals(Expected, Describe(Wrapped));
+  Test.AssertEquals(Missing.Message(), Original(Wrapped).Message());
+  Test.AssertEquals('NativeErrors.FsError.Denied', FsError.Denied.Message());
+  Test.AssertEquals(Leaf.Message(), Original(Other).Message());
+  Test.AssertEquals(Other.Message(), Nested(Leaf).Message());
+  Test.AssertEquals(Other.Message(), Later().Message());
+  Test.AssertEquals('NativeErrors.TaggedError.Tagged'#10'  Value = 7', Tag(7).Message());
+  Test.AssertEquals(
+    'NativeErrors.TaggedError.Tagged'#10'  Value = "seven"',
+    Tag('seven').Message()
+  );
+  Test.AssertTrue(Leaf = HostError.Failure(2, 'a"b'#10'next'));
+  Test.AssertTrue(Wrapped is ContextError.Failed(_, FsError.Missing(_, HostError.Failure(2, _))));
+  Test.AssertEquals('NativeErrors.MarkerError.Failed', Mark(7).Message());
+  Test.AssertEquals('NativeErrors.MarkerError.Failed', Mark('seven').Message());
+  scope
+    discard go Wrap(Leaf);
+  end scope;
+
+  Console.WriteLn(Wrapped);
+end.

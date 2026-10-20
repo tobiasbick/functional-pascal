@@ -491,7 +491,7 @@ recovers within a wrapper. Callback argument expressions evaluate eagerly in
 source order; their bodies run only on the selected variant.
 
 Import `uses Std.Parse as Parse;`. Each parser takes `Text: string` and returns
-`Result of (T, string)`:
+`Result of (T, Parse.ParseError)`:
 
 | Call through Parse | Success type T | Input |
 | --- | --- | --- |
@@ -500,7 +500,7 @@ Import `uses Std.Parse as Parse;`. Each parser takes `Text: string` and returns
 | `Parse.Bool(Text)` | boolean | Trimmed, case-insensitive true/false |
 | `Parse.HexInt(Text)` | integer | Signed hexadecimal, bare or prefixed with `$`/`0x`/`0X` |
 
-Invalid text returns Error; `Parse.Int(Text).Unwrap()` deliberately aborts.
+Invalid syntax returns `Parse.ParseError.InvalidSyntax`; valid numeric syntax outside the range returns `OutOfRange`. `Parse.Int(Text).Unwrap()` deliberately aborts.
 The parameter label is Text, including calls through matching callable values.
 Std.Conv formats and converts already typed values. See [parsing](std/text/parse.md).
 
@@ -536,7 +536,7 @@ begin
   return Ok(Checked * 2);
 end function;
 
-function IsPositiveText(Text: string): result of (boolean, string);
+function IsPositiveText(Text: string): result of (boolean, Parse.ParseError);
 begin
   const Value := try Parse.Int(Text := Text);
   return Ok(Value > 0);
@@ -566,7 +566,7 @@ begin
     when Error(const Message):
       Test.AssertEquals('positive value required', Message);
   end case;
-  const Read: function(Text: string): result of (integer, string) := Parse.Int;
+  const Read: function(Text: string): result of (integer, Parse.ParseError) := Parse.Int;
   Test.AssertTrue(Read(Text := '42') = Ok(42));
   Test.AssertTrue(Parse.Int('10') = Ok(10));
   Test.AssertTrue(Parse.HexInt('10') = Ok(16));
@@ -764,7 +764,7 @@ call arguments are unsupported. Constructors use the plain
 type name with ordinary fields/arguments, and infer from arguments or the expected
 type; do not write `Box of integer(Value := 1)` as a constructor expression.
 
-Constraints are `Numeric`, `Comparable`, and `Printable`, written `T: Numeric`.
+Constraints are `Numeric`, `Comparable`, `Printable`, and `Error`, written `T: Numeric`.
 `Numeric` allows integer/real arithmetic and implies the other two; `div` and `mod`
 are not valid generic Numeric operations because real is also a possible type.
 Numeric operands must use the same type parameter; `+`, `-`, `*` retain it,
@@ -772,6 +772,9 @@ while `/` returns real for both integer and real instantiations.
 `Comparable` permits scalar ordering and sorting, including enums without payload
 fields, distinct scalars, and subranges; equality-only aggregate types do not
 satisfy it. `Printable` expresses printable values.
+`Error` accepts native error families and implies Printable. It permits the
+read-only `Value.Message()` operation, including in contracts, without adding
+ordering, an erased root Error type or conversions between families.
 Aliases preserve the underlying constraints; distinct types and subranges have
 specific rules below. Unconstrained type parameters still permit storage/passing.
 Generic field defaults must work for every instantiation: `Option of T := None`
@@ -869,6 +872,99 @@ end.
 ```
 
 This example prints `4` after its assertions. See [generics](language/types/generics.md).
+
+Native [error families](language/types/errors.md) use `error ... end error`.
+Each variant may have one nonempty literal message. Ordinary fields require
+Printable; a field named Cause must be a concrete error or an `E: Error`
+parameter. Error families retain nominal identity and all generic arguments.
+They support exhaustive patterns and payload equality, without backing integers
+or ordering. Message() and Console printing share the automatic renderer.
+Strict `%s` formatting requires `Failure.Message()`, and try still requires
+compatible error types.
+
+```pascal id=example-14 run
+// Expected failures retain typed causes; local validation owns its own errors.
+program ConfigErrors;
+
+uses
+  Std.Console as Console, Std.Fs as Fs, Std.Parse as Parse, Std.Path as Path,
+  Std.Test as Test;
+
+type ConfigError = error
+  FileFailure(Cause: Fs.FsError) = 'Cannot load configuration';
+  MissingSetting(Name: string) = 'Missing configuration setting';
+  InvalidSetting(Name: string; Reason: string) = 'Invalid configuration setting';
+end error;
+
+type ContextError of E: Error = error
+  Failed(Cause: E; Operation: string; Resource: string) = 'Operation failed';
+end error;
+
+function Wrap<E: Error>(Cause: E): ContextError of E;
+begin
+  return ContextError.Failed(Cause, 'validate', 'port');
+end function;
+
+function LoadPort(FileName: string): result of (integer, ConfigError);
+begin
+  const Text := try Fs.ReadText(FileName).MapError(ConfigError.FileFailure);
+  if Text.Trim() = '' then
+    return Error(ConfigError.MissingSetting('port'));
+  end if;
+  const Port := try Parse.Int(Text.Trim()).MapError(
+    function(Cause: Parse.ParseError): ConfigError begin
+      return ConfigError.InvalidSetting('port', Cause.Message());
+    end function
+  );
+  if (Port < 1) or (Port > 65535) then
+    return Error(ConfigError.InvalidSetting('port', 'expected 1..65535'));
+  end if;
+
+  return Ok(Port);
+end function;
+
+function Load(FileName: string): result of (integer, ContextError of ConfigError);
+begin
+  return LoadPort(FileName).MapError(
+    function(Cause: ConfigError): ContextError of ConfigError begin
+      return ContextError.Failed(Cause, 'load', FileName);
+    end function
+  );
+end function;
+
+begin
+  const Directory := Fs.CreateTempDir().Unwrap();
+  const FileName := Path.Join([Directory, 'port.txt']);
+  case Load(FileName) of
+    when Ok(_):
+      Test.Fail('missing file was accepted');
+    when Error(const Failure):
+      Test.AssertTrue(
+        Failure is ContextError.Failed(ConfigError.FileFailure(Fs.FsError.FileNotFound(_, _)), 'load', _)
+      );
+      Console.WriteLn(Failure);
+  end case;
+
+  discard Fs.WriteText(FileName, '').Unwrap();
+  Test.AssertTrue(LoadPort(FileName) is Error(ConfigError.MissingSetting('port')));
+  discard Fs.WriteText(FileName, '70000').Unwrap();
+  Test.AssertTrue(
+    LoadPort(FileName) is Error(ConfigError.InvalidSetting('port', 'expected 1..65535'))
+  );
+  discard Fs.WriteText(FileName, '8080').Unwrap();
+  Test.AssertEquals(8080, Load(FileName).Unwrap());
+  discard Fs.DeleteDirAll(Directory).Unwrap();
+  const Local := Wrap(ConfigError.MissingSetting('port'));
+  const Parsed := Parse.Int('invalid').MapError(Wrap);
+  Test.AssertTrue(
+    Local is ContextError.Failed(ConfigError.MissingSetting('port'), 'validate', 'port')
+  );
+  Test.AssertTrue(
+    Parsed is Error(ContextError.Failed(Parse.ParseError.InvalidSyntax('integer', _), 'validate', 'port'))
+  );
+  Console.WriteLn(Local);
+end.
+```
 
 ## 11. Aliases, distinct types, subranges, and conversions
 
@@ -1050,6 +1146,17 @@ containing `include = ["Reference.Values.fpas"]`. Run `fpas run reference.fpaspr
 The reference test generates this same manifest shape; it also checks the unit
 in a library project (`kind = "library"`, the same sources, no `main`).
 
+Payload enum and native-error constructors are ordinary function values. For
+example, `const F: function(N: integer): Number := Number.Item;` uses the
+receiving signature's labels. Generic arguments require complete signature
+evidence. Fieldless variants remain values, without `()`.
+
+`Result.MapError(F)` preserves Ok without invoking F and maps Error once,
+wrapping the returned payload in Error without flattening. Receiver and callable
+expressions are each evaluated once, in that order. E/E2 need no Error constraint;
+use explicit MapError before `try` when changing error types. Runtime failures
+are not caught. See [Result operations](language/types/result-operations.md).
+
 ## 14. Find APIs and verify the source
 
 Use native dot operations for arrays, dicts, strings, Option and Result. For hosted
@@ -1154,3 +1261,5 @@ task operations inside synchronous native callbacks reject with FP5026. Repeatin
 requires the same executable, runtime build/platform, seed, inputs and limits;
 this does not reproduce the normal concurrent worker pool. Inspect
 `schedule.status` and its reasons. DAP/JSONL do not accept the seed flag.
+
+Std Fs/Proc/Parse/Json/Toml/Crypto operations use their nominal error families. JSON/TOML field helpers use their own FieldError family and preserve parser causes with MapError. Host-backed errors retain `Std.Errors.HostError` with operation/resources, optional native code and original detail; use `.Message()` only at an explicit text boundary. Task, Net and Server operations use their native TaskError, NetError and ServerError families; URI, UTF-8 and HTTP use their source-declared families. Selection callback Outcomes carry TaskError. Existing TaskFailure records and runtime failures retain their behavior.

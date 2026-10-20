@@ -89,8 +89,9 @@ pub(super) fn validate_debug_info(
     function: &ObjectFunction,
     functions: &[ObjectFunction],
     source_count: usize,
-    debug_type_count: usize,
+    debug_types: &[crate::object::ObjectDebugType],
 ) -> Result<(), ObjectError> {
+    let debug_type_count = debug_types.len();
     for (index, scope) in function.debug.scopes.iter().enumerate() {
         let valid = usize::try_from(scope.id).ok() == Some(index)
             && match (scope.id, scope.parent) {
@@ -156,14 +157,14 @@ pub(super) fn validate_debug_info(
         validate_debug_location(point.location, source_count)?;
         previous = Some(point.instruction_start);
     }
-    validate_capture_provenance(function, functions, debug_type_count)?;
+    validate_capture_provenance(function, functions, debug_types)?;
     Ok(())
 }
 
 fn validate_capture_provenance(
     function: &ObjectFunction,
     functions: &[ObjectFunction],
-    debug_type_count: usize,
+    debug_types: &[crate::object::ObjectDebugType],
 ) -> Result<(), ObjectError> {
     let sources = &function.debug.capture_sources;
     if function.capture_count == 0 {
@@ -181,9 +182,9 @@ fn validate_capture_provenance(
     if sources.len() != usize::from(function.capture_count) {
         return Err(ObjectError::InvalidTableReference("capture source count"));
     }
-    for source in sources {
+    for (index, source) in sources.iter().enumerate() {
         if source.binding as usize >= owner.debug.bindings.len()
-            || source.ty as usize >= debug_type_count
+            || source.ty as usize >= debug_types.len()
         {
             return Err(ObjectError::InvalidTableReference("capture source"));
         }
@@ -191,8 +192,24 @@ fn validate_capture_provenance(
         if binding.ty != source.ty {
             return Err(ObjectError::InvalidTableReference("capture source type"));
         }
+        let hidden_callable = binding.hidden
+            && !binding.mutable
+            && !binding.cell_backed
+            && matches!(
+                debug_types.get(binding.ty as usize),
+                Some(crate::object::ObjectDebugType::Function { .. })
+            )
+            && function
+                .debug
+                .bindings
+                .iter()
+                .filter(|binding| binding.kind == crate::object::ObjectDebugBindingKind::Capture)
+                .nth(index)
+                .is_some_and(|binding| binding.hidden);
         match source.kind {
-            crate::object::ObjectCaptureKind::Value if binding.cell_backed || binding.hidden => {
+            crate::object::ObjectCaptureKind::Value
+                if binding.cell_backed || (binding.hidden && !hidden_callable) =>
+            {
                 return Err(ObjectError::InvalidTableReference("value capture source"));
             }
             crate::object::ObjectCaptureKind::Cell

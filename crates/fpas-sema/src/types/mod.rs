@@ -10,8 +10,10 @@ pub use array_pop::{array_pop_result, array_pop_result_declaration};
 mod enums;
 /// Generic parameter identities and built-in constraints.
 mod generic_parameters;
+mod identity;
 /// Partial type evidence collected from generic arguments.
 mod inference;
+pub use identity::{error_schema, semantic_type_identity};
 /// Record identities, generic arguments, and resolved members.
 mod records;
 /// Inclusive integer bounds and structural subrange identity.

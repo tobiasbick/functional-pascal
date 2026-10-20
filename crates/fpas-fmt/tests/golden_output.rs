@@ -5,6 +5,15 @@
 mod common;
 
 #[test]
+fn native_errors_keep_literal_messages_and_named_closers() {
+    common::assert_golden(
+        "native_errors",
+        "unit Errors; public type FileError = error Missing(Path:string) = 'Can''t open'; Denied; end error; public type ContextError of E:Error = error Failed(Cause:E); end error; end unit;",
+        include_str!("golden/native_errors.expected.fpas"),
+    );
+}
+
+#[test]
 fn hello_minimal() {
     common::assert_golden(
         "hello_minimal",

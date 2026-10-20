@@ -17,6 +17,7 @@ fpas-language-service = { path = "../fpas-language-service" }
 fpas-unit = { path = "../fpas-unit" }
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-program = { path = "../fpas-program" }
+fpas-vm = { path = "../fpas-vm" }
 atomic-write-file = "0.3.0"
 mimalloc = { workspace = true }
 process-wrap = { version = "10.0.1", default-features = false, features = ["std", "job-object", "process-group"] }

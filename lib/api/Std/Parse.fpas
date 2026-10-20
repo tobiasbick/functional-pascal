@@ -1,4 +1,4 @@
-// Text parsers returning `Result of (T, string)`.
+// Text parsers returning `Result of (T, Parse.ParseError)`.
 //
 // Handbook: `docs/pascal/std/text/parse.md`.
 unit Std.Parse;
@@ -7,11 +7,27 @@ unit Std.Parse;
 // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
 // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
+// Intrinsic `ParseError` data type.
+public type ParseError = error
+  // `InvalidSyntax` enum member.
+  //
+  // Parameters:
+  // - `Target`: `string` input value used by `InvalidSyntax`.
+  // - `Detail`: `string` input value used by `InvalidSyntax`.
+  InvalidSyntax(Target: string; Detail: string) = 'Invalid value syntax';
+  // `OutOfRange` enum member.
+  //
+  // Parameters:
+  // - `Target`: `string` input value used by `OutOfRange`.
+  // - `Detail`: `string` input value used by `OutOfRange`.
+  OutOfRange(Target: string; Detail: string) = 'Value outside supported range';
+end error;
+
 // Trims whitespace; accepts `true` and `false` case-insensitively.
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Bool(Text: string): result of (boolean, string);
+public function Bool(Text: string): result of (boolean, ParseError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -20,7 +36,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function HexInt(Text: string): result of (integer, string);
+public function HexInt(Text: string): result of (integer, ParseError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -29,7 +45,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Int(Text: string): result of (integer, string);
+public function Int(Text: string): result of (integer, ParseError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -38,7 +54,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Real(Text: string): result of (real, string);
+public function Real(Text: string): result of (real, ParseError);
 begin
   panic('Intrinsic API declaration');
 end function;

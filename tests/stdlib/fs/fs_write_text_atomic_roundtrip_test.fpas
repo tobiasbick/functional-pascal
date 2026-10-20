@@ -10,7 +10,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -20,7 +20,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -31,7 +31,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 end.

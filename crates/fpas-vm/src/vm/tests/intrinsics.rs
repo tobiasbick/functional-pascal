@@ -2,7 +2,7 @@ use fpas_bytecode::{
     ArgsIntrinsic, ConsoleIntrinsic, Constant, Instruction, Intrinsic, Opcode, TestIntrinsic, Value,
 };
 
-use super::{abx, return_unit};
+use super::{abc, abx, return_unit};
 use crate::vm::Vm;
 
 fn intrinsic(destination: u16, intrinsic: Intrinsic, base: u16, count: u8) -> Instruction {
@@ -50,6 +50,7 @@ fn console_and_test_input_share_one_deterministic_host() {
                 1,
             ),
             intrinsic(1, Intrinsic::Console(ConsoleIntrinsic::ReadLn), 0, 0),
+            abc(Opcode::UnwrapSome, 1, 1, 0),
             intrinsic(
                 fpas_bytecode::NO_REGISTER,
                 Intrinsic::Console(ConsoleIntrinsic::WriteLn),

@@ -191,6 +191,15 @@ impl Vm {
             .push_line(line);
     }
 
+    /// Signal EOF after pending characters and queued text lines have been read.
+    pub fn close_text_input(&mut self) {
+        self.hosted
+            .text_input
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .close_input();
+    }
+
     /// Sets the directory returned by `Std.Test.ScratchDir()` for this VM.
     pub fn set_test_scratch_dir(&mut self, path: std::path::PathBuf) {
         *self

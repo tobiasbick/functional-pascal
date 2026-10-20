@@ -253,6 +253,14 @@ fn incompatible_object_version_is_rejected_before_linking() {
             expected: OBJECT_VERSION,
         })
     );
+    let bytes = serde_json::to_vec(&object).expect("old object wire shape");
+    assert_eq!(
+        decode_object(&bytes),
+        Err(ObjectError::Version {
+            actual: OBJECT_VERSION - 1,
+            expected: OBJECT_VERSION,
+        })
+    );
 }
 
 #[test]

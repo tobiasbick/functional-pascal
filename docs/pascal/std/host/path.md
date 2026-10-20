@@ -32,6 +32,9 @@ Requires `uses Std.Path as Path;`.
 | function | `DirName(Path: string): string` | returns the parent path without the final component |
 | function | `Extension(Path: string): string` | returns the final extension without a leading dot |
 | function | `Normalize(Path: string): string` | normalizes separators and `.` / `..` components |
+| function | `IsAbsolute(Path: string): boolean` | tests whether the path is fully absolute under host rules |
+| function | `RelativeTo(Target: string; Base: string): Option of string` | returns the lexical path from `Base` to `Target`, or `None` when indeterminate |
+| function | `ChangeExtension(Path: string; Extension: string): Option of string` | replaces the final extension, or `None` for an invalid extension or absent filename |
 
 ---
 
@@ -42,6 +45,8 @@ Requires `uses Std.Path as Path;`.
 - `Join` with an empty array returns `''`.
 - If a later `Join` segment is an absolute path (host rules), it replaces the path built so far — the same behavior as Rust `PathBuf::push`. Prefer relative segments when concatenating under a root.
 - `BaseName`, `DirName`, and `Extension` follow the same parsing rules as Rust's `std::path::Path` on the host platform.
+- `IsAbsolute`, `RelativeTo`, and `ChangeExtension` use those host parsing rules too. On Unix, a backslash is an ordinary filename character.
+- Component comparisons follow host Rust path equality. These operations do not apply filesystem-wide case folding or resolve symlinks.
 
 ---
 
@@ -115,6 +120,84 @@ Console.WriteLn(Path.Normalize('D:projects\..\demo')); // D:demo (drive-relative
 ```pascal id=example-8 fragment context=body-console-path
 Console.WriteLn(Path.Normalize('a/b/../c'));
 Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
+```
+
+---
+
+## `function IsAbsolute(Path: string): boolean`
+
+Tests whether `Path` is fully absolute on the host platform. Empty strings,
+`.` and ordinary relative paths return `false`.
+
+On Unix, a leading `/` makes a path absolute. On Windows, an absolute drive
+path such as `D:\projects` or a UNC path such as `\\server\share\projects`
+is absolute. A drive-relative path such as `D:projects`, or a root-relative
+path such as `\projects`, is not fully absolute.
+
+## `function RelativeTo(Target: string; Base: string): Option of string`
+
+Returns a path from `Base` to `Target`. The target is the first argument.
+Both paths are normalized lexically using `Normalize` rules before comparing
+their components. Empty paths are treated as `.` for this calculation.
+Identical determinate paths produce `Some('.')`.
+
+The result uses the host separator and may contain `..` components. Neither
+argument needs to exist. No current directory, filesystem lookup, or symlink
+resolution is involved.
+
+`None` means the relationship cannot be established under these rules:
+
+- One argument is absolute and the other relative, or their roots/prefixes are incompatible.
+- After matching the common component prefix, an unresolved `..` remains in the base.
+- On Windows, either argument is drive-relative or root-relative, including identical paths of those forms. Fully absolute paths on the same drive or UNC share and ordinary relative paths are supported.
+
+Shared leading parent components cancel lexically:
+`RelativeTo('../a', '../a')` returns `Some('.')`, and on Unix
+`RelativeTo('../file', '../dir')` returns `Some('../file')`. An unmatched
+parent component in the target is allowed, so on Unix
+`RelativeTo('../file', 'dir')` returns `Some('../../file')`. An unmatched
+parent in the base is indeterminate: `RelativeTo('file', '../dir')` is `None`.
+Components retain the host's existing case comparison behavior; this does not
+ask the filesystem whether differently spelled names refer to the same object.
+
+## `function ChangeExtension(Path: string; Extension: string): Option of string`
+
+Replaces only the final extension. The extension argument has no leading dot:
+`ChangeExtension('archive.tar.gz', 'zip')` returns `Some('archive.tar.zip')`.
+An empty extension removes the final extension. Multipart extensions such as
+`'tar.gz'` are accepted. A dotfile such as `.env` has no existing extension,
+so changing it to `'txt'` produces `Some('.env.txt')`.
+
+Returns `None` when the path has no final filename, including an empty path,
+root, `.` or `..`. An extension starting with `.`, containing NUL, or containing
+a host path separator also returns `None`. Both `/` and `\` are separators on
+Windows; only `/` is a separator on Unix.
+
+Final-component parsing follows the same rules as `BaseName`, including
+trailing separators: `ChangeExtension('folder/', 'txt')` produces
+`Some('folder.txt')`. Other components are not resolved against a current
+directory or checked on disk.
+
+The following assertions run on either platform:
+
+```pascal id=example-9 run
+program PathHelpers;
+
+uses Std.Path as Path, Std.Test as Test;
+
+begin
+  Test.AssertTrue(not Path.IsAbsolute('docs/guide.txt'));
+  Test.AssertEquals('guide.txt', Path.RelativeTo('docs/guide.txt', 'docs').Unwrap());
+  Test.AssertEquals('.', Path.RelativeTo('docs/./guide.txt', 'docs/guide.txt').Unwrap());
+  Test.AssertEquals('.', Path.RelativeTo('', '.').Unwrap());
+  Test.AssertEquals('.', Path.RelativeTo('../docs', '../docs').Unwrap());
+  Test.AssertTrue(Path.RelativeTo('docs', '../docs') is None);
+  Test.AssertEquals('archive.tar.zip', Path.ChangeExtension('archive.tar.gz', 'zip').Unwrap());
+  Test.AssertEquals('archive.tar', Path.ChangeExtension('archive.tar.gz', '').Unwrap());
+  Test.AssertEquals('.env.txt', Path.ChangeExtension('.env', 'txt').Unwrap());
+  Test.AssertTrue(Path.ChangeExtension('notes.txt', '.md') is None);
+  Test.AssertTrue(Path.ChangeExtension('.', 'txt') is None);
+end.
 ```
 
 ---

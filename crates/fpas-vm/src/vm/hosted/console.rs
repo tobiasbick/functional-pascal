@@ -34,15 +34,18 @@ impl Worker {
                 self.with_console(|console| console.write_ln(value, location))?;
                 None
             }
-            ConsoleIntrinsic::ReadLn => Some(Value::Str(
+            ConsoleIntrinsic::ReadLn => Some(
                 self.with_text_input(|input| input.read_line(location))?
-                    .into(),
-            )),
-            ConsoleIntrinsic::Read => Some(Value::Str(
+                    .map_or(Value::OptionNone, |line| {
+                        Value::option_some(Value::Str(line.into()))
+                    }),
+            ),
+            ConsoleIntrinsic::Read => Some(
                 self.with_text_input(|input| input.read_char(location))?
-                    .to_string()
-                    .into(),
-            )),
+                    .map_or(Value::OptionNone, |character| {
+                        Value::option_some(Value::Str(character.to_string().into()))
+                    }),
+            ),
             ConsoleIntrinsic::ReadKey => Some(Value::Str(
                 self.with_key_input(|input| input.read_key(location))?
                     .to_string()

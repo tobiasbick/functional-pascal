@@ -1,7 +1,7 @@
 # Standard library gap review
 
-Status: assessment updated on 2026-10-20. Gap 9 is delivered by AP47; other
-candidates remain unscheduled.
+Status: assessment updated on 2026-10-20. Gaps 1, 6, 8 and 9 are implemented;
+remaining candidates are unscheduled.
 
 This review covers the existing standard library, including native string and
 collection operations, but excludes `Std.Ai.*`. Findings were checked against
@@ -23,39 +23,43 @@ provide higher-order operations; arrays include stable `SortBy` and `FlatMap`.
 Strings support Unicode scalar indexing and casing, while Console exposes
 grapheme segmentation and display widths. Native error declarations, typed causes,
 automatic output and explicit MapError are delivered through AP47, including both
-selected Std cohorts and integrated acceptance. These are not missing capabilities.
+selected Std cohorts and integrated acceptance. Console text reads return Option,
+so EOF is observable without losing empty lines. String formatting supports numeric
+field widths, alignment, zero padding, fixed precision and scientific notation.
+Pure path helpers detect absolute paths, calculate relative paths and replace
+filename extensions under host platform rules.
+These are implemented capabilities.
 
 ## Everyday capability gaps
 
 Numbers are stable references within this assessment, not approved work packages.
-Gap 9 is closed by AP47; its number and historical direction anchor remain stable.
+Gaps 1, 6, 8 and 9 are closed. Their numbers remain reserved;
+the historical structured-error direction anchor remains stable.
 
 | ID | Area | Current boundary and missing capability | Comparison |
 | --- | --- | --- | --- |
-| 1 | End of text input | `Console.ReadLn()` cannot return EOF explicitly. The ordinary stdin implementation ignores the zero-byte read indication, so EOF and an empty line are indistinguishable to FPAS code. This prevents a reliable read-until-EOF loop over a pipe. | Go `io.EOF`; Rust `BufRead` |
 | 2 | Binary files | `Fs` reads and writes UTF-8 text but exposes no byte read/write operations. Existing network/Crypto byte arrays could supply an initial representation without adding language types. | Go `os.ReadFile`/`os.WriteFile`; Python binary files |
 | 3 | Incremental file I/O | No public file handles for bounded chunk reads/writes, line-by-line reading or seeking. `ReadText` loads the whole file and rejects files over 64 MiB. HTTP response streaming already exists but does not cover files. | Go `io`/`bufio`; Rust file I/O |
 | 4 | Process control | `Run` and `RunCapture` wait for completion. Missing capabilities include supplying stdin, a working directory and environment per invocation, timeout/cancellation, and bounded or incremental captured output. Moving a call into `go` does not add child-process control. | Go `os/exec`; Python `subprocess` |
 | 5 | Calendar date and time | `Time` exposes wall-clock/monotonic milliseconds and sleep, but no calendar decomposition, date values, ISO-8601 parsing or date/time formatting. Time-zone handling would be a further design step. | Go `time`; Ada `Calendar.Formatting` |
-| 6 | Numeric output formatting | String `Format` supports `%d`, `%f`, `%s` and `%%`, without selectable decimal precision, scientific notation or numeric field width. `RealToStr` provides exact round-trip text rather than presentation controls. | Go `fmt`; Python formatting |
 | 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
-| 8 | Path helpers | `Path` has five basic operations. Absolute-path checks, relative-path calculation and extension replacement are absent. Resolving a real path through filesystem/symlink state belongs in an effectful API such as `Fs`, preserving the pure `Path` boundary. | Go `path/filepath`; Rust `Path` |
 | 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
 | 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
 
 ### Evidence in FPAS
 
 - [Console input implementation](../../crates/fpas-std/src/console/input.rs) and
-  [public text input](../pascal/std/console/input.md): gap 1.
+  [public text input](../pascal/std/console/input.md): closed gap 1.
 - [Filesystem API](../pascal/std/host/fs.md): gaps 2 and 3.
 - [Process API](../pascal/std/host/proc.md) and
   [implementation](../../crates/fpas-std/src/proc.rs): gap 4.
 - [Time API](../pascal/std/host/time.md): gap 5.
 - [String formatting](../pascal/language/types/string/format-chars.md),
   [implementation](../../crates/fpas-std/src/str/format.rs) and
-  [conversion](../pascal/std/text/conv.md): gap 6.
-- [Arguments](../pascal/std/host/args.md) and
-  [paths](../pascal/std/host/path.md): gaps 7 and 8.
+  [conversion](../pascal/std/text/conv.md): closed gap 6.
+- [Arguments](../pascal/std/host/args.md): gap 7.
+- [Paths](../pascal/std/host/path.md) and
+  [implementation](../../crates/fpas-std/src/path.rs): closed gap 8.
 - The Result signatures in the filesystem, process,
   [network](../pascal/std/network/net.md) and
   [parsing](../pascal/std/text/parse.md) APIs: closed gap 9.
@@ -63,6 +67,34 @@ Gap 9 is closed by AP47; its number and historical direction anchor remain stabl
   [Crypto](../pascal/std/cryptography/crypto.md),
   [UTF-8](../pascal/std/network/utf8.md) and
   [URI](../pascal/std/network/uri.md) APIs: gaps 10 and 11.
+
+### Closed gap 1: observable console EOF
+
+`Console.ReadLn()` and `Console.ReadText()` return `Option of string`. A blank
+line is `Some('')`; EOF is `None`. Both consume the same text buffer, including
+queued and debugger input. Final unterminated lines are returned once, and real
+I/O failures remain runtime diagnostics. See the
+[Console input contract](../pascal/std/console/input.md).
+
+### Closed gap 6: numeric output formatting
+
+String `Format` and `FormatInPlace` support numeric field width, left alignment,
+zero padding, decimal precision and scientific `%e`/`%E` notation. Rounding uses
+ties to even; explicit integer precision and scientific notation preserve the
+full integer value. Existing bare formats retain their behavior. Field sizes
+and the combined output of extended numeric fields are bounded. Formatting is
+locale-independent; localized presentation remains a separate design topic.
+See the [formatting contract](../pascal/language/types/string/format-chars.md).
+
+### Closed gap 8: pure path helpers
+
+`Path.IsAbsolute` tests whether a path is fully absolute under host rules.
+`RelativeTo(Target, Base)` calculates a lexical relative path and returns `None`
+when the relationship is indeterminate. `ChangeExtension(Path, Extension)`
+replaces or removes the final suffix, returning `None` for invalid extensions or
+paths without a filename. These operations do not access the current directory,
+filesystem or symlinks. Effectful real-path resolution remains a separate `Fs`
+concern. See the [Path contract](../pascal/std/host/path.md).
 
 ### Direction for gap 9: structured errors
 
@@ -139,11 +171,8 @@ Relevant FPAS references are the [Console API](../pascal/std/console/README.md),
 
 This is a recommendation for future selection, not an approved implementation plan:
 
-1. Gap 1: make EOF observable without treating a blank line as end of input.
-2. Gap 6: add predictable numeric presentation controls.
-3. Gap 8: add the small path helpers required by real tools.
-4. Gap 10: add bounded byte codecs over the existing byte representation.
-5. Gap 7: add a small, consistent argument parser.
+1. Gap 10: add bounded byte codecs over the existing byte representation.
+2. Gap 7: add a small, consistent argument parser.
 
 These candidates provide immediate everyday value without requiring new
 source-language features. Select one canonical API for each operation rather

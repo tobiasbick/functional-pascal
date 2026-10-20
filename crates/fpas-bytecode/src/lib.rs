@@ -62,5 +62,6 @@ pub use value::{
     managed_value_buffer,
 };
 
-/// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 23;
+/// Persistent register instruction-set and intrinsic ABI version recorded in
+/// compiled artifacts.
+pub const BYTECODE_VERSION: u32 = 24;

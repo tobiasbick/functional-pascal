@@ -300,7 +300,7 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
     RUNTIME_VM_SHUTDOWN = 5020;
     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS = 5021;
 
-    /// `Std.Str.Format`: specifier count does not match argument list, or a type does not match its specifier.
+    /// Invalid `string.Format` syntax, exceeded formatting limits, or mismatched argument counts/types.
     RUNTIME_FORMAT_MISMATCH = 5022;
 
     /// `Std.Test` assertion or explicit `Fail` call.

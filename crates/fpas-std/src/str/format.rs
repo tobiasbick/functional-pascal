@@ -1,148 +1,164 @@
-//! `Std.Str.Format` template expansion.
+//! Numeric presentation and strict positional expansion for string.Format.
 //!
-//! **Documentation:** `docs/pascal/language/types/string/README.md`
+//! **Documentation:** `docs/pascal/language/types/string/format-chars.md`
 
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_FORMAT_MISMATCH;
 
-/// Applies printf-style format specifiers (`%d`, `%f`, `%s`, `%%`) to `args`.
-///
-/// **Documentation:** `docs/pascal/language/types/string/README.md`
+mod number;
+mod spec;
+
+#[cfg(test)]
+mod tests;
+
+use spec::Spec;
+
+/// Expand the template without changing the argument values or their order.
 pub(super) fn apply_format(
     template: &str,
     args: &[Value],
     location: SourceLocation,
 ) -> Result<String, StdError> {
     let mut out = String::with_capacity(template.len());
-    let mut arg_iter = args.iter();
-    let chars: Vec<char> = template.chars().collect();
-    let mut i = 0;
-    while i < chars.len() {
-        if chars[i] != '%' {
-            out.push(chars[i]);
-            i += 1;
+    let mut arguments = args.iter();
+    let mut characters = template.chars().peekable();
+    let mut new_field_bytes = 0_usize;
+    while let Some(character) = characters.next() {
+        if character != '%' {
+            out.push(character);
             continue;
         }
-        i += 1;
-        if i >= chars.len() {
-            return Err(std_runtime_error(
-                RUNTIME_FORMAT_MISMATCH,
-                "Format: trailing `%` at end of template string",
-                "Escape a literal percent sign as `%%`.",
+        if characters.peek() == Some(&'%') {
+            characters.next();
+            out.push('%');
+            continue;
+        }
+        if characters.peek().is_none() {
+            return Err(failure("trailing `%` at end of template string", location));
+        }
+        let spec = Spec::parse(&mut characters).map_err(|message| failure(message, location))?;
+        let argument = arguments.next().ok_or_else(|| {
+            failure(
+                format!("not enough arguments for `%{}` specifier", spec.kind),
                 location,
-            ));
+            )
+        })?;
+        if spec.kind == 's' {
+            let Value::Str(text) = argument else {
+                return Err(type_error('s', argument, location));
+            };
+            out.push_str(text);
+            continue;
         }
-        match chars[i] {
-            '%' => {
-                out.push('%');
-            }
-            'd' => {
-                let arg = arg_iter.next().ok_or_else(|| {
-                    std_runtime_error(
-                        RUNTIME_FORMAT_MISMATCH,
-                        "Format: not enough arguments for `%d` specifier",
-                        "Add the missing integer argument or remove the specifier.",
+        let text = numeric_argument(&spec, argument, location)?;
+        if spec.extended() {
+            new_field_bytes = new_field_bytes
+                .checked_add(spec.width.max(text.len()))
+                .filter(|total| *total <= spec::MAX_NEW_FIELD_BYTES)
+                .ok_or_else(|| {
+                    failure(
+                        "new numeric fields exceed the maximum of 1000000 output bytes",
                         location,
                     )
                 })?;
-                match arg {
-                    Value::Integer(n) => out.push_str(&n.to_string()),
-                    _ => {
-                        return Err(std_runtime_error(
-                            RUNTIME_FORMAT_MISMATCH,
-                            format!(
-                                "Format: `%d` expects an integer, got {}",
-                                value_type_name(arg)
-                            ),
-                            "Pass an integer value for the `%d` specifier.",
-                            location,
-                        ));
-                    }
-                }
-            }
-            'f' => {
-                let arg = arg_iter.next().ok_or_else(|| {
-                    std_runtime_error(
-                        RUNTIME_FORMAT_MISMATCH,
-                        "Format: not enough arguments for `%f` specifier",
-                        "Add the missing real argument or remove the specifier.",
-                        location,
-                    )
-                })?;
-                match arg {
-                    Value::Real(r) => out.push_str(&format_real(*r)),
-                    Value::Integer(n) => out.push_str(&format_real(*n as f64)),
-                    _ => {
-                        return Err(std_runtime_error(
-                            RUNTIME_FORMAT_MISMATCH,
-                            format!(
-                                "Format: `%f` expects a real or integer, got {}",
-                                value_type_name(arg)
-                            ),
-                            "Pass a real value for the `%f` specifier.",
-                            location,
-                        ));
-                    }
-                }
-            }
-            's' => {
-                let arg = arg_iter.next().ok_or_else(|| {
-                    std_runtime_error(
-                        RUNTIME_FORMAT_MISMATCH,
-                        "Format: not enough arguments for `%s` specifier",
-                        "Add the missing string argument or remove the specifier.",
-                        location,
-                    )
-                })?;
-                match arg {
-                    Value::Str(s) => out.push_str(s),
-                    _ => {
-                        return Err(std_runtime_error(
-                            RUNTIME_FORMAT_MISMATCH,
-                            format!(
-                                "Format: `%s` expects a string, got {}",
-                                value_type_name(arg)
-                            ),
-                            "Pass a string value for the `%s` specifier.",
-                            location,
-                        ));
-                    }
-                }
-            }
-            other => {
-                return Err(std_runtime_error(
-                    RUNTIME_FORMAT_MISMATCH,
-                    format!("Format: unknown specifier `%{other}`"),
-                    "Supported specifiers: `%d` (integer), `%f` (real), `%s` (string), `%%` (literal %).",
-                    location,
-                ));
-            }
         }
-        i += 1;
+        let padding = spec.width.saturating_sub(text.len());
+        if spec.left {
+            out.push_str(&text);
+            out.extend(std::iter::repeat_n(' ', padding));
+        } else if spec.zero {
+            let digits = if let Some(digits) = text.strip_prefix('-') {
+                out.push('-');
+                digits
+            } else {
+                &text
+            };
+            out.extend(std::iter::repeat_n('0', padding));
+            out.push_str(digits);
+        } else {
+            out.extend(std::iter::repeat_n(' ', padding));
+            out.push_str(&text);
+        }
     }
-    if arg_iter.next().is_some() {
-        return Err(std_runtime_error(
-            RUNTIME_FORMAT_MISMATCH,
-            "Format: more arguments than format specifiers",
-            "Remove the extra argument or add a matching specifier to the template.",
-            location,
-        ));
+    if arguments.next().is_some() {
+        return Err(failure("more arguments than format specifiers", location));
     }
     Ok(out)
 }
 
-fn format_real(r: f64) -> String {
-    if r.fract() == 0.0 && r.is_finite() {
-        format!("{r:.1}")
-    } else {
-        let s = format!("{r}");
-        if s.contains('.') { s } else { format!("{s}.0") }
+fn numeric_argument(
+    spec: &Spec,
+    value: &Value,
+    location: SourceLocation,
+) -> Result<String, StdError> {
+    match (spec.kind, value) {
+        ('d', Value::Integer(value)) => Ok(value.to_string()),
+        ('f', Value::Integer(value)) => Ok(spec.precision.map_or_else(
+            || format_real(*value as f64),
+            |precision| number::fixed_integer(*value, precision),
+        )),
+        ('e' | 'E', Value::Integer(value)) => Ok(number::scientific_integer(
+            *value,
+            spec.precision.unwrap_or(6),
+            spec.kind == 'E',
+        )),
+        ('f' | 'e' | 'E', Value::Real(value)) => {
+            if !value.is_finite() {
+                return Err(failure("numeric arguments must be finite", location));
+            }
+            Ok(if spec.kind == 'f' {
+                spec.precision.map_or_else(
+                    || format_real(*value),
+                    |precision| format!("{value:.precision$}"),
+                )
+            } else {
+                number::scientific_real(*value, spec.precision.unwrap_or(6), spec.kind == 'E')
+            })
+        }
+        _ => Err(type_error(spec.kind, value, location)),
     }
 }
 
-fn value_type_name(v: &Value) -> &'static str {
-    match v {
+fn format_real(value: f64) -> String {
+    if value.fract() == 0.0 && value.is_finite() {
+        format!("{value:.1}")
+    } else {
+        let text = format!("{value}");
+        if text.contains('.') {
+            text
+        } else {
+            format!("{text}.0")
+        }
+    }
+}
+
+fn type_error(kind: char, value: &Value, location: SourceLocation) -> StdError {
+    let expected = match kind {
+        'd' => "an integer",
+        's' => "a string",
+        _ => "a real or integer",
+    };
+    failure(
+        format!(
+            "`%{kind}` expects {expected}, got {}",
+            value_type_name(value)
+        ),
+        location,
+    )
+}
+
+fn failure(message: impl AsRef<str>, location: SourceLocation) -> StdError {
+    std_runtime_error(
+        RUNTIME_FORMAT_MISMATCH,
+        format!("Format: {}", message.as_ref()),
+        "Use numeric `%[-][0][width][.precision]d/f/e/E`, plain `%s`, or `%%`. Precision is for f/e/E; width <= 1000000 and precision <= 1024.",
+        location,
+    )
+}
+
+fn value_type_name(value: &Value) -> &'static str {
+    match value {
         Value::Integer(_) => "integer",
         Value::Real(_) => "real",
         Value::Boolean(_) => "boolean",

@@ -1,0 +1,102 @@
+program PathHelpersTest;
+
+uses Std.Path as Path, Std.Test as Test;
+
+begin
+  Test.AssertTrue(not Path.IsAbsolute(''));
+  Test.AssertTrue(not Path.IsAbsolute('.'));
+  Test.AssertTrue(not Path.IsAbsolute('docs/guide.txt'));
+
+  Test.AssertEquals('guide.txt', Path.RelativeTo('docs/guide.txt', 'docs').Unwrap());
+  Test.AssertEquals(
+    Path.Join(['..', 'tests', 'case.fpas']),
+    Path.RelativeTo('tests/case.fpas', 'docs').Unwrap()
+  );
+  Test.AssertEquals(
+    'guide.txt',
+    Path.RelativeTo('docs/./old/../guide.txt', 'docs').Unwrap()
+  );
+  Test.AssertEquals('.', Path.RelativeTo('docs/guide.txt', 'docs/guide.txt').Unwrap());
+  Test.AssertEquals('.', Path.RelativeTo('', '').Unwrap());
+  Test.AssertEquals('.', Path.RelativeTo('', '.').Unwrap());
+  Test.AssertEquals('.', Path.RelativeTo('a/..', '.').Unwrap());
+  Test.AssertEquals('docs', Path.RelativeTo('docs', '').Unwrap());
+  Test.AssertEquals('..', Path.RelativeTo('', 'docs').Unwrap());
+  Test.AssertEquals(
+    Path.Join(['..', '..', 'file']),
+    Path.RelativeTo('../file', 'dir').Unwrap()
+  );
+  Test.AssertEquals(
+    Path.Join(['..', 'Name']),
+    Path.RelativeTo('dir/Name', 'dir/name').Unwrap()
+  );
+  Test.AssertTrue(Path.RelativeTo('docs', '../docs') is None);
+  Test.AssertEquals('.', Path.RelativeTo('../docs', '../docs').Unwrap());
+  Test.AssertEquals(
+    Path.Join(['..', 'file']),
+    Path.RelativeTo('../file', '../dir').Unwrap()
+  );
+  Test.AssertEquals(
+    Path.Join(['..', '..', 'file']),
+    Path.RelativeTo('../../file', '../dir').Unwrap()
+  );
+  Test.AssertTrue(Path.RelativeTo('file', '../dir') is None);
+
+  Test.AssertEquals('archive.tar.zip', Path.ChangeExtension('archive.tar.gz', 'zip').Unwrap());
+  Test.AssertEquals('archive.tar', Path.ChangeExtension('archive.tar.gz', '').Unwrap());
+  Test.AssertEquals('README.txt', Path.ChangeExtension('README', 'txt').Unwrap());
+  Test.AssertEquals('README', Path.ChangeExtension('README', '').Unwrap());
+  Test.AssertEquals('.env.txt', Path.ChangeExtension('.env', 'txt').Unwrap());
+  Test.AssertEquals('.env', Path.ChangeExtension('.env', '').Unwrap());
+  Test.AssertEquals('archive.tar.gz', Path.ChangeExtension('archive.zip', 'tar.gz').Unwrap());
+  Test.AssertEquals('folder.txt', Path.ChangeExtension('folder/', 'txt').Unwrap());
+  Test.AssertEquals(
+    Path.Join(['dir', 'report.txt']),
+    Path.ChangeExtension(Path.Join(['dir', 'report.md']), 'txt').Unwrap()
+  );
+  Test.AssertTrue(Path.ChangeExtension('', 'txt') is None);
+  Test.AssertTrue(Path.ChangeExtension('.', 'txt') is None);
+  Test.AssertTrue(Path.ChangeExtension('..', 'txt') is None);
+  Test.AssertTrue(Path.ChangeExtension('dir/..', 'txt') is None);
+  Test.AssertTrue(Path.ChangeExtension('/', 'txt') is None);
+  Test.AssertTrue(Path.ChangeExtension('report.txt', '.md') is None);
+  Test.AssertTrue(Path.ChangeExtension('report.txt', 'bad/ext') is None);
+  Test.AssertTrue(Path.ChangeExtension('report.txt', 'bad'#0'ext') is None);
+
+  if Path.Join(['a', 'b']) = 'a\b' then
+    Test.AssertTrue(Path.IsAbsolute('D:\projects'));
+    Test.AssertTrue(Path.IsAbsolute('\\server\share\projects'));
+    Test.AssertTrue(not Path.IsAbsolute('D:projects'));
+    Test.AssertTrue(not Path.IsAbsolute('\projects'));
+    Test.AssertTrue(not Path.IsAbsolute('/projects'));
+    Test.AssertEquals(
+      '..\tests',
+      Path.RelativeTo('D:\projects\tests', 'D:\projects\docs').Unwrap()
+    );
+    Test.AssertEquals(
+      '.',
+      Path.RelativeTo('D:/projects/docs', 'D:\projects\docs').Unwrap()
+    );
+    Test.AssertEquals(
+      '..\tests',
+      Path.RelativeTo('\\server\share\tests', '\\server\share\docs').Unwrap()
+    );
+    Test.AssertTrue(Path.RelativeTo('D:\docs', 'E:\docs') is None);
+    Test.AssertTrue(Path.RelativeTo('\\server\share\docs', '\\server\other\docs') is None);
+    Test.AssertTrue(Path.RelativeTo('D:\docs', 'docs') is None);
+    Test.AssertTrue(Path.RelativeTo('docs', 'D:\docs') is None);
+    Test.AssertTrue(Path.RelativeTo('D:docs', 'D:docs') is None);
+    Test.AssertTrue(Path.RelativeTo('\docs', '\docs') is None);
+    Test.AssertTrue(Path.ChangeExtension('report.txt', 'tar\gz') is None);
+    Test.AssertTrue(Path.ChangeExtension('D:\', 'txt') is None);
+  else
+    Test.AssertTrue(Path.IsAbsolute('/projects'));
+    Test.AssertTrue(not Path.IsAbsolute('D:\projects'));
+    Test.AssertTrue(not Path.IsAbsolute('\projects'));
+    Test.AssertEquals('../tests', Path.RelativeTo('/projects/tests', '/projects/docs').Unwrap());
+    Test.AssertEquals('.', Path.RelativeTo('/projects/../docs', '/docs').Unwrap());
+    Test.AssertTrue(Path.RelativeTo('/docs', 'docs') is None);
+    Test.AssertTrue(Path.RelativeTo('docs', '/docs') is None);
+    Test.AssertEquals('report.tar\gz', Path.ChangeExtension('report.txt', 'tar\gz').Unwrap());
+  end if;
+end.

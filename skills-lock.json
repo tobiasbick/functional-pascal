@@ -6,6 +6,13 @@
       "sourceType": "github",
       "skillPath": "cli-for-agent/skills/cli-for-agents/SKILL.md",
       "computedHash": "dea509e7a742d98d2b5957521977720ba6a39c440b9fc33c98b690893fe71f0a"
+    },
+    "unslop": {
+      "source": "cursor/plugins",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "pstack/skills/unslop/SKILL.md",
+      "computedHash": "eca0ad9fa3a3867c83f3aaf3a058e247a569c8976a68ca423a569b93eb86de5d"
     }
   }
 }

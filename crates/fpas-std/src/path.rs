@@ -15,6 +15,12 @@ use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
 #[path = "path/normalize_tests.rs"]
 mod normalize_tests;
 
+mod presentation;
+
+#[cfg(test)]
+#[path = "path/presentation_tests.rs"]
+mod presentation_tests;
+
 /// Execute a `Std.Path` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
@@ -47,9 +53,31 @@ pub(crate) fn run(
             let path = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(normalize_path(path).into()));
         }
+        Intrinsic::Path(PathIntrinsic::IsAbsolute) => {
+            let path = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(Path::new(path.as_ref()).is_absolute()));
+        }
+        Intrinsic::Path(PathIntrinsic::RelativeTo) => {
+            let base = expect_str(pop_value(call, location)?, location)?;
+            let target = expect_str(pop_value(call, location)?, location)?;
+            call.push(optional_path(presentation::relative_to(target, base)));
+        }
+        Intrinsic::Path(PathIntrinsic::ChangeExtension) => {
+            let extension = expect_str(pop_value(call, location)?, location)?;
+            let path = expect_str(pop_value(call, location)?, location)?;
+            call.push(optional_path(presentation::change_extension(
+                path, extension,
+            )));
+        }
         _ => return Ok(None),
     }
     Ok(Some(()))
+}
+
+fn optional_path(path: Option<String>) -> Value {
+    path.map_or(Value::OptionNone, |path| {
+        Value::option_some(Value::Str(path.into()))
+    })
 }
 
 fn base_name(path: &str) -> String {

@@ -169,6 +169,6 @@ fn bundle_format_matches_golden_bytes() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bundled)),
-        "49128de5603e62a783141ac525c2b5110161d199a1e4c61693f446ff8c59c532"
+        "ffb2084618cfc13cdf651161c97fbc616afe108296480d43feb90a68e24d3ae9"
     );
 }

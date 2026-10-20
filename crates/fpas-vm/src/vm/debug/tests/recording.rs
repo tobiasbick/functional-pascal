@@ -130,7 +130,7 @@ fn start_recording_captures_current_stop_and_later_input() {
         r#"program CaptureInput;
 uses Std.Console as Console;
 begin
-  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn().Unwrap());
 end.
 "#,
     );

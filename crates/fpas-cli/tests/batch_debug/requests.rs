@@ -54,7 +54,7 @@ fn a_missed_breakpoint_differs_from_unbound_and_duplicates_are_deduplicated() {
 #[test]
 fn script_line_and_key_queues_match_the_test_runner() {
     let f = Fixture::new(
-        "program Input; uses Std.Console as Console; begin Console.WriteLn(Console.ReadLn()); Console.WriteText(Console.ReadKey()); Console.WriteText(Console.ReadKey()); end.",
+        "program Input; uses Std.Console as Console; begin Console.WriteLn(Console.ReadLn().Unwrap()); Console.WriteText(Console.ReadKey()); Console.WriteText(Console.ReadKey()); end.",
     );
     f.write("input.toml", "[[event]]\ntype = 'readln'\nline = 'line'\n[[event]]\ntype = 'readkey_chars'\nchars = 'ab'\n");
     let r = f.run(&["debug", "main.fpas", "--script", "input.toml"], 0);

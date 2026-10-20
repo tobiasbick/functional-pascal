@@ -105,11 +105,19 @@ fn source_review_client_rejects_non_decimal_lengths() {
         for value in values {
             let mut stream = accept(&listener);
             read_request(&mut stream);
-            write!(
-                stream,
+            let response = format!(
                 "HTTP/1.1 200 OK\r\nContent-Length: {value}\r\nConnection: close\r\n\r\n0123456789"
-            )
-            .expect("response");
+            );
+            match stream.write_all(response.as_bytes()) {
+                Ok(()) => {}
+                // Rejecting the malformed header can close the peer before the full reply is sent.
+                Err(error)
+                    if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::BrokenPipe | std::io::ErrorKind::ConnectionReset
+                    ) => {}
+                Err(error) => panic!("response: {error}"),
+            }
         }
     });
     let (exit, _, stderr) = run_program(

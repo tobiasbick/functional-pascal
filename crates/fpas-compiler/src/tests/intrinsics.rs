@@ -3,6 +3,13 @@ use super::*;
 mod bits;
 
 #[test]
+fn lexical_path_helpers_lower_through_the_standard_intrinsic_catalog() {
+    assert_succeeds(
+        "program PathHelpers; uses Std.Path as Path, Std.Test as Test; begin const Absolute: boolean := Path.IsAbsolute('file'); Test.AssertFalse(Absolute); const Relative: option of string := Path.RelativeTo(Target := 'a/file', Base := 'a'); Test.AssertTrue(Relative is Some('file')); const Changed: option of string := Path.ChangeExtension(Path := 'file.txt', Extension := 'log'); Test.AssertTrue(Changed is Some('file.log')); end.",
+    );
+}
+
+#[test]
 fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
     let program = parse_ok(
         "program RegisterInterfaceIntrinsic;\nuses Std.Console as Console;\nbegin\n  Console.WriteLn('hello');\nend.",

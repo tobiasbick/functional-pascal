@@ -37,8 +37,8 @@ export async function verifyDebuggerInput(
     "uses Std.Console as Console;",
     "",
     "begin",
-    "  Console.WriteLn(Console.ReadLn());",
-    "  Console.WriteLn(Console.ReadLn());",
+    "  Console.WriteLn(Console.ReadLn().Unwrap());",
+    "  Console.WriteLn(Console.ReadLn().Unwrap());",
     "end.",
     ""
   ];

@@ -24,8 +24,8 @@ fn readln_session() -> DebugSession {
 uses Std.Console as Console;
 
 begin
-  Console.WriteLn(Console.ReadLn());
-  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn().Unwrap());
+  Console.WriteLn(Console.ReadLn().Unwrap());
 end.
 "#,
     )
@@ -104,12 +104,27 @@ fn missing_input_fails_without_reading_protocol_stdin() {
 
 #[test]
 fn eof_is_a_first_class_input_event() {
-    let mut session = readln_session();
+    let mut session = compile_session(
+        r#"program TransportEof;
+
+uses Std.Console as Console;
+
+begin
+  Console.WriteLn(Console.ReadLn().Unwrap());
+  Console.WriteLn(Console.ReadLn().Unwrap());
+  Console.WriteLn(Console.ReadLn() is None);
+  Console.WriteLn(Console.ReadText() is None);
+end.
+"#,
+    );
+    session.push_debuggee_input("last").expect("last line");
+    session.push_debuggee_input("").expect("empty line");
     session.signal_debuggee_eof().expect("eof");
-    let stop = stopped(session.continue_execution().expect("eof continue"));
-    assert_eq!(stop.reason, DebugStopReason::RuntimeError);
-    let diagnostic = stop.diagnostic.expect("eof diagnostic");
-    assert!(diagnostic.message.contains("end of input"));
+    assert!(matches!(
+        session.continue_execution().expect("eof continue"),
+        DebugRunResult::Terminated(_)
+    ));
+    assert_eq!(session.output().lines, ["last", "", "true", "true"]);
 }
 
 #[test]
@@ -133,7 +148,7 @@ fn input_limit_rejects_without_mutation() {
 uses Std.Console as Console;
 
 begin
-  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn().Unwrap());
 end.
 "#;
             let (program, diagnostics) = fpas_parser::parse(source);

@@ -268,7 +268,7 @@ fn project_workspace_discovery_and_verified_images_share_trace_binding() {
 #[test]
 fn scripted_input_and_program_arguments_are_visible_as_changes() {
     let f = Fixture::new(
-        "program Input; uses Std.Args as Args, Std.Console as Console; var Text: string := ''; begin Text := Args.ParamStr(0); Text := Console.ReadLn(); Text := Console.ReadKey(); end.",
+        "program Input; uses Std.Args as Args, Std.Console as Console; var Text: string := ''; begin Text := Args.ParamStr(0); Text := Console.ReadLn().Unwrap(); Text := Console.ReadKey(); end.",
     );
     f.write(
         "input.toml",

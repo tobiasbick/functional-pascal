@@ -28,7 +28,7 @@ impl Parser {
             ForeignHabit {
                 found: &found,
                 replacement: &replacement,
-                explanation: "FPAS output has no `:width` or `:decimals` specifiers; format the text first, for example with `'%d'.Format(N)` or `'%f'.Format(X)`.",
+                explanation: "FPAS output has no `:width` or `:decimals` syntax; format the text first, for example with `'%8d'.Format(N)` or `'%.2f'.Format(X)`.",
             },
             written,
             // Dropping the specifiers changes the printed text.

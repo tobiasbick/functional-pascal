@@ -29,7 +29,11 @@ begin
   while true do
     begin
       Console.WriteText('you> ');
-      const Prompt: string := Console.ReadLn();
+      const Input: option of string := Console.ReadLn();
+      if Input is None then
+        break;
+      end if;
+      const Prompt: string := Input.Unwrap();
       if Prompt = '/exit' then
         begin
           break;

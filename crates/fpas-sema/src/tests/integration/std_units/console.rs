@@ -10,7 +10,14 @@ fn hello_world() {
 #[test]
 fn std_console_read_readkey_keypressed() {
     check_ok(
-        "program T;\nuses Std.Console as Console;\nbegin\n  const C: string := Console.ReadText();\n  const K: string := Console.ReadKey();\n  const P: boolean := Console.KeyPressed();\n  const S: string := Console.ReadLn();\n  Console.WriteLn(C);\n  Console.WriteLn(K);\n  Console.WriteLn(P);\n  Console.WriteLn(S);\nend.",
+        "program T;\nuses Std.Console as Console;\nbegin\n  const C: string := Console.ReadText().Unwrap();\n  const K: string := Console.ReadKey();\n  const P: boolean := Console.KeyPressed();\n  const S: string := Console.ReadLn().Unwrap();\n  Console.WriteLn(C);\n  Console.WriteLn(K);\n  Console.WriteLn(P);\n  Console.WriteLn(S);\nend.",
+    );
+}
+
+#[test]
+fn std_console_text_input_exposes_eof_options() {
+    check_ok(
+        "program T;\nuses Std.Console as Console;\nbegin\n  const Line: option of string := Console.ReadLn();\n  const Text: option of string := Console.ReadText();\n  Console.WriteLn(Line is None);\n  Console.WriteLn(Text is None);\nend.",
     );
 }
 

@@ -112,7 +112,8 @@ Allowed operations are pure computation, task/channel/group/cancellation
 operations, virtual `Sleep`, supplied `Std.Args`, prequeued
 `Console.ReadText`/`ReadLn`, and captured `WriteText`/`WriteLn`. Use the existing
 runner TOML script for text lines. Input is sealed before execution; host stdin
-is never read. Exhausted input retains the normal input/EOF behavior.
+is never read. An exhausted queue that is still open reports `FP5011`;
+sealing scheduled input does not signal EOF.
 
 Key-input script events are setup errors in seeded mode, before initialization.
 Normal batch still supports key scripts. Other console effects, wall-clock time

@@ -328,6 +328,6 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
         implementation: "Std.Str.Format",
         signature: || function(vec![], Ty::String, true),
         lowering: NativeLowering::Intrinsic,
-        documentation: "Use the receiver as the format template; heterogeneous variadic arguments are positional only",
+        documentation: "Format positional arguments with %d, %f, %e, %E, %s and %%; numeric width, alignment and precision are supported",
     },
 ];

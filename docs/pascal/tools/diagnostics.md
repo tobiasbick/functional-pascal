@@ -236,7 +236,7 @@ help text only.
 | `"text"` | C family | `'text'` | FP1014 | exact; review with `\` escapes |
 | `-- comment` at a line start or after `;` | Ada | `// comment` | FP1014 | exact |
 | `@F`, `^integer`, `P^` | Pascal | `F` as a callable value; no pointers | FP1014 | — |
-| `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%f'.Format(X)` | FP2023 | review |
+| `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%.2f'.Format(X)` | FP2023 | review |
 | `program Name is … begin … end Name;`, `procedure Main is … end Main;` | Ada | `program Name; … begin … end.` | FP2023 | exact |
 | `with Ada.Text_IO; use Ada.Text_IO;` before the header | Ada | `uses Std.Console as Console;` after the header | FP2023 | — |
 | `package Name is … end Name;`, `package body Name is … end Name;` | Ada | `unit Name; … end unit;` with exports marked `public` | FP2023 | — |
@@ -752,7 +752,7 @@ can describe a structural restriction and leave those fields null.
 | FP5019 | Missing dictionary key | Index an absent key | Check membership or insert the key first. |
 | FP5020 | VM shutdown | Execute a task after VM shutdown | Keep execution within the live VM lifecycle. |
 | FP5021 | String index | Index beyond the string's scalar length | Check `S.Length()`; empty strings have no character index. `Insert` accepts index `S.Length()`. |
-| FP5022 | Format mismatch | Format specifiers and arguments have different counts/types | Match each specifier with an argument of its required type. |
+| FP5022 | Format mismatch | Invalid format syntax/modifiers, mismatched argument counts/types, or a formatting limit exceeded | Use supported conversions; width ≤ 1_000_000, precision ≤ 1024, and modified/scientific numeric output ≤ 1_000_000 bytes per call. |
 | FP5023 | Test assertion | `AssertTrue(false)` | `AssertTrue(true)` after fixing the behavior under test. |
 | FP5024 | Unsupported recording effect | Record a host effect that cannot be replayed | Perform the effect outside the recording session. |
 | FP5025 | Host random failure | OS random-byte provider fails | Restore the host provider and retry the operation. |

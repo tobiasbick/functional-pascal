@@ -106,7 +106,8 @@ main task cannot be cancelled this way; disconnect the session instead.
 Debugger task creation and task restart are rejected. Use `go` in the program,
 or restart a selected frame. While stopped, JSONL `io.input` and DAP
 `fpas/input` queue one line for hosted `ReadText`/`ReadLn`. Continue consumes
-queued lines in order. An empty queue or a closed input stream is runtime
+queued lines in order. After EOF, `ReadText` and `ReadLn` drain queued input
+and then return `None`. An empty queue that is still open is runtime
 diagnostic `FP5011`. EOF and cancel are separate commands; protocol stdin is
 never program input. Step in, over, and out target the
 selected task; when it is waiting, the driver may run unpaused dependencies in

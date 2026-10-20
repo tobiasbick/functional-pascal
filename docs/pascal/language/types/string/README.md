@@ -55,7 +55,7 @@ at `Text.Length()` for `LastIndexOf`.
 | `Text.Reverse(): string` | Return reversed scalars |
 | `Text.TrimLeft(): string` | Remove leading whitespace |
 | `Text.TrimRight(): string` | Remove trailing whitespace |
-| `Text.Format(Arguments...): string` | Use the receiver as the format template; heterogeneous variadic arguments are positional only |
+| `Text.Format(Arguments...): string` | Format positional arguments with `%d`, `%f`, `%e`, `%E`, `%s`, and `%%`; numeric width, alignment, and precision |
 | `Text.TrimInPlace()` | Trim writable receiver |
 | `Text.TrimLeftInPlace()` | Trim leading whitespace in writable receiver |
 | `Text.TrimRightInPlace()` | Trim trailing whitespace in writable receiver |
@@ -78,7 +78,10 @@ at `Text.Length()` for `LastIndexOf`.
 
 `Length()` and `IsEmpty()` use the same canonical names for strings, arrays, and dictionaries.
 
-`Format(Arguments...)` is positional only. Its string receiver supplies the template.
+`Format(Arguments...)` is positional only. Its string receiver supplies the
+template. [Numeric formatting](format-chars.md#textformatarguments-string)
+supports minimum field width, zero padding, left alignment, and fixed or
+scientific precision. `FormatInPlace` uses the same template rules.
 
 InPlace operations return no value and obey [collection mutation](../collection-mutation.md).
 They retain the value operation's Unicode, validation and callback rules. Other

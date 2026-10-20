@@ -41,7 +41,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 16;
+pub const OBJECT_VERSION: u16 = 17;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

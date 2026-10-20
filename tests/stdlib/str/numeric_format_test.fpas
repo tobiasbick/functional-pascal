@@ -1,0 +1,27 @@
+program NumericFormatTest;
+
+uses Std.Test as Test;
+
+begin
+  Test.AssertEquals('42/42.0/text/%', '%d/%f/%s/%%'.Format(42, 42, 'text'));
+  Test.AssertEquals('     -42', '%8d'.Format(-42));
+  Test.AssertEquals('-0000042', '%08d'.Format(-42));
+  Test.AssertEquals('-42     ', '%-08d'.Format(-42));
+  Test.AssertEquals('-42     ', '%0-8d'.Format(-42));
+  Test.AssertEquals('12345', '%2d'.Format(12345));
+  Test.AssertEquals('-0002.50', '%08.2f'.Format(-2.5));
+  Test.AssertEquals('2', '%.0f'.Format(2.5));
+  Test.AssertEquals('4', '%.0f'.Format(3.5));
+  Test.AssertEquals('-0.00', '%.2f'.Format(-0.004));
+  Test.AssertEquals('9007199254740993.00', '%.2f'.Format(9007199254740993));
+  Test.AssertEquals('-9223372036854775808', '%.0f'.Format(-9223372036854775808));
+  Test.AssertEquals('1.234000e+03', '%e'.Format(1234.0));
+  Test.AssertEquals('1.25E-04', '%.2E'.Format(0.000125));
+  Test.AssertEquals('1.0e+03', '%.1e'.Format(999));
+  Test.AssertEquals('9.223372036854775807e+18', '%.18e'.Format(9223372036854775807));
+  Test.AssertEquals('-9.223372036854775808E+18', '%.18E'.Format(-9223372036854775808));
+  Test.AssertEquals('€=%08d', '%s'.Format('€=%08d'));
+  var Template := '%08.2f';
+  Template.FormatInPlace(-2.5);
+  Test.AssertEquals('-0002.50', Template);
+end.

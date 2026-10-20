@@ -22,6 +22,21 @@ fn debugger_names_use_the_public_reserved_keyword_safe_api() {
 
 mod variants;
 
+#[test]
+fn lexical_path_helpers_keep_existing_filesystem_wire_ids() {
+    for (intrinsic, wire) in [
+        (Intrinsic::Path(PathIntrinsic::IsAbsolute), 331),
+        (Intrinsic::Path(PathIntrinsic::RelativeTo), 332),
+        (Intrinsic::Path(PathIntrinsic::ChangeExtension), 333),
+        (Intrinsic::Fs(FsIntrinsic::ReadText), 315),
+        (Intrinsic::Fs(FsIntrinsic::WriteText), 316),
+        (Intrinsic::Fs(FsIntrinsic::Exists), 317),
+    ] {
+        assert_eq!(u16::from(intrinsic), wire);
+        assert_eq!(Intrinsic::from_u16(wire), Some(intrinsic));
+    }
+}
+
 use variants::ALL_INTRINSICS;
 
 #[test]

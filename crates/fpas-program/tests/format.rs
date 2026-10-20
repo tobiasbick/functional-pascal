@@ -52,7 +52,7 @@ fn canonical_image_has_target_independent_digest() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "c924fb33c089f12d8e97e7551cd36751b209da29e9ea0718754fae8888728f40"
+        "1131c4fa132e77c185d47b52c89f481649ae3fd951e60b26a6eafd9dfec8995b"
     );
 }
 
@@ -93,6 +93,20 @@ fn decoder_rejects_incompatible_bytecode_version() {
         decode_error(&bytes),
         FormatError::UnsupportedBytecodeVersion {
             image: 99,
+            runtime: fpas_bytecode::BYTECODE_VERSION,
+        }
+    );
+}
+
+#[test]
+fn decoder_rejects_the_previous_console_text_return_abi() {
+    let mut bytes = encode(&program_image()).expect("encoded image");
+    bytes[10..14].copy_from_slice(&23_u32.to_le_bytes());
+
+    assert_eq!(
+        decode_error(&bytes),
+        FormatError::UnsupportedBytecodeVersion {
+            image: 23,
             runtime: fpas_bytecode::BYTECODE_VERSION,
         }
     );

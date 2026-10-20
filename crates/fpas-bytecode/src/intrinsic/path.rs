@@ -31,5 +31,17 @@ pub enum PathIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/path.md`
     Normalize = 314,
+    /// `Std.Path.IsAbsolute(Path)` — test the host platform's lexical absolute-path rules.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/path.md`
+    IsAbsolute = 331,
+    /// `Std.Path.RelativeTo(Target, Base)` — optional lexical relative path from Base to Target.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/path.md`
+    RelativeTo = 332,
+    /// `Std.Path.ChangeExtension(Path, Extension)` — optionally replace the final suffix.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/path.md`
+    ChangeExtension = 333,
 }
 }

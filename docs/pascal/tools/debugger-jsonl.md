@@ -54,7 +54,7 @@ response precedes events caused by that request.
 | `task.create` | stopped | none | always rejected; capability `task_create` is `false` |
 | `task.restart` | stopped | optional `task_id` | always rejected; capability `task_restart` is `false` |
 | `io.input` | stopped | required `text` | queues one `ReadText`/`ReadLn` line; capability `live_input` is `true` |
-| `io.eof` | stopped | none | later `ReadText`/`ReadLn` observe end of input; later `io.input` fails |
+| `io.eof` | stopped | none | `ReadText`/`ReadLn` drain queued input and then return `None`; later `io.input` fails |
 | `io.cancel` | stopped | none | drops unread queued lines; the session byte quota is unchanged |
 | `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |

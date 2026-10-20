@@ -337,8 +337,18 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     define_proc(checker, s::STD_CONSOLE_SOUND, vec![p("Hz", Ty::Integer)]);
     define_proc(checker, s::STD_CONSOLE_NO_SOUND, vec![]);
     define_proc(checker, s::STD_CONSOLE_ASSIGN_CRT, vec![]);
-    define_func(checker, s::STD_CONSOLE_READ_LN, vec![], Ty::String);
-    define_func(checker, s::STD_CONSOLE_READ_TEXT, vec![], Ty::String);
+    define_func(
+        checker,
+        s::STD_CONSOLE_READ_LN,
+        vec![],
+        Ty::Option(Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
+        s::STD_CONSOLE_READ_TEXT,
+        vec![],
+        Ty::Option(Box::new(Ty::String)),
+    );
     define_func(checker, s::STD_CONSOLE_READ_KEY, vec![], Ty::String);
     define_func(checker, s::STD_CONSOLE_KEY_PRESSED, vec![], Ty::Boolean);
     define_proc(checker, s::STD_CONSOLE_ENABLE_RAW_MODE, vec![]);

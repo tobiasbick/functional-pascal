@@ -133,6 +133,27 @@ fn unit_lists_public_declarations_with_their_first_comment_line() {
 }
 
 #[test]
+fn console_text_input_catalog_exposes_eof_options() {
+    let temp = TempDirectory::new("api-lookup-console-input");
+    let catalog = catalog_for(temp.path());
+
+    for name in ["ReadLn", "ReadText"] {
+        let entry = single(&catalog, &format!("Std.Console.{name}"));
+        assert_eq!(
+            entry.signature,
+            format!("function {name}(): option of string")
+        );
+        assert!(
+            entry
+                .location
+                .expect("generated Console declaration")
+                .path
+                .ends_with("lib/api/Std/Console.fpas")
+        );
+    }
+}
+
+#[test]
 fn source_standard_library_units_are_found_without_a_project_and_hide_private_declarations() {
     let temp = TempDirectory::new("api-lookup-source-std");
     let catalog = catalog_for(temp.path());

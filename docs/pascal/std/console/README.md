@@ -78,8 +78,8 @@ Everything below requires `uses Std.Console as Console;`.
 | procedure | `Sound(Hz)` | emit one terminal bell for positive `Hz` |
 | procedure | `NoSound()` | stop active tone state (no-op) |
 | procedure | `AssignCrt()` | enable CRT mode |
-| function | `ReadLn(): string` | line input |
-| function | `ReadText(): string` | same buffer as `ReadLn` |
+| function | `ReadLn(): Option of string` | read a line without its terminator; `None` at EOF |
+| function | `ReadText(): Option of string` | read a Unicode scalar from the same buffer; `None` at EOF |
 | function | `ReadKey(): string` | key-by-key, separate from `ReadKeyEvent` |
 | function | `KeyPressed(): boolean` | true if `ReadKey` or `ReadKeyEvent` has data waiting |
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |

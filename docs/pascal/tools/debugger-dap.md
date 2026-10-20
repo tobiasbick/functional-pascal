@@ -241,7 +241,9 @@ Success accepts cancellation and does not guarantee immediate thread exit.
 `fpas/createTask` and `fpas/restartTask` map onto the
 JSONL rejections. `fpas/input` maps onto JSONL `io.input` with required `text`
 and returns `bytes` plus `sessionBytes`. `fpas/eof` and `fpas/cancelInput` map
-onto `io.eof` and `io.cancel`. Protocol stdin is never debuggee stdin. The adapter does not advertise
+onto `io.eof` and `io.cancel`. After `fpas/eof`, `ReadText` and `ReadLn` drain
+queued input and then return `None`; later `fpas/input` requests fail.
+Protocol stdin is never debuggee stdin. The adapter does not advertise
 `supportsSingleThreadExecutionRequests`. After the next `threads` request, a
 held task's name includes `[paused]`; cancelled tasks are omitted from
 `threads` while remaining in the JSONL catalog.

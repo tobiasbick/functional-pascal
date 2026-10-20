@@ -140,7 +140,7 @@ fn jsonl_record_captures_queued_input_without_replay() {
     let source = r#"program CaptureInput;
 uses Std.Console as Console;
 begin
-  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn().Unwrap());
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(source);

@@ -37,10 +37,18 @@ impl ReadLnQueue {
     }
 }
 
-/// Read one line from standard input (used when the test `ReadLnQueue` is empty).
-pub fn read_line_from_stdin(location: SourceLocation) -> Result<String, StdError> {
+/// Read one line from standard input, preserving its normalized line terminator.
+/// A zero-byte read is EOF; a final unterminated line is still input.
+pub fn read_line_from_stdin(location: SourceLocation) -> Result<Option<String>, StdError> {
+    read_line_from_reader(&mut io::stdin().lock(), location)
+}
+
+pub(super) fn read_line_from_reader(
+    reader: &mut impl BufRead,
+    location: SourceLocation,
+) -> Result<Option<String>, StdError> {
     let mut line = String::new();
-    io::stdin().lock().read_line(&mut line).map_err(|e| {
+    let count = reader.read_line(&mut line).map_err(|e| {
         std_runtime_error(
             RUNTIME_CONSOLE_INPUT_FAILURE,
             format!("ReadLn failed: {e}"),
@@ -48,13 +56,13 @@ pub fn read_line_from_stdin(location: SourceLocation) -> Result<String, StdError
             location,
         )
     })?;
-    if line.ends_with('\n') {
-        line.pop();
-        if line.ends_with('\r') {
-            line.pop();
-        }
+    if count == 0 {
+        return Ok(None);
     }
-    Ok(line)
+    if line.ends_with("\r\n") {
+        line.remove(line.len() - 2);
+    }
+    Ok(Some(line))
 }
 
 /// Line-buffered text stream shared by `Read` and `ReadLn` (classic Pascal `input`).
@@ -107,16 +115,13 @@ impl TextInput {
         self.pending.clear();
     }
 
-    fn refill(&mut self, location: SourceLocation) -> Result<(), StdError> {
+    fn refill(&mut self, location: SourceLocation) -> Result<bool, StdError> {
         let line = if !self.line_queue.is_empty() {
-            self.line_queue.pop_line(location)?
+            let mut line = self.line_queue.pop_line(location)?;
+            line.push('\n');
+            Some(line)
         } else if self.eof {
-            return Err(std_runtime_error(
-                RUNTIME_CONSOLE_INPUT_FAILURE,
-                "ReadLn: end of input",
-                "Signal EOF only after every required line has been queued.",
-                location,
-            ));
+            None
         } else if self.os_stdin {
             read_line_from_stdin(location)?
         } else {
@@ -127,19 +132,20 @@ impl TextInput {
                 location,
             ));
         };
-        for c in line.chars() {
-            self.pending.push_back(c);
-        }
-        self.pending.push_back('\n');
-        Ok(())
+        let Some(line) = line else {
+            self.eof = true;
+            return Ok(false);
+        };
+        self.pending.extend(line.chars());
+        Ok(true)
     }
 
     /// One character from the buffered input stream (waits for a line if the buffer is empty).
-    pub fn read_char(&mut self, location: SourceLocation) -> Result<char, StdError> {
-        if self.pending.is_empty() {
-            self.refill(location)?;
+    pub fn read_char(&mut self, location: SourceLocation) -> Result<Option<char>, StdError> {
+        if self.pending.is_empty() && !self.refill(location)? {
+            return Ok(None);
         }
-        self.pending.pop_front().ok_or_else(|| {
+        self.pending.pop_front().map(Some).ok_or_else(|| {
             std_internal_error(
                 "Read: internal error (empty buffer after refill)",
                 "This indicates a runtime bug. Please report this compiler/VM issue.",
@@ -149,11 +155,11 @@ impl TextInput {
     }
 
     /// Read until end-of-line (consumed); same logical stream as `read_char`.
-    pub fn read_line(&mut self, location: SourceLocation) -> Result<String, StdError> {
+    pub fn read_line(&mut self, location: SourceLocation) -> Result<Option<String>, StdError> {
         let mut out = String::new();
         loop {
-            if self.pending.is_empty() {
-                self.refill(location)?;
+            if self.pending.is_empty() && !self.refill(location)? {
+                return Ok((!out.is_empty()).then_some(out));
             }
             let c = self.pending.pop_front().ok_or_else(|| {
                 std_internal_error(
@@ -163,7 +169,7 @@ impl TextInput {
                 )
             })?;
             if c == '\n' {
-                return Ok(out);
+                return Ok(Some(out));
             }
             out.push(c);
         }

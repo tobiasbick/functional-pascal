@@ -35,4 +35,22 @@ pub(super) fn register_std_path(checker: &mut Checker) {
         vec![p("Path", Ty::String)],
         Ty::String,
     );
+    define_func(
+        checker,
+        s::STD_PATH_IS_ABSOLUTE,
+        vec![p("Path", Ty::String)],
+        Ty::Boolean,
+    );
+    define_func(
+        checker,
+        s::STD_PATH_RELATIVE_TO,
+        vec![p("Target", Ty::String), p("Base", Ty::String)],
+        Ty::Option(Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
+        s::STD_PATH_CHANGE_EXTENSION,
+        vec![p("Path", Ty::String), p("Extension", Ty::String)],
+        Ty::Option(Box::new(Ty::String)),
+    );
 }

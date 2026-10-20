@@ -532,14 +532,14 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Line input.
-public function ReadLn(): string;
+// Read a line without its terminator; `None` at EOF.
+public function ReadLn(): option of string;
 begin
   panic('Intrinsic API declaration');
 end function;
 
-// Same buffer as `ReadLn`.
-public function ReadText(): string;
+// Read a Unicode scalar from the same buffer; `None` at EOF.
+public function ReadText(): option of string;
 begin
   panic('Intrinsic API declaration');
 end function;

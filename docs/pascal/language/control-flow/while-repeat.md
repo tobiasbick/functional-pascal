@@ -45,10 +45,10 @@ The body executes at least once. Every body statement ends with `;`, including
 the last one before `until`; the condition also ends with `;`:
 
 ```pascal id=example-3 fragment context=body-console
-var Input: string := '';
+var Input: option of string := None;
 repeat
   Input := Console.ReadLn();
-until Input = 'quit';
+until (Input is None) or (Input is Some('quit'));
 ```
 
 Both loop forms require an explicit `null;` when their body has no action.

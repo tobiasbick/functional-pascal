@@ -51,7 +51,7 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Pascal `var` parameter passed as `F(X)` | Declare `var X: T`, call `F(var X)` (or `F(X := var X)`). |
 | Pascal routine address `@F` | Use `F` as the callable value and `F(...)` to call. |
 | C-family `==`, `!=`, `&&`, `\|\|`, `!`, `"text"`; Ada `/=` | `=`, `<>`, `and`, `or`, `not`, `'text'`; `<>`. |
-| Pascal `WriteLn(X:0:2)` | No width specifiers; format first, for example `'%f'.Format(X)`. |
+| Pascal `WriteLn(X:0:2)` | No colon width syntax; format first, for example `'%.2f'.Format(X)`. |
 | Delphi `TList<Integer>` | `array of integer`; generic types use `Box of integer`. |
 | Pascal one-based strings / `Char` | Zero-based Unicode scalar indexing; a character is a `string`. |
 | Pascal `{comment}` / `(*comment*)`, Ada `--comment` | Only `//` comments. |
@@ -621,8 +621,22 @@ key function. Only its return type must be Comparable (generic `K: Comparable`
 or `K: Numeric`); records can be elements. Both sorts are stable and ascending.
 The function runs once per element in original order over a snapshot; empty
 arrays make no calls. InPlace commits only after success.
-String formatting uses Pascal specifiers (`'%d'.Format(7)`, `'%s'.Format('text')`),
-with positional arguments; `{}` is ordinary text.
+String `Format` uses positional `%d` (integer), `%f`/`%e`/`%E` (real or integer),
+`%s` (string), and `%%` (literal percent); `{}` is ordinary text. Numeric
+`%[flags][width][.precision]kind` supports `-`/`0` flags in either order once
+each, minimum width without truncation, and precision for `f`/`e`/`E` only.
+Left alignment overrides zero padding; zeroes follow a minus sign.
+`'%.2f'.Format(3.5)` is `'3.50'`; `'%08d'.Format(-42)` is `'-0000042'`.
+Scientific notation defaults to six fractional digits and uses a signed
+exponent with at least two digits. Real rounding uses the stored binary64
+value, ties to even, and preserves negative zero. Integers remain exact for
+explicit `f` precision and `e`/`E`; `f` without precision retains its legacy
+real conversion and fractional digit. Width is at most 1_000_000, precision
+1024; numeric conversions using modifiers or `e`/`E` may emit at most
+1_000_000 bytes per call in total. Bare `%d`/`%f`, `%s`, literals, and `%%` are
+outside that limit. `%s`/`%%` accept no modifiers; `g`/`G` and localization
+are unsupported. Invalid formats, limits, counts, and argument types raise
+FP5022. `FormatInPlace` applies the same rules to a writable template.
 
 ```pascal id=example-7 run
 program ReferenceCollections;
@@ -1178,6 +1192,18 @@ documentation and names the owning handbook page; `--report json` returns the sa
 data. Do not infer a library API from Delphi or an old example using free collection
 helper functions.
 
+`Std.Path` is lexical and follows host path rules without filesystem, current
+directory, or symlink lookup. `IsAbsolute(Path)` tests fully absolute paths.
+`RelativeTo(Target, Base)` normalizes both and returns `Option of string`;
+identical determinate paths give `Some('.')`, with empty paths treated as `.`.
+Incompatible roots, absolute/relative mixtures, or a `..` remaining in the
+base after matching the common prefix give `None`; shared leading parents
+cancel lexically. Windows drive-relative and root-relative paths also
+give `None`. `ChangeExtension(Path, Extension)` replaces only the last suffix;
+`''` removes it, `.env` has none, and multipart extensions are allowed. It
+returns `None` for no final filename or an extension starting with `.`,
+containing a host separator, or containing NUL. See [Path](std/host/path.md).
+
 For source navigation, use `fpas query refs file.fpas:12:5`, `fpas query definition
 file.fpas:12:5`, or `fpas query type file.fpas:12:5`. Each returns one JSON document
 without writing artifacts. Lines and Unicode-scalar columns start at 1;
@@ -1261,5 +1287,10 @@ task operations inside synchronous native callbacks reject with FP5026. Repeatin
 requires the same executable, runtime build/platform, seed, inputs and limits;
 this does not reproduce the normal concurrent worker pool. Inspect
 `schedule.status` and its reasons. DAP/JSONL do not accept the seed flag.
+
+Console.ReadLn() and Console.ReadText() return Option of string. Some('') is an
+empty line from ReadLn; None is EOF. Both consume the same text buffer, and real
+read failures remain runtime diagnostics. ReadText returns one Unicode scalar
+and exposes actual LF/CRLF terminators as #10 without adding a final newline.
 
 Std Fs/Proc/Parse/Json/Toml/Crypto operations use their nominal error families. JSON/TOML field helpers use their own FieldError family and preserve parser causes with MapError. Host-backed errors retain `Std.Errors.HostError` with operation/resources, optional native code and original detail; use `.Message()` only at an explicit text boundary. Task, Net and Server operations use their native TaskError, NetError and ServerError families; URI, UTF-8 and HTTP use their source-declared families. Selection callback Outcomes carry TaskError. Existing TaskFailure records and runtime failures retain their behavior.

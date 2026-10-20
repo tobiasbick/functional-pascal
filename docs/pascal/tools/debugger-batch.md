@@ -82,8 +82,9 @@ chars = "ab"
 All events are queued before the one resume. Line and key queues each preserve
 their order; there is no timed ordering between the two queues. The script file
 and total queued input each have a 1 MiB bound. No implicit sidecar is loaded.
-No host stdin or host terminal is read. Exhausted line input raises the existing
-EOF diagnostic; key polling retains the headless console's existing behavior.
+No host stdin or host terminal is read. The batch runner signals EOF after queuing
+the script. Once pending line input is consumed, `ReadLn` and `ReadText` return
+`None`; key polling retains the headless console's existing behavior.
 There is no new mouse, resize or timed-replay format.
 
 Program console text and terminal rendering bytes appear in `output` with

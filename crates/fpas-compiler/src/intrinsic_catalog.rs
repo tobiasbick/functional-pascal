@@ -73,7 +73,16 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Path,
             PathIntrinsic,
-            [Join, BaseName, DirName, Extension, Normalize]
+            [
+                Join,
+                BaseName,
+                DirName,
+                Extension,
+                Normalize,
+                IsAbsolute,
+                RelativeTo,
+                ChangeExtension
+            ]
         ),
         "Server" => family!(
             member,

@@ -82,7 +82,7 @@ fn seed_boundaries_normalization_and_request_errors_are_explicit() {
 #[test]
 fn text_input_and_arguments_work_but_key_scripts_reject_before_initialization() {
     let f = Fixture::new(
-        "program Input; uses Std.Console as Console, Std.Args as Args; begin Console.WriteLn(Console.ReadLn()); Console.WriteLn(Args.ParamStr(0)); end.",
+        "program Input; uses Std.Console as Console, Std.Args as Args; begin Console.WriteLn(Console.ReadLn().Unwrap()); Console.WriteLn(Args.ParamStr(0)); end.",
     );
     f.write("input.toml", "[[event]]\ntype = 'readln'\nline = 'fixed'\n");
     let r = f.run(

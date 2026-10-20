@@ -90,16 +90,83 @@ const Pct: string := '100%%'.Format(); // '100%'
 |-----------|--------------|---------|
 | `%d` | `integer` | `'%d'.Format(42)` → `'42'` |
 | `%f` | `real` or `integer` | `'%f'.Format(3.14)` → `'3.14'` |
+| `%e` / `%E` | `real` or `integer` | `'%.2e'.Format(1250)` → `'1.25e+03'` |
 | `%s` | `string` | `'%s'.Format('hi')` → `'hi'` |
 | `%%` | *(no argument)* | `'100%%'.Format()` → `'100%'` |
 
-`%f` accepts both `real` and `integer`. Integer arguments are rendered with at least one fractional digit: `'%f'.Format(42)` produces `'42.0'`.
+Numeric conversions use `%[flags][width][.precision]kind`, where `kind` is
+`d`, `f`, `e`, or `E`. Width and precision, when present, contain decimal digits:
+
+| Field | Meaning | Example |
+|-------|---------|---------|
+| `width` | Minimum field width, padded with spaces; never truncates a value | `'%8d'.Format(42)` → `'      42'` |
+| `0` flag | Pad with zeroes after a leading minus sign | `'%08d'.Format(-42)` → `'-0000042'` |
+| `-` flag | Align left and pad with spaces on the right | `'%-8d'.Format(42)` → `'42      '` |
+| `.precision` | Digits after the decimal point for `f`, `e`, and `E` | `'%10.2f'.Format(3.5)` → `'      3.50'` |
+
+The `-` and `0` flags may appear in either order, once each. If both occur,
+left alignment takes precedence over zero padding. Precision zero emits no
+decimal point. Precision is not supported for `d`; `%s` and `%%` accept no
+flags, width, or precision. Formats such as `%g`, `%G`, dynamic `*` widths,
+and locale-specific separators are unsupported.
+
+`f` without precision retains the existing formatting: it emits at least one
+fractional digit, so `'%f'.Format(42)` produces `'42.0'`. Integer arguments are
+converted to real in that form, including when a field width or flag is used.
+With explicit precision, `f` formats integer arguments directly from their
+exact decimal value.
+
+`e` and `E` use scientific notation with one digit before the decimal point.
+The default precision is six fractional digits. The exponent uses the chosen
+`e` or `E`, an explicit sign, and at least two digits:
+`'%E'.Format(42)` produces `'4.200000E+01'`. Integer arguments are formatted
+from their exact decimal value without conversion to real.
+
+Real arguments use their stored binary64 value. Fixed precision and scientific
+notation round to the nearest value, with ties choosing the even final digit.
+The sign of negative zero is preserved. Formatting uses `.` as the decimal
+separator and does not depend on the host locale.
+
+```pascal id=example-7 run
+program NumericFormatting;
+
+uses Std.Test as Test;
+
+begin
+  Test.AssertEquals('3.14', '%.2f'.Format(3.14159));
+  Test.AssertEquals('      42', '%8d'.Format(42));
+  Test.AssertEquals('-0000042', '%08d'.Format(-42));
+  Test.AssertEquals('42      ', '%-08d'.Format(42));
+  Test.AssertEquals('42      ', '%0-8d'.Format(42));
+  Test.AssertEquals('      3.50', '%10.2f'.Format(3.5));
+  Test.AssertEquals('1.25e+03', '%.2e'.Format(1250));
+  Test.AssertEquals('4.200000E+01', '%E'.Format(42));
+  Test.AssertEquals('2', '%.0f'.Format(2.5));
+  Test.AssertEquals('4', '%.0f'.Format(3.5));
+  Test.AssertEquals('-0.00', '%.2f'.Format(-0.0));
+  Test.AssertEquals('9007199254740993.0', '%.1f'.Format(9_007_199_254_740_993));
+  var Template: string := '%08d';
+  Template.FormatInPlace(42);
+  Test.AssertEquals('00000042', Template);
+end.
+```
+
+### Limits
+
+Width is at most **1_000_000** and precision at most **1024**. Within one call,
+numeric conversions with a flag, width, or precision, and all `e`/`E`
+conversions, may emit at most **1_000_000 UTF-8 bytes in total**, including
+their padding. Bare `%d` and `%f`, `%s`, literal text, and `%%` do not count
+toward that limit and retain their existing behavior.
 
 ### Runtime errors
 
-- A trailing `%` at the end of `Template` is a runtime error.
-- Unknown specifiers such as `%q` are a runtime error.
-- Too few arguments, too many arguments, or a type mismatch for `%d`, `%f`, or `%s` are runtime errors.
+Invalid templates raise `FP5022`, including a trailing `%`, unknown kinds,
+repeated flags, missing precision digits, unsupported modifiers, or a width,
+precision, or numeric-output limit violation. Too few or too many arguments
+and argument types that do not match their conversion also raise `FP5022`.
+`%s` requires a string; use an error value's `.Message()` explicitly when
+formatting its message.
 
 ---
 

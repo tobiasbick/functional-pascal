@@ -97,8 +97,8 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 23 and register-bytecode version 23.
-Relocatable unit objects use schema version 16 and compiled-unit envelopes use
+The sectioned envelope uses program format version 23 and register-bytecode version 24.
+Relocatable unit objects use schema version 17 and compiled-unit envelopes use
 version 22. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
 debugger information. Keys retain all generic arguments; ordinary enum layouts keep
@@ -117,10 +117,16 @@ Generated linkage names are separate from their defining display names. Hidden
 callable captures are immutable, type-checked functions and remain absent from
 normal debugger scopes. Existing Std Result signatures retain their current types.
 
-Older image/object schemas require rebuilding;
-the instruction set and value representation are unchanged.
-These formats are versioned independently: a producer that changes a wire contract must
-increment its corresponding version; the two version numbers need not match.
+Older images and unit objects require rebuilding. Bytecode version 24 changes
+the existing Console text-input intrinsic ABI: `ReadLn` and `ReadText` return
+`Option of string`. `ReadLn` returns `Some('')` for a blank line; both operations
+return `None` at EOF.
+Source-backed caches rebuild through their bytecode identity checks; standalone
+artifacts with the earlier ABI are rejected before execution. Instruction
+encoding, envelope layouts and the 16-byte value representation are unchanged.
+These formats are versioned independently: a producer that changes a wire
+contract or executable ABI must increment the corresponding version. The version
+numbers need not match.
 Readers reject unsupported versions before execution, and
 `fpas run` tells the user to rebuild from project sources. Source-backed project builds replace
 incompatible artifacts automatically. A source-less incompatible `.fpascp` cannot run and must be

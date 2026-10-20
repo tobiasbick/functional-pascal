@@ -6,7 +6,7 @@ begin
   Test.PushReadLn('first');
   Test.PushReadLn('second');
   Test.PushReadLn('third');
-  Test.AssertEquals('first', Console.ReadLn());
-  Test.AssertEquals('second', Console.ReadLn());
-  Test.AssertEquals('third', Console.ReadLn());
+  Test.AssertEquals('first', Console.ReadLn().Unwrap());
+  Test.AssertEquals('second', Console.ReadLn().Unwrap());
+  Test.AssertEquals('third', Console.ReadLn().Unwrap());
 end.

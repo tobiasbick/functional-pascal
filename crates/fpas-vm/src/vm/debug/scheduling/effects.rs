@@ -158,7 +158,10 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
             | fpas_bytecode::PathIntrinsic::BaseName
             | fpas_bytecode::PathIntrinsic::DirName
             | fpas_bytecode::PathIntrinsic::Extension
-            | fpas_bytecode::PathIntrinsic::Normalize,
+            | fpas_bytecode::PathIntrinsic::Normalize
+            | fpas_bytecode::PathIntrinsic::IsAbsolute
+            | fpas_bytecode::PathIntrinsic::RelativeTo
+            | fpas_bytecode::PathIntrinsic::ChangeExtension,
         ) => None,
         Intrinsic::Json(
             fpas_bytecode::JsonIntrinsic::Parse | fpas_bytecode::JsonIntrinsic::Stringify,
@@ -276,5 +279,12 @@ mod tests {
         assert!(unsupported(Intrinsic::Time(TimeIntrinsic::Sleep)).is_none());
         assert!(unsupported(Intrinsic::Console(ConsoleIntrinsic::ReadLn)).is_none());
         assert!(unsupported(Intrinsic::Console(ConsoleIntrinsic::ReadKey)).is_some());
+        for operation in [
+            fpas_bytecode::PathIntrinsic::IsAbsolute,
+            fpas_bytecode::PathIntrinsic::RelativeTo,
+            fpas_bytecode::PathIntrinsic::ChangeExtension,
+        ] {
+            assert!(unsupported(Intrinsic::Path(operation)).is_none());
+        }
     }
 }

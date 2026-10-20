@@ -12,7 +12,11 @@
 uses Std.Console as Console;
 begin
   Console.WriteText('Name: ');
-  const Name: string := Console.ReadLn();
+  const Input: option of string := Console.ReadLn();
+  if Input is None then
+    return;
+  end if;
+  const Name: string := Input.Unwrap();
   Console.WriteLn('Hello, ', Name);
 
   Console.WriteLn('Press Escape or any printable key.');

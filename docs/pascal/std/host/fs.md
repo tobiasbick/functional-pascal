@@ -102,7 +102,9 @@ Requires `uses Std.Fs as Fs;`.
 | function | `CreateTempDir(): Result of (string, Fs.FsError)` | creates a unique temporary directory |
 | function | `CreateTempFile(): Result of (string, Fs.FsError)` | creates a unique empty temporary file |
 
-Fallible operations return `Error(Cause)` with a host error string instead of raising a runtime panic.
+Fallible operations return `Error(Cause)` with a typed `Fs.FsError`. Host-backed
+variants retain the original native `HostError` cause; operational failures do not
+raise a runtime panic.
 
 ---
 

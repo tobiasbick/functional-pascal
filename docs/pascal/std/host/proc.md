@@ -49,7 +49,9 @@ Requires `uses Std.Proc as Proc;`.
 | function | `Run(Command: string; Args: array of string): Result of (integer, Proc.ProcError)` | starts a process, waits for completion, and returns the exit code |
 | function | `RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, Proc.ProcError)` | starts a process and captures its exit code and output |
 
-Fallible operations return `Error(Cause)` with a host error string instead of raising a runtime panic.
+Fallible operations return `Error(Cause)` with a typed `Proc.ProcError`. Host-backed
+variants retain the original native `HostError` cause; operational failures do not
+raise a runtime panic.
 
 ---
 

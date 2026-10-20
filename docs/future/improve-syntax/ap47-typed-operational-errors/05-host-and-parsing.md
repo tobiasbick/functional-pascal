@@ -118,5 +118,6 @@ checks passed. Regenerating all 20 native API files produces identical output.
 The [full-suite comparison](../../../bench/ap47-host-parsing.md) records the
 unchanged 72 workloads, paired samples and regression controls. No VM row
 crosses the selected gate; additional Mandelbrot controls do not establish a
-repeatable slowdown. AP47.6 and
-AP47.7 remain open; AP47 overall is not marked complete.
+repeatable slowdown. AP47.6 and AP47.7 are now complete;
+[integrated acceptance](07-acceptance-and-performance.md#integrated-delivery-record)
+records the final AP47 closure.

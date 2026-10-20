@@ -14,6 +14,44 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-20 — AP47.7 errors baseline with matched controls
+
+The [complete acceptance report](ap47-acceptance.md) preserves three original
+72-row before/after runs and the isolated controls. VM sums of row medians are
+11266 → 11235 ms (-0.28%); flagged VM rows pass eight alternating pairs each.
+Mandelbrot render remains a reported non-VM exception: +6.77% in eight pairs and
++6.41% in sixteen additional pairs. The report includes image/CLI cross-controls,
+type-ID normalization and an identical-image A/A control; no semantic rendering
+work was added, and cache/allocator/scheduler explanations remain hypotheses.
+
+Thirteen new `errors` rows use same-build controls, with no invented historical
+feature baseline. Three samples, ratios, exact checks and timer boundaries are
+recorded in the report and [workload reference](errors.md). The Value remains
+16 bytes; two concrete wrapper instances share two factories (48 instruction
+bytes). The fresh full-suite snapshot is `ap47-7-expanded-full` with all 85 rows;
+72-row snapshots remain comparable only to their original selection.
+
+The table below is an additional current group snapshot from the real `record`
+command, separate from the three-sample medians in the report.
+
+- Group: `errors`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| errors_enum_construction | 38 | - |
+| errors_typed_construction | 41 | - |
+| errors_generic_direct | 42 | - |
+| errors_generic_helper | 61 | - |
+| errors_generic_callable | 68 | - |
+| errors_map_ok | 352 | - |
+| errors_case_ok | 310 | - |
+| errors_map_error | 1061 | - |
+| errors_case_error | 1014 | - |
+| errors_constructor_error | 993 | - |
+| errors_cause_message | 2 | - |
+| errors_cause_console | 524 | - |
+| errors_deep_image | 2 | - |
 
 ## 2026-10-20 — AP47.6 typed task and network errors
 

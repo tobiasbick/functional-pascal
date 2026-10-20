@@ -11,6 +11,9 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+#[path = "error_mapping/acceptance.rs"]
+mod acceptance;
+
 struct Fixture(PathBuf);
 impl Fixture {
     fn new(source: &str) -> Self {

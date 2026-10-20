@@ -51,16 +51,21 @@ and matched as `TomlValue.Datetime`.
 
 ## Errors
 
-Messages are neutral so callers can prefix their own context, such as the configuration
-file path:
+All fallible helpers return `FieldError`. Match its variants to make decisions;
+use `Message()` or direct printing at an output boundary.
 
-| Situation | Message |
-|-----------|---------|
-| missing key | `missing field <name>` |
-| wrong kind | `field <name> must be a string` (or `an integer`, `a float`, `a boolean`, `a table`, `an array`, `an array of strings`) |
-| unlisted key | `unexpected field <name>` |
+| Situation | Variant |
+| --- | --- |
+| invalid TOML text | `ParseFailure(Cause)` with the original `Toml.TomlError` |
+| root is not a table | `ExpectedTable` |
+| missing key | `MissingField(Name)` |
+| wrong kind | `WrongType(Name, Expected)` |
+| unlisted key | `UnknownField(Name)` |
 
-`ParseTable` returns `Std.Toml.Parse` errors unchanged.
+`ParseTable` wraps parser failures with `MapError(FieldError.ParseFailure)`,
+preserving their typed cause. `InvalidValue(Name, Reason)` is also declared for
+field validation; current accessors reject wrong kinds with `WrongType`. Local
+validation failures have no invented parser cause. Unknown-field selection follows existing dictionary iteration order.
 
 ## `RequireOnlyFields`
 
@@ -81,7 +86,3 @@ files written for an older schema.
 - [`Std.Toml`](toml.md)
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
-
-## Typed failures
-
-All fallible helpers use `TomlFields.FieldError`: `ParseFailure(Cause: Toml.TomlError)`, `ExpectedTable`, `MissingField(Name)`, `WrongType(Name, Expected)`, `InvalidValue(Name, Reason)`, and `UnknownField(Name)`. ParseFailure retains the original parser cause via MapError. Strict unknown-field selection follows existing dictionary iteration order. Numeric validation and helper success shapes are unchanged. Use Message() at an output boundary.

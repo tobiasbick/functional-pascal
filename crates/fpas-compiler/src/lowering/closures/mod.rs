@@ -138,27 +138,37 @@ impl<'a> ClosureRegistry<'a> {
                 "closure registry entry",
             ));
         };
+        // Reuse the checked callable signature used by MakeClosure. Re-resolving
+        // syntax erases applied error types and can disagree with that signature.
+        let target = self
+            .targets
+            .get(&fpas_sema::expr_lookup_key(routine.expression))
+            .ok_or_else(|| unsupported(closure.span, "closure without checked target"))?;
+        let Some(fpas_ir::IrType::Function {
+            parameters: checked,
+            result,
+        }) = types.kind(target.value_type).cloned()
+        else {
+            return Err(unsupported(closure.span, "closure without callable type"));
+        };
+        if checked.len() != closure.params.len() {
+            return Err(unsupported(
+                closure.span,
+                "closure parameter count mismatch",
+            ));
+        }
         let parameters = closure
             .params
             .iter()
-            .map(|parameter| {
-                types
-                    .formal_param_type(parameter, &[])
-                    .map(|ty| ParameterInput {
-                        name: parameter.name.clone(),
-                        type_name: types.declared_scalar_name(&parameter.type_expr),
-                        ty,
-                        declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
-                        reference: parameter.mode == fpas_parser::ParamMode::Var,
-                    })
+            .zip(checked)
+            .map(|(parameter, ty)| ParameterInput {
+                name: parameter.name.clone(),
+                type_name: types.declared_scalar_name(&parameter.type_expr),
+                ty,
+                declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
+                reference: parameter.mode == fpas_parser::ParamMode::Var,
             })
-            .collect::<Result<Vec<_>, _>>()?;
-        let result = closure
-            .return_type
-            .as_ref()
-            .map(|result| types.type_expr(result))
-            .transpose()?
-            .unwrap_or(types::UNIT);
+            .collect::<Vec<_>>();
         let mut context = LoweringContext::new(FunctionInput {
             name: &routine.name,
             source_name: &self.source_name,

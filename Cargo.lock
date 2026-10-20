@@ -404,6 +404,7 @@ dependencies = [
  "fpas-parser",
  "fpas-program",
  "fpas-unit",
+ "fpas-vm",
  "mimalloc",
  "process-wrap",
  "serde",

@@ -491,7 +491,7 @@ recovers within a wrapper. Callback argument expressions evaluate eagerly in
 source order; their bodies run only on the selected variant.
 
 Import `uses Std.Parse as Parse;`. Each parser takes `Text: string` and returns
-`Result of (T, string)`:
+`Result of (T, Parse.ParseError)`:
 
 | Call through Parse | Success type T | Input |
 | --- | --- | --- |
@@ -883,32 +883,86 @@ Strict `%s` formatting requires `Failure.Message()`, and try still requires
 compatible error types.
 
 ```pascal id=example-14 run
-program ReferenceNativeErrors;
+// Expected failures retain typed causes; local validation owns its own errors.
+program ConfigErrors;
 
-uses Std.Test as Test;
+uses
+  Std.Console as Console, Std.Fs as Fs, Std.Parse as Parse, Std.Path as Path,
+  Std.Test as Test;
 
-type FileError = error
-  Missing(Path: string) = 'File not found';
+type ConfigError = error
+  FileFailure(Cause: Fs.FsError) = 'Cannot load configuration';
+  MissingSetting(Name: string) = 'Missing configuration setting';
+  InvalidSetting(Name: string; Reason: string) = 'Invalid configuration setting';
 end error;
 
 type ContextError of E: Error = error
-  Failed(Cause: E) = 'Cannot load';
+  Failed(Cause: E; Operation: string; Resource: string) = 'Operation failed';
 end error;
 
 function Wrap<E: Error>(Cause: E): ContextError of E;
 begin
-  return ContextError.Failed(Cause);
+  return ContextError.Failed(Cause, 'validate', 'port');
+end function;
+
+function LoadPort(FileName: string): result of (integer, ConfigError);
+begin
+  const Text := try Fs.ReadText(FileName).MapError(ConfigError.FileFailure);
+  if Text.Trim() = '' then
+    return Error(ConfigError.MissingSetting('port'));
+  end if;
+  const Port := try Parse.Int(Text.Trim()).MapError(
+    function(Cause: Parse.ParseError): ConfigError begin
+      return ConfigError.InvalidSetting('port', Cause.Message());
+    end function
+  );
+  if (Port < 1) or (Port > 65535) then
+    return Error(ConfigError.InvalidSetting('port', 'expected 1..65535'));
+  end if;
+
+  return Ok(Port);
+end function;
+
+function Load(FileName: string): result of (integer, ContextError of ConfigError);
+begin
+  return LoadPort(FileName).MapError(
+    function(Cause: ConfigError): ContextError of ConfigError begin
+      return ContextError.Failed(Cause, 'load', FileName);
+    end function
+  );
 end function;
 
 begin
-  const Failure := Wrap(FileError.Missing('settings.toml'));
-  Test.AssertTrue(Failure is ContextError.Failed(FileError.Missing('settings.toml')));
-  Test.AssertEquals(
-    'ReferenceNativeErrors.ContextError.Failed: Cannot load'#10 +
-    'caused by ReferenceNativeErrors.FileError.Missing: File not found'#10 +
-    '  Path = "settings.toml"',
-    Failure.Message()
+  const Directory := Fs.CreateTempDir().Unwrap();
+  const FileName := Path.Join([Directory, 'port.txt']);
+  case Load(FileName) of
+    when Ok(_):
+      Test.Fail('missing file was accepted');
+    when Error(const Failure):
+      Test.AssertTrue(
+        Failure is ContextError.Failed(ConfigError.FileFailure(Fs.FsError.FileNotFound(_, _)), 'load', _)
+      );
+      Console.WriteLn(Failure);
+  end case;
+
+  discard Fs.WriteText(FileName, '').Unwrap();
+  Test.AssertTrue(LoadPort(FileName) is Error(ConfigError.MissingSetting('port')));
+  discard Fs.WriteText(FileName, '70000').Unwrap();
+  Test.AssertTrue(
+    LoadPort(FileName) is Error(ConfigError.InvalidSetting('port', 'expected 1..65535'))
   );
+  discard Fs.WriteText(FileName, '8080').Unwrap();
+  Test.AssertEquals(8080, Load(FileName).Unwrap());
+  discard Fs.DeleteDirAll(Directory).Unwrap();
+  const Local := Wrap(ConfigError.MissingSetting('port'));
+  const Parsed := Parse.Int('invalid').MapError(Wrap);
+  Test.AssertTrue(
+    Local is ContextError.Failed(ConfigError.MissingSetting('port'), 'validate', 'port')
+  );
+  Test.AssertTrue(
+    Parsed is Error(ContextError.Failed(Parse.ParseError.InvalidSyntax('integer', _), 'validate', 'port'))
+  );
+  Console.WriteLn(Local);
 end.
 ```
 

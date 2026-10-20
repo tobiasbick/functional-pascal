@@ -122,5 +122,5 @@ executable documentation examples. All 24 app/project checks and the standalone
 network example directory passed.
 The [original 72-workload comparison](../../../bench/ap47-tasks-network.md)
 records three unchanged before/after samples per row and any isolated controls.
-AP47.7 remains planned: it owns final cross-package acceptance and registration
-of the new errors benchmark group after this original-suite comparison.
+AP47.7 completes [final cross-package acceptance](07-acceptance-and-performance.md#integrated-delivery-record)
+and registers the new errors benchmark group after this original-suite comparison.

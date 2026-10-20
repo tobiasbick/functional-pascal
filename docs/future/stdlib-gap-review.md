@@ -1,6 +1,7 @@
 # Standard library gap review
 
-Status: assessment only, reviewed on 2026-10-19. No implementation is scheduled.
+Status: assessment updated on 2026-10-20. Gap 9 is delivered by AP47; other
+candidates remain unscheduled.
 
 This review covers the existing standard library, including native string and
 collection operations, but excludes `Std.Ai.*`. Findings were checked against
@@ -20,11 +21,14 @@ SSE decoding, task groups, cancellation, mixed-source selection, supervised work
 atomic text publication and a source-level TUI. Native arrays and dictionaries
 provide higher-order operations; arrays include stable `SortBy` and `FlatMap`.
 Strings support Unicode scalar indexing and casing, while Console exposes
-grapheme segmentation and display widths. These are not missing capabilities.
+grapheme segmentation and display widths. Native error declarations, typed causes,
+automatic output and explicit MapError are delivered through AP47, including both
+selected Std cohorts and integrated acceptance. These are not missing capabilities.
 
 ## Everyday capability gaps
 
 Numbers are stable references within this assessment, not approved work packages.
+Gap 9 is closed by AP47; its number and historical direction anchor remain stable.
 
 | ID | Area | Current boundary and missing capability | Comparison |
 | --- | --- | --- | --- |
@@ -36,7 +40,6 @@ Numbers are stable references within this assessment, not approved work packages
 | 6 | Numeric output formatting | String `Format` supports `%d`, `%f`, `%s` and `%%`, without selectable decimal precision, scientific notation or numeric field width. `RealToStr` provides exact round-trip text rather than presentation controls. | Go `fmt`; Python formatting |
 | 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
 | 8 | Path helpers | `Path` has five basic operations. Absolute-path checks, relative-path calculation and extension replacement are absent. Resolving a real path through filesystem/symlink state belongs in an effectful API such as `Fs`, preserving the pure `Path` boundary. | Go `path/filepath`; Rust `Path` |
-| 9 | Structured errors | Selected host/parsing APIs use native families since AP47.5; Tasks, Net, Server, Uri, Utf8 and HTTP use typed families since AP47.6, including nested selection callbacks and layered causes. [AP47](improve-syntax/ap47-typed-operational-errors/README.md) implements native error declarations, automatic output, typed causes and Message(). Constructor values and explicit `MapError` are implemented; Both Std migration cohorts are complete; final acceptance remains open and `try` retains its behavior. | Rust `io::ErrorKind`; Go typed errors |
 | 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
 | 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
 
@@ -55,7 +58,7 @@ Numbers are stable references within this assessment, not approved work packages
   [paths](../pascal/std/host/path.md): gaps 7 and 8.
 - The Result signatures in the filesystem, process,
   [network](../pascal/std/network/net.md) and
-  [parsing](../pascal/std/text/parse.md) APIs: gap 9.
+  [parsing](../pascal/std/text/parse.md) APIs: closed gap 9.
 - [Conversion](../pascal/std/text/conv.md),
   [Crypto](../pascal/std/cryptography/crypto.md),
   [UTF-8](../pascal/std/network/utf8.md) and
@@ -90,8 +93,8 @@ I/O capability is bundled into the error migration. AP47.2's runtime/artifact
 foundation and AP47.3's source syntax, constraints, Message() and executable
 handbook are implemented. AP47.4 delivers constructor values and MapError, and
 AP47.5 delivers host/parsing families with migrated callers. AP47.6 delivers
-task/network families and layered HTTP consumers. Final acceptance remains planned
-and requires its own implementation authorization. SDK and TUI boundaries that
+task/network families and layered HTTP consumers. AP47.7 completes integrated
+acceptance, documentation and measured performance. SDK and TUI boundaries that
 retain strings use explicit Message() mappings.
 
 ## Additional candidates
@@ -151,9 +154,9 @@ than copying every variant from the comparison libraries.
 
 Incremental file I/O and process control need separate designs covering ownership,
 bounds and cancellation. Structured errors have the selected AP47 design and
-delivery plan; AP47.2-AP47.6 implement the foundation, language, mapping and both
-Std migration cohorts, while AP47.7 still requires authorization. The remaining
-candidates should be driven by concrete application needs.
+delivery; AP47.1-AP47.7 are complete, including both Std migration cohorts and
+final acceptance. The remaining candidates should be driven by concrete
+application needs.
 
 ## Comparison sources
 

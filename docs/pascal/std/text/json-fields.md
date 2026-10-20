@@ -50,17 +50,21 @@ end.
 
 ## Errors
 
-Messages are neutral so callers can prefix their own context:
+All fallible helpers return `FieldError`. Match its variants to make decisions;
+use `Message()` or direct printing at an output boundary.
 
-| Situation | Message |
-|-----------|---------|
-| missing field | `missing field <name>` |
-| wrong kind | `field <name> must be a string` (or `a boolean`, `a number`, `an integer`, `an object`, `an array`, `an array of strings`) |
-| integer outside `-9223372036854775808..9223372036854775807` | `field <name> is outside the integer range` |
-| unlisted field | `unexpected field <name>` |
-| root is not an object | `JSON root must be an object` |
+| Situation | Variant |
+| --- | --- |
+| invalid JSON text | `ParseFailure(Cause)` with the original `Json.JsonError` |
+| root is not an object | `ExpectedObject` |
+| missing field | `MissingField(Name)` |
+| wrong kind | `WrongType(Name, Expected)` |
+| invalid numeric value | `InvalidValue(Name, Reason)` |
+| unlisted field | `UnknownField(Name)` |
 
-`ParseObject` returns `Std.Json.Parse` errors unchanged.
+`ParseObject` wraps parser failures with `MapError(FieldError.ParseFailure)`,
+preserving their typed cause. Local validation failures have no invented parser
+cause. Unknown-field selection follows existing dictionary iteration order.
 
 ## `IntegerField`
 
@@ -87,7 +91,3 @@ fields are present; use the typed accessors for required fields.
 - [`Std.Json`](json.md)
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
-
-## Typed failures
-
-All fallible helpers use `JsonFields.FieldError`: `ParseFailure(Cause: Json.JsonError)`, `ExpectedObject`, `MissingField(Name)`, `WrongType(Name, Expected)`, `InvalidValue(Name, Reason)`, and `UnknownField(Name)`. ParseFailure retains the original parser cause via MapError. Strict unknown-field selection follows existing dictionary iteration order. Numeric validation and helper success shapes are unchanged. Use Message() at an output boundary.

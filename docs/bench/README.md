@@ -9,6 +9,11 @@ capture disabled/enabled, covering scalar work, calls, globals, tasks, timer
 suspension and small/large failure reports. Use a quiet local release build for
 performance conclusions; cloud smoke checks establish correctness only.
 
+The [typed error workloads](errors.md) add the `errors` group: construction,
+generic helpers/callables, MapError/case controls, cause rendering and a structural
+deep-image round trip. [AP47.7 acceptance](ap47-acceptance.md) retains the original
+72-row comparison, the same-build controls and the fresh 85-row baseline.
+
 The `tui_styled_cells` row builds 128-by-44 frames of half-block cells with a concrete RGB
 style per cell, the per-frame path of pixel renderers such as terminal raycasters. A checksum
 over the built cells validates the result.
@@ -61,10 +66,12 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
-The current full-suite starting point is the [2026-10-12 baseline](history.md#2026-10-12--full-suite-baseline).
-Its local snapshot is `.temp-data/bench/baseline-2026-10-12.json`. Compare it with
-`cargo bench-fpas compare baseline-2026-10-12`; older history entries and local
-measurement snapshots were removed when this baseline was selected.
+The current full-suite starting point is the 85-row
+[AP47.7 baseline](ap47-acceptance.md#fresh-expanded-suite-baseline). Its local
+snapshot is `.temp-data/bench/ap47-7-expanded-full.json`; compare it with
+`cargo bench-fpas compare ap47-7-expanded-full`. Historical 72-row snapshots
+remain evidence for their original suite and are rejected against the expanded
+suite. Save a new local baseline if that snapshot is unavailable.
 
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
 and full-range slices of a 32,768-scalar string. Input construction and warmup
@@ -212,9 +219,9 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
 - `group` — `failure-dump`, `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`,
-  `review`, `local-index`, `source-review`, or `source-navigation` (filter with `--group`)
+  `review`, `local-index`, `source-review`, `source-navigation`, or `errors` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
+- `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, `program-artifact`, and `error-values` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

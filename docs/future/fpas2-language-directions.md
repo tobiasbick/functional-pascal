@@ -1,7 +1,7 @@
 # FPAS 2 language directions
 
-Status: planning only; no implementation is scheduled. Topics are open proposals
-unless their section explicitly records an agreement. The
+Status: proposal collection; delivered topics are recorded in their sections.
+Topics are open proposals unless their section explicitly records an agreement. The
 [typed operational error direction](#1-typed-operational-errors) and
 [numeric design](#21-explicit-width-numeric-types-and-money) are agreed at the
 scope stated in those sections, with their listed open points. Design agreement
@@ -39,7 +39,8 @@ AP47.5/AP47.6 host, parsing, task and network migrations are implemented. The us
 explicit MapError and unchanged try, then delegated the detailed planning choices.
 The [AP47 package](improve-syntax/ap47-typed-operational-errors/README.md) records
 those choices, dependencies and seven delivery work packages. Its design work is
-recorded; final acceptance remains open.
+recorded; AP47.1-AP47.7 and final acceptance are complete. The acceptance record
+includes executable examples, artifact/editor checks and measured performance.
 
 Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
 see [task APIs](../pascal/std/concurrency/task.md).
@@ -515,7 +516,8 @@ controlled readiness rather than timing-dependent expectations.
 ## 18. Validation and typed decoders
 
 [Std.Json.Fields](../pascal/std/text/json-fields.md) already provides strict typed
-field access and rejects unknown fields, returning individual string errors.
+field access and rejects unknown fields using typed `FieldError` variants with
+the original parser cause for parse failures.
 There is no general library of composable validation rules and typed decoders
 with structured, accumulated errors.
 

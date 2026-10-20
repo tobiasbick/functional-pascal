@@ -1,11 +1,11 @@
 # AP47: Native typed operational errors
 
-Status: AP47.1-AP47.6 complete; final acceptance remains planned.
+Status: Complete; AP47.1-AP47.7 delivered.
 The user selected native `error` declarations, automatic error
 output, explicit MapError and unchanged try, and delegated the remaining design
 choices. This plan records those choices. The runtime, language, constructor-value, explicit-mapping
-and both Std migration cohorts are delivered. Final acceptance requires its own
-implementation authorization.
+and both Std migration cohorts are delivered. AP47.7 closes integrated acceptance,
+documentation and performance with the user-authorized final implementation.
 
 Effort: large across compiler, runtime, standard library and consumers.
 Completion is tracked only in the [central plan](../README.md#package-status).
@@ -58,8 +58,8 @@ information is an ordinary leaf error, not a reporting framework.
 
 Q28/Q29 record the user's replacement direction. Q30-Q36 are concrete choices
 made under the user's delegation to prepare this implementation plan. The later
-implementation requests authorize AP47.2 through AP47.6. AP47.7 still requires
-its own authorization.
+implementation requests authorize AP47.2 through AP47.7. All seven packages
+are complete; publication remains a separate action.
 
 | ID | Selected decision | Contract owner | Affected work packages |
 | --- | --- | --- | --- |
@@ -77,7 +77,8 @@ its own authorization.
 
 The design contract, runtime/artifact foundation and source-language slice are
 complete, including constructor values, MapError and both Std migration cohorts.
-Final acceptance remains open.
+Final acceptance is complete; its [delivery record](07-acceptance-and-performance.md#integrated-delivery-record)
+links the integrated proof, verification and measured performance.
 
 - [x] [AP47.1: Language and error contract](01-decision.md)
 - [x] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)
@@ -85,7 +86,7 @@ Final acceptance remains open.
 - [x] [AP47.4: Constructor values and MapError](04-maperror-and-constructors.md)
 - [x] [AP47.5: Host, parsing and related Std migration](05-host-and-parsing.md)
 - [x] [AP47.6: Tasks, networking and layered consumers](06-tasks-and-network.md)
-- [ ] [AP47.7: Final acceptance, documentation and performance](07-acceptance-and-performance.md)
+- [x] [AP47.7: Final acceptance, documentation and performance](07-acceptance-and-performance.md)
 
 Order: AP47.1 -> AP47.2 -> AP47.3 -> AP47.4 -> AP47.5 -> AP47.6 -> AP47.7.
 AP47.2 adds dormant metadata support without exposing syntax that cannot run.
@@ -103,7 +104,7 @@ later without changing the error contract.
 ## Open decisions and exclusions
 
 No language or interface choices are left for an implementer to guess within
-this package. Later work packages still require implementation authorization. Profiling, exact
+this package. All selected work packages are authorized and delivered. Profiling, exact
 internal file splits and diagnostic-code allocation are implementation work,
 not requests to reopen the selected contract.
 

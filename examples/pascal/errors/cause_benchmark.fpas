@@ -1,0 +1,69 @@
+// The native driver captures Console output without a host writer.
+program ErrorCauses;
+
+uses
+  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Parse as Parse,
+  Std.Test as Test, Std.Time as Time;
+
+type Chain = error
+  Leaf(Code: integer) = 'Terminal';
+  Link(Cause: Chain) = 'Context';
+end error;
+
+function Build(Depth: integer): Chain;
+begin
+  var Value := Chain.Leaf(7);
+  for Index: integer := 1 to Depth do
+    Value := Chain.Link(Value);
+  end for;
+
+  return Value;
+end function;
+
+function Terminal(Value: Chain): integer;
+begin
+  var Current := Value;
+  var Depth: integer := 0;
+  while true do
+    case Current of
+      when Chain.Leaf(const Code):
+        Test.AssertEquals(7, Code);
+        return Depth;
+      when Chain.Link(const Cause):
+        Current := Cause;
+        Depth := Depth + 1;
+    end case;
+  end while;
+
+  panic('unreachable terminal traversal');
+end function;
+
+begin
+  Test.AssertEquals(2, Args.ParamCount());
+  const Mode := Args.ParamStr(0);
+  Test.AssertTrue(Mode in ['message', 'console', 'deep']);
+  const Count := Parse.Int(Args.ParamStr(1)).Unwrap();
+  Test.AssertTrue((Count > 0) and (Count <= 10000));
+  const Leaf := 'ErrorCauses.Chain.Leaf: Terminal'#10'  Code = 7';
+  const Prefix := 'ErrorCauses.Chain.Link: Context'#10'caused by ';
+  Test.AssertEquals(Prefix + Leaf, Build(1).Message());
+  const Depth := if Mode = 'deep' then 512 else 16 end if;
+  const Value := Build(Depth);
+  Test.AssertEquals(Depth, Terminal(Value));
+  const Expected := Prefix.RepeatStr(Depth) + Leaf;
+  Test.AssertEquals(Expected, Value.Message());
+  var Checksum: integer := 0;
+  const Started := Time.MonotonicMillis();
+  for Index: integer := 1 to Count do
+    if Mode = 'console' then
+      Console.WriteLn(Value);
+      Checksum := Checksum + Expected.Length();
+    else
+      Checksum := Checksum + Value.Message().Length();
+    end if;
+  end for;
+  const Elapsed := Time.ElapsedMillis(Started);
+  Test.AssertEquals(Count * Expected.Length(), Checksum);
+  Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
+end.

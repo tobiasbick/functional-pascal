@@ -1,0 +1,157 @@
+// Matched construction and MapError controls; no rendering inside the timer.
+program ErrorConstruction;
+
+uses
+  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Parse as Parse,
+  Std.Test as Test, Std.Time as Time;
+
+type First = error
+  Item(Number: integer);
+end error;
+
+type Second = error
+  Item(Number: integer);
+end error;
+
+type Wrapped of E: Error = error
+  Item(Cause: E);
+end error;
+
+type Plain = enum
+  Item(Number: integer);
+end enum;
+
+type PlainWrapped = enum
+  Item(Value: Plain);
+end enum;
+
+var Calls: integer := 0;
+
+function Generic<E: Error>(Cause: E): Wrapped of E;
+begin
+  return Wrapped.Item(Cause);
+end function;
+
+function Callable<E: Error>(Cause: E): Wrapped of E;
+begin
+  const Make: function(Cause: E): Wrapped of E := Wrapped.Item;
+  return Make(Cause);
+end function;
+
+function MapValue(Cause: First): Wrapped of First;
+begin
+  Calls := Calls + 1;
+  return Wrapped.Item(Cause);
+end function;
+
+function PlainNumber(Value: PlainWrapped): integer;
+begin
+  return case Value of
+    when PlainWrapped.Item(Plain.Item(const Number)): Number;
+  end case;
+end function;
+
+function FirstNumber(Value: Wrapped of First): integer;
+begin
+  return case Value of
+    when Wrapped.Item(First.Item(const Number)): Number;
+  end case;
+end function;
+
+function SecondNumber(Value: Wrapped of Second): integer;
+begin
+  return case Value of
+    when Wrapped.Item(Second.Item(const Number)): Number;
+  end case;
+end function;
+
+function Run(Mode: string; Count: integer): integer;
+begin
+  var Checksum: integer := 0;
+  if (Mode = 'direct') or (Mode = 'generic') or (Mode = 'callable') then
+    var MakeFirst: function(Cause: First): Wrapped of First := Wrapped.Item;
+    var MakeSecond: function(Cause: Second): Wrapped of Second := Wrapped.Item;
+    if Mode = 'generic' then
+      MakeFirst := Generic;
+      MakeSecond := Generic;
+    elsif Mode = 'callable' then
+      MakeFirst := Callable;
+      MakeSecond := Callable;
+    end if;
+
+    for Index: integer := 1 to Count do
+      if Index mod 2 = 0 then
+        Checksum := Checksum + FirstNumber(MakeFirst(First.Item(Index)));
+      else
+        Checksum := Checksum + SecondNumber(MakeSecond(Second.Item(Index)));
+      end if;
+    end for;
+
+    return Checksum;
+  end if;
+
+  for Index: integer := 1 to Count do
+    case Mode of
+      when 'plain':
+        Checksum := Checksum + PlainNumber(PlainWrapped.Item(Plain.Item(Index)));
+      when 'typed':
+        Checksum := Checksum + FirstNumber(Wrapped.Item(First.Item(Index)));
+      when 'ok-map', 'ok-case':
+        const Input: result of (integer, First) := Ok(Index);
+        var Output: result of (integer, Wrapped of First) := Ok(0);
+        if Mode = 'ok-map' then
+          Output := Input.MapError(MapValue);
+        else
+          Output := case Input of
+            when Ok(const Number): Ok(Number);
+            when Error(const Cause): Error(MapValue(Cause));
+          end case;
+        end if;
+
+        Checksum := Checksum + Output.Unwrap();
+      when 'error-map', 'error-case', 'error-constructor':
+        const Input: result of (integer, First) := Error(First.Item(Index));
+        var Output: result of (integer, Wrapped of First) := Ok(0);
+        case Mode of
+          when 'error-map':
+            Output := Input.MapError(MapValue);
+          when 'error-constructor':
+            Output := Input.MapError(Wrapped.Item);
+          else
+            Output := case Input of
+              when Ok(const Number): Ok(Number);
+              when Error(const Cause): Error(MapValue(Cause));
+            end case;
+        end case;
+
+        case Output of
+          when Ok(_):
+            Test.Fail('mapper lost Error');
+          when Error(const Cause):
+            Checksum := Checksum + FirstNumber(Cause);
+        end case;
+      else
+        panic('unknown construction mode');
+    end case;
+  end for;
+
+  return Checksum;
+end function;
+
+begin
+  Test.AssertEquals(2, Args.ParamCount());
+  const Mode := Args.ParamStr(0);
+  const Count := Parse.Int(Args.ParamStr(1)).Unwrap();
+  Test.AssertTrue((Count > 0) and (Count <= 1000000));
+  Test.AssertEquals(55, Run(Mode, 10));
+  Calls := 0;
+  const Started := Time.MonotonicMillis();
+  const Checksum := Run(Mode, Count);
+  const Elapsed := Time.ElapsedMillis(Started);
+  Test.AssertEquals(Count * (Count + 1) div 2, Checksum);
+  const ExpectedCalls := if (Mode = 'error-map') or (Mode = 'error-case') then Count else 0 end if;
+  Test.AssertEquals(ExpectedCalls, Calls);
+  Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
+  Console.WriteLn('function_mapper_calls: ' + Conv.IntToStr(Calls));
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
+end.

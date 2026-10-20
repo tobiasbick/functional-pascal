@@ -102,3 +102,32 @@ Printable does not imply conversion to string. The strict `%s` format still
 requires a string: write `Failure.Message()` when building formatted text.
 [`try`](../error-handling/try.md) retains compatible-type propagation; an Error
 constraint does not add implicit conversion or wrapping.
+
+
+## Migrating a Result boundary
+
+Selected Std operations now return concrete error families. Match the variant
+instead of interpreting message wording: channel closure is TaskError.Closed,
+URI syntax is UriError.InvalidSyntax and an HTTP transport failure retains its
+NetError inside HttpError.Transport. See the owning [Std pages](../../std/README.md)
+for the complete cases and the operations that keep ordinary EOF or absence as
+success. Existing application-authored string Result payloads remain valid.
+
+To change the error family, apply MapError before try. A one-field cause variant
+can be passed directly as a constructor value. Use an ordinary closure to add
+operation or resource fields. At an intentional text boundary, explicitly map
+Cause.Message(); this preserves the chosen string API. A local configuration
+validation failure uses MissingSetting or InvalidSetting rather than a fabricated
+file or host cause.
+
+The [complete configuration example](../../../../examples/pascal/errors/config_error.fpas)
+and its [compact-reference fence](../../agent-reference.md) load a real file,
+retain the FsError, validate the port separately, match the original cause and
+print the error directly. Its generic ContextError wrapper is used with both
+ConfigError and ParseError; the two concrete families keep distinct identities.
+Constructor values and captured closures use the same explicit error mapping.
+
+Compiled libraries and standalone images from before native error metadata must
+be rebuilt. The loader rejects unsupported formats and inconsistent native
+contracts rather than guessing a string payload. Optional debugger types can be
+stripped without removing the essential identities, payload types and Cause.

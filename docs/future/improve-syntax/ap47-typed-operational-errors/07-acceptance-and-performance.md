@@ -1,8 +1,8 @@
 # AP47.7: Final acceptance, documentation and performance
 
-Status: Planned; implementation not authorized. Depends on AP47.6.
+Status: Complete. Authorized by the AP47.7 implementation request; AP47.6 dependency satisfied.
 Completion: [AP47](README.md#dependencies-and-work-packages).
-This file names future checks; none are required to run for the planning change.
+The final delivery record below closes these integrated checks.
 
 ## Deliverable
 
@@ -103,7 +103,7 @@ baseline for subsequent tuning. Keep IDs/arguments/selection fixed for a
 comparison, never fabricate zero/missing rows. Record settled measurements in
 docs/bench/history.md with workload boundaries and any changed suite baseline.
 
-Future command sequence, using the groups available at each stage:
+Reference command sequence, using the groups available at each stage:
 
 ```text
 cargo bench-fpas save ap47-before
@@ -122,7 +122,7 @@ Do not weaken the harness's group/row validation to compare different suites.
 
 ## Required integration checks
 
-Future delivery runs the applicable per-package checks and then:
+Delivery runs the applicable per-package checks and then:
 
 ```text
 cargo fmt --all -- --check
@@ -144,3 +144,61 @@ behavior. The source error grammar must pass existing LSP and editor tests.
 Relative links, executable documentation examples and reproducible generated API
 output complete the documentation check. Report exact checks and measurements
 in the delivery, not chronological logs or machine metadata inside the plan.
+
+## Integrated delivery record
+
+The canonical [configuration example](../../../../examples/pascal/errors/config_error.fpas)
+and compact-reference `example-14` are the same complete program. They exercise a
+real missing file, local missing/invalid settings, constructor MapError, a captured
+path/context mapper and two concrete generic wrapper families. The CLI integration
+runs the program from a source project and a portable image. A separate debugger
+and failure-capture integration inspects both concrete generic Cause payloads in
+source and image execution.
+
+The example exposed a compiler defect: re-resolving closure result syntax erased
+an applied error type and disagreed with MakeClosure's checked signature (FP9001).
+Closure lowering now reuses that checked parameter/result signature. The regression
+covers captures, aliases and distinct concrete generic error parameters/results.
+The failure was reproduced before the fix; other existing successful scenarios
+are acceptance coverage, not newly demonstrated pre-fix failures.
+
+| Integrated proof | Actual owner |
+| --- | --- |
+| Captured generic parameter/result identity | `crates/fpas-compiler/src/tests/native_errors.rs`, `capturing_closures_preserve_applied_error_parameters_and_results` |
+| Imported transitive generic helpers/callables, aliases, two cause families, cached unit decode and stripped program image | Same file, `native_errors_keep_transitive_generic_factories_through_cached_units_and_images`; optional enum types and payload debugger types are removed before image transport |
+| Complete example, live debugger and failure-report values | `crates/fpas-cli/tests/error_mapping/acceptance.rs`; source projects and portable images |
+| Constructor/MapError scheduling, cancellation and trace lifecycle | Existing `crates/fpas-cli/tests/error_mapping.rs` fixtures and VM task/debug/failure-capture owners |
+| Unsaved-source completion, symbols, references, rename and public spelling | `crates/fpas-language-service/tests/native_errors.rs`; existing CLI source-query and LSP overlay tests |
+| Real host/parser cases, permission/process results and generated declarations | Existing Std/CLI owners from AP47.5; reproducible intrinsic API export |
+| Task selection/ownership, supervision, sockets/TLS, server shutdown and UTF-8/SSE ownership | Existing source/VM/CLI owners from AP47.6, including real local socket/TLS fixtures |
+| Independent rendering golden and depth-512 typed terminal cause after image decode | `crates/fpas-bench/src/native/errors.rs` with production FPAS fixtures under `examples/pascal/errors/` |
+
+The selected public-interface inventory remains the
+[Std catalog](standard-errors.md#source-boundary-mappings-and-migration-inventory),
+including aliases and nested callback Outcomes. Generated APIs are reproducible;
+selected fallible interfaces use their domain families. Intentionally general
+application/SDK/TUI Result payloads retain explicit boundary mappings. No parallel
+legacy wrapper API was introduced. The handbook, compact reference, native
+catalog, grammar, editor fixtures and repository authoring skills were checked.
+Review found and corrected stale Parse/Channel signature prose, host-string
+wording, JSON/TOML field-message contracts and one negative qualification example.
+The migration guide explains rebuilding older standalone artifacts/caches.
+
+Verification: workspace build and all 4,899 Rust tests pass (three existing
+ignored tests); Clippy with all targets/features and warnings denied is clean.
+Pascal suite: 535 passed, one intentional skip, zero failures, including all 520
+documentation examples. All 24 app/example project and source-directory checks
+plus the new errors directory pass. Grammar validation, Rust/Pascal formatting,
+relative links and diff checks complete the delivery. The intrinsic API exporter
+produces byte-identical generated declarations.
+
+The [performance report](../../../bench/ap47-acceptance.md) records every original
+row, raw samples, group sums and isolated regression controls, followed by the new
+matched error workloads and fresh expanded-suite baseline. It also records exact
+rendering/decode boundaries and shared-factory/metadata representation sizes.
+The VM regression gate passes. The report explicitly retains the non-VM
+Mandelbrot render increase and its image/CLI/A/A investigation as a measurement
+limitation; no semantic rendering work was added or runtime tradeoff claimed.
+The errors group is registered only after the unchanged 72-row comparison; suite
+comparison validation is preserved. The subagent reviews implementation, controls
+and documentation; all reported findings are resolved before completion.

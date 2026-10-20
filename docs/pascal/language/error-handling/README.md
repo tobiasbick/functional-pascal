@@ -9,6 +9,7 @@ Structured error handling with `Result` and `Option` for expected failures, and 
 | Bind payloads, handle locally, or select a plain default | Exhaustive `case` |
 | Abort deliberately on Error or None | `Value.Unwrap()` |
 | Transform wrapped success | `Value.Map(F)` |
+| Map a Result error explicitly | `Value.MapError(F)` |
 | Compose a fallible/optional operation | `Value.AndThen(F)` |
 | Recover within a wrapper | `Value.OrElse(F)` |
 

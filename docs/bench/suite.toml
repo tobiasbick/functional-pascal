@@ -3,6 +3,7 @@
 # Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling), and
 # `tui` (headless Std.Tui), and `tooling` (native editor and compiler workloads).
 # `failure-dump` compares paired capture modes for local release validation.
+# `errors` adds matched construction, mapping, rendering and image controls.
 # FPAS rows run through the production `fpas run` path.
 
 [[bench]]
@@ -505,4 +506,97 @@ id = "source_navigation_lines_2048"
 group = "source-navigation"
 path = "examples/pascal/review/navigation_benchmark.fpas"
 args = ["2048", "lines"]
+timeout_ms = 120000
+
+# AP47 typed-error workloads; controls share inputs and production runtime paths.
+
+[[bench]]
+id = "errors_enum_construction"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["plain", "100000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_typed_construction"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["typed", "100000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_generic_direct"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["direct", "100000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_generic_helper"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["generic", "100000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_generic_callable"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["callable", "100000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_map_ok"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["ok-map", "1000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_case_ok"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["ok-case", "1000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_map_error"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["error-map", "1000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_case_error"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["error-case", "1000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_constructor_error"
+group = "errors"
+path = "examples/pascal/errors/construction_benchmark.fpas"
+args = ["error-constructor", "1000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_cause_message"
+group = "errors"
+driver = "error-values"
+args = ["1000", "message"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_cause_console"
+group = "errors"
+driver = "error-values"
+args = ["1000", "console"]
+timeout_ms = 120000
+
+[[bench]]
+id = "errors_deep_image"
+group = "errors"
+driver = "error-values"
+args = ["8", "deep"]
 timeout_ms = 120000

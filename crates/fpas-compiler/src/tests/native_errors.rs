@@ -156,3 +156,37 @@ end.
         .run()
         .expect("native errors execute after image transport");
 }
+
+#[test]
+fn capturing_closures_preserve_applied_error_parameters_and_results() {
+    super::assert_succeeds(
+        r#"
+program CapturedErrors;
+uses Std.Test as Test;
+type First = error Item(Number: integer); end error;
+type Alias = First;
+type Second = error Item(Number: integer); end error;
+type Wrapped of E: Error = error Item(Cause: E; Context: string); end error;
+function Make(Context: string): function(Cause: Alias): Wrapped of First;
+begin
+  return function(Cause: Alias): Wrapped of First begin
+    return Wrapped.Item(Cause, Context);
+  end function;
+end function;
+begin
+  const LabelText := 'second';
+  const A := Make('first');
+  const B: function(Cause: Second): Wrapped of Second :=
+    function(Cause: Second): Wrapped of Second begin
+      return Wrapped.Item(Cause, LabelText);
+    end function;
+  const Read: function(Value: Wrapped of First): string :=
+    function(Value: Wrapped of First): string begin
+      return case Value of when Wrapped.Item(First.Item(_), const Context): Context; end case;
+    end function;
+  Test.AssertEquals('first', Read(A(First.Item(1))));
+  Test.AssertTrue(B(Second.Item(2)) is Wrapped.Item(Second.Item(2), 'second'));
+end.
+"#,
+    );
+}

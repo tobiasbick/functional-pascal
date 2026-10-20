@@ -229,8 +229,9 @@ fn false_conditions_auto_continue_and_condition_errors_stop_closed() {
         "breakpoint.set",
         json!({"source":"<memory>","line":6,"condition":"I < 0"}),
     ));
-    let _ = false_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stable(&mut false_server);
+    let mut events =
+        false_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    events.extend(wait_until_stable(&mut false_server));
     assert_eq!(
         false_server.status(),
         ServerStatus::Terminated,
@@ -245,8 +246,9 @@ fn false_conditions_auto_continue_and_condition_errors_stop_closed() {
         "breakpoint.set",
         json!({"source":"<memory>","line":6,"condition":"I + 1"}),
     ));
-    let _ = error_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stable(&mut error_server);
+    let mut events =
+        error_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    events.extend(wait_until_stable(&mut error_server));
     assert_eq!(error_server.status(), ServerStatus::Stopped, "{events:?}");
     assert!(
         events
@@ -264,8 +266,8 @@ fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop()
         "breakpoint.set",
         json!({"source":"<memory>","line":6,"log_message":"I={I}"}),
     ));
-    let _ = log_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stable(&mut log_server);
+    let mut events = log_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    events.extend(wait_until_stable(&mut log_server));
     let output = events
         .iter()
         .filter(|event| event["event"] == "output")
@@ -286,8 +288,8 @@ fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop()
         "breakpoint.set",
         json!({"source":"<memory>","line":6}),
     ));
-    let _ = mixed.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stable(&mut mixed);
+    let mut events = mixed.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
+    events.extend(wait_until_stable(&mut mixed));
     let output_index = events
         .iter()
         .position(|event| event["event"] == "output")

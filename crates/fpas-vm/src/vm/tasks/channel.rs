@@ -18,10 +18,6 @@ use fpas_diagnostics::codes::{
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
 
-const CLOSED_ERROR: &str = "Channel is closed";
-const SEND_CANCELLED_ERROR: &str = "Channel send was cancelled";
-const RECEIVE_CANCELLED_ERROR: &str = "Channel receive was cancelled";
-
 impl Worker {
     pub(super) fn channel_intrinsic(
         &mut self,
@@ -68,6 +64,12 @@ impl Worker {
             TaskIntrinsic::SendWithTimeout => {
                 self.require_channel_arguments(arguments, 3)?;
                 let handle = self.channel_handle(&arguments[0])?;
+                if matches!(arguments[2], Value::Integer(value) if value < 0) {
+                    return Ok(Some(Some(self.task_input_error(
+                        "TimeoutMillis",
+                        "Timeout must be non-negative",
+                    )?)));
+                }
                 let timeout = self.wait_timeout(&arguments[2])?;
                 if self.debug_tasks || self.task_id != 0 {
                     self.start_timeout_channel_send(
@@ -104,6 +106,12 @@ impl Worker {
             TaskIntrinsic::ReceiveWithTimeout => {
                 self.require_channel_arguments(arguments, 2)?;
                 let handle = self.channel_handle(&arguments[0])?;
+                if matches!(arguments[1], Value::Integer(value) if value < 0) {
+                    return Ok(Some(Some(self.task_input_error(
+                        "TimeoutMillis",
+                        "Timeout must be non-negative",
+                    )?)));
+                }
                 let timeout = self.wait_timeout(&arguments[1])?;
                 if self.debug_tasks || self.task_id != 0 {
                     self.start_timeout_channel_receive(handle, timeout, destination)
@@ -213,8 +221,4 @@ impl Worker {
 
 fn ok(value: Value) -> Value {
     Value::result_ok(value)
-}
-
-fn error(message: &str) -> Value {
-    Value::result_error(Value::Str(message.into()))
 }

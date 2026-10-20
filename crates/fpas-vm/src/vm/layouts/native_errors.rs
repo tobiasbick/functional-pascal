@@ -24,6 +24,31 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
             {
                 Some(Family::Fs)
             }
+            Some(Intrinsic::Net(_))
+            | Some(Intrinsic::Server(fpas_bytecode::ServerIntrinsic::ShutdownErrors)) => {
+                Some(Family::Net)
+            }
+            Some(Intrinsic::Server(
+                fpas_bytecode::ServerIntrinsic::CreateLifetime
+                | fpas_bytecode::ServerIntrinsic::OwnListener
+                | fpas_bytecode::ServerIntrinsic::ObserveSignals
+                | fpas_bytecode::ServerIntrinsic::FinishShutdown,
+            )) => Some(Family::Server),
+            Some(Intrinsic::Task(
+                fpas_bytecode::TaskIntrinsic::Send
+                | fpas_bytecode::TaskIntrinsic::TrySend
+                | fpas_bytecode::TaskIntrinsic::SendWithCancellation
+                | fpas_bytecode::TaskIntrinsic::SendWithTimeout
+                | fpas_bytecode::TaskIntrinsic::Receive
+                | fpas_bytecode::TaskIntrinsic::TryReceive
+                | fpas_bytecode::TaskIntrinsic::ReceiveWithCancellation
+                | fpas_bytecode::TaskIntrinsic::ReceiveWithTimeout
+                | fpas_bytecode::TaskIntrinsic::WaitAnyWithTimeout
+                | fpas_bytecode::TaskIntrinsic::WaitAnyWithCancellation
+                | fpas_bytecode::TaskIntrinsic::CloseTaskGroupWithTimeout
+                | fpas_bytecode::TaskIntrinsic::ReceiveCase
+                | fpas_bytecode::TaskIntrinsic::SendCase,
+            )) => Some(Family::Task),
             Some(Intrinsic::Proc(_)) => Some(Family::Proc),
             Some(Intrinsic::Parse(_)) => Some(Family::Parse),
             Some(Intrinsic::Crypto(_)) => Some(Family::Crypto),
@@ -33,9 +58,29 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
         };
         if let Some(family) = family {
             required[family as usize] = true;
-            if matches!(family, Family::Fs | Family::Proc | Family::Crypto) {
-                required[Family::Host as usize] = true;
+        }
+    }
+    // Close over declared Cause families without requiring unrelated native modules.
+    loop {
+        let mut changed = false;
+        for family in Family::ALL
+            .iter()
+            .copied()
+            .filter(|f| required[*f as usize])
+            .collect::<Vec<_>>()
+        {
+            for dependency in family
+                .variants()
+                .iter()
+                .flat_map(|v| v.fields.iter())
+                .filter_map(|(_, ty)| ty.cause_family())
+            {
+                changed |= !required[dependency as usize];
+                required[dependency as usize] = true;
             }
+        }
+        if !changed {
+            break;
         }
     }
     for family in Family::ALL
@@ -100,8 +145,12 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
             let cause = if let Some(field) = expected
                 .fields
                 .iter()
-                .position(|(_, ty)| matches!(ty, ErrorFieldType::Host))
+                .position(|(_, ty)| ty.cause_family().is_some())
             {
+                let family = expected.fields[field]
+                    .1
+                    .cause_family()
+                    .ok_or_else(failure)?;
                 let index = image
                     .enums
                     .iter()
@@ -109,7 +158,7 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
                         image
                             .strings
                             .get(e.name)
-                            .is_some_and(|name| name.eq_ignore_ascii_case(Family::Host.name()))
+                            .is_some_and(|name| name.eq_ignore_ascii_case(family.name()))
                     })
                     .ok_or_else(failure)?;
                 Some(ErrorCause {
@@ -134,9 +183,15 @@ fn identity(ty: ErrorFieldType) -> TypeIdentity {
         ErrorFieldType::Strings => TypeIdentity::Array(Box::new(TypeIdentity::String)),
         ErrorFieldType::OptionalString => TypeIdentity::Option(Box::new(TypeIdentity::String)),
         ErrorFieldType::OptionalInteger => TypeIdentity::Option(Box::new(TypeIdentity::Integer)),
-        ErrorFieldType::Host => TypeIdentity::Nominal {
+        ErrorFieldType::Host | ErrorFieldType::Net => TypeIdentity::Nominal {
             kind: NominalKind::Error,
-            declaration: Family::Host.name().to_ascii_lowercase(),
+            declaration: (if matches!(ty, ErrorFieldType::Host) {
+                Family::Host
+            } else {
+                Family::Net
+            })
+            .name()
+            .to_ascii_lowercase(),
             arguments: vec![],
         },
     }

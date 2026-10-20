@@ -7,14 +7,25 @@ use fpas_std::native_errors::{ErrorFieldType, NativeErrorFamily};
 use std::sync::Arc;
 
 pub(super) fn register(checker: &mut Checker, family: NativeErrorFamily) -> Ty {
+    if let Some(symbol) = checker.scopes.lookup(family.name())
+        && matches!(&symbol.ty, Ty::Enum(e) if e.is_error)
+    {
+        return symbol.ty.clone();
+    }
     let host = if matches!(
         family,
-        NativeErrorFamily::Fs | NativeErrorFamily::Proc | NativeErrorFamily::Crypto
+        NativeErrorFamily::Fs
+            | NativeErrorFamily::Proc
+            | NativeErrorFamily::Crypto
+            | NativeErrorFamily::Net
+            | NativeErrorFamily::Server
     ) {
         Some(register(checker, NativeErrorFamily::Host))
     } else {
         None
     };
+    let net =
+        (family == NativeErrorFamily::Server).then(|| register(checker, NativeErrorFamily::Net));
     let variants = family
         .variants()
         .iter()
@@ -34,6 +45,9 @@ pub(super) fn register(checker: &mut Checker, family: NativeErrorFamily) -> Ty {
                             ErrorFieldType::OptionalString => Ty::Option(Box::new(Ty::String)),
                             ErrorFieldType::OptionalInteger => Ty::Option(Box::new(Ty::Integer)),
                             ErrorFieldType::Integer => Ty::Integer,
+                            ErrorFieldType::Net => net
+                                .clone()
+                                .unwrap_or(Ty::Named(NativeErrorFamily::Net.name().into())),
                             ErrorFieldType::Host => host
                                 .clone()
                                 .unwrap_or(Ty::Named(NativeErrorFamily::Host.name().into())),

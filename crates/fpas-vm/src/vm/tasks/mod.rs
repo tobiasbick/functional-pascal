@@ -5,6 +5,7 @@
 
 mod cancellation;
 mod channel;
+mod errors;
 pub(in crate::vm) mod groups;
 pub(super) mod pool;
 mod scheduler;

@@ -1,5 +1,6 @@
 use super::NetworkConnections;
 use crate::vm::hosted::net::connections::test_connections::tls_pair;
+use crate::vm::hosted::net::failure::Failure;
 use crate::vm::hosted::net::transport::Transport;
 use std::io::Write;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -26,7 +27,7 @@ fn tls_read_cancellation_preserves_session_for_subsequent_reads() {
     assert_eq!(
         connections
             .read_with_cancellation(handle, 8, || checks.fetch_add(1, Ordering::Relaxed) >= 3),
-        Err("Network read cancelled".to_string())
+        Err(Failure::Cancelled)
     );
     peer.sock
         .write_all(&encrypted[1..])

@@ -1,6 +1,7 @@
 //! Dynamic listener address and handle-lifetime regressions.
 
 use super::NetworkListeners;
+use crate::vm::hosted::net::failure::Failure;
 use std::net::{IpAddr, Ipv4Addr, TcpStream};
 
 #[test]
@@ -32,12 +33,12 @@ fn listener_address_rejects_invalid_handles_and_ports() {
     let listeners = NetworkListeners::new();
     assert!(listeners.local_address(0).is_err());
     for port in [-1, 65536, i64::MAX] {
-        assert!(
+        assert!(matches!(
             listeners
                 .listen("127.0.0.1", port)
-                .expect_err("invalid port")
-                .contains("0..=65535")
-        );
+                .expect_err("invalid port"),
+            Failure::InvalidArgument { name: "Port", .. }
+        ));
     }
 }
 

@@ -323,7 +323,8 @@ begin
       var ApplicationInput: option of TMessage := None;
       var Cases: array of Tasks.WaitCase := [];
       const ConsoleCase: Tasks.WaitCase := Tasks.ReceiveCase(
-        ConsoleInputs, procedure(Outcome: result of (RuntimeInput.TuiHostInput, string)) begin
+        ConsoleInputs,
+        procedure(Outcome: result of (RuntimeInput.TuiHostInput, Tasks.TaskError)) begin
           case Outcome of
             when Ok(const Input):
               begin
@@ -338,7 +339,7 @@ begin
       if BackgroundEnabled then
         begin
           const ApplicationCase: Tasks.WaitCase := Tasks.ReceiveCase(
-            Inbox, procedure(Outcome: result of (TMessage, string)) begin
+            Inbox, procedure(Outcome: result of (TMessage, Tasks.TaskError)) begin
               case Outcome of
                 when Ok(const Message):
                   begin

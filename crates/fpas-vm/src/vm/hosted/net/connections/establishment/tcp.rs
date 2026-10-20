@@ -2,6 +2,7 @@
 //!
 //! Documentation: `docs/pascal/std/network/net.md`.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::io;
 use std::net::{SocketAddr, TcpStream};
 use std::time::{Duration, Instant};
@@ -17,7 +18,7 @@ pub(super) fn connect(
     address: SocketAddr,
     deadline: Instant,
     is_cancelled: impl Fn() -> bool,
-) -> Result<TcpStream, String> {
+) -> Result<TcpStream, Failure> {
     remaining(deadline, &is_cancelled)?;
     let socket = Socket::new(
         Domain::for_address(address),
@@ -52,7 +53,7 @@ fn wait_for_connection(
     deadline: Instant,
     is_cancelled: impl Fn() -> bool,
     mut check: impl FnMut() -> io::Result<bool>,
-) -> Result<(), String> {
+) -> Result<(), Failure> {
     loop {
         remaining(deadline, &is_cancelled)?;
         let ready = check();
@@ -78,8 +79,8 @@ fn in_progress(error: &io::Error) -> bool {
     false
 }
 
-fn connect_error(error: io::Error) -> String {
-    format!("TCP connect failed: {error}")
+fn connect_error(error: io::Error) -> Failure {
+    Failure::io(&error, format!("TCP connect failed: {error}"))
 }
 
 #[cfg(test)]

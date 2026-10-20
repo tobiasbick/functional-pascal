@@ -79,24 +79,27 @@ pub(super) fn cancellation_token(worker: &Worker, value: &Value) -> Result<u64, 
 }
 
 /// Validate and convert a byte-array argument.
-pub(super) fn bytes(worker: &Worker, value: &Value) -> Result<Vec<u8>, VmError> {
+pub(super) fn bytes(
+    worker: &Worker,
+    value: &Value,
+) -> Result<Result<Vec<u8>, super::failure::Failure>, VmError> {
     let Value::Array(values) = value else {
         return Err(type_error(worker, "Data", "array of integer", value));
     };
-    values
-        .iter()
-        .enumerate()
-        .map(|(index, value)| match value {
-            Value::Integer(value) => u8::try_from(*value).map_err(|_| {
-                worker.runtime_error(
-                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!("Std.Net.SendBytes Data[{index}] must be in 0..=255, got {value}"),
-                    "Pass a byte array whose integer elements are in 0..=255.",
-                )
-            }),
-            actual => Err(type_error(worker, "Data element", "integer", actual)),
-        })
-        .collect()
+    let mut bytes = Vec::with_capacity(values.len());
+    for (index, value) in values.iter().enumerate() {
+        let Value::Integer(value) = value else {
+            return Err(type_error(worker, "Data element", "integer", value));
+        };
+        let Ok(byte) = u8::try_from(*value) else {
+            return Ok(Err(super::failure::Failure::argument(
+                "Data",
+                format!("Data[{index}] must be in 0..=255, got {value}"),
+            )));
+        };
+        bytes.push(byte);
+    }
+    Ok(Ok(bytes))
 }
 
 fn type_error(worker: &Worker, name: &str, expected: &str, actual: &Value) -> VmError {

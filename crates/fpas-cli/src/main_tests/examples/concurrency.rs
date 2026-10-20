@@ -48,7 +48,7 @@ fn example_timed_close_retains_cleanup_until_release() {
         (exit, stdout.as_str(), stderr.as_str()),
         (
             0,
-            "Task group close timed out\nCleanup joined; ownership released\n",
+            "Std.Tasks.TaskError.Timeout: Operation timed out\n  Operation = \"Std.Tasks.CloseTaskGroupWithTimeout\"\nCleanup joined; ownership released\n",
             ""
         )
     );

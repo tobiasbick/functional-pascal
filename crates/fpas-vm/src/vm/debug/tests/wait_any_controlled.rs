@@ -19,32 +19,32 @@ begin scope
   const T: task of integer := go Work();
   case Tasks.WaitAnyWithTimeout([T], 0) of
     when Ok(_): panic('pending task ready');
-    when Error(const Message): if Message <> 'Task wait timed out' then panic(Message); end if;
+    when Error(const Message): if not (Message is Tasks.TaskError.Timeout('Std.Tasks.WaitAnyWithTimeout')) then panic(Message.Message()); end if;
   end case;
   case Tasks.WaitAnyWithTimeout([T], 1) of
     when Ok(_): panic('deadline extended');
-    when Error(const Message): if Message <> 'Task wait timed out' then panic(Message); end if;
+    when Error(const Message): if not (Message is Tasks.TaskError.Timeout('Std.Tasks.WaitAnyWithTimeout')) then panic(Message.Message()); end if;
   end case;
   const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   const Canceller: task of integer := go CancelLater(Source);
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('not cancelled');
-    when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
+    when Error(const Message): if not (Message is Tasks.TaskError.Cancelled('Std.Tasks.WaitAnyWithCancellation')) then panic(Message.Message()); end if;
   end case;
   if Tasks.Wait(Canceller) <> 0 then panic('canceller result'); end if;
   if Tasks.Wait(T) <> 7 then panic('result lost'); end if;
   case Tasks.WaitAnyWithTimeout([T], 0) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');
-    when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
+    when Error(const Message): if not (Message is Tasks.TaskError.Cancelled('Std.Tasks.WaitAnyWithCancellation')) then panic(Message.Message()); end if;
   end case;
   const Active: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Active)) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
  end scope; end."#;
 
@@ -75,13 +75,13 @@ begin scope
   Tasks.WaitAll([T]);
   case Tasks.WaitAnyWithTimeout([T], 0) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
   const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   discard Tasks.Cancel(Source);
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');
-    when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
+    when Error(const Message): if not (Message is Tasks.TaskError.Cancelled('Std.Tasks.WaitAnyWithCancellation')) then panic(Message.Message()); end if;
   end case;
   if Tasks.Wait(T) <> 7 then panic('result consumed'); end if;
  end scope; end."#,

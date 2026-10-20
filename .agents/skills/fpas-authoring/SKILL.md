@@ -93,7 +93,7 @@ see [Looking up declarations](../../../docs/pascal/program-structure/cli.md#look
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
 - Import `uses Std.Parse as Parse;` and call Parse.Int/Real/Bool/HexInt,
-  each taking Text: string and returning Result of (target type, string).
+  each taking Text: string and returning Result of (target type, Parse.ParseError).
   Std.Conv formats and converts typed
   values. Use try for propagation, nonbinding is for variant tests, and exhaustive
   case for payload binding, local handling, or plain defaults. Unwrap deliberately

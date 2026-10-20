@@ -3,7 +3,11 @@
 // Handbook: `docs/pascal/std/network/utf8.md`.
 unit Std.Net.Utf8;
 
-uses Std.Conv as Conv;
+// Byte offsets use the decoder's existing zero-based input convention.
+public type Utf8Error = error
+  InvalidByte(Offset: integer; Detail: string) = 'Invalid UTF-8';
+  IncompleteSequence(Offset: integer) = 'Invalid UTF-8';
+end error;
 
 // Internal bulk codec implemented by the string runtime.
 function EncodeBytes(Text: string): array of integer;
@@ -23,9 +27,9 @@ end function;
 // Parameters:
 // - `Index`: Byte offset where validation failed.
 // - `Message`: Reason the byte sequence is invalid.
-function Invalid(Index: integer; Message: string): result of (string, string);
+function Invalid(Index: integer; Message: string): result of (string, Utf8Error);
 begin
-  return Error('Invalid UTF-8 at byte ' + Conv.IntToStr(Index) + ': ' + Message);
+  return Error(Utf8Error.InvalidByte(Index, Message));
 end function;
 
 // Reports whether an integer is a UTF-8 continuation byte.
@@ -41,7 +45,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Integer byte values in `0..255`.
-public function Decode(Bytes: array of integer): result of (string, string);
+public function Decode(Bytes: array of integer): result of (string, Utf8Error);
 begin
   var Parts: array of string := [];
   var Index: integer := 0;
@@ -80,7 +84,7 @@ begin
 
       if Index + Width > Bytes.Length() then
         begin
-          return Invalid(Index, 'truncated sequence');
+          return Error(Utf8Error.IncompleteSequence(Index));
         end;
       end if;
 

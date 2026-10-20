@@ -52,7 +52,7 @@ begin
               end;
             when Error(const Message):
               begin
-                panic(Message);
+                panic(Message.Message());
               end;
           end case;
         end;

@@ -1,5 +1,6 @@
 //! Verified TLS client setup for `Std.Net.ConnectTls`.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::net::TcpStream;
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
@@ -8,7 +9,7 @@ use rustls::pki_types::ServerName;
 use rustls::{ClientConfig, ClientConnection, StreamOwned};
 use rustls_platform_verifier::BuilderVerifierExt;
 
-static CLIENT_CONFIG: OnceLock<Result<Arc<ClientConfig>, String>> = OnceLock::new();
+static CLIENT_CONFIG: OnceLock<Result<Arc<ClientConfig>, Failure>> = OnceLock::new();
 
 /// Complete a TLS handshake using the operating system trust policy.
 pub(in crate::vm::hosted::net) fn connect(
@@ -16,22 +17,30 @@ pub(in crate::vm::hosted::net) fn connect(
     server_name: &str,
     timeout: Duration,
     is_cancelled: impl Fn() -> bool,
-) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
+) -> Result<StreamOwned<ClientConnection, TcpStream>, Failure> {
     connect_with_config(socket, server_name, client_config()?, timeout, is_cancelled)
 }
 
-fn client_config() -> Result<Arc<ClientConfig>, String> {
+fn client_config() -> Result<Arc<ClientConfig>, Failure> {
     CLIENT_CONFIG.get_or_init(platform_config).clone()
 }
 
-fn platform_config() -> Result<Arc<ClientConfig>, String> {
+fn platform_config() -> Result<Arc<ClientConfig>, Failure> {
     let provider = Arc::new(rustls::crypto::ring::default_provider());
     let builder = ClientConfig::builder_with_provider(provider)
         .with_safe_default_protocol_versions()
-        .map_err(|error| format!("Could not configure TLS protocol versions: {error}"))?;
+        .map_err(|error| {
+            Failure::Tls(format!(
+                "Could not configure TLS protocol versions: {error}"
+            ))
+        })?;
     let config = builder
         .with_platform_verifier()
-        .map_err(|error| format!("Could not configure platform TLS verification: {error}"))?
+        .map_err(|error| {
+            Failure::Tls(format!(
+                "Could not configure platform TLS verification: {error}"
+            ))
+        })?
         .with_no_client_auth();
     Ok(Arc::new(config))
 }
@@ -42,11 +51,15 @@ fn connect_with_config(
     config: Arc<ClientConfig>,
     timeout: Duration,
     is_cancelled: impl Fn() -> bool,
-) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
-    let server_name = ServerName::try_from(server_name.to_owned())
-        .map_err(|error| format!("Invalid TLS server name '{server_name}': {error}"))?;
+) -> Result<StreamOwned<ClientConnection, TcpStream>, Failure> {
+    let server_name = ServerName::try_from(server_name.to_owned()).map_err(|error| {
+        Failure::argument(
+            "Host",
+            format!("Invalid TLS server name '{server_name}': {error}"),
+        )
+    })?;
     let connection = ClientConnection::new(config, server_name)
-        .map_err(|error| format!("Could not create TLS client: {error}"))?;
+        .map_err(|error| Failure::Tls(format!("Could not create TLS client: {error}")))?;
     let mut stream = StreamOwned::new(connection, socket);
     super::handshake::complete(&mut stream.sock, timeout, is_cancelled, |socket| {
         stream.conn.complete_io(socket)?;
@@ -57,6 +70,7 @@ fn connect_with_config(
 
 #[cfg(test)]
 mod tests {
+    use super::Failure;
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
     use std::sync::Arc;
@@ -165,7 +179,7 @@ mod tests {
         )
         .expect_err("hostname mismatch must fail");
 
-        assert!(error.contains("certificate not valid for name"), "{error}");
+        assert!(matches!(error, Failure::Tls(_)), "{error}");
         server.join().expect("join TLS server");
     }
 
@@ -190,7 +204,7 @@ mod tests {
         )
         .expect_err("untrusted certificate must fail");
 
-        assert!(error.contains("UnknownIssuer"), "{error}");
+        assert!(matches!(error, Failure::Tls(_)), "{error}");
         server.join().expect("join TLS server");
     }
 }

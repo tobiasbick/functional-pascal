@@ -1,5 +1,6 @@
 //! Cancellation-aware writes with explicit partial-progress reporting.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::io::Write;
 
 use super::polling::Direction;
@@ -14,7 +15,7 @@ impl NetworkConnections {
         handle: u64,
         bytes: &[u8],
         is_cancelled: impl Fn() -> bool,
-    ) -> Result<usize, String> {
+    ) -> Result<usize, Failure> {
         write_size(bytes.len())?;
         self.poll_io(handle, Direction::Write, is_cancelled, |transport| {
             transport.write(bytes)

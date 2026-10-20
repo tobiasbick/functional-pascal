@@ -1,6 +1,8 @@
 //! Hosted `Std.Server` lifetimes. See `docs/pascal/std/network/server.md`.
 
+mod failure;
 mod signals;
+use failure::Failure;
 mod state;
 mod watchdog;
 
@@ -68,7 +70,7 @@ impl Worker {
         &self,
         intrinsic: Intrinsic,
         args: &[Value],
-        _location: SourceLocation,
+        location: SourceLocation,
     ) -> Result<Option<Option<Value>>, VmError> {
         let Intrinsic::Server(op) = intrinsic else {
             return Ok(None);
@@ -80,13 +82,14 @@ impl Worker {
                 "Use a live Std.Server lifetime belonging to this VM.",
             )
         };
+        let result = |value| result(value, self, op, location);
         let value = if op == Op::CreateLifetime {
             let [Value::Integer(grace), Value::Boolean(force)] = args else {
                 return Err(fail(
                     "CreateLifetime expects GraceMillis and ForceExit".into(),
                 ));
             };
-            result(self.create_server(*grace, *force).map(Value::OpaqueHandle))
+            result(self.create_server(*grace, *force).map(Value::OpaqueHandle))?
         } else {
             let expected = if op == Op::OwnListener { 2 } else { 1 };
             if args.len() != expected {
@@ -112,13 +115,21 @@ impl Worker {
                 Op::IsReady => Value::Boolean(lifetime.ready()),
                 Op::RequestStop => Value::Boolean(lifetime.request_stop()),
                 Op::RemainingMillis => Value::Integer(lifetime.remaining()),
-                Op::FinishShutdown => result(lifetime.finish(self.task_id).map(Value::Boolean)),
+                Op::FinishShutdown => result(lifetime.finish(self.task_id).map(Value::Boolean))?,
                 Op::ShutdownErrors => Value::Array(
                     lifetime
                         .errors()
                         .into_iter()
-                        .map(|e| Value::Str(e.into()))
-                        .collect::<Vec<_>>()
+                        .map(|(id, error)| {
+                            let value = error.into_value(
+                                self.layouts.as_ref(),
+                                "Std.Net.CloseListener",
+                                &[id.to_string()],
+                                location,
+                            )?;
+                            Ok(Value::Str(value.to_string().into()))
+                        })
+                        .collect::<Result<Vec<_>, VmError>>()?
                         .into(),
                 ),
                 Op::ObserveSignals => result(
@@ -127,14 +138,13 @@ impl Worker {
                         .servers
                         .process_authority
                         .load(Ordering::Acquire)
+                        || !lifetime.ready()
                     {
-                        Err("The embedding host has not authorized process signal ownership".into())
-                    } else if !lifetime.ready() {
-                        Err("Cannot observe signals after shutdown begins".into())
+                        Err(Failure::State)
                     } else {
                         signals::observe(&lifetime).map(Value::Boolean)
                     },
-                ),
+                )?,
                 Op::OwnListener => {
                     let Value::OpaqueHandle(listener) = args[1] else {
                         return Err(fail("Expected Std.Net.Listener".into()));
@@ -149,11 +159,9 @@ impl Worker {
                         .iter()
                         .any(|(other, life)| *other != id && life.owns_listener(listener))
                     {
-                        result(Err(
-                            "Listener already belongs to another server lifetime".into()
-                        ))
+                        result(Err(Failure::State))?
                     } else {
-                        result(lifetime.own_listener(listener).map(Value::Boolean))
+                        result(lifetime.own_listener(listener).map(Value::Boolean))?
                     }
                 }
                 Op::CreateLifetime => unreachable!(),
@@ -162,9 +170,12 @@ impl Worker {
         Ok(Some(Some(value)))
     }
 
-    fn create_server(&self, grace: i64, force: bool) -> Result<u64, String> {
+    fn create_server(&self, grace: i64, force: bool) -> Result<u64, Failure> {
         if !(0..=86_400_000).contains(&grace) {
-            return Err("GraceMillis must be between 0 and 86400000".into());
+            return Err(Failure::Argument(
+                "GraceMillis",
+                "GraceMillis must be between 0 and 86400000".into(),
+            ));
         }
         if force
             && !self
@@ -173,10 +184,10 @@ impl Worker {
                 .process_authority
                 .load(Ordering::Acquire)
         {
-            return Err("The embedding host has not authorized process escalation".into());
+            return Err(Failure::State);
         }
         if self.debug_tasks && force {
-            return Err("Process escalation is unavailable in the source debugger".into());
+            return Err(Failure::State);
         }
         let mut entries = self
             .hosted
@@ -185,12 +196,13 @@ impl Worker {
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         if entries.len() >= 256 {
-            return Err("At most 256 server lifetime identities may be created per VM".into());
+            return Err(Failure::State);
         }
-        let scheduler = self.scheduler_ref().map_err(|e| e.message.clone())?;
+        let scheduler = self.scheduler_ref().map_err(Failure::Invariant)?;
         let group = scheduler
             .groups
-            .create(self.task_id, || self.hosted.cancellations.create_owned())?;
+            .create(self.task_id, || self.hosted.cancellations.create_owned())
+            .map_err(|error| Failure::Invariant(self.group_error(error)))?;
         let lifetime = Arc::new(Lifetime::new(
             group,
             self.task_id,
@@ -200,8 +212,14 @@ impl Worker {
             &self.hosted,
         ));
         if force && let Err(error) = watchdog::start(&lifetime) {
-            scheduler.groups.begin_close(group, self.task_id)?;
-            scheduler.groups.take_closed(group)?;
+            scheduler
+                .groups
+                .begin_close(group, self.task_id)
+                .map_err(|error| Failure::Invariant(self.group_error(error)))?;
+            scheduler
+                .groups
+                .take_closed(group)
+                .map_err(|error| Failure::Invariant(self.group_error(error)))?;
             return Err(error);
         }
         let id = NEXT.fetch_add(1, Ordering::Relaxed);
@@ -210,9 +228,28 @@ impl Worker {
     }
 }
 
-fn result(value: Result<Value, String>) -> Value {
+fn result(
+    value: Result<Value, Failure>,
+    worker: &Worker,
+    operation: Op,
+    location: SourceLocation,
+) -> Result<Value, VmError> {
     match value {
-        Ok(value) => Value::result_ok(value),
-        Err(error) => Value::result_error(Value::Str(error.into())),
+        Ok(value) => Ok(Value::result_ok(value)),
+        Err(error) => error_value(error, worker, operation, location),
     }
+}
+#[cold]
+#[inline(never)]
+fn error_value(
+    error: Failure,
+    worker: &Worker,
+    operation: Op,
+    location: SourceLocation,
+) -> Result<Value, VmError> {
+    Ok(Value::result_error(error.into_value(
+        worker,
+        &Intrinsic::Server(operation).debugger_name(),
+        location,
+    )?))
 }

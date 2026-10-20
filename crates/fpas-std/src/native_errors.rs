@@ -18,6 +18,12 @@ pub enum NativeErrorFamily {
     Toml,
     /// `Std.Crypto.CryptoError`.
     Crypto,
+    /// `Std.Tasks.TaskError`.
+    Task,
+    /// `Std.Net.NetError`.
+    Net,
+    /// `Std.Server.ServerError`.
+    Server,
 }
 
 /// Payload type in a native error declaration.
@@ -35,6 +41,18 @@ pub enum ErrorFieldType {
     Integer,
     /// Shared native cause.
     Host,
+    /// Network operation cause.
+    Net,
+}
+impl ErrorFieldType {
+    /// Native family carried by a typed Cause payload.
+    pub const fn cause_family(self) -> Option<NativeErrorFamily> {
+        match self {
+            Self::Host => Some(NativeErrorFamily::Host),
+            Self::Net => Some(NativeErrorFamily::Net),
+            _ => None,
+        }
+    }
 }
 /// Static variant metadata shared with semantic registration.
 pub struct ErrorVariant {
@@ -55,6 +73,9 @@ impl NativeErrorFamily {
         Self::Json,
         Self::Toml,
         Self::Crypto,
+        Self::Task,
+        Self::Net,
+        Self::Server,
     ];
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
@@ -66,12 +87,131 @@ impl NativeErrorFamily {
             Self::Json => "Std.Json.JsonError",
             Self::Toml => "Std.Toml.TomlError",
             Self::Crypto => "Std.Crypto.CryptoError",
+            Self::Task => crate::std_symbols::STD_TASK_TASK_ERROR,
+            Self::Net => crate::std_symbols::STD_NET_ERROR,
+            Self::Server => crate::std_symbols::STD_SERVER_ERROR,
         }
     }
     /// Ordered declared variants.
     pub const fn variants(self) -> &'static [ErrorVariant] {
         use ErrorFieldType::*;
         match self {
+            Self::Task => &[
+                ErrorVariant {
+                    name: "Closed",
+                    message: "Channel is closed",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "Timeout",
+                    message: "Operation timed out",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "Cancelled",
+                    message: "Operation cancelled",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "InvalidArgument",
+                    message: "Task operation failed",
+                    fields: &[("Name", String), ("Reason", String)],
+                },
+                ErrorVariant {
+                    name: "InvalidGroup",
+                    message: "Task operation failed",
+                    fields: &[("Operation", String)],
+                },
+            ],
+            Self::Net => &[
+                ErrorVariant {
+                    name: "Closed",
+                    message: "Connection is closed",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "Timeout",
+                    message: "Operation timed out",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "Cancelled",
+                    message: "Operation cancelled",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "InvalidArgument",
+                    message: "Network operation failed",
+                    fields: &[("Name", String), ("Reason", String)],
+                },
+                ErrorVariant {
+                    name: "ResolveFailed",
+                    message: "Network operation failed",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "ConnectionRefused",
+                    message: "Network operation failed",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "ConnectionLost",
+                    message: "Network operation failed",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "AddressInUse",
+                    message: "Network operation failed",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "AccessDenied",
+                    message: "Network operation failed",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "TlsFailure",
+                    message: "Network operation failed",
+                    fields: &[("Detail", String)],
+                },
+                ErrorVariant {
+                    name: "IoFailure",
+                    message: "Network operation failed",
+                    fields: &[("Cause", Host)],
+                },
+            ],
+            Self::Server => &[
+                ErrorVariant {
+                    name: "InvalidArgument",
+                    message: "Server operation failed",
+                    fields: &[("Name", String), ("Reason", String)],
+                },
+                ErrorVariant {
+                    name: "InvalidState",
+                    message: "Server operation failed",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "ListenerFailure",
+                    message: "Server operation failed",
+                    fields: &[("Cause", Net)],
+                },
+                ErrorVariant {
+                    name: "SignalFailure",
+                    message: "Server operation failed",
+                    fields: &[("Cause", Host)],
+                },
+                ErrorVariant {
+                    name: "Timeout",
+                    message: "Operation timed out",
+                    fields: &[("Operation", String)],
+                },
+                ErrorVariant {
+                    name: "IoFailure",
+                    message: "Server operation failed",
+                    fields: &[("Cause", Host)],
+                },
+            ],
             Self::Host => &[ErrorVariant {
                 name: "Failure",
                 message: "Host operation failed",

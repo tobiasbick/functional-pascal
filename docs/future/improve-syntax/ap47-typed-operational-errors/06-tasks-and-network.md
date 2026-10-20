@@ -1,6 +1,6 @@
 # AP47.6: Tasks, networking and layered consumers
 
-Status: Planned; implementation not authorized. Depends on AP47.5.
+Status: Complete. Authorized by the AP47.6 implementation request; AP47.5 dependency satisfied.
 Selected interfaces: [task/network catalog](standard-errors.md#task-and-networking-cohort)
 and [explicit mappings](standard-errors.md#source-boundary-mappings-and-migration-inventory).
 Completion: [AP47](README.md#dependencies-and-work-packages).
@@ -45,7 +45,7 @@ mechanisms retain their existing scheduling, ownership and cleanup behavior.
   fixtures in the same delivery. SDK/app boundaries that intentionally retain
   strings convert explicitly there; selected Std APIs never ship both variants.
 
-## Actual owners and planned edits
+## Implementation owners
 
 | Path | Responsibility |
 | --- | --- |
@@ -88,3 +88,39 @@ the relevant crate and full language/Std suites, affected apps/workspaces,
 generated-declaration checks, editor queries and the appropriate VM/concurrency/
 TUI/network benchmark comparisons from AP47.7. Local sockets and TLS fixtures
 need real permitted access before sandbox failures can be interpreted.
+
+
+## Delivered behavior and proof
+
+The native catalog, semantic signatures, generated APIs, cached factories and
+image admission now include TaskError, NetError and ServerError. Runtime layout
+retention covers values constructed without source constructor references,
+including ShutdownErrors rendering of retained listener failures. Server causes
+retain NetError and HostError dependencies. Invalid native task identities and
+runtime invariants remain diagnostics; TaskFailure records remain unchanged.
+
+UriError and Utf8Error are source families at their parser/decoder owners.
+Http.Types owns HttpError, re-exported by Std.Http; all selected HTTP helpers and
+callbacks retain typed causes. SDK and TUI string contracts map Message()
+explicitly. Apps, standalone examples, project examples, source fixtures and
+Rust-embedded programs are migrated together.
+
+Owner tests cover channel cancellation/timeout/closure, selection outcomes,
+large controlled waits and group ownership. Local TCP/TLS, listener state,
+actual signal-handler conflict, URI/UTF-8/SSE boundaries, portable images and
+cached/source callers exercise production paths. The subagent's missing final
+zero-chunk finding is repaired as UnexpectedEnd and verified through the real
+private Wire owner in source and portable-image routes. Review also checked the
+consumer migration and the event-collection repair in debugger protocol tests.
+
+Verification includes the workspace build, tests, warning-free all-feature
+Clippy, Rust/Pascal formatting, API regeneration reproducibility, all affected
+app/project manifests, executable handbook examples and the editor grammar.
+The final workspace run passed 4894 tests with three existing ignored tests;
+the Pascal suite passed 535 with one intentional skip and includes all 520
+executable documentation examples. All 24 app/project checks and the standalone
+network example directory passed.
+The [original 72-workload comparison](../../../bench/ap47-tasks-network.md)
+records three unchanged before/after samples per row and any isolated controls.
+AP47.7 remains planned: it owns final cross-package acceptance and registration
+of the new errors benchmark group after this original-suite comparison.

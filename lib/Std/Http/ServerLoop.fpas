@@ -7,35 +7,60 @@ uses Std.Http.Server as Server, Std.Http.Types as Types, Std.Net as Net, Std.Tas
 //
 // Parameters:
 // - `Options`: Server-loop limits to validate.
-function ValidateOptions(Options: Types.ServerOptions): result of (boolean, string);
+function ValidateOptions(Options: Types.ServerOptions): result of (boolean, Types.HttpError);
 begin
   if Options.MaxHeaderBytes < 1 then
     begin
-      return Error('HTTP server MaxHeaderBytes must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxHeaderBytes',
+          'HTTP server MaxHeaderBytes must be positive'
+        )
+      );
     end;
   end if;
 
   if Options.MaxBodyBytes < 0 then
     begin
-      return Error('HTTP server MaxBodyBytes must not be negative');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxBodyBytes',
+          'HTTP server MaxBodyBytes must not be negative'
+        )
+      );
     end;
   end if;
 
   if Options.ConnectionTimeoutMillis < 1 then
     begin
-      return Error('HTTP server ConnectionTimeoutMillis must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'ConnectionTimeoutMillis',
+          'HTTP server ConnectionTimeoutMillis must be positive'
+        )
+      );
     end;
   end if;
 
   if Options.MaxConcurrentRequests < 1 then
     begin
-      return Error('HTTP server MaxConcurrentRequests must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxConcurrentRequests',
+          'HTTP server MaxConcurrentRequests must be positive'
+        )
+      );
     end;
   end if;
 
   if Options.MaxRequests < 0 then
     begin
-      return Error('HTTP server MaxRequests must not be negative');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxRequests',
+          'HTTP server MaxRequests must not be negative'
+        )
+      );
     end;
   end if;
 
@@ -48,7 +73,7 @@ end function;
 // - `Connection`: Connection to close.
 procedure CloseQuietly(Connection: Net.Connection);
 begin
-  case Net.Close(Connection) of
+  case Net.Close(Connection).MapError(Types.HttpError.Transport) of
     when Ok(_):
       begin
       end;
@@ -87,7 +112,10 @@ function ServeConnection(
   Handler: Types.RequestHandler
 ): boolean;
 begin
-  case Net.SetTimeout(Connection, Options.ConnectionTimeoutMillis) of
+  case Net.SetTimeout(
+    Connection,
+    Options.ConnectionTimeoutMillis
+  ).MapError(Types.HttpError.Transport) of
     when Ok(_):
       begin
       end;
@@ -150,7 +178,7 @@ end function;
 // - `Listener`: Open TCP or TLS listener.
 // - `Options`: Request limits and server-loop bounds.
 // - `Handler`: Callback that maps each accepted request to a response.
-public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of (boolean, string);
+public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of (boolean, Types.HttpError);
 begin
   scope
     case ValidateOptions(Options) of
@@ -168,7 +196,7 @@ begin
         var Tasks: array of task of boolean := [];
         while HasCapacity(Options, Accepted, Tasks.Length()) do
           begin
-            case Net.Accept(Listener) of
+            case Net.Accept(Listener).MapError(Types.HttpError.Transport) of
               when Ok(const Connection):
                 begin
                   Tasks.PushInPlace(go ServeConnection(Connection, Options, Handler));

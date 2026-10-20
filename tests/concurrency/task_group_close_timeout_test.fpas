@@ -21,14 +21,14 @@ begin
       return Error('retained worker failure');
     end function
   );
-  const First: result of (array of Tasks.TaskFailure, string) := Tasks.CloseTaskGroupWithTimeout(
+  const First: result of (array of Tasks.TaskFailure, Tasks.TaskError) := Tasks.CloseTaskGroupWithTimeout(
     Group,
     2
   );
   case First of
     when Error(const Message):
       begin
-        Test.AssertEquals('Task group close timed out', Message);
+        Test.AssertTrue(Message is Tasks.TaskError.Timeout('Std.Tasks.CloseTaskGroupWithTimeout'));
       end;
     when Ok(const Reports):
       begin

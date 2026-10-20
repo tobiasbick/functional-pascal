@@ -1,18 +1,16 @@
 //! Explicit process-wide signal ownership for standalone hosts.
 
+use super::failure::Failure;
 use super::state::Lifetime;
 use std::sync::{Arc, Mutex, OnceLock, Weak};
 
 static SUBSCRIBERS: Mutex<Vec<Weak<Lifetime>>> = Mutex::new(Vec::new());
-static INSTALLED: OnceLock<Result<(), String>> = OnceLock::new();
+static INSTALLED: OnceLock<Result<(), Failure>> = OnceLock::new();
 
 /// Install the process adapter once and subscribe a lifetime without retaining it.
-pub(super) fn observe(lifetime: &Arc<Lifetime>) -> Result<bool, String> {
+pub(super) fn observe(lifetime: &Arc<Lifetime>) -> Result<bool, Failure> {
     INSTALLED
-        .get_or_init(|| {
-            ctrlc::try_set_handler(dispatch)
-                .map_err(|e| format!("Cannot own process termination signals: {e}"))
-        })
+        .get_or_init(|| ctrlc::try_set_handler(dispatch).map_err(Failure::signal))
         .clone()?;
     let mut subscribers = SUBSCRIBERS.lock().unwrap_or_else(|e| e.into_inner());
     subscribers.retain(|entry| entry.upgrade().is_some_and(|life| life.ready()));
@@ -23,7 +21,10 @@ pub(super) fn observe(lifetime: &Arc<Lifetime>) -> Result<bool, String> {
         return Ok(false);
     }
     if subscribers.len() >= 16 {
-        return Err("At most 16 server lifetimes may observe process signals".into());
+        return Err(Failure::Argument(
+            "Lifetime",
+            "At most 16 server lifetimes may observe process signals".into(),
+        ));
     }
     subscribers.push(Arc::downgrade(lifetime));
     Ok(true)

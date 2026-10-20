@@ -96,22 +96,22 @@ begin
                 begin
                   case Http.FeedSse(Decoder, Bytes) of
                     when Ok(const Events): PrintEvents(Events);
-                    when Error(const Message): panic(Message);
+                    when Error(const Message): panic(Message.Message());
                   end case;
                 end; end if;
               end;
-              when Error(const Message): panic(Message);
+              when Error(const Message): panic(Message.Message());
             end case;
           end; end while;
           case Http.FinishSse(Decoder) of
             when Ok(const Events): PrintEvents(Events);
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -174,21 +174,21 @@ begin
             panic('unexpected first body fragment');
           end; end if;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Http.ReadStream(ResponseValue.Body, 8) of
         when Ok(_): panic('truncated Content-Length was accepted');
         when Error(const Message):
         begin
-          if not ('shorter than Content-Length' in Message) then
+          if not (Message is Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadFixed')) then
           begin
-            panic(Message);
+            panic(Message.Message());
           end; end if;
         end;
       end case;
       Console.WriteLn('ok');
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#

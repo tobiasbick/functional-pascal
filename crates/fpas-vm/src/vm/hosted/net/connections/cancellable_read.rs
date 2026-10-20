@@ -1,5 +1,6 @@
 //! Cooperative reads that preserve TCP/TLS state and socket timeout configuration.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::io::Read;
 
 use super::polling::Direction;
@@ -14,7 +15,7 @@ impl NetworkConnections {
         handle: u64,
         max_bytes: i64,
         is_cancelled: impl Fn() -> bool,
-    ) -> Result<Vec<u8>, String> {
+    ) -> Result<Vec<u8>, Failure> {
         let mut bytes = vec![0; read_size(max_bytes)?];
         let count = self.poll_io(handle, Direction::Read, is_cancelled, |transport| {
             transport.read(&mut bytes)

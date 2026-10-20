@@ -10,6 +10,7 @@ use fpas_std::std_symbols as s;
 
 /// Register the Task unit's handles and task-aware intrinsic declarations.
 pub fn register_std_task(c: &mut Checker) {
+    let error = super::errors::register(c, fpas_std::native_errors::NativeErrorFamily::Task);
     let case = type_registration::register_record_type(c, s::STD_TASK_WAIT_CASE, Vec::new());
     define_func(
         c,
@@ -70,7 +71,7 @@ pub fn register_std_task(c: &mut Checker) {
         vec![p("Group", group.clone()), p("TimeoutMillis", Ty::Integer)],
         Ty::Result(
             Box::new(Ty::Array(Box::new(failure.clone()))),
-            Box::new(Ty::String),
+            Box::new(error),
         ),
     );
     define_func(

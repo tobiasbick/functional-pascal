@@ -43,14 +43,14 @@ begin
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_): Console.WriteLn('served https');
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#

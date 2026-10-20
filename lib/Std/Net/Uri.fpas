@@ -5,6 +5,13 @@ unit Std.Net.Uri;
 
 uses Std.Net.Decimal as Decimal;
 
+// Structured address failures preserve the parser's existing grammar.
+public type UriError = error
+  InvalidSyntax(Detail: string) = 'Invalid URI';
+  UnsupportedScheme(Scheme: string) = 'Invalid URI';
+  InvalidPort(Detail: string) = 'Invalid URI';
+end error;
+
 // Parsed absolute network URI used by protocol clients.
 public type Uri = record
   // Lowercase URI scheme.
@@ -21,7 +28,7 @@ end record;
 //
 // Parameters:
 // - `Scheme`: Lowercase URI scheme.
-function DefaultPort(Scheme: string): result of (integer, string);
+function DefaultPort(Scheme: string): result of (integer, UriError);
 begin
   if Scheme = 'http' then
     begin
@@ -35,14 +42,14 @@ begin
     end;
   end if;
 
-  return Error('Unsupported URI scheme: ' + Scheme);
+  return Error(UriError.UnsupportedScheme(Scheme));
 end function;
 
 // Parses and validates a decimal TCP port.
 //
 // Parameters:
 // - `Text`: Decimal port text.
-function ParsePort(Text: string): result of (integer, string);
+function ParsePort(Text: string): result of (integer, UriError);
 begin
   case Decimal.Parse(Text, 65535) of
     when Ok(const Port):
@@ -53,11 +60,11 @@ begin
           end;
         end if;
 
-        return Error('URI port must be in 1..65535');
+        return Error(UriError.InvalidPort('URI port must be in 1..65535'));
       end;
     when Error(const Message):
       begin
-        return Error('Invalid URI port: ' + Message);
+        return Error(UriError.InvalidPort('Invalid URI port: ' + Message));
       end;
   end case;
 end function;
@@ -68,17 +75,17 @@ end function;
 // - `Scheme`: Lowercase supported URI scheme.
 // - `Authority`: Host and optional port text.
 // - `Path`: Origin-form path including an optional query.
-function BuildUri(Scheme: string; Authority: string; Path: string): result of (Uri, string);
+function BuildUri(Scheme: string; Authority: string; Path: string): result of (Uri, UriError);
 begin
   if Authority = '' then
     begin
-      return Error('URI host must not be empty');
+      return Error(UriError.InvalidSyntax('URI host must not be empty'));
     end;
   end if;
 
   if ('@' in Authority) then
     begin
-      return Error('URI user information is not supported');
+      return Error(UriError.InvalidSyntax('URI user information is not supported'));
     end;
   end if;
   const SchemePort: integer := try DefaultPort(Scheme);
@@ -90,7 +97,7 @@ begin
       const ClosingBracket := Authority.IndexOf(']');
       case ClosingBracket of
         when None:
-          return Error('IPv6 URI host is missing closing bracket');
+          return Error(UriError.InvalidSyntax('IPv6 URI host is missing closing bracket'));
         when Some(const Closing):
           Host := Authority.Slice(1, Closing - 1);
           const Remainder: string := Authority.Slice(Closing + 1, Authority.Length() - Closing - 1);
@@ -98,7 +105,7 @@ begin
             begin
               if not Remainder.StartsWith(':') then
                 begin
-                  return Error('Unexpected text after IPv6 URI host');
+                  return Error(UriError.InvalidSyntax('Unexpected text after IPv6 URI host'));
                 end;
               end if;
 
@@ -123,7 +130,7 @@ begin
 
   if Host = '' then
     begin
-      return Error('URI host must not be empty');
+      return Error(UriError.InvalidSyntax('URI host must not be empty'));
     end;
   end if;
   var Port: integer := SchemePort;
@@ -140,15 +147,15 @@ end function;
 //
 // Parameters:
 // - `Text`: Absolute URI text to parse.
-public function Parse(Text: string): result of (Uri, string);
+public function Parse(Text: string): result of (Uri, UriError);
 begin
   const SchemeDelimiter := Text.IndexOf('://');
   case SchemeDelimiter of
     when None:
-      return Error('URI must be absolute and include ://');
+      return Error(UriError.InvalidSyntax('URI must be absolute and include ://'));
     when Some(const SchemeEnd):
       if SchemeEnd = 0 then
-        return Error('URI must be absolute and include ://');
+        return Error(UriError.InvalidSyntax('URI must be absolute and include ://'));
       end if;
       const Scheme: string := Text.Slice(0, SchemeEnd).ToLower();
       var Rest: string := Text.Slice(SchemeEnd + 3, Text.Length() - SchemeEnd - 3);

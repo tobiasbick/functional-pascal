@@ -111,7 +111,11 @@ public type TuiApplication = record
   ): result of (boolean, string);
   begin
     discard ApplicationState.TuiAppRequireOpen(Self.Id);
-    return Tasks.TrySend(Inbox, Message);
+    return Tasks.TrySend(Inbox, Message).MapError(
+      function(Cause: Tasks.TaskError): string begin
+        return Cause.Message();
+      end function
+    );
   end function;
 
   // Returns an explicit immutable copy of the last painted surface.

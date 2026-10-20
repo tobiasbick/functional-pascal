@@ -13,7 +13,7 @@ begin
   var Total: integer := 0;
   for Item: integer := 1 to 2 do
     discard Tasks.Select([
-      Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, string))
+      Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, Tasks.TaskError))
         begin Total := Total + Outcome.Unwrap(); end procedure),
       Tasks.TimerCase(1000, procedure() begin panic('consumer stalled'); end procedure)
     ]); end for;
@@ -55,7 +55,7 @@ begin
     return Total;
   end function);
   for Item: integer := 1 to 2 do
-    discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of (boolean, string))
+    discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of (boolean, Tasks.TaskError))
       begin discard Outcome.Unwrap(); end procedure)]); end for;
   if Tasks.Wait(Child) <> 3 then panic('delivery lost'); end if;
   if Tasks.CloseTaskGroup(Group).Length() <> 0 then panic('worker failed'); end if;

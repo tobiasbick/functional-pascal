@@ -12,16 +12,16 @@ begin
   case Tasks.ReceiveWithTimeout(Messages, 25) of
     when Ok(_): panic('empty channel did not time out');
     when Error(const Message):
-      if Message <> 'Channel receive timed out' then panic(Message); end if;
+      if not (Message is Tasks.TaskError.Timeout('Std.Tasks.ReceiveWithTimeout')) then panic(Message.Message()); end if;
   end case;
   case Tasks.Send(Messages, 1) of
     when Ok(_): begin end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
   case Tasks.SendWithTimeout(Messages, 2, 25) of
     when Ok(_): panic('full channel did not time out');
     when Error(const Message):
-      if Message <> 'Channel send timed out' then panic(Message); end if;
+      if not (Message is Tasks.TaskError.Timeout('Std.Tasks.SendWithTimeout')) then panic(Message.Message()); end if;
   end case;
 end.
 "#;

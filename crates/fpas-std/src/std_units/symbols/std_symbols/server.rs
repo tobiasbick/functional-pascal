@@ -1,5 +1,7 @@
 //! Server lifetime symbol names. See `docs/pascal/std/network/server.md`.
 
+/// Native operational error family.
+pub const STD_SERVER_ERROR: &str = "Std.Server.ServerError";
 std_symbol!(STD_SERVER_LIFETIME = "Std.Server.ServerLifetime");
 std_symbol!(STD_SERVER_CREATE_LIFETIME = "Std.Server.CreateLifetime");
 std_symbol!(STD_SERVER_GET_WORK_GROUP = "Std.Server.GetWorkGroup");
@@ -13,6 +15,7 @@ std_symbol!(STD_SERVER_OBSERVE_SIGNALS = "Std.Server.ObserveSignals");
 std_symbol!(STD_SERVER_SHUTDOWN_ERRORS = "Std.Server.ShutdownErrors");
 
 pub(in crate::std_units) const STD_SERVER_SYMBOLS: &[&str] = &[
+    STD_SERVER_ERROR,
     STD_SERVER_LIFETIME,
     STD_SERVER_CREATE_LIFETIME,
     STD_SERVER_GET_WORK_GROUP,

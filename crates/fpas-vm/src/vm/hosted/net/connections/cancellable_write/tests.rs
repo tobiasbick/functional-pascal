@@ -1,3 +1,4 @@
+use crate::vm::hosted::net::failure::Failure;
 use std::io::{self, Read};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
@@ -11,7 +12,7 @@ fn pre_cancelled_write_preserves_connection_without_sending_data() {
     let (connections, handle, mut peer) = tcp_pair();
     assert_eq!(
         connections.write_with_cancellation(handle, b"wrong", || true),
-        Err("Network write cancelled".into())
+        Err(Failure::Cancelled)
     );
     assert_eq!(
         connections.write_with_cancellation(handle, b"next", || false),
@@ -55,7 +56,7 @@ fn cancellation_interrupts_pending_write_attempts() {
             Err(io::ErrorKind::WouldBlock.into())
         },
     );
-    assert_eq!(result, Err("Network write cancelled".into()));
+    assert_eq!(result, Err(Failure::Cancelled));
     assert_eq!(attempts, 2);
 }
 
@@ -82,7 +83,7 @@ fn write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts() {
         || started.elapsed() >= Duration::from_secs(2),
         |_| Err(io::ErrorKind::WouldBlock.into()),
     );
-    assert_eq!(result, Err("Network write timed out".into()));
+    assert_eq!(result, Err(Failure::deadline("Network write timed out")));
     let transport = connection.transport.lock().expect("lock");
     assert_eq!(
         transport.write_timeout().expect("timeout"),
@@ -103,7 +104,7 @@ fn write_cancellation_interrupts_lock_contention() {
     assert_eq!(
         connections
             .write_with_cancellation(handle, b"x", || checks.fetch_add(1, Ordering::Relaxed) >= 2),
-        Err("Network write cancelled".into())
+        Err(Failure::Cancelled)
     );
 }
 
@@ -127,7 +128,7 @@ fn tcp_backpressure_can_time_out_and_cancel_without_closing() {
                 );
             }
             Err(error) => {
-                assert_eq!(error, "Network write timed out");
+                assert_eq!(error, Failure::deadline("Network write timed out"));
                 break;
             }
         }
@@ -145,7 +146,7 @@ fn tcp_backpressure_can_time_out_and_cancel_without_closing() {
                 assert!(checks.load(Ordering::Relaxed) <= 4);
             }
             Err(error) => {
-                assert_eq!(error, "Network write cancelled");
+                assert_eq!(error, Failure::Cancelled);
                 break;
             }
         }
@@ -160,12 +161,12 @@ fn empty_and_oversized_writes_keep_the_existing_limits() {
         connections.write_with_cancellation(handle, &[], || false),
         Ok(0)
     );
-    assert!(
+    assert!(matches!(
         connections
             .write_with_cancellation(handle, &vec![0; MAX_IO_BYTES + 1], || false)
-            .expect_err("size")
-            .contains("write size")
-    );
+            .expect_err("size"),
+        Failure::InvalidArgument { name: "Data", .. }
+    ));
 }
 
 #[test]
@@ -185,7 +186,7 @@ fn tls_partial_write_reports_accepted_prefix_without_duplication() {
     );
     assert_eq!(
         connections.write_with_cancellation(handle, b"ef", || true),
-        Err("Network write cancelled".into())
+        Err(Failure::Cancelled)
     );
     assert_eq!(
         connections.write_with_cancellation(handle, b"ef", || false),

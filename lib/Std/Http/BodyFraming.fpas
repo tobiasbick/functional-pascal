@@ -15,7 +15,7 @@ end record;
 //
 // Parameters:
 // - `Headers`: Parsed message fields used to determine framing.
-public function Select(Headers: array of Types.Header): result of (Framing, string);
+public function Select(Headers: array of Types.Header): result of (Framing, Types.HttpError);
 begin
   var TransferEncoding: string := '';
   var TransferEncodingCount: integer := 0;
@@ -37,7 +37,11 @@ begin
               begin
                 if (ContentLengthCount > 0) and (Length <> ContentLength) then
                   begin
-                    return Error('HTTP message contains conflicting Content-Length headers');
+                    return Error(
+                      Types.HttpError.InvalidMessage(
+                        'HTTP message contains conflicting Content-Length headers'
+                      )
+                    );
                   end;
                 end if;
 
@@ -46,7 +50,9 @@ begin
               end;
             when Error(const Message):
               begin
-                return Error('Invalid HTTP Content-Length: ' + Message);
+                return Error(
+                  Types.HttpError.InvalidMessage('Invalid HTTP Content-Length: ' + Message)
+                );
               end;
           end case;
         end;
@@ -56,13 +62,19 @@ begin
 
   if TransferEncodingCount > 1 then
     begin
-      return Error('HTTP message contains multiple Transfer-Encoding headers');
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP message contains multiple Transfer-Encoding headers')
+      );
     end;
   end if;
 
   if (TransferEncodingCount > 0) and (ContentLengthCount > 0) then
     begin
-      return Error('HTTP message contains both Transfer-Encoding and Content-Length');
+      return Error(
+        Types.HttpError.InvalidMessage(
+          'HTTP message contains both Transfer-Encoding and Content-Length'
+        )
+      );
     end;
   end if;
 
@@ -70,7 +82,11 @@ begin
     begin
       if TransferEncoding <> 'chunked' then
         begin
-          return Error('Unsupported HTTP Transfer-Encoding: ' + TransferEncoding);
+          return Error(
+            Types.HttpError.InvalidMessage(
+              'Unsupported HTTP Transfer-Encoding: ' + TransferEncoding
+            )
+          );
         end;
       end if;
 

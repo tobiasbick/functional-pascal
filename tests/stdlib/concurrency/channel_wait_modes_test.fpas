@@ -19,7 +19,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -30,7 +30,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -41,7 +41,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -52,7 +52,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -63,7 +63,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.AssertEquals('Channel receive timed out', Message);
+        Test.AssertTrue(Message is Tasks.TaskError.Timeout('Std.Tasks.ReceiveWithTimeout'));
       end;
   end case;
 
@@ -73,7 +73,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.Fail(Message);
+        Test.Fail(Message.Message());
       end;
   end case;
 
@@ -84,7 +84,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.AssertEquals('Channel send timed out', Message);
+        Test.AssertTrue(Message is Tasks.TaskError.Timeout('Std.Tasks.SendWithTimeout'));
       end;
   end case;
 end.

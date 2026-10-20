@@ -18,7 +18,10 @@ pub(super) fn register_std_net(checker: &mut Checker) {
         s::STD_TASK_CANCELLATION_TOKEN,
         Vec::new(),
     );
-    let error = Box::new(Ty::String);
+    let error = Box::new(super::errors::register(
+        checker,
+        fpas_std::native_errors::NativeErrorFamily::Net,
+    ));
     let address = type_registration::register_record_type(
         checker,
         s::STD_NET_NETWORK_ADDRESS,

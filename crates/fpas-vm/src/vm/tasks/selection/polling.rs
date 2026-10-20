@@ -81,7 +81,10 @@ impl Worker {
                     .map_err(|e| self.selection_error(e))?
                 {
                     ReceiveState::Received(value) => Some(Value::result_ok(value)),
-                    ReceiveState::Closed => Some(closed()),
+                    ReceiveState::Closed => Some(self.task_outcome_error(
+                        crate::vm::tasks::errors::TaskErrorKind::Closed,
+                        "Std.Tasks.ReceiveCase",
+                    )?),
                     _ => continue,
                 },
                 CaseSource::Send(id, value) => match self
@@ -91,7 +94,10 @@ impl Worker {
                     .map_err(|e| self.selection_error(e))?
                 {
                     SendState::Sent => Some(Value::result_ok(Value::Boolean(true))),
-                    SendState::Closed => Some(closed()),
+                    SendState::Closed => Some(self.task_outcome_error(
+                        crate::vm::tasks::errors::TaskErrorKind::Closed,
+                        "Std.Tasks.SendCase",
+                    )?),
                     _ => continue,
                 },
                 CaseSource::Task(id) => match self.scheduler_ref()?.poll_any(&[*id]) {
@@ -193,10 +199,6 @@ impl Worker {
             Ok(false)
         }
     }
-}
-
-fn closed() -> Value {
-    Value::result_error(Value::Str("Channel is closed".into()))
 }
 
 #[cfg(test)]

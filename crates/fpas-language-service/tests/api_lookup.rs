@@ -149,7 +149,7 @@ fn source_standard_library_units_are_found_without_a_project_and_hide_private_de
         .iter()
         .map(|member| member.name.as_str())
         .collect::<Vec<_>>();
-    assert_eq!(members, ["Uri", "Parse"]);
+    assert_eq!(members, ["UriError", "Uri", "Parse"]);
     assert!(catalog.lookup("Std.Net.Uri.ParsePort").matches.is_empty());
 }
 

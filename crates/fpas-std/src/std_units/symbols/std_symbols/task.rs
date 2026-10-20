@@ -1,5 +1,7 @@
 //! `Std.Tasks` symbol names and registry group.
 
+/// Native operational error family.
+pub const STD_TASK_TASK_ERROR: &str = std_task!("TaskError");
 /// Opaque group owner.
 pub const STD_TASK_TASK_GROUP: &str = std_task!("TaskGroup");
 /// Report of a grouped child's failure.
@@ -49,6 +51,7 @@ std_symbol!(STD_TASK_WAIT_ANY_WITH_TIMEOUT = std_task!("WaitAnyWithTimeout"));
 std_symbol!(STD_TASK_WAIT_ANY_WITH_CANCELLATION = std_task!("WaitAnyWithCancellation"));
 
 pub(in crate::std_units) const STD_TASK_SYMBOLS: &[&str] = &[
+    STD_TASK_TASK_ERROR,
     STD_TASK_CANCELLATION_SOURCE,
     STD_TASK_WAIT_CASE,
     STD_TASK_TASK_GROUP,

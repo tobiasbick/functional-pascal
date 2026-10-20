@@ -112,7 +112,7 @@ begin
             when Ok(_):
             begin
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
           case Http.ReadRequest(Connection, 4096, 1024) of
             when Ok(const RequestValue):
@@ -128,26 +128,26 @@ begin
                 when Ok(_):
                 begin
                 end;
-                when Error(const Message): panic(Message);
+                when Error(const Message): panic(Message.Message());
               end case;
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
           case Net.Close(Connection) of
             when Ok(_):
             begin
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_): Console.WriteLn('served');
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -188,7 +188,7 @@ begin
             when Ok(_):
             begin
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
           case Http.ReadRequest(Connection, 4096, 1024) of
             when Ok(const RequestValue):
@@ -202,31 +202,31 @@ begin
                     when Ok(_):
                     begin
                     end;
-                    when Error(const Message): panic(Message);
+                    when Error(const Message): panic(Message.Message());
                   end case;
                 end;
-                when Error(const Message): panic(Message);
+                when Error(const Message): panic(Message.Message());
               end case;
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
           case Net.Close(Connection) of
             when Ok(_):
             begin
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -270,9 +270,9 @@ begin
             when Ok(_): panic('ambiguous framing was accepted');
             when Error(const Message):
             begin
-              if not ('both Transfer-Encoding and Content-Length' in Message) then
+              if not (Message is Http.HttpError.InvalidMessage(_)) then
               begin
-                panic(Message);
+                panic(Message.Message());
               end; end if;
               var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(400, 'Bad Request');
               ResponseValue.Body := Utf8.Encode('rejected');
@@ -280,7 +280,7 @@ begin
                 when Ok(_):
                 begin
                 end;
-                when Error(const WriteMessage): panic(WriteMessage);
+                when Error(const WriteMessage): panic(WriteMessage.Message());
               end case;
             end;
           end case;
@@ -288,19 +288,19 @@ begin
             when Ok(_):
             begin
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -340,9 +340,9 @@ begin
             when Ok(_): panic('oversized request body was accepted');
             when Error(const Message):
             begin
-              if not ('MaxBodyBytes' in Message) then
+              if not (Message is Http.HttpError.LimitExceeded('Std.Http.Server.ReadRequest', _)) then
               begin
-                panic(Message);
+                panic(Message.Message());
               end; end if;
               var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(413, 'Content Too Large');
               ResponseValue.Body := Utf8.Encode('too large');
@@ -350,7 +350,7 @@ begin
                 when Ok(_):
                 begin
                 end;
-                when Error(const WriteMessage): panic(WriteMessage);
+                when Error(const WriteMessage): panic(WriteMessage.Message());
               end case;
             end;
           end case;
@@ -358,19 +358,19 @@ begin
             when Ok(_):
             begin
             end;
-            when Error(const Message): panic(Message);
+            when Error(const Message): panic(Message.Message());
           end case;
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
       case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#

@@ -22,7 +22,7 @@ end record;
 // - `Connection`: Open HTTP transport connection.
 // - `MaxHeaderBytes`: Maximum size of each response head.
 // - `MaxResponseBytes`: Maximum total response bytes.
-public function ReadFinal(Connection: Net.Connection; MaxHeaderBytes: integer; MaxResponseBytes: integer): result of (FinalHead, string);
+public function ReadFinal(Connection: Net.Connection; MaxHeaderBytes: integer; MaxResponseBytes: integer): result of (FinalHead, Types.HttpError);
 begin
   var Buffer: array of integer := [];
   var BytesReceived: integer := 0;
@@ -34,13 +34,17 @@ begin
         begin
           if Buffer.Length() >= MaxHeaderBytes then
             begin
-              return Error('HTTP response headers exceed MaxHeaderBytes');
+              return Error(
+                Types.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', MaxHeaderBytes)
+              );
             end;
           end if;
           const ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
           if ResponseAvailable < 1 then
             begin
-              return Error('HTTP response exceeds MaxResponseBytes');
+              return Error(
+                Types.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', MaxResponseBytes)
+              );
             end;
           end if;
           var ReadMaximum: integer := MaxHeaderBytes - Buffer.Length();
@@ -56,12 +60,12 @@ begin
             end;
           end if;
 
-          case Net.ReceiveBytes(Connection, ReadMaximum) of
+          case Net.ReceiveBytes(Connection, ReadMaximum).MapError(Types.HttpError.Transport) of
             when Ok(const Bytes):
               begin
                 if Bytes.Length() = 0 then
                   begin
-                    return Error('HTTP response is missing the header terminator');
+                    return Error(Types.HttpError.UnexpectedEnd('Std.Http.Head.ReadFinal'));
                   end;
                 end if;
 
@@ -80,7 +84,7 @@ begin
 
       if Separator + 4 > MaxHeaderBytes then
         begin
-          return Error('HTTP response headers exceed MaxHeaderBytes');
+          return Error(Types.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', MaxHeaderBytes));
         end;
       end if;
 
@@ -91,14 +95,20 @@ begin
               begin
                 if Head.StatusCode = 101 then
                   begin
-                    return Error('HTTP 101 Switching Protocols is not supported');
+                    return Error(
+                      Types.HttpError.InvalidMessage(
+                        'HTTP 101 Switching Protocols is not supported'
+                      )
+                    );
                   end;
                 end if;
 
                 InterimResponses := InterimResponses + 1;
                 if InterimResponses > MaxInterimResponses then
                   begin
-                    return Error('HTTP response contains too many informational responses');
+                    return Error(
+                      Types.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', MaxInterimResponses)
+                    );
                   end;
                 end if;
 
@@ -124,6 +134,6 @@ begin
     end;
   end while;
 
-  return Error('HTTP response head loop ended unexpectedly');
+  return Error(Types.HttpError.InvalidMessage('HTTP response head loop ended unexpectedly'));
 end function;
 end unit;

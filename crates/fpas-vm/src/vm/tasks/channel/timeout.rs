@@ -8,10 +8,8 @@ use super::super::super::VmError;
 use super::super::super::channels::{CANCELLATION_POLL_INTERVAL, ReceiveState, SendState};
 use super::super::super::worker::Worker;
 use super::super::TaskSuspension;
-use super::{CLOSED_ERROR, error, ok};
-
-const SEND_TIMEOUT_ERROR: &str = "Channel send timed out";
-const RECEIVE_TIMEOUT_ERROR: &str = "Channel receive timed out";
+use super::ok;
+use crate::vm::tasks::errors::TaskErrorKind;
 
 impl Worker {
     pub(super) fn timeout_channel_send(
@@ -29,17 +27,21 @@ impl Worker {
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 SendState::Sent => return Ok(ok(Value::Boolean(true))),
-                SendState::Closed => return Ok(error(CLOSED_ERROR)),
+                SendState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
+                }
                 SendState::Pending(pending) => value = pending,
                 SendState::Cancelled => {
                     unreachable!("channel timeout does not observe cancellation")
                 }
             }
             let Some(remaining) = remaining(timeout, started) else {
-                return Ok(error(SEND_TIMEOUT_ERROR));
+                return self
+                    .task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.SendWithTimeout");
             };
             if self.channel_scheduler_stopped() {
-                return Ok(error(CLOSED_ERROR));
+                return self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
             }
             match self
                 .hosted
@@ -53,7 +55,10 @@ impl Worker {
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 SendState::Sent => return Ok(ok(Value::Boolean(true))),
-                SendState::Closed => return Ok(error(CLOSED_ERROR)),
+                SendState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
+                }
                 SendState::Pending(pending) => value = pending,
                 SendState::Cancelled => {
                     unreachable!("channel timeout does not observe cancellation")
@@ -76,17 +81,22 @@ impl Worker {
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 ReceiveState::Received(value) => return Ok(ok(value)),
-                ReceiveState::Closed => return Ok(error(CLOSED_ERROR)),
+                ReceiveState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
+                }
                 ReceiveState::Pending => {}
                 ReceiveState::Cancelled => {
                     unreachable!("channel timeout does not observe cancellation")
                 }
             }
             let Some(remaining) = remaining(timeout, started) else {
-                return Ok(error(RECEIVE_TIMEOUT_ERROR));
+                return self
+                    .task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.ReceiveWithTimeout");
             };
             if self.channel_scheduler_stopped() {
-                return Ok(error(CLOSED_ERROR));
+                return self
+                    .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
             }
             match self
                 .hosted
@@ -99,7 +109,10 @@ impl Worker {
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 ReceiveState::Received(value) => return Ok(ok(value)),
-                ReceiveState::Closed => return Ok(error(CLOSED_ERROR)),
+                ReceiveState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
+                }
                 ReceiveState::Pending => {}
                 ReceiveState::Cancelled => {
                     unreachable!("channel timeout does not observe cancellation")
@@ -124,8 +137,12 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             SendState::Sent => Ok(Some(Some(ok(Value::Boolean(true))))),
-            SendState::Closed => Ok(Some(Some(error(CLOSED_ERROR)))),
-            SendState::Pending(_) if timeout.is_zero() => Ok(Some(Some(error(SEND_TIMEOUT_ERROR)))),
+            SendState::Closed => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout")?,
+            ))),
+            SendState::Pending(_) if timeout.is_zero() => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.SendWithTimeout")?,
+            ))),
             SendState::Pending(value) => {
                 self.task_suspension = Some(TaskSuspension::ChannelSendTimeout {
                     handle,
@@ -155,10 +172,12 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             ReceiveState::Received(value) => Ok(Some(Some(ok(value)))),
-            ReceiveState::Closed => Ok(Some(Some(error(CLOSED_ERROR)))),
-            ReceiveState::Pending if timeout.is_zero() => {
-                Ok(Some(Some(error(RECEIVE_TIMEOUT_ERROR))))
-            }
+            ReceiveState::Closed => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout")?,
+            ))),
+            ReceiveState::Pending if timeout.is_zero() => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.ReceiveWithTimeout")?,
+            ))),
             ReceiveState::Pending => {
                 self.task_suspension = Some(TaskSuspension::ChannelReceiveTimeout {
                     handle,
@@ -189,9 +208,11 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             SendState::Sent => Some(ok(Value::Boolean(true))),
-            SendState::Closed => Some(error(CLOSED_ERROR)),
+            SendState::Closed => {
+                Some(self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout")?)
+            }
             SendState::Pending(_) if self.channel_deadline_reached(deadline_millis) => {
-                Some(error(SEND_TIMEOUT_ERROR))
+                Some(self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.SendWithTimeout")?)
             }
             SendState::Pending(value) => {
                 self.task_suspension = Some(TaskSuspension::ChannelSendTimeout {
@@ -221,10 +242,12 @@ impl Worker {
             .map_err(|message| self.channel_runtime_error(message))?
         {
             ReceiveState::Received(value) => Some(ok(value)),
-            ReceiveState::Closed => Some(error(CLOSED_ERROR)),
-            ReceiveState::Pending if self.channel_deadline_reached(deadline_millis) => {
-                Some(error(RECEIVE_TIMEOUT_ERROR))
-            }
+            ReceiveState::Closed => Some(
+                self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout")?,
+            ),
+            ReceiveState::Pending if self.channel_deadline_reached(deadline_millis) => Some(
+                self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.ReceiveWithTimeout")?,
+            ),
             ReceiveState::Pending => {
                 self.task_suspension = Some(TaskSuspension::ChannelReceiveTimeout {
                     handle,

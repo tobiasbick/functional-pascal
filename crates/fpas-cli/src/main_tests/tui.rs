@@ -345,7 +345,9 @@ begin
       begin
         const Target: channel of integer := State.Inbox;
         Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-          return Tasks.SendWithCancellation(Target, 42, Token);
+          return Tasks.SendWithCancellation(Target, 42, Token).MapError(
+            function(Cause: Tasks.TaskError): string begin return Cause.Message(); end function
+          );
         end function);
         return State;
       end;

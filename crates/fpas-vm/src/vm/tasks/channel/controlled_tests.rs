@@ -1,12 +1,15 @@
 //! Real suspended operations observe readiness before expiry without timing races.
 
 use super::*;
+use crate::vm::tasks::errors::TaskErrorKind;
 use crate::vm::tasks::{TaskClock, TaskScheduler};
 use std::sync::Arc;
 use std::time::Duration;
 
 fn worker() -> Worker {
-    let (program, errors) = fpas_parser::parse("program T; begin end.");
+    let (program, errors) = fpas_parser::parse(
+        "program T; uses Std.Tasks as Tasks; begin const Q: channel of integer := Tasks.CreateChannel(1); discard Tasks.TryReceive(Q); end.",
+    );
     assert!(errors.is_empty());
     let mut worker = Worker::new(Arc::new(fpas_compiler::compile(&program).unwrap())).unwrap();
     worker.debug_tasks = true;
@@ -105,7 +108,17 @@ fn cancelled_operations_never_transfer_ready_data_and_validate_channel_identity(
             None,
         )
         .unwrap();
-    assert_eq!(received, Some(Some(error(RECEIVE_CANCELLED_ERROR))));
+    assert_eq!(
+        received,
+        Some(Some(
+            worker
+                .task_outcome_error(
+                    TaskErrorKind::Cancelled,
+                    "Std.Tasks.ReceiveWithCancellation"
+                )
+                .unwrap()
+        ))
+    );
     assert!(matches!(
         worker
             .hosted
@@ -125,7 +138,14 @@ fn cancelled_operations_never_transfer_ready_data_and_validate_channel_identity(
             None,
         )
         .unwrap();
-    assert_eq!(sent, Some(Some(error(SEND_CANCELLED_ERROR))));
+    assert_eq!(
+        sent,
+        Some(Some(
+            worker
+                .task_outcome_error(TaskErrorKind::Cancelled, "Std.Tasks.SendWithCancellation")
+                .unwrap()
+        ))
+    );
     assert!(matches!(
         worker
             .hosted

@@ -80,3 +80,11 @@ pub(crate) fn register_error_type(checker: &mut Checker, name: &str) {
         errors::register(checker, *family);
     }
 }
+
+/// Resolve a native family for nested builtin signatures.
+pub(crate) fn native_error_type(
+    checker: &mut Checker,
+    family: fpas_std::native_errors::NativeErrorFamily,
+) -> crate::types::Ty {
+    errors::register(checker, family)
+}

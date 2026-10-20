@@ -34,18 +34,18 @@ keeps graphics-specific API, platform and deployment questions separate.
 ## 1. Typed operational errors
 
 Status: selected native-error design; the runtime/artifact foundation and
-AP47.3's source-language slice, AP47.4's constructor values/MapError and AP47.5's
-host/parsing migration are implemented. The user selected native error declarations, automatic output,
+AP47.3's source-language slice, AP47.4's constructor values/MapError and the
+AP47.5/AP47.6 host, parsing, task and network migrations are implemented. The user selected native error declarations, automatic output,
 explicit MapError and unchanged try, then delegated the detailed planning choices.
 The [AP47 package](improve-syntax/ap47-typed-operational-errors/README.md) records
 those choices, dependencies and seven delivery work packages. Its design work is
-recorded; task/network migration and final acceptance remain open.
+recorded; final acceptance remains open.
 
-Channel closure, timeout and cancellation currently use strings inside
-`Result of (T, string)`; see [task APIs](../pascal/std/concurrency/task.md).
+Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
+see [task APIs](../pascal/std/concurrency/task.md).
 [Stdlib gap 9](stdlib-gap-review.md#direction-for-gap-9-structured-errors)
-tracks the delivered host/parsing families and remaining task/network interfaces.
-These conditions need typed decisions independent of diagnostic wording.
+tracks the delivered native and source families. Selected Std interfaces support
+typed decisions independent of diagnostic wording.
 
 ### Selected language direction
 

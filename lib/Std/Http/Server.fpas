@@ -11,14 +11,14 @@ uses
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Maximum`: Maximum request-head size in bytes.
-function ReadHead(Connection: Net.Connection; Maximum: integer): result of (array of integer, string);
+function ReadHead(Connection: Net.Connection; Maximum: integer): result of (array of integer, Types.HttpError);
 begin
   var Bytes: array of integer := [];
   while Wire.FindSeparator(Bytes, 0) < 0 do
     begin
       if Bytes.Length() >= Maximum then
         begin
-          return Error('HTTP request headers exceed MaxHeaderBytes');
+          return Error(Types.HttpError.LimitExceeded('Std.Http.Server.ReadHead', Maximum));
         end;
       end if;
       var ReadMaximum: integer := Maximum - Bytes.Length();
@@ -28,12 +28,12 @@ begin
         end;
       end if;
 
-      case Net.ReceiveBytes(Connection, ReadMaximum) of
+      case Net.ReceiveBytes(Connection, ReadMaximum).MapError(Types.HttpError.Transport) of
         when Ok(const Chunk):
           begin
             if Chunk.Length() = 0 then
               begin
-                return Error('HTTP request is missing the header terminator');
+                return Error(Types.HttpError.UnexpectedEnd('Std.Http.Server.ReadHead'));
               end;
             end if;
 
@@ -54,18 +54,24 @@ end function;
 //
 // Parameters:
 // - `Line`: Decoded request line.
-function ParseRequestLine(Line: string): result of (array of string, string);
+function ParseRequestLine(Line: string): result of (array of string, Types.HttpError);
 begin
   const Parts: array of string := Line.Split(' ');
   if Parts.Length() <> 3 then
     begin
-      return Error('HTTP request line must contain method, target, and version');
+      return Error(
+        Types.HttpError.InvalidMessage(
+          'HTTP request line must contain method, target, and version'
+        )
+      );
     end;
   end if;
 
   if not Method.IsValidToken(Parts[0]) then
     begin
-      return Error('HTTP request method must be a non-empty RFC 9110 token');
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP request method must be a non-empty RFC 9110 token')
+      );
     end;
   end if;
 
@@ -80,13 +86,19 @@ begin
     (not Fields.IsValidValue(Parts[1]))
   then
     begin
-      return Error('HTTP server supports only safe origin-form request targets');
+      return Error(
+        Types.HttpError.InvalidMessage(
+          'HTTP server supports only safe origin-form request targets'
+        )
+      );
     end;
   end if;
 
   if (Parts[2] <> 'HTTP/1.0') and (Parts[2] <> 'HTTP/1.1') then
     begin
-      return Error('HTTP server supports only HTTP/1.0 and HTTP/1.1 requests');
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP server supports only HTTP/1.0 and HTTP/1.1 requests')
+      );
     end;
   end if;
 
@@ -120,7 +132,7 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Initial`: Body bytes already read with the request head.
 // - `Length`: Declared complete body length.
-function ReadBody(Connection: Net.Connection; Initial: array of integer; Length: integer): result of (array of integer, string);
+function ReadBody(Connection: Net.Connection; Initial: array of integer; Length: integer): result of (array of integer, Types.HttpError);
 begin
   var InitialLength: integer := Initial.Length();
   if Length < InitialLength then
@@ -139,12 +151,12 @@ begin
         end;
       end if;
 
-      case Net.ReceiveBytes(Connection, ReadMaximum) of
+      case Net.ReceiveBytes(Connection, ReadMaximum).MapError(Types.HttpError.Transport) of
         when Ok(const Chunk):
           begin
             if Chunk.Length() = 0 then
               begin
-                return Error('HTTP request body is shorter than Content-Length');
+                return Error(Types.HttpError.UnexpectedEnd('Std.Http.Server.ReadBody'));
               end;
             end if;
 
@@ -168,17 +180,27 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `MaxHeaderBytes`: Maximum request-head size in bytes.
 // - `MaxBodyBytes`: Maximum request-body size in bytes.
-public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of (Types.ServerRequest, string);
+public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of (Types.ServerRequest, Types.HttpError);
 begin
   if MaxHeaderBytes < 1 then
     begin
-      return Error('HTTP server MaxHeaderBytes must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxHeaderBytes',
+          'HTTP server MaxHeaderBytes must be positive'
+        )
+      );
     end;
   end if;
 
   if MaxBodyBytes < 0 then
     begin
-      return Error('HTTP server MaxBodyBytes must not be negative');
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxBodyBytes',
+          'HTTP server MaxBodyBytes must not be negative'
+        )
+      );
     end;
   end if;
   var Bytes: array of integer := [];
@@ -195,20 +217,20 @@ begin
   const Separator: integer := Wire.FindSeparator(Bytes, 0);
   const HeadBytes: array of integer := Bytes.Slice(0, Separator);
   var HeadText: string := '';
-  case Utf8.Decode(HeadBytes) of
+  case Utf8.Decode(HeadBytes).MapError(Types.HttpError.Encoding) of
     when Ok(const Value):
       begin
         HeadText := Value;
       end;
     when Error(const Message):
       begin
-        return Error('HTTP request headers are not valid UTF-8: ' + Message);
+        return Error(Message);
       end;
   end case;
   const Lines: array of string := HeadText.Split(#13 + #10);
   if Lines.Length() = 0 then
     begin
-      return Error('HTTP request line is missing');
+      return Error(Types.HttpError.InvalidMessage('HTTP request line is missing'));
     end;
   end if;
   var RequestLine: array of string := [];
@@ -236,7 +258,9 @@ begin
 
   if (RequestLine[2] = 'HTTP/1.1') and (HeaderCount(Headers, 'Host') <> 1) then
     begin
-      return Error('HTTP/1.1 request must contain exactly one Host header');
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP/1.1 request must contain exactly one Host header')
+      );
     end;
   end if;
 
@@ -247,7 +271,9 @@ begin
           begin
             if Value.Trim() = '' then
               begin
-                return Error('HTTP/1.1 Host header must not be empty');
+                return Error(
+                  Types.HttpError.InvalidMessage('HTTP/1.1 Host header must not be empty')
+                );
               end;
             end if;
           end;
@@ -263,7 +289,9 @@ begin
       begin
         if Framing.Mode = 2 then
           begin
-            return Error('HTTP server does not support chunked request bodies');
+            return Error(
+              Types.HttpError.InvalidMessage('HTTP server does not support chunked request bodies')
+            );
           end;
         end if;
 
@@ -281,7 +309,7 @@ begin
 
   if BodyLength > MaxBodyBytes then
     begin
-      return Error('HTTP request body exceeds MaxBodyBytes');
+      return Error(Types.HttpError.LimitExceeded('Std.Http.Server.ReadRequest', MaxBodyBytes));
     end;
   end if;
   const InitialBody: array of integer := Bytes.Slice(Separator + 4, Bytes.Length() - Separator - 4);
@@ -309,11 +337,11 @@ end function;
 //
 // Parameters:
 // - `ResponseValue`: Complete response to encode.
-function EncodeResponse(ResponseValue: Types.ServerResponse): result of (array of integer, string);
+function EncodeResponse(ResponseValue: Types.ServerResponse): result of (array of integer, Types.HttpError);
 begin
   if (ResponseValue.StatusCode < 100) or (ResponseValue.StatusCode > 599) then
     begin
-      return Error('HTTP response status code must be in 100..599');
+      return Error(Types.HttpError.InvalidMessage('HTTP response status code must be in 100..599'));
     end;
   end if;
 
@@ -322,7 +350,11 @@ begin
     HttpHeaders.ContainsUnsafeText(ResponseValue.ReasonPhrase)
   then
     begin
-      return Error('HTTP response reason phrase contains an invalid control character');
+      return Error(
+        Types.HttpError.InvalidMessage(
+          'HTTP response reason phrase contains an invalid control character'
+        )
+      );
     end;
   end if;
   var Head: string := 'HTTP/1.1 ' + Conv.IntToStr(ResponseValue.StatusCode) + ' ' +
@@ -335,7 +367,7 @@ begin
       const Field: Types.Header := ResponseValue.Headers[Index];
       if (not Method.IsValidToken(Field.Name)) or (not Fields.IsValidValue(Field.Value)) then
         begin
-          return Error('HTTP response contains an invalid header');
+          return Error(Types.HttpError.InvalidMessage('HTTP response contains an invalid header'));
         end;
       end if;
 
@@ -348,7 +380,11 @@ begin
       )
       then
         begin
-          return Error('Content-Length, Transfer-Encoding, and Connection are managed by Std.Http');
+          return Error(
+            Types.HttpError.InvalidMessage(
+              'Content-Length, Transfer-Encoding, and Connection are managed by Std.Http'
+            )
+          );
         end;
       end if;
 
@@ -365,7 +401,7 @@ end function;
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `ResponseValue`: Complete response to serialize and write.
-public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): result of (boolean, string);
+public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): result of (boolean, Types.HttpError);
 begin
   case EncodeResponse(ResponseValue) of
     when Ok(const Bytes):

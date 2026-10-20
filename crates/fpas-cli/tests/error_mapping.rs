@@ -263,3 +263,120 @@ end."#,
     f.run(&["build", "app.fpasprj"], 0);
     f.run(&["run", "app.fpascp"], 0);
 }
+
+#[test]
+fn task_network_and_http_causes_survive_portable_images() {
+    let f = Fixture::new(
+        r#"program NetworkErrors;
+uses Std.Net as Net, Std.Tasks as Tasks, Std.Server as Server, Std.Errors as Errors,
+  Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Conv as Conv, Std.Test as Test;
+begin
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  case Net.Listen(Address.Host, Address.Port) of
+    when Ok(_): Test.Fail('address already in use was accepted');
+    when Error(Net.NetError.AddressInUse(Errors.HostError.Failure('Std.Net.Listen', const Resources, Some(_), Some(_), _))):
+      Test.AssertEquals(2, Resources.Length());
+      Test.AssertEquals(Address.Host, Resources[0]);
+      Test.AssertEquals(Conv.IntToStr(Address.Port), Resources[1]);
+    when Error(_): Test.Fail('address-in-use cause was lost');
+  end case;
+  const Client := Net.Connect(Address.Host, Address.Port, 2000).Unwrap();
+  const Peer := Net.Accept(Listener).Unwrap();
+  discard Net.SetTimeout(Peer, 100).Unwrap();
+  Test.AssertTrue(Net.ReceiveBytes(Peer, 1) is Error(Net.NetError.Timeout(Errors.HostError.Failure('Std.Net.ReceiveBytes', _, Some(_), Some(_), _))));
+  Test.AssertTrue(Net.SendBytes(Client, [-1]) is Error(Net.NetError.InvalidArgument('Data', _)));
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  discard Tasks.Cancel(Source);
+  Test.AssertTrue(Net.ReceiveBytesWithCancellation(Peer, 1, Token) is Error(Net.NetError.Cancelled('Std.Net.ReceiveBytesWithCancellation')));
+  Test.AssertTrue(Net.ConnectWithCancellation(Address.Host, Address.Port, 2000, Token) is Error(Net.NetError.Cancelled('Std.Net.ConnectWithCancellation')));
+  discard Net.Close(Client).Unwrap();
+  Test.AssertEquals(0, Net.ReceiveBytes(Peer, 1).Unwrap().Length());
+  discard Net.Close(Peer).Unwrap();
+  Test.AssertTrue(Net.ReceiveBytes(Peer, 1) is Error(Net.NetError.Closed('Std.Net.ReceiveBytes')));
+  discard Net.CloseListener(Listener).Unwrap();
+  Test.AssertTrue(Net.Connect(Address.Host, Address.Port, 1000) is Error(Net.NetError.ConnectionRefused(Errors.HostError.Failure('Std.Net.Connect', _, Some(_), Some(_), _))));
+  Test.AssertTrue(Http.Send(Http.Request.Get('ftp://example.test/')) is Error(Http.HttpError.Address(_)));
+  const Decoder := Http.CreateSseDecoder(100).Unwrap();
+  discard Http.FeedSse(Decoder, [100, 97, 116, 97, 58, 32, 226]).Unwrap();
+  Test.AssertTrue(Http.FinishSse(Decoder) is Error(Http.HttpError.Encoding(Utf8.Utf8Error.IncompleteSequence(6))));
+  const Life := Server.CreateLifetime(0, false).Unwrap();
+  Test.AssertTrue(Server.OwnListener(Life, Listener) is Error(Server.ServerError.ListenerFailure(Net.NetError.Closed('Std.Server.OwnListener'))));
+  Test.AssertTrue(Server.FinishShutdown(Life) is Error(Server.ServerError.InvalidState('Std.Server.FinishShutdown')));
+  discard Server.RequestStop(Life);
+  Test.AssertTrue(Server.FinishShutdown(Life) is Error(Server.ServerError.Timeout('Std.Server.FinishShutdown')));
+  discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
+  Test.AssertTrue(Server.FinishShutdown(Life).Unwrap());
+end."#,
+    );
+    fs::write(f.0.join("app.fpasprj"), "[project]\nname = 'app'\nkind = 'program'\nmain = 'main.fpas'\n[sources]\ninclude = ['*.fpas']\n").expect("manifest");
+    f.run(&["run", "app.fpasprj"], 0);
+    f.run(&["build", "app.fpasprj"], 0);
+    f.run(&["run", "app.fpascp"], 0);
+}
+
+#[test]
+fn runtime_errors_keep_layouts_without_source_constructor_references() {
+    let f = Fixture::new(
+        r#"program NativeLayouts;
+uses Std.Tasks as Tasks, Std.Net as Net, Std.Server as Server, Std.Test as Test;
+begin
+  const Queue: channel of integer := Tasks.CreateChannel(1);
+  discard Tasks.CloseChannel(Queue);
+  Test.AssertTrue(Tasks.Receive(Queue) is Error(_));
+  Test.AssertTrue(Net.Connect('localhost', 0, 10) is Error(_));
+  const Life := Server.CreateLifetime(1000, false).Unwrap();
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  discard Server.OwnListener(Life, Listener).Unwrap();
+  discard Net.CloseListener(Listener).Unwrap();
+  discard Server.RequestStop(Life);
+  discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
+  Test.AssertEquals(1, Server.ShutdownErrors(Life).Length());
+  Test.AssertTrue(Server.FinishShutdown(Life).Unwrap());
+end."#,
+    );
+    fs::write(f.0.join("app.fpasprj"), "[project]\nname = 'app'\nkind = 'program'\nmain = 'main.fpas'\n[sources]\ninclude = ['*.fpas']\n").expect("manifest");
+    f.run(&["run", "app.fpasprj"], 0);
+    f.run(&["build", "app.fpasprj"], 0);
+    f.run(&["run", "app.fpascp"], 0);
+}
+
+#[test]
+fn internal_buffered_http_parser_reports_truncated_chunked_bodies() {
+    let f = Fixture::new(
+        r#"program ChunkedEnd;
+uses Std.Http.Wire as Wire, Std.Http.Types as Types, Std.Net.Utf8 as Utf8, Std.Test as Test;
+begin
+  const CrLf := string.Chr(13) + string.Chr(10);
+  const Head := 'HTTP/1.1 200 OK' + CrLf + 'Transfer-Encoding: chunked' + CrLf + CrLf;
+  Test.AssertTrue(Wire.ParseResponse(Utf8.Encode(Head), 'GET') is
+    Error(Types.HttpError.UnexpectedEnd('Std.Http.Wire.DecodeChunked')));
+  Test.AssertTrue(Wire.ParseResponse(Utf8.Encode(Head + '1' + CrLf + 'a' + CrLf), 'GET') is
+    Error(Types.HttpError.UnexpectedEnd('Std.Http.Wire.DecodeChunked')));
+end."#,
+    );
+    // Compile the real private owners inside this fixture's project, without exporting them.
+    let library = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../lib/Std");
+    fs::create_dir_all(f.0.join("Std/Http")).expect("HTTP owners");
+    for entry in fs::read_dir(library.join("Http")).expect("HTTP sources") {
+        let entry = entry.expect("source entry");
+        if entry.path().extension().is_some_and(|ext| ext == "fpas") {
+            fs::copy(entry.path(), f.0.join("Std/Http").join(entry.file_name()))
+                .expect("HTTP owner source");
+        }
+    }
+    fs::create_dir_all(f.0.join("Std/Net")).expect("network owners");
+    for file in ["Uri.fpas", "Utf8.fpas", "Decimal.fpas"] {
+        fs::copy(
+            library.join("Net").join(file),
+            f.0.join("Std/Net").join(file),
+        )
+        .expect("network owner source");
+    }
+    fs::write(f.0.join("app.fpasprj"), "[project]\nname = 'app'\nkind = 'program'\nmain = 'main.fpas'\n[sources]\ninclude = ['main.fpas']\n").expect("manifest");
+    fs::write(f.0.join("stdlib.fpasprj"), "[project]\nname = 'http-owner-fixture'\nkind = 'library'\n[exports]\nunits = ['Std.Http.Wire', 'Std.Http.Types', 'Std.Net.Utf8']\n[sources]\ninclude = ['Std/**/*.fpas']\n").expect("owner library manifest");
+    f.run(&["run", "--std-lib", ".", "app.fpasprj"], 0);
+    f.run(&["build", "--std-lib", ".", "app.fpasprj"], 0);
+    f.run(&["run", "--std-lib", ".", "app.fpascp"], 0);
+}

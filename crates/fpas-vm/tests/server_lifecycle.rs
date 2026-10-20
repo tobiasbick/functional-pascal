@@ -102,6 +102,11 @@ fn standalone_signal_registration_is_explicit_and_idempotent() {
 }
 
 #[test]
+fn signal_adapter_conflicts_preserve_a_typed_host_cause() {
+    assert!(run_child("signal-conflict").success());
+}
+
+#[test]
 fn noncooperative_computation_is_terminated_and_parent_survives() {
     assert!(!run_child("compute").success());
 }
@@ -142,7 +147,13 @@ fn server_lifecycle_child() {
     let Ok(mode) = std::env::var("FPAS_SERVER_TEST_MODE") else {
         return;
     };
-    let body = if mode == "signals" {
+    if mode == "signal-conflict" {
+        ctrlc::try_set_handler(|| {}).expect("existing host signal owner");
+    }
+    let body = if mode == "signal-conflict" {
+        "Test.AssertTrue(Server.ObserveSignals(Life) is Error(Server.ServerError.SignalFailure(Errors.HostError.Failure('Std.Server.ObserveSignals', _, None, None, _))));
+         discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_));"
+    } else if mode == "signals" {
         "Test.AssertTrue(Server.ObserveSignals(Life).Unwrap()); Test.AssertTrue(not Server.ObserveSignals(Life).Unwrap());\n         discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_));"
     } else if mode == "clean" {
         "discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n         Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_)); Time.Sleep(200);"
@@ -151,8 +162,9 @@ fn server_lifecycle_child() {
     } else {
         "discard Server.RequestStop(Life); Console.WriteLn('output');"
     };
+    let force = mode != "signal-conflict";
     let source = format!(
-        "program Child; uses Std.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console, Std.Test as Test;\n        begin const Life: Server.ServerLifetime := Server.CreateLifetime(50, true).Unwrap(); {body} end."
+        "program Child; uses Std.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console, Std.Test as Test, Std.Errors as Errors;\n        begin const Life: Server.ServerLifetime := Server.CreateLifetime(50, {force}).Unwrap(); {body} end."
     );
     let (program, errors) = fpas_parser::parse(&source);
     assert!(errors.is_empty(), "{errors:?}");
@@ -165,7 +177,7 @@ fn server_lifecycle_child() {
         Vm::with_writer_and_args(fpas_compiler::compile(&program).unwrap(), output, vec![]);
     vm.allow_process_lifecycle();
     let result = vm.run();
-    if mode == "clean" || mode == "signals" {
+    if mode == "clean" || mode == "signals" || mode == "signal-conflict" {
         result.unwrap();
     } else {
         // A host diagnostic must not disarm the deadline before the process has exited.

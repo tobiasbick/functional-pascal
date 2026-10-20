@@ -1,11 +1,11 @@
 # AP47: Native typed operational errors
 
-Status: AP47.1-AP47.5 complete; later packages remain planned.
+Status: AP47.1-AP47.6 complete; final acceptance remains planned.
 The user selected native `error` declarations, automatic error
 output, explicit MapError and unchanged try, and delegated the remaining design
 choices. This plan records those choices. The runtime, language, constructor-value, explicit-mapping
-and host/parsing slices are delivered. Task/network migration and final acceptance
-require their own implementation authorization.
+and both Std migration cohorts are delivered. Final acceptance requires its own
+implementation authorization.
 
 Effort: large across compiler, runtime, standard library and consumers.
 Completion is tracked only in the [central plan](../README.md#package-status).
@@ -42,8 +42,8 @@ contract is [AP47.1](01-decision.md); the standard-library contract is
 - Result supplies Map, MapError, AndThen, OrElse and Unwrap. Payload enum and
   error constructors are ordinary callable values.
 - Host/parsing [Std interfaces](../../../pascal/std/README.md), including JSON/TOML
-  field helpers, return native errors. Tasks, nested selection callbacks and
-  network/HTTP interfaces retain string errors until AP47.6.
+  field helpers, return native errors. AP47.6 also delivers typed Tasks, nested
+  selection callbacks and Net/Server/Uri/Utf8/HTTP interfaces.
 - Preserve Result and Option as ordinary data, compatible-type try propagation,
   evaluation order, task ownership, cancellation priorities and runtime failures.
 - Preserve application-authored `Result of (T, string)` and other Result error
@@ -58,8 +58,8 @@ information is an ordinary leaf error, not a reporting framework.
 
 Q28/Q29 record the user's replacement direction. Q30-Q36 are concrete choices
 made under the user's delegation to prepare this implementation plan. The later
-implementation requests authorize AP47.2, AP47.3, AP47.4 and AP47.5. Later packages still
-require their own authorization.
+implementation requests authorize AP47.2 through AP47.6. AP47.7 still requires
+its own authorization.
 
 | ID | Selected decision | Contract owner | Affected work packages |
 | --- | --- | --- | --- |
@@ -76,15 +76,15 @@ require their own authorization.
 ## Dependencies and work packages
 
 The design contract, runtime/artifact foundation and source-language slice are
-complete, including constructor values, MapError and host/parsing migration.
-Task/network migration and final acceptance remain open.
+complete, including constructor values, MapError and both Std migration cohorts.
+Final acceptance remains open.
 
 - [x] [AP47.1: Language and error contract](01-decision.md)
 - [x] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)
 - [x] [AP47.3: Language, compiler and editor support](03-language-and-tooling.md)
 - [x] [AP47.4: Constructor values and MapError](04-maperror-and-constructors.md)
 - [x] [AP47.5: Host, parsing and related Std migration](05-host-and-parsing.md)
-- [ ] [AP47.6: Tasks, networking and layered consumers](06-tasks-and-network.md)
+- [x] [AP47.6: Tasks, networking and layered consumers](06-tasks-and-network.md)
 - [ ] [AP47.7: Final acceptance, documentation and performance](07-acceptance-and-performance.md)
 
 Order: AP47.1 -> AP47.2 -> AP47.3 -> AP47.4 -> AP47.5 -> AP47.6 -> AP47.7.

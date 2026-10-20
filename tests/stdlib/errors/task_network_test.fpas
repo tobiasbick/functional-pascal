@@ -1,0 +1,66 @@
+program TaskNetworkErrors;
+
+uses
+  Std.Tasks as Tasks, Std.Net as Net, Std.Server as Server, Std.Net.Uri as Uri,
+  Std.Net.Utf8 as Utf8, Std.Http as Http, Std.Test as Test;
+
+function CloseForeignGroup(Group: Tasks.TaskGroup): result of (array of Tasks.TaskFailure, Tasks.TaskError);
+begin
+  return Tasks.CloseTaskGroupWithTimeout(Group, 0);
+end function;
+
+begin
+  const Queue: channel of integer := Tasks.CreateChannel(1);
+  discard Tasks.CloseChannel(Queue);
+  Test.AssertTrue(Tasks.Receive(Queue) is Error(Tasks.TaskError.Closed('Std.Tasks.Receive')));
+  Test.AssertTrue(
+    Tasks.SendWithTimeout(Queue, 1, -1) is Error(Tasks.TaskError.InvalidArgument('TimeoutMillis', _))
+  );
+  var ClosedOutcome: option of Tasks.TaskError := None;
+  const ClosedCase: Tasks.WaitCase := Tasks.ReceiveCase(
+    Queue, procedure(Outcome: result of (integer, Tasks.TaskError)) begin
+      case Outcome of
+        when Ok(_):
+          Test.Fail('closed channel delivered a value');
+        when Error(const Cause):
+          ClosedOutcome := Some(Cause);
+      end case;
+    end procedure
+  );
+  Test.AssertEquals(0, Tasks.Select([ClosedCase]));
+  Test.AssertTrue(ClosedOutcome is Some(Tasks.TaskError.Closed('Std.Tasks.ReceiveCase')));
+  scope
+    const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+    const Foreign: task of result of (array of Tasks.TaskFailure, Tasks.TaskError) := go CloseForeignGroup(
+      Group
+    );
+    Test.AssertTrue(
+      Tasks.Wait(Foreign) is Error(Tasks.TaskError.InvalidGroup('Std.Tasks.CloseTaskGroupWithTimeout'))
+    );
+    Test.AssertFalse(Tasks.IsCancellationRequested(Tasks.GetTaskGroupToken(Group)));
+    discard Tasks.CloseTaskGroup(Group);
+  end scope;
+
+  Test.AssertTrue(
+    Net.Connect('localhost', 0, 10) is Error(Net.NetError.InvalidArgument('Port', _))
+  );
+  Test.AssertTrue(
+    Server.CreateLifetime(-1, false) is Error(Server.ServerError.InvalidArgument('GraceMillis', _))
+  );
+  Test.AssertTrue(Uri.Parse('relative') is Error(Uri.UriError.InvalidSyntax(_)));
+  Test.AssertTrue(Uri.Parse('ftp://example.test/') is Error(Uri.UriError.UnsupportedScheme('ftp')));
+  Test.AssertTrue(Uri.Parse('http://example.test:65536/') is Error(Uri.UriError.InvalidPort(_)));
+  Test.AssertTrue(Utf8.Decode([226]) is Error(Utf8.Utf8Error.IncompleteSequence(0)));
+  Test.AssertTrue(Utf8.Decode([240, 40, 140, 188]) is Error(Utf8.Utf8Error.InvalidByte(1, _)));
+  const Decoder := Http.CreateSseDecoder(100).Unwrap();
+  Test.AssertTrue(Http.FeedSse(Decoder, [100, 97, 116, 97, 58, 32, 226]) is Ok(_));
+  Test.AssertTrue(
+    Http.FinishSse(Decoder) is Error(Http.HttpError.Encoding(Utf8.Utf8Error.IncompleteSequence(6)))
+  );
+  const Complete := Http.CreateSseDecoder(100).Unwrap();
+  Test.AssertTrue(Http.FeedSse(Complete, [100, 97, 116, 97, 58, 32, 226]) is Ok(_));
+  const Events := Http.FeedSse(Complete, [130, 172, 10, 10]).Unwrap();
+  Test.AssertEquals(1, Events.Length());
+  Test.AssertEquals(string.Chr(8364), Events[0].Data);
+  Test.AssertEquals(0, Http.FinishSse(Complete).Unwrap().Length());
+end.

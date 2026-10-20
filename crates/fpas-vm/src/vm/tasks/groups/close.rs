@@ -23,10 +23,16 @@ impl Worker {
         let scheduler = Arc::clone(self.scheduler_ref()?);
         let deadline_millis =
             timeout.map(|duration| self.task_clock_ref().deadline_after(duration));
-        scheduler
-            .groups
-            .begin_close(id, self.task_id)
-            .map_err(|e| self.group_error(e))?;
+        match scheduler.groups.begin_close(id, self.task_id) {
+            Ok(()) => {}
+            Err(super::GroupCloseError::WrongOwner) if timeout.is_some() => {
+                return Ok(Some(self.task_outcome_error(
+                    crate::vm::tasks::errors::TaskErrorKind::InvalidGroup,
+                    "Std.Tasks.CloseTaskGroupWithTimeout",
+                )?));
+            }
+            Err(error) => return Err(self.group_error(error)),
+        }
         loop {
             self.check_task_cancellation()?;
             let signal = WakeSignal::new();
@@ -70,9 +76,14 @@ impl Worker {
                 report
             }));
         }
-        Ok(deadline_millis
-            .filter(|deadline| self.task_clock_ref().now_millis() >= *deadline)
-            .map(|_| Value::result_error(Value::Str("Task group close timed out".into()))))
+        if deadline_millis.is_some_and(|deadline| self.task_clock_ref().now_millis() >= deadline) {
+            Ok(Some(self.task_outcome_error(
+                crate::vm::tasks::errors::TaskErrorKind::Timeout,
+                "Std.Tasks.CloseTaskGroupWithTimeout",
+            )?))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Resume with the original deadline; timeout never takes the group's children or reports.

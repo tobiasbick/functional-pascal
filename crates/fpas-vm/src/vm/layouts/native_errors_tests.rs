@@ -126,3 +126,63 @@ fn hosted_families_require_the_exact_host_cause_contract() {
         }
     }
 }
+
+#[test]
+fn task_network_and_server_operations_require_their_native_contracts() {
+    for (source, family) in [
+        (
+            "program T; uses Std.Tasks as Tasks; begin const Q: channel of integer := Tasks.CreateChannel(1); discard Tasks.TryReceive(Q); end.",
+            "Std.Tasks.TaskError",
+        ),
+        (
+            "program T; uses Std.Net as Net; begin discard Net.Connect('localhost', 0, 1); end.",
+            "Std.Net.NetError",
+        ),
+        (
+            "program T; uses Std.Server as Server; begin discard Server.CreateLifetime(-1, false); end.",
+            "Std.Server.ServerError",
+        ),
+    ] {
+        let original = image(source);
+        RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("native contract");
+        let mut changed = original.clone();
+        let owner = changed
+            .enums
+            .iter_mut()
+            .find(|owner| changed.strings.get(owner.name) == Some(family))
+            .expect("native family");
+        owner.error = None;
+        assert!(
+            RuntimeLayouts::build(&changed, InstructionAddress::new(0)).is_err(),
+            "{family}"
+        );
+    }
+}
+
+#[test]
+fn server_listener_causes_admit_the_net_and_host_dependency_closure() {
+    let original = image(
+        "program T; uses Std.Server as Server; begin discard Server.CreateLifetime(-1, false); end.",
+    );
+    for family in ["Std.Net.NetError", "Std.Errors.HostError"] {
+        let mut changed = original.clone();
+        let owner = changed
+            .enums
+            .iter_mut()
+            .find(|owner| changed.strings.get(owner.name) == Some(family))
+            .expect("Cause dependency");
+        owner.error = None;
+        assert!(
+            RuntimeLayouts::build(&changed, InstructionAddress::new(0)).is_err(),
+            "{family}"
+        );
+    }
+    let mut changed = original;
+    let listener = changed
+        .enum_variants
+        .iter_mut()
+        .find(|variant| changed.strings.get(variant.name) == Some("ListenerFailure"))
+        .expect("listener cause");
+    listener.error.as_mut().expect("essential metadata").cause = None;
+    assert!(RuntimeLayouts::build(&changed, InstructionAddress::new(0)).is_err());
+}

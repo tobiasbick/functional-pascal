@@ -1,5 +1,6 @@
 //! Certificate-configured TLS server setup for `Std.Net.ListenTls`.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::net::TcpStream;
 use std::path::Path;
 use std::sync::Arc;
@@ -24,25 +25,45 @@ impl TlsServer {
         certificate_path: &str,
         private_key_path: &str,
         handshake_timeout_millis: i64,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, Failure> {
         let handshake_timeout = handshake_timeout(handshake_timeout_millis)?;
         let certificates = CertificateDer::pem_file_iter(Path::new(certificate_path))
-            .map_err(|error| format!("Could not open TLS certificate chain: {error}"))?
+            .map_err(|error| {
+                Failure::pem(
+                    &error,
+                    format!("Could not open TLS certificate chain: {error}"),
+                )
+            })?
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|error| format!("Could not parse TLS certificate chain: {error}"))?;
+            .map_err(|error| {
+                Failure::pem(
+                    &error,
+                    format!("Could not parse TLS certificate chain: {error}"),
+                )
+            })?;
         if certificates.is_empty() {
-            return Err("TLS certificate chain contains no certificates".to_string());
+            return Err(Failure::Tls(
+                "TLS certificate chain contains no certificates".to_string(),
+            ));
         }
-        let private_key = PrivateKeyDer::from_pem_file(Path::new(private_key_path))
-            .map_err(|error| format!("Could not load TLS private key: {error}"))?;
+        let private_key =
+            PrivateKeyDer::from_pem_file(Path::new(private_key_path)).map_err(|error| {
+                Failure::pem(&error, format!("Could not load TLS private key: {error}"))
+            })?;
         let provider = Arc::new(rustls::crypto::ring::default_provider());
         let config = ServerConfig::builder_with_provider(provider)
             .with_safe_default_protocol_versions()
-            .map_err(|error| format!("Could not configure TLS protocol versions: {error}"))?
+            .map_err(|error| {
+                Failure::Tls(format!(
+                    "Could not configure TLS protocol versions: {error}"
+                ))
+            })?
             .with_no_client_auth()
             .with_single_cert(certificates, private_key)
             .map_err(|error| {
-                format!("Could not configure TLS certificate and private key: {error}")
+                Failure::Tls(format!(
+                    "Could not configure TLS certificate and private key: {error}"
+                ))
             })?;
         Ok(Self {
             config: Arc::new(config),
@@ -55,9 +76,10 @@ impl TlsServer {
         &self,
         mut socket: TcpStream,
         is_cancelled: impl Fn() -> bool,
-    ) -> Result<StreamOwned<ServerConnection, TcpStream>, String> {
-        let mut connection = ServerConnection::new(Arc::clone(&self.config))
-            .map_err(|error| format!("Could not create TLS server connection: {error}"))?;
+    ) -> Result<StreamOwned<ServerConnection, TcpStream>, Failure> {
+        let mut connection = ServerConnection::new(Arc::clone(&self.config)).map_err(|error| {
+            Failure::Tls(format!("Could not create TLS server connection: {error}"))
+        })?;
         super::handshake::complete(
             &mut socket,
             self.handshake_timeout,
@@ -71,20 +93,19 @@ impl TlsServer {
     }
 }
 
-fn handshake_timeout(millis: i64) -> Result<Duration, String> {
+fn handshake_timeout(millis: i64) -> Result<Duration, Failure> {
     let millis = u64::try_from(millis)
         .ok()
         .filter(|millis| (1..=MAX_HANDSHAKE_TIMEOUT_MILLIS).contains(millis))
         .ok_or_else(|| {
-            format!(
-                "TLS handshake timeout must be in 1..={MAX_HANDSHAKE_TIMEOUT_MILLIS} ms, got {millis}"
-            )
+            Failure::argument("HandshakeTimeoutMillis", format!("TLS handshake timeout must be in 1..={MAX_HANDSHAKE_TIMEOUT_MILLIS} ms, got {millis}"))
         })?;
     Ok(Duration::from_millis(millis))
 }
 
 #[cfg(test)]
 mod tests {
+    use super::Failure;
     use super::TlsServer;
 
     #[test]
@@ -93,6 +114,15 @@ mod tests {
             .err()
             .expect("zero handshake timeout must fail");
 
-        assert!(error.contains("handshake timeout"), "{error}");
+        assert!(
+            matches!(
+                error,
+                Failure::InvalidArgument {
+                    name: "HandshakeTimeoutMillis",
+                    ..
+                }
+            ),
+            "{error}"
+        );
     }
 }

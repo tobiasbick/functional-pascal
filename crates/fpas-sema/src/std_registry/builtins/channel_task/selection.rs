@@ -31,9 +31,10 @@ pub(super) fn check_case(c: &mut Checker, name: &str, args: &[&Expr], span: Span
         }
         _ => unreachable!("selection constructor dispatch"),
     };
+    let error = task_error_type(c);
     let params = payload
         .into_iter()
-        .map(|ty| ParamTy::value("Outcome", Ty::Result(Box::new(ty), Box::new(Ty::String))))
+        .map(|ty| ParamTy::value("Outcome", Ty::Result(Box::new(ty), Box::new(error.clone()))))
         .collect();
     expect_type(
         c,

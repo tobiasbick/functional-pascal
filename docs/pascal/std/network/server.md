@@ -5,25 +5,40 @@ and explicitly authorized process escalation. Import with `uses Std.Server as Se
 access its declarations through `Server.Name`.
 There is no new language syntax and no change to ordinary task-group close semantics.
 
+## Operational errors
+
+`ServerError` has `InvalidArgument(Name, Reason)`, `InvalidState(Operation)`,
+`ListenerFailure(Cause: NetError)`, `SignalFailure(Cause: HostError)`,
+`Timeout(Operation)` and `IoFailure(Cause: HostError)`. Listener validation retains
+the original network family; signal installation and watchdog I/O retain their
+available native codes and details. A state/argument policy failure invents no
+host cause. FinishShutdown reports Timeout when its common budget has expired
+while required cleanup remains incomplete; completed cleanup still succeeds.
+
+ShutdownErrors keeps its existing `array of string` shape and renders retained
+listener errors only when that output snapshot is requested. TaskFailure reports,
+worker failure propagation, ownership, shutdown ordering and escalation remain
+unchanged. Match variants for decisions and call Message() for explicit output.
+
 ## Quick reference
 
 | Kind | Signature | Description |
 |------|-----------|-------------|
 | type | `ServerLifetime` | Opaque VM-local identity for one server lifetime |
-| function | `CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of (ServerLifetime, string)` | Creates a ready lifetime with its own task group and stop token |
+| function | `CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of (ServerLifetime, ServerError)` | Creates a ready lifetime with its own task group and stop token |
 | function | `GetWorkGroup(Lifetime: ServerLifetime): TaskGroup` | Group for all admitted server workers; use `Std.Tasks.StartTaskInGroup` |
 | function | `GetStopToken(Lifetime: ServerLifetime): CancellationToken` | Token notified by any lifecycle stop request |
 | function | `IsReady(Lifetime: ServerLifetime): boolean` | True before shutdown begins; false once admission is sealed |
 | function | `RequestStop(Lifetime: ServerLifetime): boolean` | Starts shutdown once; later calls return false without extending the deadline |
 | function | `RemainingMillis(Lifetime: ServerLifetime): integer` | Remaining common grace budget, rounded up to milliseconds and clamped at zero |
-| function | `OwnListener(Lifetime: ServerLifetime; Listener: Listener): result of (boolean, string)` | Transfers TCP/TLS listener cleanup to this lifetime |
-| function | `ObserveSignals(Lifetime: ServerLifetime): result of (boolean, string)` | Explicitly subscribes this lifetime to process stop signals |
+| function | `OwnListener(Lifetime: ServerLifetime; Listener: Listener): result of (boolean, ServerError)` | Transfers TCP/TLS listener cleanup to this lifetime |
+| function | `ObserveSignals(Lifetime: ServerLifetime): result of (boolean, ServerError)` | Explicitly subscribes this lifetime to process stop signals |
 | function | `ShutdownErrors(Lifetime: ServerLifetime): array of string` | Snapshot of retained listener-close failures, without consuming them |
-| function | `FinishShutdown(Lifetime: ServerLifetime): result of (boolean, string)` | Confirms caller-managed cleanup and disarms escalation after explicit group close |
+| function | `FinishShutdown(Lifetime: ServerLifetime): result of (boolean, ServerError)` | Confirms caller-managed cleanup and disarms escalation after explicit group close |
 
 Import `Std.Tasks` for the group/token types and `Std.Net` for `Listener`.
 Foreign, fabricated, or wrong-kind handles raise a runtime diagnostic. Fallible configuration,
-ownership transfer, signal installation, and incomplete shutdown return `Error(string)`.
+ownership transfer, signal installation, and incomplete shutdown return `Error(ServerError)` values.
 
 ## Ownership and stop ordering
 

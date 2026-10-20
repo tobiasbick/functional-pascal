@@ -85,10 +85,10 @@ begin
     begin
       case Http.BodyText(ResponseValue) of
         when Ok(const Text): Console.WriteLn(Text);
-        when Error(const Message): panic(Message);
+        when Error(const Message): panic(Message.Message());
       end case;
     end;
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -166,7 +166,7 @@ begin
   RequestValue.Body := Utf8.Encode('payload');
   case Http.Send(RequestValue) of
     when Ok(const ResponseValue): Console.WriteLn(ResponseValue.StatusCode);
-    when Error(const Message): panic(Message);
+    when Error(const Message): panic(Message.Message());
   end case;
 end.
 "#
@@ -224,7 +224,7 @@ begin
     when Ok(_): panic('oversized response head was accepted');
     when Error(const Message):
     begin
-      if not ('MaxHeaderBytes' in Message) then panic(Message); end if;
+      if not (Message is Http.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', 48)) then panic(Message.Message()); end if;
     end;
   end case;
   var RedirectRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{redirect_port}/');
@@ -233,7 +233,7 @@ begin
     when Ok(_): panic('redirect limit was ignored');
     when Error(const Message):
     begin
-      if not ('MaxRedirects' in Message) then panic(Message); end if;
+      if not (Message is Http.HttpError.RedirectFailure(_)) then panic(Message.Message()); end if;
     end;
   end case;
   Console.WriteLn('ok');
@@ -296,22 +296,28 @@ fn http_client_rejects_ambiguous_framing_and_excess_interim_responses() {
 
 uses Std.Console as Console, Std.Http as Http;
 
-procedure ExpectError(Url: string; Text: string);
+procedure ExpectError(Url: string; Interim: boolean);
 begin
   case Http.Send(Http.Request.Get(Url)) of
     when Ok(_): panic('hostile HTTP response was accepted');
     when Error(const Message):
     begin
-      if not (Text in Message) then panic(Message); end if;
+      if Interim then
+      begin
+        if not (Message is Http.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', 8)) then panic(Message.Message()); end if;
+      end;
+      else begin
+        if not (Message is Http.HttpError.InvalidMessage(_)) then panic(Message.Message()); end if;
+      end; end if;
     end;
   end case;
 end procedure;
 
 begin
-  ExpectError('http://127.0.0.1:{port}/framing', 'both Transfer-Encoding and Content-Length');
-  ExpectError('http://127.0.0.1:{port}/interim', 'too many informational responses');
-  ExpectError('http://127.0.0.1:{port}/header', 'header name');
-  ExpectError('http://127.0.0.1:{port}/status', 'exactly three digits');
+  ExpectError('http://127.0.0.1:{port}/framing', false);
+  ExpectError('http://127.0.0.1:{port}/interim', true);
+  ExpectError('http://127.0.0.1:{port}/header', false);
+  ExpectError('http://127.0.0.1:{port}/status', false);
   Console.WriteLn('ok');
 end.
 "#
@@ -354,7 +360,7 @@ begin
     when Ok(_): panic('overflowing HTTP chunk size was accepted');
     when Error(const Message):
     begin
-      if not ('exceeds the integer range' in Message) then panic(Message); end if;
+      if not (Message is Http.HttpError.InvalidMessage(_)) then panic(Message.Message()); end if;
     end;
   end case;
 end procedure;

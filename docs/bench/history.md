@@ -15,6 +15,24 @@ cargo bench-fpas record "vm-only note" --group vm
 Newest entries are prepended below this header.
 
 
+## 2026-10-20 — AP47.6 typed task and network errors
+
+Compared pre-migration `be512d862` with AP47.6 using all 72 original workloads:
+three baselines before implementation, then three serial final runs with the
+same IDs, arguments and groups. The [complete comparison](ap47-tasks-network.md)
+retains every row, sample, median and measurement boundary. Sums of row medians
+were 11678 → 10683 ms for VM, 2311 → 2341 ms for concurrency, 3671 → 3461 ms
+for tooling and 3406 → 3203 ms for startup. These cloud samples support the
+regression check without establishing a general speedup.
+
+No VM row crossed the selected gate. Four full-suite outliers received eight
+alternating isolated pairs each. Failure capture was 316 → 307 ms (-2.85%),
+Mandelbrot painting 1247 → 1159.5 ms (-7.02%), task spawning 736 → 730.5 ms
+(-0.75%) and long-line navigation 39.5 → 40 ms (+1.27%). The increases did not
+repeat. All result checks passed; no builds/tests overlapped measured rows.
+The suite still has its original 72 rows; the planned AP47.7 package owns the
+new errors group and its fresh baseline.
+
 ## 2026-10-20 — AP47.5 typed host and parsing errors
 
 Compared the unchanged pre-migration source archive (`a63232a0f`) with the final

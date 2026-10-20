@@ -9,12 +9,12 @@ begin
   discard Tasks.Send(Words, 'retained');
   var Seen: integer := 0;
   const First: Tasks.WaitCase := Tasks.ReceiveCase(
-    Numbers, procedure(Outcome: result of (integer, string)) begin
+    Numbers, procedure(Outcome: result of (integer, Tasks.TaskError)) begin
       Seen := Outcome.Unwrap();
     end procedure
   );
   const Second: Tasks.WaitCase := Tasks.ReceiveCase(
-    Words, procedure(Outcome: result of (string, string)) begin
+    Words, procedure(Outcome: result of (string, Tasks.TaskError)) begin
       panic('losing callback ran');
     end procedure
   );

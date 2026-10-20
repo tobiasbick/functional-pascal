@@ -56,12 +56,12 @@ end procedure;
 //
 // Parameters:
 // - `Decoder`: Decoder handle to resolve.
-function DecoderIndex(Decoder: Types.SseDecoder): result of (integer, string);
+function DecoderIndex(Decoder: Types.SseDecoder): result of (integer, Types.HttpError);
 begin
   const Slot: integer := Handles.SseDecoderSlot(Decoder);
   if (Slot < 1) or (not HasState(Slot)) then
     begin
-      return Error('SSE decoder handle is invalid');
+      return Error(Types.HttpError.InvalidArgument('Decoder', 'SSE decoder handle is invalid'));
     end;
   end if;
 
@@ -148,7 +148,7 @@ end function;
 //
 // Parameters:
 // - `State`: Decoder state updated while parsing buffered lines.
-function Process(State: DecoderState; Final: boolean): result of (DecoderProcess, string);
+function Process(State: DecoderState; Final: boolean): result of (DecoderProcess, Types.HttpError);
 begin
   var LocalState: DecoderState := State;
   var Events: array of Types.SseEvent := [];
@@ -159,7 +159,7 @@ begin
       LocalState.EventBytes := LocalState.EventBytes + EndValue[0] + EndValue[1];
       if LocalState.EventBytes > LocalState.Maximum then
         begin
-          return Error('SSE event exceeds MaxEventBytes');
+          return Error(Types.HttpError.LimitExceeded('Std.Http.Sse.Process', LocalState.Maximum));
         end;
       end if;
 
@@ -167,7 +167,7 @@ begin
         EndValue[0] + EndValue[1], LocalState.Buffer.Length() - EndValue[0] -
         EndValue[1]
       );
-      case Utf8.Decode(LineBytes) of
+      case Utf8.Decode(LineBytes).MapError(Types.HttpError.Encoding) of
         when Ok(const Line):
           begin
             if Line = '' then
@@ -212,7 +212,7 @@ begin
           end;
         when Error(const Message):
           begin
-            return Error('SSE line is not valid UTF-8: ' + Message);
+            return Error(Message);
           end;
       end case;
 
@@ -222,7 +222,7 @@ begin
 
   if LocalState.EventBytes + LocalState.Buffer.Length() > LocalState.Maximum then
     begin
-      return Error('SSE event exceeds MaxEventBytes');
+      return Error(Types.HttpError.LimitExceeded('Std.Http.Sse.Process', LocalState.Maximum));
     end;
   end if;
 
@@ -256,11 +256,13 @@ end function;
 //
 // Parameters:
 // - `MaxEventBytes`: Maximum buffered bytes for one incomplete event.
-public function Create(MaxEventBytes: integer): result of (Types.SseDecoder, string);
+public function Create(MaxEventBytes: integer): result of (Types.SseDecoder, Types.HttpError);
 begin
   if MaxEventBytes < 1 then
     begin
-      return Error('SSE MaxEventBytes must be positive');
+      return Error(
+        Types.HttpError.InvalidArgument('MaxEventBytes', 'SSE MaxEventBytes must be positive')
+      );
     end;
   end if;
   const State: DecoderState := DecoderState(
@@ -281,7 +283,7 @@ end function;
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder.
 // - `Bytes`: Next response-body byte fragment.
-public function Feed(Decoder: Types.SseDecoder; Bytes: array of integer): result of (array of Types.SseEvent, string);
+public function Feed(Decoder: Types.SseDecoder; Bytes: array of integer): result of (array of Types.SseEvent, Types.HttpError);
 begin
   case DecoderIndex(Decoder) of
     when Ok(const Index):
@@ -289,7 +291,9 @@ begin
         var State: DecoderState := LoadState(Index);
         if State.Finished then
           begin
-            return Error('SSE decoder is already finished');
+            return Error(
+              Types.HttpError.InvalidArgument('Decoder', 'SSE decoder is already finished')
+            );
           end;
         end if;
         var Events: array of Types.SseEvent := [];
@@ -347,7 +351,7 @@ end function;
 //
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder to finish.
-public function Finish(Decoder: Types.SseDecoder): result of (array of Types.SseEvent, string);
+public function Finish(Decoder: Types.SseDecoder): result of (array of Types.SseEvent, Types.HttpError);
 begin
   case DecoderIndex(Decoder) of
     when Ok(const Index):
@@ -355,7 +359,9 @@ begin
         const State: DecoderState := LoadState(Index);
         if State.Finished then
           begin
-            return Error('SSE decoder is already finished');
+            return Error(
+              Types.HttpError.InvalidArgument('Decoder', 'SSE decoder is already finished')
+            );
           end;
         end if;
 

@@ -2,6 +2,7 @@
 //!
 //! Documentation: `docs/pascal/std/network/net.md`.
 
+use crate::vm::hosted::net::failure::Failure;
 use std::net::ToSocketAddrs;
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
@@ -31,15 +32,19 @@ impl NetworkConnections {
         timeout_millis: i64,
         mode: ConnectMode,
         is_cancelled: impl Fn() -> bool,
-    ) -> Result<u64, String> {
+    ) -> Result<u64, Failure> {
         let port = connect_port(port)?;
         let deadline = Instant::now() + timeout(timeout_millis, false)?;
         let cancelled = || is_cancelled() || self.shutdown.load(Ordering::Acquire);
         remaining(deadline, cancelled)?;
         let addresses = (host, port).to_socket_addrs();
         remaining(deadline, cancelled)?;
-        let addresses =
-            addresses.map_err(|error| format!("Could not resolve TCP host '{host}': {error}"))?;
+        let addresses = addresses.map_err(|error| {
+            Failure::resolve(
+                &error,
+                format!("Could not resolve TCP host '{host}': {error}"),
+            )
+        })?;
         let mut last_error = None;
         for address in addresses {
             let connected = tcp::connect(address, deadline, cancelled);
@@ -51,9 +56,12 @@ impl NetworkConnections {
                     continue;
                 }
             };
-            stream
-                .set_nodelay(true)
-                .map_err(|error| format!("Could not configure TCP connection: {error}"))?;
+            stream.set_nodelay(true).map_err(|error| {
+                Failure::io(
+                    &error,
+                    format!("Could not configure TCP connection: {error}"),
+                )
+            })?;
             let transport = match mode {
                 ConnectMode::Tcp => Transport::tcp(stream),
                 ConnectMode::Tls => {
@@ -66,21 +74,20 @@ impl NetworkConnections {
             remaining(deadline, cancelled)?;
             return self.insert(transport);
         }
-        Err(last_error.map_or_else(
-            || format!("TCP host '{host}' resolved to no addresses"),
-            |error| format!("Could not connect to {host}:{port}: {error}"),
-        ))
+        Err(last_error.unwrap_or_else(|| {
+            Failure::no_addresses(format!("TCP host '{host}' resolved to no addresses"))
+        }))
     }
 }
 
-fn remaining(deadline: Instant, is_cancelled: impl Fn() -> bool) -> Result<Duration, String> {
+fn remaining(deadline: Instant, is_cancelled: impl Fn() -> bool) -> Result<Duration, Failure> {
     if is_cancelled() {
-        return Err("Network connect cancelled".to_string());
+        return Err(Failure::Cancelled);
     }
     deadline
         .checked_duration_since(Instant::now())
         .filter(|duration| !duration.is_zero())
-        .ok_or_else(|| "Network connect timed out".to_string())
+        .ok_or_else(|| Failure::deadline("Network connect timed out"))
 }
 
 #[cfg(test)]

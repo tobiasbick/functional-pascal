@@ -11,7 +11,9 @@ pub(super) fn register(checker: &mut Checker) {
     let group = register_record_type(checker, s::STD_TASK_TASK_GROUP, vec![]);
     let token = register_record_type(checker, s::STD_TASK_CANCELLATION_TOKEN, vec![]);
     let listener = register_record_type(checker, s::STD_NET_LISTENER, vec![]);
-    let result = |ty| Ty::Result(Box::new(ty), Box::new(Ty::String));
+    let error =
+        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Server);
+    let result = |ty| Ty::Result(Box::new(ty), Box::new(error.clone()));
     define_func(
         checker,
         s::STD_SERVER_CREATE_LIFETIME,

@@ -7,7 +7,7 @@ begin
   const Messages: channel of string := Tasks.CreateChannel(4);
   discard Tasks.Send(Messages, 'hello from the queue');
   const Message: Tasks.WaitCase := Tasks.ReceiveCase(
-    Messages, procedure(Outcome: result of (string, string)) begin
+    Messages, procedure(Outcome: result of (string, Tasks.TaskError)) begin
       case Outcome of
         when Ok(const Text):
           begin

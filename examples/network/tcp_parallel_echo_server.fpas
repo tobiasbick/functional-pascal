@@ -5,12 +5,21 @@ uses
   Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Net as Net, Std.Tasks as Tasks,
   Std.Time as Time, Std.Server as Server, Std.Parse as Parse;
 
-function Echo(Client: Net.Connection; Token: Tasks.CancellationToken): result of (boolean, string);
+type EchoError = error
+  Transport(Cause: Net.NetError);
+  WriteStopped = 'TCP write made no progress';
+end error;
+
+function Echo(Client: Net.Connection; Token: Tasks.CancellationToken): result of (boolean, EchoError);
 begin
-  const Configured: boolean := try Net.SetTimeout(Client, 5000);
+  const Configured: boolean := try Net.SetTimeout(Client, 5000).MapError(EchoError.Transport);
   while not Tasks.IsCancellationRequested(Token) do
     begin
-      const Bytes: array of integer := try Net.ReceiveBytesWithCancellation(Client, 4096, Token);
+      const Bytes: array of integer := try Net.ReceiveBytesWithCancellation(
+        Client,
+        4096,
+        Token
+      ).MapError(EchoError.Transport);
       if Bytes.Length() = 0 then
         begin
           return Ok(true);
@@ -24,10 +33,10 @@ begin
               Offset, Bytes.Length() -
               Offset
             ), Token
-          );
+          ).MapError(EchoError.Transport);
           if Count <= 0 then
             begin
-              return Error('TCP write made no progress');
+              return Error(EchoError.WriteStopped);
             end;
           end if;
 
@@ -73,16 +82,16 @@ begin
   const Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      const ConnectionTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(
-        Workers, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+      const ConnectionTask: task of result of (boolean, EchoError) := Tasks.StartTaskInGroup(
+        Workers, function(Token: Tasks.CancellationToken): result of (boolean, EchoError) begin
           while not Tasks.IsCancellationRequested(Token) do
             begin
-              case Net.AcceptWithCancellation(ListenerValue, Token) of
+              case Net.AcceptWithCancellation(ListenerValue, Token).MapError(EchoError.Transport) of
                 when Ok(const Client):
                   begin
-                    const Outcome: result of (boolean, string) := Echo(Client, Token);
+                    const Outcome: result of (boolean, EchoError) := Echo(Client, Token);
                     // Close even on read/write failure. One failed client does not stop admission.
-                    const Closed: boolean := try Net.Close(Client);
+                    const Closed: boolean := try Net.Close(Client).MapError(EchoError.Transport);
                     case Outcome of
                       when Error(const Message):
                         begin

@@ -1,13 +1,15 @@
 //! Pending operations and control precedence without scheduling-dependent readiness.
 
-use super::{CANCELLED, TIMED_OUT, control_error};
+use crate::vm::tasks::errors::TaskErrorKind;
 use crate::vm::{TaskResultPoll, tasks::TaskScheduler, worker::Worker};
 use fpas_bytecode::{TaskIntrinsic, Value};
 use std::sync::Arc;
 use std::time::Duration;
 
 fn worker() -> Worker {
-    let (program, errors) = fpas_parser::parse("program T; begin end.");
+    let (program, errors) = fpas_parser::parse(
+        "program T; uses Std.Tasks as Tasks; begin const Q: channel of integer := Tasks.CreateChannel(1); discard Tasks.TryReceive(Q); end.",
+    );
     assert!(errors.is_empty());
     let mut worker =
         Worker::new(Arc::new(fpas_compiler::compile(&program).expect("compile"))).expect("worker");
@@ -30,7 +32,14 @@ fn pending_timeout_returns_without_completing_or_consuming_task() {
             None,
         )
         .expect("wait");
-    assert_eq!(result, Some(Some(control_error(TIMED_OUT))));
+    assert_eq!(
+        result,
+        Some(Some(
+            worker
+                .task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.WaitAnyWithTimeout")
+                .unwrap()
+        ))
+    );
     assert!(matches!(
         worker.scheduler.as_ref().expect("scheduler").poll_result(1),
         TaskResultPoll::Pending
@@ -56,7 +65,17 @@ fn cancellation_is_observed_without_any_task_completion() {
         None,
     );
     canceller.join().expect("join");
-    assert_eq!(result.expect("wait"), Some(Some(control_error(CANCELLED))));
+    assert_eq!(
+        result.expect("wait"),
+        Some(Some(
+            worker
+                .task_outcome_error(
+                    TaskErrorKind::Cancelled,
+                    "Std.Tasks.WaitAnyWithCancellation"
+                )
+                .unwrap()
+        ))
+    );
     assert!(matches!(
         worker.scheduler.as_ref().expect("scheduler").poll_result(1),
         TaskResultPoll::Pending
@@ -123,7 +142,14 @@ fn failure_precedes_cancel_and_cancel_precedes_ready_without_consumption() {
         worker
             .controlled_wait_result(&[1], Some(token), true)
             .unwrap(),
-        Some(control_error(CANCELLED))
+        Some(
+            worker
+                .task_outcome_error(
+                    TaskErrorKind::Cancelled,
+                    "Std.Tasks.WaitAnyWithCancellation"
+                )
+                .unwrap()
+        )
     );
     assert!(matches!(
         scheduler.poll_result(1),
@@ -169,4 +195,23 @@ fn invalid_identity_and_shutdown_failure_are_not_control_errors() {
             .code,
         fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN
     );
+}
+
+#[test]
+fn controlled_waits_preserve_the_existing_large_task_list_bound() {
+    let mut worker = worker();
+    worker
+        .scheduler
+        .as_ref()
+        .expect("scheduler")
+        .store_result(1, Value::Integer(42));
+    let tasks = Value::Array(vec![Value::Task(1); 1025].into());
+    let result = worker
+        .controlled_wait_any(
+            TaskIntrinsic::WaitAnyWithTimeout,
+            &[tasks, Value::Integer(0)],
+            None,
+        )
+        .expect("valid list above the selection-case bound");
+    assert_eq!(result, Some(Some(Value::result_ok(Value::Integer(0)))));
 }

@@ -37,7 +37,7 @@ begin
                     discard Tasks.Select([
                       Tasks.SendCase(
                         Output, Producer * 32 + Item,
-                        procedure(Outcome: result of (boolean, string)) begin
+                        procedure(Outcome: result of (boolean, Tasks.TaskError)) begin
                           Test.AssertTrue(Outcome.Unwrap());
                         end procedure
                       ),
@@ -62,7 +62,7 @@ begin
           Test.AssertEquals(
             0, Tasks.Select([
               Tasks.ReceiveCase(
-                Output, procedure(Outcome: result of (integer, string)) begin
+                Output, procedure(Outcome: result of (integer, Tasks.TaskError)) begin
                   const Number: integer := Outcome.Unwrap();
                   Test.AssertTrue((Number >= 0) and (Number < 256));
                   Seen[Number] := Seen[Number] + 1;

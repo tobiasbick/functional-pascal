@@ -2,19 +2,17 @@ use super::*;
 
 #[test]
 fn controlled_wait_any_rejects_negative_timeout() {
-    let error = run_program(
+    assert_succeeds(
         r#"program BadTimeout;
-uses Std.Tasks as Tasks;
+uses Std.Tasks as Tasks, Std.Test as Test;
 procedure Work();
 begin
 end procedure;
 begin scope
   const T: task := go Work();
-  discard Tasks.WaitAnyWithTimeout([T], -1);
+  Test.AssertTrue(Tasks.WaitAnyWithTimeout([T], -1) is Error(Tasks.TaskError.InvalidArgument('TimeoutMillis', _)));
  end scope; end."#,
-    )
-    .expect_err("negative timeout");
-    assert!(error.message.contains("non-negative timeout"));
+    );
 }
 
 #[test]

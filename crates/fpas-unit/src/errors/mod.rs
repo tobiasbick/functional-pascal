@@ -2,13 +2,14 @@
 //! Documentation: `docs/pascal/program-structure/compiled-programs.md`.
 
 mod budget;
+mod requests;
 mod substitution;
 mod validation;
 
 pub use budget::ErrorInstantiationBudget;
 
 use crate::interface::TypeConstraint;
-use fpas_bytecode::{ErrorInstanceKey, TypeIdentity};
+pub use fpas_bytecode::{ErrorInstanceKey, IdentityParameter, NominalKind, TypeIdentity};
 
 /// Complete error declaration retained for source-less instantiation.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -84,7 +85,7 @@ pub struct ErrorRoutineConstructors {
 #[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ErrorInterface {
-    /// Public declarations, sorted by canonical identity.
+    /// Public and hidden constructor-required declarations, sorted by canonical identity.
     pub schemas: Vec<ErrorSchema>,
     /// Public routine requirements, sorted by routine identity.
     pub routines: Vec<ErrorRoutineConstructors>,

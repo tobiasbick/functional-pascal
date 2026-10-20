@@ -58,16 +58,19 @@ fn sample_interface() -> UnitInterface {
                 name: "State".to_string(),
                 qualified_name: "Demo.Api.State".to_string(),
                 ty: InterfaceType::Enum(Box::new(EnumType {
+                    is_error: false,
                     type_parameters: Vec::new(),
                     type_arguments: Vec::new(),
                     name: "Demo.Api.State".to_string(),
                     variants: vec![
                         EnumVariant {
+                            message: None,
                             name: "Idle".to_string(),
                             fields: Vec::new(),
                             backing_value: Some(0),
                         },
                         EnumVariant {
+                            message: None,
                             name: "Failed".to_string(),
                             fields: vec![FieldType {
                                 name: "Message".to_string(),

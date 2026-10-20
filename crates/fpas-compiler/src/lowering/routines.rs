@@ -51,7 +51,7 @@ impl<'a> Routine<'a> {
         }
     }
 
-    fn type_params(&self) -> Vec<fpas_parser::TypeParam> {
+    pub(super) fn type_params(&self) -> Vec<fpas_parser::TypeParam> {
         let routine_parameters = match self {
             Self::Function(function) | Self::RecordFunction(_, function) => &function.type_params,
             Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => {
@@ -104,7 +104,7 @@ impl<'a> Routine<'a> {
         }
     }
 
-    fn span(&self) -> fpas_lexer::Span {
+    pub(super) fn span(&self) -> fpas_lexer::Span {
         match self {
             Self::Function(function) | Self::RecordFunction(_, function) => function.span,
             Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => procedure.span,

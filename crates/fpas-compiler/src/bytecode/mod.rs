@@ -21,8 +21,40 @@ use self::metadata::MetadataBuilder;
 
 pub(crate) use self::superinstructions::integer_immediate;
 
+#[cfg(test)]
 pub(super) fn compile_program(
+    program: Program,
+) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
+    compile_with_errors(program, &crate::errors::ErrorMetadata::default())
+}
+
+pub(super) fn compile_for_object(
     mut program: Program,
+    errors: &crate::errors::ErrorMetadata,
+) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
+    for function in &mut program.functions {
+        if errors.displays.contains_key(&function.id) {
+            function.name = if let Some(request) = errors.factories.get(&function.id) {
+                fpas_unit::errors::constructor_symbol(request).map_err(compile_error_owned)?
+            } else {
+                format!(
+                    "{}.$error.bound.{}",
+                    errors.owner.to_ascii_lowercase(),
+                    function.id.get()
+                )
+            };
+        }
+    }
+    compile_with_errors(program, errors)
+}
+
+fn compile_error_owned(message: String) -> CompileError {
+    compile_error(&message)
+}
+
+pub(super) fn compile_with_errors(
+    mut program: Program,
+    errors: &crate::errors::ErrorMetadata,
 ) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
     program
         .validate()
@@ -173,17 +205,24 @@ pub(super) fn compile_program(
     let mut enum_variants = Vec::new();
     for layout in &program.enum_layouts {
         enums.push(fpas_bytecode::EnumLayout {
-            error: None,
-            name: metadata.intern_string(&layout.name)?,
+            error: errors.concrete(layout.id),
+            name: metadata.intern_string(
+                &errors
+                    .layouts
+                    .get(&layout.id)
+                    .map(|enumeration| errors.display_name(enumeration))
+                    .unwrap_or_else(|| layout.name.clone()),
+            )?,
         });
-        for variant in &layout.variants {
+        for (index, variant) in layout.variants.iter().enumerate() {
             let fields = variant
                 .field_names
                 .iter()
                 .map(|name| metadata.intern_string(name))
                 .collect::<Result<Vec<_>, _>>()?;
             enum_variants.push(fpas_bytecode::EnumVariant {
-                error: None,
+                error: errors
+                    .variant(layout.id, index, &mut |text| metadata.intern_string(text))?,
                 owner: fpas_bytecode::EnumTypeId::new(
                     u16::try_from(layout.id.get())
                         .map_err(|_| compile_error("enum layout exceeds u16"))?,

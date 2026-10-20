@@ -69,6 +69,7 @@ impl Checker {
                     }
 
                     variants.push(EnumVariantTy {
+                        message: member.message.clone(),
                         name: member.name.clone(),
                         fields,
                         backing_value,
@@ -79,6 +80,7 @@ impl Checker {
             });
 
         let ty = Ty::Enum(Arc::new(EnumTy {
+            is_error: enum_ty.is_error,
             name: td.name.clone(),
             type_params: Self::resolve_type_params(&td.type_params),
             type_args: Vec::new(),
@@ -114,6 +116,9 @@ impl Checker {
 
     // One integer identifies each simple variant; data variants use their tags instead.
     fn enum_backing_values(&mut self, enum_name: &str, enum_ty: &EnumType) -> Vec<Option<i64>> {
+        if enum_ty.is_error {
+            return vec![None; enum_ty.members.len()];
+        }
         if enum_ty
             .members
             .iter()

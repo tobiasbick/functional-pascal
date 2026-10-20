@@ -138,7 +138,11 @@ pub(super) fn declaration_symbol(
                 | TypeBody::Distinct(_)
                 | TypeBody::Subrange { .. } => Some(value.name.clone()),
             },
-            format!("type {}", value.name),
+            if matches!(&value.body, TypeBody::Enum(body) if body.is_error) {
+                format!("type {} = error", value.name)
+            } else {
+                format!("type {}", value.name)
+            },
         ),
         Decl::Function(value) => (
             &value.name,

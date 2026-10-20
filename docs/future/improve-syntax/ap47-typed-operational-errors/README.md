@@ -1,9 +1,10 @@
 # AP47: Native typed operational errors
 
-Status: AP47.2 complete; later packages planned.
+Status: AP47.1-AP47.3 complete; later packages remain planned.
 The user selected native `error` declarations, automatic error
 output, explicit MapError and unchanged try, and delegated the remaining design
-choices. This plan records those choices. Only AP47.2 is authorized for implementation.
+choices. This plan records those choices. The runtime and language slices are
+delivered; later packages require their own implementation authorization.
 
 Effort: large across compiler, runtime, standard library and consumers.
 Completion is tracked only in the [central plan](../README.md#package-status).
@@ -30,8 +31,8 @@ contract is [AP47.1](01-decision.md); the standard-library contract is
 
 ## Current checkout and preserved behavior
 
-- Error is currently a Result constructor; `type T = error ... end error` and
-  the built-in Error constraint are not implemented.
+- Error remains a Result constructor. AP47.3 adds contextual native error
+  declarations, the Error constraint, typed construction/matching and Message().
 - Enum layouts and shared enum values already provide nominal variants and
   payload storage. Runtime values have a stack-safe display implementation.
 - AP47.2 supplies essential native-error metadata, typed causes, automatic
@@ -53,7 +54,8 @@ information is an ordinary leaf error, not a reporting framework.
 
 Q28/Q29 record the user's replacement direction. Q30-Q36 are concrete choices
 made under the user's delegation to prepare this implementation plan. The later
-implementation request authorizes AP47.2 only, not the remaining packages.
+implementation requests authorize AP47.2 and AP47.3. Later packages still
+require their own authorization.
 
 | ID | Selected decision | Contract owner | Affected work packages |
 | --- | --- | --- | --- |
@@ -69,12 +71,12 @@ implementation request authorizes AP47.2 only, not the remaining packages.
 
 ## Dependencies and work packages
 
-The design contract and internal runtime/artifact foundation are complete.
-Source-language support, migration and final acceptance remain open.
+The design contract, runtime/artifact foundation and source-language slice are
+complete. Constructor values, MapError, migration and final acceptance remain open.
 
 - [x] [AP47.1: Language and error contract](01-decision.md)
 - [x] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)
-- [ ] [AP47.3: Language, compiler and editor support](03-language-and-tooling.md)
+- [x] [AP47.3: Language, compiler and editor support](03-language-and-tooling.md)
 - [ ] [AP47.4: Constructor values and MapError](04-maperror-and-constructors.md)
 - [ ] [AP47.5: Host, parsing and related Std migration](05-host-and-parsing.md)
 - [ ] [AP47.6: Tasks, networking and layered consumers](06-tasks-and-network.md)

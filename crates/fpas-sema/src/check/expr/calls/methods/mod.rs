@@ -97,6 +97,7 @@ impl Checker {
             Ty::Record(record_ty) => record_ty.clone(),
             _ => return None,
         };
+        self.record_method_owner_arguments(&record_ty, span);
 
         if self.reject_private_record_member(&record_ty, &method_name, span) {
             self.check_args_only(args);

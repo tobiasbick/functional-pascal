@@ -14,6 +14,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Record update](record-update.md) | `with` copy-and-override expressions |
 | [Result and Option types](result-option-types.md) | `Result of (T, E)` and `Option of T` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
+| [Native error families](errors.md) | Typed operational errors, causes, Error constraint and automatic Message() output |
 | [String operations](string/README.md) | Unicode scalar operations, `Slice`, `IsEmpty`, and `string.Chr` |
 | [Array operations](array/README.md) | Eager callbacks, value `Push`/`Pop`, InPlace counterparts and `array.Fill` |
 | [Collection mutation](collection-mutation.md) | Value/InPlace naming, writable receivers, callback and failure rules |

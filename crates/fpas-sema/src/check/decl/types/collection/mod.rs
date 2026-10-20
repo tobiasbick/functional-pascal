@@ -30,6 +30,7 @@ pub(crate) struct TypeCollection {
 impl Checker {
     /// Resolve every type and member signature before checking declarations in source order.
     pub(crate) fn collect_unit_types(&mut self, declarations: &[Decl]) {
+        self.needs_error_constructors |= declarations.iter().any(|declaration| matches!(declaration, Decl::TypeDef(definition) if matches!(&definition.body, TypeBody::Enum(body) if body.is_error)));
         if declarations.iter().any(|declaration| {
             matches!(
                 declaration,
@@ -60,10 +61,12 @@ impl Checker {
                     ty: if definition.type_params.is_empty() {
                         Ty::Named(definition.name.clone())
                     } else if matches!(definition.body, TypeBody::Enum(_)) {
-                        Ty::Enum(std::sync::Arc::new(crate::types::EnumTy::header(
+                        Ty::Enum(std::sync::Arc::new(crate::types::EnumTy {
+                            is_error: matches!(&definition.body, TypeBody::Enum(body) if body.is_error),
+                            ..crate::types::EnumTy::header(
                             definition.name.clone(),
                             Self::resolve_type_params(&definition.type_params),
-                        )))
+                        )}))
                     } else {
                         Ty::Record(std::sync::Arc::new(crate::types::RecordTy::header(
                             definition.name.clone(),
@@ -125,6 +128,7 @@ impl Checker {
         }
         self.validate_generic_recursion(declarations);
         self.validate_finite_types(declarations);
+        self.validate_error_declarations(declarations);
     }
 
     // Recursive aliases can retain a nominal placeholder or a record's pre-member shape.

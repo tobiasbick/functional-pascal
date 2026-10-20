@@ -2,6 +2,7 @@ use super::*;
 
 mod distinct_types;
 mod enums;
+mod errors;
 mod handler_fields;
 mod ordinary_members;
 mod record_methods;

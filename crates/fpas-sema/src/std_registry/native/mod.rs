@@ -4,6 +4,7 @@
 
 mod array;
 mod dictionary;
+mod error;
 mod factory;
 mod in_place;
 mod option;
@@ -16,6 +17,8 @@ use crate::types::{FunctionTy, ParamMode, ParamTy, Ty};
 /// Static receiver shape selecting a built-in operation without lexical lookup.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NativeReceiver {
+    /// A concrete native error family or an Error-constrained parameter.
+    Error,
     /// Unicode scalar sequence.
     String,
     /// Array with any known element type.
@@ -71,6 +74,7 @@ impl NativeReceiver {
     #[must_use]
     pub fn accepts(self, ty: &Ty) -> bool {
         match (self, ty) {
+            (Self::Error, ty) => crate::types::TypeConstraint::Error.satisfied_by(ty),
             (Self::String, Ty::String)
             | (Self::Array, Ty::Array(_))
             | (Self::Dictionary, Ty::Dict(_, _))
@@ -85,6 +89,7 @@ impl NativeReceiver {
     #[must_use]
     pub fn label(self) -> &'static str {
         match self {
+            Self::Error => "Error",
             Self::String | Self::StringFactory => "string",
             Self::Array | Self::ArrayFactory => "array",
             Self::StringArray => "array of string",
@@ -98,6 +103,7 @@ impl NativeReceiver {
     #[must_use]
     pub fn handbook(self) -> &'static str {
         match self {
+            Self::Error => "docs/pascal/language/types/errors.md",
             Self::String | Self::StringFactory => "docs/pascal/language/types/string/README.md",
             Self::Array | Self::StringArray | Self::ArrayFactory => {
                 "docs/pascal/language/types/array/README.md"
@@ -155,6 +161,9 @@ impl NativeOperation {
 
     /// Whether operation-specific checking supplies generic callback constraints.
     pub(crate) fn polymorphic(self) -> bool {
+        if self.receiver == NativeReceiver::Error {
+            return false;
+        }
         !self.implementation.starts_with("Std.Str.")
             || matches!(
                 self.name,
@@ -169,6 +178,7 @@ pub fn native_operations() -> impl Iterator<Item = &'static NativeOperation> {
         string::OPERATIONS,
         array::OPERATIONS,
         dictionary::OPERATIONS,
+        error::OPERATIONS,
         option::OPERATIONS,
         result::OPERATIONS,
         factory::OPERATIONS,

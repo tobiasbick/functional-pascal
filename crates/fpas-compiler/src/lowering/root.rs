@@ -52,7 +52,10 @@ pub(super) fn lower_analyzed_root(
         "",
         0,
     );
-    let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
+    let mut type_table =
+        types::TypeTable::from_metadata(&metadata, name).map_err(|error| vec![error])?;
+    super::errors::prepare(&mut type_table, declarations, supporting_interfaces)
+        .map_err(|error| vec![error])?;
     let mut constants = BTreeMap::new();
     let (mut globals, mut global_bindings) =
         globals::collect(declarations, &mut type_table).map_err(|error| vec![error])?;
@@ -328,6 +331,20 @@ pub(super) fn lower_analyzed_root(
         owner_map.insert(routine.id, routine.owner);
     }
     debug::attach(&mut functions, &owner_map).map_err(|error| vec![error])?;
+    super::errors::lower(
+        &mut functions,
+        &mut type_table,
+        &mut globals,
+        super::errors::LoweringInput {
+            routines: &routines,
+            metadata: &metadata,
+            interfaces: supporting_interfaces,
+            span,
+            owners: &owner_map,
+        },
+    )
+    .map_err(|error| vec![error])?;
+    functions.sort_by_key(|function| function.id);
     let distinct_types = type_table
         .distinct_type_names(&metadata, declarations)
         .map_err(|error| vec![error])?;
@@ -352,6 +369,7 @@ pub(super) fn lower_analyzed_root(
         )]
     })?;
     Ok(LoweredUnit {
+        errors: type_table.errors.clone(),
         program: ir,
         imports,
     })

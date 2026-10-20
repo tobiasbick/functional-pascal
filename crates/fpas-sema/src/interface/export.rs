@@ -5,6 +5,7 @@ use fpas_unit::interface as artifact;
 
 use crate::check;
 use crate::scope::canonical_symbol_name;
+use crate::types::Ty;
 
 use super::conversion::{
     InterfaceConversionError, ty_to_interface_reference, ty_to_interface_type,
@@ -31,6 +32,7 @@ impl check::Checker {
             })
             .collect();
         let mut symbols = Vec::new();
+        let mut errors = fpas_unit::errors::ErrorInterface::default();
         for declaration in &unit.declarations {
             if declaration.visibility() == Visibility::Private {
                 continue;
@@ -46,6 +48,30 @@ impl check::Checker {
             } else {
                 ty_to_interface_reference(&symbol.ty)?
             };
+            if matches!(declaration, Decl::TypeDef(_))
+                && let Ty::Enum(enumeration) = &symbol.ty
+                && enumeration.is_error
+                && enumeration.type_args.is_empty()
+            {
+                let schema = crate::error_schema(enumeration, &unit_name, &|name| {
+                    self.scopes
+                        .lookup_type(name)
+                        .map(|symbol| symbol.ty.clone())
+                })
+                .map_err(InterfaceConversionError::new)?;
+                let schema = self
+                    .imported_error_schemas
+                    .get(&schema.declaration)
+                    .cloned()
+                    .unwrap_or(schema);
+                if !errors
+                    .schemas
+                    .iter()
+                    .any(|existing| existing.declaration == schema.declaration)
+                {
+                    errors.schemas.push(schema);
+                }
+            }
             self.apply_record_defaults(declaration, &mut ty)?;
             qualify_owned_type(&mut ty, &unit_name, &own_types);
             let mut kind = exported_symbol_kind(declaration, symbol);
@@ -70,7 +96,7 @@ impl check::Checker {
             });
         }
         Ok(artifact::UnitInterface {
-            errors: Default::default(),
+            errors,
             routine_initialization: self
                 .initialization
                 .exported
@@ -185,7 +211,9 @@ fn qualify_owned_type(
             }
         }
         Named(name) => *name = qualify_owned_name(name, unit_name, own_types),
-        artifact::InterfaceType::EnumApplication { name, arguments } => {
+        artifact::InterfaceType::EnumApplication {
+            name, arguments, ..
+        } => {
             *name = qualify_owned_name(name, unit_name, own_types);
             for argument in arguments {
                 qualify_owned_type(argument, unit_name, own_types);

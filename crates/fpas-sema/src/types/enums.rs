@@ -7,6 +7,8 @@ use std::collections::HashMap;
 /// Nominal enum declaration or application with resolved payload types.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
+    /// Native error families retain concrete runtime identity and automatic output.
+    pub is_error: bool,
     /// Case-preserving qualified enum name.
     pub name: String,
     /// Generic parameters in declaration order.
@@ -20,6 +22,8 @@ pub struct EnumTy {
 /// A single enum variant with associated-data fields or an integer backing value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumVariantTy {
+    /// Optional literal native-error message.
+    pub message: Option<String>,
     /// Case-preserving variant name.
     pub name: String,
     /// Associated-data fields in declaration order.
@@ -32,6 +36,7 @@ impl EnumTy {
     /// Reserve an enum identity before resolving recursive payload references.
     pub fn header(name: String, type_params: Vec<GenericParamDef>) -> Self {
         Self {
+            is_error: false,
             name,
             type_params,
             type_args: Vec::new(),
@@ -39,11 +44,13 @@ impl EnumTy {
         }
     }
 
-    /// True when at least one variant carries associated data.
+    /// Whether variants use tagged enum storage, including fieldless native errors.
     pub fn has_data(&self) -> bool {
-        self.variants
-            .iter()
-            .any(|variant| !variant.fields.is_empty())
+        self.is_error
+            || self
+                .variants
+                .iter()
+                .any(|variant| !variant.fields.is_empty())
     }
 
     /// Substitute declaration parameters without expanding recursive identities.

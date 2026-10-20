@@ -155,6 +155,8 @@ pub struct FieldDef {
 /// A parsed enum type body.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumType {
+    /// Native error family rather than an ordinary enum.
+    pub is_error: bool,
     /// The variants declared by the enum.
     pub members: Vec<EnumMember>,
     /// The source span covering the complete `enum ... end` body.
@@ -164,6 +166,8 @@ pub struct EnumType {
 /// A parsed enum variant, with either an integer value or associated data.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumMember {
+    /// Optional literal message on a native error variant.
+    pub message: Option<String>,
     /// The variant name.
     pub name: String,
     /// The explicitly assigned integer value, if present.

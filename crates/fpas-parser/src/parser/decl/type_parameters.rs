@@ -54,10 +54,11 @@ impl Parser {
                 Token::Comparable => "Comparable",
                 Token::Numeric => "Numeric",
                 Token::Printable => "Printable",
+                Token::Error => "Error",
                 _ => {
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
-                        "Expected generic constraint `Comparable`, `Numeric`, or `Printable`",
+                        "Expected generic constraint `Comparable`, `Numeric`, `Printable`, or `Error`",
                         "Use one of the supported generic constraints.",
                         self.current_span(),
                     );

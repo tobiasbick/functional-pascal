@@ -98,8 +98,8 @@ layouts, source maps, and the entry function before the VM can execute the image
 ## Format validation
 
 The sectioned envelope uses program format version 23 and register-bytecode version 23.
-Relocatable unit objects use schema version 15 and compiled-unit envelopes use
-version 21. Error layouts retain complete nominal instance keys, literal labels,
+Relocatable unit objects use schema version 16 and compiled-unit envelopes use
+version 22. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
 debugger information. Keys retain all generic arguments; ordinary enum layouts keep
 their existing erasure. Bounded postfix type identities avoid recursive wire decoding.
@@ -110,8 +110,12 @@ noncapturing functions using the existing instruction set. Error values reuse sh
 enum storage. A shared expansion budget rejects amplified schemas before copying
 their fields or labels. Error values use
 automatic iterative display and stack-safe aggregate destruction;
-the Value representation remains 16 bytes. These internal artifact foundations do
-not yet expose native error declarations in source or change Std Result signatures.
+the Value representation remains 16 bytes. Native error declarations and
+Error-constrained generic routines emit this metadata. Hidden constructor
+parameters and bound callable environments preserve the source arity and labels.
+Generated linkage names are separate from their defining display names. Hidden
+callable captures are immutable, type-checked functions and remain absent from
+normal debugger scopes. Existing Std Result signatures retain their current types.
 
 Older image/object schemas require rebuilding;
 the instruction set and value representation are unchanged.

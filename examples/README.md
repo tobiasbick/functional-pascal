@@ -165,7 +165,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/functions/nested_functions.fpas` | Nested helper function (`Square` inside `Hypotenuse`) |
 | `pascal/higher-order-functions/higher_order_functions.fpas` | First-class functions and array helpers |
 | `pascal/enum-data/` | Enums with associated data and `case` |
-| `pascal/error-handling/` | `Result`, `Option`, `panic`, and `try` |
+| `pascal/error-handling/` | Native typed errors, `Result`, `Option`, `panic`, and `try` |
 | `pascal/for/for_example.fpas` | Index-based counting `for` with `break` / `continue` |
 | `pascal/for/downto_example.fpas` | `for I: integer := N downto M do` |
 | `pascal/for-in/for_in_example.fpas` | `for V: integer in Items do` |

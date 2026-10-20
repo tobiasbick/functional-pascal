@@ -99,6 +99,9 @@ impl Checker {
                         .insert(crate::designator_lookup_key(designator));
                 }
                 if let Some(DesignatorPart::Ident(_, span)) = parts.last() {
+                    if symbol.kind == SymbolKind::EnumMember {
+                        self.enum_member_paths.insert((span.source_id, span.offset));
+                    }
                     self.path_types
                         .insert((span.source_id, span.offset), ty.clone());
                 }
@@ -212,7 +215,7 @@ impl Checker {
                                 .insert((span.source_id, span.offset), ty.clone());
                             let is_last = offset + 1 == trailing;
                             let bound_key = if is_last {
-                                Some((designator_key, parts.len() - 1))
+                                Some((designator_key, parts.len() - 1, designator.span))
                             } else {
                                 None
                             };

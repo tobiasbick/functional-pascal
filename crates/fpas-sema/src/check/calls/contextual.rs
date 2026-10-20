@@ -86,6 +86,10 @@ impl Checker {
             return actual;
         }
         self.validate_constraints(type_params, &arguments, span);
+        if self.needs_error_constructors {
+            self.routine_type_arguments
+                .insert((span.source_id, span.offset), arguments);
+        }
         match Self::substitute_type_params(&actual, &inferred) {
             Ty::Function(mut function) => {
                 function.type_params.clear();

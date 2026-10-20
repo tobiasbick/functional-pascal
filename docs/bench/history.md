@@ -14,6 +14,52 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-19 — AP47.3 native error language
+
+Native error declarations, Error-constrained routines and Message() connect the
+runtime metadata to source programs, cached units and ordinary callable values.
+The unchanged suite is compared against AP47.2 (`7f0fd9f`) in three serial runs
+per group. [The complete comparison](ap47-language.md) retains every raw sample.
+
+Sums of row medians change from 6,500 to 6,551 ms for VM (+0.78%), 6,545 to
+6,313 ms for tooling (-3.54%), and 3,162 to 3,131 ms for startup (-0.98%).
+These are not whole-suite wall times. Alternating controls retain smaller
+increases in integer loops (+2.46%) and string concatenation (+4.75%); every
+VM row remains below the selected 5% gate. The configured codec rows are below
+timer resolution; 50,000-decode controls measure 88/90 ms for unit objects and
+67/66 ms for program images. No new feature benchmark group is registered here.
+
+The following table is an additional current VM `record` capture.
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 718 | throughput: 69637883 iters/s |
+| typed_real | 155 | - |
+| typed_boolean | 240 | - |
+| typed_string | 129 | - |
+| global_access | 98 | throughput: 51020408 global updates/s |
+| record_field_access | 332 | throughput: 45180722 field accesses/s |
+| closure_call | 143 | throughput: 20979020 closure calls/s |
+| mutable_capture | 180 | throughput: 16666666 captured updates/s |
+| branch_dispatch | 342 | throughput: 58479532 branches/s |
+| dynamic_numeric | 286 | throughput: 17482517 dynamic numeric ops/s |
+| array_push | 54 | throughput: 37037037 pushes/s |
+| array_length | 23 | throughput: 21739130 lengths/s |
+| string_concat | 925 | throughput: 5405405 concats/s |
+| string_length | 21 | throughput: 23809523 lengths/s |
+| intrinsic_dispatch | 656 | throughput: 22865853 intrinsic calls/s |
+| function_call | 260 | throughput: 23076923 calls/s |
+| array_callbacks | 832 | throughput: 11538461 callbacks/s |
+| record_update | 86 | throughput: 11627906 updates/s |
+| unicode_char_at | 263 | throughput: 11406844 chars/s |
+| wrapper_payload | 718 | throughput: 13927576 wrappers/s |
+| string_search | 67 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
+
 ## 2026-10-19 — AP47.2 native error metadata and portable artifacts
 
 Native errors reuse shared enum values and essential portable metadata. Iterative

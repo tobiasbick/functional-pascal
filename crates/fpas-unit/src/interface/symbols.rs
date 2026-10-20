@@ -197,7 +197,9 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             }
         }
         Named(name) => *name = canonical_name(name),
-        InterfaceType::EnumApplication { name, arguments } => {
+        InterfaceType::EnumApplication {
+            name, arguments, ..
+        } => {
             *name = canonical_name(name);
             for argument in arguments {
                 canonicalize_type(argument);

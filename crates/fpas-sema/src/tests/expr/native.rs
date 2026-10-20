@@ -8,6 +8,10 @@ mod sort_by;
 fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
     let cases = [
         (
+            "program T; type Failure = error Failed; end error; begin const Receiver := Failure.Failed; const Output: string := Receiver.Message(); end.",
+            "program T; type Failure = error Failed; end error; begin const Receiver := Failure.Failed; const Output: string := Receiver.Message(); end.",
+        ),
+        (
             "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.Length(); end.",
             "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.Length(); end.",
         ),

@@ -172,6 +172,7 @@ fn method_to_interface(
 
 fn enum_to_interface(enum_ty: &EnumTy) -> Result<artifact::EnumType, InterfaceConversionError> {
     Ok(artifact::EnumType {
+        is_error: enum_ty.is_error,
         name: enum_ty.name.clone(),
         type_parameters: generic_parameters_to_interface(&enum_ty.type_params),
         type_arguments: enum_ty
@@ -184,6 +185,7 @@ fn enum_to_interface(enum_ty: &EnumTy) -> Result<artifact::EnumType, InterfaceCo
             .iter()
             .map(|variant| {
                 Ok(artifact::EnumVariant {
+                    message: variant.message.clone(),
                     name: variant.name.clone(),
                     fields: variant
                         .fields
@@ -234,6 +236,7 @@ pub(crate) fn ty_to_interface_reference(
         Ty::Record(record) => Output::Named(record.name.clone()),
         Ty::Enum(enum_ty) if !enum_ty.type_params.is_empty() || !enum_ty.type_args.is_empty() => {
             Output::EnumApplication {
+                is_error: enum_ty.is_error,
                 name: enum_ty.name.clone(),
                 arguments: if enum_ty.type_args.is_empty() {
                     enum_ty

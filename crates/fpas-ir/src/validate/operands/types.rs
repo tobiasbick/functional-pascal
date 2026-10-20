@@ -220,6 +220,7 @@ fn require_enum_layout(
 ) -> Result<(), ValidationError> {
     match program.ty(ty).map(|definition| &definition.kind) {
         Some(IrType::Enum(actual)) if *actual == layout => Ok(()),
+        Some(IrType::Dynamic) if program.enum_layout(layout).is_some_and(|layout| layout.error_template) => Ok(()),
         _ => Err(function_error(
             function.id,
             Some(block),

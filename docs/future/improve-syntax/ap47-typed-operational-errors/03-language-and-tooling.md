@@ -1,6 +1,6 @@
 # AP47.3: Language, compiler and editor support
 
-Status: Planned; implementation not authorized. Depends on AP47.2.
+Status: Complete. Depends on completed AP47.2.
 Contract: [AP47.1](01-decision.md). Completion: [package README](README.md).
 
 ## Deliverable
@@ -44,6 +44,16 @@ MapError are added by AP47.4, not assumed available here.
   Errors are ordinary values, not exception handlers or catchable panic objects.
 
 ## Actual owners and planned edits
+
+The source slice reuses `TypeBody::Enum` with a native-error discriminator in
+`ast/decl.rs` and `types/enums.rs`, so pattern checking and navigation retain
+one owner. New focused modules under semantic type checking, compiler lowering
+and object emission own payload admission, semantic identities and hidden
+constructor transport. The existing native-operation catalog and intrinsic
+dispatch own Message() and a private, pure generic-pattern query. Source regressions live under `tests/stdlib/result/` and
+compiler artifact tests; formatter, public-signature and navigation fixtures
+extend their existing owners. This continuation uses the current AP47 campaign
+branch with its completed runtime prerequisite.
 
 | Path | Responsibility |
 | --- | --- |
@@ -92,6 +102,8 @@ generic helper and a typed callable. Verify distinct instance IDs, alias reuse,
 typed matching and exact Cause checks after linking without dependency source.
 Include a private constructing helper behind an exported generic, recursion with
 a stable instance key and a parameter used only in an ordinary data payload.
+Include fieldless generic errors, task callables, and direct/bound generic record
+methods, retaining both record and method arguments across cached-unit imports.
 Prove construction requirements reach each caller without changing visible
 arity/labels or duplicating unrelated generic bodies. Reuse AP47.2's malformed
 artifact fixtures rather than replaying them as source tests.
@@ -102,3 +114,8 @@ fixtures still pass. Compiler fixtures verify Message() does not permit host
 effects inside contracts. Run the appropriate crate tests, workspace checks,
 language suite, compact-reference example test and editor grammar verification.
 No MapError example is published as runnable until AP47.4 is delivered.
+
+The [performance comparison](../../../bench/ap47-language.md) records unchanged
+VM, tooling and artifact workloads against the completed AP47.2 source baseline.
+The independent imported-generic-enum projection failure and NotesUpdate
+reference-count assertion remain the checkout follow-ups recorded in AP47.2.

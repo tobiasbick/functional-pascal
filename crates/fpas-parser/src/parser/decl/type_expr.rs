@@ -53,6 +53,23 @@ impl Parser {
             };
         }
         match self.current_token() {
+            Token::Error => {
+                let span = self.current_span();
+                self.error_with_code(
+                    PARSE_EXPECTED_TOKEN,
+                    "Error is a generic constraint, not a storable root type",
+                    "Use a concrete error family, or declare `E: Error` and use E here.",
+                    span,
+                );
+                self.advance();
+                TypeExpr::Named {
+                    id: QualifiedId {
+                        parts: vec!["Error".into()],
+                        span,
+                    },
+                    span,
+                }
+            }
             Token::Array => {
                 let start = self.current_span();
                 self.advance();

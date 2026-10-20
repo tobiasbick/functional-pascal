@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub(crate) mod collection;
 mod distinct;
 mod enums;
+mod errors;
 mod records;
 mod subranges;
 

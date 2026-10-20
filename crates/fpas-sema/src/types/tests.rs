@@ -27,6 +27,7 @@ fn cloning_record_type_shares_immutable_descriptor() {
 #[test]
 fn cloning_enum_type_shares_immutable_descriptor() {
     let ty = Ty::Enum(Arc::new(EnumTy {
+        is_error: false,
         name: "Direction".to_string(),
         type_params: Vec::new(),
         type_args: Vec::new(),

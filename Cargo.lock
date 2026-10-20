@@ -497,6 +497,7 @@ dependencies = [
  "fpas-linker",
  "fpas-numeric",
  "fpas-parser",
+ "fpas-program",
  "fpas-sema",
  "fpas-std",
  "fpas-unit",

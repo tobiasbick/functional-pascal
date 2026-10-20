@@ -17,6 +17,8 @@ impl LoweringContext {
         expression: &Expr,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
+        // Generated callable values retain the checked call's substitution identity.
+        let call_span = expression.span();
         if let Expr::Postfix {
             base, operations, ..
         } = expression
@@ -25,7 +27,12 @@ impl LoweringContext {
                 return Err(unsupported(span, "empty task postfix call"));
             };
             let key = fpas_sema::postfix_operation_lookup_key(last);
-            let fpas_parser::PostfixOperation::MethodCall { args, .. } = last else {
+            let fpas_parser::PostfixOperation::MethodCall {
+                args,
+                span: call_span,
+                ..
+            } = last
+            else {
                 return Err(unsupported(span, "task postfix call"));
             };
             let receiver = if prefix.is_empty() {
@@ -47,7 +54,7 @@ impl LoweringContext {
                         name: &target.name,
                         result_ty: &target.result_ty,
                     },
-                    span,
+                    *call_span,
                 );
             }
             if let Some(target) = self.method_calls.get(&key).cloned() {
@@ -64,7 +71,7 @@ impl LoweringContext {
                         name: target.qualified_name(),
                         result_ty: &result_ty,
                     },
-                    span,
+                    *call_span,
                 );
             }
             return Err(unsupported(span, "task postfix receiver call"));
@@ -90,7 +97,7 @@ impl LoweringContext {
                     name: &name,
                     result_ty: &result_ty,
                 },
-                span,
+                call_span,
             );
         }
         if let Some(result_ty) = self
@@ -117,7 +124,7 @@ impl LoweringContext {
                     name: &target.name,
                     result_ty: &target.result_ty,
                 },
-                span,
+                call_span,
             );
         }
         if let Some(target) = self
@@ -148,7 +155,7 @@ impl LoweringContext {
                     name: target.qualified_name(),
                     result_ty: &result_ty,
                 },
-                span,
+                call_span,
             );
         }
         let Some(name) = designator
@@ -193,7 +200,7 @@ impl LoweringContext {
                         captures,
                     },
                     callable.value_type,
-                    span,
+                    call_span,
                 )?;
                 (callee, callable.result)
             };

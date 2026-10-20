@@ -1,10 +1,10 @@
 # AP47.1: Selected language and error contract
 
-Status: Design recorded; AP47.2's internal runtime/artifact foundation is complete.
+Status: Design recorded; AP47.2's foundation and AP47.3's language slice are implemented.
 Package and decisions: [AP47](README.md#decisions-and-authority).
-Source-language behavior here remains planned. AP47.2 implements the internal
-runtime and artifact foundation; source syntax and library migration belong to
-the later work packages.
+Native error declarations, constraints, typed construction/matching and Message()
+are implemented. Constructor values, MapError and library migration remain
+planned in the later work packages.
 
 ## Declaration and identity
 
@@ -30,7 +30,7 @@ type_body += error_type
 generic type_def alternatives += error_type
 constraint_name += 'Error'
 error_type = 'error' error_member { error_member } 'end' 'error'
-error_member = identifier [ enum_fields ] [ '=' string_literal ] ';'
+error_member = identifier [ enum_fields ] [ '=' quoted_string ] ';'
 ```
 
 At least one variant is required. Reuse enum payload syntax, qualification,
@@ -212,5 +212,6 @@ The [Std catalog](standard-errors.md) uses these same language rules.
 
 The user authorized autonomous detail decisions for this plan; Q28-Q36 are
 recorded in the package README and all dependent packages refer to this contract.
-No blocking syntax/interface choices remain within the declared scope. Runtime,
-compiler, migration and performance acceptance remain future unchecked work.
+No blocking syntax/interface choices remain within the declared scope. The
+runtime and language slices are delivered separately from constructor values,
+MapError, Std migration and final acceptance.

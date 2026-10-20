@@ -12,7 +12,7 @@ pub enum TypeConstraint {
     Numeric,
     /// Can be converted to a string representation.
     Printable,
-    /// Native-error constraint retained in compiled interfaces before source support.
+    /// A native error family, implying Printable.
     Error,
 }
 
@@ -25,6 +25,8 @@ impl TypeConstraint {
             Some(Self::Numeric)
         } else if name.eq_ignore_ascii_case("printable") {
             Some(Self::Printable)
+        } else if name.eq_ignore_ascii_case("error") {
+            Some(Self::Error)
         } else {
             None
         }
@@ -56,8 +58,7 @@ impl TypeConstraint {
             Self::Comparable => ty.is_comparable(),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
             Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),
-            // Error source declarations are introduced by AP47.3, not inferred from enum shape.
-            Self::Error => false,
+            Self::Error => matches!(ty, Ty::Enum(enumeration) if enumeration.is_error),
         }
     }
 }

@@ -41,7 +41,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 15;
+pub const OBJECT_VERSION: u16 = 16;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -270,7 +270,7 @@ impl RelocatableObject {
                 function,
                 &self.functions,
                 self.sources.len(),
-                self.debug_types.len(),
+                &self.debug_types,
             )?;
             for (instruction_index, word) in function.code.iter().copied().enumerate() {
                 let instruction = Instruction::from_word(word);

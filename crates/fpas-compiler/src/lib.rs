@@ -11,6 +11,7 @@
 )]
 mod bytecode;
 mod error;
+mod errors;
 mod intrinsic_catalog;
 mod lowering;
 mod object;
@@ -33,8 +34,8 @@ pub use object::{
 /// Returns semantic diagnostics, a structured lowering diagnostic, or a bytecode
 /// construction/verifier diagnostic represented as an internal compiler failure.
 pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
-    let ir = lower(program)?;
-    bytecode::compile_program(ir).map_err(|error| vec![error])
+    let lowered = lowering::lower_with_metadata(program)?;
+    bytecode::compile_with_errors(lowered.program, &lowered.errors).map_err(|error| vec![error])
 }
 
 /// Compile one root program into a relocatable object.
@@ -48,17 +49,7 @@ pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, V
 pub fn compile_object(
     program: &Program,
 ) -> Result<fpas_unit::object::RelocatableObject, Vec<CompileError>> {
-    let executable = compile(program)?;
-    fpas_unit::object::RelocatableObject::from_executable(&program.name, executable).map_err(
-        |error| {
-            vec![error::internal_compiler_error(
-                format!("Object construction failed: {error}."),
-                "This is an internal compiler error. Re-run compilation and report the source program.",
-                program.span.line,
-                program.span.column,
-            )]
-        },
-    )
+    compile_program_object_with_support(program, &[], &[])
 }
 
 use fpas_parser::Program;

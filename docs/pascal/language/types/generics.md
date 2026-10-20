@@ -245,12 +245,16 @@ end record;
 
 ## Implementation
 
-Generics use type erasure. The VM operates on dynamic values, so no monomorphization is needed. Type parameters are checked at compile time and erased at runtime.
+Generic routine bodies use type erasure. Ordinary generic record and enum layouts
+retain their existing erasure. [Native error families](errors.md) retain fully
+applied runtime identities and payload metadata; shared erased bodies receive
+hidden read-only constructor values rather than being copied for each instance.
 
 ## Constraints
 
-`Comparable`, `Numeric`, and `Printable` are reserved keywords. They are valid
-only after `:` in a generic type-parameter declaration.
+`Comparable`, `Numeric`, `Printable`, and `Error` are built-in constraints,
+written after `:` in a generic type-parameter declaration. Error also introduces
+a native error declaration and remains the Result constructor in expressions.
 
 Type parameters can be constrained to require specific capabilities from the concrete type. Constraints are written after the parameter name, separated by a colon: `<T: Constraint>`.
 
@@ -261,6 +265,7 @@ Type parameters can be constrained to require specific capabilities from the con
 | `Comparable` | `integer`, `real`, `boolean`, `string`, [distinct scalar types](distinct-types.md), [subranges](subranges.md), [enums without payload fields](enums.md) | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`, and array sorting |
 | `Numeric` | `integer`, `real` | Supports arithmetic operators: `+`, `-`, `*`, `/`; does not establish integer-only `div`/`mod` operands |
 | `Printable` | All types except `function`, `procedure`, and distinct types | Can be converted to a string representation |
+| `Error` | Native error families, their aliases, and Error-constrained parameters | Implies Printable and permits Message(); no ordering or implicit family conversions |
 
 Subranges satisfy `Comparable` and `Printable`, but not `Numeric`: arithmetic
 widens to integer values and does not preserve their bounds.

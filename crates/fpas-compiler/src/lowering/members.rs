@@ -198,6 +198,29 @@ impl LoweringContext {
         if part_count == 0 || part_count > designator.parts.len() {
             return Err(unsupported(designator.span, "record member receiver path"));
         }
+        if let Some(DesignatorPart::Ident(name, span)) = designator.parts.get(part_count - 1)
+            && self
+                .enum_member_paths
+                .contains(&(span.source_id, span.offset))
+            && let Some(semantic) = self.path_types.get(&(span.source_id, span.offset)).cloned()
+        {
+            let ty = self.type_table.id(&semantic, span.line, span.column)?;
+            if let Some(fpas_ir::IrType::Enum(layout)) = self.type_kind(ty)
+                && let Some((variant, fields)) = self.enum_variant(layout, name)
+                && fields.is_empty()
+            {
+                let value = self.emit_value(
+                    Operation::MakeEnum {
+                        layout,
+                        variant,
+                        fields: vec![],
+                    },
+                    ty,
+                    designator.span,
+                )?;
+                return Ok((value, ty));
+            }
+        }
         self.lower_designator_prefix(designator, part_count)
     }
 

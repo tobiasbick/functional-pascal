@@ -43,10 +43,12 @@ fn two_generic_instances_share_erased_code_and_survive_source_less_round_trips()
         image
             .functions
             .iter()
-            .filter(|info| image
-                .strings
-                .get(info.name)
-                .is_some_and(|name| name.contains("$constructor")))
+            .filter(
+                |info| image.strings.get(info.name).is_some_and(|name| matches!(
+                    name,
+                    "Example.Fs.Missing" | "Example.Parse.Missing" | "Example.Context.Failed"
+                ))
+            )
             .count(),
         4,
         "duplicate requests must share factories"

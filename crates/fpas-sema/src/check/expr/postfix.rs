@@ -185,7 +185,7 @@ impl Checker {
         match operation {
             PostfixOperation::Field { name, span } => {
                 let key = Self::postfix_operation_lookup_key(operation);
-                self.check_record_member_access(&resolved, name, *span, Some((key, 0)))
+                self.check_record_member_access(&resolved, name, *span, Some((key, 0, *span)))
             }
             PostfixOperation::Index { index, span } => {
                 self.check_index_access(&resolved, index, *span)
@@ -295,6 +295,7 @@ impl Checker {
                 qualified_name: qualified.clone(),
             },
         );
+        self.record_method_owner_arguments(record_ty, span);
 
         match method_kind {
             MethodKind::Function(func_ty) => {

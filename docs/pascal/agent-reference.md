@@ -764,7 +764,7 @@ call arguments are unsupported. Constructors use the plain
 type name with ordinary fields/arguments, and infer from arguments or the expected
 type; do not write `Box of integer(Value := 1)` as a constructor expression.
 
-Constraints are `Numeric`, `Comparable`, and `Printable`, written `T: Numeric`.
+Constraints are `Numeric`, `Comparable`, `Printable`, and `Error`, written `T: Numeric`.
 `Numeric` allows integer/real arithmetic and implies the other two; `div` and `mod`
 are not valid generic Numeric operations because real is also a possible type.
 Numeric operands must use the same type parameter; `+`, `-`, `*` retain it,
@@ -772,6 +772,9 @@ while `/` returns real for both integer and real instantiations.
 `Comparable` permits scalar ordering and sorting, including enums without payload
 fields, distinct scalars, and subranges; equality-only aggregate types do not
 satisfy it. `Printable` expresses printable values.
+`Error` accepts native error families and implies Printable. It permits the
+read-only `Value.Message()` operation, including in contracts, without adding
+ordering, an erased root Error type or conversions between families.
 Aliases preserve the underlying constraints; distinct types and subranges have
 specific rules below. Unconstrained type parameters still permit storage/passing.
 Generic field defaults must work for every instantiation: `Option of T := None`
@@ -869,6 +872,45 @@ end.
 ```
 
 This example prints `4` after its assertions. See [generics](language/types/generics.md).
+
+Native [error families](language/types/errors.md) use `error ... end error`.
+Each variant may have one nonempty literal message. Ordinary fields require
+Printable; a field named Cause must be a concrete error or an `E: Error`
+parameter. Error families retain nominal identity and all generic arguments.
+They support exhaustive patterns and payload equality, without backing integers
+or ordering. Message() and Console printing share the automatic renderer.
+Strict `%s` formatting requires `Failure.Message()`, and try still requires
+compatible error types.
+
+```pascal id=example-14 run
+program ReferenceNativeErrors;
+
+uses Std.Test as Test;
+
+type FileError = error
+  Missing(Path: string) = 'File not found';
+end error;
+
+type ContextError of E: Error = error
+  Failed(Cause: E) = 'Cannot load';
+end error;
+
+function Wrap<E: Error>(Cause: E): ContextError of E;
+begin
+  return ContextError.Failed(Cause);
+end function;
+
+begin
+  const Failure := Wrap(FileError.Missing('settings.toml'));
+  Test.AssertTrue(Failure is ContextError.Failed(FileError.Missing('settings.toml')));
+  Test.AssertEquals(
+    'ReferenceNativeErrors.ContextError.Failed: Cannot load'#10 +
+    'caused by ReferenceNativeErrors.FileError.Missing: File not found'#10 +
+    '  Path = "settings.toml"',
+    Failure.Message()
+  );
+end.
+```
 
 ## 11. Aliases, distinct types, subranges, and conversions
 

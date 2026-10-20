@@ -116,11 +116,22 @@ impl TypeTable {
                 fpas_sema::Ty::Enum(enumeration) => Some(enumeration.clone()),
                 _ => None,
             });
-        let enumeration = template.as_deref().unwrap_or(enumeration);
+        let expanded = if enumeration.is_error && enumeration.variants.is_empty() {
+            template
+                .as_deref()
+                .map(|template| template.instantiate(enumeration.type_args.clone()))
+        } else {
+            None
+        };
+        let enumeration = if enumeration.is_error {
+            expanded.as_ref().unwrap_or(enumeration)
+        } else {
+            template.as_deref().unwrap_or(enumeration)
+        };
         let id = if let Some(layout) = self
             .enum_layouts
             .iter()
-            .find(|layout| layout.name.eq_ignore_ascii_case(&enumeration.name))
+            .find(|layout| self.enum_layout_matches(layout, enumeration))
         {
             layout.id
         } else {
@@ -166,17 +177,34 @@ impl TypeTable {
         if let Some(layout) = self
             .enum_layouts
             .iter()
-            .find(|layout| layout.name.eq_ignore_ascii_case(&enumeration.name))
+            .find(|layout| self.enum_layout_matches(layout, enumeration))
         {
             return Ok(layout.id);
         }
         let id = EnumLayoutId::try_from_index(self.enum_layouts.len())
             .map_err(|error| type_error(&error.to_string(), synthetic_span(line, column)))?;
         self.enum_layouts.push(EnumLayout {
+            error_template: enumeration.is_error && self.errors.instance(enumeration, &[]).is_err(),
             id,
             name: enumeration.name.clone(),
             variants: Vec::new(),
         });
+        if enumeration.is_error {
+            self.errors.layouts.insert(id, enumeration.clone());
+        }
         Ok(id)
+    }
+
+    fn enum_layout_matches(&self, layout: &EnumLayout, enumeration: &fpas_sema::EnumTy) -> bool {
+        layout.name.eq_ignore_ascii_case(&enumeration.name)
+            && if enumeration.is_error {
+                self.errors.layouts.get(&layout.id).is_some_and(|existing| {
+                    existing.type_args == enumeration.type_args
+                        || (self.errors.instance(existing, &[]).is_err()
+                            && self.errors.instance(enumeration, &[]).is_err())
+                })
+            } else {
+                !self.errors.layouts.contains_key(&layout.id)
+            }
     }
 }

@@ -3,7 +3,7 @@
 
 use super::invalid;
 use crate::LinkError;
-use fpas_bytecode::{ErrorInstanceKey, Instruction, NO_REGISTER, Opcode};
+use fpas_bytecode::{ErrorInstanceKey, Instruction, Opcode};
 use fpas_unit::{
     errors::{ErrorConstructorRequest, constructor_symbol},
     object::{
@@ -77,14 +77,8 @@ pub(super) fn object(
             return Err(invalid("error constructor symbol hash collision"));
         }
         let destination = u16::from(arity);
-        let construct = Instruction::abc(
-            Opcode::MakeEnum,
-            destination,
-            0,
-            if arity == 0 { NO_REGISTER } else { 0 },
-            0,
-        )
-        .map_err(|error| invalid(error.to_string()))?;
+        let construct = Instruction::abc(Opcode::MakeEnum, destination, 0, 0, 0)
+            .map_err(|error| invalid(error.to_string()))?;
         let returns = Instruction::abc(Opcode::Return, destination, 0, 0, 0)
             .map_err(|error| invalid(error.to_string()))?;
         result.relocations.push(Relocation {
@@ -99,6 +93,10 @@ pub(super) fn object(
             },
         });
         result.functions.push(ObjectFunction {
+            display_name: Some(format!(
+                "{}.{}",
+                provenance.schema.display_name, variant.name
+            )),
             error_constructors: None,
             name,
             code: vec![construct.word(), returns.word()],

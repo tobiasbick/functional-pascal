@@ -242,7 +242,7 @@ fn link_prepared(
             )
             .ok_or(LinkError::Overflow("function code range"))?;
         linked_functions.push(FunctionInfo {
-            name: strings.intern(&function.name)?,
+            name: strings.intern(function.display_name.as_deref().unwrap_or(&function.name))?,
             code: CodeRange::new(
                 InstructionAddress::new(code_start),
                 InstructionAddress::new(end),

@@ -50,8 +50,9 @@ pub use std_registry::{
     validate_native_catalog,
 };
 pub use types::{
-    DistinctTy, EnumTy, FunctionTy, GenericParamDef, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty,
-    TypeConstraint, array_pop_result, array_pop_result_declaration,
+    DistinctTy, EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, ParamMode, ParamTy,
+    ProcedureTy, RecordTy, Ty, TypeConstraint, array_pop_result, array_pop_result_declaration,
+    error_schema, semantic_type_identity,
 };
 
 use fpas_parser::Program;

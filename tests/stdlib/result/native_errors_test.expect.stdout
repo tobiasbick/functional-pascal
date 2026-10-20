@@ -1,0 +1,7 @@
+NativeErrors.ContextError.Failed: Operation failed
+  Operation = "load"
+caused by NativeErrors.FsError.Missing: File not found
+  Path = "settings.toml"
+caused by NativeErrors.HostError.Failure: Host failure
+  Code = 2
+  Detail = "a\"b\nnext"

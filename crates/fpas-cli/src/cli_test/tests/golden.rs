@@ -7,9 +7,12 @@ fn test_cli_compares_golden_stdout_sidecar() {
     let cwd = create_temp_dir("fpas-test-expect-stdout");
     write_text(
         &cwd.join("echo_test.fpas"),
-        "program E;\nuses Std.Console as Console, Std.Test as Test;\nbegin Console.WriteLn('Hello'); Console.WriteLn('World'); end.",
+        "program E;\nuses Std.Console as Console, Std.Test as Test;\nbegin Console.WriteLn('Hello'); Console.WriteLn('World'#10'Again'); end.",
     );
-    write_text(&cwd.join("echo_test.expect.stdout"), "Hello\nWorld\n");
+    write_text(
+        &cwd.join("echo_test.expect.stdout"),
+        "Hello\nWorld\nAgain\n",
+    );
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();

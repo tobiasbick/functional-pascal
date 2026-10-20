@@ -20,6 +20,7 @@ pub fn return_unit() -> u64 {
 
 pub fn function(name: &str) -> ObjectFunction {
     ObjectFunction {
+        display_name: None,
         error_constructors: None,
         name: name.to_string(),
         code: vec![return_unit()],
@@ -85,6 +86,7 @@ pub fn program() -> RelocatableObject {
         entry: Some(0),
         initializer: None,
         functions: vec![ObjectFunction {
+            display_name: None,
             error_constructors: None,
             name: "demo".to_string(),
             code: vec![call, return_unit()],

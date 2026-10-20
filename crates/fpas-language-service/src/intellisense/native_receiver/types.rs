@@ -16,6 +16,21 @@ pub(super) fn from_symbol(
     symbol: &DocumentSymbol,
     depth: usize,
 ) -> Option<Ty> {
+    if let Some(semantic) = documents[owner]
+        .analysis
+        .as_ref()
+        .and_then(|analysis| analysis.semantic())
+        && let Some(ty) = semantic.metadata().value_declaration_types.get(&(
+            symbol.full_span.source_id(),
+            symbol.full_span.offset(),
+            symbol.name.to_ascii_lowercase(),
+        ))
+        // Imported applied records can be references without member tables. Resolve
+        // their declarations below before substituting the concrete field types.
+        && !matches!(ty, Ty::Record(record) if record.fields.is_empty() && !record.type_args.is_empty())
+    {
+        return Some(ty.clone());
+    }
     if matches!(
         symbol.kind,
         SymbolKind::Function | SymbolKind::Procedure | SymbolKind::Method
@@ -42,6 +57,19 @@ pub(super) fn from_symbol(
         let initializer = initializer.trim().trim_end_matches(';').trim();
         return super::receiver_type(documents, owner, initializer, end, depth + 1);
     };
+    if let Some((_, parameter)) =
+        crate::navigation::resolve_unqualified(documents, owner, name, symbol.full_span.offset())
+        && parameter.kind == SymbolKind::TypeParameter
+    {
+        let constraint = parameter
+            .detail
+            .rsplit_once(": ")
+            .and_then(|(_, name)| fpas_sema::TypeConstraint::from_name(name));
+        return Some(Ty::GenericParam(
+            parameter.qualified_name.clone(),
+            constraint,
+        ));
+    }
     if let Some(semantic) = documents[owner]
         .analysis
         .as_ref()
@@ -106,6 +134,9 @@ fn from_syntax_in_scope(
             match base {
                 Ty::Record(record) => {
                     Ty::Record(std::sync::Arc::new(record.instantiate(arguments)))
+                }
+                Ty::Enum(enumeration) => {
+                    Ty::Enum(std::sync::Arc::new(enumeration.instantiate(arguments)))
                 }
                 other => other,
             }
@@ -215,6 +246,62 @@ fn named_type(
             _ => None,
         })?;
     match &definition.body {
+        TypeBody::Enum(enumeration) => {
+            let type_params = definition
+                .type_params
+                .iter()
+                .map(|parameter| fpas_sema::GenericParamDef {
+                    name: parameter.name.clone(),
+                    constraint: parameter
+                        .constraint
+                        .as_deref()
+                        .and_then(fpas_sema::TypeConstraint::from_name),
+                })
+                .collect::<Vec<_>>();
+            let parameters = type_params
+                .iter()
+                .map(|parameter| {
+                    (
+                        parameter.name.to_ascii_lowercase(),
+                        Ty::GenericParam(parameter.name.clone(), parameter.constraint),
+                    )
+                })
+                .collect::<HashMap<_, _>>();
+            let variants = enumeration
+                .members
+                .iter()
+                .map(|member| {
+                    Some(fpas_sema::EnumVariantTy {
+                        name: member.name.clone(),
+                        message: member.message.clone(),
+                        backing_value: member.value,
+                        fields: member
+                            .fields
+                            .iter()
+                            .map(|field| {
+                                Some((
+                                    field.name.clone(),
+                                    from_syntax_in_scope(
+                                        documents,
+                                        index,
+                                        &field.type_expr,
+                                        depth + 1,
+                                        &parameters,
+                                    )?,
+                                ))
+                            })
+                            .collect::<Option<_>>()?,
+                    })
+                })
+                .collect::<Option<_>>()?;
+            Some(Ty::Enum(std::sync::Arc::new(fpas_sema::EnumTy {
+                is_error: enumeration.is_error,
+                name: symbol.qualified_name.clone(),
+                type_params,
+                type_args: vec![],
+                variants,
+            })))
+        }
         TypeBody::Alias(syntax) => from_syntax(documents, index, syntax, depth + 1),
         TypeBody::Record(record) => {
             let type_params: Vec<_> = definition

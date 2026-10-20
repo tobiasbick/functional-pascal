@@ -101,6 +101,7 @@ impl Parser {
                 | Token::Procedure
                 | Token::Record
                 | Token::Enum
+                | Token::Error
                 | Token::Unit
                 | Token::If
                 | Token::Case

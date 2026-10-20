@@ -105,6 +105,7 @@ example_run_tests! {
     (example_option, "examples/pascal/error-handling/option_example.fpas"),
     (example_panic, "examples/pascal/error-handling/panic_example.fpas"),
     (example_result, "examples/pascal/error-handling/result_example.fpas"),
+    (example_native_errors, "examples/pascal/error-handling/native_errors.fpas"),
     (example_for_downto, "examples/pascal/for/downto_example.fpas"),
     (example_for, "examples/pascal/for/for_example.fpas"),
     (example_dict_for_in, "examples/pascal/for-in/dict_for_in_example.fpas"),

@@ -107,6 +107,8 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
         ) => None,
         Intrinsic::Conv(
             fpas_bytecode::ConvIntrinsic::IntToStr
+            | fpas_bytecode::ConvIntrinsic::ErrorMessage
+            | fpas_bytecode::ConvIntrinsic::ErrorMatchesVariant
             | fpas_bytecode::ConvIntrinsic::RealToStr
             | fpas_bytecode::ConvIntrinsic::IntToReal
             | fpas_bytecode::ConvIntrinsic::BoolToStr

@@ -1,0 +1,16 @@
+program ErrorValues;
+
+uses Std.Console as Console;
+
+type FileError = error
+  Missing(Path: string) = 'File not found';
+end error;
+
+type ConfigError = error
+  Failed(Cause: FileError) = 'Cannot load configuration';
+end error;
+
+begin
+  const Failure := ConfigError.Failed(FileError.Missing('settings.toml'));
+  Console.WriteLn(Failure);
+end.

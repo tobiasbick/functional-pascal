@@ -60,6 +60,8 @@ const B: integer := 'hi'.Length(); // Built-in string operation: 2
 `Length()` and `IsEmpty()` are shared by strings, arrays, and dictionaries.
 Strings and arrays both use `Slice(Start, Len)`; string indexes count Unicode
 scalars. Generic containers retain their operations when their shape is known.
+Native [error families](../types/errors.md) and `E: Error` parameters supply
+the read-only `Message(): string` operation, including their typed causes.
 An unconstrained type parameter, scalar, channel, or task handle has no native
 instance catalog. A free function returning a record or built-in type can
 start a chain: `Build().Next()` or `MakeText().Trim()`.

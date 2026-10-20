@@ -1,0 +1,11 @@
+unit Errors;
+
+public type FileError = error
+  Missing(Path: string) = 'Can''t open';
+  Denied;
+end error;
+
+public type ContextError of E: Error = error
+  Failed(Cause: E);
+end error;
+end unit;

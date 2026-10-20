@@ -18,7 +18,7 @@ impl Checker {
         ty: &Ty,
         member: &str,
         span: Span,
-        bound_key: Option<(usize, usize)>,
+        bound_key: Option<(usize, usize, Span)>,
     ) -> Ty {
         match ty {
             Ty::Record(record_ty) => {
@@ -63,7 +63,15 @@ impl Checker {
                     return Ty::Error;
                 };
 
-                self.bound_callable_type(&qualified, &method_kind, span, bound_key)
+                if let Some((_, _, binding_span)) = bound_key {
+                    self.record_method_owner_arguments(record_ty, binding_span);
+                }
+                self.bound_callable_type(
+                    &qualified,
+                    &method_kind,
+                    span,
+                    bound_key.map(|(key, receiver, _)| (key, receiver)),
+                )
             }
             _ => {
                 self.error_with_code(

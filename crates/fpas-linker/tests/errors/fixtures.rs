@@ -80,6 +80,7 @@ pub fn inputs() -> (Vec<RelocatableObject>, RelocatableObject) {
             vec![fs.as_type()],
         ))));
     library.functions.push(ObjectFunction {
+        display_name: None,
         error_constructors: Some(ErrorConstructorSignature {
             type_parameters: 1,
             requirements: vec![request(key(
@@ -124,10 +125,34 @@ pub fn inputs() -> (Vec<RelocatableObject>, RelocatableObject) {
 }
 
 pub fn factory(executable: &VerifiedExecutable, request: &ErrorConstructorRequest) -> FunctionId {
-    function(
-        executable,
-        &fpas_unit::errors::constructor_symbol(request).expect("factory name"),
+    let image = executable.executable();
+    let variant = image
+        .enum_variants
+        .iter()
+        .enumerate()
+        .filter(|(_, variant)| {
+            image.enums[usize::from(variant.owner.get())].error.as_ref() == Some(&request.instance)
+        })
+        .nth(usize::from(request.variant))
+        .map(|(index, _)| index)
+        .expect("concrete requested variant");
+    FunctionId::try_from_index(
+        image
+            .functions
+            .iter()
+            .position(|function| {
+                let instruction = image.code[function.code.start.get() as usize];
+                instruction.opcode().ok() == Some(Opcode::MakeEnum)
+                    && usize::from(
+                        instruction
+                            .abc_operands()
+                            .expect("enum constructor operands")
+                            .b,
+                    ) == variant
+            })
+            .expect("factory for concrete requested variant"),
     )
+    .expect("factory function ID")
 }
 
 pub fn function(executable: &VerifiedExecutable, name: &str) -> FunctionId {

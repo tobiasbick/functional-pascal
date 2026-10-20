@@ -163,6 +163,8 @@ pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Str(StrIntrinsic::Filter),
     Intrinsic::Str(StrIntrinsic::Reduce),
     Intrinsic::Conv(ConvIntrinsic::IntToStr),
+    Intrinsic::Conv(ConvIntrinsic::ErrorMessage),
+    Intrinsic::Conv(ConvIntrinsic::ErrorMatchesVariant),
     Intrinsic::Conv(ConvIntrinsic::RealToStr),
     Intrinsic::Conv(ConvIntrinsic::IntToReal),
     Intrinsic::Conv(ConvIntrinsic::BoolToStr),

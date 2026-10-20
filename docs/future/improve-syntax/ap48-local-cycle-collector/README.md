@@ -1,6 +1,6 @@
 # AP48: Task ownership and a local cycle collector
 
-Status: Decision pending. Effort: large, across runtime values, VM, sema and host tooling.
+Status: Planned. Effort: large, across runtime values, VM, sema and host tooling.
 The user requested planning documentation only. No implementation is authorized.
 Completion is tracked in the [central plan](../README.md#package-status).
 
@@ -47,7 +47,9 @@ Source entry points:
 2. A cell belongs to exactly one domain. A local graph cannot contain foreign cells.
    Encapsulated cell operations and a shared graph walker enforce this rule.
 3. Values without reachable local cells, task-bound callables or escaping references
-   may be shared, subject to the existing contracts for resource handles.
+   may be shared between tasks of the same VM, subject to resource-handle contracts.
+   Session imports additionally require matching executable provenance for every
+   contained callable. Data transferability alone does not grant code access.
    A `const` binding alone does not prove transferability.
 4. Cross-task transfers reject local graphs before publication. There is no implicit
    deep copy, ownership transfer or new FPAS ownership syntax in this package.
@@ -70,17 +72,47 @@ all shared values with a tracing heap, and unrelated language or scheduler redes
 
 ## Decisions and gates
 
-| ID | Question | User decision | Affected work packages |
+| ID | Question | Planning decision and authorization | Affected work packages |
 | --- | --- | --- | --- |
-| Q37 | Adopt the proposed domain, transfer, external-root and local tracing contract? | Planning requested only; contract proposed, implementation not authorized | AP48.1 through AP48.7 |
+| Q37 | Which ownership and collection contract does AP48 use? | Domain isolation, checked transfers, registered roots and local tracing retained under delegated planning; implementation not authorized | AP48.1 through AP48.7 |
+| Q38 | How long do unused selection cases retain local callbacks? | Selected under delegated planning: close cases at owner termination and abandoned attempt cleanup | AP48.2, AP48.4, AP48.5, AP48.7 |
+| Q39 | Who collects retired domains after external roots disappear? | Selected under delegated planning: every root release requests maintenance; a quiescent domain is serviced synchronously by the releasing thread | AP48.4 through AP48.7 |
+| Q40 | When can blocked tasks be collected? | Selected under delegated planning: saved tasks and explicitly published native waits are eligible; opaque native calls defer collection until return | AP48.4, AP48.5, AP48.7 |
+| Q41 | Which callable values may enter another session? | Selected under delegated planning: require the identical shared executable instance as well as transferability and valid resource handles | AP48.1, AP48.2, AP48.4, AP48.7 |
+
+Q38 through Q41 are concrete plan decisions requested by the user. They do not
+authorize implementation or change the current handbook. Q37 records the overall
+design; explicit implementation authorization is still required. The work packages
+below own the detailed rules and acceptance.
+
+Q38 intentionally changes the current VM-lifetime retention of unused cases. Close
+them after owner cleanup, without running callbacks or closing underlying resources.
+An abandoned supervised attempt closes its own cases before retry. The logical task
+retains its domain across retries. Returning from a reusable callback invocation is
+not session termination; session cases close at shutdown or destruction.
+
+Q39 applies to non-final root releases and host mutations that disconnect values,
+not only destruction of the last handle. A per-domain request generation and the
+permit-release handshake prevent lost maintenance requests. No collector thread is
+introduced. The releasing thread may pay the cost of a complete local collection.
+
+Q40 distinguishes scheduler suspension from native blocking. Native code publishes
+all roots and releases execution access before an eligible wait. Opaque native calls
+retain execution access, so there is no prompt-reclamation guarantee during them.
+
+Q41 uses an opaque runtime token owned by the shared verified executable. Cloning its
+shared handle preserves identity; loading equal bytes into a separate executable
+creates a different identity. Numeric function IDs, names and byte equality do not
+authorize import. Accepted calls resolve globals in the target session, with its
+ordinary ownership checks. No source-session global references are imported.
 
 The choice proposed here is local root tracing followed by cell-edge removal,
 rather than reference-count snapshots or a concurrent cycle algorithm.
 
 Open gates:
 
-- Record Q37 before implementation. Any change to language semantics beyond the
-  documented transfer restriction needs an explicit decision.
+- Obtain implementation authorization for Q37 through Q41 before changing code.
+  Further semantic changes outside these recorded decisions need a new decision.
 - AP48.1 must establish the cycle-through-cells invariant and the complete walker.
 - AP48.4 must close raw host/debugger escape paths and specify external-root lifetime.
 - AP48.5 must demonstrate exclusive collection and complete roots at safe points.
@@ -110,7 +142,10 @@ Follow the [development process](../development-process.md) for delivery and sta
 Unreachable cycles are reclaimed during long-running tasks and after task teardown.
 Reachable cycles preserve identity and mutable state. All transfer variants reject
 forbidden graphs, including values hidden behind aggregates or ordinary calls.
-Host roots remain valid across collection and permit reclamation after release.
+Host roots remain valid across collection and permit reclamation after any release,
+even while another root survives after task termination. Unused cases do not retain
+abandoned task or attempt graphs. Cross-session callables require matching code
+provenance. Opaque native calls explicitly defer collection until execution returns.
 Collecting one domain permits unrelated runnable tasks to make progress.
 
 Acceptance evidence must distinguish live objects, allocator caches and process

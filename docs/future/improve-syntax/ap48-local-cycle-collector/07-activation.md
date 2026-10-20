@@ -9,8 +9,13 @@ Request collection using per-domain cell allocation and mutation pressure, servi
 at the AP48.5 safe points. Include periodic checks while execution continues, before
 parking, at termination and after external-root release. A graph can become garbage
 when a register or handle drops without a new cell allocation; scheduling must cover
-that case. Avoid a collector thread or global pause unless a later design explicitly
-requires one. No public FPAS collection controls are introduced.
+that case. Use the Q39 maintenance executor and Q40 blocking classifications from
+AP48.5. There is no collector thread or global pause. No public FPAS collection
+controls are introduced. Opaque native calls defer collection until return/unwind.
+
+Pressure thresholds may defer ordinary running-task collections. They must not
+suppress a requested retired/quiescent-domain pass after an external-root removal or
+edge-removing mutation. Include handle-release latency in performance measurements.
 
 Choose initial thresholds from controlled measurements rather than arbitrary defaults.
 Before activation, record concrete workload-specific throughput, memory and pause
@@ -26,7 +31,14 @@ from collection costs. These measurements are future work, not current results.
 | Live mutable closures survive repeated passes | Results, alias identity and state match execution without collection |
 | Deep/wide graphs and many immutable transfers | No stack overflow; measured costs meet recorded budgets |
 | Migration, channel waits, cancellation and retries | No deadlock, stranded task or retained abandoned domain |
-| External roots released after task completion | Only rooted graphs survive; final release triggers cleanup without the original worker |
+| Root A released after task/VM destruction while independent root B survives | A's cycle is collected without waiting for B; B remains usable for inspection |
+| External mutation disconnects a cycle without dropping the root handle | Retired-domain maintenance collects the disconnected cycle |
+| Root release races with collection or permit exit | Every request is serviced; no self-deadlock or lost wakeup |
+| Owner termination and supervised retry with unused Select cases | Old case roots disappear; cycles collect; callbacks/resources are not invoked or closed |
+| Saved task and published native wait | Maintenance proceeds without dispatching the task or ending the native wait |
+| Polling and opaque native waits | Polling services requests; opaque calls defer them and service them on return/unwind |
+| Equal function IDs in distinct executable instances | Direct, nested and bound callables are rejected before target execution |
+| Two sessions share one verified executable | Transferable functions run against target globals; foreign cells/handles remain rejected |
 | Busy collector and independent worker | Independent worker progresses during collection |
 | Callback/session/debugger churn | No accumulating detached cycles, stale roots or owner collisions |
 
@@ -47,7 +59,7 @@ including Rust formatting/build/workspace tests, the FPAS suite and affected pro
 Check portable/cached artifacts, embedding consumers and debugging behavior.
 Review the result against the contract and repository standards.
 
-Update the closure, task and variable-reference documentation, Rust embedding
+Update the closure, task, Select-lifetime and variable-reference documentation, Rust embedding
 contracts and compact reference as applicable. Explain reference counting plus local
 cycle collection and the absence of a global execution lock. Completion requires
 recorded budget results and passing package acceptance, not merely a successful build.

@@ -21,6 +21,13 @@ Prerequisite: Q37 recorded and implementation explicitly authorized.
    cells and callable capabilities, not by `const` or an outer aggregate's type.
 5. Add weak cell registration for later collection, with dead-entry cleanup.
    Administrative handles must not introduce strong domain/value cycles.
+6. Give every runtime function value executable provenance, including named functions,
+   closures and bound methods. Follow Q41 in the package README: use the identity of
+   the shared verified executable, not its function IDs or serialized bytes. Keep
+   code identity separate from cell-domain identity and task-bound capability.
+   All constructors, constant loading and debugger copies must preserve or explicitly
+   establish validated provenance. Do not expose a safe host constructor that can
+   attach a foreign function ID without validating the executable association.
 
 ## Owners and migration
 
@@ -37,6 +44,9 @@ Audit and migrate all direct cell constructors, including embedded fixtures.
   owner. Mixed-domain writes fail without replacing the original value.
 - Equal task numbers in different sessions do not confer access. Worker migration
   and same-task callbacks preserve access and alias identity.
+- Equal function IDs in distinct executable instances do not confer callable import
+  permission. Copies sharing one verified executable retain the same code identity.
+  Provenance is runtime-only and reconstructed when an artifact is loaded.
 - `var` reference reads/writes remain correct and retain their non-escape rule.
 - Weak registration neither retains an acyclic cell nor grows without bound as
   ordinary cells are created and released.

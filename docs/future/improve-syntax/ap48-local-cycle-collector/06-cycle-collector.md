@@ -43,6 +43,11 @@ Keep the collector independent of task-specific callback/channel implementations
 - Preserve a cycle reachable only from a host root, suspended continuation, `var`
   reference, callback temporary or debugger handle. Reclaim it after that root ends.
 - Collector candidates and registries do not accidentally count as live roots.
+- With independent rooted cycles A and B in a retired domain, remove A's root and
+  explicitly service maintenance: reclaim A while B keeps its identity and contents.
+  Repeat after mutating B to disconnect another cycle, without removing B's root.
+- Collect a cycle formerly held by an automatically closed owner/attempt case.
+  Preserve it if an explicit debugger root still exists, then reclaim it on release.
 - Deep graphs use bounded call-stack space. Incomplete marking never clears cells.
 - Repeated explicit collection is idempotent. Acyclic release still occurs without
   waiting for collection. Teardown does not invoke user code while holding cell locks.

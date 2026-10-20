@@ -1,8 +1,8 @@
 //! Enum identities, generic arguments, and associated-data variants.
 //! See `docs/pascal/language/types/enums.md` and `docs/pascal/language/types/generics.md`.
 
-use super::{GenericParamDef, Ty, substitute_type_parameters};
-use std::collections::HashMap;
+use super::{FunctionTy, GenericParamDef, ParamTy, Ty, substitute_type_parameters};
+use std::{collections::HashMap, sync::Arc};
 
 /// Nominal enum declaration or application with resolved payload types.
 #[derive(Debug, Clone, PartialEq)]
@@ -51,6 +51,32 @@ impl EnumTy {
                 .variants
                 .iter()
                 .any(|variant| !variant.fields.is_empty())
+    }
+
+    /// Return a payload constructor's readonly signature, retaining generic parameters.
+    /// Fieldless variants are values rather than callable constructors.
+    pub fn constructor_type(self: &Arc<Self>, variant_name: &str) -> Option<FunctionTy> {
+        let variant = self
+            .variants
+            .iter()
+            .find(|variant| variant.name.eq_ignore_ascii_case(variant_name))?;
+        if variant.fields.is_empty() {
+            return None;
+        }
+        Some(FunctionTy {
+            type_params: if self.type_args.is_empty() {
+                self.type_params.clone()
+            } else {
+                vec![]
+            },
+            params: variant
+                .fields
+                .iter()
+                .map(|(name, ty)| ParamTy::value(name, ty.clone()))
+                .collect(),
+            return_type: Box::new(Ty::Enum(Arc::clone(self))),
+            variadic: false,
+        })
     }
 
     /// Substitute declaration parameters without expanding recursive identities.

@@ -45,7 +45,7 @@ impl Checker {
     }
 
     /// Instantiate a generic routine value using the expected callable signature.
-    pub(in crate::check) fn specialize_expected_callable(
+    pub(crate) fn specialize_expected_callable(
         &mut self,
         actual: Ty,
         expected: &Ty,

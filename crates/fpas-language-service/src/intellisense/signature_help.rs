@@ -93,6 +93,7 @@ impl LanguageService {
                 crate::SymbolKind::Function
                     | crate::SymbolKind::Procedure
                     | crate::SymbolKind::Method
+                    | crate::SymbolKind::EnumMember
             ))
             .then(|| {
                 super::callable_values::signature(

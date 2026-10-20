@@ -33,15 +33,12 @@ keeps graphics-specific API, platform and deployment questions separate.
 
 ## 1. Typed operational errors
 
-Status: selected native-error design; the runtime/artifact foundation and
-AP47.3's source-language slice, AP47.4's constructor values/MapError and the
-AP47.5/AP47.6 host, parsing, task and network migrations are implemented. The user selected native error declarations, automatic output,
-explicit MapError and unchanged try, then delegated the detailed planning choices.
-The [AP47 package](improve-syntax/ap47-typed-operational-errors/README.md) records
-those choices, dependencies and seven delivery work packages. Its design work is
-recorded; AP47.1-AP47.7 and final acceptance are complete. The acceptance record
-includes executable examples, artifact/editor checks and benchmark workloads.
-Elapsed-time performance acceptance requires a controlled local host.
+Status: Implemented. Native error declarations, typed causes, automatic output,
+constructor values and explicit MapError are described in the current
+[language handbook](../pascal/language/types/errors.md) and
+[Std reference](../pascal/std/README.md). Functional acceptance includes source,
+portable-image, editor and executable documentation checks. Elapsed-time
+performance acceptance requires a controlled local host.
 
 Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
 see [task APIs](../pascal/std/concurrency/task.md).
@@ -51,8 +48,7 @@ typed decisions independent of diagnostic wording.
 
 ### Selected language direction
 
-Use one native nominal type declaration. The syntax is available in AP47.3;
-the Std FsError family in this example is available since AP47.5:
+Native nominal error declarations and the Std FsError family are implemented:
 
 ```pascal
 type ConfigError = error
@@ -73,7 +69,7 @@ Error is also a built-in generic constraint implying Printable, not a storable
 erased root type. Concrete native or application error types remain in Result.
 One Message() operation and direct Printable output share the same renderer;
 strict string formatting still requires a string. Full syntax, type, Cause and
-output rules are owned by [AP47.1](improve-syntax/ap47-typed-operational-errors/01-decision.md).
+output rules are owned by the [current handbook](../pascal/language/types/errors.md).
 
 ### Agreed MapError and try contract
 
@@ -103,17 +99,16 @@ unchanged. Neither native errors nor MapError catch runtime failures.
 
 ### Delivery and scope
 
-[AP47's Std catalog](improve-syntax/ap47-typed-operational-errors/standard-errors.md)
-selects the domain families, structured native leaf, normalization, exact cohort
-coverage and mapping rules. Selected signatures are replaced in place with their
-consumers; no parallel typed/string wrapper family is added. Source-authored
-application Result errors remain general and need no runtime registration.
+The [Std reference](../pascal/std/README.md) documents domain families and their
+[shared native cause](../pascal/std/host/errors.md), normalization and explicit
+mappings. Selected signatures and their consumers use those concrete families;
+there is no parallel typed/string wrapper API. Source-authored application Result
+errors remain general and require no runtime registration.
 
-[AP47's acceptance plan](improve-syntax/ap47-typed-operational-errors/07-acceptance-and-performance.md)
-covers artifacts, standalone images, editor/query behavior, runtime and Std
-integration, executable examples and local performance checks. Error metadata must
-not add work to ordinary VM instruction dispatch. Remaining profiling/file-split
-work does not reopen the selected public contract or authorize implementation.
+The [compiled-program handbook](../pascal/program-structure/compiled-programs.md)
+documents artifact compatibility. Error metadata adds no polling to ordinary VM
+instruction dispatch. Further language or library capabilities require their
+own design and implementation decision.
 
 ## 2. Uniform first-class operations
 

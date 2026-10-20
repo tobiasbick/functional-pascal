@@ -344,7 +344,7 @@ begin
                   begin
                     CloseAt(Index);
                     return Error(
-                      HttpTypes.HttpError.InvalidMessage('HTTP chunk is missing its trailing CRLF')
+                      HttpTypes.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')
                     );
                   end;
                 end if;

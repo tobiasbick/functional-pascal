@@ -72,12 +72,12 @@ application error families retain concrete variants and typed payloads in Result
 Literal message labels, automatic output and a designated typed Cause remove
 per-type reporting functions and preserve the original error under wrappers.
 
-The [AP47 plan](improve-syntax/ap47-typed-operational-errors/README.md) records the
-user's direction and autonomous detail decisions. It owns the complete contract,
-seven ordered work packages and [Std error catalog](improve-syntax/ap47-typed-operational-errors/standard-errors.md).
-The catalog covers host/parsing and task/network cohorts, nested callback Results,
-a shared native HostError leaf and explicit domain mappings. Native conditions are
-classified from structured outcomes, never by parsing message strings.
+The implemented contract is documented in the
+[language handbook](../pascal/language/types/errors.md) and
+[Std reference](../pascal/std/README.md), including nested callback Results,
+a [shared native HostError leaf](../pascal/std/host/errors.md) and explicit domain
+mappings. Native conditions are classified from structured outcomes, never by
+parsing message strings.
 
 MapError is the explicit general Result error transformation. Ok preserves its
 payload without calling the mapper; Error calls it once. Constructor values make
@@ -89,13 +89,10 @@ their existing behavior.
 Selected public signatures are replaced in place with all affected consumers;
 there is no parallel string/typed wrapper family. Existing successes, limits,
 EOF and lifecycle distinctions remain specified at their current owner. No new
-I/O capability is bundled into the error migration. AP47.2's runtime/artifact
-foundation and AP47.3's source syntax, constraints, Message() and executable
-handbook are implemented. AP47.4 delivers constructor values and MapError, and
-AP47.5 delivers host/parsing families with migrated callers. AP47.6 delivers
-task/network families and layered HTTP consumers. AP47.7 completes integrated
-acceptance, documentation and benchmark workloads. SDK and TUI boundaries that
-retain strings use explicit Message() mappings.
+I/O capability is bundled into the error migration. Native error declarations,
+constraints, Message(), constructor values and MapError are implemented, along
+with host/parsing, task/network and layered HTTP families. SDK and TUI boundaries
+that retain strings use explicit Message() mappings.
 
 ## Additional candidates
 
@@ -153,10 +150,9 @@ source-language features. Select one canonical API for each operation rather
 than copying every variant from the comparison libraries.
 
 Incremental file I/O and process control need separate designs covering ownership,
-bounds and cancellation. Structured errors have the selected AP47 design and
-delivery; AP47.1-AP47.7 are complete, including both Std migration cohorts and
-final acceptance. The remaining candidates should be driven by concrete
-application needs.
+bounds and cancellation. Structured errors and the selected Std migrations are
+implemented. The remaining candidates should be driven by concrete application
+needs.
 
 ## Comparison sources
 

@@ -3,8 +3,8 @@
 The FPAS 1 syntax campaign is closed. This directory keeps its planning workflow
 and a copyable package template for later work, including
 [FPAS 2 language directions](../fpas2-language-directions.md).
-AP47 contains the selected native-error design and its implementation work packages.
-AP47.1-AP47.7 are complete, including functional acceptance and benchmark workloads.
+Completed plans are removed after delivery; implemented behavior remains in the
+current handbook and grammar.
 
 Implemented behavior belongs in the [current handbook](../../pascal/README.md)
 and [grammar](../../specs/grammar.ebnf). A proposal here does not authorize a
@@ -29,8 +29,8 @@ The example is a template, not an active AP or an approved proposal.
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
 2. Copy `example-apNN-topic/` to `ap48-<topic>/` for the next package. Continue
-   with the next unused number for later packages. AP01 through AP46 belong to
-   the closed campaign; do not reuse or renumber those IDs.
+   with the next unused number for later packages. AP01 through AP47 are
+   closed; do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
    and one numbered file per work package, such as `01-decision.md` and
    `02-implementation.md`. Delete template instructions from the copied files.
@@ -45,20 +45,17 @@ The example is a template, not an active AP or an approved proposal.
    Follow the [development process](development-process.md) for delivery.
 
 Use `AP48` for the next package and `AP48.1`, `AP48.2`, and so on for its work
-packages. Decision IDs continue at `Q37`; AP47 owns Q28 through Q36, while Q01
-through Q27 belong to the closed campaign. Record each decision and its affected
-work packages in the owning package README. Do not create a second decision or
-completion index.
+packages. Decision IDs continue at `Q37`; Q01 through Q36 belong to closed
+packages. Record each decision and its affected work packages in the owning
+package README. Do not create a second decision or completion index.
 
 ## Package status
 
-AP47.1-AP47.7 are complete, including functional acceptance and benchmark
-workloads. Add real packages here when planning begins; keep the example out of
-this table.
+No active AP packages. Add new packages here when planning begins; keep the
+example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [x] | [AP47: Native typed operational errors](ap47-typed-operational-errors/README.md) | Large; seven delivery packages | Current variants, generics, Result/try and callback runtime | Complete; AP47.1-AP47.7 delivered |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

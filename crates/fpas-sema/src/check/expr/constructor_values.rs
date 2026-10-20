@@ -1,11 +1,7 @@
 //! Payload variant references use ordinary readonly callable signatures.
 //! Documentation: `docs/pascal/language/functions/function-types.md`.
 
-use crate::{
-    check::Checker,
-    scope::SymbolKind,
-    types::{FunctionTy, ParamTy, Ty},
-};
+use crate::{check::Checker, scope::SymbolKind, types::Ty};
 use fpas_parser::Designator;
 
 impl Checker {
@@ -22,26 +18,9 @@ impl Checker {
             return ty;
         };
         let variant_name = name.rsplit('.').next().unwrap_or(&name);
-        let Some(variant) = enumeration
-            .variants
-            .iter()
-            .find(|variant| variant.name.eq_ignore_ascii_case(variant_name))
-        else {
-            return Ty::Error;
-        };
-        Ty::Function(FunctionTy {
-            type_params: if enumeration.type_args.is_empty() {
-                enumeration.type_params.clone()
-            } else {
-                vec![]
-            },
-            params: variant
-                .fields
-                .iter()
-                .map(|(name, ty)| ParamTy::value(name, ty.clone()))
-                .collect(),
-            return_type: Box::new(Ty::Enum(enumeration)),
-            variadic: false,
-        })
+        enumeration
+            .constructor_type(variant_name)
+            .map(Ty::Function)
+            .unwrap_or(Ty::Error)
     }
 }

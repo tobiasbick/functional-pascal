@@ -99,7 +99,9 @@ case Status of
 end case;
 ```
 
-If the process cannot be started, returns `Error(Cause)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.
+If the process cannot be started, returns `Error(ProcError.StartFailed(Cause))`.
+If the host reports that the process ended without an exit code, returns
+`Error(ProcError.WaitFailed(Cause))` with the original host explanation.
 
 The child inherits standard input and output. Its standard error is inherited too, except under
 `fpas run --diagnostics json`, `fpas test --diagnostics json`, or a native application with `FPAS_DIAGNOSTICS=json`, where each

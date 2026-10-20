@@ -67,9 +67,16 @@ pub(super) fn operation_result(
                 offset,
                 depth + 1,
             )
-            .and_then(|ty| match ty {
-                Ty::Function(function) => Some(*function.return_type),
-                _ => None,
+            .and_then(|actual| {
+                let expected = &signature
+                    .params
+                    .iter()
+                    .find(|parameter| parameter.name.eq_ignore_ascii_case("F"))?
+                    .ty;
+                match fpas_sema::specialize_callable_type(&actual, expected)? {
+                    Ty::Function(function) => Some(*function.return_type),
+                    _ => None,
+                }
             }),
         };
         match (name.to_ascii_lowercase().as_str(), result) {

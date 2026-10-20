@@ -1,0 +1,206 @@
+// Left-to-right command-line scanning after schema and input validation.
+unit Std.Cli.Parser;
+
+uses
+  Std.Cli.Types as Types, Std.Cli.Values as Values, Std.Cli.Rules as Rules,
+  Std.Cli.HelpText as Help;
+
+type MatchedOption = record
+  Index: integer;
+  Negative: boolean := false;
+  Inline: option of string := None;
+end record;
+
+type NamedValue = record
+  Value: Types.Value;
+  Consumed: integer;
+end record;
+
+function MatchOption(Argument: string; Lookup: Rules.Indexes): option of MatchedOption;
+begin
+  if Argument.StartsWith('--') then
+    const Body := Argument.Slice(2, Argument.Length() - 2);
+    var Name := Body;
+    var Inline: option of string := None;
+    case Body.IndexOf('=') of
+      when Some(const Separator):
+        Name := Body.Slice(0, Separator);
+        Inline := Some(Body.Slice(Separator + 1, Body.Length() - Separator - 1));
+      when None:
+        null;
+    end case;
+
+    if Name in Lookup.LongOptions then
+      return Some(MatchedOption(Index := Lookup.LongOptions[Name], Inline := Inline));
+    end if;
+
+    if Name in Lookup.NegatedOptions then
+      return Some(
+        MatchedOption(
+          Index := Lookup.NegatedOptions[Name], Negative := true, Inline := Inline
+        )
+      );
+    end if;
+  elsif Argument.Length() = 2 and Argument.StartsWith('-') then
+    const Short := Argument[1];
+    if Short in Lookup.ShortOptions then
+      return Some(MatchedOption(Index := Lookup.ShortOptions[Short]));
+    end if;
+  end if;
+
+  return None;
+end function;
+
+function ReadOption(
+  Arguments: array of string; Index: integer; Spec: Types.OptionSpec; Match: MatchedOption
+): result of (NamedValue, Types.CliError);
+begin
+  if Match.Negative then
+    if Match.Inline is Some(_) then
+      return Error(Types.CliError.UnexpectedValue(Spec.Name, Index));
+    end if;
+
+    return Ok(NamedValue(Value := Types.Value.Bool(false), Consumed := 1));
+  end if;
+
+  case Match.Inline of
+    when Some(const Text):
+      const Converted := try Values.Convert(Text, Spec.Kind, Spec.Name, Index);
+      return Ok(NamedValue(Value := Converted, Consumed := 1));
+    when None:
+      null;
+  end case;
+
+  if Spec.Kind = Types.Kind.Bool then
+    return Ok(NamedValue(Value := Types.Value.Bool(true), Consumed := 1));
+  end if;
+
+  if Index + 1 >= Arguments.Length() then
+    return Error(Types.CliError.MissingValue(Spec.Name, Index));
+  end if;
+
+  if Arguments[Index + 1] = '--' then
+    return Error(Types.CliError.MissingValue(Spec.Name, Index));
+  end if;
+  const Converted := try Values.Convert(Arguments[Index + 1], Spec.Kind, Spec.Name, Index + 1);
+  return Ok(NamedValue(Value := Converted, Consumed := 2));
+end function;
+
+function IsNumericPosition(
+  Argument: string; Definition: Types.Schema; Position: integer
+): boolean;
+begin
+  if Position >= Definition.Positionals.Length() or Argument.Length() < 2 then
+    return false;
+  end if;
+
+  if not Argument.StartsWith('-') then
+    return false;
+  end if;
+
+  if Argument[1] < '0' or Argument[1] > '9' then
+    return false;
+  end if;
+  const Kind := Definition.Positionals[Position].Kind;
+  return Kind = Types.Kind.Int or Kind = Types.Kind.Float;
+end function;
+
+function Complete(
+  Definition: Types.Schema; Explicit: dict of string to Types.Value
+): result of (Types.Outcome, Types.CliError);
+begin
+  // Required means explicit presence, even when a default exists.
+  for Spec: Types.OptionSpec in Definition.Options do
+    if Spec.Required and not (Spec.Name in Explicit) then
+      return Error(Types.CliError.MissingRequired(Spec.Name));
+    end if;
+  end for;
+
+  for Spec: Types.PositionalSpec in Definition.Positionals do
+    if Spec.Required and not (Spec.Name in Explicit) then
+      return Error(Types.CliError.MissingRequired(Spec.Name));
+    end if;
+  end for;
+  var Completed := Explicit;
+  for Spec: Types.OptionSpec in Definition.Options do
+    if not (Spec.Name in Completed) then
+      case Spec.Default of
+        when Some(const DefaultValue):
+          Completed[Spec.Name] := DefaultValue;
+        when None:
+          if Spec.Kind = Types.Kind.Bool then
+            Completed[Spec.Name] := Types.Value.Bool(false);
+          end if;
+      end case;
+    end if;
+  end for;
+
+  for Spec: Types.PositionalSpec in Definition.Positionals do
+    if not (Spec.Name in Completed) then
+      case Spec.Default of
+        when Some(const DefaultValue):
+          Completed[Spec.Name] := DefaultValue;
+        when None:
+          null;
+      end case;
+    end if;
+  end for;
+
+  return Ok(Types.Outcome.Parsed(Completed));
+end function;
+
+// Parse independent argument text without accessing the host command line.
+public function Parse(
+  Arguments: array of string; Definition: Types.Schema
+): result of (Types.Outcome, Types.CliError);
+begin
+  const Lookup := try Rules.Validate(Definition);
+  discard try Rules.ValidateArguments(Arguments);
+  var ParsedValues: dict of string to Types.Value := [:];
+  var Index := 0;
+  var Position := 0;
+  var EndOptions := false;
+  while Index < Arguments.Length() do
+    const Argument := Arguments[Index];
+    if not EndOptions then
+      if Argument = '--' then
+        EndOptions := true;
+        Index := Index + 1;
+        continue;
+      end if;
+
+      if Argument = '--help' or Argument = '-h' then
+        return Ok(Types.Outcome.Help(Help.Render(Definition)));
+      end if;
+
+      if Argument.StartsWith('-') and Argument <> '-' then
+        if not IsNumericPosition(Argument, Definition, Position) then
+          case MatchOption(Argument, Lookup) of
+            when Some(const Match):
+              const Spec := Definition.Options[Match.Index];
+              if Spec.Name in ParsedValues then
+                return Error(Types.CliError.DuplicateOption(Spec.Name, Index));
+              end if;
+              const Parsed := try ReadOption(Arguments, Index, Spec, Match);
+              ParsedValues[Spec.Name] := Parsed.Value;
+              Index := Index + Parsed.Consumed;
+              continue;
+            when None:
+              return Error(Types.CliError.UnknownOption(Argument, Index));
+          end case;
+        end if;
+      end if;
+    end if;
+
+    if Position >= Definition.Positionals.Length() then
+      return Error(Types.CliError.UnexpectedArgument(Argument, Index));
+    end if;
+    const Spec := Definition.Positionals[Position];
+    ParsedValues[Spec.Name] := try Values.Convert(Argument, Spec.Kind, Spec.Name, Index);
+    Position := Position + 1;
+    Index := Index + 1;
+  end while;
+
+  return Complete(Definition, ParsedValues);
+end function;
+end unit;

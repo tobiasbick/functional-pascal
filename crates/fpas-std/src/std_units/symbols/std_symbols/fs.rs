@@ -1,5 +1,23 @@
 //! `Std.Fs` symbol names and registry group.
 
+std_symbol!(STD_FS_FILE = std_fs!("File"));
+std_symbol!(STD_FS_FILE_MODE = std_fs!("FileMode"));
+std_symbol!(STD_FS_SEEK_ORIGIN = std_fs!("SeekOrigin"));
+std_symbol!(STD_FS_OPEN = std_fs!("Open"));
+std_symbol!(STD_FS_CLOSE = std_fs!("Close"));
+std_symbol!(STD_FS_READ = std_fs!("Read"));
+std_symbol!(STD_FS_WRITE = std_fs!("Write"));
+std_symbol!(STD_FS_READ_LINE = std_fs!("ReadLine"));
+std_symbol!(STD_FS_SEEK = std_fs!("Seek"));
+std_symbol!(STD_FS_TELL = std_fs!("Tell"));
+std_symbol!(STD_FS_FLUSH = std_fs!("Flush"));
+std_symbol!(STD_FS_READ_WITH_CANCELLATION = std_fs!("ReadWithCancellation"));
+std_symbol!(STD_FS_WRITE_WITH_CANCELLATION = std_fs!("WriteWithCancellation"));
+std_symbol!(STD_FS_READ_LINE_WITH_CANCELLATION = std_fs!("ReadLineWithCancellation"));
+
+std_symbol!(STD_FS_READ_BYTES = std_fs!("ReadBytes"));
+std_symbol!(STD_FS_WRITE_BYTES = std_fs!("WriteBytes"));
+
 std_symbol!(STD_FS_READ_TEXT = std_fs!("ReadText"));
 std_symbol!(STD_FS_WRITE_TEXT = std_fs!("WriteText"));
 std_symbol!(STD_FS_WRITE_TEXT_ATOMIC = std_fs!("WriteTextAtomic"));
@@ -28,6 +46,22 @@ std_symbol!(STD_FS_READ_DIR = std_fs!("ReadDir"));
 std_symbol!(STD_FS_GLOB = std_fs!("Glob"));
 
 pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
+    STD_FS_FILE,
+    STD_FS_FILE_MODE,
+    STD_FS_SEEK_ORIGIN,
+    STD_FS_OPEN,
+    STD_FS_CLOSE,
+    STD_FS_READ,
+    STD_FS_WRITE,
+    STD_FS_READ_LINE,
+    STD_FS_SEEK,
+    STD_FS_TELL,
+    STD_FS_FLUSH,
+    STD_FS_READ_WITH_CANCELLATION,
+    STD_FS_WRITE_WITH_CANCELLATION,
+    STD_FS_READ_LINE_WITH_CANCELLATION,
+    STD_FS_READ_BYTES,
+    STD_FS_WRITE_BYTES,
     STD_FS_READ_TEXT,
     STD_FS_WRITE_TEXT,
     STD_FS_WRITE_TEXT_ATOMIC,

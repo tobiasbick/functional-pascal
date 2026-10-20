@@ -308,3 +308,6 @@ impl DebugSession {
         self.runtime.wait(duration);
     }
 }
+
+#[cfg(test)]
+mod fs_lifecycle;

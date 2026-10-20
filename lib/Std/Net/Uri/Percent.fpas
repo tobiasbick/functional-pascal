@@ -1,0 +1,174 @@
+// Bounded percent encoding and one-pass decoding over bulk UTF-8 bytes.
+unit Std.Net.Uri.Percent;
+
+uses Std.Net.Uri.Components as Components, Std.Net.Utf8 as Utf8;
+
+// Decoding retains the byte count for aggregate query budgets.
+public type DecodedPart = record
+  public Text: string;
+  public Size: integer;
+end record;
+
+// Reject scalar counts before allocating the bulk UTF-8 representation.
+public function ReadUtf8Bytes(
+  Text: string; Maximum: integer; Resource: string
+): result of (array of integer, Components.ComponentError);
+begin
+  if Text.Length() > Maximum then
+    return Error(Components.ComponentError.LimitExceeded(Resource, Maximum));
+  end if;
+  const Bytes := Utf8.Encode(Text);
+  if Bytes.Length() > Maximum then
+    return Error(Components.ComponentError.LimitExceeded(Resource, Maximum));
+  end if;
+
+  return Ok(Bytes);
+end function;
+
+function IsUnreserved(Byte: integer): boolean;
+begin
+  return ((Byte >= 65) and (Byte <= 90))
+    or
+    ((Byte >= 97) and (Byte <= 122))
+    or
+    ((Byte >= 48) and (Byte <= 57))
+    or
+    (Byte = 45) or (Byte = 46) or (Byte = 95) or (Byte = 126);
+end function;
+
+function HexDigit(Digit: integer): string;
+begin
+  if Digit < 10 then
+    return string.Chr(48 + Digit);
+  end if;
+
+  return string.Chr(55 + Digit);
+end function;
+
+function HexValue(Byte: integer): integer;
+begin
+  if Byte >= 48 and Byte <= 57 then
+    return Byte - 48;
+  end if;
+
+  if Byte >= 65 and Byte <= 70 then
+    return Byte - 65 + 10;
+  end if;
+
+  if Byte >= 97 and Byte <= 102 then
+    return Byte - 97 + 10;
+  end if;
+
+  return -1;
+end function;
+
+// Called with byte arrays already admitted under the decoded byte budget.
+public function EncodedLength(Bytes: array of integer): integer;
+begin
+  var Length := 0;
+  for Byte: integer in Bytes do
+    if IsUnreserved(Byte) then
+      Length := Length + 1;
+    else
+      Length := Length + 3;
+    end if;
+  end for;
+
+  return Length;
+end function;
+
+// Build fixed fragments only after the caller has checked output budgets.
+public function EncodeBytes(Bytes: array of integer): string;
+begin
+  var Parts: array of string := [];
+  for Byte: integer in Bytes do
+    if IsUnreserved(Byte) then
+      Parts.PushInPlace(string.Chr(Byte));
+    else
+      Parts.PushInPlace('%');
+      Parts.PushInPlace(HexDigit(Byte div 16));
+      Parts.PushInPlace(HexDigit(Byte mod 16));
+    end if;
+  end for;
+
+  return Parts.Join('');
+end function;
+
+// Only ASCII unreserved characters remain literal in either component kind.
+public function Encode(Text: string): result of (string, Components.ComponentError);
+begin
+  const Bytes := try ReadUtf8Bytes(Text, Components.MaximumDecodedBytes, 'decoded bytes');
+  if EncodedLength(Bytes) > Components.MaximumEncodedBytes then
+    return Error(
+      Components.ComponentError.LimitExceeded(
+        'encoded bytes', Components.MaximumEncodedBytes
+      )
+    );
+  end if;
+
+  return Ok(EncodeBytes(Bytes));
+end function;
+
+// Ranges are supplied by the bounded query scanner or the complete decoder.
+// Escape offsets remain absolute; the nested UTF-8 cause keeps its local offset.
+public function DecodeRange(
+  Bytes: array of integer; Start: integer; Count: integer; RemainingDecoded: integer
+): result of (DecodedPart, Components.ComponentError);
+begin
+  const EndIndex := Start + Count;
+  var Index := Start;
+  var Size := 0;
+  // Validate all escapes and determine size before allocating decoded output.
+  while Index < EndIndex do
+    if Bytes[Index] = 37 then
+      if EndIndex - Index < 3 then
+        return Error(Components.ComponentError.InvalidEscape(Index));
+      end if;
+
+      if HexValue(Bytes[Index + 1]) < 0 or HexValue(Bytes[Index + 2]) < 0 then
+        return Error(Components.ComponentError.InvalidEscape(Index));
+      end if;
+
+      Index := Index + 3;
+    else
+      Index := Index + 1;
+    end if;
+
+    Size := Size + 1;
+  end while;
+
+  if Size > RemainingDecoded then
+    return Error(
+      Components.ComponentError.LimitExceeded(
+        'decoded bytes', Components.MaximumDecodedBytes
+      )
+    );
+  end if;
+  var DecodedBytes: array of integer := [];
+  Index := Start;
+  while Index < EndIndex do
+    if Bytes[Index] = 37 then
+      DecodedBytes.PushInPlace(HexValue(Bytes[Index + 1]) * 16 + HexValue(Bytes[Index + 2]));
+      Index := Index + 3;
+    else
+      DecodedBytes.PushInPlace(Bytes[Index]);
+      Index := Index + 1;
+    end if;
+  end while;
+
+  case Utf8.Decode(DecodedBytes) of
+    when Ok(const Text):
+      return Ok(DecodedPart(Text := Text, Size := Size));
+    when Error(const Cause):
+      return Error(Components.ComponentError.InvalidEncoding(Start, Cause));
+  end case;
+end function;
+
+// Decode exactly once; plus signs and unescaped reserved characters stay literal.
+public function Decode(Text: string): result of (string, Components.ComponentError);
+begin
+  const Bytes := try ReadUtf8Bytes(Text, Components.MaximumEncodedBytes, 'encoded bytes');
+  const Part := try DecodeRange(Bytes, 0, Bytes.Length(), Components.MaximumDecodedBytes);
+  return Ok(Part.Text);
+end function;
+end unit;

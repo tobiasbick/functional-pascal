@@ -23,6 +23,28 @@ fn debugger_names_use_the_public_reserved_keyword_safe_api() {
 mod variants;
 
 #[test]
+fn binary_files_keep_stable_ids_after_encoding() {
+    for (intrinsic, wire, name) in [
+        (
+            Intrinsic::Fs(FsIntrinsic::ReadBytes),
+            708,
+            "Std.Fs.ReadBytes",
+        ),
+        (
+            Intrinsic::Fs(FsIntrinsic::WriteBytes),
+            709,
+            "Std.Fs.WriteBytes",
+        ),
+    ] {
+        assert_eq!(u16::from(intrinsic), wire);
+        assert_eq!(Intrinsic::from_u16(wire), Some(intrinsic));
+        assert_eq!(intrinsic.debugger_name(), name);
+        assert_eq!(intrinsic.owner(), IntrinsicOwner::Standard);
+        assert!(crate::intrinsic_debug_effects(intrinsic).contains(crate::DebugEffectSet::HOST_IO));
+    }
+}
+
+#[test]
 fn lexical_path_helpers_keep_existing_filesystem_wire_ids() {
     for (intrinsic, wire) in [
         (Intrinsic::Path(PathIntrinsic::IsAbsolute), 331),
@@ -140,4 +162,64 @@ fn intrinsic_wire_values_are_globally_unique() -> Result<(), Box<dyn std::error:
         "duplicate intrinsic wire values: {duplicates:?}"
     );
     Ok(())
+}
+
+#[test]
+fn hosted_files_append_stable_wire_ids_without_reclassifying_whole_file_helpers() {
+    for (offset, operation) in [
+        FsIntrinsic::Open,
+        FsIntrinsic::Close,
+        FsIntrinsic::Read,
+        FsIntrinsic::Write,
+        FsIntrinsic::ReadLine,
+        FsIntrinsic::Seek,
+        FsIntrinsic::Tell,
+        FsIntrinsic::Flush,
+        FsIntrinsic::ReadWithCancellation,
+        FsIntrinsic::WriteWithCancellation,
+        FsIntrinsic::ReadLineWithCancellation,
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let intrinsic = Intrinsic::Fs(operation);
+        let wire = 710 + offset as u16;
+        assert_eq!(u16::from(intrinsic), wire);
+        assert_eq!(Intrinsic::from_u16(wire), Some(intrinsic));
+        assert_eq!(intrinsic.owner(), IntrinsicOwner::Hosted);
+        assert!(crate::intrinsic_debug_effects(intrinsic).contains(crate::DebugEffectSet::HOST_IO));
+    }
+    assert_eq!(
+        Intrinsic::Fs(FsIntrinsic::ReadBytes).owner(),
+        IntrinsicOwner::Standard
+    );
+    assert_eq!(
+        Intrinsic::Fs(FsIntrinsic::WriteBytes).owner(),
+        IntrinsicOwner::Standard
+    );
+}
+
+#[test]
+fn process_configuration_appends_ids_and_splits_hosted_execution_from_pure_defaults() {
+    for (operation, wire, owner) in [
+        (ProcIntrinsic::Run, 330, IntrinsicOwner::Hosted),
+        (
+            ProcIntrinsic::CurrentExecutable,
+            344,
+            IntrinsicOwner::Standard,
+        ),
+        (ProcIntrinsic::RunCapture, 345, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::RunWithOptions, 721, IntrinsicOwner::Hosted),
+        (
+            ProcIntrinsic::RunCaptureWithOptions,
+            722,
+            IntrinsicOwner::Hosted,
+        ),
+        (ProcIntrinsic::DefaultOptions, 723, IntrinsicOwner::Standard),
+    ] {
+        let intrinsic = Intrinsic::Proc(operation);
+        assert_eq!(u16::from(intrinsic), wire);
+        assert_eq!(Intrinsic::from_u16(wire), Some(intrinsic));
+        assert_eq!(intrinsic.owner(), owner);
+    }
 }

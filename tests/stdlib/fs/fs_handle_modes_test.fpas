@@ -1,0 +1,85 @@
+program FsHandleModesTest;
+
+uses Std.Fs as Fs, Std.Test as Test;
+
+procedure AssertBytes(Expected: array of integer; Actual: array of integer);
+begin
+  Test.AssertEquals(Expected.Length(), Actual.Length());
+  for Index: integer := 0 to Expected.Length() - 1 do
+    Test.AssertEquals(Expected[Index], Actual[Index]);
+  end for;
+end procedure;
+
+procedure WriteAll(File: Fs.File; Bytes: array of integer);
+begin
+  var Offset := 0;
+  while Offset < Bytes.Length() do
+    const Count := Fs.Write(File, Bytes.Slice(Offset, Bytes.Length() - Offset)).Unwrap();
+    Test.AssertTrue(Count > 0);
+    Test.AssertTrue(Count <= Bytes.Length() - Offset);
+    Offset := Offset + Count;
+  end while;
+end procedure;
+
+function ReadByte(File: Fs.File): integer;
+begin
+  const Bytes := Fs.Read(File, 1).Unwrap();
+  Test.AssertEquals(1, Bytes.Length());
+  return Bytes[0];
+end function;
+
+begin
+  const FileName := Test.ScratchDir() + '/handle-modes.bin';
+  const Missing := Test.ScratchDir() + '/handle-created.bin';
+  Test.AssertTrue(Fs.Open(Missing, Fs.FileMode.Read) is Error(Fs.FsError.FileNotFound(_, _)));
+  Test.AssertTrue(Fs.Open(Missing, Fs.FileMode.ReadWrite) is Error(Fs.FsError.FileNotFound(_, _)));
+  Test.AssertFalse(Fs.Exists(Missing));
+  Test.AssertTrue(Fs.WriteBytes(FileName, [1, 2, 3, 4]).Unwrap());
+  const File := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+  const Alias := File;
+  Test.AssertEquals(1, ReadByte(File));
+  Test.AssertEquals(1, Fs.Tell(Alias).Unwrap());
+  Test.AssertEquals(2, ReadByte(Alias));
+  Test.AssertEquals(2, Fs.Tell(File).Unwrap());
+  Test.AssertEquals(3, ReadByte(File));
+  Test.AssertEquals(4, ReadByte(Alias));
+  Test.AssertEquals(0, Fs.Read(File, 8).Unwrap().Length());
+  Test.AssertEquals(0, Fs.Read(Alias, 1).Unwrap().Length());
+  Test.AssertEquals(2, Fs.Seek(Alias, -2, Fs.SeekOrigin.FileEnd).Unwrap());
+  Test.AssertEquals(3, ReadByte(File));
+  Test.AssertEquals(0, Fs.Seek(File, 0, Fs.SeekOrigin.Start).Unwrap());
+  Test.AssertEquals(1, Fs.Seek(Alias, 1, Fs.SeekOrigin.Current).Unwrap());
+  Test.AssertEquals(2, ReadByte(File));
+  Test.AssertTrue(Fs.Write(File, [9]) is Error(_));
+  Test.AssertTrue(Fs.Close(Alias).Unwrap());
+  Test.AssertTrue(Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Fs.Read')));
+  Test.AssertTrue(Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell')));
+  Test.AssertTrue(Fs.Close(File) is Error(Fs.FsError.Closed('Std.Fs.Close')));
+  const Created := Fs.Open(FileName, Fs.FileMode.Create).Unwrap();
+  Test.AssertEquals(0, Fs.FileSize(FileName).Unwrap());
+  Test.AssertEquals(0, Fs.Write(Created, []).Unwrap());
+  WriteAll(Created, [9, 8]);
+  Test.AssertTrue(Fs.Flush(Created).Unwrap());
+  Test.AssertTrue(Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell')));
+  Test.AssertTrue(Fs.Close(Created).Unwrap());
+  AssertBytes([9, 8], Fs.ReadBytes(FileName).Unwrap());
+  const Append := Fs.Open(FileName, Fs.FileMode.Append).Unwrap();
+  Test.AssertEquals(0, Fs.Seek(Append, 0, Fs.SeekOrigin.Start).Unwrap());
+  WriteAll(Append, [7, 6]);
+  Test.AssertTrue(Fs.Flush(Append).Unwrap());
+  Test.AssertTrue(Fs.Close(Append).Unwrap());
+  AssertBytes([9, 8, 7, 6], Fs.ReadBytes(FileName).Unwrap());
+  const NewAppend := Fs.Open(Missing, Fs.FileMode.Append).Unwrap();
+  WriteAll(NewAppend, [0, 255]);
+  Test.AssertTrue(Fs.Close(NewAppend).Unwrap());
+  AssertBytes([0, 255], Fs.ReadBytes(Missing).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(Missing).Unwrap());
+  const NewCreate := Fs.Open(Missing, Fs.FileMode.Create).Unwrap();
+  Test.AssertTrue(Fs.Close(NewCreate).Unwrap());
+  Test.AssertTrue(Fs.IsFile(Missing));
+  Test.AssertEquals(0, Fs.FileSize(Missing).Unwrap());
+  Test.AssertTrue(Fs.Open(Test.ScratchDir(), Fs.FileMode.Create) is Error(_));
+  Test.AssertTrue(Fs.IsDir(Test.ScratchDir()));
+  Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(Missing).Unwrap());
+end.

@@ -298,15 +298,21 @@ impl Vm {
                 "Register VM instances are single-use. Construct a new instance for each callback.",
             ));
         }
-        Worker::for_function_with_state(
-            Arc::clone(&self.executable),
-            function,
-            arguments,
-            Arc::clone(&self.globals),
-            self.layouts.clone()?,
-            Arc::clone(&self.hosted),
-        )?
-        .run()
+        let result = self.layouts.clone().and_then(|layouts| {
+            Worker::for_function_with_state(
+                Arc::clone(&self.executable),
+                function,
+                arguments,
+                Arc::clone(&self.globals),
+                layouts,
+                Arc::clone(&self.hosted),
+            )?
+            .run()
+        });
+        self.hosted.close_process_handles();
+        self.hosted.close_file_handles();
+        self.hosted.wait_process_handles();
+        result
     }
 }
 

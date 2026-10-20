@@ -1,0 +1,64 @@
+program EncodingErrorsTest;
+
+uses Std.Encoding as Encoding, Std.Test as Test;
+
+begin
+  Test.AssertTrue(Encoding.Base64Encode([-1]) is Error(Encoding.EncodingError.InvalidByte(0, -1)));
+  Test.AssertTrue(
+    Encoding.Base64UrlEncode([0, 256]) is Error(Encoding.EncodingError.InvalidByte(1, 256))
+  );
+  Test.AssertTrue(
+    Encoding.HexEncode([1, 2, -300]) is Error(Encoding.EncodingError.InvalidByte(2, -300))
+  );
+
+  Test.AssertTrue(Encoding.Base64Decode('Zg') is Error(Encoding.EncodingError.InvalidLength(2)));
+  Test.AssertTrue(Encoding.Base64Decode('AA=A') is Error(Encoding.EncodingError.InvalidPadding(2)));
+  Test.AssertTrue(Encoding.Base64Decode('Zh==') is Error(Encoding.EncodingError.NonCanonical(1)));
+  Test.AssertTrue(Encoding.Base64Decode('Zm9=') is Error(Encoding.EncodingError.NonCanonical(2)));
+  Test.AssertTrue(
+    Encoding.Base64Decode('-_8=') is Error(Encoding.EncodingError.InvalidCharacter(0))
+  );
+  Test.AssertTrue(
+    Encoding.Base64Decode('Z g=') is Error(Encoding.EncodingError.InvalidCharacter(1))
+  );
+  Test.AssertTrue(
+    Encoding.Base64Decode('Zg'#10'A') is Error(Encoding.EncodingError.InvalidCharacter(2))
+  );
+
+  Test.AssertTrue(
+    Encoding.Base64UrlDecode('Zg==') is Error(Encoding.EncodingError.InvalidPadding(2))
+  );
+  Test.AssertTrue(Encoding.Base64UrlDecode('A') is Error(Encoding.EncodingError.InvalidLength(1)));
+  Test.AssertTrue(Encoding.Base64UrlDecode('Zh') is Error(Encoding.EncodingError.NonCanonical(1)));
+  Test.AssertTrue(Encoding.Base64UrlDecode('Zm9') is Error(Encoding.EncodingError.NonCanonical(2)));
+  Test.AssertTrue(
+    Encoding.Base64UrlDecode('+w') is Error(Encoding.EncodingError.InvalidCharacter(0))
+  );
+  Test.AssertTrue(
+    Encoding.Base64UrlDecode('Z ') is Error(Encoding.EncodingError.InvalidCharacter(1))
+  );
+
+  Test.AssertTrue(Encoding.HexDecode('A') is Error(Encoding.EncodingError.InvalidLength(1)));
+  Test.AssertTrue(Encoding.HexDecode('0G') is Error(Encoding.EncodingError.InvalidCharacter(1)));
+  Test.AssertTrue(Encoding.HexDecode('0x00') is Error(Encoding.EncodingError.InvalidCharacter(1)));
+  Test.AssertTrue(Encoding.HexDecode('00 0') is Error(Encoding.EncodingError.InvalidCharacter(2)));
+  Test.AssertTrue(Encoding.HexDecode('00_0') is Error(Encoding.EncodingError.InvalidCharacter(2)));
+  Test.AssertTrue(Encoding.HexDecode('AAé') is Error(Encoding.EncodingError.InvalidCharacter(2)));
+  Test.AssertTrue(
+    Encoding.Base64Decode('AAé') is Error(Encoding.EncodingError.InvalidCharacter(2))
+  );
+  Test.AssertTrue(
+    Encoding.Base64UrlDecode('AAé') is Error(Encoding.EncodingError.InvalidCharacter(2))
+  );
+
+  case Encoding.HexEncode([256]) of
+    when Error(const Failure):
+      Test.AssertTrue(
+        Failure.Message().StartsWith(
+          'Std.Encoding.EncodingError.InvalidByte: Byte value is outside 0..255'
+        )
+      );
+    when Ok(_):
+      Test.Fail('Expected an invalid-byte error');
+  end case;
+end.

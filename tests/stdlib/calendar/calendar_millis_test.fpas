@@ -1,0 +1,53 @@
+program CalendarMillisTest;
+
+uses Std.Calendar as Calendar, Std.Test as Test;
+
+function Shift(Value: Calendar.DateTime; Delta: integer): result of (Calendar.DateTime, Calendar.CalendarError);
+begin
+  const Shifted := try Calendar.AddMillis(Value, Delta);
+  return Ok(Shifted);
+end function;
+
+begin
+  const Epoch := Calendar.CreateDateTime(1970, 1, 1, 0, 0, 0, 0).Unwrap();
+  const BeforeEpoch := Calendar.CreateDateTime(1969, 12, 31, 23, 59, 59, 999).Unwrap();
+  Test.AssertTrue(Shift(Epoch, -1).Unwrap() = BeforeEpoch);
+  Test.AssertTrue(Shift(BeforeEpoch, 1).Unwrap() = Epoch);
+  Test.AssertTrue(Shift(Epoch, 0).Unwrap() = Epoch);
+  Test.AssertEquals(1, Calendar.MillisBetween(BeforeEpoch, Epoch));
+  Test.AssertEquals(-1, Calendar.MillisBetween(Epoch, BeforeEpoch));
+  Test.AssertEquals(0, Calendar.MillisBetween(Epoch, Epoch));
+  const LeapEve := Calendar.CreateDateTime(2000, 2, 28, 23, 59, 59, 999).Unwrap();
+  const LeapDay := Calendar.CreateDateTime(2000, 2, 29, 0, 0, 0, 0).Unwrap();
+  Test.AssertTrue(Calendar.AddMillis(LeapEve, 1).Unwrap() = LeapDay);
+  Test.AssertTrue(
+    Calendar.AddMillis(LeapDay, 86400000).Unwrap() =
+    Calendar.CreateDateTime(2000, 3, 1, 0, 0, 0, 0).Unwrap()
+  );
+  Test.AssertTrue(
+    Calendar.AddMillis(Calendar.CreateDateTime(2023, 12, 31, 23, 59, 59, 999).Unwrap(), 1).Unwrap() =
+    Calendar.CreateDateTime(2024, 1, 1, 0, 0, 0, 0).Unwrap()
+  );
+  Test.AssertTrue(
+    Calendar.AddMillis(Epoch, -86400001).Unwrap() =
+    Calendar.CreateDateTime(1969, 12, 30, 23, 59, 59, 999).Unwrap()
+  );
+  const First := Calendar.CreateDateTime(1, 1, 1, 0, 0, 0, 0).Unwrap();
+  const Last := Calendar.CreateDateTime(9999, 12, 31, 23, 59, 59, 999).Unwrap();
+  Test.AssertEquals(315537897599999, Calendar.MillisBetween(First, Last));
+  Test.AssertEquals(-315537897599999, Calendar.MillisBetween(Last, First));
+  Test.AssertTrue(Shift(First, 315537897599999).Unwrap() = Last);
+  Test.AssertTrue(Shift(Last, -315537897599999).Unwrap() = First);
+  Test.AssertTrue(
+    Shift(First, -1) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+  );
+  Test.AssertTrue(
+    Shift(Last, 1) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+  );
+  Test.AssertTrue(
+    Shift(First, -9223372036854775808) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+  );
+  Test.AssertTrue(
+    Shift(Last, 9223372036854775807) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+  );
+end.

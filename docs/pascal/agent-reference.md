@@ -1182,8 +1182,11 @@ services, import the owning unit with `uses Unit.Path as Alias;` and call `Alias
 | Assertions and test fixtures | `Std.Test` |
 | Numeric operations / bits | `Std.Math`, `Std.Bits` |
 | Text parsing / typed conversion and formatting | `Std.Parse` (Result parsers), `Std.Conv` |
+| Binary-text encodings | `Std.Encoding` (Base64, unpadded Base64url, hexadecimal) |
+| Program argument schemas / generated help | `Std.Cli` (source unit; process access remains `Std.Args`) |
 | Files, paths, environment, arguments, processes | `Std.Fs`, `Std.Path`, `Std.Env`, `Std.Args`, `Std.Proc` |
 | Time, tasks, channels | `Std.Time`, `Std.Tasks` |
+| Gregorian dates / UTC text and arithmetic | `Std.Calendar` (pure source unit; years 1..9999, milliseconds) |
 | JSON, networking, terminal UI | [Standard library index](std/README.md) |
 
 Run `fpas doc` for exact signatures instead of guessing: `fpas doc Std.Fs.ReadText`,
@@ -1191,6 +1194,27 @@ Run `fpas doc` for exact signatures instead of guessing: `fpas doc Std.Fs.ReadTe
 documentation and names the owning handbook page; `--report json` returns the same as
 data. Do not infer a library API from Delphi or an old example using free collection
 helper functions.
+
+`Std.Fs.ReadBytes(Path)` returns `Result of (array of integer, Fs.FsError)`;
+`WriteBytes(Path, Bytes)` returns `Result of (boolean, Fs.FsError)`. Both are
+blocking and limited to 1_048_576 raw bytes, with no UTF-8 or newline conversion.
+Empty writes create/truncate; empty reads return an empty array. WriteBytes
+checks size, then every integer's `0..255` range before opening the target;
+`InvalidByte(Offset, Value)` preserves the first invalid index/value, and
+validation failures preserve existing files and do not create missing files.
+`LimitExceeded` names the binary operation and limit. Host failures retain
+typed FsError/HostError causes; ordinary writes have no atomic guarantee.
+`ReadText` remains UTF-8 with a separate 64 MiB limit. See [Fs](std/host/fs.md).
+
+`Fs.Open(Path, Fs.FileMode.Read/Create/Append/ReadWrite)` returns an opaque
+`Fs.File`; aliases share position, and Close invalidates them all. Read and
+Write are bounded to 1 MiB; Read returns an empty byte array at EOF, while
+Write returns a possibly partial count after validating the complete input.
+ReadLine returns Some(line)/Some('')/None, strips LF/CRLF, and validates UTF-8.
+Tell/Seek use logical byte positions and account for unread line buffers.
+Flush is not fsync. The WithCancellation variants check a Tasks token between
+chunks; cancelled line prefixes remain unconsumed for recovery. Close files
+explicitly; at most 1024 may be open per VM. See [streaming](std/host/fs-streams.md).
 
 `Std.Path` is lexical and follows host path rules without filesystem, current
 directory, or symlink lookup. `IsAbsolute(Path)` tests fully absolute paths.
@@ -1203,6 +1227,56 @@ give `None`. `ChangeExtension(Path, Extension)` replaces only the last suffix;
 `''` removes it, `.env` has none, and multipart extensions are allowed. It
 returns `None` for no final filename or an extension starting with `.`,
 containing a host separator, or containing NUL. See [Path](std/host/path.md).
+
+`Std.Encoding` provides `Base64Encode`/`Base64Decode`,
+`Base64UrlEncode`/`Base64UrlDecode`, and `HexEncode`/`HexDecode`, all returning
+Results with `Encoding.EncodingError`. Encoders take integer bytes in `0..255`;
+decoders return byte arrays. Standard Base64 requires padding when needed;
+Base64url uses `-`/`_` without padding. Both reject whitespace, mixed alphabets,
+and nonzero unused bits. Hex output is uppercase; decoding accepts either case
+with even length and no prefix/separators. Binary input/output is bounded to
+1_048_576 bytes; size preflight precedes content errors. Error offsets count
+array elements for encoders and UTF-8 bytes for decoders. See
+[Encoding](std/text/encoding.md) for error payloads and encoded-size bounds.
+
+`Std.Cli.Parse(Arguments, Definition)` returns `Result of (Cli.Outcome, Cli.CliError)`.
+Schemas use `OptionSpec` and ordered `PositionalSpec` records; supply both
+Schema.Options and Schema.Positionals arrays explicitly. Real names are ASCII,
+case-sensitive, at most 64 characters, and unique across options/positions;
+short aliases have their own namespace. Parsed values are a dict keyed by
+canonical names, with
+`Cli.Value.Text`/`Int`/`Float`/`Bool` payloads; missing optional values have no
+key. Optional Boolean options default false, options default optional, positions default
+required; explicit defaults must match Kind and cannot accompany Required.
+Use `--name=value`, `--name value`, `-n value`, Boolean `--flag`/`--no-flag`,
+or `--` before positional dash text. Exact `--help`/`-h` returns a successful
+Help outcome; `Cli.Help` returns help directly. Neither prints nor exits.
+InvalidValue preserves a typed Std.Parse.ParseError cause; indexes identify
+zero-based argv tokens. See [Cli](std/host/cli.md) for grammar and limits.
+
+`Std.Net.Uri` encodes/decodes individual path segments and query components,
+with only ASCII unreserved characters left literal and uppercase UTF-8 `%HH`
+escapes. Space is `%20`, `+` is `%2B`; decoding leaves literal `+` unchanged
+and runs once. `ParseQuery` takes a body without `?`, splits raw `&`/first `=`
+before decoding, and preserves order, duplicates, case, flags (`None`), and
+explicit empty values (`Some('')`). `BuildQuery` returns a body without `?`;
+an empty name with `None` is invalid. Helpers return ComponentError with
+original-input byte offsets for escapes and typed UTF-8 causes. Limits are
+65_536 decoded bytes, 196_608 encoded bytes, and 4096 query parameters;
+query decoded size is aggregate, and count is checked before decoding.
+Existing absolute `Uri.Parse` behavior is unchanged. See [URI](std/network/uri.md).
+
+`Std.Proc.DefaultOptions()` returns a ProcessOptions record; update it with
+`with ... end with` because its native fields have no declaration defaults.
+RunWithOptions/RunCaptureWithOptions configure child cwd, environment changes,
+UTF-8 stdin followed by EOF, timeout, cancellation, and capture bounds. Parent
+cwd/environment are unchanged. RunWithOptions inherits output; with a JSON
+program-stderr receiver, stderr is bounded and forwarded after process cleanup.
+Capture bounds apply per raw stdout/stderr stream (default 1 MiB). Old Run keeps inherited
+stdin; RunCapture now has the default bound and stdin EOF. Nonzero completion
+is still Ok. Timeout/Cancelled/LimitExceeded/ExecutionFailed preserve captured
+output, and owned process trees are terminated and reaped before return.
+See [processes](std/host/proc.md) for limits and exact error payloads.
 
 For source navigation, use `fpas query refs file.fpas:12:5`, `fpas query definition
 file.fpas:12:5`, or `fpas query type file.fpas:12:5`. Each returns one JSON document

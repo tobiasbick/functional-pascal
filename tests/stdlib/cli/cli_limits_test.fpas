@@ -1,0 +1,63 @@
+program CliLimitsTest;
+
+uses Std.Cli as Cli, Std.Conv as Conv, Std.Test as Test;
+
+begin
+  const Empty := Cli.Schema(ProgramName := 'limits', Options := [], Positionals := []);
+  Test.AssertTrue(
+    Cli.Parse(array.Fill('', 4097), Empty) is Error(Cli.CliError.LimitExceeded('arguments', 4096))
+  );
+  Test.AssertTrue(
+    Cli.Parse(array.Fill('x'.RepeatStr(1000), 1001), Empty) is Error(Cli.CliError.LimitExceeded('argument text', 1000000))
+  );
+  // Input limits precede the early help outcome and count Unicode scalars.
+  const ExactArguments := ['--help', 'é'.RepeatStr(999994)];
+  Test.AssertTrue(Cli.Parse(ExactArguments, Empty) is Ok(Cli.Outcome.Help(_)));
+  Test.AssertTrue(
+    Cli.Parse(['--help', 'é'.RepeatStr(999995)], Empty) is Error(Cli.CliError.LimitExceeded('argument text', 1000000))
+  );
+  Test.AssertTrue(
+    Cli.Parse(array.Fill('', 4096), Empty) is Error(Cli.CliError.UnexpectedArgument('', 0))
+  );
+  const MixedSpecs := Cli.Schema(
+    ProgramName := 'limits',
+    Options := array.Fill(Cli.OptionSpec(Name := 'option'), 128),
+    Positionals := array.Fill(Cli.PositionalSpec(Name := 'position'), 129)
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--help'], MixedSpecs) is Error(Cli.CliError.LimitExceeded('schema specs', 256))
+  );
+  var ExactOptions: array of Cli.OptionSpec := [];
+  for Index: integer := 0 to 255 do
+    ExactOptions.PushInPlace(Cli.OptionSpec(Name := 'option-' + Conv.IntToStr(Index)));
+  end for;
+  const ExactSpecs := Cli.Schema(
+    ProgramName := 'limits',
+    Options := ExactOptions,
+    Positionals := []
+  );
+  Test.AssertTrue(Cli.Parse([], ExactSpecs) is Ok(Cli.Outcome.Parsed(_)));
+  const TooManySpecs := Cli.Schema(
+    ProgramName := 'limits',
+    Options := array.Fill(Cli.OptionSpec(Name := 'item'), 257),
+    Positionals := []
+  );
+  Test.AssertTrue(Cli.Help(TooManySpecs) is Error(Cli.CliError.LimitExceeded('schema specs', 256)));
+  const TooMuchText := Cli.Schema(
+    ProgramName := 'limits',
+    Description := 'é'.RepeatStr(1000000),
+    Options := [],
+    Positionals := []
+  );
+  Test.AssertTrue(
+    Cli.Help(TooMuchText) is Error(Cli.CliError.LimitExceeded('schema text', 1000000))
+  );
+  // Two-byte scalars count once; together with the six-character program name this is the limit.
+  const UnicodeText := Cli.Schema(
+    ProgramName := 'limits',
+    Description := 'é'.RepeatStr(999994),
+    Options := [],
+    Positionals := []
+  );
+  Test.AssertTrue(Cli.Help(UnicodeText) is Ok(_));
+end.

@@ -11,6 +11,13 @@ documented_intrinsic_enum! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum ProcIntrinsic {
+    /// `Std.Proc.RunWithOptions` process configuration API.
+    RunWithOptions = 721,
+    /// `Std.Proc.RunCaptureWithOptions` process configuration API.
+    RunCaptureWithOptions = 722,
+    /// `Std.Proc.DefaultOptions` process configuration API.
+    DefaultOptions = 723,
+
     /// `Std.Proc.Run(Command, Args)` - run a host process and return its exit code.
     ///
     /// **Documentation:** `docs/pascal/std/host/proc.md`

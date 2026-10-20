@@ -25,7 +25,7 @@ pub(super) fn wait_until_ready(
         if ready_path.is_file() {
             return Ok(WaitOutcome::Ready);
         }
-        match child.try_wait()? {
+        match crate::process_tree::try_wait_owned(child)? {
             Some(status) => return Ok(WaitOutcome::Exited(status)),
             None => {
                 let remaining = deadline.saturating_duration_since(Instant::now());

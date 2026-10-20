@@ -16,6 +16,11 @@ end.
 
 `Std.Time` exposes host clock values and task-aware sleep. It is separate from `Std.Console.Delay`, which remains available for CRT-style console programs.
 
+[`Std.Calendar`](calendar.md) provides pure Gregorian dates, UTC date-times,
+ISO/RFC-3339 text conversion and checked arithmetic. Pass `TimestampMillis()`
+to `Calendar.FromTimestampMillis` to obtain a calendar value. Monotonic readings
+are not Unix timestamps.
+
 
 ## Importing and names
 
@@ -113,4 +118,5 @@ Time.Sleep(250);
 ## See also
 
 - [Host I/O index](README.md)
+- [Calendar values and text](calendar.md)
 - [Standard library index](../README.md)

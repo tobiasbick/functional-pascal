@@ -45,6 +45,7 @@ mod debug;
 mod diagnostics;
 mod discard;
 mod error_conventions;
+mod fs_file;
 mod functions;
 mod intrinsics;
 mod keyword_switch;

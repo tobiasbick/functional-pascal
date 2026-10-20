@@ -1,0 +1,57 @@
+program FsHandleLinesTest;
+
+uses Std.Fs as Fs, Std.Test as Test;
+
+begin
+  const FileName := Test.ScratchDir() + '/handle-lines.bin';
+  Test.AssertTrue(
+    Fs.WriteBytes(FileName, [195, 169, 13, 10, 88, 89, 10, 116, 97, 105, 108]).Unwrap()
+  );
+  const File := Fs.Open(FileName, Fs.FileMode.ReadWrite).Unwrap();
+  const Alias := File;
+  Test.AssertTrue(Fs.ReadLine(File).Unwrap() = Some('é'));
+  Test.AssertEquals(4, Fs.Tell(Alias).Unwrap());
+  Test.AssertTrue(Fs.Write(File, [1, 2, 256]) is Error(Fs.FsError.InvalidByte(2, 256)));
+  Test.AssertEquals(4, Fs.Tell(File).Unwrap());
+  const Byte := Fs.Read(Alias, 1).Unwrap();
+  Test.AssertEquals(1, Byte.Length());
+  Test.AssertEquals(88, Byte[0]);
+  Test.AssertEquals(5, Fs.Tell(File).Unwrap());
+  Test.AssertEquals(1, Fs.Write(File, [90]).Unwrap());
+  Test.AssertEquals(6, Fs.Tell(Alias).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(Alias).Unwrap() = Some(''));
+  Test.AssertEquals(7, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(File).Unwrap() = Some('tail'));
+  Test.AssertEquals(11, Fs.Tell(Alias).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(File).Unwrap() is None);
+  Test.AssertTrue(Fs.ReadLine(File).Unwrap() is None);
+  Test.AssertEquals(4, Fs.Seek(File, 4, Fs.SeekOrigin.Start).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(Alias).Unwrap() = Some('XZ'));
+  Test.AssertEquals(7, Fs.Tell(File).Unwrap());
+  Test.AssertEquals(6, Fs.Seek(Alias, -1, Fs.SeekOrigin.Current).Unwrap());
+  const Terminator := Fs.Read(File, 1).Unwrap();
+  Test.AssertEquals(1, Terminator.Length());
+  Test.AssertEquals(10, Terminator[0]);
+  Test.AssertTrue(Fs.Flush(File).Unwrap());
+  Test.AssertTrue(Fs.Close(File).Unwrap());
+
+  Test.AssertTrue(Fs.WriteBytes(FileName, [13, 10, 10, 97, 13, 98, 10, 0, 10, 113, 13]).Unwrap());
+  const Lines := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+  Test.AssertTrue(Fs.ReadLine(Lines).Unwrap() = Some(''));
+  Test.AssertTrue(Fs.ReadLine(Lines).Unwrap() = Some(''));
+  Test.AssertTrue(Fs.ReadLine(Lines).Unwrap() = Some('a'#13'b'));
+  Test.AssertTrue(Fs.ReadLine(Lines).Unwrap() = Some(#0));
+  Test.AssertTrue(Fs.ReadLine(Lines).Unwrap() = Some('q'#13));
+  Test.AssertTrue(Fs.ReadLine(Lines).Unwrap() is None);
+  Test.AssertTrue(Fs.Close(Lines).Unwrap());
+
+  Test.AssertTrue(Fs.WriteBytes(FileName, [255, 10, 111, 107, 10]).Unwrap());
+  const Invalid := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+  Test.AssertTrue(Fs.ReadLine(Invalid) is Error(Fs.FsError.InvalidEncoding(_, _)));
+  Test.AssertEquals(2, Fs.Tell(Invalid).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(Invalid).Unwrap() = Some('ok'));
+  Test.AssertEquals(5, Fs.Tell(Invalid).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(Invalid).Unwrap() is None);
+  Test.AssertTrue(Fs.Close(Invalid).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
+end.

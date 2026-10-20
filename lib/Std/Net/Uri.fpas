@@ -1,9 +1,11 @@
-// Absolute HTTP and HTTPS URI parsing for network clients.
+// Absolute HTTP URI parsing and bounded URL component/query helpers.
 //
 // Handbook: `docs/pascal/std/network/uri.md`.
 unit Std.Net.Uri;
 
-uses Std.Net.Decimal as Decimal;
+uses
+  Std.Net.Decimal as Decimal, Std.Net.Uri.Components as Components,
+  Std.Net.Uri.Percent as Percent, Std.Net.Uri.Queries as Queries;
 
 // Structured address failures preserve the parser's existing grammar.
 public type UriError = error
@@ -11,6 +13,12 @@ public type UriError = error
   UnsupportedScheme(Scheme: string) = 'Invalid URI';
   InvalidPort(Detail: string) = 'Invalid URI';
 end error;
+
+// One ordered query entry; None is a flag and Some('') an explicit empty value.
+public type QueryParam = Components.QueryParam;
+
+// Component failures retain original percent offsets and typed UTF-8 causes.
+public type ComponentError = Components.ComponentError;
 
 // Parsed absolute network URI used by protocol clients.
 public type Uri = record
@@ -196,5 +204,59 @@ begin
 
       return BuildUri(Scheme, Authority, Path);
   end case;
+end function;
+
+// Encodes one path segment using uppercase UTF-8 escapes; slash becomes %2F.
+//
+// Parameters:
+// - `Text`: Decoded segment text.
+public function EncodePathSegment(Text: string): result of (string, ComponentError);
+begin
+  return Percent.Encode(Text);
+end function;
+
+// Decodes one percent-encoded segment, preserving a literal plus sign.
+//
+// Parameters:
+// - `Text`: Component text, with strict percent escapes and UTF-8 validation.
+public function DecodePathSegment(Text: string): result of (string, ComponentError);
+begin
+  return Percent.Decode(Text);
+end function;
+
+// Encodes one query name or value; space becomes %20 and plus becomes %2B.
+//
+// Parameters:
+// - `Text`: Decoded query-component text.
+public function EncodeQueryComponent(Text: string): result of (string, ComponentError);
+begin
+  return Percent.Encode(Text);
+end function;
+
+// Decodes one query name or value once, keeping a literal plus sign.
+//
+// Parameters:
+// - `Text`: Component text, with strict percent escapes and UTF-8 validation.
+public function DecodeQueryComponent(Text: string): result of (string, ComponentError);
+begin
+  return Percent.Decode(Text);
+end function;
+
+// Parses a query body into ordered entries, preserving duplicate names and flags.
+//
+// Parameters:
+// - `Text`: Query body without a leading question mark; empty ampersand fields are ignored.
+public function ParseQuery(Text: string): result of (array of QueryParam, ComponentError);
+begin
+  return Queries.Parse(Text);
+end function;
+
+// Builds a canonical query body from ordered entries, without a leading question mark.
+//
+// Parameters:
+// - `Parameters`: Names and optional values; empty flag names are not representable.
+public function BuildQuery(Parameters: array of QueryParam): result of (string, ComponentError);
+begin
+  return Queries.Build(Parameters);
 end function;
 end unit;

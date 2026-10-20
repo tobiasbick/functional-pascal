@@ -1,0 +1,129 @@
+program ProcOptionsValidationTest;
+
+uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Tasks as Tasks, Std.Test as Test;
+
+function LibraryPath(): string;
+begin
+  var Root := Fs.CurrentDir().Unwrap();
+  while not Fs.IsFile(Path.Join([Root, 'lib', 'stdlib.fpasprj'])) do
+    const Parent := Path.DirName(Root);
+    if (Parent = Root) or (Parent = '') then
+      Test.Fail('Run process tests inside the repository.');
+    end if;
+
+    Root := Parent;
+  end while;
+
+  return Path.Join([Root, 'lib']);
+end function;
+
+procedure AssertInvalid(Command: string; Arguments: array of string; Options: Proc.ProcessOptions; Name: string);
+begin
+  case Proc.RunCaptureWithOptions(Command, Arguments, Options) of
+    when Error(Proc.ProcError.InvalidArgument(const ActualName, _)):
+      Test.AssertEquals(Name, ActualName);
+    when Error(const Failure):
+      Test.Fail(Failure.Message());
+    when Ok(_):
+      Test.Fail('Expected invalid process configuration');
+  end case;
+end procedure;
+
+begin
+  const Defaults := Proc.DefaultOptions();
+  const Executable := Proc.CurrentExecutable().Unwrap();
+  AssertInvalid('invalid'#0'command', [], Defaults, 'Command');
+  AssertInvalid(Executable, ['invalid'#0'argument'], Defaults, 'Args');
+  AssertInvalid(
+    Executable,
+    [],
+    Defaults with WorkingDirectory := Some('invalid'#0'directory'); end with,
+    'WorkingDirectory'
+  );
+  AssertInvalid(Executable, [], Defaults with TimeoutMillis := Some(-1); end with, 'TimeoutMillis');
+  AssertInvalid(Executable, [], Defaults with MaxOutputBytes := -1; end with, 'MaxOutputBytes');
+  AssertInvalid(
+    Executable,
+    [],
+    Defaults with MaxOutputBytes := 67108865; end with,
+    'MaxOutputBytes'
+  );
+  for Name: string in ['', 'bad=name', 'bad'#0'name'] do
+    AssertInvalid(
+      Executable,
+      [],
+      Defaults with Environment := [Proc.EnvironmentVariable(Name := Name, Value := None)]; end with,
+      'Environment'
+    );
+  end for;
+
+  AssertInvalid(
+    Executable,
+    [],
+    Defaults with Environment := [
+      Proc.EnvironmentVariable(Name := 'FPAS_VALUE', Value := Some('bad'#0'value'))
+    ]; end with,
+    'Environment'
+  );
+  AssertInvalid(
+    Executable, [], Defaults with Environment := [
+      Proc.EnvironmentVariable(Name := 'FPAS_DUPLICATE', Value := Some('one')),
+      Proc.EnvironmentVariable(Name := 'FPAS_DUPLICATE', Value := None)
+    ]; end with, 'Environment'
+  );
+  if Path.Join(['a', 'b']) = 'a\b' then
+    AssertInvalid(
+      Executable, [], Defaults with Environment := [
+        Proc.EnvironmentVariable(Name := 'FPAS_CASE', Value := Some('one')),
+        Proc.EnvironmentVariable(Name := 'fpas_case', Value := None)
+      ]; end with, 'Environment'
+    );
+  end if;
+
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(Executable, array.Fill('', 4097), Defaults) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'arguments', 4096, '', ''))
+  );
+  const TooManyEnvironment := Defaults with Environment := array.Fill(
+    Proc.EnvironmentVariable(Name := 'FPAS_ENTRY', Value := None),
+    1025
+  ); end with;
+
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(Executable, [], TooManyEnvironment) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'environment', 1024, '', ''))
+  );
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(Executable, ['xx'.RepeatStr(524289)], Defaults) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'configuration bytes', 1048576, '', ''))
+  );
+  const Root := Path.Join([Fs.CurrentDir().Unwrap(), Test.ScratchDir()]);
+  const Source := Path.Join([Root, 'marker-child.fpas']);
+  const Marker := Path.Join([Root, 'must-stay-absent.txt']);
+  Test.AssertTrue(
+    Fs.WriteText(
+      Source,
+      'program Child; uses Std.Args as Args, Std.Fs as Fs;'#10 +
+      'begin discard Fs.WriteText(Args.ParamStr(0), ''started'').Unwrap(); end.'
+    ).Unwrap()
+  );
+  const Arguments := ['run', '--std-lib', LibraryPath(), Source, '--', Marker];
+  const CancellationSource := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(CancellationSource);
+  Test.AssertTrue(Tasks.Cancel(CancellationSource));
+  const Cancelled := Defaults with CancellationToken := Some(Token); end with;
+
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(Executable, Arguments, Cancelled) is Error(Proc.ProcError.Cancelled('Std.Proc.RunCaptureWithOptions', '', ''))
+  );
+  Test.AssertTrue(
+    Proc.RunWithOptions(Executable, Arguments, Cancelled) is Error(Proc.ProcError.Cancelled('Std.Proc.RunWithOptions', '', ''))
+  );
+  Test.AssertFalse(Fs.Exists(Marker));
+  const Immediate := Defaults with TimeoutMillis := Some(0); end with;
+
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(Executable, Arguments, Immediate) is Error(Proc.ProcError.Timeout('Std.Proc.RunCaptureWithOptions', '', ''))
+  );
+  Test.AssertTrue(
+    Proc.RunWithOptions(Executable, Arguments, Immediate) is Error(Proc.ProcError.Timeout('Std.Proc.RunWithOptions', '', ''))
+  );
+  Test.AssertFalse(Fs.Exists(Marker));
+end.

@@ -32,6 +32,7 @@ pub mod console;
 pub mod conv;
 pub mod crypto;
 pub mod dict;
+pub mod encoding;
 pub mod env;
 mod execution;
 pub mod fs;
@@ -59,6 +60,7 @@ pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
 pub use crypto::CryptoIntrinsic;
 pub use dict::DictIntrinsic;
+pub use encoding::EncodingIntrinsic;
 pub use env::EnvIntrinsic;
 pub use execution::IntrinsicOwner;
 pub use fs::FsIntrinsic;
@@ -112,6 +114,8 @@ pub enum Intrinsic {
     Array(ArrayIntrinsic),
     /// Dictionary operation.
     Dict(DictIntrinsic),
+    /// Bounded binary-text codec operation.
+    Encoding(EncodingIntrinsic),
     /// Environment-variable operation.
     Env(EnvIntrinsic),
     /// Host-path operation.
@@ -252,6 +256,7 @@ intrinsic_wire_ops!(
     Array(ArrayIntrinsic),
     Dict(DictIntrinsic),
     Env(EnvIntrinsic),
+    Encoding(EncodingIntrinsic),
     Path(PathIntrinsic),
     Proc(ProcIntrinsic),
     Fs(FsIntrinsic),

@@ -1,0 +1,59 @@
+program UriComponentLimitsTest;
+
+uses Std.Net.Uri as Uri, Std.Test as Test;
+
+begin
+  const Spaces := ' '.RepeatStr(65536);
+  const EscapedSpaces := '%20'.RepeatStr(65536);
+  Test.AssertEquals(196608, Uri.EncodePathSegment(Spaces).Unwrap().Length());
+  Test.AssertEquals(Spaces, Uri.DecodePathSegment(EscapedSpaces).Unwrap());
+  Test.AssertEquals(196608, Uri.EncodeQueryComponent('é'.RepeatStr(32768)).Unwrap().Length());
+  Test.AssertTrue(
+    Uri.EncodePathSegment('a'.RepeatStr(65537)) is Error(Uri.ComponentError.LimitExceeded('decoded bytes', 65536))
+  );
+  Test.AssertTrue(
+    Uri.EncodeQueryComponent('é'.RepeatStr(32769)) is Error(Uri.ComponentError.LimitExceeded('decoded bytes', 65536))
+  );
+  Test.AssertTrue(
+    Uri.DecodeQueryComponent('a'.RepeatStr(65537)) is Error(Uri.ComponentError.LimitExceeded('decoded bytes', 65536))
+  );
+  Test.AssertTrue(
+    Uri.DecodePathSegment('%' + 'a'.RepeatStr(196608)) is Error(Uri.ComponentError.LimitExceeded('encoded bytes', 196608))
+  );
+  const Exact: array of Uri.QueryParam := [
+    Uri.QueryParam(Name := 'a'),
+    Uri.QueryParam(Name := '', Value := Some(' '.RepeatStr(65535)))
+  ];
+  const ExactQuery := Uri.BuildQuery(Exact).Unwrap();
+  Test.AssertEquals(196608, ExactQuery.Length());
+  const Decoded := Uri.ParseQuery(ExactQuery).Unwrap();
+  Test.AssertEquals(2, Decoded.Length());
+  Test.AssertEquals('a', Decoded[0].Name);
+  Test.AssertTrue(Decoded[0].Value is None);
+  Test.AssertTrue(Decoded[1].Value = Some(' '.RepeatStr(65535)));
+  Test.AssertTrue(
+    Uri.BuildQuery([Uri.QueryParam(Name := '', Value := Some(Spaces))]) is Error(Uri.ComponentError.LimitExceeded('encoded bytes', 196608))
+  );
+  const Half := 'x'.RepeatStr(32768);
+  Test.AssertTrue(
+    Uri.ParseQuery('a=' + Half + '&b=' + Half) is Error(Uri.ComponentError.LimitExceeded('decoded bytes', 65536))
+  );
+  Test.AssertTrue(
+    Uri.BuildQuery([
+      Uri.QueryParam(Name := 'a', Value := Some(Half)),
+      Uri.QueryParam(Name := 'b', Value := Some(Half))
+    ]) is Error(Uri.ComponentError.LimitExceeded('decoded bytes', 65536))
+  );
+  const CountQuery := Uri.BuildQuery(array.Fill(Uri.QueryParam(Name := 'x'), 4096)).Unwrap();
+  Test.AssertEquals(4096, Uri.ParseQuery(CountQuery).Unwrap().Length());
+  Test.AssertEquals(0, Uri.ParseQuery('&&'.RepeatStr(4097)).Unwrap().Length());
+  Test.AssertTrue(
+    Uri.ParseQuery('%&' + 'x&'.RepeatStr(4096)) is Error(Uri.ComponentError.LimitExceeded('query parameters', 4096))
+  );
+  Test.AssertTrue(
+    Uri.BuildQuery(array.Fill(Uri.QueryParam(Name := 'x'), 4097)) is Error(Uri.ComponentError.LimitExceeded('query parameters', 4096))
+  );
+  Test.AssertTrue(
+    Uri.ParseQuery('%' + 'a'.RepeatStr(196608)) is Error(Uri.ComponentError.LimitExceeded('encoded bytes', 196608))
+  );
+end.

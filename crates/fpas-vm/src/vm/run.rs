@@ -12,6 +12,9 @@ impl Vm {
     /// diagnostic if a verified executable requests an opcode assigned to a later phase.
     pub fn run(&mut self) -> Result<Execution, VmError> {
         let result = self.run_inner();
+        self.hosted.close_process_handles();
+        self.hosted.close_file_handles();
+        self.hosted.wait_process_handles();
         if let Err(error) = &result {
             self.notify_failure(error);
         }

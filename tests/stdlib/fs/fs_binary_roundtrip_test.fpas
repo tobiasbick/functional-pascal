@@ -1,0 +1,51 @@
+program FsBinaryRoundtripTest;
+
+uses Std.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+
+procedure AssertBytes(Expected: array of integer; Actual: array of integer);
+begin
+  Test.AssertEquals(Expected.Length(), Actual.Length());
+  for Index: integer := 0 to Expected.Length() - 1 do
+    Test.AssertEquals(Expected[Index], Actual[Index]);
+  end for;
+end procedure;
+
+function RoundTrip(FileName: string; Bytes: array of integer): result of (array of integer, Fs.FsError);
+begin
+  discard try Fs.WriteBytes(FileName, Bytes);
+  return Fs.ReadBytes(FileName);
+end function;
+
+begin
+  const FileName := Test.ScratchDir() + '/binary-roundtrip.bin';
+  var Bytes: array of integer := [];
+  for Value: integer := 0 to 255 do
+    Bytes.PushInPlace(Value);
+  end for;
+
+  Test.AssertTrue(Fs.WriteBytes(FileName, Bytes).Unwrap());
+  AssertBytes(Bytes, Fs.ReadBytes(FileName).Unwrap());
+  Test.AssertEquals(256, Fs.FileSize(FileName).Unwrap());
+  Test.AssertTrue(Fs.ReadText(FileName) is Error(Fs.FsError.InvalidEncoding(_, _)));
+
+  Test.AssertTrue(Fs.WriteBytes(FileName, [0, 255, 128, 13, 10]).Unwrap());
+  AssertBytes([0, 255, 128, 13, 10], Fs.ReadBytes(FileName).Unwrap());
+  Test.AssertEquals(5, Fs.FileSize(FileName).Unwrap());
+  Test.AssertTrue(Fs.WriteBytes(FileName, []).Unwrap());
+  Test.AssertEquals(0, Fs.ReadBytes(FileName).Unwrap().Length());
+  Test.AssertEquals(0, Fs.FileSize(FileName).Unwrap());
+  const EmptyFile := Test.ScratchDir() + '/binary-empty.bin';
+  Test.AssertTrue(Fs.WriteBytes(EmptyFile, []).Unwrap());
+  Test.AssertTrue(Fs.IsFile(EmptyFile));
+  Test.AssertEquals(0, Fs.ReadBytes(EmptyFile).Unwrap().Length());
+
+  scope
+    const Job: task of result of (array of integer, Fs.FsError) := go RoundTrip(
+      FileName,
+      [255, 0, 254]
+    );
+    AssertBytes([255, 0, 254], Tasks.Wait(Job).Unwrap());
+    const ReadJob: task of result of (array of integer, Fs.FsError) := go Fs.ReadBytes(FileName);
+    AssertBytes([255, 0, 254], Tasks.Wait(ReadJob).Unwrap());
+  end scope;
+end.

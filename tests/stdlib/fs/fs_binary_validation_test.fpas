@@ -1,0 +1,48 @@
+program FsBinaryValidationTest;
+
+uses Std.Fs as Fs, Std.Test as Test;
+
+procedure AssertOriginal(FileName: string);
+begin
+  const Bytes := Fs.ReadBytes(FileName).Unwrap();
+  Test.AssertEquals(4, Bytes.Length());
+  Test.AssertEquals(77, Bytes[0]);
+  Test.AssertEquals(0, Bytes[1]);
+  Test.AssertEquals(255, Bytes[2]);
+  Test.AssertEquals(10, Bytes[3]);
+end procedure;
+
+function StoreCount(FileName: string; Bytes: array of integer): result of (integer, Fs.FsError);
+begin
+  discard try Fs.WriteBytes(FileName, Bytes);
+  return Ok(Bytes.Length());
+end function;
+
+begin
+  const FileName := Test.ScratchDir() + '/binary-validation.bin';
+  const Missing := Test.ScratchDir() + '/binary-must-stay-absent.bin';
+  Test.AssertTrue(Fs.WriteBytes(FileName, [77, 0, 255, 10]).Unwrap());
+  Test.AssertFalse(Fs.Exists(Missing));
+  Test.AssertTrue(Fs.WriteBytes(FileName, [1, 2, -1, 256]) is Error(Fs.FsError.InvalidByte(2, -1)));
+  AssertOriginal(FileName);
+  Test.AssertTrue(
+    Fs.WriteBytes(FileName, [1, 2, 256, -1]) is Error(Fs.FsError.InvalidByte(2, 256))
+  );
+  AssertOriginal(FileName);
+  Test.AssertTrue(StoreCount(Missing, [1, 2, -1]) is Error(Fs.FsError.InvalidByte(2, -1)));
+  Test.AssertFalse(Fs.Exists(Missing));
+  Test.AssertTrue(StoreCount(Missing, [1, 2, 256]) is Error(Fs.FsError.InvalidByte(2, 256)));
+  Test.AssertFalse(Fs.Exists(Missing));
+  // Each Fill is within its own limit; Concat produces 1_048_578 invalid elements.
+  const Half: array of integer := array.Fill(256, 524289);
+  const TooMany := Half.Concat(Half);
+  Test.AssertEquals(1048578, TooMany.Length());
+  Test.AssertTrue(
+    Fs.WriteBytes(FileName, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Fs.WriteBytes', 1048576))
+  );
+  AssertOriginal(FileName);
+  Test.AssertTrue(
+    StoreCount(Missing, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Fs.WriteBytes', 1048576))
+  );
+  Test.AssertFalse(Fs.Exists(Missing));
+end.

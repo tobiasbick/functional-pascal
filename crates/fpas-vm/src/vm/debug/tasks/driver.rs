@@ -371,9 +371,18 @@ impl DebugTaskRuntime {
 
     /// Take the root result once normal teardown has finished every spawned task.
     pub(in crate::vm::debug) fn take_finished_root_result(&mut self) -> Option<Value> {
-        self.spawned_tasks_finished()
+        let value = self
+            .spawned_tasks_finished()
             .then(|| self.root_result.take())
-            .flatten()
+            .flatten();
+        if value.is_some()
+            && let Some(worker) = self.worker(0)
+        {
+            worker.hosted.close_process_handles();
+            worker.hosted.close_file_handles();
+            worker.hosted.wait_process_handles();
+        }
+        value
     }
 
     /// Wait for the next scheduler poll using the configured monotonic clock.
@@ -384,6 +393,11 @@ impl DebugTaskRuntime {
     /// Cancel every remaining task immediately for explicit disconnect or fatal teardown.
     pub(in crate::vm::debug) fn cancel(&mut self) {
         self.scheduler.request_cancel();
+        if let Some(worker) = self.worker(0) {
+            worker.hosted.close_process_handles();
+            worker.hosted.close_file_handles();
+            worker.hosted.wait_process_handles();
+        }
         for (&task_id, slot) in &mut self.tasks {
             slot.worker.supervision = None;
             if !matches!(

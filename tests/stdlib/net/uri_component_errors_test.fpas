@@ -1,0 +1,33 @@
+program UriComponentErrorsTest;
+
+uses Std.Net.Uri as Uri, Std.Net.Utf8 as Utf8, Std.Test as Test;
+
+begin
+  Test.AssertTrue(Uri.DecodePathSegment('%') is Error(Uri.ComponentError.InvalidEscape(0)));
+  Test.AssertTrue(Uri.DecodeQueryComponent('%0') is Error(Uri.ComponentError.InvalidEscape(0)));
+  Test.AssertTrue(Uri.DecodePathSegment('x%GG') is Error(Uri.ComponentError.InvalidEscape(1)));
+  Test.AssertTrue(Uri.DecodeQueryComponent('é%') is Error(Uri.ComponentError.InvalidEscape(2)));
+  Test.AssertTrue(Uri.ParseQuery('a=ok&name=%') is Error(Uri.ComponentError.InvalidEscape(10)));
+  Test.AssertTrue(Uri.ParseQuery('é=%') is Error(Uri.ComponentError.InvalidEscape(3)));
+  Test.AssertTrue(
+    Uri.DecodePathSegment('%C0%AF') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(0, _)))
+  );
+  Test.AssertTrue(
+    Uri.DecodeQueryComponent('%ED%A0%80') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(0, _)))
+  );
+  Test.AssertTrue(
+    Uri.DecodePathSegment('%E2%82') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.IncompleteSequence(0)))
+  );
+  Test.AssertTrue(
+    Uri.DecodePathSegment('x%E2%28%A1') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(2, _)))
+  );
+  Test.AssertTrue(
+    Uri.DecodeQueryComponent('%F4%90%80%80') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(0, _)))
+  );
+  Test.AssertTrue(
+    Uri.ParseQuery('first=ok&bad=x%E2%28%A1') is Error(Uri.ComponentError.InvalidEncoding(13, Utf8.Utf8Error.InvalidByte(2, _)))
+  );
+  Test.AssertTrue(
+    Uri.ParseQuery('ok=1&%C0%AF=x') is Error(Uri.ComponentError.InvalidEncoding(5, Utf8.Utf8Error.InvalidByte(0, _)))
+  );
+end.

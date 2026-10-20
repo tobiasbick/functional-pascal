@@ -128,8 +128,12 @@ fn hosted_families_require_the_exact_host_cause_contract() {
 }
 
 #[test]
-fn task_network_and_server_operations_require_their_native_contracts() {
+fn selected_operations_require_their_native_contracts() {
     for (source, family) in [
+        (
+            "program T; uses Std.Encoding as Codec; begin discard Codec.HexDecode('!'); end.",
+            "Std.Encoding.EncodingError",
+        ),
         (
             "program T; uses Std.Tasks as Tasks; begin const Q: channel of integer := Tasks.CreateChannel(1); discard Tasks.TryReceive(Q); end.",
             "Std.Tasks.TaskError",
@@ -185,4 +189,147 @@ fn server_listener_causes_admit_the_net_and_host_dependency_closure() {
         .expect("listener cause");
     listener.error.as_mut().expect("essential metadata").cause = None;
     assert!(RuntimeLayouts::build(&changed, InstructionAddress::new(0)).is_err());
+}
+
+#[test]
+fn encoding_requires_its_exact_payload_without_host_dependencies() {
+    let mut original =
+        image("program T; uses Std.Encoding as Codec; begin discard Codec.HexDecode('!'); end.");
+    RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("encoding ABI");
+    assert!(
+        !original
+            .enums
+            .iter()
+            .any(|owner| original.strings.get(owner.name) == Some("Std.Errors.HostError"))
+    );
+    let variant = original
+        .enum_variants
+        .iter_mut()
+        .find(|variant| original.strings.get(variant.name) == Some("InvalidByte"))
+        .expect("byte variant");
+    variant
+        .error
+        .as_mut()
+        .expect("essential metadata")
+        .field_types[1] = fpas_bytecode::TypeIdentity::String;
+    assert!(RuntimeLayouts::build(&original, InstructionAddress::new(0)).is_err());
+}
+
+#[test]
+fn binary_file_operations_require_the_complete_filesystem_error_abi() {
+    for source in [
+        "program T; uses Std.Fs as Fs; begin discard Fs.ReadBytes('file'); end.",
+        "program T; uses Std.Fs as Fs; begin discard Fs.WriteBytes('file', [0, 255]); end.",
+    ] {
+        let original = image(source);
+        RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("binary Fs ABI");
+        let variant = original
+            .enum_variants
+            .iter()
+            .position(|variant| original.strings.get(variant.name) == Some("InvalidByte"))
+            .expect("byte validation error is retained without a source constructor");
+        let mut wrong_payload = original.clone();
+        wrong_payload.enum_variants[variant]
+            .error
+            .as_mut()
+            .expect("essential metadata")
+            .field_types[1] = fpas_bytecode::TypeIdentity::String;
+        assert!(RuntimeLayouts::build(&wrong_payload, InstructionAddress::new(0)).is_err());
+        let mut missing_variant = original;
+        missing_variant.enum_variants.remove(variant);
+        assert!(RuntimeLayouts::build(&missing_variant, InstructionAddress::new(0)).is_err());
+    }
+}
+
+#[test]
+fn filesystem_lifecycle_errors_append_and_keep_operation_payloads() {
+    let catalog = fpas_std::native_errors::NativeErrorFamily::Fs.variants();
+    assert_eq!(catalog.len(), 15);
+    assert_eq!(catalog[12].name, "InvalidByte");
+    assert_eq!(catalog[13].name, "Closed");
+    assert_eq!(catalog[14].name, "Cancelled");
+    let original =
+        image("program T; uses Std.Fs as Fs; begin discard Fs.ReadText('missing'); end.");
+    RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("filesystem lifecycle ABI");
+    let owner = original
+        .enums
+        .iter()
+        .position(|owner| original.strings.get(owner.name) == Some("Std.Fs.FsError"))
+        .expect("filesystem family");
+    for name in ["Closed", "Cancelled"] {
+        let mut changed = original.clone();
+        let variant = changed
+            .enum_variants
+            .iter_mut()
+            .find(|variant| {
+                usize::from(variant.owner.get()) == owner
+                    && changed.strings.get(variant.name) == Some(name)
+            })
+            .expect("lifecycle variant");
+        variant
+            .error
+            .as_mut()
+            .expect("essential lifecycle metadata")
+            .field_types[0] = fpas_bytecode::TypeIdentity::Integer;
+        assert!(
+            RuntimeLayouts::build(&changed, InstructionAddress::new(0)).is_err(),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn process_control_errors_retain_partial_output_and_original_host_causes() {
+    let catalog = fpas_std::native_errors::NativeErrorFamily::Proc.variants();
+    assert_eq!(catalog.len(), 8);
+    assert_eq!(catalog[0].name, "StartFailed");
+    assert_eq!(catalog[3].name, "IoFailure");
+    assert_eq!(catalog[4].name, "Timeout");
+    assert_eq!(catalog[5].name, "Cancelled");
+    assert_eq!(catalog[6].name, "LimitExceeded");
+    assert_eq!(catalog[7].name, "ExecutionFailed");
+    let original = image(
+        "program T; uses Std.Proc as Proc; begin discard Proc.RunCaptureWithOptions('tool', [], Proc.DefaultOptions()); end.",
+    );
+    RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("process control ABI");
+    let owner = original
+        .enums
+        .iter()
+        .position(|owner| original.strings.get(owner.name) == Some("Std.Proc.ProcError"))
+        .expect("process error owner");
+    for name in ["Timeout", "Cancelled", "LimitExceeded", "ExecutionFailed"] {
+        let mut changed = original.clone();
+        let variant = changed
+            .enum_variants
+            .iter_mut()
+            .find(|variant| {
+                usize::from(variant.owner.get()) == owner
+                    && changed.strings.get(variant.name) == Some(name)
+            })
+            .expect("control error");
+        let error = variant.error.as_mut().expect("essential process metadata");
+        if name == "ExecutionFailed" {
+            error.cause = None;
+        } else {
+            error.field_types[1] = fpas_bytecode::TypeIdentity::Integer;
+        }
+        assert!(
+            RuntimeLayouts::build(&changed, InstructionAddress::new(0)).is_err(),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn pure_process_defaults_do_not_require_process_or_host_error_metadata() {
+    let mut defaults =
+        image("program T; uses Std.Proc as Proc; begin discard Proc.DefaultOptions(); end.");
+    for owner in &mut defaults.enums {
+        owner.error = None;
+    }
+    for variant in &mut defaults.enum_variants {
+        variant.error = None;
+    }
+    RuntimeLayouts::build(&defaults, InstructionAddress::new(0))
+        .expect("pure record construction does not admit unused error families");
 }

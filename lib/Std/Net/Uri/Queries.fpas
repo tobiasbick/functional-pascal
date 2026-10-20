@@ -1,0 +1,186 @@
+// Ordered query fields with strict component decoding and aggregate byte budgets.
+unit Std.Net.Uri.Queries;
+
+uses Std.Net.Uri.Components as Components, Std.Net.Uri.Percent as Percent;
+
+type PreparedParam = record
+  public Name: array of integer;
+  public Value: option of array of integer;
+end record;
+
+function CountFields(Bytes: array of integer): result of (integer, Components.ComponentError);
+begin
+  var Count := 0;
+  var NonEmpty := false;
+  for Byte: integer in Bytes do
+    if Byte = 38 then
+      if NonEmpty then
+        if Count = Components.MaximumParameters then
+          return Error(
+            Components.ComponentError.LimitExceeded(
+              'query parameters',
+              Components.MaximumParameters
+            )
+          );
+        end if;
+
+        Count := Count + 1;
+      end if;
+
+      NonEmpty := false;
+    else
+      NonEmpty := true;
+    end if;
+  end for;
+
+  if NonEmpty then
+    if Count = Components.MaximumParameters then
+      return Error(
+        Components.ComponentError.LimitExceeded('query parameters', Components.MaximumParameters)
+      );
+    end if;
+
+    Count := Count + 1;
+  end if;
+
+  return Ok(Count);
+end function;
+
+// Parse a raw query body. A leading question mark is ordinary component data.
+public function Parse(Text: string): result of (array of Components.QueryParam, Components.ComponentError);
+begin
+  const Bytes := try Percent.ReadUtf8Bytes(Text, Components.MaximumEncodedBytes, 'encoded bytes');
+  // Bound all raw fields before interpreting the first percent escape.
+  discard try CountFields(Bytes);
+  var Parameters: array of Components.QueryParam := [];
+  var Remaining := Components.MaximumDecodedBytes;
+  var Start := 0;
+  while Start < Bytes.Length() do
+    var Finish := Start;
+    var Equal := -1;
+    while Finish < Bytes.Length() do
+      if Bytes[Finish] = 38 then
+        break;
+      end if;
+
+      if (Bytes[Finish] = 61) and (Equal < 0) then
+        Equal := Finish;
+      end if;
+
+      Finish := Finish + 1;
+    end while;
+
+    if Finish > Start then
+      var NameLength := Finish - Start;
+      if Equal >= 0 then
+        NameLength := Equal - Start;
+      end if;
+      const Name := try Percent.DecodeRange(Bytes, Start, NameLength, Remaining);
+      Remaining := Remaining - Name.Size;
+      var Value: option of string := None;
+      if Equal >= 0 then
+        const DecodedValue := try Percent.DecodeRange(
+          Bytes,
+          Equal + 1,
+          Finish - Equal - 1,
+          Remaining
+        );
+        Remaining := Remaining - DecodedValue.Size;
+        Value := Some(DecodedValue.Text);
+      end if;
+
+      Parameters.PushInPlace(Components.QueryParam(Name := Name.Text, Value := Value));
+    end if;
+
+    Start := Finish + 1;
+  end while;
+
+  return Ok(Parameters);
+end function;
+
+function TakeDecoded(Count: integer; Remaining: integer): result of (integer, Components.ComponentError);
+begin
+  if Count > Remaining then
+    return Error(
+      Components.ComponentError.LimitExceeded('decoded bytes', Components.MaximumDecodedBytes)
+    );
+  end if;
+
+  return Ok(Remaining - Count);
+end function;
+
+function TakeEncoded(Count: integer; Remaining: integer): result of (integer, Components.ComponentError);
+begin
+  if Count > Remaining then
+    return Error(
+      Components.ComponentError.LimitExceeded('encoded bytes', Components.MaximumEncodedBytes)
+    );
+  end if;
+
+  return Ok(Remaining - Count);
+end function;
+
+// Build canonical query text only after every aggregate budget has been checked.
+public function Build(Parameters: array of Components.QueryParam): result of (string, Components.ComponentError);
+begin
+  if Parameters.Length() > Components.MaximumParameters then
+    return Error(
+      Components.ComponentError.LimitExceeded('query parameters', Components.MaximumParameters)
+    );
+  end if;
+  var Prepared: array of PreparedParam := [];
+  var DecodedRemaining := Components.MaximumDecodedBytes;
+  var EncodedRemaining := Components.MaximumEncodedBytes;
+  for Index: integer := 0 to Parameters.Length() - 1 do
+    const Parameter := Parameters[Index];
+    if (Parameter.Name = '') and (Parameter.Value is None) then
+      return Error(
+        Components.ComponentError.InvalidQueryParameter(
+          Index,
+          'Empty flag names are not representable'
+        )
+      );
+    end if;
+    const Name := try Percent.ReadUtf8Bytes(
+      Parameter.Name,
+      Components.MaximumDecodedBytes,
+      'decoded bytes'
+    );
+    DecodedRemaining := try TakeDecoded(Name.Length(), DecodedRemaining);
+    EncodedRemaining := try TakeEncoded(Percent.EncodedLength(Name), EncodedRemaining);
+    if Index > 0 then
+      EncodedRemaining := try TakeEncoded(1, EncodedRemaining);
+    end if;
+    var Value: option of array of integer := None;
+    case Parameter.Value of
+      when None:
+        begin
+        end;
+      when Some(const Text):
+        const Bytes := try Percent.ReadUtf8Bytes(
+          Text,
+          Components.MaximumDecodedBytes,
+          'decoded bytes'
+        );
+        DecodedRemaining := try TakeDecoded(Bytes.Length(), DecodedRemaining);
+        EncodedRemaining := try TakeEncoded(1, EncodedRemaining);
+        EncodedRemaining := try TakeEncoded(Percent.EncodedLength(Bytes), EncodedRemaining);
+        Value := Some(Bytes);
+    end case;
+
+    Prepared.PushInPlace(PreparedParam(Name := Name, Value := Value));
+  end for;
+  var Fields: array of string := [];
+  for Parameter: PreparedParam in Prepared do
+    const Name := Percent.EncodeBytes(Parameter.Name);
+    case Parameter.Value of
+      when None:
+        Fields.PushInPlace(Name);
+      when Some(const Bytes):
+        Fields.PushInPlace(Name + '=' + Percent.EncodeBytes(Bytes));
+    end case;
+  end for;
+
+  return Ok(Fields.Join('&'));
+end function;
+end unit;

@@ -1,0 +1,213 @@
+program CliSchemaHelpTest;
+
+uses Std.Cli as Cli, Std.Test as Test;
+
+procedure CheckHelp(Arguments: array of string; Definition: Cli.Schema; Expected: string);
+begin
+  case Cli.Parse(Arguments, Definition).Unwrap() of
+    when Cli.Outcome.Help(const Text):
+      Test.AssertEquals(Expected, Text);
+    when Cli.Outcome.Parsed(_):
+      Test.Fail('Expected a help outcome');
+  end case;
+end procedure;
+
+begin
+  const Definition := Cli.Schema(
+    ProgramName := 'tool',
+    Description := 'A command-line test.',
+    Options := [
+      Cli.OptionSpec(Name := 'count', Short := Some('n'), Kind := Cli.Kind.Int, Required := true),
+      Cli.OptionSpec(Name := 'verbose', Kind := Cli.Kind.Bool, Help := 'Show details')
+    ],
+    Positionals := [Cli.PositionalSpec(Name := 'input')]
+  );
+  const Text := Cli.Help(Definition).Unwrap();
+  Test.AssertTrue(Text.StartsWith('Usage: tool'));
+  Test.AssertTrue(Text.EndsWith(#10));
+  Test.AssertTrue('--count' in Text);
+  Test.AssertTrue('--no-verbose' in Text);
+  Test.AssertTrue('A command-line test.' in Text);
+  Test.AssertTrue('Show details' in Text);
+  CheckHelp(['--help'], Definition, Text);
+  CheckHelp(['-h'], Definition, Text);
+  CheckHelp(['--help', '--unknown'], Definition, Text);
+  Test.AssertTrue(
+    Cli.Parse(['--unknown', '--help'], Definition) is Error(Cli.CliError.UnknownOption('--unknown', 0))
+  );
+  Test.AssertTrue(Cli.Parse(['--help=false'], Definition) is Error(_));
+
+  for Invalid: Cli.Schema in [
+    Cli.Schema(ProgramName := '', Options := [], Positionals := []),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := '1name')],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := 'bad_name')],
+      Positionals := []
+    ),
+    Cli.Schema(ProgramName := 'bad', Options := [Cli.OptionSpec(Name := 'é')], Positionals := []),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := 'name', Short := Some('nn'))],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := 'name', Short := Some('1'))],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := 'help')],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := 'name', Short := Some('h'))],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [
+        Cli.OptionSpec(Name := 'one', Short := Some('x')),
+        Cli.OptionSpec(Name := 'two', Short := Some('x'))
+      ],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [Cli.OptionSpec(Name := 'same')],
+      Positionals := [Cli.PositionalSpec(Name := 'same')]
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [
+        Cli.OptionSpec(Name := 'verbose', Kind := Cli.Kind.Bool),
+        Cli.OptionSpec(Name := 'no-verbose')
+      ],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [],
+      Positionals := [
+        Cli.PositionalSpec(Name := 'first', Required := false),
+        Cli.PositionalSpec(Name := 'second')
+      ]
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [
+        Cli.OptionSpec(
+          Name := 'count',
+          Kind := Cli.Kind.Int,
+          Default := Some(Cli.Value.Text('wrong'))
+        )
+      ],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [
+        Cli.OptionSpec(
+          Name := 'count',
+          Kind := Cli.Kind.Int,
+          Required := true,
+          Default := Some(Cli.Value.Int(1))
+        )
+      ],
+      Positionals := []
+    ),
+    Cli.Schema(
+      ProgramName := 'bad',
+      Options := [],
+      Positionals := [
+        Cli.PositionalSpec(Name := 'input', Default := Some(Cli.Value.Text('default')))
+      ]
+    )
+  ] do
+    Test.AssertTrue(Cli.Help(Invalid) is Error(Cli.CliError.InvalidSchema(_, _)));
+    Test.AssertTrue(Cli.Parse(['--help'], Invalid) is Error(Cli.CliError.InvalidSchema(_, _)));
+  end for;
+  const RequiredFlag := Cli.Schema(
+    ProgramName := 'confirm',
+    Options := [Cli.OptionSpec(Name := 'confirm', Kind := Cli.Kind.Bool, Required := true)],
+    Positionals := []
+  );
+  const RequiredHelp := Cli.Help(RequiredFlag).Unwrap();
+  Test.AssertTrue('[required]' in RequiredHelp);
+  Test.AssertTrue(not ('[default: false]' in RequiredHelp));
+  Test.AssertTrue(Cli.Parse([], RequiredFlag) is Error(Cli.CliError.MissingRequired('confirm')));
+  const Name64 := 'a'.RepeatStr(64);
+  const Name65 := 'a'.RepeatStr(65);
+  Test.AssertTrue(
+    Cli.Help(
+      Cli.Schema(
+        ProgramName := 'name64', Options := [Cli.OptionSpec(Name := Name64)], Positionals := []
+      )
+    ) is Ok(_)
+  );
+  Test.AssertTrue(
+    Cli.Help(
+      Cli.Schema(
+        ProgramName := 'name64', Options := [], Positionals := [Cli.PositionalSpec(Name := Name64)]
+      )
+    ) is Ok(_)
+  );
+  Test.AssertTrue(
+    Cli.Help(
+      Cli.Schema(
+        ProgramName := 'name65', Options := [Cli.OptionSpec(Name := Name65)], Positionals := []
+      )
+    ) is Error(Cli.CliError.InvalidSchema(_, _))
+  );
+  Test.AssertTrue(
+    Cli.Help(
+      Cli.Schema(
+        ProgramName := 'name65', Options := [], Positionals := [Cli.PositionalSpec(Name := Name65)]
+      )
+    ) is Error(Cli.CliError.InvalidSchema(_, _))
+  );
+  const Namespaces := Cli.Schema(
+    ProgramName := 'namespaces',
+    Options := [
+      Cli.OptionSpec(Name := 'name', Short := Some('n')),
+      Cli.OptionSpec(Name := 'flag', Kind := Cli.Kind.Bool),
+      Cli.OptionSpec(Name := 'Help', Short := Some('H')),
+      Cli.OptionSpec(Name := 'h')
+    ],
+    Positionals := [
+      Cli.PositionalSpec(Name := 'n'),
+      Cli.PositionalSpec(Name := 'no-flag'),
+      Cli.PositionalSpec(Name := 'help')
+    ]
+  );
+  case Cli.Parse(
+    [
+      '-n',
+      'option',
+      '--no-flag',
+      '--Help=capital',
+      '--h=long',
+      'position',
+      'negative',
+      'help-name'
+    ],
+    Namespaces
+  ).Unwrap() of
+    when Cli.Outcome.Parsed(const Values):
+      Test.AssertTrue(Values.Get('name') is Some(Cli.Value.Text('option')));
+      Test.AssertTrue(Values.Get('n') is Some(Cli.Value.Text('position')));
+      Test.AssertTrue(Values.Get('flag') is Some(Cli.Value.Bool(false)));
+      Test.AssertTrue(Values.Get('no-flag') is Some(Cli.Value.Text('negative')));
+      Test.AssertTrue(Values.Get('help') is Some(Cli.Value.Text('help-name')));
+      Test.AssertTrue(Values.Get('Help') is Some(Cli.Value.Text('capital')));
+      Test.AssertTrue(Values.Get('h') is Some(Cli.Value.Text('long')));
+    when Cli.Outcome.Help(_):
+      Test.Fail('Case-sensitive real names collided with help');
+  end case;
+end.

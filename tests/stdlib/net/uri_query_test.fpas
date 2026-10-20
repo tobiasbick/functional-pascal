@@ -1,0 +1,61 @@
+program UriQueryTest;
+
+uses Std.Net.Uri as Uri, Std.Test as Test;
+
+procedure CheckParameter(Name: string; Value: option of string; Actual: Uri.QueryParam);
+begin
+  Test.AssertEquals(Name, Actual.Name);
+  Test.AssertTrue(Value = Actual.Value);
+end procedure;
+
+begin
+  Test.AssertEquals(0, Uri.ParseQuery('').Unwrap().Length());
+  Test.AssertEquals(0, Uri.ParseQuery('&&&&').Unwrap().Length());
+  Test.AssertEquals('', Uri.BuildQuery([]).Unwrap());
+  const Parameters := Uri.ParseQuery(
+    '&&flag&a=&a=1&a=2&=x&=&case=A&Case=B&x=a+b&encoded=a%26b%3Dc&&'
+  ).Unwrap();
+  Test.AssertEquals(10, Parameters.Length());
+  CheckParameter('flag', None, Parameters[0]);
+  CheckParameter('a', Some(''), Parameters[1]);
+  CheckParameter('a', Some('1'), Parameters[2]);
+  CheckParameter('a', Some('2'), Parameters[3]);
+  CheckParameter('', Some('x'), Parameters[4]);
+  CheckParameter('', Some(''), Parameters[5]);
+  CheckParameter('case', Some('A'), Parameters[6]);
+  CheckParameter('Case', Some('B'), Parameters[7]);
+  CheckParameter('x', Some('a+b'), Parameters[8]);
+  CheckParameter('encoded', Some('a&b=c'), Parameters[9]);
+  Test.AssertEquals(
+    'flag&a=&a=1&a=2&=x&=&case=A&Case=B&x=a%2Bb&encoded=a%26b%3Dc',
+    Uri.BuildQuery(Parameters).Unwrap()
+  );
+  const Escaped := Uri.ParseQuery('a%26b=c%3Dd&e=one=two&x=%2526%253D').Unwrap();
+  Test.AssertEquals(3, Escaped.Length());
+  CheckParameter('a&b', Some('c=d'), Escaped[0]);
+  CheckParameter('e', Some('one=two'), Escaped[1]);
+  CheckParameter('x', Some('%26%3D'), Escaped[2]);
+  Test.AssertEquals('a%26b=c%3Dd&e=one%3Dtwo&x=%2526%253D', Uri.BuildQuery(Escaped).Unwrap());
+  const Literal := Uri.ParseQuery('?x=1#part').Unwrap();
+  Test.AssertEquals(1, Literal.Length());
+  CheckParameter('?x', Some('1#part'), Literal[0]);
+  Test.AssertEquals('%3Fx=1%23part', Uri.BuildQuery(Literal).Unwrap());
+  const Binary := Uri.ParseQuery('quote=%27%22&nul=%00').Unwrap();
+  CheckParameter('quote', Some('''"'), Binary[0]);
+  CheckParameter('nul', Some(#0), Binary[1]);
+  const Constructed: array of Uri.QueryParam := [
+    Uri.QueryParam(Name := 'flag'),
+    Uri.QueryParam(Name := '', Value := Some('')),
+    Uri.QueryParam(Name := 'é', Value := Some('🌍 +'))
+  ];
+  Test.AssertEquals('flag&=&%C3%A9=%F0%9F%8C%8D%20%2B', Uri.BuildQuery(Constructed).Unwrap());
+  const Again := Uri.ParseQuery(Uri.BuildQuery(Constructed).Unwrap()).Unwrap();
+  Test.AssertEquals(Constructed.Length(), Again.Length());
+  for Index: integer := 0 to Again.Length() - 1 do
+    CheckParameter(Constructed[Index].Name, Constructed[Index].Value, Again[Index]);
+  end for;
+
+  Test.AssertTrue(
+    Uri.BuildQuery([Uri.QueryParam(Name := 'ok'), Uri.QueryParam(Name := '')]) is Error(Uri.ComponentError.InvalidQueryParameter(1, _))
+  );
+end.

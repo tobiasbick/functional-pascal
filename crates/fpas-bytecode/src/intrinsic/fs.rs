@@ -11,6 +11,37 @@ documented_intrinsic_enum! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum FsIntrinsic {
+    /// `Std.Fs.Open` — bounded VM-owned file operation.
+    Open = 710,
+    /// `Std.Fs.Close` — bounded VM-owned file operation.
+    Close = 711,
+    /// `Std.Fs.Read` — bounded VM-owned file operation.
+    Read = 712,
+    /// `Std.Fs.Write` — bounded VM-owned file operation.
+    Write = 713,
+    /// `Std.Fs.ReadLine` — bounded VM-owned file operation.
+    ReadLine = 714,
+    /// `Std.Fs.Seek` — bounded VM-owned file operation.
+    Seek = 715,
+    /// `Std.Fs.Tell` — bounded VM-owned file operation.
+    Tell = 716,
+    /// `Std.Fs.Flush` — bounded VM-owned file operation.
+    Flush = 717,
+    /// `Std.Fs.ReadWithCancellation` — bounded VM-owned file operation.
+    ReadWithCancellation = 718,
+    /// `Std.Fs.WriteWithCancellation` — bounded VM-owned file operation.
+    WriteWithCancellation = 719,
+    /// `Std.Fs.ReadLineWithCancellation` — bounded VM-owned file operation.
+    ReadLineWithCancellation = 720,
+
+    /// `Std.Fs.ReadBytes(Path)` - read a bounded binary file.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    ReadBytes = 708,
+    /// `Std.Fs.WriteBytes(Path, Bytes)` - write a bounded array of byte integers.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    WriteBytes = 709,
     /// `Std.Fs.ReadText(Path)` - read a UTF-8 text file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`

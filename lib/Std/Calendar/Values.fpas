@@ -1,0 +1,242 @@
+// Validated Gregorian civil values and UTC millisecond arithmetic.
+//
+// Handbook: `docs/pascal/std/host/calendar.md`.
+unit Std.Calendar.Values;
+
+// Component, text, offset and range failures from pure calendar operations.
+public type CalendarError = error
+  InvalidDate(Year: integer; Month: integer; Day: integer) = 'Invalid Gregorian date';
+  InvalidTime(Hour: integer; Minute: integer; Second: integer; Millisecond: integer) = 'Invalid time';
+  InvalidSyntax(Offset: integer; Reason: string) = 'Invalid calendar syntax';
+  InvalidOffset(Text: string) = 'Invalid UTC offset';
+  OutOfRange(Operation: string) = 'Calendar result out of range';
+end error;
+
+// A checked Gregorian date; private fields preserve validity through copies.
+public type Date = record
+  YearValue: integer;
+  MonthValue: integer;
+  DayValue: integer;
+
+  // Returns the Gregorian year in 1..9999.
+  public function Year(Self: Date): integer;
+  begin
+    return Self.YearValue;
+  end function;
+
+  // Returns the calendar month in 1..12.
+  public function Month(Self: Date): integer;
+  begin
+    return Self.MonthValue;
+  end function;
+
+  // Returns the day within its validated month.
+  public function Day(Self: Date): integer;
+  begin
+    return Self.DayValue;
+  end function;
+end record;
+
+// A checked UTC date-time with millisecond precision.
+public type DateTime = record
+  DateValue: Date;
+  HourValue: integer;
+  MinuteValue: integer;
+  SecondValue: integer;
+  MillisecondValue: integer;
+
+  // Returns the UTC calendar date without its time of day.
+  public function ToDate(Self: DateTime): Date;
+  begin
+    return Self.DateValue;
+  end function;
+
+  // Returns the UTC hour in 0..23.
+  public function Hour(Self: DateTime): integer;
+  begin
+    return Self.HourValue;
+  end function;
+
+  // Returns the minute in 0..59.
+  public function Minute(Self: DateTime): integer;
+  begin
+    return Self.MinuteValue;
+  end function;
+
+  // Returns the second in 0..59, without leap seconds.
+  public function Second(Self: DateTime): integer;
+  begin
+    return Self.SecondValue;
+  end function;
+
+  // Returns the millisecond within the second in 0..999.
+  public function Millisecond(Self: DateTime): integer;
+  begin
+    return Self.MillisecondValue;
+  end function;
+end record;
+
+const MillisPerDay: integer := 86400000;
+const EpochOrdinal: integer := 719162;
+const MaximumOrdinal: integer := 3652058;
+const MinimumTimestamp: integer := -62135596800000;
+const MaximumTimestamp: integer := 253402300799999;
+
+function IsLeapYear(Year: integer): boolean;
+begin
+  return (Year mod 4 = 0) and ((Year mod 100 <> 0) or (Year mod 400 = 0));
+end function;
+
+// Called only after the year and month have been validated.
+function MonthDays(Year: integer; Month: integer): integer;
+begin
+  if Month = 2 then
+    if IsLeapYear(Year) then
+      return 29;
+    end if;
+
+    return 28;
+  end if;
+
+  if (Month = 4) or (Month = 6) or (Month = 9) or (Month = 11) then
+    return 30;
+  end if;
+
+  return 31;
+end function;
+
+function DaysBeforeYear(Year: integer): integer;
+begin
+  const Previous := Year - 1;
+  return Previous * 365 + Previous div 4 - Previous div 100 + Previous div 400;
+end function;
+
+function Ordinal(Value: Date): integer;
+begin
+  var Days := DaysBeforeYear(Value.YearValue);
+  var Month := 1;
+  while Month < Value.MonthValue do
+    Days := Days + MonthDays(Value.YearValue, Month);
+    Month := Month + 1;
+  end while;
+
+  return Days + Value.DayValue - 1;
+end function;
+
+// The caller guarantees 0 <= Value <= MaximumOrdinal.
+function FromOrdinal(Value: integer): Date;
+begin
+  var Lower := 1;
+  var Upper := 9999;
+  while Lower < Upper do
+    const Middle := Lower + (Upper - Lower + 1) div 2;
+    if DaysBeforeYear(Middle) <= Value then
+      Lower := Middle;
+    else
+      Upper := Middle - 1;
+    end if;
+  end while;
+  var Remaining := Value - DaysBeforeYear(Lower);
+  var Month := 1;
+  while Remaining >= MonthDays(Lower, Month) do
+    Remaining := Remaining - MonthDays(Lower, Month);
+    Month := Month + 1;
+  end while;
+
+  return Date(YearValue := Lower, MonthValue := Month, DayValue := Remaining + 1);
+end function;
+
+public function CreateDate(Year: integer; Month: integer; Day: integer): result of (Date, CalendarError);
+begin
+  if (Year < 1) or (Year > 9999) or (Month < 1) or (Month > 12) then
+    return Error(CalendarError.InvalidDate(Year, Month, Day));
+  end if;
+
+  if (Day < 1) or (Day > MonthDays(Year, Month)) then
+    return Error(CalendarError.InvalidDate(Year, Month, Day));
+  end if;
+
+  return Ok(Date(YearValue := Year, MonthValue := Month, DayValue := Day));
+end function;
+
+public function CreateDateTime(Year: integer; Month: integer; Day: integer; Hour: integer; Minute: integer; Second: integer; Millisecond: integer): result of (DateTime, CalendarError);
+begin
+  const CivilDate := try CreateDate(Year, Month, Day);
+  if (Hour < 0) or (Hour > 23) or (Minute < 0) or (Minute > 59)
+    or
+    (Second < 0) or (Second > 59) or (Millisecond < 0) or (Millisecond > 999)
+  then
+    return Error(CalendarError.InvalidTime(Hour, Minute, Second, Millisecond));
+  end if;
+
+  return Ok(
+    DateTime(
+      DateValue := CivilDate, HourValue := Hour, MinuteValue := Minute,
+      SecondValue := Second, MillisecondValue := Millisecond
+    )
+  );
+end function;
+
+public function ToTimestampMillis(Value: DateTime): integer;
+begin
+  return (Ordinal(Value.DateValue) - EpochOrdinal) * MillisPerDay +
+    Value.HourValue * 3600000 + Value.MinuteValue * 60000 +
+    Value.SecondValue * 1000 + Value.MillisecondValue;
+end function;
+
+public function FromTimestampMillis(Value: integer): result of (DateTime, CalendarError);
+begin
+  if (Value < MinimumTimestamp) or (Value > MaximumTimestamp) then
+    return Error(CalendarError.OutOfRange('Std.Calendar.FromTimestampMillis'));
+  end if;
+  // Integer division truncates toward zero: adjust to a floor day and positive remainder.
+  var Days := Value div MillisPerDay;
+  var Remaining := Value mod MillisPerDay;
+  if Remaining < 0 then
+    Days := Days - 1;
+    Remaining := Remaining + MillisPerDay;
+  end if;
+  const CivilDate := FromOrdinal(Days + EpochOrdinal);
+  const Hour := Remaining div 3600000;
+  Remaining := Remaining mod 3600000;
+  const Minute := Remaining div 60000;
+  Remaining := Remaining mod 60000;
+  return Ok(
+    DateTime(
+      DateValue := CivilDate, HourValue := Hour, MinuteValue := Minute,
+      SecondValue := Remaining div 1000, MillisecondValue := Remaining mod 1000
+    )
+  );
+end function;
+
+public function AddDays(Value: Date; Days: integer): result of (Date, CalendarError);
+begin
+  const Current := Ordinal(Value);
+  // Compare the delta with small bounds before adding, including for integer extrema.
+  if (Days < - Current) or (Days > MaximumOrdinal - Current) then
+    return Error(CalendarError.OutOfRange('Std.Calendar.AddDays'));
+  end if;
+
+  return Ok(FromOrdinal(Current + Days));
+end function;
+
+public function DaysBetween(Start: Date; Finish: Date): integer;
+begin
+  return Ordinal(Finish) - Ordinal(Start);
+end function;
+
+public function AddMillis(Value: DateTime; Milliseconds: integer): result of (DateTime, CalendarError);
+begin
+  const Current := ToTimestampMillis(Value);
+  if (Milliseconds < MinimumTimestamp - Current) or (Milliseconds > MaximumTimestamp - Current) then
+    return Error(CalendarError.OutOfRange('Std.Calendar.AddMillis'));
+  end if;
+
+  return FromTimestampMillis(Current + Milliseconds);
+end function;
+
+public function MillisBetween(Start: DateTime; Finish: DateTime): integer;
+begin
+  return ToTimestampMillis(Finish) - ToTimestampMillis(Start);
+end function;
+end unit;

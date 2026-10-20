@@ -1,0 +1,89 @@
+program CliArgumentsTest;
+
+uses Std.Cli as Cli, Std.Parse as Parse, Std.Test as Test;
+
+begin
+  const Definition := Cli.Schema(
+    ProgramName := 'arguments',
+    Options := [
+      Cli.OptionSpec(Name := 'count', Short := Some('n'), Kind := Cli.Kind.Int),
+      Cli.OptionSpec(Name := 'verbose', Short := Some('v'), Kind := Cli.Kind.Bool),
+      Cli.OptionSpec(Name := 'name')
+    ],
+    Positionals := [Cli.PositionalSpec(Name := 'input', Required := false)]
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--COUNT=1'], Definition) is Error(Cli.CliError.UnknownOption('--COUNT=1', 0))
+  );
+  Test.AssertTrue(Cli.Parse(['-nv'], Definition) is Error(Cli.CliError.UnknownOption('-nv', 0)));
+  Test.AssertTrue(Cli.Parse(['-n1'], Definition) is Error(Cli.CliError.UnknownOption('-n1', 0)));
+  Test.AssertTrue(Cli.Parse(['-n=1'], Definition) is Error(Cli.CliError.UnknownOption('-n=1', 0)));
+  Test.AssertTrue(
+    Cli.Parse(['--count'], Definition) is Error(Cli.CliError.MissingValue('count', 0))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--count', '--'], Definition) is Error(Cli.CliError.MissingValue('count', 0))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--count=1', '-n', '2'], Definition) is Error(Cli.CliError.DuplicateOption('count', 1))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--verbose', '--no-verbose'], Definition) is Error(Cli.CliError.DuplicateOption('verbose', 1))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--no-verbose=false'], Definition) is Error(Cli.CliError.UnexpectedValue(_, 0))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['one', 'two'], Definition) is Error(Cli.CliError.UnexpectedArgument('two', 1))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['-file'], Definition) is Error(Cli.CliError.UnknownOption('-file', 0))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--count', 'bad'], Definition) is Error(Cli.CliError.InvalidValue('count', 'bad', 1, Parse.ParseError.InvalidSyntax('integer', _)))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--count=bad'], Definition) is Error(Cli.CliError.InvalidValue('count', 'bad', 0, Parse.ParseError.InvalidSyntax('integer', _)))
+  );
+  Test.AssertTrue(
+    Cli.Parse(['--verbose=bad'], Definition) is Error(Cli.CliError.InvalidValue('verbose', 'bad', 0, Parse.ParseError.InvalidSyntax('boolean', _)))
+  );
+  case Cli.Parse(['--', '--help'], Definition).Unwrap() of
+    when Cli.Outcome.Parsed(const Values):
+      Test.AssertTrue(Values.Get('input') is Some(Cli.Value.Text('--help')));
+    when Cli.Outcome.Help(_):
+      Test.Fail('Sentinel did not disable help');
+  end case;
+
+  case Cli.Parse(['-'], Definition).Unwrap() of
+    when Cli.Outcome.Parsed(const Values):
+      Test.AssertTrue(Values.Get('input') is Some(Cli.Value.Text('-')));
+    when Cli.Outcome.Help(_):
+      Test.Fail('A lone dash requested help');
+  end case;
+  const IntegerPosition := Cli.Schema(
+    ProgramName := 'integer',
+    Options := [],
+    Positionals := [Cli.PositionalSpec(Name := 'number', Kind := Cli.Kind.Int)]
+  );
+  Test.AssertTrue(
+    Cli.Parse(['-$FF'], IntegerPosition) is Error(Cli.CliError.UnknownOption('-$FF', 0))
+  );
+  case Cli.Parse(['--', '-$FF'], IntegerPosition).Unwrap() of
+    when Cli.Outcome.Parsed(const Values):
+      Test.AssertTrue(Values.Get('number') is Some(Cli.Value.Int(-255)));
+    when Cli.Outcome.Help(_):
+      Test.Fail('Sentinel integer requested help');
+  end case;
+
+  Test.AssertTrue(
+    Cli.Parse(['-1x'], IntegerPosition) is Error(Cli.CliError.InvalidValue('number', '-1x', 0, Parse.ParseError.InvalidSyntax('integer', _)))
+  );
+  const RequiredFlag := Cli.Schema(
+    ProgramName := 'required',
+    Options := [Cli.OptionSpec(Name := 'confirm', Kind := Cli.Kind.Bool, Required := true)],
+    Positionals := []
+  );
+  Test.AssertTrue(Cli.Parse([], RequiredFlag) is Error(Cli.CliError.MissingRequired('confirm')));
+  Test.AssertTrue(Cli.Parse([], IntegerPosition) is Error(Cli.CliError.MissingRequired('number')));
+end.

@@ -1,0 +1,97 @@
+// Deterministic LF-delimited help rendered from an already validated schema.
+unit Std.Cli.HelpText;
+
+uses Std.Cli.Types as Types, Std.Cli.Values as Values;
+
+function Annotation(Kind: Types.Kind; Required: boolean; Default: option of Types.Value; Flag: boolean): string;
+begin
+  var Parts: array of string := [];
+  if Required then
+    Parts.PushInPlace('[required]');
+  end if;
+
+  case Default of
+    when Some(const Value):
+      Parts.PushInPlace('[default: ' + Values.Display(Value) + ']');
+    when None:
+      if Flag and (Kind = Types.Kind.Bool) and (not Required) then
+        Parts.PushInPlace('[default: false]');
+      end if;
+  end case;
+
+  if Parts.Length() = 0 then
+    return '';
+  end if;
+
+  return ' ' + Parts.Join(' ');
+end function;
+
+function OptionLabel(Spec: Types.OptionSpec): string;
+begin
+  var Aliases: array of string := [];
+  case Spec.Short of
+    when None:
+      begin
+      end;
+    when Some(const Short):
+      Aliases.PushInPlace('-' + Short);
+  end case;
+
+  Aliases.PushInPlace('--' + Spec.Name);
+  if Spec.Kind = Types.Kind.Bool then
+    Aliases.PushInPlace('--no-' + Spec.Name);
+  end if;
+  var Label := Aliases.Join(', ');
+  if Spec.Kind <> Types.Kind.Bool then
+    Label := Label + ' <' + Values.KindName(Spec.Kind) + '>';
+  end if;
+
+  return Label + Annotation(Spec.Kind, Spec.Required, Spec.Default, true);
+end function;
+
+// Render after Rules.Validate has admitted the complete definition.
+public function Render(Definition: Types.Schema): string;
+begin
+  var Usage: array of string := ['Usage:', Definition.ProgramName, '[options]'];
+  for Spec: Types.PositionalSpec in Definition.Positionals do
+    const Placeholder := '<' + Spec.Name + ':' + Values.KindName(Spec.Kind) + '>';
+    if Spec.Required then
+      Usage.PushInPlace(Placeholder);
+    else
+      Usage.PushInPlace('[' + Placeholder + ']');
+    end if;
+  end for;
+  var Lines: array of string := [Usage.Join(' ')];
+  if Definition.Description <> '' then
+    Lines.PushInPlace('');
+    Lines.PushInPlace(Definition.Description);
+  end if;
+
+  Lines.PushInPlace('');
+  Lines.PushInPlace('Options:');
+  Lines.PushInPlace('  -h, --help  Show this help');
+  for Spec: Types.OptionSpec in Definition.Options do
+    Lines.PushInPlace('  ' + OptionLabel(Spec));
+    if Spec.Help <> '' then
+      Lines.PushInPlace('    ' + Spec.Help);
+    end if;
+  end for;
+
+  if Definition.Positionals.Length() > 0 then
+    Lines.PushInPlace('');
+    Lines.PushInPlace('Positionals:');
+    for Spec: Types.PositionalSpec in Definition.Positionals do
+      Lines.PushInPlace(
+        '  ' + Spec.Name + ' <' + Values.KindName(Spec.Kind) + '>' +
+        Annotation(Spec.Kind, Spec.Required, Spec.Default, false)
+      );
+      if Spec.Help <> '' then
+        Lines.PushInPlace('    ' + Spec.Help);
+      end if;
+    end for;
+  end if;
+
+  Lines.PushInPlace('');
+  return Lines.Join(#10);
+end function;
+end unit;

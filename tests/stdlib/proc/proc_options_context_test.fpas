@@ -1,0 +1,86 @@
+program ProcOptionsContextTest;
+
+uses Std.Env as Env, Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+
+function LibraryPath(): string;
+begin
+  var Root := Fs.CurrentDir().Unwrap();
+  while not Fs.IsFile(Path.Join([Root, 'lib', 'stdlib.fpasprj'])) do
+    const Parent := Path.DirName(Root);
+    if (Parent = Root) or (Parent = '') then
+      Test.Fail('Run process tests inside the repository.');
+    end if;
+
+    Root := Parent;
+  end while;
+
+  return Path.Join([Root, 'lib']);
+end function;
+
+begin
+  const Defaults := Proc.DefaultOptions();
+  Test.AssertTrue(Defaults.WorkingDirectory is None);
+  Test.AssertEquals(0, Defaults.Environment.Length());
+  Test.AssertEquals('', Defaults.Input);
+  Test.AssertTrue(Defaults.TimeoutMillis is None);
+  Test.AssertEquals(1048576, Defaults.MaxOutputBytes);
+  Test.AssertTrue(Defaults.CancellationToken is None);
+  const ParentDirectory := Fs.CurrentDir().Unwrap();
+  const Root := Path.Join([ParentDirectory, Test.ScratchDir()]);
+  const Working := Path.Join([Root, 'child-work']);
+  Test.AssertTrue(Fs.CreateDirAll(Working).Unwrap());
+  const Source := Path.Join([Root, 'context-child.fpas']);
+  Test.AssertTrue(
+    Fs.WriteText(
+      Source,
+      'program Child;'#10 +
+      'uses Std.Args as Args, Std.Console as Console, Std.Env as Env, Std.Fs as Fs;'#10 +
+      'begin'#10 +
+      'if Args.ParamStr(0) = ''cwd'' then Console.WriteText(Fs.CurrentDir().Unwrap());'#10 +
+      'else case Env.Get(Args.ParamStr(0)) of'#10 +
+      'when Some(const Value): Console.WriteText(Value);'#10 +
+      'when None: Console.WriteText(''<missing>'');'#10 +
+      'end case; end if; end.'
+    ).Unwrap()
+  );
+  const Executable := Proc.CurrentExecutable().Unwrap();
+  const Library := LibraryPath();
+  const WorkOptions := Defaults with WorkingDirectory := Some(Working); end with;
+  const DirectoryOutput := Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'cwd'], WorkOptions
+  ).Unwrap();
+  Test.AssertEquals(0, DirectoryOutput.ExitCode);
+  Test.AssertEquals(Path.Normalize(Working), Path.Normalize(DirectoryOutput.Stdout));
+  Test.AssertEquals('', DirectoryOutput.Stderr);
+  Test.AssertEquals(ParentDirectory, Fs.CurrentDir().Unwrap());
+  const ParentValue := Env.Get('FPAS_PROC_OPTIONS_VALUE');
+  const Changed := Defaults with Environment := [
+    Proc.EnvironmentVariable(Name := 'FPAS_PROC_OPTIONS_VALUE', Value := Some('child-only'))
+  ]; end with;
+  const ChildValue := Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'FPAS_PROC_OPTIONS_VALUE'], Changed
+  ).Unwrap();
+  Test.AssertEquals(0, ChildValue.ExitCode);
+  Test.AssertEquals('child-only', ChildValue.Stdout);
+  Test.AssertTrue(Env.Get('FPAS_PROC_OPTIONS_VALUE') = ParentValue);
+  const ParentPath := Env.Get('PATH');
+  const Inherited := Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'PATH'], Defaults
+  ).Unwrap();
+  Test.AssertEquals(0, Inherited.ExitCode);
+  case ParentPath of
+    when Some(const Value):
+      Test.AssertEquals(Value, Inherited.Stdout);
+    when None:
+      Test.AssertEquals('<missing>', Inherited.Stdout);
+  end case;
+  const Removed := Defaults with Environment := [
+    Proc.EnvironmentVariable(Name := 'PATH', Value := None)
+  ]; end with;
+  const WithoutPath := Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'PATH'], Removed
+  ).Unwrap();
+  Test.AssertEquals(0, WithoutPath.ExitCode);
+  Test.AssertEquals('<missing>', WithoutPath.Stdout);
+  Test.AssertTrue(Env.Get('PATH') = ParentPath);
+end.

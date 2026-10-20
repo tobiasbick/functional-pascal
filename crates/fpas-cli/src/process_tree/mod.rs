@@ -5,26 +5,54 @@ mod unix;
 #[cfg(windows)]
 mod windows;
 
-use std::process::{Child, Command};
+use std::io;
+use std::process::{Child, Command, ExitStatus};
 
 /// Places a worker and its descendants in a separately terminable process tree.
-pub(crate) fn configure(command: &mut Command) {
+pub(crate) fn configure(command: &mut Command) -> io::Result<()> {
     #[cfg(unix)]
-    unix::configure(command);
+    {
+        unix::configure(command)
+    }
     #[cfg(windows)]
-    windows::configure(command);
+    {
+        windows::configure(command);
+        Ok(())
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let _ = command;
+        Ok(())
+    }
+}
+
+/// Keep the Unix session leader waitable until its entire session is cleaned up.
+pub(crate) fn try_wait_owned(child: &mut Child) -> io::Result<Option<ExitStatus>> {
+    #[cfg(unix)]
+    {
+        unix::try_wait_owned(child)
+    }
+    #[cfg(not(unix))]
+    {
+        child.try_wait()
+    }
 }
 
 /// Terminates the owned tree and reaps the direct child.
-pub(crate) fn terminate(child: &mut Child) {
+pub(crate) fn terminate(child: &mut Child) -> io::Result<()> {
     #[cfg(unix)]
-    unix::terminate(child);
+    {
+        unix::terminate(child)
+    }
     #[cfg(windows)]
-    windows::terminate(child);
+    {
+        windows::terminate(child);
+        Ok(())
+    }
     #[cfg(not(any(unix, windows)))]
     {
         let _ = child.kill();
-        let _ = child.wait();
+        child.wait().map(|_| ())
     }
 }
 

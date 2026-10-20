@@ -369,8 +369,15 @@ end."#,
                 .expect("HTTP owner source");
         }
     }
-    fs::create_dir_all(f.0.join("Std/Net")).expect("network owners");
-    for file in ["Uri.fpas", "Utf8.fpas", "Decimal.fpas"] {
+    fs::create_dir_all(f.0.join("Std/Net/Uri")).expect("network owners");
+    for file in [
+        "Uri.fpas",
+        "Uri/Components.fpas",
+        "Uri/Percent.fpas",
+        "Uri/Queries.fpas",
+        "Utf8.fpas",
+        "Decimal.fpas",
+    ] {
         fs::copy(
             library.join("Net").join(file),
             f.0.join("Std/Net").join(file),

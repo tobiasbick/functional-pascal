@@ -173,7 +173,9 @@ The CLI parent owns an isolated worker and the invocation deadline. The deadline
 starts before target/script preparation and includes execution and capture.
 On timeout or output overflow, the parent requests a cooperative stop, allows at
 most 250 ms grace, then terminates the worker's process tree and reaps it. The
-same Unix process-group / Windows process-tree owner serves the test runner.
+same Unix session / Windows process-tree owner serves the test runner. Unix
+cleanup includes nested process groups created by `Std.Proc`, including children
+reparented after the worker dies. Descendants must remain in the worker's session.
 Private request/result/cancellation files are removed after the invocation.
 
 After forced termination, only complete acknowledged output records and an

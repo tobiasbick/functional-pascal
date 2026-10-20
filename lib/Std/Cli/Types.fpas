@@ -1,0 +1,67 @@
+// Schema, typed values and outcomes shared by the command-line parser.
+unit Std.Cli.Types;
+
+uses Std.Parse as Parse;
+
+// Type requested for one command-line value.
+public type Kind = enum
+  Text;
+  Int;
+  Float;
+  Bool;
+end enum;
+
+// A parsed or default command-line value.
+public type Value = enum
+  Text(Value: string);
+  Int(Value: integer);
+  Float(Value: real);
+  Bool(Value: boolean);
+end enum;
+
+// One named option. Optional Boolean flags have an implicit false default.
+public type OptionSpec = record
+  public Name: string;
+  public Short: option of string := None;
+  public Kind: Kind := Kind.Text;
+  public Default: option of Value := None;
+  public Required: boolean := false;
+  public Help: string := '';
+end record;
+
+// One positional value. Required positions precede optional positions.
+public type PositionalSpec = record
+  public Name: string;
+  public Kind: Kind := Kind.Text;
+  public Default: option of Value := None;
+  public Required: boolean := true;
+  public Help: string := '';
+end record;
+
+// Complete parser definition. ProgramName is used only in generated help.
+public type Schema = record
+  public ProgramName: string;
+  public Description: string := '';
+  public Options: array of OptionSpec;
+  public Positionals: array of PositionalSpec;
+end record;
+
+// Parsing succeeds with values or an explicit request to display help.
+public type Outcome = enum
+  Parsed(Values: dict of string to Value);
+  Help(Text: string);
+end enum;
+
+// Recoverable definition, argument and value failures.
+public type CliError = error
+  InvalidSchema(Name: string; Reason: string) = 'Invalid command-line schema';
+  UnknownOption(Argument: string; Index: integer) = 'Unknown command-line option';
+  DuplicateOption(Name: string; Index: integer) = 'Command-line option repeated';
+  MissingValue(Name: string; Index: integer) = 'Missing command-line value';
+  UnexpectedValue(Name: string; Index: integer) = 'Option does not accept a value';
+  InvalidValue(Name: string; Text: string; Index: integer; Cause: Parse.ParseError) = 'Invalid command-line value';
+  MissingRequired(Name: string) = 'Missing required command-line argument';
+  UnexpectedArgument(Argument: string; Index: integer) = 'Unexpected positional argument';
+  LimitExceeded(Resource: string; Limit: integer) = 'Command-line parser limit exceeded';
+end error;
+end unit;

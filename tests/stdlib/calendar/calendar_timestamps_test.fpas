@@ -1,0 +1,51 @@
+program CalendarTimestampsTest;
+
+uses Std.Calendar as Calendar, Std.Test as Test;
+
+begin
+  const Epoch := Calendar.CreateDateTime(1970, 1, 1, 0, 0, 0, 0).Unwrap();
+  Test.AssertEquals(0, Calendar.ToTimestampMillis(Epoch));
+  Test.AssertTrue(Calendar.FromTimestampMillis(0).Unwrap() = Epoch);
+  const BeforeEpoch := Calendar.CreateDateTime(1969, 12, 31, 23, 59, 59, 999).Unwrap();
+  Test.AssertTrue(Calendar.FromTimestampMillis(-1).Unwrap() = BeforeEpoch);
+  Test.AssertEquals(-1, Calendar.ToTimestampMillis(BeforeEpoch));
+  Test.AssertTrue(
+    Calendar.FromTimestampMillis(-86400001).Unwrap() =
+    Calendar.CreateDateTime(1969, 12, 30, 23, 59, 59, 999).Unwrap()
+  );
+  Test.AssertTrue(
+    Calendar.FromTimestampMillis(-86400000).Unwrap() =
+    Calendar.CreateDateTime(1969, 12, 31, 0, 0, 0, 0).Unwrap()
+  );
+  Test.AssertTrue(
+    Calendar.FromTimestampMillis(86400000).Unwrap() =
+    Calendar.CreateDateTime(1970, 1, 2, 0, 0, 0, 0).Unwrap()
+  );
+  Test.AssertTrue(
+    Calendar.FromTimestampMillis(-62135596800000).Unwrap() =
+    Calendar.CreateDateTime(1, 1, 1, 0, 0, 0, 0).Unwrap()
+  );
+  Test.AssertTrue(
+    Calendar.FromTimestampMillis(253402300799999).Unwrap() =
+    Calendar.CreateDateTime(9999, 12, 31, 23, 59, 59, 999).Unwrap()
+  );
+  for Stamp: integer in [
+    -62135596800000, -62135596799999, -2203977600000, -86400001,
+    -86400000, -1, 0, 1, 86399999, 86400000,
+    951782400000, 253402300799998, 253402300799999
+  ] do
+    Test.AssertEquals(
+      Stamp,
+      Calendar.ToTimestampMillis(Calendar.FromTimestampMillis(Stamp).Unwrap())
+    );
+  end for;
+
+  for Stamp: integer in [
+    -9223372036854775808, -62135596800001,
+    253402300800000, 9223372036854775807
+  ] do
+    Test.AssertTrue(
+      Calendar.FromTimestampMillis(Stamp) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.FromTimestampMillis'))
+    );
+  end for;
+end.

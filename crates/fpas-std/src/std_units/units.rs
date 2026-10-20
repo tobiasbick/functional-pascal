@@ -15,6 +15,8 @@ standard_unit_names! {
     STD_UNIT_ERRORS = "Std.Errors";
     STD_UNIT_SERVER = "Std.Server";
     STD_UNIT_ARGS = "Std.Args";
+    STD_UNIT_CLI = "Std.Cli";
+    STD_UNIT_CALENDAR = "Std.Calendar";
     STD_UNIT_ENV = "Std.Env";
     STD_UNIT_PROC = "Std.Proc";
     STD_UNIT_PATH = "Std.Path";
@@ -30,6 +32,7 @@ standard_unit_names! {
     STD_UNIT_NET = "Std.Net";
     STD_UNIT_RANDOM = "Std.Random";
     STD_UNIT_CRYPTO = "Std.Crypto";
+    STD_UNIT_ENCODING = "Std.Encoding";
     STD_UNIT_ARRAY = "Std.Arrays";
     STD_UNIT_RESULT = "Std.Results";
     STD_UNIT_OPTION = "Std.Options";
@@ -59,6 +62,7 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
     STD_UNIT_NET,
     STD_UNIT_RANDOM,
     STD_UNIT_CRYPTO,
+    STD_UNIT_ENCODING,
     STD_UNIT_TASK,
     STD_UNIT_JSON,
     STD_UNIT_TOML,
@@ -70,6 +74,8 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_ERRORS,
     STD_UNIT_SERVER,
     STD_UNIT_ARGS,
+    STD_UNIT_CLI,
+    STD_UNIT_CALENDAR,
     STD_UNIT_ENV,
     STD_UNIT_PROC,
     STD_UNIT_PATH,
@@ -83,6 +89,7 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_NET,
     STD_UNIT_RANDOM,
     STD_UNIT_CRYPTO,
+    STD_UNIT_ENCODING,
     STD_UNIT_TASK,
     STD_UNIT_JSON,
     STD_UNIT_TOML,
@@ -92,12 +99,18 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
 
 #[cfg(test)]
 mod tests {
-    use super::{STD_UNIT_CONSOLE, STD_UNIT_TUI, STD_UNIT_VERSION, STD_UNITS_INTRINSIC};
+    use super::{
+        STD_UNIT_CALENDAR, STD_UNIT_CLI, STD_UNIT_CONSOLE, STD_UNIT_TUI, STD_UNIT_VERSION,
+        STD_UNITS_INTRINSIC,
+    };
 
     #[test]
     fn intrinsic_units_exclude_source_defined_units() {
         assert!(STD_UNITS_INTRINSIC.contains(&STD_UNIT_CONSOLE));
         assert!(!STD_UNITS_INTRINSIC.contains(&STD_UNIT_TUI));
+        assert!(!STD_UNITS_INTRINSIC.contains(&STD_UNIT_CLI));
+        assert!(!STD_UNITS_INTRINSIC.contains(&STD_UNIT_CALENDAR));
+        assert!(super::STD_UNITS_KNOWN.contains(&STD_UNIT_CALENDAR));
         assert!(!STD_UNITS_INTRINSIC.contains(&STD_UNIT_VERSION));
     }
 }

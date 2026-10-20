@@ -1,4 +1,4 @@
-use super::check_errors;
+use super::{check_errors, check_ok};
 
 #[test]
 fn parse_std_qualified_call_rejects_empty_segments() {
@@ -33,4 +33,16 @@ fn uses_std_extra_segment_rejected() {
             .any(|e| e.message.contains("reserved namespace `Std`")),
         "{errs:#?}"
     );
+}
+
+#[test]
+fn source_cli_import_does_not_register_intrinsic_symbols() {
+    check_ok("program T;\nuses Std.Cli as Cli;\nbegin\nend.");
+    assert!(crate::intrinsic_std_symbols(fpas_std::STD_UNIT_CLI).is_empty());
+}
+
+#[test]
+fn source_calendar_import_does_not_register_intrinsic_symbols() {
+    check_ok("program T;\nuses Std.Calendar as Calendar;\nbegin\nend.");
+    assert!(crate::intrinsic_std_symbols(fpas_std::STD_UNIT_CALENDAR).is_empty());
 }

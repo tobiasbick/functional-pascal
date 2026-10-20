@@ -292,7 +292,16 @@ fn render_record(
         output.push_str("  _IntrinsicHandle: integer;\n");
     } else {
         for (field, ty) in &value.fields {
-            let _ = writeln!(output, "  public {field}: {ty};");
+            let visibility = if value
+                .private_members
+                .iter()
+                .any(|private| private.eq_ignore_ascii_case(field))
+            {
+                ""
+            } else {
+                "public "
+            };
+            let _ = writeln!(output, "  {visibility}{field}: {ty};");
         }
     }
     for member_name in member_names {

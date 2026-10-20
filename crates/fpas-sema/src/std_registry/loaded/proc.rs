@@ -17,6 +17,52 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
             ("Stderr".into(), Ty::String),
         ],
     );
+    let environment = type_registration::register_record_type(
+        checker,
+        s::STD_PROC_ENVIRONMENT_VARIABLE,
+        vec![
+            ("Name".into(), Ty::String),
+            ("Value".into(), Ty::Option(Box::new(Ty::String))),
+        ],
+    );
+    let token = type_registration::register_record_type(
+        checker,
+        s::STD_TASK_CANCELLATION_TOKEN,
+        Vec::new(),
+    );
+    let options = type_registration::register_record_type(
+        checker,
+        s::STD_PROC_PROCESS_OPTIONS,
+        vec![
+            ("WorkingDirectory".into(), Ty::Option(Box::new(Ty::String))),
+            ("Environment".into(), Ty::Array(Box::new(environment))),
+            ("Input".into(), Ty::String),
+            ("TimeoutMillis".into(), Ty::Option(Box::new(Ty::Integer))),
+            ("MaxOutputBytes".into(), Ty::Integer),
+            ("CancellationToken".into(), Ty::Option(Box::new(token))),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_PROC_DEFAULT_OPTIONS,
+        vec![],
+        options.clone(),
+    );
+    for (name, output) in [
+        (s::STD_PROC_RUN_WITH_OPTIONS, Ty::Integer),
+        (s::STD_PROC_RUN_CAPTURE_WITH_OPTIONS, process_output.clone()),
+    ] {
+        define_func(
+            checker,
+            name,
+            vec![
+                p("Command", Ty::String),
+                p("Args", Ty::Array(Box::new(Ty::String))),
+                p("Options", options.clone()),
+            ],
+            Ty::Result(Box::new(output), Box::new(error_ty.clone())),
+        );
+    }
     define_func(
         checker,
         s::STD_PROC_CURRENT_EXECUTABLE,

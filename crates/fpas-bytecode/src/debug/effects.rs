@@ -160,6 +160,7 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
     match intrinsic {
         Intrinsic::Str(_)
         | Intrinsic::Conv(_)
+        | Intrinsic::Encoding(_)
         | Intrinsic::Parse(_)
         | Intrinsic::Math(_)
         | Intrinsic::Bits(_)
@@ -174,7 +175,11 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
         Intrinsic::Random(_) => DebugEffectSet::NONDETERMINISTIC,
         Intrinsic::Crypto(_) => DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC),
         Intrinsic::Env(_) => DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC),
+        Intrinsic::Fs(_) if matches!(intrinsic.owner(), crate::IntrinsicOwner::Hosted) => {
+            DebugEffectSet::HOST_IO.union(DebugEffectSet::BLOCKING)
+        }
         Intrinsic::Fs(_) | Intrinsic::Console(_) | Intrinsic::Test(_) => DebugEffectSet::HOST_IO,
+        Intrinsic::Proc(crate::ProcIntrinsic::DefaultOptions) => DebugEffectSet::EMPTY,
         Intrinsic::Proc(_) => DebugEffectSet::HOST_IO
             .union(DebugEffectSet::BLOCKING)
             .union(DebugEffectSet::NONDETERMINISTIC),
@@ -242,6 +247,14 @@ mod tests {
 
     #[test]
     fn representative_intrinsic_policies_are_stable() {
+        assert!(
+            intrinsic_debug_effects(Intrinsic::Proc(crate::ProcIntrinsic::DefaultOptions))
+                .is_debug_safe()
+        );
+        assert!(
+            intrinsic_debug_effects(Intrinsic::Proc(crate::ProcIntrinsic::RunWithOptions))
+                .contains(DebugEffectSet::BLOCKING)
+        );
         assert!(
             intrinsic_debug_effects(Intrinsic::Math(crate::MathIntrinsic::Sqrt)).is_debug_safe()
         );

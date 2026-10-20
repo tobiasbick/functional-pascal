@@ -1,8 +1,8 @@
-//! `Std.Proc` runtime implementation.
-//!
-//! Blocking host process execution safe to call from `go` tasks.
+//! Pure `Std.Proc` helpers and legacy Rust process adapters.
 //!
 //! **Documentation:** `docs/pascal/std/host/proc.md` (from the repository root).
+
+mod options;
 
 use crate::error::StdError;
 use crate::intrinsic_args::{IntrinsicCall, pop_array, pop_string, pop_value};
@@ -13,22 +13,29 @@ use std::io::{self, BufRead, BufReader};
 use std::process::{Command, ExitStatus, Stdio};
 use std::sync::Arc;
 
-/// Receives each standard-error line of a child started by `Std.Proc.Run`.
+/// Receives standard-error lines from hosted process calls.
 ///
 /// Lines arrive without their line ending. A host installs a receiver when the
 /// child's standard error must not reach the parent's stderr directly, for
 /// example to wrap it as program-output events in a JSON diagnostic stream.
+/// Legacy `Run` forwards live; `RunWithOptions` delivers bounded stderr after
+/// child cleanup, outside its managed process deadline.
 pub type ProgramStderr = Arc<dyn Fn(&str) + Send + Sync>;
 
 /// Execute a `Std.Proc` intrinsic and return `None` when another unit should handle it.
 ///
-/// `Std.Proc.Run` is hosted by the VM, which passes its stderr receiver to [`run_process`].
+/// Process starts use the VM's owned process engine. This owner constructs
+/// defaults and reads the executable path; the capture adapter is also used by
+/// direct Rust helper tests.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
+        Intrinsic::Proc(ProcIntrinsic::DefaultOptions) => {
+            call.push(options::defaults(call.factory(), location)?);
+        }
         Intrinsic::Proc(ProcIntrinsic::CurrentExecutable) => {
             call.push(current_executable(call.factory(), location)?);
         }
@@ -301,12 +308,16 @@ mod tests {
     }
 
     fn run_capture(stack: &mut Vec<Value>) {
-        crate::execute_test_intrinsic(
+        let arguments = std::mem::take(stack);
+        let mut call = IntrinsicCall::new(&arguments, &crate::intrinsics::TEST_AGGREGATES);
+        super::run(
             Intrinsic::Proc(ProcIntrinsic::RunCapture),
-            stack,
+            &mut call,
             test_location(),
         )
         .unwrap();
+        let (_, result) = call.finish();
+        stack.extend(result);
     }
 
     #[test]

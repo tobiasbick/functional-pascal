@@ -1,0 +1,91 @@
+// Pure Gregorian dates, UTC date-times and checked calendar arithmetic.
+//
+// Handbook: `docs/pascal/std/host/calendar.md`.
+unit Std.Calendar;
+
+uses Std.Calendar.Values as Values, Std.Calendar.Text as Iso;
+
+// A Gregorian date in years 1..9999, created through checked functions.
+public type Date = Values.Date;
+
+// A UTC date-time with millisecond precision and no leap seconds.
+public type DateTime = Values.DateTime;
+
+// Invalid components, text, UTC offsets and results outside the supported range.
+public type CalendarError = Values.CalendarError;
+
+// Creates a Gregorian date after validating every component.
+public function CreateDate(Year: integer; Month: integer; Day: integer): result of (Date, CalendarError);
+begin
+  return Values.CreateDate(Year, Month, Day);
+end function;
+
+// Creates a UTC date-time after validating every date and time component.
+public function CreateDateTime(
+  Year: integer; Month: integer; Day: integer;
+  Hour: integer; Minute: integer; Second: integer; Millisecond: integer
+): result of (DateTime, CalendarError);
+begin
+  return Values.CreateDateTime(Year, Month, Day, Hour, Minute, Second, Millisecond);
+end function;
+
+// Parses exactly YYYY-MM-DD under the proleptic Gregorian calendar.
+public function ParseDate(Text: string): result of (Date, CalendarError);
+begin
+  return Iso.ParseDate(Text);
+end function;
+
+// Parses an RFC-3339 timestamp with at most three fractional digits into UTC.
+public function ParseDateTime(Text: string): result of (DateTime, CalendarError);
+begin
+  return Iso.ParseDateTime(Text);
+end function;
+
+// Formats a date as YYYY-MM-DD.
+public function FormatDate(Value: Date): string;
+begin
+  return Iso.FormatDate(Value);
+end function;
+
+// Formats UTC as YYYY-MM-DDTHH:mm:ss.SSSZ, including zero milliseconds.
+public function FormatDateTime(Value: DateTime): string;
+begin
+  return Iso.FormatDateTime(Value);
+end function;
+
+// Converts Unix milliseconds, including negative values, into a UTC date-time.
+public function FromTimestampMillis(Value: integer): result of (DateTime, CalendarError);
+begin
+  return Values.FromTimestampMillis(Value);
+end function;
+
+// Returns UTC milliseconds since 1970-01-01T00:00:00Z.
+public function ToTimestampMillis(Value: DateTime): integer;
+begin
+  return Values.ToTimestampMillis(Value);
+end function;
+
+// Adds whole calendar days and reports a result outside years 1..9999.
+public function AddDays(Value: Date; Days: integer): result of (Date, CalendarError);
+begin
+  return Values.AddDays(Value, Days);
+end function;
+
+// Returns Finish minus Start in whole calendar days.
+public function DaysBetween(Start: Date; Finish: Date): integer;
+begin
+  return Values.DaysBetween(Start, Finish);
+end function;
+
+// Adds milliseconds and reports a result outside the supported UTC range.
+public function AddMillis(Value: DateTime; Milliseconds: integer): result of (DateTime, CalendarError);
+begin
+  return Values.AddMillis(Value, Milliseconds);
+end function;
+
+// Returns Finish minus Start in milliseconds, without reading a host clock.
+public function MillisBetween(Start: DateTime; Finish: DateTime): integer;
+begin
+  return Values.MillisBetween(Start, Finish);
+end function;
+end unit;

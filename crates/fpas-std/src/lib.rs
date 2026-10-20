@@ -22,6 +22,7 @@ mod console;
 mod console_event;
 mod conv;
 mod dict;
+mod encoding;
 mod env;
 mod error;
 mod fs;
@@ -62,9 +63,10 @@ pub use intrinsics::run_intrinsic_borrowed;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
 pub use proc::{ProgramStderr, run_process, run_process_arguments};
 pub use std_units::{
-    STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO,
-    STD_UNIT_DICT, STD_UNIT_ENV, STD_UNIT_ERRORS, STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH,
-    STD_UNIT_NET, STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM,
+    STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CALENDAR, STD_UNIT_CLI,
+    STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_DICT, STD_UNIT_ENCODING,
+    STD_UNIT_ENV, STD_UNIT_ERRORS, STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET,
+    STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM,
     STD_UNIT_RESULT, STD_UNIT_SERVER, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME,
     STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_INTRINSIC, STD_UNITS_KNOWN,
     canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_retired_type_helper_unit,

@@ -1,0 +1,48 @@
+// Pure schema-driven command-line parsing and generated help.
+//
+// Handbook: `docs/pascal/std/host/cli.md`.
+unit Std.Cli;
+
+uses Std.Cli.Types as Types, Std.Cli.Parser as Parser, Std.Cli.Rules as Rules, Std.Cli.HelpText as HelpText;
+
+// Supported string, integer, real and Boolean kinds.
+public type Kind = Types.Kind;
+
+// Parsed values retain their concrete primitive type in a data variant.
+public type Value = Types.Value;
+
+// One named option and its optional short alias.
+public type OptionSpec = Types.OptionSpec;
+
+// One positional argument in declaration order.
+public type PositionalSpec = Types.PositionalSpec;
+
+// The complete argument schema, including usage text.
+public type Schema = Types.Schema;
+
+// Successful parsed values or help requested by the user.
+public type Outcome = Types.Outcome;
+
+// Typed schema, input and value failures; InvalidValue preserves its parser cause.
+public type CliError = Types.CliError;
+
+// Parses an explicit argument array without reading process state or writing output.
+//
+// Parameters:
+// - `Arguments`: Tokens supplied by the application, excluding the executable name.
+// - `Definition`: Option and positional declarations, defaults and help text.
+public function Parse(Arguments: array of string; Definition: Schema): result of (Outcome, CliError);
+begin
+  return Parser.Parse(Arguments, Definition);
+end function;
+
+// Validates the schema and returns deterministic help text ending in LF.
+//
+// Parameters:
+// - `Definition`: Option and positional declarations, defaults and help text.
+public function Help(Definition: Schema): result of (string, CliError);
+begin
+  discard try Rules.Validate(Definition);
+  return Ok(HelpText.Render(Definition));
+end function;
+end unit;

@@ -1,0 +1,84 @@
+// Typed conversions and display for command-line values.
+unit Std.Cli.Values;
+
+uses Std.Cli.Types as Types, Std.Conv as Conv, Std.Parse as Parse;
+
+// Tests the variant used by a schema default.
+public function Matches(Item: Types.Value; Expected: Types.Kind): boolean;
+begin
+  case Item of
+    when Types.Value.Text(_):
+      return Expected = Types.Kind.Text;
+    when Types.Value.Int(_):
+      return Expected = Types.Kind.Int;
+    when Types.Value.Float(_):
+      return Expected = Types.Kind.Float;
+    when Types.Value.Bool(_):
+      return Expected = Types.Kind.Bool;
+  end case;
+end function;
+
+// Parses according to the existing Pascal numeric and Boolean grammars.
+public function Convert(Text: string; Kind: Types.Kind; Name: string; Index: integer): result of (Types.Value, Types.CliError);
+begin
+  case Kind of
+    when Types.Kind.Text:
+      return Ok(Types.Value.Text(Text));
+    when Types.Kind.Int:
+      case Parse.Int(Text) of
+        when Ok(const Number):
+          return Ok(Types.Value.Int(Number));
+        when Error(const Cause):
+          return Error(Types.CliError.InvalidValue(Name, Text, Index, Cause));
+      end case;
+    when Types.Kind.Float:
+      case Parse.Real(Text) of
+        when Ok(const Number):
+          return Ok(Types.Value.Float(Number));
+        when Error(const Cause):
+          return Error(Types.CliError.InvalidValue(Name, Text, Index, Cause));
+      end case;
+    when Types.Kind.Bool:
+      case Parse.Bool(Text) of
+        when Ok(const Flag):
+          return Ok(Types.Value.Bool(Flag));
+        when Error(const Cause):
+          return Error(Types.CliError.InvalidValue(Name, Text, Index, Cause));
+      end case;
+  end case;
+end function;
+
+// Stable type names used by generated help.
+public function KindName(Kind: Types.Kind): string;
+begin
+  case Kind of
+    when Types.Kind.Text:
+      return 'text';
+    when Types.Kind.Int:
+      return 'integer';
+    when Types.Kind.Float:
+      return 'real';
+    when Types.Kind.Bool:
+      return 'boolean';
+  end case;
+end function;
+
+// Renders a default without introducing unescaped line breaks into help rows.
+public function Display(Item: Types.Value): string;
+begin
+  case Item of
+    when Types.Value.Text(const Text):
+      return '"' +
+        Text.Replace(
+          '\',
+          '\\'
+        ).Replace('"', '\"').Replace(#10, '\n').Replace(#13, '\r').Replace(#9, '\t') + '"';
+    when Types.Value.Int(const Number):
+      return Conv.IntToStr(Number);
+    when Types.Value.Float(const Number):
+      return Conv.RealToStr(Number);
+    when Types.Value.Bool(const Flag):
+      return Conv.BoolToStr(Flag);
+  end case;
+end function;
+end unit;

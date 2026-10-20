@@ -1,0 +1,23 @@
+program EncodingLimitsTest;
+
+uses Std.Encoding as Encoding, Std.Test as Test;
+
+begin
+  // Large malformed strings exercise preflight without allocating decoded byte arrays.
+  const TooLongBase64 := '!!'.RepeatStr(699052) + '!';
+  Test.AssertTrue(
+    Encoding.Base64Decode(TooLongBase64) is Error(Encoding.EncodingError.LimitExceeded(1048576))
+  );
+  Test.AssertTrue(
+    Encoding.Base64UrlDecode(TooLongBase64) is Error(Encoding.EncodingError.LimitExceeded(1048576))
+  );
+  const TooLongHex := '!!!!'.RepeatStr(524289);
+  Test.AssertTrue(
+    Encoding.HexDecode(TooLongHex) is Error(Encoding.EncodingError.LimitExceeded(1048576))
+  );
+  // This text meets the encoded-length bound but would decode to 1_048_578 bytes.
+  const TooManyDecodedBytes := 'AAAA'.RepeatStr(349526);
+  Test.AssertTrue(
+    Encoding.Base64Decode(TooManyDecodedBytes) is Error(Encoding.EncodingError.LimitExceeded(1048576))
+  );
+end.

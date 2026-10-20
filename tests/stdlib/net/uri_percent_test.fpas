@@ -1,0 +1,35 @@
+program UriPercentTest;
+
+uses Std.Net.Uri as Uri, Std.Test as Test;
+
+procedure Check(Text: string; Encoded: string);
+begin
+  Test.AssertEquals(Encoded, Uri.EncodePathSegment(Text).Unwrap());
+  Test.AssertEquals(Encoded, Uri.EncodeQueryComponent(Text).Unwrap());
+  Test.AssertEquals(Text, Uri.DecodePathSegment(Encoded).Unwrap());
+  Test.AssertEquals(Text, Uri.DecodeQueryComponent(Encoded).Unwrap());
+end procedure;
+
+begin
+  Check('', '');
+  Check('AZaz09-._~', 'AZaz09-._~');
+  Check('/ +?&=#', '%2F%20%2B%3F%26%3D%23');
+  Check('''"', '%27%22');
+  Check(#0, '%00');
+  Check('a'#0'b', 'a%00b');
+  Check('Grüße 🌍', 'Gr%C3%BC%C3%9Fe%20%F0%9F%8C%8D');
+  Check(string.Chr(1114111), '%F4%8F%BF%BF');
+  Check('%2F', '%252F');
+  Test.AssertEquals('//', Uri.DecodePathSegment('%2f%2F').Unwrap());
+  Test.AssertEquals('é/+?&=#', Uri.DecodePathSegment('é/+?&=#').Unwrap());
+  Test.AssertEquals('é/+?&=#', Uri.DecodeQueryComponent('é/+?&=#').Unwrap());
+  Test.AssertEquals('++ ', Uri.DecodeQueryComponent('%2B+%20').Unwrap());
+  Test.AssertEquals('%2F', Uri.DecodePathSegment('%25%32%46').Unwrap());
+  Test.AssertEquals('%2F', Uri.DecodeQueryComponent('%252F').Unwrap());
+  const Address := Uri.Parse('https://example.test/a%2Fb?name=a+b#tail').Unwrap();
+  Test.AssertEquals('https', Address.Scheme);
+  Test.AssertEquals('example.test', Address.Host);
+  Test.AssertEquals(443, Address.Port);
+  Test.AssertEquals('/a%2Fb?name=a+b', Address.Path);
+  Test.AssertTrue(Uri.Parse('ftp://example.test/') is Error(Uri.UriError.UnsupportedScheme('ftp')));
+end.

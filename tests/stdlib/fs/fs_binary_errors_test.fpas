@@ -1,0 +1,50 @@
+program FsBinaryErrorsTest;
+
+uses Std.Errors as Errors, Std.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+
+function ReadCount(FileName: string): result of (integer, Fs.FsError);
+begin
+  const Bytes := try Fs.ReadBytes(FileName);
+  return Ok(Bytes.Length());
+end function;
+
+begin
+  const Missing := Test.ScratchDir() + '/binary-missing.bin';
+  case Fs.ReadBytes(Missing) of
+    when Ok(_):
+      Test.Fail('A missing file unexpectedly produced bytes');
+    when Error(Fs.FsError.FileNotFound(const FileName, const Cause)):
+      Test.AssertEquals(Missing, FileName);
+      case Cause of
+        when Errors.HostError.Failure(const Operation, const Resources, _, _, const Detail):
+          Test.AssertEquals('Std.Fs.ReadBytes', Operation);
+          Test.AssertEquals(1, Resources.Length());
+          Test.AssertEquals(Missing, Resources[0]);
+          Test.AssertFalse(Detail.IsEmpty());
+      end case;
+    when Error(_):
+      Test.Fail('Expected a typed missing-file error');
+  end case;
+
+  Test.AssertTrue(
+    ReadCount(Missing) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Fs.ReadBytes', _, _, _, _)))
+  );
+  scope
+    const Job: task of result of (array of integer, Fs.FsError) := go Fs.ReadBytes(Missing);
+    Test.AssertTrue(
+      Tasks.Wait(Job) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Fs.ReadBytes', _, _, _, _)))
+    );
+  end scope;
+  const MissingParent := Test.ScratchDir() + '/binary-no-parent/data.bin';
+  Test.AssertTrue(
+    Fs.WriteBytes(MissingParent, [0, 255]) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Fs.WriteBytes', _, _, _, _)))
+  );
+  Test.AssertFalse(Fs.Exists(Test.ScratchDir() + '/binary-no-parent'));
+  const LargeFile := Test.ScratchDir() + '/binary-over-read-limit.bin';
+  Test.AssertTrue(Fs.WriteText(LargeFile, 'xx'.RepeatStr(524289)).Unwrap());
+  Test.AssertEquals(1048578, Fs.FileSize(LargeFile).Unwrap());
+  Test.AssertTrue(
+    Fs.ReadBytes(LargeFile) is Error(Fs.FsError.LimitExceeded('Std.Fs.ReadBytes', 1048576))
+  );
+  Test.AssertEquals(1048578, Fs.ReadText(LargeFile).Unwrap().Length());
+end.

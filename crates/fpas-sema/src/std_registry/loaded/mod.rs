@@ -4,6 +4,7 @@ mod channel_task;
 mod console;
 mod conv;
 mod crypto;
+mod encoding;
 mod env;
 mod errors;
 mod fs;
@@ -53,6 +54,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_CONSOLE => console::register_std_console(checker),
         STD_UNIT_CONV => conv::register_std_conv(checker),
         STD_UNIT_CRYPTO => crypto::register_std_crypto(checker),
+        fpas_std::STD_UNIT_ENCODING => encoding::register_std_encoding(checker),
         STD_UNIT_PARSE => parse::register_std_parse(checker),
         STD_UNIT_MATH => math::register_std_math(checker),
         STD_UNIT_BITS => bits::register_std_bits(checker),
@@ -63,7 +65,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         SOURCE_STD_UNIT_VERSION => {}
         STD_UNIT_JSON => json::register_std_json(checker),
         STD_UNIT_TOML => toml::register_std_toml(checker),
-        STD_UNIT_TUI => {}
+        STD_UNIT_TUI | fpas_std::STD_UNIT_CLI | fpas_std::STD_UNIT_CALENDAR => {}
         STD_UNIT_TEST => test::register_std_test(checker),
         _ => unreachable!(
             "register_single_std_unit: unhandled std unit `{unit}` — add a match arm for every entry in fpas_std::STD_UNITS_KNOWN"

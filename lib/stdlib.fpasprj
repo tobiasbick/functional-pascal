@@ -5,6 +5,8 @@ kind = "library"
 [exports]
 units = [
   "Std.Version",
+  "Std.Cli",
+  "Std.Calendar",
   "Std.Tui",
   "Std.Net.Uri",
   "Std.Net.Utf8",

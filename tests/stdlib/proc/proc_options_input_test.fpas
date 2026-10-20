@@ -1,0 +1,74 @@
+program ProcOptionsInputTest;
+
+uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+
+function LibraryPath(): string;
+begin
+  var Root := Fs.CurrentDir().Unwrap();
+  while not Fs.IsFile(Path.Join([Root, 'lib', 'stdlib.fpasprj'])) do
+    const Parent := Path.DirName(Root);
+    if (Parent = Root) or (Parent = '') then
+      Test.Fail('Run process tests inside the repository.');
+    end if;
+
+    Root := Parent;
+  end while;
+
+  return Path.Join([Root, 'lib']);
+end function;
+
+begin
+  const Root := Path.Join([Fs.CurrentDir().Unwrap(), Test.ScratchDir()]);
+  const Source := Path.Join([Root, 'input-child.fpas']);
+  Test.AssertTrue(
+    Fs.WriteText(
+      Source,
+      'program Child;'#10 +
+      'uses Std.Args as Args, Std.Console as Console, Std.Fs as Fs;'#10 +
+      'begin'#10 +
+      'if Args.ParamStr(0) = ''duplex'' then'#10 +
+      'Console.WriteText(''o''.RepeatStr(131072));'#10 +
+      'Console.WriteText(Console.ReadLn().Unwrap());'#10 +
+      'panic(''e''.RepeatStr(131072));'#10 +
+      'elsif Args.ParamStr(0) = ''save'' then'#10 +
+      'discard Fs.WriteText(Args.ParamStr(1), Console.ReadLn().Unwrap()).Unwrap();'#10 +
+      'else'#10 +
+      'case Console.ReadLn() of'#10 +
+      'when Some(const Line): Console.WriteText(Line);'#10 +
+      'when None: Console.WriteText(''<eof>'');'#10 +
+      'end case; Console.WriteText(''|''); Console.WriteText(Console.ReadLn() is None);'#10 +
+      'end if; end.'
+    ).Unwrap()
+  );
+  const Executable := Proc.CurrentExecutable().Unwrap();
+  const Library := LibraryPath();
+  const Arguments := ['run', '--std-lib', Library, Source, '--', 'line'];
+  const Empty := Proc.RunCaptureWithOptions(Executable, Arguments, Proc.DefaultOptions()).Unwrap();
+  Test.AssertEquals(0, Empty.ExitCode);
+  Test.AssertEquals('<eof>|true', Empty.Stdout);
+  Test.AssertEquals('', Empty.Stderr);
+  const Input := Proc.DefaultOptions() with Input := 'line'#0'zero'#10; end with;
+  const Line := Proc.RunCaptureWithOptions(Executable, Arguments, Input).Unwrap();
+  Test.AssertEquals(0, Line.ExitCode);
+  Test.AssertEquals('line'#0'zero|true', Line.Stdout);
+  const Legacy := Proc.RunCapture(Executable, Arguments).Unwrap();
+  Test.AssertEquals('<eof>|true', Legacy.Stdout);
+  const Saved := Path.Join([Root, 'saved-input.txt']);
+  const Inherited := Proc.DefaultOptions() with Input := 'run-input'#10; MaxOutputBytes := 0; end with;
+
+  Test.AssertEquals(
+    0, Proc.RunWithOptions(
+      Executable, ['run', '--std-lib', Library, Source, '--', 'save', Saved], Inherited
+    ).Unwrap()
+  );
+  Test.AssertEquals('run-input', Fs.ReadText(Saved).Unwrap());
+  const Duplex := Proc.DefaultOptions() with Input := 'i'.RepeatStr(131072) + #10; TimeoutMillis := Some(
+    30000
+  ); end with;
+  const Output := Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'duplex'], Duplex
+  ).Unwrap();
+  Test.AssertTrue(Output.ExitCode <> 0);
+  Test.AssertEquals('o'.RepeatStr(131072) + 'i'.RepeatStr(131072), Output.Stdout);
+  Test.AssertTrue(Output.Stderr.Length() > 65536);
+end.

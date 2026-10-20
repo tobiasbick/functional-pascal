@@ -1,0 +1,88 @@
+program CalendarTextTest;
+
+uses Std.Calendar as Calendar, Std.Test as Test;
+
+procedure AssertDateText(Text: string; Year: integer; Month: integer; Day: integer);
+begin
+  const Expected := Calendar.CreateDate(Year, Month, Day).Unwrap();
+  const Parsed := Calendar.ParseDate(Text).Unwrap();
+  Test.AssertTrue(Parsed = Expected);
+  Test.AssertEquals(Text, Calendar.FormatDate(Parsed));
+end procedure;
+
+procedure AssertTimestamp(Text: string; ExpectedText: string; Expected: Calendar.DateTime);
+begin
+  const Parsed := Calendar.ParseDateTime(Text).Unwrap();
+  Test.AssertTrue(Parsed = Expected);
+  Test.AssertEquals(ExpectedText, Calendar.FormatDateTime(Parsed));
+  Test.AssertTrue(Calendar.ParseDateTime(Calendar.FormatDateTime(Parsed)).Unwrap() = Parsed);
+end procedure;
+
+begin
+  AssertDateText('0001-01-01', 1, 1, 1);
+  AssertDateText('0042-03-09', 42, 3, 9);
+  AssertDateText('1582-10-10', 1582, 10, 10);
+  AssertDateText('1900-02-28', 1900, 2, 28);
+  AssertDateText('2000-02-29', 2000, 2, 29);
+  AssertDateText('2400-02-29', 2400, 2, 29);
+  AssertDateText('9999-12-31', 9999, 12, 31);
+  AssertTimestamp(
+    '0001-01-01T00:00:00Z',
+    '0001-01-01T00:00:00.000Z',
+    Calendar.CreateDateTime(1, 1, 1, 0, 0, 0, 0).Unwrap()
+  );
+  AssertTimestamp(
+    '9999-12-31T23:59:59.999Z',
+    '9999-12-31T23:59:59.999Z',
+    Calendar.CreateDateTime(9999, 12, 31, 23, 59, 59, 999).Unwrap()
+  );
+  AssertTimestamp(
+    '2000-02-29t12:34:56z',
+    '2000-02-29T12:34:56.000Z',
+    Calendar.CreateDateTime(2000, 2, 29, 12, 34, 56, 0).Unwrap()
+  );
+  AssertTimestamp(
+    '2000-02-29T12:34:56.1Z',
+    '2000-02-29T12:34:56.100Z',
+    Calendar.CreateDateTime(2000, 2, 29, 12, 34, 56, 100).Unwrap()
+  );
+  AssertTimestamp(
+    '2000-02-29T12:34:56.12Z',
+    '2000-02-29T12:34:56.120Z',
+    Calendar.CreateDateTime(2000, 2, 29, 12, 34, 56, 120).Unwrap()
+  );
+  AssertTimestamp(
+    '2000-02-29T12:34:56.123Z',
+    '2000-02-29T12:34:56.123Z',
+    Calendar.CreateDateTime(2000, 2, 29, 12, 34, 56, 123).Unwrap()
+  );
+  AssertTimestamp(
+    '2000-02-29T12:34:56.000Z',
+    '2000-02-29T12:34:56.000Z',
+    Calendar.CreateDateTime(2000, 2, 29, 12, 34, 56, 0).Unwrap()
+  );
+  const Epoch := Calendar.CreateDateTime(1970, 1, 1, 0, 0, 0, 0).Unwrap();
+  AssertTimestamp('1970-01-01T00:00:00+00:00', '1970-01-01T00:00:00.000Z', Epoch);
+  AssertTimestamp('1970-01-01T01:00:00+01:00', '1970-01-01T00:00:00.000Z', Epoch);
+  AssertTimestamp('1969-12-31T23:30:00-00:30', '1970-01-01T00:00:00.000Z', Epoch);
+  AssertTimestamp(
+    '2024-01-01T00:15:00.125+00:30',
+    '2023-12-31T23:45:00.125Z',
+    Calendar.CreateDateTime(2023, 12, 31, 23, 45, 0, 125).Unwrap()
+  );
+  AssertTimestamp(
+    '2023-12-31T23:45:00-00:30',
+    '2024-01-01T00:15:00.000Z',
+    Calendar.CreateDateTime(2024, 1, 1, 0, 15, 0, 0).Unwrap()
+  );
+  AssertTimestamp(
+    '2024-01-02T00:00:00+23:59',
+    '2024-01-01T00:01:00.000Z',
+    Calendar.CreateDateTime(2024, 1, 1, 0, 1, 0, 0).Unwrap()
+  );
+  AssertTimestamp(
+    '2024-01-01T00:00:00-23:59',
+    '2024-01-01T23:59:00.000Z',
+    Calendar.CreateDateTime(2024, 1, 1, 23, 59, 0, 0).Unwrap()
+  );
+end.

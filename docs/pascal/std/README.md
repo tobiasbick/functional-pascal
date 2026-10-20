@@ -53,10 +53,10 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 | Area | Hub | Units / topics |
 |------|-----|----------------|
 | Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
-| Host I/O | [host/](host/README.md) | Args, Env, Errors, Fs, Path, Proc, Time |
+| Host I/O | [host/](host/README.md) | Args, Calendar (Gregorian dates and UTC), Cli (schema parsing/help), Env, Errors, Fs (whole-file and handle I/O), Path, Proc (options and bounded capture), Time |
 | Networking | [network/](network/README.md) | Net, Server lifetime, URI, UTF-8, HTTP |
 | AI clients | [ai/](ai/README.md) | OpenAI-compatible chat completions |
-| Text | [text/](text/README.md) | Conv, Parse, Json, Json.Fields, Toml, Toml.Fields |
+| Text | [text/](text/README.md) | Conv, Encoding (Base64/Base64url/hex), Parse, Json, Json.Fields, Toml, Toml.Fields |
 | Numeric | [numeric/](numeric/README.md) | Math, Bits, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |

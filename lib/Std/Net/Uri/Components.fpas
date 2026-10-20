@@ -1,0 +1,23 @@
+// Shared URL component types and resource bounds.
+unit Std.Net.Uri.Components;
+
+uses Std.Net.Utf8 as Utf8;
+
+public const MaximumDecodedBytes: integer := 65536;
+public const MaximumEncodedBytes: integer := 196608;
+public const MaximumParameters: integer := 4096;
+
+// Query order, duplicate names, flags and explicit empty values are retained.
+public type QueryParam = record
+  public Name: string;
+  public Value: option of string := None;
+end record;
+
+// Percent offsets refer to UTF-8 bytes in the original supplied text.
+public type ComponentError = error
+  InvalidEscape(Offset: integer) = 'Invalid percent escape';
+  InvalidEncoding(ComponentOffset: integer; Cause: Utf8.Utf8Error) = 'Invalid UTF-8 in URL component';
+  InvalidQueryParameter(Index: integer; Reason: string) = 'Invalid query parameter';
+  LimitExceeded(Resource: string; Limit: integer) = 'URL component limit exceeded';
+end error;
+end unit;

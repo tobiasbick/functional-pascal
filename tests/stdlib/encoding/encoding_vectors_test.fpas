@@ -1,0 +1,49 @@
+program EncodingVectorsTest;
+
+uses Std.Encoding as Encoding, Std.Test as Test;
+
+procedure AssertBytes(Expected: array of integer; Actual: array of integer);
+begin
+  Test.AssertEquals(Expected.Length(), Actual.Length());
+  for Index: integer := 0 to Expected.Length() - 1 do
+    Test.AssertEquals(Expected[Index], Actual[Index]);
+  end for;
+end procedure;
+
+procedure Check(Bytes: array of integer; Standard: string; Url: string; Hex: string);
+begin
+  Test.AssertEquals(Standard, Encoding.Base64Encode(Bytes).Unwrap());
+  AssertBytes(Bytes, Encoding.Base64Decode(Standard).Unwrap());
+  Test.AssertEquals(Url, Encoding.Base64UrlEncode(Bytes).Unwrap());
+  AssertBytes(Bytes, Encoding.Base64UrlDecode(Url).Unwrap());
+  Test.AssertEquals(Hex, Encoding.HexEncode(Bytes).Unwrap());
+  AssertBytes(Bytes, Encoding.HexDecode(Hex).Unwrap());
+  AssertBytes(Bytes, Encoding.HexDecode(Hex.ToLower()).Unwrap());
+end procedure;
+
+begin
+  Check([], '', '', '');
+  Check([102], 'Zg==', 'Zg', '66');
+  Check([102, 111], 'Zm8=', 'Zm8', '666F');
+  Check([102, 111, 111], 'Zm9v', 'Zm9v', '666F6F');
+  Check([102, 111, 111, 98], 'Zm9vYg==', 'Zm9vYg', '666F6F62');
+  Check([102, 111, 111, 98, 97], 'Zm9vYmE=', 'Zm9vYmE', '666F6F6261');
+  Check([102, 111, 111, 98, 97, 114], 'Zm9vYmFy', 'Zm9vYmFy', '666F6F626172');
+  Check([0], 'AA==', 'AA', '00');
+  Check([255], '/w==', '_w', 'FF');
+  Check([251, 255], '+/8=', '-_8', 'FBFF');
+  Check([251, 255, 239], '+//v', '-__v', 'FBFFEF');
+  var Bytes: array of integer := [];
+  for Value: integer := 0 to 255 do
+    Bytes.PushInPlace(Value);
+  end for;
+  const Standard := Encoding.Base64Encode(Bytes).Unwrap();
+  const Url := Encoding.Base64UrlEncode(Bytes).Unwrap();
+  const Hex := Encoding.HexEncode(Bytes).Unwrap();
+  Test.AssertEquals(344, Standard.Length());
+  Test.AssertEquals(342, Url.Length());
+  Test.AssertEquals(512, Hex.Length());
+  AssertBytes(Bytes, Encoding.Base64Decode(Standard).Unwrap());
+  AssertBytes(Bytes, Encoding.Base64UrlDecode(Url).Unwrap());
+  AssertBytes(Bytes, Encoding.HexDecode(Hex).Unwrap());
+end.

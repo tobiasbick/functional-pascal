@@ -97,7 +97,7 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 23 and register-bytecode version 24.
+The sectioned envelope uses program format version 23 and register-bytecode version 27.
 Relocatable unit objects use schema version 17 and compiled-unit envelopes use
 version 22. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
@@ -117,10 +117,17 @@ Generated linkage names are separate from their defining display names. Hidden
 callable captures are immutable, type-checked functions and remain absent from
 normal debugger scopes. Existing Std Result signatures retain their current types.
 
-Older images and unit objects require rebuilding. Bytecode version 24 changes
-the existing Console text-input intrinsic ABI: `ReadLn` and `ReadText` return
-`Option of string`. `ReadLn` returns `Some('')` for a blank line; both operations
-return `None` at EOF.
+Older images and unit objects require rebuilding. Bytecode version 27 adds
+controlled process options and extends the native `Std.Proc.ProcError` ABI with
+`Timeout`, `Cancelled`, `LimitExceeded` and `ExecutionFailed`, including captured
+output prefixes. Existing process error variants keep their order and payloads.
+Version 26 added
+VM-owned file-handle intrinsics and extends the native `Std.Fs.FsError` ABI with
+`Closed(Operation)` and `Cancelled(Operation)`. Version 25 introduced bounded
+binary files and `InvalidByte(Offset, Value)`. Existing filesystem error variants
+keep their order and payloads. The preceding version 24 changed Console
+text-input results to `Option of string`; `ReadLn` returns
+`Some('')` for a blank line and both text-input operations return `None` at EOF.
 Source-backed caches rebuild through their bytecode identity checks; standalone
 artifacts with the earlier ABI are rejected before execution. Instruction
 encoding, envelope layouts and the 16-byte value representation are unchanged.

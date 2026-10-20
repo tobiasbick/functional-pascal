@@ -1,0 +1,100 @@
+program CalendarValuesTest;
+
+uses Std.Calendar as Calendar, Std.Test as Test;
+
+procedure AssertDate(Year: integer; Month: integer; Day: integer);
+begin
+  const Value := Calendar.CreateDate(Year, Month, Day).Unwrap();
+  Test.AssertEquals(Year, Value.Year());
+  Test.AssertEquals(Month, Value.Month());
+  Test.AssertEquals(Day, Value.Day());
+  Test.AssertTrue(Value = Calendar.CreateDate(Year, Month, Day).Unwrap());
+end procedure;
+
+begin
+  AssertDate(1, 1, 1);
+  AssertDate(9999, 12, 31);
+  AssertDate(1582, 10, 10);
+  AssertDate(1900, 2, 28);
+  AssertDate(2000, 2, 29);
+  AssertDate(2100, 2, 28);
+  AssertDate(2400, 2, 29);
+  Test.AssertTrue(
+    Calendar.CreateDate(1900, 2, 29) is Error(Calendar.CalendarError.InvalidDate(1900, 2, 29))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2100, 2, 29) is Error(Calendar.CalendarError.InvalidDate(2100, 2, 29))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(0, 1, 1) is Error(Calendar.CalendarError.InvalidDate(0, 1, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(10000, 1, 1) is Error(Calendar.CalendarError.InvalidDate(10000, 1, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(-9223372036854775808, 1, 1) is Error(Calendar.CalendarError.InvalidDate(-9223372036854775808, 1, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(9223372036854775807, 1, 1) is Error(Calendar.CalendarError.InvalidDate(9223372036854775807, 1, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, 0, 1) is Error(Calendar.CalendarError.InvalidDate(2024, 0, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, 13, 1) is Error(Calendar.CalendarError.InvalidDate(2024, 13, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, 1, 0) is Error(Calendar.CalendarError.InvalidDate(2024, 1, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, 1, 32) is Error(Calendar.CalendarError.InvalidDate(2024, 1, 32))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, 4, 31) is Error(Calendar.CalendarError.InvalidDate(2024, 4, 31))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, -9223372036854775808, 1) is Error(Calendar.CalendarError.InvalidDate(2024, -9223372036854775808, 1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDate(2024, 1, 9223372036854775807) is Error(Calendar.CalendarError.InvalidDate(2024, 1, 9223372036854775807))
+  );
+  const Moment := Calendar.CreateDateTime(2000, 2, 29, 23, 58, 57, 999).Unwrap();
+  Test.AssertTrue(Moment.ToDate() = Calendar.CreateDate(2000, 2, 29).Unwrap());
+  Test.AssertEquals(23, Moment.Hour());
+  Test.AssertEquals(58, Moment.Minute());
+  Test.AssertEquals(57, Moment.Second());
+  Test.AssertEquals(999, Moment.Millisecond());
+  Test.AssertTrue(Moment = Calendar.CreateDateTime(2000, 2, 29, 23, 58, 57, 999).Unwrap());
+  Test.AssertTrue(Moment <> Calendar.CreateDateTime(2000, 2, 29, 23, 58, 57, 998).Unwrap());
+  Test.AssertTrue(Moment <> Calendar.CreateDateTime(2000, 3, 1, 23, 58, 57, 999).Unwrap());
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, -1, 0, 0, 0) is Error(Calendar.CalendarError.InvalidTime(-1, 0, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 24, 0, 0, 0) is Error(Calendar.CalendarError.InvalidTime(24, 0, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 0, -1, 0, 0) is Error(Calendar.CalendarError.InvalidTime(0, -1, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 0, 60, 0, 0) is Error(Calendar.CalendarError.InvalidTime(0, 60, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 0, 0, -1, 0) is Error(Calendar.CalendarError.InvalidTime(0, 0, -1, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 0, 0, 60, 0) is Error(Calendar.CalendarError.InvalidTime(0, 0, 60, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 0, 0, 0, -1) is Error(Calendar.CalendarError.InvalidTime(0, 0, 0, -1))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 0, 0, 0, 1000) is Error(Calendar.CalendarError.InvalidTime(0, 0, 0, 1000))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2024, 1, 1, 9223372036854775807, 0, 0, 0) is Error(Calendar.CalendarError.InvalidTime(9223372036854775807, 0, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.CreateDateTime(2023, 2, 29, 24, 0, 0, 0) is Error(Calendar.CalendarError.InvalidDate(2023, 2, 29))
+  );
+end.

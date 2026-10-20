@@ -1,0 +1,256 @@
+// Schema admission and bounded argument validation for command-line parsing.
+unit Std.Cli.Rules;
+
+uses Std.Cli.Types as Types, Std.Cli.Values as Values;
+
+public type Indexes = record
+  public LongOptions: dict of string to integer;
+  public ShortOptions: dict of string to integer;
+  public NegatedOptions: dict of string to integer;
+end record;
+
+const MaximumSpecs: integer := 256;
+const MaximumArguments: integer := 4096;
+const MaximumText: integer := 1000000;
+
+function IsLetter(Character: string): boolean;
+begin
+  const Code := Character.Ord();
+  return ((Code >= 65) and (Code <= 90)) or ((Code >= 97) and (Code <= 122));
+end function;
+
+function IsName(Name: string): boolean;
+begin
+  if (Name.Length() = 0) or (Name.Length() > 64) then
+    return false;
+  end if;
+
+  if not IsLetter(Name[0]) then
+    return false;
+  end if;
+
+  for Index: integer := 1 to Name.Length() - 1 do
+    const Character := Name[Index];
+    const Code := Character.Ord();
+    if (not IsLetter(Character)) and ((Code < 48) or (Code > 57)) and (Character <> '-') then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function TakeText(Text: string; Remaining: integer; Resource: string): result of (integer, Types.CliError);
+begin
+  const Length := Text.Length();
+  if Length > Remaining then
+    return Error(Types.CliError.LimitExceeded(Resource, MaximumText));
+  end if;
+
+  return Ok(Remaining - Length);
+end function;
+
+function TakeDefault(Default: option of Types.Value; Remaining: integer): result of (integer, Types.CliError);
+begin
+  case Default of
+    when None:
+      return Ok(Remaining);
+    when Some(const Value):
+      case Value of
+        when Types.Value.Text(const Text):
+          return TakeText(Text, Remaining, 'schema text');
+        when Types.Value.Int(_):
+          return Ok(Remaining);
+        when Types.Value.Float(_):
+          return Ok(Remaining);
+        when Types.Value.Bool(_):
+          return Ok(Remaining);
+      end case;
+  end case;
+end function;
+
+function CheckDefault(Name: string; Kind: Types.Kind; Required: boolean; Default: option of Types.Value): result of (boolean, Types.CliError);
+begin
+  case Default of
+    when None:
+      return Ok(true);
+    when Some(const Value):
+      if Required then
+        return Error(
+          Types.CliError.InvalidSchema(Name, 'Required values cannot have explicit defaults')
+        );
+      end if;
+
+      if not Values.Matches(Value, Kind) then
+        return Error(
+          Types.CliError.InvalidSchema(Name, 'Default value does not match the declared kind')
+        );
+      end if;
+
+      return Ok(true);
+  end case;
+end function;
+
+// Validate the complete definition before interpreting arguments or requesting help.
+public function Validate(Definition: Types.Schema): result of (Indexes, Types.CliError);
+begin
+  if Definition.Options.Length() > MaximumSpecs then
+    return Error(Types.CliError.LimitExceeded('schema specs', MaximumSpecs));
+  end if;
+
+  if Definition.Positionals.Length() > MaximumSpecs - Definition.Options.Length() then
+    return Error(Types.CliError.LimitExceeded('schema specs', MaximumSpecs));
+  end if;
+  var Remaining := try TakeText(Definition.ProgramName, MaximumText, 'schema text');
+  Remaining := try TakeText(Definition.Description, Remaining, 'schema text');
+  if Definition.ProgramName.Length() = 0 then
+    return Error(Types.CliError.InvalidSchema('ProgramName', 'ProgramName must not be empty'));
+  end if;
+  var Names: dict of string to boolean := [:];
+  var LongOptions: dict of string to integer := [:];
+  var ShortOptions: dict of string to integer := [:];
+  var NegatedOptions: dict of string to integer := [:];
+  for Index: integer := 0 to Definition.Options.Length() - 1 do
+    const Spec := Definition.Options[Index];
+    Remaining := try TakeText(Spec.Name, Remaining, 'schema text');
+    Remaining := try TakeText(Spec.Help, Remaining, 'schema text');
+    Remaining := try TakeDefault(Spec.Default, Remaining);
+    if not IsName(Spec.Name) then
+      return Error(
+        Types.CliError.InvalidSchema(
+          Spec.Name,
+          'Names must contain 1..64 characters matching [A-Za-z][A-Za-z0-9-]*'
+        )
+      );
+    end if;
+
+    if Spec.Name = 'help' then
+      return Error(Types.CliError.InvalidSchema(Spec.Name, 'The help option name is reserved'));
+    end if;
+
+    if Spec.Name in Names then
+      return Error(
+        Types.CliError.InvalidSchema(
+          Spec.Name,
+          'Names must be unique across options and positionals'
+        )
+      );
+    end if;
+
+    Names[Spec.Name] := true;
+    LongOptions[Spec.Name] := Index;
+    case Spec.Short of
+      when None:
+        begin
+        end;
+      when Some(const Short):
+        Remaining := try TakeText(Short, Remaining, 'schema text');
+        if Short.Length() <> 1 then
+          return Error(
+            Types.CliError.InvalidSchema(Spec.Name, 'Short names must contain one ASCII letter')
+          );
+        end if;
+
+        if not IsLetter(Short) then
+          return Error(
+            Types.CliError.InvalidSchema(Spec.Name, 'Short names must contain one ASCII letter')
+          );
+        end if;
+
+        if Short = 'h' then
+          return Error(
+            Types.CliError.InvalidSchema(Spec.Name, 'The short help name h is reserved')
+          );
+        end if;
+
+        if Short in ShortOptions then
+          return Error(Types.CliError.InvalidSchema(Spec.Name, 'Short names must be unique'));
+        end if;
+
+        ShortOptions[Short] := Index;
+    end case;
+
+    discard try CheckDefault(Spec.Name, Spec.Kind, Spec.Required, Spec.Default);
+  end for;
+  var OptionalSeen := false;
+  for Index: integer := 0 to Definition.Positionals.Length() - 1 do
+    const Spec := Definition.Positionals[Index];
+    Remaining := try TakeText(Spec.Name, Remaining, 'schema text');
+    Remaining := try TakeText(Spec.Help, Remaining, 'schema text');
+    Remaining := try TakeDefault(Spec.Default, Remaining);
+    if not IsName(Spec.Name) then
+      return Error(
+        Types.CliError.InvalidSchema(
+          Spec.Name,
+          'Names must contain 1..64 characters matching [A-Za-z][A-Za-z0-9-]*'
+        )
+      );
+    end if;
+
+    if Spec.Name in Names then
+      return Error(
+        Types.CliError.InvalidSchema(
+          Spec.Name,
+          'Names must be unique across options and positionals'
+        )
+      );
+    end if;
+
+    Names[Spec.Name] := true;
+    if Spec.Required and OptionalSeen then
+      return Error(
+        Types.CliError.InvalidSchema(
+          Spec.Name,
+          'Required positions must precede optional positions'
+        )
+      );
+    end if;
+
+    if not Spec.Required then
+      OptionalSeen := true;
+    end if;
+
+    discard try CheckDefault(Spec.Name, Spec.Kind, Spec.Required, Spec.Default);
+  end for;
+
+  // Wait until every real long option is indexed to catch forward collisions too.
+  for Index: integer := 0 to Definition.Options.Length() - 1 do
+    const Spec := Definition.Options[Index];
+    if Spec.Kind = Types.Kind.Bool then
+      const Negative := 'no-' + Spec.Name;
+      if (Negative in LongOptions) or (Negative in NegatedOptions) then
+        return Error(
+          Types.CliError.InvalidSchema(
+            Spec.Name,
+            'Generated negative option collides with another long name'
+          )
+        );
+      end if;
+
+      NegatedOptions[Negative] := Index;
+    end if;
+  end for;
+
+  return Ok(
+    Indexes(
+      LongOptions := LongOptions,
+      ShortOptions := ShortOptions,
+      NegatedOptions := NegatedOptions
+    )
+  );
+end function;
+
+// Arguments count and text are bounded before parser state is allocated.
+public function ValidateArguments(Arguments: array of string): result of (boolean, Types.CliError);
+begin
+  if Arguments.Length() > MaximumArguments then
+    return Error(Types.CliError.LimitExceeded('arguments', MaximumArguments));
+  end if;
+  var Remaining := MaximumText;
+  for Argument: string in Arguments do
+    Remaining := try TakeText(Argument, Remaining, 'argument text');
+  end for;
+
+  return Ok(true);
+end function;
+end unit;

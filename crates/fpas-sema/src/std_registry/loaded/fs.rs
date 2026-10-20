@@ -1,4 +1,5 @@
 use super::super::{define_func, p};
+use super::type_registration;
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
@@ -6,6 +7,117 @@ use fpas_std::std_symbols as s;
 /// Register the `Std.Fs` functions made visible by `uses Std.Fs`.
 pub(super) fn register_std_fs(checker: &mut Checker) {
     let error_ty = super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Fs);
+    let file = type_registration::register_opaque_type(checker, s::STD_FS_FILE);
+    let mode = type_registration::register_enum_type(
+        checker,
+        s::STD_FS_FILE_MODE,
+        &["Read", "Create", "Append", "ReadWrite"],
+    );
+    let origin = type_registration::register_enum_type(
+        checker,
+        s::STD_FS_SEEK_ORIGIN,
+        &["Start", "Current", "FileEnd"],
+    );
+    let token = type_registration::register_record_type(
+        checker,
+        s::STD_TASK_CANCELLATION_TOKEN,
+        Vec::new(),
+    );
+    let bytes = Ty::Array(Box::new(Ty::Integer));
+    let result = |ty| Ty::Result(Box::new(ty), Box::new(error_ty.clone()));
+    define_func(
+        checker,
+        s::STD_FS_OPEN,
+        vec![p("Path", Ty::String), p("Mode", mode)],
+        result(file.clone()),
+    );
+    for name in [s::STD_FS_CLOSE, s::STD_FS_FLUSH] {
+        define_func(
+            checker,
+            name,
+            vec![p("File", file.clone())],
+            result(Ty::Boolean),
+        );
+    }
+    define_func(
+        checker,
+        s::STD_FS_READ,
+        vec![p("File", file.clone()), p("MaxBytes", Ty::Integer)],
+        result(bytes.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_FS_WRITE,
+        vec![p("File", file.clone()), p("Bytes", bytes.clone())],
+        result(Ty::Integer),
+    );
+    define_func(
+        checker,
+        s::STD_FS_READ_LINE,
+        vec![p("File", file.clone())],
+        result(Ty::Option(Box::new(Ty::String))),
+    );
+    define_func(
+        checker,
+        s::STD_FS_SEEK,
+        vec![
+            p("File", file.clone()),
+            p("Offset", Ty::Integer),
+            p("Origin", origin),
+        ],
+        result(Ty::Integer),
+    );
+    define_func(
+        checker,
+        s::STD_FS_TELL,
+        vec![p("File", file.clone())],
+        result(Ty::Integer),
+    );
+    define_func(
+        checker,
+        s::STD_FS_READ_WITH_CANCELLATION,
+        vec![
+            p("File", file.clone()),
+            p("MaxBytes", Ty::Integer),
+            p("Token", token.clone()),
+        ],
+        result(bytes.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_FS_WRITE_WITH_CANCELLATION,
+        vec![
+            p("File", file.clone()),
+            p("Bytes", bytes),
+            p("Token", token.clone()),
+        ],
+        result(Ty::Integer),
+    );
+    define_func(
+        checker,
+        s::STD_FS_READ_LINE_WITH_CANCELLATION,
+        vec![p("File", file), p("Token", token)],
+        result(Ty::Option(Box::new(Ty::String))),
+    );
+
+    define_func(
+        checker,
+        s::STD_FS_READ_BYTES,
+        vec![p("Path", Ty::String)],
+        Ty::Result(
+            Box::new(Ty::Array(Box::new(Ty::Integer))),
+            Box::new(error_ty.clone()),
+        ),
+    );
+    define_func(
+        checker,
+        s::STD_FS_WRITE_BYTES,
+        vec![
+            p("Path", Ty::String),
+            p("Bytes", Ty::Array(Box::new(Ty::Integer))),
+        ],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(error_ty.clone())),
+    );
     define_func(
         checker,
         s::STD_FS_READ_TEXT,

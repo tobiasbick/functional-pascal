@@ -1,0 +1,113 @@
+program CalendarTextErrorsTest;
+
+uses Std.Calendar as Calendar, Std.Test as Test;
+
+procedure AssertDateSyntax(Text: string; Offset: integer);
+begin
+  case Calendar.ParseDate(Text) of
+    when Error(Calendar.CalendarError.InvalidSyntax(const ActualOffset, const Reason)):
+      Test.AssertEquals(Offset, ActualOffset);
+      Test.AssertTrue(Reason <> '');
+    when Error(const Failure):
+      Test.Fail(Failure.Message());
+    when Ok(_):
+      Test.Fail('Expected invalid date syntax');
+  end case;
+end procedure;
+
+procedure AssertTimestampSyntax(Text: string; Offset: integer);
+begin
+  case Calendar.ParseDateTime(Text) of
+    when Error(Calendar.CalendarError.InvalidSyntax(const ActualOffset, const Reason)):
+      Test.AssertEquals(Offset, ActualOffset);
+      Test.AssertTrue(Reason <> '');
+    when Error(const Failure):
+      Test.Fail(Failure.Message());
+    when Ok(_):
+      Test.Fail('Expected invalid timestamp syntax');
+  end case;
+end procedure;
+
+begin
+  AssertDateSyntax('', 0);
+  AssertDateSyntax('2024', 4);
+  AssertDateSyntax('2024-01', 7);
+  AssertDateSyntax('202x-01-01', 3);
+  AssertDateSyntax('2024/01-01', 4);
+  AssertDateSyntax('2024-01/01', 7);
+  AssertDateSyntax('2024-1-01', 6);
+  AssertDateSyntax('2024-01-1', 9);
+  AssertDateSyntax('2024-01-010', 10);
+  AssertDateSyntax('2024-'#0'1-01', 5);
+  for Text: string in [' 2024-01-01', '2024-01-01 ', '2024-W01-1', '2024-001', '２０２４-01-01'] do
+    Test.AssertTrue(Calendar.ParseDate(Text) is Error(Calendar.CalendarError.InvalidSyntax(_, _)));
+  end for;
+
+  Test.AssertTrue(
+    Calendar.ParseDate('0000-01-01') is Error(Calendar.CalendarError.InvalidDate(0, 1, 1))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDate('1900-02-29') is Error(Calendar.CalendarError.InvalidDate(1900, 2, 29))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDate('2100-02-29') is Error(Calendar.CalendarError.InvalidDate(2100, 2, 29))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDate('2024-13-01') is Error(Calendar.CalendarError.InvalidDate(2024, 13, 1))
+  );
+
+  AssertTimestampSyntax('', 0);
+  AssertTimestampSyntax('2024-01-01', 10);
+  AssertTimestampSyntax('2024-01-01 00:00:00Z', 10);
+  AssertTimestampSyntax('2024-01-01T00-00:00Z', 13);
+  AssertTimestampSyntax('2024-01-01T00:00-00Z', 16);
+  AssertTimestampSyntax('2024-01-01T00:00:00', 19);
+  AssertTimestampSyntax('2024-01-01T00:00:00.', 20);
+  AssertTimestampSyntax('2024-01-01T00:00:00.Z', 20);
+  AssertTimestampSyntax('2024-01-01T00:00:00.1', 21);
+  AssertTimestampSyntax('2024-01-01T00:00:00.1234Z', 23);
+  AssertTimestampSyntax('2024-01-01T00:00:00.0000Z', 23);
+  AssertTimestampSyntax('2024-01-01T00:00:00Zx', 20);
+  AssertTimestampSyntax('2024-01-01T00:00:00+01', 22);
+  AssertTimestampSyntax('2024-01-01T00:00:00+01-00', 22);
+  AssertTimestampSyntax('2024-01-01T00:00:00+0x:00', 21);
+  AssertTimestampSyntax('2024-01-01'#0'00:00:00Z', 10);
+  AssertTimestampSyntax('2024-01-01T00:00:00.123+00:00x', 29);
+  for Text: string in [
+    '2024-01-01T00:00:00Z ', ' 2024-01-01T00:00:00Z',
+    '2024-W01-1T00:00:00Z', '２０２４-01-01T00:00:00Z',
+    '2024-01-01T00:00:00,1Z'
+  ] do
+    Test.AssertTrue(
+      Calendar.ParseDateTime(Text) is Error(Calendar.CalendarError.InvalidSyntax(_, _))
+    );
+  end for;
+
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2023-02-29T00:00:00Z') is Error(Calendar.CalendarError.InvalidDate(2023, 2, 29))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2024-01-01T24:00:00Z') is Error(Calendar.CalendarError.InvalidTime(24, 0, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2024-01-01T00:60:00Z') is Error(Calendar.CalendarError.InvalidTime(0, 60, 0, 0))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2024-01-01T00:00:60Z') is Error(Calendar.CalendarError.InvalidTime(0, 0, 60, 0))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2024-01-01T00:00:00-00:00') is Error(Calendar.CalendarError.InvalidOffset('-00:00'))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2024-01-01T00:00:00+24:00') is Error(Calendar.CalendarError.InvalidOffset('+24:00'))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('2024-01-01T00:00:00+00:60') is Error(Calendar.CalendarError.InvalidOffset('+00:60'))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('0001-01-01T00:00:00+00:01') is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.ParseDateTime'))
+  );
+  Test.AssertTrue(
+    Calendar.ParseDateTime('9999-12-31T23:59:59.999-00:01') is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.ParseDateTime'))
+  );
+end.

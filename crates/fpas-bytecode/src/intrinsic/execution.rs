@@ -1,8 +1,8 @@
 //! Runtime ownership and mutable-dispatch metadata for intrinsic instructions.
 
 use super::{
-    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ProcIntrinsic, ResultIntrinsic,
-    StrIntrinsic, TestIntrinsic, TimeIntrinsic,
+    ArrayIntrinsic, DictIntrinsic, FsIntrinsic, Intrinsic, OptionIntrinsic, ProcIntrinsic,
+    ResultIntrinsic, StrIntrinsic, TestIntrinsic, TimeIntrinsic,
 };
 
 /// Runtime module that owns execution of an intrinsic.
@@ -43,7 +43,25 @@ impl Intrinsic {
             | Self::Http(_)
             | Self::Random(_)
             | Self::Crypto(_)
-            | Self::Proc(ProcIntrinsic::Run) => IntrinsicOwner::Hosted,
+            | Self::Proc(
+                ProcIntrinsic::Run
+                | ProcIntrinsic::RunCapture
+                | ProcIntrinsic::RunWithOptions
+                | ProcIntrinsic::RunCaptureWithOptions,
+            )
+            | Self::Fs(
+                FsIntrinsic::Open
+                | FsIntrinsic::Close
+                | FsIntrinsic::Read
+                | FsIntrinsic::Write
+                | FsIntrinsic::ReadLine
+                | FsIntrinsic::Seek
+                | FsIntrinsic::Tell
+                | FsIntrinsic::Flush
+                | FsIntrinsic::ReadWithCancellation
+                | FsIntrinsic::WriteWithCancellation
+                | FsIntrinsic::ReadLineWithCancellation,
+            ) => IntrinsicOwner::Hosted,
             Self::Test(
                 TestIntrinsic::AssertScreenLine
                 | TestIntrinsic::AssertScreenCell
@@ -139,7 +157,7 @@ mod tests {
             (Intrinsic::Proc(ProcIntrinsic::Run), IntrinsicOwner::Hosted),
             (
                 Intrinsic::Proc(ProcIntrinsic::RunCapture),
-                IntrinsicOwner::Standard,
+                IntrinsicOwner::Hosted,
             ),
             (
                 Intrinsic::Array(ArrayIntrinsic::Length),

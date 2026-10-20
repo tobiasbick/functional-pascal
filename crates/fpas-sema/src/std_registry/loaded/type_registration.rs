@@ -87,3 +87,39 @@ pub(super) fn register_record_type(
     );
     record_ty
 }
+
+/// Register a host-owned handle using persisted nominal record privacy.
+///
+/// The private field is declaration metadata only. Runtime handles use
+/// `Value::OpaqueHandle`, so FPAS cannot construct or inspect their storage.
+pub(super) fn register_opaque_type(checker: &mut Checker, qualified_name: &str) -> Ty {
+    let owner = qualified_name
+        .rsplit_once('.')
+        .map(|(unit, _)| unit.to_string());
+    let ty = Ty::Record(Arc::new(RecordTy {
+        name: qualified_name.into(),
+        owner_unit: owner,
+        type_params: Vec::new(),
+        type_args: Vec::new(),
+        private_members: vec!["_IntrinsicHandle".into()],
+        fields: vec![("_IntrinsicHandle".into(), Ty::Integer)],
+        methods: Vec::new(),
+        static_functions: Vec::new(),
+        static_procedures: Vec::new(),
+    }));
+    checker.scopes.imports.define_metadata(
+        qualified_name,
+        Symbol {
+            constant: None,
+            ty: ty.clone(),
+            mutable: false,
+            kind: SymbolKind::Type,
+            task_bound: false,
+        },
+    );
+    ty
+}
+
+#[cfg(test)]
+#[path = "type_registration_tests.rs"]
+mod tests;

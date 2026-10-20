@@ -77,4 +77,5 @@ end if;
 ## See also
 
 - [Host I/O index](README.md)
+- [`Std.Cli`: typed argument schemas and generated help](cli.md)
 - [Standard library index](../README.md)

@@ -9,6 +9,7 @@ use crate::array;
 use crate::bits;
 use crate::conv;
 use crate::dict;
+use crate::encoding;
 use crate::env;
 use crate::error::{StdError, std_internal_error, std_runtime_error};
 use crate::fs;
@@ -22,7 +23,7 @@ use crate::result_option;
 use crate::str;
 use crate::time;
 use crate::toml;
-use fpas_bytecode::{Intrinsic, IntrinsicOwner, SourceLocation, Value};
+use fpas_bytecode::{FsIntrinsic, Intrinsic, IntrinsicOwner, ProcIntrinsic, SourceLocation, Value};
 
 fn dispatch_intrinsic(
     intrinsic: Intrinsic,
@@ -49,9 +50,47 @@ fn dispatch_intrinsic(
         Intrinsic::Bits(_) => bits::run(intrinsic, call, location),
         Intrinsic::Array(_) => array::run(intrinsic, call, location),
         Intrinsic::Dict(_) => dict::run(intrinsic, call, location),
+        Intrinsic::Encoding(_) => encoding::run(intrinsic, call, location),
         Intrinsic::Env(_) => env::run(intrinsic, call, location),
         Intrinsic::Path(_) => path::run(intrinsic, call, location),
+        Intrinsic::Proc(
+            ProcIntrinsic::Run
+            | ProcIntrinsic::RunCapture
+            | ProcIntrinsic::RunWithOptions
+            | ProcIntrinsic::RunCaptureWithOptions,
+        ) => {
+            return Err(std_internal_error(
+                format!(
+                    "internal: {} has inconsistent runtime ownership",
+                    intrinsic.debugger_name()
+                ),
+                "Process execution must be routed through the hosted VM registry.",
+                location,
+            ));
+        }
         Intrinsic::Proc(_) => proc::run(intrinsic, call, location),
+        Intrinsic::Fs(
+            FsIntrinsic::Open
+            | FsIntrinsic::Close
+            | FsIntrinsic::Read
+            | FsIntrinsic::Write
+            | FsIntrinsic::ReadLine
+            | FsIntrinsic::Seek
+            | FsIntrinsic::Tell
+            | FsIntrinsic::Flush
+            | FsIntrinsic::ReadWithCancellation
+            | FsIntrinsic::WriteWithCancellation
+            | FsIntrinsic::ReadLineWithCancellation,
+        ) => {
+            return Err(std_internal_error(
+                format!(
+                    "internal: {} has inconsistent runtime ownership",
+                    intrinsic.debugger_name()
+                ),
+                "File handles must be routed through the hosted VM registry.",
+                location,
+            ));
+        }
         Intrinsic::Fs(_) => fs::run(intrinsic, call, location),
         Intrinsic::Json(_) => json::run(intrinsic, call, location),
         Intrinsic::Result(_) | Intrinsic::Option(_) => {

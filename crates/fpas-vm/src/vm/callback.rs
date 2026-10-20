@@ -1,5 +1,8 @@
 //! Synchronous hosted-callback entry using numeric function identifiers.
 
+#[cfg(test)]
+mod fs_lifecycle;
+
 use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
@@ -78,11 +81,22 @@ impl CallbackSession {
     /// Cancel further hosted callback invocations.
     pub fn cancel(&mut self) {
         self.stopped = true;
+        self.hosted.close_process_handles();
+        self.hosted.close_file_handles();
+        self.hosted.wait_process_handles();
     }
 
     /// Shut down the callback session.
     pub fn shutdown(&mut self) {
-        self.stopped = true;
+        self.cancel();
+    }
+}
+
+impl Drop for CallbackSession {
+    fn drop(&mut self) {
+        self.hosted.close_process_handles();
+        self.hosted.close_file_handles();
+        self.hosted.wait_process_handles();
     }
 }
 

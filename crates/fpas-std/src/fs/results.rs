@@ -78,6 +78,10 @@ pub(super) fn result<T>(
         Failure::LimitExceeded(operation, limit) => {
             (11, vec![text(operation), Value::Integer(limit)])
         }
+        Failure::InvalidByte { offset, value } => (
+            12,
+            vec![Value::Integer(offset as i64), Value::Integer(value)],
+        ),
     };
     native_errors::value(factory, NativeErrorFamily::Fs, variant, fields, location)
         .map(Value::result_error)

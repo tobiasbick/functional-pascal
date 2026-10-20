@@ -152,7 +152,7 @@ fn run_with_files(
     match readiness::wait_until_ready(&mut child, &files.ready(), deadline) {
         Ok(readiness::WaitOutcome::Ready) => {}
         Ok(readiness::WaitOutcome::Exited(status)) => {
-            terminate_process_tree(&mut child);
+            let _ = terminate_process_tree(&mut child);
             return worker_failure(
                 reporter,
                 &prepared,
@@ -160,11 +160,11 @@ fn run_with_files(
             );
         }
         Ok(readiness::WaitOutcome::TimedOut) => {
-            terminate_process_tree(&mut child);
+            let _ = terminate_process_tree(&mut child);
             return timed_out(reporter, &prepared, timeout);
         }
         Err(error) => {
-            terminate_process_tree(&mut child);
+            let _ = terminate_process_tree(&mut child);
             return worker_failure(
                 reporter,
                 &prepared,
@@ -174,7 +174,7 @@ fn run_with_files(
     }
 
     if let Err(error) = fs::write(files.start(), []) {
-        terminate_process_tree(&mut child);
+        let _ = terminate_process_tree(&mut child);
         return worker_failure(
             reporter,
             &prepared,
@@ -183,17 +183,24 @@ fn run_with_files(
     }
 
     loop {
-        match child.try_wait() {
+        match crate::process_tree::try_wait_owned(&mut child) {
             Ok(Some(status)) => {
+                if let Err(error) = terminate_process_tree(&mut child) {
+                    return worker_failure(
+                        reporter,
+                        &prepared,
+                        &format!("Error cleaning isolated test process: {error}"),
+                    );
+                }
                 return read_worker_result(files, status.success(), reporter, &prepared);
             }
             Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
             Ok(None) => {
-                terminate_process_tree(&mut child);
+                let _ = terminate_process_tree(&mut child);
                 return timed_out(reporter, &prepared, timeout);
             }
             Err(error) => {
-                terminate_process_tree(&mut child);
+                let _ = terminate_process_tree(&mut child);
                 return worker_failure(
                     reporter,
                     &prepared,
@@ -276,7 +283,8 @@ fn spawn_worker(files: &WorkerFiles) -> Result<Child, String> {
         .env("TMP", &files.root)
         .env("TEMP", &files.root)
         .env("TMPDIR", &files.root);
-    configure_process_tree(&mut command);
+    configure_process_tree(&mut command)
+        .map_err(|error| format!("Error configuring isolated test process: {error}"))?;
     command.spawn().map_err(|error| {
         format!(
             "Error starting isolated test process `{}`: {error}",
@@ -376,10 +384,10 @@ fn worker_failure(
     TestOutcome::RuntimeError
 }
 
-fn configure_process_tree(command: &mut Command) {
-    crate::process_tree::configure(command);
+fn configure_process_tree(command: &mut Command) -> std::io::Result<()> {
+    crate::process_tree::configure(command)
 }
 
-fn terminate_process_tree(child: &mut Child) {
-    crate::process_tree::terminate(child);
+fn terminate_process_tree(child: &mut Child) -> std::io::Result<()> {
+    crate::process_tree::terminate(child)
 }

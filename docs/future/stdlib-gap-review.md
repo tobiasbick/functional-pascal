@@ -1,7 +1,7 @@
 # Standard library gap review
 
-Status: assessment updated on 2026-10-20. Gaps 1, 6, 8 and 9 are implemented;
-remaining candidates are unscheduled.
+Status: assessment updated on 2026-10-20. Gaps 1 through 11 are implemented;
+additional candidates are unscheduled.
 
 This review covers the existing standard library, including native string and
 collection operations, but excludes `Std.Ai.*`. Findings were checked against
@@ -28,45 +28,59 @@ so EOF is observable without losing empty lines. String formatting supports nume
 field widths, alignment, zero padding, fixed precision and scientific notation.
 Pure path helpers detect absolute paths, calculate relative paths and replace
 filename extensions under host platform rules.
+Binary-to-text codecs provide bounded Base64, Base64url and hexadecimal
+conversions over the existing integer-array byte representation. Schema-based
+command-line parsing supplies typed options and positions, defaults, generated
+help and recoverable errors without reading process state. Bounded binary file
+reads and writes preserve raw bytes using the existing integer-array representation.
+VM-owned file handles add bounded block and line access, explicit opening modes,
+byte positioning and cooperative cancellation without loading a complete file.
+Controlled process calls add per-call input, working directories and environment
+overrides, bounded captured output, deadlines and cancellation with owned
+process-tree cleanup.
+URL component codecs and ordered query parsing/building preserve UTF-8 data,
+duplicate parameters, flags and explicit empty values with bounded resources.
+Pure Gregorian dates and UTC date-times add checked construction, strict
+ISO/RFC-3339 conversion and day/millisecond arithmetic over years 1..9999.
 These are implemented capabilities.
 
 ## Everyday capability gaps
 
 Numbers are stable references within this assessment, not approved work packages.
-Gaps 1, 6, 8 and 9 are closed. Their numbers remain reserved;
-the historical structured-error direction anchor remains stable.
+Gaps 1 through 11 are closed. Their numbers remain reserved; the historical
+structured-error direction anchor remains stable.
 
-| ID | Area | Current boundary and missing capability | Comparison |
-| --- | --- | --- | --- |
-| 2 | Binary files | `Fs` reads and writes UTF-8 text but exposes no byte read/write operations. Existing network/Crypto byte arrays could supply an initial representation without adding language types. | Go `os.ReadFile`/`os.WriteFile`; Python binary files |
-| 3 | Incremental file I/O | No public file handles for bounded chunk reads/writes, line-by-line reading or seeking. `ReadText` loads the whole file and rejects files over 64 MiB. HTTP response streaming already exists but does not cover files. | Go `io`/`bufio`; Rust file I/O |
-| 4 | Process control | `Run` and `RunCapture` wait for completion. Missing capabilities include supplying stdin, a working directory and environment per invocation, timeout/cancellation, and bounded or incremental captured output. Moving a call into `go` does not add child-process control. | Go `os/exec`; Python `subprocess` |
-| 5 | Calendar date and time | `Time` exposes wall-clock/monotonic milliseconds and sleep, but no calendar decomposition, date values, ISO-8601 parsing or date/time formatting. Time-zone handling would be a further design step. | Go `time`; Ada `Calendar.Formatting` |
-| 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
-| 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
-| 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
+No everyday capability gaps remain in this assessment. The additional candidates
+below are unscheduled.
 
 ### Evidence in FPAS
 
 - [Console input implementation](../../crates/fpas-std/src/console/input.rs) and
   [public text input](../pascal/std/console/input.md): closed gap 1.
-- [Filesystem API](../pascal/std/host/fs.md): gaps 2 and 3.
+- [Filesystem API](../pascal/std/host/fs.md) and
+  [binary implementation](../../crates/fpas-std/src/fs/binary.rs): closed gap 2.
+- [Incremental file contract](../pascal/std/host/fs-streams.md) and
+  [VM implementation](../../crates/fpas-vm/src/vm/hosted/fs/mod.rs): closed gap 3.
 - [Process API](../pascal/std/host/proc.md) and
-  [implementation](../../crates/fpas-std/src/proc.rs): gap 4.
-- [Time API](../pascal/std/host/time.md): gap 5.
+  [VM implementation](../../crates/fpas-vm/src/vm/hosted/proc/mod.rs): closed gap 4.
+- [Calendar API](../pascal/std/host/calendar.md) and
+  [source implementation](../../lib/Std/Calendar.fpas): closed gap 5;
+  [Time](../pascal/std/host/time.md) remains the clock and sleep API.
 - [String formatting](../pascal/language/types/string/format-chars.md),
   [implementation](../../crates/fpas-std/src/str/format.rs) and
   [conversion](../pascal/std/text/conv.md): closed gap 6.
-- [Arguments](../pascal/std/host/args.md): gap 7.
+- [Command-line parsing](../pascal/std/host/cli.md) and
+  [source implementation](../../lib/Std/Cli.fpas): closed gap 7;
+  [Args](../pascal/std/host/args.md) remains the process-argument accessor.
 - [Paths](../pascal/std/host/path.md) and
   [implementation](../../crates/fpas-std/src/path.rs): closed gap 8.
 - The Result signatures in the filesystem, process,
   [network](../pascal/std/network/net.md) and
   [parsing](../pascal/std/text/parse.md) APIs: closed gap 9.
-- [Conversion](../pascal/std/text/conv.md),
-  [Crypto](../pascal/std/cryptography/crypto.md),
-  [UTF-8](../pascal/std/network/utf8.md) and
-  [URI](../pascal/std/network/uri.md) APIs: gaps 10 and 11.
+- [Byte codecs](../pascal/std/text/encoding.md) and
+  [implementation](../../crates/fpas-std/src/encoding): closed gap 10.
+- [URI components and queries](../pascal/std/network/uri.md) and
+  [source implementation](../../lib/Std/Net/Uri.fpas): closed gap 11.
 
 ### Closed gap 1: observable console EOF
 
@@ -75,6 +89,61 @@ line is `Some('')`; EOF is `None`. Both consume the same text buffer, including
 queued and debugger input. Final unterminated lines are returned once, and real
 I/O failures remain runtime diagnostics. See the
 [Console input contract](../pascal/std/console/input.md).
+
+### Closed gap 2: bounded binary files
+
+`Fs.ReadBytes` reads raw file bytes into an integer array and `Fs.WriteBytes`
+creates or replaces a file from integer bytes in `0..255`. Both operations are
+limited to 1 MiB per call. Writes validate size and every byte before opening
+the destination; validation failures leave existing files unchanged and create
+no new files. Empty arrays and files are valid. Reads bound the actual stream
+as well as checking its reported size. Typed `FsError` failures preserve host
+causes, and `InvalidByte(Offset, Value)` identifies the first invalid element.
+Normal writes retain the existing `WriteText` behavior for I/O failures.
+See the [filesystem contract](../pascal/std/host/fs.md). Incremental access is
+covered by gap 3; compact byte buffers remain a separate topic.
+
+### Closed gap 3: incremental regular-file I/O
+
+`Std.Fs.File` is an opaque VM-owned handle with explicit opening modes and
+`Close`. Copies share a byte position and close state. Block reads and writes,
+strict UTF-8 line reads, `Seek`, `Tell` and `Flush` operate without loading the
+whole file. Byte transfers and line contents are bounded at 1 MiB; a VM can hold at most 1,024
+open files. Line reads distinguish empty lines from EOF and retain buffered
+prefixes after cancellation or a size failure so callers can recover through
+byte reads or seeking. Writes validate the complete byte array before I/O and
+return the actual transferred count. Cancellation variants observe tokens before
+block I/O and between line chunks; they cannot interrupt a running OS call.
+Typed `FsError` failures retain host causes, and VM/session termination closes
+remaining handles. See the [incremental file contract](../pascal/std/host/fs-streams.md).
+
+### Closed gap 4: controlled process execution
+
+`Proc.DefaultOptions`, `RunWithOptions` and `RunCaptureWithOptions` add UTF-8 stdin,
+per-call working directories and environment overrides without changing host
+process state. Captured output defaults to 1 MiB per stream and can be configured
+up to 64 MiB. Output limits, monotonic deadlines and cancellation return typed
+errors with captured prefixes. Input and both output pipes progress concurrently;
+EOF is explicit. VM-owned process groups on Unix and Jobs on Windows terminate
+remaining descendants and reap the direct child during completion or shutdown.
+Existing call signatures and nonzero exit codes remain supported. Interactive
+process handles, detached processes and incremental public output are outside
+this API. See the [process contract](../pascal/std/host/proc.md).
+
+### Closed gap 5: Gregorian calendar dates and UTC date-times
+
+`Std.Calendar` provides immutable date and UTC date-time values with checked
+construction and read-only component methods. The proleptic Gregorian calendar
+covers years 1..9999, including negative Unix milliseconds before 1970.
+Strict date and RFC-3339 parsers accept up to three fractional digits and known
+numeric offsets, normalize to UTC and reject unknown offsets or precision loss.
+Canonical formatting emits fixed-width ISO dates and UTC milliseconds. Day and
+millisecond addition checks bounds before arithmetic, and signed differences
+fit an integer. Invalid components, syntax, offsets and range failures return
+native `CalendarError` values. The implementation is a pure source unit;
+clock/sleep APIs are unchanged. Month/year addition, named time zones,
+daylight-saving rules and localization remain separate extensions. See the
+[calendar contract](../pascal/std/host/calendar.md).
 
 ### Closed gap 6: numeric output formatting
 
@@ -85,6 +154,17 @@ full integer value. Existing bare formats retain their behavior. Field sizes
 and the combined output of extended numeric fields are bounded. Formatting is
 locale-independent; localized presentation remains a separate design topic.
 See the [formatting contract](../pascal/language/types/string/format-chars.md).
+
+### Closed gap 7: typed command-line parsing
+
+`Std.Cli` parses an explicit argument array using a schema of string, integer,
+real and Boolean options and positions. It supports long and short options,
+negative Boolean aliases, the `--` separator, required values and typed defaults.
+Successful parsing returns either typed values or generated help; schema, token,
+value and resource failures use `CliError`, preserving `ParseError` causes.
+The parser is source-defined, bounded and independent of process state, output
+and exit status. Subcommands, repeated options and short bundles remain outside
+the initial API. See the [CLI parsing contract](../pascal/std/host/cli.md).
 
 ### Closed gap 8: pure path helpers
 
@@ -126,6 +206,30 @@ constraints, Message(), constructor values and MapError are implemented, along
 with host/parsing, task/network and layered HTTP families. SDK and TUI boundaries
 that retain strings use explicit Message() mappings.
 
+### Closed gap 10: bounded byte codecs
+
+`Std.Encoding` encodes and decodes standard padded Base64, unpadded Base64url
+and hexadecimal text. Encoders validate integer bytes in `0..255`; decoders
+reject whitespace, invalid alphabets, padding and noncanonical unused bits.
+Hexadecimal output is uppercase, while decoding accepts either case. All six
+functions return Result with a native `EncodingError` and preserve empty inputs.
+Binary inputs and outputs are limited to 1 MiB, with matching encoded-text bounds
+checked before output allocation. See the
+[encoding contract](../pascal/std/text/encoding.md). Compact buffers remain separate.
+
+### Closed gap 11: URL components and ordered queries
+
+`Std.Net.Uri` provides UTF-8 percent encoding and strict decoding for path
+segments and query components. Encoders leave only RFC 3986 unreserved ASCII
+characters literal and emit uppercase escapes; space is `%20`, slash is `%2F`,
+and decoding preserves a literal plus sign. Query helpers retain parameter order,
+duplicate names and the difference between a flag and an explicit empty value.
+They split separators before decoding and return typed `ComponentError` failures,
+including original `Utf8Error` causes. The helpers cap decoded text at 64 KiB,
+encoded text at 192 KiB and query entries at 4,096. Existing HTTP/HTTPS URI
+parsing retains its grammar, nominal `UriError` and raw request-target behavior.
+See the [URI contract](../pascal/std/network/uri.md).
+
 ## Additional candidates
 
 These have more application-specific value or can already be expressed using
@@ -165,23 +269,14 @@ Relevant FPAS references are the [Console API](../pascal/std/console/README.md),
 - Broader HTTP support is also absent: compression, proxies and persistent
   connections are explicitly outside the current
   [HTTP contract](../pascal/std/network/http.md). These are separate from the
-  existing response-streaming support and from gap 11's URL helpers.
+  existing response-streaming support and the implemented URL helpers.
 
-## Suggested FPAS 1 starting order
+## Selecting further FPAS 1 work
 
-This is a recommendation for future selection, not an approved implementation plan:
-
-1. Gap 10: add bounded byte codecs over the existing byte representation.
-2. Gap 7: add a small, consistent argument parser.
-
-These candidates provide immediate everyday value without requiring new
-source-language features. Select one canonical API for each operation rather
-than copying every variant from the comparison libraries.
-
-Incremental file I/O and process control need separate designs covering ownership,
-bounds and cancellation. Structured errors and the selected Std migrations are
-implemented. The remaining candidates should be driven by concrete application
-needs.
+The reviewed everyday capabilities and selected error migrations are implemented.
+Further work should be driven by concrete application needs among the additional
+candidates and larger extensions. This assessment does not schedule further
+implementation work.
 
 ## Comparison sources
 

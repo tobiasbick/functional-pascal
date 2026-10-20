@@ -13,6 +13,7 @@ pub(super) mod callbacks;
 mod console;
 mod console_args;
 mod crypto;
+mod fs;
 mod http_handles;
 mod net;
 mod proc;
@@ -40,6 +41,7 @@ impl Worker {
             Intrinsic::Args(_) => self.execute_args_intrinsic(intrinsic, arguments, location),
             Intrinsic::Console(_) => self.execute_console_intrinsic(intrinsic, arguments, location),
             Intrinsic::Net(_) => self.execute_net_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Fs(_) => self.execute_fs_intrinsic(intrinsic, arguments, location),
             Intrinsic::Http(_) => self.execute_http_state_intrinsic(intrinsic, arguments, location),
             Intrinsic::Random(_) => self.execute_random_intrinsic(intrinsic, arguments, location),
             Intrinsic::Crypto(_) => self.execute_crypto_intrinsic(intrinsic, arguments, location),
@@ -73,6 +75,8 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) network_connections: NetworkConnections,
     pub(in crate::vm::hosted) network_listeners: NetworkListeners,
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
+    pub(in crate::vm::hosted) files: fs::Files,
+    pub(in crate::vm::hosted) processes: proc::Processes,
     pub(in crate::vm::hosted) random: Mutex<random::state::RandomState>,
     pub(in crate::vm) cancellations: CancellationRegistry,
     pub(in crate::vm) channels: ChannelRegistry,
@@ -93,6 +97,8 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
+            files: fs::Files::new(),
+            processes: proc::Processes::new(),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
@@ -118,6 +124,8 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
+            files: fs::Files::new(),
+            processes: proc::Processes::new(),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
@@ -129,8 +137,25 @@ impl HostedState {
 
     /// Interrupt blocking hosted operations during VM shutdown.
     pub(super) fn shutdown_blocking_operations(&self) {
+        self.processes.shutdown();
+        self.files.shutdown();
         self.channels.shutdown();
         self.network_listeners.shutdown();
         self.network_connections.shutdown();
+    }
+
+    /// Close file handles after a run or callback session has finished its workers.
+    pub(super) fn close_file_handles(&self) {
+        self.files.shutdown();
+    }
+
+    /// Request process-group termination without waiting in an active host callback.
+    pub(super) fn close_process_handles(&self) {
+        self.processes.shutdown();
+    }
+
+    /// Wait for process calls after workers and host callbacks have returned.
+    pub(super) fn wait_process_handles(&self) {
+        self.processes.wait_idle();
     }
 }

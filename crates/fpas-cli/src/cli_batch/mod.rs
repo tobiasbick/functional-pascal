@@ -143,7 +143,8 @@ fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Fa
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    crate::process_tree::configure(&mut command);
+    crate::process_tree::configure(&mut command)
+        .map_err(|error| (3, "worker_start", error.to_string()))?;
     let mut child = command
         .spawn()
         .map_err(|error| (3, "worker_start", error.to_string()))?;

@@ -89,7 +89,7 @@ fn parent(args: &[String], cwd: &Path, started: Instant) -> Value {
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null());
-        crate::process_tree::configure(&mut command);
+        crate::process_tree::configure(&mut command)?;
         command.spawn()
     };
     let mut child = match spawn() {

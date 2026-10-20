@@ -112,6 +112,38 @@ fn intrinsic_routine_matches_hover_documentation_and_unit_handbook() {
 }
 
 #[test]
+fn source_calendar_routines_use_their_public_declarations_and_handbook() {
+    let temp = TempDirectory::new("api-lookup-calendar");
+    let catalog = catalog_for(temp.path());
+    for name in [
+        "CreateDate",
+        "ParseDateTime",
+        "AddDays",
+        "ToTimestampMillis",
+    ] {
+        let entry = single(&catalog, &format!("Std.Calendar.{name}"));
+        assert_eq!(entry.kind, ApiEntryKind::Declaration(SymbolKind::Function));
+        assert_eq!(
+            entry.handbook.as_deref(),
+            Some("docs/pascal/std/host/calendar.md")
+        );
+        assert!(
+            entry
+                .location
+                .expect("source declaration")
+                .path
+                .ends_with("lib/Std/Calendar.fpas")
+        );
+    }
+    assert!(
+        catalog
+            .lookup("Std.Calendar.Date.YearValue")
+            .matches
+            .is_empty()
+    );
+}
+
+#[test]
 fn unit_lists_public_declarations_with_their_first_comment_line() {
     let temp = TempDirectory::new("api-lookup-unit");
     let catalog = catalog_for(temp.path());
@@ -170,7 +202,22 @@ fn source_standard_library_units_are_found_without_a_project_and_hide_private_de
         .iter()
         .map(|member| member.name.as_str())
         .collect::<Vec<_>>();
-    assert_eq!(members, ["UriError", "Uri", "Parse"]);
+    assert_eq!(
+        members,
+        [
+            "UriError",
+            "QueryParam",
+            "ComponentError",
+            "Uri",
+            "Parse",
+            "EncodePathSegment",
+            "DecodePathSegment",
+            "EncodeQueryComponent",
+            "DecodeQueryComponent",
+            "ParseQuery",
+            "BuildQuery",
+        ]
+    );
     assert!(catalog.lookup("Std.Net.Uri.ParsePort").matches.is_empty());
 }
 

@@ -10,6 +10,7 @@ pub(super) enum Failure {
     InvalidPattern(String),
     InvalidEncoding(String),
     LimitExceeded(&'static str, i64),
+    InvalidByte { offset: usize, value: i64 },
 }
 impl Failure {
     pub(super) fn at(path: &std::path::Path, error: io::Error) -> Self {
@@ -31,6 +32,9 @@ impl std::fmt::Display for Failure {
             | Self::InvalidEncoding(reason) => reason.fmt(f),
             Self::LimitExceeded(operation, limit) => {
                 write!(f, "{operation} exceeds maximum limit of {limit}")
+            }
+            Self::InvalidByte { offset, value } => {
+                write!(f, "byte at offset {offset} is outside 0..255: {value}")
             }
         }
     }

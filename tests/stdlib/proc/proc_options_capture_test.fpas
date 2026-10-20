@@ -1,0 +1,70 @@
+program ProcOptionsCaptureTest;
+
+uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+
+function LibraryPath(): string;
+begin
+  var Root := Fs.CurrentDir().Unwrap();
+  while not Fs.IsFile(Path.Join([Root, 'lib', 'stdlib.fpasprj'])) do
+    const Parent := Path.DirName(Root);
+    if (Parent = Root) or (Parent = '') then
+      Test.Fail('Run process tests inside the repository.');
+    end if;
+
+    Root := Parent;
+  end while;
+
+  return Path.Join([Root, 'lib']);
+end function;
+
+begin
+  const Source := Path.Join([Fs.CurrentDir().Unwrap(), Test.ScratchDir(), 'capture-child.fpas']);
+  Test.AssertTrue(
+    Fs.WriteText(
+      Source,
+      'program Child; uses Std.Args as Args, Std.Console as Console;'#10 +
+      'begin if Args.ParamStr(0) = ''failure'' then panic(''failure text'');'#10 +
+      'else Console.WriteText(Args.ParamStr(0)); end if; end.'
+    ).Unwrap()
+  );
+  const Executable := Proc.CurrentExecutable().Unwrap();
+  const Library := LibraryPath();
+  const Limit := Proc.DefaultOptions() with MaxOutputBytes := 3; end with;
+  const Exact := Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'abc'], Limit
+  ).Unwrap();
+  Test.AssertEquals(0, Exact.ExitCode);
+  Test.AssertEquals('abc', Exact.Stdout);
+  Test.AssertEquals('', Exact.Stderr);
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(
+      Executable,
+      ['run', '--std-lib', Library, Source, '--', 'abcd'],
+      Limit
+    ) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'stdout bytes', 3, 'abc', ''))
+  );
+  const Zero := Proc.DefaultOptions() with MaxOutputBytes := 0; end with;
+
+  Test.AssertEquals(
+    '', Proc.RunCaptureWithOptions(
+      Executable, ['run', '--std-lib', Library, Source, '--', ''], Zero
+    ).Unwrap().Stdout
+  );
+  Test.AssertTrue(
+    Proc.RunCaptureWithOptions(Executable, ['run', '--std-lib', Library, Source, '--', 'x'], Zero) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'stdout bytes', 0, '', ''))
+  );
+  const StderrLimit := Proc.DefaultOptions() with MaxOutputBytes := 10; end with;
+
+  case Proc.RunCaptureWithOptions(
+    Executable, ['run', '--std-lib', Library, Source, '--', 'failure'], StderrLimit
+  ) of
+    when Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'stderr bytes', 10, const Stdout, const Stderr)):
+      Test.AssertEquals('', Stdout);
+      Test.AssertTrue(Stderr.Length() > 0);
+      Test.AssertTrue(Stderr.Length() <= 10);
+    when Error(const Failure):
+      Test.Fail(Failure.Message());
+    when Ok(_):
+      Test.Fail('Expected bounded stderr failure');
+  end case;
+end.

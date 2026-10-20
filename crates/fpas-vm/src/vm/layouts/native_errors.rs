@@ -49,8 +49,13 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
                 | fpas_bytecode::TaskIntrinsic::ReceiveCase
                 | fpas_bytecode::TaskIntrinsic::SendCase,
             )) => Some(Family::Task),
-            Some(Intrinsic::Proc(_)) => Some(Family::Proc),
+            Some(Intrinsic::Proc(operation))
+                if operation != fpas_bytecode::ProcIntrinsic::DefaultOptions =>
+            {
+                Some(Family::Proc)
+            }
             Some(Intrinsic::Parse(_)) => Some(Family::Parse),
+            Some(Intrinsic::Encoding(_)) => Some(Family::Encoding),
             Some(Intrinsic::Crypto(_)) => Some(Family::Crypto),
             Some(Intrinsic::Json(fpas_bytecode::JsonIntrinsic::Parse)) => Some(Family::Json),
             Some(Intrinsic::Toml(fpas_bytecode::TomlIntrinsic::Parse)) => Some(Family::Toml),

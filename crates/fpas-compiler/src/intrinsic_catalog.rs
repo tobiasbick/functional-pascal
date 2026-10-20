@@ -2,10 +2,10 @@
 
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic,
-    DictIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic,
-    MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic,
-    RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic,
-    TimeIntrinsic, TomlIntrinsic,
+    DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic,
+    JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic,
+    ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic,
+    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -68,6 +68,19 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Length, Keys, Values, Remove, Get, Merge, Map, Filter, Reduce,
             ]
         ),
+        "Encoding" => family!(
+            member,
+            Encoding,
+            EncodingIntrinsic,
+            [
+                Base64Encode,
+                Base64Decode,
+                Base64UrlEncode,
+                Base64UrlDecode,
+                HexEncode,
+                HexDecode
+            ]
+        ),
         "Env" => family!(member, Env, EnvIntrinsic, [Get, Exists]),
         "Path" => family!(
             member,
@@ -105,13 +118,33 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Proc,
             ProcIntrinsic,
-            [Run, CurrentExecutable, RunCapture]
+            [
+                Run,
+                CurrentExecutable,
+                RunCapture,
+                RunWithOptions,
+                RunCaptureWithOptions,
+                DefaultOptions
+            ]
         ),
         "Fs" => family!(
             member,
             Fs,
             FsIntrinsic,
             [
+                Open,
+                Close,
+                Read,
+                Write,
+                ReadLine,
+                Seek,
+                Tell,
+                Flush,
+                ReadWithCancellation,
+                WriteWithCancellation,
+                ReadLineWithCancellation,
+                ReadBytes,
+                WriteBytes,
                 ReadText,
                 WriteText,
                 WriteTextAtomic,

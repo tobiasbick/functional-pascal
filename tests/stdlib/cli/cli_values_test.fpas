@@ -1,0 +1,99 @@
+program CliValuesTest;
+
+uses Std.Cli as Cli, Std.Test as Test;
+
+function Parsed(Arguments: array of string; Definition: Cli.Schema): dict of string to Cli.Value;
+begin
+  case Cli.Parse(Arguments, Definition).Unwrap() of
+    when Cli.Outcome.Parsed(const Values):
+      return Values;
+    when Cli.Outcome.Help(_):
+      Test.Fail('Unexpected help outcome');
+      return [:];
+  end case;
+end function;
+
+begin
+  const Definition := Cli.Schema(
+    ProgramName := 'values',
+    Options := [
+      Cli.OptionSpec(Name := 'name', Short := Some('n')),
+      Cli.OptionSpec(Name := 'count', Short := Some('c'), Kind := Cli.Kind.Int),
+      Cli.OptionSpec(
+        Name := 'ratio',
+        Kind := Cli.Kind.Float,
+        Default := Some(Cli.Value.Float(1.5))
+      ),
+      Cli.OptionSpec(Name := 'verbose', Short := Some('v'), Kind := Cli.Kind.Bool),
+      Cli.OptionSpec(Name := 'mode', Default := Some(Cli.Value.Text('safe'))),
+      Cli.OptionSpec(Name := 'optional')
+    ],
+    Positionals := [
+      Cli.PositionalSpec(Name := 'input'),
+      Cli.PositionalSpec(
+        Name := 'tail',
+        Required := false,
+        Default := Some(Cli.Value.Text('last'))
+      ),
+      Cli.PositionalSpec(Name := 'extra', Required := false)
+    ]
+  );
+  const First := Parsed(['--name=', '-c', '-$FF', '--verbose', 'source.txt'], Definition);
+  Test.AssertTrue(First.Get('name') is Some(Cli.Value.Text('')));
+  Test.AssertTrue(First.Get('count') is Some(Cli.Value.Int(-255)));
+  Test.AssertTrue(First.Get('ratio') = Some(Cli.Value.Float(1.5)));
+  Test.AssertTrue(First.Get('verbose') is Some(Cli.Value.Bool(true)));
+  Test.AssertTrue(First.Get('input') is Some(Cli.Value.Text('source.txt')));
+  Test.AssertTrue(First.Get('mode') is Some(Cli.Value.Text('safe')));
+  Test.AssertTrue(First.Get('tail') is Some(Cli.Value.Text('last')));
+  Test.AssertTrue(First.Get('optional') is None);
+  Test.AssertTrue(First.Get('extra') is None);
+  Test.AssertTrue(First.Get('c') is None);
+  Test.AssertTrue(First.Get('v') is None);
+  const Second := Parsed(
+    ['--count', '1_024', '--ratio=-2.5', '--verbose=FALSE', '-n', 'label', 'input'],
+    Definition
+  );
+  Test.AssertTrue(Second.Get('count') is Some(Cli.Value.Int(1024)));
+  Test.AssertTrue(Second.Get('ratio') = Some(Cli.Value.Float(-2.5)));
+  Test.AssertTrue(Second.Get('verbose') is Some(Cli.Value.Bool(false)));
+  Test.AssertTrue(Second.Get('name') is Some(Cli.Value.Text('label')));
+  Test.AssertTrue(Parsed(['input'], Definition).Get('verbose') is Some(Cli.Value.Bool(false)));
+  Test.AssertTrue(Parsed(['-v', 'input'], Definition).Get('verbose') is Some(Cli.Value.Bool(true)));
+  Test.AssertTrue(
+    Parsed(['--no-verbose', 'input'], Definition).Get('verbose') is Some(Cli.Value.Bool(false))
+  );
+  Test.AssertTrue(
+    Parsed(['--name', '--help', 'input'], Definition).Get('name') is Some(Cli.Value.Text('--help'))
+  );
+  const Defaults := Cli.Schema(
+    ProgramName := 'defaults',
+    Options := [
+      Cli.OptionSpec(Name := 'count', Kind := Cli.Kind.Int, Default := Some(Cli.Value.Int(7))),
+      Cli.OptionSpec(
+        Name := 'enabled',
+        Kind := Cli.Kind.Bool,
+        Default := Some(Cli.Value.Bool(true))
+      ),
+      Cli.OptionSpec(Name := 'no-cache')
+    ],
+    Positionals := []
+  );
+  const DefaultValues := Parsed(['--no-cache=data'], Defaults);
+  Test.AssertTrue(DefaultValues.Get('count') is Some(Cli.Value.Int(7)));
+  Test.AssertTrue(DefaultValues.Get('enabled') is Some(Cli.Value.Bool(true)));
+  Test.AssertTrue(DefaultValues.Get('no-cache') is Some(Cli.Value.Text('data')));
+  const Positions := Cli.Schema(
+    ProgramName := 'positions',
+    Options := [],
+    Positionals := [
+      Cli.PositionalSpec(Name := 'count', Kind := Cli.Kind.Int),
+      Cli.PositionalSpec(Name := 'ratio', Kind := Cli.Kind.Float),
+      Cli.PositionalSpec(Name := 'enabled', Kind := Cli.Kind.Bool)
+    ]
+  );
+  const TypedPositions := Parsed(['-12', '-2.5', 'TRUE'], Positions);
+  Test.AssertTrue(TypedPositions.Get('count') is Some(Cli.Value.Int(-12)));
+  Test.AssertTrue(TypedPositions.Get('ratio') = Some(Cli.Value.Float(-2.5)));
+  Test.AssertTrue(TypedPositions.Get('enabled') is Some(Cli.Value.Bool(true)));
+end.

@@ -46,6 +46,7 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
         Intrinsic::Time(_) => Some("Std.Time"),
         Intrinsic::Fs(_) => Some("Std.Fs"),
         Intrinsic::Env(_) => Some("Std.Env"),
+        Intrinsic::Proc(fpas_bytecode::ProcIntrinsic::DefaultOptions) => None,
         Intrinsic::Proc(_) => Some("Std.Proc"),
         Intrinsic::Net(_) => Some("Std.Net"),
         Intrinsic::Http(_) => Some("Std.Http"),
@@ -59,6 +60,7 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
         Intrinsic::Console(_) => Some("Std.Console"),
         Intrinsic::Str(_)
         | Intrinsic::Conv(_)
+        | Intrinsic::Encoding(_)
         | Intrinsic::Parse(_)
         | Intrinsic::Math(_)
         | Intrinsic::Bits(_)

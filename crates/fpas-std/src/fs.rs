@@ -5,6 +5,7 @@
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
 mod append;
+mod binary;
 mod directory;
 mod failure;
 mod glob;
@@ -21,7 +22,7 @@ use std::path::Path;
 use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 
 use crate::error::StdError;
-use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, expect_array, pop_string, pop_value};
 
 /// Execute a `Std.Fs` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
@@ -30,6 +31,37 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
+        Intrinsic::Fs(FsIntrinsic::ReadBytes) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(results::result(
+                call.factory(),
+                "Std.Fs.ReadBytes",
+                std::slice::from_ref(&path),
+                binary::read_bytes(&path),
+                |bytes| {
+                    Value::Array(
+                        bytes
+                            .into_iter()
+                            .map(|byte| Value::Integer(i64::from(byte)))
+                            .collect(),
+                    )
+                },
+                location,
+            )?);
+        }
+        Intrinsic::Fs(FsIntrinsic::WriteBytes) => {
+            let bytes = expect_array(pop_value(call, location)?, location)?;
+            let path = pop_string(pop_value(call, location)?, location)?;
+            let outcome = binary::write_bytes(&path, bytes, location)?;
+            call.push(results::result(
+                call.factory(),
+                "Std.Fs.WriteBytes",
+                std::slice::from_ref(&path),
+                outcome,
+                |()| Value::Boolean(true),
+                location,
+            )?);
+        }
         Intrinsic::Fs(FsIntrinsic::ReadText) => {
             let path = pop_string(pop_value(call, location)?, location)?;
             call.push(results::result(
@@ -291,6 +323,9 @@ pub(crate) fn run(
     }
     Ok(Some(()))
 }
+
+#[cfg(test)]
+mod binary_tests;
 
 #[cfg(test)]
 mod tests;

@@ -120,5 +120,10 @@ impl DebugTaskRuntime {
                 });
             }
         }
+        if let Some(worker) = self.worker(0) {
+            worker.hosted.close_process_handles();
+            worker.hosted.close_file_handles();
+            worker.hosted.wait_process_handles();
+        }
     }
 }

@@ -33,13 +33,15 @@ pub(crate) fn wait(
         if grace_deadline.is_some_and(|deadline| Instant::now() >= deadline) {
             break Err("Worker exceeded its deadline or output limit.".into());
         }
-        match child.try_wait() {
+        match crate::process_tree::try_wait_owned(child) {
             Ok(Some(_)) => break Err("Worker terminated before publishing a result.".into()),
             Err(error) => break Err(error.to_string()),
             Ok(None) => {}
         }
         std::thread::sleep(Duration::from_millis(3));
     };
-    crate::process_tree::terminate(child);
-    (result, ended)
+    match crate::process_tree::terminate(child) {
+        Err(error) if result.is_ok() => (Err(format!("Worker cleanup failed: {error}")), ended),
+        _ => (result, ended),
+    }
 }

@@ -38,10 +38,10 @@ pub use instruction::{
 };
 pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic,
-    DictIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic, IntrinsicOwner,
-    JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic,
-    ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic,
-    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic,
+    IntrinsicOwner, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic,
+    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic,
+    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
     Constant, DistinctTypeName, EnumLayout, EnumVariant, ErrorCause, ErrorInstanceKey,
@@ -64,4 +64,4 @@ pub use value::{
 
 /// Persistent register instruction-set and intrinsic ABI version recorded in
 /// compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 24;
+pub const BYTECODE_VERSION: u32 = 27;

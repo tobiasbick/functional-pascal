@@ -1,5 +1,7 @@
 //! Shared nominal error catalog for hosted operations and parsers.
 
+mod proc;
+
 /// Public native error family, indexed once in an admitted executable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]
@@ -24,6 +26,8 @@ pub enum NativeErrorFamily {
     Net,
     /// `Std.Server.ServerError`.
     Server,
+    /// `Std.Encoding.EncodingError`.
+    Encoding,
 }
 
 /// Payload type in a native error declaration.
@@ -76,6 +80,7 @@ impl NativeErrorFamily {
         Self::Task,
         Self::Net,
         Self::Server,
+        Self::Encoding,
     ];
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
@@ -90,12 +95,45 @@ impl NativeErrorFamily {
             Self::Task => crate::std_symbols::STD_TASK_TASK_ERROR,
             Self::Net => crate::std_symbols::STD_NET_ERROR,
             Self::Server => crate::std_symbols::STD_SERVER_ERROR,
+            Self::Encoding => crate::std_symbols::STD_ENCODING_ERROR,
         }
     }
     /// Ordered declared variants.
     pub const fn variants(self) -> &'static [ErrorVariant] {
         use ErrorFieldType::*;
         match self {
+            Self::Encoding => &[
+                ErrorVariant {
+                    name: "InvalidByte",
+                    message: "Byte value is outside 0..255",
+                    fields: &[("Offset", Integer), ("Value", Integer)],
+                },
+                ErrorVariant {
+                    name: "InvalidCharacter",
+                    message: "Invalid encoding character",
+                    fields: &[("Offset", Integer)],
+                },
+                ErrorVariant {
+                    name: "InvalidLength",
+                    message: "Invalid encoding length",
+                    fields: &[("Length", Integer)],
+                },
+                ErrorVariant {
+                    name: "InvalidPadding",
+                    message: "Invalid Base64 padding",
+                    fields: &[("Offset", Integer)],
+                },
+                ErrorVariant {
+                    name: "NonCanonical",
+                    message: "Noncanonical Base64 text",
+                    fields: &[("Offset", Integer)],
+                },
+                ErrorVariant {
+                    name: "LimitExceeded",
+                    message: "Encoding size limit exceeded",
+                    fields: &[("Limit", Integer)],
+                },
+            ],
             Self::Task => &[
                 ErrorVariant {
                     name: "Closed",
@@ -284,29 +322,23 @@ impl NativeErrorFamily {
                     message: "Filesystem operation failed",
                     fields: &[("Operation", String), ("Limit", Integer)],
                 },
-            ],
-            Self::Proc => &[
                 ErrorVariant {
-                    name: "StartFailed",
-                    message: "Process operation failed",
-                    fields: &[("Cause", Host)],
+                    name: "InvalidByte",
+                    message: "Byte value is outside 0..255",
+                    fields: &[("Offset", Integer), ("Value", Integer)],
                 },
                 ErrorVariant {
-                    name: "WaitFailed",
-                    message: "Process operation failed",
-                    fields: &[("Cause", Host)],
+                    name: "Closed",
+                    message: "File is closed",
+                    fields: &[("Operation", String)],
                 },
                 ErrorVariant {
-                    name: "InvalidArgument",
-                    message: "Process operation failed",
-                    fields: &[("Name", String), ("Reason", String)],
-                },
-                ErrorVariant {
-                    name: "IoFailure",
-                    message: "Process operation failed",
-                    fields: &[("Cause", Host)],
+                    name: "Cancelled",
+                    message: "Operation cancelled",
+                    fields: &[("Operation", String)],
                 },
             ],
+            Self::Proc => proc::VARIANTS,
             Self::Parse => &[
                 ErrorVariant {
                     name: "InvalidSyntax",

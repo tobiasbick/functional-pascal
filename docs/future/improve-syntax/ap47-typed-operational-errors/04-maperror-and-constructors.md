@@ -1,15 +1,14 @@
 # AP47.4: Constructor routine values and MapError
 
-Status: Planned; implementation not authorized. Depends on AP47.3.
+Status: Complete. Depends on completed AP47.3.
 Contracts: [AP47.1](01-decision.md#explicit-propagation-and-constructor-values)
 and [AP47 decisions](README.md#decisions-and-authority).
 Completion is tracked only in the package README.
 
 ## Deliverable
 
-Implement the agreed Result operation and permit payload variant constructors
-as ordinary callable values. Apply the same constructor rule to errors and
-ordinary enums; do not make an error-only callback exception.
+Result error mapping and payload variant constructor values are implemented.
+Native errors and ordinary enums use the same readonly callable rule.
 
 ```text
 Value.MapError(F: function(Cause: E): E2): Result of (T, E2)
@@ -44,44 +43,68 @@ with several parameters require a matching callable; no currying, defaulted
 arguments or automatic capture is added. A wrapper requiring extra application
 context uses a normal anonymous function that captures those values.
 
-## Actual owners and planned edits
+## Implementation owners
 
 | Path | Responsibility |
 | --- | --- |
 | `crates/fpas-sema/src/check/expr/`, `src/types/` | Resolve variant paths as constructor callables under an expected signature |
 | `crates/fpas-sema/src/std_registry/native/result.rs` | One MapError entry and documentation |
 | `crates/fpas-sema/src/std_registry/builtins/result_option.rs` | Generic receiver/callback/result substitution |
-| `crates/fpas-compiler/src/lowering/`, `src/bytecode/` | Shared concrete constructor bodies and ordinary function-value metadata |
+| `crates/fpas-compiler/src/lowering/closures/constructor_values.rs`, `closures/discover.rs`, `closures/mod.rs`, `root.rs`, `calls.rs` | Shared ordinary enum constructor bodies and callable discovery |
+| `crates/fpas-compiler/src/lowering/errors/mod.rs`, `errors/rewrite.rs` | Concrete error factories and forwarding hidden generic factories without per-reference adapter environments |
 | `crates/fpas-bytecode/src/intrinsic/` | ResultIntrinsic::MapError ID and portable validation |
 | `crates/fpas-vm/src/vm/hosted/callbacks/` | Sync and resumable MapError routing and ResultError callback wrapping |
 | `crates/fpas-vm/src/vm/debug/scheduling/effects.rs` | Classify the new callback intrinsic consistently with existing Result operations |
 | `docs/pascal/language/types/result-operations.md`, callable documentation | Publish delivered semantics and constructor use |
 
-The existing callback plan has Ok passthrough paths and SingleWrapper::ResultOk.
-Extend the shared planning/wrapping mechanism for ResultError instead of adding
-a second callback execution loop. Scheduled callbacks may suspend and resume;
-main-task callbacks follow the existing synchronous route. Preserve current
-task/scope ownership, trace observation and failure-capture rules.
+The shared callback plan includes Ok passthrough and `SingleWrapper::ResultError`.
+Sync and scheduled callbacks use their existing execution loops. Scheduled mappers
+suspend and resume with their owner; task/scope ownership, trace observations and
+failure capture retain their existing rules. Constructor requests remain in their
+lexical generic-parameter universe. Shared bodies distinguish semantic native-error
+instances even when their IR signatures erase to the same types. Local and global
+callable bindings named like a variant follow ordinary function-value dispatch.
 
-## Acceptance and verification
+## Regression coverage
 
-One source owner verifies a side-effect counter: receiver/callable construction
+The Result source fixture verifies a side-effect counter: receiver/callable construction
 once, mapper body zero times on Ok and exactly once on Error. A returned Result
-as E2 stays nested rather than being flattened. Cover unrelated success/error
+as E2 stays nested rather than being flattened. It covers unrelated success/error
 types, string-to-custom and custom-to-custom mappings and nominally distinct
-errors. Use the constructor directly, an imported constructor and a captured
-ordinary closure. An enum constructor demonstrates the shared callable rule.
-Use two instantiations of a generic error constructor to prove MapError retains
-each concrete owner/Cause identity and reuses the matching shared factory.
+errors. Direct and imported constructors and captured ordinary closures are exercised. An enum constructor demonstrates the shared callable rule.
+Distinct instantiations in one generic owner, reversed generic arguments and
+separate generic calls retain each concrete owner/Cause identity and reuse the
+matching shared factory.
 
 Separate lifecycle fixtures cover a scheduled mapper that suspends, nested
-callbacks, cancellation, panic/contract failure and trace bounds. Extend existing
-Result callback fixtures for these distinct routes rather than replaying all
-scalar cases at every layer. Incompatible callback arity/labels/types and
+callbacks, cancellation, panic/contract failure and trace bounds. The CLI and concurrency fixtures exercise these distinct routes without
+replaying every scalar case at each layer. Incompatible callback arity/labels/types and
 uninferred generic arguments must fail at checking, not runtime.
 
 Try rejection for incompatible E/E2 is still observable without explicit mapping;
 mapping before try succeeds. Option and OrElse retain their contracts. Source,
-cached-unit and program-image constructor calls agree. Run relevant compiler,
-sema, VM/debugger and CLI checks plus existing VM/concurrency benchmarks. Public
-examples and native operation catalogs must describe the same operation.
+cached-unit and program-image constructor calls agree. Compiler, sema, VM/debugger, CLI, native catalog and public examples cover the
+same operation. The [VM/concurrency comparison](../../../bench/ap47-maperror.md)
+records the unchanged workload boundaries.
+
+Additional integration owners are `crates/fpas-std/src/std_units/symbols/std_symbols/result.rs`,
+`crates/fpas-compiler/src/intrinsic_catalog.rs`, bytecode execution/debug-effect
+classification and the existing native catalog export. Regression owners are
+`tests/stdlib/result/map_error_test.fpas`, `crates/fpas-sema/src/tests/decl/errors.rs`,
+`tests/concurrency/map_error_callbacks_test.fpas`,
+`crates/fpas-language-service/tests/intellisense/error_conventions.rs` and
+`crates/fpas-cli/tests/error_mapping.rs`. Public documentation also includes
+`docs/pascal/language/functions/function-types.md`, `types/errors.md` and the compact
+`docs/pascal/agent-reference.md`. No application or Std signature migration belongs
+to this work package.
+
+
+## Remaining boundaries
+
+Std signatures and their consumers remain the responsibility of AP47.5/AP47.6;
+no migration or parallel compatibility API is included here. Independent checkout
+follow-ups remain in imported-generic-enum debug projections, NotesUpdate reference
+counts, Linux socket fixture assumptions and existing source-format differences.
+Generic record callable defaults also retain an existing limitation reproduced
+with ordinary generic routine values. Verification evidence belongs in the
+delivery report; these do not change AP47.4's selected contract.

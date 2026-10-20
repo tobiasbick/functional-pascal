@@ -24,5 +24,9 @@ pub enum ResultIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/language/types/result-operations.md`
     OrElse = 132,
+    /// `R.MapError(F)` preserves Ok and wraps the mapped error payload without flattening.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/result-operations.md`
+    MapError = 136,
 }
 }

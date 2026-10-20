@@ -15,6 +15,37 @@ pub(super) fn rewrite(
     span: fpas_lexer::Span,
     globals: &mut [fpas_ir::Global],
 ) -> Result<(), CompileError> {
+    // Constructor references are the shared factory itself, not an adapter closure
+    // capturing that factory. Generic callers forward the hidden value unchanged.
+    let mut constructors = BTreeMap::new();
+    for function in functions
+        .iter()
+        .filter(|function| function.name.starts_with("$constructor_"))
+    {
+        for instruction in function.blocks.iter().flat_map(|block| &block.instructions) {
+            if let Operation::MakeEnum {
+                layout, variant, ..
+            } = instruction.operation
+                && types.errors.layouts.contains_key(&layout)
+            {
+                constructors.insert(
+                    function.id,
+                    Request {
+                        instance: construction_instance(
+                            instruction,
+                            layout,
+                            function.id,
+                            parameters,
+                            metadata,
+                            types,
+                        )?,
+                        variant: u16::try_from(variant.get())
+                            .map_err(|_| error("constructor variant overflow"))?,
+                    },
+                );
+            }
+        }
+    }
     let original = functions.len();
     for index in 0..original {
         let mut function = functions[index].clone();
@@ -94,6 +125,45 @@ pub(super) fn rewrite(
                             function: target,
                             arguments,
                         };
+                    }
+                    Operation::MakeClosure {
+                        function: target, ..
+                    } if constructors.contains_key(&target) => {
+                        // The generated body and its reference share a lexical type
+                        // parameter universe; constructor specialization was checked
+                        // in that universe before lowering.
+                        let request = constructors[&target].clone();
+                        let factory = factory_value(
+                            functions,
+                            types,
+                            &request,
+                            &hidden,
+                            &mut rewritten,
+                            &mut next,
+                            source,
+                            span,
+                        )?;
+                        let ty = instruction
+                            .result
+                            .ok_or_else(|| error("constructor value type is unavailable"))?
+                            .ty;
+                        let local = fpas_ir::LocalId::try_from_index(function.locals.len())
+                            .map_err(|e| error(e.to_string()))?;
+                        function.locals.push(fpas_ir::Local {
+                            id: local,
+                            ty,
+                            mutable: false,
+                            capture: None,
+                        });
+                        rewritten.push(Instruction {
+                            source,
+                            result: None,
+                            operation: Operation::WriteLocal {
+                                local,
+                                value: factory,
+                            },
+                        });
+                        instruction.operation = Operation::ReadLocal(local);
                     }
                     Operation::MakeClosure {
                         function: target,

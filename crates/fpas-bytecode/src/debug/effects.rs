@@ -212,9 +212,10 @@ const fn dict_effects(operation: DictIntrinsic) -> DebugEffectSet {
 
 const fn result_effects(operation: ResultIntrinsic) -> DebugEffectSet {
     match operation {
-        ResultIntrinsic::Map | ResultIntrinsic::AndThen | ResultIntrinsic::OrElse => {
-            DebugEffectSet::DYNAMIC_CALL
-        }
+        ResultIntrinsic::Map
+        | ResultIntrinsic::MapError
+        | ResultIntrinsic::AndThen
+        | ResultIntrinsic::OrElse => DebugEffectSet::DYNAMIC_CALL,
         _ => DebugEffectSet::EMPTY,
     }
 }

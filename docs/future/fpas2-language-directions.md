@@ -34,11 +34,11 @@ keeps graphics-specific API, platform and deployment questions separate.
 ## 1. Typed operational errors
 
 Status: selected native-error design; the runtime/artifact foundation and
-AP47.3's source-language slice are implemented. The user selected native error declarations, automatic output,
+AP47.3's source-language slice and AP47.4's constructor values/MapError are implemented. The user selected native error declarations, automatic output,
 explicit MapError and unchanged try, then delegated the detailed planning choices.
 The [AP47 package](improve-syntax/ap47-typed-operational-errors/README.md) records
 those choices, dependencies and seven delivery work packages. Its design work is
-recorded; constructor values, MapError, Std migration and final acceptance remain open.
+recorded; Std migration and final acceptance remain open.
 
 Channel closure, timeout and cancellation currently use strings inside
 `Result of (T, string)`; see [task APIs](../pascal/std/concurrency/task.md).

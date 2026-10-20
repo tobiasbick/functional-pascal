@@ -14,6 +14,22 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+
+## 2026-10-20 — AP47.4 constructor values and MapError
+
+Compared unchanged AP47.3 (`c3dee7ac7`) with AP47.4 in three paired serial runs
+of the original VM and concurrency groups. The
+[complete comparison](ap47-maperror.md) preserves every sample and the measurement
+boundaries. Sums of row medians were 11611 → 11055 ms for VM and 2576 → 2103 ms
+for concurrency. Large scatter prevents attributing those lower totals to an
+optimization.
+
+Two initial VM medians exceeded 5%. Eight isolated alternating pairs reproduced
+neither increase: typed Boolean 351 → 343 ms (-2.28%), record field access
+551 → 563 ms (+2.18%), with matching checksums. No repeatable VM regression
+crossed the selected gate. Dedicated error workloads remain scheduled after Std
+migration, preserving the original suite IDs and arguments.
+
 ## 2026-10-19 — AP47.3 native error language
 
 Native error declarations, Error-constrained routines and Message() connect the

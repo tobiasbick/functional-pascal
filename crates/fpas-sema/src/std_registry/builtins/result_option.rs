@@ -21,6 +21,7 @@ pub(super) fn check_result_option_builtin_std_call(
             unwrap_result_ok(c, name, ty, span)
         }),
         s::STD_RESULT_MAP => check_result_map(c, args, span),
+        s::STD_RESULT_MAP_ERROR => check_result_map_error(c, args, span),
         s::STD_RESULT_AND_THEN => check_result_and_then(c, args, span),
         s::STD_RESULT_OR_ELSE => check_result_or_else(c, args, span),
         s::STD_OPTION_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
@@ -129,6 +130,25 @@ fn check_result_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
             );
             Ty::Error
         }
+    }
+}
+
+/// `R.MapError(F)` keeps the success type and maps only the error payload.
+fn check_result_map_error(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
+    if args.len() != 2 {
+        c.error_with_code(
+            SEMA_WRONG_ARGUMENT_COUNT,
+            "MapError expects 2 arguments",
+            "Use R.MapError(F).",
+            span,
+        );
+        return Ty::Error;
+    }
+    let result = c.check_expr(args[0]);
+    let callback = c.check_expr(args[1]);
+    match (result, callback) {
+        (Ty::Result(ok, _), Ty::Function(function)) => Ty::Result(ok, function.return_type),
+        _ => Ty::Error,
     }
 }
 

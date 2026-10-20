@@ -94,7 +94,12 @@ impl Checker {
             self.ensure_fq_std_unit_loaded(&full_name);
             if let Some(symbol) = self.scopes.lookup(&full_name) {
                 let ty = symbol.ty.clone();
-                if parts.len() == designator.parts.len() && symbol.kind == SymbolKind::EnumMember {
+                if parts.len() == designator.parts.len()
+                    && matches!(
+                        symbol.kind,
+                        SymbolKind::EnumMember | SymbolKind::EnumVariantConstructor
+                    )
+                {
                     self.enum_members
                         .insert(crate::designator_lookup_key(designator));
                 }

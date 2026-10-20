@@ -1,6 +1,6 @@
 # AP47.1: Selected language and error contract
 
-Status: Design recorded; AP47.2's foundation and AP47.3's language slice are implemented.
+Status: Design recorded; runtime, language, constructor values and MapError are implemented through AP47.4.
 Package and decisions: [AP47](README.md#decisions-and-authority).
 Native error declarations, constraints, typed construction/matching and Message()
 are implemented. Constructor values, MapError and library migration remain

@@ -1,0 +1,121 @@
+program MapErrorTests;
+
+uses Std.Test as Test;
+
+type Failure = error
+  Text(Value: string);
+end error;
+
+type NumberError = error
+  Code(Value: integer);
+end error;
+
+type Number = enum
+  Value(Item: integer);
+end enum;
+
+type GlobalNumber = enum
+  Item(Value: integer);
+end enum;
+
+var Item: function(N: integer): GlobalNumber := GlobalNumber.Item;
+
+type Context of E: Error = error
+  Failed(Cause: E);
+end error;
+
+var Receivers: integer := 0;
+var Factories: integer := 0;
+var Calls: integer := 0;
+var Order: integer := 0;
+
+function Source(Success: boolean): result of (integer, string);
+begin
+  Order := Order * 10 + 1;
+  Receivers := Receivers + 1;
+  if Success then
+    return Ok(7);
+  end if;
+
+  return Error('bad');
+end function;
+
+function Mapper(): function(Value: string): Failure;
+begin
+  Order := Order * 10 + 2;
+  Factories := Factories + 1;
+  const Prefix := 'wrapped:';
+  return function(Value: string): Failure begin
+    Calls := Calls + 1;
+    return Failure.Text(Prefix + Value);
+  end function;
+end function;
+
+function Wrap<E: Error>(Value: E): Context of E;
+begin
+  const Input: result of (integer, E) := Error(Value);
+  const Output: result of (integer, Context of E) := Input.MapError(Context.Failed);
+  return case Output of
+    when Ok(_): Context.Failed(Value);
+    when Error(const Wrapped): Wrapped;
+  end case;
+end function;
+
+type PairError of (A: Error, B: Error) = error
+  Failed(Cause: A; Other: B);
+end error;
+
+procedure VerifyFactories<A: Error, B: Error>(First: A; Second: B);
+begin
+  const Left: function(Cause: A): Context of A := Context.Failed;
+  const Right: function(Cause: B): Context of B := Context.Failed;
+  const Swapped: function(Left: B; Right: A): PairError of (B, A) := PairError.Failed;
+  Test.AssertEquals(Context.Failed(First).Message(), Left(First).Message());
+  Test.AssertEquals(Context.Failed(Second).Message(), Right(Second).Message());
+  Test.AssertEquals(PairError.Failed(Second, First).Message(), Swapped(Second, First).Message());
+end procedure;
+
+function Nested(Value: string): result of (boolean, integer);
+begin
+  return Error(Value.Length());
+end function;
+
+begin
+  const Success := Source(true).MapError(Mapper());
+  Test.AssertEquals(7, Success.Unwrap());
+  Test.AssertEquals(1, Receivers);
+  Test.AssertEquals(1, Factories);
+  Test.AssertEquals(0, Calls);
+  Test.AssertEquals(12, Order);
+  const Failed := Source(false).MapError(Mapper());
+  Test.AssertTrue(Failed is Error(Failure.Text('wrapped:bad')));
+  Test.AssertEquals(2, Receivers);
+  Test.AssertEquals(2, Factories);
+  Test.AssertEquals(1, Calls);
+  Test.AssertEquals(1212, Order);
+  const Direct := Source(false).MapError(Failure.Text);
+  Test.AssertTrue(Direct is Error(Failure.Text('bad')));
+  var Value: function(N: integer): Number := Number.Value;
+  Value := function(N: integer): Number begin
+    return Number.Value(N + 1);
+  end function;
+
+  Test.AssertTrue(Value(1) is Number.Value(2));
+  Item := function(N: integer): GlobalNumber begin
+    return GlobalNumber.Item(N + 2);
+  end function;
+
+  Test.AssertTrue(Item(1) is GlobalNumber.Item(3));
+  const EnumInput: result of (string, integer) := Error(9);
+  Test.AssertTrue(EnumInput.MapError(Number.Value) is Error(Number.Value(9)));
+  const Bound: function(Text: string): Failure := Failure.Text;
+  Test.AssertTrue(Bound(Text := 'label') is Failure.Text('label'));
+  VerifyFactories(Failure.Text('first'), NumberError.Code(2));
+  const First := Wrap(Failure.Text('first'));
+  const Second := Wrap(NumberError.Code(2));
+  Test.AssertTrue(First is Context.Failed(Failure.Text('first')));
+  Test.AssertTrue(Second is Context.Failed(NumberError.Code(2)));
+  const Raw: result of (integer, string) := Error('abc');
+  const Kept := Raw.MapError(Nested);
+  Test.AssertTrue(Kept is Error(Error(3)));
+end.

@@ -1,6 +1,7 @@
 //! Anonymous-closure discovery, capture typing, and body lowering.
 
 mod bound_methods;
+mod constructor_values;
 mod discover;
 mod intrinsic_routines;
 mod intrinsic_tasks;
@@ -62,6 +63,7 @@ pub(super) struct ClosureRegistry<'a> {
     pub targets: HashMap<usize, ClosureTarget>,
     pub bound_routines: Vec<BoundMethodRoutine>,
     pub bound_targets: HashMap<usize, BoundMethodTarget>,
+    pub constructor_routines: Vec<constructor_values::ConstructorRoutine>,
     pub intrinsic_routines: Vec<IntrinsicRoutine>,
     pub intrinsic_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
@@ -81,6 +83,7 @@ impl<'a> ClosureRegistry<'a> {
             targets: HashMap::new(),
             bound_routines: Vec::new(),
             bound_targets: HashMap::new(),
+            constructor_routines: Vec::new(),
             intrinsic_routines: Vec::new(),
             intrinsic_targets: HashMap::new(),
             cell_names: HashMap::new(),

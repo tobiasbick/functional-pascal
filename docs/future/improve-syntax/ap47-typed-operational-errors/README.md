@@ -1,10 +1,10 @@
 # AP47: Native typed operational errors
 
-Status: AP47.1-AP47.3 complete; later packages remain planned.
+Status: AP47.1-AP47.4 complete; later packages remain planned.
 The user selected native `error` declarations, automatic error
 output, explicit MapError and unchanged try, and delegated the remaining design
-choices. This plan records those choices. The runtime and language slices are
-delivered; later packages require their own implementation authorization.
+choices. This plan records those choices. The runtime, language, constructor-value and explicit-mapping slices are
+delivered; Std migration and final acceptance require their own implementation authorization.
 
 Effort: large across compiler, runtime, standard library and consumers.
 Completion is tracked only in the [central plan](../README.md#package-status).
@@ -25,7 +25,8 @@ end error;
 const Text := try Fs.ReadText(Path).MapError(ConfigError.FileFailure);
 ```
 
-This is selected future syntax, not current implemented behavior. The complete
+The error declarations and MapError operation are implemented; the typed Fs
+interface in this combined example remains planned for Std migration. The complete
 contract is [AP47.1](01-decision.md); the standard-library contract is
 [standard-errors.md](standard-errors.md).
 
@@ -37,7 +38,8 @@ contract is [AP47.1](01-decision.md); the standard-library contract is
   payload storage. Runtime values have a stack-safe display implementation.
 - AP47.2 supplies essential native-error metadata, typed causes, automatic
   rendering and portable constructor factories without exposing source syntax.
-- Result supplies Map, AndThen, OrElse and Unwrap. MapError is not implemented.
+- Result supplies Map, MapError, AndThen, OrElse and Unwrap. Payload enum and
+  error constructors are ordinary callable values.
 - Many [Std interfaces](../../../pascal/std/README.md) return string errors,
   including nested selection callbacks and source HTTP/field helpers.
 - Preserve Result and Option as ordinary data, compatible-type try propagation,
@@ -54,7 +56,7 @@ information is an ordinary leaf error, not a reporting framework.
 
 Q28/Q29 record the user's replacement direction. Q30-Q36 are concrete choices
 made under the user's delegation to prepare this implementation plan. The later
-implementation requests authorize AP47.2 and AP47.3. Later packages still
+implementation requests authorize AP47.2, AP47.3 and AP47.4. Later packages still
 require their own authorization.
 
 | ID | Selected decision | Contract owner | Affected work packages |
@@ -72,12 +74,13 @@ require their own authorization.
 ## Dependencies and work packages
 
 The design contract, runtime/artifact foundation and source-language slice are
-complete. Constructor values, MapError, migration and final acceptance remain open.
+complete, including constructor values and MapError. Std migration and final
+acceptance remain open.
 
 - [x] [AP47.1: Language and error contract](01-decision.md)
 - [x] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)
 - [x] [AP47.3: Language, compiler and editor support](03-language-and-tooling.md)
-- [ ] [AP47.4: Constructor values and MapError](04-maperror-and-constructors.md)
+- [x] [AP47.4: Constructor values and MapError](04-maperror-and-constructors.md)
 - [ ] [AP47.5: Host, parsing and related Std migration](05-host-and-parsing.md)
 - [ ] [AP47.6: Tasks, networking and layered consumers](06-tasks-and-network.md)
 - [ ] [AP47.7: Final acceptance, documentation and performance](07-acceptance-and-performance.md)

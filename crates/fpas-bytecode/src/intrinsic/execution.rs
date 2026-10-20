@@ -66,7 +66,10 @@ impl Intrinsic {
             | Self::Dict(DictIntrinsic::Map | DictIntrinsic::Filter | DictIntrinsic::Reduce)
             | Self::Str(StrIntrinsic::Map | StrIntrinsic::Filter | StrIntrinsic::Reduce)
             | Self::Result(
-                ResultIntrinsic::Map | ResultIntrinsic::AndThen | ResultIntrinsic::OrElse,
+                ResultIntrinsic::Map
+                | ResultIntrinsic::MapError
+                | ResultIntrinsic::AndThen
+                | ResultIntrinsic::OrElse,
             )
             | Self::Option(
                 OptionIntrinsic::Map | OptionIntrinsic::AndThen | OptionIntrinsic::OrElse,

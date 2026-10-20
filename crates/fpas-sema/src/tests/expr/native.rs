@@ -280,6 +280,10 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, integer) := Receiver.OrElse(F := function(Err: string): Result of (integer, integer) begin return Ok(1); end function); end.",
         ),
         (
+            "program T; begin var Receiver: Result of (integer, string) := Error('bad'); const Output: Result of (integer, integer) := Receiver.MapError(function(Cause: string): integer begin return 1; end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Error('bad'); const Output: Result of (integer, integer) := Receiver.MapError(F := function(Cause: string): integer begin return 1; end function); end.",
+        ),
+        (
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
         ),

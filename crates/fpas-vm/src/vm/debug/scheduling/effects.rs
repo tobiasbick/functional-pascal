@@ -200,7 +200,8 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
             fpas_bytecode::ResultIntrinsic::Unwrap
             | fpas_bytecode::ResultIntrinsic::Map
             | fpas_bytecode::ResultIntrinsic::AndThen
-            | fpas_bytecode::ResultIntrinsic::OrElse,
+            | fpas_bytecode::ResultIntrinsic::OrElse
+            | fpas_bytecode::ResultIntrinsic::MapError,
         ) => None,
         Intrinsic::Option(
             fpas_bytecode::OptionIntrinsic::Unwrap

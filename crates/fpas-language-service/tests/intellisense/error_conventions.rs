@@ -23,9 +23,13 @@ fn wrapper_completion_contains_only_retained_operations() {
             .iter()
             .map(|candidate| candidate.qualified_name.clone())
             .collect::<BTreeSet<_>>();
-        let expected = ["Map", "AndThen", "OrElse", "Unwrap"]
-            .map(|name| format!("{family}.{name}"))
+        let mut names = vec!["Map", "AndThen", "OrElse", "Unwrap"];
+        if family == "Result" {
+            names.push("MapError");
+        }
+        let expected = names
             .into_iter()
+            .map(|name| format!("{family}.{name}"))
             .collect();
         assert_eq!(actual, expected, "{candidates:#?}");
     }

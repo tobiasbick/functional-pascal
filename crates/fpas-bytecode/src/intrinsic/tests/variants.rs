@@ -245,6 +245,7 @@ pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Array(ArrayIntrinsic::ForEach),
     Intrinsic::Result(ResultIntrinsic::Unwrap),
     Intrinsic::Result(ResultIntrinsic::Map),
+    Intrinsic::Result(ResultIntrinsic::MapError),
     Intrinsic::Result(ResultIntrinsic::AndThen),
     Intrinsic::Result(ResultIntrinsic::OrElse),
     Intrinsic::Option(OptionIntrinsic::Unwrap),

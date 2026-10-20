@@ -200,14 +200,24 @@ pub(super) fn lower(
                     _ => continue,
                 };
                 for request in previous.get(&target).into_iter().flatten() {
-                    let applied = apply(
-                        request,
-                        instruction,
-                        function.id,
-                        &parameters,
-                        metadata,
-                        types,
-                    )?;
+                    // Generated constructor bodies already use their lexical owner's
+                    // parameter indices. Source constructor arguments are not routine
+                    // arguments of the generated body and must not substitute them again.
+                    let constructor = functions.iter().any(|candidate| {
+                        candidate.id == target && candidate.name.starts_with("$constructor_")
+                    });
+                    let applied = if constructor {
+                        request.clone()
+                    } else {
+                        apply(
+                            request,
+                            instruction,
+                            function.id,
+                            &parameters,
+                            metadata,
+                            types,
+                        )?
+                    };
                     if applied.instance.validate(0).is_err() {
                         requirements.entry(function.id).or_default().insert(applied);
                     }
@@ -327,6 +337,10 @@ fn construction_instance(
     });
     let enumeration = match semantic {
         Some(Ty::Enum(enumeration)) if enumeration.is_error => enumeration.as_ref(),
+        Some(Ty::Function(function)) => match function.return_type.as_ref() {
+            Ty::Enum(enumeration) if enumeration.is_error => enumeration.as_ref(),
+            _ => &types.errors.layouts[&layout],
+        },
         _ => &types.errors.layouts[&layout],
     };
     types

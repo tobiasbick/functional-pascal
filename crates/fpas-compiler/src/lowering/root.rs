@@ -272,6 +272,19 @@ pub(super) fn lower_analyzed_root(
         type_table = updated_types;
         functions.push(function);
     }
+    for routine in &closures.constructor_routines {
+        let (function, updated_types) = closures
+            .lower_constructor(
+                routine,
+                &metadata,
+                &mut type_table,
+                &global_bindings,
+                &constants,
+            )
+            .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
+    }
     let defaults = type_table.prepare_record_defaults(&metadata, name, declarations);
     let mut next_default_id = functions
         .iter()
@@ -328,6 +341,9 @@ pub(super) fn lower_analyzed_root(
         owner_map.insert(routine.id, routine.owner);
     }
     for routine in &closures.intrinsic_routines {
+        owner_map.insert(routine.id, routine.owner);
+    }
+    for routine in &closures.constructor_routines {
         owner_map.insert(routine.id, routine.owner);
     }
     debug::attach(&mut functions, &owner_map).map_err(|error| vec![error])?;

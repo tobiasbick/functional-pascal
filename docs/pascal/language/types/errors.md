@@ -43,7 +43,7 @@ Declare at least one variant. An optional message is one nonempty string-literal
 token; omit `= 'text'` when no label is needed. Messages have no interpolation.
 Variants accept the same named or positional payload arguments as enums. They
 have no integer backing values, defaults, methods or inheritance. Payload
-constructors are called with their arguments; a fieldless variant is a value.
+constructors can be called directly or used as [ordinary function values](../functions/function-types.md#payload-constructors-as-functions), including with [MapError](result-operations.md). A fieldless variant is a value and has no `()` form.
 
 Aliases preserve identity. Two declarations with identical fields remain
 different types. Generic families retain all applied type arguments:

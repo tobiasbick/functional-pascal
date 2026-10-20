@@ -23,7 +23,7 @@ end.
 ```
 
 Call sites pass a **named** function or procedure, a **closure expression**, a
-**bound record method**, or a **variable** whose type is a function or procedure
+**bound record method**, a [payload variant constructor](function-types.md#payload-constructors-as-functions), or a **variable** whose type is a function or procedure
 type. Imported routines are called through their explicit import alias, for
 example `Console.WriteLn(...)` after `uses Std.Console as Console;`.
 

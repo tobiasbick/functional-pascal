@@ -136,7 +136,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Result,
             ResultIntrinsic,
-            [Unwrap, Map, AndThen, OrElse]
+            [Unwrap, Map, MapError, AndThen, OrElse]
         ),
         "Options" => family!(
             member,

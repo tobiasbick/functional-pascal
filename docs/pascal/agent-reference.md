@@ -1092,6 +1092,17 @@ containing `include = ["Reference.Values.fpas"]`. Run `fpas run reference.fpaspr
 The reference test generates this same manifest shape; it also checks the unit
 in a library project (`kind = "library"`, the same sources, no `main`).
 
+Payload enum and native-error constructors are ordinary function values. For
+example, `const F: function(N: integer): Number := Number.Item;` uses the
+receiving signature's labels. Generic arguments require complete signature
+evidence. Fieldless variants remain values, without `()`.
+
+`Result.MapError(F)` preserves Ok without invoking F and maps Error once,
+wrapping the returned payload in Error without flattening. Receiver and callable
+expressions are each evaluated once, in that order. E/E2 need no Error constraint;
+use explicit MapError before `try` when changing error types. Runtime failures
+are not caught. See [Result operations](language/types/result-operations.md).
+
 ## 14. Find APIs and verify the source
 
 Use native dot operations for arrays, dicts, strings, Option and Result. For hosted

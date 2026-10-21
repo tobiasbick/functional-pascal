@@ -14,244 +14,175 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
-## 2026-10-17 — Borrowed closure and callback function values
-
-- Group: `vm`
-- Suite: [`suite.toml`](suite.toml)
-
-| bench | elapsed_ms | throughput |
-|-------|------------|------------|
-| integer_loop | 709 | throughput: 70521861 iters/s |
-| typed_real | 154 | - |
-| typed_boolean | 243 | - |
-| typed_string | 121 | - |
-| global_access | 101 | throughput: 49504950 global updates/s |
-| record_field_access | 327 | throughput: 45871559 field accesses/s |
-| closure_call | 144 | throughput: 20833333 closure calls/s |
-| mutable_capture | 189 | throughput: 15873015 captured updates/s |
-| branch_dispatch | 349 | throughput: 57306590 branches/s |
-| dynamic_numeric | 297 | throughput: 16835016 dynamic numeric ops/s |
-| array_push | 55 | throughput: 36363636 pushes/s |
-| array_length | 22 | throughput: 22727272 lengths/s |
-| string_concat | 911 | throughput: 5488474 concats/s |
-| string_length | 21 | throughput: 23809523 lengths/s |
-| intrinsic_dispatch | 641 | throughput: 23400936 intrinsic calls/s |
-| function_call | 259 | throughput: 23166023 calls/s |
-| array_callbacks | 809 | throughput: 11866501 callbacks/s |
-| record_update | 91 | throughput: 10989010 updates/s |
-| unicode_char_at | 271 | throughput: 11070110 chars/s |
-| wrapper_payload | 683 | throughput: 14641288 wrappers/s |
-| string_search | 70 | - |
-| substring_ascii | 6 | - |
-| substring_unicode | 11 | - |
-
-## 2026-10-15 — In-place integer and Boolean register stores
-
-- Group: `vm`
-- Suite: [`suite.toml`](suite.toml)
-
-| bench | elapsed_ms | throughput |
-|-------|------------|------------|
-| integer_loop | 706 | throughput: 70821529 iters/s |
-| typed_real | 168 | - |
-| typed_boolean | 273 | - |
-| typed_string | 141 | - |
-| global_access | 103 | throughput: 48543689 global updates/s |
-| record_field_access | 325 | throughput: 46153846 field accesses/s |
-| closure_call | 157 | throughput: 19108280 closure calls/s |
-| mutable_capture | 200 | throughput: 15000000 captured updates/s |
-| branch_dispatch | 357 | throughput: 56022408 branches/s |
-| dynamic_numeric | 304 | throughput: 16447368 dynamic numeric ops/s |
-| array_push | 55 | throughput: 36363636 pushes/s |
-| array_length | 24 | throughput: 20833333 lengths/s |
-| string_concat | 931 | throughput: 5370569 concats/s |
-| string_length | 21 | throughput: 23809523 lengths/s |
-| intrinsic_dispatch | 649 | throughput: 23112480 intrinsic calls/s |
-| function_call | 280 | throughput: 21428571 calls/s |
-| array_callbacks | 863 | throughput: 11123986 callbacks/s |
-| record_update | 89 | throughput: 11235955 updates/s |
-| unicode_char_at | 267 | throughput: 11235955 chars/s |
-| wrapper_payload | 697 | throughput: 14347202 wrappers/s |
-| string_search | 69 | - |
-| substring_ascii | 6 | - |
-| substring_unicode | 11 | - |
-
-## 2026-10-15 — Failure dump balanced paired latency baseline
-
-- Group: `failure-dump`
-- Suite: [`suite.toml`](suite.toml)
-
-| bench | elapsed_ms | throughput |
-|-------|------------|------------|
-| failure_dump_scalar | 392 | throughput: enabled/disabled median change 4.761904761904759% |
-| failure_dump_calls | 355 | throughput: enabled/disabled median change 5.263157894736835% |
-| failure_dump_globals | 701 | throughput: enabled/disabled median change 0% |
-| failure_dump_spawn_wait | 966 | throughput: enabled/disabled median change 3.773584905660371% |
-| failure_dump_suspension | 9161 | throughput: enabled/disabled median change 0.38986354775828147% |
-| failure_dump_failure | 218 | throughput: enabled/disabled median change 18.181818181818187% |
-| failure_dump_large_report | 706 | throughput: enabled/disabled median change 384.61538461538464% |
-
-Local release baseline on a working tree based on `c49c0ae20`, using Rust
-1.99.0. Both modes pass the same unique report path, so they share the
-operating system's per-command-line process start cost. Three complete runs
-on a quiet system agree. `elapsed_ms` sums both modes' nine measured samples;
-the percentage compares rounded millisecond medians within the run and is not
-a before/after implementation speedup. Scalar, call and global rows differ by
-at most one timer tick. The [paired results and measurement limits](failure-dump.md#local-measurements-2026-10-15)
-include saved sample arrays, report sizes and in-process live-peer profiling.
-
-## 2026-10-14 — In-place typed real register stores
-
-- Group: `vm`
-- Suite: [`suite.toml`](suite.toml)
-
-| bench | elapsed_ms | throughput |
-|-------|------------|------------|
-| integer_loop | 1024 | throughput: 48828125 iters/s |
-| typed_real | 173 | - |
-| typed_boolean | 287 | - |
-| typed_string | 165 | - |
-| global_access | 132 | throughput: 37878787 global updates/s |
-| record_field_access | 326 | throughput: 46012269 field accesses/s |
-| closure_call | 162 | throughput: 18518518 closure calls/s |
-| mutable_capture | 218 | throughput: 13761467 captured updates/s |
-| branch_dispatch | 535 | throughput: 37383177 branches/s |
-| dynamic_numeric | 301 | throughput: 16611295 dynamic numeric ops/s |
-| array_push | 60 | throughput: 33333333 pushes/s |
-| array_length | 24 | throughput: 20833333 lengths/s |
-| string_concat | 938 | throughput: 5330490 concats/s |
-| string_length | 24 | throughput: 20833333 lengths/s |
-| intrinsic_dispatch | 699 | throughput: 21459227 intrinsic calls/s |
-| function_call | 280 | throughput: 21428571 calls/s |
-| array_callbacks | 871 | throughput: 11021814 callbacks/s |
-| record_update | 87 | throughput: 11494252 updates/s |
-| unicode_char_at | 274 | throughput: 10948905 chars/s |
-| wrapper_payload | 745 | throughput: 13422818 wrappers/s |
-| string_search | 78 | - |
-| substring_ascii | 6 | - |
-| substring_unicode | 11 | - |
-
-## 2026-10-14 — Direct VM integer, real and global access fast paths
-
-- Group: `vm`
-- Suite: [`suite.toml`](suite.toml)
-
-| bench | elapsed_ms | throughput |
-|-------|------------|------------|
-| integer_loop | 1032 | throughput: 48449612 iters/s |
-| typed_real | 264 | - |
-| typed_boolean | 270 | - |
-| typed_string | 162 | - |
-| global_access | 128 | throughput: 39062500 global updates/s |
-| record_field_access | 333 | throughput: 45045045 field accesses/s |
-| closure_call | 160 | throughput: 18750000 closure calls/s |
-| mutable_capture | 215 | throughput: 13953488 captured updates/s |
-| branch_dispatch | 535 | throughput: 37383177 branches/s |
-| dynamic_numeric | 301 | throughput: 16611295 dynamic numeric ops/s |
-| array_push | 62 | throughput: 32258064 pushes/s |
-| array_length | 24 | throughput: 20833333 lengths/s |
-| string_concat | 926 | throughput: 5399568 concats/s |
-| string_length | 24 | throughput: 20833333 lengths/s |
-| intrinsic_dispatch | 689 | throughput: 21770682 intrinsic calls/s |
-| function_call | 289 | throughput: 20761245 calls/s |
-| array_callbacks | 826 | throughput: 11622276 callbacks/s |
-| record_update | 86 | throughput: 11627906 updates/s |
-| unicode_char_at | 274 | throughput: 10948905 chars/s |
-| wrapper_payload | 739 | throughput: 13531799 wrappers/s |
-| string_search | 76 | - |
-| substring_ascii | 7 | - |
-| substring_unicode | 11 | - |
-
-## 2026-10-14 — Constant-time task scope child completion
-
-- Group: `concurrency`
-- Suite: [`suite.toml`](suite.toml)
-
-| bench | elapsed_ms | throughput |
-|-------|------------|------------|
-| task_spawn_wait | 504 | throughput: 198412 tasks/s |
-| task_array_callbacks | 713 | throughput: 5385694 callbacks/s |
-
-## 2026-10-12 — Full-suite baseline
+## 2026-10-21 — Aktueller Stand (AP48, Optimierungen 07a38a95f)
 
 - Group: `all`
 - Suite: [`suite.toml`](suite.toml)
-- Commit: `7d8bfecf89ad85e7b325a349f2b00001ad3e5080`
-- Command: `cargo bench-fpas run`
-- Local snapshot: `baseline-2026-10-12` (gitignored)
-
-This completed 65-benchmark run is the new starting point. Earlier history entries
-and local measurement snapshots were removed. The values are taken from the existing
-run, without another measurement. Times exclude the preparatory Rust build; 0 ms is
-below the reported millisecond resolution. The local snapshot preserves elapsed times
-and throughput; full per-workload stdout was not retained.
-
-Compare the full suite with `cargo bench-fpas compare baseline-2026-10-12`.
 
 | bench | elapsed_ms | throughput |
 |-------|------------|------------|
-| mandelbrot_render | 856 | - |
-| mandelbrot_paint | 887 | - |
-| integer_loop | 1083 | throughput: 46168051 iters/s |
-| typed_real | 218 | - |
-| typed_boolean | 241 | - |
-| typed_string | 159 | - |
-| global_access | 118 | throughput: 42372881 global updates/s |
-| record_field_access | 344 | throughput: 43604651 field accesses/s |
-| closure_call | 141 | throughput: 21276595 closure calls/s |
-| mutable_capture | 215 | throughput: 13953488 captured updates/s |
-| branch_dispatch | 667 | throughput: 29985007 branches/s |
-| dynamic_numeric | 284 | throughput: 17605633 dynamic numeric ops/s |
-| array_push | 61 | throughput: 32786885 pushes/s |
+| failure_dump_scalar | 1165 | throughput: enabled/disabled median change -1.538461538461533% |
+| failure_dump_calls | 1193 | throughput: enabled/disabled median change -1.538461538461533% |
+| failure_dump_globals | 1461 | throughput: enabled/disabled median change 0% |
+| failure_dump_spawn_wait | 2556 | throughput: enabled/disabled median change 0.7142857142857082% |
+| failure_dump_suspension | 9966 | throughput: enabled/disabled median change -0.5357142857142918% |
+| failure_dump_failure | 1064 | throughput: enabled/disabled median change 8.92857142857143% |
+| failure_dump_large_report | 1553 | throughput: enabled/disabled median change 86.20689655172413% |
+| mandelbrot_render | 1243 | - |
+| mandelbrot_paint | 1153 | - |
+| integer_loop | 787 | throughput: 63532401 iters/s |
+| typed_real | 163 | - |
+| typed_boolean | 255 | - |
+| typed_string | 136 | - |
+| global_access | 117 | throughput: 42735042 global updates/s |
+| record_field_access | 368 | throughput: 40760869 field accesses/s |
+| closure_call | 144 | throughput: 20833333 closure calls/s |
+| mutable_capture | 542 | throughput: 5535055 captured updates/s |
+| branch_dispatch | 359 | throughput: 55710306 branches/s |
+| dynamic_numeric | 300 | throughput: 16666666 dynamic numeric ops/s |
+| array_push | 65 | throughput: 30769230 pushes/s |
 | array_length | 24 | throughput: 20833333 lengths/s |
-| string_concat | 966 | throughput: 5175983 concats/s |
-| string_length | 23 | throughput: 21739130 lengths/s |
-| intrinsic_dispatch | 685 | throughput: 21897810 intrinsic calls/s |
-| function_call | 242 | throughput: 24793388 calls/s |
-| array_callbacks | 757 | throughput: 12681638 callbacks/s |
-| record_update | 86 | throughput: 11627906 updates/s |
-| unicode_char_at | 369 | throughput: 8130081 chars/s |
-| wrapper_payload | 658 | throughput: 15197568 wrappers/s |
-| task_spawn_wait | 469 | throughput: 213219 tasks/s |
-| task_array_callbacks | 718 | throughput: 5348189 callbacks/s |
-| tui_headless | 1546 | throughput: 323 frames/s |
-| notes_headless | 2950 | throughput: 84 frames/s |
-| tui_styled_cells | 352 | - |
-| analysis_queries | 235 | - |
-| string_search | 89 | - |
-| compiler_lowering | 1789 | - |
+| string_concat | 921 | throughput: 5428881 concats/s |
+| string_length | 22 | throughput: 22727272 lengths/s |
+| intrinsic_dispatch | 677 | throughput: 22156573 intrinsic calls/s |
+| function_call | 270 | throughput: 22222222 calls/s |
+| array_callbacks | 1682 | throughput: 5707491 callbacks/s |
+| record_update | 99 | throughput: 10101010 updates/s |
+| unicode_char_at | 275 | throughput: 10909090 chars/s |
+| wrapper_payload | 816 | throughput: 12254901 wrappers/s |
+| task_spawn_wait | 11472 | throughput: 8716 tasks/s |
+| task_array_callbacks | 1335 | throughput: 2876404 callbacks/s |
+| tui_headless | 1722 | throughput: 290 frames/s |
+| notes_headless | 3376 | throughput: 74 frames/s |
+| tui_styled_cells | 407 | - |
+| analysis_queries | 224 | - |
+| string_search | 72 | - |
+| compiler_lowering | 2073 | - |
 | substring_ascii | 6 | - |
 | substring_unicode | 11 | - |
-| project_queries | 935 | - |
-| project_edits | 2843 | - |
-| project_overlapping_queries | 648 | - |
-| project_build_cold | 1754 | - |
-| project_build_warm | 1079 | - |
+| project_queries | 987 | - |
+| project_edits | 4012 | - |
+| project_overlapping_queries | 746 | - |
+| project_build_cold | 2463 | - |
+| project_build_warm | 1420 | - |
 | unit_artifact_shared_types | 0 | - |
 | program_artifact_shared_types | 0 | - |
 | dictionary_reads | 4 | - |
-| scalar_membership | 27 | - |
+| scalar_membership | 3 | - |
 | array_pop | 1 | - |
-| text_area_locate | 900 | - |
-| http_body_accumulation | 105 | - |
-| local_index_write | 16 | throughput: 40000000 writes/s |
-| cell_grid_headless | 104 | throughput: 961 paints/s |
-| partial_surface_fill | 62 | - |
+| text_area_locate | 880 | - |
+| http_body_accumulation | 247 | - |
+| local_index_write | 21 | throughput: 30476190 writes/s |
+| cell_grid_headless | 123 | throughput: 813 paints/s |
+| partial_surface_fill | 78 | - |
 | source_utf8_ascii_2048 | 8 | - |
 | source_utf8_ascii_4096 | 16 | - |
-| source_utf8_ascii_8192 | 34 | - |
+| source_utf8_ascii_8192 | 32 | - |
 | source_utf8_unicode_2048 | 28 | - |
-| source_utf8_unicode_4096 | 58 | - |
-| source_utf8_unicode_8192 | 115 | - |
+| source_utf8_unicode_4096 | 56 | - |
+| source_utf8_unicode_8192 | 113 | - |
+| source_notes_ascii_128 | 3 | - |
+| source_notes_ascii_256 | 8 | - |
+| source_notes_ascii_512 | 17 | - |
+| source_queue_ascii_256 | 73 | - |
+| source_queue_ascii_512 | 147 | - |
+| source_queue_ascii_1024 | 305 | - |
+| source_navigation_long_512 | 27 | - |
+| source_navigation_long_1024 | 49 | - |
+| source_navigation_long_2048 | 94 | - |
+| source_navigation_lines_512 | 7 | - |
+| source_navigation_lines_1024 | 12 | - |
+| source_navigation_lines_2048 | 21 | - |
+| errors_enum_construction | 29 | - |
+| errors_typed_construction | 34 | - |
+| errors_generic_direct | 31 | - |
+| errors_generic_helper | 60 | - |
+| errors_generic_callable | 62 | - |
+| errors_map_ok | 328 | - |
+| errors_case_ok | 248 | - |
+| errors_map_error | 956 | - |
+| errors_case_error | 763 | - |
+| errors_constructor_error | 893 | - |
+| errors_cause_message | 1 | - |
+| errors_cause_console | 432 | - |
+| errors_deep_image | 1 | - |
+
+## 2026-10-21 — Referenz 17.10. (76ac7d6df)
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 504 | throughput: enabled/disabled median change 3.7037037037037095% |
+| failure_dump_calls | 536 | throughput: enabled/disabled median change 0% |
+| failure_dump_globals | 739 | throughput: enabled/disabled median change 0% |
+| failure_dump_spawn_wait | 1087 | throughput: enabled/disabled median change 6.779661016949149% |
+| failure_dump_suspension | 9210 | throughput: enabled/disabled median change -0.38759689922480334% |
+| failure_dump_failure | 365 | throughput: enabled/disabled median change 15.78947368421052% |
+| failure_dump_large_report | 770 | throughput: enabled/disabled median change 220% |
+| mandelbrot_render | 1093 | - |
+| mandelbrot_paint | 1057 | - |
+| integer_loop | 755 | throughput: 66225165 iters/s |
+| typed_real | 164 | - |
+| typed_boolean | 253 | - |
+| typed_string | 132 | - |
+| global_access | 100 | throughput: 50000000 global updates/s |
+| record_field_access | 322 | throughput: 46583850 field accesses/s |
+| closure_call | 145 | throughput: 20689655 closure calls/s |
+| mutable_capture | 196 | throughput: 15306122 captured updates/s |
+| branch_dispatch | 363 | throughput: 55096418 branches/s |
+| dynamic_numeric | 294 | throughput: 17006802 dynamic numeric ops/s |
+| array_push | 55 | throughput: 36363636 pushes/s |
+| array_length | 23 | throughput: 21739130 lengths/s |
+| string_concat | 933 | throughput: 5359056 concats/s |
+| string_length | 21 | throughput: 23809523 lengths/s |
+| intrinsic_dispatch | 654 | throughput: 22935779 intrinsic calls/s |
+| function_call | 266 | throughput: 22556390 calls/s |
+| array_callbacks | 804 | throughput: 11940298 callbacks/s |
+| record_update | 90 | throughput: 11111111 updates/s |
+| unicode_char_at | 270 | throughput: 11111111 chars/s |
+| wrapper_payload | 692 | throughput: 14450867 wrappers/s |
+| task_spawn_wait | 539 | throughput: 185528 tasks/s |
+| task_array_callbacks | 698 | throughput: 5501432 callbacks/s |
+| tui_headless | 1521 | throughput: 328 frames/s |
+| notes_headless | 3309 | throughput: 75 frames/s |
+| tui_styled_cells | 353 | - |
+| analysis_queries | 377 | - |
+| string_search | 69 | - |
+| compiler_lowering | 1891 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
+| project_queries | 2037 | - |
+| project_edits | 5891 | - |
+| project_overlapping_queries | 852 | - |
+| project_build_cold | 3479 | - |
+| project_build_warm | 10056 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 3 | - |
+| scalar_membership | 30 | - |
+| array_pop | 1 | - |
+| text_area_locate | 848 | - |
+| http_body_accumulation | 169 | - |
+| local_index_write | 15 | throughput: 42666666 writes/s |
+| cell_grid_headless | 93 | throughput: 1075 paints/s |
+| partial_surface_fill | 55 | - |
+| source_utf8_ascii_2048 | 7 | - |
+| source_utf8_ascii_4096 | 15 | - |
+| source_utf8_ascii_8192 | 30 | - |
+| source_utf8_unicode_2048 | 26 | - |
+| source_utf8_unicode_4096 | 53 | - |
+| source_utf8_unicode_8192 | 108 | - |
 | source_notes_ascii_128 | 3 | - |
 | source_notes_ascii_256 | 7 | - |
-| source_notes_ascii_512 | 16 | - |
+| source_notes_ascii_512 | 15 | - |
 | source_queue_ascii_256 | 60 | - |
-| source_queue_ascii_512 | 122 | - |
+| source_queue_ascii_512 | 121 | - |
 | source_queue_ascii_1024 | 242 | - |
-| source_navigation_long_512 | 27 | - |
-| source_navigation_long_1024 | 50 | - |
-| source_navigation_long_2048 | 99 | - |
-| source_navigation_lines_512 | 7 | - |
-| source_navigation_lines_1024 | 11 | - |
-| source_navigation_lines_2048 | 19 | - |
+| source_navigation_long_512 | 24 | - |
+| source_navigation_long_1024 | 45 | - |
+| source_navigation_long_2048 | 89 | - |
+| source_navigation_lines_512 | 6 | - |
+| source_navigation_lines_1024 | 10 | - |
+| source_navigation_lines_2048 | 18 | - |

@@ -152,3 +152,18 @@ test. An earlier FPAS CLI probe with an owned worker blocked in
 `Std.Proc.RunCapture` measured semantic owner cleanup rather than collection:
 its reports appeared only after the native operation finished and contained
 only the root task.
+
+## Process-start cost on Windows
+
+The driver starts each child through `Std.Proc.RunCapture`, so most of the
+elapsed time is process launch. On Windows the process engine places every child
+in a Job Object so that its whole process tree can be supervised and terminated.
+`process-wrap` creates the child suspended, assigns it to the job and resumes it
+by scanning a snapshot of all system threads. On a development machine this costs
+about 30 ms per spawn (`spawn` 34 ms with the job, 4 ms without; a full
+`RunCapture` 50 ms against 16 ms), independent of the VM and its memory
+management. Rows in this group are therefore dominated by about 30 ms for each of
+the 18 measured processes, and the cost grows with the number of threads on the
+machine. This is an accepted trade-off for reliable process-tree ownership; do not
+read it as workload or capture overhead. The VM was ruled out by running the same
+image directly (23 ms) and by timing `spawn` separately.

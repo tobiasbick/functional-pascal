@@ -39,6 +39,8 @@ impl GroupChild {
         #[cfg(unix)]
         command.wrap(process_wrap::std::ProcessGroup::leader());
         #[cfg(windows)]
+        // Accepted cost: process-wrap resumes the suspended child by scanning all system
+        // threads, about 30 ms per spawn. See docs/bench/failure-dump.md.
         command.wrap(process_wrap::std::JobObject);
 
         Ok(Self {

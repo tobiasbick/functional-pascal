@@ -14,6 +14,99 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-21 — Nach Optimierungen (O(1)-Aufrufprüfung, Task-Neutralität, Callbacks im Batch, 7f3ee572b)
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 1094 | throughput: enabled/disabled median change 1.6949152542372872% |
+| failure_dump_calls | 1512 | throughput: enabled/disabled median change 1.2048192771084274% |
+| failure_dump_globals | 1413 | throughput: enabled/disabled median change 0% |
+| failure_dump_spawn_wait | 2402 | throughput: enabled/disabled median change 0% |
+| failure_dump_suspension | 9980 | throughput: enabled/disabled median change 1.2658227848101262% |
+| failure_dump_failure | 965 | throughput: enabled/disabled median change 3.9215686274509807% |
+| failure_dump_large_report | 1422 | throughput: enabled/disabled median change 96.15384615384616% |
+| mandelbrot_render | 1185 | - |
+| mandelbrot_paint | 1193 | - |
+| integer_loop | 775 | throughput: 64516129 iters/s |
+| typed_real | 163 | - |
+| typed_boolean | 268 | - |
+| typed_string | 140 | - |
+| global_access | 120 | throughput: 41666666 global updates/s |
+| record_field_access | 434 | throughput: 34562211 field accesses/s |
+| closure_call | 163 | throughput: 18404907 closure calls/s |
+| mutable_capture | 548 | throughput: 5474452 captured updates/s |
+| branch_dispatch | 374 | throughput: 53475935 branches/s |
+| dynamic_numeric | 302 | throughput: 16556291 dynamic numeric ops/s |
+| array_push | 66 | throughput: 30303030 pushes/s |
+| array_length | 23 | throughput: 21739130 lengths/s |
+| string_concat | 952 | throughput: 5252100 concats/s |
+| string_length | 23 | throughput: 21739130 lengths/s |
+| intrinsic_dispatch | 685 | throughput: 21897810 intrinsic calls/s |
+| function_call | 281 | throughput: 21352313 calls/s |
+| array_callbacks | 760 | throughput: 12631578 callbacks/s |
+| record_update | 112 | throughput: 8928571 updates/s |
+| unicode_char_at | 273 | throughput: 10989010 chars/s |
+| wrapper_payload | 828 | throughput: 12077294 wrappers/s |
+| task_spawn_wait | 812 | throughput: 123152 tasks/s |
+| task_array_callbacks | 1059 | throughput: 3626062 callbacks/s |
+| tui_headless | 1722 | throughput: 290 frames/s |
+| notes_headless | 3381 | throughput: 73 frames/s |
+| tui_styled_cells | 418 | - |
+| analysis_queries | 222 | - |
+| string_search | 73 | - |
+| compiler_lowering | 2101 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+| project_queries | 999 | - |
+| project_edits | 3728 | - |
+| project_overlapping_queries | 664 | - |
+| project_build_cold | 2305 | - |
+| project_build_warm | 1422 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 3 | - |
+| scalar_membership | 3 | - |
+| array_pop | 1 | - |
+| text_area_locate | 893 | - |
+| http_body_accumulation | 228 | - |
+| local_index_write | 21 | throughput: 30476190 writes/s |
+| cell_grid_headless | 129 | throughput: 775 paints/s |
+| partial_surface_fill | 76 | - |
+| source_utf8_ascii_2048 | 8 | - |
+| source_utf8_ascii_4096 | 16 | - |
+| source_utf8_ascii_8192 | 32 | - |
+| source_utf8_unicode_2048 | 28 | - |
+| source_utf8_unicode_4096 | 56 | - |
+| source_utf8_unicode_8192 | 116 | - |
+| source_notes_ascii_128 | 3 | - |
+| source_notes_ascii_256 | 8 | - |
+| source_notes_ascii_512 | 18 | - |
+| source_queue_ascii_256 | 73 | - |
+| source_queue_ascii_512 | 149 | - |
+| source_queue_ascii_1024 | 296 | - |
+| source_navigation_long_512 | 26 | - |
+| source_navigation_long_1024 | 47 | - |
+| source_navigation_long_2048 | 92 | - |
+| source_navigation_lines_512 | 7 | - |
+| source_navigation_lines_1024 | 11 | - |
+| source_navigation_lines_2048 | 19 | - |
+| errors_enum_construction | 28 | - |
+| errors_typed_construction | 30 | - |
+| errors_generic_direct | 30 | - |
+| errors_generic_helper | 58 | - |
+| errors_generic_callable | 61 | - |
+| errors_map_ok | 327 | - |
+| errors_case_ok | 241 | - |
+| errors_map_error | 897 | - |
+| errors_case_error | 754 | - |
+| errors_constructor_error | 811 | - |
+| errors_cause_message | 1 | - |
+| errors_cause_console | 442 | - |
+| errors_deep_image | 1 | - |
+
 ## 2026-10-21 — Aktueller Stand (AP48, Optimierungen 07a38a95f)
 
 - Group: `all`

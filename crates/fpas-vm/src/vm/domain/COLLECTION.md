@@ -57,6 +57,14 @@ or depend on task-specific channels/callbacks.
 4. Acquire every unreachable candidate's payload lock with nonblocking access.
    Any failed lock releases the prepared guards without changing a payload.
 
+If the pruned registry has no live candidates, the pass validates the complete
+prepared root view and returns without marking cells or preparing a commit.
+Ownership-neutral aggregate summaries skip subgraphs with no cells, references or
+functions during this validation. Foreign cells still reject before payload access;
+callable and global-reference owners are checked as well. Finite graph bounds retain
+full value counting. Root publication, exclusion, generation acknowledgement and
+pressure reset follow the same maintenance protocol, including for empty passes.
+
 These bounds limit whether a whole pass can be prepared. They do not implement
 incremental marking or a pause-time bound. A successful pass covers the entire
 domain; collection frequency does not bound its pause.

@@ -145,7 +145,7 @@ fn ordinary_fault_reads_visible_bindings_references_and_worker_local_globals() {
 }
 
 #[test]
-fn hosted_callback_faults_keep_the_callback_and_calling_continuation() {
+fn inline_callback_faults_keep_the_callback_and_calling_continuation() {
     let source = "program Callback;\n\nfunction Fail(Item: integer): integer;\nbegin\n  panic('callback');\nend function;\nbegin\n  const Items := [7];\n  const Mapped := Items.Map(Fail);\nend.";
     for task_id in [0, 1] {
         let mut worker = worker(source);
@@ -185,17 +185,56 @@ fn hosted_callback_faults_keep_the_callback_and_calling_continuation() {
             Some(2)
         );
         assert_eq!(bounded, 1);
-        if task_id == 0 {
-            let _guard = worker.callback_worker.borrow_mut();
-            let blocked = frames::visit(&worker, Boundary::Fault, 256, |_, _, _| {
-                panic!("unavailable callback must not invent an active caller frame")
-            });
-            assert_eq!(
-                (blocked.total, blocked.unavailable_reason),
-                (None, Some("busy"))
-            );
-        }
     }
+}
+
+#[test]
+fn native_callback_faults_keep_frames_and_report_unavailable_callback_storage() {
+    let worker = worker(
+        "program Native; function Fail(Item: integer): integer; begin panic('native callback'); end function; begin end.",
+    );
+    let image = worker.executable.executable();
+    let target = image
+        .functions
+        .iter()
+        .position(|info| {
+            image
+                .strings
+                .get(info.name)
+                .is_some_and(|name| name.eq_ignore_ascii_case("Fail"))
+        })
+        .unwrap();
+    let callback = Value::function(
+        worker
+            .function_target(fpas_bytecode::FunctionId::new(target.try_into().unwrap()))
+            .unwrap(),
+        Vec::new(),
+    );
+    let error = worker
+        .call_callback_sync(&callback, [Value::Integer(7)])
+        .unwrap_err();
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
+    let mut names = Vec::new();
+    let count = frames::visit(&worker, Boundary::Fault, 256, |owner, frame, _| {
+        let image = owner.executable.executable();
+        names.push(
+            image
+                .strings
+                .get(image.functions[usize::from(frame.function.get())].name)
+                .unwrap()
+                .to_owned(),
+        );
+    });
+    assert_eq!(count.total, Some(2));
+    assert_eq!(names[0], "fail");
+    let _guard = worker.callback_worker.borrow_mut();
+    let blocked = frames::visit(&worker, Boundary::Fault, 256, |_, _, _| {
+        panic!("unavailable callback must not invent an active caller frame")
+    });
+    assert_eq!(
+        (blocked.total, blocked.unavailable_reason),
+        (None, Some("busy"))
+    );
 }
 
 #[test]

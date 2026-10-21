@@ -7,6 +7,7 @@ mod closure_calls;
 mod console_eof;
 mod dispatch_budget;
 mod global_index_path;
+mod inline_callbacks;
 mod intrinsics;
 mod register_initialization;
 mod register_stack;

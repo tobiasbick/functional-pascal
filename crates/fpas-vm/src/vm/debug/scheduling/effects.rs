@@ -12,7 +12,7 @@ impl Worker {
         if self.debug_schedule.is_none() {
             return Ok(());
         }
-        let denied = if self.capture_callback
+        let denied = if self.has_synchronous_callback_boundary()
             && matches!(
                 intrinsic,
                 Intrinsic::Task(_) | Intrinsic::Time(TimeIntrinsic::Sleep)
@@ -28,12 +28,16 @@ impl Worker {
     }
 
     pub(in crate::vm) fn check_scheduling_scope(&self) -> Result<(), VmError> {
-        if self.capture_callback && self.debug_schedule.is_some() {
+        if self.has_synchronous_callback_boundary() && self.debug_schedule.is_some() {
             return self.reject_scheduling_effect(
                 "task scopes, spawning or yielding inside a synchronous native callback",
             );
         }
         Ok(())
+    }
+
+    fn has_synchronous_callback_boundary(&self) -> bool {
+        self.capture_callback || (self.task_id == 0 && !self.callback_continuations.is_empty())
     }
 
     fn reject_scheduling_effect(&self, effect: &str) -> Result<(), VmError> {

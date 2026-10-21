@@ -255,7 +255,7 @@ impl Worker {
             Opcode::TestVariant => self.test_variant(instruction.abc())?,
             Opcode::LoadEnumField => self.load_enum_field(instruction.abc())?,
             Opcode::Intrinsic => {
-                self.execute_intrinsic(instruction.abc())?;
+                self.execute_intrinsic::<true>(instruction.abc())?;
                 return Ok(Flow::Boundary);
             }
             Opcode::SpawnTask => {

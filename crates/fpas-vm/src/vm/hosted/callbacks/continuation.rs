@@ -1,4 +1,4 @@
-//! Task-owned orchestration for resumable hosted callbacks.
+//! Worker-owned orchestration for inline higher-order callbacks.
 
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
@@ -6,7 +6,7 @@ use super::operation::{Advance, AdvanceError, CallbackContinuation};
 use super::{CallbackOutcome, Worker, plan};
 use crate::vm::VmError;
 
-/// Start a supported hosted callback operation for a spawned task.
+/// Start a supported callback operation on its main or scheduled owner.
 pub(super) fn start(
     worker: &mut Worker,
     intrinsic: Intrinsic,

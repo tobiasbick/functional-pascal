@@ -248,7 +248,7 @@ fn completed_calls_release_live_instance_capacity() {
 }
 
 #[test]
-fn cached_main_callback_workers_admit_fresh_parameters_and_local_instances() {
+fn inline_main_callbacks_admit_fresh_parameters_and_local_instances() {
     let r = finish(session(
         "program T; function Map(N: integer): integer; begin var Total: integer := N; Total := Total + 1; return Total; end function; begin discard [1, 2, 1].Map(Map); end.",
         &["Map::Total", "Map::N"],

@@ -131,21 +131,44 @@ pub(super) fn reachable_cells(
     limit: usize,
 ) -> Result<HashSet<usize>, OwnershipError> {
     let mut cells = HashSet::new();
-    let mut mark = |value: &Value| {
+    trace_collection_roots(domain, values, limit, Some(&mut cells))?;
+    Ok(cells)
+}
+
+/// Empty candidate sets still require ownership checks, but no cell marking.
+pub(super) fn validate_collection_roots(
+    domain: &MemoryDomain,
+    values: &[Value],
+    limit: usize,
+) -> Result<(), OwnershipError> {
+    trace_collection_roots(domain, values, limit, None)
+}
+
+fn trace_collection_roots(
+    domain: &MemoryDomain,
+    values: &[Value],
+    limit: usize,
+    mut cells: Option<&mut HashSet<usize>>,
+) -> Result<(), OwnershipError> {
+    // Finite diagnostic bounds count every value even when there is nothing to mark.
+    let inspect_aggregates = cells.is_some() || limit != usize::MAX;
+    let mut visit = |value: &Value| {
         if let Value::Cell(cell) = value {
             if cell.owner() != domain.id() {
                 return Err(OwnershipError::ForeignDomain);
             }
-            insert(&mut cells, cell.identity())?;
+            if let Some(cells) = &mut cells {
+                insert(cells, cell.identity())?;
+            }
         }
         Ok(())
     };
-    let mut walker = Walker::observing(&mut mark, Some(limit));
+    let mut walker = Walker::observing(&mut visit, Some(limit));
+    walker.inspect_aggregates = inspect_aggregates;
     for value in values {
         walker.enqueue(value)?;
     }
-    walker.finish()?.validate_domain(domain)?;
-    Ok(cells)
+    walker.finish()?.validate_domain(domain)
 }
 
 type Observer<'a> = &'a mut dyn FnMut(&Value) -> Result<(), OwnershipError>;
@@ -157,6 +180,7 @@ struct Walker<'a> {
     classification: GraphClassification,
     observer: Option<Observer<'a>>,
     remaining: Option<usize>,
+    inspect_aggregates: bool,
 }
 
 impl<'a> Walker<'a> {
@@ -167,6 +191,7 @@ impl<'a> Walker<'a> {
             classification: GraphClassification::default(),
             observer: Some(observer),
             remaining,
+            inspect_aggregates: true,
         }
     }
 
@@ -186,17 +211,21 @@ impl<'a> Walker<'a> {
         loop {
             match value {
                 Value::Array(values)
-                    if self.observer.is_none() && values.is_ownership_neutral() =>
+                    if !self.inspect_aggregates && values.is_ownership_neutral() =>
                 {
                     return Ok(());
                 }
-                Value::Record(value) if self.observer.is_none() && value.is_ownership_neutral() => {
+                Value::Record(value)
+                    if !self.inspect_aggregates && value.is_ownership_neutral() =>
+                {
                     return Ok(());
                 }
-                Value::Enum(value) if self.observer.is_none() && value.is_ownership_neutral() => {
+                Value::Enum(value) if !self.inspect_aggregates && value.is_ownership_neutral() => {
                     return Ok(());
                 }
-                Value::Dict(values) if self.observer.is_none() && values.is_ownership_neutral() => {
+                Value::Dict(values)
+                    if !self.inspect_aggregates && values.is_ownership_neutral() =>
+                {
                     return Ok(());
                 }
                 Value::ResultOk(payload)

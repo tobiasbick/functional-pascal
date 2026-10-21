@@ -47,7 +47,7 @@ impl Worker {
         continuation::resume(self)?;
         Ok(())
     }
-    /// Execute immediately on the main task or retain resumable state for a spawned task.
+    /// Execute higher-order bytecode calls through the owning worker's frames.
     pub(in crate::vm) fn execute_callback_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -55,11 +55,6 @@ impl Worker {
         location: SourceLocation,
         destination: Option<usize>,
     ) -> Result<Option<CallbackOutcome>, VmError> {
-        if self.task_id == 0 {
-            return self
-                .execute_callback_intrinsic_sync(intrinsic, arguments, location)
-                .map(|result| result.flatten().map(CallbackOutcome::Complete));
-        }
         continuation::start(self, intrinsic, arguments, location, destination)
     }
 

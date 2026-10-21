@@ -14,7 +14,12 @@ a temporary registration until the public export is registered. Host ingress
 likewise roots same-domain arguments before consuming the final incoming export.
 A mismatched register/initialization bitmap defers maintenance.
 
-Before callback re-entry the enclosing worker publishes and registers its native
+Higher-order bytecode callbacks use frames on their owning main or scheduled worker.
+Caller windows, callback captures, pending results and operation state are enumerated
+by that worker's execution roots. Each dispatch batch follows the same publication
+and safe-point protocol; individual elements need no native root registrations.
+
+Before native callback re-entry the enclosing worker publishes and registers its native
 caller roots. Native operation state retains intermediate results and arguments.
 Every enclosing execution provider must be complete; an unavailable provider makes
 maintenance defer. Returning invalidates the published caller before dropping its

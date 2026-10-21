@@ -20,7 +20,7 @@ requests in quiescent or retired domains.
 | Supervised retry input | `SupervisedTask.function`, including captures and receiver, is enumerated throughout retries |
 | Synchronous callback caller | Native root registration captures all caller execution edges before entering another worker |
 | Cached callback worker | Successful cache retains register capacity only; faulted cache retains live frames for existing failure inspection and is recursively enumerated |
-| Saved callback continuations | Callback, pending result and the complete operation state implement `TraceRoots` |
+| Main and scheduled higher-order callbacks | Caller/callback frames and the continuation's pending result and complete operation state are execution roots; native registrations are unnecessary for individual elements |
 | Native higher-order operation | One synchronized provider retains input cursors, partial arrays/dictionaries, reduction accumulators, cached sort keys and pending results; per-call arguments are registered before re-entry |
 | Native callback result handoff | Native state accepts the result before another FPAS call; A temporary result registration protects the final return value before releasing execution access |
 | Unused and claimed Select cases | Each case owns a registration for callback and send payload. Claim moves the registration intact; close, owner/attempt cleanup, cancellation and shutdown release it |

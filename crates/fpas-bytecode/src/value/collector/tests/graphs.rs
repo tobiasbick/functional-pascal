@@ -1,8 +1,8 @@
 use super::*;
 use crate::value::graph::tests::target;
 use crate::{
-    EnumTypeId, EnumVariantId, RecordTypeId, RuntimeEnumLayout, RuntimeRecordLayout, SharedEnum,
-    SharedRecord,
+    EnumTypeId, EnumVariantId, RecordTypeId, ReferenceRoot, RuntimeEnumLayout, RuntimeRecordLayout,
+    SharedEnum, SharedRecord, VariableReference,
 };
 
 fn edge(kind: usize, next: Value) -> Value {
@@ -35,6 +35,36 @@ fn edge(kind: usize, next: Value) -> Value {
         8 => Value::function(target(), vec![next]),
         9 => Value::bound_function(target(), next),
         _ => unreachable!(),
+    }
+}
+#[test]
+fn empty_domains_reject_foreign_cells_in_every_edge_before_reading_their_payloads() {
+    let foreign = MemoryDomain::new();
+    let cell = foreign.new_cell(Value::Integer(7)).unwrap();
+    let _ = std::panic::catch_unwind(|| {
+        let _lock = cell.lock(false).unwrap();
+        panic!("poison foreign cell");
+    });
+    for kind in 0..=10 {
+        let domain = domain();
+        let value = if kind == 10 {
+            Value::Reference(Arc::new(VariableReference {
+                root: ReferenceRoot::Cell(cell.clone()),
+                path: vec![],
+            }))
+        } else {
+            edge(kind, Value::Cell(cell.clone()))
+        };
+        let root = domain.root_values(RootKind::Host, vec![value]);
+        assert_eq!(
+            domain.request_explicit_maintenance(),
+            MaintenanceOutcome::Busy(OwnershipError::ForeignDomain),
+            "edge {kind}"
+        );
+        assert_eq!(domain.collection_stats().completed_passes, 0);
+        assert_eq!(domain.collection_stats().aborted_passes, 1);
+        drop(root);
+        collect(&domain);
     }
 }
 #[test]

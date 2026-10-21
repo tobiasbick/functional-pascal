@@ -10,7 +10,8 @@ use crate::vm::worker::Worker;
 use crate::vm::{VmError, diagnostics};
 
 impl Worker {
-    pub(in crate::vm) fn execute_intrinsic(
+    /// Bytecode dispatch may enter callback frames; immediate host calls finish synchronously.
+    pub(in crate::vm) fn execute_intrinsic<const INLINE_CALLBACKS: bool>(
         &mut self,
         operands: AbcOperands,
     ) -> Result<(), VmError> {
@@ -48,7 +49,7 @@ impl Worker {
             let result = self.execute_borrowed_intrinsic(intrinsic, owner, &arguments, location)?;
             return self.store_intrinsic_result(intrinsic, destination, result);
         }
-        if self.task_id != 0 && owner == IntrinsicOwner::Callback {
+        if INLINE_CALLBACKS && owner == IntrinsicOwner::Callback {
             let arguments = self.registers[start..end].to_vec();
             let absolute_destination =
                 destination.map(|register| self.base + usize::from(register.get()));
@@ -106,7 +107,7 @@ impl Worker {
         for (offset, value) in arguments.iter().enumerate() {
             self.store_register(base + offset, value.clone())?;
         }
-        self.execute_intrinsic(AbcOperands {
+        self.execute_intrinsic::<false>(AbcOperands {
             a: 0,
             b: intrinsic.into(),
             c: u16::try_from(base).map_err(|_| {

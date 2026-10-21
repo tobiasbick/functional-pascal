@@ -1,4 +1,4 @@
-//! Main-task higher-order execution using the same rooted state machine as saved tasks.
+//! Immediate native and debugger execution using the rooted callback state machine.
 
 use super::operation::{Advance, AdvanceError, CallbackContinuation};
 use super::{Worker, plan};

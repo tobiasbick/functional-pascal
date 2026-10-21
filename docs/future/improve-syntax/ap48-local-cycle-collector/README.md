@@ -183,3 +183,9 @@ reference, generated APIs and artifact behavior; no new syntax is planned.
 Benchmark artifacts belong under `.temp-data/`. Cloud runs provide correctness
 evidence. Controlled local performance measurement and tuning are optional follow-up
 under Q43; they do not block activation or package completion.
+
+## Callback execution follow-up
+
+[Array callback execution](array-callbacks.md) records the completed profiling,
+inline callback dispatch and empty-collector path, including their rationale and
+verification. Step 4, reducing remaining copies and repeated validation, is open.

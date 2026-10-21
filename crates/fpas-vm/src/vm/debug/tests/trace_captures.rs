@@ -232,7 +232,7 @@ fn repeated_admissions_and_debug_tail_call_frames_renew_activations() {
 }
 
 #[test]
-fn real_tail_frame_reuse_in_callback_workers_retires_previous_capture_instances() {
+fn inline_callback_debug_frames_keep_each_recursive_capture_activation_live() {
     let r = finish(session(
         "program T; function Make(): function(N: integer): integer; function Next(N: integer): integer; begin Total := Total + 1; if N > 0 then return Next(N - 1); end if; return Total; end function; begin var Total := 0; return Next; end function; begin const A := Make(); discard [3].Map(A); end.",
         &["Make.Next::Total"],
@@ -245,17 +245,39 @@ fn real_tail_frame_reuse_in_callback_workers_retires_previous_capture_instances(
             json!("1"),
             json!("2"),
             json!("2"),
+            json!("2"),
             json!("3"),
             json!("3"),
+            json!("3"),
+            json!("3"),
+            json!("4"),
+            json!("4"),
+            json!("4"),
             json!("4")
         ]
     );
     let events = r["events"].as_array().unwrap();
-    for pair in events.as_chunks::<2>().0 {
-        assert_eq!(pair[0]["kind"], "initialize");
-        assert_eq!(pair[1]["kind"], "change");
-        assert_eq!(pair[0]["instance_id"], pair[1]["instance_id"]);
+    let mut activations = std::collections::BTreeMap::<_, Vec<_>>::new();
+    for event in events {
+        activations
+            .entry(event["activation_id"].as_str().unwrap())
+            .or_default()
+            .push(event);
     }
+    for activation in activations.values() {
+        assert_eq!(activation[0]["kind"], "initialize");
+        for event in &activation[1..] {
+            assert_eq!(event["kind"], "change");
+            assert_eq!(event["instance_id"], activation[0]["instance_id"]);
+        }
+    }
+    assert_eq!(
+        activations
+            .values()
+            .map(Vec::len)
+            .collect::<std::collections::BTreeSet<_>>(),
+        [2, 3, 4, 5].into()
+    );
     let ids: std::collections::BTreeSet<_> = events
         .iter()
         .map(|e| e["activation_id"].as_str().unwrap())

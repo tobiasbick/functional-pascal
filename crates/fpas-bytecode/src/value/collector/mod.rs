@@ -39,6 +39,11 @@ impl MemoryDomain {
         limits: CollectionLimits,
     ) -> Result<usize, OwnershipError> {
         let candidates = self.collection_candidates(limits.max_cells)?;
+        if candidates.is_empty() {
+            super::graph::validate_collection_roots(self, roots, limits.max_graph_nodes)?;
+            increment(&self.0.collection.completed, 1);
+            return Ok(0);
+        }
         let reachable = super::graph::reachable_cells(self, roots, limits.max_graph_nodes)?;
         let mut unreachable = Vec::new();
         unreachable

@@ -26,6 +26,11 @@ fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
 fpas debug app.fpasprj --protocol dap
 ```
 
+All debugger modes accept the same three positive
+[collection scheduling overrides](../program-structure/cli.md#collection-scheduling)
+as `fpas run` and `fpas test`. The selected settings apply to task domains, retained
+inspection values and detached evaluation helpers; JSONL/DAP wire formats are unchanged.
+
 Program arguments follow `--`. JSONL live mode uses one UTF-8 JSON object per
 line on stdin/stdout; script mode processes `--commands` deterministically.
 DAP uses standard `Content-Length` framing. Protocol stdout never contains raw

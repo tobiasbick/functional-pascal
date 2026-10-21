@@ -1,4 +1,5 @@
 //! Real runtime holders keep local cycles across maintenance and release them afterward.
+mod automatic;
 use super::*;
 use crate::vm::{
     HostChild, Vm,

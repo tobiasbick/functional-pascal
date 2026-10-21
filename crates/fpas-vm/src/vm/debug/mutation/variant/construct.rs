@@ -90,6 +90,7 @@ pub(in crate::vm::debug) fn complete_value(
     variant: &VariantMetadata,
     mut values: Vec<Value>,
     limits: DebugEvaluationLimits,
+    schedule: fpas_bytecode::CollectionSchedule,
 ) -> Result<Value, DebugSessionError> {
     if values.len() != variant.fields.len() {
         return Err(unsupported_metadata());
@@ -105,6 +106,7 @@ pub(in crate::vm::debug) fn complete_value(
             values,
             limits.max_depth,
             limits.max_detached_values,
+            schedule,
         ),
     }
 }

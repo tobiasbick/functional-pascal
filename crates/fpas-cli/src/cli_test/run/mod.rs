@@ -27,6 +27,7 @@ use program::{ProgramRunOptions, RunOutput, run_test_program};
 /// Per-run settings shared by every test of one `fpas test` invocation.
 #[derive(Clone, Copy)]
 pub(super) struct TestRunSettings<'a> {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     /// Optional scripted input configuration.
     pub script_override: Option<&'a Path>,
     /// Optional wall-clock timeout per test.
@@ -67,6 +68,7 @@ pub(super) fn run_single_test_capture(
         path,
         link,
         TestRunSettings {
+            collection_schedule: Default::default(),
             script_override,
             timeout,
             show_output: false,
@@ -98,6 +100,7 @@ pub(super) fn run_single_test_prepared(
     compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
     let TestRunSettings {
+        collection_schedule,
         script_override,
         timeout,
         show_output,
@@ -122,6 +125,7 @@ pub(super) fn run_single_test_prepared(
             hook,
             "Setup",
             HookRunContext {
+                collection_schedule,
                 test_path: path,
                 link,
                 timeout,
@@ -131,7 +135,15 @@ pub(super) fn run_single_test_prepared(
             reporter,
         );
         if outcome.is_failure() {
-            let _ = run_optional_teardown(link, path, timeout, reporter, &display, scratch.path());
+            let _ = run_optional_teardown(
+                link,
+                path,
+                timeout,
+                reporter,
+                &display,
+                scratch.path(),
+                collection_schedule,
+            );
             return outcome;
         }
     }
@@ -148,6 +160,7 @@ pub(super) fn run_single_test_prepared(
         link,
         reporter,
         ProgramRunOptions {
+            collection_schedule,
             script_override,
             timeout,
             display: &display,
@@ -159,8 +172,15 @@ pub(super) fn run_single_test_prepared(
     );
 
     if let Some(link) = link
-        && let Some(teardown_outcome) =
-            run_optional_teardown(link, path, timeout, reporter, &display, scratch.path())
+        && let Some(teardown_outcome) = run_optional_teardown(
+            link,
+            path,
+            timeout,
+            reporter,
+            &display,
+            scratch.path(),
+            collection_schedule,
+        )
         && outcome == TestOutcome::Pass
         && teardown_outcome.is_failure()
     {

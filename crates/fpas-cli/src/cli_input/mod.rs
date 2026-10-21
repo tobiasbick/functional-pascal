@@ -3,6 +3,7 @@
 //! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 
 mod batch;
+mod collection;
 pub(crate) use batch::parse_seed as parse_schedule_seed;
 mod discovery;
 mod doc;
@@ -268,6 +269,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             diagnostics,
         }),
         CliMode::Run => ResolvedCli::Run(CliConfig {
+            collection_schedule: options.collection_schedule,
             input,
             program_args,
             standard_library: options.standard_library,
@@ -296,6 +298,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 return Err("Batch --output-limit cannot exceed 1048576 bytes.".into());
             }
             ResolvedCli::Debug(DebugCliConfig {
+                collection_schedule: options.collection_schedule,
                 batch,
                 cwd: cwd.to_path_buf(),
                 input,
@@ -316,6 +319,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             })
         }
         CliMode::Check => ResolvedCli::Check(CliConfig {
+            collection_schedule: options.collection_schedule,
             input,
             program_args,
             standard_library: options.standard_library,
@@ -325,6 +329,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {
+            collection_schedule: options.collection_schedule,
             input,
             cwd: cwd.to_path_buf(),
             fail_fast: options.fail_fast,

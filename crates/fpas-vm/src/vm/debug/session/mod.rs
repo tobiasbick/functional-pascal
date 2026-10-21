@@ -24,6 +24,7 @@ use crate::vm::tasks::{TaskClock, TaskScheduler};
 use crate::vm::worker::Worker;
 
 mod breakpoints;
+mod collection;
 mod completed_result;
 mod container_mutation;
 mod data_breakpoints;

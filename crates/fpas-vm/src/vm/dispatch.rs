@@ -53,6 +53,7 @@ impl Worker {
     ) -> Result<DispatchBatch, VmError> {
         let access = self.execution_access()?;
         let result = self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget);
+        access.note_completed_batch();
         if access.outermost() || self.domain.maintenance_pending() {
             let extra = match &result {
                 Ok(batch) => match &batch.step {

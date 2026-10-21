@@ -13,6 +13,7 @@ fn config(
     jobs: usize,
 ) -> TestCliConfig {
     TestCliConfig {
+        collection_schedule: Default::default(),
         input: crate::CliInput::SourceFile(cwd.clone()),
         cwd,
         fail_fast: false,

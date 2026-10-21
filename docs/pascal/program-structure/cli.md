@@ -226,6 +226,41 @@ original diagnostic, retaining runtime exit code `2`. Only `run` accepts this
 option; flags after `--` remain program arguments. See the
 [failure-report schema and limits](../tools/failure-dump.md).
 
+## Collection scheduling
+
+`fpas run`, `fpas test` and `fpas debug` use automatic local cycle collection.
+These positive decimal integer options override the per-domain initial defaults:
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--gc-cell-threshold=N` | 4096 | Newly allocated cells before a collection request |
+| `--gc-mutation-threshold=N` | 8192 | Successful cell mutations before a running-task request |
+| `--gc-poll-interval=N` | 256 | Completed execution batches before a periodic request |
+
+The first reached threshold requests collection at the next safe point. A batch is
+an execution dispatch unit, not a millisecond or individual instruction. Busy passes
+keep pending work. Root releases and quiescent mutations are serviced without
+waiting for these thresholds. The options never bypass root publication or domain
+exclusion, and do not promise a maximum collection pause. Reference counting still
+releases acyclic values immediately.
+
+Both `--option=N` and `--option N` forms are accepted. Omitted values use defaults;
+zero, negative, malformed, overflowing or duplicate values are argument errors.
+Source/project/workspace and compiled-image runs, isolated test bodies and hooks,
+and batch/JSONL/DAP debugger execution use the selected settings. Child tasks,
+callback sessions and debugger helper domains inherit them. Options after `--`
+remain program arguments. Check/build/format commands do not accept these options.
+
+```sh
+fpas run app.fpasprj --gc-cell-threshold=2048 --gc-poll-interval=128
+fpas test tests/suite.fpasprj --gc-mutation-threshold=4096
+fpas debug app.fpasprj --protocol jsonl --gc-cell-threshold=2048
+```
+
+These are heuristic starting values. Controlled local measurements may guide later
+tuning; cloud correctness runs are not performance baselines. See
+[runtime ownership](runtime-ownership.md#cycle-reclamation).
+
 ## Checking without running
 
 Use `fpas check` to parse, link, and type-check without executing code:

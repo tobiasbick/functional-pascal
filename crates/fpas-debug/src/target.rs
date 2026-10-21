@@ -22,6 +22,7 @@ pub struct PreparedDebugTarget {
     sources: Vec<DebugSourceContent>,
     reloader: Option<DebugReloadProvider>,
     schedule_seed: Option<u64>,
+    collection_schedule: fpas_bytecode::CollectionSchedule,
 }
 
 impl PreparedDebugTarget {
@@ -35,7 +36,18 @@ impl PreparedDebugTarget {
             sources: Vec::new(),
             reloader: None,
             schedule_seed: None,
+            collection_schedule: fpas_bytecode::CollectionSchedule::default(),
         }
+    }
+
+    /// Configure collection thresholds for debugger tasks and helper domains.
+    #[must_use]
+    pub const fn with_collection_schedule(
+        mut self,
+        schedule: fpas_bytecode::CollectionSchedule,
+    ) -> Self {
+        self.collection_schedule = schedule;
+        self
     }
 
     /// Override controlled-execution limits for this launch.
@@ -105,5 +117,6 @@ impl PreparedDebugTarget {
             self.execution_limits,
             self.schedule_seed,
         )
+        .map(|session| session.with_collection_schedule(self.collection_schedule))
     }
 }

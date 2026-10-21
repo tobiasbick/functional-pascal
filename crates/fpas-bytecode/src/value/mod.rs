@@ -32,9 +32,10 @@ pub use managed_heap::managed_value_buffer;
 pub use payload::ValuePayload;
 pub use reference::{ReferenceRoot, ReferenceStep, SharedReference, VariableReference};
 pub use roots::{
-    DomainAccess, DomainMaintenance, DomainPhase, DomainSession, ExecutionAccess, ExecutionResume,
-    ExecutionRoots, MaintenanceDeferral, MaintenanceOutcome, MaintenancePolicy, PublishedWait,
-    RegisteredRoots, RootKind, RootValues, TraceRoots, defer_maintenance,
+    CollectionSchedule, DomainAccess, DomainMaintenance, DomainPhase, DomainSession,
+    ExecutionAccess, ExecutionResume, ExecutionRoots, MaintenanceDeferral, MaintenanceOutcome,
+    MaintenancePolicy, PublishedWait, RegisteredRoots, RootKind, RootValues, TraceRoots,
+    defer_maintenance,
 };
 pub use string::SharedStr;
 

@@ -92,6 +92,7 @@ pub(in crate::vm::debug) fn construct(
     spec: TransitionSpec,
     payload: Value,
     limits: DebugEvaluationLimits,
+    schedule: fpas_bytecode::CollectionSchedule,
 ) -> Result<Value, DebugSessionError> {
     validate::value(
         executable.executable(),
@@ -109,6 +110,7 @@ pub(in crate::vm::debug) fn construct(
             payload,
             limits.max_depth,
             limits.max_detached_values,
+            schedule,
         ),
     }
 }

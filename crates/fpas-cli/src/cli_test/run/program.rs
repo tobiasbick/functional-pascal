@@ -50,6 +50,7 @@ impl RunOutput {
 
 /// Per-execution settings for one compiled or source-backed test program.
 pub(super) struct ProgramRunOptions<'a> {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     /// Optional scripted input configuration.
     pub script_override: Option<&'a Path>,
     /// Optional wall-clock timeout.
@@ -68,6 +69,7 @@ pub(super) struct ProgramRunOptions<'a> {
 
 /// Fully compiled test input transferable to an isolated worker process.
 pub(in crate::cli_test) struct PreparedProgram {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub test_path: PathBuf,
     pub executable: fpas_bytecode::VerifiedExecutable,
     pub source_paths: Option<Arc<Vec<PathBuf>>>,
@@ -113,6 +115,7 @@ fn prepare_test_program(
     options: ProgramRunOptions<'_>,
 ) -> Result<PreparedProgram, TestOutcome> {
     let ProgramRunOptions {
+        collection_schedule,
         script_override,
         timeout: _,
         display,
@@ -155,6 +158,7 @@ fn prepare_test_program(
     };
 
     Ok(PreparedProgram {
+        collection_schedule,
         test_path: path.to_path_buf(),
         executable,
         source_paths,
@@ -189,6 +193,7 @@ pub(in crate::cli_test) fn run_prepared_program(
     gate: impl FnOnce() -> Result<(), String>,
 ) -> Result<TestOutcome, String> {
     let PreparedProgram {
+        collection_schedule,
         test_path,
         executable,
         source_paths,
@@ -204,7 +209,7 @@ pub(in crate::cli_test) fn run_prepared_program(
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, &paths));
     reporter.load_sources(&sources);
-    let mut vm = fpas_vm::Vm::new(executable);
+    let mut vm = fpas_vm::Vm::new(executable).with_collection_schedule(collection_schedule);
     vm.set_test_scratch_dir(scratch_dir);
     let (program_stderr, receiver) = process::ProgramStderrBuffer::new(reporter.format());
     if let Some(receiver) = receiver {

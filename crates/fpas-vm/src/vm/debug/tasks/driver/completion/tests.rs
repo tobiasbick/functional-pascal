@@ -140,6 +140,16 @@ fn forced_completion_releases_cases_for_retained_unretained_and_root_tasks() {
     for (task_id, retain_child) in [(1, true), (1, false), (0, false)] {
         let mut runtime = runtime(retain_child);
         let count = retain_case(&mut runtime, task_id);
+        let _observation = runtime
+            .tasks
+            .get(&task_id)
+            .unwrap()
+            .worker
+            .domain
+            .root_values(
+                fpas_bytecode::RootKind::Host,
+                vec![Value::Cell(count.clone())],
+            );
         let value = if task_id == 0 {
             Value::Cell(count.clone())
         } else {

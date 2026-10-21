@@ -327,6 +327,10 @@ fn var_cell_paths_validate_replacements_before_commit() {
         root: ReferenceRoot::Cell(cell.clone()),
         path: vec![ReferenceStep::Element(1)],
     };
+    let _observation = worker.domain.root_values(
+        fpas_bytecode::RootKind::Host,
+        vec![Value::Cell(cell.clone())],
+    );
     worker
         .write_reference(&reference, Value::Integer(9))
         .expect("valid path update");

@@ -125,6 +125,10 @@ fn retries_keep_one_cell_domain_distinct_from_the_starting_task() {
         .new_cell(Value::Integer(42))
         .expect("task-local cell");
     assert!(cell.read(&worker.domain).is_err());
+    let _observation = first.domain.root_values(
+        fpas_bytecode::RootKind::Host,
+        vec![Value::Cell(cell.clone())],
+    );
     let mut pending = Some(first);
     for _ in 0..3 {
         let task = pending

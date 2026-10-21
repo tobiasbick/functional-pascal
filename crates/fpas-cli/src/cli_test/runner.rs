@@ -89,6 +89,7 @@ pub(super) fn run_tests_sequential(
             &test.path,
             test.link.as_ref(),
             TestRunSettings {
+                collection_schedule: config.collection_schedule,
                 script_override: config.script_path.as_deref(),
                 timeout: config.timeout,
                 show_output: config.show_output,
@@ -169,6 +170,7 @@ pub(super) fn run_tests_parallel(
         prepared,
         config.jobs,
         TestRunSettings {
+            collection_schedule: config.collection_schedule,
             script_override: config.script_path.as_deref(),
             timeout: config.timeout,
             show_output: config.show_output,

@@ -53,6 +53,7 @@ pub(crate) enum CliInput {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CliConfig {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub input: CliInput,
     pub program_args: Vec<String>,
     pub standard_library: Option<PathBuf>,
@@ -73,6 +74,7 @@ pub(crate) enum DebugProtocol {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DebugCliConfig {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub batch: DebugBatchConfig,
     pub cwd: PathBuf,
     pub input: CliInput,
@@ -167,6 +169,7 @@ pub(crate) struct FmtCliConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct TestCliConfig {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub input: CliInput,
     pub cwd: PathBuf,
     pub fail_fast: bool,

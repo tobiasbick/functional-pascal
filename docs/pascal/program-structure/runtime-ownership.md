@@ -33,7 +33,7 @@ callable in a cell or aggregate still rejects the reachable reference.
 The domain registers cells weakly. Registration neither retains an acyclic value
 nor keeps an abandoned domain alive. Releasing a cell removes its registration;
 registry snapshots also prune expired entries. These administrative snapshots are
-not program roots. Cycles use the explicit collection protocol described below.
+not program roots. Cycles use the local collection protocol described below.
 
 ## Function provenance
 
@@ -156,8 +156,8 @@ FPAS. Opaque native calls keep execution access until return/unwind. Registering
 few temporary values alone does not authorize a wait to release execution access.
 
 Maintenance uses a per-domain generation/permit handshake; idle and retired domains
-can service requests on the requesting thread. VM-created domains install an explicit-only local collector;
-automatic collection remains disabled. See the
+can service requests on the requesting thread. VM-created domains install scheduled
+local collection with inherited per-domain thresholds. See the
 [execution protocol and native blocking inventory](../../../crates/fpas-vm/src/vm/domain/EXECUTION.md).
 
 Debugger inspection registers bounded live copies and writable cell origins.
@@ -173,10 +173,23 @@ A debugger update with retained callable graphs is rejected before changing any
 worker or image, until an atomic graph rebind is available. This includes nested
 callables, globals, inspection roots and selection cases.
 
-## Explicit cycle reclamation
+## Cycle reclamation
 
-VM-created domains support explicit maintenance through the internal Rust domain
-interface. No public FPAS collection control or automatic scheduling is enabled.
+VM-created domains automatically request collection after 4096 cell allocations,
+8192 successful cell mutations or 256 completed execution batches, whichever comes
+first. Periodic checks cover dropped values even without new allocations. Root
+release, retirement, published parking and quiescent edge-removing mutations request
+service without waiting for running thresholds. Collection still waits for complete
+roots and exclusive access. Busy passes retain pending work; successful passes reset
+pressure. Collection frequency does not bound the pause of a whole-domain trace.
+
+The three positive [CLI scheduling overrides](cli.md#collection-scheduling) apply
+consistently to run/test/debugger execution, tasks, callbacks and helper domains.
+Rust embedding constructors select the same defaults; `with_collection_schedule`
+configures a VM, callback session or stopped debugger before execution. The internal
+explicit-maintenance interface remains available. There is no public FPAS collection
+unit or manual collection command. Defaults are heuristic; performance tuning can
+follow controlled local measurements without changing ownership semantics.
 Each pass owns the domain exclusively and uses the complete registered root view.
 It snapshots weak cell candidates, marks reachable cells with the shared iterative
 walker, and only then disconnects unreachable payload edges. Candidates themselves
@@ -197,7 +210,7 @@ public sealed host exports already follow this discipline. Cell access/mutation 
 allocation participate in domain exclusion; try operations report busy ownership.
 
 Explicit roots can outlive execution and the VM. In a retired domain, releasing A
-and requesting a pass reclaims A's unreachable cycle while independent root B remains
+requests a pass that reclaims A's unreachable cycle while independent root B remains
 valid. Mutating B can disconnect another cycle without releasing B. Independent
 requests use the same generation handshake as execution safe points.
 

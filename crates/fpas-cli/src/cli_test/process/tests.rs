@@ -85,3 +85,45 @@ fn worker_directory_skips_existing_entries_without_changing_them() {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+#[test]
+fn isolated_worker_request_preserves_effective_collection_configuration() {
+    use super::{WorkerRequest, write_worker_inputs};
+    use crate::cli_test::run::program::{PreparedProgram, RunOutput};
+    use std::{num::NonZeroUsize, sync::Arc};
+    let config = fpas_bytecode::CollectionSchedule {
+        allocations: NonZeroUsize::new(13).unwrap(),
+        mutations: NonZeroUsize::new(17).unwrap(),
+        safe_points: NonZeroUsize::new(19).unwrap(),
+    };
+    let (program, errors) = fpas_parser::parse("program WorkerConfig; begin end.");
+    assert!(errors.is_empty());
+    let files = WorkerFiles::create().unwrap();
+    let prepared = PreparedProgram {
+        collection_schedule: config,
+        test_path: files.root.join("worker_test.fpas"),
+        executable: fpas_compiler::compile(&program).unwrap(),
+        source_paths: None,
+        sources: Arc::new(vec![]),
+        script_override: None,
+        manifest_override: None,
+        display: "worker_test.fpas".into(),
+        output: RunOutput::Test,
+        show_output: false,
+        scratch_dir: files.root.clone(),
+    };
+    write_worker_inputs(
+        &files,
+        &prepared,
+        crate::cli_output::DiagnosticFormat::Text,
+        false,
+    )
+    .unwrap();
+    let bytes = fs::read(files.request()).unwrap();
+    let request: WorkerRequest = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(request.collection_schedule, config);
+    let mut invalid: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    invalid["collection_schedule"]["allocations"] = serde_json::json!(0);
+    assert!(serde_json::from_value::<WorkerRequest>(invalid).is_err());
+    files.cleanup();
+}

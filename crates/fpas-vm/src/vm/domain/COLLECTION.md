@@ -1,11 +1,37 @@
-# Explicit local cycle reclamation
+# Local cycle collection
 
-VM domain/session construction installs `LocalCollector` as an explicit-only
-`DomainMaintenance` hook. A domain retains the stateless hook without retaining a
-worker, callback registry or session. Internal callers request a pass through
-`MemoryDomain::request_explicit_maintenance`; running execution hands the request to
-AP48.5 safe points. Ordinary allocation, mutation and root release never activate
-automatic collection. No FPAS collection command is exposed.
+VM domain/session construction installs `LocalCollector` with scheduled maintenance.
+A domain retains the stateless hook without retaining a worker, callback registry or
+session. Every task, callback session and debugger helper inherits the effective
+collection schedule from its owning VM/session. Existing constructors use defaults;
+additive `with_collection_schedule` methods configure embedding and debugger launches.
+No FPAS collection unit or manual collection command is exposed.
+
+## Scheduling
+
+Heuristic per-domain defaults request collection after 4096 cell allocations, 8192
+successful cell mutations or 256 completed dispatch batches, whichever comes first.
+The periodic counter advances once per batch, including nested callbacks. Retries
+at the same safe point do not consume additional ticks. Pressure resets only after
+successful service; incomplete/busy passes keep pending work. Requests are serviced
+only with domain exclusion and complete prepared roots, including returned values.
+
+Root disconnection, retirement and published parking request maintenance independently
+of running thresholds. A non-final external-root removal or quiescent cell mutation
+can collect an unreachable component while other roots survive. The requesting thread
+services quiescent domains synchronously; active execution defers until publication.
+Opaque native calls retain execution ownership until return/unwind. Native published
+waits and saved tasks can collect without resuming their FPAS code.
+
+CLI run/test/debugger commands accept positive `--gc-cell-threshold=N`,
+`--gc-mutation-threshold=N` and `--gc-poll-interval=N` overrides. The last option counts
+completed batches, not milliseconds. Isolated test workers and debugger transports
+receive the same effective configuration. These options alter scheduling only.
+
+Internal `MemoryDomain::request_explicit_maintenance` still requests the same safe
+maintenance route. Explicit-only policy remains useful for isolated collector tests.
+The defaults are initial policy choices, not measured performance optima. Controlled
+local tuning is independent follow-up; cloud runs establish correctness only.
 
 The root/exclusion prerequisites are the [root inventory](ROOTS.md),
 [execution protocol](EXECUTION.md) and the shared-value cell-cycle proof in the
@@ -79,5 +105,7 @@ VM regressions exercise a self-recursive closure export after VM destruction, na
 caller re-entry, published native waits, saved completion/continuation state, actual
 inspection handles and owner/abandoned-attempt case cleanup with an independent
 inspection root. Root publication and generation/exclusion races remain covered by
-AP48.5 tests. Automatic pressure thresholds, controlled benchmarks and production
-activation remain AP48.7.
+AP48.5 tests. Automatic acceptance also covers repeated closure creation during real
+dispatch, surviving mutable aliases, inherited task configuration, callback/inspection
+churn, native publication, request races and independent VM progress. CLI fixtures
+cover defaults, validation, subprocess propagation and source/cached/debug launches.

@@ -16,6 +16,13 @@ use fpas_diagnostics::codes::{
 use fpas_diagnostics::{DiagnosticSeverity, FileDiagnostic};
 use fpas_project as project;
 
+#[derive(Default)]
+struct ExecutionOptions {
+    program_args: Vec<String>,
+    failure_dump: Option<PathBuf>,
+    collection_schedule: fpas_bytecode::CollectionSchedule,
+}
+
 static PROCESS_LIFECYCLE_AUTHORIZED: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
@@ -121,15 +128,14 @@ fn run_input(
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
+    let options = ExecutionOptions {
+        program_args: config.program_args,
+        failure_dump: config.failure_dump,
+        collection_schedule: config.collection_schedule,
+    };
     let input = match config.input {
         CliInput::CompiledProgramFile(path) => {
-            return run_compiled_program_file(
-                &path,
-                config.program_args,
-                config.failure_dump,
-                stdout,
-                reporter,
-            );
+            return run_compiled_program_file(&path, options, stdout, reporter);
         }
         input => input,
     };
@@ -147,35 +153,18 @@ fn run_input(
             )
             .with_help("Pass a `.fpas` program file or a `.fpasprj` project path."),
         ),
-        CliInput::SourceFile(path) => run_source_file(
-            &path,
-            library.as_ref(),
-            config.program_args,
-            config.failure_dump,
-            stdout,
-            reporter,
-        ),
-        CliInput::ProjectFile(path) => run_project_file(
-            &path,
-            library.as_ref(),
-            config.program_args,
-            config.failure_dump,
-            stdout,
-            reporter,
-        ),
+        CliInput::SourceFile(path) => {
+            run_source_file(&path, library.as_ref(), options, stdout, reporter)
+        }
+        CliInput::ProjectFile(path) => {
+            run_project_file(&path, library.as_ref(), options, stdout, reporter)
+        }
         CliInput::WorkspaceFile(path) => {
             let project_path = match project::discover_run_project_in_workspace(&path) {
                 Ok(project_path) => project_path,
                 Err(error) => return reporter.failure(&error.into()),
             };
-            run_project_file(
-                &project_path,
-                library.as_ref(),
-                config.program_args,
-                config.failure_dump,
-                stdout,
-                reporter,
-            )
+            run_project_file(&project_path, library.as_ref(), options, stdout, reporter)
         }
         CliInput::CompiledProgramFile(_) => {
             unreachable!("handled before standard library resolution")
@@ -186,8 +175,7 @@ fn run_input(
 fn run_source_file(
     path: &Path,
     standard_library: Option<&project::StandardLibrary>,
-    program_args: Vec<String>,
-    failure_dump: Option<PathBuf>,
+    options: ExecutionOptions,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -214,20 +202,18 @@ fn run_source_file(
             path,
             built.executable,
             Some(&built.source_paths),
-            program_args,
-            failure_dump,
+            options,
             stdout,
             reporter,
         );
     }
-    run_source_impl(path, &source, program_args, failure_dump, stdout, reporter)
+    run_source_impl(path, &source, options, stdout, reporter)
 }
 
 fn run_project_file(
     path: &Path,
     standard_library: Option<&project::StandardLibrary>,
-    program_args: Vec<String>,
-    failure_dump: Option<PathBuf>,
+    options: ExecutionOptions,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -250,8 +236,7 @@ fn run_project_file(
                 &artifact.path,
                 artifact.executable,
                 Some(&artifact.source_paths),
-                program_args,
-                failure_dump,
+                options,
                 stdout,
                 reporter,
             )
@@ -278,8 +263,7 @@ fn run_project_file(
 
 fn run_compiled_program_file(
     path: &Path,
-    program_args: Vec<String>,
-    failure_dump: Option<PathBuf>,
+    options: ExecutionOptions,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -321,8 +305,7 @@ fn run_compiled_program_file(
         path,
         image.into_executable(),
         Some(&source_paths),
-        program_args,
-        failure_dump,
+        options,
         stdout,
         reporter,
     )
@@ -331,8 +314,7 @@ fn run_compiled_program_file(
 fn run_source_impl(
     path: &Path,
     source: &str,
-    program_args: Vec<String>,
-    failure_dump: Option<PathBuf>,
+    options: ExecutionOptions,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -360,15 +342,7 @@ fn run_source_impl(
         }
     };
 
-    run_executable(
-        path,
-        executable,
-        None,
-        program_args,
-        failure_dump,
-        stdout,
-        reporter,
-    )
+    run_executable(path, executable, None, options, stdout, reporter)
 }
 
 #[cfg(test)]
@@ -383,8 +357,7 @@ pub(crate) fn run_source(
     run_source_impl(
         Path::new(path),
         source,
-        Vec::new(),
-        None,
+        ExecutionOptions::default(),
         stdout,
         &mut reporter,
     )
@@ -394,18 +367,23 @@ fn run_executable(
     path: &Path,
     executable: fpas_bytecode::VerifiedExecutable,
     source_paths: Option<&[PathBuf]>,
-    program_args: Vec<String>,
-    failure_dump: Option<PathBuf>,
+    options: ExecutionOptions,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
+    let ExecutionOptions {
+        program_args,
+        failure_dump,
+        collection_schedule,
+    } = options;
     // Runtime diagnostics carry linked source IDs; callers pass paths indexed by graph source.
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, paths));
     let sources = failure_dump
         .as_ref()
         .map(|_| crate::cli_failure_dump::Sources::new(&executable, source_paths.as_deref()));
-    let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args);
+    let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args)
+        .with_collection_schedule(collection_schedule);
     let session = failure_dump
         .clone()
         .zip(sources)

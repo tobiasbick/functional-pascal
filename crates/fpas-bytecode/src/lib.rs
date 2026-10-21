@@ -56,15 +56,16 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    CellSnapshot, CellUpdateError, CollectionLimits, CollectionStats, DomainAccess, DomainId,
-    DomainMaintenance, DomainPhase, DomainSession, EnumConstructionError, EnumValue,
-    ExecutionAccess, ExecutionResume, ExecutionRoots, FunctionValue, GraphClassification,
-    MaintenanceDeferral, MaintenanceOutcome, MaintenancePolicy, MemoryDomain, OwnedCell,
-    OwnershipError, PublishedWait, RecordValue, ReferenceRoot, ReferenceStep, RegisteredRoots,
-    RootKind, RootValues, RuntimeEnumLayout, RuntimeErrorVariant, RuntimeRecordLayout, SharedArray,
-    SharedDict, SharedEnum, SharedFunction, SharedRecord, SharedReference, SharedStr, TraceRoots,
-    Value, VariableReference, WeakOwnedCell, classify_values, defer_maintenance, inspect_values,
-    managed_value_buffer, release_values, validate_local,
+    CellSnapshot, CellUpdateError, CollectionLimits, CollectionSchedule, CollectionStats,
+    DomainAccess, DomainId, DomainMaintenance, DomainPhase, DomainSession, EnumConstructionError,
+    EnumValue, ExecutionAccess, ExecutionResume, ExecutionRoots, FunctionValue,
+    GraphClassification, MaintenanceDeferral, MaintenanceOutcome, MaintenancePolicy, MemoryDomain,
+    OwnedCell, OwnershipError, PublishedWait, RecordValue, ReferenceRoot, ReferenceStep,
+    RegisteredRoots, RootKind, RootValues, RuntimeEnumLayout, RuntimeErrorVariant,
+    RuntimeRecordLayout, SharedArray, SharedDict, SharedEnum, SharedFunction, SharedRecord,
+    SharedReference, SharedStr, TraceRoots, Value, VariableReference, WeakOwnedCell,
+    classify_values, defer_maintenance, inspect_values, managed_value_buffer, release_values,
+    validate_local,
 };
 
 /// Persistent register instruction-set and intrinsic ABI version recorded in

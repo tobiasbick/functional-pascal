@@ -5,8 +5,9 @@ nested aggregates, callable captures/receivers, cells, reference cells and dicti
 path keys. An unavailable provider returns an error; a partial view never authorizes
 collection. The [execution protocol](EXECUTION.md) supplies execution exclusion, safe points,
 request servicing and explicit native-wait publication. The
-[local collector](COLLECTION.md) uses this complete root view only on explicit
-maintenance requests; automatic collection remains disabled.
+[local collector](COLLECTION.md) uses this complete root view for scheduled and
+explicit maintenance requests. Running thresholds do not suppress root-release
+requests in quiescent or retired domains.
 
 | Holder | Root treatment and lifetime |
 | --- | --- |

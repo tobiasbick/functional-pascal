@@ -192,6 +192,7 @@ impl DebugSession {
                             .next()
                             .ok_or_else(replacement_unavailable)?,
                         limits,
+                        self.collection_schedule(),
                     )?;
                     (target, replacement)
                 }

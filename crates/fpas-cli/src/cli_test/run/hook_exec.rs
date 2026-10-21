@@ -15,6 +15,7 @@ use crate::cli_output::{CliFailure, Reporter};
 
 /// Shared execution inputs for one setup or teardown hook.
 pub(super) struct HookRunContext<'a> {
+    pub collection_schedule: fpas_bytecode::CollectionSchedule,
     /// Test entry whose hook is running.
     pub test_path: &'a Path,
     /// Linked project context containing the hook unit.
@@ -34,12 +35,14 @@ pub(super) fn run_optional_teardown(
     reporter: &mut Reporter<'_>,
     display: &str,
     scratch_dir: &Path,
+    collection_schedule: fpas_bytecode::CollectionSchedule,
 ) -> Option<TestOutcome> {
     link.hooks.teardown.as_ref().map(|hook| {
         run_test_hook(
             hook,
             "Teardown",
             HookRunContext {
+                collection_schedule,
                 test_path: path,
                 link,
                 timeout,
@@ -58,6 +61,7 @@ pub(super) fn run_test_hook(
     reporter: &mut Reporter<'_>,
 ) -> TestOutcome {
     let HookRunContext {
+        collection_schedule,
         test_path,
         link,
         timeout,
@@ -82,6 +86,7 @@ pub(super) fn run_test_hook(
         Some(link),
         reporter,
         ProgramRunOptions {
+            collection_schedule,
             show_output: false,
             script_override: None,
             timeout,

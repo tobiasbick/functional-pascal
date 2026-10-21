@@ -56,7 +56,7 @@ Add new packages here when planning begins; keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP48: Task ownership and a local cycle collector](ap48-local-cycle-collector/README.md) | Large | None | In progress; ownership, static diagnostics, registered roots, safe points and explicit cycle reclamation delivered |
+| [x] | [AP48: Task ownership and a local cycle collector](ap48-local-cycle-collector/README.md) | Large | None | Complete; task ownership, transfer/static checks, registered roots, automatic local collection and CLI thresholds delivered |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

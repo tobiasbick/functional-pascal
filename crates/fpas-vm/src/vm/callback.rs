@@ -32,6 +32,13 @@ pub struct CallbackSession {
 }
 
 impl CallbackSession {
+    /// Configure collection for this reusable session and its nested execution.
+    #[must_use]
+    pub fn with_collection_schedule(self, schedule: fpas_bytecode::CollectionSchedule) -> Self {
+        crate::vm::domain::configure(&self.domain, schedule);
+        self
+    }
+
     /// Create a callback session from an owned verified executable.
     #[must_use]
     pub fn new(executable: VerifiedExecutable) -> Self {

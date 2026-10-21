@@ -29,8 +29,10 @@ pub(in crate::vm::debug) fn construct_enum(
     arguments: Vec<Value>,
     max_depth: usize,
     max_detached_values: usize,
+    schedule: fpas_bytecode::CollectionSchedule,
 ) -> Result<Value, DebugSessionError> {
     let mut detacher = detach::ValueDetacher::new(max_detached_values);
+    crate::vm::domain::configure(&detacher.domain, schedule);
     enum_constructor::construct(executable, layout, arguments, &mut detacher, max_depth)
 }
 
@@ -41,6 +43,7 @@ pub(in crate::vm::debug) fn construct_enum_payload(
     payload: Value,
     max_depth: usize,
     max_detached_values: usize,
+    schedule: fpas_bytecode::CollectionSchedule,
 ) -> Result<Value, DebugSessionError> {
     construct_enum(
         executable,
@@ -48,5 +51,6 @@ pub(in crate::vm::debug) fn construct_enum_payload(
         vec![payload],
         max_depth,
         max_detached_values,
+        schedule,
     )
 }

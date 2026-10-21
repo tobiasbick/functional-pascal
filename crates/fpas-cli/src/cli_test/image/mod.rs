@@ -88,6 +88,7 @@ mod tests {
                 &test.path,
                 None,
                 TestRunSettings {
+                    collection_schedule: Default::default(),
                     script_override: None,
                     timeout: None,
                     show_output: false,
@@ -152,6 +153,7 @@ mod tests {
                 &test.path,
                 test.link.as_ref(),
                 TestRunSettings {
+                    collection_schedule: Default::default(),
                     script_override: None,
                     timeout: None,
                     show_output: false,
@@ -202,6 +204,7 @@ mod tests {
                 &test.path,
                 None,
                 TestRunSettings {
+                    collection_schedule: Default::default(),
                     script_override: None,
                     timeout: None,
                     show_output: false,

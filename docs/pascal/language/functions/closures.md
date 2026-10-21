@@ -116,10 +116,11 @@ with FP3030. See [Reference-parameter lifetimes](var-parameters.md#lifetime).
 Creating or copying a closure copies the callable value and shares its environment.
 Reference counting releases an acyclic environment when its final owner is released.
 A cycle through a mutable capture can retain its environment. The runtime supports
-explicit local collection through its internal maintenance interface; it preserves
-cycles reachable from execution, host or debugger roots and removes unreachable
-cell edges. Automatic collection is not enabled. See
-[runtime ownership](../../program-structure/runtime-ownership.md#explicit-cycle-reclamation).
+automatic local collection at safe points; it preserves cycles reachable from
+execution, host or debugger roots and removes unreachable cell edges. External-root
+release and quiescent mutations request collection even after execution has ended.
+See [runtime ownership](../../program-structure/runtime-ownership.md#cycle-reclamation)
+and [CLI scheduling options](../../program-structure/cli.md#collection-scheduling).
 
 Closure equality and ordering are not defined. Test for assignment with the existing
 optional-value facilities when needed.

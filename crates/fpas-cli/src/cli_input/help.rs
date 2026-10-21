@@ -159,6 +159,9 @@ Direct `.fpascp` execution does not load sources or the source standard library.
 The destination must be a new file; existing files are never overwritten.
 
 Options:
+  --gc-cell-threshold <N>      Cell allocations per collection request (default: 4096)
+  --gc-mutation-threshold <N>  Successful cell mutations per request (default: 8192)
+  --gc-poll-interval <N>       Completed execution batches per request (default: 256)
   --std-lib <dir>  Replace the complete source standard library
   --diagnostics <text | json>
                    Diagnostic format on stderr; `json` writes one record per line
@@ -247,6 +250,9 @@ requires --source-root to verify source identities. With no target, discover a
 workspace or project. Program input is scripted; host stdin is never consumed.
 
 Options:
+  --gc-cell-threshold <N>      Cell allocations per collection request (default: 4096)
+  --gc-mutation-threshold <N>  Successful cell mutations per request (default: 8192)
+  --gc-poll-interval <N>       Completed execution batches per request (default: 256)
   --break <path:line[:column]>   Stop before a source statement (repeat, max 64)
   --print <expression>          Inspect one stored-value expression (repeat, max 64)
   --schedule-seed <N>          Seeded fair task rounds and virtual time (controlled text-input runs only)
@@ -313,6 +319,9 @@ Usage:
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 
 Options:
+  --gc-cell-threshold <N>      Cell allocations per collection request (default: 4096)
+  --gc-mutation-threshold <N>  Successful cell mutations per request (default: 8192)
+  --gc-poll-interval <N>       Completed execution batches per request (default: 256)
   --std-lib <dir>     Replace the complete source standard library
   --diagnostics <text | json>
                       Diagnostic format on stderr; `json` writes one record per line

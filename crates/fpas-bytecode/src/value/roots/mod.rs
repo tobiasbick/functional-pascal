@@ -12,6 +12,7 @@ mod maintenance;
 #[cfg(test)]
 mod protocol_tests;
 mod registration;
+mod scheduling;
 #[cfg(test)]
 mod tests;
 
@@ -27,6 +28,7 @@ pub use execution::{ExecutionAccess, ExecutionResume, ExecutionRoots, PublishedW
 pub use lifecycle::{DomainPhase, DomainSession};
 pub use maintenance::{DomainMaintenance, MaintenanceOutcome, MaintenancePolicy};
 pub use registration::{RegisteredRoots, RootValues};
+pub use scheduling::CollectionSchedule;
 
 /// The holder responsible for retaining a graph outside ordinary register execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -78,6 +80,7 @@ pub(super) struct DomainRoots {
     pending: AtomicBool,
     explicit: AtomicBool,
     automatic: AtomicBool,
+    scheduled: AtomicBool,
     installed: AtomicBool,
     serviced: AtomicU64,
     maintenance: Mutex<Option<Arc<dyn DomainMaintenance>>>,

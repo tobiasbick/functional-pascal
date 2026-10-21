@@ -22,7 +22,13 @@ impl Worker {
             .map_err(|e| self.group_error(e))?;
         let info = &self.executable.executable().functions[usize::from(function.function.get())];
         scheduler.register_result(id);
-        let mut task = TaskState::entry(id, function, info, [Value::OpaqueHandle(token)]);
+        let mut task = TaskState::entry_in_domain(
+            id,
+            function,
+            info,
+            [Value::OpaqueHandle(token)],
+            crate::vm::domain::related_domain(&self.domain),
+        );
         task.supervision =
             policy.map(|policy| Box::new(SupervisedTask::new(function.clone(), token, policy)));
         scheduler.enqueue(task);

@@ -21,6 +21,7 @@ pub(super) struct AccessState {
     pub executions: usize,
     pub sessions: usize,
     pub retired: bool,
+    pub pressure: Option<super::scheduling::Pressure>,
 }
 
 /// Reentrant external access, excluding execution and maintenance on other threads.

@@ -13,13 +13,16 @@ pub trait DomainMaintenance: Send + Sync {
     /// Incomplete traversal must return an error before changing any graph edge.
     fn maintain(&self, domain: &MemoryDomain, roots: &[Value]) -> Result<(), OwnershipError>;
 }
-/// Production activation remains off; AP48.6 uses explicit requests first.
+/// Scheduled production collection and unthrottled or explicit diagnostic policies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MaintenancePolicy {
     /// Run only requests explicitly made through the maintenance entry point.
     Explicit,
-    /// Service root-release/mutation requests as well; production activation is AP48.7.
+    /// Service every root-release/mutation request without pressure throttling.
     Automatic,
+    /// Schedule allocation, mutation and periodic requests with explicit thresholds.
+    /// Production VM construction uses this policy with the effective configuration.
+    Scheduled(super::CollectionSchedule),
 }
 /// Whether a request was completed or remains pending for a later safe point.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -56,9 +59,21 @@ impl Drop for CollectionGuard {
 }
 impl MemoryDomain {
     /// Install trusted maintenance context without a strong domain back-reference.
-    /// VM domains install explicit-only reclamation; automatic collection stays off.
+    /// VM domains install scheduled reclamation; explicit-only policy supports
+    /// diagnostic control and bounded algorithm tests.
     pub fn set_maintenance(&self, hook: Arc<dyn DomainMaintenance>, policy: MaintenancePolicy) {
         let _access = self.access();
+        self.0
+            .roots
+            .access
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .pressure = match policy {
+            MaintenancePolicy::Scheduled(schedule) => {
+                Some(super::scheduling::Pressure::new(schedule))
+            }
+            _ => None,
+        };
         let old = self
             .0
             .roots
@@ -69,7 +84,11 @@ impl MemoryDomain {
         self.0
             .roots
             .automatic
-            .store(policy == MaintenancePolicy::Automatic, Ordering::Release);
+            .store(policy != MaintenancePolicy::Explicit, Ordering::Release);
+        self.0.roots.scheduled.store(
+            matches!(policy, MaintenancePolicy::Scheduled(_)),
+            Ordering::Release,
+        );
         self.0.roots.installed.store(true, Ordering::Release);
         drop(old);
     }
@@ -218,6 +237,9 @@ impl MemoryDomain {
             // This mutex also guards request recording and the owner-release handshake.
             self.0.roots.pending.store(false, Ordering::Release);
             self.0.roots.explicit.store(false, Ordering::Release);
+            if let Some(pressure) = &mut state.pressure {
+                pressure.reset();
+            }
             state.collecting = false;
             if state.external == 0 && state.execution == 0 {
                 state.owner = None;

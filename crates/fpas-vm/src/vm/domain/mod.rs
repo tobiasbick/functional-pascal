@@ -12,7 +12,7 @@ mod root_tests;
 pub(in crate::vm) mod roots;
 mod transfer;
 
-pub(in crate::vm) use collector::{new_domain, new_session_domain};
+pub(in crate::vm) use collector::{configure, new_domain, new_session_domain, related_domain};
 pub(in crate::vm) use transfer::check_transfer;
 
 use fpas_bytecode::{GraphClassification, OwnershipError, Value, classify_values, validate_local};

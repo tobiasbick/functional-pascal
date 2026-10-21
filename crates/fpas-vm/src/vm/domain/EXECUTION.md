@@ -67,9 +67,12 @@ outlive execution and the VM without retaining hosted resources or workers. Reti
 domains allow guarded graph access/mutation/release, but reject execution re-entry.
 The requesting thread can service an idle or retired domain with surviving roots.
 
-VM-created domains install the explicit-only [local collector](COLLECTION.md).
-Ordinary requests do not activate it. Automatic policy/pressure scheduling remain
-AP48.7; AP48.5 supplies the protocol used by explicit AP48.6 reclamation.
+VM-created domains install the scheduled [local collector](COLLECTION.md).
+Allocation/mutation pressure and completed-batch polls request safe service. A batch
+records its poll before deciding whether to publish nested callback roots; unrelated
+maintenance retries do not count as execution batches. Saved-state publication and
+native parking request service regardless of running thresholds. Root release and
+quiescent mutations retain synchronous service through the same generation handshake.
 
 ## Native blocking inventory
 

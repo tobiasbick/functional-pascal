@@ -294,7 +294,7 @@ impl Worker {
     /// Share immutable execution context without transferring task-owned registers.
     pub(super) fn pool_template(&self) -> Self {
         Self {
-            domain: crate::vm::domain::new_domain(),
+            domain: crate::vm::domain::related_domain(&self.domain),
             execution: None,
             supervision: None,
             capture_record: None,

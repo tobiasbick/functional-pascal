@@ -1,27 +1,17 @@
 # AP48.7: Automatic scheduling and acceptance
 
-Package: [AP48](README.md). Status: in progress; implementation paused. Effort: medium to large.
+Package: [AP48](README.md). Status: complete. Effort: medium to large.
 Prerequisite: [AP48.6](06-cycle-collector.md) complete.
 
-## Work
+## Delivered contract
 
-Request collection using per-domain cell allocation and mutation pressure, serviced
-at the AP48.5 safe points. Include periodic checks while execution continues, before
-parking, at termination and after external-root release. A graph can become garbage
-when a register or handle drops without a new cell allocation; scheduling must cover
-that case. Use the Q39 maintenance executor and Q40 blocking classifications from
-AP48.5. There is no collector thread or global pause. Public CLI threshold overrides
-are approved by Q42; no FPAS collection unit, manual collection command or source
-syntax is introduced. Opaque native calls defer collection until return/unwind.
+VM, callback and debugger domains collect local cycles automatically. Each domain
+counts allocation/mutation pressure and completed execution batches, requesting a
+whole-domain pass at the first reached threshold. Existing exclusion and complete
+root publication determine when service is safe. Collection introduces no global
+execution lock, collector thread or FPAS source syntax.
 
-Pressure thresholds may defer ordinary running-task collections. They must not
-suppress a requested retired/quiescent-domain pass after an external-root removal or
-edge-removing mutation. Such requests use the existing synchronous executor as soon
-as exclusive access and complete roots permit service.
-
-## Approved defaults and CLI configuration
-
-Q42 approves these heuristic initial defaults for each domain:
+Q42 defines the heuristic initial defaults and positive CLI overrides:
 
 | Trigger | Default | CLI override |
 | --- | --- | --- |
@@ -29,125 +19,108 @@ Q42 approves these heuristic initial defaults for each domain:
 | Successful cell mutations | 8192 | `--gc-mutation-threshold=N` |
 | Completed VM execution batches | 256 | `--gc-poll-interval=N` |
 
-The first reached threshold requests collection at the next complete exclusive safe
-point. The poll interval counts completed execution batches, not milliseconds or
-individual instructions; it covers garbage created by dropping values without new
-cell allocations. Reset pressure after successful collection, while deferred or
-incomplete passes retain pending work. Thresholds do not delay mandatory collection
-requests at retirement, publication before parking or external-root disconnection.
+Periodic polls cover garbage created by dropping values without new allocations.
+Each completed dispatch batch contributes once, including nested callbacks; retries
+at the same safe point do not advance the batch counter. Pressure resets only after
+successful service. Busy/incomplete passes retain pending work through the existing
+request-generation and permit-release handshake.
 
-All overrides take positive decimal integers representable by the shared runtime
-configuration. Reject zero, negative, malformed and overflowing values with ordinary
-CLI argument diagnostics. Each omitted option keeps its default. Existing invocations
-remain valid and use automatic collection with the defaults after activation.
+Root removal, quiescent edge-removing mutation, retirement and publication before
+parking request collection independently of running thresholds. The requesting
+thread services a quiescent domain synchronously once complete roots and exclusion
+permit it. Saved tasks and published native waits can collect without dispatching
+FPAS; opaque native calls defer until return/unwind. A full trace has no fixed
+maximum pause guarantee.
 
-Use one effective configuration consistently across run, test and debugger execution,
-including test subprocesses, task domains, reusable callback sessions and debugger
-helper domains. Existing Rust embedding constructors retain their call signatures
-and select defaults; expose configuration through an additive runtime interface.
-Thresholds affect scheduling only: they cannot bypass domain exclusion, complete-root
-publication, ownership validation or fail-closed interrupted teardown.
+Reference counting still releases acyclic data immediately. Reachable values retain
+identity, aliases, copy-on-write and callable provenance. Transfers, task/resource
+ownership, cancellation and cleanup rules remain unchanged. Raw administrative cell
+handles and snapshots require the established guarded publication/root discipline.
+No parameter can bypass complete-root publication, domain exclusion or interrupted
+commit poisoning.
 
-This approval covers the three threshold options. A public `--gc=off` mode and manual
-collection commands are outside the agreed scope. Reference counting continues to
-release acyclic values immediately; live identity, aliases and copy-on-write remain.
+## Configuration and propagation
 
-## Activation and package completion
+Run/test/debugger commands accept both `--option=N` and `--option N`. Values must be
+positive decimal integers representable by the shared runtime configuration; zero,
+negative, malformed, overflowing, missing and duplicate values are argument errors.
+Omitted options use defaults. Options after `--` remain program arguments. Existing
+invocations remain valid. Check/build/format commands reject these execution options.
 
-Q43 approves automatic activation using these defaults after correctness acceptance,
-required checks, independent review, confirmed-finding repairs and documentation.
-Controlled throughput, memory and pause measurements are not prerequisites for
-activation or completion. Do not invent performance results or describe the defaults
-as measured optima. This replaces the former controlled-budget activation gate.
+One effective configuration flows through source/project/workspace and verified-image
+runs, normal/parallel/isolated tests and setup/teardown hooks, and batch/JSONL/DAP
+sessions. Task domains, retries, reusable callbacks, detached inspections and debugger
+helper construction inherit the owning runtime's settings. Existing embedding
+constructor signatures remain; additive `with_collection_schedule` methods configure
+VMs, callback sessions and debugger targets/sessions before execution.
 
-Completing this work package and the package acceptance closes AP48, since AP48.1
-through AP48.6 are delivered. Later local measurements and threshold optimization are
-independent improvements; they do not leave AP48 open or create another prerequisite.
+The internal explicit-maintenance route and diagnostic policies remain available.
+There is no public FPAS GC unit, manual collection command or `--gc=off` option.
 
-## Acceptance workloads
+## Implementation ownership
 
-| Workload | Pass criterion |
-| --- | --- |
-| Long-running loop creates and drops closure cycles | Repeated runs return live local cells to a stable envelope after collection |
-| Live mutable closures survive repeated passes | Results, alias identity and state match execution without collection |
-| Deep/wide graphs and many immutable transfers | No stack overflow; reachable values, sharing and transfer behavior remain correct |
-| Migration, channel waits, cancellation and retries | No deadlock, stranded task or retained abandoned domain |
-| Root A released after task/VM destruction while independent root B survives | A's cycle is collected without waiting for B; B remains usable for inspection |
-| External mutation disconnects a cycle without dropping the root handle | Retired-domain maintenance collects the disconnected cycle |
-| Root release races with collection or permit exit | Every request is serviced; no self-deadlock or lost wakeup |
-| Owner termination and supervised retry with unused Select cases | Old case roots disappear; cycles collect; callbacks/resources are not invoked or closed |
-| Saved task and published native wait | Maintenance proceeds without dispatching the task or ending the native wait |
-| Polling and opaque native waits | Polling services requests; opaque calls defer them and service them on return/unwind |
-| Equal function IDs in distinct executable instances | Direct, nested and bound callables are rejected before target execution |
-| Two sessions share one verified executable | Transferable functions run against target globals; foreign cells/handles remain rejected |
-| Busy collector and independent worker | Independent worker progresses during collection |
-| Callback/session/debugger churn | No accumulating detached cycles, stale roots or owner collisions |
-| Allocation, mutation and periodic thresholds | Each trigger independently requests a safe pass; the periodic trigger works without new allocations |
-| CLI defaults, individual and combined overrides | Effective values reach every execution domain and subprocess without changing program results |
-| Invalid CLI thresholds | Zero, negative, malformed and overflowing values fail before execution with normal argument diagnostics |
+- `crates/fpas-bytecode/src/value/roots/scheduling.rs` owns the nonzero shared
+  configuration/defaults, per-domain pressure and mandatory boundary notifications.
+  `roots/{access,maintenance,execution,mod}.rs` owns policy, successful reset and
+  request/exclusion coordination. `value/{domain,cell}.rs` records successful events.
+- `crates/fpas-vm/src/vm/domain/collector.rs` installs scheduled collection and
+  constructs independent domains with inherited settings. `dispatch.rs` records
+  completed batches before deciding whether nested caller roots must be published;
+  `tasks/state.rs` requests a pass after complete saved-state publication.
+- VM/callback/debugger configuration methods, task/group spawn, worker templates and
+  debugger detachment/enum construction propagate settings without merging domain
+  identities. `fpas-debug/src/target.rs` applies configuration at protocol launch.
+- `crates/fpas-cli/src/cli_input/collection.rs` owns shared parsing/validation.
+  Input types/help, `cli_run.rs`, `cli_debug/mod.rs` and `cli_test/` owners carry
+  effective configuration through execution, hooks and the isolated worker wire.
+- The closure/runtime ownership and CLI/test/debugger handbook pages plus the domain
+  inventories document automatic collection, options, units and raw access rules.
+  The compact language reference is confirmed; no syntax or generated Std API changes.
 
-Use live-allocation/reclamation counters and weak-lifetime observations to distinguish
-collected cycles from pooled capacity and process resident memory. RSS alone does not
-prove reclamation. No hard real-time or maximum-pause guarantee is introduced.
+See the [collector inventory](../../../../crates/fpas-vm/src/vm/domain/COLLECTION.md),
+[execution protocol](../../../../crates/fpas-vm/src/vm/domain/EXECUTION.md) and
+[root inventory](../../../../crates/fpas-vm/src/vm/domain/ROOTS.md).
 
-Optional later controlled measurements may compare the original baseline,
-ownership enforcement alone and automatic collection, separating graph-checking
-costs from collection costs. Throughput, live cells, pause distributions and root
-release latency can guide tuning. Cloud runs provide correctness evidence only;
-all experiment output belongs under `.temp-data/`.
+## Acceptance and verification
 
-## Owners, documentation and verification
+- Independent allocation, successful-mutation and periodic triggers use actual
+  reclamation; periodic service works without new allocations. Busy preparation
+  preserves cells and pending work for retry; successful passes reset pressure.
+- Real dispatch repeatedly creates/drops self-recursive mutable closures under both
+  defaults and smaller schedules. Live cells remain bounded while retained closure
+  aliases preserve state; cycles reclaim during execution and after retirement.
+- Independent roots survive non-final release and quiescent mutation after task/VM
+  destruction. Release during collection triggers another pass without lost work;
+  an unrelated VM progresses while collection is blocked in its own domain.
+- Saved completion/continuation state, native callers and published waits retain
+  reachable cycles. Opaque execution defers service; owner/attempt cases close before
+  retry and inspection roots remain independent. Callback/inspection churn releases
+  cycles after each final export/handle without closing the reusable session.
+- Task/pool/helper configuration and distinct ownership identities are preserved.
+  CLI tests cover defaults/individual/combined overrides, invalid values, program
+  argument separation and exact nonzero serialization through worker requests.
+  Real processes exercise source/project/cached/image runs, isolated tests and
+  batch/JSONL/DAP launch with aggressive collection settings.
+- Existing deep/shared graph, ownership/provenance, migration/channel/cancellation/
+  retry, artifact/cache, embedding and debugger regressions run with automatic
+  factories. Raw-handle test observations explicitly register Host roots; callback
+  and mutation assertions retain their original meaning. The TUI background-failure
+  fixture waits for failure delivery with a monotonic deadline instead of assuming
+  that its earlier ready signal guarantees task completion.
 
-Integrate scheduling in domain counters, dispatch and lifecycle code. Reuse existing
-runtime benchmark infrastructure and closure/concurrency regression owners. Add only
-workloads that distinguish a credible failure or cost; no implementation-mirroring
-tests or synthetic public language APIs.
+Applicable Rust build/workspace tests, strict Clippy, Rust/Pascal formatting,
+standalone Pascal suite, affected projects and documentation checks are recorded in
+the delivery report. Independent GPT-6.1 Sol review and repair review are complete.
 
-Complete all applicable checks from the [development process](../development-process.md#required-checks),
-including Rust formatting/build/workspace tests, the FPAS suite and affected projects.
-Check portable/cached artifacts, embedding consumers and debugging behavior.
-Review the result against the contract and repository standards.
+## Package completion and later tuning
 
-Update the closure, task, Select-lifetime and variable-reference documentation, Rust
-embedding contracts, CLI help and runtime/tool documentation; confirm the compact
-reference. Document the defaults, units and scope of the three overrides. Explain
-reference counting plus local cycle collection and the absence of a global execution
-lock. Completion requires passing package acceptance and required checks, repaired
-independent review and current documentation. Performance tuning remains follow-up.
+Q43 approves activation and completion after correctness acceptance, required
+checks, repaired review and documentation. The defaults are heuristic policy
+choices, not measured optima. Controlled throughput/memory/pause budgets are not
+activation or package-completion prerequisites.
 
-## Implementation scope
-
-The explicit collector and complete root protocol are delivered. Add pressure-based
-scheduling and CLI configuration without changing value, transfer, resource or task
-semantics. Activate automatic collection in production VM factories with the approved
-defaults as part of this delivery. Implementation is paused; this plan update does
-not authorize resuming code changes.
-
-- Add `crates/fpas-bytecode/src/value/roots/scheduling.rs` and focused scheduling
-  fixtures for the approved defaults and nonzero threshold overrides. Integrate
-  state and policy in `roots/{access,maintenance,mod,execution}.rs`; reset pressure
-  only after successful service. Root release and quiescent mutation bypass running
-  thresholds; native published parking requests a pass.
-- Update `value/domain.rs` and `value/cell.rs` to record allocation/mutation pressure,
-  preserving publication-before-service and all-lock release boundaries. Export the
-  shared scheduling configuration through value/lib interfaces, with no FPAS source API.
-- Connect saved-task publication in `crates/fpas-vm/src/vm/tasks/state.rs` to forced
-  parking requests. Existing dispatch and native safe points provide periodic polls.
-  Update `vm/domain/collector.rs` construction and VM/session/task configuration
-  propagation to use automatic policy. Add focused automatic correctness regressions
-  under `vm/domain/collector/` using both defaults and smaller test schedules.
-- Extend `crates/fpas-cli/src/cli_input/` parsing, option types and help for the three
-  overrides. Propagate effective configuration through run/test/debugger owners and
-  test subprocesses; add argument-validation and end-to-end propagation regressions.
-- Verify long-running garbage-only drop loops, reachable state/aliases, retired
-  independent roots and mutation, parking, opaque calls, independent workers and
-  host/session/debugger lifetime against real collection. Reuse previous acceptance
-  coverage for task migration, cancellation, retries and executable provenance.
-- Document scheduling, default values, CLI overrides and package acceptance. Update
-  runtime inventories and confirm the compact reference; no language syntax change.
-
-One GPT-6.1 Sol reviewer examines the implementation after solo coding. Fix confirmed
-findings, complete applicable checks and update status. Keep this checkbox and AP48
-open until automatic activation, CLI propagation, correctness acceptance, review and
-documentation are delivered. After completion, wait without committing or integrating
-unless separately authorized.
+AP48.1 through AP48.7 and package acceptance are complete. Later controlled local
+measurements may compare the original baseline, ownership enforcement alone and
+automatic collection. Throughput, live allocations, pause distributions and root
+release latency can guide independent threshold tuning. Cloud runs provide
+correctness evidence only; experiment output belongs under `.temp-data/`.

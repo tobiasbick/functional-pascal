@@ -1,8 +1,8 @@
 # AP48: Task ownership and a local cycle collector
 
-Status: In progress. Effort: large, across runtime values, VM, sema and host tooling.
-AP48.1 through AP48.6 are delivered on the shared feature branch.
-Each work package receives independent review and repairs before its successor.
+Status: Complete. Effort: large, across runtime values, VM, sema and host tooling.
+AP48.1 through AP48.7 are delivered, independently reviewed and verified.
+Automatic collection and CLI threshold configuration complete the package.
 Completion is tracked in the [central plan](../README.md#package-status).
 
 ## Goal
@@ -25,12 +25,13 @@ admission or mutation. Session imports check origin and callable code identity.
 Unused selection cases follow task/attempt cleanup. Static capabilities distinguish
 transferable, unknown and task-bound values; conservative flow joins retain known
 local state. Unknown values keep the runtime guard. Execution and registered
-external roots publish complete views under per-domain exclusion. Explicit internal
-collection can reclaim unreachable local cycles; automatic activation remains open.
+external roots publish complete views under per-domain exclusion. Automatic local
+collection reclaims unreachable cycles with per-domain allocation/mutation pressure
+and periodic batch polls. Run/test/debugger commands share configurable thresholds.
 
 Cells use strong shared references and can participate in cycles with closures.
 Dropping registers alone does not release such a cycle through reference counting.
-Explicit collection traces registered roots and disconnects unreachable cell payloads.
+Collection traces registered roots and disconnects unreachable cell payloads.
 Callback, selection, debugger and embedding roots preserve reachable values until
 their ownership ends. Allocation counters and weak-lifetime regressions distinguish
 reclaimed cycles from retained roots; no performance result is claimed.
@@ -40,7 +41,7 @@ Source entry points:
 - [Runtime values](../../../../crates/fpas-bytecode/src/value/mod.rs),
   [variable references](../../../../crates/fpas-bytecode/src/value/reference.rs)
   and [iterative release](../../../../crates/fpas-bytecode/src/value/drain.rs).
-- [Explicit collector](../../../../crates/fpas-vm/src/vm/domain/COLLECTION.md)
+- [Local collector](../../../../crates/fpas-vm/src/vm/domain/COLLECTION.md)
   and [registered roots](../../../../crates/fpas-vm/src/vm/domain/ROOTS.md).
 - [Closure cells](../../../../crates/fpas-vm/src/vm/calls/closures.rs),
   [saved task state](../../../../crates/fpas-vm/src/vm/tasks/state.rs),
@@ -50,7 +51,7 @@ Source entry points:
   [host callbacks](../../../../crates/fpas-vm/src/vm/callback.rs)
   and [retained inspection values](../../../../crates/fpas-vm/src/vm/inspection/values/model.rs).
 
-## Proposed contract
+## Contract
 
 1. Each logical task owns a unique memory domain, identified across VM and session
    instances. Moving between worker threads preserves that domain. Synchronous
@@ -98,8 +99,8 @@ Q37 through Q43 are approved for implementation. The work packages below own
 the detailed rules and acceptance. Update the current handbook with each delivered
 contract, after verification and independent review.
 
-Q38 intentionally changes the current VM-lifetime retention of unused cases. Close
-them after owner cleanup, without running callbacks or closing underlying resources.
+Q38 replaces VM-lifetime retention of unused cases with owner cleanup, without
+running callbacks or closing underlying resources.
 An abandoned supervised attempt closes its own cases before retry. The logical task
 retains its domain across retries. Returning from a reusable callback invocation is
 not session termination; session cases close at shutdown or destruction.
@@ -119,7 +120,7 @@ creates a different identity. Numeric function IDs, names and byte equality do n
 authorize import. Accepted calls resolve globals in the target session, with its
 ordinary ownership checks. No source-session global references are imported.
 
-The choice proposed here is local root tracing followed by cell-edge removal,
+The collector uses local root tracing followed by cell-edge removal,
 rather than reference-count snapshots or a concurrent cycle algorithm.
 
 Q42 permits CLI scheduling controls while keeping a public FPAS GC unit, manual
@@ -135,11 +136,9 @@ independent improvement. Further semantic changes need a new decision.
 
 ## Dependencies and work packages
 
-No prerequisite AP. Execute in the following order; each package includes its own
-consumer migration, verification and independent review. AP48.1 through AP48.6 are
-complete. Ownership, the maintenance protocol and explicit cycle reclamation are
-delivered. AP48.7 automatic scheduling, CLI configuration and correctness acceptance
-are in progress; implementation is paused.
+No prerequisite AP. AP48.1 through AP48.7 are complete, including consumer
+migration, verification, independent review and package acceptance. The ordered
+work packages below own their delivered contracts and regression boundaries.
 
 - [x] [AP48.1: Owned cells and graph classification](01-owned-values.md)
 - [x] [AP48.2: Runtime transfer enforcement](02-transfer-rules.md)
@@ -147,7 +146,7 @@ are in progress; implementation is paused.
 - [x] [AP48.4: Execution and external roots](04-roots-and-embedding.md)
 - [x] [AP48.5: Safe points and domain lifecycle](05-safe-points.md)
 - [x] [AP48.6: Local cycle reclamation](06-cycle-collector.md)
-- [ ] [AP48.7: Automatic scheduling and acceptance](07-activation.md)
+- [x] [AP48.7: Automatic scheduling and acceptance](07-activation.md)
 
 This is the only work-package checklist. Finishing AP48.1 through AP48.4 establishes
 the ownership milestone without enabling collection. AP48.5 establishes the

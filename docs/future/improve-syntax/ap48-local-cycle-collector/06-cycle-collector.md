@@ -7,11 +7,11 @@ and AP48.4 exhaustive root inventory.
 ## Delivered contract
 
 VM-created task, callback/session, helper and debugger-detachment domains install a
-stateless explicit-only collector. Internal callers request collection through
-`MemoryDomain::request_explicit_maintenance`; AP48.5 exclusion and complete-root
-publication determine when it can run. Ordinary allocation, mutation and root
-release record requests without activating automatic collection. No FPAS collection
-command or new ownership syntax is introduced.
+stateless local collector. AP48.5 exclusion and complete-root publication determine
+when it can run. The internal `MemoryDomain::request_explicit_maintenance` interface
+remains available; [AP48.7](07-activation.md) installs scheduled production policy
+and owns automatic requests from allocation, mutation, periodic polls and lifecycle
+boundaries. No FPAS collection command or new ownership syntax is introduced.
 
 Each pass traces the entire owning domain:
 
@@ -34,7 +34,7 @@ Each pass traces the entire owning domain:
 Reference counting continues to release acyclic data immediately. Reachable cells
 retain identity, aliases, callable provenance and copy-on-write behavior. Explicit
 roots can independently retain cycles after execution/session retirement; releasing
-one root or disconnecting an edge permits a later explicit pass to collect only
+one root or disconnecting an edge permits a later pass to collect only
 that unreachable component. Repeated passes are idempotent.
 
 An armed commit guard remains active through edge removal, release and registry
@@ -55,7 +55,8 @@ prepared root view and rejects calls outside exclusive collection ownership.
 - `crates/fpas-bytecode/src/value/collector/{mod,commit,stats}.rs` owns candidate
   preparation, nonblocking all-lock preflight, destructive commit, poisoning and
   allocation/reclamation counters. `domain.rs`, `cell.rs` and value exports expose
-  checked domain-local operations. Cell mutation requests maintenance once.
+  checked domain-local operations. Successful cell mutations notify the shared
+  maintenance boundary; AP48.7 policy determines when they request a pass.
 - `value/graph.rs` remains the single iterative edge walker for classification,
   inspection and marking, with fallible scratch preparation and visited-value bounds.
 - `value/roots/{access,execution,lifecycle,maintenance,mod}.rs` owns exclusive
@@ -94,15 +95,15 @@ Algorithm and exclusion details live in the runtime
 - Interrupted commit rejects fresh access and cross-thread parked-wait resumption;
   nested execution-token cleanup remains balanced.
 
-The closure lifetime and runtime ownership handbook describe explicit reclamation
+The closure lifetime and runtime ownership handbook describe reclamation
 and the raw access/root discipline. The compact language reference is confirmed;
 syntax, task/resource transfers and source-level semantics remain unchanged.
 Independent GPT-6.1 Sol review and repair review are complete. Applicable Rust,
 Pascal, project and documentation checks are recorded in the delivery report.
 
-## Remaining scope
+## Scheduling and package acceptance
 
-[AP48.7](07-activation.md) owns automatic scheduling, the agreed initial thresholds,
+[AP48.7](07-activation.md) delivers automatic scheduling, the agreed initial thresholds,
 CLI configuration and package acceptance. Controlled local measurement and later
 threshold tuning are optional follow-up under Q43. Collection frequency does not
 bound a full-domain pause; incremental collection would require a separate mutation

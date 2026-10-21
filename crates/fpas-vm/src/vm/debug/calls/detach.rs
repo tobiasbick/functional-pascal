@@ -49,6 +49,12 @@ impl ValueDetacher {
     }
 
     pub(in crate::vm::debug) fn allow_source(&mut self, domain: MemoryDomain) {
+        if self.sources.is_empty() {
+            crate::vm::domain::configure(
+                &self.domain,
+                domain.collection_schedule().unwrap_or_default(),
+            );
+        }
         if !self.sources.iter().any(|source| source.id() == domain.id()) {
             self.sources.push(domain);
         }

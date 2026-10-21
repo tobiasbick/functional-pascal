@@ -52,16 +52,14 @@ pub(crate) fn prepare(config: &DebugCliConfig) -> Result<fpas_debug::PreparedDeb
     let library =
         crate::standard_library::resolve_standard_library(config.standard_library.as_deref())
             .map_err(Failure::from)?;
-    Ok(
-        prepare_target(config, library.as_ref())?.with_execution_limits(
-            fpas_vm::DebugExecutionLimits {
-                max_instructions: config.instruction_limit,
-                timeout: config.timeout,
-                max_output_bytes: config.output_limit,
-                ..Default::default()
-            },
-        ),
-    )
+    Ok(prepare_target(config, library.as_ref())?
+        .with_collection_schedule(config.collection_schedule)
+        .with_execution_limits(fpas_vm::DebugExecutionLimits {
+            max_instructions: config.instruction_limit,
+            timeout: config.timeout,
+            max_output_bytes: config.output_limit,
+            ..Default::default()
+        }))
 }
 
 fn fail(stderr: &mut dyn Write, message: impl std::fmt::Display) -> i32 {

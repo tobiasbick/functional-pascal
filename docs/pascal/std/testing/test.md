@@ -17,6 +17,10 @@ end.
 Test entry files are named `*_test.fpas` and must declare a `program` (not a bare `unit`).
 
 
+The runner accepts the three [collection scheduling overrides](../../program-structure/cli.md#collection-scheduling).
+The effective configuration also applies to setup/teardown hooks, parallel runs
+and isolated timeout workers. Omitted options use the shared runtime defaults.
+
 ## Importing and names
 
 Import with `uses Std.Test as Test;` and access public symbols as `Test.Name`. User enum variants require `Test.Type.Variant`.

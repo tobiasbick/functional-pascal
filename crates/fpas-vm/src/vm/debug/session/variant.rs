@@ -105,6 +105,7 @@ impl DebugSession {
                 &resolved.variant,
                 resolved.field_values,
                 limits,
+                self.collection_schedule(),
             )?;
             let value =
                 self.commit_mutation(resolved.task_id, &resolved.target, replacement, limits)?;

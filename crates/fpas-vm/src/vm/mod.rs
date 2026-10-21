@@ -121,6 +121,14 @@ pub struct Vm {
 }
 
 impl Vm {
+    /// Select collection thresholds for this VM and every domain derived from it.
+    /// Configure before starting execution; existing constructors select defaults.
+    #[must_use]
+    pub fn with_collection_schedule(self, schedule: fpas_bytecode::CollectionSchedule) -> Self {
+        crate::vm::domain::configure(&self.domain, schedule);
+        self
+    }
+
     /// Construct an isolated VM from an owned verified executable.
     #[must_use]
     pub fn new(executable: VerifiedExecutable) -> Self {

@@ -37,9 +37,13 @@ covering the program and resolved dependencies, including sibling projects.
 | `--output-limit bytes` | Positive combined output bound; default and ceiling 1,048,576 bytes. |
 | `--source-root dir` | Common source root printed by `fpas build`; required for a compiled image. |
 | `--std-lib dir` | Replace the complete source standard library. |
+| `--gc-cell-threshold N` | Positive cell-allocation threshold; default 4096. |
+| `--gc-mutation-threshold N` | Positive successful-mutation threshold; default 8192. |
+| `--gc-poll-interval N` | Positive completed-batch interval; default 256. |
 | `-- arguments...` | Program arguments, available through `Std.Args`. |
 
-These batch-specific inspection/input options cannot be combined with an explicit
+The collection overrides also apply to JSONL/DAP; see [scheduling](../program-structure/cli.md#collection-scheduling).
+Batch-specific inspection/input options cannot be combined with an explicit
 protocol. `--commands` still requires `--protocol jsonl`. Batch has no `--batch`,
 `--report`, `--until` or text-output switch. Help and version requests retain ordinary CLI output.
 

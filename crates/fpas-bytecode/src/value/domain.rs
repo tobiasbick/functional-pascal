@@ -103,6 +103,7 @@ impl MemoryDomain {
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .insert(cell.identity(), Arc::downgrade(&cell.0));
         super::collector::increment(&self.0.collection.allocated, 1);
+        self.note_cell_allocation();
         Ok(cell)
     }
 

@@ -43,6 +43,7 @@ pub(in crate::vm) struct TaskState {
 
 impl TaskState {
     /// Build a fresh task with receiver, explicit arguments, then immutable captures.
+    #[cfg(test)]
     pub(in crate::vm::tasks) fn entry(
         id: u64,
         function: &FunctionValue,
@@ -111,6 +112,7 @@ impl TaskState {
                 .is_ok()
             {
                 execution.publish(values);
+                self.domain.request_collection_at_rest();
             } else {
                 execution.invalidate();
             }

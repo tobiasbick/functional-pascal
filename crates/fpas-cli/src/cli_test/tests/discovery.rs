@@ -22,6 +22,7 @@ fn test_cli_runs_matching_tests_in_directory() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd: cwd.clone(),
             fail_fast: false,
@@ -60,6 +61,7 @@ fn test_cli_list_only_prints_paths_without_running() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
             fail_fast: false,
@@ -98,6 +100,7 @@ fn test_cli_list_only_fails_when_stdout_cannot_be_written() {
         let mut stderr = Vec::new();
         let exit = test_cli_with_stderr(
             TestCliConfig {
+                collection_schedule: Default::default(),
                 input: crate::CliInput::SourceFile(cwd.clone()),
                 cwd: cwd.clone(),
                 fail_fast: false,
@@ -143,6 +146,7 @@ fn test_cli_filter_runs_matching_tests_only() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
             fail_fast: false,
@@ -183,6 +187,7 @@ fn test_cli_jobs_runs_tests_in_parallel_mode() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
             fail_fast: false,
@@ -227,6 +232,7 @@ fn test_cli_fail_fast_records_not_run_tests() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd: cwd.clone(),
             fail_fast: true,
@@ -276,6 +282,7 @@ fn parallel_fail_fast_stops_after_a_link_context_error() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
             fail_fast: true,

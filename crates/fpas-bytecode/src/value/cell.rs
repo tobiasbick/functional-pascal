@@ -308,7 +308,7 @@ impl OwnedCell {
             std::mem::replace(&mut *slot, next.into_arc())
         };
         drop(CellSnapshot(Some(old)));
-        domain.request_maintenance();
+        domain.note_cell_mutation();
         Ok(())
     }
 
@@ -368,7 +368,7 @@ impl OwnedCell {
             std::mem::replace(&mut *slot, next.into_arc())
         };
         drop(CellSnapshot(Some(old)));
-        domain.request_maintenance();
+        domain.note_cell_mutation();
         Ok(())
     }
 

@@ -2,6 +2,15 @@
 use super::*;
 
 impl DebugTaskRuntime {
+    pub(in crate::vm::debug) fn configure_collection(
+        &mut self,
+        schedule: fpas_bytecode::CollectionSchedule,
+    ) {
+        for slot in self.tasks.values() {
+            crate::vm::domain::configure(&slot.worker.domain, schedule);
+        }
+    }
+
     pub(in crate::vm::debug) fn set_trace(
         &mut self,
         trace: Option<Arc<std::sync::Mutex<crate::vm::debug::trace::TraceHistory>>>,

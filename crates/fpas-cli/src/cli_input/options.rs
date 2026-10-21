@@ -8,6 +8,7 @@ use super::types::{DebugProtocol, TestReportFormat};
 use crate::cli_output::DiagnosticFormat;
 
 pub(super) struct ParsedOptions {
+    pub(super) collection_schedule: fpas_bytecode::CollectionSchedule,
     pub(super) check_only: bool,
     pub(super) fix: bool,
     pub(super) stdout_mode: bool,
@@ -39,6 +40,7 @@ pub(super) struct ParsedOptions {
 /// Parses the options accepted by one CLI subcommand.
 pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<ParsedOptions, String> {
     let mut options = ParsedOptions {
+        collection_schedule: Default::default(),
         check_only: false,
         fix: false,
         stdout_mode: false,
@@ -68,7 +70,19 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
     };
 
     let mut index = 0;
+    let mut collection_seen = 0;
     while index < cli_args.len() {
+        if matches!(mode, CliMode::Run | CliMode::Test | CliMode::Debug)
+            && super::collection::parse(
+                cli_args,
+                &mut index,
+                &mut options.collection_schedule,
+                &mut collection_seen,
+            )?
+        {
+            index += 1;
+            continue;
+        }
         match cli_args[index].as_str() {
             "--failure-dump" if mode == CliMode::Run => {
                 let value = take_option_value(

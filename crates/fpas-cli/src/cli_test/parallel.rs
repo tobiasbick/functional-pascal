@@ -65,6 +65,7 @@ pub(super) fn run_tests_parallel(
 
     let script_path = settings.script_override.map(Path::to_path_buf);
     let TestRunSettings {
+        collection_schedule,
         timeout,
         show_output,
         diagnostics,
@@ -99,6 +100,7 @@ pub(super) fn run_tests_parallel(
                 let result = run_prepared_test(
                     test,
                     TestRunSettings {
+                        collection_schedule,
                         script_override: script_path.as_deref(),
                         timeout,
                         show_output,
@@ -239,6 +241,7 @@ mod tests {
 
     fn text_settings() -> TestRunSettings<'static> {
         TestRunSettings {
+            collection_schedule: Default::default(),
             script_override: None,
             timeout: None,
             show_output: false,

@@ -73,3 +73,56 @@ fn reusable_session_preserves_mutable_closures_and_rejects_a_foreign_owner() {
         Value::Integer(3)
     );
 }
+
+#[test]
+fn repeated_callback_cycles_reclaim_after_each_export_without_closing_the_session() {
+    let (program, errors) = fpas_parser::parse(
+        r#"
+program CallbackCycles;
+function Make(): function(): integer;
+begin
+  var Count := 0;
+  var Current: function(): integer := function(): integer begin return 0; end function;
+  Current := function(): integer begin
+    Count := Count + 1;
+    if Count < 0 then return Current(); end if;
+    return Count;
+  end function;
+  return Current;
+end function;
+function Invoke(Next: function(): integer): integer;
+begin return Next(); end function;
+begin end.
+"#,
+    );
+    assert!(errors.is_empty());
+    let image = Arc::new(fpas_compiler::compile(&program).unwrap());
+    let make = function(&image, "make");
+    let invoke = function(&image, "invoke");
+    let config = fpas_bytecode::CollectionSchedule {
+        allocations: std::num::NonZeroUsize::new(1).unwrap(),
+        mutations: std::num::NonZeroUsize::new(1).unwrap(),
+        safe_points: std::num::NonZeroUsize::new(1).unwrap(),
+    };
+    let mut session = CallbackSession::from_shared(image).with_collection_schedule(config);
+    assert_eq!(session.domain.collection_schedule(), Some(config));
+    for _ in 0..40 {
+        let a = session.invoke(make, vec![]).unwrap().value;
+        let b = session.invoke(make, vec![]).unwrap().value;
+        assert_eq!(session.domain.collection_stats().live_cells, 4);
+        drop(a);
+        assert_eq!(session.domain.collection_stats().live_cells, 2);
+        assert_eq!(
+            session
+                .invoke(invoke, vec![b.clone().into()])
+                .unwrap()
+                .value
+                .try_to_data()
+                .unwrap(),
+            Value::Integer(1)
+        );
+        drop(b);
+        assert_eq!(session.domain.collection_stats().live_cells, 0);
+    }
+    assert!(session.domain.collection_stats().cleared_cells >= 160);
+}

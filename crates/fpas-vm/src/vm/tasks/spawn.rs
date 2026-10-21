@@ -104,7 +104,13 @@ impl Worker {
             Some(destination)
         };
         let id = scheduler.alloc_id();
-        let mut task = TaskState::entry(id, &function, info, arguments);
+        let mut task = TaskState::entry_in_domain(
+            id,
+            &function,
+            info,
+            arguments,
+            crate::vm::domain::related_domain(&self.domain),
+        );
         task.owner_scope = scheduler.scopes.enroll(scope, id);
         scheduler.register_result(id);
         if let Some(destination) = destination {

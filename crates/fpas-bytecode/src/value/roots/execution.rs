@@ -135,6 +135,7 @@ impl MemoryDomain {
         state.owner = None;
         self.0.roots.available.notify_all();
         drop(state);
+        self.request_collection_at_rest();
         self.try_service_maintenance();
         Some(PublishedWait {
             domain: self.clone(),
@@ -248,6 +249,17 @@ impl ExecutionAccess {
     /// Service pending work only at a completed operation with every owner published.
     pub fn safe_point(&self) -> super::MaintenanceOutcome {
         self.domain.service(true)
+    }
+    /// Poll after one completed dispatch batch with every owner and result published.
+    /// Other maintenance retries do not advance the periodic batch counter.
+    pub fn batch_safe_point(&self) -> super::MaintenanceOutcome {
+        self.note_completed_batch();
+        self.safe_point()
+    }
+    /// Record one completed dispatch batch before deciding whether roots must be
+    /// published. This only requests work; active execution still excludes service.
+    pub fn note_completed_batch(&self) {
+        self.domain.note_safe_point();
     }
 }
 impl Drop for ExecutionAccess {

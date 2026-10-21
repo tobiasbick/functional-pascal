@@ -48,6 +48,10 @@ fn send_case_rejects_local_payload_but_accepts_and_executes_local_callback() {
         vec![Value::Cell(count.clone())],
         worker.domain.id().clone(),
     );
+    let _observation = worker.domain.root_values(
+        fpas_bytecode::RootKind::Host,
+        vec![Value::Cell(count.clone())],
+    );
     for payload in [
         Value::Cell(count.clone()),
         Value::option_some(Value::Cell(count.clone())),

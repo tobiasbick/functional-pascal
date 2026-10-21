@@ -34,6 +34,7 @@ const MAX_CAPTURED_OUTPUT: usize = 8 * 1024 * 1024;
 
 #[derive(Serialize, Deserialize)]
 struct WorkerRequest {
+    collection_schedule: fpas_bytecode::CollectionSchedule,
     test_path: PathBuf,
     source_paths: Option<Vec<PathBuf>>,
     sources: Vec<crate::cli_output::RuntimeSource>,
@@ -224,6 +225,7 @@ fn write_worker_inputs(
             script: value.script.clone(),
         });
     let request = WorkerRequest {
+        collection_schedule: prepared.collection_schedule,
         test_path: prepared.test_path.clone(),
         source_paths: prepared.source_paths.as_deref().cloned(),
         sources: (*prepared.sources).clone(),

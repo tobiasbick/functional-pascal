@@ -88,29 +88,33 @@ impl Worker {
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
         self.check_task_cancellation()?;
-        if !self.callback_continuations.is_empty() {
-            if TRACE {
-                self.trace_local_begin();
-            }
-            let (owner, address) = self
-                .callback_origin()
-                .unwrap_or((self.function, self.current_address));
-            let result = self.resume_callback_continuation();
-            // Continuation work has no declaration store, even if current_address still
-            // names the last completed Move in a callback frame.
-            if TRACE {
-                self.trace_local_finish(owner, address, false, false, false);
-            }
-            if result? {
-                return Ok(DispatchBatch {
-                    step: DispatchStep::Continue,
-                    steps: 1,
-                });
-            }
-        }
         let mut steps = 0;
         while steps < budget {
             self.check_task_cancellation()?;
+            // A ready hosted continuation advances as one scheduling step inside the batch,
+            // so each callback does not pay a separate execution-access round trip.
+            if self.callback_resume_pending() {
+                if TRACE {
+                    self.trace_local_begin();
+                }
+                let (owner, address) = self
+                    .callback_origin()
+                    .unwrap_or((self.function, self.current_address));
+                let result = self.resume_callback_continuation();
+                // Continuation work has no declaration store, even if current_address still
+                // names the last completed Move in a callback frame.
+                if TRACE {
+                    self.trace_local_finish(owner, address, false, false, false);
+                }
+                if result? {
+                    steps += 1;
+                    // Requested maintenance is serviced at this boundary, as before.
+                    if self.domain.maintenance_pending() {
+                        break;
+                    }
+                    continue;
+                }
+            }
             if TRACE && self.trace_interrupted() {
                 return Err(diagnostics::at_address(
                     self.executable.executable(),
@@ -172,7 +176,7 @@ impl Worker {
                             steps,
                         });
                     }
-                    if self.callback_resume_pending() {
+                    if self.domain.maintenance_pending() && self.callback_resume_pending() {
                         break;
                     }
                 }

@@ -19,6 +19,7 @@ impl Value {
                 | Self::Boolean(_)
                 | Self::Str(_)
                 | Self::Unit
+                | Self::Task(_)
                 | Self::OptionNone => return true,
                 Self::Array(values) => return values.is_ownership_neutral(),
                 Self::Record(value) => return value.is_ownership_neutral(),
@@ -27,11 +28,9 @@ impl Value {
                 Self::OptionSome(inner) | Self::ResultOk(inner) | Self::ResultError(inner) => {
                     value = inner;
                 }
-                Self::Cell(_)
-                | Self::Reference(_)
-                | Self::Function(_)
-                | Self::Task(_)
-                | Self::OpaqueHandle(_) => return false,
+                Self::Cell(_) | Self::Reference(_) | Self::Function(_) | Self::OpaqueHandle(_) => {
+                    return false;
+                }
             }
         }
     }

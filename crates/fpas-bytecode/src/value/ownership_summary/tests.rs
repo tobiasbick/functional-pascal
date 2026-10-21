@@ -70,6 +70,13 @@ fn resource_shaped_records_are_neutral_without_becoming_plain_data() {
 }
 
 #[test]
+fn task_ids_are_plain_leaves_for_ownership_summaries() {
+    let tasks = SharedArray::from(vec![Value::Task(1), Value::option_some(Value::Task(2))]);
+    assert!(tasks.is_ownership_neutral());
+    assert!(!tasks.is_plain_data());
+}
+
+#[test]
 fn local_or_capability_leaves_in_any_position_prevent_a_neutral_summary() {
     let owner = MemoryDomain::new();
     for value in [
@@ -81,7 +88,6 @@ fn local_or_capability_leaves_in_any_position_prevent_a_neutral_summary() {
             },
             path: Vec::new(),
         })),
-        Value::Task(3),
         Value::OpaqueHandle(4),
     ] {
         let wrapped = Value::option_some(Value::result_error(value));
@@ -143,7 +149,7 @@ fn specialized_replacements_preserve_summaries_only_for_neutral_inputs() {
         Value::Unit
     );
     assert!(record_value.is_ownership_neutral());
-    record_value.replace_field(0, Value::Task(1));
+    record_value.replace_field(0, Value::OpaqueHandle(1));
     assert!(!record_value.is_ownership_neutral());
 
     let mut enumeration = enumeration(Value::Unit);

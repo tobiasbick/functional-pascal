@@ -3,6 +3,7 @@ use super::*;
 mod network_connect;
 mod network_read;
 mod network_write;
+mod static_capabilities;
 mod task_results;
 mod task_scopes;
 mod wait_any;
@@ -19,7 +20,10 @@ fn retained_task_spawn_and_wait_execute() {
     let execution = assert_succeeds(
         "program RegisterTasks;\nuses Std.Console as Console, Std.Tasks as Tasks;\n\nfunction Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend function;\n\nbegin scope\n  const T: task of integer := go Add(20, 22);\n  Console.WriteLn(Tasks.Wait(T));\n end scope; end.",
     );
-    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        fpas_bytecode::Value::Unit
+    );
 }
 
 #[test]
@@ -64,7 +68,7 @@ fn wait_all_keeps_register_task_results_available() {
 
 #[test]
 fn mutable_capture_cannot_cross_register_task_boundary() {
-    let source = "program RegisterTaskBound;\nuses Std.Tasks as Tasks;\n\nfunction Make(): function(): integer;\nbegin\n  var Value: integer := 41;\n  return function(): integer\n  begin\n    Value := Value + 1;\n    return Value;\n  end function;\nend function;\n\nbegin scope\n  const Work: function(): integer := Make();\n  const T: task of integer := go Work();\n  discard Tasks.Wait(T);\n end scope; end.";
+    let source = "program RegisterTaskBound;\nuses Std.Tasks as Tasks;\n\nfunction Make(): function(): integer;\nbegin\n  var Value: integer := 41;\n  return function(): integer\n  begin\n    Value := Value + 1;\n    return Value;\n  end function;\nend function;\n\nprocedure Start(Work: function(): integer);\nbegin scope\n  const T: task of integer := go Work();\n  discard Tasks.Wait(T);\nend scope; end procedure;\n\nbegin Start(Make()); end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
 }

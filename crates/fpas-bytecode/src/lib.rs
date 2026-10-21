@@ -30,7 +30,7 @@ pub use debug::{
     analyze_debug_effects, intrinsic_debug_effects,
 };
 pub use decoded::DecodedInstruction;
-pub use executable::{Executable, VerifiedExecutable};
+pub use executable::{Executable, ExecutableIdentity, FunctionTarget, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
 pub use function::{CodeRange, FunctionFlags, FunctionInfo, ReturnConvention};
 pub use instruction::{
@@ -56,10 +56,15 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    EnumConstructionError, EnumValue, FunctionValue, RecordValue, ReferenceRoot, ReferenceStep,
-    RuntimeEnumLayout, RuntimeErrorVariant, RuntimeRecordLayout, SharedArray, SharedDict,
-    SharedEnum, SharedFunction, SharedRecord, SharedReference, SharedStr, Value, VariableReference,
-    managed_value_buffer,
+    CellSnapshot, CellUpdateError, CollectionLimits, CollectionStats, DomainAccess, DomainId,
+    DomainMaintenance, DomainPhase, DomainSession, EnumConstructionError, EnumValue,
+    ExecutionAccess, ExecutionResume, ExecutionRoots, FunctionValue, GraphClassification,
+    MaintenanceDeferral, MaintenanceOutcome, MaintenancePolicy, MemoryDomain, OwnedCell,
+    OwnershipError, PublishedWait, RecordValue, ReferenceRoot, ReferenceStep, RegisteredRoots,
+    RootKind, RootValues, RuntimeEnumLayout, RuntimeErrorVariant, RuntimeRecordLayout, SharedArray,
+    SharedDict, SharedEnum, SharedFunction, SharedRecord, SharedReference, SharedStr, TraceRoots,
+    Value, VariableReference, WeakOwnedCell, classify_values, defer_maintenance, inspect_values,
+    managed_value_buffer, release_values, validate_local,
 };
 
 /// Persistent register instruction-set and intrinsic ABI version recorded in

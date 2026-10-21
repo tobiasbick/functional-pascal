@@ -1,15 +1,16 @@
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use fpas_bytecode::{
-    EnumTypeId, EnumVariantId, FunctionId, RecordTypeId, RuntimeEnumLayout, RuntimeRecordLayout,
-    SharedArray, SharedEnum, SharedRecord, Value,
+    EnumTypeId, EnumVariantId, FunctionId, MemoryDomain, RecordTypeId, RuntimeEnumLayout,
+    RuntimeRecordLayout, SharedArray, SharedEnum, SharedRecord, Value,
 };
 
 use super::{DebugInspectionLimits, RetainedValue, render};
 
 fn retained(value: Value) -> RetainedValue {
     RetainedValue {
+        domain: None,
         name: "value".to_string(),
         type_name: value.type_name().to_string(),
         value: Some(value),
@@ -109,13 +110,16 @@ fn summaries_cover_scalars_wrappers_aggregates_functions_and_opaque_values() {
 
     let function = render(
         &retained(Value::function(
-            FunctionId::new(0),
-            "callback".to_string(),
+            payload_executable()
+                .verify()
+                .expect("verified payload image")
+                .function_target(FunctionId::new(0))
+                .expect("root target"),
             vec![Value::Integer(1)],
         )),
         limits,
     );
-    assert_eq!(function.summary, "<function callback>");
+    assert_eq!(function.summary, "<function root>");
     assert_eq!(function.named_children, 1);
     assert_eq!(
         render(&retained(Value::Task(9)), limits).summary,
@@ -124,37 +128,28 @@ fn summaries_cover_scalars_wrappers_aggregates_functions_and_opaque_values() {
 }
 
 #[test]
-fn cells_report_cycles_contention_and_poisoning_without_blocking() {
+fn cells_report_cycles_and_inaccessible_ownership_without_blocking() {
     let limits = DebugInspectionLimits::default();
-    let cycle = Arc::new(Mutex::new(Value::Unit));
-    *cycle.lock().expect("cycle lock") = Value::Cell(Arc::clone(&cycle));
-    let first = render(&retained(Value::Cell(Arc::clone(&cycle))), limits);
+    let domain = MemoryDomain::new();
+    let cycle = domain.new_cell(Value::Unit).expect("cycle cell");
+    cycle
+        .replace(&domain, Value::Cell(cycle.clone()))
+        .expect("create cycle");
+    let mut value = retained(Value::Cell(cycle.clone()));
+    value.domain = Some(domain.clone());
+    let first = render(&value, limits);
     let second = render(&first.children[0], limits);
     assert_eq!(second.summary, "<cycle>");
     assert_eq!(second.presentation_hint, Some("cycle".to_string()));
+    cycle.replace(&domain, Value::Unit).expect("break cycle");
 
-    let busy = Arc::new(Mutex::new(Value::Integer(1)));
-    let guard = busy.lock().expect("busy lock");
-    assert_eq!(
-        render(&retained(Value::Cell(Arc::clone(&busy))), limits).summary,
-        "<cell busy>"
-    );
-    drop(guard);
-
-    let poisoned = Arc::new(Mutex::new(Value::Integer(2)));
-    let thread_cell = Arc::clone(&poisoned);
-    assert!(
-        std::thread::spawn(move || {
-            let _guard = thread_cell.lock().expect("poison lock");
-            panic!("poison debugger test cell");
-        })
-        .join()
-        .is_err()
-    );
-    assert_eq!(
-        render(&retained(Value::Cell(poisoned)), limits).presentation_hint,
-        Some("captured mutable, poisoned".to_string())
-    );
+    let cell = domain.new_cell(Value::Integer(1)).expect("owned cell");
+    let mut inaccessible = retained(Value::Cell(cell));
+    assert_eq!(render(&inaccessible, limits).summary, "<cell unavailable>");
+    inaccessible.domain = Some(MemoryDomain::new());
+    let denied = render(&inaccessible, limits);
+    assert_eq!(denied.summary, "<cell unavailable>");
+    assert_eq!(denied.presentation_hint, Some("unavailable".to_string()));
 }
 
 fn writable(value: Value, ty: fpas_bytecode::DebugTypeId) -> RetainedValue {

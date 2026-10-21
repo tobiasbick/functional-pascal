@@ -47,6 +47,8 @@ impl DebugSession {
         expression: Option<&DebugExpression>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugTaskResultReplacement, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_inspectable("task.result.replace")?;
         let function = match self.runtime.completed_result_function(task_id) {
             Ok(function) => function,
@@ -106,6 +108,13 @@ impl DebugSession {
         let reserved_handles = prepared.reserved_handles();
         match self.runtime.replace_completed_result(task_id, value) {
             RetainedResultReplacement::Replaced => {}
+            RetainedResultReplacement::Invalid(message) => {
+                return Err(DebugSessionError {
+                    kind: DebugErrorKind::TaskResultReplacementType,
+                    message: format!("completed task result cannot be published: {message}"),
+                    hint: "Use a transferable result without local cells, task-bound functions, or references.".into(),
+                });
+            }
             RetainedResultReplacement::Consumed => {
                 return Err(result_unsupported(
                     format!("task {task_id} result was already consumed"),

@@ -53,7 +53,8 @@ pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
                 if a.function != b.function
                     || a.name != b.name
                     || a.task_bound != b.task_bound
-                    || a.owner_task != b.owner_task
+                    || a.owner_domain != b.owner_domain
+                    || !a.target().same_executable(b.target())
                     || a.captures.len() != b.captures.len()
                 {
                     return false;
@@ -65,7 +66,7 @@ pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
                     _ => return false,
                 }
             }
-            (Value::Cell(a), Value::Cell(b)) if std::sync::Arc::ptr_eq(a, b) => {}
+            (Value::Cell(a), Value::Cell(b)) if a.ptr_eq(b) => {}
             (Value::Task(a), Value::Task(b)) if a == b => {}
             (Value::OpaqueHandle(a), Value::OpaqueHandle(b)) if a == b => {}
             _ => return false,

@@ -43,6 +43,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugStringMutationResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("string.replace_character")?;
         let result = (|| {
             let prepared = self.prepare_container_mutation(

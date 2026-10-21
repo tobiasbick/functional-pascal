@@ -36,7 +36,10 @@ begin
     panic('scalar mismatch'); end if;
 end.",
     );
-    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        fpas_bytecode::Value::Unit
+    );
 }
 
 #[test]

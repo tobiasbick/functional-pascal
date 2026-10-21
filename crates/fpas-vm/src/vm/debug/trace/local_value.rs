@@ -54,7 +54,7 @@ fn dereference(
     }
     match root {
         Value::Cell(cell) => {
-            let value = cell.try_lock().ok()?;
+            let value = cell.try_read(&worker.domain).ok()?;
             dereference(worker, &value, types, fields, depth + 1)
         }
         Value::Reference(reference) => match bindings::read_reference(worker, reference) {
@@ -107,7 +107,8 @@ pub(super) fn project(
     let valid = match (image.debug_types.get(ty.get() as usize)?, value) {
         (DebugType::Enum(expected), Value::Enum(value)) => {
             let actual = &value.body().layout;
-            actual.enumeration == *expected
+            value.body().values.is_empty()
+                && actual.enumeration == *expected
                 && image
                     .enum_variants
                     .get(actual.variant_id.get() as usize)

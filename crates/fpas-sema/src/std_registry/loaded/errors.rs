@@ -79,7 +79,7 @@ pub(super) fn register(checker: &mut Checker, family: NativeErrorFamily) -> Ty {
                 ty: ty.clone(),
                 mutable: false,
                 kind,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         );
     }

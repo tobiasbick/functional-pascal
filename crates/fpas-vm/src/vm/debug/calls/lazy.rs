@@ -17,6 +17,7 @@ pub(in crate::vm::debug) struct LazyCallSandbox<'a> {
     executable: Arc<VerifiedExecutable>,
     layouts: Arc<RuntimeLayouts>,
     globals: Arc<RwLock<Vec<Option<Value>>>>,
+    global_domain: Option<fpas_bytecode::MemoryDomain>,
     limits: DebugEvaluationLimits,
     cancelled: Arc<AtomicBool>,
     sandbox: Option<CallSandbox>,
@@ -24,12 +25,17 @@ pub(in crate::vm::debug) struct LazyCallSandbox<'a> {
 
 impl<'a> LazyCallSandbox<'a> {
     /// Retains the inputs needed to create a detached call sandbox on first invocation.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "source storage carries explicit ownership authority separately from the selected task"
+    )]
     pub(in crate::vm::debug) fn new(
         inspection: &'a crate::vm::debug::inspection::InspectionSnapshot,
         frame_id: Option<u64>,
         executable: Arc<VerifiedExecutable>,
         layouts: Arc<RuntimeLayouts>,
         globals: Arc<RwLock<Vec<Option<Value>>>>,
+        global_domain: Option<fpas_bytecode::MemoryDomain>,
         limits: DebugEvaluationLimits,
         cancelled: Arc<AtomicBool>,
     ) -> Self {
@@ -39,10 +45,41 @@ impl<'a> LazyCallSandbox<'a> {
             executable,
             layouts,
             globals,
+            global_domain,
             limits,
             cancelled,
             sandbox: None,
         }
+    }
+
+    /// Retain only reachable sandbox cells, not the globals or temporary construction map.
+    pub(in crate::vm::debug) fn result_roots(
+        &self,
+        values: &[Value],
+    ) -> Result<Vec<fpas_bytecode::RootValues>, DebugSessionError> {
+        let mut roots = self.inspection.root_guards();
+        if let Some(sandbox) = &self.sandbox {
+            let domain = &sandbox.detacher.domain;
+            let mut retained = Vec::new();
+            fpas_bytecode::inspect_values(values, |value| match value {
+                Value::Cell(cell) if cell.owner() == domain.id() => retained.push(value.clone()),
+                Value::Function(function)
+                    if function.owner_domain.as_ref() == Some(domain.id()) =>
+                {
+                    retained.push(value.clone())
+                }
+                _ => {}
+            })
+            .map_err(|_| {
+                super::detach::error(
+                    crate::vm::debug::types::DebugErrorKind::UnavailableValue,
+                    "debug result graph is unavailable",
+                    "Retry at a stable stop.",
+                )
+            })?;
+            roots.push(domain.root_values(fpas_bytecode::RootKind::Evaluation, retained));
+        }
+        Ok(roots)
     }
 
     /// Invokes a debugger call through one lazily initialized detached sandbox.
@@ -76,11 +113,15 @@ impl<'a> LazyCallSandbox<'a> {
                         })
                 })
                 .unwrap_or(fpas_bytecode::SourceId::new(0));
+            let domains = std::iter::once(self.inspection.domain.clone())
+                .chain(self.global_domain.clone())
+                .collect::<Vec<_>>();
             self.sandbox = Some(CallSandbox::new(
                 Arc::clone(&self.executable),
                 Arc::clone(&self.layouts),
                 source,
                 &self.globals,
+                &domains,
                 self.limits,
                 Arc::clone(&self.cancelled),
             )?);
@@ -93,8 +134,13 @@ impl<'a> LazyCallSandbox<'a> {
             )
         })?;
         if let DebugCallTarget::Reference(assignment) = target {
-            return sandbox.reference(self.inspection, self.frame_id, &assignment, &arguments);
+            let result =
+                sandbox.reference(self.inspection, self.frame_id, &assignment, &arguments)?;
+            sandbox.temporary_roots.push(result.clone());
+            return Ok(result);
         }
-        sandbox.invoke(target, arguments)
+        let result = sandbox.invoke(target, arguments)?;
+        sandbox.temporary_roots.push(result.clone());
+        Ok(result)
     }
 }

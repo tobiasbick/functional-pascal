@@ -12,6 +12,7 @@ impl Checker {
                 (Some(expected), Some(expr)) => {
                     let actual = self.check_expr_with_expected(expr, Some(expected));
                     self.check_type_compat(expected, &actual, "return value", span);
+                    self.observe_return_capability(expr);
                 }
                 (Some(expected), None) => {
                     self.error_with_code(
@@ -51,6 +52,8 @@ impl Checker {
                 "Place break inside for, while, or repeat.",
                 span,
             );
+        } else {
+            self.scopes.record_capability_loop_break();
         }
     }
 
@@ -62,6 +65,8 @@ impl Checker {
                 "Place continue inside for, while, or repeat.",
                 span,
             );
+        } else {
+            self.scopes.record_capability_loop_continue();
         }
     }
 }

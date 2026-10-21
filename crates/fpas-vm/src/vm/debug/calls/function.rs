@@ -74,11 +74,14 @@ impl CallSandbox {
         self.require_parameters(info, &arguments, display_name)?;
         let arguments = self.detach_values(&arguments)?;
         let captures = self.detach_values(captures)?;
-        let mut worker = Worker::for_function_with_captures(
+        let mut worker = Worker::for_function_in_domain(
             Arc::clone(&self.executable),
             function,
-            &arguments,
-            &captures,
+            crate::vm::worker::FunctionInputs {
+                arguments: &arguments,
+                captures: &captures,
+                domain: self.detacher.domain.clone(),
+            },
             Arc::clone(&self.globals),
             Arc::clone(&self.layouts),
             Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
@@ -101,7 +104,10 @@ impl CallSandbox {
                 .map_err(|diagnostic| runtime_error(*diagnostic))?
             {
                 DispatchStep::Continue => {}
-                DispatchStep::Return(value) => return Ok(value),
+                DispatchStep::Return(value) => {
+                    self.temporary_roots.push(value.clone());
+                    return Ok(value);
+                }
                 DispatchStep::Suspend => {
                     return Err(error(
                         DebugErrorKind::ForbiddenCallEffect,

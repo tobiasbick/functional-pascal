@@ -76,6 +76,7 @@ pub(in crate::vm) fn capture(
             result.reason = Some("string_limit");
         }
         let retained = RetainedValue {
+            domain: Some(worker.domain.clone()),
             name: String::new(),
             value,
             type_name: type_prefix.to_string(),

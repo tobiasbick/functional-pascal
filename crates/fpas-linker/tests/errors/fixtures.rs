@@ -168,14 +168,10 @@ pub fn function(executable: &VerifiedExecutable, name: &str) -> FunctionId {
 }
 
 pub fn callable(executable: &VerifiedExecutable, id: FunctionId) -> Value {
-    let info = &executable.executable().functions[usize::from(id.get())];
     Value::Function(fpas_bytecode::SharedFunction::unbound(
-        id,
         executable
-            .executable()
-            .strings
-            .get(info.name)
-            .expect("name"),
+            .function_target(id)
+            .expect("verified function target"),
         vec![],
     ))
 }

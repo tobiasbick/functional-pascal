@@ -103,7 +103,7 @@ pub(super) fn as_function(value: &Value) -> &SharedFunction {
     }
 }
 
-pub(super) fn cell_arc(value: &Value) -> &std::sync::Arc<std::sync::Mutex<Value>> {
+pub(super) fn cell_handle(value: &Value) -> &fpas_bytecode::OwnedCell {
     match value {
         Value::Cell(cell) => cell,
         other => panic!("expected cell, got {}", other.type_name()),

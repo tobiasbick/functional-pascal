@@ -75,7 +75,10 @@ impl check::Checker {
             }
             for exported in &interface.symbols {
                 self.install_native_error_dependencies(&exported.ty);
-                let symbol = interface_symbol_to_sema(exported)?;
+                let mut symbol = interface_symbol_to_sema(exported)?;
+                if !self.type_can_contain_callable(&symbol.ty) {
+                    symbol.capability = crate::TransferCapability::Transferable;
+                }
                 self.scopes.imports.define_source(
                     &interface.unit_name,
                     &exported.qualified_name,
@@ -184,7 +187,7 @@ impl check::Checker {
                 ty: enum_symbol_ty.clone(),
                 mutable: false,
                 kind,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             };
             let fully_qualified = format!("{}.{}", exported.qualified_name, variant.name);
             self.scopes

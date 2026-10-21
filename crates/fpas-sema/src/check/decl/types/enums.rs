@@ -24,7 +24,7 @@ impl Checker {
                     ty: Ty::Named(td.name.clone()),
                     mutable: false,
                     kind: SymbolKind::Type,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
             )
         {
@@ -98,7 +98,7 @@ impl Checker {
                 ty: ty.clone(),
                 mutable: false,
                 kind,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             };
             self.register_enum_variant_symbols(&td.name, &variant.name, symbol, span);
         }
@@ -109,7 +109,7 @@ impl Checker {
                 ty,
                 mutable: false,
                 kind: SymbolKind::Type,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             };
         }
     }

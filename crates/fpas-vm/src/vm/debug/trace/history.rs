@@ -226,6 +226,7 @@ fn capture(
         TraceLeaf::Absent => None,
     });
     let value = RetainedValue {
+        domain: None,
         name: String::new(),
         value,
         type_name: watch.type_name.clone(),

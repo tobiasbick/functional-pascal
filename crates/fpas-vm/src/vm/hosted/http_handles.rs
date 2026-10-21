@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use fpas_bytecode::{HttpIntrinsic, Intrinsic, SourceLocation, Value};
+use fpas_bytecode::{HttpIntrinsic, Intrinsic, SourceLocation, Value, release_values};
 use fpas_diagnostics::codes::{
     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_INTRINSIC_STACK_STATE_ERROR,
     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -37,7 +37,11 @@ impl HttpStateRegistry {
         }
     }
 
-    fn reserve(&self, operation: HttpIntrinsic, state: Value) -> Option<i64> {
+    fn reserve(&self, operation: HttpIntrinsic, state: Value) -> Result<Option<i64>, String> {
+        if let Err(message) = crate::vm::domain::check_transfer(std::slice::from_ref(&state)) {
+            release_values(vec![state]);
+            return Err(message);
+        }
         let mut states = self
             .states
             .lock()
@@ -45,19 +49,33 @@ impl HttpStateRegistry {
         let slot = match operation {
             HttpIntrinsic::ReserveBodyStreamState => {
                 let slot = states.next_body_stream;
-                states.next_body_stream = slot.checked_add(1)?;
+                let Some(next) = slot.checked_add(1) else {
+                    drop(states);
+                    release_values(vec![state]);
+                    return Ok(None);
+                };
+                states.next_body_stream = next;
                 states.body_streams.insert(slot, state);
                 slot
             }
             HttpIntrinsic::ReserveSseDecoderState => {
                 let slot = states.next_sse_decoder;
-                states.next_sse_decoder = slot.checked_add(1)?;
+                let Some(next) = slot.checked_add(1) else {
+                    drop(states);
+                    release_values(vec![state]);
+                    return Ok(None);
+                };
+                states.next_sse_decoder = next;
                 states.sse_decoders.insert(slot, state);
                 slot
             }
-            _ => return None,
+            _ => {
+                drop(states);
+                release_values(vec![state]);
+                return Ok(None);
+            }
         };
-        Some(slot)
+        Ok(Some(slot))
     }
 
     fn contains(&self, operation: HttpIntrinsic, slot: i64) -> bool {
@@ -84,7 +102,11 @@ impl HttpStateRegistry {
         }
     }
 
-    fn store(&self, operation: HttpIntrinsic, slot: i64, state: Value) -> bool {
+    fn store(&self, operation: HttpIntrinsic, slot: i64, state: Value) -> Result<bool, String> {
+        if let Err(message) = crate::vm::domain::check_transfer(std::slice::from_ref(&state)) {
+            release_values(vec![state]);
+            return Err(message);
+        }
         let mut states = self
             .states
             .lock()
@@ -92,13 +114,21 @@ impl HttpStateRegistry {
         let registry = match operation {
             HttpIntrinsic::StoreBodyStreamState => &mut states.body_streams,
             HttpIntrinsic::StoreSseDecoderState => &mut states.sse_decoders,
-            _ => return false,
+            _ => {
+                drop(states);
+                release_values(vec![state]);
+                return Ok(false);
+            }
         };
         let Some(current) = registry.get_mut(&slot) else {
-            return false;
+            drop(states);
+            release_values(vec![state]);
+            return Ok(false);
         };
-        *current = state;
-        true
+        let previous = std::mem::replace(current, state);
+        drop(states);
+        release_values(vec![previous]);
+        Ok(true)
     }
 }
 
@@ -120,6 +150,7 @@ impl Worker {
                     .hosted
                     .http_states
                     .reserve(operation, state)
+                    .map_err(|message| self.invalid_local_value(message))?
                     .ok_or_else(|| {
                         self.runtime_error(
                             RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
@@ -156,7 +187,12 @@ impl Worker {
                 require_count(self, arguments, 2)?;
                 let slot = integer(self, &arguments[0])?;
                 let state = record(self, &arguments[1])?.clone();
-                if !self.hosted.http_states.store(operation, slot, state) {
+                if !self
+                    .hosted
+                    .http_states
+                    .store(operation, slot, state)
+                    .map_err(|message| self.invalid_local_value(message))?
+                {
                     return Err(self.runtime_error(
                         RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                         format!("HTTP state slot {slot} is invalid"),
@@ -210,6 +246,9 @@ fn type_error(worker: &Worker, expected: &str, actual: &Value) -> VmError {
 }
 
 #[cfg(test)]
+mod ownership_tests;
+
+#[cfg(test)]
 mod tests {
     use std::sync::Arc;
     use std::thread;
@@ -235,6 +274,7 @@ mod tests {
                 worker
                     .join()
                     .expect("state worker should complete")
+                    .expect("state should be transferable")
                     .expect("slot range should remain available")
             })
             .collect();

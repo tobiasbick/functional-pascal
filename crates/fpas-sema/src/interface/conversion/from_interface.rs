@@ -51,7 +51,14 @@ pub(crate) fn interface_symbol_to_sema(
         ty: interface_type_to_ty(&exported.ty)?,
         mutable,
         kind,
-        task_bound: false,
+        capability: if matches!(
+            exported.kind,
+            artifact::SymbolKind::Variable | artifact::SymbolKind::ComputedConstant
+        ) {
+            crate::TransferCapability::Unknown
+        } else {
+            crate::TransferCapability::Transferable
+        },
     })
 }
 

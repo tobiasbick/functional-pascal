@@ -2,7 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
-use fpas_bytecode::{DebugType, DebugTypeId, FunctionId, Value, VerifiedExecutable};
+use fpas_bytecode::{
+    DebugType, DebugTypeId, FunctionId, SharedFunction, Value, VerifiedExecutable,
+};
 
 use super::super::super::evaluation::DebugEvaluationLimits;
 use super::super::super::routines::matching_functions;
@@ -99,12 +101,18 @@ pub(in crate::vm::debug) fn prepare(
         limits.max_depth,
         limits.max_detached_values,
     )?;
-    let value = Value::bound_function(function_id, canonical.to_string(), receiver);
-    let Value::Function(bound) = &value else {
-        unreachable!("bound function constructor must return a function value")
-    };
-    captures::require_eligible(bound, limits.max_depth, limits.max_detached_values)?;
-    Ok(value)
+    let bound = SharedFunction::bound(
+        executable.function_target(function_id).ok_or_else(|| {
+            type_error(
+                "bound target is outside the verified executable",
+                "Rebuild the executable.",
+            )
+        })?,
+        receiver,
+    )
+    .with_display_name(canonical);
+    captures::require_eligible(&bound, limits.max_depth, limits.max_detached_values)?;
+    Ok(Value::Function(bound))
 }
 
 fn resolve_exact(

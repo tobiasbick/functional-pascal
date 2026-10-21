@@ -642,3 +642,35 @@ fn active_body_replace_is_rejected_before_the_live_image_changes() {
     assert_eq!(live_ptr(&session), before);
     assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
 }
+
+#[test]
+fn retained_callable_provenance_rejects_an_unrebound_live_image_atomically() {
+    let source = "program P;\nfunction F(): integer;\nbegin\nreturn 1;\nend function;\nbegin\nconst Callback := F;\ndiscard Callback();\nend.";
+    let compile = |text: &str| {
+        let (program, errors) = fpas_parser::parse(text);
+        assert!(errors.is_empty(), "{errors:?}");
+        fpas_compiler::compile(&program).expect("image")
+    };
+    let current = compile(source);
+    let candidate = compile(&source.replace("return 1;", "return 2;"));
+    let mut session = DebugSession::new(current).expect("session");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "<memory>".into(),
+            line: 8,
+            column: None,
+        })
+        .expect("breakpoint");
+    stopped(session.continue_execution().expect("retain callback"));
+    assert!(session.classify_live_image(&candidate).accepted);
+    let before = live_ptr(&session);
+    let version = session.live_image_version();
+    let error = session
+        .replace_live_image(&candidate)
+        .expect_err("no numeric-only rebind");
+    assert_eq!(error.kind, DebugErrorKind::LiveImageIncompatible);
+    assert!(error.message.contains("callable"));
+    assert_eq!(live_ptr(&session), before);
+    assert_eq!(session.live_image_version(), version);
+    assert!(session.test_workers_share_live_image());
+}

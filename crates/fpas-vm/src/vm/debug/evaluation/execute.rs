@@ -2,9 +2,6 @@
 //!
 //! Boolean evaluation: `docs/pascal/language/basics/operators.md#evaluation-order`.
 
-use std::collections::HashSet;
-use std::sync::{Arc, TryLockError};
-
 use fpas_bytecode::Value;
 
 use super::model::{DebugBinaryOperation, DebugCallTarget, DebugEvaluationLimits, DebugExpression};
@@ -280,7 +277,7 @@ fn evaluate_with_qualified_fallback(
             }
         }
     };
-    materialize(value, budget)
+    materialize(value)
 }
 
 fn evaluate_arguments(
@@ -297,37 +294,14 @@ fn evaluate_arguments(
         .collect()
 }
 
-fn materialize(
-    mut value: Value,
-    budget: &mut EvaluationBudget,
-) -> Result<Value, DebugSessionError> {
-    loop {
-        let Value::Cell(cell) = value else {
-            return Ok(value);
-        };
-        let identity = Arc::as_ptr(&cell) as usize;
-        if !budget.visited_cells.insert(identity) {
-            return Err(unavailable_error(
-                "debug expression encountered a cyclic mutable cell",
-                "Inspect the cell in Variables instead of evaluating through the cycle.",
-            ));
-        }
-        value = match cell.try_lock() {
-            Ok(inner) => inner.clone(),
-            Err(TryLockError::WouldBlock) => {
-                return Err(unavailable_error(
-                    "debug expression value is currently locked",
-                    "Retry after the value is no longer contended.",
-                ));
-            }
-            Err(TryLockError::Poisoned(_)) => {
-                return Err(unavailable_error(
-                    "debug expression value is stored in a poisoned cell",
-                    "Inspect the value in Variables; evaluation does not recover poisoned cells.",
-                ));
-            }
-        };
+fn materialize(value: Value) -> Result<Value, DebugSessionError> {
+    if matches!(value, Value::Cell(_)) {
+        return Err(unavailable_error(
+            "debug expression received mutable storage without its owning domain",
+            "Resolve mutable bindings through the current stopped-task inspection.",
+        ));
     }
+    Ok(value)
 }
 
 fn count_traversal(
@@ -377,7 +351,6 @@ fn unavailable_error(message: impl Into<String>, hint: impl Into<String>) -> Deb
 pub(super) struct EvaluationBudget {
     operations: usize,
     traversals: usize,
-    visited_cells: HashSet<usize>,
 }
 
 impl EvaluationBudget {
@@ -385,7 +358,6 @@ impl EvaluationBudget {
         Self {
             operations: 0,
             traversals: 0,
-            visited_cells: HashSet::new(),
         }
     }
 }

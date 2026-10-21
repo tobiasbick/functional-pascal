@@ -1,7 +1,7 @@
 //! Shallow runtime views and bounded presentation records.
 
 use super::ValueOrigin;
-use fpas_bytecode::Value;
+use fpas_bytecode::{MemoryDomain, Value};
 use std::collections::HashSet;
 
 /// Shallow retained runtime storage for lazy inspection, not a detached snapshot.
@@ -9,6 +9,8 @@ use std::collections::HashSet;
 pub(in crate::vm) struct RetainedValue<O: ValueOrigin> {
     /// Binding or child display name.
     pub name: String,
+    /// Explicit authority for checked cell reads; absent for detached scalar observations.
+    pub domain: Option<MemoryDomain>,
     /// Initialized runtime storage, retained shallowly for lazy expansion.
     pub value: Option<Value>,
     /// Declared or runtime display type.

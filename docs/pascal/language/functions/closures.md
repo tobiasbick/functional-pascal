@@ -57,7 +57,8 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 | Routine, static record routine, or program/unit constant | Resolve normally; not stored as capture data. |
 
 All closures created by one activation and capturing the same mutable local observe
-the same cell. The cell survives until the final closure that references it is released.
+the same cell. The cell belongs to the creating logical task, even when that task
+moves between worker threads. Synchronous callbacks share that ownership.
 
 ```pascal id=example-3 fragment context=declarations
 function Counter(): function(): integer;
@@ -113,7 +114,12 @@ with FP3030. See [Reference-parameter lifetimes](var-parameters.md#lifetime).
 ## Lifetime and equality
 
 Creating or copying a closure copies the callable value and shares its environment.
-Releasing the final copy releases the environment.
+Reference counting releases an acyclic environment when its final owner is released.
+A cycle through a mutable capture can retain its environment. The runtime supports
+explicit local collection through its internal maintenance interface; it preserves
+cycles reachable from execution, host or debugger roots and removes unreachable
+cell edges. Automatic collection is not enabled. See
+[runtime ownership](../../program-structure/runtime-ownership.md#explicit-cycle-reclamation).
 
 Closure equality and ordering are not defined. Test for assignment with the existing
 optional-value facilities when needed.
@@ -127,6 +133,35 @@ An immutable capture environment may cross a task boundary. A closure that conta
 mutable capture is **task-bound** and cannot be used as the callable of `go`, sent to
 another task, or returned through a task result. Capturing another task-bound callable
 also makes the outer closure task-bound (the mutable cells are still reachable).
+Runtime closure construction follows the complete capture graph, including cells or
+task-bound functions inside arrays, dictionaries, records and payloads. An immutable
+outer wrapper does not change the ownership of its contents. Cell reads and writes
+check the logical task's ownership before accessing storage; replacing a cell with
+a foreign local graph fails without changing its previous value.
+
+The runtime checks complete graphs before every task start, retained retry, channel
+send and published task result, including arguments, captures and bound receivers.
+This also covers values returned by ordinary helpers whose capture state is not
+known to the compiler. A rejected start admits no child; a rejected send leaves
+the channel unchanged; a forbidden task result completes through the task-failure
+path. Argument expressions already evaluated keep their effects.
+
+The checker distinguishes proven transferable values, known task-bound values,
+and values whose capture state is unknown. It reports FP3016 for known task-bound
+callables, arguments, channel values and task results at the transfer operation.
+This includes locally resolved factory results when their return capability is
+known. Returning a local closure to an ordinary caller remains valid.
+
+Branch and loop joins retain known local state, as do field/index writes and
+aggregate wrappers. A whole-binding assignment replaces the previous capability;
+overwriting one field cannot prove that all other fields are transferable.
+Scalar projections remain transferable. Callable parameters and unresolved or
+imported factory results stay unknown without proof and proceed to the runtime
+guard. Uncertainty alone is not a compile-time error.
+
+An immutable global containing a local closure remains usable by its owning task,
+but a foreign task cannot load that graph. Selection callbacks stay on their
+selecting task and may retain its mutable captures.
 
 Extracting a callable with `const Name` in a `case` pattern preserves the
 matched value's known task-bound state, including nested payloads and uses in
@@ -194,3 +229,4 @@ diagnostic.
 - [Nested functions](nested.md)
 - [Function types](function-types.md)
 - [Concurrency](../concurrency/README.md)
+- [Runtime ownership for Rust hosts](../../program-structure/runtime-ownership.md)

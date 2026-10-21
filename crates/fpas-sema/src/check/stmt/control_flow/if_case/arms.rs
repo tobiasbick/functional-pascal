@@ -6,6 +6,7 @@
 
 use super::Checker;
 use super::coverage::Pat;
+use crate::scope::CapabilitySnapshot;
 use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_UNREACHABLE_CASE_LABEL;
 use fpas_lexer::Span;
@@ -24,6 +25,9 @@ pub(super) struct CaseArms {
     pub(super) rows: Vec<Vec<Pat>>,
     /// Whether every label checked without errors, so coverage diagnostics are meaningful.
     pub(super) labels_valid: bool,
+    pub(super) exhaustive: bool,
+    /// Arm exits; the checker itself is restored to the selector's entry state.
+    pub(super) exits: Vec<CapabilitySnapshot>,
 }
 
 impl Checker {
@@ -33,7 +37,7 @@ impl Checker {
         expr: &Expr,
         arms: &[CaseArmHead<'_>],
         span: Span,
-        mut check_body: impl FnMut(&mut Self, usize),
+        mut check_body: impl FnMut(&mut Self, usize) -> bool,
     ) -> CaseArms {
         let case_ty = self.check_expr(expr);
         let case_ty = self.resolve_visible_type(&case_ty);
@@ -57,7 +61,10 @@ impl Checker {
         let is_pattern_case = is_result_or_option || is_data_enum || is_simple_enum;
         let mut rows: Vec<Vec<Pat>> = Vec::new();
         let mut labels_valid = !case_ty.is_error();
+        let entry = self.scopes.snapshot_capabilities();
+        let mut exits = Vec::with_capacity(arms.len());
         for (index, arm) in arms.iter().enumerate() {
+            self.scopes.restore_capabilities(&entry);
             if let Some(binding_name) =
                 self.scalar_case_binding(is_scalar_case, arm.labels, arm.guard)
             {
@@ -80,8 +87,11 @@ impl Checker {
                 }
                 self.define_pattern_binding(binding_name, &case_ty, expr, arm.span);
                 self.check_guard(arm.guard, span);
-                check_body(self, index);
+                let falls_through = check_body(self, index);
                 self.scopes.pop_scope();
+                if falls_through {
+                    exits.push(self.scopes.snapshot_capabilities());
+                }
                 continue;
             }
 
@@ -135,15 +145,23 @@ impl Checker {
                 }
             }
             self.check_guard(arm.guard, span);
-            check_body(self, index);
+            let falls_through = check_body(self, index);
             if !bindings.is_empty() {
                 self.scopes.pop_scope();
             }
+            if falls_through {
+                exits.push(self.scopes.snapshot_capabilities());
+            }
         }
+        self.scopes.restore_capabilities(&entry);
+        let exhaustive = labels_valid
+            && !self.pattern_row_is_useful(&rows, &[Pat::Wild], std::slice::from_ref(&case_ty));
         CaseArms {
             case_ty,
             rows,
             labels_valid,
+            exhaustive,
+            exits,
         }
     }
 

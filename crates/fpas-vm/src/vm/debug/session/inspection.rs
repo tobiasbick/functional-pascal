@@ -148,18 +148,39 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_inspectable("evaluate")?;
         let task_id = self.task_for_frame(frame_id)?;
         self.inspection_task_id = task_id;
         let result = self.evaluate_runtime_value(expression, frame_id, limits);
-        let result = match result {
-            Ok(value) => self
-                .inspections
-                .get_mut(&task_id)
-                .ok_or_else(|| unknown_task(task_id))?
-                .retain_evaluation_result(value, limits),
+        let result = (|| match result {
+            Ok(value) => {
+                if fpas_bytecode::classify_values(std::slice::from_ref(&value))
+                    .is_ok_and(|graph| graph.owners.is_empty() && !graph.has_references)
+                {
+                    self.inspections
+                        .get_mut(&task_id)
+                        .ok_or_else(|| unknown_task(task_id))?
+                        .retain_evaluation_result(value, limits)
+                } else {
+                    let mut detacher =
+                        crate::vm::debug::calls::ValueDetacher::new(limits.max_detached_values);
+                    if let Some(inspection) = self.inspections.get(&task_id) {
+                        detacher.allow_source(inspection.domain.clone());
+                    }
+                    for domain in self.evaluation_roots.domains() {
+                        detacher.allow_source(domain);
+                    }
+                    let value = detacher.observation(&value)?;
+                    self.inspections
+                        .get_mut(&task_id)
+                        .ok_or_else(|| unknown_task(task_id))?
+                        .retain_evaluation_result_in_domain(value, detacher.domain.clone(), limits)
+                }
+            }
             Err(error) => Err(error),
-        };
+        })();
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
     }
@@ -174,6 +195,8 @@ impl DebugSession {
         expression: &DebugExpression,
         frame_id: Option<u64>,
     ) -> Result<bool, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_inspectable("evaluate.condition")?;
         let result = self
             .evaluate_runtime_value(expression, frame_id, DebugEvaluationLimits::default())
@@ -216,15 +239,19 @@ impl DebugSession {
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
+            self.runtime.worker(0).map(|worker| worker.domain.clone()),
             limits,
             Arc::clone(&self.evaluation_cancelled),
         );
-        evaluate_value(
+        let result = evaluate_value(
             expression,
             limits,
             |name| inspection.resolve_evaluation_name(frame_id, name),
             |target, arguments| sandbox.invoke(target, arguments),
-        )
+        )?;
+        self.evaluation_roots
+            .retain(sandbox.result_roots(std::slice::from_ref(&result))?);
+        Ok(result)
     }
 
     /// Evaluates ordered expressions under one budget in one detached task context.
@@ -250,15 +277,18 @@ impl DebugSession {
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
+            self.runtime.worker(0).map(|worker| worker.domain.clone()),
             limits,
             Arc::clone(&self.evaluation_cancelled),
         );
-        evaluate_values(
+        let result = evaluate_values(
             expressions,
             limits,
             |name| inspection.resolve_evaluation_name(frame_id, name),
             |target, arguments| sandbox.invoke(target, arguments),
-        )
+        )?;
+        self.evaluation_roots.retain(sandbox.result_roots(&result)?);
+        Ok(result)
     }
 
     /// Evaluates ordered expressions around one validation checkpoint under one shared budget.
@@ -286,17 +316,21 @@ impl DebugSession {
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
+            self.runtime.worker(0).map(|worker| worker.domain.clone()),
             limits,
             Arc::clone(&self.evaluation_cancelled),
         );
-        evaluate_values_with_checkpoint(
+        let result = evaluate_values_with_checkpoint(
             prefix,
             suffix,
             limits,
             |name| inspection.resolve_evaluation_name(frame_id, name),
             |target, arguments| sandbox.invoke(target, arguments),
             checkpoint,
-        )
+        )?;
+        self.evaluation_roots
+            .retain(sandbox.result_roots(&result.1)?);
+        Ok(result)
     }
 
     /// Evaluates selectors, derives ordered value expressions, and evaluates them under one budget.
@@ -325,15 +359,19 @@ impl DebugSession {
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
+            self.runtime.worker(0).map(|worker| worker.domain.clone()),
             limits,
             Arc::clone(&self.evaluation_cancelled),
         );
-        evaluate_values_with_dynamic_suffix(
+        let result = evaluate_values_with_dynamic_suffix(
             prefix,
             limits,
             |name| inspection.resolve_evaluation_name(frame_id, name),
             |target, arguments| sandbox.invoke(target, arguments),
             checkpoint,
-        )
+        )?;
+        self.evaluation_roots
+            .retain(sandbox.result_roots(&result.1)?);
+        Ok(result)
     }
 }

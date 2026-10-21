@@ -16,6 +16,10 @@ impl DebugTaskRuntime {
             {
                 continue;
             }
+            let access = slot
+                .worker
+                .execution_access()
+                .map_err(|error| (task_id, error))?;
             let before = readiness_progress(slot);
             match slot.worker.poll_task_suspension() {
                 Ok(true) => {
@@ -30,6 +34,9 @@ impl DebugTaskRuntime {
                     progress = true;
                     if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
                         slot.state = state_from_suspension(&slot.worker);
+                        if slot.worker.publish_execution(&[]).is_ok() {
+                            access.safe_point();
+                        }
                         continue;
                     }
                     // Complete group cleanup and supervision through the same
@@ -37,6 +44,9 @@ impl DebugTaskRuntime {
                     slot.worker.pending_completion = Some(Err(error));
                     slot.state = DebugTaskState::Runnable;
                 }
+            }
+            if slot.worker.publish_execution(&[]).is_ok() {
+                access.safe_point();
             }
             progress |= before != readiness_progress(slot);
             if slot.worker.trace_interrupted() {

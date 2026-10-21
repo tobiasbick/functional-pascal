@@ -57,7 +57,10 @@ fn reused_call_frame_registers_do_not_expose_previous_values() {
     let result = Vm::new(executable)
         .call(FunctionId::new(1), Vec::new())
         .expect("reused call frame should return successfully");
-    assert_eq!(result.value, Value::Unit);
+    assert_eq!(
+        result.value.try_to_data().expect("pure return value"),
+        Value::Unit
+    );
 }
 
 #[test]
@@ -107,7 +110,7 @@ fn released_and_reused_register_slots_are_explicitly_uninitialized() {
 
 #[test]
 fn integer_overwrite_preserves_the_slot_and_releases_previous_references() {
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
 
     let executable = super::verified(
         vec![super::return_unit()],
@@ -116,16 +119,16 @@ fn integer_overwrite_preserves_the_slot_and_releases_previous_references() {
         1,
     );
     let mut worker = crate::vm::worker::Worker::new(Arc::new(executable)).expect("worker");
-    let cell = Arc::new(Mutex::new(Value::Unit));
+    let cell = worker.domain.new_cell(Value::Unit).expect("owned cell");
     worker
-        .store_register(0, Value::Cell(Arc::clone(&cell)))
+        .store_register(0, Value::Cell(cell))
         .expect("store reference");
-    assert_eq!(Arc::strong_count(&cell), 2);
+    assert_eq!(worker.domain.registered_count(), 1);
 
     worker
         .store_register(0, Value::Integer(3))
         .expect("replace reference");
-    assert_eq!(Arc::strong_count(&cell), 1);
+    assert_eq!(worker.domain.registered_count(), 0);
     worker
         .store_register(0, Value::Integer(4))
         .expect("replace integer");
@@ -135,7 +138,7 @@ fn integer_overwrite_preserves_the_slot_and_releases_previous_references() {
 
 #[test]
 fn typed_scalar_stores_update_in_place_or_replace_other_values() {
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
 
     let executable = super::verified(
         vec![super::return_unit()],
@@ -167,16 +170,16 @@ fn typed_scalar_stores_update_in_place_or_replace_other_values() {
         .expect("replace a Boolean");
     assert_eq!(worker.registers[0], Value::Integer(9));
 
-    let cell = Arc::new(Mutex::new(Value::Unit));
+    let cell = worker.domain.new_cell(Value::Unit).expect("owned cell");
     worker
-        .store_register(1, Value::Cell(Arc::clone(&cell)))
+        .store_register(1, Value::Cell(cell))
         .expect("store reference");
     worker
         .store_integer_register(1, 1)
         .expect("replace reference");
     assert_eq!(
-        Arc::strong_count(&cell),
-        1,
+        worker.domain.registered_count(),
+        0,
         "the replaced reference is released"
     );
     assert_eq!(worker.registers[1], Value::Integer(1));

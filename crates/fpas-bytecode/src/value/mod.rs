@@ -1,13 +1,19 @@
 mod aggregate;
 mod array;
+mod cell;
+mod collector;
 mod display;
+mod domain;
 mod drain;
 mod equal;
 mod function;
+mod graph;
 mod managed_heap;
 mod ordering;
+mod ownership_summary;
 mod payload;
 mod reference;
+mod roots;
 mod string;
 
 pub use aggregate::{
@@ -15,11 +21,21 @@ pub use aggregate::{
     RuntimeRecordLayout, SharedDict, SharedEnum, SharedRecord,
 };
 pub use array::SharedArray;
+pub use cell::{CellSnapshot, CellUpdateError, OwnedCell, OwnershipError, WeakOwnedCell};
+pub use collector::{CollectionLimits, CollectionStats};
+pub use domain::{DomainId, MemoryDomain};
+pub use drain::release_values;
 use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
+pub use graph::{GraphClassification, classify_values, inspect_values, validate_local};
 pub use managed_heap::managed_value_buffer;
 pub use payload::ValuePayload;
 pub use reference::{ReferenceRoot, ReferenceStep, SharedReference, VariableReference};
+pub use roots::{
+    DomainAccess, DomainMaintenance, DomainPhase, DomainSession, ExecutionAccess, ExecutionResume,
+    ExecutionRoots, MaintenanceDeferral, MaintenanceOutcome, MaintenancePolicy, PublishedWait,
+    RegisteredRoots, RootKind, RootValues, TraceRoots, defer_maintenance,
+};
 pub use string::SharedStr;
 
 /// Runtime value in the VM.
@@ -68,7 +84,7 @@ pub enum Value {
     /// multi-threaded VM. Mutable captures still mark closures as `task_bound`.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
-    Cell(std::sync::Arc<std::sync::Mutex<Value>>),
+    Cell(OwnedCell),
     /// Task handle (runtime id).
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/README.md`
@@ -151,36 +167,23 @@ impl Value {
         Self::Dict(pairs.into())
     }
 
-    /// Create a non-task-bound first-class function value.
-    pub fn function(
-        function: crate::FunctionId,
-        name: impl Into<std::sync::Arc<str>>,
-        captures: Vec<Value>,
-    ) -> Self {
-        Self::Function(SharedFunction::unbound(function, name, captures))
+    /// Create a first-class function from a validated executable target.
+    pub fn function(target: crate::FunctionTarget, captures: Vec<Value>) -> Self {
+        Self::Function(SharedFunction::unbound(target, captures))
     }
 
-    /// Create a first-class method value bound to one immutable receiver snapshot.
-    pub fn bound_function(
-        function: crate::FunctionId,
-        name: impl Into<std::sync::Arc<str>>,
-        receiver: Value,
-    ) -> Self {
-        Self::Function(SharedFunction::bound(function, name, receiver))
+    /// Create a method value bound to one immutable receiver snapshot.
+    pub fn bound_function(target: crate::FunctionTarget, receiver: Value) -> Self {
+        Self::Function(SharedFunction::bound(target, receiver))
     }
 
-    /// Create a task-bound function owned by one runtime task.
-    ///
-    /// The owner token is runtime-only and is never stored in program artifacts.
+    /// Create a task-bound function owned by one runtime memory domain.
     pub fn task_owned_function(
-        function: crate::FunctionId,
-        name: impl Into<std::sync::Arc<str>>,
+        target: crate::FunctionTarget,
         captures: Vec<Value>,
-        owner_task: u64,
+        owner_domain: DomainId,
     ) -> Self {
-        Self::Function(SharedFunction::task_owned(
-            function, name, captures, owner_task,
-        ))
+        Self::Function(SharedFunction::task_owned(target, captures, owner_domain))
     }
 
     /// Return the runtime type category name for diagnostics.
@@ -270,10 +273,12 @@ mod tests {
 
     #[test]
     fn display_formats_self_referential_cell_opaquely() {
-        let cell = std::sync::Arc::new(std::sync::Mutex::new(Value::Unit));
-        *cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Value::Cell(cell.clone());
-
-        assert_eq!(Value::Cell(cell).to_string(), "<cell>");
+        let domain = MemoryDomain::new();
+        let cell = domain.new_cell(Value::Unit).expect("local cell");
+        cell.replace(&domain, Value::Cell(cell.clone()))
+            .expect("local cycle");
+        assert_eq!(Value::Cell(cell.clone()).to_string(), "<cell>");
+        cell.replace(&domain, Value::Unit).expect("release cycle");
     }
 
     #[test]
@@ -376,42 +381,11 @@ mod tests {
     }
 
     #[test]
-    fn partial_eq_compares_function_captures_and_task_binding() {
-        let left = Value::function(
-            crate::FunctionId::new(1),
-            "demo.run".to_string(),
-            vec![Value::Integer(1)],
-        );
-        let right = Value::function(
-            crate::FunctionId::new(1),
-            "demo.run".to_string(),
-            vec![Value::Integer(1)],
-        );
-        let task_bound = Value::task_owned_function(
-            crate::FunctionId::new(1),
-            "demo.run".to_string(),
-            vec![Value::Integer(1)],
-            1,
-        );
-        let other_owner = Value::task_owned_function(
-            crate::FunctionId::new(1),
-            "demo.run".to_string(),
-            vec![Value::Integer(1)],
-            2,
-        );
-
-        assert_eq!(left, right);
-        assert_ne!(right, task_bound);
-        assert_ne!(task_bound, other_owner);
-    }
-
-    #[test]
     fn partial_eq_compares_cells_by_shared_allocation() {
-        let cell = std::sync::Arc::new(std::sync::Mutex::new(Value::Integer(1)));
+        let domain = MemoryDomain::new();
+        let cell = domain.new_cell(Value::Integer(1)).expect("local cell");
         let same_cell = Value::Cell(cell.clone());
-        let different_cell = Value::Cell(std::sync::Arc::new(std::sync::Mutex::new(
-            Value::Integer(1),
-        )));
+        let different_cell = Value::Cell(domain.new_cell(Value::Integer(1)).expect("other cell"));
 
         assert_eq!(Value::Cell(cell), same_cell);
         assert_ne!(same_cell, different_cell);

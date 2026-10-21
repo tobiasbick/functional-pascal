@@ -124,6 +124,14 @@ impl DebugSession {
             if let Some(value) = self.runtime.take_finished_root_result() {
                 let instruction_count = self.runtime.instruction_count();
                 self.state = DebugSessionState::Terminated;
+                let worker = self.runtime.worker(0).ok_or_else(|| unknown_task(0))?;
+                let exports = crate::vm::host_value::HostValues::for_executable(
+                    worker.domain.clone(),
+                    &self.executable,
+                    Arc::clone(&worker.globals),
+                );
+                let value = exports.export_value(value);
+                self.runtime.release_finished_root_result();
                 self.inspections.clear();
                 return Ok(DebugRunResult::Terminated(DebugTermination {
                     value,

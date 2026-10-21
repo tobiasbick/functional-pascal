@@ -38,7 +38,33 @@ impl ValuePayload {
 
 impl Clone for ValuePayload {
     fn clone(&self) -> Self {
-        Self::new((**self).clone())
+        enum Wrapper {
+            Some,
+            Ok,
+            Error,
+        }
+
+        let mut wrappers = Vec::new();
+        let mut current = &**self;
+        loop {
+            let (kind, inner) = match current {
+                Value::OptionSome(inner) => (Wrapper::Some, inner),
+                Value::ResultOk(inner) => (Wrapper::Ok, inner),
+                Value::ResultError(inner) => (Wrapper::Error, inner),
+                _ => break,
+            };
+            wrappers.push(kind);
+            current = inner;
+        }
+        let mut value = current.clone();
+        for kind in wrappers.into_iter().rev() {
+            value = match kind {
+                Wrapper::Some => Value::option_some(value),
+                Wrapper::Ok => Value::result_ok(value),
+                Wrapper::Error => Value::result_error(value),
+            };
+        }
+        Self::new(value)
     }
 }
 
@@ -85,8 +111,9 @@ impl Drop for ValuePayload {
         let Some(mut value) = self.value.take() else {
             return;
         };
-        *value = Value::Unit;
+        let inner = std::mem::replace(&mut *value, Value::Unit);
         recycle_payload_box(value);
+        super::drain::release_value(inner);
     }
 }
 
@@ -125,5 +152,72 @@ mod tests {
         drop(nested);
 
         assert!(matches!(*ValuePayload::new(Value::Unit), Value::Unit));
+    }
+
+    #[test]
+    fn deep_mixed_wrappers_clone_and_release_iteratively_preserving_cell_aliases() {
+        std::thread::Builder::new()
+            .stack_size(128 * 1024)
+            .spawn(|| {
+                let domain = crate::MemoryDomain::new();
+                let cell = domain.new_cell(Value::Integer(1)).unwrap();
+                let weak = cell.downgrade();
+                let mut source = Value::Cell(cell.clone());
+                for index in 0..30_000 {
+                    source = match index % 3 {
+                        0 => Value::option_some(source),
+                        1 => Value::result_ok(source),
+                        _ => Value::result_error(source),
+                    };
+                }
+                let copy = source.clone();
+                let mut current = &copy;
+                for index in (0..30_000).rev() {
+                    current = match (index % 3, current) {
+                        (0, Value::OptionSome(inner))
+                        | (1, Value::ResultOk(inner))
+                        | (2, Value::ResultError(inner)) => inner,
+                        _ => panic!("cloning changed wrapper order"),
+                    };
+                }
+                let Value::Cell(copied_cell) = current else {
+                    panic!("cloning changed the terminal value");
+                };
+                assert!(cell.ptr_eq(copied_cell));
+                drop(cell);
+                crate::release_values(vec![source]);
+                assert!(weak.upgrade().is_some());
+                crate::release_values(vec![copy]);
+                assert!(weak.upgrade().is_none());
+                assert_eq!(domain.registered_count(), 0);
+            })
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+
+    #[test]
+    fn ordinary_drop_releases_deep_mixed_wrappers_on_a_small_stack() {
+        std::thread::Builder::new()
+            .stack_size(128 * 1024)
+            .spawn(|| {
+                let domain = crate::MemoryDomain::new();
+                let cell = domain.new_cell(Value::Integer(1)).unwrap();
+                let weak = cell.downgrade();
+                let mut value = Value::Cell(cell);
+                for index in 0..30_000 {
+                    value = match index % 3 {
+                        0 => Value::option_some(value),
+                        1 => Value::result_ok(value),
+                        _ => Value::result_error(value),
+                    };
+                }
+                drop(value);
+                assert!(weak.upgrade().is_none());
+                assert_eq!(domain.registered_count(), 0);
+            })
+            .unwrap()
+            .join()
+            .unwrap();
     }
 }

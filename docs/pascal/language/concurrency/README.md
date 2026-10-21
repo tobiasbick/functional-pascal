@@ -36,6 +36,13 @@ Close groups explicitly when their results/reports are needed. A timed close
 that reports timeout retains unfinished children. Cooperative join, including
 main-task cleanup, has no hard wall-clock completion guarantee.
 
+Task boundaries validate the complete graph of the callable, its captures and
+receiver, arguments, channel payloads and task results. Local mutable captures
+and temporary variable references cannot cross those boundaries, even inside
+immutable aggregates. Invalid starts admit no child and invalid sends leave the
+channel unchanged. Returning a forbidden graph fails the task instead of publishing
+a successful result. See [closure ownership](../functions/closures.md#concurrency).
+
 ## Keywords
 
 `go`, `channel`, `scope` — case-insensitive.

@@ -1,8 +1,6 @@
 //! Non-recursive bounded summaries and lazy aggregate child extraction.
 
-use std::sync::{Arc, TryLockError};
-
-use fpas_bytecode::{DebugType, Executable, Value};
+use fpas_bytecode::{DebugType, Executable, OwnedCell, Value};
 
 use super::{ValueLimits, ValueOrigin};
 use super::{ValuePath as MutationPath, payload::resolve as resolve_payload};
@@ -244,12 +242,12 @@ pub(in crate::vm) fn render_with_executable<O: ValueOrigin>(
 }
 
 fn render_cell<O: ValueOrigin>(
-    cell: &Arc<std::sync::Mutex<Value>>,
+    cell: &OwnedCell,
     parent: &RetainedValue<O>,
     limits: ValueLimits,
     executable: Option<&Executable>,
 ) -> RenderedValue<O> {
-    let identity = Arc::as_ptr(cell) as usize;
+    let identity = cell.identity();
     if parent.visited_cells.len() >= limits.max_depth {
         return leaf(
             "<max depth>".to_string(),
@@ -264,14 +262,25 @@ fn render_cell<O: ValueOrigin>(
             Some("cycle".to_string()),
         );
     }
-    let (inner, poisoned) = match cell.try_lock() {
-        Ok(inner) => (inner.clone(), false),
-        Err(TryLockError::Poisoned(poisoned)) => (poisoned.into_inner().clone(), true),
-        Err(TryLockError::WouldBlock) => {
+    let Some(domain) = parent.domain.as_ref() else {
+        return leaf(
+            "<cell unavailable>".into(),
+            metadata(&parent.type_name).into(),
+            Some("unavailable".into()),
+        );
+    };
+    let inner = match cell.try_read(domain) {
+        Ok(inner) => inner,
+        Err(error) => {
+            let summary = match error {
+                fpas_bytecode::OwnershipError::Busy => "<cell busy>",
+                fpas_bytecode::OwnershipError::Poisoned => "<cell poisoned>",
+                _ => "<cell unavailable>",
+            };
             return leaf(
-                "<cell busy>".to_string(),
-                metadata(&parent.type_name).to_string(),
-                Some("unavailable".to_string()),
+                summary.into(),
+                metadata(&parent.type_name).into(),
+                Some("unavailable".into()),
             );
         }
     };
@@ -291,15 +300,12 @@ fn render_cell<O: ValueOrigin>(
         children,
         1,
         0,
-        Some(if poisoned {
-            "captured mutable, poisoned".to_string()
-        } else {
-            "captured mutable".to_string()
-        }),
+        Some("captured mutable".to_string()),
         limits,
     );
     if parent.presentation_hint.as_deref() == Some("captured mutable") {
         let inner_value = RetainedValue {
+            domain: parent.domain.clone(),
             name: metadata(&parent.name).to_string(),
             value: Some(inner),
             type_name: metadata(&parent.type_name).to_string(),
@@ -360,6 +366,7 @@ fn child_value<O: ValueOrigin>(
     writable: Option<(MutationPath, fpas_bytecode::DebugTypeId)>,
 ) -> RetainedValue<O> {
     RetainedValue {
+        domain: parent.domain.clone(),
         name,
         value: Some(value.clone()),
         type_name: value.type_name().to_string(),

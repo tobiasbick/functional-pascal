@@ -16,12 +16,18 @@ fn worker() -> Worker {
 fn root_selection_leaves_queued_computation_for_pool_workers() {
     let mut worker = worker();
     let scheduler = Arc::clone(worker.scheduler_ref().unwrap());
-    let function = SharedFunction::unbound(FunctionId::new(0), "queued computation", vec![]);
+    let function = SharedFunction::unbound(
+        worker
+            .executable
+            .function_target(FunctionId::new(0))
+            .expect("queued target"),
+        vec![],
+    );
     let info = &worker.executable.executable().functions[0];
     scheduler.register_result(1);
     scheduler.enqueue(crate::vm::tasks::TaskState::entry(1, &function, info, []));
     worker
-        .run_selection(wait(vec![CaseSource::Timer(20)]))
+        .run_selection(wait(&worker, vec![CaseSource::Timer(20)]))
         .unwrap();
     assert_eq!(
         scheduler
@@ -32,13 +38,20 @@ fn root_selection_leaves_queued_computation_for_pool_workers() {
     );
 }
 
-fn wait(sources: Vec<CaseSource>) -> SelectionWait {
+fn wait(worker: &Worker, sources: Vec<CaseSource>) -> SelectionWait {
     SelectionWait {
         cases: sources
             .into_iter()
             .map(|source| WaitCase {
+                roots: None,
                 source,
-                callback: SharedFunction::unbound(FunctionId::new(0), "unused callback", vec![]),
+                callback: SharedFunction::unbound(
+                    worker
+                        .executable
+                        .function_target(FunctionId::new(0))
+                        .expect("callback target"),
+                    vec![],
+                ),
             })
             .collect(),
         started: Instant::now(),
@@ -56,11 +69,48 @@ fn invalid_later_source_prevents_an_earlier_ready_receive() {
         .channels
         .send(queue, Value::Integer(42), false, None)
         .unwrap();
-    let selection = wait(vec![CaseSource::Receive(queue), CaseSource::Receive(0)]);
+    let selection = wait(
+        &worker,
+        vec![CaseSource::Receive(queue), CaseSource::Receive(0)],
+    );
     assert!(worker.selection_probe(&selection).is_err());
     assert!(matches!(
         worker.hosted.channels.receive(queue, false, None).unwrap(),
         ReceiveState::Received(Value::Integer(42))
+    ));
+}
+
+#[test]
+fn invalid_later_send_payload_prevents_an_earlier_ready_receive() {
+    let worker = worker();
+    let queue = worker.hosted.channels.create(2).expect("channel");
+    worker
+        .hosted
+        .channels
+        .send(queue, Value::Integer(42), false, None)
+        .expect("initial value");
+    let captured = worker
+        .domain
+        .new_cell(Value::Integer(7))
+        .expect("local payload");
+    let selection = wait(
+        &worker,
+        vec![
+            CaseSource::Receive(queue),
+            CaseSource::Send(queue, Value::option_some(Value::Cell(captured))),
+        ],
+    );
+    let error = worker
+        .selection_probe(&selection)
+        .expect_err("validate every payload before commit");
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
+    assert!(matches!(
+        worker.hosted.channels.receive(queue, false, None),
+        Ok(ReceiveState::Received(Value::Integer(42)))
+    ));
+    assert!(matches!(
+        worker.hosted.channels.receive(queue, false, None),
+        Ok(ReceiveState::Pending)
     ));
 }
 
@@ -72,10 +122,13 @@ fn task_failure_prevents_channel_commit_and_retains_its_diagnostic() {
     scheduler.register_result(1);
     let error = worker.selection_error("original child failure");
     scheduler.store_failure(1, error.clone());
-    let selection = wait(vec![
-        CaseSource::Send(queue, Value::Integer(42)),
-        CaseSource::Task(1),
-    ]);
+    let selection = wait(
+        &worker,
+        vec![
+            CaseSource::Send(queue, Value::Integer(42)),
+            CaseSource::Task(1),
+        ],
+    );
     assert_eq!(worker.selection_probe(&selection).unwrap_err(), error);
     assert!(matches!(
         worker.hosted.channels.receive(queue, false, None).unwrap(),
@@ -87,10 +140,13 @@ fn task_failure_prevents_channel_commit_and_retains_its_diagnostic() {
 fn first_ready_send_commits_without_enqueueing_a_losing_value() {
     let worker = worker();
     let queue = worker.hosted.channels.create(2).unwrap();
-    let selection = wait(vec![
-        CaseSource::Send(queue, Value::Integer(1)),
-        CaseSource::Send(queue, Value::Integer(2)),
-    ]);
+    let selection = wait(
+        &worker,
+        vec![
+            CaseSource::Send(queue, Value::Integer(1)),
+            CaseSource::Send(queue, Value::Integer(2)),
+        ],
+    );
     assert_eq!(
         worker.selection_probe(&selection).unwrap(),
         Some((0, Some(Value::result_ok(Value::Boolean(true)))))
@@ -121,7 +177,7 @@ fn cancellation_and_timer_obey_input_order_without_consuming_channel_values() {
         vec![CaseSource::Timer(0), CaseSource::Cancellation(token)],
     ] {
         assert_eq!(
-            worker.selection_probe(&wait(sources)).unwrap(),
+            worker.selection_probe(&wait(&worker, sources)).unwrap(),
             Some((0, None))
         );
     }
@@ -151,10 +207,10 @@ fn competing_selections_deliver_each_buffered_value_exactly_once() {
                 (0..250)
                     .map(|_| {
                         let outcome = worker
-                            .selection_probe(&wait(vec![
-                                CaseSource::Receive(queue),
-                                CaseSource::Timer(0),
-                            ]))
+                            .selection_probe(&wait(
+                                &worker,
+                                vec![CaseSource::Receive(queue), CaseSource::Timer(0)],
+                            ))
                             .unwrap();
                         let Some((0, Some(Value::ResultOk(value)))) = outcome else {
                             panic!("receive must win: {outcome:?}");
@@ -182,7 +238,6 @@ fn competing_selections_deliver_each_buffered_value_exactly_once() {
 
 #[test]
 fn callback_panic_keeps_the_committed_send_and_losing_captures_are_already_released() {
-    use std::sync::Mutex;
     let (program, errors) = fpas_parser::parse(
         r#"program CallbackFailure;
 uses Std.Tasks as Tasks;
@@ -208,16 +263,33 @@ begin FailSelected(Ok(true)); end."#,
     let mut worker = Worker::new(Arc::new(executable)).unwrap();
     worker.scheduler = Some(Arc::new(TaskScheduler::new()));
     let queue = worker.hosted.channels.create(1).unwrap();
-    let captured = Arc::new(Mutex::new(Value::Integer(9)));
-    let weak = Arc::downgrade(&captured);
-    let mut selection = wait(vec![
-        CaseSource::Send(queue, Value::Integer(42)),
-        CaseSource::Timer(0),
-    ]);
-    selection.cases[0].callback =
-        SharedFunction::unbound(FunctionId::new(callback as u16), "FailSelected", vec![]);
-    selection.cases[1].callback =
-        SharedFunction::task_owned(FunctionId::new(0), "loser", vec![Value::Cell(captured)], 0);
+    let captured = worker
+        .domain
+        .new_cell(Value::Integer(9))
+        .expect("owned capture");
+    let weak = captured.downgrade();
+    let mut selection = wait(
+        &worker,
+        vec![
+            CaseSource::Send(queue, Value::Integer(42)),
+            CaseSource::Timer(0),
+        ],
+    );
+    selection.cases[0].callback = SharedFunction::unbound(
+        worker
+            .executable
+            .function_target(FunctionId::new(callback as u16))
+            .expect("selected target"),
+        vec![],
+    );
+    selection.cases[1].callback = SharedFunction::task_owned(
+        worker
+            .executable
+            .function_target(FunctionId::new(0))
+            .expect("losing target"),
+        vec![Value::Cell(captured)],
+        worker.domain.id().clone(),
+    );
     worker.run_selection(selection).unwrap();
     assert!(
         weak.upgrade().is_none(),
@@ -237,18 +309,22 @@ begin FailSelected(Ok(true)); end."#,
 
 #[test]
 fn abandoning_a_suspended_debug_selection_releases_its_owned_cases() {
-    use std::sync::Mutex;
     let mut worker = worker();
     worker.debug_tasks = true;
     worker.task_clock = Some(Arc::new(TaskClock::manual()));
-    let captured = Arc::new(Mutex::new(Value::Integer(9)));
-    let weak = Arc::downgrade(&captured);
-    let mut selection = wait(vec![CaseSource::Timer(100)]);
+    let captured = worker
+        .domain
+        .new_cell(Value::Integer(9))
+        .expect("owned capture");
+    let weak = captured.downgrade();
+    let mut selection = wait(&worker, vec![CaseSource::Timer(100)]);
     selection.cases[0].callback = SharedFunction::task_owned(
-        FunctionId::new(0),
-        "pending",
+        worker
+            .executable
+            .function_target(FunctionId::new(0))
+            .expect("pending target"),
         vec![Value::Cell(captured)],
-        0,
+        worker.domain.id().clone(),
     );
     assert!(!worker.poll_selection(selection).unwrap());
     assert!(weak.upgrade().is_some());
@@ -258,19 +334,23 @@ fn abandoning_a_suspended_debug_selection_releases_its_owned_cases() {
 
 #[test]
 fn scheduler_shutdown_releases_parked_pool_selection_captures() {
-    use std::sync::Mutex;
     for _ in 0..100 {
         let mut worker = worker();
         worker.task_id = 1;
         let scheduler = Arc::clone(worker.scheduler_ref().unwrap());
-        let captured = Arc::new(Mutex::new(Value::Integer(9)));
-        let weak = Arc::downgrade(&captured);
-        let mut selection = wait(vec![CaseSource::Timer(u64::MAX)]);
+        let captured = worker
+            .domain
+            .new_cell(Value::Integer(9))
+            .expect("owned capture");
+        let weak = captured.downgrade();
+        let mut selection = wait(&worker, vec![CaseSource::Timer(u64::MAX)]);
         selection.cases[0].callback = SharedFunction::task_owned(
-            FunctionId::new(0),
-            "pending",
+            worker
+                .executable
+                .function_target(FunctionId::new(0))
+                .expect("pending target"),
             vec![Value::Cell(captured)],
-            1,
+            worker.domain.id().clone(),
         );
         worker.run_selection(selection).unwrap();
         assert!(worker.suspend_requested);
@@ -293,17 +373,21 @@ fn scheduler_shutdown_releases_parked_pool_selection_captures() {
 
 #[test]
 fn scheduler_shutdown_releases_normal_selection_cases_without_running_the_callback() {
-    use std::sync::Mutex;
     let mut worker = worker();
     let scheduler = Arc::clone(worker.scheduler_ref().unwrap());
-    let captured = Arc::new(Mutex::new(Value::Integer(9)));
-    let weak = Arc::downgrade(&captured);
-    let mut selection = wait(vec![CaseSource::Timer(u64::MAX)]);
+    let captured = worker
+        .domain
+        .new_cell(Value::Integer(9))
+        .expect("owned capture");
+    let weak = captured.downgrade();
+    let mut selection = wait(&worker, vec![CaseSource::Timer(u64::MAX)]);
     selection.cases[0].callback = SharedFunction::task_owned(
-        FunctionId::new(0),
-        "pending",
+        worker
+            .executable
+            .function_target(FunctionId::new(0))
+            .expect("pending target"),
         vec![Value::Cell(captured)],
-        0,
+        worker.domain.id().clone(),
     );
     let stopping = std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(5));

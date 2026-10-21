@@ -253,11 +253,32 @@ impl Checker {
             self.check_args_only(args);
             return Ty::Error;
         };
+        self.native_capabilities.remove(&call_key);
+        let receiver_capability = self.native_receiver_capability(receiver, receiver_ty);
         self.prechecked_receivers
             .insert(Self::expr_lookup_key(receiver), receiver_ty.clone());
         let result = self.check_native_arguments(operation, Some(receiver), args, span, expected);
         self.prechecked_receivers
             .remove(&Self::expr_lookup_key(receiver));
+        if !result.is_error() {
+            let capability =
+                self.native_result_capability(operation, receiver_capability, args, &result);
+            self.native_capabilities.insert(call_key, capability);
+            if matches!(
+                operation.lowering,
+                crate::std_registry::NativeLowering::InPlace(_)
+            ) && self.type_can_contain_callable(receiver_ty)
+                && let Expr::Designator(target) = receiver
+            {
+                let stored = self.native_result_capability(
+                    operation,
+                    receiver_capability,
+                    args,
+                    receiver_ty,
+                );
+                self.join_designator_root_capability(target, stored);
+            }
+        }
         if result == Ty::Unit && !allow_procedure_result {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,

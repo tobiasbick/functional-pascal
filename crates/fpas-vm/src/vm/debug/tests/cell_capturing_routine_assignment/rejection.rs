@@ -1,6 +1,8 @@
 //! Rejected cell-capturing assignment leaves destination and cells unchanged.
 
 use super::*;
+use fpas_bytecode::MemoryDomain;
+use std::sync::Arc;
 
 fn preserved_identity(session: &mut DebugSession, frame: u64) -> String {
     rendered(session, call("Current", 1), frame)
@@ -144,25 +146,34 @@ fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
 #[test]
 fn copied_task_owned_functions_reject_foreign_owner_and_stale_frame() {
     let mut foreign = DebugSession::new(compile_fixture()).expect("foreign copy");
+    let frame = run_to(&mut foreign, "const CellStop: integer := 0;");
+    let original = runtime(&foreign, &name("Original"), frame);
+    let domain = MemoryDomain::new();
+    let cell = domain.new_cell(Value::Integer(8)).expect("foreign cell");
+    let source = Value::task_owned_function(
+        as_function(&original).target().clone(),
+        vec![Value::Cell(cell.clone())],
+        domain.id().clone(),
+    );
+    // Normal task publication now rejects this value before it can reach a caller.
+    // Inject the source to exercise the debugger's independent copy guard directly.
     foreign
-        .set_breakpoint(SourceBreakpoint {
-            source: "<memory>".to_string(),
-            line: line("const RootStop: integer := 0;"),
-            column: None,
-        })
-        .expect("root breakpoint");
-    let worker = run_to(&mut foreign, "const WorkerStop: integer := 0;");
-    foreign
-        .set_expression(&root("Current"), &name("AddWorker"), Some(worker))
-        .expect("construct worker-owned source");
-    let _ = stopped(foreign.continue_execution().expect("reach root"));
-    let root_frame = foreign.stack(0, 1).expect("root frame").items[0].id;
+        .test_inject_frame_binding(frame, "Copy", source)
+        .expect("inject foreign source");
+    let frame = foreign.stack(0, 1).expect("fresh frame").items[0].id;
     let rejected = foreign
-        .set_expression(&root("Current"), &name("Stolen"), Some(root_frame))
+        .set_expression(&root("Current"), &name("Copy"), Some(frame))
         .expect_err("foreign owner");
     assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
-    assert!(rejected.message.contains("belongs to task"), "{rejected:?}");
-    assert_eq!(rendered(&mut foreign, call("Current", 1), root_frame), "1");
+    assert!(
+        rejected.message.contains("different memory domain"),
+        "{rejected:?}"
+    );
+    assert_eq!(rendered(&mut foreign, call("Current", 1), frame), "1");
+    assert_eq!(
+        cell.read(&domain).expect("unchanged source cell"),
+        Value::Integer(8)
+    );
 
     let mut stale = DebugSession::new(compile_fixture()).expect("stale copy");
     let frame = run_to(&mut stale, "const CellStop: integer := 0;");
@@ -207,18 +218,38 @@ fn task_spawn_rejects_the_constructed_function() {
 
 #[test]
 fn foreign_task_invocation_fails_before_callee_entry() {
-    let mut session = DebugSession::new(compile_fixture()).expect("worker session");
-    let worker = run_to(&mut session, "const WorkerStop: integer := 0;");
-    session
-        .set_expression(&root("Current"), &name("AddWorker"), Some(worker))
-        .expect("worker owner assign");
-    let stop = stopped(
-        session
-            .continue_execution()
-            .expect("foreign CallValue is a runtime failure"),
+    let mut worker = crate::vm::worker::Worker::new(Arc::new(compile_fixture())).expect("worker");
+    let image = worker.executable.executable();
+    let function = image
+        .functions
+        .iter()
+        .position(|function| image.strings.get(function.name) == Some("worker.addworker"))
+        .expect("cell-mutating callee");
+    let target = worker
+        .executable
+        .function_target(FunctionId::new(
+            u16::try_from(function).expect("function index"),
+        ))
+        .expect("verified callee target");
+    let domain = MemoryDomain::new();
+    let cell = domain.new_cell(Value::Integer(8)).expect("foreign cell");
+    // Deliberately bypass the earlier transfer/storage guards to test CallValue itself.
+    worker.registers[0] =
+        Value::task_owned_function(target, vec![Value::Cell(cell.clone())], domain.id().clone());
+    worker.registers[1] = Value::Integer(1);
+    worker.registers[2] = Value::Integer(99);
+    worker.register_initialized[..3].fill(true);
+    let before = (
+        worker.function,
+        worker.ip,
+        worker.base,
+        worker.call_stack.len(),
     );
-    assert_eq!(stop.reason, DebugStopReason::RuntimeError);
-    let diagnostic = stop.diagnostic.expect("runtime diagnostic");
+    let before_registers = worker.registers.clone();
+    let before_initialized = worker.register_initialized.clone();
+    let diagnostic = worker
+        .call_value(abc_aux(Opcode::CallValue, 2, 0, 1, 1).abc_payload())
+        .expect_err("foreign CallValue");
     assert_eq!(
         diagnostic.code,
         fpas_diagnostics::codes::RUNTIME_INVALID_TASK
@@ -227,6 +258,21 @@ fn foreign_task_invocation_fails_before_callee_entry() {
         diagnostic.message.contains("foreign task"),
         "{}",
         diagnostic.message
+    );
+    assert_eq!(
+        (
+            worker.function,
+            worker.ip,
+            worker.base,
+            worker.call_stack.len()
+        ),
+        before,
+    );
+    assert_eq!(worker.registers, before_registers);
+    assert_eq!(worker.register_initialized, before_initialized);
+    assert_eq!(
+        cell.read(&domain).expect("unchanged capture"),
+        Value::Integer(8)
     );
 }
 

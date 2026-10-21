@@ -21,7 +21,7 @@ pub(super) fn materialize(
     function: &FunctionInfo,
     canonical: &str,
     frame_id: Option<u64>,
-    task_id: u64,
+    _task_id: u64,
     destination: Option<&MutationTarget>,
     limits: DebugEvaluationLimits,
 ) -> Result<Value, DebugSessionError> {
@@ -54,15 +54,32 @@ pub(super) fn materialize(
             }
         }
     }
+    let classification = fpas_bytecode::classify_values(&captures)
+        .map_err(|_| type_error("capture graph is unavailable", "Retry at a stable stop."))?;
+    classification
+        .validate_domain(&inspection.domain)
+        .map_err(|_| {
+            type_error(
+                "capture graph contains foreign local values",
+                "Select the owning stopped task.",
+            )
+        })?;
+    task_bound |= !classification.is_transferable();
+    let target = executable.function_target(function_id).ok_or_else(|| {
+        type_error(
+            "capture target is outside the verified executable",
+            "Rebuild the executable.",
+        )
+    })?;
     let constructed = if task_bound {
         super::super::destination::require_frame_register(
             destination,
             frame_id,
             inspection.generation(),
         )?;
-        Value::task_owned_function(function_id, canonical.to_string(), captures, task_id)
+        Value::task_owned_function(target, captures, inspection.domain.id().clone())
     } else {
-        Value::function(function_id, canonical.to_string(), captures)
+        Value::function(target, captures)
     };
     let Value::Function(shared) = &constructed else {
         return Err(type_error(

@@ -14,6 +14,7 @@ use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 /// Fully rendered evaluation result prepared before a live debugger commit.
 pub(in crate::vm::debug) struct PreparedEvaluationResult {
     rendered: render::RenderedValue,
+    _roots: Vec<fpas_bytecode::RootValues>,
 }
 
 impl PreparedEvaluationResult {
@@ -171,7 +172,10 @@ impl InspectionSnapshot {
             ),
             None => None,
         };
-        resolve_name(frame_values, &self.globals, name)
+        super::mutation_targets::materialize(
+            resolve_name(frame_values, &self.globals, name)?,
+            &self.domain,
+        )
     }
 
     pub(in crate::vm::debug) fn retain_evaluation_result(
@@ -179,7 +183,20 @@ impl InspectionSnapshot {
         value: Value,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
-        let prepared = self.prepare_evaluation_result(&value, limits)?;
+        self.retain_evaluation_result_in_domain(value, self.domain.clone(), limits)
+    }
+
+    pub(in crate::vm::debug) fn retain_evaluation_result_in_domain(
+        &mut self,
+        value: Value,
+        domain: fpas_bytecode::MemoryDomain,
+        limits: DebugEvaluationLimits,
+    ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let rendered = self.render_evaluation_value_in_domain(&value, domain, limits)?;
+        let prepared = PreparedEvaluationResult {
+            _roots: super::roots::retain_values(&rendered.children),
+            rendered,
+        };
         let rendered = prepared.rendered;
         let variables_reference = if rendered.children.is_empty() {
             0
@@ -210,7 +227,11 @@ impl InspectionSnapshot {
                     .to_string(),
             });
         }
-        Ok(PreparedEvaluationResult { rendered })
+        let roots = super::roots::retain_values(&rendered.children);
+        Ok(PreparedEvaluationResult {
+            rendered,
+            _roots: roots,
+        })
     }
 
     /// Retain a pre-rendered result in a snapshot that reserved its handle slot.
@@ -226,6 +247,7 @@ impl InspectionSnapshot {
             let id = item_id(self.generation, self.handles.len());
             self.handles.push(HandleEntry {
                 id,
+                _roots: super::roots::retain_values(&rendered.children),
                 values: rendered.children,
             });
             id
@@ -254,7 +276,17 @@ impl InspectionSnapshot {
         value: &Value,
         limits: DebugEvaluationLimits,
     ) -> Result<render::RenderedValue, DebugSessionError> {
+        self.render_evaluation_value_in_domain(value, self.domain.clone(), limits)
+    }
+
+    fn render_evaluation_value_in_domain(
+        &self,
+        value: &Value,
+        domain: fpas_bytecode::MemoryDomain,
+        limits: DebugEvaluationLimits,
+    ) -> Result<render::RenderedValue, DebugSessionError> {
         let retained = RetainedValue {
+            domain: Some(domain),
             name: "$result".to_string(),
             type_name: value.type_name().to_string(),
             value: Some(value.clone()),
@@ -299,7 +331,12 @@ impl InspectionSnapshot {
             });
         }
         let id = item_id(self.generation, self.handles.len());
-        self.handles.push(HandleEntry { id, values });
+        let roots = super::roots::retain_values(&values);
+        self.handles.push(HandleEntry {
+            id,
+            values,
+            _roots: roots,
+        });
         Ok(id)
     }
 

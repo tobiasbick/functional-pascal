@@ -37,7 +37,10 @@ fn caller_continuation_observes_the_forced_function_result() {
         .expect("force return");
     match session.continue_execution().expect("continue") {
         DebugRunResult::Terminated(termination) => {
-            assert_eq!(termination.value, fpas_bytecode::Value::Unit);
+            assert_eq!(
+                termination.value.try_to_data().expect("unit result"),
+                fpas_bytecode::Value::Unit
+            );
         }
         other => panic!("expected termination after forced return, got {other:?}"),
     }

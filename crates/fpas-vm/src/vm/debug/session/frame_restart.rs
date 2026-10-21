@@ -20,6 +20,7 @@ impl DebugSession {
         &mut self,
         frame_id: u64,
     ) -> Result<DebugFrameRestartResult, DebugSessionError> {
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("frame.restart")?;
         let task_id = self.task_for_frame(Some(frame_id))?;
         let frame = self

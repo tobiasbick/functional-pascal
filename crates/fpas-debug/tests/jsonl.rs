@@ -108,8 +108,8 @@ fn instruction_and_timeout_limits_are_reported() {
     for (source, limits, code) in cases {
         let mut server = server_with_limits(source, limits);
         let _ = server.handle_line(&request(1, "initialize", json!({})));
-        let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
-        let records = server.wait();
+        let mut records = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
+        records.extend(server.wait());
         assert!(
             records.iter().any(|record| record["body"]["code"] == code),
             "missing {code}: {records:?}"
@@ -349,8 +349,8 @@ fn conditions_and_logpoints_use_detached_controlled_calls() {
         json!({"source":"<memory>","line":line,"log_message":"value={Render(I)}"}),
     ));
     assert_eq!(set[0]["body"]["verified"], true, "{set:?}");
-    let _ = logpoint.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stable(&mut logpoint);
+    let mut events = logpoint.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    events.extend(wait_until_stable(&mut logpoint));
     let output = events
         .iter()
         .filter(|event| event["event"] == "output")

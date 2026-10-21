@@ -1,7 +1,5 @@
 //! Selected live-frame restart regressions.
 
-use std::sync::Arc;
-
 use fpas_bytecode::Value;
 
 use super::*;
@@ -220,12 +218,16 @@ end.
     let Value::Cell(before_cell) = &before.4[before.2] else {
         panic!("inner capture must be a cell")
     };
-    let before_cell = Arc::clone(before_cell);
+    let before_cell = before_cell.clone();
     assert_eq!(
-        *before_cell
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner()),
-        Value::Integer(6)
+        session
+            .evaluate(
+                &DebugExpression::Name("Counter".to_string()),
+                Some(selected)
+            )
+            .expect("capture value")
+            .value,
+        "6"
     );
 
     let restarted = session.restart_frame(selected).expect("restart inner");
@@ -235,7 +237,7 @@ end.
     let Value::Cell(after_cell) = &after.4[after.2] else {
         panic!("restarted inner capture must be a cell")
     };
-    assert!(Arc::ptr_eq(&before_cell, after_cell));
+    assert!(before_cell.ptr_eq(after_cell));
     assert_eq!(restarted.frame.name, "outer.inner");
     assert!(matches!(
         session.continue_execution().expect("continue inner"),

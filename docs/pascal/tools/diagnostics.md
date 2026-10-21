@@ -601,7 +601,7 @@ Call arguments still use commas; commas inside types such as
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
 | FP3014 | Non-constant or invalid compile-time value | `when ReadValue():` in a scalar `case`, or a computed default in an exported record | Use a guard for a dynamic case condition; use a valid scalar constant expression or optional `None` for an exported default. |
 | FP3015 | Missing record field | Construct a record without required X | Supply `X := 1` in typed record construction. |
-| FP3016 | Task-bound callable | Pass a closure capturing mutable state into another task | Pass a closure with immutable captures. |
+| FP3016 | Task-bound value transfer | Start, send, pass or publish a value known to contain a closure with mutable captures | Keep the value on its owning task or pass immutable captures. |
 | FP3017 | Private record member | Access another unit's non-public record field | Export the field with `public` or use its public API. |
 | FP3018 | Enum backing overflow | Implicit variant after backing value `9223372036854775807` | Assign a smaller unused explicit backing value. |
 | FP3019 | Private type in public signature | Public routine returns a private unit type | Export that type or keep the routine non-public. |
@@ -637,6 +637,13 @@ Some/Ok/Error use the payload label `Value`. FP3026 applies to variadic
 calls such as `WriteLn` and native `Format`, and misplaced named arguments.
 Fixed-signature callable values, receiver operations and fixed-arity
 polymorphic Std operations accept fully named calls.
+
+FP3016 applies to `go`, group and supervised starts, channel sends, and known
+task-bound results at a task start. Wrappers, branch/loop joins and partial
+aggregate writes preserve known local captures. Ordinary local calls may return
+such values. Unknown callable parameters or unresolved/imported factory results
+are accepted and retain the mandatory runtime transfer check; the checker does
+not require a public capability annotation.
 
 FP3027 hints show the marked argument, for example `var Counter`, or ask to
 remove `var` for a read-only parameter. FP3028 names the reason a `var`

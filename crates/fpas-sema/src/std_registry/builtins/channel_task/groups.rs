@@ -89,5 +89,13 @@ pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Spa
         );
         return Ty::Error;
     }
+    if c.callable_result_capability(args[1]).is_task_bound() {
+        c.error_with_code(
+            SEMA_TASK_BOUND_CALLABLE,
+            "Cannot start a worker with a task-bound result",
+            "Return an immutable value graph from the child, or invoke this worker on the same task.",
+            args[1].span(),
+        );
+    }
     Ty::Task(Box::new(result))
 }

@@ -113,21 +113,28 @@ fn two_generic_instances_share_erased_code_and_survive_source_less_round_trips()
     let parse_callable = callable(&executable, parse_wrapper);
     let mut session = CallbackSession::new(executable);
     let fs_value = session
-        .invoke(fs_factory, vec![Value::Str("settings.toml".into())])
+        .invoke(fs_factory, vec![Value::Str("settings.toml".into()).into()])
         .expect("Fs leaf")
         .value;
     let parse_value = session
-        .invoke(parse_factory, vec![Value::Str("value".into())])
+        .invoke(parse_factory, vec![Value::Str("value".into()).into()])
         .expect("Parse leaf")
         .value;
     let fs_error = session
-        .invoke(wrapper, vec![fs_value, fs_callable])
+        .invoke(wrapper, vec![fs_value.into(), fs_callable.into()])
         .expect("erased Fs wrapper")
-        .value;
+        .value
+        .try_to_data()
+        .expect("pure error data");
     let parse_error = session
-        .invoke(wrapper, vec![parse_value.clone(), parse_callable])
+        .invoke(
+            wrapper,
+            vec![parse_value.clone().into(), parse_callable.into()],
+        )
         .expect("erased Parse wrapper")
-        .value;
+        .value
+        .try_to_data()
+        .expect("pure error data");
     assert_eq!(
         fs_error.to_string(),
         "Example.Context.Failed: Operation failed\ncaused by Example.Fs.Missing: Resource missing\n  Path = \"settings.toml\""
@@ -147,7 +154,7 @@ fn two_generic_instances_share_erased_code_and_survive_source_less_round_trips()
         parse_error.body().layout.enumeration
     );
     let failure = session
-        .invoke(fs_wrapper, vec![parse_value])
+        .invoke(fs_wrapper, vec![parse_value.into()])
         .expect_err("wrong concrete Cause must fail at construction");
     assert_eq!(
         failure.code,

@@ -46,7 +46,7 @@ fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
             }),
             mutable: false,
             kind: SymbolKind::Function,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 }
@@ -63,7 +63,7 @@ fn define_proc_variadic(c: &mut Checker, q: &str) {
             }),
             mutable: false,
             kind: SymbolKind::Procedure,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 }
@@ -80,7 +80,7 @@ fn define_proc(c: &mut Checker, q: &str, params: Vec<ParamTy>) {
             }),
             mutable: false,
             kind: SymbolKind::Procedure,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 }
@@ -93,7 +93,7 @@ fn define_const(c: &mut Checker, q: &str, ty: Ty) {
             ty,
             mutable: false,
             kind: SymbolKind::Const,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 }
@@ -115,7 +115,7 @@ fn define_builtin_std(c: &mut Checker, q: &str, mut placeholder: Ty) {
             ty: placeholder,
             mutable: false,
             kind: SymbolKind::BuiltinStd,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 }

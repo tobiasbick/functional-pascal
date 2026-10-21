@@ -1,8 +1,6 @@
 //! Writable inspection origins for `var` parameters.
 //! See `docs/pascal/language/functions/var-parameters.md` and `docs/pascal/tools/debugger.md`.
 
-use std::sync::Arc;
-
 use fpas_bytecode::{DebugTypeId, ReferenceRoot, ReferenceStep, VariableReference};
 
 use super::targets::{MutationAccess, MutationPath, MutationRoot, MutationTarget};
@@ -16,8 +14,8 @@ pub(super) fn mutation(
     frame_id: u64,
 ) -> MutationAccess {
     let root = match &reference.root {
-        ReferenceRoot::Cell(cell) => MutationRoot::ClosureCell(Arc::clone(cell)),
-        ReferenceRoot::Global(slot) => {
+        ReferenceRoot::Cell(cell) => MutationRoot::ClosureCell(cell.clone()),
+        ReferenceRoot::Global { slot, .. } => {
             if !executable
                 .globals
                 .get(*slot as usize)

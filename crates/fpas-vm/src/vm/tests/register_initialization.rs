@@ -183,7 +183,12 @@ fn callback_and_debug_intrinsic_argument_windows_are_initialized() {
         ],
     );
     let callback = Worker::new(Arc::new(callback_image)).expect("callback worker");
-    let function = Value::function(FunctionId::new(1), "double".to_string(), Vec::new());
+    let function = Value::function(
+        callback
+            .function_target(FunctionId::new(1))
+            .expect("target"),
+        Vec::new(),
+    );
     assert_eq!(
         callback
             .call_callback_sync(&function, &[Value::Integer(3)])
@@ -192,9 +197,11 @@ fn callback_and_debug_intrinsic_argument_windows_are_initialized() {
     );
     let stored = callback.callback_worker.borrow();
     let stored = stored.as_ref().expect("reused callback worker");
-    assert!(stored.register_is_initialized(0));
-    assert!(stored.register_is_initialized(1));
-    assert!(!stored.register_is_initialized(2));
+    assert!(
+        stored.registers.is_empty(),
+        "successful cache retains capacity only"
+    );
+    assert!(stored.register_initialized.is_empty());
 }
 
 #[test]

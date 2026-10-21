@@ -114,6 +114,7 @@ impl CaptureState {
 
     /// Forget an outcome when the existing scheduler owner releases it.
     pub(in crate::vm) fn release_task(&self, id: u64) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         self.catalog
             .entries
             .lock()
@@ -123,6 +124,7 @@ impl CaptureState {
 
     /// Release inspection ownership after a successful or failed top-level run.
     pub(in crate::vm) fn finish_catalog(&self) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         self.finished.store(true, Ordering::Release);
         self.catalog
             .template
@@ -198,7 +200,7 @@ impl Worker {
     /// Keep root globals available through server-finalization errors after normal return.
     pub(in crate::vm) fn capture_root_outcome(
         &self,
-        outcome: &Result<crate::vm::Execution, VmError>,
+        outcome: &Result<crate::vm::RuntimeExecution, VmError>,
     ) {
         let Some(state) = self
             .scheduler

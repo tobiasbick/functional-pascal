@@ -8,6 +8,8 @@ mod timeout;
 #[cfg(test)]
 mod controlled_tests;
 #[cfg(test)]
+mod ownership_tests;
+#[cfg(test)]
 mod tests;
 
 use fpas_bytecode::{Intrinsic, Register, TaskIntrinsic, Value};
@@ -48,6 +50,7 @@ impl Worker {
                 let token = cancellable
                     .then(|| self.cancellation_token(&arguments[2]))
                     .transpose()?;
+                self.require_transferable_values(&arguments[1..2])?;
                 if self.debug_tasks || self.task_id != 0 {
                     self.start_channel_send(handle, arguments[1].clone(), token, destination)
                 } else {
@@ -58,6 +61,7 @@ impl Worker {
             TaskIntrinsic::TrySend => {
                 self.require_channel_arguments(arguments, 2)?;
                 let handle = self.channel_handle(&arguments[0])?;
+                self.require_transferable_values(&arguments[1..2])?;
                 self.try_channel_send(handle, arguments[1].clone())
                     .map(|value| Some(Some(value)))
             }
@@ -71,6 +75,7 @@ impl Worker {
                     )?)));
                 }
                 let timeout = self.wait_timeout(&arguments[2])?;
+                self.require_transferable_values(&arguments[1..2])?;
                 if self.debug_tasks || self.task_id != 0 {
                     self.start_timeout_channel_send(
                         handle,

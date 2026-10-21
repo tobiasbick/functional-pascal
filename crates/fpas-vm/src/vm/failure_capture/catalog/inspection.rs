@@ -1,5 +1,8 @@
 //! Read-only task names and borrowed saved register windows.
 
+#[cfg(test)]
+mod tests;
+
 use super::super::CaptureState;
 use super::*;
 use std::time::Instant;
@@ -60,17 +63,17 @@ impl CaptureState {
         if Instant::now() >= deadline {
             return None;
         }
+        // Discover authority without holding storage while acquiring domain ownership.
+        let domain = record.saved.try_lock().ok()?.as_ref()?.domain.clone();
+        let _maintenance = fpas_bytecode::defer_maintenance();
+        let _access = domain.try_access().ok()?;
         let mut saved = record.saved.try_lock().ok()?;
-        let task = saved.take()?;
-        let template = self
-            .catalog
-            .template
-            .lock()
-            .unwrap_or_else(|p| p.into_inner());
-        let Some(template) = template.as_ref() else {
-            *saved = Some(task);
+        if saved.as_ref()?.domain.id() != domain.id() {
             return None;
-        };
+        }
+        let template = self.catalog.template.try_lock().ok()?;
+        let template = template.as_ref()?;
+        let task = saved.take()?;
         let owner = SavedInspection {
             slot: &mut saved,
             worker: template.worker_for_task(task),

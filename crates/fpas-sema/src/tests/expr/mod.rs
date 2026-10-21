@@ -23,6 +23,7 @@ mod record_context;
 mod record_updates;
 mod std_shadowing;
 mod subrange_membership;
+mod transfer_capabilities;
 mod var_parameters;
 
 // ── Literals ────────────────────────────────────────────────────

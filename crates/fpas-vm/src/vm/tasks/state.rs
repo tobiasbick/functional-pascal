@@ -1,6 +1,6 @@
 //! Portable saved execution state for one suspended register task.
 
-use fpas_bytecode::{FunctionId, FunctionInfo, FunctionValue, Value};
+use fpas_bytecode::{FunctionId, FunctionInfo, FunctionValue, MemoryDomain, Value};
 
 use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 use crate::vm::frame::CallFrame;
@@ -8,6 +8,8 @@ use crate::vm::hosted::callbacks::CallbackContinuation;
 
 /// Complete mutable register-machine state transferable between pool workers.
 pub(in crate::vm) struct TaskState {
+    /// Stable logical-task ownership, independent of scheduler task numbering.
+    pub domain: MemoryDomain,
     /// Optional catalog ownership, moved out before storing this state in its record.
     pub(in crate::vm) capture_record:
         Option<std::sync::Arc<crate::vm::failure_capture::catalog::TaskRecord>>,
@@ -36,6 +38,7 @@ pub(in crate::vm) struct TaskState {
     pub task_scopes: Vec<super::scopes::OpenScope>,
     /// Shared control of the task scope that owns this task, if any.
     pub owner_scope: Option<std::sync::Arc<super::scopes::ScopeControl>>,
+    pub execution: Option<fpas_bytecode::ExecutionRoots>,
 }
 
 impl TaskState {
@@ -46,6 +49,23 @@ impl TaskState {
         info: &FunctionInfo,
         arguments: impl IntoIterator<Item = Value>,
     ) -> Self {
+        Self::entry_in_domain(
+            id,
+            function,
+            info,
+            arguments,
+            crate::vm::domain::new_domain(),
+        )
+    }
+
+    pub(in crate::vm::tasks) fn entry_in_domain(
+        id: u64,
+        function: &FunctionValue,
+        info: &FunctionInfo,
+        arguments: impl IntoIterator<Item = Value>,
+        domain: MemoryDomain,
+    ) -> Self {
+        let execution = domain.execution_roots().ok();
         let (registers, register_initialized) = crate::vm::worker::Worker::register_window(
             usize::from(info.register_count),
             function
@@ -55,7 +75,9 @@ impl TaskState {
                 .chain(arguments)
                 .chain(function.captures.iter().cloned()),
         );
-        Self {
+        let state = Self {
+            execution,
+            domain,
             capture_record: None,
             observed_task_failure: None,
             pending_completion: None,
@@ -74,6 +96,24 @@ impl TaskState {
             callback_continuations: Vec::new(),
             task_scopes: Vec::new(),
             owner_scope: None,
+        };
+        state.publish_execution();
+        state
+    }
+
+    /// Publish before taking any scheduler/catalog storage lock. Incomplete views stay busy.
+    pub(in crate::vm) fn publish_execution(&self) {
+        use fpas_bytecode::TraceRoots;
+        if let Some(execution) = &self.execution {
+            let mut values = Vec::new();
+            if self
+                .trace_roots(&mut |value| values.push(value.clone()))
+                .is_ok()
+            {
+                execution.publish(values);
+            } else {
+                execution.invalidate();
+            }
         }
     }
 }

@@ -32,8 +32,11 @@ pub(in crate::vm::debug) struct CallSandbox {
     calls: usize,
     pub(super) instructions: u64,
     pub(super) reference_types: HashMap<usize, fpas_bytecode::DebugTypeId>,
-    pub(super) local_cells: HashMap<usize, Arc<std::sync::Mutex<Value>>>,
+    pub(super) local_cells: HashMap<usize, fpas_bytecode::OwnedCell>,
+    pub(super) temporary_roots: fpas_bytecode::RootValues,
+    _globals_roots: fpas_bytecode::RegisteredRoots,
     cancelled: Arc<AtomicBool>,
+    _session: fpas_bytecode::DomainSession,
 }
 
 impl CallSandbox {
@@ -44,14 +47,45 @@ impl CallSandbox {
         layouts: Arc<RuntimeLayouts>,
         source: fpas_bytecode::SourceId,
         source_globals: &Arc<RwLock<Vec<Option<Value>>>>,
+        source_domains: &[fpas_bytecode::MemoryDomain],
         limits: DebugEvaluationLimits,
         cancelled: Arc<AtomicBool>,
     ) -> Result<Self, DebugSessionError> {
+        let mut detacher = ValueDetacher::new(limits.max_detached_values);
+        for domain in source_domains {
+            detacher.allow_source(domain.clone());
+        }
+        Self::with_detacher(
+            executable,
+            layouts,
+            source,
+            source_globals,
+            detacher,
+            limits,
+            cancelled,
+        )
+    }
+
+    pub(super) fn with_detacher(
+        executable: Arc<VerifiedExecutable>,
+        layouts: Arc<RuntimeLayouts>,
+        source: fpas_bytecode::SourceId,
+        source_globals: &Arc<RwLock<Vec<Option<Value>>>>,
+        mut detacher: ValueDetacher,
+        limits: DebugEvaluationLimits,
+        cancelled: Arc<AtomicBool>,
+    ) -> Result<Self, DebugSessionError> {
+        let session = detacher.domain.retain_session().map_err(|_| {
+            error(
+                DebugErrorKind::UnavailableValue,
+                "evaluation domain is retired",
+                "Start a new evaluation.",
+            )
+        })?;
         let effects = analyze_debug_effects(&executable)
             .into_iter()
             .map(|summary| summary.transitive)
             .collect();
-        let mut detacher = ValueDetacher::new(limits.max_detached_values);
         let globals = source_globals
             .read()
             .map_err(|_| {
@@ -69,11 +103,19 @@ impl CallSandbox {
                     .transpose()
             })
             .collect::<Result<Vec<_>, _>>()?;
+        let globals = Arc::new(RwLock::new(globals));
+        let globals_roots = detacher.domain.register_roots(
+            fpas_bytecode::RootKind::Evaluation,
+            Arc::new(crate::vm::domain::roots::GlobalRoots(Arc::clone(&globals))),
+        );
+        let temporary_roots = detacher
+            .domain
+            .root_values(fpas_bytecode::RootKind::Evaluation, Vec::new());
         Ok(Self {
             executable,
             layouts,
             source,
-            globals: Arc::new(RwLock::new(globals)),
+            globals,
             effects,
             detacher,
             limits,
@@ -82,7 +124,10 @@ impl CallSandbox {
             instructions: 0,
             reference_types: HashMap::new(),
             local_cells: HashMap::new(),
+            temporary_roots,
+            _globals_roots: globals_roots,
             cancelled,
+            _session: session,
         })
     }
 
@@ -119,13 +164,26 @@ impl CallSandbox {
                 "Supply argument names only on the call itself.",
             )),
             DebugCallTarget::Named(name) => self.invoke_named(&name, arguments),
-            DebugCallTarget::Value(Value::Function(function)) => self.invoke_function(
-                function.function,
-                function.bound_receiver.as_ref(),
-                &function.captures,
-                arguments,
-                &function.name,
-            ),
+            DebugCallTarget::Value(Value::Function(function)) => {
+                if !function.target().belongs_to(&self.executable) {
+                    return Err(error(
+                        DebugErrorKind::UnavailableValue,
+                        "debug callable belongs to a different executable image",
+                        "Resolve the callable again in the current stopped image.",
+                    ));
+                }
+                let Value::Function(function) = self.detacher.detach(&Value::Function(function))?
+                else {
+                    unreachable!("detachment preserves function values")
+                };
+                self.invoke_function(
+                    function.function,
+                    function.bound_receiver.as_ref(),
+                    &function.captures,
+                    arguments,
+                    &function.name,
+                )
+            }
             DebugCallTarget::Value(other) => Err(error(
                 DebugErrorKind::EvaluationType,
                 format!(
@@ -219,18 +277,27 @@ impl CallSandbox {
         let effects = intrinsic_debug_effects(intrinsic);
         self.require_safe(name, effects)?;
         let arguments = self.detach_values(&arguments)?;
-        let mut worker = Worker::for_function_with_state(
+        let mut worker = Worker::for_function_in_domain(
             Arc::clone(&self.executable),
             self.executable.executable().entry,
-            Vec::new(),
+            crate::vm::worker::FunctionInputs {
+                arguments: &[],
+                captures: &[],
+                domain: self.detacher.domain.clone(),
+            },
             Arc::clone(&self.globals),
             Arc::clone(&self.layouts),
             Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
         )
         .map_err(|diagnostic| runtime_error(*diagnostic))?;
-        worker
+        let _access = worker
+            .execution_access()
+            .map_err(|diagnostic| runtime_error(*diagnostic))?;
+        let result = worker
             .execute_debug_intrinsic(intrinsic, &arguments)
-            .map_err(|diagnostic| runtime_error(*diagnostic))
+            .map_err(|diagnostic| runtime_error(*diagnostic))?;
+        self.temporary_roots.push(result.clone());
+        Ok(result)
     }
 
     fn invoke_member(

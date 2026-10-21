@@ -48,6 +48,8 @@ impl DebugSession {
         expression: Option<&DebugExpression>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugForcedReturnResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         let result = (|| {
             let recovery = if self.state == DebugSessionState::Failed
                 && self.last_stop.reason == DebugStopReason::RuntimeError
@@ -129,6 +131,13 @@ impl DebugSession {
                 None => fpas_bytecode::Value::Unit,
             };
             prepare_return_value(&self.executable, result_type, &value, limits.max_depth)?;
+            if matches!(&prepared, Target::Entry(_)) && task_id != 0 {
+                crate::vm::domain::check_transfer(std::slice::from_ref(&value)).map_err(|message| DebugSessionError {
+                    kind: DebugErrorKind::FrameReturnType,
+                    message: format!("forced task return cannot be published: {message}"),
+                    hint: "Return a transferable value without local cells, task-bound functions, or references.".into(),
+                })?;
+            }
             let prepared_result = self
                 .inspections
                 .get(&task_id)

@@ -52,5 +52,8 @@ fn closure_passed_as_its_own_overlapping_argument_keeps_its_captures() {
     let result = Vm::new(executable)
         .call(FunctionId::new(1), Vec::new())
         .expect("closure call should succeed");
-    assert_eq!(result.value, Value::Integer(42));
+    assert_eq!(
+        result.value.try_to_data().expect("pure return value"),
+        Value::Integer(42)
+    );
 }

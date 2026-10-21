@@ -20,7 +20,7 @@ fn same_span_value_declarations_retain_independent_source_names_and_types() {
                 ty,
                 mutable: false,
                 kind: SymbolKind::Const,
-                task_bound: false
+                capability: crate::TransferCapability::Transferable
             },
             span
         ));
@@ -47,7 +47,7 @@ fn pop_scope_never_removes_root_scope() {
                 ty: Ty::Integer,
                 mutable: false,
                 kind: SymbolKind::Var,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             }
         ),
         "root scope must remain usable after extra pop_scope"
@@ -65,7 +65,7 @@ fn remove_from_current_drops_only_the_innermost_symbol() {
             ty: Ty::Integer,
             mutable: false,
             kind: SymbolKind::Var,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         }
     ));
     assert!(stack.remove_from_current("Offset"));

@@ -10,6 +10,7 @@
     )
 )]
 
+mod capability;
 mod check;
 mod error;
 mod interface;
@@ -17,6 +18,7 @@ mod scope;
 mod std_registry;
 mod std_units;
 mod types;
+pub use capability::TransferCapability;
 pub use types::SubrangeTy;
 
 pub use check::AnalysisMetadata;

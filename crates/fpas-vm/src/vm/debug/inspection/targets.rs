@@ -1,8 +1,6 @@
 //! Stop-local writable origins retained alongside immutable presentation values.
 
-use std::sync::{Arc, Mutex};
-
-use fpas_bytecode::{DebugTypeId, Value};
+use fpas_bytecode::{DebugTypeId, OwnedCell};
 
 use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 
@@ -38,7 +36,7 @@ pub(in crate::vm::debug) struct MutationTarget {
 pub(in crate::vm::debug) enum MutationRoot {
     FrameRegister(usize),
     Global(usize),
-    ClosureCell(Arc<Mutex<Value>>),
+    ClosureCell(OwnedCell),
 }
 
 impl MutationAccess {

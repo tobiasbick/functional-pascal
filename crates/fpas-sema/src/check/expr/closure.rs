@@ -50,9 +50,7 @@ impl Checker {
             &analysis.pending_routines,
         );
         let info = closure_info_from_captures(analysis.captures);
-        if info.task_bound {
-            self.mark_expr_task_bound(key);
-        }
+        self.set_expr_capability(key, info.capability);
         self.closure_infos.insert(key, info);
 
         if is_function {

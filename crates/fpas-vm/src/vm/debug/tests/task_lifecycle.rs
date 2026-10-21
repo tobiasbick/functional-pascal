@@ -141,12 +141,23 @@ fn cancel_child_marks_cancelled_and_stores_failure_without_dispatch() {
         session.test_worker_registers(0).expect("main still frozen"),
         before_main
     );
+    let after_child = session
+        .test_worker_registers(1)
+        .expect("cancelled child metadata");
     assert_eq!(
-        session
-            .test_worker_registers(1)
-            .expect("child registers kept"),
-        before_child
+        (after_child.0, after_child.1, after_child.2, after_child.3),
+        (
+            before_child.0,
+            before_child.1,
+            before_child.2,
+            before_child.3
+        )
     );
+    assert!(
+        after_child.4.is_empty() && after_child.5.is_empty(),
+        "cancelled frames retire without dispatch"
+    );
+
     let child = session
         .tasks(0, 8)
         .expect("catalog")

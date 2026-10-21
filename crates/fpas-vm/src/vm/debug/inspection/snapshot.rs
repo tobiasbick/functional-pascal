@@ -3,13 +3,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use fpas_bytecode::VerifiedExecutable;
+use fpas_bytecode::{MemoryDomain, VerifiedExecutable};
 
 use super::model::{DebugFrame, DebugInspectionLimits, DebugScope};
 use super::render::RetainedValue;
 
 pub(crate) struct InspectionSnapshot {
     pub(super) generation: u32,
+    pub(in crate::vm::debug) domain: MemoryDomain,
     pub(super) executable: Arc<VerifiedExecutable>,
     pub(super) frames: Vec<FrameSnapshot>,
     pub(super) globals: Vec<RetainedValue>,
@@ -17,6 +18,7 @@ pub(crate) struct InspectionSnapshot {
     pub(super) handles: Vec<HandleEntry>,
     pub(super) child_handles: HashMap<(u64, usize), u64>,
     pub(super) limits: DebugInspectionLimits,
+    pub(super) roots: Vec<fpas_bytecode::RootValues>,
 }
 
 pub(super) struct FrameSnapshot {
@@ -41,6 +43,7 @@ pub(super) struct FrameBinding {
 pub(super) struct HandleEntry {
     pub(super) id: u64,
     pub(super) values: Vec<RetainedValue>,
+    pub(super) _roots: Vec<fpas_bytecode::RootValues>,
 }
 
 pub(super) fn item_id(generation: u32, index: usize) -> u64 {

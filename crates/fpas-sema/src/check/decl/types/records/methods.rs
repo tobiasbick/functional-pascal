@@ -200,7 +200,7 @@ impl Checker {
                 ty,
                 mutable: false,
                 kind: symbol_kind,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         );
         self.scopes.set_declaration(&qualified, routine.span);

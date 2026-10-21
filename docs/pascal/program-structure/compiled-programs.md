@@ -144,6 +144,7 @@ from project sources with the compiler rather than editing it by hand.
 
 ## See also
 
+- [Runtime ownership for Rust hosts](runtime-ownership.md)
 - [Projects](projects.md)
 - [Command-line interface](cli.md)
 - [Units](units.md)

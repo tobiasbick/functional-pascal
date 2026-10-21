@@ -2,17 +2,22 @@
 //!
 //! **Documentation:** `docs/pascal/language/functions/var-parameters.md`
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use super::Value;
+use super::{DomainId, OwnedCell};
 
 /// Storage that holds the referenced variable.
 #[derive(Debug, Clone)]
 pub enum ReferenceRoot {
     /// A local variable stored in a shared cell.
-    Cell(Arc<Mutex<Value>>),
+    Cell(OwnedCell),
     /// A mutable global slot.
-    Global(u32),
+    Global {
+        /// Executable-local global slot.
+        slot: u32,
+        /// Domain that owns the referenced storage.
+        owner: DomainId,
+    },
 }
 
 /// One step from the root variable to the referenced field or element.

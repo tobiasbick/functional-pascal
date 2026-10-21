@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/basics/variables.md`
 
 use super::Checker;
+use crate::TransferCapability;
 use crate::scope::SymbolKind;
 use fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT;
 use fpas_lexer::Span;
@@ -23,13 +24,13 @@ impl Checker {
             self.check_type_compat(&target_ty, &value_ty, "assignment", span);
         }
 
-        let value_is_task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
-        if target.parts.len() == 1
-            && let Some(DesignatorPart::Ident(base, _)) = target.parts.first()
-            && let Some(symbol) = self.scopes.lookup_mut(base)
-        {
-            symbol.task_bound = value_is_task_bound;
-        }
+        let capability = if self.type_can_contain_callable(&target_ty) {
+            self.assignment_value_capability(value)
+        } else {
+            TransferCapability::Transferable
+        };
+        self.update_designator_capability(target, capability, true);
+        self.forget_overwritten_capture_provenance(target);
 
         if let Some((symbol, _)) = self.designator_root_symbol(&target.parts)
             && !self.designator_is_mutable_target(target)
@@ -52,6 +53,42 @@ impl Checker {
                 hint,
                 span,
             );
+        }
+    }
+
+    /// Conservatively retain callable facts when a native or `var` call mutates storage.
+    pub(crate) fn join_designator_root_capability(
+        &mut self,
+        target: &Designator,
+        capability: TransferCapability,
+    ) {
+        self.update_designator_capability(target, capability, false);
+    }
+
+    fn update_designator_capability(
+        &mut self,
+        target: &Designator,
+        capability: TransferCapability,
+        overwrite_whole_binding: bool,
+    ) {
+        let Some((_, root_parts)) = self.designator_root_symbol(&target.parts) else {
+            return;
+        };
+        let root = target.parts[..root_parts]
+            .iter()
+            .filter_map(|part| match part {
+                DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join(".");
+        if let Some(symbol) = self.scopes.lookup_mut(&root) {
+            symbol.capability = if overwrite_whole_binding && root_parts == target.parts.len() {
+                capability
+            } else {
+                // Replacing one path does not clear local values at another path.
+                symbol.capability.join(capability)
+            };
         }
     }
 }

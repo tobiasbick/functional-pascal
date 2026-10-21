@@ -26,8 +26,10 @@ impl InspectionSnapshot {
         generation: u32,
         limits: DebugInspectionLimits,
     ) -> Self {
-        Self {
+        let mut snapshot = Self {
+            roots: Vec::new(),
             generation,
+            domain: worker.domain.clone(),
             executable: Arc::clone(&worker.executable),
             frames: Vec::new(),
             globals: capture_globals(worker, generation),
@@ -35,7 +37,9 @@ impl InspectionSnapshot {
             handles: Vec::new(),
             child_handles: HashMap::new(),
             limits,
-        }
+        };
+        snapshot.register_captured_roots();
+        snapshot
     }
     /// Capture debugger-owned handles at the current stopped boundary.
     pub(in crate::vm::debug) fn capture(
@@ -81,7 +85,9 @@ impl InspectionSnapshot {
         let mut capture_limits = limits;
         capture_limits.max_handles = capture_limits.max_handles.saturating_sub(reserved_handles);
         let mut snapshot = Self {
+            roots: Vec::new(),
             generation,
+            domain: worker.domain.clone(),
             executable: Arc::clone(&worker.executable),
             frames: Vec::new(),
             globals: capture_globals(worker, generation),
@@ -100,6 +106,7 @@ impl InspectionSnapshot {
         );
         debug_assert!(boundary != Boundary::Stopped || count.unavailable_reason.is_none());
         snapshot.total_frames = count.total.unwrap_or(snapshot.frames.len());
+        snapshot.register_captured_roots();
         snapshot.limits = limits;
         snapshot
     }
@@ -181,6 +188,7 @@ impl InspectionSnapshot {
                 mutation
             };
             let retained = RetainedValue {
+                domain: Some(worker.domain.clone()),
                 name: name.to_string(),
                 value,
                 type_name: type_name.to_string(),
@@ -273,7 +281,7 @@ fn binding_mutation(
     }
     let root = if binding.cell_backed {
         match value {
-            Some(Value::Cell(cell)) => MutationRoot::ClosureCell(Arc::clone(cell)),
+            Some(Value::Cell(cell)) => MutationRoot::ClosureCell(cell.clone()),
             _ => return MutationAccess::Unavailable,
         }
     } else {
@@ -298,12 +306,20 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
         .iter()
         .enumerate()
         .map(|(index, global)| {
-            let (value, unavailable) = match &slots {
+            let (mut value, mut unavailable) = match &slots {
                 Ok(slots) => globals::read_slot(slots, index),
                 Err(reason) => bindings::ReadValue::Unavailable(reason),
             }
             .into_parts();
+            if value
+                .as_ref()
+                .is_some_and(|value| fpas_bytecode::validate_local(&worker.domain, value).is_err())
+            {
+                value = None;
+                unavailable = Some("foreign_domain");
+            }
             RetainedValue {
+                domain: Some(worker.domain.clone()),
                 name: image
                     .strings
                     .get(global.name)

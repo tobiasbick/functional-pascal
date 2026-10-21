@@ -5,7 +5,7 @@ use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
 use super::Worker;
 use crate::vm::dispatch::DispatchStep;
-use crate::vm::{Execution, VmError, diagnostics};
+use crate::vm::{RuntimeExecution, VmError, diagnostics};
 
 /// Maximum scheduling steps between two scheduler abort checks.
 const ABORT_CHECK_INTERVAL: u32 = 256;
@@ -13,6 +13,20 @@ const ABORT_CHECK_INTERVAL: u32 = 256;
 impl Worker {
     /// Execute one scheduled task until return, suspension or scheduler abort.
     pub(in crate::vm) fn run_task(&mut self) -> Result<Option<Value>, VmError> {
+        let access = self.execution_access()?;
+        let result = self.run_task_owned();
+        if access.outermost() {
+            let extra = match &result {
+                Ok(Some(value)) => std::slice::from_ref(value),
+                _ => &[],
+            };
+            if self.publish_execution(extra).is_ok() {
+                access.safe_point();
+            }
+        }
+        result
+    }
+    fn run_task_owned(&mut self) -> Result<Option<Value>, VmError> {
         if self.capture_record.is_some() {
             self.run_task_inner::<true>()
         } else {
@@ -61,32 +75,63 @@ impl Worker {
     }
 
     /// Execute and consume a standalone worker through its ownership barriers.
-    pub fn run(mut self) -> Result<Execution, VmError> {
+    pub fn run(mut self) -> Result<RuntimeExecution, VmError> {
         self.run_retained()
     }
 
     /// Execute while retaining ownership of root storage through VM finalization.
-    pub(in crate::vm) fn run_retained(&mut self) -> Result<Execution, VmError> {
-        let outcome = self.run_in_place().map(|execution| execution.value);
-        let value = self.finish_owned_groups_blocking(outcome)?;
-        Ok(Execution {
+    pub(in crate::vm) fn run_retained(&mut self) -> Result<RuntimeExecution, VmError> {
+        let access = self.execution_access()?;
+        let execution = self.run_in_place();
+        let outcome = execution
+            .as_ref()
+            .map(|execution| execution.value.clone())
+            .map_err(Clone::clone);
+        let value = match self.finish_owned_groups_blocking(outcome) {
+            Ok(value) => value,
+            Err(error) => {
+                if self.publish_execution(&[]).is_ok() {
+                    access.safe_point();
+                }
+                return Err(error);
+            }
+        };
+        let execution = RuntimeExecution::rooted(
             value,
-            instruction_count: self
-                .instruction_count
+            self.instruction_count
                 .saturating_add(self.callback_instruction_count.get()),
-        })
+            &self.domain,
+        );
+        if self
+            .publish_execution(std::slice::from_ref(&execution.value))
+            .is_ok()
+        {
+            access.safe_point();
+        }
+        Ok(execution)
     }
 
     /// Execute a synchronous root/callback, retaining failure state before scope unwind.
-    pub(in crate::vm) fn run_in_place(&mut self) -> Result<Execution, VmError> {
-        self.run_in_place_inner().map_err(|error| {
+    pub(in crate::vm) fn run_in_place(&mut self) -> Result<RuntimeExecution, VmError> {
+        let access = self.execution_access()?;
+        let result = self.run_in_place_inner().map_err(|error| {
             let error = self.capture_failure(error);
             self.capture_root_propagation(&error);
             self.unwind_task_scopes_blocking(error)
-        })
+        });
+        if access.outermost() {
+            let extra = match &result {
+                Ok(execution) => std::slice::from_ref(&execution.value),
+                Err(_) => &[],
+            };
+            if self.publish_execution(extra).is_ok() {
+                access.safe_point();
+            }
+        }
+        result
     }
 
-    fn run_in_place_inner(&mut self) -> Result<Execution, VmError> {
+    fn run_in_place_inner(&mut self) -> Result<RuntimeExecution, VmError> {
         if self.capture_record.is_some() {
             self.run_in_place_loop::<true>()
         } else {
@@ -94,7 +139,7 @@ impl Worker {
         }
     }
 
-    fn run_in_place_loop<const CAPTURE: bool>(&mut self) -> Result<Execution, VmError> {
+    fn run_in_place_loop<const CAPTURE: bool>(&mut self) -> Result<RuntimeExecution, VmError> {
         loop {
             if CAPTURE {
                 self.capture_peer_boundary();
@@ -122,12 +167,12 @@ impl Worker {
                     ));
                 }
                 DispatchStep::Return(value) => {
-                    return Ok(Execution {
+                    return Ok(RuntimeExecution::rooted(
                         value,
-                        instruction_count: self
-                            .instruction_count
+                        self.instruction_count
                             .saturating_add(self.callback_instruction_count.get()),
-                    });
+                        &self.domain,
+                    ));
                 }
             }
         }

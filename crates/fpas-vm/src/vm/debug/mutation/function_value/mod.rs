@@ -58,7 +58,7 @@ pub(in crate::vm::debug) fn prepare(
     let AssignmentContext {
         inspection,
         frame_id,
-        task_id,
+        task_id: _task_id,
         destination,
         limits,
     } = context;
@@ -100,7 +100,13 @@ pub(in crate::vm::debug) fn prepare(
     };
     if function.task_bound {
         destination::require_frame_register(Some(destination), frame_id, inspection.generation())?;
-        captures::require_task_owner(function, task_id)?;
+        captures::require_task_owner(function, inspection.domain.id())?;
+        fpas_bytecode::validate_local(&inspection.domain, &value).map_err(|_| {
+            type_error(
+                "source function contains foreign local values",
+                "Select the owning task.",
+            )
+        })?;
         captures::require_task_owned(function, limits.max_depth, limits.max_detached_values)?;
     } else {
         captures::require_eligible(function, limits.max_depth, limits.max_detached_values)?;

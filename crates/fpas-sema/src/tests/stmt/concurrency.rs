@@ -2,7 +2,9 @@ use super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_parser::{ParseDiagnostic, parse};
 
+mod capabilities;
 mod groups;
+mod result_summaries;
 mod task_scopes;
 mod task_types;
 mod worker_state;

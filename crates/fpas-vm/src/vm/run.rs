@@ -1,6 +1,9 @@
 //! Root execution, terminal observation and ordinary shutdown joins.
 
-use super::{Execution, Vm, VmError, diagnostics, tasks, worker::Worker};
+use super::{
+    Execution, RuntimeExecution, Vm, VmError, diagnostics, tasks,
+    worker::{FunctionInputs, Worker},
+};
 use std::sync::Arc;
 
 impl Vm {
@@ -15,16 +18,19 @@ impl Vm {
         self.hosted.close_process_handles();
         self.hosted.close_file_handles();
         self.hosted.wait_process_handles();
+        self.hosted.cases.close_all();
         if let Err(error) = &result {
             self.notify_failure(error);
         }
         if let Some(capture) = self.scheduler.failure_capture.get() {
             capture.finish_catalog();
         }
+        let result = result.map(|execution| self.host_values.export(execution));
+        self.session.take();
         result
     }
 
-    fn run_inner(&mut self) -> Result<Execution, VmError> {
+    fn run_inner(&mut self) -> Result<RuntimeExecution, VmError> {
         if std::mem::replace(&mut self.has_run, true) {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
@@ -35,10 +41,14 @@ impl Vm {
             ));
         }
         let scheduler = Arc::clone(&self.scheduler);
-        let mut worker = Worker::for_function_with_state(
+        let mut worker = Worker::for_function_in_domain(
             Arc::clone(&self.executable),
             self.executable.executable().entry,
-            Vec::new(),
+            FunctionInputs {
+                arguments: &[],
+                captures: &[],
+                domain: self.domain.clone(),
+            },
             Arc::clone(&self.globals),
             self.layouts.clone()?,
             Arc::clone(&self.hosted),
@@ -102,9 +112,9 @@ impl Vm {
 
     fn finish_server_execution(
         &self,
-        result: Result<Execution, VmError>,
+        result: Result<RuntimeExecution, VmError>,
         worker: &Worker,
-    ) -> Result<Execution, VmError> {
+    ) -> Result<RuntimeExecution, VmError> {
         worker.capture_root_outcome(&result);
         // An escaping root error already wins over server cleanup and pool joins.
         // Do not wait for those operations before delivering its original state.

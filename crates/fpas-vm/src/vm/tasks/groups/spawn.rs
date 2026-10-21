@@ -13,9 +13,7 @@ impl Worker {
         policy: Option<RetryPolicy>,
     ) -> Result<Value, VmError> {
         let function = self.validate_callback(work, 1)?;
-        if function.task_bound {
-            return Err(self.group_error("Cannot start a task-bound worker in another task"));
-        }
+        self.require_transferable_values(std::slice::from_ref(work))?;
         let scheduler = self.scheduler_ref()?;
         let id = scheduler.alloc_id();
         let token = scheduler

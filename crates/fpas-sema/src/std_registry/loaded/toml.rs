@@ -78,7 +78,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
             ty: toml_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 
@@ -91,7 +91,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
                 ty: toml_ty.clone(),
                 mutable: false,
                 kind: SymbolKind::EnumVariantConstructor,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         );
     }

@@ -2,6 +2,7 @@ mod fluent;
 mod indexed;
 mod methods;
 mod native;
+mod native_capabilities;
 
 pub(in crate::check) use fluent::FluentCall;
 pub(in crate::check) use methods::MethodCallSite;

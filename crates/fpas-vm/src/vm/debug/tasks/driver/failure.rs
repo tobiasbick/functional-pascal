@@ -24,6 +24,7 @@ pub(super) fn record(
             slot.failure = None;
         }
         slot.worker.task_suspension = None;
+        slot.worker.retire_execution();
         slot.exited = true;
         events.push(DebugTaskEvent {
             task_id,
@@ -31,6 +32,7 @@ pub(super) fn record(
         });
         true
     } else {
+        let _ = slot.worker.publish_execution(&[]);
         false
     }
 }

@@ -219,7 +219,7 @@ pub(super) fn clone_pairs(values: &[(Value, Value)]) -> Vec<(Value, Value)> {
 
 pub(super) fn recycle_values(values: &mut Vec<Value>) {
     let mut values = mem::take(values);
-    values.clear();
+    super::drain::values(&mut values);
     let _ = VALUE_BUFFERS.try_with(move |pool| pool.borrow_mut().recycle(values));
 }
 
@@ -231,7 +231,7 @@ pub(super) fn recycle_error_values(values: &mut Vec<Value>) {
 
 pub(super) fn recycle_pairs(values: &mut Vec<(Value, Value)>) {
     let mut values = mem::take(values);
-    values.clear();
+    super::drain::pairs(&mut values);
     let _ = PAIR_BUFFERS.try_with(move |pool| pool.borrow_mut().recycle(values));
 }
 

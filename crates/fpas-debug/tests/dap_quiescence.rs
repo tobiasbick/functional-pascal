@@ -129,8 +129,9 @@ fn jsonl_task_ids_map_to_stable_dap_threads() {
         "breakpoint.set",
         json!({"source":"<memory>","line":8}),
     ));
-    let _ = jsonl.handle_line(&jsonl_request(3, "launch", json!({"stop_on_entry":false})));
-    let jsonl_events = jsonl.wait();
+    let mut jsonl_events =
+        jsonl.handle_line(&jsonl_request(3, "launch", json!({"stop_on_entry":false})));
+    jsonl_events.extend(jsonl.wait());
     let jsonl_stop = jsonl_events
         .iter()
         .find(|record| record["event"] == "stopped")
@@ -149,8 +150,8 @@ fn jsonl_task_ids_map_to_stable_dap_threads() {
         "setBreakpoints",
         json!({"source":{"path":"<memory>"},"breakpoints":[{"line":8}]}),
     ));
-    let _ = dap.handle(request(4, "configurationDone", json!({})));
-    let dap_events = dap.wait();
+    let mut dap_events = dap.handle(request(4, "configurationDone", json!({})));
+    dap_events.extend(dap.wait());
     let dap_stop = dap_events
         .iter()
         .find(|event| event["event"] == "stopped")

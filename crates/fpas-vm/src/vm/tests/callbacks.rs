@@ -92,9 +92,11 @@ fn array_style_callbacks_use_numeric_targets_repeatedly() {
         .into_iter()
         .map(|value| {
             callbacks
-                .invoke(FunctionId::new(1), vec![Value::Integer(value)])
+                .invoke(FunctionId::new(1), vec![Value::Integer(value).into()])
                 .expect("callback")
                 .value
+                .try_to_data()
+                .expect("pure callback result")
         })
         .collect::<Vec<_>>();
     assert_eq!(
@@ -112,9 +114,11 @@ fn callback_panic_unwinds_only_current_invocation() {
     assert_eq!(error.code, RUNTIME_PROGRAM_PANIC);
     assert_eq!(
         callbacks
-            .invoke(FunctionId::new(1), vec![Value::Integer(4)])
+            .invoke(FunctionId::new(1), vec![Value::Integer(4).into()])
             .expect("session remains usable")
-            .value,
+            .value
+            .try_to_data()
+            .expect("pure callback result"),
         Value::Integer(8)
     );
 }
@@ -125,7 +129,7 @@ fn cancellation_and_shutdown_reject_later_callbacks() {
     cancelled.cancel();
     assert_eq!(
         cancelled
-            .invoke(FunctionId::new(1), vec![Value::Integer(1)])
+            .invoke(FunctionId::new(1), vec![Value::Integer(1).into()])
             .expect_err("cancelled")
             .code,
         RUNTIME_VM_SHUTDOWN
@@ -135,7 +139,7 @@ fn cancellation_and_shutdown_reject_later_callbacks() {
     shutdown.shutdown();
     assert_eq!(
         shutdown
-            .invoke(FunctionId::new(1), vec![Value::Integer(1)])
+            .invoke(FunctionId::new(1), vec![Value::Integer(1).into()])
             .expect_err("shutdown")
             .code,
         RUNTIME_VM_SHUTDOWN
@@ -145,8 +149,11 @@ fn cancellation_and_shutdown_reject_later_callbacks() {
 #[test]
 fn hosted_callback_rejects_a_task_owned_function_from_a_foreign_task() {
     let worker = Worker::new(Arc::new(callback_image())).expect("worker");
-    let function =
-        Value::task_owned_function(FunctionId::new(1), "double".to_string(), Vec::new(), 7);
+    let function = Value::task_owned_function(
+        worker.function_target(FunctionId::new(1)).expect("target"),
+        Vec::new(),
+        fpas_bytecode::MemoryDomain::new().id().clone(),
+    );
 
     let error = worker
         .call_callback_sync(&function, &[Value::Integer(3)])
@@ -160,8 +167,7 @@ fn hosted_callback_rejects_a_task_owned_function_from_a_foreign_task() {
 fn reused_hosted_callback_keeps_bound_receiver_before_visible_arguments() {
     let worker = Worker::new(Arc::new(callback_image())).expect("worker");
     let function = Value::bound_function(
-        FunctionId::new(1),
-        "Counter.Double".to_string(),
+        worker.function_target(FunctionId::new(1)).expect("target"),
         Value::Integer(3),
     );
 
@@ -216,8 +222,20 @@ fn hosted_callback_worker_keeps_the_owner_task_when_reused() {
     );
     let mut worker = Worker::new(Arc::new(executable)).expect("worker");
     worker.task_id = 7;
-    let inner = Value::task_owned_function(FunctionId::new(2), "inner".to_string(), Vec::new(), 7);
-    let outer = Value::task_owned_function(FunctionId::new(1), "outer".to_string(), vec![inner], 7);
+    let inner = Value::task_owned_function(
+        worker
+            .function_target(FunctionId::new(2))
+            .expect("inner target"),
+        Vec::new(),
+        worker.domain.id().clone(),
+    );
+    let outer = Value::task_owned_function(
+        worker
+            .function_target(FunctionId::new(1))
+            .expect("outer target"),
+        vec![inner],
+        worker.domain.id().clone(),
+    );
 
     assert_eq!(
         worker

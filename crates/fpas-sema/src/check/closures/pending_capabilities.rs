@@ -8,15 +8,17 @@ use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
-use super::{CaptureBinding, task_bound_from_captures};
+use super::{CaptureBinding, capability_from_captures};
+use crate::TransferCapability;
 use crate::check::Checker;
 
-type BindingKey = (String, u32, usize, usize);
+pub(super) type BindingKey = (String, u32, usize, usize);
 
 /// Pending routine provenance through bindings and accepted capability boundaries.
 #[derive(Default)]
 pub(super) struct PendingCapabilities {
-    bindings: HashMap<BindingKey, Vec<usize>>,
+    pub(super) bindings: HashMap<BindingKey, Vec<usize>>,
+    pub(super) direct: HashMap<BindingKey, TransferCapability>,
     checks: Vec<(Vec<usize>, Span)>,
 }
 
@@ -27,17 +29,39 @@ impl Checker {
         name: &str,
         value: Option<&Expr>,
     ) {
-        let Some((_, _, Some(span))) = self.scopes.lookup_with_scope_and_declaration(name) else {
+        let Some((_, symbol, Some(span))) = self.scopes.lookup_with_scope_and_declaration(name)
+        else {
             return;
         };
-        let targets = value
-            .map(|expr| self.pending_expr_captures(expr))
-            .unwrap_or_default();
+        let scalar = !self.type_can_contain_callable(&symbol.ty);
+        let targets = if scalar {
+            Vec::new()
+        } else {
+            value
+                .map(|expr| self.pending_expr_captures(expr))
+                .unwrap_or_default()
+        };
+        let direct = if scalar {
+            TransferCapability::Transferable
+        } else {
+            value.map_or(TransferCapability::Unknown, |expr| {
+                self.direct_expr_capability(expr)
+            })
+        };
+        self.capture_dependencies
+            .capabilities
+            .direct
+            .insert(binding_key(name, span), direct);
         if !targets.is_empty() {
             self.capture_dependencies
                 .capabilities
                 .bindings
                 .insert(binding_key(name, span), targets);
+        } else {
+            self.capture_dependencies
+                .capabilities
+                .bindings
+                .remove(&binding_key(name, span));
         }
     }
 
@@ -45,7 +69,10 @@ impl Checker {
     pub(in crate::check) fn defer_capture_task_call(&mut self, call: &Expr, span: Span) {
         let targets = match call {
             Expr::Call { designator, .. } => self.pending_designator_captures(designator),
-            Expr::Postfix { base, .. } => self.pending_expr_captures(base),
+            Expr::Postfix {
+                base, operations, ..
+            } => self
+                .pending_postfix_captures(base, &operations[..operations.len().saturating_sub(1)]),
             _ => Vec::new(),
         };
         self.defer_capture_boundary(targets, span);
@@ -58,15 +85,17 @@ impl Checker {
     }
 
     fn defer_capture_boundary(&mut self, targets: Vec<usize>, span: Span) {
-        if !targets.is_empty() {
-            self.capture_dependencies
-                .capabilities
-                .checks
-                .push((targets, span));
+        let checks = &mut self.capture_dependencies.capabilities.checks;
+        if !targets.is_empty()
+            && !checks
+                .iter()
+                .any(|(existing, location)| existing == &targets && *location == span)
+        {
+            checks.push((targets, span));
         }
     }
 
-    fn pending_expr_captures(&self, expr: &Expr) -> Vec<usize> {
+    pub(super) fn pending_expr_captures(&self, expr: &Expr) -> Vec<usize> {
         if self
             .expr_types
             .get(&Self::expr_lookup_key(expr))
@@ -103,8 +132,10 @@ impl Checker {
             | Expr::ResultError(inner, _)
             | Expr::OptionSome(inner, _)
             | Expr::Try(inner, _)
-            | Expr::NamedArgument { value: inner, .. }
-            | Expr::Postfix { base: inner, .. } => self.pending_expr_captures(inner),
+            | Expr::NamedArgument { value: inner, .. } => self.pending_expr_captures(inner),
+            Expr::Postfix {
+                base, operations, ..
+            } => self.pending_postfix_captures(base, operations),
             Expr::ArrayLiteral(values, _) => values
                 .iter()
                 .flat_map(|value| self.pending_expr_captures(value))
@@ -142,19 +173,34 @@ impl Checker {
                         .flat_map(|field| self.pending_expr_captures(&field.value)),
                 )
                 .collect(),
-            Expr::Call { args, .. }
-                if self
-                    .record_constructions
-                    .contains(&Self::expr_lookup_key(expr)) =>
-            {
-                args.iter()
-                    .flat_map(|arg| self.pending_expr_captures(arg))
-                    .collect()
-            }
-            Expr::Call { designator, .. }
-                if self.fluent_calls.contains_key(&Self::expr_lookup_key(expr)) =>
-            {
-                self.pending_designator_captures(designator)
+            Expr::Call {
+                designator, args, ..
+            } if self.is_value_constructor(Self::expr_lookup_key(expr), designator) => args
+                .iter()
+                .flat_map(|arg| self.pending_expr_captures(arg))
+                .collect(),
+            Expr::Call {
+                designator, args, ..
+            } => {
+                let key = Self::expr_lookup_key(expr);
+                let operation = self
+                    .fluent_calls
+                    .get(&key)
+                    .map(|target| target.name.as_str())
+                    .or_else(|| self.intrinsic_calls.get(&key).map(String::as_str))
+                    .and_then(crate::std_registry::native_operation_by_implementation);
+                if let Some(operation) = operation
+                    && let Some(result) = self.expr_types.get(&key)
+                {
+                    self.pending_native_captures(
+                        operation,
+                        result,
+                        self.pending_designator_captures(designator),
+                        args,
+                    )
+                } else {
+                    Vec::new()
+                }
             }
             _ => Vec::new(),
         };
@@ -164,6 +210,16 @@ impl Checker {
     }
 
     fn pending_designator_captures(&self, designator: &Designator) -> Vec<usize> {
+        if designator.parts.iter().any(|part| {
+            let span = match part {
+                DesignatorPart::Ident(_, span) | DesignatorPart::Index(_, span) => span,
+            };
+            self.path_types
+                .get(&(span.source_id, span.offset))
+                .is_some_and(|ty| !self.type_can_contain_callable(ty))
+        }) {
+            return Vec::new();
+        }
         let full = Self::resolve_designator_name(designator);
         let name = if self.scopes.lookup(&full).is_some() {
             full.as_str()
@@ -190,29 +246,44 @@ impl Checker {
 
     /// Completes captured callable dependencies and diagnoses provisional task transfers.
     pub(in crate::check) fn finish_pending_capture_checks(&mut self) {
+        // Start at direct facts, rather than joining provisional Unknown metadata forever.
+        // Subsequent joins are monotone over the finite capability lattice.
+        let direct = &self.capture_dependencies.capabilities.direct;
+        for info in self.closure_infos.values_mut() {
+            complete_capabilities(&mut info.captures, direct);
+            info.capability = capability_from_captures(&info.captures);
+        }
+        for info in self.nested_routine_captures.values_mut() {
+            complete_capabilities(&mut info.captures, direct);
+            info.capability = capability_from_captures(&info.captures);
+        }
         loop {
-            let states: HashMap<_, _> = self
-                .capture_dependencies
-                .capabilities
-                .bindings
-                .iter()
-                .map(|(binding, targets)| {
-                    let task_bound = targets.iter().any(|key| {
-                        self.nested_routine_captures
-                            .get(key)
-                            .is_some_and(|info| info.task_bound)
-                    });
-                    (binding.clone(), task_bound)
-                })
-                .collect();
+            let mut states = self.capture_dependencies.capabilities.direct.clone();
+            for (binding, targets) in &self.capture_dependencies.capabilities.bindings {
+                let capability = targets.iter().fold(
+                    states.get(binding).copied().unwrap_or_default(),
+                    |state, key| {
+                        state.join(
+                            self.nested_routine_captures
+                                .get(key)
+                                .map_or(TransferCapability::Unknown, |info| info.capability),
+                        )
+                    },
+                );
+                states.insert(binding.clone(), capability);
+            }
             let mut changed = false;
             for info in self.closure_infos.values_mut() {
                 changed |= complete_capabilities(&mut info.captures, &states);
-                info.task_bound = task_bound_from_captures(&info.captures);
+                let next = capability_from_captures(&info.captures);
+                changed |= info.capability != next;
+                info.capability = next;
             }
             for info in self.nested_routine_captures.values_mut() {
                 changed |= complete_capabilities(&mut info.captures, &states);
-                info.task_bound = task_bound_from_captures(&info.captures);
+                let next = capability_from_captures(&info.captures);
+                changed |= info.capability != next;
+                info.capability = next;
             }
             if !changed {
                 break;
@@ -220,18 +291,16 @@ impl Checker {
         }
         for (&key, info) in &self.nested_routine_captures {
             self.scopes
-                .update_routine_capture_capabilities(key, info.task_bound);
+                .update_routine_capture_capabilities(key, info.capability);
         }
         for (&key, info) in &self.closure_infos {
-            if info.task_bound {
-                self.task_bound_exprs.insert(key);
-            }
+            self.expr_capabilities.insert(key, info.capability);
         }
         for (targets, span) in std::mem::take(&mut self.capture_dependencies.capabilities.checks) {
             let invalid = targets.iter().any(|key| {
                 self.nested_routine_captures
                     .get(key)
-                    .is_some_and(|info| info.task_bound)
+                    .is_some_and(|info| info.capability.is_task_bound())
             });
             if invalid {
                 self.error_with_code(SEMA_TASK_BOUND_CALLABLE,
@@ -244,20 +313,24 @@ impl Checker {
 
 fn complete_capabilities(
     captures: &mut [CaptureBinding],
-    states: &HashMap<BindingKey, bool>,
+    states: &HashMap<BindingKey, TransferCapability>,
 ) -> bool {
     let mut changed = false;
     for capture in captures {
-        if let Some(&task_bound) = states.get(&binding_key(&capture.name, capture.declaration)) {
-            let next_bound = capture.task_bound || task_bound;
-            changed |= capture.task_bound != next_bound;
-            capture.task_bound = next_bound;
+        if capture.mutable {
+            // Mutable cells already make their closure local; an initializer does
+            // not describe the cell's contents when this routine is invoked.
+            continue;
+        }
+        if let Some(&capability) = states.get(&binding_key(&capture.name, capture.declaration)) {
+            changed |= capture.capability != capability;
+            capture.capability = capability;
         }
     }
     changed
 }
 
-fn binding_key(name: &str, span: Span) -> BindingKey {
+pub(super) fn binding_key(name: &str, span: Span) -> BindingKey {
     (
         name.to_ascii_lowercase(),
         span.source_id,

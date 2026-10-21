@@ -544,3 +544,18 @@ the source standard library adjacent to that same toolchain. The
 `functionalPascal.programTerminal` setting supplies the default terminal;
 `"console": "integratedTerminal"`, `"externalTerminal"`, or `"debugConsole"`
 overrides it per launch configuration.
+
+### Runtime ownership of retained values
+
+Inspection handles register their live values and writable closure-cell origins.
+Invalidating a stop generation releases those registrations. Detached call results
+keep their evaluation domain through retained child handles; failed evaluations
+release partial construction and temporary handoffs. Public Rust termination
+results expose a sealed `HostValue`, which remains inspectable after session drop.
+Failure-report trees and scalar trace history contain detached observations.
+
+Live-image replacement checks retained callable provenance before commit. Existing
+address mapping cannot atomically rebind stored callable graphs, so an update with
+such values is rejected while preserving all worker images and the version counter.
+Numeric target equality alone cannot authorize invocation against another image.
+See [runtime ownership](../program-structure/runtime-ownership.md).

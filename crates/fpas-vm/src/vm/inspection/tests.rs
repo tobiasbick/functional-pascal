@@ -32,9 +32,10 @@ fn worker(source: &str) -> Worker {
         .with_scheduler(Some(Arc::new(crate::vm::tasks::TaskScheduler::new())))
 }
 
-fn detached(value: bindings::ReadValue) -> ValueSnapshot {
+fn detached(value: bindings::ReadValue, domain: &fpas_bytecode::MemoryDomain) -> ValueSnapshot {
     let (value, reason) = value.into_parts();
     let retained = RetainedValue {
+        domain: Some(domain.clone()),
         name: String::new(),
         type_name: value
             .as_ref()
@@ -67,7 +68,7 @@ fn ordinary_fault_reads_visible_bindings_references_and_worker_local_globals() {
         "{error:?}"
     );
     assert_eq!(
-        detached(globals::read(&worker, 0)).scalar,
+        detached(globals::read(&worker, 0), &worker.domain).scalar,
         Some(Scalar::Integer("7".to_string()))
     );
     assert!(
@@ -100,7 +101,7 @@ fn ordinary_fault_reads_visible_bindings_references_and_worker_local_globals() {
                         .get(binding.name)
                         .expect("binding name")
                         .to_ascii_lowercase(),
-                    detached(bindings::read(owner, frame.base, binding)),
+                    detached(bindings::read(owner, frame.base, binding), &owner.domain),
                 )
             })
             .collect::<Vec<_>>();
@@ -171,7 +172,7 @@ fn hosted_callback_faults_keep_the_callback_and_calling_continuation() {
                     .find(|binding| binding.kind == DebugBindingKind::Parameter)
                     .expect("callback parameter");
                 assert_eq!(
-                    detached(bindings::read(owner, frame.base, parameter)).scalar,
+                    detached(bindings::read(owner, frame.base, parameter), &owner.domain).scalar,
                     Some(Scalar::Integer("7".to_string()))
                 );
             }
@@ -200,28 +201,46 @@ fn hosted_callback_faults_keep_the_callback_and_calling_continuation() {
 #[test]
 fn global_contention_and_empty_storage_have_different_statuses() {
     let worker = worker("program Empty; var Item: integer := 1; begin end.");
-    assert_eq!(detached(globals::read(&worker, 0)).status, "uninitialized");
+    assert_eq!(
+        detached(globals::read(&worker, 0), &worker.domain).status,
+        "uninitialized"
+    );
     let guard = worker.globals.write().expect("exclusive global access");
-    let busy = detached(globals::read(&worker, 0));
+    let busy = detached(globals::read(&worker, 0), &worker.domain);
     assert_eq!((busy.status, busy.reason), ("unavailable", Some("busy")));
     drop(guard);
     assert_eq!(
-        detached(globals::read(&worker, usize::MAX)).reason,
+        detached(globals::read(&worker, usize::MAX), &worker.domain).reason,
         Some("storage_unavailable")
     );
-    let cell = Arc::new(std::sync::Mutex::new(Value::Integer(8)));
+    let cell = worker.domain.new_cell(Value::Integer(8)).expect("referent");
     let reference = fpas_bytecode::VariableReference {
-        root: fpas_bytecode::ReferenceRoot::Cell(Arc::clone(&cell)),
+        root: fpas_bytecode::ReferenceRoot::Cell(cell),
         path: Vec::new(),
     };
-    let guard = cell.lock().expect("hold referent");
+    let foreign = fpas_bytecode::MemoryDomain::new();
+    let foreign_reference = fpas_bytecode::VariableReference {
+        root: fpas_bytecode::ReferenceRoot::Cell(
+            foreign
+                .new_cell(Value::Integer(9))
+                .expect("foreign referent"),
+        ),
+        path: Vec::new(),
+    };
     assert_eq!(
-        detached(bindings::read_reference(&worker, &reference)).reason,
-        Some("busy")
+        detached(
+            bindings::read_reference(&worker, &foreign_reference),
+            &worker.domain
+        )
+        .reason,
+        Some("ownership_unavailable")
     );
-    drop(guard);
     assert_eq!(
-        detached(bindings::read_reference(&worker, &reference)).scalar,
+        detached(
+            bindings::read_reference(&worker, &reference),
+            &worker.domain
+        )
+        .scalar,
         Some(Scalar::Integer("8".to_string()))
     );
 }
@@ -242,7 +261,10 @@ fn failing_escaped_closures_expose_the_current_capture_cell() {
             .iter()
             .find(|binding| binding.kind == DebugBindingKind::Capture && !binding.hidden)
             .expect("capture metadata");
-        captured = Some(detached(bindings::read(owner, frame.base, binding)));
+        captured = Some(detached(
+            bindings::read(owner, frame.base, binding),
+            &owner.domain,
+        ));
     });
     assert_eq!(
         captured.expect("captured value").scalar,

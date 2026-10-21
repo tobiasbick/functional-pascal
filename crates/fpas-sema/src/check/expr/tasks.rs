@@ -3,8 +3,10 @@
 //! **Documentation:** `docs/pascal/language/concurrency/go.md`.
 
 use super::{Checker, calls};
+use crate::TransferCapability;
+use crate::check::MethodCallTarget;
 use crate::types::Ty;
-use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
+use fpas_parser::{DesignatorPart, Expr, PostfixOperation};
 
 impl Checker {
     /// Checks a retained or detached task call, including its escape restrictions.
@@ -71,6 +73,7 @@ impl Checker {
                     args,
                     span,
                 );
+                self.check_task_transfer_arguments(args);
             }
             Expr::Postfix { operations, .. } => {
                 if let Some(operation @ PostfixOperation::MethodCall { args, .. }) =
@@ -82,12 +85,15 @@ impl Checker {
                         args,
                         span,
                     );
+                    self.check_task_transfer_arguments(args);
                 }
             }
             _ => {}
         }
         let inner_key = Self::expr_lookup_key(inner);
         self.expr_types.insert(inner_key, inner_ty.clone());
+        let result_capability = self.call_result_capability(inner);
+        self.set_expr_capability(inner_key, result_capability);
         if self.callable_expr_is_task_bound(inner) {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
@@ -98,48 +104,99 @@ impl Checker {
         } else {
             self.defer_capture_task_call(inner, span);
         }
+        if result_capability.is_task_bound() {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
+                "Cannot spawn a routine with a task-bound result",
+                "Return an immutable value graph from the child, or call this routine on the same task.",
+                span,
+            );
+        }
         Ty::Task(Box::new(inner_ty))
+    }
+
+    fn check_task_transfer_arguments(&mut self, args: &[Expr]) {
+        for argument in args {
+            let value = argument.argument_value();
+            if self.expr_is_task_bound(Self::expr_lookup_key(value)) {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
+                    "Cannot pass a task-bound value to another task",
+                    "Pass immutable values without mutable captures, or invoke the routine on the same task.",
+                    value.span(),
+                );
+            } else {
+                self.defer_capture_transfer(value, value.span());
+            }
+        }
     }
 
     /// Reports whether the resolved call target owns task-bound mutable captures.
     pub(crate) fn callable_expr_is_task_bound(&self, expr: &Expr) -> bool {
         match expr {
             Expr::Call { designator, .. } => {
-                self.fluent_calls
-                    .get(&Self::expr_lookup_key(expr))
-                    .and_then(|target| self.scopes.lookup(&target.name))
-                    .is_some_and(|symbol| symbol.task_bound)
-                    || self.designator_refers_to_task_bound(designator)
-            }
-            Expr::Postfix { operations, .. } => {
-                operations
-                    .last()
-                    .and_then(|operation| {
+                let key = Self::expr_lookup_key(expr);
+                if let Some(MethodCallTarget::Static(name)) = self.method_calls.get(&key) {
+                    return self.named_callable_capability(name).is_task_bound();
+                }
+                let target = self
+                    .method_calls
+                    .get(&key)
+                    .map(|target| target.qualified_name())
+                    .or_else(|| {
                         self.fluent_calls
-                            .get(&Self::postfix_operation_lookup_key(operation))
+                            .get(&key)
+                            .map(|target| target.name.as_str())
+                    });
+                let capability = self.designator_capability(designator);
+                let receiver_ty = self
+                    .fluent_calls
+                    .get(&key)
+                    .map(|target| &target.receiver_ty)
+                    .or_else(|| {
+                        target
+                            .and_then(|_| designator.parts.iter().rev().nth(1))
+                            .and_then(|part| {
+                                let span = match part {
+                                    DesignatorPart::Ident(_, span)
+                                    | DesignatorPart::Index(_, span) => span,
+                                };
+                                self.path_types.get(&(span.source_id, span.offset))
+                            })
+                    });
+                let capability =
+                    if receiver_ty.is_some_and(|ty| !self.type_can_contain_callable(ty)) {
+                        TransferCapability::Transferable
+                    } else {
+                        capability
+                    };
+                capability.is_task_bound()
+                    || target
+                        .is_some_and(|name| self.named_callable_capability(name).is_task_bound())
+            }
+            Expr::Postfix {
+                base, operations, ..
+            } => {
+                let Some((last, prefix)) = operations.split_last() else {
+                    return self.expr_is_task_bound(Self::expr_lookup_key(base));
+                };
+                let key = Self::postfix_operation_lookup_key(last);
+                if let Some(MethodCallTarget::Static(name)) = self.method_calls.get(&key) {
+                    return self.named_callable_capability(name).is_task_bound();
+                }
+                self.postfix_prefix_capability(base, prefix).is_task_bound()
+                    || self.fluent_calls.get(&key).is_some_and(|target| {
+                        self.named_callable_capability(&target.name).is_task_bound()
                     })
-                    .and_then(|target| self.scopes.lookup(&target.name))
-                    .is_some_and(|symbol| symbol.task_bound)
-                    || self.expr_is_task_bound(Self::expr_lookup_key(expr))
             }
             other => self.expr_is_task_bound(Self::expr_lookup_key(other)),
         }
     }
 
-    /// Reports whether a named callable or its receiver owns mutable captures.
-    pub(crate) fn designator_refers_to_task_bound(&self, designator: &Designator) -> bool {
-        let name = Self::resolve_designator_name(designator);
-        let Some(symbol) = self.scopes.lookup(&name).or_else(|| {
-            designator.parts.first().and_then(|part| match part {
-                DesignatorPart::Ident(base, _) => self.scopes.lookup(base),
-                _ => None,
-            })
-        }) else {
-            return false;
-        };
-        if symbol.task_bound {
-            return true;
-        }
-        false
+    fn named_callable_capability(&self, name: &str) -> TransferCapability {
+        self.scopes
+            .lookup(name)
+            .map(|symbol| symbol.capability)
+            .unwrap_or_default()
     }
 }

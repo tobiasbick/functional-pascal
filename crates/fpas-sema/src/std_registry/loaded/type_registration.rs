@@ -37,7 +37,7 @@ pub(super) fn register_enum_type(
             ty: enum_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 
@@ -50,7 +50,7 @@ pub(super) fn register_enum_type(
                 ty: enum_ty.clone(),
                 mutable: false,
                 kind: SymbolKind::EnumMember,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         );
     }
@@ -82,7 +82,7 @@ pub(super) fn register_record_type(
             ty: record_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
     record_ty
@@ -114,7 +114,7 @@ pub(super) fn register_opaque_type(checker: &mut Checker, qualified_name: &str) 
             ty: ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
     ty

@@ -75,7 +75,8 @@ impl Worker {
             ));
         }
         let arguments = self.clone_window(argument_base, operands.auxiliary)?;
-        let id = scheduler.alloc_id();
+        self.require_transferable_values(std::slice::from_ref(&Value::Function(function.clone())))?;
+        self.require_transferable_values(&arguments)?;
         let scope = self.spawning_scope().ok_or_else(|| {
             self.runtime_error(
                 RUNTIME_INVALID_TASK,
@@ -83,22 +84,36 @@ impl Worker {
                 "Open `scope ... end scope;` around the start, or pass an explicit TaskGroup and use StartTaskInGroup.",
             )
         })?;
+        let destination = if operands.a == u16::MAX {
+            None
+        } else {
+            let destination = Register::new(operands.a).map_err(|error| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    error.to_string(),
+                )
+            })?;
+            if self.base + usize::from(destination.get()) >= self.active_register_count() {
+                return Err(diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Task destination is outside the active register window",
+                ));
+            }
+            Some(destination)
+        };
+        let id = scheduler.alloc_id();
         let mut task = TaskState::entry(id, &function, info, arguments);
         task.owner_scope = scheduler.scopes.enroll(scope, id);
         scheduler.register_result(id);
-        if operands.a != u16::MAX {
-            self.write(
-                Register::new(operands.a).map_err(|e| {
-                    diagnostics::internal(
-                        self.executable.executable(),
-                        self.current_address,
-                        e.to_string(),
-                    )
-                })?,
-                Value::Task(id),
-            )?;
+        if let Some(destination) = destination {
+            self.write(destination, Value::Task(id))?;
         }
         scheduler.enqueue(task);
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;

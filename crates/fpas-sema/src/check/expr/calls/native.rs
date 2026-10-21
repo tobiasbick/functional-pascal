@@ -38,7 +38,15 @@ impl Checker {
             self.check_args_only(args);
             return Some(Ty::Error);
         };
+        self.native_capabilities.remove(&key);
         let result = self.check_native_arguments(operation, None, args, span, expected);
+        let capability = self.native_result_capability(
+            operation,
+            crate::TransferCapability::Transferable,
+            args,
+            &result,
+        );
+        self.native_capabilities.insert(key, capability);
         self.intrinsic_calls
             .insert(key, operation.implementation.into());
         Some(result)

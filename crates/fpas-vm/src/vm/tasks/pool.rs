@@ -31,6 +31,7 @@ pub(super) fn run_helped(
 }
 
 fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<(), VmError> {
+    let access = worker.execution_access()?;
     let _capture_panic = worker.capture_pool_guard();
     let attempt = (|| {
         if !worker.supervised_ready()? || !worker.resume_pool_suspension()? {
@@ -50,6 +51,13 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         }
         other => other,
     };
+    let _outcome_roots = worker.domain.root_values(
+        fpas_bytecode::RootKind::Native,
+        match &attempt {
+            Ok(Some(value)) => vec![value.clone()],
+            _ => Vec::new(),
+        },
+    );
     let outcome = match attempt {
         Ok(Some(value)) => worker
             .finish_owned_groups(Ok(value))
@@ -60,7 +68,7 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         },
         Ok(None) => Ok(None),
     };
-    match outcome {
+    let result = match outcome {
         Ok(Some(value)) => {
             if worker.retain_result {
                 scheduler.store_result(worker.task_id, value);
@@ -86,11 +94,20 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
             if worker.retain_result {
                 let grouped = scheduler.store_failure(worker.task_id, error.clone());
                 if grouped && !scheduler.is_aborted() {
+                    worker.retire_execution();
                     return Ok(());
                 }
             }
             scheduler.fail(error.clone());
             Err(error)
         }
+    };
+    if worker.suspend_requested && worker.execution.is_some() {
+        if worker.publish_execution(&[]).is_ok() {
+            access.safe_point();
+        }
+    } else if !worker.suspend_requested {
+        worker.retire_execution();
     }
+    result
 }

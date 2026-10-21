@@ -1,4 +1,9 @@
 //! Bytecode execution and source-level debugging for compiled FPAS programs.
+//!
+//! Execution and debugger termination return registered [`HostValue`] handles.
+//! These preserve domain ownership after the session is dropped; inspection and
+//! mutation remain guarded, while shutdown prohibits execution re-entry.
+//! See `docs/pascal/program-structure/runtime-ownership.md`.
 
 #![cfg_attr(
     test,
@@ -35,9 +40,10 @@ pub use vm::{
     DebuggeeChannelState, DebuggeeInputResult, Execution, FailureBinding, FailureDiagnostic,
     FailureFrame, FailureGlobal, FailureGlobals, FailureObservation, FailureScalar,
     FailureSnapshot, FailureTask, FailureTaskCatalog, FailureValue, FunctionBreakpoint,
-    LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass, MAX_RECORDING_EVENTS,
-    Paginated, RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm,
-    VmError, VmOutput,
+    HostArgument, HostChild, HostEnumInfo, HostValue, HostValueError, LiveImageClassification,
+    LiveImageReplaceResult, LiveImageUpdateClass, MAX_RECORDING_EVENTS, Paginated,
+    RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm, VmError,
+    VmOutput,
 };
 
 pub use vm::{

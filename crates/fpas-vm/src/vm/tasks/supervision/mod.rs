@@ -2,12 +2,16 @@
 //!
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 
+#[cfg(test)]
+mod case_tests;
 mod execution;
 #[cfg(test)]
 mod lifetime_tests;
 mod policy;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod transfer_tests;
 
 use fpas_bytecode::SharedFunction;
 use std::time::Instant;
@@ -43,5 +47,15 @@ impl SupervisedTask {
             admission_pending: true,
             deadline: None,
         }
+    }
+}
+
+impl fpas_bytecode::TraceRoots for SupervisedTask {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&fpas_bytecode::Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        visit(&fpas_bytecode::Value::Function(self.function.clone()));
+        Ok(())
     }
 }

@@ -63,7 +63,11 @@ impl Checker {
 
         let stored_ty = declared_ty;
 
-        let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
+        let capability = if mutable {
+            self.assignment_value_capability(value)
+        } else {
+            self.expr_capability(Self::expr_lookup_key(value))
+        };
         let constant_info = constant.then(|| self.binding_constant_info(value, &stored_ty));
         let symbol = Symbol {
             constant: constant_info,
@@ -74,7 +78,7 @@ impl Checker {
             } else {
                 SymbolKind::Var
             },
-            task_bound,
+            capability,
         };
         let installed = if self
             .predeclared_bindings
@@ -87,6 +91,9 @@ impl Checker {
         } else {
             self.scopes.define_with_declaration(name, symbol, span)
         };
+        if installed {
+            self.record_callable_result_binding(name, value, mutable);
+        }
         if !installed {
             self.error_with_code(
                 SEMA_DUPLICATE_DECLARATION,

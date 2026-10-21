@@ -71,3 +71,22 @@ impl Drop for LocalTraceState {
         self.retire_from(0);
     }
 }
+
+impl fpas_bytecode::TraceRoots for LocalTraceState {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        for frame in &self.frames {
+            for local in &frame.live {
+                if let Some(ParameterValue::Alias(value)) = &local.parameter {
+                    visit(value);
+                }
+            }
+        }
+        for local in &self.inherited {
+            visit(&local.storage);
+        }
+        Ok(())
+    }
+}

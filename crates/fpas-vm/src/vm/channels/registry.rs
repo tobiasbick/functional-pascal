@@ -120,6 +120,7 @@ impl ChannelRegistry {
         wait_for: Option<Duration>,
     ) -> Result<SendState, String> {
         let channel = self.channel(handle)?;
+        crate::vm::domain::check_transfer(std::slice::from_ref(&value))?;
         let mut state = channel
             .state
             .lock()
@@ -228,5 +229,7 @@ fn capacity_error(capacity: i64) -> String {
     format!("Channel capacity must be in 1..={MAX_CHANNEL_CAPACITY}, got {capacity}")
 }
 
+#[cfg(test)]
+mod ownership_tests;
 #[cfg(test)]
 mod tests;

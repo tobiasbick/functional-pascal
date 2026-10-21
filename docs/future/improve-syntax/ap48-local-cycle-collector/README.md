@@ -1,7 +1,8 @@
 # AP48: Task ownership and a local cycle collector
 
-Status: Planned. Effort: large, across runtime values, VM, sema and host tooling.
-The user requested planning documentation only. No implementation is authorized.
+Status: In progress. Effort: large, across runtime values, VM, sema and host tooling.
+AP48.1 through AP48.6 are delivered on the shared feature branch.
+Each work package receives independent review and repairs before its successor.
 Completion is tracked in the [central plan](../README.md#package-status).
 
 ## Goal
@@ -16,20 +17,31 @@ lock-free execution or a fixed maximum collection pause.
 
 The [closure contract](../../../pascal/language/functions/closures.md#concurrency)
 already prohibits mutable captures crossing task boundaries, including task results.
-The current runtime enforces ownership on closure invocation, but does not enforce
-recursive ownership checks at every transfer. Closure construction checks direct
-cells and function captures, rather than the complete contained graph.
+The runtime now uses unique logical-task domains, checked cells and a shared
+iterative graph classifier. Closure construction, invocation and local storage
+validate the complete contained ownership graph. Callable targets carry verified
+executable provenance. Task and channel publication reject local graphs before
+admission or mutation. Session imports check origin and callable code identity.
+Unused selection cases follow task/attempt cleanup. Static capabilities distinguish
+transferable, unknown and task-bound values; conservative flow joins retain known
+local state. Unknown values keep the runtime guard. Execution and registered
+external roots publish complete views under per-domain exclusion. Explicit internal
+collection can reclaim unreachable local cycles; automatic activation remains open.
 
 Cells use strong shared references and can participate in cycles with closures.
-Dropping registers alone does not release such a cycle. The static audit also found
-values retained outside registers by callbacks, selection, debugging and embedding.
-These are source-inspection findings, not measured leak or concurrency results.
+Dropping registers alone does not release such a cycle through reference counting.
+Explicit collection traces registered roots and disconnects unreachable cell payloads.
+Callback, selection, debugger and embedding roots preserve reachable values until
+their ownership ends. Allocation counters and weak-lifetime regressions distinguish
+reclaimed cycles from retained roots; no performance result is claimed.
 
 Source entry points:
 
 - [Runtime values](../../../../crates/fpas-bytecode/src/value/mod.rs),
   [variable references](../../../../crates/fpas-bytecode/src/value/reference.rs)
   and [iterative release](../../../../crates/fpas-bytecode/src/value/drain.rs).
+- [Explicit collector](../../../../crates/fpas-vm/src/vm/domain/COLLECTION.md)
+  and [registered roots](../../../../crates/fpas-vm/src/vm/domain/ROOTS.md).
 - [Closure cells](../../../../crates/fpas-vm/src/vm/calls/closures.rs),
   [saved task state](../../../../crates/fpas-vm/src/vm/tasks/state.rs),
   [task admission](../../../../crates/fpas-vm/src/vm/tasks/spawn.rs)
@@ -74,16 +86,17 @@ all shared values with a tracing heap, and unrelated language or scheduler redes
 
 | ID | Question | Planning decision and authorization | Affected work packages |
 | --- | --- | --- | --- |
-| Q37 | Which ownership and collection contract does AP48 use? | Domain isolation, checked transfers, registered roots and local tracing retained under delegated planning; implementation not authorized | AP48.1 through AP48.7 |
-| Q38 | How long do unused selection cases retain local callbacks? | Selected under delegated planning: close cases at owner termination and abandoned attempt cleanup | AP48.2, AP48.4, AP48.5, AP48.7 |
-| Q39 | Who collects retired domains after external roots disappear? | Selected under delegated planning: every root release requests maintenance; a quiescent domain is serviced synchronously by the releasing thread | AP48.4 through AP48.7 |
-| Q40 | When can blocked tasks be collected? | Selected under delegated planning: saved tasks and explicitly published native waits are eligible; opaque native calls defer collection until return | AP48.4, AP48.5, AP48.7 |
-| Q41 | Which callable values may enter another session? | Selected under delegated planning: require the identical shared executable instance as well as transferability and valid resource handles | AP48.1, AP48.2, AP48.4, AP48.7 |
+| Q37 | Which ownership and collection contract does AP48 use? | Domain isolation, checked transfers, registered roots and local tracing approved for implementation | AP48.1 through AP48.7 |
+| Q38 | How long do unused selection cases retain local callbacks? | Approved for implementation: close cases at owner termination and abandoned attempt cleanup | AP48.2, AP48.4, AP48.5, AP48.7 |
+| Q39 | Who collects retired domains after external roots disappear? | Approved for implementation: every root release requests maintenance; a quiescent domain is serviced synchronously by the releasing thread | AP48.4 through AP48.7 |
+| Q40 | When can blocked tasks be collected? | Approved for implementation: saved tasks and explicitly published native waits are eligible; opaque native calls defer collection until return | AP48.4, AP48.5, AP48.7 |
+| Q41 | Which callable values may enter another session? | Approved for implementation: require the identical shared executable instance as well as transferability and valid resource handles | AP48.1, AP48.2, AP48.4, AP48.7 |
+| Q42 | Which initial collection thresholds and public tuning controls are allowed? | Approved: 4096 cell allocations, 8192 successful cell mutations or 256 completed execution batches, whichever threshold is reached first; positive CLI overrides `--gc-cell-threshold=N`, `--gc-mutation-threshold=N`, `--gc-poll-interval=N` apply consistently to run/test/debugger execution and their domains | AP48.7 |
+| Q43 | Are controlled performance budgets required before activation and package completion? | Approved: activate with the heuristic Q42 defaults after correctness acceptance, required checks, repaired independent review and documentation; later local measurement and tuning do not block AP48 completion | AP48.7 |
 
-Q38 through Q41 are concrete plan decisions requested by the user. They do not
-authorize implementation or change the current handbook. Q37 records the overall
-design; explicit implementation authorization is still required. The work packages
-below own the detailed rules and acceptance.
+Q37 through Q43 are approved for implementation. The work packages below own
+the detailed rules and acceptance. Update the current handbook with each delivered
+contract, after verification and independent review.
 
 Q38 intentionally changes the current VM-lifetime retention of unused cases. Close
 them after owner cleanup, without running callbacks or closing underlying resources.
@@ -109,27 +122,31 @@ ordinary ownership checks. No source-session global references are imported.
 The choice proposed here is local root tracing followed by cell-edge removal,
 rather than reference-count snapshots or a concurrent cycle algorithm.
 
-Open gates:
+Q42 permits CLI scheduling controls while keeping a public FPAS GC unit, manual
+collection commands and a public disable mode outside this scope. Existing CLI
+invocations and Rust embedding constructor signatures remain compatible. The
+thresholds affect running collection frequency; they do not bypass safe points or
+delay required retired/quiescent-domain maintenance.
 
-- Obtain implementation authorization for Q37 through Q41 before changing code.
-  Further semantic changes outside these recorded decisions need a new decision.
-- AP48.1 must establish the cycle-through-cells invariant and the complete walker.
-- AP48.4 must close raw host/debugger escape paths and specify external-root lifetime.
-- AP48.5 must demonstrate exclusive collection and complete roots at safe points.
-- AP48.7 must set workload-specific overhead and pause budgets from a controlled
-  baseline before automatic collection is enabled. No timing claims exist yet.
+Q43 replaces the former controlled-budget activation gate. No performance result
+or fixed maximum pause is claimed. With AP48.1 through AP48.6 delivered, completing
+AP48.7 and package acceptance completes AP48; later threshold optimization is an
+independent improvement. Further semantic changes need a new decision.
 
 ## Dependencies and work packages
 
 No prerequisite AP. Execute in the following order; each package includes its own
-consumer migration and verification. All implementation work is not started.
+consumer migration, verification and independent review. AP48.1 through AP48.6 are
+complete. Ownership, the maintenance protocol and explicit cycle reclamation are
+delivered. AP48.7 automatic scheduling, CLI configuration and correctness acceptance
+are in progress; implementation is paused.
 
-- [ ] [AP48.1: Owned cells and graph classification](01-owned-values.md)
-- [ ] [AP48.2: Runtime transfer enforcement](02-transfer-rules.md)
-- [ ] [AP48.3: Static capability diagnostics](03-static-capabilities.md)
-- [ ] [AP48.4: Execution and external roots](04-roots-and-embedding.md)
-- [ ] [AP48.5: Safe points and domain lifecycle](05-safe-points.md)
-- [ ] [AP48.6: Local cycle reclamation](06-cycle-collector.md)
+- [x] [AP48.1: Owned cells and graph classification](01-owned-values.md)
+- [x] [AP48.2: Runtime transfer enforcement](02-transfer-rules.md)
+- [x] [AP48.3: Static capability diagnostics](03-static-capabilities.md)
+- [x] [AP48.4: Execution and external roots](04-roots-and-embedding.md)
+- [x] [AP48.5: Safe points and domain lifecycle](05-safe-points.md)
+- [x] [AP48.6: Local cycle reclamation](06-cycle-collector.md)
 - [ ] [AP48.7: Automatic scheduling and acceptance](07-activation.md)
 
 This is the only work-package checklist. Finishing AP48.1 through AP48.4 establishes
@@ -164,4 +181,6 @@ Update the closure, concurrency and variable-reference handbook pages with the
 corresponding implementation, including the closure lifetime statement. Update host
 Rust interface documentation when embedding changes. Confirm the compact language
 reference, generated APIs and artifact behavior; no new syntax is planned.
-This documentation change does not update current behavior under `docs/pascal/`.
+Benchmark artifacts belong under `.temp-data/`. Cloud runs provide correctness
+evidence. Controlled local performance measurement and tuning are optional follow-up
+under Q43; they do not block activation or package completion.

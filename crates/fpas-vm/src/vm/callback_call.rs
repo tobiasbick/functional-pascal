@@ -2,13 +2,14 @@
 
 use std::sync::Arc;
 
-use fpas_bytecode::{FunctionId, InstructionAddress, SharedFunction, Value};
+use fpas_bytecode::{FunctionId, InstructionAddress, MemoryDomain, SharedFunction, Value};
 use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY};
 
-use super::worker::Worker;
+use super::worker::{FunctionInputs, Worker};
 use super::{VmError, diagnostics};
 
 struct CallbackInputs<'a> {
+    domain: MemoryDomain,
     bound_receiver: Option<&'a Value>,
     arguments: &'a [Value],
     captures: &'a [Value],
@@ -93,6 +94,13 @@ impl Worker {
         function: &SharedFunction,
         arguments: &[Value],
     ) -> Result<Value, VmError> {
+        let _caller_roots = self.native_caller_roots()?;
+        let _arguments = self.domain.root_values(
+            fpas_bytecode::RootKind::Native,
+            std::iter::once(Value::Function(function.clone()))
+                .chain(arguments.iter().cloned())
+                .collect(),
+        );
         let target = function.function;
         let info = &self.executable.executable().functions[usize::from(target.get())];
 
@@ -102,6 +110,7 @@ impl Worker {
                 info.code.start,
                 info.register_count,
                 CallbackInputs {
+                    domain: self.domain.clone(),
                     bound_receiver: function.bound_receiver.as_ref(),
                     arguments,
                     captures: &function.captures,
@@ -116,11 +125,14 @@ impl Worker {
                 .chain(arguments)
                 .cloned()
                 .collect::<Vec<_>>();
-            let mut callback = Self::for_function_with_captures(
+            let mut callback = Self::for_function_in_domain(
                 Arc::clone(&self.executable),
                 target,
-                &call_arguments,
-                &function.captures,
+                FunctionInputs {
+                    arguments: &call_arguments,
+                    captures: &function.captures,
+                    domain: self.domain.clone(),
+                },
                 Arc::clone(&self.globals),
                 Arc::clone(&self.layouts),
                 Arc::clone(&self.hosted),
@@ -152,6 +164,11 @@ impl Worker {
             self.observed_task_failure
                 .set(callback.observed_task_failure.take());
         }
+        if execution.is_ok() {
+            callback.reset_registers(0);
+            callback.call_stack.clear();
+        }
+        let _ = callback.publish_execution(&[]);
         *self.callback_worker.borrow_mut() = Some(callback);
         let execution = execution?;
         self.callback_instruction_count.set(
@@ -170,6 +187,7 @@ impl Worker {
         inputs: CallbackInputs<'_>,
         task_id: u64,
     ) -> Result<(), VmError> {
+        self.domain = inputs.domain;
         self.function = target;
         self.ip = usize::try_from(start.get()).map_err(|_| {
             diagnostics::internal(

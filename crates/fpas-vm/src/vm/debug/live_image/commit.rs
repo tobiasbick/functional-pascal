@@ -2,7 +2,9 @@
 
 use std::sync::Arc;
 
-use fpas_bytecode::{FunctionId, InstructionAddress, VerifiedExecutable};
+use fpas_bytecode::{
+    FunctionId, InstructionAddress, TraceRoots, VerifiedExecutable, classify_values,
+};
 
 use crate::vm::worker::Worker;
 
@@ -56,7 +58,8 @@ impl PreparedLiveImageCommit {
 
     /// Verify that every instruction identity in a worker has a candidate address.
     pub(in crate::vm::debug) fn validates(&self, worker: &Worker) -> bool {
-        self.remap_index(worker.function, worker.ip).is_some()
+        self.retained_values_compatible(worker)
+            && self.remap_index(worker.function, worker.ip).is_some()
             && self.remap_any_address(worker.current_address).is_some()
             && worker
                 .call_stack
@@ -66,6 +69,37 @@ impl PreparedLiveImageCommit {
                 self.remap_address(target.function, target.instruction)
                     .is_some()
             })
+    }
+
+    /// Existing address mapping does not authorize retained callable targets. Until a
+    /// graph can be rebound atomically, reject it before switching any worker/image.
+    fn retained_values_compatible(&self, worker: &Worker) -> bool {
+        let mut compatible = true;
+        let mut inspect = |value: &fpas_bytecode::Value| {
+            compatible &= classify_values(std::slice::from_ref(value)).is_ok_and(|graph| {
+                graph
+                    .executable_identities
+                    .iter()
+                    .all(|identity| identity == self.candidate.identity())
+            });
+        };
+        if worker.trace_roots(&mut inspect).is_err() {
+            return false;
+        }
+        if worker
+            .domain
+            .trace_registered_roots(&mut |_, value| inspect(value))
+            .is_err()
+        {
+            return false;
+        }
+        let Ok(globals) = worker.globals.try_read() else {
+            return false;
+        };
+        for value in globals.iter().flatten() {
+            inspect(value);
+        }
+        compatible
     }
 
     /// Switch one prevalidated worker to the candidate image without allocation.

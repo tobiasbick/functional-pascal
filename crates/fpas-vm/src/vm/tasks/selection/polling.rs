@@ -20,6 +20,9 @@ impl Worker {
     fn validate_selection_sources(&self, wait: &SelectionWait) -> Result<(), VmError> {
         let mut tasks = Vec::new();
         for case in &wait.cases {
+            if let CaseSource::Send(_, value) = &case.source {
+                self.require_transferable_values(std::slice::from_ref(value))?;
+            }
             match case.source {
                 CaseSource::Send(id, _) | CaseSource::Receive(id) => self
                     .hosted
@@ -181,7 +184,11 @@ impl Worker {
                 .unwrap_or(Duration::from_millis(10))
                 .min(Duration::from_millis(10));
             self.check_task_cancellation()?;
-            signal.wait(interval);
+            {
+                // Claimed cases own registrations throughout this wait.
+                let _wait = self.native_wait(Vec::new())?;
+                signal.wait(interval);
+            }
         }
     }
 

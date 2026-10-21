@@ -147,7 +147,7 @@ begin Third('local'); Second(); end procedure; begin end."
         .nested_routine_captures
         .values()
         .map(|info| {
-            assert!(info.task_bound);
+            assert!(info.capability.is_task_bound());
             assert_eq!(info.captures.len(), 1);
             let capture = &info.captures[0];
             assert!(capture.reference);

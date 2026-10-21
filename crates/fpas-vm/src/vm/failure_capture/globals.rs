@@ -14,6 +14,7 @@ use std::{collections::HashSet, sync::Arc};
 impl CaptureState {
     /// Capture globals after primary values, using worker-local slots where enabled.
     pub(in crate::vm) fn capture_globals(self: &Arc<Self>, worker: &Worker) {
+        let _access = worker.domain.access();
         let header = self
             .reserve_model(std::mem::size_of::<FailureGlobals>())
             .unwrap_or_else(|| self.reserve_terminal(std::mem::size_of::<FailureGlobals>()));
@@ -49,6 +50,7 @@ impl CaptureState {
             }
             .into_parts();
             let retained = RetainedValue {
+                domain: Some(worker.domain.clone()),
                 name: String::new(),
                 type_name: super::super::inspection::values::render::metadata(
                     value.as_ref().map_or("dynamic", |value| value.type_name()),

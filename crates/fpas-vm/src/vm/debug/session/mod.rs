@@ -28,6 +28,7 @@ mod completed_result;
 mod container_mutation;
 mod data_breakpoints;
 mod dictionary;
+mod evaluation_roots;
 mod events;
 mod execution;
 mod forced_return;
@@ -89,10 +90,12 @@ pub struct DebugSession {
     function_breakpoints: Vec<BoundFunctionBreakpoint>,
     data_breakpoints: Vec<BoundDataBreakpoint>,
     data_watch_snapshots: BTreeMap<u64, Option<Value>>,
+    data_watch_roots: Option<fpas_bytecode::RootValues>,
     next_breakpoint_id: u64,
     breakpoint_limits: DebugBreakpointLimits,
     pause_requested: Arc<AtomicBool>,
     evaluation_cancelled: Arc<AtomicBool>,
+    evaluation_roots: Arc<evaluation_roots::EvaluationRoots>,
     last_stop: DebugStop,
     inspection_generation: u32,
     inspection_task_id: u64,
@@ -253,10 +256,12 @@ impl DebugSession {
             function_breakpoints: Vec::new(),
             data_breakpoints: Vec::new(),
             data_watch_snapshots: BTreeMap::new(),
+            data_watch_roots: None,
             next_breakpoint_id: 1,
             breakpoint_limits: DebugBreakpointLimits::default(),
             pause_requested,
             evaluation_cancelled,
+            evaluation_roots: Arc::default(),
             last_stop,
             inspection_generation,
             inspection_task_id: 0,
@@ -354,6 +359,8 @@ impl DebugSession {
             let Some(worker) = self.runtime.worker(inspectable_task_id) else {
                 continue;
             };
+            let _access = worker.domain.access();
+            let _ = worker.publish_execution(&[]);
             self.inspection_generation = self.inspection_generation.wrapping_add(1).max(1);
             let reserved_handles = reservation
                 .filter(|(reserved_task_id, _)| *reserved_task_id == inspectable_task_id)

@@ -61,8 +61,9 @@ fn callback(worker: &Worker, name: &str) -> Value {
         })
         .expect("callback target");
     Value::function(
-        FunctionId::new(index.try_into().expect("function index")),
-        name,
+        worker
+            .function_target(FunctionId::new(index.try_into().expect("function index")))
+            .expect("target"),
         Vec::new(),
     )
 }

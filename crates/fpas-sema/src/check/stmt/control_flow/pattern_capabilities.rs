@@ -4,6 +4,7 @@
 //! `docs/pascal/language/functions/discard.md`
 
 use super::super::super::Checker;
+use crate::TransferCapability;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::Ty;
 use fpas_lexer::Span;
@@ -21,8 +22,11 @@ impl Checker {
         value: &Expr,
         span: Span,
     ) -> bool {
-        let task_bound = self.type_can_contain_callable(ty)
-            && self.expr_is_task_bound(Self::expr_lookup_key(value));
+        let capability = if self.type_can_contain_callable(ty) {
+            self.expr_capability(Self::expr_lookup_key(value))
+        } else {
+            TransferCapability::Transferable
+        };
         let defined = self.scopes.define_with_declaration(
             name,
             Symbol {
@@ -30,7 +34,7 @@ impl Checker {
                 ty: ty.clone(),
                 mutable: false,
                 kind: SymbolKind::Var,
-                task_bound,
+                capability,
             },
             span,
         );

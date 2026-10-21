@@ -2,6 +2,8 @@
 //!
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 
+#[cfg(test)]
+mod ownership_tests;
 mod polling;
 mod registry;
 
@@ -38,6 +40,18 @@ impl SelectionWait {
                     remaining: Duration::from_millis(milliseconds),
                 }
             })
+    }
+}
+
+impl fpas_bytecode::TraceRoots for SelectionWait {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        for case in &self.cases {
+            case.trace_roots(visit)?;
+        }
+        Ok(())
     }
 }
 
@@ -112,6 +126,10 @@ impl Worker {
             operation,
             TaskIntrinsic::SendCase | TaskIntrinsic::ReceiveCase
         ));
+        if operation == TaskIntrinsic::SendCase {
+            self.require_transferable_values(&args[1..2])?;
+        }
+        self.require_storable_value(&args[count - 1])?;
         let callback = self.validate_callback(&args[count - 1], arity)?;
         let identity = match operation {
             TaskIntrinsic::TaskCase => {
@@ -149,7 +167,8 @@ impl Worker {
         let id = self
             .hosted
             .cases
-            .create(self.task_id, || WaitCase {
+            .create_in_domain(self.task_id, &self.domain, || WaitCase {
+                roots: None,
                 callback: callback.clone(),
                 source: match operation {
                     TaskIntrinsic::SendCase => CaseSource::Send(identity, args[1].clone()),

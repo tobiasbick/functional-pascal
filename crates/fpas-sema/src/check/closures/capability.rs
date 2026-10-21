@@ -1,17 +1,18 @@
-//! Closure capability checks (task-bound transfer).
-//!
-//! **Documentation:** `docs/pascal/language/functions/closures.md`
+//! Capture transfer capabilities. See `docs/pascal/language/functions/closures.md`.
 
 use super::CaptureBinding;
+use crate::TransferCapability;
 
-/// Returns whether a closure is task-bound (may not cross task boundaries freely).
-///
-/// A closure is task-bound when it captures a mutable cell directly, or when it
-/// captures another task-bound value (for example a nested closure that already
-/// captured a mutable cell).
-///
-/// **Documentation:** `docs/pascal/language/functions/closures.md`
+/// Mutable captures retain local cells; immutable captures preserve their value capability.
 #[must_use]
-pub fn task_bound_from_captures(captures: &[CaptureBinding]) -> bool {
-    captures.iter().any(|c| c.mutable || c.task_bound)
+pub fn capability_from_captures(captures: &[CaptureBinding]) -> TransferCapability {
+    captures
+        .iter()
+        .fold(TransferCapability::Transferable, |state, capture| {
+            state.join(if capture.mutable {
+                TransferCapability::TaskBound
+            } else {
+                capture.capability
+            })
+        })
 }

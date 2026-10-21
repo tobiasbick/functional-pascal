@@ -309,6 +309,20 @@ impl Checker {
                     .insert((span.source_id, span.offset), arguments);
             }
         }
+        // An ordinary call may replace a callable-containing `var` target. Without
+        // a proven write summary, keep local evidence and invalidate transferable facts.
+        for ((param, arg), ty) in params.iter().zip(&args).zip(&arg_types) {
+            if param.is_var()
+                && self.type_can_contain_callable(ty)
+                && let Expr::VarArgument { designator, .. } = arg
+            {
+                self.join_designator_root_capability(
+                    designator,
+                    crate::TransferCapability::Unknown,
+                );
+            }
+        }
+        self.invalidate_captured_callable_writes(name, &args);
         inferred
     }
 

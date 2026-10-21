@@ -86,3 +86,13 @@ impl StringReduction {
         }
     }
 }
+
+impl fpas_bytecode::TraceRoots for StringReduction {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        visit(&self.accumulator);
+        Ok(())
+    }
+}

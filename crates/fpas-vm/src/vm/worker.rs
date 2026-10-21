@@ -2,10 +2,13 @@
 
 mod run;
 
+#[cfg(test)]
+mod domains;
+
 use std::cell::{Cell, RefCell};
 use std::sync::{Arc, RwLock};
 
-use fpas_bytecode::{FunctionId, InstructionAddress, Value, VerifiedExecutable};
+use fpas_bytecode::{FunctionId, InstructionAddress, MemoryDomain, Value, VerifiedExecutable};
 
 use super::debug::initializer_suppression::SourceInitializerTarget;
 use super::frame::CallFrame;
@@ -15,7 +18,16 @@ use super::layouts::RuntimeLayouts;
 use super::tasks::{TaskClock, TaskScheduler, TaskState, TaskSuspension, TaskSuspensionState};
 use super::{VmError, diagnostics};
 
+/// Inputs already assigned to the logical task that will execute them.
+pub(super) struct FunctionInputs<'a> {
+    pub arguments: &'a [Value],
+    pub captures: &'a [Value],
+    pub domain: MemoryDomain,
+}
+
 pub(super) struct Worker {
+    /// Stable cell ownership across worker migration and synchronous callbacks.
+    pub domain: MemoryDomain,
     /// Optional ownership record transferred with this task, absent without D1.
     pub(in crate::vm) capture_record: Option<Arc<super::failure_capture::catalog::TaskRecord>>,
     /// Whether this worker owns the top-level root, rather than a synchronous callback.
@@ -66,6 +78,7 @@ pub(super) struct Worker {
     pub(in crate::vm) scope_failure_sequence: Cell<Option<u64>>,
     /// Child identity whose failure is already carried by the body's terminal error.
     pub(in crate::vm) observed_task_failure: Cell<Option<u64>>,
+    pub(in crate::vm) execution: Option<fpas_bytecode::ExecutionRoots>,
 }
 
 impl Worker {
@@ -127,6 +140,34 @@ impl Worker {
         layouts: Arc<RuntimeLayouts>,
         hosted: Arc<HostedState>,
     ) -> Result<Self, VmError> {
+        Self::for_function_in_domain(
+            executable,
+            entry,
+            FunctionInputs {
+                arguments,
+                captures,
+                domain: crate::vm::domain::new_domain(),
+            },
+            globals,
+            layouts,
+            hosted,
+        )
+    }
+
+    /// Construct an invocation in its caller's or reusable session's domain.
+    pub(super) fn for_function_in_domain(
+        executable: Arc<VerifiedExecutable>,
+        entry: FunctionId,
+        inputs: FunctionInputs<'_>,
+        globals: Arc<RwLock<Vec<Option<Value>>>>,
+        layouts: Arc<RuntimeLayouts>,
+        hosted: Arc<HostedState>,
+    ) -> Result<Self, VmError> {
+        let FunctionInputs {
+            arguments,
+            captures,
+            domain,
+        } = inputs;
         let image = executable.executable();
         let info = image
             .functions
@@ -166,7 +207,18 @@ impl Worker {
             usize::from(register_count),
             arguments.iter().chain(captures).cloned(),
         );
-        Ok(Self {
+        let execution = domain.execution_roots().map_err(|error| {
+            diagnostics::at_address(
+                image,
+                start,
+                fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                error.to_string(),
+                "Create a live memory domain before executing FPAS.",
+            )
+        })?;
+        let worker = Self {
+            execution: Some(execution),
+            domain,
             capture_record: None,
             capture_root: false,
             capture_callback: false,
@@ -207,10 +259,15 @@ impl Worker {
             enclosing_scope_controls: Vec::new(),
             scope_failure_sequence: Cell::new(None),
             observed_task_failure: Cell::new(None),
-        })
+        };
+        worker.publish_execution(&[])?;
+        Ok(worker)
     }
 
     pub(super) fn with_scheduler(mut self, scheduler: Option<Arc<TaskScheduler>>) -> Self {
+        if let Some(scheduler) = &scheduler {
+            scheduler.attach_cases(&self.hosted.cases);
+        }
         self.scheduler = scheduler;
         self
     }
@@ -237,6 +294,8 @@ impl Worker {
     /// Share immutable execution context without transferring task-owned registers.
     pub(super) fn pool_template(&self) -> Self {
         Self {
+            domain: crate::vm::domain::new_domain(),
+            execution: None,
             supervision: None,
             capture_record: None,
             capture_root: false,
@@ -284,13 +343,18 @@ impl Worker {
     }
 
     /// Take a saved task's execution and optional inspection ownership.
-    pub(super) fn worker_for_task(&self, task: TaskState) -> Self {
+    pub(super) fn worker_for_task(&self, mut task: TaskState) -> Self {
+        if task.execution.is_none() {
+            task.execution = task.domain.execution_roots().ok();
+        }
         debug_assert_eq!(
             task.register_initialized.len(),
             task.registers.len(),
             "task register initialization bits must match saved register values"
         );
         Self {
+            execution: task.execution,
+            domain: task.domain,
             supervision: task.supervision,
             capture_record: task.capture_record,
             capture_root: false,
@@ -339,7 +403,9 @@ impl Worker {
 
     /// Move all resumable task state to its next scheduler owner.
     pub(super) fn take_task_state(&mut self) -> TaskState {
-        TaskState {
+        let state = TaskState {
+            execution: self.execution.take(),
+            domain: self.domain.clone(),
             capture_record: self.capture_record.take(),
             observed_task_failure: self.observed_task_failure.take(),
             pending_completion: self.pending_completion.take(),
@@ -358,7 +424,9 @@ impl Worker {
             callback_continuations: std::mem::take(&mut self.callback_continuations),
             task_scopes: std::mem::take(&mut self.task_scopes),
             owner_scope: self.owner_scope.take(),
-        }
+        };
+        state.publish_execution();
+        state
     }
 
     pub(super) fn suspend_and_enqueue(&mut self) {

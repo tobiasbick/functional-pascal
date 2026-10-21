@@ -56,7 +56,7 @@ impl Checker {
                     } else {
                         SymbolKind::Const
                     },
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
                 span,
             ) {

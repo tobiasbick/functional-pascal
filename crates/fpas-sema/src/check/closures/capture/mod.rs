@@ -22,9 +22,8 @@ pub struct CaptureBinding {
     pub ty: Ty,
     /// `true` when the capture is mutable (cell-backed at runtime).
     pub mutable: bool,
-    /// `true` when the captured binding already holds a task-bound value
-    /// (for example a nested closure that captured a mutable cell).
-    pub task_bound: bool,
+    /// Transfer capability of the captured binding value.
+    pub capability: crate::TransferCapability,
     /// Exact declaration of the captured source binding.
     pub declaration: fpas_lexer::Span,
     /// `true` when the binding is a `var` parameter whose storage is the caller's variable.
@@ -160,7 +159,7 @@ impl CaptureCollector<'_> {
             name: name.to_string(),
             ty: symbol.ty.clone(),
             mutable: symbol.mutable,
-            task_bound: symbol.task_bound,
+            capability: symbol.capability,
             declaration,
             reference: symbol.is_var_parameter(),
         });

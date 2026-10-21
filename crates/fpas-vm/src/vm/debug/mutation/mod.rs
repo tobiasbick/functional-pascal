@@ -14,8 +14,6 @@ mod transition;
 mod validate;
 mod variant;
 
-use std::sync::TryLockError;
-
 use fpas_bytecode::{Value, VerifiedExecutable};
 
 use super::inspection::{MutationRoot, MutationTarget};
@@ -97,6 +95,13 @@ pub(in crate::vm::debug) fn commit(
     if !target.path.is_empty() && !target.initialized {
         return Err(uninitialized_path());
     }
+    worker
+        .require_storable_value(&replacement)
+        .map_err(|_| DebugSessionError {
+            kind: DebugErrorKind::VariableValueType,
+            message: "debug replacement contains foreign or escaping local storage".into(),
+            hint: "Assign values owned by the selected stopped task.".into(),
+        })?;
     match &target.root {
         MutationRoot::FrameRegister(register) => {
             if target.path.is_empty() {
@@ -132,15 +137,18 @@ pub(in crate::vm::debug) fn commit(
             Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
         }
         MutationRoot::ClosureCell(cell) => {
-            let mut inner = match cell.try_lock() {
-                Ok(inner) => inner,
-                Err(TryLockError::WouldBlock | TryLockError::Poisoned(_)) => {
-                    return Err(unavailable());
-                }
-            };
-            let updated = replace::descendant(inner.clone(), &target.path, replacement)?;
-            *inner = updated.clone();
-            Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
+            let mut committed = None;
+            cell.try_update(&worker.domain, |inner| {
+                let updated = replace::descendant(inner.clone(), &target.path, replacement)?;
+                committed =
+                    Some(replaced_value(&updated, &target.path).unwrap_or_else(|| updated.clone()));
+                Ok(updated)
+            })
+            .map_err(|failure| match failure {
+                fpas_bytecode::CellUpdateError::Ownership(_) => unavailable(),
+                fpas_bytecode::CellUpdateError::Update(error) => error,
+            })?;
+            committed.ok_or_else(unavailable)
         }
     }
 }

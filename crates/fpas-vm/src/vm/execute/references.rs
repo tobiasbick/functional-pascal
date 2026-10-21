@@ -5,7 +5,8 @@
 use std::sync::Arc;
 
 use fpas_bytecode::{
-    AbcOperands, AbxOperands, ReferenceRoot, ReferenceStep, Value, VariableReference,
+    AbcOperands, AbxOperands, CellUpdateError, ReferenceRoot, ReferenceStep, Value,
+    VariableReference,
 };
 use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
 
@@ -26,7 +27,14 @@ impl Worker {
     /// Creates a reference to the variable held by a capture cell.
     pub fn make_cell_reference(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let cell = match self.read(register(o.b)?)? {
-            Value::Cell(cell) => cell.clone(),
+            Value::Cell(cell) => {
+                if cell.owner() != self.domain.id() {
+                    return Err(self.invalid_local_value(
+                        "Variable reference belongs to a foreign task or session",
+                    ));
+                }
+                cell.clone()
+            }
             other => return Err(self.type_mismatch("cell", other)),
         };
         self.write(
@@ -44,7 +52,10 @@ impl Worker {
         self.write(
             register(o.a)?,
             Value::Reference(Arc::new(VariableReference {
-                root: ReferenceRoot::Global(o.bx),
+                root: ReferenceRoot::Global {
+                    slot: o.bx,
+                    owner: self.domain.id().clone(),
+                },
                 path: Vec::new(),
             })),
         )
@@ -93,10 +104,17 @@ impl Worker {
     ) -> Result<Value, VmError> {
         let resolved = match &reference.root {
             ReferenceRoot::Cell(cell) => {
-                let root = cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                let root = cell
+                    .read(&self.domain)
+                    .map_err(|error| self.ownership_error(error))?;
                 resolve_path(&root, &reference.path).cloned()
             }
-            ReferenceRoot::Global(slot) => {
+            ReferenceRoot::Global { slot, owner } => {
+                if owner != self.domain.id() {
+                    return Err(self.invalid_local_value(
+                        "Global reference belongs to a foreign task or session",
+                    ));
+                }
                 self.check_global_task_access(*slot)?;
                 let globals = self.global_slots();
                 let root = usize::try_from(*slot)
@@ -116,13 +134,24 @@ impl Worker {
         reference: &VariableReference,
         value: Value,
     ) -> Result<(), VmError> {
+        self.require_storable_value(&value)?;
         match &reference.root {
-            ReferenceRoot::Cell(cell) => {
-                let mut root = cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-                replace_path(&mut root, &reference.path, value)
-                    .map_err(|failure| self.path_failure(failure))
-            }
-            ReferenceRoot::Global(slot) => {
+            ReferenceRoot::Cell(cell) => cell
+                .update(&self.domain, |root| {
+                    let mut replacement = root.clone();
+                    replace_path(&mut replacement, &reference.path, value)?;
+                    Ok(replacement)
+                })
+                .map_err(|failure| match failure {
+                    CellUpdateError::Ownership(error) => self.ownership_error(error),
+                    CellUpdateError::Update(error) => self.path_failure(error),
+                }),
+            ReferenceRoot::Global { slot, owner } => {
+                if owner != self.domain.id() {
+                    return Err(self.invalid_local_value(
+                        "Global reference belongs to a foreign task or session",
+                    ));
+                }
                 self.check_global_task_access(*slot)?;
                 let index = usize::try_from(*slot).map_err(|_| self.uninitialized_global(*slot))?;
                 let mutable = self
@@ -245,16 +274,21 @@ fn replace_path(
     };
     match (step, current) {
         (ReferenceStep::Field(field), Value::Record(record)) => {
-            let child = record
-                .values_mut()
-                .get_mut(usize::from(*field))
-                .ok_or(PathFailure::MissingField(*field))?;
-            replace_path(child, tail, replacement)
+            let position = usize::from(*field);
+            if position >= record.body().values.len() {
+                return Err(PathFailure::MissingField(*field));
+            }
+            record.update_field(position, |child| replace_path(child, tail, replacement))
         }
         (ReferenceStep::Field(_), other) => Err(PathFailure::NotRecord(other.type_name())),
         (ReferenceStep::Element(index), Value::Array(values)) => {
             let position = element_index(*index, values.len())?;
-            replace_path(&mut values[position], tail, replacement)
+            if tail.is_empty() {
+                values.replace_element(position, replacement);
+                Ok(())
+            } else {
+                values.update_element(position, |child| replace_path(child, tail, replacement))
+            }
         }
         (ReferenceStep::Element(_), other) => Err(PathFailure::NotArray(other.type_name())),
     }

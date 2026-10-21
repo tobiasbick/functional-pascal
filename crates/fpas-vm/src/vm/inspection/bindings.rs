@@ -4,7 +4,6 @@ use crate::vm::worker::Worker;
 use fpas_bytecode::{
     DebugBinding, DebugType, DebugTypeId, ReferenceRoot, ReferenceStep, Value, VariableReference,
 };
-use std::sync::TryLockError;
 
 /// Result of reading storage; a retained runtime value is not an owned value snapshot.
 pub(in crate::vm) enum ReadValue {
@@ -58,17 +57,19 @@ pub(in crate::vm) fn value_type(worker: &Worker, binding: &DebugBinding) -> Debu
 /// Read a fixed reference path without executing FPAS or acquiring a blocking lock.
 pub(in crate::vm) fn read_reference(worker: &Worker, reference: &VariableReference) -> ReadValue {
     match &reference.root {
-        ReferenceRoot::Cell(cell) => match cell.try_lock() {
+        ReferenceRoot::Cell(cell) => match cell.try_read(&worker.domain) {
             Ok(root) => resolve_path(&root, &reference.path),
-            Err(TryLockError::Poisoned(poisoned)) => {
-                resolve_path(&poisoned.into_inner(), &reference.path)
+            Err(fpas_bytecode::OwnershipError::Busy) => ReadValue::Unavailable("busy"),
+            Err(fpas_bytecode::OwnershipError::Poisoned) => ReadValue::Unavailable("poisoned"),
+            Err(_) => ReadValue::Unavailable("ownership_unavailable"),
+        },
+        ReferenceRoot::Global { slot, owner } if owner == worker.domain.id() => {
+            match super::globals::read(worker, *slot as usize) {
+                ReadValue::Available(root) => resolve_path(&root, &reference.path),
+                other => other,
             }
-            Err(TryLockError::WouldBlock) => ReadValue::Unavailable("busy"),
-        },
-        ReferenceRoot::Global(slot) => match super::globals::read(worker, *slot as usize) {
-            ReadValue::Available(root) => resolve_path(&root, &reference.path),
-            other => other,
-        },
+        }
+        ReferenceRoot::Global { .. } => ReadValue::Unavailable("ownership_unavailable"),
     }
 }
 

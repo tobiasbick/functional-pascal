@@ -95,7 +95,14 @@ impl DebugSession {
                 snapshots.insert(index, self.global_value(index));
             }
         }
+        let roots = self.runtime.worker(0).map(|worker| {
+            worker.domain.root_values(
+                fpas_bytecode::RootKind::Inspection,
+                snapshots.values().flatten().cloned().collect(),
+            )
+        });
         self.data_watch_snapshots = snapshots;
+        self.data_watch_roots = roots;
     }
 
     fn global_value(&self, index: u64) -> Option<Value> {

@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fpas_bytecode::{SharedFunction, Value};
+use fpas_bytecode::{MemoryDomain, RootKind, RootValues, SharedFunction, TraceRoots, Value};
 
 const TAG: u64 = 0x5345_0000_0000_0000;
 const MASK: u64 = 0xffff_0000_0000_0000;
@@ -25,6 +25,20 @@ pub(super) enum CaseSource {
 pub(super) struct WaitCase {
     pub(super) source: CaseSource,
     pub(super) callback: SharedFunction,
+    pub(super) roots: Option<RootValues>,
+}
+
+impl TraceRoots for WaitCase {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        visit(&Value::Function(self.callback.clone()));
+        if let CaseSource::Send(_, value) = &self.source {
+            visit(value);
+        }
+        Ok(())
+    }
 }
 
 struct Entry {
@@ -32,35 +46,57 @@ struct Entry {
     case: WaitCase,
 }
 
+#[derive(Default)]
+struct Entries {
+    cases: HashMap<u64, Entry>,
+    closed: bool,
+}
+
 /// Unused cases; claiming transfers ownership to the selecting operation.
 #[derive(Default)]
 pub(in crate::vm) struct CaseRegistry {
-    entries: Mutex<HashMap<u64, Entry>>,
+    entries: Mutex<Entries>,
 }
 
 impl CaseRegistry {
     /// Check capacity before retaining a case's values and callback.
+    #[cfg(test)]
     pub(super) fn create(
         &self,
         owner: u64,
         build: impl FnOnce() -> WaitCase,
     ) -> Result<u64, String> {
-        let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
-        if entries.len() >= MAX_UNUSED {
-            return Err("At most 4096 unused WaitCase handles may belong to one VM; select or close existing cases".into());
+        self.create_in_domain(owner, &MemoryDomain::new(), build)
+    }
+
+    pub(super) fn create_in_domain(
+        &self,
+        owner: u64,
+        domain: &MemoryDomain,
+        build: impl FnOnce() -> WaitCase,
+    ) -> Result<u64, String> {
+        {
+            let entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
+            entries.require_capacity()?;
         }
+        let mut case = build();
+        if let CaseSource::Send(_, payload) = &case.source {
+            crate::vm::domain::check_transfer(std::slice::from_ref(payload))?;
+        }
+        let mut values = Vec::new();
+        case.trace_roots(&mut |value| values.push(value.clone()))
+            .map_err(|e| e.to_string())?;
+        case.roots = Some(domain.root_values(RootKind::Selection, values));
+        // Construction and graph validation hold no registry lock. Check again
+        // so concurrent shutdown or another constructor cannot admit a late case.
+        let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
+        entries.require_capacity()?;
         let handle = NEXT
             .try_update(Ordering::Relaxed, Ordering::Relaxed, |id| {
                 (id & MASK == TAG && id < (TAG | !MASK)).then(|| id + 1)
             })
             .map_err(|_| "WaitCase identity space is exhausted".to_string())?;
-        entries.insert(
-            handle,
-            Entry {
-                owner,
-                case: build(),
-            },
-        );
+        entries.cases.insert(handle, Entry { owner, case });
         Ok(handle)
     }
 
@@ -76,7 +112,7 @@ impl CaseRegistry {
             if !unique.insert(*id) {
                 return Err("Select cannot contain the same WaitCase handle twice".into());
             }
-            let entry = entries.get(id).ok_or_else(|| {
+            let entry = entries.cases.get(id).ok_or_else(|| {
                 "WaitCase is closed, already selected, or belongs to another VM".to_string()
             })?;
             if entry.owner != owner {
@@ -85,7 +121,7 @@ impl CaseRegistry {
         }
         Ok(ids
             .iter()
-            .filter_map(|id| entries.remove(id).map(|entry| entry.case))
+            .filter_map(|id| entries.cases.remove(id).map(|entry| entry.case))
             .collect())
     }
 
@@ -93,10 +129,53 @@ impl CaseRegistry {
     pub(super) fn close(&self, owner: u64, id: u64) -> Result<bool, String> {
         validate(id)?;
         let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
-        if entries.get(&id).is_some_and(|entry| entry.owner != owner) {
+        if entries
+            .cases
+            .get(&id)
+            .is_some_and(|entry| entry.owner != owner)
+        {
             return Err("WaitCase must be closed by the task that created it".into());
         }
-        Ok(entries.remove(&id).is_some())
+        let removed = entries.cases.remove(&id);
+        drop(entries);
+        Ok(removed.is_some())
+    }
+
+    /// Release unused cases after owner cleanup, before completion or a retry.
+    pub(in crate::vm) fn close_owner(&self, owner: u64) -> usize {
+        let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
+        let removed = entries
+            .cases
+            .extract_if(|_, entry| entry.owner == owner)
+            .map(|(_, entry)| entry)
+            .collect::<Vec<_>>();
+        drop(entries);
+        let count = removed.len();
+        drop(removed);
+        count
+    }
+
+    /// Shut admission and release unused cases without invoking their callbacks.
+    pub(in crate::vm) fn close_all(&self) -> usize {
+        let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
+        entries.closed = true;
+        let removed = std::mem::take(&mut entries.cases);
+        drop(entries);
+        let count = removed.len();
+        drop(removed);
+        count
+    }
+}
+
+impl Entries {
+    fn require_capacity(&self) -> Result<(), String> {
+        if self.closed {
+            return Err("WaitCase registry is closed after session shutdown".into());
+        }
+        if self.cases.len() >= MAX_UNUSED {
+            return Err("At most 4096 unused WaitCase handles may belong to one VM; select or close existing cases".into());
+        }
+        Ok(())
     }
 }
 

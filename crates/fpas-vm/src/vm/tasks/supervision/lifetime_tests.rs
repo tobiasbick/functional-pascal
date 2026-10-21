@@ -46,8 +46,9 @@ fn start(
     });
     let weak = Arc::downgrade(&layout);
     let work = Value::Function(SharedFunction::unbound(
-        FunctionId::try_from_index(function).expect("function id"),
-        "worker",
+        image
+            .function_target(FunctionId::try_from_index(function).expect("function id"))
+            .expect("worker target"),
         vec![Value::Record(SharedRecord::new(
             layout,
             vec![Value::Integer(42)],

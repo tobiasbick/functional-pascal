@@ -3,7 +3,7 @@
 
 use std::collections::{HashMap, VecDeque};
 
-use super::{CaptureBinding, task_bound_from_captures};
+use super::{CaptureBinding, capability_from_captures};
 use crate::check::Checker;
 
 /// A routine whose captures depend on a named target still being checked.
@@ -15,7 +15,7 @@ pub(crate) enum CaptureOwner {
     Closure(usize),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct Consumer {
     owner: CaptureOwner,
     scope_index: usize,
@@ -60,11 +60,15 @@ impl Checker {
                 .insert(key, targets.to_vec());
         }
         for &target in targets {
-            self.capture_dependencies
+            let consumers = self
+                .capture_dependencies
                 .consumers
                 .entry(target)
-                .or_default()
-                .push(Consumer { owner, scope_index });
+                .or_default();
+            let consumer = Consumer { owner, scope_index };
+            if !consumers.contains(&consumer) {
+                consumers.push(consumer);
+            }
         }
     }
 
@@ -104,23 +108,21 @@ impl Checker {
                 ) {
                     continue;
                 }
-                let task_bound = task_bound_from_captures(captures);
+                let capability = capability_from_captures(captures);
                 match consumer.owner {
                     CaptureOwner::Routine(key) => {
                         if let Some(info) = self.nested_routine_captures.get_mut(&key) {
-                            info.task_bound = task_bound;
+                            info.capability = capability;
                         }
                         self.scopes
-                            .update_routine_capture_capabilities(key, task_bound);
+                            .update_routine_capture_capabilities(key, capability);
                         pending.push_back(key);
                     }
                     CaptureOwner::Closure(key) => {
                         if let Some(info) = self.closure_infos.get_mut(&key) {
-                            info.task_bound = task_bound;
+                            info.capability = capability;
                         }
-                        if task_bound {
-                            self.mark_expr_task_bound(key);
-                        }
+                        self.set_expr_capability(key, capability);
                     }
                 }
             }
@@ -156,9 +158,9 @@ fn merge_captures(
             .iter_mut()
             .find(|existing| identity(existing) == key)
         {
-            let task_bound = existing.task_bound || capture.task_bound;
-            changed |= existing.task_bound != task_bound;
-            existing.task_bound = task_bound;
+            let capability = existing.capability.join(capture.capability);
+            changed |= existing.capability != capability;
+            existing.capability = capability;
         } else {
             captures.push(capture.clone());
             changed = true;

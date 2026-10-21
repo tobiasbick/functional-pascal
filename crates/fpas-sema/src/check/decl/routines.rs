@@ -4,7 +4,7 @@
 //! `docs/pascal/language/functions/closures.md`
 
 use super::super::closures::{
-    CaptureAnalysis, CaptureOwner, NestedRoutineCaptureInfo, task_bound_from_captures,
+    CaptureAnalysis, CaptureOwner, NestedRoutineCaptureInfo, capability_from_captures,
 };
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};
@@ -74,7 +74,7 @@ impl Checker {
             ty: func_ty,
             mutable: false,
             kind: SymbolKind::Function,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         };
         self.register_routine_symbol(&f.name, symbol, &f.body, f.span);
         if is_nested {
@@ -142,7 +142,7 @@ impl Checker {
             ty: proc_ty,
             mutable: false,
             kind: SymbolKind::Procedure,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         };
         self.register_routine_symbol(&p.name, symbol, &p.body, p.span);
         if is_nested {
@@ -183,15 +183,15 @@ impl Checker {
             .iter()
             .find(|capture| capture.reference)
             .map(|capture| capture.name.clone());
-        let task_bound = task_bound_from_captures(&captures);
+        let capability = capability_from_captures(&captures);
         if let Some(symbol) = self.scopes.lookup_mut(name) {
-            symbol.task_bound = task_bound;
+            symbol.capability = capability;
         }
         self.nested_routine_captures.insert(
             key,
             NestedRoutineCaptureInfo {
                 captures,
-                task_bound,
+                capability,
             },
         );
         self.record_var_parameter_routine(key, reference);

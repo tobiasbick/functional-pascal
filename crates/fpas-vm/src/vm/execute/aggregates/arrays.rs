@@ -7,12 +7,17 @@ impl Worker {
     /// Constructs an array from the instruction register window.
     pub fn make_array(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let values = self.window(o.b, usize::from(o.c))?;
+        for value in &values {
+            self.require_storable_value(value)?;
+        }
         self.write(register(o.a)?, Value::Array(values.into()))
     }
 
     /// Consumes the source array and appends with copy-on-write isolation.
     pub fn array_push(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
+        self.require_storable_value(&value)?;
+        self.require_local_value(self.read(register(o.b)?)?)?;
         let array = self.take(register(o.b)?)?;
         let Value::Array(mut array) = array else {
             return Err(self.type_mismatch("array", &array));

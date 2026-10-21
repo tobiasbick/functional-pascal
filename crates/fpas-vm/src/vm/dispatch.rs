@@ -51,6 +51,28 @@ impl Worker {
         &mut self,
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
+        let access = self.execution_access()?;
+        let result = self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget);
+        if access.outermost() || self.domain.maintenance_pending() {
+            let extra = match &result {
+                Ok(batch) => match &batch.step {
+                    DispatchStep::Return(value) => std::slice::from_ref(value),
+                    _ => &[],
+                },
+                Err(_) => &[],
+            };
+            // A failed publication defers maintenance; it does not replace program diagnostics.
+            if self.publish_execution(extra).is_ok() {
+                access.safe_point();
+            }
+        }
+        result
+    }
+
+    fn dispatch_owned<const SUPPRESS_INITIALIZERS: bool>(
+        &mut self,
+        budget: u32,
+    ) -> Result<DispatchBatch, VmError> {
         // Trace hooks must not enter the ordinary per-instruction hot path. Select once
         // per batch; synchronous callbacks can inherit traces without debug_tasks.
         if self.debug_trace.is_some() || self.debug_local_trace.is_some() {

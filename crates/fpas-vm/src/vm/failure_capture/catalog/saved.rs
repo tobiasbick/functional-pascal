@@ -54,6 +54,7 @@ impl ScheduledTask {
 impl CaptureState {
     /// Save the original registers under their owner lock, without taking a value snapshot.
     pub(in crate::vm) fn save(self: &Arc<Self>, mut task: TaskState, timer: bool) -> ScheduledTask {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         if self.finished.load(Ordering::Acquire) {
             task.capture_record = None;
             return ScheduledTask::Direct(task);
@@ -80,5 +81,26 @@ impl CaptureState {
             record.state.store(state, Ordering::Release);
         }
         ScheduledTask::Observed(record)
+    }
+}
+
+impl fpas_bytecode::TraceRoots for ScheduledTask {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&fpas_bytecode::Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        match self {
+            Self::Direct(task) => task.trace_roots(visit),
+            Self::Observed(record) => {
+                let saved = record.saved.try_lock().map_err(|error| match error {
+                    std::sync::TryLockError::WouldBlock => fpas_bytecode::OwnershipError::Busy,
+                    std::sync::TryLockError::Poisoned(_) => fpas_bytecode::OwnershipError::Poisoned,
+                })?;
+                if let Some(task) = saved.as_ref() {
+                    task.trace_roots(visit)?;
+                }
+                Ok(())
+            }
+        }
     }
 }

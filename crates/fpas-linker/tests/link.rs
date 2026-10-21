@@ -75,7 +75,10 @@ fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
         "unit debugger sequence points are rebased with linked code"
     );
     let execution = Vm::new(first).run().expect("linked VM execution");
-    assert_eq!(execution.value, Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        Value::Unit
+    );
 }
 
 #[test]

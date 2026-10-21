@@ -12,6 +12,9 @@ impl Worker {
             .cloned()
             .ok_or_else(|| self.bad_slot("record layout", u32::from(o.b)))?;
         let values = self.window(o.c, layout.fields.len())?;
+        for value in &values {
+            self.require_storable_value(value)?;
+        }
         self.write(
             register(o.a)?,
             Value::Record(SharedRecord::new(layout, values)),
@@ -30,8 +33,10 @@ impl Worker {
     /// Updates a validated field, reusing uniquely owned record storage.
     pub fn store_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
+        self.require_storable_value(&value)?;
         let destination = register(o.a)?;
         let field = usize::from(o.b);
+        self.require_local_value(self.read(destination)?)?;
         match self.read(destination)? {
             Value::Record(record) if field < record.body().values.len() => {}
             Value::Record(_) => return Err(self.bad_slot("record field", u32::from(o.b))),
@@ -44,7 +49,7 @@ impl Worker {
                 "Validated StoreField destination changed type before commit",
             ));
         };
-        record.values_mut()[field] = value;
+        record.replace_field(field, value);
         self.write(destination, Value::Record(record))
     }
 
@@ -54,6 +59,7 @@ impl Worker {
     /// body is updated in place instead of being copied.
     pub fn update_record(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let destination = register(o.a)?;
+        self.require_local_value(self.read(destination)?)?;
         let field_count = match self.read(destination)? {
             Value::Record(record) => record.body().values.len(),
             other => return Err(self.type_mismatch("record", other)),
@@ -64,6 +70,7 @@ impl Worker {
             return Err(self.bad_slot("register window", u32::from(o.b)));
         };
         for pair in overrides.as_chunks::<2>().0 {
+            self.require_storable_value(&pair[1])?;
             let Value::Integer(field) = &pair[0] else {
                 return Err(self.type_mismatch("integer record field slot", &pair[0]));
             };
@@ -90,11 +97,10 @@ impl Worker {
                 "Validated UpdateRecord destination changed type before commit",
             ));
         };
-        let values = body.values_mut();
         for pair in self.registers[start..end].as_chunks::<2>().0 {
             // Field slots were validated above.
             if let Value::Integer(field) = pair[0] {
-                values[field as usize] = pair[1].clone();
+                body.replace_field(field as usize, pair[1].clone());
             }
         }
         self.write(destination, record)

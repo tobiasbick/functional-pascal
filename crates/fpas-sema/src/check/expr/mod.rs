@@ -260,12 +260,16 @@ impl Checker {
         let inner_ty = self.check_expr(inner);
         match &inner_ty {
             Ty::Result(ok, _) => {
-                self.check_try_context(&inner_ty, span);
+                if self.check_try_context(&inner_ty, span) {
+                    self.observe_try_return_capability(inner, &inner_ty);
+                }
                 *ok.clone()
             }
-            Ty::Option(inner) => {
-                self.check_try_context(&inner_ty, span);
-                *inner.clone()
+            Ty::Option(value) => {
+                if self.check_try_context(&inner_ty, span) {
+                    self.observe_try_return_capability(inner, &inner_ty);
+                }
+                *value.clone()
             }
             Ty::Error => Ty::Error,
             _ => {
@@ -280,7 +284,7 @@ impl Checker {
         }
     }
 
-    fn check_try_context(&mut self, inner_ty: &Ty, span: fpas_lexer::Span) {
+    fn check_try_context(&mut self, inner_ty: &Ty, span: fpas_lexer::Span) -> bool {
         let Some(function_ctx) = self.scopes.function_ctx.clone() else {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
@@ -288,7 +292,7 @@ impl Checker {
                 "Wrap the expression in a function that returns `Result of (T, E)` or `Option of T`.",
                 span,
             );
-            return;
+            return false;
         };
 
         let Some(return_ty) = function_ctx.return_type else {
@@ -301,11 +305,11 @@ impl Checker {
                 "Use `try` inside a function that returns `Result of (T, E)` or `Option of T`.",
                 span,
             );
-            return;
+            return false;
         };
 
         if return_ty.is_error() {
-            return;
+            return false;
         }
 
         match (inner_ty, &return_ty) {
@@ -320,9 +324,12 @@ impl Checker {
                         "Make the enclosing function return `Result of (ValueType, ErrorType)` with the same error type.",
                         span,
                     );
+                    false
+                } else {
+                    true
                 }
             }
-            (Ty::Option(_), Ty::Option(_)) => {}
+            (Ty::Option(_), Ty::Option(_)) => true,
             (Ty::Result(_, _), _) => {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
@@ -333,6 +340,7 @@ impl Checker {
                     "Use `try` on `Result` only inside a function that returns `Result of (T, E)` with a compatible error type.",
                     span,
                 );
+                false
             }
             (Ty::Option(_), _) => {
                 self.error_with_code(
@@ -344,8 +352,9 @@ impl Checker {
                     "Use `try` on `Option` only inside a function that returns `Option of T`.",
                     span,
                 );
+                false
             }
-            _ => {}
+            _ => false,
         }
     }
 }

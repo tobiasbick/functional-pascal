@@ -7,6 +7,7 @@ mod model;
 mod mutation_targets;
 mod references;
 mod render;
+mod roots;
 mod snapshot;
 mod targets;
 mod typed_bindings;

@@ -1,28 +1,34 @@
 //! Synchronous hosted-callback entry using numeric function identifiers.
 
 #[cfg(test)]
+mod domains;
+#[cfg(test)]
 mod fs_lifecycle;
 
 use std::sync::{Arc, RwLock};
 
-use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
+use fpas_bytecode::{FunctionId, MemoryDomain, Value, VerifiedExecutable};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
+use super::host_value::HostValues;
 use super::hosted::HostedState;
 use super::layouts::RuntimeLayouts;
-use super::worker::Worker;
-use super::{Execution, VmError, diagnostics};
+use super::worker::{FunctionInputs, Worker};
+use super::{Execution, HostArgument, VmError, diagnostics};
 
 /// Reusable synchronous callback runner for one verified executable.
 ///
 /// Each callback receives fresh frame state while sharing immutable code and metadata. A callback
 /// panic unwinds only that invocation; the session remains usable until cancelled or shut down.
 pub struct CallbackSession {
+    domain: MemoryDomain,
+    host_values: HostValues,
     executable: Arc<VerifiedExecutable>,
     stopped: bool,
     globals: Arc<RwLock<Vec<Option<Value>>>>,
     layouts: Result<Arc<RuntimeLayouts>, VmError>,
     hosted: Arc<HostedState>,
+    session: Option<fpas_bytecode::DomainSession>,
 }
 
 impl CallbackSession {
@@ -44,9 +50,17 @@ impl CallbackSession {
             fpas_bytecode::InstructionAddress::new(0),
         )
         .map(Arc::new);
+        let (domain, session) = crate::vm::domain::new_session_domain();
         Self {
+            host_values: HostValues::for_executable(
+                domain.clone(),
+                &executable,
+                Arc::clone(&globals),
+            ),
+            domain,
             executable,
             stopped: false,
+            session: Some(session),
             globals,
             layouts,
             hosted: Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
@@ -62,20 +76,30 @@ impl CallbackSession {
     pub fn invoke(
         &mut self,
         function: FunctionId,
-        arguments: Vec<Value>,
+        arguments: Vec<HostArgument>,
     ) -> Result<Execution, VmError> {
         if self.stopped {
             return Err(stopped_error(self.executable.executable()));
         }
-        Worker::for_function_with_state(
+        let layouts = self.layouts.clone()?;
+        let (arguments, argument_roots) = self.host_values.admit(arguments, &self.executable)?;
+        let worker = Worker::for_function_in_domain(
             Arc::clone(&self.executable),
             function,
-            arguments,
+            FunctionInputs {
+                arguments: &arguments,
+                captures: &[],
+                domain: self.domain.clone(),
+            },
             Arc::clone(&self.globals),
-            self.layouts.clone()?,
+            layouts,
             Arc::clone(&self.hosted),
-        )?
-        .run()
+        );
+        fpas_bytecode::release_values(arguments);
+        drop(argument_roots);
+        worker?
+            .run()
+            .map(|execution| self.host_values.export(execution))
     }
 
     /// Cancel further hosted callback invocations.
@@ -84,6 +108,8 @@ impl CallbackSession {
         self.hosted.close_process_handles();
         self.hosted.close_file_handles();
         self.hosted.wait_process_handles();
+        self.hosted.cases.close_all();
+        self.session.take();
     }
 
     /// Shut down the callback session.
@@ -97,6 +123,9 @@ impl Drop for CallbackSession {
         self.hosted.close_process_handles();
         self.hosted.close_file_handles();
         self.hosted.wait_process_handles();
+        self.hosted.cases.close_all();
+        self.host_values.retire_globals(&self.globals);
+        self.session.take();
     }
 }
 

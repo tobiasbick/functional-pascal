@@ -18,9 +18,7 @@ impl Checker {
             Stmt::Discard { expr, span } => self.check_discard(expr, *span),
             Stmt::Block(stmts, _) => {
                 self.scopes.push_scope();
-                for stmt in stmts {
-                    self.check_stmt(stmt);
-                }
+                self.check_stmt_sequence(stmts);
                 self.scopes.pop_scope();
             }
             Stmt::Var(var_def) => self.check_local_binding(var_def, true),

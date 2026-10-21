@@ -45,6 +45,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("dictionary.insert")?;
         let result = (|| {
             let prepared = self.prepare_container_mutation(
@@ -115,6 +117,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("dictionary.remove")?;
         let result = (|| {
             let prepared = self.prepare_container_mutation(
@@ -179,6 +183,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("dictionary.replace_key")?;
         let result = (|| {
             let prepared = self.prepare_container_mutation(

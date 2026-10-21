@@ -43,6 +43,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugVariantDescription, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("variant.describe")?;
         let result = self
             .resolve_wrapper_target(assignment, frame_id, limits)
@@ -88,6 +90,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugVariantConstructionResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("variant.construct")?;
         let result = (|| {
             let resolved = self.resolve_variant_construction(

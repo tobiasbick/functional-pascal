@@ -1,6 +1,6 @@
 # AP48.4: Execution and external roots
 
-Package: [AP48](README.md). Status: not started. Effort: large.
+Package: [AP48](README.md). Status: complete. Effort: large.
 Prerequisite: [AP48.3](03-static-capabilities.md) complete.
 
 ## Work
@@ -65,6 +65,37 @@ Modify `crates/fpas-vm/src/vm/inspection/`, `debug/`, `failure_capture/`,
 Inventory public execution results and all embedding callers before finalizing the
 handle interface. Runtime graph operations stay in the shared value modules.
 
+## Implementation scope
+
+- Add shared root tracing, weak registrations, guarded external access and deferred
+  removal/request-generation primitives under `crates/fpas-bytecode/src/value/roots/`.
+  Extend `value/domain.rs`, `value/mod.rs` and `lib.rs`; cover independent roots,
+  retired domains, nested access and edge-removing mutation without collection.
+- Add `crates/fpas-vm/src/vm/domain/roots.rs` and focused tracing implementations
+  for `worker.rs`, `tasks/{state,suspension}.rs`, supervision inputs, callback
+  continuations and selection cases. Trace active and saved execution through the
+  same interface; document every retained Value/SharedFunction owner in a focused
+  root inventory beside the domain implementation.
+- Migrate `vm/host_value/`, `callback.rs`, `callback_call.rs`, `mod.rs` and `run.rs`
+  to registered exports, guarded inspection/mutation and rooted idle globals.
+  Preserve sealed provenance, same-session identity, pure-data convenience and
+  shutdown rejection. Add host lifecycle and registration regressions.
+- Register native caller/temporary graphs in `hosted/callbacks/`, callback re-entry,
+  `tasks/selection/` and their cleanup paths. Use the shared callback operation
+  representation for complete native-state tracing; keep native blocking opaque
+  until AP48.5 publishes execution access.
+- Migrate retained inspection, debug handle/evaluation/call state, trace histories
+  and live failure observations under `inspection/`, `debug/` and `failure_capture/`.
+  Detached diagnostic trees remain root-free observations. Retain the sandbox
+  domain through returned inspection values and partial/error cleanup.
+- Validate contained callable targets during debugger executable replacement.
+  Reject retained callable graphs before commit when the existing instruction mapping
+  cannot atomically rebind their provenance. Modify `debug/live_image/` and shared
+  detachment helpers as required; never authorize a numeric target alone.
+- Update `docs/pascal/program-structure/runtime-ownership.md`, embedding/debugger
+  guidance and relevant Rust API docs. Confirm the compact language reference;
+  no syntax, safe-point servicing or reclamation is introduced.
+
 ## Acceptance and verification
 
 - Enumerating roots covers each inventory row in active and suspended states.
@@ -86,3 +117,33 @@ handle interface. Runtime graph operations stay in the shared value modules.
 Extend embedding, debugger, callback and failure-capture contract coverage. Update
 public Rust documentation and migrate callers in the same delivery. Finish the
 ownership milestone with AP48.1 through AP48.4 complete; collection remains disabled.
+
+## Delivered implementation notes
+
+The [holder inventory](../../../../crates/fpas-vm/src/vm/domain/ROOTS.md) maps retained
+values to shared tracing, weak registrations or detached observations. Host values,
+including debugger termination results, use sealed registered handles. Clone/removal,
+nested external access, retired mutation and selection cleanup follow request generation.
+Debugger result handles retain their detached domain; operation-scoped handoffs and
+partial construction release registrations on error as well as success.
+
+Live-image replacement rejects retained callable graphs before commit. Its existing
+instruction mapping is not an atomic callable-graph rebind. Invocation and debugger
+calls validate the original opaque executable identity; a numeric ID is insufficient.
+
+Execution exclusion, eligible wait publication, request servicing and reclamation
+remain AP48.5/AP48.6 work. No collector is active in this milestone.
+
+## Regression coverage
+
+Root tests cover independent clones and non-final releases, nested/deferred removal,
+busy providers, retired domains, guarded mutation and maintenance request delivery.
+VM coverage includes initialized and saved register state, native caller retention,
+selection claim/owner cleanup, failure callback frames, independent host clones and
+shutdown before first invocation. Debugger regressions cover detached child-domain
+retention, abandoned partial copies, bounded nesting, operation handoff success/error
+cleanup, registered terminal exports and atomic rejection of unrebound live images.
+
+The compact language reference was confirmed against this delivery. No FPAS syntax
+or language-facing invocation semantics changed; the Rust embedding ownership
+contract and debugger lifetime rules are documented in the current handbook.

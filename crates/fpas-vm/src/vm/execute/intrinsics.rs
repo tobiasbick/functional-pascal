@@ -82,6 +82,23 @@ impl Worker {
         intrinsic: Intrinsic,
         arguments: &[Value],
     ) -> Result<Value, VmError> {
+        let access = self.execution_access()?;
+        let result = self.execute_debug_intrinsic_owned(intrinsic, arguments);
+        let extra = match &result {
+            Ok(value) => std::slice::from_ref(value),
+            Err(_) => &[],
+        };
+        if self.publish_execution(extra).is_ok() {
+            access.safe_point();
+        }
+        result
+    }
+
+    fn execute_debug_intrinsic_owned(
+        &mut self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+    ) -> Result<Value, VmError> {
         let base = 1_usize;
         let required = base.saturating_add(arguments.len());
         self.base = 0;

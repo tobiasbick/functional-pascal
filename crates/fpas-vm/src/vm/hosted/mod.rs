@@ -80,7 +80,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) random: Mutex<random::state::RandomState>,
     pub(in crate::vm) cancellations: CancellationRegistry,
     pub(in crate::vm) channels: ChannelRegistry,
-    pub(in crate::vm) cases: super::tasks::selection::CaseRegistry,
+    pub(in crate::vm) cases: Arc<super::tasks::selection::CaseRegistry>,
     pub(super) test_scratch_dir: Mutex<PathBuf>,
     /// Receiver for stderr lines of `Std.Proc.Run` children; inherited when `None`.
     pub(super) program_stderr: Mutex<Option<fpas_std::ProgramStderr>>,

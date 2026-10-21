@@ -219,7 +219,13 @@ fn timed_root_close_never_executes_queued_child_code_inline() {
     scheduler.groups.enroll(id, 0, 1).expect("child");
     scheduler.register_result(1);
     let info = &worker.executable.executable().functions[0];
-    let function = SharedFunction::unbound(FunctionId::new(0), "must remain queued", vec![]);
+    let function = SharedFunction::unbound(
+        worker
+            .executable
+            .function_target(FunctionId::new(0))
+            .expect("queued target"),
+        vec![],
+    );
     let task = crate::vm::tasks::TaskState::entry(1, &function, info, []);
     scheduler.enqueue(task);
     let started = std::time::Instant::now();

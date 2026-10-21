@@ -494,8 +494,24 @@ fn shared_images_have_isolated_single_use_vm_instances() {
     let mut first = Vm::from_shared(Arc::clone(&image));
     let mut second = Vm::from_shared(image);
 
-    assert_eq!(first.run().expect("first run").value, Value::Unit);
-    assert_eq!(second.run().expect("isolated run").value, Value::Unit);
+    assert_eq!(
+        first
+            .run()
+            .expect("first run")
+            .value
+            .try_to_data()
+            .expect("pure return value"),
+        Value::Unit
+    );
+    assert_eq!(
+        second
+            .run()
+            .expect("isolated run")
+            .value
+            .try_to_data()
+            .expect("pure return value"),
+        Value::Unit
+    );
     let repeated = first.run().expect_err("VM instance must be single-use");
     assert_eq!(repeated.code, RUNTIME_VM_SHUTDOWN);
 }

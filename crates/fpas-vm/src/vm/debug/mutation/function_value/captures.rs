@@ -43,7 +43,7 @@ pub(super) fn require_task_owned(
     max_depth: usize,
     max_values: usize,
 ) -> Result<(), DebugSessionError> {
-    if !function.task_bound || function.owner_task.is_none() {
+    if !function.task_bound || function.owner_domain.is_none() {
         return Err(ownership(
             "constructed function is missing a runtime task owner",
             "Assign a named nested routine from the selected live owner task so mutable captures stay on that task.",
@@ -62,7 +62,7 @@ pub(super) fn require_task_owned(
     for capture in &function.captures {
         match capture {
             Value::Cell(cell) => {
-                if !state.visited.insert(std::sync::Arc::as_ptr(cell) as usize) {
+                if !state.visited.insert(cell.identity()) {
                     continue;
                 }
                 state.values = state.values.saturating_add(1);
@@ -85,18 +85,16 @@ pub(super) fn require_task_owned(
 /// Prove that a task-bound function belongs to the selected debugger task.
 pub(super) fn require_task_owner(
     function: &SharedFunction,
-    task_id: u64,
+    domain: &fpas_bytecode::DomainId,
 ) -> Result<(), DebugSessionError> {
-    match function.owner_task {
-        Some(owner_task) if owner_task == task_id => Ok(()),
-        Some(owner_task) => Err(ownership(
-            &format!(
-                "source task-bound function belongs to task {owner_task}, not selected task {task_id}"
-            ),
-            "Select the stopped task that owns the function and copy it only between mutable local or parameter bindings in that task's selected frame.",
+    match &function.owner_domain {
+        Some(owner) if owner == domain => Ok(()),
+        Some(_) => Err(ownership(
+            "source task-bound function belongs to a different memory domain",
+            "Select the stopped task that owns the function.",
         )),
         None => Err(ownership(
-            "source task-bound function is missing a runtime task owner",
+            "source task-bound function is missing a runtime domain owner",
             "Assign a task-bound function created for the selected live owner task.",
         )),
     }
@@ -203,7 +201,7 @@ fn shared_identity(value: &Value) -> Option<usize> {
         Value::Record(record) => std::ptr::from_ref(record.body()) as usize,
         Value::Enum(enumeration) => std::ptr::from_ref(enumeration.body()) as usize,
         Value::Function(function) => identity_of_function(function),
-        Value::Cell(cell) => std::sync::Arc::as_ptr(cell) as usize,
+        Value::Cell(cell) => cell.identity(),
         _ => return None,
     })
 }
@@ -231,14 +229,38 @@ fn limit(message: String, hint: &str) -> DebugSessionError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fpas_bytecode::{FunctionId, RecordTypeId, RuntimeRecordLayout, SharedRecord};
-    use std::sync::{Arc, Mutex};
+    use fpas_bytecode::{
+        FunctionTarget, MemoryDomain, OwnedCell, RecordTypeId, RuntimeRecordLayout, SharedRecord,
+    };
+    use std::sync::Arc;
+
+    fn target() -> FunctionTarget {
+        let (program, errors) = fpas_parser::parse("program Captures; begin end.");
+        assert!(errors.is_empty());
+        let executable = fpas_compiler::compile(&program).expect("capture fixture");
+        executable
+            .function_target(executable.executable().entry)
+            .expect("entry target")
+    }
+
+    fn cell() -> OwnedCell {
+        MemoryDomain::new()
+            .new_cell(Value::Integer(1))
+            .expect("fixture cell")
+    }
 
     fn function(captures: Vec<Value>, task_bound: bool) -> SharedFunction {
+        let domain = captures
+            .iter()
+            .find_map(|value| match value {
+                Value::Cell(cell) => Some(cell.owner().clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| MemoryDomain::new().id().clone());
         let value = if task_bound {
-            Value::task_owned_function(FunctionId::new(1), "work".to_string(), captures, 1)
+            Value::task_owned_function(target(), captures, domain)
         } else {
-            Value::function(FunctionId::new(1), "work".to_string(), captures)
+            Value::function(target(), captures)
         };
         match value {
             Value::Function(function) => function,
@@ -256,9 +278,7 @@ mod tests {
             }),
             vec![Value::Task(7)],
         ));
-        let Value::Function(function) =
-            Value::bound_function(FunctionId::new(1), "Holder.Read".to_string(), receiver)
-        else {
+        let Value::Function(function) = Value::bound_function(target(), receiver) else {
             unreachable!("bound constructor")
         };
 
@@ -272,11 +292,7 @@ mod tests {
 
     #[test]
     fn immutable_aggregates_and_nested_safe_functions_are_eligible() {
-        let nested = Value::function(
-            FunctionId::new(2),
-            "nested".to_string(),
-            vec![Value::Integer(1)],
-        );
+        let nested = Value::function(target(), vec![Value::Integer(1)]);
         let captured = function(
             vec![
                 Value::Integer(1),
@@ -300,10 +316,7 @@ mod tests {
         assert!(error.message.contains("task-bound"), "{error:?}");
         assert!(error.hint.contains("non-task-bound"), "{}", error.hint);
 
-        let cell = function(
-            vec![Value::Cell(Arc::new(Mutex::new(Value::Integer(1))))],
-            false,
-        );
+        let cell = function(vec![Value::Cell(cell())], false);
         assert!(
             require_eligible(&cell, 8, 64)
                 .expect_err("cell")
@@ -326,10 +339,9 @@ mod tests {
         );
         let nested_bound = function(
             vec![Value::task_owned_function(
-                FunctionId::new(2),
-                "inner".to_string(),
+                target(),
                 Vec::new(),
-                1,
+                MemoryDomain::new().id().clone(),
             )],
             false,
         );
@@ -343,12 +355,7 @@ mod tests {
 
     #[test]
     fn nested_cell_inside_array_is_rejected_without_executing() {
-        let nested = function(
-            vec![Value::Array(
-                vec![Value::Cell(Arc::new(Mutex::new(Value::Integer(1))))].into(),
-            )],
-            false,
-        );
+        let nested = function(vec![Value::Array(vec![Value::Cell(cell())].into())], false);
         let error = require_eligible(&nested, 8, 64).expect_err("nested cell");
         assert_eq!(error.kind, DebugErrorKind::VariableValueType);
         assert!(error.message.contains("cell"), "{error:?}");
@@ -372,30 +379,20 @@ mod tests {
 
     #[test]
     fn task_owned_cell_captures_are_counted_without_locking_payloads() {
-        let cell = Arc::new(Mutex::new(Value::Integer(1)));
-        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            let _guard = cell.lock().expect("lock");
-            panic!("poison the cell");
-        }));
-        let owned = function(vec![Value::Cell(Arc::clone(&cell))], true);
-        require_task_owned(&owned, 8, 64).expect("poisoned cell handle");
-        let missing_owner =
-            match Value::function(FunctionId::new(1), "work".to_string(), Vec::new()) {
-                Value::Function(function) => function,
-                other => panic!("expected function, got {}", other.type_name()),
-            };
+        let captured_cell = cell();
+        let owned = function(vec![Value::Cell(captured_cell)], true);
+        require_task_owned(&owned, 8, 64).expect("owned cell handle");
+        let missing_owner = match Value::function(target(), Vec::new()) {
+            Value::Function(function) => function,
+            other => panic!("expected function, got {}", other.type_name()),
+        };
         assert!(
             require_task_owned(&missing_owner, 8, 64)
                 .expect_err("unbound")
                 .message
                 .contains("task owner")
         );
-        let nested = function(
-            vec![Value::Array(
-                vec![Value::Cell(Arc::new(Mutex::new(Value::Integer(1))))].into(),
-            )],
-            true,
-        );
+        let nested = function(vec![Value::Array(vec![Value::Cell(cell())].into())], true);
         assert!(
             require_task_owned(&nested, 8, 64)
                 .expect_err("nested cell")
@@ -407,10 +404,14 @@ mod tests {
     #[test]
     fn task_owner_must_match_the_selected_task() {
         let owned = function(Vec::new(), true);
-        require_task_owner(&owned, 1).expect("matching owner");
-        let error = require_task_owner(&owned, 2).expect_err("foreign owner");
+        let owner = owned.owner_domain.as_ref().expect("runtime owner");
+        require_task_owner(&owned, owner).expect("matching owner");
+        let error =
+            require_task_owner(&owned, MemoryDomain::new().id()).expect_err("foreign owner");
         assert_eq!(error.kind, DebugErrorKind::VariableValueType);
-        assert!(error.message.contains("task 1"), "{error:?}");
-        assert!(error.message.contains("task 2"), "{error:?}");
+        assert!(
+            error.message.contains("different memory domain"),
+            "{error:?}"
+        );
     }
 }

@@ -4,12 +4,16 @@
 
 mod capability;
 mod capture;
+mod captured_writes;
 mod dependencies;
+mod direct_capabilities;
+mod pending_assignments;
 mod pending_capabilities;
+mod pending_values;
 
 use std::collections::HashMap;
 
-pub use capability::task_bound_from_captures;
+pub use capability::capability_from_captures;
 pub use capture::{CaptureAnalysis, CaptureBinding, collect_captures};
 pub(crate) use dependencies::{CaptureDependencies, CaptureOwner};
 
@@ -20,8 +24,8 @@ pub(crate) use dependencies::{CaptureDependencies, CaptureOwner};
 pub struct ClosureInfo {
     /// Free variables captured from enclosing scopes.
     pub captures: Vec<CaptureBinding>,
-    /// `true` when any capture is mutable or already task-bound; restricts task spawning.
-    pub task_bound: bool,
+    /// Transfer capability derived from the captured values.
+    pub capability: crate::TransferCapability,
 }
 
 /// Maps closure expression identity to [`ClosureInfo`].
@@ -34,8 +38,8 @@ pub type ClosureInfoMap = HashMap<usize, ClosureInfo>;
 pub struct NestedRoutineCaptureInfo {
     /// Free variables captured from enclosing scopes.
     pub captures: Vec<CaptureBinding>,
-    /// `true` when any capture is mutable or already task-bound.
-    pub task_bound: bool,
+    /// Transfer capability derived from the captured values.
+    pub capability: crate::TransferCapability,
 }
 
 /// Maps stable in-pipeline routine declaration identities to capture metadata.
@@ -44,9 +48,9 @@ pub type NestedRoutineCaptureMap = HashMap<usize, NestedRoutineCaptureInfo>;
 /// Build [`ClosureInfo`] from analyzed captures.
 #[must_use]
 pub fn closure_info_from_captures(captures: Vec<CaptureBinding>) -> ClosureInfo {
-    let task_bound = task_bound_from_captures(&captures);
+    let capability = capability_from_captures(&captures);
     ClosureInfo {
         captures,
-        task_bound,
+        capability,
     }
 }

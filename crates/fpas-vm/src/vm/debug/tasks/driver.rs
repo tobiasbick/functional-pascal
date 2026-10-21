@@ -9,6 +9,7 @@ mod live_image;
 mod quiescence;
 mod readiness;
 mod recovery;
+mod roots;
 mod seeded;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -96,44 +97,24 @@ pub(in crate::vm::debug) struct DebugTaskRuntime {
     resumed_at_boundary: BTreeSet<u64>,
     events: Vec<DebugTaskEvent>,
     root_result: Option<Value>,
+    root_result_roots: Option<fpas_bytecode::RootValues>,
+    _globals_roots: fpas_bytecode::RegisteredRoots,
     seeded: Option<super::super::scheduling::rounds::SeededRounds>,
 }
 
 impl DebugTaskRuntime {
-    pub(in crate::vm::debug) fn set_trace(
-        &mut self,
-        trace: Option<Arc<std::sync::Mutex<super::super::trace::TraceHistory>>>,
-    ) {
-        for slot in self.tasks.values_mut() {
-            slot.worker.debug_local_trace = trace.as_ref().and_then(|history| {
-                let local = history
-                    .lock()
-                    .unwrap_or_else(|p| p.into_inner())
-                    .report
-                    .watches
-                    .iter()
-                    .any(|watch| {
-                        matches!(
-                            watch.identity,
-                            super::super::trace::DebugTraceIdentity::Local { .. }
-                        )
-                    });
-                local.then(|| {
-                    Box::new(super::super::trace::LocalTraceState::new(Arc::clone(
-                        history,
-                    )))
-                })
-            });
-            slot.worker.debug_trace = trace.clone();
-        }
-    }
-
     /// Create the debugger-owned task runtime around the main worker.
     pub(in crate::vm::debug) fn new(
         root: Worker,
         scheduler: Arc<TaskScheduler>,
         clock: Arc<TaskClock>,
     ) -> Self {
+        let globals_roots = root.domain.register_roots(
+            fpas_bytecode::RootKind::Globals,
+            Arc::new(crate::vm::domain::roots::GlobalRoots(Arc::clone(
+                &root.globals,
+            ))),
+        );
         let entry_function = root.function;
         let tasks = BTreeMap::from([(
             0,
@@ -148,6 +129,7 @@ impl DebugTaskRuntime {
             },
         )]);
         Self {
+            _globals_roots: globals_roots,
             scheduler,
             clock,
             tasks,
@@ -155,6 +137,7 @@ impl DebugTaskRuntime {
             resumed_at_boundary: BTreeSet::new(),
             events: Vec::new(),
             root_result: None,
+            root_result_roots: None,
             seeded: None,
         }
     }
@@ -271,6 +254,10 @@ impl DebugTaskRuntime {
             unreachable!("scheduled debug task must exist")
         };
         debug_assert!(!slot.paused, "paused debug tasks must not be dispatched");
+        let access = slot
+            .worker
+            .execution_access()
+            .map_err(|error| (task_id, error))?;
         slot.state = DebugTaskState::Running;
         slot.failure = None;
         self.last_dispatched = task_id;
@@ -307,6 +294,11 @@ impl DebugTaskRuntime {
             DispatchStep::Return(value) => {
                 slot.state = DebugTaskState::Completed;
                 if task_id == 0 {
+                    self.root_result_roots = Some(
+                        slot.worker
+                            .domain
+                            .root_values(fpas_bytecode::RootKind::Native, vec![value.clone()]),
+                    );
                     self.root_result = Some(value.clone());
                 }
                 if slot.worker.retain_result {
@@ -319,12 +311,17 @@ impl DebugTaskRuntime {
                         kind: DebugTaskEventKind::Exited,
                     });
                 }
+                slot.worker.retire_execution();
                 DebugDispatch::Completed {
                     task_id,
                     main: task_id == 0,
                 }
             }
         };
+        if slot.worker.publish_execution(&[]).is_ok() {
+            access.safe_point();
+        }
+        drop(access);
         self.drain_spawned();
         if self.scheduler.is_shutdown() {
             self.cancel_sleeping_tasks();
@@ -385,6 +382,10 @@ impl DebugTaskRuntime {
         value
     }
 
+    pub(in crate::vm::debug) fn release_finished_root_result(&mut self) {
+        self.root_result_roots.take();
+    }
+
     /// Wait for the next scheduler poll using the configured monotonic clock.
     pub(in crate::vm::debug) fn wait(&self, duration: Duration) {
         self.clock.wait(duration);
@@ -400,6 +401,10 @@ impl DebugTaskRuntime {
         }
         for (&task_id, slot) in &mut self.tasks {
             slot.worker.supervision = None;
+            // Claimed Select cases belong to the suspended operation, not the closed registry.
+            // Shutdown and hosted cleanup have completed, so no operation can resume.
+            slot.worker.task_suspension = None;
+            slot.worker.retire_execution();
             if !matches!(
                 slot.state,
                 DebugTaskState::Completed | DebugTaskState::Failed | DebugTaskState::Cancelled
@@ -424,7 +429,10 @@ impl DebugTaskRuntime {
                 break;
             };
             let mut worker = template.worker_for_task(task);
+            let access = worker.domain.access();
             worker.trace_local_begin();
+            let _ = worker.publish_execution(&[]);
+            drop(access);
             let function_name = worker
                 .executable
                 .executable()
@@ -459,9 +467,8 @@ impl DebugTaskRuntime {
                 continue;
             }
             slot.state = DebugTaskState::Cancelled;
-            slot.worker.supervision = None;
+            slot.worker.retire_execution();
             slot.exited = true;
-            slot.worker.task_suspension = None;
             if slot.worker.retain_result {
                 self.scheduler.cancel_result(task_id);
             }

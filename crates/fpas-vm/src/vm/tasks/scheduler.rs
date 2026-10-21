@@ -7,6 +7,7 @@ mod completion_ranges;
 mod group_results;
 #[cfg(test)]
 mod group_tests;
+mod publication;
 mod result_polling;
 mod scope_results;
 #[cfg(test)]
@@ -43,10 +44,13 @@ pub(in crate::vm) enum RetainedResultReplacement {
     Consumed,
     /// No retained task uses the supplied identity.
     Unknown,
+    /// The replacement graph cannot cross the completed task's boundary.
+    Invalid(String),
 }
 
 /// Mutable scheduler state shared by register workers; executable metadata remains immutable.
 pub(in crate::vm) struct TaskScheduler {
+    cases: std::sync::OnceLock<std::sync::Weak<super::selection::CaseRegistry>>,
     /// Optional failure capture and task catalog, installed before execution.
     pub(in crate::vm) failure_capture:
         std::sync::OnceLock<Arc<crate::vm::failure_capture::CaptureState>>,
@@ -70,6 +74,7 @@ impl TaskScheduler {
     /// Create an empty scheduler with no retained work or wait registrations.
     pub fn new() -> Self {
         Self {
+            cases: std::sync::OnceLock::new(),
             failure_capture: std::sync::OnceLock::new(),
             queue: Mutex::new(VecDeque::new()),
             available: Condvar::new(),
@@ -103,6 +108,8 @@ impl TaskScheduler {
     }
     /// Publish runnable work and wake pool workers and completion-barrier helpers.
     pub fn enqueue(&self, task: TaskState) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
+        task.publish_execution();
         let task = match self.failure_capture.get() {
             Some(capture) => capture.save(task, false),
             None => ScheduledTask::Direct(task),
@@ -111,6 +118,7 @@ impl TaskScheduler {
     }
 
     fn enqueue_owned(&self, task: ScheduledTask) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         self.queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -122,6 +130,7 @@ impl TaskScheduler {
     }
     /// Transfer the next runnable task to its worker without waiting.
     pub fn try_dequeue(&self) -> Option<TaskState> {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         self.queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -130,6 +139,7 @@ impl TaskScheduler {
     }
     /// Transfer runnable ownership, waiting until work or shutdown is available.
     pub fn dequeue(&self) -> Option<TaskState> {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
         loop {
             if let Some(task) = queue.pop_front() {
@@ -152,6 +162,12 @@ impl TaskScheduler {
     }
     /// Publish a child outcome before exposing its consumable successful result.
     pub fn store_result(&self, id: u64, value: Value) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
+        if let Err(error) = Self::validate_result(&value) {
+            self.reject_result(id, error);
+            return;
+        }
+        self.close_owner_cases(id);
         let state = match value {
             Value::Unit => TaskResultState::Unit,
             value => TaskResultState::Value(Box::new(value)),
@@ -170,6 +186,8 @@ impl TaskScheduler {
     }
     /// Publish failure and report whether an explicit group owns its propagation.
     pub fn store_failure(&self, id: u64, error: VmError) -> bool {
+        let _maintenance = fpas_bytecode::defer_maintenance();
+        self.close_owner_cases(id);
         if let Some(capture) = self.failure_capture.get() {
             capture.task_finished(id, Some(&error));
         }
@@ -203,6 +221,9 @@ impl TaskScheduler {
     }
     /// Replace one exact retained failure with a successful result.
     pub(in crate::vm) fn replace_failure(&self, id: u64, expected: &VmError, value: Value) -> bool {
+        if Self::validate_result(&value).is_err() {
+            return false;
+        }
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         let matches = matches!(
             results.get(&id),
@@ -227,6 +248,9 @@ impl TaskScheduler {
         id: u64,
         value: Value,
     ) -> RetainedResultReplacement {
+        if let Err(error) = Self::validate_result(&value) {
+            return RetainedResultReplacement::Invalid(error.message);
+        }
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         let outcome = match results.get(&id) {
             Some(TaskResultState::Unit | TaskResultState::Value(_)) => {
@@ -305,6 +329,8 @@ impl TaskScheduler {
     }
     /// Move a suspended task to the timer owner until its next wake deadline.
     pub fn schedule(&self, task: TaskState, milliseconds: u64) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
+        task.publish_execution();
         let task = match self.failure_capture.get() {
             Some(capture) => capture.save(task, true),
             None => ScheduledTask::Direct(task),
@@ -327,6 +353,7 @@ impl TaskScheduler {
     }
     /// Cancels sleepers and wakes every waiter before the runtime joins its threads.
     pub fn finish_main(&self) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         self.groups.shutdown();
         self.scopes.shutdown();
         self.accepting_timers.store(false, Ordering::Release);
@@ -334,6 +361,7 @@ impl TaskScheduler {
             self.cancel(task.take());
         }
         self.shutdown.store(true, Ordering::Release);
+        self.close_all_cases();
         self.complete_pending_results();
         self.timers.notify_shutdown();
         {
@@ -369,6 +397,7 @@ impl TaskScheduler {
         self.abort.load(Ordering::Acquire)
     }
     fn cancel(&self, task: TaskState) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         if task.retain_result {
             self.cancel_result(task.id);
         }

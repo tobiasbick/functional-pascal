@@ -72,7 +72,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
             ty: json_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
-            task_bound: false,
+            capability: crate::TransferCapability::Transferable,
         },
     );
 
@@ -90,7 +90,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
                 ty: json_ty.clone(),
                 mutable: false,
                 kind,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         );
     }

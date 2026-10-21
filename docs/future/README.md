@@ -9,7 +9,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
-| Runtime memory | [AP48: Task ownership and a local cycle collector](improve-syntax/ap48-local-cycle-collector/README.md) | Seven work packages for ownership, transfers, roots and local reclamation; planning only, no implementation authorized |
+| Runtime memory | [AP48: Task ownership and a local cycle collector](improve-syntax/ap48-local-cycle-collector/README.md) | Ownership, safe points and explicit cycle reclamation delivered; automatic activation remains open |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |

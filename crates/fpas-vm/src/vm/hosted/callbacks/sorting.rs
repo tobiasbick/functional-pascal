@@ -38,3 +38,17 @@ impl KeyedSort {
         }
     }
 }
+
+impl fpas_bytecode::TraceRoots for KeyedSort {
+    fn trace_roots(
+        &self,
+        visit: &mut dyn FnMut(&Value),
+    ) -> Result<(), fpas_bytecode::OwnershipError> {
+        self.values.as_slice().trace_roots(visit)?;
+        for (key, value) in &self.entries {
+            visit(key);
+            visit(value);
+        }
+        Ok(())
+    }
+}

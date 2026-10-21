@@ -27,6 +27,7 @@ pub struct RecordValue {
     pub layout: Arc<RuntimeRecordLayout>,
     /// Values in layout order.
     pub values: Vec<Value>,
+    ownership_neutral: bool,
 }
 
 impl Clone for RecordValue {
@@ -34,6 +35,7 @@ impl Clone for RecordValue {
         Self {
             layout: Arc::clone(&self.layout),
             values: clone_values(&self.values),
+            ownership_neutral: self.ownership_neutral,
         }
     }
 }
@@ -57,7 +59,12 @@ impl SharedRecord {
     /// Construct a record from shared layout metadata.
     #[must_use]
     pub fn new(layout: Arc<RuntimeRecordLayout>, values: Vec<Value>) -> Self {
-        Self(Arc::new(RecordValue { layout, values }))
+        let ownership_neutral = values.iter().all(Value::is_ownership_neutral);
+        Self(Arc::new(RecordValue {
+            layout,
+            values,
+            ownership_neutral,
+        }))
     }
 
     /// Borrow the immutable body.
@@ -68,7 +75,35 @@ impl SharedRecord {
 
     /// Mutably borrow values, detaching only when the body is shared.
     pub fn values_mut(&mut self) -> &mut Vec<Value> {
-        &mut Arc::make_mut(&mut self.0).values
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral = false;
+        &mut body.values
+    }
+
+    pub(super) fn is_ownership_neutral(&self) -> bool {
+        self.0.ownership_neutral
+    }
+
+    /// Replace a field while preserving known ownership properties.
+    ///
+    /// # Panics
+    /// Panics if `index` is outside the stored fields.
+    pub fn replace_field(&mut self, index: usize, value: Value) -> Value {
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral &= value.is_ownership_neutral();
+        std::mem::replace(&mut body.values[index], value)
+    }
+
+    /// Edit one field, invalidating cached ownership properties if the callback panics.
+    ///
+    /// # Panics
+    /// Panics if `index` is outside the stored fields, or if the callback panics.
+    pub fn update_field<R>(&mut self, index: usize, update: impl FnOnce(&mut Value) -> R) -> R {
+        let body = Arc::make_mut(&mut self.0);
+        let ownership_neutral = std::mem::replace(&mut body.ownership_neutral, false);
+        let result = update(&mut body.values[index]);
+        body.ownership_neutral = ownership_neutral && body.values[index].is_ownership_neutral();
+        result
     }
 }
 
@@ -141,6 +176,7 @@ pub struct EnumValue {
     pub layout: Arc<RuntimeEnumLayout>,
     /// Associated values in declaration order.
     pub values: Vec<Value>,
+    ownership_neutral: bool,
 }
 
 impl Clone for EnumValue {
@@ -148,6 +184,7 @@ impl Clone for EnumValue {
         Self {
             layout: Arc::clone(&self.layout),
             values: clone_values(&self.values),
+            ownership_neutral: self.ownership_neutral,
         }
     }
 }
@@ -199,7 +236,12 @@ impl SharedEnum {
     /// Construct an enum from shared variant metadata.
     #[must_use]
     pub fn new(layout: Arc<RuntimeEnumLayout>, values: Vec<Value>) -> Self {
-        Self(Arc::new(EnumValue { layout, values }))
+        let ownership_neutral = values.iter().all(Value::is_ownership_neutral);
+        Self(Arc::new(EnumValue {
+            layout,
+            values,
+            ownership_neutral,
+        }))
     }
 
     /// Borrow the immutable body.
@@ -210,19 +252,49 @@ impl SharedEnum {
 
     /// Mutably borrow values, detaching only when the body is shared.
     pub fn values_mut(&mut self) -> &mut Vec<Value> {
-        &mut Arc::make_mut(&mut self.0).values
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral = false;
+        &mut body.values
+    }
+
+    pub(super) fn is_ownership_neutral(&self) -> bool {
+        self.0.ownership_neutral
+    }
+
+    /// Replace a field while preserving known ownership properties.
+    ///
+    /// # Panics
+    /// Panics if `index` is outside the stored fields.
+    pub fn replace_field(&mut self, index: usize, value: Value) -> Value {
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral &= value.is_ownership_neutral();
+        std::mem::replace(&mut body.values[index], value)
+    }
+
+    /// Edit one field, invalidating cached ownership properties if the callback panics.
+    ///
+    /// # Panics
+    /// Panics if `index` is outside the stored fields, or if the callback panics.
+    pub fn update_field<R>(&mut self, index: usize, update: impl FnOnce(&mut Value) -> R) -> R {
+        let body = Arc::make_mut(&mut self.0);
+        let ownership_neutral = std::mem::replace(&mut body.ownership_neutral, false);
+        let result = update(&mut body.values[index]);
+        body.ownership_neutral = ownership_neutral && body.values[index].is_ownership_neutral();
+        result
     }
 }
 
 #[derive(Debug)]
 struct DictValue {
     pairs: Vec<(Value, Value)>,
+    ownership_neutral: bool,
 }
 
 impl Clone for DictValue {
     fn clone(&self) -> Self {
         Self {
             pairs: clone_pairs(&self.pairs),
+            ownership_neutral: self.ownership_neutral,
         }
     }
 }
@@ -241,11 +313,50 @@ pub struct SharedDict(Arc<DictValue>);
 
 impl From<Vec<(Value, Value)>> for SharedDict {
     fn from(pairs: Vec<(Value, Value)>) -> Self {
-        Self(Arc::new(DictValue { pairs }))
+        let ownership_neutral = pairs
+            .iter()
+            .all(|(key, value)| key.is_ownership_neutral() && value.is_ownership_neutral());
+        Self(Arc::new(DictValue {
+            pairs,
+            ownership_neutral,
+        }))
     }
 }
 
 impl SharedDict {
+    pub(super) fn is_ownership_neutral(&self) -> bool {
+        self.0.ownership_neutral
+    }
+
+    /// Append a pair while preserving known ownership properties of both key and value.
+    pub fn push(&mut self, pair: (Value, Value)) {
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral &= pair.0.is_ownership_neutral() && pair.1.is_ownership_neutral();
+        body.pairs.push(pair);
+    }
+
+    /// Replace the value at one pair position, retaining its key.
+    ///
+    /// # Panics
+    /// Panics if `index` is outside the stored pairs.
+    pub fn replace_value(&mut self, index: usize, value: Value) -> Value {
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral &= value.is_ownership_neutral();
+        std::mem::replace(&mut body.pairs[index].1, value)
+    }
+
+    /// Edit one value, invalidating cached ownership properties if the callback panics.
+    ///
+    /// # Panics
+    /// Panics if `index` is outside the stored pairs, or if the callback panics.
+    pub fn update_value<R>(&mut self, index: usize, update: impl FnOnce(&mut Value) -> R) -> R {
+        let body = Arc::make_mut(&mut self.0);
+        let ownership_neutral = std::mem::replace(&mut body.ownership_neutral, false);
+        let result = update(&mut body.pairs[index].1);
+        body.ownership_neutral = ownership_neutral && body.pairs[index].1.is_ownership_neutral();
+        result
+    }
+
     pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
         if let Some(mut body) = Arc::into_inner(self.0) {
             for (key, value) in body.pairs.drain(..) {
@@ -275,7 +386,9 @@ impl Deref for SharedDict {
 
 impl DerefMut for SharedDict {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut Arc::make_mut(&mut self.0).pairs
+        let body = Arc::make_mut(&mut self.0);
+        body.ownership_neutral = false;
+        &mut body.pairs
     }
 }
 
@@ -298,46 +411,4 @@ impl IntoIterator for SharedDict {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn cloned_dict_detaches_on_mutation() {
-        let original = SharedDict::from(vec![(Value::Integer(1), Value::Integer(2))]);
-        let mut updated = original.clone();
-        updated[0].1 = Value::Integer(3);
-        assert_eq!(original[0].1, Value::Integer(2));
-        assert_eq!(updated[0].1, Value::Integer(3));
-    }
-
-    #[test]
-    fn cloned_record_detaches_on_mutation() {
-        let layout = Arc::new(RuntimeRecordLayout {
-            record: RecordTypeId::new(0),
-            type_name: "Point".to_string(),
-            fields: vec!["x".to_string()],
-        });
-        let original = SharedRecord::new(layout, vec![Value::Integer(1)]);
-        let mut updated = original.clone();
-        updated.values_mut()[0] = Value::Integer(2);
-        assert_eq!(original.body().values[0], Value::Integer(1));
-        assert_eq!(updated.body().values[0], Value::Integer(2));
-    }
-
-    #[test]
-    fn cloned_enum_detaches_on_mutation() {
-        let layout = Arc::new(RuntimeEnumLayout {
-            error: None,
-            enumeration: EnumTypeId::new(0),
-            variant_id: EnumVariantId::new(0),
-            type_name: "Choice".to_string(),
-            variant: "Count".to_string(),
-            fields: vec!["Value".to_string()],
-        });
-        let original = SharedEnum::new(layout, vec![Value::Integer(1)]);
-        let mut updated = original.clone();
-        updated.values_mut()[0] = Value::Integer(2);
-        assert_eq!(original.body().values[0], Value::Integer(1));
-        assert_eq!(updated.body().values[0], Value::Integer(2));
-    }
-}
+mod tests;

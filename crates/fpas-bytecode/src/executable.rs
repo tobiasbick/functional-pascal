@@ -1,5 +1,9 @@
 //! Untrusted and verified register executable aggregates.
 
+mod provenance;
+
+pub use provenance::{ExecutableIdentity, FunctionTarget};
+
 use std::sync::Arc;
 
 use crate::{
@@ -73,6 +77,7 @@ impl Executable {
             .map(|function| Arc::from(self.strings.get(function.name).unwrap_or_default()))
             .collect();
         Ok(VerifiedExecutable {
+            identity: ExecutableIdentity::new(),
             executable: self,
             decoded,
             string_constants,
@@ -82,8 +87,9 @@ impl Executable {
 }
 
 /// Register executable whose structural and operand invariants have been checked.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct VerifiedExecutable {
+    identity: ExecutableIdentity,
     executable: Executable,
     decoded: Vec<DecodedInstruction>,
     // Shared runtime strings for string constants, indexed like `Executable::constants`.
@@ -93,6 +99,25 @@ pub struct VerifiedExecutable {
 }
 
 impl VerifiedExecutable {
+    /// Borrow the runtime identity of this independently verified code instance.
+    ///
+    /// Sharing an `Arc<VerifiedExecutable>` preserves this identity. Cloning the
+    /// verified image itself creates an independent instance with a fresh identity.
+    #[must_use]
+    pub fn identity(&self) -> &ExecutableIdentity {
+        &self.identity
+    }
+
+    /// Bind a function index to its validated executable and canonical name.
+    ///
+    /// Returns `None` for an index outside the verified function table. Runtime
+    /// function values require this target instead of a caller-supplied code token.
+    #[must_use]
+    pub fn function_target(&self, function: FunctionId) -> Option<FunctionTarget> {
+        self.function_name(function)
+            .map(|name| FunctionTarget::new(self.identity.clone(), function, Arc::clone(name)))
+    }
+
     /// Borrow the immutable validated executable.
     #[must_use]
     pub const fn executable(&self) -> &Executable {
@@ -125,3 +150,28 @@ impl VerifiedExecutable {
         self.executable
     }
 }
+
+impl Clone for VerifiedExecutable {
+    fn clone(&self) -> Self {
+        Self {
+            identity: ExecutableIdentity::new(),
+            executable: self.executable.clone(),
+            decoded: self.decoded.clone(),
+            string_constants: self.string_constants.clone(),
+            function_names: self.function_names.clone(),
+        }
+    }
+}
+
+// Artifact and metadata comparisons remain structural. Runtime admission uses
+// the separate opaque identity and never derives permission from this equality.
+impl PartialEq for VerifiedExecutable {
+    fn eq(&self, other: &Self) -> bool {
+        self.executable == other.executable
+            && self.decoded == other.decoded
+            && self.string_constants == other.string_constants
+            && self.function_names == other.function_names
+    }
+}
+
+impl Eq for VerifiedExecutable {}

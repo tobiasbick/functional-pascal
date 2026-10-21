@@ -64,6 +64,10 @@ impl CaptureState {
         snapshot: &mut FailureSnapshot,
         boundary: Boundary,
     ) {
+        let Ok(_access) = worker.domain.try_access() else {
+            snapshot.reason = Some("storage_unavailable");
+            return;
+        };
         let (mut usage, mut budget) = self.budget();
         let before = (budget.values, budget.bytes);
         let offset = snapshot.frames.len();

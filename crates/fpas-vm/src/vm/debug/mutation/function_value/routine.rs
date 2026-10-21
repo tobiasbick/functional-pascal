@@ -93,7 +93,15 @@ pub(in crate::vm::debug) fn prepare(
         limits.max_depth,
         limits.max_detached_values,
     )?;
-    Ok(Value::function(function_id, canonical, Vec::new()))
+    Ok(Value::function(
+        executable.function_target(function_id).ok_or_else(|| {
+            type_error(
+                "routine target is outside the verified executable",
+                "Rebuild the executable.",
+            )
+        })?,
+        Vec::new(),
+    ))
 }
 
 fn resolve_unique(

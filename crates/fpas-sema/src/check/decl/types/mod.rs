@@ -59,7 +59,7 @@ impl Checker {
                     ty: Ty::Enum(enum_ty.clone()),
                     mutable: false,
                     kind,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
             ) {
                 self.error_with_code(
@@ -117,7 +117,7 @@ impl Checker {
                     ty: Ty::GenericParam(tp.name.clone(), constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
             );
         }
@@ -152,7 +152,7 @@ impl Checker {
                 ty,
                 mutable: false,
                 kind: SymbolKind::Type,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         ) {
             return true;

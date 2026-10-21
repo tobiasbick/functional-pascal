@@ -34,7 +34,7 @@ fn checker(types: &[Ty]) -> Checker {
                 mutable: false,
                 kind: SymbolKind::Type,
                 constant: None,
-                task_bound: false
+                capability: crate::TransferCapability::Transferable
             }
         ));
     }

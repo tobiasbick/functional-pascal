@@ -95,7 +95,7 @@ begin scope
         "scalar guard binding spuriously captured outer M: {info:#?}"
     );
     assert!(
-        !info.task_bound,
+        !info.capability.is_task_bound(),
         "closure should not be task-bound from a shadowed mutable: {info:#?}"
     );
 }
@@ -140,7 +140,7 @@ begin scope
         })
         .expect("outer closure should capture Inc");
     assert!(
-        outer.task_bound,
+        outer.capability.is_task_bound(),
         "outer closure must be task-bound via nested capture: {outer:#?}"
     );
 }

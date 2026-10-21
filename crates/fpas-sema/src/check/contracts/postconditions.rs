@@ -24,10 +24,10 @@ impl Checker {
                         name,
                         Symbol {
                             constant: None,
+                            capability: self.capability_for_type(&ty),
                             ty,
                             mutable: false,
                             kind: SymbolKind::Const,
-                            task_bound: false,
                         },
                         *span,
                     );

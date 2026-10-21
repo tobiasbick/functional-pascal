@@ -16,6 +16,10 @@ impl Worker {
         if !supervision.admission_pending {
             return Ok(true);
         }
+        self.require_transferable_values(&[
+            Value::Function(supervision.function.clone()),
+            Value::OpaqueHandle(supervision.token),
+        ])?;
         self.check_supervisor_cancellation(supervision.token)?;
         let remaining = match supervision.deadline.as_ref() {
             None => Duration::ZERO,
@@ -42,6 +46,14 @@ impl Worker {
         &mut self,
         outcome: Result<Value, VmError>,
     ) -> Result<Option<Value>, VmError> {
+        // This boundary runs only after the attempt has joined its scopes and groups.
+        self.hosted.cases.close_owner(self.task_id);
+        let outcome = outcome.and_then(|value| {
+            if self.task_id != 0 {
+                self.require_transferable_values(std::slice::from_ref(&value))?;
+            }
+            Ok(value)
+        });
         let Some(mut supervision) = self.supervision.take() else {
             return outcome.map(Some);
         };
@@ -54,6 +66,10 @@ impl Worker {
             return outcome.map(Some);
         }
         self.check_supervisor_cancellation(supervision.token)?;
+        self.require_transferable_values(&[
+            Value::Function(supervision.function.clone()),
+            Value::OpaqueHandle(supervision.token),
+        ])?;
         supervision.policy.remaining -= 1;
         supervision.admission_pending = true;
         let delay = Duration::from_millis(supervision.policy.backoff_millis);
@@ -68,12 +84,14 @@ impl Worker {
         });
         let info = &self.executable.executable().functions
             [usize::from(supervision.function.function.get())];
-        let mut task = TaskState::entry(
+        let mut task = TaskState::entry_in_domain(
             self.task_id,
             &supervision.function,
             info,
             [Value::OpaqueHandle(supervision.token)],
+            self.domain.clone(),
         );
+        // A retry is a new attempt of the same logical task, not a new cell owner.
         task.instruction_count = self
             .instruction_count
             .saturating_add(self.callback_instruction_count.get());
@@ -85,6 +103,19 @@ impl Worker {
 
     /// Apply identical attempt boundaries to single-instruction debugger dispatch.
     pub(in crate::vm) fn dispatch_supervised_debug_one(&mut self) -> Result<DispatchStep, VmError> {
+        let access = self.execution_access()?;
+        let result = self.dispatch_supervised_debug_owned();
+        let extra = match &result {
+            Ok(DispatchStep::Return(value)) => std::slice::from_ref(value),
+            _ => &[],
+        };
+        if self.publish_execution(extra).is_ok() {
+            access.safe_point();
+        }
+        result
+    }
+
+    fn dispatch_supervised_debug_owned(&mut self) -> Result<DispatchStep, VmError> {
         if !self.supervised_ready()? {
             return Ok(DispatchStep::Suspend);
         }

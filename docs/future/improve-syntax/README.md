@@ -45,8 +45,8 @@ The example is a template, not an active AP or an approved proposal.
    Follow the [development process](development-process.md) for delivery.
 
 Use `AP49` for the next package and `AP49.1`, `AP49.2`, and so on for its work
-packages. Decision IDs continue at `Q42`; Q01 through Q36 belong to closed
-packages and Q37 through Q41 belong to AP48. Record each decision and its affected
+packages. Decision IDs continue at `Q44`; Q01 through Q36 belong to closed
+packages and Q37 through Q43 belong to AP48. Record each decision and its affected
 work packages in the owning package README. Do not create a second decision or
 completion index.
 
@@ -56,7 +56,7 @@ Add new packages here when planning begins; keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP48: Task ownership and a local cycle collector](ap48-local-cycle-collector/README.md) | Large | None | Planned; implementation not authorized |
+| [ ] | [AP48: Task ownership and a local cycle collector](ap48-local-cycle-collector/README.md) | Large | None | In progress; ownership, static diagnostics, registered roots, safe points and explicit cycle reclamation delivered |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed
@@ -67,6 +67,7 @@ delivery, following [status tracking](development-process.md#status-tracking).
 | Decision pending | A proposal or required design choice is unresolved; affected implementation is not approved. |
 | Agreed direction | The direction is accepted; named open details may still block implementation. |
 | Planned | The delegated design and work packages are recorded; implementation still requires authorization. |
+| In progress | Implementation is authorized and delivery is underway. |
 | Complete | Every work package is delivered and verified within the agreed scope. |
 | Deferred | The user has parked the proposal; no work is scheduled and reopening requires a new decision. |
 | Rejected; closed | The proposal will not be implemented under this plan. |

@@ -1,5 +1,8 @@
+mod capabilities;
 mod captures;
 mod imports;
+
+pub(crate) use capabilities::CapabilitySnapshot;
 
 use crate::types::Ty;
 use fpas_lexer::Span;
@@ -31,10 +34,10 @@ pub struct Symbol {
     pub ty: Ty,
     pub mutable: bool,
     pub kind: SymbolKind,
-    /// `true` when this binding holds a task-bound callable (mutable captures).
+    /// Static transfer evidence for the binding's complete value graph.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
-    pub task_bound: bool,
+    pub capability: crate::TransferCapability,
     /// Constant-expression classification, independent of binding mutability.
     pub constant: Option<ConstantInfo>,
 }
@@ -67,11 +70,13 @@ pub enum SymbolKind {
 /// A single scope level.
 #[derive(Debug)]
 struct Scope {
+    identity: std::sync::Arc<()>,
     symbols: HashMap<String, ScopedSymbol>,
 }
 
 #[derive(Debug)]
 struct ScopedSymbol {
+    identity: std::sync::Arc<()>,
     original_name: String,
     symbol: Symbol,
     declaration: Option<Span>,
@@ -81,6 +86,7 @@ struct ScopedSymbol {
 impl Scope {
     fn new() -> Self {
         Self {
+            identity: std::sync::Arc::new(()),
             symbols: HashMap::new(),
         }
     }
@@ -93,6 +99,7 @@ pub struct ScopeStack {
     value_declaration_types: HashMap<(u32, usize, String), Ty>,
     pub(crate) imports: imports::ImportNames,
     scopes: Vec<Scope>,
+    capability_loops: Vec<capabilities::CapabilityLoop>,
     /// Recorded parameter escapes of imported routines and record routines by canonical name.
     param_escapes: HashMap<String, std::sync::Arc<[bool]>>,
     /// Current loop depth (for break/continue validation).
@@ -118,6 +125,7 @@ impl ScopeStack {
             declaration_types: HashMap::new(),
             value_declaration_types: HashMap::new(),
             scopes: vec![Scope::new()],
+            capability_loops: Vec::new(),
             imports: Default::default(),
             param_escapes: HashMap::new(),
             loop_depth: 0,
@@ -254,6 +262,7 @@ impl ScopeStack {
         scope.symbols.insert(
             canonical_name,
             ScopedSymbol {
+                identity: std::sync::Arc::new(()),
                 original_name: name.to_string(),
                 symbol,
                 declaration,

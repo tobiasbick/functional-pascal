@@ -1,9 +1,8 @@
 //! Handle-based and named lookup of writable stopped-state values.
 
 use std::collections::HashSet;
-use std::sync::{Arc, TryLockError};
 
-use fpas_bytecode::Value;
+use fpas_bytecode::{MemoryDomain, Value};
 
 use super::render::RetainedValue;
 use super::snapshot::InspectionSnapshot;
@@ -77,7 +76,11 @@ impl InspectionSnapshot {
                 )
             })?;
         let target = writable_target(retained, name)?;
-        let value = retained.value.clone().map(materialize).transpose()?;
+        let value = retained
+            .value
+            .clone()
+            .map(|value| materialize(value, &self.domain))
+            .transpose()?;
         Ok((target, value))
     }
 }
@@ -103,18 +106,21 @@ fn writable_target(
     }
 }
 
-fn materialize(mut value: Value) -> Result<Value, DebugSessionError> {
+pub(super) fn materialize(
+    mut value: Value,
+    domain: &MemoryDomain,
+) -> Result<Value, DebugSessionError> {
     let mut visited = HashSet::new();
     loop {
         let Value::Cell(cell) = value else {
             return Ok(value);
         };
-        if !visited.insert(Arc::as_ptr(&cell) as usize) {
+        if !visited.insert(cell.identity()) {
             return Err(unavailable());
         }
-        value = match cell.try_lock() {
-            Ok(inner) => inner.clone(),
-            Err(TryLockError::WouldBlock | TryLockError::Poisoned(_)) => {
+        value = match cell.try_read(domain) {
+            Ok(inner) => inner,
+            Err(_) => {
                 return Err(unavailable());
             }
         };

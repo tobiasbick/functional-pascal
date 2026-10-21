@@ -18,6 +18,7 @@ use fpas_bytecode::{RuntimeEnumLayout, Value, VerifiedExecutable};
 
 use crate::vm::debug::types::DebugSessionError;
 
+pub(in crate::vm::debug) use detach::ValueDetacher;
 pub(super) use execute::CallSandbox;
 pub(super) use lazy::LazyCallSandbox;
 

@@ -135,6 +135,10 @@ impl Checker {
         } = input;
         let FuncBody::Block { nested, stmts } = body;
 
+        let outer_capabilities = self.scopes.snapshot_capabilities();
+        let outer_loops = self.scopes.take_capability_loops();
+        self.forget_outer_mutable_capabilities();
+        self.begin_return_summary(qualified_name, body);
         self.scopes.push_scope();
 
         // Introduce method-level generic type parameters as `GenericParam` types
@@ -148,7 +152,7 @@ impl Checker {
                     ty: Ty::GenericParam(resolved.name, resolved.constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
             );
         }
@@ -161,7 +165,7 @@ impl Checker {
                     ty: param.ty.clone(),
                     mutable: param.is_var(),
                     kind: SymbolKind::Param,
-                    task_bound: false,
+                    capability: self.capability_for_type(&param.ty),
                 },
                 *span,
             );
@@ -193,12 +197,13 @@ impl Checker {
         for name in hoisted {
             self.scopes.remove_from_current(&name);
         }
-        for stmt in stmts {
-            self.check_stmt(stmt);
-        }
+        self.check_stmt_sequence(stmts);
         self.scopes.function_ctx = previous_ctx;
         self.routine_type_path.pop();
+        self.finish_return_summary();
         self.scopes.pop_scope();
+        self.scopes.restore_capabilities(&outer_capabilities);
+        self.scopes.restore_capability_loops(outer_loops);
     }
 
     /// Resolve a method parameter type, treating the type name as the record type (for `Self`).

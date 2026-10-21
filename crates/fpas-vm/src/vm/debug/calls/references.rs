@@ -1,7 +1,7 @@
 //! Detached writable designators and exact `var` argument types.
 //! See `docs/pascal/language/functions/var-parameters.md` and `docs/pascal/tools/debugger.md`.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use fpas_bytecode::{ReferenceRoot, ReferenceStep, Value, VariableReference};
 
@@ -30,17 +30,18 @@ impl CallSandbox {
             )
         })?;
         let root = match &target.root {
-            MutationRoot::Global(index) => {
-                ReferenceRoot::Global(u32::try_from(*index).map_err(|_| {
+            MutationRoot::Global(index) => ReferenceRoot::Global {
+                slot: u32::try_from(*index).map_err(|_| {
                     error(
                         DebugErrorKind::EvaluationType,
                         "debug reference global index overflows",
                         "Rebuild the executable.",
                     )
-                })?)
-            }
+                })?,
+                owner: self.detacher.domain.id().clone(),
+            },
             MutationRoot::ClosureCell(cell) => {
-                let Value::Cell(detached) = self.detacher.detach(&Value::Cell(Arc::clone(cell)))?
+                let Value::Cell(detached) = self.detacher.detach(&Value::Cell(cell.clone()))?
                 else {
                     return Err(error(
                         DebugErrorKind::UnavailableValue,
@@ -53,19 +54,29 @@ impl CallSandbox {
             MutationRoot::FrameRegister(register) => {
                 if !self.local_cells.contains_key(register) {
                     let detached = self.detacher.detach(&root_value)?;
-                    self.local_cells
-                        .insert(*register, Arc::new(Mutex::new(detached)));
+                    self.local_cells.insert(
+                        *register,
+                        self.detacher.domain.new_cell(detached).map_err(|_| {
+                            error(
+                                DebugErrorKind::UnavailableValue,
+                                "detached reference has foreign storage",
+                                "Use values from the selected task.",
+                            )
+                        })?,
+                    );
+                    self.temporary_roots
+                        .push(Value::Cell(self.local_cells[register].clone()));
                 }
-                ReferenceRoot::Cell(Arc::clone(&self.local_cells[register]))
+                ReferenceRoot::Cell(self.local_cells[register].clone())
             }
         };
         let detached_root = match &root {
-            ReferenceRoot::Global(index) => self
+            ReferenceRoot::Global { slot: index, .. } => self
                 .globals
                 .try_read()
                 .ok()
                 .and_then(|globals| globals.get(*index as usize).cloned().flatten()),
-            ReferenceRoot::Cell(cell) => cell.try_lock().ok().map(|value| value.clone()),
+            ReferenceRoot::Cell(cell) => cell.try_read(&self.detacher.domain).ok(),
         }
         .ok_or_else(|| {
             error(
@@ -132,8 +143,17 @@ impl CallSandbox {
 /// Whether two arguments refer to the same storage root, even through different paths.
 pub(super) fn same_root(left: &VariableReference, right: &VariableReference) -> bool {
     match (&left.root, &right.root) {
-        (ReferenceRoot::Cell(left), ReferenceRoot::Cell(right)) => Arc::ptr_eq(left, right),
-        (ReferenceRoot::Global(left), ReferenceRoot::Global(right)) => left == right,
+        (ReferenceRoot::Cell(left), ReferenceRoot::Cell(right)) => left.ptr_eq(right),
+        (
+            ReferenceRoot::Global {
+                slot: left,
+                owner: left_owner,
+            },
+            ReferenceRoot::Global {
+                slot: right,
+                owner: right_owner,
+            },
+        ) => left == right && left_owner == right_owner,
         _ => false,
     }
 }

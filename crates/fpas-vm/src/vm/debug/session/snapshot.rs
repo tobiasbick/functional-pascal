@@ -162,6 +162,7 @@ impl DebugSession {
                     },
                 )?;
                 let retained = RetainedValue {
+                    domain: Some(inspection.domain.clone()),
                     name: String::new(),
                     type_name: value.type_name().into(),
                     value: Some(value),
@@ -274,6 +275,7 @@ impl DebugSession {
                 }
                 .into_parts();
                 let retained = RetainedValue {
+                    domain: Some(worker.domain.clone()),
                     name: String::new(),
                     type_name: value
                         .as_ref()

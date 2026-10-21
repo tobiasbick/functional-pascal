@@ -9,10 +9,12 @@ mod channels;
 mod debug;
 mod diagnostics;
 mod dispatch;
+mod domain;
 mod execute;
 mod failure_capture;
 mod frame;
 mod globals;
+mod host_value;
 mod hosted;
 mod inspection;
 mod layouts;
@@ -28,12 +30,13 @@ mod tests;
 
 use std::sync::{Arc, RwLock};
 
-use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
+use fpas_bytecode::{FunctionId, MemoryDomain, Value, VerifiedExecutable};
 
+use self::host_value::HostValues;
 use self::hosted::HostedState;
 use self::layouts::RuntimeLayouts;
 use self::tasks::TaskScheduler;
-use self::worker::Worker;
+use self::worker::{FunctionInputs, Worker};
 
 pub use callback::CallbackSession;
 pub use debug::{
@@ -63,6 +66,7 @@ pub use failure_capture::{
     FailureObservation, FailureScalar, FailureSnapshot, FailureTask, FailureTaskCatalog,
     FailureValue,
 };
+pub use host_value::{HostArgument, HostChild, HostEnumInfo, HostValue, HostValueError};
 
 /// Captured console output produced by the virtual machine.
 pub type VmOutput = fpas_std::CapturedOutput;
@@ -72,12 +76,30 @@ pub(crate) use shared::{TaskAnyPoll, TaskBatchPoll, TaskResultPoll, TaskResultSt
 const TIMESLICE: u32 = 256;
 
 /// Successful root execution result and diagnostic instruction count.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Execution {
     /// Root or callback return value.
-    pub value: Value,
+    pub value: HostValue,
     /// Number of packed instructions dispatched by this run.
     pub instruction_count: u64,
+}
+
+/// Worker outcome before the public host boundary seals its value.
+#[derive(Debug)]
+pub(super) struct RuntimeExecution {
+    value: Value,
+    instruction_count: u64,
+    _roots: Option<fpas_bytecode::RootValues>,
+}
+impl RuntimeExecution {
+    fn rooted(value: Value, instruction_count: u64, domain: &fpas_bytecode::MemoryDomain) -> Self {
+        let roots = domain.root_values(fpas_bytecode::RootKind::Native, vec![value.clone()]);
+        Self {
+            value,
+            instruction_count,
+            _roots: Some(roots),
+        }
+    }
 }
 
 /// Single-use VM for a pre-verified executable.
@@ -85,8 +107,11 @@ pub struct Execution {
 /// This API is intentionally not wired to the production CLI until later phases complete
 /// intrinsics, tasks, persistent artifacts, and the production cutover.
 pub struct Vm {
+    domain: MemoryDomain,
+    host_values: HostValues,
     executable: Arc<VerifiedExecutable>,
     has_run: bool,
+    session: Option<fpas_bytecode::DomainSession>,
     globals: Arc<RwLock<Vec<Option<Value>>>>,
     layouts: Result<Arc<RuntimeLayouts>, VmError>,
     hosted: Arc<HostedState>,
@@ -170,15 +195,28 @@ impl Vm {
             0
         };
         let use_local_globals = pool_size == 0 && globals::can_use_local_globals(&executable);
+        let (domain, session) = crate::vm::domain::new_session_domain();
+        let hosted = Arc::new(HostedState::new(console, arguments));
+        let scheduler = Arc::new(TaskScheduler::new());
+        // Synchronous Vm::call workers need no scheduler, but their shutdown handle still
+        // owns the session boundary and must close unused cases while a call is blocked.
+        scheduler.attach_cases(&hosted.cases);
         Self {
+            host_values: HostValues::for_executable(
+                domain.clone(),
+                &executable,
+                Arc::clone(&globals),
+            ),
+            domain,
             executable,
             has_run: false,
+            session: Some(session),
             globals,
             layouts,
-            hosted: Arc::new(HostedState::new(console, arguments)),
+            hosted,
             pool_size,
             use_local_globals,
-            scheduler: Arc::new(TaskScheduler::new()),
+            scheduler,
         }
     }
 
@@ -287,9 +325,9 @@ impl Vm {
     pub fn call(
         &mut self,
         function: FunctionId,
-        arguments: Vec<Value>,
+        arguments: Vec<HostArgument>,
     ) -> Result<Execution, VmError> {
-        if std::mem::replace(&mut self.has_run, true) {
+        if self.scheduler.is_shutdown() || std::mem::replace(&mut self.has_run, true) {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
                 fpas_bytecode::InstructionAddress::new(0),
@@ -299,20 +337,39 @@ impl Vm {
             ));
         }
         let result = self.layouts.clone().and_then(|layouts| {
-            Worker::for_function_with_state(
+            let (arguments, argument_roots) =
+                self.host_values.admit(arguments, &self.executable)?;
+            let worker = Worker::for_function_in_domain(
                 Arc::clone(&self.executable),
                 function,
-                arguments,
+                FunctionInputs {
+                    arguments: &arguments,
+                    captures: &[],
+                    domain: self.domain.clone(),
+                },
                 Arc::clone(&self.globals),
                 layouts,
                 Arc::clone(&self.hosted),
-            )?
-            .run()
+            );
+            fpas_bytecode::release_values(arguments);
+            drop(argument_roots);
+            worker?.run()
         });
         self.hosted.close_process_handles();
         self.hosted.close_file_handles();
         self.hosted.wait_process_handles();
+        self.hosted.cases.close_all();
+        let result = result.map(|execution| self.host_values.export(execution));
+        self.session.take();
         result
+    }
+}
+
+impl Drop for Vm {
+    fn drop(&mut self) {
+        self.hosted.cases.close_all();
+        self.host_values.retire_globals(&self.globals);
+        self.session.take();
     }
 }
 

@@ -43,17 +43,17 @@ impl Worker {
             if self.channel_scheduler_stopped() {
                 return self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
             }
-            match self
-                .hosted
-                .channels
-                .send(
+            let state = {
+                let _wait = self.native_wait(vec![value.clone()])?;
+                self.hosted.channels.send(
                     handle,
                     value,
                     false,
                     Some(remaining.min(CANCELLATION_POLL_INTERVAL)),
                 )
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
+            }
+            .map_err(|message| self.channel_runtime_error(message))?;
+            match state {
                 SendState::Sent => return Ok(ok(Value::Boolean(true))),
                 SendState::Closed => {
                     return self
@@ -98,16 +98,16 @@ impl Worker {
                 return self
                     .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
             }
-            match self
-                .hosted
-                .channels
-                .receive(
+            let state = {
+                let _wait = self.native_wait(Vec::new())?;
+                self.hosted.channels.receive(
                     handle,
                     false,
                     Some(remaining.min(CANCELLATION_POLL_INTERVAL)),
                 )
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
+            }
+            .map_err(|message| self.channel_runtime_error(message))?;
+            match state {
                 ReceiveState::Received(value) => return Ok(ok(value)),
                 ReceiveState::Closed => {
                     return self

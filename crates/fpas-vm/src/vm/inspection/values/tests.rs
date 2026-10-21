@@ -6,12 +6,13 @@ use super::{
     render::RetainedValue,
     snapshot::{self, Scalar, ValueSnapshot},
 };
-use fpas_bytecode::{FunctionId, Value};
+use fpas_bytecode::{FunctionTarget, MemoryDomain, StringTable, Value};
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 fn retained(value: Value) -> RetainedValue<()> {
     RetainedValue {
+        domain: None,
         name: "value".to_string(),
         type_name: value.type_name().to_string(),
         value: Some(value),
@@ -36,6 +37,29 @@ fn capture(value: &Value, limits: ValueLimits, budget: &mut ValueBudget) -> Valu
     snapshot::capture(&retained(value.clone()), limits, None, budget).expect("root snapshot")
 }
 
+fn capture_in(value: &Value, domain: &MemoryDomain, limits: ValueLimits) -> ValueSnapshot {
+    let mut value = retained(value.clone());
+    value.domain = Some(domain.clone());
+    snapshot::capture(&value, limits, None, &mut budget()).expect("owned snapshot")
+}
+
+fn target_named(name: &str) -> FunctionTarget {
+    let (program, errors) = fpas_parser::parse("program Snapshot; begin end.");
+    assert!(errors.is_empty());
+    let compiled = fpas_compiler::compile(&program).expect("snapshot image");
+    let mut image = compiled.executable().clone();
+    let entry = image.entry;
+    let name_id = image.functions[usize::from(entry.get())].name;
+    let mut strings = image.strings.iter().map(str::to_string).collect::<Vec<_>>();
+    strings[usize::try_from(name_id.get()).expect("name index")] = name.to_string();
+    image.strings = StringTable::new(strings);
+    image
+        .verify()
+        .expect("verified name")
+        .function_target(entry)
+        .expect("entry target")
+}
+
 fn budget() -> ValueBudget {
     ValueBudget::new(16384, 8 * 1024 * 1024)
 }
@@ -47,14 +71,25 @@ fn snapshots_detach_nested_capture_cells_and_preserve_scalar_precision() {
         minimum.scalar,
         Some(Scalar::Integer("-9223372036854775808".to_string()))
     );
-    let cell = Arc::new(Mutex::new(Value::Integer(i64::MAX)));
-    let function = Value::function(
-        FunctionId::new(0),
-        "captured",
-        vec![Value::Array(vec![Value::Cell(Arc::clone(&cell))].into())],
+    let domain = MemoryDomain::new();
+    let cell = domain
+        .new_cell(Value::Integer(i64::MAX))
+        .expect("capture cell");
+    let weak = cell.downgrade();
+    let function = Value::task_owned_function(
+        target_named("captured"),
+        vec![Value::Array(vec![Value::Cell(cell.clone())].into())],
+        domain.id().clone(),
     );
-    let snapshot = capture(&function, limits(), &mut budget());
-    *cell.lock().expect("mutate live cell") = Value::Integer(0);
+    let snapshot = capture_in(&function, &domain, limits());
+    cell.replace(&domain, Value::Integer(0))
+        .expect("mutate live cell");
+    drop(function);
+    drop(cell);
+    assert!(
+        weak.upgrade().is_none(),
+        "snapshot must not retain mutable storage"
+    );
     assert_eq!(snapshot.kind, "function");
     assert_eq!(snapshot.summary, "<function captured>");
     let captured = &snapshot.children[0].1.children[0].1;
@@ -63,38 +98,38 @@ fn snapshots_detach_nested_capture_cells_and_preserve_scalar_precision() {
         captured.scalar,
         Some(Scalar::Integer("9223372036854775807".to_string()))
     );
-    assert_eq!(
-        Arc::strong_count(&cell),
-        2,
-        "only the test and the live function retain mutable storage"
-    );
 }
 
 #[test]
-fn snapshots_distinguish_busy_and_cyclic_cells_without_waiting() {
-    let cell = Arc::new(Mutex::new(Value::Integer(1)));
-    let guard = cell.lock().expect("hold cell");
-    let busy = capture(
-        &Value::Cell(Arc::clone(&cell)),
+fn snapshots_distinguish_inaccessible_and_cyclic_cells_without_waiting() {
+    let domain = MemoryDomain::new();
+    let cell = domain.new_cell(Value::Integer(1)).expect("cell");
+    let unavailable = capture_in(
+        &Value::Cell(cell.clone()),
+        &MemoryDomain::new(),
         ValueLimits {
             max_string_chars: 1,
             ..limits()
         },
-        &mut budget(),
     );
     assert_eq!(
-        busy.type_name, "c",
+        unavailable.type_name, "c",
         "unavailable markers obey string limits too"
     );
-    assert_eq!((busy.status, busy.reason), ("unavailable", Some("busy")));
-    drop(guard);
-    *cell.lock().expect("create cycle") = Value::Cell(Arc::clone(&cell));
-    let cyclic = capture(&Value::Cell(Arc::clone(&cell)), limits(), &mut budget());
+    assert_eq!(
+        (unavailable.status, unavailable.reason),
+        ("unavailable", Some("ownership_unavailable"))
+    );
+    let missing_domain = capture(&Value::Cell(cell.clone()), limits(), &mut budget());
+    assert_eq!(missing_domain.reason, Some("ownership_unavailable"));
+    cell.replace(&domain, Value::Cell(cell.clone()))
+        .expect("create cycle");
+    let cyclic = capture_in(&Value::Cell(cell.clone()), &domain, limits());
     assert_eq!(
         (cyclic.status, cyclic.reason),
         ("unavailable", Some("cycle"))
     );
-    *cell.lock().expect("break cycle") = Value::Unit;
+    cell.replace(&domain, Value::Unit).expect("break cycle");
 }
 
 #[test]
@@ -191,7 +226,7 @@ fn snapshot_limits_bound_strings_depth_children_and_shared_storage() {
     );
     assert_eq!(tight.reason, Some("retained_byte_limit"));
     let named = capture(
-        &Value::function(FunctionId::new(0), "x".repeat(100000), Vec::new()),
+        &Value::function(target_named(&"x".repeat(100000)), Vec::new()),
         limits(),
         &mut budget(),
     );
@@ -245,6 +280,7 @@ fn aggregate_limits_apply_before_child_origins_are_materialized() {
     image.debug_types = vec![DebugType::Integer, DebugType::Array(DebugTypeId::new(0))];
     let materialized = Arc::new(AtomicUsize::new(0));
     let input = RetainedValue {
+        domain: None,
         name: String::new(),
         value: Some(Value::Array(vec![Value::Integer(1); 10000].into())),
         type_name: "array of Integer".to_string(),

@@ -25,6 +25,7 @@ impl DebugTaskRuntime {
         &mut self,
         task_id: u64,
     ) -> Result<(), TaskCancelError> {
+        let _access = self.access_domains();
         if task_id == 0 {
             return Err(TaskCancelError::Root);
         }
@@ -55,6 +56,7 @@ impl DebugTaskRuntime {
             if !slot.worker.task_scopes.is_empty() {
                 // Joining runs after resume; the stopped command never dispatches child code.
                 if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
+                    let _ = slot.worker.publish_execution(&[]);
                     slot.state = DebugTaskState::Waiting;
                     slot.paused = false;
                     return Ok(());
@@ -62,6 +64,7 @@ impl DebugTaskRuntime {
             }
             match slot.worker.finish_owned_groups(Err(error.clone())) {
                 Ok(None) => {
+                    let _ = slot.worker.publish_execution(&[]);
                     slot.state = DebugTaskState::Waiting;
                     slot.paused = false;
                     return Ok(());

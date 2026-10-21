@@ -39,6 +39,8 @@ impl DebugSession {
         expression: &DebugExpression,
         frame_id: Option<u64>,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("location.assign")?;
         let limits = DebugEvaluationLimits::default();
         let result = (|| {

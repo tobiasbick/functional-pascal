@@ -9,7 +9,15 @@ impl DebugTaskRuntime {
         &self,
         commit: &PreparedLiveImageCommit,
     ) -> bool {
-        self.tasks
+        self.root_result.as_ref().is_none_or(|value| {
+            fpas_bytecode::classify_values(std::slice::from_ref(value)).is_ok_and(|graph| {
+                graph
+                    .executable_identities
+                    .iter()
+                    .all(|identity| identity == commit.candidate().identity())
+            })
+        }) && self
+            .tasks
             .values()
             .all(|slot| commit.validates(&slot.worker))
     }

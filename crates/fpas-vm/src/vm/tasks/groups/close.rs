@@ -57,6 +57,7 @@ impl Worker {
                     .saturating_sub(self.task_clock_ref().now_millis())
                     .min(10)
             });
+            let _wait = self.native_wait(Vec::new())?;
             signal.wait(Duration::from_millis(milliseconds));
         }
     }

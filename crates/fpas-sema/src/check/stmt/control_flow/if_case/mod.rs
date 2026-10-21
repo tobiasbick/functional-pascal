@@ -40,11 +40,21 @@ impl Checker {
     ) {
         self.scopes.push_scope();
         self.check_branch_condition(condition, "if", span);
+        let entry = self.scopes.snapshot_capabilities();
         self.check_stmt(then_branch);
+        let mut exits = Vec::new();
+        if Self::stmt_falls_through(then_branch) {
+            exits.push(self.scopes.snapshot_capabilities());
+        }
+        self.scopes.restore_capabilities(&entry);
         self.scopes.pop_scope();
         if let Some(else_branch) = else_branch {
             self.check_stmt(else_branch);
         }
+        if else_branch.is_none_or(Self::stmt_falls_through) {
+            exits.push(self.scopes.snapshot_capabilities());
+        }
+        self.scopes.join_capability_snapshots(&exits);
     }
 
     /// Checks existing labels and guards, with a separate scope for every case body.
@@ -65,15 +75,21 @@ impl Checker {
             .collect::<Vec<_>>();
         let checked = self.check_case_arms(expr, &heads, span, |checker, index| {
             checker.check_stmt(&arms[index].body);
+            Self::stmt_falls_through(&arms[index].body)
         });
 
         if let Some(else_body) = else_body {
             self.scopes.push_scope();
-            for stmt in else_body {
-                self.check_stmt(stmt);
-            }
+            self.check_stmt_sequence(else_body);
             self.scopes.pop_scope();
         }
+        let mut exits = checked.exits;
+        if else_body.is_some_and(Self::stmts_fall_through)
+            || (else_body.is_none() && !checked.exhaustive)
+        {
+            exits.push(self.scopes.snapshot_capabilities());
+        }
+        self.scopes.join_capability_snapshots(&exits);
 
         self.check_case_exhaustiveness(
             &checked.case_ty,

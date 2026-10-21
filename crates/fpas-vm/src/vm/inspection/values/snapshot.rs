@@ -6,7 +6,6 @@ use super::{
     render::{self, RetainedValue},
 };
 use fpas_bytecode::{Executable, Value};
-use std::sync::{Arc, TryLockError};
 
 /// Canonical scalar payload, preserving the full FPAS integer range.
 #[derive(Debug, PartialEq)]
@@ -66,7 +65,7 @@ fn capture_reserved<O: ValueOrigin>(
     budget: &mut ValueBudget,
 ) -> Option<ValueSnapshot> {
     if let Some(Value::Cell(cell)) = &value.value {
-        let identity = Arc::as_ptr(cell) as usize;
+        let identity = cell.identity();
         let reason = if value.visited_cells.contains(&identity) {
             Some("cycle")
         } else if value.visited_cells.len() >= limits.max_depth {
@@ -77,14 +76,27 @@ fn capture_reserved<O: ValueOrigin>(
         if let Some(reason) = reason {
             return Some(marker(value, reason, limits.max_string_chars, budget));
         }
-        let inner = match cell.try_lock() {
-            Ok(inner) => inner.clone(),
-            Err(TryLockError::Poisoned(poisoned)) => poisoned.into_inner().clone(),
-            Err(TryLockError::WouldBlock) => {
-                return Some(marker(value, "busy", limits.max_string_chars, budget));
+        let Some(domain) = value.domain.as_ref() else {
+            return Some(marker(
+                value,
+                "ownership_unavailable",
+                limits.max_string_chars,
+                budget,
+            ));
+        };
+        let inner = match cell.try_read(domain) {
+            Ok(inner) => inner,
+            Err(error) => {
+                let reason = match error {
+                    fpas_bytecode::OwnershipError::Busy => "busy",
+                    fpas_bytecode::OwnershipError::Poisoned => "poisoned",
+                    _ => "ownership_unavailable",
+                };
+                return Some(marker(value, reason, limits.max_string_chars, budget));
             }
         };
         let mut inner_value = RetainedValue {
+            domain: value.domain.clone(),
             name: String::new(),
             type_name: if value.type_name == "cell" {
                 inner.type_name()

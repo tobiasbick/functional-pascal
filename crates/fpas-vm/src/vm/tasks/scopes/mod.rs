@@ -80,6 +80,7 @@ impl Worker {
                 return Ok(());
             }
             self.check_task_cancellation()?;
+            let _wait = self.native_wait(Vec::new())?;
             signal.wait(Duration::from_millis(10));
         }
     }
@@ -170,6 +171,7 @@ impl Worker {
         let signal = WakeSignal::new();
         let _registration = self.scheduler_ref()?.subscribe(&signal);
         self.check_task_cancellation()?;
+        let _wait = self.native_wait(Vec::new())?;
         signal.wait(Duration::from_millis(10));
         Ok(())
     }

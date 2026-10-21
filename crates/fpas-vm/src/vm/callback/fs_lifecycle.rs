@@ -29,6 +29,10 @@ begin
   return (Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell'))) and
     (Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Fs.Read')));
 end function;
+procedure CloseFile(File: Fs.File);
+begin
+  discard Fs.Close(File);
+end procedure;
 "#;
 
 struct InputFile(PathBuf);
@@ -110,28 +114,34 @@ fn callbacks_keep_files_between_invocations_and_close_on_cancel_shutdown_or_drop
         let mut session = CallbackSession::new(executable(""));
         let image = Arc::clone(&session.executable);
         let file = session
-            .invoke(function(&image, "OpenFile"), vec![input.argument()])
+            .invoke(function(&image, "OpenFile"), vec![input.argument().into()])
             .expect("open through real callback")
             .value;
         assert_eq!(
             session
-                .invoke(function(&image, "Position"), vec![file.clone()])
+                .invoke(function(&image, "Position"), vec![file.clone().into()])
                 .expect("position survives previous invocation")
-                .value,
+                .value
+                .try_to_data()
+                .expect("pure file result"),
             Value::Integer(0)
         );
         assert_eq!(
             session
-                .invoke(function(&image, "ReadOne"), vec![file.clone()])
+                .invoke(function(&image, "ReadOne"), vec![file.clone().into()])
                 .expect("read through another callback")
-                .value,
+                .value
+                .try_to_data()
+                .expect("pure file result"),
             Value::Integer(42)
         );
         assert_eq!(
             session
-                .invoke(function(&image, "Position"), vec![file.clone()])
+                .invoke(function(&image, "Position"), vec![file.clone().into()])
                 .expect("shared file cursor")
-                .value,
+                .value
+                .try_to_data()
+                .expect("pure file result"),
             Value::Integer(1)
         );
         // Keep the registry and executable alive so Arc destruction cannot satisfy closure.
@@ -151,18 +161,24 @@ fn callbacks_keep_files_between_invocations_and_close_on_cancel_shutdown_or_drop
                 Arc::clone(&layouts),
                 Arc::clone(&globals),
                 Arc::clone(&hosted),
-                file.clone(),
+                file.runtime_value_for_test(),
             );
             assert_eq!(
                 session
-                    .invoke(function(&image, "Position"), vec![file.clone()])
+                    .invoke(function(&image, "Position"), vec![file.clone().into()])
                     .expect_err("stopped session")
                     .code,
                 RUNTIME_VM_SHUTDOWN
             );
             drop(session);
         }
-        probe(image, layouts, globals, hosted, file);
+        probe(
+            image,
+            layouts,
+            globals,
+            hosted,
+            file.runtime_value_for_test(),
+        );
     }
 }
 
@@ -233,7 +249,7 @@ fn one_shot_vm_call_closes_returned_file_before_vm_or_shutdown_handle_drop() {
     let target = function(&vm.executable, "OpenFile");
     let shutdown = vm.shutdown_handle();
     let file = vm
-        .call(target, vec![input.argument()])
+        .call(target, vec![input.argument().into()])
         .expect("one-shot callback opens a real file")
         .value;
     probe(
@@ -241,8 +257,43 @@ fn one_shot_vm_call_closes_returned_file_before_vm_or_shutdown_handle_drop() {
         vm.layouts.clone().expect("admitted layouts"),
         Arc::clone(&vm.globals),
         Arc::clone(&vm.hosted),
-        file,
+        file.runtime_value_for_test(),
     );
     drop(shutdown);
     drop(vm);
+}
+
+#[test]
+fn closed_file_export_reenters_owner_and_is_rejected_by_another_session() {
+    let input = InputFile::new();
+    let image = Arc::new(executable(""));
+    let mut owner = CallbackSession::from_shared(Arc::clone(&image));
+    let mut other = CallbackSession::from_shared(Arc::clone(&image));
+    let file = owner
+        .invoke(function(&image, "OpenFile"), vec![input.argument().into()])
+        .expect("open file")
+        .value;
+    assert_eq!(
+        file.try_to_data(),
+        Err(crate::vm::HostValueError::SessionBound)
+    );
+    owner
+        .invoke(function(&image, "CloseFile"), vec![file.clone().into()])
+        .expect("close file");
+    assert_eq!(
+        owner
+            .invoke(function(&image, "IsClosed"), vec![file.clone().into()])
+            .expect("closed file remains an operational outcome")
+            .value
+            .try_to_data()
+            .expect("boolean"),
+        Value::Boolean(true)
+    );
+    assert_eq!(
+        other
+            .invoke(function(&image, "IsClosed"), vec![file.into()])
+            .expect_err("closed handles keep origin without a registry entry")
+            .code,
+        fpas_diagnostics::codes::RUNTIME_INVALID_TASK
+    );
 }

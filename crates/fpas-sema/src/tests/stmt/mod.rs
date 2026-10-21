@@ -1,4 +1,5 @@
 mod assignment;
+mod capability_flow;
 mod case_blocks;
 mod case_coverage;
 mod closed_enum_cases;

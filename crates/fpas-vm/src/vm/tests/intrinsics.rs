@@ -65,7 +65,10 @@ fn console_and_test_input_share_one_deterministic_host() {
     );
     let mut vm = Vm::new(executable);
     let execution = vm.run().expect("hosted console input/output");
-    assert_eq!(execution.value, Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        Value::Unit
+    );
     assert_eq!(vm.output().lines, vec!["hello"]);
 }
 

@@ -13,9 +13,7 @@ impl Checker {
     pub(in crate::check) fn check_scope_stmt(&mut self, body: &[Stmt]) {
         self.task_scopes.enter_scope();
         self.scopes.push_scope();
-        for stmt in body {
-            self.check_stmt(stmt);
-        }
+        self.check_stmt_sequence(body);
         self.scopes.pop_scope();
         self.task_scopes.exit_scope();
     }

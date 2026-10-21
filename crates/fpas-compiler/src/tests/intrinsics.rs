@@ -179,7 +179,10 @@ fn borrowed_standard_intrinsics_execute() {
     let execution = assert_succeeds(
         "program RegisterIntrinsics;\nuses Std.Math as Math, Std.Conv as Conv, Std.Test as Test;\nbegin\n  const Text: string := 'fpas'.ToUpper();\n  const Root: real := Math.Sqrt(81.0);\n  const Number: string := Conv.IntToStr(42);\n  const Formatted: string := 'n=%d %s'.Format(42, 'ok');\n  Test.AssertEquals('FPAS', Text);\n  Test.AssertEquals(9.0, Root);\n  Test.AssertEquals('42', Number);\n  Test.AssertEquals('n=42 ok', Formatted);\nend.",
     );
-    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        fpas_bytecode::Value::Unit
+    );
 }
 
 #[test]
@@ -224,7 +227,10 @@ fn higher_order_intrinsics_invoke_numeric_callbacks() {
     let execution = assert_succeeds(
         "program RegisterCallbacks;\nuses Std.Test as Test;\n\nfunction Double(Value: integer): integer;\nbegin\n  return Value * 2;\nend function;\n\nbegin\n  const Values: array of integer := [2, 3, 4].Map(Double);\n  Test.AssertEquals(3, Values.Length());\n  Test.AssertEquals(6, Values[1]);\nend.",
     );
-    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        fpas_bytecode::Value::Unit
+    );
 }
 
 #[test]
@@ -239,7 +245,10 @@ fn variadic_console_output_preserves_evaluation_order() {
     let execution = assert_succeeds(
         "program RegisterConsoleOutput;\nuses Std.Console as Console, Std.Test as Test;\n\nfunction SideEffect(): string;\nbegin\n  Console.WriteText('B');\n  return 'C';\nend function;\n\nbegin\n  Console.WriteText('A', SideEffect());\n  Console.WriteLn('D', 42, true);\n  Console.WriteLn();\n  Test.AssertScreenLine('ABCD42true', 1);\n  Test.AssertScreenLine('', 2);\nend.",
     );
-    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+    assert_eq!(
+        execution.value.try_to_data().expect("pure return value"),
+        fpas_bytecode::Value::Unit
+    );
 }
 
 #[test]

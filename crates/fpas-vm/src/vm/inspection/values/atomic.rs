@@ -109,6 +109,8 @@ pub(super) fn capture<O: ValueOrigin>(
             };
             node.reason = unavailable.map(|reason| match reason {
                 "busy" => "busy",
+                "poisoned" => "poisoned",
+                "ownership_unavailable" => "ownership_unavailable",
                 "missing_metadata" => "missing_metadata",
                 _ => "storage_unavailable",
             });

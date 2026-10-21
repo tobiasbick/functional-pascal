@@ -718,6 +718,10 @@ mutable cell across closures that capture it, even after the outer call returns.
 A `var` parameter cannot be captured. Globals are resolved normally rather than
 captured into closure storage. A closure with mutable captures belongs to its task:
 it cannot be sent through a channel, returned across tasks, or passed to `go`.
+Known local callables, arguments and task results produce FP3016 at transfer;
+branch/loop joins and aggregate writes preserve that evidence. Unknown callable
+parameters and unresolved/imported factory results remain permitted and checked
+by the VM. Ordinary calls may return local closures to their owning task.
 
 Named sibling signatures are visible throughout their lexical scope; free
 routines, methods, and nested helpers follow the same rule and may be mutually

@@ -270,10 +270,13 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub(crate) bound_methods: BoundMethodMap,
-    /// Expression keys whose value is a task-bound callable.
+    /// Static transfer evidence for checked expression values.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
-    pub(crate) task_bound_exprs: HashSet<usize>,
+    pub(crate) routine_results: super::return_capabilities::RoutineResults,
+    pub(crate) expr_capabilities: HashMap<usize, crate::TransferCapability>,
+    /// Resolved native-operation result evidence, replaced on each flow analysis.
+    pub(crate) native_capabilities: HashMap<usize, crate::TransferCapability>,
     /// Nested routine declaration identities → the enclosing `var` parameter they use.
     ///
     /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
@@ -348,7 +351,9 @@ impl Checker {
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
-            task_bound_exprs: HashSet::new(),
+            routine_results: Default::default(),
+            expr_capabilities: HashMap::new(),
+            native_capabilities: HashMap::new(),
             var_parameter_routines: HashMap::new(),
             pending_var_parameter_uses: HashMap::new(),
             pending_routine_captures: HashMap::new(),
@@ -406,12 +411,37 @@ impl Checker {
         std::ptr::from_ref(expr) as usize
     }
 
-    pub(crate) fn mark_expr_task_bound(&mut self, key: usize) {
-        self.task_bound_exprs.insert(key);
+    pub(crate) fn expr_is_task_bound(&self, key: usize) -> bool {
+        self.expr_capability(key).is_task_bound()
     }
 
-    pub(crate) fn expr_is_task_bound(&self, key: usize) -> bool {
-        self.task_bound_exprs.contains(&key)
+    pub(crate) fn expr_capability(&self, key: usize) -> crate::TransferCapability {
+        if let Some(ty) = self.expr_types.get(&key)
+            && !self.type_can_contain_callable(ty)
+        {
+            return crate::TransferCapability::Transferable;
+        }
+        self.expr_capabilities
+            .get(&key)
+            .copied()
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn set_expr_capability(
+        &mut self,
+        key: usize,
+        capability: crate::TransferCapability,
+    ) {
+        let capability = if self
+            .expr_types
+            .get(&key)
+            .is_some_and(|ty| !self.type_can_contain_callable(ty))
+        {
+            crate::TransferCapability::Transferable
+        } else {
+            capability
+        };
+        self.expr_capabilities.insert(key, capability);
     }
 
     pub(crate) fn error_with_code(

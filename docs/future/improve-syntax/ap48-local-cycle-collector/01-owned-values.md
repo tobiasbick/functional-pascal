@@ -1,7 +1,7 @@
 # AP48.1: Owned cells and graph classification
 
-Package: [AP48](README.md). Status: not started. Effort: large.
-Prerequisite: Q37 recorded and implementation explicitly authorized.
+Package: [AP48](README.md). Status: complete. Effort: large.
+Prerequisite: Q37 through Q41 recorded and implementation authorized.
 
 ## Work
 
@@ -45,7 +45,8 @@ Audit and migrate all direct cell constructors, including embedded fixtures.
 - Equal task numbers in different sessions do not confer access. Worker migration
   and same-task callbacks preserve access and alias identity.
 - Equal function IDs in distinct executable instances do not confer callable import
-  permission. Copies sharing one verified executable retain the same code identity.
+  permission: their validated targets carry different identities, which AP48.2
+  checks at import boundaries. Copies sharing one verified executable retain the same code identity.
   Provenance is runtime-only and reconstructed when an artifact is loaded.
 - `var` reference reads/writes remain correct and retain their non-escape rule.
 - Weak registration neither retains an acyclic cell nor grows without bound as
@@ -56,3 +57,34 @@ Audit and migrate all direct cell constructors, including embedded fixtures.
 Extend value/reference and VM task-owned-function tests at their public behavior
 interfaces. Update Rust ownership documentation with delivery. Run the applicable
 Rust and language checks from the development process; collection stays disabled.
+
+## Implementation scope
+
+- Add domain, owned-cell and graph traversal modules under
+  `crates/fpas-bytecode/src/value/`; migrate `mod.rs`, `reference.rs`, `function.rs`,
+  `drain.rs` and `equal.rs` to encapsulated ownership and validated callable targets.
+- Extend `crates/fpas-bytecode/src/executable.rs` with runtime-only executable
+  provenance and validated function targets. Preserve artifact representation.
+- Add focused domain policy under `crates/fpas-vm/src/vm/domain/`; migrate
+  `worker.rs`, `tasks/state.rs`, task save/restore and supervision retry paths,
+  `callback.rs` and `callback_call.rs` to logical-task domains.
+- Migrate `calls/closures.rs`, `access.rs`, `execute/references.rs`, inspection
+  cell readers and debugger mutation/detachment/callable construction to checked
+  cells and preserved executable provenance.
+- Validate optimized persistent updates in `execute/global_index_path.rs` before
+  consuming the source register or mutating a global, and extend its regressions.
+- Maintain a conservative plain-scalar summary in `value/array.rs` so repeated
+  checked appends and indexed writes do not rescan growing scalar arrays. Raw
+  mutable access invalidates the summary; graph traversal trusts only proven
+  primitive contents. Migrate indexed VM updates to the checked summary-preserving
+  array operation and cover invalidation and copy-on-write isolation.
+- Extend this bounded-cost validation to immutable compound data in
+  `value/aggregate.rs` and a focused `value/ownership_summary.rs`. Keep the ownership
+  summary distinct from resource provenance: HTTP handles can be records of scalar
+  fields. Preserve or invalidate summaries through guarded aggregate edits, including
+  nested reference/global paths, and test invalidation on unwinding.
+- Migrate affected bytecode, linker and VM fixtures, add ownership and graph
+  regressions, and document the strong-edge inventory and Rust ownership contract.
+  Update `docs/pascal/language/functions/closures.md` and add
+  `docs/pascal/program-structure/runtime-ownership.md`; confirm the compact reference.
+  No collector or transfer-publication enforcement is introduced in this package.

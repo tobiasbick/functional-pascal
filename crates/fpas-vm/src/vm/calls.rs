@@ -3,8 +3,6 @@
 mod closures;
 mod tail_call;
 
-use std::sync::{Arc, Mutex};
-
 use fpas_bytecode::{AbcOperands, FunctionId, Register, SharedFunction, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -67,8 +65,15 @@ impl Worker {
         &self,
         function: &SharedFunction,
     ) -> Result<(), VmError> {
-        if !function.task_bound || function.owner_task == Some(self.task_id) {
-            return Ok(());
+        if !function.target().belongs_to(&self.executable) {
+            return Err(
+                self.invalid_local_value("Callable value belongs to a different executable image")
+            );
+        }
+        if !function.task_bound || function.owner_domain.as_ref() == Some(self.domain.id()) {
+            // Invocation may borrow `var` captures during a direct nested call.
+            // Retaining the same graph requires the stricter storage validation.
+            return self.require_local_value(&Value::Function(function.clone()));
         }
         Err(diagnostics::at_address(
             self.executable.executable(),

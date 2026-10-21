@@ -32,6 +32,10 @@ impl Checker {
         let FuncBody::Block { nested, stmts } = body;
         self.routine_type_path.push(name.to_owned());
 
+        let outer_capabilities = self.scopes.snapshot_capabilities();
+        let outer_loops = self.scopes.take_capability_loops();
+        self.forget_outer_mutable_capabilities();
+        self.begin_return_summary(name, body);
         self.scopes.push_scope();
         let routine_scope_index = self.scopes.scope_count() - 1;
         self.task_scopes.enter_routine();
@@ -65,7 +69,7 @@ impl Checker {
                     ),
                     mutable: false,
                     kind: SymbolKind::Type,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
             );
         }
@@ -78,7 +82,7 @@ impl Checker {
                     ty: p.ty.clone(),
                     mutable: p.is_var(),
                     kind: SymbolKind::Param,
-                    task_bound: false,
+                    capability: self.capability_for_type(&p.ty),
                 },
                 source.span,
             );
@@ -126,9 +130,7 @@ impl Checker {
         for name in &hoisted {
             self.scopes.remove_from_current(name);
         }
-        for stmt in stmts {
-            self.check_stmt(stmt);
-        }
+        self.check_stmt_sequence(stmts);
 
         let mut captures = collect_captures(
             &self.scopes,
@@ -161,7 +163,10 @@ impl Checker {
         self.task_scopes.exit_routine();
         self.scopes.function_ctx = prev_ctx;
         self.routine_type_path.pop();
+        self.finish_return_summary();
         self.scopes.pop_scope();
+        self.scopes.restore_capabilities(&outer_capabilities);
+        self.scopes.restore_capability_loops(outer_loops);
         self.task_call_depth = previous_task_call_depth;
         captures
     }
@@ -219,7 +224,7 @@ impl Checker {
                     } else {
                         SymbolKind::Var
                     },
-                    task_bound: false,
+                    capability: self.capability_for_type(&ty),
                 },
                 variable.span,
             );

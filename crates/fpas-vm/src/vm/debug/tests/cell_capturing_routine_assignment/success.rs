@@ -49,15 +49,16 @@ fn direct_cell_capture_shares_the_original_handle_and_is_task_owned() {
     let original_fn = as_function(&original);
     let assigned_fn = as_function(&assigned);
     assert!(assigned_fn.task_bound);
-    assert_eq!(assigned_fn.owner_task, Some(session.last_stop().task_id));
+    assert_eq!(assigned_fn.owner_domain, original_fn.owner_domain);
+    assert_eq!(
+        assigned_fn.owner_domain.as_ref(),
+        Some(cell_handle(&original_fn.captures[0]).owner())
+    );
     assert_eq!(original_fn.captures.len(), 1);
     assert_eq!(assigned_fn.captures.len(), 1);
     assert!(
-        std::sync::Arc::ptr_eq(
-            cell_arc(&original_fn.captures[0]),
-            cell_arc(&assigned_fn.captures[0])
-        ),
-        "debugger construction must clone the existing cell Arc"
+        cell_handle(&original_fn.captures[0]).ptr_eq(cell_handle(&assigned_fn.captures[0])),
+        "debugger construction must clone the existing cell handle"
     );
     assert!(
         !std::ptr::eq(&**original_fn, &**assigned_fn),
@@ -99,10 +100,10 @@ fn enclosing_cell_capture_reuses_the_transitive_handle() {
         .expect("enclosing cell");
     let frame = session.stack(0, 1).expect("fresh").items[0].id;
     let assigned = runtime(&session, &name("Current"), frame);
-    assert!(std::sync::Arc::ptr_eq(
-        cell_arc(&as_function(&original).captures[0]),
-        cell_arc(&as_function(&assigned).captures[0])
-    ));
+    assert!(
+        cell_handle(&as_function(&original).captures[0])
+            .ptr_eq(cell_handle(&as_function(&assigned).captures[0]))
+    );
 }
 
 #[test]

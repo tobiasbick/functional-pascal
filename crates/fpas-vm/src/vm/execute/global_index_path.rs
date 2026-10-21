@@ -27,8 +27,14 @@ impl Worker {
                 "Recompile the program and report this internal bytecode invariant failure.",
             ));
         };
+        self.require_storable_value(value)?;
+        for index in indexes {
+            self.require_storable_value(index)?;
+        }
         let root_register = register(o.a)?;
-        let path = self.resolve_global_index_path(self.read(root_register)?, indexes)?;
+        let root = self.read(root_register)?;
+        self.require_local_value(root)?;
+        let path = self.resolve_global_index_path(root, indexes)?;
         let global_index = usize::from(o.b);
         let mutable = self
             .executable
@@ -154,9 +160,19 @@ fn replace_resolved_path(current: &mut Value, path: &[ResolvedIndex], replacemen
         return true;
     };
     match (current, step) {
-        (Value::Array(values), ResolvedIndex::Array(index)) => values
-            .get_mut(*index)
-            .is_some_and(|child| replace_resolved_path(child, tail, replacement)),
+        (Value::Array(values), ResolvedIndex::Array(index)) => {
+            if *index >= values.len() {
+                return false;
+            }
+            if tail.is_empty() {
+                values.replace_element(*index, replacement);
+                true
+            } else {
+                values.update_element(*index, |child| {
+                    replace_resolved_path(child, tail, replacement)
+                })
+            }
+        }
         (
             Value::Dict(pairs),
             ResolvedIndex::Dictionary {
@@ -170,8 +186,10 @@ fn replace_resolved_path(current: &mut Value, path: &[ResolvedIndex], replacemen
                 }
                 pairs.push((key.clone(), replacement));
                 true
-            } else if let Some((_, child)) = pairs.get_mut(*position) {
-                replace_resolved_path(child, tail, replacement)
+            } else if *position < pairs.len() {
+                pairs.update_value(*position, |child| {
+                    replace_resolved_path(child, tail, replacement)
+                })
             } else {
                 false
             }
@@ -179,3 +197,6 @@ fn replace_resolved_path(current: &mut Value, path: &[ResolvedIndex], replacemen
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests;

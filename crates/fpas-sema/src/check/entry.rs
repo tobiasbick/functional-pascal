@@ -183,7 +183,7 @@ impl Checker {
                 ty: crate::types::array_pop_result_declaration(),
                 mutable: false,
                 kind: SymbolKind::Type,
-                task_bound: false,
+                capability: crate::TransferCapability::Transferable,
             },
         );
         for name in &["integer", "real", "boolean", "string"] {
@@ -194,7 +194,7 @@ impl Checker {
                     ty: Ty::Named(name.to_string()),
                     mutable: false,
                     kind: SymbolKind::Type,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
             );
         }

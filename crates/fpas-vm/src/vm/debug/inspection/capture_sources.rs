@@ -150,7 +150,7 @@ fn require_cell_backed(
         });
     }
     match &captured.value {
-        Some(Value::Cell(cell)) => Ok(Value::Cell(std::sync::Arc::clone(cell))),
+        Some(Value::Cell(cell)) => Ok(Value::Cell(cell.clone())),
         _ => Err(DebugSessionError {
             kind: DebugErrorKind::VariableValueType,
             message: format!(

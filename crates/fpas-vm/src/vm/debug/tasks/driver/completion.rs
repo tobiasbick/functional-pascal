@@ -35,6 +35,11 @@ impl DebugTaskRuntime {
 
         let retain_result = slot.worker.retain_result;
         let root = task_id == 0;
+        if !root {
+            slot.worker
+                .require_transferable_values(std::slice::from_ref(&value))
+                .ok()?;
+        }
         let slot = self.tasks.get_mut(&task_id)?;
         let value = match slot.worker.finish_owned_groups(Ok(value)) {
             Ok(Some(value)) => value,
@@ -44,18 +49,25 @@ impl DebugTaskRuntime {
                 return Some(false);
             }
             Err(error) => {
+                slot.worker.hosted.cases.close_owner(task_id);
                 slot.worker.pending_completion = Some(Err(error));
                 slot.state = DebugTaskState::Runnable;
                 slot.worker.supervision = None;
                 return Some(false);
             }
         };
+        slot.worker.hosted.cases.close_owner(task_id);
         slot.state = DebugTaskState::Completed;
         slot.worker.supervision = None;
-        if retain_result {
+        if retain_result && !root {
             self.scheduler.store_result(task_id, value.clone());
         }
         if root {
+            self.root_result_roots = Some(
+                slot.worker
+                    .domain
+                    .root_values(fpas_bytecode::RootKind::Native, vec![value.clone()]),
+            );
             self.root_result = Some(value);
             self.scheduler.finish_main();
         } else if !slot.exited {
@@ -65,6 +77,7 @@ impl DebugTaskRuntime {
                 kind: DebugTaskEventKind::Exited,
             });
         }
+        slot.worker.retire_execution();
         if root {
             self.cancel_after_root_completion();
         }
@@ -76,11 +89,22 @@ impl DebugTaskRuntime {
         if slot.exited || slot.state != DebugTaskState::Failed || slot.failure.is_none() {
             return None;
         }
+        let root = task_id == 0;
+        if !root {
+            slot.worker
+                .require_transferable_values(std::slice::from_ref(&value))
+                .ok()?;
+        }
+        slot.worker.hosted.cases.close_owner(task_id);
         slot.failure = None;
         slot.worker.supervision = None;
         slot.state = DebugTaskState::Completed;
-        let root = task_id == 0;
         if root {
+            self.root_result_roots = Some(
+                slot.worker
+                    .domain
+                    .root_values(fpas_bytecode::RootKind::Native, vec![value.clone()]),
+            );
             self.root_result = Some(value);
             self.scheduler.finish_main();
         } else if !slot.exited {
@@ -90,6 +114,7 @@ impl DebugTaskRuntime {
                 kind: DebugTaskEventKind::Exited,
             });
         }
+        slot.worker.retire_execution();
         if root {
             self.cancel_after_root_completion();
         }
@@ -107,8 +132,7 @@ impl DebugTaskRuntime {
                 continue;
             }
             slot.state = DebugTaskState::Cancelled;
-            slot.worker.supervision = None;
-            slot.worker.task_suspension = None;
+            slot.worker.retire_execution();
             if slot.worker.retain_result {
                 self.scheduler.cancel_result(task_id);
             }
@@ -127,3 +151,6 @@ impl DebugTaskRuntime {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

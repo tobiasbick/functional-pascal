@@ -36,6 +36,7 @@ impl Checker {
                 checker.check_expr_with_expected(value, expected),
                 value.span(),
             ));
+            true
         });
         if let Some(else_arm) = else_arm {
             values.push((
@@ -43,6 +44,11 @@ impl Checker {
                 else_arm.value.span(),
             ));
         }
+        let mut exits = checked.exits;
+        if else_arm.is_some() {
+            exits.push(self.scopes.snapshot_capabilities());
+        }
+        self.scopes.join_capability_snapshots(&exits);
         self.deferred_constructor_inference -= 1;
         self.check_case_exhaustiveness(
             &checked.case_ty,

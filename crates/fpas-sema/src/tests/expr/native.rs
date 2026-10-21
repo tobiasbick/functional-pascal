@@ -1,5 +1,6 @@
 //! Import-free checking of every catalog signature and native argument diagnostics.
 use super::{check_errors, check_ok};
+mod capabilities;
 mod collections;
 mod in_place_calls;
 mod sort_by;

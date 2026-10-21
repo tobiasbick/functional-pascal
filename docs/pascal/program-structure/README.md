@@ -9,6 +9,7 @@ Units, projects, workspaces, and the `fpas` CLI.
 | [Projects](projects.md) | `.fpasprj` format, kinds, dependencies |
 | [Initializing](initializing.md) | Create program, library, and workspace scaffolds |
 | [Compiled programs](compiled-programs.md) | `.fpascp` identity, validation, and format versions |
+| [Runtime ownership](runtime-ownership.md) | Rust host cells, task domains and callable provenance |
 | [Workspaces](workspaces.md) | `.fpasworkspace` multi-project layout |
 | [CLI](cli.md) | `fpas init`, `build`, `run`, `check`, `test`, and `fmt` |
 

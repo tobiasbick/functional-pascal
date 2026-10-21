@@ -62,12 +62,17 @@ impl Worker {
             }
             self.check_task_cancellation()?;
             let cancelled = self.channel_cancelled(token)?;
-            match self
-                .hosted
-                .channels
-                .send(handle, value, cancelled, Some(CANCELLATION_POLL_INTERVAL))
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
+            let state = {
+                let _wait = self.native_wait(vec![value.clone()])?;
+                self.hosted.channels.send(
+                    handle,
+                    value,
+                    cancelled,
+                    Some(CANCELLATION_POLL_INTERVAL),
+                )
+            }
+            .map_err(|message| self.channel_runtime_error(message))?;
+            match state {
                 SendState::Sent => return Ok(ok(Value::Boolean(true))),
                 SendState::Closed => {
                     return self.task_outcome_error(
@@ -142,12 +147,14 @@ impl Worker {
             }
             self.check_task_cancellation()?;
             let cancelled = self.channel_cancelled(token)?;
-            match self
-                .hosted
-                .channels
-                .receive(handle, cancelled, Some(CANCELLATION_POLL_INTERVAL))
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
+            let state = {
+                let _wait = self.native_wait(Vec::new())?;
+                self.hosted
+                    .channels
+                    .receive(handle, cancelled, Some(CANCELLATION_POLL_INTERVAL))
+            }
+            .map_err(|message| self.channel_runtime_error(message))?;
+            match state {
                 ReceiveState::Received(value) => return Ok(ok(value)),
                 ReceiveState::Closed => {
                     return self.task_outcome_error(

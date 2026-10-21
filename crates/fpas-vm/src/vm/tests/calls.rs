@@ -172,7 +172,10 @@ fn direct_call_uses_argument_window_and_return_destination() {
     let result = Vm::new(executable)
         .call(FunctionId::new(1), Vec::new())
         .expect("direct call should succeed");
-    assert_eq!(result.value, Value::Integer(42));
+    assert_eq!(
+        result.value.try_to_data().expect("pure return value"),
+        Value::Integer(42)
+    );
 }
 
 #[test]
@@ -212,9 +215,11 @@ fn recursive_call_and_early_return_restore_each_frame() {
 
     assert_eq!(
         Vm::new(executable)
-            .call(FunctionId::new(1), vec![Value::Integer(5)])
+            .call(FunctionId::new(1), vec![Value::Integer(5).into()])
             .expect("recursion should succeed")
-            .value,
+            .value
+            .try_to_data()
+            .expect("pure return value"),
         Value::Integer(120)
     );
 }
@@ -270,7 +275,9 @@ fn numeric_function_value_calls_without_name_lookup() {
         Vm::new(executable)
             .call(FunctionId::new(1), Vec::new())
             .expect("value call should succeed")
-            .value,
+            .value
+            .try_to_data()
+            .expect("pure return value"),
         Value::Integer(42)
     );
 }
@@ -314,16 +321,22 @@ fn bound_function_value_prepends_receiver_before_visible_arguments() {
         ],
     );
     let bound = Value::bound_function(
-        FunctionId::new(2),
-        "Counter.Add".to_string(),
+        executable
+            .function_target(FunctionId::new(2))
+            .expect("bound target"),
         Value::Integer(10),
     );
 
     assert_eq!(
         Vm::new(executable)
-            .call(FunctionId::new(1), vec![bound, Value::Integer(5)])
+            .call(
+                FunctionId::new(1),
+                vec![bound.into(), Value::Integer(5).into()]
+            )
             .expect("bound value call should succeed")
-            .value,
+            .value
+            .try_to_data()
+            .expect("pure return value"),
         Value::Integer(15)
     );
 }
@@ -378,7 +391,9 @@ fn mutable_capture_cell_is_shared_in_semantic_capture_order() {
         Vm::new(executable)
             .call(FunctionId::new(1), Vec::new())
             .expect("closure should succeed")
-            .value,
+            .value
+            .try_to_data()
+            .expect("pure return value"),
         Value::Integer(42)
     );
 }
@@ -454,9 +469,15 @@ fn method_receiver_is_an_ordinary_first_register_argument() {
         vec![Value::Integer(1)],
     ));
     let result = Vm::new(executable)
-        .call(FunctionId::new(1), vec![receiver, Value::Integer(42)])
+        .call(
+            FunctionId::new(1),
+            vec![receiver.into(), Value::Integer(42).into()],
+        )
         .expect("method-shaped call should succeed");
-    assert_eq!(result.value, Value::Integer(42));
+    assert_eq!(
+        result.value.try_to_data().expect("pure return value"),
+        Value::Integer(42)
+    );
 }
 
 #[test]

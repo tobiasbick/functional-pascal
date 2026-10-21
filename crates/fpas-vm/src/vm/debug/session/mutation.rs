@@ -39,6 +39,8 @@ impl DebugSession {
         expression: &DebugExpression,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("variable.set")?;
         let result = (|| {
             let generation = (variables_reference >> 32) as u32;
@@ -99,6 +101,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("expression.set")?;
         let result = (|| {
             let task_id = self.task_for_frame(frame_id)?;
@@ -234,6 +238,37 @@ impl DebugSession {
             .get_mut(&task_id)
             .ok_or_else(|| unknown_task(task_id))?
             .retain_evaluation_result(committed, limits)
+    }
+
+    /// Inject invalid storage only in tests of downstream ownership rejection.
+    #[cfg(test)]
+    pub(in crate::vm::debug) fn test_inject_frame_binding(
+        &mut self,
+        frame_id: u64,
+        name: &str,
+        value: fpas_bytecode::Value,
+    ) -> Result<(), DebugSessionError> {
+        self.require_stopped("test.binding.inject")?;
+        let task_id = self.task_for_frame(Some(frame_id))?;
+        let (target, _) = self
+            .inspections
+            .get(&task_id)
+            .ok_or_else(|| unknown_task(task_id))?
+            .resolve_named_mutation_target(Some(frame_id), name)?;
+        let super::super::inspection::MutationRoot::FrameRegister(index) = target.root else {
+            return Err(replacement_unavailable());
+        };
+        let worker = self
+            .runtime
+            .worker_mut(task_id)
+            .ok_or_else(|| unknown_task(task_id))?;
+        // Bypass admission deliberately: ordinary assignment rejects this fixture earlier.
+        worker.registers[index] = value;
+        worker.register_initialized[index] = true;
+        self.invalidate_inspection();
+        self.refresh_inspection();
+        self.inspection_task_id = task_id;
+        Ok(())
     }
 }
 

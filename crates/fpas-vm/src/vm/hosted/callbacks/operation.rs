@@ -1,5 +1,7 @@
 //! State machine for one resumable higher-order operation.
 
+mod roots;
+
 use fpas_bytecode::{FunctionId, InstructionAddress, SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
@@ -428,8 +430,16 @@ mod tests {
 
     #[test]
     fn single_callback_reports_repeated_advance_without_a_result() {
+        let (program, errors) = fpas_parser::parse("program Callback; begin end.");
+        assert!(errors.is_empty(), "{errors:?}");
+        let executable = fpas_compiler::compile(&program).expect("callback fixture");
         let mut continuation = CallbackContinuation::new(
-            SharedFunction::unbound(FunctionId::new(0), "callback".to_owned(), Vec::new()),
+            SharedFunction::unbound(
+                executable
+                    .function_target(FunctionId::new(0))
+                    .expect("callback target"),
+                Vec::new(),
+            ),
             None,
             CallbackOperation::Single {
                 arguments: Some(CallbackArguments::empty()),

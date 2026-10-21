@@ -1,4 +1,5 @@
 use super::super::super::Checker;
+use crate::TransferCapability;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::Ty;
 use fpas_diagnostics::codes::{SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH};
@@ -32,24 +33,23 @@ impl Checker {
         let end_ty = self.check_expr(end);
         self.check_type_compat(&var_ty, &end_ty, "for loop end", span);
 
-        self.scopes.push_scope();
-        self.scopes.define_with_declaration(
-            var_name,
-            Symbol {
-                constant: None,
-                ty: var_ty,
-                mutable: false,
-                kind: SymbolKind::ForVar,
-                task_bound: false,
-            },
-            span,
-        );
-
-        self.scopes.loop_depth += 1;
-        self.check_stmt(body);
-        self.scopes.loop_depth -= 1;
-
-        self.scopes.pop_scope();
+        self.check_capability_loop(true, |checker| {
+            checker.scopes.push_scope();
+            checker.scopes.define_with_declaration(
+                var_name,
+                Symbol {
+                    constant: None,
+                    ty: var_ty.clone(),
+                    mutable: false,
+                    kind: SymbolKind::ForVar,
+                    capability: TransferCapability::Transferable,
+                },
+                span,
+            );
+            checker.check_stmt(body);
+            checker.scopes.pop_scope();
+            Self::stmt_falls_through(body)
+        });
     }
 
     pub(in super::super) fn check_for_in_stmt(
@@ -83,33 +83,38 @@ impl Checker {
             }
         }
 
-        self.scopes.push_scope();
-        self.scopes.define_with_declaration(
-            var_name,
-            Symbol {
-                constant: None,
-                ty: var_ty,
-                mutable: false,
-                kind: SymbolKind::ForVar,
-                task_bound: false,
-            },
-            span,
-        );
-
-        self.scopes.loop_depth += 1;
-        self.check_stmt(body);
-        self.scopes.loop_depth -= 1;
-
-        self.scopes.pop_scope();
+        let capability = if self.type_can_contain_callable(&var_ty) {
+            self.expr_capability(Self::expr_lookup_key(iterable))
+        } else {
+            TransferCapability::Transferable
+        };
+        self.check_capability_loop(true, |checker| {
+            checker.scopes.push_scope();
+            checker.scopes.define_with_declaration(
+                var_name,
+                Symbol {
+                    constant: None,
+                    ty: var_ty.clone(),
+                    mutable: false,
+                    kind: SymbolKind::ForVar,
+                    capability,
+                },
+                span,
+            );
+            checker.check_stmt(body);
+            checker.scopes.pop_scope();
+            Self::stmt_falls_through(body)
+        });
     }
 
     pub(in super::super) fn check_while_stmt(&mut self, condition: &Expr, body: &Stmt, span: Span) {
-        self.scopes.push_scope();
-        self.check_branch_condition(condition, "while", span);
-        self.scopes.loop_depth += 1;
-        self.check_stmt(body);
-        self.scopes.loop_depth -= 1;
-        self.scopes.pop_scope();
+        self.check_capability_loop(true, |checker| {
+            checker.scopes.push_scope();
+            checker.check_branch_condition(condition, "while", span);
+            checker.check_stmt(body);
+            checker.scopes.pop_scope();
+            Self::stmt_falls_through(body)
+        });
     }
 
     pub(in super::super) fn check_repeat_stmt(
@@ -118,24 +123,76 @@ impl Checker {
         condition: &Expr,
         span: Span,
     ) {
-        self.scopes.loop_depth += 1;
-        self.scopes.push_scope();
-        for stmt in body {
-            self.check_stmt(stmt);
-        }
-        self.scopes.pop_scope();
-        self.scopes.loop_depth -= 1;
+        self.check_capability_loop(false, |checker| {
+            checker.scopes.push_scope();
+            checker.check_stmt_sequence(body);
+            checker.scopes.pop_scope();
+            let reaches_condition = checker
+                .scopes
+                .join_capability_loop_continues(Self::stmts_fall_through(body));
 
-        let condition_ty = self.check_expr(condition);
-        if matches!(condition_ty, Ty::GenericParam(..)) {
-            self.check_type_compat(&Ty::Boolean, &condition_ty, "repeat condition", span);
-        } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
-            self.error_with_code(
-                SEMA_NON_BOOLEAN_CONDITION,
-                "Repeat/until condition must be a boolean expression",
-                "repeat ... until <boolean>",
-                span,
-            );
+            let condition_ty = if reaches_condition {
+                checker.check_expr(condition)
+            } else {
+                checker.check_unreachable(|checker| checker.check_expr(condition))
+            };
+            if matches!(condition_ty, Ty::GenericParam(..)) {
+                checker.check_type_compat(&Ty::Boolean, &condition_ty, "repeat condition", span);
+            } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
+                checker.error_with_code(
+                    SEMA_NON_BOOLEAN_CONDITION,
+                    "Repeat/until condition must be a boolean expression",
+                    "repeat ... until <boolean>",
+                    span,
+                );
+            }
+            reaches_condition
+        });
+    }
+
+    /// Check backedges to a monotone fixed point before keeping diagnostics.
+    ///
+    /// A later iteration can reach a transfer that precedes the assignment which
+    /// introduced local state. Abrupt exits are captured before subsequent source
+    /// statements can overwrite their binding facts.
+    fn check_capability_loop(
+        &mut self,
+        may_skip: bool,
+        mut check_body: impl FnMut(&mut Self) -> bool,
+    ) {
+        let entry = self.scopes.snapshot_capabilities();
+        let mut head = entry.clone();
+        let errors_before = self.errors.len();
+        self.scopes.loop_depth += 1;
+        loop {
+            self.scopes.restore_capabilities(&head);
+            self.scopes.begin_capability_loop();
+            let falls_through = check_body(self);
+            let flow = self.scopes.finish_capability_loop();
+            let tail = self.scopes.snapshot_capabilities();
+            let mut backedges = vec![head.clone()];
+            if falls_through {
+                backedges.push(tail.clone());
+            }
+            backedges.extend(flow.continues.iter().cloned());
+            self.scopes.join_capability_snapshots(&backedges);
+            let next = self.scopes.snapshot_capabilities();
+            if next == head {
+                let mut exits = Vec::new();
+                if falls_through {
+                    exits.push(tail);
+                }
+                exits.extend(flow.breaks);
+                exits.extend(flow.continues);
+                if may_skip {
+                    exits.push(entry);
+                }
+                self.scopes.join_capability_snapshots(&exits);
+                break;
+            }
+            head = next;
+            self.errors.truncate(errors_before);
         }
+        self.scopes.loop_depth -= 1;
     }
 }

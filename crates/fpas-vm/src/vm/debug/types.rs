@@ -191,8 +191,8 @@ pub struct DebugTaskEvent {
 /// Successful root termination information.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugTermination {
-    /// Root return value.
-    pub value: fpas_bytecode::Value,
+    /// Registered root return value, inspectable after the debug session is dropped.
+    pub value: crate::HostValue,
     /// Number of dispatched packed instructions.
     pub instruction_count: u64,
 }

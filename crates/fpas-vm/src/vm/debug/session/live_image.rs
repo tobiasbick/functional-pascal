@@ -2,6 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
+#[cfg(test)]
+mod maintenance_tests;
+
 use std::sync::Arc;
 
 use fpas_bytecode::VerifiedExecutable;
@@ -104,6 +107,7 @@ impl DebugSession {
         &mut self,
         candidate: Arc<VerifiedExecutable>,
     ) -> Result<LiveImageReplaceResult, DebugSessionError> {
+        let _domain_access = self.runtime.access_domains();
         self.require_inspectable("image.replace")?;
         let classification = self.classify_live_image(&candidate);
         if !classification.accepted {
@@ -251,9 +255,9 @@ fn version_exhausted() -> DebugSessionError {
 fn commit_preparation_failed() -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::LiveImageIncompatible,
-        message: "the live-image update could not remap every retained instruction identity"
+        message: "the live-image update could not remap every retained instruction or callable identity"
             .to_string(),
-        hint: "Keep the current image and rebuild without changing active function bodies or function identities."
+        hint: "Keep the current image. Retained callable graphs require an atomic provenance rebind; numeric function IDs alone cannot authorize the replacement."
             .to_string(),
     }
 }

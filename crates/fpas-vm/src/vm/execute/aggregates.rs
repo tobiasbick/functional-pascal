@@ -1,6 +1,8 @@
 //! Dense global and positional aggregate operations.
 
 mod arrays;
+#[cfg(test)]
+mod global_tests;
 mod records;
 
 use fpas_bytecode::{
@@ -32,6 +34,7 @@ impl Worker {
                     "Initialize every global before its first read.",
                 )
             })?;
+        self.require_storable_value(&value)?;
         self.write(register(o.a)?, value)
     }
 
@@ -39,6 +42,7 @@ impl Worker {
     pub fn store_global(&mut self, o: AbxOperands) -> Result<(), VmError> {
         self.check_global_task_access(o.bx)?;
         let value = self.read(register(o.a)?)?.clone();
+        self.require_storable_value(&value)?;
         let index = usize::try_from(o.bx).map_err(|_| self.bad_slot("global", o.bx))?;
         let mutable = self
             .executable
@@ -108,6 +112,9 @@ impl Worker {
             .checked_mul(2)
             .ok_or_else(|| self.bad_slot("dictionary window", u32::from(o.c)))?;
         let values = self.window(o.b, count)?;
+        for value in &values {
+            self.require_storable_value(value)?;
+        }
         let pairs = values
             .as_chunks::<2>()
             .0
@@ -130,6 +137,9 @@ impl Worker {
         let destination = register(o.a)?;
         let index = self.read(register(o.b)?)?.clone();
         let value = self.read(register(o.c)?)?.clone();
+        self.require_storable_value(&value)?;
+        self.require_storable_value(&index)?;
+        self.require_local_value(self.read(destination)?)?;
         let array_index = match self.read(destination)? {
             Value::Array(values) => {
                 let index = self.array_index(&index)?;
@@ -160,15 +170,13 @@ impl Worker {
                         "Validated IndexSet array lost its index",
                     ));
                 };
-                values[index] = value;
+                values.replace_element(index, value);
                 Value::Array(values)
             }
             Value::Dict(mut pairs) => {
                 let key = index;
-                if let Some((_, existing)) =
-                    pairs.iter_mut().find(|(candidate, _)| *candidate == key)
-                {
-                    *existing = value;
+                if let Some(position) = pairs.iter().position(|(candidate, _)| *candidate == key) {
+                    pairs.replace_value(position, value);
                 } else {
                     pairs.push((key, value));
                 }
@@ -201,6 +209,9 @@ impl Worker {
             .cloned()
             .ok_or_else(|| self.bad_slot("enum variant", u32::from(o.b)))?;
         let values = self.window(o.c, variant.fields.len())?;
+        for value in &values {
+            self.require_storable_value(value)?;
+        }
         let value = SharedEnum::try_new(variant, values).map_err(|error| {
             self.aggregate_error_code(
                 fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
@@ -238,6 +249,7 @@ impl Worker {
 
     pub fn wrap(&mut self, o: AbcOperands, constructor: fn(Value) -> Value) -> Result<(), VmError> {
         let value = self.read(register(o.b)?)?.clone();
+        self.require_storable_value(&value)?;
         self.write(register(o.a)?, constructor(value))
     }
     pub fn none(&mut self, o: AbcOperands) -> Result<(), VmError> {

@@ -1,19 +1,22 @@
 //! Shared storage for first-class function values.
 
 use super::Value;
-use crate::FunctionId;
+use crate::{DomainId, FunctionId, FunctionTarget};
 use std::ops::Deref;
 use std::sync::Arc;
 
 /// Immutable runtime data for a first-class function value.
 ///
-/// `owner_task` is runtime-only identity. It is never serialized into units or
+/// `owner_domain` and executable provenance are runtime-only identities, never serialized into units or
 /// programs. **Documentation:** `docs/pascal/language/functions/closures.md`
 #[derive(Debug, Clone)]
 pub struct FunctionValue {
+    target: FunctionTarget,
     /// Executable target.
     pub function: FunctionId,
-    /// Canonical runtime function name, shared with the executable's prepared name table.
+    /// Display name; defaults to the executable's shared canonical name.
+    ///
+    /// Presentation overrides never change the validated target or its code identity.
     pub name: Arc<str>,
     /// Captured values appended to arguments when invoked.
     pub captures: Vec<Value>,
@@ -21,8 +24,25 @@ pub struct FunctionValue {
     pub bound_receiver: Option<Value>,
     /// Whether mutable capture state prevents crossing task boundaries.
     pub task_bound: bool,
-    /// Owning runtime task when `task_bound` is true; otherwise `None`.
-    pub owner_task: Option<u64>,
+    /// Owning runtime domain when `task_bound` is true; otherwise `None`.
+    pub owner_domain: Option<DomainId>,
+}
+
+impl FunctionValue {
+    /// Borrow this callable's validated executable target.
+    #[must_use]
+    pub fn target(&self) -> &FunctionTarget {
+        &self.target
+    }
+}
+
+impl Drop for FunctionValue {
+    fn drop(&mut self) {
+        if let Some(receiver) = self.bound_receiver.take() {
+            self.captures.push(receiver);
+        }
+        super::drain::values(&mut self.captures);
+    }
 }
 
 /// Shared immutable storage for a first-class function value.
@@ -30,6 +50,10 @@ pub struct FunctionValue {
 pub struct SharedFunction(Arc<FunctionValue>);
 
 impl SharedFunction {
+    pub(super) fn allocation_identity(&self) -> usize {
+        Arc::as_ptr(&self.0) as usize
+    }
+
     pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
         if let Some(mut body) = Arc::into_inner(self.0) {
             pending.append(&mut body.captures);
@@ -38,44 +62,55 @@ impl SharedFunction {
             }
         }
     }
+    /// Override the presentation name while preserving the validated target and ownership.
+    ///
+    /// Existing shared copies retain their original name. Invocation always uses [`FunctionValue::target`].
+    #[must_use]
+    pub fn with_display_name(mut self, name: impl Into<Arc<str>>) -> Self {
+        Arc::make_mut(&mut self.0).name = name.into();
+        self
+    }
+
     /// Create a non-task-bound function with no runtime task owner.
-    pub fn unbound(function: FunctionId, name: impl Into<Arc<str>>, captures: Vec<Value>) -> Self {
+    pub fn unbound(target: FunctionTarget, captures: Vec<Value>) -> Self {
         Self(Arc::new(FunctionValue {
-            function,
-            name: name.into(),
+            function: target.function(),
+            name: Arc::clone(target.name()),
+            target,
             captures,
             bound_receiver: None,
             task_bound: false,
-            owner_task: None,
+            owner_domain: None,
         }))
     }
 
     /// Create a task-bound function owned by one runtime task.
     pub fn task_owned(
-        function: FunctionId,
-        name: impl Into<Arc<str>>,
+        target: FunctionTarget,
         captures: Vec<Value>,
-        owner_task: u64,
+        owner_domain: DomainId,
     ) -> Self {
         Self(Arc::new(FunctionValue {
-            function,
-            name: name.into(),
+            function: target.function(),
+            name: Arc::clone(target.name()),
+            target,
             captures,
             bound_receiver: None,
             task_bound: true,
-            owner_task: Some(owner_task),
+            owner_domain: Some(owner_domain),
         }))
     }
 
     /// Create a non-task-bound method value with one receiver argument.
-    pub fn bound(function: FunctionId, name: impl Into<Arc<str>>, receiver: Value) -> Self {
+    pub fn bound(target: FunctionTarget, receiver: Value) -> Self {
         Self(Arc::new(FunctionValue {
-            function,
-            name: name.into(),
+            function: target.function(),
+            name: Arc::clone(target.name()),
+            target,
             captures: Vec::new(),
             bound_receiver: Some(receiver),
             task_bound: false,
-            owner_task: None,
+            owner_domain: None,
         }))
     }
 }

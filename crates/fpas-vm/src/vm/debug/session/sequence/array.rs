@@ -43,6 +43,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugArrayMutationResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("array.insert")?;
         let result = (|| {
             let prepared = self.prepare_container_mutation(
@@ -115,6 +117,8 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugArrayMutationResult, DebugSessionError> {
+        let _evaluation_scope = self.evaluation_roots.enter();
+        let _domain_access = self.runtime.access_domains();
         self.require_stopped("array.remove")?;
         let result = (|| {
             let prepared = self.prepare_container_mutation(

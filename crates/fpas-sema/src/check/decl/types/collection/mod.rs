@@ -79,7 +79,7 @@ impl Checker {
                     },
                     mutable: false,
                     kind: SymbolKind::Type,
-                    task_bound: false,
+                    capability: crate::TransferCapability::Transferable,
                 },
                 definition.span,
             ) {

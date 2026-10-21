@@ -9,6 +9,13 @@ the labels in the API tables below, including polymorphic operations such as
 `Send(Value := 3, Queue := Queue)` and `Wait(Handle := Job)`.
 Named values evaluate in written order before they are mapped to parameter slots.
 
+Known task-bound callables, arguments, send values and task results are rejected
+with FP3016. Unknown capture state is accepted by the checker and checked at the
+runtime boundary, including for imported factory results. Group and supervised
+starts follow the same rule. Selection callbacks execute on their selecting task
+and may capture its mutable locals; a `SendCase` value must still be transferable.
+See [Capturing closures](../../language/functions/closures.md#concurrency).
+
 ## Waiting and execution
 
 Waiting blocks the calling FPAS task, not necessarily its operating-system thread. A child waiting
@@ -513,7 +520,13 @@ select or explicitly close cases to release their captured values and callback r
 
 `CloseWaitCase` returns true only when discarding a live case. Repeated close, or close after selection,
 returns false. An invalid handle kind or live case owned by another task is a runtime diagnostic.
-VM teardown releases unused cases. Closing a case never closes or cancels its underlying resource.
+Unused cases close when their creating task terminates, after structured child/group
+cleanup and before publishing its outcome. An abandoned supervised attempt closes
+its unused cases before retry; stale copies never refer to the new attempt's cases.
+Claimed cases remain owned by their pending selection. Cleanup does not run callbacks
+or close or cancel underlying resources. A reusable Rust callback session retains
+its cases across invocation returns and closes them at session shutdown or destruction.
+Closing an automatically closed case returns false, as with an explicitly closed case.
 
 Pending selection registers with event sources before probing and uses bounded parking, shortened
 for the earliest timer. A pending child selection saves its cases and execution state and releases

@@ -83,9 +83,10 @@ fn array_operation(
     ) {
         return Ok(None);
     }
+    // The shared storage is copy-on-write, so later caller mutations cannot alter this snapshot.
     let values = worker
         .array_argument(arguments.first(), "Std.Arrays callback")?
-        .to_vec();
+        .clone();
     let callback_index = usize::from(matches!(operation, Reduce)) + 1;
     let callback = arguments
         .get(callback_index)

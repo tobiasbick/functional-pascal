@@ -26,9 +26,20 @@ pub struct FunctionValue {
     pub task_bound: bool,
     /// Owning runtime domain when `task_bound` is true; otherwise `None`.
     pub owner_domain: Option<DomainId>,
+    /// Construction proved that every reachable cell and callable belongs to `owner_domain`
+    /// (or that the graph has none), so invocation needs no graph walk.
+    ///
+    /// Cell payloads change only through writes that validate the same domain.
+    local_graph: bool,
 }
 
 impl FunctionValue {
+    /// Whether construction established an ownership-local capture graph.
+    #[must_use]
+    pub fn is_graph_local(&self) -> bool {
+        self.local_graph
+    }
+
     /// Borrow this callable's validated executable target.
     #[must_use]
     pub fn target(&self) -> &FunctionTarget {
@@ -77,6 +88,7 @@ impl SharedFunction {
             function: target.function(),
             name: Arc::clone(target.name()),
             target,
+            local_graph: captures.iter().all(Value::is_ownership_neutral),
             captures,
             bound_receiver: None,
             task_bound: false,
@@ -94,6 +106,7 @@ impl SharedFunction {
             function: target.function(),
             name: Arc::clone(target.name()),
             target,
+            local_graph: owned_by(&captures, &owner_domain),
             captures,
             bound_receiver: None,
             task_bound: true,
@@ -108,11 +121,18 @@ impl SharedFunction {
             name: Arc::clone(target.name()),
             target,
             captures: Vec::new(),
+            local_graph: receiver.is_ownership_neutral(),
             bound_receiver: Some(receiver),
             task_bound: false,
             owner_domain: None,
         }))
     }
+}
+
+/// Whether every cell and callable reachable from `captures` belongs to `owner`.
+fn owned_by(captures: &[Value], owner: &DomainId) -> bool {
+    super::graph::classify_values(captures)
+        .is_ok_and(|classification| classification.owners.iter().all(|found| found == owner))
 }
 
 impl Deref for SharedFunction {

@@ -25,7 +25,7 @@ fn saved_continuation_accumulator_retains_a_local_cycle_until_discarded() {
             callback,
             None,
             CallbackOperation::ArrayReduce {
-                values: vec![],
+                values: vec![].into(),
                 next: 0,
                 accumulator,
             },

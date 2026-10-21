@@ -78,11 +78,11 @@ impl StringReduction {
         if let Some(scalar) = self.scalars.get(self.next).copied() {
             self.next += 1;
             Advance::Call(CallbackArguments::two(
-                self.accumulator.clone(),
+                std::mem::replace(&mut self.accumulator, Value::Unit),
                 Value::Str(scalar.to_string().into()),
             ))
         } else {
-            Advance::Complete(self.accumulator.clone())
+            Advance::Complete(std::mem::replace(&mut self.accumulator, Value::Unit))
         }
     }
 }

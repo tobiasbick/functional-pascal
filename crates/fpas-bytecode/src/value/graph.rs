@@ -98,6 +98,9 @@ pub fn inspect_values(
 /// # Errors
 /// Rejects foreign local values or an unavailable graph snapshot.
 pub fn validate_local(domain: &MemoryDomain, value: &Value) -> Result<(), OwnershipError> {
+    if value.is_ownership_neutral() {
+        return Ok(());
+    }
     classify_values(std::slice::from_ref(value))?.validate_domain(domain)
 }
 
@@ -105,6 +108,10 @@ pub(super) fn validate_storable(
     domain: &MemoryDomain,
     value: &Value,
 ) -> Result<(), OwnershipError> {
+    // Neutral summaries prove the absence of cells, references and callables.
+    if value.is_ownership_neutral() {
+        return Ok(());
+    }
     let classification = classify_values(std::slice::from_ref(value))?;
     classification.validate_domain(domain)?;
     if classification.has_references {

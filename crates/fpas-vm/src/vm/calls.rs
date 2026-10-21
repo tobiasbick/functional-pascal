@@ -73,6 +73,9 @@ impl Worker {
         if !function.task_bound || function.owner_domain.as_ref() == Some(self.domain.id()) {
             // Invocation may borrow `var` captures during a direct nested call.
             // Retaining the same graph requires the stricter storage validation.
+            if function.is_graph_local() {
+                return Ok(());
+            }
             return self.require_local_value(&Value::Function(function.clone()));
         }
         Err(diagnostics::at_address(
@@ -170,7 +173,7 @@ impl Worker {
     pub(super) fn enter_callback_inline(
         &mut self,
         function: &SharedFunction,
-        arguments: &[Value],
+        arguments: impl ExactSizeIterator<Item = Value>,
     ) -> Result<(), VmError> {
         let argument_count = arguments
             .len()
@@ -187,8 +190,8 @@ impl Worker {
             self.store_register(self.base, receiver.clone())?;
             next = 1;
         }
-        for (index, value) in arguments.iter().enumerate() {
-            self.store_register(self.base + next + index, value.clone())?;
+        for (index, value) in arguments.enumerate() {
+            self.store_register(self.base + next + index, value)?;
         }
         for (index, value) in function.captures.iter().enumerate() {
             self.store_register(self.base + prepared.argument_count + index, value.clone())?;

@@ -98,7 +98,7 @@ impl Worker {
         &self,
         value: Option<&'a Value>,
         _context: &str,
-    ) -> Result<&'a [Value], VmError> {
+    ) -> Result<&'a fpas_bytecode::SharedArray, VmError> {
         match value {
             Some(Value::Array(values)) => Ok(values),
             other => Err(self.callback_type_error("array", other)),

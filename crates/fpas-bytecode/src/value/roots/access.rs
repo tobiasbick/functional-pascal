@@ -180,6 +180,10 @@ impl MemoryDomain {
         if state.external != 0 || state.collecting {
             return;
         }
+        // Nothing to retire and an enclosing execution still owns the domain.
+        if state.execution != 0 && state.pending.is_empty() {
+            return;
+        }
         // Keep ownership while destructors run outside every protocol/storage mutex.
         loop {
             state.external = 1;

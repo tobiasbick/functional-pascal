@@ -2,7 +2,7 @@
 
 mod roots;
 
-use fpas_bytecode::{FunctionId, InstructionAddress, SharedFunction, Value};
+use fpas_bytecode::{FunctionId, InstructionAddress, SharedArray, SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
 use super::sorting::KeyedSort;
@@ -25,7 +25,7 @@ pub(super) enum CallbackOperation {
     ArraySortBy(KeyedSort),
     ArrayFilter(Sequence),
     ArrayReduce {
-        values: Vec<Value>,
+        values: SharedArray,
         next: usize,
         accumulator: Value,
     },
@@ -49,7 +49,7 @@ pub(super) enum CallbackOperation {
 
 /// Cursor over immutable callback inputs.
 pub(super) struct Cursor {
-    pub(super) values: Vec<Value>,
+    pub(super) values: SharedArray,
     next: usize,
 }
 
@@ -154,14 +154,18 @@ impl CallbackContinuation {
                 if let Some(value) = self.pending.take() {
                     *accumulator = value;
                 }
+                // The callee frame becomes the accumulator's only owner while the call runs.
                 if let Some(value) = values.get(*next).cloned() {
                     *next += 1;
                     Ok(Advance::Call(CallbackArguments::two(
-                        accumulator.clone(),
+                        std::mem::replace(accumulator, Value::Unit),
                         value,
                     )))
                 } else {
-                    Ok(Advance::Complete(accumulator.clone()))
+                    Ok(Advance::Complete(std::mem::replace(
+                        accumulator,
+                        Value::Unit,
+                    )))
                 }
             }
             CallbackOperation::ArrayFind(cursor) => {
@@ -298,7 +302,7 @@ impl CallbackOperation {
 
 impl Cursor {
     /// Create a cursor before the first value.
-    pub(super) fn new(values: Vec<Value>) -> Self {
+    pub(super) fn new(values: SharedArray) -> Self {
         Self { values, next: 0 }
     }
 
@@ -315,7 +319,7 @@ impl Cursor {
 
 impl Sequence {
     /// Create an empty array result for the supplied inputs.
-    pub(super) fn new(values: Vec<Value>) -> Self {
+    pub(super) fn new(values: SharedArray) -> Self {
         Self {
             cursor: Cursor::new(values),
             output: Vec::new(),
@@ -393,12 +397,12 @@ impl DictionaryReduction {
         if let Some((key, value)) = self.entries.get(self.next) {
             self.next += 1;
             Advance::Call(CallbackArguments::three(
-                self.accumulator.clone(),
+                std::mem::replace(&mut self.accumulator, Value::Unit),
                 key.clone(),
                 value.clone(),
             ))
         } else {
-            Advance::Complete(self.accumulator.clone())
+            Advance::Complete(std::mem::replace(&mut self.accumulator, Value::Unit))
         }
     }
 }

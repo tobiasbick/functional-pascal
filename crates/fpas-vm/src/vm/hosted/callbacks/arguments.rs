@@ -3,47 +3,49 @@
 use fpas_bytecode::Value;
 
 /// Callback arguments whose supported arity never exceeds three values.
-pub(super) enum CallbackArguments {
-    Empty,
-    One(Value),
-    Two([Value; 2]),
-    Three([Value; 3]),
+pub(super) struct CallbackArguments {
+    values: [Value; 3],
+    len: usize,
 }
 
 impl CallbackArguments {
     /// Construct an empty callback argument list.
     pub(super) const fn empty() -> Self {
-        Self::Empty
+        Self::new([Value::Unit, Value::Unit, Value::Unit], 0)
     }
 
     /// Construct a one-value callback argument list.
     pub(super) fn one(value: Value) -> Self {
-        Self::One(value)
+        Self::new([value, Value::Unit, Value::Unit], 1)
     }
 
     /// Construct a two-value callback argument list.
     pub(super) fn two(first: Value, second: Value) -> Self {
-        Self::Two([first, second])
+        Self::new([first, second, Value::Unit], 2)
     }
 
     /// Construct a three-value callback argument list.
     pub(super) fn three(first: Value, second: Value, third: Value) -> Self {
-        Self::Three([first, second, third])
+        Self::new([first, second, third], 3)
+    }
+
+    const fn new(values: [Value; 3], len: usize) -> Self {
+        Self { values, len }
     }
 
     /// Borrow the initialized values as a contiguous slice.
     pub(super) fn as_slice(&self) -> &[Value] {
-        match self {
-            Self::Empty => &[],
-            Self::One(value) => std::slice::from_ref(value),
-            Self::Two(values) => values,
-            Self::Three(values) => values,
-        }
+        &self.values[..self.len]
     }
 
     /// Return the visible callback arity.
     pub(super) fn len(&self) -> usize {
-        self.as_slice().len()
+        self.len
+    }
+
+    /// Move the initialized values out in argument order.
+    pub(super) fn into_values(self) -> impl ExactSizeIterator<Item = Value> {
+        self.values.into_iter().take(self.len)
     }
 }
 

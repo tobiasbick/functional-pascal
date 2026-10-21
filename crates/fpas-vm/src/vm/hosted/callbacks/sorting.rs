@@ -1,21 +1,21 @@
 //! One key evaluation per snapshot element, followed by stable sorting.
 //! Documentation: `docs/pascal/language/types/array/basics.md`.
 
-use fpas_bytecode::{SourceLocation, Value};
+use fpas_bytecode::{SharedArray, SourceLocation, Value};
 
 use super::arguments::CallbackArguments;
 use super::operation::{Advance, AdvanceError};
 
 /// Snapshot and cached keys retained across task suspension.
 pub(super) struct KeyedSort {
-    values: Vec<Value>,
+    values: SharedArray,
     entries: Vec<(Value, Value)>,
     location: SourceLocation,
 }
 
 impl KeyedSort {
     /// Retain the receiver snapshot before evaluating any keys.
-    pub(super) fn new(values: Vec<Value>, location: SourceLocation) -> Self {
+    pub(super) fn new(values: SharedArray, location: SourceLocation) -> Self {
         Self {
             entries: Vec::with_capacity(values.len()),
             values,

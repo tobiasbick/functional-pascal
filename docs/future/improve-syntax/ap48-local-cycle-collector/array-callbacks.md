@@ -1,6 +1,6 @@
 # AP48 follow-up: Array callback execution
 
-Package: [AP48](README.md). Status: steps 1 through 3 complete; step 4 open.
+Package: [AP48](README.md). Status: steps 1 through 4 complete.
 The delivered AP48.1 through AP48.7 ownership and collection contracts still apply.
 
 ## Goal and sequence
@@ -14,7 +14,7 @@ exclusion, failure inspection and debugger behavior. The work follows four steps
 | 1 | Profile callback execution, root handling and collection | Complete |
 | 2 | Use inline bytecode callback continuations on the main task | Complete |
 | 3 | Complete collection early when no live cell candidates exist | Complete |
-| 4 | Reduce remaining value copies and repeated validation | Open |
+| 4 | Reduce remaining value copies and repeated validation | Complete |
 
 ## Step 1: Establish the cause
 
@@ -91,32 +91,25 @@ The [collector](../../../../crates/fpas-bytecode/src/value/collector/mod.rs),
 and [collector inventory](../../../../crates/fpas-vm/src/vm/domain/COLLECTION.md)
 own this behavior.
 
-## Step 4: Remaining copies and repeated validation — open
+## Step 4: Remove remaining copies
 
-Start from the completed inline/empty-pass implementation and establish which
-copies and checks still occur in the active callback path. The original profile
-includes work already removed by steps 2 and 3.
+Array operations used to materialize their receiver with `to_vec()`, copying every
+element before the first callback. Cursors, reductions and keyed sorts now retain a
+`SharedArray` clone. Its storage is copy-on-write, so a callback that mutates the
+captured source array still leaves the operation's snapshot unchanged, and the
+retained handle remains traced as an execution root.
 
-Concrete inspection targets are array materialization in
-[operation planning](../../../../crates/fpas-vm/src/vm/hosted/callbacks/plan.rs),
-element/accumulator copies in
-[operation state](../../../../crates/fpas-vm/src/vm/hosted/callbacks/operation.rs),
-and callback handle cloning and call preparation in continuations. Retain shared
-input storage or move values where their remaining owners and lifetimes permit it.
-For repeated validation, identify the exact invariant and interval in which it
-cannot change before consolidating checks. Dynamic arguments, results and mutable
-captures still require their applicable ownership checks.
+Reduce-style operations (Array, Dict, Str) move their accumulator into the callback
+call instead of cloning it. The callee frame is then its only owner while the call
+runs, which also lets the callback mutate an array accumulator in place; the pending
+result replaces it afterwards. Callback arguments are moved into the callee registers
+(`CallbackArguments::into_values`) rather than cloned from a slice.
 
-Preserve copy-on-write behavior, alias identity, evaluation order, callback effect
-restrictions, executable provenance, roots across suspension and collection, and
-error/debugger observations. A smaller clone/check count must follow from a clear
-ownership or invariant argument. Reuse the callback/collector regressions and add
-focused cases for any new lifetime or validation boundary.
-
-After implementation, run the applicable Rust/Pascal tests, strict workspace
-Clippy, formatting and project checks, then repeat the same VM benchmark group.
-Store instrumentation, benchmark snapshots and differences under `.temp-data/`.
-Step 4 has not been implemented by this delivery.
+Callback resolution, arity and capture validation stay per call: they depend on the
+callee's frame preparation and the call-depth limit, which change between invocations.
+The regression `tests/stdlib/array/callback_input_snapshot_test.fpas` covers snapshot
+isolation and array accumulators; the existing callback, collector and debugger
+suites cover roots and failure observations. No new benchmark timing was recorded.
 
 ## Verification and measurement records
 

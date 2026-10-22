@@ -116,7 +116,8 @@ impl Worker {
         if let Some(destination) = destination {
             self.write(destination, Value::Task(id))?;
         }
-        scheduler.enqueue(task);
+        // `entry_in_domain` published these roots; only the owner scope was added since.
+        scheduler.enqueue_published(task);
         Ok(())
     }
 }

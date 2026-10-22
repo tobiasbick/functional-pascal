@@ -18,7 +18,7 @@ mod tests;
 mod wakeup_tests;
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 
 use fpas_bytecode::{SourceLocation, Value};
@@ -55,6 +55,8 @@ pub(in crate::vm) struct TaskScheduler {
     pub(in crate::vm) failure_capture:
         std::sync::OnceLock<Arc<crate::vm::failure_capture::CaptureState>>,
     queue: Mutex<VecDeque<ScheduledTask>>,
+    /// Queue length readable without the lock, for the cheap "anything waiting?" check.
+    queued: AtomicUsize,
     available: Condvar,
     timers: TaskTimers<ScheduledTask>,
     accepting_timers: AtomicBool,
@@ -77,6 +79,7 @@ impl TaskScheduler {
             cases: std::sync::OnceLock::new(),
             failure_capture: std::sync::OnceLock::new(),
             queue: Mutex::new(VecDeque::new()),
+            queued: AtomicUsize::new(0),
             available: Condvar::new(),
             timers: TaskTimers::new(),
             accepting_timers: AtomicBool::new(true),
@@ -110,6 +113,12 @@ impl TaskScheduler {
     pub fn enqueue(&self, task: TaskState) {
         let _maintenance = fpas_bytecode::defer_maintenance();
         task.publish_execution();
+        self.enqueue_published(task);
+    }
+
+    /// Enqueue a task whose execution roots are already published and unchanged.
+    pub fn enqueue_published(&self, task: TaskState) {
+        let _maintenance = fpas_bytecode::defer_maintenance();
         let task = match self.failure_capture.get() {
             Some(capture) => capture.save(task, false),
             None => ScheduledTask::Direct(task),
@@ -119,10 +128,11 @@ impl TaskScheduler {
 
     fn enqueue_owned(&self, task: ScheduledTask) {
         let _maintenance = fpas_bytecode::defer_maintenance();
-        self.queue
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .push_back(task);
+        {
+            let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
+            queue.push_back(task);
+            self.queued.store(queue.len(), Ordering::Release);
+        }
         self.available.notify_one();
         // Synchronize queued-work notification with wait-any's predicate-to-sleep transition.
         let _results = self.results.lock().unwrap_or_else(|e| e.into_inner());
@@ -130,20 +140,15 @@ impl TaskScheduler {
     }
     /// Whether any runnable task is waiting for a worker.
     pub fn has_queued(&self) -> bool {
-        !self
-            .queue
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .is_empty()
+        self.queued.load(Ordering::Acquire) != 0
     }
     /// Transfer the next runnable task to its worker without waiting.
     pub fn try_dequeue(&self) -> Option<TaskState> {
         let _maintenance = fpas_bytecode::defer_maintenance();
-        self.queue
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .pop_front()
-            .map(ScheduledTask::take)
+        let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
+        let task = queue.pop_front();
+        self.queued.store(queue.len(), Ordering::Release);
+        task.map(ScheduledTask::take)
     }
     /// Transfer runnable ownership, waiting until work or shutdown is available.
     pub fn dequeue(&self) -> Option<TaskState> {
@@ -151,6 +156,7 @@ impl TaskScheduler {
         let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
         loop {
             if let Some(task) = queue.pop_front() {
+                self.queued.store(queue.len(), Ordering::Release);
                 return Some(task.take());
             }
             if self.is_shutdown() {

@@ -23,15 +23,17 @@ pub(in crate::vm) fn configure(domain: &MemoryDomain, schedule: CollectionSchedu
         MaintenancePolicy::Scheduled(schedule),
     );
 }
+fn scheduled_domain(schedule: CollectionSchedule) -> MemoryDomain {
+    MemoryDomain::with_maintenance(
+        Arc::new(LocalCollector),
+        MaintenancePolicy::Scheduled(schedule),
+    )
+}
 pub(in crate::vm) fn new_domain() -> MemoryDomain {
-    let domain = MemoryDomain::new();
-    configure(&domain, CollectionSchedule::default());
-    domain
+    scheduled_domain(CollectionSchedule::default())
 }
 pub(in crate::vm) fn related_domain(parent: &MemoryDomain) -> MemoryDomain {
-    let domain = MemoryDomain::new();
-    configure(&domain, parent.collection_schedule().unwrap_or_default());
-    domain
+    scheduled_domain(parent.collection_schedule().unwrap_or_default())
 }
 pub(in crate::vm) fn new_session_domain() -> (MemoryDomain, DomainSession) {
     let (domain, session) = MemoryDomain::new_session();

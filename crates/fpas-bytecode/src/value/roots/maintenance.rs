@@ -37,6 +37,13 @@ pub enum MaintenanceOutcome {
     Serviced(u64),
 }
 
+fn schedule(policy: MaintenancePolicy) -> Option<super::CollectionSchedule> {
+    match policy {
+        MaintenancePolicy::Scheduled(schedule) => Some(schedule),
+        _ => None,
+    }
+}
+
 struct CollectionGuard(MemoryDomain, bool);
 impl Drop for CollectionGuard {
     fn drop(&mut self) {
@@ -59,22 +66,34 @@ impl Drop for CollectionGuard {
     }
 }
 impl MemoryDomain {
+    /// Create a domain whose maintenance is installed before it can be shared.
+    #[must_use]
+    pub fn with_maintenance(hook: Arc<dyn DomainMaintenance>, policy: MaintenancePolicy) -> Self {
+        let mut roots = super::DomainRoots::default();
+        roots.pressure.install(schedule(policy));
+        *roots
+            .maintenance
+            .get_mut()
+            .unwrap_or_else(|e| e.into_inner()) = Some(hook);
+        *roots.automatic.get_mut() = policy != MaintenancePolicy::Explicit;
+        *roots.scheduled.get_mut() = matches!(policy, MaintenancePolicy::Scheduled(_));
+        *roots.installed.get_mut() = true;
+        Self::from_roots(roots)
+    }
     /// Install trusted maintenance context without a strong domain back-reference.
     /// VM domains install scheduled reclamation; explicit-only policy supports
     /// diagnostic control and bounded algorithm tests.
     pub fn set_maintenance(&self, hook: Arc<dyn DomainMaintenance>, policy: MaintenancePolicy) {
         let _access = self.access();
-        self.0
-            .roots
-            .access
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .pressure = match policy {
-            MaintenancePolicy::Scheduled(schedule) => {
-                Some(super::scheduling::Pressure::new(schedule))
-            }
-            _ => None,
-        };
+        {
+            let _state = self
+                .0
+                .roots
+                .access
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            self.0.roots.pressure.install(schedule(policy));
+        }
         let old = self
             .0
             .roots
@@ -239,9 +258,7 @@ impl MemoryDomain {
             // This mutex also guards request recording and the owner-release handshake.
             self.0.roots.pending.store(false, Ordering::Release);
             self.0.roots.explicit.store(false, Ordering::Release);
-            if let Some(pressure) = &mut state.pressure {
-                pressure.reset();
-            }
+            self.0.roots.pressure.reset();
             state.collecting = false;
             if state.external == 0 && state.execution == 0 {
                 state.owner = None;

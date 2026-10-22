@@ -157,15 +157,7 @@ impl Drop for CellSnapshot {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take()
             && let Some(value) = Arc::into_inner(snapshot)
-            // Inline scalars own no further storage and need no iterative teardown.
-            && !matches!(
-                value,
-                Value::Integer(_)
-                    | Value::Real(_)
-                    | Value::Boolean(_)
-                    | Value::Unit
-                    | Value::OptionNone
-            )
+            && !is_inline_scalar(&value)
         {
             super::drain::values(&mut vec![value]);
         }
@@ -270,15 +262,11 @@ impl OwnedCell {
         let snapshot = {
             let _access = domain.access();
             let slot = self.lock(false)?;
-            match &**slot {
-                Value::Integer(_)
-                | Value::Real(_)
-                | Value::Boolean(_)
-                | Value::Unit
-                | Value::OptionNone => return Ok((**slot).clone()),
-                // Shared payloads must still be cloned after releasing storage and domain access.
-                _ => CellSnapshot(Some(Arc::clone(&slot))),
+            if is_inline_scalar(&slot) {
+                return Ok((**slot).clone());
             }
+            // Shared payloads must still be cloned after releasing storage and domain access.
+            CellSnapshot(Some(Arc::clone(&slot)))
         };
         Ok((*snapshot).clone())
     }
@@ -323,13 +311,25 @@ impl OwnedCell {
         } else {
             domain.access()
         };
-        graph::validate_storable(domain, &value)?;
-        let next = CellSnapshot(Some(Arc::new(value.into_inner())));
-        let old = {
-            let mut slot = self.lock(nonblocking)?;
-            std::mem::replace(&mut *slot, next.into_arc())
-        };
-        drop(CellSnapshot(Some(old)));
+        if !is_inline_scalar(&value) {
+            graph::validate_storable(domain, &value)?;
+        }
+        let mut slot = self.lock(nonblocking)?;
+        match Arc::get_mut(&mut slot) {
+            // No snapshot shares the payload, so it can change in place.
+            Some(current) => {
+                let old = std::mem::replace(current, value.into_inner());
+                drop(slot);
+                if !is_inline_scalar(&old) {
+                    super::drain::release_value(old);
+                }
+            }
+            None => {
+                let old = std::mem::replace(&mut *slot, Arc::new(value.into_inner()));
+                drop(slot);
+                drop(CellSnapshot(Some(old)));
+            }
+        }
         domain.note_cell_mutation();
         Ok(())
     }
@@ -406,6 +406,14 @@ impl OwnedCell {
             }
         }
     }
+}
+
+/// Inline scalars own no further storage, graph edges or iterative teardown.
+fn is_inline_scalar(value: &Value) -> bool {
+    matches!(
+        value,
+        Value::Integer(_) | Value::Real(_) | Value::Boolean(_) | Value::Unit | Value::OptionNone
+    )
 }
 
 #[cfg(test)]

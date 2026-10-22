@@ -29,12 +29,21 @@ thread_local! {
 static NEXT_TOKEN: AtomicU64 = AtomicU64::new(1);
 
 thread_local! {
-    static TOKEN: u64 = NEXT_TOKEN.fetch_add(1, Ordering::Relaxed);
+    // Const-initialized without a destructor, so reads need no lazy-initialization state.
+    static TOKEN: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
 }
 
-/// Nonzero numeric identity of the calling thread; `u64::MAX` never matches an owner.
+/// Nonzero numeric identity of the calling thread, assigned on first use.
 fn thread_token() -> u64 {
-    TOKEN.try_with(|token| *token).unwrap_or(u64::MAX)
+    TOKEN.with(|token| {
+        let current = token.get();
+        if current != 0 {
+            return current;
+        }
+        let assigned = NEXT_TOKEN.fetch_add(1, Ordering::Relaxed);
+        token.set(assigned);
+        assigned
+    })
 }
 
 /// Identity of the calling thread without cloning its handle on every domain access.
@@ -110,6 +119,7 @@ pub(super) struct DomainRoots {
     installed: AtomicBool,
     serviced: AtomicU64,
     maintenance: Mutex<Option<Arc<dyn DomainMaintenance>>>,
+    pressure: scheduling::Pressure,
 }
 
 impl MemoryDomain {

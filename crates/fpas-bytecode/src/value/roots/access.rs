@@ -22,7 +22,6 @@ pub(super) struct AccessState {
     pub executions: usize,
     pub sessions: usize,
     pub retired: bool,
-    pub pressure: Option<super::scheduling::Pressure>,
 }
 
 /// Reentrant external access, excluding execution and maintenance on other threads.
@@ -214,7 +213,7 @@ impl MemoryDomain {
             return;
         }
         // Keep ownership while destructors run outside every protocol/storage mutex.
-        loop {
+        while !state.pending.is_empty() {
             state.external = 1;
             let pending = std::mem::take(&mut state.pending);
             drop(state);
@@ -226,9 +225,6 @@ impl MemoryDomain {
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
             state.external = 0;
-            if state.pending.is_empty() {
-                break;
-            }
         }
         if state.execution != 0 {
             return;

@@ -74,10 +74,14 @@ impl MemoryDomain {
     /// Create a new identity unrelated to any other live or retired task.
     #[must_use]
     pub fn new() -> Self {
+        Self::from_roots(super::roots::DomainRoots::default())
+    }
+
+    pub(super) fn from_roots(roots: super::roots::DomainRoots) -> Self {
         Self(Arc::new(DomainState {
             id: DomainId(Arc::new(())),
             cells: Mutex::new(HashMap::new()),
-            roots: super::roots::DomainRoots::default(),
+            roots,
             collection: super::collector::Counters::default(),
         }))
     }

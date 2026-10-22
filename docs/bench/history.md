@@ -14,6 +14,99 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-22 — Lazy Task-Roots, Transfer-Summary, In-place-Zellen, atomare Druckzähler (auf fefd38b19)
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 1423 | throughput: enabled/disabled median change -1.2658227848101262% |
+| failure_dump_calls | 1390 | throughput: enabled/disabled median change 1.3157894736842053% |
+| failure_dump_globals | 2046 | throughput: enabled/disabled median change 2.6785714285714306% |
+| failure_dump_spawn_wait | 2342 | throughput: enabled/disabled median change 96.42857142857142% |
+| failure_dump_suspension | 10164 | throughput: enabled/disabled median change 0.5319148936170279% |
+| failure_dump_failure | 1218 | throughput: enabled/disabled median change 4.545454545454547% |
+| failure_dump_large_report | 1892 | throughput: enabled/disabled median change 74.66666666666666% |
+| mandelbrot_render | 734 | - |
+| mandelbrot_paint | 740 | - |
+| integer_loop | 786 | throughput: 63613231 iters/s |
+| typed_real | 169 | - |
+| typed_boolean | 271 | - |
+| typed_string | 143 | - |
+| global_access | 121 | throughput: 41322314 global updates/s |
+| record_field_access | 399 | throughput: 37593984 field accesses/s |
+| closure_call | 155 | throughput: 19354838 closure calls/s |
+| mutable_capture | 243 | throughput: 12345679 captured updates/s |
+| branch_dispatch | 381 | throughput: 52493438 branches/s |
+| dynamic_numeric | 308 | throughput: 16233766 dynamic numeric ops/s |
+| array_push | 68 | throughput: 29411764 pushes/s |
+| array_length | 6 | throughput: 83333333 lengths/s |
+| string_concat | 855 | throughput: 5847953 concats/s |
+| string_length | 6 | throughput: 83333333 lengths/s |
+| intrinsic_dispatch | 177 | throughput: 84745762 intrinsic calls/s |
+| function_call | 277 | throughput: 21660649 calls/s |
+| array_callbacks | 769 | throughput: 12483745 callbacks/s |
+| record_update | 111 | throughput: 9009009 updates/s |
+| unicode_char_at | 276 | throughput: 10869565 chars/s |
+| wrapper_payload | 339 | throughput: 29498525 wrappers/s |
+| task_spawn_wait | 546 | throughput: 183150 tasks/s |
+| task_array_callbacks | 312 | throughput: 12307692 callbacks/s |
+| tui_headless | 1676 | throughput: 298 frames/s |
+| notes_headless | 3464 | throughput: 72 frames/s |
+| tui_styled_cells | 435 | - |
+| analysis_queries | 231 | - |
+| string_search | 74 | - |
+| compiler_lowering | 2209 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+| project_queries | 1049 | - |
+| project_edits | 4313 | - |
+| project_overlapping_queries | 792 | - |
+| project_build_cold | 2570 | - |
+| project_build_warm | 1518 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 2 | - |
+| scalar_membership | 4 | - |
+| array_pop | 1 | - |
+| text_area_locate | 907 | - |
+| http_body_accumulation | 228 | - |
+| local_index_write | 17 | throughput: 37647058 writes/s |
+| cell_grid_headless | 131 | throughput: 763 paints/s |
+| partial_surface_fill | 76 | - |
+| source_utf8_ascii_2048 | 6 | - |
+| source_utf8_ascii_4096 | 12 | - |
+| source_utf8_ascii_8192 | 24 | - |
+| source_utf8_unicode_2048 | 24 | - |
+| source_utf8_unicode_4096 | 50 | - |
+| source_utf8_unicode_8192 | 106 | - |
+| source_notes_ascii_128 | 2 | - |
+| source_notes_ascii_256 | 6 | - |
+| source_notes_ascii_512 | 14 | - |
+| source_queue_ascii_256 | 76 | - |
+| source_queue_ascii_512 | 142 | - |
+| source_queue_ascii_1024 | 283 | - |
+| source_navigation_long_512 | 25 | - |
+| source_navigation_long_1024 | 49 | - |
+| source_navigation_long_2048 | 93 | - |
+| source_navigation_lines_512 | 6 | - |
+| source_navigation_lines_1024 | 8 | - |
+| source_navigation_lines_2048 | 14 | - |
+| errors_enum_construction | 28 | - |
+| errors_typed_construction | 30 | - |
+| errors_generic_direct | 30 | - |
+| errors_generic_helper | 59 | - |
+| errors_generic_callable | 67 | - |
+| errors_map_ok | 290 | - |
+| errors_case_ok | 197 | - |
+| errors_map_error | 922 | - |
+| errors_case_error | 766 | - |
+| errors_constructor_error | 834 | - |
+| errors_cause_message | 1 | - |
+| errors_cause_console | 453 | - |
+| errors_deep_image | 1 | - |
+
 ## 2026-10-21 — Nach Optimierungen (O(1)-Aufrufprüfung, Task-Neutralität, Callbacks im Batch, 7f3ee572b)
 
 - Group: `all`

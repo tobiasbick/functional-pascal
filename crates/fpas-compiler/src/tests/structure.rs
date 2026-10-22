@@ -2,6 +2,7 @@ use super::*;
 
 mod native_aliases;
 mod program_names;
+mod wrappers;
 
 #[test]
 fn identical_source_produces_deterministic_ir_and_bytecode() {

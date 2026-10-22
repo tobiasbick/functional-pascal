@@ -50,9 +50,10 @@ fn deterministic_round_trip_preserves_every_register_table() {
 fn canonical_image_has_target_independent_digest() {
     let bytes = encode(&program_image()).expect("encoded image");
 
+    // The canonical identity includes the current bytecode ABI version.
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "d087d261e9c2a30d8f9722b806cc83fffe000bfbf77836bfa8bcef7b8dbc3074"
+        "a01898715013aaf583541c5c29647990d76e7e6a24351c0264cbed21804ffa2a"
     );
 }
 

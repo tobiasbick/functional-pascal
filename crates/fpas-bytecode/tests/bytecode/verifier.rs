@@ -883,6 +883,42 @@ fn concatenation_accepts_only_the_consume_left_flag() {
 }
 
 #[test]
+fn wrapper_operations_admit_only_the_consume_source_flag() {
+    for opcode in [
+        Opcode::MakeOk,
+        Opcode::MakeError,
+        Opcode::MakeSome,
+        Opcode::UnwrapOk,
+        Opcode::UnwrapError,
+        Opcode::UnwrapSome,
+    ] {
+        for (c, auxiliary, valid) in [
+            (0, 0, true),
+            (0, 1, true),
+            (0, 2, false),
+            (1, 0, false),
+            (1, 1, false),
+        ] {
+            let mut image = minimal_executable();
+            image.functions[0].register_count = 2;
+            replace_root_code(
+                &mut image,
+                vec![abc(opcode, 0, 1, c, auxiliary), return_unit()],
+            );
+            let construction = matches!(
+                opcode,
+                Opcode::MakeSome | Opcode::MakeOk | Opcode::MakeError
+            );
+            assert_eq!(
+                image.verify().is_ok(),
+                valid && (auxiliary == 0 || construction),
+                "{opcode:?} C={c} auxiliary={auxiliary}"
+            );
+        }
+    }
+}
+
+#[test]
 fn move_accepts_only_the_consume_source_flag() {
     for (auxiliary, valid) in [(0, true), (1, true), (2, false)] {
         let mut executable = minimal_executable();

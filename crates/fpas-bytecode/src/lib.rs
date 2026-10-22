@@ -70,4 +70,4 @@ pub use value::{
 
 /// Persistent register instruction-set and intrinsic ABI version recorded in
 /// compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 27;
+pub const BYTECODE_VERSION: u32 = 28;

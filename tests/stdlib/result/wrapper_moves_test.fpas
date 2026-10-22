@@ -1,0 +1,39 @@
+program WrapperMoves;
+
+uses Std.Test as Test;
+
+type Reader = function(): integer;
+
+function MakeReader(): option of result of (Reader, string);
+begin
+  var Count: integer := 40;
+  return Some(
+    Ok(
+      function(): integer begin
+        Count := Count + 1;
+        return Count;
+      end function
+    )
+  );
+end function;
+
+begin
+  const Original: option of option of array of integer := Some(Some([1, 2]));
+  const Copy := Original;
+  var Changed := Copy.Unwrap().Unwrap();
+  Changed[0] := 9;
+  Test.AssertEquals(1, Original.Unwrap().Unwrap()[0]);
+  Test.AssertEquals(9, Changed[0]);
+
+  case Some(Some([3, 4])) of
+    when Some(Some(const Values)):
+      Test.AssertEquals(3, Values[0]);
+      Test.AssertEquals(4, Values[1]);
+    when Some(None), None:
+      Test.AssertTrue(false);
+  end case;
+  const Next := MakeReader().Unwrap().Unwrap();
+  const Alias := Next;
+  Test.AssertEquals(41, Next());
+  Test.AssertEquals(42, Alias());
+end.

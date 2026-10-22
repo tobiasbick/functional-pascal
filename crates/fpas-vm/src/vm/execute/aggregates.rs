@@ -248,8 +248,13 @@ impl Worker {
     }
 
     pub fn wrap(&mut self, o: AbcOperands, constructor: fn(Value) -> Value) -> Result<(), VmError> {
-        let value = self.read(register(o.b)?)?.clone();
-        self.require_storable_value(&value)?;
+        let source = register(o.b)?;
+        self.require_storable_value(self.read(source)?)?;
+        let value = if o.auxiliary == 1 {
+            self.take(source)?
+        } else {
+            self.read(source)?.clone()
+        };
         self.write(register(o.a)?, constructor(value))
     }
     pub fn none(&mut self, o: AbcOperands) -> Result<(), VmError> {

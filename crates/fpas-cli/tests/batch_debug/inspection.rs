@@ -138,6 +138,14 @@ fn worker_stop_exposes_all_stop_tasks() {
     );
     assert_eq!(peer["expressions"][0]["task_id"], 0);
     assert_eq!(peer["expressions"][0]["value"]["kind"], "task");
+    let main = peer["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|task| task["id"] == 0)
+        .unwrap();
+    assert_eq!(main["state"], "waiting");
+    assert_eq!(main["frames"][0]["location"]["line"], 11);
 }
 #[test]
 fn value_bounds_are_explicit_without_failing_successful_inspection() {

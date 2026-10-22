@@ -20,5 +20,6 @@ mod support;
 pub(in crate::vm) mod task_images;
 mod task_owned_functions;
 mod task_scopes;
+mod wrappers;
 
 use support::*;

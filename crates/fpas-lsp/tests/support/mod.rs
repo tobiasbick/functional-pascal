@@ -7,6 +7,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Output, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
+use std::thread::JoinHandle;
 use std::time::Duration;
 
 use serde_json::Value;
@@ -18,6 +20,9 @@ pub struct Transcript {
 }
 
 type MessageFactory = Box<dyn Fn(&[Value]) -> Value>;
+
+/// Upper bound for each awaited server message, so a missing publication fails the test.
+const MESSAGE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Client actions and explicit server-message synchronization in a protocol transcript.
 pub enum TranscriptStep {
@@ -79,8 +84,7 @@ pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
             TranscriptStep::Wait(duration) => std::thread::sleep(*duration),
         }
     }
-    let (output, remaining) = server.finish();
-    messages.extend(parse_frames(&remaining));
+    let output = server.finish(&mut messages);
     Transcript { output, messages }
 }
 
@@ -94,7 +98,8 @@ pub fn frame(value: &Value) -> Vec<u8> {
 struct RunningServer {
     child: Child,
     stdin: ChildStdin,
-    stdout: BufReader<ChildStdout>,
+    messages: Receiver<Value>,
+    reader: JoinHandle<()>,
 }
 
 impl RunningServer {
@@ -107,10 +112,13 @@ impl RunningServer {
             .expect("start fpas-lsp");
         let stdin = child.stdin.take().expect("server stdin");
         let stdout = BufReader::new(child.stdout.take().expect("server stdout"));
+        let (sender, messages) = std::sync::mpsc::channel();
+        let reader = std::thread::spawn(move || read_frames(stdout, &sender));
         Self {
             child,
             stdin,
-            stdout,
+            messages,
+            reader,
         }
     }
 
@@ -121,26 +129,6 @@ impl RunningServer {
         self.stdin.flush().expect("flush LSP frame");
     }
 
-    fn read_message(&mut self) -> Value {
-        let mut content_length = None;
-        loop {
-            let mut line = String::new();
-            self.stdout.read_line(&mut line).expect("read LSP header");
-            assert!(!line.is_empty(), "server stdout ended before a response");
-            if line == "\r\n" {
-                break;
-            }
-            if let Some(value) = line.strip_prefix("Content-Length:") {
-                content_length = Some(value.trim().parse::<usize>().expect("content length"));
-            }
-        }
-        let mut body = vec![0; content_length.expect("Content-Length response header")];
-        self.stdout
-            .read_exact(&mut body)
-            .expect("read complete LSP response");
-        serde_json::from_slice(&body).expect("valid JSON LSP response")
-    }
-
     fn read_through_response(&mut self, expected_id: &Value, messages: &mut Vec<Value>) {
         self.read_until(messages, |message| {
             message.get("method").is_none() && message.get("id") == Some(expected_id)
@@ -149,7 +137,8 @@ impl RunningServer {
 
     fn read_until(&mut self, messages: &mut Vec<Value>, complete: impl Fn(&Value) -> bool) {
         loop {
-            let message = self.read_message();
+            let message = next_message(&self.messages)
+                .expect("server stdout ended before the awaited message");
             let finished = complete(&message);
             if message.get("method").is_some()
                 && let Some(id) = message.get("id")
@@ -167,29 +156,75 @@ impl RunningServer {
         }
     }
 
-    fn finish(mut self) -> (Output, Vec<u8>) {
-        drop(self.stdin);
-        let mut remaining_stdout = Vec::new();
-        self.stdout
-            .read_to_end(&mut remaining_stdout)
-            .expect("read remaining stdout");
-        let status = self.child.wait().expect("wait for fpas-lsp");
+    fn finish(self, messages: &mut Vec<Value>) -> Output {
+        let Self {
+            mut child,
+            stdin,
+            messages: received,
+            reader,
+        } = self;
+        drop(stdin);
+        while let Some(message) = next_message(&received) {
+            messages.push(message);
+        }
+        if let Err(panic) = reader.join() {
+            std::panic::resume_unwind(panic);
+        }
+        let status = child.wait().expect("wait for fpas-lsp");
         let mut stderr = Vec::new();
-        self.child
+        child
             .stderr
             .take()
             .expect("server stderr")
             .read_to_end(&mut stderr)
             .expect("read server stderr");
-        (
-            Output {
-                status,
-                stdout: Vec::new(),
-                stderr,
-            },
-            remaining_stdout,
-        )
+        Output {
+            status,
+            stdout: Vec::new(),
+            stderr,
+        }
     }
+}
+
+/// Next server message, or `None` once stdout has closed.
+fn next_message(messages: &Receiver<Value>) -> Option<Value> {
+    match messages.recv_timeout(MESSAGE_TIMEOUT) {
+        Err(RecvTimeoutError::Disconnected) => None,
+        received => Some(received.expect("server message within MESSAGE_TIMEOUT")),
+    }
+}
+
+/// Forward framed server messages until stdout closes between frames.
+fn read_frames(mut stdout: BufReader<ChildStdout>, sender: &Sender<Value>) {
+    while let Some(message) = read_frame(&mut stdout) {
+        if sender.send(message).is_err() {
+            return;
+        }
+    }
+}
+
+fn read_frame(stdout: &mut BufReader<ChildStdout>) -> Option<Value> {
+    let mut content_length = None;
+    let mut header_started = false;
+    loop {
+        let mut line = String::new();
+        if stdout.read_line(&mut line).expect("read LSP header") == 0 {
+            assert!(!header_started, "stdout ended inside an LSP header");
+            return None;
+        }
+        header_started = true;
+        if line == "\r\n" {
+            break;
+        }
+        if let Some(value) = line.strip_prefix("Content-Length:") {
+            content_length = Some(value.trim().parse::<usize>().expect("content length"));
+        }
+    }
+    let mut body = vec![0; content_length.expect("Content-Length header")];
+    stdout
+        .read_exact(&mut body)
+        .expect("read complete LSP body");
+    Some(serde_json::from_slice(&body).expect("valid JSON LSP body"))
 }
 
 pub fn initialize(id: i64) -> Value {

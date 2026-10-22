@@ -51,6 +51,14 @@ fn task_cycles_return_to_the_allocation_baseline() {
 }
 
 #[test]
+fn callback_cycles_keep_peak_memory_bounded() {
+    measurement::isolated(
+        "callback_cycles_keep_peak_memory_bounded",
+        workloads::callback_cycles,
+    );
+}
+
+#[test]
 fn callback_exports_release_payloads_without_session_growth() {
     measurement::isolated(
         "callback_exports_release_payloads_without_session_growth",

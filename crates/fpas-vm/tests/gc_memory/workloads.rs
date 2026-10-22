@@ -155,3 +155,59 @@ end."#
         }
     }
 }
+
+/// Self-referential closures created by array callbacks, each retaining a private payload.
+const CALLBACK_CYCLES: &str = r#"
+program CallbackCycles;
+
+function MakeCycle(Seed: integer): integer;
+begin
+  var Payload: array of integer := array.Fill(Seed, 128);
+  var Current: function(): integer := function(): integer begin return 0; end function;
+  Current := function(): integer begin
+    if Payload.Length() < 0 then return Current(); end if;
+    return Payload[0];
+  end function;
+  return Current();
+end function;
+
+begin
+  const Seeds: array of integer := array.Fill(1, 1000);
+  var Total := 0;
+  for Round: integer := 1 to 32 do
+    Total := Total + Seeds.Map(MakeCycle).Length();
+  end for;
+  if Total <> 32000 then panic('callback results'); end if;
+end."#;
+
+/// Unreachable cycles are reclaimed during the run, not only when the VM ends.
+pub fn callback_cycles() {
+    // Collected garbage stays near one allocation threshold; 32000 leaked 2 KiB
+    // payloads would retain more than 64 MiB.
+    const BOUND: i128 = 16 * 1024 * 1024;
+    let image = Arc::new(image(CALLBACK_CYCLES));
+    let run = |schedule: CollectionSchedule| {
+        crate::measurement::peak_growth(|| {
+            Vm::from_shared(image.clone())
+                .with_collection_schedule(schedule)
+                .run()
+                .unwrap();
+        })
+    };
+    let disabled = NonZeroUsize::new(100_000_000).unwrap();
+    let uncollected = run(CollectionSchedule {
+        allocations: disabled,
+        mutations: disabled,
+        safe_points: disabled,
+    });
+    assert!(
+        uncollected > BOUND,
+        "control run without collection stayed at {uncollected} bytes"
+    );
+    let collected = run(CollectionSchedule::default());
+    assert!(
+        collected < BOUND,
+        "callback cycles peaked at {collected} bytes"
+    );
+    println!("callback cycles: peak growth {collected} bytes, uncollected {uncollected} bytes");
+}

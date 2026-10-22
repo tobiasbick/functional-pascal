@@ -26,6 +26,7 @@ and then checks that releasing it on a third thread restores the baseline.
 | Aggregate cycles | Two-cell cycles through arrays, dictionary keys/values, records, enums, Option, both Result variants, captures and bound receivers release their backing storage. Payloads include a 64 KiB string and an 8192-element array. Weak observations and allocated/released cell counts verify actual collection before thread exit. |
 | VM | Large captured closure cycles and live aliases behave correctly with default and 1/1/1 collection thresholds. Both successful execution and runtime failure release memory. |
 | Tasks | Concurrent child tasks release cycles on completion and on failure with scope cancellation. The balance includes pool/timer threads and their teardown. |
+| Callback cycles | 32,000 self-referential closures created by `Map` callbacks, each with a private 2 KiB payload, keep sampled peak growth below 16 MiB. A control run with collection thresholds disabled must exceed that bound, so the check detects reclamation deferred to VM teardown. |
 | Callbacks | A persistent session repeatedly exports aliases, invokes them and handles failed callbacks without memory growth. An independent closure remains alive; its last host root is released after session destruction. |
 | Debugger | Repeated breakpoint stops, variable expansion and detached evaluation of a cyclic captured value have stable memory use. Disconnecting a stopped session releases its current payload and inspection/helper roots. |
 

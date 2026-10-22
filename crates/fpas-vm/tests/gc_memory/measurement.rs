@@ -1,6 +1,8 @@
 //! Count requested live bytes, including reallocations and every runtime thread.
 use crate::ALLOCATOR;
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Footprint {
@@ -89,6 +91,27 @@ pub fn completed_threads(name: &str, rounds: usize, exercise: impl Fn() + Sync) 
     balanced_rounds(name, 0, rounds, || {
         std::thread::scope(|scope| scope.spawn(&exercise).join().unwrap());
     });
+}
+
+/// Highest sampled growth of live bytes while `run` executes on this thread.
+///
+/// Sampling can miss short spikes, but a leak grows monotonically and stays visible.
+pub fn peak_growth(run: impl FnOnce()) -> i128 {
+    let baseline = Footprint::now().bytes;
+    let done = AtomicBool::new(false);
+    std::thread::scope(|scope| {
+        let sampler = scope.spawn(|| {
+            let mut peak = baseline;
+            while !done.load(Ordering::Acquire) {
+                peak = peak.max(Footprint::now().bytes);
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            peak
+        });
+        run();
+        done.store(true, Ordering::Release);
+        sampler.join().unwrap() - baseline
+    })
 }
 
 pub fn verify_counter() {

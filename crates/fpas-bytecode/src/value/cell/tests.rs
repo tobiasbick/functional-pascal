@@ -106,6 +106,107 @@ fn snapshots_keep_prior_contents_without_preventing_replacement() {
 }
 
 #[test]
+fn scalar_reads_preserve_values_and_snapshots_across_replacement() {
+    let domain = MemoryDomain::new();
+    for value in [
+        Value::Integer(i64::MIN),
+        Value::Integer(i64::MAX),
+        Value::Real(-0.0),
+        Value::Real(f64::MIN_POSITIVE),
+        Value::Boolean(false),
+        Value::Boolean(true),
+        Value::Unit,
+        Value::OptionNone,
+    ] {
+        let cell = domain.new_cell(value.clone()).unwrap();
+        let snapshot = cell.read_snapshot(&domain).unwrap();
+        let copy = cell.read(&domain).unwrap();
+        let nonblocking = cell.try_read(&domain).unwrap();
+        cell.replace(&domain, Value::Integer(19)).unwrap();
+        assert_eq!(copy, value);
+        assert_eq!(nonblocking, value);
+        assert_eq!(*snapshot, value);
+        if let Value::Real(expected) = value {
+            for actual in [&copy, &nonblocking, &*snapshot] {
+                let Value::Real(actual) = actual else {
+                    panic!("real read changed type");
+                };
+                assert_eq!(actual.to_bits(), expected.to_bits());
+            }
+        }
+        assert_eq!(cell.read(&domain).unwrap(), Value::Integer(19));
+        assert_eq!(cell.try_read(&domain).unwrap(), Value::Integer(19));
+    }
+}
+
+#[test]
+fn shared_reads_keep_cell_aliases_and_copy_on_write_snapshots() {
+    let domain = MemoryDomain::new();
+    let child = domain.new_cell(Value::Integer(7)).unwrap();
+    let weak = child.downgrade();
+    let cell = domain
+        .new_cell(Value::Array(vec![Value::Cell(child)].into()))
+        .unwrap();
+    let snapshot = cell.read_snapshot(&domain).unwrap();
+    let Value::Array(mut first) = cell.read(&domain).unwrap() else {
+        panic!("array read changed type");
+    };
+    let Value::Array(second) = cell.try_read(&domain).unwrap() else {
+        panic!("array read changed type");
+    };
+    first.push(Value::Integer(99));
+    assert_eq!(first.len(), 2);
+    assert_eq!(second.len(), 1);
+    let Value::Array(retained) = &*snapshot else {
+        panic!("snapshot changed type");
+    };
+    assert_eq!(retained.len(), 1);
+    let Value::Cell(alias) = &first[0] else {
+        panic!("cell alias changed type");
+    };
+    alias.replace(&domain, Value::Integer(8)).unwrap();
+    let Value::Cell(alias) = &second[0] else {
+        panic!("cell alias changed type");
+    };
+    assert_eq!(alias.read(&domain).unwrap(), Value::Integer(8));
+    cell.replace(&domain, Value::Unit).unwrap();
+    drop(first);
+    drop(second);
+    assert!(weak.upgrade().is_some());
+    drop(snapshot);
+    assert!(weak.upgrade().is_none());
+}
+
+#[test]
+fn scalar_nonblocking_reads_observe_another_threads_domain_access() {
+    let domain = MemoryDomain::new();
+    let cells = [
+        Value::Integer(7),
+        Value::Real(1.5),
+        Value::Boolean(true),
+        Value::Unit,
+        Value::OptionNone,
+    ]
+    .into_iter()
+    .map(|value| domain.new_cell(value).unwrap())
+    .collect::<Vec<_>>();
+    let access = domain.access();
+    let other = domain.clone();
+    let cells = std::thread::spawn(move || {
+        for cell in &cells {
+            assert_eq!(cell.try_read(&other), Err(OwnershipError::Busy));
+        }
+        cells
+    })
+    .join()
+    .unwrap();
+    drop(access);
+    for cell in cells {
+        assert_eq!(cell.read(&domain).unwrap(), cell.try_read(&domain).unwrap());
+    }
+}
+
+#[test]
 fn classification_and_nonblocking_access_report_busy_cells() {
     let domain = MemoryDomain::new();
     let cell = domain.new_cell(Value::Integer(1)).unwrap();
@@ -131,6 +232,7 @@ fn interrupted_storage_is_unavailable_to_reads_and_writes() {
     });
     assert!(interruption.is_err());
     assert_eq!(cell.read(&domain), Err(OwnershipError::Poisoned));
+    assert_eq!(cell.try_read(&domain), Err(OwnershipError::Poisoned));
     assert_eq!(
         cell.try_replace(&domain, Value::Unit),
         Err(OwnershipError::Poisoned)

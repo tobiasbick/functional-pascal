@@ -257,7 +257,20 @@ impl OwnedCell {
     /// # Errors
     /// Rejects foreign ownership or a poisoned cell.
     pub fn read(&self, domain: &MemoryDomain) -> Result<Value, OwnershipError> {
-        let snapshot = self.read_snapshot(domain)?;
+        self.check_owner(domain)?;
+        let snapshot = {
+            let _access = domain.access();
+            let slot = self.lock(false)?;
+            match &**slot {
+                Value::Integer(_)
+                | Value::Real(_)
+                | Value::Boolean(_)
+                | Value::Unit
+                | Value::OptionNone => return Ok((**slot).clone()),
+                // Shared payloads must still be cloned after releasing storage and domain access.
+                _ => CellSnapshot(Some(Arc::clone(&slot))),
+            }
+        };
         Ok((*snapshot).clone())
     }
 

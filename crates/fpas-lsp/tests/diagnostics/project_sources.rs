@@ -80,7 +80,7 @@ include = ["src/**/*.fpas"]
             TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
             TranscriptStep::Message(initialized()),
             TranscriptStep::Message(open(&main_uri, 1, valid)),
-            TranscriptStep::Wait(ANALYSIS_WAIT),
+            TranscriptStep::WaitForDiagnostics(main_uri.clone(), 1),
             TranscriptStep::Action(Box::new(move || {
                 if invalid_utf8 {
                     std::fs::write(&remove_unit, [0xff]).expect("invalid UTF-8 sibling");
@@ -93,12 +93,12 @@ include = ["src/**/*.fpas"]
                 2,
                 "program Broken;\nbegin\n  if then; end if;\nend.\n",
             )),
-            TranscriptStep::Wait(ANALYSIS_WAIT),
+            TranscriptStep::WaitForDiagnostics(main_uri.clone(), 2),
             TranscriptStep::Action(Box::new(move || {
                 std::fs::write(&restore_unit, unit_source).expect("restore sibling")
             })),
             TranscriptStep::Message(change(&main_uri, 3, valid)),
-            TranscriptStep::Wait(ANALYSIS_WAIT),
+            TranscriptStep::WaitForDiagnostics(main_uri.clone(), 3),
             TranscriptStep::Message(shutdown(2)),
             TranscriptStep::Message(exit()),
         ]);

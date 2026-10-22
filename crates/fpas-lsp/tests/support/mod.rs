@@ -26,6 +26,8 @@ pub enum TranscriptStep {
     Send(Value),
     /// Reads and answers server requests until the named request has arrived.
     WaitForRequest(&'static str),
+    /// Reads server messages until diagnostics for this document version have been published.
+    WaitForDiagnostics(String, i32),
     Action(Box<dyn Fn()>),
     Wait(Duration),
 }
@@ -63,6 +65,14 @@ pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
                 server.read_until(&mut messages, |message| {
                     message.get("method").and_then(Value::as_str) == Some(method)
                         && message.get("id").is_some()
+                });
+            }
+            TranscriptStep::WaitForDiagnostics(uri, version) => {
+                server.read_until(&mut messages, |message| {
+                    message.get("method").and_then(Value::as_str)
+                        == Some("textDocument/publishDiagnostics")
+                        && message["params"]["uri"] == *uri
+                        && message["params"]["version"] == *version
                 });
             }
             TranscriptStep::Action(action) => action(),

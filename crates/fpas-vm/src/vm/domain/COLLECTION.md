@@ -117,3 +117,12 @@ AP48.5 tests. Automatic acceptance also covers repeated closure creation during 
 dispatch, surviving mutable aliases, inherited task configuration, callback/inspection
 churn, native publication, request races and independent VM progress. CLI fixtures
 cover defaults, validation, subprocess propagation and source/cached/debug launches.
+
+The [GC memory regressions](../../../tests/gc_memory/README.md) also check requested
+bytes and outstanding allocations through a process-wide test allocator. Isolated
+cases cover aggregate payloads, VM success/failure, concurrent task completion and
+cancellation, persistent callbacks, and debugger inspection/evaluation. Every round
+must restore the fixed baseline after warm-up; completed threads must also release
+their local pools. Separate bytecode pool tests exercise byte/bucket limits and
+ensure recycled payload boxes retain no values. These balances complement cell
+lifetime observations; they make no assertion about process resident memory.

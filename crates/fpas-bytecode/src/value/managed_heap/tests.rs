@@ -2,6 +2,8 @@ use std::sync::mpsc;
 
 use super::*;
 
+mod limits;
+
 fn clear_local_pools() {
     VALUE_BUFFERS.with_borrow_mut(BufferPool::clear);
     PAIR_BUFFERS.with_borrow_mut(BufferPool::clear);

@@ -1,6 +1,6 @@
 //! Borrowed register-window execution for non-hosted standard-library intrinsics.
 
-mod length;
+mod unary;
 
 use fpas_bytecode::{
     AbcOperands, Intrinsic, IntrinsicOwner, NO_REGISTER, Register, SourceLocation, Value,
@@ -17,7 +17,7 @@ impl Worker {
         &mut self,
         operands: AbcOperands,
     ) -> Result<(), VmError> {
-        if operands.auxiliary == 1 && self.execute_length_intrinsic(operands)? {
+        if operands.auxiliary == 1 && self.execute_unary_intrinsic(operands)? {
             return Ok(());
         }
         let intrinsic = Intrinsic::from_u16(operands.b).ok_or_else(|| {

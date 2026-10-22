@@ -5,6 +5,7 @@ use super::registration::RootEntry;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::thread::ThreadId;
 
 #[derive(Default)]
@@ -29,7 +30,7 @@ pub(super) struct AccessState {
 /// Registered providers and cell locks must be released before this guard. Collection
 /// hooks use their prepared root view, never re-enter graph access or FPAS execution.
 pub struct DomainAccess {
-    domain: MemoryDomain,
+    domain: Option<MemoryDomain>,
     not_send: PhantomData<Rc<()>>,
 }
 
@@ -37,7 +38,14 @@ impl MemoryDomain {
     /// Enter guarded external access. Re-entry from a collection hook is forbidden.
     #[must_use]
     pub fn access(&self) -> DomainAccess {
-        let current = std::thread::current().id();
+        // The executing owner thread already excludes every other accessor and collector.
+        if self.0.roots.exec_owner.load(Ordering::Acquire) == super::thread_token() {
+            return DomainAccess {
+                domain: None,
+                not_send: PhantomData,
+            };
+        }
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -63,7 +71,7 @@ impl MemoryDomain {
         state.owner = Some(current);
         state.external += 1;
         DomainAccess {
-            domain: self.clone(),
+            domain: Some(self.clone()),
             not_send: PhantomData,
         }
     }
@@ -73,7 +81,7 @@ impl MemoryDomain {
     /// Returns Busy when execution/maintenance or another accessor owns this domain.
     pub fn try_access(&self) -> Result<DomainAccess, super::super::OwnershipError> {
         use super::super::OwnershipError;
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -89,7 +97,7 @@ impl MemoryDomain {
         state.owner = Some(current);
         state.external += 1;
         Ok(DomainAccess {
-            domain: self.clone(),
+            domain: Some(self.clone()),
             not_send: PhantomData,
         })
     }
@@ -106,7 +114,7 @@ impl MemoryDomain {
             return Err(OwnershipError::Poisoned);
         }
         if !state.collecting
-            || state.owner != Some(std::thread::current().id())
+            || state.owner != Some(super::current_thread())
             || state.external != 0
             || state.removing != 0
         {
@@ -115,16 +123,36 @@ impl MemoryDomain {
         Ok(())
     }
     pub(in crate::value) fn poison_collection(&self) {
-        self.0
+        let mut state = self
+            .0
             .roots
             .access
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .poisoned = true;
+            .unwrap_or_else(|e| e.into_inner());
+        state.poisoned = true;
+        self.refresh_fast_owner(&state);
+    }
+
+    /// Publish whether the calling thread may skip the access mutex. Requires the state lock.
+    ///
+    /// Holds only while this thread owns an unparked execution gate with no collection or
+    /// poison, so re-entry from a collection hook still reaches the checked slow path.
+    pub(super) fn refresh_fast_owner(&self, state: &AccessState) {
+        let token = if state.execution != 0
+            && !state.collecting
+            && !state.poisoned
+            && state.parked.is_none()
+            && state.owner == Some(super::current_thread())
+        {
+            super::thread_token()
+        } else {
+            0
+        };
+        self.0.roots.exec_owner.store(token, Ordering::Release);
     }
 
     pub(super) fn release_root(&self, root: Arc<RootEntry>) {
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -159,7 +187,7 @@ impl MemoryDomain {
             drop(state);
             drop(root);
             drop(DomainAccess {
-                domain: self.clone(),
+                domain: Some(self.clone()),
                 not_send: PhantomData,
             });
         }
@@ -177,6 +205,7 @@ impl MemoryDomain {
         } else {
             state.external -= 1;
         }
+        self.refresh_fast_owner(&state);
         if state.external != 0 || state.collecting {
             return;
         }
@@ -214,6 +243,8 @@ impl MemoryDomain {
 }
 impl Drop for DomainAccess {
     fn drop(&mut self) {
-        self.domain.release_access(false);
+        if let Some(domain) = &self.domain {
+            domain.release_access(false);
+        }
     }
 }

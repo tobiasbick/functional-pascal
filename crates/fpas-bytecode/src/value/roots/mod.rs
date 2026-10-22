@@ -22,6 +22,28 @@ use std::sync::{Arc, Condvar, Mutex, Weak};
 
 use super::{MemoryDomain, OwnershipError, Value};
 
+thread_local! {
+    static THREAD: std::thread::ThreadId = std::thread::current().id();
+}
+
+static NEXT_TOKEN: AtomicU64 = AtomicU64::new(1);
+
+thread_local! {
+    static TOKEN: u64 = NEXT_TOKEN.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Nonzero numeric identity of the calling thread; `u64::MAX` never matches an owner.
+fn thread_token() -> u64 {
+    TOKEN.try_with(|token| *token).unwrap_or(u64::MAX)
+}
+
+/// Identity of the calling thread without cloning its handle on every domain access.
+fn current_thread() -> std::thread::ThreadId {
+    THREAD
+        .try_with(|id| *id)
+        .unwrap_or_else(|_| std::thread::current().id())
+}
+
 pub use access::DomainAccess;
 pub use defer::{MaintenanceDeferral, defer_maintenance};
 pub use execution::{ExecutionAccess, ExecutionResume, ExecutionRoots, PublishedWait};
@@ -81,6 +103,10 @@ pub(super) struct DomainRoots {
     explicit: AtomicBool,
     automatic: AtomicBool,
     scheduled: AtomicBool,
+    /// Token of the thread that holds an unparked execution gate, else zero.
+    ///
+    /// Written only under the access mutex; lets that thread re-enter graph access without it.
+    exec_owner: AtomicU64,
     installed: AtomicBool,
     serviced: AtomicU64,
     maintenance: Mutex<Option<Arc<dyn DomainMaintenance>>>,

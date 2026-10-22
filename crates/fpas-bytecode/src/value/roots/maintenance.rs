@@ -55,6 +55,7 @@ impl Drop for CollectionGuard {
             state.owner = None;
             self.0.0.roots.available.notify_all();
         }
+        self.0.refresh_fast_owner(&state);
     }
 }
 impl MemoryDomain {
@@ -145,7 +146,7 @@ impl MemoryDomain {
         if super::defer::deferred(self) {
             return MaintenanceOutcome::Deferred;
         }
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -165,6 +166,7 @@ impl MemoryDomain {
         }
         state.owner = Some(current);
         state.collecting = true;
+        self.refresh_fast_owner(&state);
         drop(state);
         let mut collection = CollectionGuard(self.clone(), true);
         loop {
@@ -245,6 +247,7 @@ impl MemoryDomain {
                 state.owner = None;
                 self.0.roots.available.notify_all();
             }
+            self.refresh_fast_owner(&state);
             collection.1 = false;
             return MaintenanceOutcome::Serviced(generation);
         }

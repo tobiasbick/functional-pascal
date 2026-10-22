@@ -157,6 +157,15 @@ impl Drop for CellSnapshot {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take()
             && let Some(value) = Arc::into_inner(snapshot)
+            // Inline scalars own no further storage and need no iterative teardown.
+            && !matches!(
+                value,
+                Value::Integer(_)
+                    | Value::Real(_)
+                    | Value::Boolean(_)
+                    | Value::Unit
+                    | Value::OptionNone
+            )
         {
             super::drain::values(&mut vec![value]);
         }

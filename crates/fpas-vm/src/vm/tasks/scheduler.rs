@@ -128,6 +128,14 @@ impl TaskScheduler {
         let _results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         self.notify_result_change();
     }
+    /// Whether any runnable task is waiting for a worker.
+    pub fn has_queued(&self) -> bool {
+        !self
+            .queue
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_empty()
+    }
     /// Transfer the next runnable task to its worker without waiting.
     pub fn try_dequeue(&self) -> Option<TaskState> {
         let _maintenance = fpas_bytecode::defer_maintenance();

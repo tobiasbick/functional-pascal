@@ -66,7 +66,6 @@ impl TaskState {
         arguments: impl IntoIterator<Item = Value>,
         domain: MemoryDomain,
     ) -> Self {
-        let execution = domain.execution_roots().ok();
         let (registers, register_initialized) = crate::vm::worker::Worker::register_window(
             usize::from(info.register_count),
             function
@@ -76,8 +75,10 @@ impl TaskState {
                 .chain(arguments)
                 .chain(function.captures.iter().cloned()),
         );
-        let state = Self {
-            execution,
+        // The first worker admits execution roots. Until then the state holds only
+        // transferable values, so nothing in its domain needs rooting.
+        Self {
+            execution: None,
             domain,
             capture_record: None,
             observed_task_failure: None,
@@ -97,9 +98,7 @@ impl TaskState {
             callback_continuations: Vec::new(),
             task_scopes: Vec::new(),
             owner_scope: None,
-        };
-        state.publish_execution();
-        state
+        }
     }
 
     /// Publish before taking any scheduler/catalog storage lock. Incomplete views stay busy.

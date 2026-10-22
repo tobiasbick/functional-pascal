@@ -65,7 +65,7 @@ pub use value::{
     RuntimeRecordLayout, SharedArray, SharedDict, SharedEnum, SharedFunction, SharedRecord,
     SharedReference, SharedStr, TraceRoots, Value, VariableReference, WeakOwnedCell,
     classify_values, defer_maintenance, inspect_values, managed_value_buffer, release_values,
-    validate_local,
+    summarized_transferable, validate_local,
 };
 
 /// Persistent register instruction-set and intrinsic ABI version recorded in

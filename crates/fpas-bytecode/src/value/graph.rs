@@ -47,6 +47,18 @@ impl GraphClassification {
     }
 }
 
+/// Whether construction-time summaries alone prove local-memory transferability.
+///
+/// A callable that is neither task-bound nor graph-nonlocal captures only neutral
+/// values. False is inconclusive; classify the complete graph instead.
+#[must_use]
+pub fn summarized_transferable(values: &[Value]) -> bool {
+    values.iter().all(|value| match value {
+        Value::Function(function) => !function.task_bound && function.is_graph_local(),
+        value => value.is_ownership_neutral(),
+    })
+}
+
 /// Classify complete graphs without recursion or deep cloning of wrapper chains.
 ///
 /// Shared aggregates and cells are visited once per allocation. Cell payloads are

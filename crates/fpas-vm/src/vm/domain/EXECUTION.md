@@ -2,6 +2,8 @@
 
 Each logical execution has one movable `ExecutionRoots`. It moves through the
 worker, saved task, catalog and retry boundary; a physical pool template owns none.
+A fresh task entry holds only transferable values, so its first worker admits the
+roots; spawning neither registers nor collects the new domain.
 `ExecutionAccess` is thread-bound and reentrant on its owning thread. Its gate also
 excludes external access and maintenance on other threads. No instruction acquires
 a gate: dispatch acquires once per batch, with outer execution guards covering

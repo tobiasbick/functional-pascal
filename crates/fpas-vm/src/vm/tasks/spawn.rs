@@ -116,7 +116,7 @@ impl Worker {
         if let Some(destination) = destination {
             self.write(destination, Value::Task(id))?;
         }
-        // `entry_in_domain` published these roots; only the owner scope was added since.
+        // A fresh entry has no execution roots to publish yet.
         scheduler.enqueue_published(task);
         Ok(())
     }

@@ -8,6 +8,9 @@ use fpas_diagnostics::codes::{
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
 
+/// Small bound: tasks typically poll their own token and one inherited host token.
+const MAX_CANCELLATION_VIEWS: usize = 8;
+
 impl Worker {
     pub(super) fn cancellation_intrinsic(
         &self,
@@ -45,12 +48,7 @@ impl Worker {
             TaskIntrinsic::IsCancellationRequested => {
                 self.require_cancellation_arguments(arguments, 1)?;
                 let token = self.cancellation_handle(&arguments[0], "CancellationToken")?;
-                Value::Boolean(
-                    self.hosted
-                        .cancellations
-                        .is_cancelled(token)
-                        .map_err(|message| self.cancellation_error(message))?,
-                )
+                Value::Boolean(self.poll_cancellation(token)?)
             }
             TaskIntrinsic::ReceiveCase
             | TaskIntrinsic::SendCase
@@ -102,6 +100,28 @@ impl Worker {
             ),
             "Check the compiler intrinsic signature and register argument count.",
         ))
+    }
+
+    /// Poll a token through a retained view; tasks poll the same shared tokens repeatedly.
+    fn poll_cancellation(&self, token: u64) -> Result<bool, VmError> {
+        let mut views = self.cancellation_views.borrow_mut();
+        if let Some(view) = views.iter().find(|view| view.is_for(token))
+            && let Some(cancelled) = view.is_cancelled()
+        {
+            return Ok(cancelled);
+        }
+        views.retain(|view| !view.is_for(token));
+        let view = self
+            .hosted
+            .cancellations
+            .view(token)
+            .map_err(|message| self.cancellation_error(message))?;
+        let cancelled = view.is_cancelled().unwrap_or(true);
+        if views.len() == MAX_CANCELLATION_VIEWS {
+            views.remove(0);
+        }
+        views.push(view);
+        Ok(cancelled)
     }
 
     /// Decode an opaque cancellation handle before registry validation.

@@ -12,7 +12,33 @@ const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
 #[derive(Default)]
 struct CancellationState {
     cancelled: AtomicBool,
+    /// Set before its owner removes the registry entry, so retained views look it up again.
+    released: AtomicBool,
     changed: Arc<WakeSource>,
+}
+
+/// A token state retained by one worker and read without the registry lock.
+///
+/// Handles are never reused, so a retained view cannot alias another token.
+pub(in crate::vm) struct CancellationView {
+    handle: u64,
+    state: Arc<CancellationState>,
+}
+
+impl CancellationView {
+    /// Whether this view belongs to the given token handle.
+    pub(in crate::vm) fn is_for(&self, handle: u64) -> bool {
+        self.handle == handle
+    }
+
+    /// Current cancellation, or None after release so the registry reports the stale handle.
+    pub(in crate::vm) fn is_cancelled(&self) -> Option<bool> {
+        if self.state.released.load(Ordering::Acquire) {
+            None
+        } else {
+            Some(self.state.cancelled.load(Ordering::Acquire))
+        }
+    }
 }
 
 type Entries = Mutex<HashMap<u64, Arc<CancellationState>>>;
@@ -44,6 +70,7 @@ impl OwnedCancellation {
 impl Drop for OwnedCancellation {
     fn drop(&mut self) {
         self.cancel();
+        self.state.released.store(true, Ordering::Release);
         if let Some(entries) = self.entries.upgrade() {
             entries
                 .lock()
@@ -117,6 +144,14 @@ impl CancellationRegistry {
     /// Return whether cancellation was requested for a token.
     pub(in crate::vm) fn is_cancelled(&self, token: u64) -> Result<bool, String> {
         Ok(self.state(token)?.cancelled.load(Ordering::Acquire))
+    }
+
+    /// Validate a token once and return a view that later reads need not look up again.
+    pub(in crate::vm) fn view(&self, token: u64) -> Result<CancellationView, String> {
+        Ok(CancellationView {
+            handle: token,
+            state: self.state(token)?,
+        })
     }
 
     /// Subscribe before inspecting cancellation; dropping the guard unregisters this wait.

@@ -73,7 +73,7 @@ pub type VmOutput = fpas_std::CapturedOutput;
 
 pub(crate) use shared::{TaskAnyPoll, TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers};
 
-const TIMESLICE: u32 = 256;
+const TIMESLICE: u32 = 65536;
 
 /// Successful root execution result and diagnostic instruction count.
 #[derive(Debug, Clone)]

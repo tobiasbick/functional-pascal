@@ -1,17 +1,26 @@
-# AP48: Task ownership and a local cycle collector
+# AP48: Task ownership and memory management
 
-Status: Complete. Effort: large, across runtime values, VM, sema and host tooling.
-AP48.1 through AP48.7 are delivered, independently reviewed and verified.
-Automatic collection and CLI threshold configuration complete the package.
+Status: extension planned. Effort: very large, across runtime values, VM, sema
+and host tooling. AP48.1 through AP48.7 are delivered, independently reviewed and
+verified. AP48.8 through AP48.12 plan a replacement memory architecture; none is
+implemented. The current runtime remains the corrected local cycle collector.
 Completion is tracked in the [central plan](../README.md#package-status).
 
 ## Goal
 
-Close the gaps in task ownership and value transfers before collecting unreachable
-closure cycles. Keep ordinary reference-counted release and parallel task execution.
-Collection pauses only the owning logical task and coordinates access to its domain.
-This is a garbage collector, not a global interpreter lock. It does not promise
-lock-free execution or a fixed maximum collection pause.
+Simplify ownership, local access and reclamation with a candidate single-owner
+tracing heap per task/domain. Evaluate the design before replacing the delivered
+reference-counted runtime. Parallel task execution remains a design goal; no fixed
+pause or speedup is promised. See [AP48.8](08-memory-architecture.md) for the full
+mandate, invariants and alternatives.
+
+The user permits replacement of all internals, APIs, bytecode and semantics without
+backward compatibility. Preserve FPAS syntax where practical; change it only for a
+concrete need. This authorization removes compatibility constraints, but does not
+choose every transfer or host-lifetime rule. AP48.8/AP48.9 resolve those details.
+The present task records and publishes the plan; runtime implementation has not
+started. Existing behavior below describes the delivered implementation, not a
+requirement to preserve its representation in the extension.
 
 ## Current behavior
 
@@ -51,7 +60,7 @@ Source entry points:
   [host callbacks](../../../../crates/fpas-vm/src/vm/callback.rs)
   and [retained inspection values](../../../../crates/fpas-vm/src/vm/inspection/values/model.rs).
 
-## Contract
+## Delivered contract (AP48.1 through AP48.7)
 
 1. Each logical task owns a unique memory domain, identified across VM and session
    instances. Moving between worker threads preserves that domain. Synchronous
@@ -129,16 +138,35 @@ invocations and Rust embedding constructor signatures remain compatible. The
 thresholds affect running collection frequency; they do not bypass safe points or
 delay required retired/quiescent-domain maintenance.
 
-Q43 replaces the former controlled-budget activation gate. No performance result
-or fixed maximum pause is claimed. With AP48.1 through AP48.6 delivered, completing
-AP48.7 and package acceptance completes AP48; later threshold optimization is an
-independent improvement. Further semantic changes need a new decision.
+Q43 completed activation acceptance for AP48.1 through AP48.7 without a fixed
+performance or pause budget. Q44 through Q49 govern the newly planned extension
+and may replace the delivered contract through a coherent redesign.
+
+### Replacement architecture decisions
+
+| ID | Question | Current decision or remaining choice | Affected work packages |
+| --- | --- | --- | --- |
+| Q44 | What may be replaced? | User-authorized: all internal representations, APIs, bytecode and semantics; no backward compatibility. Prefer unchanged FPAS syntax, but permit necessary syntax changes. Current task is documentation, commit and push. | AP48.8 through AP48.12 |
+| Q45 | What architecture should be evaluated? | Preferred candidate: single-owner heap per logical task/domain, nonmoving mark-and-sweep, cheap local references. Resolve value representation, aggregate semantics/storage, safe points and native cleanup in AP48.8. | AP48.8, AP48.10, AP48.11 |
+| Q46 | How do graphs cross task boundaries? | Open design choice: specify copy, proven ownership transfer and constrained immutable/resource sharing. Start from the existing prohibition on foreign local cells; do not assume mutable captures must become transferable. | AP48.9 through AP48.12 |
+| Q47 | How do host/debugger references survive? | Preferred candidate: persistent rooted handles plus scoped exclusive access. Resolve cross-thread access, retired-heap maintenance, re-entry and shutdown before integration. | AP48.9 through AP48.12 |
+| Q48 | Which collector controls remain meaningful? | Open design choice: choose allocation/live-byte policy after prototyping; existing cell/mutation flags and Rust constructors may be replaced without compatibility adapters. | AP48.11, AP48.12 |
+| Q49 | What justifies adopting the replacement? | Require correct lifetime/reclamation, a simpler explained ownership model and measured execution/memory tradeoffs. Prototype gate before integration; no promised speedup or numerical budget. | AP48.10 through AP48.12 |
+
+These are explicit design tasks, not completed implementations. Record selected
+rules and their consequences in the owning files before changing consumers.
+The broad redesign authorization is already given; do not repeatedly seek
+compatibility approval for internal changes. Escalate a genuine blocker or a
+material unresolved product tradeoff rather than silently choosing contradictory
+semantics. The current handbook remains unchanged until implementation delivers
+the selected behavior.
 
 ## Dependencies and work packages
 
 No prerequisite AP. AP48.1 through AP48.7 are complete, including consumer
-migration, verification, independent review and package acceptance. The ordered
-work packages below own their delivered contracts and regression boundaries.
+migration, verification, independent review and original package acceptance.
+AP48.8 through AP48.12 are the new ordered extension, using the delivered runtime
+as the corrected baseline. The work packages own their contracts and evidence.
 
 - [x] [AP48.1: Owned cells and graph classification](01-owned-values.md)
 - [x] [AP48.2: Runtime transfer enforcement](02-transfer-rules.md)
@@ -147,13 +175,18 @@ work packages below own their delivered contracts and regression boundaries.
 - [x] [AP48.5: Safe points and domain lifecycle](05-safe-points.md)
 - [x] [AP48.6: Local cycle reclamation](06-cycle-collector.md)
 - [x] [AP48.7: Automatic scheduling and acceptance](07-activation.md)
+- [ ] [AP48.8: Replacement memory architecture](08-memory-architecture.md)
+- [ ] [AP48.9: Task transfer, captures and host boundaries](09-task-and-host-boundaries.md)
+- [ ] [AP48.10: Bounded tracing-heap prototype](10-tracing-heap-prototype.md)
+- [ ] [AP48.11: Replace runtime memory management and migrate consumers](11-runtime-replacement.md)
+- [ ] [AP48.12: Memory correctness, performance and package acceptance](12-memory-acceptance.md)
 
 This is the only work-package checklist. Finishing AP48.1 through AP48.4 establishes
 the ownership milestone without enabling collection. AP48.5 establishes the
 collection protocol. AP48.6 adds explicit reclamation. AP48.7 enables automatic runs.
 Follow the [development process](../development-process.md) for delivery and status.
 
-## Package acceptance
+## Delivered acceptance (AP48.1 through AP48.7)
 
 Unreachable cycles are reclaimed during long-running tasks and after task teardown.
 Reachable cycles preserve identity and mutable state. All transfer variants reject
@@ -169,7 +202,16 @@ resident memory. A falling process memory reading alone does not prove reclamati
 Use the acceptance cases in each work package and the
 [shared constraints](../shared-constraints.md); reuse existing tests where adequate.
 
-## Documentation and implementation ownership
+## Extension acceptance
+
+[AP48.12](12-memory-acceptance.md) owns final acceptance for the replacement.
+AP48.10 must first demonstrate the design with a bounded prototype. Full delivery
+requires all value kinds, task boundaries, host/debugger lifetimes and retired
+heaps to use a coherent model, removal of temporary bridges, applicable checks,
+and a reported same-environment comparison. Reuse the safety intent of existing
+tests while adapting obsolete APIs and explicitly changed semantics.
+
+## Delivered documentation and implementation ownership
 
 Runtime value representation and graph traversal belong in `fpas-bytecode` value
 modules. VM domain policy, root enumeration and collection scheduling belong in
@@ -188,4 +230,12 @@ under Q43; they do not block activation or package completion.
 
 [Array callback execution](array-callbacks.md) records the completed profiling,
 inline callback dispatch and empty-collector path, including their rationale and
-verification. Step 4, reducing remaining copies and repeated validation, is open.
+verification. All four steps are complete.
+
+## Research and alternatives
+
+[Runtime comparison](runtime-memory-comparison.md) records the QuickJS, BEAM and
+Wren source review. [Execution access follow-up](execution-access-follow-up.md)
+contains the Lua review and the narrower optimization alternative. The preferred
+next direction is now the AP48.8 architecture investigation, rather than requiring
+further patches to the existing memory model first. Neither candidate is implemented.

@@ -338,8 +338,24 @@ impl Worker {
             Opcode::BranchIfGreaterEqualInteger => BinaryOperation::GreaterEqual,
             _ => unreachable!("integer compare-and-branch opcode"),
         };
-        self.execute_integer_binary(operands, operation)?;
-        let condition = self.branch_condition(operands.a)?;
+        let result = match (
+            self.read_operand(operands.b)?,
+            self.read_operand(operands.c)?,
+        ) {
+            (Value::Integer(left), Value::Integer(right)) => {
+                let Some(result) = direct_integer_binary(operation, *left, *right) else {
+                    unreachable!("integer comparison produces a Boolean");
+                };
+                result
+            }
+            (left, right) => value_ops::binary(operation, left, right)
+                .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?,
+        };
+        let Value::Boolean(condition) = result else {
+            unreachable!("comparison produces a Boolean");
+        };
+        // Preserve the observable result register, but branch on the computed value.
+        self.write_boolean_operand(operands.a, condition)?;
         let branch = self.executable.decoded()[self.ip];
         let target = branch.abx().bx;
         self.ip += 1;

@@ -1,8 +1,13 @@
 # AP48.11: Replace runtime memory management and migrate consumers
 
-Package: [AP48](README.md). Status: planned; blocked on prototype evaluation.
+Package: [AP48](README.md). Status: placeholder; blocked on prototype evaluation.
 Prerequisite: [AP48.10](10-tracing-heap-prototype.md) proceed decision, with
-AP48.8/AP48.9 contracts resolved. Effort: very large. Decisions: Q44 through Q48.
+AP48.8/AP48.9 contracts resolved. Effort: very large. Decisions: Q44 through Q48, Q50.
+
+This scope is too large for one reviewable work package. After the proceed
+decision, replace this file with separately reviewable work packages, for example
+values and collector, compiler and VM, tasks and channels, host and debugger, and
+consumers. Each must build and pass its checks on its own.
 
 ## Goal
 
@@ -73,15 +78,10 @@ bridges may support development but must have an explicit removal point before
 AP48.12 acceptance. Keep the corrected baseline available through Git and saved
 measurement artifacts; do not ship a legacy engine to preserve it.
 
-Do not limit the design artificially to preserve existing FPAS syntax. Where
-semantics change, rewrite tests around the
-selected observable behavior and explain the change. Keep memory-safety and
-reclamation regressions even if their internal APIs disappear. Before implementing
-a syntax change, discuss its concrete proposal with the user and record explicit
-approval, rationale, before/after examples and the affected consumers. Then update
-grammar, parser, formatter, diagnostics, editor support and every repository
-example together. Broad redesign authorization does not replace approval of a
-specific syntax change or make undocumented inconsistencies acceptable.
+Where semantics change, rewrite tests around the selected observable behavior and
+explain the change. Keep memory-safety and reclamation regressions even if their
+internal APIs disappear. An approved syntax change updates grammar, parser,
+formatter, diagnostics, editor support and every repository example together.
 
 Update current documentation only with the delivered behavior: closure and
 concurrency rules, variable references, host Rust APIs, debugger and CLI manuals,

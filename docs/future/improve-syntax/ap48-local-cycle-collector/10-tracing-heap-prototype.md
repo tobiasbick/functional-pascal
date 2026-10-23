@@ -1,22 +1,22 @@
 # AP48.10: Bounded tracing-heap prototype
 
 Package: [AP48](README.md). Status: planned; no implementation or measurements.
-Prerequisites: [AP48.8](08-memory-architecture.md) and
-[AP48.9](09-task-and-host-boundaries.md) contracts sufficient for the prototype.
+Prerequisites: the AP48.8 Phase 0 gate selected the architecture work, Q50 is
+decided, and the [AP48.8](08-memory-architecture.md) and
+[AP48.9](09-task-and-host-boundaries.md) contracts suffice for the prototype.
 Effort: large. Decision: Q49.
 
 ## Purpose and scope
 
 Test whether a single-owner, nonmoving tracing heap makes captures and lifetime
 management substantially simpler while preserving the chosen language behavior.
-The corrected existing runtime is the baseline: commit
-`17bb3f1191963857c921c73a7de78d45c39de804` includes the external-access exclusion
-fix. Rebuild and measure it alongside the candidate; recorded timings are not a
-substitute for a fresh comparison. A microbenchmark of unchecked pointer loads
-is not sufficient evidence to replace it.
+The baseline is the corrected runtime at the commit measured in Phase 0. Rebuild
+and measure it alongside the candidate; recorded timings are not a substitute for
+a fresh comparison. A microbenchmark of unchecked pointer loads is not sufficient
+evidence to replace it.
 
 Implement one vertical slice: closure creation, shared mutable cells, calls and
-returns, recursive/cyclic environments, aggregate edges, persistent host roots,
+returns, recursive/cyclic environments, aggregate edges as selected by Q50, persistent host roots,
 collection and domain teardown. Exercise two independent heaps and at least one
 chosen cross-task transfer path. Cover suspension and worker migration as actual
 ownership transitions, even if the first harness is small.
@@ -72,8 +72,9 @@ remaining concurrent transitions.
 Store scripts, raw samples, logs, binaries/identifiers and reports only beneath
 `.temp-data/ap48-tracing-prototype/`. Record compiler version, build profile,
 commit/dirty patch identity, CPU policy, collector settings and benchmark sources.
-Compare the baseline and candidate in the same cloud environment. Do not use
-repository timings from other machines as a speedup baseline.
+Compare the baseline and candidate on the same machine; local runs are preferred
+for timing, cloud runs supply correctness evidence. Never compare timings across
+machines.
 
 Measure mutable/real/Boolean/string captures, closure calls, array callbacks,
 non-capturing calls, allocation churn, aggregate copies, transfers and tasks.
@@ -99,6 +100,8 @@ Choose proceed, revise or abandon based on that evidence. No numerical speedup i
 pre-approved. If the design is simpler but slower, state the tradeoff explicitly;
 do not silently redefine the workload or tune away correctness checks. A failed
 prototype is useful evidence and does not authorize shipping a partial collector.
+A proceed decision includes splitting AP48.11 into separately reviewable work
+packages.
 
 Inspect module ownership before selecting exact prototype paths. Keep reusable
 tests and design results in the repository; generated artifacts stay in

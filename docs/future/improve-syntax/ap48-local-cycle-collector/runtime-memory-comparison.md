@@ -5,10 +5,9 @@ performance comparison was made. Downloaded sources remain under
 `.temp-data/runtime-gc-review/`.
 
 This supplements the [execution access investigation](execution-access-follow-up.md)
-and its Lua comparison. With compatibility constraints removed by the user, the
-preferred next direction is the [AP48.8 replacement design](08-memory-architecture.md)
-and the AP48.10 prototype. The findings below describe the reviewed runtimes;
-they do not establish that either FPAS design is faster.
+and its Lua comparison. The [AP48.8 replacement design](08-memory-architecture.md)
+builds on these findings after its Phase 0 measurement. The findings below describe
+the reviewed runtimes; they do not establish that either FPAS design is faster.
 
 ## QuickJS
 

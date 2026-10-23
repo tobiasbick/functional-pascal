@@ -1,11 +1,10 @@
 # Execution access follow-up
 
-Status: alternative investigation; no runtime change implemented. The preferred
-next direction is the [AP48.8 architecture redesign](08-memory-architecture.md).
-The user permits replacing internals and semantics without backward compatibility,
-with syntax changes also eligible after discussion and explicit user approval
-of the concrete proposal before implementation. This narrower alternative is not a prerequisite
-for the redesign; the Lua findings and access-safety requirements remain useful.
+Status: alternative investigation; no runtime change implemented. The
+[AP48.8 Phase 0 gate](08-memory-architecture.md#phase-0-measure-the-corrected-baseline)
+selects this narrower alternative if domain access checks dominate the measured
+cost but cell storage does not. The Lua findings and access-safety requirements
+apply to either direction.
 
 See also the [QuickJS, BEAM and Wren comparison](runtime-memory-comparison.md)
 for additional source-based findings and their limits for FPAS.

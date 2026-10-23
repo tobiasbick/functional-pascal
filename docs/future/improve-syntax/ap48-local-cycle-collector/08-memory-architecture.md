@@ -1,49 +1,88 @@
 # AP48.8: Replacement memory architecture
 
-Package: [AP48](README.md). Status: planned; design direction recorded, no prototype.
-Prerequisite: delivered AP48.1 through AP48.7 and the corrected access protocol.
-Effort: large. Decisions: Q44 and Q45.
+Package: [AP48](README.md). Status: planned; Phase 0 not started.
+Prerequisite: delivered AP48.1 through AP48.7, including the external-access
+exclusion fix. Effort: large. Decisions: Q45, Q49 (Phase 0 gate) and Q50.
 
-## Mandate and goal
+## Goal
 
-This hobby project may replace its runtime, compiler internals, bytecode, Rust
-embedding interfaces and language semantics without backward compatibility.
-Syntax changes are valid design options; do not artificially constrain the
-architecture to preserve current syntax. Before implementing a syntax change,
-present its rationale, before/after examples, alternatives and affected consumers
-to the user, obtain explicit approval and record it in the owning work package.
-The general redesign mandate does not approve a specific syntax change.
-Do not build compatibility adapters or retain two
-production memory models merely to preserve old interfaces.
+A smaller, understandable ownership and reclamation model. Correct reclamation,
+predictable alias behavior and comprehensible Rust safety arguments matter before
+throughput. Faster mutable captures are a hypothesis to test. A simpler correct
+design can be worthwhile without a speedup, but measured regressions must be
+visible before adoption.
 
-The goal is a smaller, understandable ownership and reclamation model. Faster
-mutable captures are a hypothesis to test, not a promised outcome. Correct
-reclamation, predictable alias behavior and comprehensible Rust safety arguments
-matter before throughput. A simpler correct design can be worthwhile without a
-large speedup, but measured regressions must be visible before adoption.
-
-The immediate request records this plan and publishes it. It does not start the
-runtime rewrite. AP48.8 is complete only when the concrete design work below is
-done; writing this proposal does not complete the work package.
-
-## Current behavior and reason for reconsidering it
+## Current behavior
 
 FPAS combines reference-counted values, copy-on-write aggregates, domain-owned
-mutable cells, registered roots, domain exclusion and separate cycle reclamation.
-Mutable captures already cannot cross task boundaries. Parallel tasks can share
-eligible values and resource handles under their existing contracts.
+mutable cells (`Arc` storage with a mutex and domain access checks), registered
+roots, domain exclusion and separate cycle reclamation. Aggregates carry
+constant-time ownership summaries (`value/ownership_summary.rs`). Mutable captures
+cannot cross task boundaries; ownership-neutral values and resource handles can.
 
 The corrected implementation counts external guards even when acquired by the
-executing owner. Otherwise an external borrow can survive a safe point, a native
-wait or execution itself without preserving exclusion. That correctness fix
-increases some capture-access costs. Replacing it with another unchecked owner
-shortcut would repeat the bug.
+executing owner (`17bb3f119`). Otherwise an external borrow can survive a safe
+point, a native wait or execution itself without preserving exclusion. Replacing
+it with another unchecked owner shortcut would repeat the bug.
 
-Investigate removing the overlapping lifetime mechanisms for local objects,
-rather than assuming the existing representation is a permanent constraint.
-The [runtime comparison](runtime-memory-comparison.md) explains the useful ideas:
-Wren's small tracing heap, BEAM's process ownership, and QuickJS's contrasting
-reference-counting design. None establishes a performance result for FPAS.
+## Phase 0: measure the corrected baseline
+
+The performance motivation is not yet quantified. [Benchmark history](../../../bench/history.md)
+shows `mutable_capture` at 196 ms before AP48 (`76ac7d6df`), about 545 ms after
+delivery and 234 ms on `ea5a9ee7d`; `closure_call` improved from 145 ms to 135 ms.
+All of these predate the exclusion fix and later capture changes, so the current
+cost is unknown.
+
+1. On one machine, run `mutable_capture`, `closure_call`, `array_callbacks` and the
+   `concurrency` group for the current branch and for `76ac7d6df`, with release
+   builds, warmup and interleaved repetitions. Report medians and spread.
+2. Profile `mutable_capture` and `array_callbacks` on the current branch. Attribute
+   time to domain access checks, the cell mutex, reference-count traffic, ownership
+   classification, collector polls and remaining dispatch.
+3. Record the summary in this file. Raw samples, scripts and logs go under
+   `.temp-data/ap48-phase0/`.
+
+Gate, presented to the user with the numbers (no fixed threshold):
+
+- Memory-protocol costs are a small share and the gap to pre-AP48 is small: the
+  performance motivation is gone. Continue only if simplification alone justifies
+  the effort, or stop the extension.
+- Domain access checks dominate, but cell storage does not: try the narrower
+  permit-reuse alternative in [execution access follow-up](execution-access-follow-up.md)
+  first and measure again.
+- Cell storage, reference counting or classification dominate: continue with Q50
+  and the architecture below.
+
+## Aggregate storage (Q50)
+
+Decide this before the rest of the design; it sets the scope of AP48.9 through
+AP48.11.
+
+Shared storage must never hold hidden strong edges into a local heap, or an
+uncollected cycle between heaps and shared storage becomes possible. Arrays,
+records, dictionaries, enums and `Option`/`Result` payloads can contain closures,
+and closures reference cells. Tracing alone also gives no uniqueness signal for
+copy-on-write.
+
+**Candidate A, hybrid (recommended first).** Only cells and the closure
+environments that hold them live in the domain heap, as handles accessed under
+the execution owner without a mutex or per-access guard. Strings and aggregates
+stay reference-counted with copy-on-write. An aggregate containing a local handle
+is local by its ownership summary, as today; neutral aggregates stay shareable.
+Marking traverses reference-counted aggregates reachable from roots; sweeping
+unmarked cells drops their payloads. Every strong cycle passes through a cell, so
+this reclaims all cycles. Transfers keep "reject local, share neutral" without
+graph copying. Reference-count traffic on aggregates and strings remains.
+
+**Candidate B, complete local heap.** All compound values live in the domain heap
+as tagged values without reference counts. Copy-on-write is replaced by eager
+copies, persistent structures or a compiler-maintained uniqueness mechanism.
+Task boundaries then need graph copying or a separate shared immutable heap
+(AP48.9). This rewrites every aggregate operation, strings and host values.
+
+Choose with the Phase 0 profile: if cell access and classification dominate, A
+suffices; B is relevant only if aggregate reference counting is a measured cost.
+Record the rejected candidate and its reason here.
 
 ## Candidate architecture
 
@@ -51,44 +90,25 @@ reference-counting design. None establishes a performance result for FPAS.
 | --- | --- | --- |
 | Local object heap | One heap per logical task or execution domain | Owner identity survives worker migration and nested calls |
 | Local reclamation | Nonmoving, whole-domain mark-and-sweep | Every object edge and root is enumerated; unreachable cycles reclaim |
-| Local references | Cheap tagged values or object handles | No refcount increment or per-cell mutex needed on proven local access |
+| Local references | Cheap tagged values or object handles | No refcount increment or per-cell mutex on proven local access |
 | Execution | One active mutator per heap | Collection and external inspection cannot overlap an unprotected borrow |
-| Task communication | Explicit copy, transfer or constrained sharing at runtime boundaries | Publication is atomic and cannot expose foreign local pointers |
+| Task communication | Rule selected in AP48.9 | Publication is atomic and cannot expose foreign local pointers |
 | Host/debugger | Registered persistent handles plus scoped access | Retention keeps the heap alive; releasing roots permits reclamation |
 | Native resources | Explicit resource ownership and synchronization | No managed/native cycle can bypass tracing and lifetime rules |
-
-"Explicit" task communication does not imply new source syntax. Existing task
-and channel operations can implement an unambiguous transfer rule internally.
-AP48.9 selects that rule before broad implementation.
 
 ## Heap and value design
 
 Classify every value kind: immediate scalars, strings, arrays, records, enums,
 closures, cells, variable references, task/channel handles, native resources and
 future FPAS2 data types. Each needs a storage owner, trace rule, copy rule and
-destruction rule. Adding a type must not require a second ad hoc GC protocol.
-
-Start the prototype with local closures, cells and the aggregate edges needed
-to connect them. A partial prototype must root every boundary into old storage;
-it is not evidence that the final runtime can safely ignore mixed graphs.
+destruction rule according to Q50. Adding a type must not require a second ad hoc
+GC protocol.
 
 Nonmoving collection avoids relocating live objects, but does not make raw
 pointers safe by itself. Select stable allocation or generation-checked handles;
 document stale-reference prevention and free-slot reuse. Identify the small
 unsafe boundary, if any, and its invariants. Do not make local object access
 thread-safe by silently adding an atomic operation to every access.
-
-Preserving array/record value semantics is separate from preserving today's COW
-representation. Options include immutable backing storage, persistent structures,
-eager copies or a proven uniqueness mechanism. Tracing alone does not tell us
-whether an aggregate is uniquely referenced. AP48.8 must choose a coherent
-candidate before AP48.10 measures aggregate behavior.
-
-Shared immutable storage may retain reference counting if it has a simple,
-acyclic ownership relationship with local heaps. It must never hold hidden strong
-back-pointers into local heaps. If that restriction cannot represent a value,
-copy it, classify it as local or redesign it; do not introduce an uncollected
-cycle between heaps and shared storage.
 
 ## Collector and execution invariants
 
@@ -109,29 +129,24 @@ Choose collection points for allocation slow paths, dispatch boundaries, saved
 tasks, callbacks, native waits and retired heaps. If allocation can collect,
 constructor inputs and partially built objects must already be rooted. If
 allocation defers collection, define the permitted overshoot and failure policy.
-The initial collector is neither concurrent, incremental nor generational; these
-would add barriers and protocols without evidence that we need them.
+The initial collector is neither concurrent, incremental nor generational.
 
 ## Work and acceptance
 
-Inventory the current value modules and the VM's `domain/ROOTS.md`,
-`domain/EXECUTION.md` and `domain/COLLECTION.md`. Produce a replacement ownership
-diagram, value-kind matrix, root inventory and lifecycle state machine. Include
-running, suspended, native-blocked, retired-with-handles and destroyed states,
-with transitions for cancellation and worker migration.
+After the Phase 0 gate and Q50: inventory the current value modules and the VM's
+`domain/ROOTS.md`, `domain/EXECUTION.md` and `domain/COLLECTION.md`. Produce a
+replacement ownership diagram, value-kind matrix, root inventory and lifecycle
+state machine. Include running, suspended, native-blocked, retired-with-handles and
+destroyed states, with transitions for cancellation and worker migration. Record
+alternatives rejected for concrete complexity or semantic reasons.
 
-Resolve heap granularity, object representation, COW replacement, allocation
-safe points and external resource cleanup. Record alternatives rejected for
-concrete complexity or semantic reasons. No need to explore a JIT, WASM,
-generational collector or a new surface language in this package.
+Acceptance: Phase 0 results and gate decision recorded; Q50 decided; every proposed
+pointer edge has an owner and trace/lifetime rule; every transition names its roots
+and exclusive-access condition; no local capture operation depends on unrestricted
+external access. The design supports AP48.9 and a bounded AP48.10 prototype.
 
-Acceptance: every proposed pointer edge has an owner and trace/lifetime rule;
-every transition names its roots and exclusive-access condition; no local
-capture operation depends on unrestricted external access. The design supports
-the boundary contract in AP48.9 and a bounded AP48.10 prototype.
-
-Likely implementation owners are `crates/fpas-bytecode/src/value/` and
-`crates/fpas-vm/src/vm/domain/`. Before implementation, list exact files to create,
-replace and delete after inspecting the checkout. Crate boundaries may change;
-do not preserve a split that forces a circular dependency. Planned rules remain
-here until implemented; the current handbook stays accurate for the shipped VM.
+Likely owners are `crates/fpas-bytecode/src/value/` and `crates/fpas-vm/src/vm/domain/`.
+List exact files to create, replace and delete before implementation. Crate
+boundaries may change; do not preserve a split that forces a circular dependency.
+The existing `value/managed_heap.rs` is a buffer pool, not a heap; rename it if a
+real heap module is introduced.

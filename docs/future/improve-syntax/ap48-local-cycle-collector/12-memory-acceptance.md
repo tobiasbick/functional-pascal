@@ -66,9 +66,9 @@ additional observation, not the pass/fail oracle for object reclamation.
 
 Use the AP48.10 protocol against the corrected old baseline and the fully
 integrated candidate. Store all benchmark artifacts under
-`.temp-data/ap48-memory-acceptance/`. Keep cloud comparisons within that environment;
-do not compare them to unrelated historical machines or rewrite tracked timing
-history. Record exact source/build identities and collector configurations.
+`.temp-data/ap48-memory-acceptance/`. Compare on one machine only and do not
+rewrite tracked timing history. Record exact source/build identities and collector
+configurations.
 
 Include capture-heavy workloads, array callbacks, calls/loops without captures,
 aggregate copying, channel/task transfer, large live sets and repeated cycles.
@@ -93,15 +93,12 @@ blocker that prevents completion. Distinguish environment limitations from produ
 failures with evidence.
 
 Review the final design and implementation against the ownership matrix, root
-inventory, native cleanup and concurrency contracts. Arrange independent review
-when authorized; this planning task itself does not start agents or implementation.
+inventory, native cleanup and concurrency contracts, with independent review.
 Fix confirmed findings, repeat affected checks and preserve any coverage limits.
 
-Verify that every implemented FPAS syntax change has recorded explicit user
-approval for its concrete proposal; broad redesign authorization is insufficient.
-Remove temporary bridges and obsolete APIs/options. Update current manuals and
-runtime inventories, mark work packages complete only with evidence, then update
-the central package status. Record the final chosen architecture, remaining
-tradeoffs and measured results without retaining obsolete design alternatives as
-production requirements. Commit/push/merge follow the user's authorization for
-that implementation work; this document does not pre-authorize a later merge.
+Verify that every implemented syntax change has its recorded approval. Remove
+temporary bridges and obsolete APIs/options. Update current manuals and runtime
+inventories, mark work packages complete only with evidence, then update the
+central package status. Record the final chosen architecture, remaining tradeoffs
+and measured results without retaining obsolete design alternatives as production
+requirements.

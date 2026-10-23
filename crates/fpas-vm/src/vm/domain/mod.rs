@@ -15,7 +15,10 @@ mod transfer;
 pub(in crate::vm) use collector::{configure, new_domain, new_session_domain, related_domain};
 pub(in crate::vm) use transfer::check_transfer;
 
-use fpas_bytecode::{GraphClassification, OwnershipError, Value, classify_values, validate_local};
+use fpas_bytecode::{
+    GraphClassification, OwnershipError, Value, classify_values, summarized_transferable,
+    validate_local,
+};
 use fpas_diagnostics::codes::RUNTIME_INVALID_TASK;
 
 use super::worker::Worker;
@@ -37,11 +40,13 @@ impl Worker {
     }
 
     /// Check the complete contained graph before replacing owned storage.
+    #[inline]
     pub(in crate::vm) fn require_local_value(&self, value: &Value) -> Result<(), VmError> {
         validate_local(&self.domain, value).map_err(|error| self.ownership_error(error))
     }
 
     /// Persistent storage cannot retain an ephemeral `var` reference.
+    #[inline]
     pub(in crate::vm) fn require_storable_value(&self, value: &Value) -> Result<(), VmError> {
         if matches!(
             value,
@@ -53,7 +58,9 @@ impl Worker {
                 | Value::OptionNone
                 | Value::Task(_)
                 | Value::OpaqueHandle(_)
-        ) {
+        ) || summarized_transferable(std::slice::from_ref(value))
+        {
+            // Summaries prove the absence of references without walking aggregates.
             return Ok(());
         }
         let classification = self.classify_local_values(std::slice::from_ref(value))?;

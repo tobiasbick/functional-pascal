@@ -223,6 +223,13 @@ pub(super) fn recycle_values(values: &mut Vec<Value>) {
     let _ = VALUE_BUFFERS.try_with(move |pool| pool.borrow_mut().recycle(values));
 }
 
+/// Recycle a buffer whose elements are primitive leaves without iterative teardown.
+pub(super) fn recycle_plain_values(values: &mut Vec<Value>) {
+    let mut values = mem::take(values);
+    values.clear();
+    let _ = VALUE_BUFFERS.try_with(move |pool| pool.borrow_mut().recycle(values));
+}
+
 pub(super) fn recycle_error_values(values: &mut Vec<Value>) {
     let mut values = mem::take(values);
     super::drain::values(&mut values);

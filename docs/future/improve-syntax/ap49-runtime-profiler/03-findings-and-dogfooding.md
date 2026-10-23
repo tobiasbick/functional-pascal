@@ -1,6 +1,6 @@
 # AP49.3: Findings, documentation and dogfooding
 
-Package: [AP49](README.md). Status: in progress; findings and documentation delivered.
+Package: [AP49](README.md). Status: complete.
 Prerequisite: [AP49.2](02-profile-report.md).
 
 ## Findings
@@ -24,6 +24,26 @@ Profile the headless Mandelbrot benchmark and a live graph of records with
 closures. Fix confirmed runtime defects whose cause the report identifies, with
 regression tests; record collection-policy observations for AP48 without changing
 Q42 defaults.
+
+## Dogfooding results
+
+- Live graph of records with closures: the report attributed 98 % of time to
+  the building routine's `PushInPlace` line, at 177 times the average time per
+  instruction, and classification at 1,667 visits per call. `ArrayPush`,
+  `IndexSet`, `StoreField` and `UpdateRecord` revalidated the whole destination
+  graph on every store. They now validate only the stored value; building
+  20,000 handlers dropped from 39 s to 11 ms. A CLI test asserts linear
+  classification work through the report counters.
+- The same program then reported collection at 93 % of execution time: with
+  20,000 live closures the periodic poll ran 144 passes tracing 5.6 million
+  values (424 ms); with polling disabled, 4 passes (28 ms). Pass cost grows with
+  the live graph while the poll interval is fixed. Collection defaults are Q42
+  in AP48 and stay unchanged; the measurement is recorded in
+  [AP48.8](../ap48-local-cycle-collector/08-memory-architecture.md#phase-0-measure-the-corrected-baseline).
+- Headless Mandelbrot: about 62 % of worker time is in the `Complex` record
+  methods, which allocate per iteration, and pool workers are idle 77 % of the
+  time because each frame waits for its slowest row. Both are properties of the
+  example, not runtime defects.
 
 ## Documentation
 

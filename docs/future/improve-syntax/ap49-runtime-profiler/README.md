@@ -1,6 +1,6 @@
 # AP49: Runtime profiler for agents
 
-Status: in progress. Effort: medium, across `fpas-bytecode`, `fpas-vm` and `fpas-cli`.
+Status: complete. Effort: medium, across `fpas-bytecode`, `fpas-vm` and `fpas-cli`.
 Completion is tracked only in the [central plan](../README.md#package-status).
 
 ## Goal
@@ -52,7 +52,7 @@ mechanisms whose events are counted.
 
 - [x] [AP49.1: Runtime event counters](01-runtime-counters.md)
 - [x] [AP49.2: Routine and line profile report](02-profile-report.md)
-- [ ] [AP49.3: Findings, documentation and dogfooding](03-findings-and-dogfooding.md)
+- [x] [AP49.3: Findings, documentation and dogfooding](03-findings-and-dogfooding.md)
 
 This is the only work-package checklist for this AP. Follow
 [status tracking](../development-process.md#status-tracking); completion does

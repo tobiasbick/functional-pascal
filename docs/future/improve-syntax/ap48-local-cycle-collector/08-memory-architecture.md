@@ -43,6 +43,12 @@ so the remaining cost distribution is unknown.
 3. Record the summary in this file. Raw samples, scripts and logs go under
    `.temp-data/ap48-phase0/`.
 
+Collection policy observation (via `fpas run --profile`): the periodic poll
+collects every 256 batches regardless of heap size. With 20,000 live closures,
+144 passes traced 5.6 million values and took 93 % of execution time (424 ms
+versus 28 ms with polling disabled). Q48 should scale the poll with the live
+graph or back off after passes that reclaim nothing.
+
 Gate, presented to the user with the numbers (no fixed threshold):
 
 - Memory-protocol costs are a small share and the gap to pre-AP48 is small: the

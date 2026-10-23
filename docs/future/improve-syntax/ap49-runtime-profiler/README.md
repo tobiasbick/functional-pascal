@@ -1,28 +1,26 @@
 # AP49: Runtime profiler for agents
 
-Status: complete. Effort: medium, across `fpas-bytecode`, `fpas-vm` and `fpas-cli`.
+Status: AP49.1 through AP49.3 complete; AP49.4 planned.
+Effort: medium, across `fpas-bytecode`, `fpas-vm` and `fpas-cli`.
 Completion is tracked only in the [central plan](../README.md#package-status).
 
 ## Goal
 
-Agents diagnosing slow FPAS programs currently build native samplers, guess at
-inlined Rust frames and isolate hypotheses with handwritten benchmark variants.
-The VM knows which FPAS routine runs and which runtime mechanism costs time, but
-reports neither. This package adds a one-shot profile report, designed like the
+The profiler gives agents a one-shot profile report, designed like the
 [batch debugger](../../../pascal/tools/debugger-batch.md): one run, one bounded
-JSON document, stable field names and short findings that point at the cause.
+JSON document, stable field names and short findings that point at the cost.
+AP49.4 proposes explicit units, structured evidence and comparison metadata to
+reduce interpretation errors.
 
 ## Current behavior and proposed contract
 
-- Current behavior: `fpas run` reports only program output and diagnostics. The
-  VM counts dispatched instructions per worker; no routine, line or runtime-event
-  attribution exists. Native profilers need administrator rights on Windows or
-  cannot attribute samples to FPAS source.
-- Proposed contract: `fpas run --profile <path> <target> [-- args]` runs the
+- Delivered contract: `fpas run --profile <path> <target> [-- args]` runs the
   program normally and then writes one JSON report to a new file. It contains
   wall time, dispatched instructions, the top routines (self and inclusive) and
   source lines, runtime event counters and findings. Without the option, event
   sites cost one relaxed atomic load and dispatch batches one pointer check.
+- Proposed extension: [AP49.4](04-agent-report-contract.md) replaces the version 1
+  report with an explicit version 2 schema. It is planned, not implemented.
 - Preserved behavior: program output, exit codes, diagnostics, scheduling and
   collection semantics are unchanged. The report never contains program values.
 - Excluded scope: native Rust stack sampling, allocation-site tracking, a
@@ -43,7 +41,9 @@ collection defaults found while profiling are out of scope: Q42 belongs to AP48.
 
 ## Open decisions
 
-None for this package.
+AP49.4 records a proposed version 2 report contract. Only its planning
+documentation is authorized; implementation requires a separate instruction.
+The Q51 implementation delegation covers AP49.1 through AP49.3.
 
 ## Dependencies and work packages
 
@@ -53,6 +53,7 @@ mechanisms whose events are counted.
 - [x] [AP49.1: Runtime event counters](01-runtime-counters.md)
 - [x] [AP49.2: Routine and line profile report](02-profile-report.md)
 - [x] [AP49.3: Findings, documentation and dogfooding](03-findings-and-dogfooding.md)
+- [ ] [AP49.4: Reliable profile reports for agents](04-agent-report-contract.md)
 
 This is the only work-package checklist for this AP. Follow
 [status tracking](../development-process.md#status-tracking); completion does

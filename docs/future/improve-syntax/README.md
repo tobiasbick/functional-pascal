@@ -57,7 +57,7 @@ Add new packages here when planning begins; keep the example out of this table.
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [ ] | [AP48: Task ownership and memory management](ap48-local-cycle-collector/README.md) | Very large | None | AP48.1–.7 delivered; AP48.8–.12 planned: baseline measurement (Phase 0), replacement architecture, boundary rules, tracing-heap prototype, integration and acceptance |
-| [x] | [AP49: Runtime profiler for agents](ap49-runtime-profiler/README.md) | Medium | None | Complete: `run --profile` JSON report with routines, lines, runtime counters and findings |
+| [ ] | [AP49: Runtime profiler for agents](ap49-runtime-profiler/README.md) | Medium | None | AP49.1–.3 delivered; AP49.4 planned: explicit percentages, evidence-based structured findings and comparison metadata |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

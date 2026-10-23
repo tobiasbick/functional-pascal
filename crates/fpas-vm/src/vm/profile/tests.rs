@@ -59,6 +59,13 @@ fn batches_attribute_self_and_inclusive_samples_across_pool_tasks() {
     let hot = routine("hot");
     let caller = routine("caller");
     assert_eq!(report.routines[0].name, "hot");
+    assert!(!hot.entry);
+    assert!(
+        report
+            .routines
+            .iter()
+            .any(|routine| routine.entry && routine.name.starts_with("$entry"))
+    );
     assert!(hot.self_sample.instructions * 10 > report.total.instructions * 9);
     // Caller's 200000 iterations plus two spawned 100000-iteration tasks.
     assert!(hot.inclusive.instructions > caller.inclusive.instructions * 3 / 2);

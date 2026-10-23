@@ -19,21 +19,9 @@ counts for the caller, consistent with its inclusive stack.
 
 `fpas run --profile <path>` validates the destination like `--failure-dump`,
 enables counters and VM sampling, runs the program and publishes the report
-atomically, also after a runtime failure. Top-level fields:
-
-| Field | Content |
-| --- | --- |
-| `format`, `version` | `fpas-profile`, `1` |
-| `status`, `exit_code` | `ok` or `error`, and the process exit code |
-| `wall_ms`, `instructions` | Whole-run wall time and dispatched instructions |
-| `attribution` | Text describing batch-boundary attribution and its limits |
-| `routines` | Top 25 by self time: name, source, line, self/inclusive instructions, percent and milliseconds |
-| `lines` | Top 25 source lines by time, with routine name |
-| `counters` | Every AP49.1 counter by name |
-| `findings` | Short ordered statements derived from counters and samples |
-
-Sources are project-relative paths when known. Milliseconds are rounded to three
-decimals. Rows with zero instructions are omitted.
+atomically, also after a runtime failure. AP49.2 delivered report version 1;
+[AP49.4](04-agent-report-contract.md) replaced it with version 2, documented in
+the [handbook](../../../pascal/tools/profiler.md).
 
 ## Acceptance
 

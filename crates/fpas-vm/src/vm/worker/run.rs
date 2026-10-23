@@ -8,7 +8,7 @@ use crate::vm::dispatch::DispatchStep;
 use crate::vm::{RuntimeExecution, VmError, diagnostics};
 
 /// Maximum scheduling steps between two scheduler abort checks.
-const ABORT_CHECK_INTERVAL: u32 = 256;
+const ABORT_CHECK_INTERVAL: u32 = crate::vm::BATCH_STEPS;
 
 impl Worker {
     /// Execute one scheduled task until return, suspension or scheduler abort.

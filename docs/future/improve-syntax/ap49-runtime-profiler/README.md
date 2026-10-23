@@ -1,6 +1,6 @@
 # AP49: Runtime profiler for agents
 
-Status: AP49.1 through AP49.3 complete; AP49.4 planned.
+Status: complete.
 Effort: medium, across `fpas-bytecode`, `fpas-vm` and `fpas-cli`.
 Completion is tracked only in the [central plan](../README.md#package-status).
 
@@ -8,9 +8,8 @@ Completion is tracked only in the [central plan](../README.md#package-status).
 
 The profiler gives agents a one-shot profile report, designed like the
 [batch debugger](../../../pascal/tools/debugger-batch.md): one run, one bounded
-JSON document, stable field names and short findings that point at the cost.
-AP49.4 proposes explicit units, structured evidence and comparison metadata to
-reduce interpretation errors.
+JSON document, stable field names, explicit units, structured findings with
+their evidence and metadata for judging whether two reports compare.
 
 ## Current behavior and proposed contract
 
@@ -19,8 +18,7 @@ reduce interpretation errors.
   wall time, dispatched instructions, the top routines (self and inclusive) and
   source lines, runtime event counters and findings. Without the option, event
   sites cost one relaxed atomic load and dispatch batches one pointer check.
-- Proposed extension: [AP49.4](04-agent-report-contract.md) replaces the version 1
-  report with an explicit version 2 schema. It is planned, not implemented.
+  [AP49.4](04-agent-report-contract.md) delivered report version 2.
 - Preserved behavior: program output, exit codes, diagnostics, scheduling and
   collection semantics are unchanged. The report never contains program values.
 - Excluded scope: native Rust stack sampling, allocation-site tracking, a
@@ -42,9 +40,7 @@ under Q42 in AP48.
 
 ## Open decisions
 
-AP49.4 records a proposed version 2 report contract. Only its planning
-documentation is authorized; implementation requires a separate instruction.
-The Q51 implementation delegation covers AP49.1 through AP49.3.
+None.
 
 ## Dependencies and work packages
 
@@ -54,7 +50,7 @@ mechanisms whose events are counted.
 - [x] [AP49.1: Runtime event counters](01-runtime-counters.md)
 - [x] [AP49.2: Routine and line profile report](02-profile-report.md)
 - [x] [AP49.3: Findings, documentation and dogfooding](03-findings-and-dogfooding.md)
-- [ ] [AP49.4: Reliable profile reports for agents](04-agent-report-contract.md)
+- [x] [AP49.4: Reliable profile reports for agents](04-agent-report-contract.md)
 
 This is the only work-package checklist for this AP. Follow
 [status tracking](../development-process.md#status-tracking); completion does

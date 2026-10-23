@@ -7,6 +7,7 @@
 //! Documentation: `docs/pascal/tools/profiler.md`.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Mutex, PoisonError};
 
 /// One counted runtime event or duration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,19 +90,73 @@ thread_local! {
     static STRIPE: usize = NEXT_STRIPE.fetch_add(1, Ordering::Relaxed) % STRIPES;
 }
 
-/// Reset every counter and start counting.
-pub fn enable() {
-    for stripe in &STRIPES_STORAGE {
-        for count in &stripe.0 {
-            count.store(0, Ordering::Relaxed);
-        }
-    }
-    ENABLED.store(true, Ordering::Release);
+/// Profiled runs currently counting, and whether any of them overlapped.
+static RUNS: Mutex<(usize, bool)> = Mutex::new((0, false));
+
+/// One profiled run's claim on the process-wide counters.
+///
+/// The first concurrent run resets the counters. Overlapping runs share them, so their
+/// snapshots report `exclusive: false`.
+#[must_use]
+pub struct Run {
+    finished: bool,
 }
 
-/// Stop counting; counts remain readable.
-pub fn disable() {
-    ENABLED.store(false, Ordering::Release);
+/// Counter totals of one finished run.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Snapshot {
+    /// Every counter, in report order.
+    pub counts: Vec<(Counter, u64)>,
+    /// No other profiled run counted at any time during this run.
+    pub exclusive: bool,
+}
+
+/// Start counting for one profiled run.
+pub fn begin() -> Run {
+    let mut runs = RUNS.lock().unwrap_or_else(PoisonError::into_inner);
+    if runs.0 == 0 {
+        for stripe in &STRIPES_STORAGE {
+            for count in &stripe.0 {
+                count.store(0, Ordering::Relaxed);
+            }
+        }
+        runs.1 = false;
+    } else {
+        runs.1 = true;
+    }
+    runs.0 += 1;
+    ENABLED.store(true, Ordering::Release);
+    Run { finished: false }
+}
+
+impl Run {
+    /// Stop this run's counting and return the totals it observed.
+    #[must_use]
+    pub fn finish(mut self) -> Snapshot {
+        let exclusive = self.release();
+        Snapshot {
+            counts: totals(),
+            exclusive,
+        }
+    }
+
+    fn release(&mut self) -> bool {
+        self.finished = true;
+        let mut runs = RUNS.lock().unwrap_or_else(PoisonError::into_inner);
+        runs.0 -= 1;
+        if runs.0 == 0 {
+            ENABLED.store(false, Ordering::Release);
+        }
+        !runs.1
+    }
+}
+
+impl Drop for Run {
+    fn drop(&mut self) {
+        if !self.finished {
+            self.release();
+        }
+    }
 }
 
 /// Whether a profiled run is counting events.
@@ -148,9 +203,7 @@ impl Drop for Timer {
     }
 }
 
-/// Sum every counter across stripes.
-#[must_use]
-pub fn snapshot() -> Vec<(Counter, u64)> {
+fn totals() -> Vec<(Counter, u64)> {
     Counter::ALL
         .iter()
         .map(|&counter| {

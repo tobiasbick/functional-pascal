@@ -13,6 +13,9 @@ use fpas_bytecode::{Executable, InstructionAddress};
 
 use super::worker::Worker;
 
+/// Most instructions attributed by one sample: the dispatch batch size.
+pub const MAX_BATCH_STEPS: u32 = super::BATCH_STEPS;
+
 /// Dispatched steps and wall time attributed to one routine or line.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct ProfileSample {
@@ -118,6 +121,8 @@ impl Worker {
 pub struct RoutineProfile {
     /// Diagnostic routine name.
     pub name: String,
+    /// Whether this is the program's entry routine.
+    pub entry: bool,
     /// Source path table index of the routine's first instruction.
     pub source: Option<u32>,
     /// One-based line of the routine's first instruction.
@@ -203,6 +208,7 @@ impl ProfileSink {
                     });
                 RoutineProfile {
                     name: name(function),
+                    entry: function == executable.entry.get(),
                     source: start.map(|(source, _)| source),
                     line: start.map(|(_, line)| line),
                     self_sample: own.get(&function).copied().unwrap_or_default(),

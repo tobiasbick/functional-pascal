@@ -1,6 +1,6 @@
 # AP49.4: Reliable profile reports for agents
 
-Package: [AP49](README.md). Status: planned; documentation only is authorized.
+Package: [AP49](README.md). Status: complete; implemented on user instruction.
 Prerequisites: [AP49.2](02-profile-report.md) and
 [AP49.3](03-findings-and-dogfooding.md), both delivered.
 
@@ -24,8 +24,18 @@ This work package closes gaps that can mislead an agent:
 - Reports show neither how parallel a run was nor the executable identity and
   effective runtime configuration needed to judge whether two runs compare.
 
-The contract below is proposed for implementation. Creating this plan does not
-authorize source changes, commits or profiling runs.
+The contract below is implemented; the [handbook](../../../pascal/tools/profiler.md)
+documents version 2.
+
+## Delivered choices
+
+- Counter scope: counters stay process-wide. `profile::begin()` returns a run guard;
+  overlapping runs share the counters and report `counters_exclusive: false`.
+- `run.tool.build` is the compiler build identity; no source-control revision is
+  embedded. `run.target.digest` hashes the canonical `.fpascp` payload encoding of
+  the executed bytecode with BLAKE3.
+- The dominant-routine rule identifies the entry routine from the executable's entry
+  function. Findings are capped at eight, in the documented rule order.
 
 ## Order of work
 
@@ -174,6 +184,3 @@ until implementation.
    existing CLI and VM coverage where it proves the contract. Confirm bounded
    report output and check that profiling-disabled VM performance stays within
    normal measurement noise using the established benchmark workflow.
-
-For this planning-only delivery, verify relative links and `git diff --check`.
-Do not run implementation tests or benchmarks merely to create the plan.

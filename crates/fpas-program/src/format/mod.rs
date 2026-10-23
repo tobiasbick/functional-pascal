@@ -14,7 +14,7 @@ use std::fmt;
 use crate::ImageError;
 
 pub use read::decode;
-pub use write::encode;
+pub use write::{encode, executable_digest};
 
 /// Current sectioned register `.fpascp` envelope format version.
 pub const PROGRAM_FORMAT_VERSION: u16 = 23;

@@ -86,6 +86,8 @@ pub(super) struct LoweringContext {
     debug_scope: u32,
     debug_scope_stack: Vec<u32>,
     next_value: u32,
+    /// Types of defined values indexed by dense value id, for constant-time lookup.
+    value_types: Vec<Option<TypeId>>,
     max_call_arguments: u32,
     pub(super) can_spawn_tasks: bool,
 }
@@ -310,6 +312,10 @@ impl LoweringContext {
                     )
                 },
             )?,
+            value_types: parameter_types
+                .iter()
+                .map(|parameter| Some(parameter.ty))
+                .collect(),
             max_call_arguments: 0,
             can_spawn_tasks: false,
         })
@@ -327,30 +333,12 @@ impl LoweringContext {
         self.type_table.function_result(callable)
     }
 
+    /// Type of a parameter or emitted value; lowered blocks declare no block parameters.
     pub(super) fn lowered_value_type(&self, value: ValueId) -> Option<TypeId> {
-        if let Some(ty) = self
-            .parameters
-            .iter()
-            .find(|definition| definition.id == value)
-            .map(|definition| definition.ty)
-        {
-            return Some(ty);
-        }
-        if let Some(ty) = self
-            .blocks
-            .iter()
-            .flat_map(|block| &block.parameters)
-            .find(|parameter| parameter.id == value)
-            .map(|parameter| parameter.ty)
-        {
-            return Some(ty);
-        }
-        self.blocks
-            .iter()
-            .flat_map(|block| &block.instructions)
-            .filter_map(|instruction| instruction.result.as_ref())
-            .find(|definition| definition.id == value)
-            .map(|definition| definition.ty)
+        self.value_types
+            .get(value.get() as usize)
+            .copied()
+            .flatten()
     }
 
     pub(super) fn declared_type(
@@ -382,6 +370,11 @@ impl LoweringContext {
             result: Some(ValueDefinition { id: value, ty }),
             operation,
         });
+        let index = value.get() as usize;
+        if self.value_types.len() <= index {
+            self.value_types.resize(index + 1, None);
+        }
+        self.value_types[index] = Some(ty);
         self.record_sequence_point(instruction, source);
         Ok(value)
     }

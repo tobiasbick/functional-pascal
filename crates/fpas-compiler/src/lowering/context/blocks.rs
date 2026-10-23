@@ -106,8 +106,14 @@ impl LoweringContext {
 
     /// Removes only the final block, preserving dense construction indices.
     pub(in crate::lowering) fn remove_last_block_if(&mut self, id: BlockId) {
-        if self.blocks.last().is_some_and(|block| block.id == id) {
-            let _ = self.blocks.pop();
+        if self.blocks.last().is_some_and(|block| block.id == id)
+            && let Some(block) = self.blocks.pop()
+        {
+            for definition in block.instructions.iter().filter_map(|i| i.result.as_ref()) {
+                if let Some(ty) = self.value_types.get_mut(definition.id.get() as usize) {
+                    *ty = None;
+                }
+            }
         }
     }
 

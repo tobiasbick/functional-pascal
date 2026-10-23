@@ -3,11 +3,12 @@ name = "fpas-unit"
 description = "Compiled-unit identities, format, and source-adjacent sidecars for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
 [dependencies]
-atomic-write-file = "0.3.0"
+atomic-write-file = "0.3.1"
 fpas-binary = { path = "../fpas-binary" }
 fpas-bytecode = { path = "../fpas-bytecode" }
 serde = { workspace = true, features = ["rc"] }

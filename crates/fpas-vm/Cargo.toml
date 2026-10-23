@@ -3,6 +3,7 @@ name = "fpas-vm"
 description = "Virtual machine and bytecode interpreter for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
@@ -26,10 +27,10 @@ process-wrap = { version = "10.0.1", default-features = false, features = ["std"
 [target.'cfg(unix)'.dependencies]
 libc.workspace = true
 nix = { version = "0.31.3", features = ["fs"] }
-rustix = { version = "1.1.4", features = ["process"] }
+rustix = { version = "1.1.5", features = ["process"] }
 
 [target.'cfg(windows)'.dependencies]
-tokio = { version = "1.53", features = ["rt-multi-thread", "process", "io-util"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "process", "io-util"] }
 
 [dev-dependencies]
 fpas-compiler = { path = "../fpas-compiler" }

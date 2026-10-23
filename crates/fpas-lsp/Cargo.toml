@@ -2,6 +2,7 @@
 name = "fpas-lsp"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Language Server Protocol transport for Functional Pascal"
@@ -9,18 +10,18 @@ description = "Language Server Protocol transport for Functional Pascal"
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-language-service = { path = "../fpas-language-service" }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1.53.3", features = ["io-std", "macros", "rt-multi-thread", "sync", "time"] }
-tower = "0.5"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["io-std", "macros", "rt-multi-thread", "sync", "time"] }
+tower = "0.5.3"
 tower-lsp-server = "=0.23.0"
-tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
 
 [dev-dependencies]
 fpas-fmt = { path = "../fpas-fmt" }
 fpas-parser = { path = "../fpas-parser" }
-tokio = { version = "1.53.3", features = ["io-util", "process"] }
+tokio = { version = "1.54.1", features = ["io-util", "process"] }
 
 [lints]
 workspace = true

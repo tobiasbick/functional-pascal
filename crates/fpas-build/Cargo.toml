@@ -3,11 +3,12 @@ name = "fpas-build"
 description = "Incremental compiled-unit build engine for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
 [dependencies]
-atomic-write-file = "0.3.0"
+atomic-write-file = "0.3.1"
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }

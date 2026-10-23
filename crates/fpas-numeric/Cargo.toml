@@ -3,6 +3,7 @@ name = "fpas-numeric"
 description = "Shared checked arithmetic and numeric literal grammar for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 

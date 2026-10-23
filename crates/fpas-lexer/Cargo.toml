@@ -3,6 +3,7 @@ name = "fpas-lexer"
 description = "Tokenizer and lexical analysis for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 

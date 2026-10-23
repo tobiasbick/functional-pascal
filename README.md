@@ -30,6 +30,10 @@ A modern, function-first programming language built on Pascal's readable syntax.
 
 ### Build from source
 
+Rust 1.99.1 or newer is required. Install Rust through [rustup](https://rustup.rs/);
+the repository's `rust-toolchain.toml` selects Rust 1.99.1 with rustfmt and Clippy
+for reproducible development builds.
+
 ```sh
 git clone https://github.com/tobiasbick/functional-pascal.git
 cd functional-pascal
@@ -118,7 +122,7 @@ npm run package --prefix editors/vscode
 This compiles the extension and verifies the archive without building FPAS or
 running integration tests. To run the full extension test suite before packaging,
 use `npm run package:verified --prefix editors/vscode`; that command also requires
-a stable Rust toolchain.
+the repository's pinned Rust toolchain.
 
 The result is `editors/vscode/dist/functional-pascal-<version>.vsix`. Install
 it in VS Code, Cursor, VSCodium, or another compatible desktop editor through

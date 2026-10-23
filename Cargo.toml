@@ -9,6 +9,7 @@ codegen-units = 1
 [workspace.package]
 version = "0.0.1"
 edition = "2024"
+rust-version = "1.99.1"
 license = "BSD-3-Clause"
 repository = "https://github.com/tobiasbick/functional-pascal"
 description = "A modern, function-first programming language built on Pascal's readable syntax"
@@ -25,23 +26,23 @@ todo = "warn"
 
 [workspace.dependencies]
 allocation-counter = "0.8.1"
-blake3 = "1.8.5"
+blake3 = "1.8.7"
 caseless = "0.2.2"
-crossterm = "0.29"
-glob = "0.3"
+crossterm = "0.29.0"
+glob = "0.3.4"
 getrandom = "0.4.3"
-libc = "0.2.190"
-mimalloc = "0.1"
+libc = "0.2.191"
+mimalloc = "0.1.52"
 rand = "0.10.3"
 rand_chacha = "0.10.0"
 rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
-rustls = { version = "0.23.45", default-features = false, features = ["ring", "std", "tls12"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 rustls-platform-verifier = "0.7.1"
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
 # Objects keep insertion order so Std.Json agrees with ordered FPAS dictionaries.
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
-socket2 = "0.6"
+socket2 = "0.6.5"
 stats_alloc = "0.1.10"
 toml = "1.1.8"
-unicode-segmentation = "1"
-unicode-width = "0.2"
+unicode-segmentation = "1.13.3"
+unicode-width = "0.2.2"

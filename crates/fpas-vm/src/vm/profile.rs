@@ -246,6 +246,12 @@ impl super::Vm {
         let _ = self.hosted.profile.set(std::sync::Arc::default());
     }
 
+    /// Pool threads that run spawned tasks; zero when the program spawns none.
+    #[must_use]
+    pub fn worker_count(&self) -> usize {
+        self.pool_size
+    }
+
     /// Resolve the samples of a finished run; `None` unless profiling was enabled.
     #[must_use]
     pub fn profile_report(&self) -> Option<ProfileReport> {

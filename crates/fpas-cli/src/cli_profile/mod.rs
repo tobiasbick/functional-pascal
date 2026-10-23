@@ -45,7 +45,14 @@ impl Session {
         profile::disable();
         let counters = profile::snapshot();
         let report = vm.profile_report().unwrap_or_default();
-        let document = render(&report, &counters, wall, exit_code, sources);
+        let document = render(
+            &report,
+            &counters,
+            wall,
+            vm.worker_count(),
+            exit_code,
+            sources,
+        );
         let mut bytes = serde_json::to_vec_pretty(&document)?;
         bytes.push(b'\n');
         crate::cli_failure_dump::publish_report(&self.destination, &bytes)
@@ -62,6 +69,8 @@ pub(crate) struct Evidence<'a> {
     pub report: &'a ProfileReport,
     pub counters: &'a [(Counter, u64)],
     pub wall: Duration,
+    /// Pool threads of the profiled VM.
+    pub workers: usize,
 }
 
 impl Evidence<'_> {
@@ -77,6 +86,7 @@ fn render(
     report: &ProfileReport,
     counters: &[(Counter, u64)],
     wall: Duration,
+    workers: usize,
     exit_code: i32,
     sources: Option<&[PathBuf]>,
 ) -> Json {
@@ -129,6 +139,7 @@ fn render(
         report,
         counters,
         wall,
+        workers,
     };
     let hot_source = report
         .routines

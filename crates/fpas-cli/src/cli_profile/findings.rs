@@ -32,8 +32,8 @@ pub(super) fn derive(evidence: &Evidence<'_>, hot_source: Option<&str>) -> Vec<S
     if calls > 0 && visited / calls >= 1000 {
         findings.push(format!(
             "Ownership classification visited {} allocations per call on average over {calls} \
-             calls. Storing into a large aggregate that contains functions or cells revalidates \
-             its whole graph on each store.",
+             calls. Values with functions or cells are classified when stored or transferred; \
+             vary the stored value's graph size and inspect the hot call sites.",
             visited / calls,
         ));
     }
@@ -47,10 +47,7 @@ pub(super) fn derive(evidence: &Evidence<'_>, hot_source: Option<&str>) -> Vec<S
         ));
     }
     let idle = evidence.counter(Counter::WorkerIdleNanos);
-    let workers = std::thread::available_parallelism()
-        .map_or(1, std::num::NonZeroUsize::get)
-        .saturating_sub(1)
-        .max(1) as u64;
+    let workers = evidence.workers as u64;
     let available = u64::try_from(evidence.wall.as_nanos())
         .unwrap_or(u64::MAX)
         .saturating_mul(workers);

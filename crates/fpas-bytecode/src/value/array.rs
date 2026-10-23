@@ -103,20 +103,20 @@ impl SharedArray {
     }
 
     pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
-        if let Some(mut body) = Arc::into_inner(self.0) {
+        if let Some(mut body) = Arc::into_inner(self.0)
+            && !body.plain_data
+        {
             pending.append(&mut body.values);
         }
+        // A plain body is dropped here and cleared flat.
     }
 }
 
 impl From<Vec<Value>> for SharedArray {
     fn from(values: Vec<Value>) -> Self {
-        let mut plain_data = true;
-        let mut ownership_neutral = true;
-        for value in &values {
-            plain_data &= is_plain_data_leaf(value);
-            ownership_neutral &= value.is_ownership_neutral();
-        }
+        // Plain leaves are ownership-neutral, so most arrays need only the first scan.
+        let plain_data = values.iter().all(is_plain_data_leaf);
+        let ownership_neutral = plain_data || values.iter().all(Value::is_ownership_neutral);
         Self(Arc::new(ArrayValue {
             values,
             plain_data,

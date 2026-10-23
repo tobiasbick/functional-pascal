@@ -314,6 +314,42 @@ fn cell_reads_and_writes_reject_foreign_domains_without_changing_storage() {
 }
 
 #[test]
+fn cell_reads_preserve_payloads_and_allow_replacing_the_source_register() {
+    let mut worker = ownership_worker();
+    for value in [
+        Value::Integer(i64::MIN),
+        Value::Integer(i64::MAX),
+        Value::Real(-0.0),
+        Value::Boolean(true),
+        Value::Unit,
+        Value::OptionNone,
+        Value::option_some(Value::Integer(17)),
+        Value::Array(vec![Value::Integer(5), Value::Integer(6)].into()),
+    ] {
+        let cell = worker.domain.new_cell(value.clone()).expect("cell");
+        let weak = cell.downgrade();
+        let snapshot = cell.read_snapshot(&worker.domain).expect("snapshot");
+        worker.registers[0] = Value::Cell(cell);
+        worker.registers[1] = Value::Integer(99);
+        worker.register_initialized[1] = false;
+        worker
+            .read_cell(abc(Opcode::CellRead, 1, 0, 0, 0).abc_payload())
+            .expect("read into existing integer register");
+        assert_eq!(worker.registers[1], value);
+        assert!(worker.register_is_initialized(1));
+        worker
+            .read_cell(abc(Opcode::CellRead, 0, 0, 0, 0).abc_payload())
+            .expect("replace the last cell handle with its value");
+        assert_eq!(worker.registers[0], value);
+        assert_eq!(*snapshot, value);
+        assert!(weak.upgrade().is_none());
+        if let Value::Real(actual) = worker.registers[0] {
+            assert_eq!(actual.to_bits(), (-0.0_f64).to_bits());
+        }
+    }
+}
+
+#[test]
 fn var_cell_paths_validate_replacements_before_commit() {
     use fpas_bytecode::{ReferenceRoot, ReferenceStep, VariableReference};
     let mut worker = ownership_worker();

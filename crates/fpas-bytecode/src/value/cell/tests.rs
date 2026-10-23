@@ -27,6 +27,12 @@ fn foreign_reads_and_mixed_graph_writes_fail_without_replacement() {
     let cell = owner.new_cell(Value::Integer(7)).unwrap();
     let foreign_cell = foreign.new_cell(Value::Integer(9)).unwrap();
     assert_eq!(cell.read(&foreign), Err(OwnershipError::ForeignDomain));
+    let mut fallback = Value::Integer(41);
+    assert_eq!(
+        cell.read_integer_or_value(&foreign, &mut fallback),
+        Err(OwnershipError::ForeignDomain)
+    );
+    assert_eq!(fallback, Value::Integer(41));
     assert_eq!(cell.try_read(&foreign), Err(OwnershipError::ForeignDomain));
     let mixed = Value::dict(vec![(
         Value::Integer(1),
@@ -103,6 +109,49 @@ fn snapshots_keep_prior_contents_without_preventing_replacement() {
     cell.try_replace(&domain, Value::Integer(2)).unwrap();
     assert_eq!(*before, Value::Integer(1));
     assert_eq!(cell.read(&domain).unwrap(), Value::Integer(2));
+}
+
+#[test]
+fn integer_reads_preserve_snapshots_and_observe_payload_type_changes() {
+    let domain = MemoryDomain::new();
+    let cell = domain.new_cell(Value::Integer(i64::MIN)).unwrap();
+    let snapshot = cell.read_snapshot(&domain).unwrap();
+    let mut fallback = Value::Integer(41);
+    assert_eq!(
+        cell.read_integer_or_value(&domain, &mut fallback).unwrap(),
+        Some(i64::MIN)
+    );
+    assert_eq!(fallback, Value::Integer(41));
+    cell.replace(&domain, Value::Integer(i64::MAX)).unwrap();
+    assert_eq!(
+        cell.read_integer_or_value(&domain, &mut fallback).unwrap(),
+        Some(i64::MAX)
+    );
+    assert_eq!(*snapshot, Value::Integer(i64::MIN));
+    for value in [
+        Value::Real(-0.0),
+        Value::Boolean(true),
+        Value::Unit,
+        Value::OptionNone,
+        Value::option_some(Value::Integer(17)),
+    ] {
+        cell.replace(&domain, value.clone()).unwrap();
+        assert_eq!(
+            cell.read_integer_or_value(&domain, &mut fallback).unwrap(),
+            None
+        );
+        assert_eq!(fallback, value);
+        assert_eq!(cell.read(&domain).unwrap(), value);
+        assert_eq!(
+            cell.read_integer_or_value(&MemoryDomain::new(), &mut fallback),
+            Err(OwnershipError::ForeignDomain)
+        );
+    }
+    cell.replace(&domain, Value::Integer(0)).unwrap();
+    assert_eq!(
+        cell.read_integer_or_value(&domain, &mut fallback).unwrap(),
+        Some(0)
+    );
 }
 
 #[test]
@@ -232,6 +281,12 @@ fn interrupted_storage_is_unavailable_to_reads_and_writes() {
     });
     assert!(interruption.is_err());
     assert_eq!(cell.read(&domain), Err(OwnershipError::Poisoned));
+    let mut fallback = Value::Integer(41);
+    assert_eq!(
+        cell.read_integer_or_value(&domain, &mut fallback),
+        Err(OwnershipError::Poisoned)
+    );
+    assert_eq!(fallback, Value::Integer(41));
     assert_eq!(cell.try_read(&domain), Err(OwnershipError::Poisoned));
     assert_eq!(
         cell.try_replace(&domain, Value::Unit),

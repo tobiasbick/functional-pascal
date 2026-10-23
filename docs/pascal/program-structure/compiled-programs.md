@@ -97,7 +97,7 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 23 and register-bytecode version 27.
+The sectioned envelope uses program format version 23 and register-bytecode version 28.
 Relocatable unit objects use schema version 17 and compiled-unit envelopes use
 version 22. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
@@ -117,17 +117,14 @@ Generated linkage names are separate from their defining display names. Hidden
 callable captures are immutable, type-checked functions and remain absent from
 normal debugger scopes. Existing Std Result signatures retain their current types.
 
-Older images and unit objects require rebuilding. Bytecode version 27 adds
-controlled process options and extends the native `Std.Proc.ProcError` ABI with
-`Timeout`, `Cancelled`, `LimitExceeded` and `ExecutionFailed`, including captured
-output prefixes. Existing process error variants keep their order and payloads.
-Version 26 added
-VM-owned file-handle intrinsics and extends the native `Std.Fs.FsError` ABI with
-`Closed(Operation)` and `Cancelled(Operation)`. Version 25 introduced bounded
-binary files and `InvalidByte(Offset, Value)`. Existing filesystem error variants
-keep their order and payloads. The preceding version 24 changed Console
-text-input results to `Option of string`; `ReadLn` returns
-`Some('')` for a blank line and both text-input operations return `None` at EOF.
+Bytecode version 28 permits auxiliary flag 1 on Result/Option construction
+to consume a source register proven dead by the compiler.
+Validation succeeds before the source is removed; failed operations preserve it
+for diagnostics and inspection. Live sources use the ordinary copying form.
+Pattern payload extraction keeps its source for subsequent pattern arms.
+Single-argument intrinsics borrow the argument's existing register without an
+intermediate copy window. Their error behavior and ownership checks are unchanged.
+Older images and unit objects require rebuilding.
 Source-backed caches rebuild through their bytecode identity checks; standalone
 artifacts with the earlier ABI are rejected before execution. Instruction
 encoding, envelope layouts and the 16-byte value representation are unchanged.

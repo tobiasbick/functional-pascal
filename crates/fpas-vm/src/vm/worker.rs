@@ -79,6 +79,10 @@ pub(super) struct Worker {
     /// Child identity whose failure is already carried by the body's terminal error.
     pub(in crate::vm) observed_task_failure: Cell<Option<u64>>,
     pub(in crate::vm) execution: Option<fpas_bytecode::ExecutionRoots>,
+    /// Token states already validated by this worker; polling them needs no registry lock.
+    pub(in crate::vm) cancellation_views: RefCell<Vec<super::cancellation::CancellationView>>,
+    /// Local profile samples, created on the first batch of a profiled run.
+    pub(in crate::vm) profile: Option<Box<super::profile::ProfileBuffer>>,
 }
 
 impl Worker {
@@ -244,6 +248,8 @@ impl Worker {
             task_id: 0,
             retain_result: false,
             instructions_until_yield: super::TIMESLICE,
+            cancellation_views: RefCell::new(Vec::new()),
+            profile: None,
             suspend_requested: false,
             debug_tasks: false,
             debug_schedule: None,
@@ -308,7 +314,7 @@ impl Worker {
             register_initialized: Vec::new(),
             globals: Arc::clone(&self.globals),
             local_globals: None,
-            layouts: Arc::clone(&self.layouts),
+            layouts: Arc::new(self.layouts.detached()),
             hosted: Arc::clone(&self.hosted),
             call_stack: Vec::new(),
             instruction_count: 0,
@@ -321,6 +327,8 @@ impl Worker {
             task_id: 0,
             retain_result: false,
             instructions_until_yield: super::TIMESLICE,
+            cancellation_views: RefCell::new(Vec::new()),
+            profile: None,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
             debug_schedule: self.debug_schedule.clone(),
@@ -380,6 +388,8 @@ impl Worker {
             task_id: task.id,
             retain_result: task.retain_result,
             instructions_until_yield: super::TIMESLICE,
+            cancellation_views: RefCell::new(Vec::new()),
+            profile: None,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
             debug_schedule: self.debug_schedule.clone(),
@@ -431,6 +441,7 @@ impl Worker {
 
     pub(super) fn suspend_and_enqueue(&mut self) {
         if let Some(scheduler) = self.scheduler.clone() {
+            fpas_bytecode::profile::add(fpas_bytecode::profile::Counter::TaskYields, 1);
             let state = self.take_task_state();
             scheduler.enqueue(state);
             self.suspend_requested = true;

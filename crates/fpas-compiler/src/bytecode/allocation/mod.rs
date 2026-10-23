@@ -237,12 +237,10 @@ fn largest_window(function: &Function) -> usize {
         .iter()
         .flat_map(|block| &block.instructions)
         .map(|instruction| match &instruction.operation {
-            Operation::CallDirect { arguments, .. } | Operation::CallValue { arguments, .. } => {
-                call_argument_width(arguments)
-            }
-            Operation::SpawnTask { arguments, .. } | Operation::Intrinsic { arguments, .. } => {
-                arguments.len()
-            }
+            Operation::CallDirect { arguments, .. }
+            | Operation::CallValue { arguments, .. }
+            | Operation::Intrinsic { arguments, .. } => call_argument_width(arguments),
+            Operation::SpawnTask { arguments, .. } => arguments.len(),
             Operation::MakeClosure { captures, .. } => captures.len(),
             Operation::MakeRecord { fields, .. } | Operation::MakeEnum { fields, .. } => {
                 fields.len()

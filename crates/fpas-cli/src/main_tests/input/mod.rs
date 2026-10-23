@@ -235,6 +235,7 @@ fn resolve_cli_config_splits_program_arguments_after_separator() {
             standard_library: None,
             diagnostics: Default::default(),
             failure_dump: None,
+            profile: None,
             fix: false,
         }))
     );

@@ -16,6 +16,6 @@ mod format;
 mod identity;
 mod image;
 
-pub use format::{FormatError, PROGRAM_FORMAT_VERSION, decode, encode};
+pub use format::{FormatError, PROGRAM_FORMAT_VERSION, decode, encode, executable_digest};
 pub use identity::{Digest, LinkedUnitIdentity, ProgramIdentity};
 pub use image::{ImageError, ProgramImage};

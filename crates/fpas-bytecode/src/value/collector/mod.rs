@@ -40,11 +40,14 @@ impl MemoryDomain {
     ) -> Result<usize, OwnershipError> {
         let candidates = self.collection_candidates(limits.max_cells)?;
         if candidates.is_empty() {
-            super::graph::validate_collection_roots(self, roots, limits.max_graph_nodes)?;
+            let traced =
+                super::graph::validate_collection_roots(self, roots, limits.max_graph_nodes)?;
+            self.note_traced_graph(traced);
             increment(&self.0.collection.completed, 1);
             return Ok(0);
         }
-        let reachable = super::graph::reachable_cells(self, roots, limits.max_graph_nodes)?;
+        let (reachable, traced) =
+            super::graph::reachable_cells(self, roots, limits.max_graph_nodes)?;
         let mut unreachable = Vec::new();
         unreachable
             .try_reserve(candidates.len())
@@ -59,6 +62,8 @@ impl MemoryDomain {
         let count = commit.cleared;
         drop(unreachable);
         let _ = self.registered_count();
+        // Only completed passes scale later thresholds; a failed pass keeps counting.
+        self.note_traced_graph(traced);
         increment(&self.0.collection.completed, 1);
         commit.finish();
         Ok(count)

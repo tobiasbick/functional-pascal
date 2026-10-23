@@ -1,6 +1,6 @@
 //! Deterministic `.fpascp` encoder.
 
-use crate::ProgramImage;
+use crate::{Digest, ProgramImage};
 
 use super::{FormatError, executable, header};
 
@@ -13,4 +13,16 @@ pub fn encode(image: &ProgramImage) -> Result<Vec<u8>, FormatError> {
     image.validate()?;
     let payload = executable::encode(image.executable().executable())?;
     header::encode(image.identity(), image.source_hashes(), &payload)
+}
+
+/// BLAKE3 digest of an executable's canonical payload encoding, without image headers.
+///
+/// Equal executables, including their debug metadata, have equal digests regardless of
+/// whether they were compiled from source or decoded from an image.
+///
+/// # Errors
+///
+/// Returns a structured format or resource-limit error.
+pub fn executable_digest(executable: &fpas_bytecode::Executable) -> Result<Digest, FormatError> {
+    executable::encode(executable).map(Digest::of)
 }

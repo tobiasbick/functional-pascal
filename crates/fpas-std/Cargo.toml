@@ -3,12 +3,13 @@ name = "fpas-std"
 description = "Standard library intrinsics for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
 [dependencies]
 fpas-numeric = { path = "../fpas-numeric" }
-atomic-write-file = "0.3.0"
+atomic-write-file = "0.3.1"
 crossterm = { workspace = true }
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }

@@ -3,6 +3,7 @@ name = "fpas-linker"
 description = "Deterministic linker from Functional Pascal unit objects to executable chunks"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 

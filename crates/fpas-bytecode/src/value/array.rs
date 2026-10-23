@@ -4,7 +4,9 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use super::Value;
-use super::managed_heap::{clone_values, managed_value_buffer, recycle_values};
+use super::managed_heap::{
+    clone_values, managed_value_buffer, recycle_plain_values, recycle_values,
+};
 
 /// Copy-on-write storage for FPAS array values.
 ///
@@ -29,7 +31,12 @@ impl Clone for ArrayValue {
 
 impl Drop for ArrayValue {
     fn drop(&mut self) {
-        recycle_values(&mut self.values);
+        // Plain leaves own no nested values, so ordinary clearing cannot recurse deeply.
+        if self.plain_data {
+            recycle_plain_values(&mut self.values);
+        } else {
+            recycle_values(&mut self.values);
+        }
     }
 }
 
@@ -55,6 +62,7 @@ impl SharedArray {
     }
 
     /// Append an element while preserving known primitive-only contents.
+    #[inline]
     pub fn push(&mut self, value: Value) {
         let body = Arc::make_mut(&mut self.0);
         body.plain_data &= is_plain_data_leaf(&value);
@@ -95,20 +103,20 @@ impl SharedArray {
     }
 
     pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
-        if let Some(mut body) = Arc::into_inner(self.0) {
+        if let Some(mut body) = Arc::into_inner(self.0)
+            && !body.plain_data
+        {
             pending.append(&mut body.values);
         }
+        // A plain body is dropped here and cleared flat.
     }
 }
 
 impl From<Vec<Value>> for SharedArray {
     fn from(values: Vec<Value>) -> Self {
-        let mut plain_data = true;
-        let mut ownership_neutral = true;
-        for value in &values {
-            plain_data &= is_plain_data_leaf(value);
-            ownership_neutral &= value.is_ownership_neutral();
-        }
+        // Plain leaves are ownership-neutral, so most arrays need only the first scan.
+        let plain_data = values.iter().all(is_plain_data_leaf);
+        let ownership_neutral = plain_data || values.iter().all(Value::is_ownership_neutral);
         Self(Arc::new(ArrayValue {
             values,
             plain_data,

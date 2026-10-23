@@ -24,7 +24,13 @@ impl Selector<'_> {
             .map_err(|_| selection_error("intrinsic identifier exceeds u16"))?;
         fpas_bytecode::Intrinsic::from_u16(wire)
             .ok_or_else(|| selection_error("intrinsic identifier has no stable wire variant"))?;
-        let mut instructions = self.prepare_window(arguments)?;
+        let (mut instructions, base) = match arguments.as_slice() {
+            [argument] => (Vec::new(), self.allocation.value(*argument)?),
+            _ => (
+                self.prepare_window(arguments)?,
+                self.allocation.call_window(),
+            ),
+        };
         let result_id = result.ok_or_else(|| selection_error("intrinsic call has no result"))?;
         let returns_unit = matches!(
             self.value_types
@@ -42,7 +48,7 @@ impl Selector<'_> {
             Opcode::Intrinsic,
             destination,
             wire,
-            self.allocation.call_window().get(),
+            base.get(),
             argument_count(arguments)?,
         )?);
         if returns_unit {

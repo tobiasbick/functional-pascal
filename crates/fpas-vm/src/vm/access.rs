@@ -86,6 +86,7 @@ impl Worker {
     }
 
     /// Remove a value from a register without cloning it.
+    #[inline(always)]
     pub(super) fn take(&mut self, register: Register) -> Result<Value, VmError> {
         self.take_register(self.base + usize::from(register.get()))
     }

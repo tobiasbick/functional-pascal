@@ -101,7 +101,7 @@ impl MemoryDomain {
     /// Release execution access only after publishing every enclosing owner and native temporary.
     /// Returns `None` when an enclosing external borrow prevents safe publication.
     pub fn publish_wait(&self) -> Option<PublishedWait> {
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let state = self
             .0
             .roots
@@ -133,6 +133,7 @@ impl MemoryDomain {
         let depth = std::mem::take(&mut state.execution);
         state.parked = Some(current);
         state.owner = None;
+        self.refresh_fast_owner(&state);
         self.0.roots.available.notify_all();
         drop(state);
         self.request_collection_at_rest();
@@ -159,7 +160,7 @@ impl ExecutionRoots {
     /// Rejects retirement and collection-hook re-entry instead of waiting on itself.
     pub fn enter(&self) -> Result<ExecutionAccess, OwnershipError> {
         let domain = self.registration.domain();
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = domain
             .0
             .roots
@@ -188,6 +189,7 @@ impl ExecutionRoots {
         let outermost = state.execution == 0;
         state.owner = Some(current);
         state.execution += 1;
+        domain.refresh_fast_owner(&state);
         drop(state);
         self.invalidate();
         Ok(ExecutionAccess {
@@ -269,7 +271,7 @@ impl Drop for ExecutionAccess {
 }
 impl Drop for PublishedWait {
     fn drop(&mut self) {
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = self
             .domain
             .0
@@ -289,6 +291,7 @@ impl Drop for PublishedWait {
         state.owner = Some(current);
         state.parked = None;
         state.execution += self.depth;
+        self.domain.refresh_fast_owner(&state);
         // Restore token accounting so enclosing access guards can unwind safely,
         // but never return normally to execution after an interrupted commit.
         let poisoned = state.poisoned;

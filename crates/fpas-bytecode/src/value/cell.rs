@@ -157,6 +157,7 @@ impl Drop for CellSnapshot {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take()
             && let Some(value) = Arc::into_inner(snapshot)
+            && !is_inline_scalar(&value)
         {
             super::drain::values(&mut vec![value]);
         }
@@ -238,7 +239,7 @@ impl OwnedCell {
     /// Rejects foreign ownership or a poisoned cell.
     pub fn read_snapshot(&self, domain: &MemoryDomain) -> Result<CellSnapshot, OwnershipError> {
         self.check_owner(domain)?;
-        let _access = domain.access();
+        let _access = domain.operation_access();
         Ok(CellSnapshot(Some(Arc::clone(&*self.lock(false)?))))
     }
 
@@ -257,8 +258,44 @@ impl OwnedCell {
     /// # Errors
     /// Rejects foreign ownership or a poisoned cell.
     pub fn read(&self, domain: &MemoryDomain) -> Result<Value, OwnershipError> {
-        let snapshot = self.read_snapshot(domain)?;
-        Ok((*snapshot).clone())
+        let mut value = Value::Unit;
+        if let Some(integer) = self.read_integer_or_value(domain, &mut value)? {
+            return Ok(Value::Integer(integer));
+        }
+        Ok(value)
+    }
+
+    /// Read once, returning an integer directly or storing another payload in `value`.
+    ///
+    /// Integer reads and failed reads leave `value` unchanged. Other reads replace it only
+    /// after releasing cell storage and domain access, so dropping its old contents is safe.
+    ///
+    /// # Errors
+    /// Rejects foreign ownership or a poisoned cell.
+    pub fn read_integer_or_value(
+        &self,
+        domain: &MemoryDomain,
+        value: &mut Value,
+    ) -> Result<Option<i64>, OwnershipError> {
+        self.check_owner(domain)?;
+        let snapshot = {
+            let access = domain.operation_access();
+            let slot = self.lock(false)?;
+            if let Value::Integer(integer) = &**slot {
+                return Ok(Some(*integer));
+            }
+            if is_inline_scalar(&slot) {
+                let scalar = (**slot).clone();
+                drop(slot);
+                drop(access);
+                *value = scalar;
+                return Ok(None);
+            }
+            // Shared payloads must still be cloned after releasing storage and domain access.
+            CellSnapshot(Some(Arc::clone(&slot)))
+        };
+        *value = (*snapshot).clone();
+        Ok(None)
     }
 
     /// Copy the payload without waiting on busy storage.
@@ -297,17 +334,29 @@ impl OwnedCell {
         let value = PendingValue::new(value);
         self.check_owner(domain)?;
         let _access = if nonblocking {
-            domain.try_access()?
+            Some(domain.try_access()?)
         } else {
-            domain.access()
+            domain.operation_access()
         };
-        graph::validate_storable(domain, &value)?;
-        let next = CellSnapshot(Some(Arc::new(value.into_inner())));
-        let old = {
-            let mut slot = self.lock(nonblocking)?;
-            std::mem::replace(&mut *slot, next.into_arc())
-        };
-        drop(CellSnapshot(Some(old)));
+        if !is_inline_scalar(&value) {
+            graph::validate_storable(domain, &value)?;
+        }
+        let mut slot = self.lock(nonblocking)?;
+        match Arc::get_mut(&mut slot) {
+            // No snapshot shares the payload, so it can change in place.
+            Some(current) => {
+                let old = std::mem::replace(current, value.into_inner());
+                drop(slot);
+                if !is_inline_scalar(&old) {
+                    super::drain::release_value(old);
+                }
+            }
+            None => {
+                let old = std::mem::replace(&mut *slot, Arc::new(value.into_inner()));
+                drop(slot);
+                drop(CellSnapshot(Some(old)));
+            }
+        }
         domain.note_cell_mutation();
         Ok(())
     }
@@ -384,6 +433,14 @@ impl OwnedCell {
             }
         }
     }
+}
+
+/// Inline scalars own no further storage, graph edges or iterative teardown.
+fn is_inline_scalar(value: &Value) -> bool {
+    matches!(
+        value,
+        Value::Integer(_) | Value::Real(_) | Value::Boolean(_) | Value::Unit | Value::OptionNone
+    )
 }
 
 #[cfg(test)]

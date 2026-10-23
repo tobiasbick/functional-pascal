@@ -23,6 +23,7 @@ pub(super) struct ParsedOptions {
     pub(super) report: Option<TestReportFormat>,
     pub(super) diagnostics: Option<DiagnosticFormat>,
     pub(super) failure_dump: Option<PathBuf>,
+    pub(super) profile: Option<PathBuf>,
     pub(super) timeout: Option<Duration>,
     pub(super) jobs: Option<usize>,
     pub(super) standard_library: Option<PathBuf>,
@@ -55,6 +56,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         report: None,
         diagnostics: None,
         failure_dump: None,
+        profile: None,
         timeout: None,
         jobs: None,
         standard_library: None,
@@ -99,6 +101,23 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                 }
                 if options.failure_dump.replace(PathBuf::from(value)).is_some() {
                     return Err("Duplicate `--failure-dump` option.".into());
+                }
+            }
+            "--profile" if mode == CliMode::Run => {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--profile",
+                    "Missing path after `--profile`.
+  help: `fpas run app.fpasprj --profile .temp-data/profile.json`.",
+                )?;
+                if value.is_empty() || value == "-" {
+                    return Err(
+                        "`--profile` requires a new file path, not an empty path or `-`.".into(),
+                    );
+                }
+                if options.profile.replace(PathBuf::from(value)).is_some() {
+                    return Err("Duplicate `--profile` option.".into());
                 }
             }
             "--std-lib"
@@ -394,6 +413,7 @@ fn is_known_option(value: &str) -> bool {
         value,
         "--std-lib"
             | "--failure-dump"
+            | "--profile"
             | "--executable"
             | "--name"
             | "--check"

@@ -11,6 +11,9 @@ No FPAS collection unit or manual collection command is exposed.
 
 Heuristic per-domain defaults request collection after 4096 cell allocations, 8192
 successful cell mutations or 256 completed dispatch batches, whichever comes first.
+These are minimums: after a completed pass each threshold grows to one allocation or
+mutation and two batches per shared value that pass traced, so tracing a large live
+graph stays proportional to the work between passes.
 The periodic counter advances once per batch, including nested callbacks. Retries
 at the same safe point do not consume additional ticks. Pressure resets only after
 successful service; incomplete/busy passes keep pending work. Requests are serviced
@@ -117,3 +120,12 @@ AP48.5 tests. Automatic acceptance also covers repeated closure creation during 
 dispatch, surviving mutable aliases, inherited task configuration, callback/inspection
 churn, native publication, request races and independent VM progress. CLI fixtures
 cover defaults, validation, subprocess propagation and source/cached/debug launches.
+
+The [GC memory regressions](../../../tests/gc_memory/README.md) also check requested
+bytes and outstanding allocations through a process-wide test allocator. Isolated
+cases cover aggregate payloads, VM success/failure, concurrent task completion and
+cancellation, persistent callbacks, and debugger inspection/evaluation. Every round
+must restore the fixed baseline after warm-up; completed threads must also release
+their local pools. Separate bytecode pool tests exercise byte/bucket limits and
+ensure recycled payload boxes retain no values. These balances complement cell
+lifetime observations; they make no assertion about process resident memory.

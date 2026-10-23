@@ -1,7 +1,7 @@
 //! Total active-subset IR instruction selection into checked packed instructions.
 
 mod aggregates;
-mod consuming_moves;
+mod consuming;
 mod intrinsics;
 mod local_moves;
 mod operators;
@@ -62,7 +62,7 @@ impl<'a> Selector<'a> {
             .get(index)
             .ok_or_else(|| selection_error("instruction index is outside its block"))?;
         let words = self.select_words(block, index, instruction, metadata)?;
-        self.mark_consuming_moves(words, block.id, index, instruction)
+        self.mark_consuming_operands(words, block.id, index, instruction)
     }
 
     fn select_words(

@@ -111,6 +111,25 @@ impl RuntimeLayouts {
             native_errors,
         })
     }
+
+    /// Copy record and enum layouts into allocations owned by one pool thread.
+    ///
+    /// Every aggregate value retains its layout, so one allocation shared by all threads
+    /// makes their reference counts contend. Layouts compare by content, not identity.
+    /// Native error layouts stay shared because those values are rare.
+    pub fn detached(&self) -> Self {
+        fn copy<T: Clone>(layouts: &[Arc<T>]) -> Vec<Arc<T>> {
+            layouts
+                .iter()
+                .map(|layout| Arc::new(T::clone(layout)))
+                .collect()
+        }
+        Self {
+            records: copy(&self.records),
+            enum_variants: copy(&self.enum_variants),
+            native_errors: self.native_errors.clone(),
+        }
+    }
 }
 
 impl fpas_std::AggregateFactory for RuntimeLayouts {

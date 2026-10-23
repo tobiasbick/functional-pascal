@@ -36,7 +36,6 @@ impl Worker {
         self.require_storable_value(&value)?;
         let destination = register(o.a)?;
         let field = usize::from(o.b);
-        self.require_local_value(self.read(destination)?)?;
         match self.read(destination)? {
             Value::Record(record) if field < record.body().values.len() => {}
             Value::Record(_) => return Err(self.bad_slot("record field", u32::from(o.b))),
@@ -59,7 +58,6 @@ impl Worker {
     /// body is updated in place instead of being copied.
     pub fn update_record(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let destination = register(o.a)?;
-        self.require_local_value(self.read(destination)?)?;
         let field_count = match self.read(destination)? {
             Value::Record(record) => record.body().values.len(),
             other => return Err(self.type_mismatch("record", other)),

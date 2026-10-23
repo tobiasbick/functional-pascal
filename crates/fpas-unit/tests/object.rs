@@ -32,8 +32,9 @@ fn candidate() -> Executable {
         abc(Opcode::MakeEnum, 3, 0, 2),
         abc(Opcode::TestVariant, 4, 3, 0),
         abc(Opcode::LoadEnumField, 5, 3, 0),
-        Instruction::abc(Opcode::CallDirect, NO_REGISTER, 1, 0, 0).expect("direct call"),
+        Instruction::abc(Opcode::CallDirect, NO_REGISTER, 2, 0, 0).expect("direct call"),
         abc(Opcode::Move, 0, 0, 0),
+        abc(Opcode::Return, NO_REGISTER, 0, 0),
         abc(Opcode::Return, NO_REGISTER, 0, 0),
         abc(Opcode::Return, NO_REGISTER, 0, 0),
     ];
@@ -102,6 +103,16 @@ fn candidate() -> Executable {
                     ..FunctionDebugInfo::default()
                 },
             },
+            FunctionInfo {
+                name: StringId::new(11),
+                code: CodeRange::new(InstructionAddress::new(11), InstructionAddress::new(12)),
+                arity: 0,
+                capture_count: 0,
+                register_count: 0,
+                return_convention: ReturnConvention::Unit,
+                flags: FunctionFlags::default(),
+                debug: FunctionDebugInfo::default(),
+            },
         ],
         constants: vec![Constant::String(StringId::new(2))],
         strings: StringTable::new(vec![
@@ -116,6 +127,7 @@ fn candidate() -> Executable {
             "fixture.fpas".to_string(),
             "method".to_string(),
             "demo.record.method".to_string(),
+            "demo.direct".to_string(),
         ]),
         globals: vec![GlobalInfo {
             projection: None,
@@ -171,6 +183,12 @@ fn candidate() -> Executable {
                     instruction_start: InstructionAddress::new(10),
                     source: SourceId::new(0),
                     line: 4,
+                    column: 1,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(11),
+                    source: SourceId::new(0),
+                    line: 5,
                     column: 1,
                 },
             ],

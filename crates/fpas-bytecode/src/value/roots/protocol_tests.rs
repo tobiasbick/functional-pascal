@@ -132,6 +132,63 @@ fn published_native_wait_services_while_waiter_stays_blocked() {
     waiter.join().unwrap();
 }
 #[test]
+fn execution_owner_reenters_access_while_other_threads_stay_excluded() {
+    let domain = MemoryDomain::new();
+    let owner = domain.execution_roots().unwrap();
+    let access = owner.enter().unwrap();
+    // The executing thread re-enters without waiting; its release leaves ownership intact.
+    drop(domain.access());
+    let cell = domain.new_cell(Value::Integer(1)).unwrap();
+    cell.replace(&domain, Value::Integer(2)).unwrap();
+    assert_eq!(cell.read(&domain).unwrap(), Value::Integer(2));
+    let other = domain.clone();
+    std::thread::spawn(move || {
+        assert_eq!(other.try_access().err(), Some(OwnershipError::Busy));
+    })
+    .join()
+    .unwrap();
+    drop(access);
+    let other = domain.clone();
+    std::thread::spawn(move || assert!(other.try_access().is_ok()))
+        .join()
+        .unwrap();
+}
+#[test]
+fn collection_clears_the_execution_owner_fast_path_and_restores_it_afterwards() {
+    struct Observe(std::sync::atomic::AtomicU64);
+    impl DomainMaintenance for Observe {
+        fn maintain(&self, domain: &MemoryDomain, _: &[Value]) -> Result<(), OwnershipError> {
+            self.0.store(
+                domain.0.roots.exec_owner.load(Ordering::SeqCst),
+                Ordering::SeqCst,
+            );
+            Ok(())
+        }
+    }
+    let domain = MemoryDomain::new();
+    let observed = Arc::new(Observe(std::sync::atomic::AtomicU64::new(u64::MAX)));
+    domain.set_maintenance(observed.clone(), MaintenancePolicy::Automatic);
+    let owner = domain.execution_roots().unwrap();
+    let access = owner.enter().unwrap();
+    assert_eq!(
+        domain.0.roots.exec_owner.load(Ordering::SeqCst),
+        thread_token()
+    );
+    owner.publish(vec![]);
+    domain.request_maintenance();
+    assert!(matches!(
+        access.safe_point(),
+        MaintenanceOutcome::Serviced(_)
+    ));
+    assert_eq!(observed.0.load(Ordering::SeqCst), 0);
+    assert_eq!(
+        domain.0.roots.exec_owner.load(Ordering::SeqCst),
+        thread_token()
+    );
+    drop(access);
+    assert_eq!(domain.0.roots.exec_owner.load(Ordering::SeqCst), 0);
+}
+#[test]
 fn opaque_execution_and_incomplete_providers_never_authorize_maintenance() {
     let domain = MemoryDomain::new();
     let probe = automatic(&domain);

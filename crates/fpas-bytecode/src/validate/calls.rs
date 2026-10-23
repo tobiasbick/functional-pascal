@@ -50,6 +50,18 @@ pub(super) fn validate_call(
             },
         ));
     }
+    if target.capture_count != 0 {
+        return Err(ValidationError::instruction(
+            executable,
+            caller_id,
+            address,
+            Some(opcode),
+            ValidationErrorKind::CallCaptures {
+                target: operands.target,
+                captures: target.capture_count,
+            },
+        ));
+    }
     validate_destination(site, operands.destination, target.return_convention)?;
     validate_window(
         site,

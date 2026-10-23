@@ -112,9 +112,6 @@ pub(super) fn validate_abc(
         | Opcode::CellRead
         | Opcode::MakeCellReference
         | Opcode::ReferenceRead
-        | Opcode::MakeOk
-        | Opcode::MakeError
-        | Opcode::MakeSome
         | Opcode::IsResultOk
         | Opcode::IsOptionSome
         | Opcode::UnwrapOk
@@ -123,7 +120,7 @@ pub(super) fn validate_abc(
             validate_registers(site, &[("destination", a), ("source", b)])?;
             canonical_tail(site, c, auxiliary)
         }
-        Opcode::Move => {
+        Opcode::Move | Opcode::MakeOk | Opcode::MakeError | Opcode::MakeSome => {
             validate_registers(site, &[("destination", a), ("source", b)])?;
             canonical_u16(site, "C", c, 0)?;
             if auxiliary <= 1 {

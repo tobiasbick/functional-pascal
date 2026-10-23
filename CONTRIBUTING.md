@@ -20,6 +20,11 @@ Agent instructions live in [`AGENTS.md`](AGENTS.md).
 
 ## How to work
 
+Use the Rust toolchain selected by `rust-toolchain.toml`. The workspace declares
+Rust 1.99.1 as its minimum supported version, inherited by every member crate.
+When upgrading Rust, update the toolchain pin, workspace minimum, and build
+documentation together. Keep resolved dependency versions in `Cargo.lock`.
+
 1. Read the relevant area under [`docs/pascal/`](docs/pascal/README.md) (stdlib:
    [`docs/pascal/std/README.md`](docs/pascal/std/README.md)).
 2. Inspect the existing implementation before adding code.

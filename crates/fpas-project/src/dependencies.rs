@@ -152,8 +152,9 @@ fn merge_dependency_link_meta(
             .cloned(),
     );
 
+    let dependency_sources = dependency_loaded.link_meta.source_index();
     for source_path in &dependency_loaded.source_files {
-        let origin = dependency_loaded.link_meta.origin_for_source(source_path);
+        let origin = dependency_sources.origin_for_source(source_path);
         let remapped = match origin {
             SourceOrigin::Own => SourceOrigin::Library(dependency_canonical.clone()),
             SourceOrigin::Library(path) => SourceOrigin::Library(path),

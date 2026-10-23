@@ -52,7 +52,9 @@ pub(in crate::vm) fn visit(
             walk(callback, boundary, maximum, depth, callbacks + 1, visitor)?;
         }
         let next = InstructionAddress::try_from_index(worker.ip).unwrap_or(worker.current_address);
-        let instruction = if boundary != Boundary::Stopped {
+        let instruction = if boundary != Boundary::Stopped || worker.task_suspension.is_some() {
+            // A parked task has not finished its current instruction. Its resume address may
+            // already leave the lexical scope whose locals are still live during the wait.
             // An inline hosted callback may have returned before its continuation fails.
             // Its Return address is no longer an instruction in the restored caller.
             let caller_site = InstructionAddress::try_from_index(worker.ip.saturating_sub(1))

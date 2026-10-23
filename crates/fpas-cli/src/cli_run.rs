@@ -20,6 +20,9 @@ use fpas_project as project;
 struct ExecutionOptions {
     program_args: Vec<String>,
     failure_dump: Option<PathBuf>,
+    profile: Option<PathBuf>,
+    /// Input kind and path recorded by profile reports.
+    target: (&'static str, PathBuf),
     collection_schedule: fpas_bytecode::CollectionSchedule,
 }
 
@@ -128,9 +131,17 @@ fn run_input(
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
+    let target = match &config.input {
+        CliInput::SourceFile(path) => ("source", path.clone()),
+        CliInput::ProjectFile(path) => ("project", path.clone()),
+        CliInput::WorkspaceFile(path) => ("workspace", path.clone()),
+        CliInput::CompiledProgramFile(path) => ("compiled", path.clone()),
+    };
     let options = ExecutionOptions {
         program_args: config.program_args,
         failure_dump: config.failure_dump,
+        profile: config.profile,
+        target,
         collection_schedule: config.collection_schedule,
     };
     let input = match config.input {
@@ -374,8 +385,14 @@ fn run_executable(
     let ExecutionOptions {
         program_args,
         failure_dump,
+        profile,
+        target,
         collection_schedule,
     } = options;
+    let profile = profile.map(|destination| {
+        let target = crate::cli_profile::Target::new(target.0, &target.1, executable.executable());
+        (destination, target)
+    });
     // Runtime diagnostics carry linked source IDs; callers pass paths indexed by graph source.
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, paths));
@@ -388,6 +405,9 @@ fn run_executable(
         .clone()
         .zip(sources)
         .map(|(path, sources)| crate::cli_failure_dump::Session::start(&mut vm, path, sources));
+    let profile = profile.map(|(destination, target)| {
+        crate::cli_profile::Session::start(&mut vm, destination, target, collection_schedule)
+    });
     if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
         vm.allow_process_lifecycle();
     }
@@ -399,6 +419,24 @@ fn run_executable(
         session
             .and_then(|session| session.finish(outcome.as_ref().err().map(|error| error.as_ref())))
     });
+    let exit_code = if outcome.is_err() { 2 } else { 0 };
+    if let Some(profile) = profile {
+        let destination = profile.destination().to_path_buf();
+        if let Err(error) = profile.finish(&vm, exit_code, source_paths.as_deref()) {
+            let failure = CliFailure::new(
+                fpas_diagnostics::codes::CLI_OUTPUT_FAILED,
+                format!(
+                    "Cannot publish profile `{}`: {error}",
+                    destination.display()
+                ),
+            )
+            .with_help("Choose a new writable file path.");
+            let code = reporter.failure(&failure);
+            if exit_code == 0 {
+                return code;
+            }
+        }
+    }
     if let Err(diagnostic) = outcome {
         reporter.record(&locate(path, source_paths.as_deref(), &diagnostic));
         if let Some(Err(error)) = publication {

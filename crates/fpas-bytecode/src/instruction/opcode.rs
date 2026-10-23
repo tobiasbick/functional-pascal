@@ -165,11 +165,11 @@ pub enum Opcode {
     UpdateRecord = 76,
     /// Invoke a validated hosted intrinsic.
     Intrinsic = 77,
-    /// Construct a Result.Ok value.
+    /// Construct a Result.Ok value. Auxiliary 1 consumes the source register.
     MakeOk = 78,
-    /// Construct a Result.Error value.
+    /// Construct a Result.Error value. Auxiliary 1 consumes the source register.
     MakeError = 79,
-    /// Construct an Option.Some value.
+    /// Construct an Option.Some value. Auxiliary 1 consumes the source register.
     MakeSome = 80,
     /// Construct an Option.None value.
     MakeNone = 81,

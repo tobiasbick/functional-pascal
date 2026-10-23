@@ -31,12 +31,18 @@ impl Worker {
 
     /// Copy a mutable capture only after checking the logical task's domain.
     pub(in crate::vm) fn read_cell(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let value = match self.read(self.call_register(operands.b)?)? {
-            Value::Cell(cell) => cell
-                .read(&self.domain)
-                .map_err(|error| self.ownership_error(error))?,
+        let mut value = Value::Unit;
+        match self.read(self.call_register(operands.b)?)? {
+            Value::Cell(cell) => {
+                if let Some(value) = cell
+                    .read_integer_or_value(&self.domain, &mut value)
+                    .map_err(|error| self.ownership_error(error))?
+                {
+                    return self.write_integer_operand(operands.a, value);
+                }
+            }
             other => return Err(self.operand_type_error("cell", other)),
-        };
+        }
         self.write(self.call_register(operands.a)?, value)
     }
 

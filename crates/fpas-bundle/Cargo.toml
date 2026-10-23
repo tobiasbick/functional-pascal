@@ -3,11 +3,12 @@ name = "fpas-bundle"
 description = "Host-native application bundles for Functional Pascal programs"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
 [dependencies]
-atomic-write-file = "0.3.0"
+atomic-write-file = "0.3.1"
 fpas-program = { path = "../fpas-program" }
 
 [dev-dependencies]

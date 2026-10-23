@@ -1,6 +1,6 @@
 # Benchmark history
 
-Committed snapshots from `cargo bench-fpas record`. Absolute times are machine-specific; use them
+Snapshots from the `cargo bench-fpas` harness. Absolute times are machine-specific; use them
 to track relative progress on the same machine and to see which changes moved which benches.
 
 Do **not** record hostnames, usernames, paths, or other machine-identifying metadata.
@@ -13,6 +13,239 @@ cargo bench-fpas record "vm-only note" --group vm
 ```
 
 Newest entries are prepended below this header.
+
+## 2026-10-23 — VM comparison: median of three runs (on 4ad57426c)
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+- Measurement: three sequential local release runs, 23 workloads each; all 69 executions succeeded.
+  `elapsed_ms` is the per-workload median; throughput comes from a run with that elapsed time.
+- Recorded from existing `save` snapshots, without rerunning `record`:
+  `vm-20261023-80e55e662-run1`, `vm-20261023-80e55e662-run2`,
+  `vm-20261023-80e55e662-run3`. Preparation started on `80e55e662`;
+  the intervening commit to `4ad57426c` changes only AP48 documentation.
+- Reference: the preceding Nachtlauf on `ea5a9ee7d`. VM workload sources, selection
+  and arguments are unchanged. This is a historical comparison, not a paired rerun
+  of the old executable. Historical load and power conditions are unverified;
+  dependencies changed and the current checkout pins Rust 1.99.1. Differences cannot
+  be attributed solely to VM changes. Build time is excluded from these measurements.
+- Sum of VM row times: 5132 ms reference, 4974 ms current medians, a 3.08% reduction.
+  The geometric mean of elapsed-time ratios is 3.04% lower. Neither aggregate is a
+  general application-throughput measurement; 5–10 ms rows have coarse resolution.
+- `mutable_capture` is the only higher median: 234 ms reference versus 345 ms,
+  up 47.44%. Individual runs were 347, 343 and 345 ms. The cause is not diagnosed.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 577 | throughput: 86655112 iters/s |
+| typed_real | 119 | - |
+| typed_boolean | 224 | - |
+| typed_string | 99 | - |
+| global_access | 100 | throughput: 50000000 global updates/s |
+| record_field_access | 313 | throughput: 47923322 field accesses/s |
+| closure_call | 127 | throughput: 23622047 closure calls/s |
+| mutable_capture | 345 | throughput: 8695652 captured updates/s |
+| branch_dispatch | 268 | throughput: 74626865 branches/s |
+| dynamic_numeric | 259 | throughput: 19305019 dynamic numeric ops/s |
+| array_push | 54 | throughput: 37037037 pushes/s |
+| array_length | 5 | throughput: 100000000 lengths/s |
+| string_concat | 729 | throughput: 6858710 concats/s |
+| string_length | 5 | throughput: 100000000 lengths/s |
+| intrinsic_dispatch | 139 | throughput: 107913669 intrinsic calls/s |
+| function_call | 227 | throughput: 26431718 calls/s |
+| array_callbacks | 682 | throughput: 14076246 callbacks/s |
+| record_update | 82 | throughput: 12195121 updates/s |
+| unicode_char_at | 235 | throughput: 12765957 chars/s |
+| wrapper_payload | 305 | throughput: 32786885 wrappers/s |
+| string_search | 64 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
+
+## 2026-10-23 — Nachtlauf: Inline-Schnellpfade, Cancellation-Fastpath, flache Arrays, Lowering-Typtabelle, IR-Lookups, Source-Index (auf ea5a9ee7d)
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 1029 | throughput: enabled/disabled median change 1.7857142857142918% |
+| failure_dump_calls | 1043 | throughput: enabled/disabled median change 0% |
+| failure_dump_globals | 1308 | throughput: enabled/disabled median change 1.3888888888888857% |
+| failure_dump_spawn_wait | 1686 | throughput: enabled/disabled median change 101.61290322580646% |
+| failure_dump_suspension | 9934 | throughput: enabled/disabled median change -0.7207207207207205% |
+| failure_dump_failure | 1279 | throughput: enabled/disabled median change 32.8125% |
+| failure_dump_large_report | 1388 | throughput: enabled/disabled median change 101.9607843137255% |
+| mandelbrot_render | 682 | - |
+| mandelbrot_paint | 747 | - |
+| integer_loop | 604 | throughput: 82781456 iters/s |
+| typed_real | 148 | - |
+| typed_boolean | 233 | - |
+| typed_string | 102 | - |
+| global_access | 103 | throughput: 48543689 global updates/s |
+| record_field_access | 324 | throughput: 46296296 field accesses/s |
+| closure_call | 135 | throughput: 22222222 closure calls/s |
+| mutable_capture | 234 | throughput: 12820512 captured updates/s |
+| branch_dispatch | 295 | throughput: 67796610 branches/s |
+| dynamic_numeric | 276 | throughput: 18115942 dynamic numeric ops/s |
+| array_push | 54 | throughput: 37037037 pushes/s |
+| array_length | 5 | throughput: 100000000 lengths/s |
+| string_concat | 750 | throughput: 6666666 concats/s |
+| string_length | 5 | throughput: 100000000 lengths/s |
+| intrinsic_dispatch | 139 | throughput: 107913669 intrinsic calls/s |
+| function_call | 260 | throughput: 23076923 calls/s |
+| array_callbacks | 721 | throughput: 13314840 callbacks/s |
+| record_update | 90 | throughput: 11111111 updates/s |
+| unicode_char_at | 261 | throughput: 11494252 chars/s |
+| wrapper_payload | 310 | throughput: 32258064 wrappers/s |
+| task_spawn_wait | 562 | throughput: 177935 tasks/s |
+| task_array_callbacks | 294 | throughput: 13061224 callbacks/s |
+| tui_headless | 1462 | throughput: 341 frames/s |
+| notes_headless | 2803 | throughput: 89 frames/s |
+| tui_styled_cells | 354 | - |
+| analysis_queries | 221 | - |
+| string_search | 67 | - |
+| compiler_lowering | 405 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
+| project_queries | 971 | - |
+| project_edits | 798 | - |
+| project_overlapping_queries | 625 | - |
+| project_build_cold | 2272 | - |
+| project_build_warm | 1463 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 2 | - |
+| scalar_membership | 3 | - |
+| array_pop | 1 | - |
+| text_area_locate | 810 | - |
+| http_body_accumulation | 179 | - |
+| local_index_write | 15 | throughput: 42666666 writes/s |
+| cell_grid_headless | 101 | throughput: 990 paints/s |
+| partial_surface_fill | 58 | - |
+| source_utf8_ascii_2048 | 5 | - |
+| source_utf8_ascii_4096 | 11 | - |
+| source_utf8_ascii_8192 | 23 | - |
+| source_utf8_unicode_2048 | 21 | - |
+| source_utf8_unicode_4096 | 43 | - |
+| source_utf8_unicode_8192 | 86 | - |
+| source_notes_ascii_128 | 2 | - |
+| source_notes_ascii_256 | 5 | - |
+| source_notes_ascii_512 | 11 | - |
+| source_queue_ascii_256 | 55 | - |
+| source_queue_ascii_512 | 110 | - |
+| source_queue_ascii_1024 | 223 | - |
+| source_navigation_long_512 | 24 | - |
+| source_navigation_long_1024 | 44 | - |
+| source_navigation_long_2048 | 84 | - |
+| source_navigation_lines_512 | 5 | - |
+| source_navigation_lines_1024 | 8 | - |
+| source_navigation_lines_2048 | 13 | - |
+| errors_enum_construction | 24 | - |
+| errors_typed_construction | 24 | - |
+| errors_generic_direct | 26 | - |
+| errors_generic_helper | 53 | - |
+| errors_generic_callable | 56 | - |
+| errors_map_ok | 259 | - |
+| errors_case_ok | 180 | - |
+| errors_map_error | 786 | - |
+| errors_case_error | 640 | - |
+| errors_constructor_error | 724 | - |
+| errors_cause_message | 1 | - |
+| errors_cause_console | 419 | - |
+| errors_deep_image | 1 | - |
+
+## 2026-10-22 — Lazy Task-Roots, Transfer-Summary, In-place-Zellen, atomare Druckzähler (auf fefd38b19)
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 1423 | throughput: enabled/disabled median change -1.2658227848101262% |
+| failure_dump_calls | 1390 | throughput: enabled/disabled median change 1.3157894736842053% |
+| failure_dump_globals | 2046 | throughput: enabled/disabled median change 2.6785714285714306% |
+| failure_dump_spawn_wait | 2342 | throughput: enabled/disabled median change 96.42857142857142% |
+| failure_dump_suspension | 10164 | throughput: enabled/disabled median change 0.5319148936170279% |
+| failure_dump_failure | 1218 | throughput: enabled/disabled median change 4.545454545454547% |
+| failure_dump_large_report | 1892 | throughput: enabled/disabled median change 74.66666666666666% |
+| mandelbrot_render | 734 | - |
+| mandelbrot_paint | 740 | - |
+| integer_loop | 786 | throughput: 63613231 iters/s |
+| typed_real | 169 | - |
+| typed_boolean | 271 | - |
+| typed_string | 143 | - |
+| global_access | 121 | throughput: 41322314 global updates/s |
+| record_field_access | 399 | throughput: 37593984 field accesses/s |
+| closure_call | 155 | throughput: 19354838 closure calls/s |
+| mutable_capture | 243 | throughput: 12345679 captured updates/s |
+| branch_dispatch | 381 | throughput: 52493438 branches/s |
+| dynamic_numeric | 308 | throughput: 16233766 dynamic numeric ops/s |
+| array_push | 68 | throughput: 29411764 pushes/s |
+| array_length | 6 | throughput: 83333333 lengths/s |
+| string_concat | 855 | throughput: 5847953 concats/s |
+| string_length | 6 | throughput: 83333333 lengths/s |
+| intrinsic_dispatch | 177 | throughput: 84745762 intrinsic calls/s |
+| function_call | 277 | throughput: 21660649 calls/s |
+| array_callbacks | 769 | throughput: 12483745 callbacks/s |
+| record_update | 111 | throughput: 9009009 updates/s |
+| unicode_char_at | 276 | throughput: 10869565 chars/s |
+| wrapper_payload | 339 | throughput: 29498525 wrappers/s |
+| task_spawn_wait | 546 | throughput: 183150 tasks/s |
+| task_array_callbacks | 312 | throughput: 12307692 callbacks/s |
+| tui_headless | 1676 | throughput: 298 frames/s |
+| notes_headless | 3464 | throughput: 72 frames/s |
+| tui_styled_cells | 435 | - |
+| analysis_queries | 231 | - |
+| string_search | 74 | - |
+| compiler_lowering | 2209 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+| project_queries | 1049 | - |
+| project_edits | 4313 | - |
+| project_overlapping_queries | 792 | - |
+| project_build_cold | 2570 | - |
+| project_build_warm | 1518 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 2 | - |
+| scalar_membership | 4 | - |
+| array_pop | 1 | - |
+| text_area_locate | 907 | - |
+| http_body_accumulation | 228 | - |
+| local_index_write | 17 | throughput: 37647058 writes/s |
+| cell_grid_headless | 131 | throughput: 763 paints/s |
+| partial_surface_fill | 76 | - |
+| source_utf8_ascii_2048 | 6 | - |
+| source_utf8_ascii_4096 | 12 | - |
+| source_utf8_ascii_8192 | 24 | - |
+| source_utf8_unicode_2048 | 24 | - |
+| source_utf8_unicode_4096 | 50 | - |
+| source_utf8_unicode_8192 | 106 | - |
+| source_notes_ascii_128 | 2 | - |
+| source_notes_ascii_256 | 6 | - |
+| source_notes_ascii_512 | 14 | - |
+| source_queue_ascii_256 | 76 | - |
+| source_queue_ascii_512 | 142 | - |
+| source_queue_ascii_1024 | 283 | - |
+| source_navigation_long_512 | 25 | - |
+| source_navigation_long_1024 | 49 | - |
+| source_navigation_long_2048 | 93 | - |
+| source_navigation_lines_512 | 6 | - |
+| source_navigation_lines_1024 | 8 | - |
+| source_navigation_lines_2048 | 14 | - |
+| errors_enum_construction | 28 | - |
+| errors_typed_construction | 30 | - |
+| errors_generic_direct | 30 | - |
+| errors_generic_helper | 59 | - |
+| errors_generic_callable | 67 | - |
+| errors_map_ok | 290 | - |
+| errors_case_ok | 197 | - |
+| errors_map_error | 922 | - |
+| errors_case_error | 766 | - |
+| errors_constructor_error | 834 | - |
+| errors_cause_message | 1 | - |
+| errors_cause_console | 453 | - |
+| errors_deep_image | 1 | - |
 
 ## 2026-10-21 — Nach Optimierungen (O(1)-Aufrufprüfung, Task-Neutralität, Callbacks im Batch, 7f3ee572b)
 

@@ -17,6 +17,7 @@ impl Worker {
     /// Transfer pending operation ownership to the shared timer driver.
     pub(in crate::vm) fn park_pool_suspension(&mut self) -> Result<(), VmError> {
         let scheduler = std::sync::Arc::clone(self.scheduler_ref()?);
+        fpas_bytecode::profile::add(fpas_bytecode::profile::Counter::TaskParks, 1);
         let state = self.take_task_state();
         scheduler.schedule(state, 1);
         self.suspend_requested = true;

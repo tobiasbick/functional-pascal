@@ -148,6 +148,32 @@ fn callable_capability_and_code_identity_are_independent_of_cell_reachability() 
 }
 
 #[test]
+fn summarized_transfer_never_admits_what_classification_rejects() {
+    let owner = MemoryDomain::new();
+    let cell = Value::Cell(owner.new_cell(Value::Integer(1)).unwrap());
+    let candidates = [
+        Value::Integer(1),
+        Value::Array(vec![Value::Integer(2)].into()),
+        Value::function(target(), vec![Value::Integer(3)]),
+        Value::bound_function(target(), Value::Integer(4)),
+        Value::function(target(), vec![cell.clone()]),
+        Value::bound_function(target(), cell.clone()),
+        Value::function(target(), vec![Value::function(target(), vec![])]),
+        Value::task_owned_function(target(), vec![], owner.id().clone()),
+        Value::option_some(cell),
+    ];
+    for value in &candidates {
+        let values = std::slice::from_ref(value);
+        if summarized_transferable(values) {
+            assert!(classify_values(values).unwrap().is_transferable());
+        }
+    }
+    assert!(summarized_transferable(&candidates[..4]));
+    assert!(!summarized_transferable(&candidates[4..6]));
+    assert!(!summarized_transferable(&candidates[7..]));
+}
+
+#[test]
 fn cyclic_closure_graphs_finish_and_preserve_aliases() {
     let owner = MemoryDomain::new();
     let cell = owner.new_cell(Value::Unit).unwrap();

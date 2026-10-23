@@ -27,7 +27,9 @@ pub use domain::{DomainId, MemoryDomain};
 pub use drain::release_values;
 use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
-pub use graph::{GraphClassification, classify_values, inspect_values, validate_local};
+pub use graph::{
+    GraphClassification, classify_values, inspect_values, summarized_transferable, validate_local,
+};
 pub use managed_heap::managed_value_buffer;
 pub use payload::ValuePayload;
 pub use reference::{ReferenceRoot, ReferenceStep, SharedReference, VariableReference};

@@ -3,6 +3,7 @@ name = "fpas-diagnostics"
 description = "Error codes and diagnostic utilities for Functional Pascal"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 

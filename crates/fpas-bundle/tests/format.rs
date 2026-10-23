@@ -167,8 +167,9 @@ fn decoder_rejects_footer_lengths_outside_the_executable() {
 fn bundle_format_matches_golden_bytes() {
     let bundled = encoded_bundle("golden");
 
+    // The embedded program identity includes the current bytecode ABI version.
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bundled)),
-        "a7d59e11e73324dd145ada5ea73d26d813f0453ae051f359c774ca5dad03bf6c"
+        "a217d13f03f9a5e1f0b7b4f59a9af79afd9167b55676259907449f7766399895"
     );
 }

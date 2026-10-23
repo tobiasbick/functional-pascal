@@ -22,6 +22,37 @@ use std::sync::{Arc, Condvar, Mutex, Weak};
 
 use super::{MemoryDomain, OwnershipError, Value};
 
+thread_local! {
+    static THREAD: std::thread::ThreadId = std::thread::current().id();
+}
+
+static NEXT_TOKEN: AtomicU64 = AtomicU64::new(1);
+
+thread_local! {
+    // Const-initialized without a destructor, so reads need no lazy-initialization state.
+    static TOKEN: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// Nonzero numeric identity of the calling thread, assigned on first use.
+fn thread_token() -> u64 {
+    TOKEN.with(|token| {
+        let current = token.get();
+        if current != 0 {
+            return current;
+        }
+        let assigned = NEXT_TOKEN.fetch_add(1, Ordering::Relaxed);
+        token.set(assigned);
+        assigned
+    })
+}
+
+/// Identity of the calling thread without cloning its handle on every domain access.
+fn current_thread() -> std::thread::ThreadId {
+    THREAD
+        .try_with(|id| *id)
+        .unwrap_or_else(|_| std::thread::current().id())
+}
+
 pub use access::DomainAccess;
 pub use defer::{MaintenanceDeferral, defer_maintenance};
 pub use execution::{ExecutionAccess, ExecutionResume, ExecutionRoots, PublishedWait};
@@ -81,9 +112,14 @@ pub(super) struct DomainRoots {
     explicit: AtomicBool,
     automatic: AtomicBool,
     scheduled: AtomicBool,
+    /// Token of the thread that holds an unparked execution gate, else zero.
+    ///
+    /// Written under the access mutex; lets pressure accounting skip quiescence lookups.
+    exec_owner: AtomicU64,
     installed: AtomicBool,
     serviced: AtomicU64,
     maintenance: Mutex<Option<Arc<dyn DomainMaintenance>>>,
+    pressure: scheduling::Pressure,
 }
 
 impl MemoryDomain {

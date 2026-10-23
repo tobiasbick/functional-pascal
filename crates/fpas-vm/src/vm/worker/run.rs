@@ -8,7 +8,7 @@ use crate::vm::dispatch::DispatchStep;
 use crate::vm::{RuntimeExecution, VmError, diagnostics};
 
 /// Maximum scheduling steps between two scheduler abort checks.
-const ABORT_CHECK_INTERVAL: u32 = 256;
+const ABORT_CHECK_INTERVAL: u32 = crate::vm::BATCH_STEPS;
 
 impl Worker {
     /// Execute one scheduled task until return, suspension or scheduler abort.
@@ -67,8 +67,19 @@ impl Worker {
                 self.instructions_until_yield =
                     self.instructions_until_yield.saturating_sub(batch.steps);
                 if self.instructions_until_yield == 0 {
-                    self.suspend_and_enqueue();
-                    return Ok(None);
+                    // Yielding saves and republishes the whole task. It only helps when other
+                    // work is waiting; the check repeats at every slice, so waiters never starve.
+                    if !CAPTURE
+                        && self
+                            .scheduler
+                            .as_ref()
+                            .is_some_and(|scheduler| !scheduler.has_queued())
+                    {
+                        self.instructions_until_yield = crate::vm::TIMESLICE;
+                    } else {
+                        self.suspend_and_enqueue();
+                        return Ok(None);
+                    }
                 }
             }
         }

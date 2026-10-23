@@ -170,6 +170,16 @@ fn typed_scalar_stores_update_in_place_or_replace_other_values() {
         .expect("replace a Boolean");
     assert_eq!(worker.registers[0], Value::Integer(9));
 
+    worker
+        .store_real_register(0, 1.5)
+        .expect("replace an integer with a real");
+    assert_eq!(worker.registers[0], Value::Real(1.5));
+    worker
+        .store_real_register(0, 2.5)
+        .expect("update a real in place");
+    assert_eq!(worker.registers[0], Value::Real(2.5));
+    assert!(worker.register_is_initialized(0));
+
     let cell = worker.domain.new_cell(Value::Unit).expect("owned cell");
     worker
         .store_register(1, Value::Cell(cell))
@@ -184,12 +194,27 @@ fn typed_scalar_stores_update_in_place_or_replace_other_values() {
     );
     assert_eq!(worker.registers[1], Value::Integer(1));
 
+    let cell = worker.domain.new_cell(Value::Unit).expect("owned cell");
+    worker
+        .store_register(1, Value::Cell(cell))
+        .expect("store another reference");
+    worker
+        .store_real_register(1, 3.5)
+        .expect("replace reference with a real");
+    assert_eq!(worker.domain.registered_count(), 0);
+    assert_eq!(worker.registers[1], Value::Real(3.5));
+    assert!(worker.register_is_initialized(1));
+
     assert!(
         worker.store_integer_register(2, 0).is_err(),
         "outside the frame"
     );
     assert!(
         worker.store_boolean_register(2, true).is_err(),
+        "outside the frame"
+    );
+    assert!(
+        worker.store_real_register(2, 0.0).is_err(),
         "outside the frame"
     );
 }

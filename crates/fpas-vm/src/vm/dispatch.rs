@@ -26,7 +26,7 @@ pub(super) struct DispatchBatch {
 
 /// Control effect of one executed instruction inside a batch.
 enum Flow {
-    /// Keep dispatching in the current batch.
+    /// Keep dispatching without changing hosted callback readiness.
     Next,
     /// The opcode may have requested suspension or readied a hosted callback continuation.
     Boundary,
@@ -52,9 +52,16 @@ impl Worker {
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
         let access = self.execution_access()?;
+        let started = self.hosted.profile.get().map(|_| std::time::Instant::now());
         let result = self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget);
+        if let (Some(started), Ok(batch)) = (started, &result) {
+            self.record_profile_batch(batch.steps, started.elapsed());
+        }
         access.note_completed_batch();
         if access.outermost() || self.domain.maintenance_pending() {
+            let _timer = fpas_bytecode::profile::Timer::start(
+                fpas_bytecode::profile::Counter::SafePointNanos,
+            );
             let extra = match &result {
                 Ok(batch) => match &batch.step {
                     DispatchStep::Return(value) => std::slice::from_ref(value),
@@ -89,7 +96,7 @@ impl Worker {
     ) -> Result<DispatchBatch, VmError> {
         self.check_task_cancellation()?;
         let mut steps = 0;
-        while steps < budget {
+        'batch: while steps < budget {
             self.check_task_cancellation()?;
             // A ready hosted continuation advances as one scheduling step inside the batch,
             // so each callback does not pay a separate execution-access round trip.
@@ -115,77 +122,86 @@ impl Worker {
                     continue;
                 }
             }
-            if TRACE && self.trace_interrupted() {
-                return Err(diagnostics::at_address(
-                    self.executable.executable(),
-                    self.current_address,
-                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
-                    "Debug trace collection reached a bound",
-                    "Inspect the bounded batch trace result.",
-                ));
-            }
-            let Some(&instruction) = self.executable.decoded().get(self.ip) else {
-                return Err(self.invalid_instruction_pointer());
-            };
-            // Verified code length fits an instruction address.
-            self.current_address = InstructionAddress::new(self.ip as u32);
-            if TRACE {
-                self.trace_local_begin();
-            }
-            if TRACE && self.trace_interrupted() {
-                return Err(diagnostics::at_address(
-                    self.executable.executable(),
-                    self.current_address,
-                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
-                    "Debug trace reached a bound",
-                    "Inspect trace coverage.",
-                ));
-            }
-            self.ip += 1;
-            self.instruction_count = self.instruction_count.wrapping_add(1);
-            steps += 1;
-            if SUPPRESS_INITIALIZERS
-                && self.take_suppressed_source_initializer(self.current_address)
-            {
-                break;
-            }
-            let owner = self.function;
-            let address = self.current_address;
-            let old_depth = self.call_stack.len();
-            let result = self.execute(instruction);
-            if TRACE {
-                let tail = matches!(
-                    instruction.opcode(),
-                    fpas_bytecode::Opcode::TailCall | fpas_bytecode::Opcode::TailCallValue
-                ) && self.call_stack.len() == old_depth
-                    && result.is_ok();
-                self.trace_local_finish(
-                    owner,
-                    address,
-                    result.is_ok(),
-                    matches!(result, Ok(Flow::Return(_))),
-                    tail,
-                );
-            }
-            match result? {
-                Flow::Next => {}
-                Flow::Boundary => {
-                    if self.suspend_requested {
+            // Run ordinary instructions without inspecting callback state again. Only
+            // boundary opcodes can make a continuation ready, so return to the outer loop there.
+            loop {
+                if TRACE && self.trace_interrupted() {
+                    return Err(diagnostics::at_address(
+                        self.executable.executable(),
+                        self.current_address,
+                        fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                        "Debug trace collection reached a bound",
+                        "Inspect the bounded batch trace result.",
+                    ));
+                }
+                let Some(&instruction) = self.executable.decoded().get(self.ip) else {
+                    return Err(self.invalid_instruction_pointer());
+                };
+                // Verified code length fits an instruction address.
+                self.current_address = InstructionAddress::new(self.ip as u32);
+                if TRACE {
+                    self.trace_local_begin();
+                }
+                if TRACE && self.trace_interrupted() {
+                    return Err(diagnostics::at_address(
+                        self.executable.executable(),
+                        self.current_address,
+                        fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                        "Debug trace reached a bound",
+                        "Inspect trace coverage.",
+                    ));
+                }
+                self.ip += 1;
+                self.instruction_count = self.instruction_count.wrapping_add(1);
+                steps += 1;
+                if SUPPRESS_INITIALIZERS
+                    && self.take_suppressed_source_initializer(self.current_address)
+                {
+                    break 'batch;
+                }
+                let owner = self.function;
+                let address = self.current_address;
+                let old_depth = self.call_stack.len();
+                let result = self.execute(instruction);
+                if TRACE {
+                    let tail = matches!(
+                        instruction.opcode(),
+                        fpas_bytecode::Opcode::TailCall | fpas_bytecode::Opcode::TailCallValue
+                    ) && self.call_stack.len() == old_depth
+                        && result.is_ok();
+                    self.trace_local_finish(
+                        owner,
+                        address,
+                        result.is_ok(),
+                        matches!(result, Ok(Flow::Return(_))),
+                        tail,
+                    );
+                }
+                match result? {
+                    Flow::Next => {}
+                    Flow::Boundary => {
+                        if self.suspend_requested {
+                            return Ok(DispatchBatch {
+                                step: DispatchStep::Suspend,
+                                steps,
+                            });
+                        }
+                        if self.domain.maintenance_pending() && self.callback_resume_pending() {
+                            break 'batch;
+                        }
+                        break;
+                    }
+                    Flow::Return(value) => {
                         return Ok(DispatchBatch {
-                            step: DispatchStep::Suspend,
+                            step: DispatchStep::Return(value),
                             steps,
                         });
                     }
-                    if self.domain.maintenance_pending() && self.callback_resume_pending() {
-                        break;
-                    }
                 }
-                Flow::Return(value) => {
-                    return Ok(DispatchBatch {
-                        step: DispatchStep::Return(value),
-                        steps,
-                    });
+                if steps >= budget {
+                    break 'batch;
                 }
+                self.check_task_cancellation()?;
             }
         }
         Ok(DispatchBatch {

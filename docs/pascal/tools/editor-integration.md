@@ -236,8 +236,9 @@ For a fully tested package, use:
 npm run package:verified --prefix editors/vscode
 ```
 
-This command additionally requires a stable Rust toolchain. It builds the current
-debug `fpas` toolchain and runs the full extension test suite before packaging.
+This command additionally requires the repository's pinned Rust toolchain. It
+builds the current debug `fpas` toolchain and runs the full extension test suite
+before packaging.
 If a test fails, packaging stops and an existing VSIX is left unchanged.
 
 Install that file through **Extensions: Install from VSIX** in a compatible

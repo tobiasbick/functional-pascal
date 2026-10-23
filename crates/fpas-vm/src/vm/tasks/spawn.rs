@@ -116,7 +116,8 @@ impl Worker {
         if let Some(destination) = destination {
             self.write(destination, Value::Task(id))?;
         }
-        scheduler.enqueue(task);
+        // A fresh entry has no execution roots to publish yet.
+        scheduler.enqueue_published(task);
         Ok(())
     }
 }

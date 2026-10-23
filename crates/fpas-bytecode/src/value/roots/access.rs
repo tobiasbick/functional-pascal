@@ -5,6 +5,7 @@ use super::registration::RootEntry;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::thread::ThreadId;
 
 #[derive(Default)]
@@ -21,7 +22,6 @@ pub(super) struct AccessState {
     pub executions: usize,
     pub sessions: usize,
     pub retired: bool,
-    pub pressure: Option<super::scheduling::Pressure>,
 }
 
 /// Reentrant external access, excluding execution and maintenance on other threads.
@@ -37,7 +37,8 @@ impl MemoryDomain {
     /// Enter guarded external access. Re-entry from a collection hook is forbidden.
     #[must_use]
     pub fn access(&self) -> DomainAccess {
-        let current = std::thread::current().id();
+        // Count every borrow: it may outlive execution or span a safe point/native wait.
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -73,7 +74,7 @@ impl MemoryDomain {
     /// Returns Busy when execution/maintenance or another accessor owns this domain.
     pub fn try_access(&self) -> Result<DomainAccess, super::super::OwnershipError> {
         use super::super::OwnershipError;
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -94,6 +95,20 @@ impl MemoryDomain {
         })
     }
 
+    /// Access for one bounded cell operation, reusing the executing owner's exclusion.
+    ///
+    /// Only the executing owner thread observes its own token, and only it can park or
+    /// reach a safe point. Callers must therefore keep the guard inside one operation that
+    /// never escapes, parks, reaches a safe point or runs FPAS/host code. Every other
+    /// caller gets a counted borrow.
+    pub(in crate::value) fn operation_access(&self) -> Option<DomainAccess> {
+        if self.0.roots.exec_owner.load(Ordering::Acquire) == super::thread_token() {
+            None
+        } else {
+            Some(self.access())
+        }
+    }
+
     pub(in crate::value) fn require_collection(&self) -> Result<(), super::super::OwnershipError> {
         use super::super::OwnershipError;
         let state = self
@@ -106,7 +121,7 @@ impl MemoryDomain {
             return Err(OwnershipError::Poisoned);
         }
         if !state.collecting
-            || state.owner != Some(std::thread::current().id())
+            || state.owner != Some(super::current_thread())
             || state.external != 0
             || state.removing != 0
         {
@@ -115,16 +130,36 @@ impl MemoryDomain {
         Ok(())
     }
     pub(in crate::value) fn poison_collection(&self) {
-        self.0
+        let mut state = self
+            .0
             .roots
             .access
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .poisoned = true;
+            .unwrap_or_else(|e| e.into_inner());
+        state.poisoned = true;
+        self.refresh_fast_owner(&state);
+    }
+
+    /// Publish the executing owner for pressure accounting. Requires the state lock.
+    ///
+    /// Holds only while this thread owns an unparked execution gate with no collection or
+    /// poison, so only its mutations can skip the quiescent-state lookup.
+    pub(super) fn refresh_fast_owner(&self, state: &AccessState) {
+        let token = if state.execution != 0
+            && !state.collecting
+            && !state.poisoned
+            && state.parked.is_none()
+            && state.owner == Some(super::current_thread())
+        {
+            super::thread_token()
+        } else {
+            0
+        };
+        self.0.roots.exec_owner.store(token, Ordering::Release);
     }
 
     pub(super) fn release_root(&self, root: Arc<RootEntry>) {
-        let current = std::thread::current().id();
+        let current = super::current_thread();
         let mut state = self
             .0
             .roots
@@ -177,6 +212,7 @@ impl MemoryDomain {
         } else {
             state.external -= 1;
         }
+        self.refresh_fast_owner(&state);
         if state.external != 0 || state.collecting {
             return;
         }
@@ -185,7 +221,7 @@ impl MemoryDomain {
             return;
         }
         // Keep ownership while destructors run outside every protocol/storage mutex.
-        loop {
+        while !state.pending.is_empty() {
             state.external = 1;
             let pending = std::mem::take(&mut state.pending);
             drop(state);
@@ -197,9 +233,6 @@ impl MemoryDomain {
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
             state.external = 0;
-            if state.pending.is_empty() {
-                break;
-            }
         }
         if state.execution != 0 {
             return;

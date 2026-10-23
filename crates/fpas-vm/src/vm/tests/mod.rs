@@ -8,6 +8,8 @@ mod console_eof;
 mod dispatch_budget;
 mod global_index_path;
 mod inline_callbacks;
+mod intrinsic_length;
+mod intrinsic_unwrap;
 mod intrinsics;
 mod register_initialization;
 mod register_stack;
@@ -20,5 +22,6 @@ mod support;
 pub(in crate::vm) mod task_images;
 mod task_owned_functions;
 mod task_scopes;
+mod wrappers;
 
 use support::*;

@@ -4,15 +4,19 @@ uses Std.Console as Console;
 
 begin
   var Items: array of integer := [1, 2, 3];
-  const Doubled := Items.Map(function(N: integer): integer begin
-    Items.PushInPlace(N);
-    return N * 2;
-  end function);
-  const Sum := [1, 2, 3].Reduce([0], function(Acc: array of integer; V: integer): array of integer begin
-    var Next := Acc;
-    Next.PushInPlace(V);
-    return Next;
-  end function);
+  const Doubled := Items.Map(
+    function(N: integer): integer begin
+      Items.PushInPlace(N);
+      return N * 2;
+    end function
+  );
+  const Sum := [1, 2, 3].Reduce(
+    [0], function(Acc: array of integer; V: integer): array of integer begin
+      var Next := Acc;
+      Next.PushInPlace(V);
+      return Next;
+    end function
+  );
   Console.WriteLn(Doubled.Length());
   Console.WriteLn(Items.Length());
   Console.WriteLn(Sum.Length());

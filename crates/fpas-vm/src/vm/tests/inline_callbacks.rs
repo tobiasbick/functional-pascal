@@ -37,6 +37,50 @@ fn main_callbacks_obey_single_instruction_dispatch_budgets() {
 }
 
 #[test]
+fn nested_callbacks_preserve_results_and_counts_across_batch_boundaries() {
+    let executable = Arc::new(image(
+        r#"program T;
+begin
+  var Calls := 0;
+  const Values := [1, 2, 3].Map(function(N: integer): integer begin
+    const Inner := [N, N + 1].Map(function(M: integer): integer begin
+      Calls := Calls + 1;
+      return M * 2;
+    end function);
+    return Inner[0] + Inner[1];
+  end function);
+  if Calls <> 6 then panic('callback count'); end if;
+  if (Values[0] <> 6) or (Values[1] <> 10) or (Values[2] <> 14) then
+    panic('callback results');
+  end if;
+end."#,
+    ));
+    let mut expected = None;
+    for budget in [1, 2, 3, 7, 256] {
+        let mut worker = Worker::new(Arc::clone(&executable)).unwrap();
+        let mut scheduling_steps = 0;
+        loop {
+            assert!(scheduling_steps < 10_000, "callback did not finish");
+            let before = worker.instruction_count;
+            let batch = worker.dispatch_batch::<false>(budget).unwrap();
+            assert!(worker.instruction_count - before <= u64::from(batch.steps));
+            assert!(batch.steps <= budget);
+            scheduling_steps += batch.steps;
+            match batch.step {
+                DispatchStep::Return(value) => {
+                    assert_eq!(value, Value::Unit);
+                    break;
+                }
+                DispatchStep::Continue => {}
+                DispatchStep::Suspend => panic!("unexpected suspension"),
+            }
+        }
+        let counts = (worker.instruction_count, scheduling_steps);
+        assert_eq!(counts, *expected.get_or_insert(counts));
+    }
+}
+
+#[test]
 fn nested_main_callbacks_keep_partial_results_and_live_capture_aliases_rooted() {
     let mut worker = Worker::new(Arc::new(image(
         r#"program Roots;

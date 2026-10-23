@@ -1,6 +1,6 @@
 //! Shared admission policy for values published across task boundaries.
 
-use fpas_bytecode::{Value, classify_values};
+use fpas_bytecode::{Value, classify_values, summarized_transferable};
 use fpas_diagnostics::codes::RUNTIME_INVALID_TASK;
 
 use crate::vm::worker::Worker;
@@ -11,6 +11,9 @@ use crate::vm::{VmError, diagnostics};
 /// Resource handles retain their existing registry rules. Executable provenance is checked
 /// separately when importing values into a host session.
 pub(in crate::vm) fn check_transfer(values: &[Value]) -> Result<(), String> {
+    if summarized_transferable(values) {
+        return Ok(());
+    }
     let graph = classify_values(values)
         .map_err(|error| format!("Cannot inspect value graph for task transfer: {error}"))?;
     if graph.is_transferable() {

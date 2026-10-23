@@ -35,12 +35,13 @@ fn build_from_parsed_sources(
     mut source_paths: Vec<PathBuf>,
 ) -> Result<UnitGraph, crate::ProjectError> {
     let mut nodes = std::collections::HashMap::new();
+    let index = link_meta.source_index();
     for (path, unit) in sources {
-        let validate_name = !link_meta.is_trusted_standard_library_source(&path);
+        let validate_name = !index.is_trusted_standard_library_source(&path);
         insert_unit(
             &mut nodes,
             &mut source_paths,
-            link_meta,
+            &index,
             &path,
             unit,
             None,

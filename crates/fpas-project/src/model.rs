@@ -85,17 +85,26 @@ impl ProjectLinkMeta {
     }
 
     /// Origin for a source path; defaults to [`SourceOrigin::Own`] when unknown.
+    ///
+    /// Repeated lookups should share one [`Self::source_index`].
     pub fn origin_for_source(&self, source_path: &Path) -> SourceOrigin {
-        let canonical = canonical_source_path(source_path);
-        self.source_origins
-            .get(&canonical)
-            .or_else(|| {
-                self.source_origins
-                    .iter()
-                    .find_map(|(path, origin)| same_file(path, source_path).then_some(origin))
-            })
-            .cloned()
-            .unwrap_or(SourceOrigin::Own)
+        self.source_index().origin_for_source(source_path)
+    }
+
+    /// Resolve every source key's filesystem aliases once for repeated lookups.
+    pub(crate) fn source_index(&self) -> SourceIndex<'_> {
+        SourceIndex {
+            origins: self
+                .source_origins
+                .iter()
+                .map(|(path, origin)| (canonical_source_path(path), origin))
+                .collect(),
+            trusted: self
+                .trusted_standard_library_sources
+                .iter()
+                .map(|path| canonical_source_path(path))
+                .collect(),
+        }
     }
 
     /// Export policy for a library project path, defaulting to [`LibraryExportPolicy::AllUnits`].
@@ -114,12 +123,30 @@ impl ProjectLinkMeta {
 
     /// Returns whether a source belongs to the trusted implementation standard library.
     pub fn is_trusted_standard_library_source(&self, source_path: &Path) -> bool {
-        let canonical = canonical_source_path(source_path);
-        self.trusted_standard_library_sources.contains(&canonical)
-            || self
-                .trusted_standard_library_sources
-                .iter()
-                .any(|path| same_file(path, source_path))
+        self.source_index()
+            .is_trusted_standard_library_source(source_path)
+    }
+}
+
+/// Link-metadata source keys in canonical form, so a lookup resolves only its query path.
+///
+/// Matching canonical forms is equivalent to comparing each key with `same_file`.
+pub(crate) struct SourceIndex<'a> {
+    origins: HashMap<PathBuf, &'a SourceOrigin>,
+    trusted: HashSet<PathBuf>,
+}
+
+impl SourceIndex<'_> {
+    /// Origin for a source path; defaults to [`SourceOrigin::Own`] when unknown.
+    pub(crate) fn origin_for_source(&self, source_path: &Path) -> SourceOrigin {
+        self.origins
+            .get(&canonical_source_path(source_path))
+            .map_or(SourceOrigin::Own, |origin| (*origin).clone())
+    }
+
+    /// Returns whether a source belongs to the trusted implementation standard library.
+    pub(crate) fn is_trusted_standard_library_source(&self, source_path: &Path) -> bool {
+        self.trusted.contains(&canonical_source_path(source_path))
     }
 }
 

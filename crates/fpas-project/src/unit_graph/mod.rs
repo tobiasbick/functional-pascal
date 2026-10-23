@@ -83,6 +83,7 @@ pub(crate) fn build_unit_graph_with_base(
     mut source_paths: Vec<PathBuf>,
 ) -> Result<UnitGraph, crate::ProjectError> {
     let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
+    let sources = effective_link_meta.source_index();
     let mut nodes = HashMap::<String, UnitNode>::new();
 
     for source_path in source_files {
@@ -106,7 +107,7 @@ pub(crate) fn build_unit_graph_with_base(
         insert_unit(
             &mut nodes,
             &mut source_paths,
-            &effective_link_meta,
+            &sources,
             source_path,
             unit,
             Some(fpas_unit::Digest::of(&source)),
@@ -129,7 +130,7 @@ pub(crate) fn build_unit_graph_with_base(
             insert_unit(
                 &mut nodes,
                 &mut source_paths,
-                &effective_link_meta,
+                &sources,
                 source_path,
                 unit,
                 Some(fpas_unit::Digest::of(&source)),
@@ -167,7 +168,7 @@ fn merge_standard_library_link_meta(
 fn insert_unit(
     nodes: &mut HashMap<String, UnitNode>,
     source_paths: &mut Vec<PathBuf>,
-    link_meta: &ProjectLinkMeta,
+    sources: &crate::model::SourceIndex<'_>,
     source_path: &Path,
     mut unit: Unit,
     source_hash: Option<fpas_unit::Digest>,
@@ -193,7 +194,7 @@ fn insert_unit(
         key,
         UnitNode::new(
             source_path.to_path_buf(),
-            link_meta.origin_for_source(source_path),
+            sources.origin_for_source(source_path),
             unit,
             source_hash,
         ),

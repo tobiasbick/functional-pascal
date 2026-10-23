@@ -14,5 +14,6 @@ mod bytecode {
     mod projections;
     mod spawn_flags;
     mod support;
+    mod verified_calls;
     mod verifier;
 }

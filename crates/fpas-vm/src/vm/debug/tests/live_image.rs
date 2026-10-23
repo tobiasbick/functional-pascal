@@ -298,8 +298,12 @@ fn global_layout_changes_are_rejected() {
 
 #[test]
 fn capture_count_changes_are_rejected() {
-    let current = pair_executable();
+    let mut current = pair_executable().into_unverified();
+    current.code[0] = abc(Opcode::MakeClosure, 0, 1, 0);
+    current.code[1] = abc(Opcode::CallValue, NO_REGISTER, 0, 0);
+    let current = current.verify().expect("closure caller");
     let mut image = current.clone().into_unverified();
+    image.code[0] = Instruction::abc(Opcode::MakeClosure, 0, 1, 0, 1).expect("one capture");
     image.functions[0].debug.bindings.push(owner_binding());
     image.functions[1].capture_count = 1;
     image.functions[1].debug.lexical_owner = Some(FunctionId::new(0));

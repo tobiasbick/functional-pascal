@@ -24,7 +24,7 @@ struct PreparedCall {
 impl Worker {
     pub(super) fn call_direct(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let target = FunctionId::new(operands.b);
-        self.enter_call(target, operands.a, operands.c, operands.auxiliary, &[], 0)
+        self.enter_call::<true>(target, operands.a, operands.c, operands.auxiliary, &[], 0)
             .map(|_| ())
     }
 
@@ -43,7 +43,7 @@ impl Worker {
         let target = function.function;
         let capture_count = function.captures.len();
         let receiver = function.bound_receiver.clone();
-        let capture_start = self.enter_call(
+        let capture_start = self.enter_call::<false>(
             target,
             operands.a,
             operands.c,
@@ -109,7 +109,7 @@ impl Worker {
     }
 
     /// Enter a callee frame and return the absolute register of its first capture slot.
-    fn enter_call(
+    fn enter_call<const DIRECT: bool>(
         &mut self,
         target: FunctionId,
         destination: u16,
@@ -118,30 +118,14 @@ impl Worker {
         prefix_arguments: &[Value],
         capture_count: usize,
     ) -> Result<usize, VmError> {
-        let argument_start = self
-            .base
-            .checked_add(usize::from(argument_base))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Call argument window overflowed the active frame",
-                )
-            })?;
-        let argument_end = argument_start
-            .checked_add(usize::from(argument_count))
-            .filter(|end| *end <= self.active_register_count())
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Call argument window left the active frame",
-                )
-            })?;
+        // Both call bytecodes have a verified argument window in the caller frame.
+        let argument_start = self.base + usize::from(argument_base);
+        let argument_end = argument_start + usize::from(argument_count);
+        debug_assert!(argument_end <= self.active_register_count());
         let actual_argument_count =
             usize::from(argument_count).saturating_add(prefix_arguments.len());
         let prepared =
-            self.prepare_call(target, destination, actual_argument_count, capture_count)?;
+            self.prepare_call::<DIRECT>(target, destination, actual_argument_count, capture_count)?;
         // Arguments that end the caller's frame already sit where the callee's parameters go:
         // the callee frame starts on them instead of copying (overlapping register windows).
         let overlapping = prefix_arguments.is_empty()
@@ -178,7 +162,7 @@ impl Worker {
         let argument_count = arguments
             .len()
             .saturating_add(usize::from(function.bound_receiver.is_some()));
-        let prepared = self.prepare_call(
+        let prepared = self.prepare_call::<false>(
             function.function,
             fpas_bytecode::NO_REGISTER,
             argument_count,
@@ -201,7 +185,8 @@ impl Worker {
         Ok(())
     }
 
-    fn prepare_call(
+    /// Direct bytecodes have verified signatures; callable values require a runtime check.
+    fn prepare_call<const DIRECT: bool>(
         &self,
         target: FunctionId,
         destination: u16,
@@ -219,7 +204,7 @@ impl Worker {
                     "Call target is outside the function table",
                 )
             })?;
-        if argument_count != usize::from(info.arity) {
+        if !DIRECT && argument_count != usize::from(info.arity) {
             return Err(diagnostics::internal(
                 image,
                 self.current_address,
@@ -229,7 +214,7 @@ impl Worker {
                 ),
             ));
         }
-        if capture_count != usize::from(info.capture_count) {
+        if !DIRECT && capture_count != usize::from(info.capture_count) {
             return Err(diagnostics::internal(
                 image,
                 self.current_address,

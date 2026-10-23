@@ -57,3 +57,57 @@ fn closure_passed_as_its_own_overlapping_argument_keeps_its_captures() {
         Value::Integer(42)
     );
 }
+
+#[test]
+fn dynamic_calls_still_reject_incorrect_arity_and_missing_captures() {
+    for (arity, captures, message) in [
+        (1, 0, "Call arity mismatch"),
+        (0, 1, "Closure capture mismatch"),
+    ] {
+        let executable = image(
+            vec![
+                abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+                abc(Opcode::CallValue, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+                abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+                abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            ],
+            Vec::new(),
+            &[
+                FunctionSpec {
+                    start: 0,
+                    end: 1,
+                    arity: 0,
+                    captures: 0,
+                    registers: 0,
+                    returns: ReturnConvention::Unit,
+                },
+                FunctionSpec {
+                    start: 1,
+                    end: 3,
+                    arity: 1,
+                    captures: 0,
+                    registers: 1,
+                    returns: ReturnConvention::Unit,
+                },
+                FunctionSpec {
+                    start: 3,
+                    end: 4,
+                    arity,
+                    captures,
+                    registers: 1,
+                    returns: ReturnConvention::Unit,
+                },
+            ],
+        );
+        let function = Value::function(
+            executable
+                .function_target(FunctionId::new(2))
+                .expect("target"),
+            Vec::new(),
+        );
+        let error = Vm::new(executable)
+            .call(FunctionId::new(1), vec![function.into()])
+            .expect_err("dynamic signature must still be checked");
+        assert!(error.message.contains(message), "{error:?}");
+    }
+}

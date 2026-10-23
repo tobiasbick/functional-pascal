@@ -228,6 +228,13 @@ pub enum ValidationErrorKind {
         /// Encoded argument count.
         actual: u8,
     },
+    /// A direct call targets a function that requires closure captures.
+    CallCaptures {
+        /// Target function identifier.
+        target: u16,
+        /// Captures required by the target but absent from a direct call.
+        captures: u16,
+    },
     /// A branch leaves the current function's code range.
     BranchTarget {
         /// Encoded target address.

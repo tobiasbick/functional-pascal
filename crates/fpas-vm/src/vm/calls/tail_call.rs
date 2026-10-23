@@ -11,35 +11,11 @@ impl Worker {
     pub(in crate::vm) fn tail_call(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let target = FunctionId::new(operands.b);
         let image = self.executable.executable();
-        let info = image
-            .functions
-            .get(usize::from(target.get()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    image,
-                    self.current_address,
-                    "Tail-call target is outside the function table",
-                )
-            })?;
+        // The verifier establishes the direct target, arity and absence of captures.
+        let info = &image.functions[usize::from(target.get())];
         let count = usize::from(operands.auxiliary);
-        if count != usize::from(info.arity) || info.capture_count != 0 {
-            return Err(diagnostics::internal(
-                image,
-                self.current_address,
-                format!(
-                    "Tail-call signature mismatch: expected {} arguments and no captures, got {count} arguments and {} captures",
-                    info.arity, info.capture_count
-                ),
-            ));
-        }
         let frame_size = usize::from(info.register_count);
-        let entry = usize::try_from(info.code.start.get()).map_err(|_| {
-            diagnostics::internal(
-                image,
-                self.current_address,
-                "Tail-call address does not fit this host",
-            )
-        })?;
+        let entry = info.code.start.get() as usize;
         let arguments = self.base + usize::from(operands.c);
         for offset in 0..count {
             let value = self.take_register(arguments + offset)?;

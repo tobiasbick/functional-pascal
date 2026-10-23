@@ -619,6 +619,10 @@ fn function_ranges_partitions_and_frames_are_rejected() {
     captures.functions[1].register_count = 256;
     let closure = opcode_index(&captures, Opcode::MakeClosure);
     captures.code[closure] = abc(Opcode::LoadUnit, 0, 0, 0, 0);
+    for opcode in [Opcode::CallDirect, Opcode::TailCall] {
+        let call = opcode_index(&captures, opcode);
+        captures.code[call] = abc(Opcode::LoadUnit, 0, 0, 0, 0);
+    }
     assert!(matches!(
         error_kind(captures),
         ValidationErrorKind::FrameWindow { captures: 256, .. }

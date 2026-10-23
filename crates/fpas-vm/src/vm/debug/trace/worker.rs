@@ -13,8 +13,18 @@ pub(in crate::vm) struct TraceWrite {
 
 impl Worker {
     /// Retain scalar leaves only, before a possibly in-place aggregate commit.
+    #[inline(always)]
     pub(in crate::vm) fn begin_trace_store(&self, index: usize) -> Option<TraceWrite> {
+        // Untraced stores stay on the inlined fast path.
         let history = self.debug_trace.as_ref()?;
+        self.begin_traced_store(history, index)
+    }
+
+    fn begin_traced_store(
+        &self,
+        history: &Arc<Mutex<TraceHistory>>,
+        index: usize,
+    ) -> Option<TraceWrite> {
         let state = history.lock().unwrap_or_else(|p| p.into_inner());
         if state.limit.is_some()
             || !state.report.watches.iter().any(|watch| {
@@ -40,8 +50,14 @@ impl Worker {
     }
 
     /// Failed stores discard their before-values and never invoke this method.
+    #[inline(always)]
     pub(in crate::vm) fn finish_trace_store(&self, write: Option<TraceWrite>) {
-        let Some(write) = write else { return };
+        if let Some(write) = write {
+            self.finish_traced_store(write);
+        }
+    }
+
+    fn finish_traced_store(&self, write: TraceWrite) {
         let mut state = write.history.lock().unwrap_or_else(|p| p.into_inner());
         let before = match write.before {
             Ok(before) => before,

@@ -109,6 +109,7 @@ pub fn inspect_values(
 ///
 /// # Errors
 /// Rejects foreign local values or an unavailable graph snapshot.
+#[inline]
 pub fn validate_local(domain: &MemoryDomain, value: &Value) -> Result<(), OwnershipError> {
     if value.is_ownership_neutral() {
         return Ok(());

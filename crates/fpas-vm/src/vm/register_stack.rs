@@ -112,6 +112,7 @@ impl Worker {
     }
 
     /// Remove an absolute active register value and mark the slot uninitialized.
+    #[inline]
     pub(super) fn take_register(&mut self, index: usize) -> Result<Value, VmError> {
         if index >= self.registers.len() || index >= self.register_initialized.len() {
             return Err(self.register_outside_frame(index));

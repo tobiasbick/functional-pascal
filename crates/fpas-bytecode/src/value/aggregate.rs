@@ -88,6 +88,7 @@ impl SharedRecord {
     ///
     /// # Panics
     /// Panics if `index` is outside the stored fields.
+    #[inline]
     pub fn replace_field(&mut self, index: usize, value: Value) -> Value {
         let body = Arc::make_mut(&mut self.0);
         body.ownership_neutral &= value.is_ownership_neutral();

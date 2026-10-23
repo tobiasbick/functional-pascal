@@ -117,7 +117,17 @@ impl Worker {
     }
 
     /// Stop this task when its owning scope was cancelled or an enclosing scope failed.
+    #[inline(always)]
     pub(in crate::vm) fn check_task_cancellation(&self) -> Result<(), VmError> {
+        // Runs before every instruction; code without scope ownership has nothing to observe.
+        if self.has_task_scope_ownership() {
+            self.check_scope_cancellation()
+        } else {
+            Ok(())
+        }
+    }
+
+    fn check_scope_cancellation(&self) -> Result<(), VmError> {
         if self
             .owner_scope
             .as_ref()
@@ -149,6 +159,7 @@ impl Worker {
     }
 
     /// Whether this task must observe scope cancellation while it waits.
+    #[inline(always)]
     pub(in crate::vm) fn has_task_scope_ownership(&self) -> bool {
         self.owner_scope.is_some()
             || !self.task_scopes.is_empty()

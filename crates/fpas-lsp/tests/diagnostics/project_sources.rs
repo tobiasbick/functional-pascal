@@ -30,7 +30,7 @@ include = ["src/**/*.fpas"]
         TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
         TranscriptStep::Message(initialized()),
         TranscriptStep::Message(open(&unit_uri, 1, unit_source)),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(unit_uri.to_string(), 1),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);
@@ -205,7 +205,7 @@ end unit;
         })),
         TranscriptStep::Message(initialized()),
         TranscriptStep::Message(open(&facade_uri, 1, facade_source)),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(facade_uri.to_string(), 1),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);
@@ -270,7 +270,7 @@ include = ["main.fpas"]
         })),
         TranscriptStep::Message(initialized()),
         TranscriptStep::Message(open(&source_uri, 1, source)),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(source_uri.to_string(), 1),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);

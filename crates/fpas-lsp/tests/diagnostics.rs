@@ -37,7 +37,7 @@ fn invalid_comment_form_publishes_one_actionable_lexer_diagnostic() {
             1,
             "program Invalid;\n{ not a comment }\nbegin\nend.\n",
         )),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(uri.to_string(), 1),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);
@@ -68,19 +68,19 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
             1,
             "program Broken;\nbegin\n  if then; end if;\nend.\n",
         )),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(uri.to_string(), 1),
         TranscriptStep::Message(change(
             uri,
             2,
             "program Semantic;\nbegin\n  const Value: integer := 'wrong';\nend.\n",
         )),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(uri.to_string(), 2),
         TranscriptStep::Message(change(
             uri,
             3,
             "program Fixed;\nbegin\n  const Value: integer := 1;\nend.\n",
         )),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(uri.to_string(), 3),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);
@@ -151,7 +151,7 @@ fn rapid_changes_publish_only_the_latest_document_version() {
             3,
             "program Latest;\nbegin\n  const Value: integer := 1;\nend.\n",
         )),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(uri.to_string(), 3),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);
@@ -174,7 +174,7 @@ fn multiple_diagnostics_keep_distinct_ranges() {
             1,
             "program Multi\nbegin\n  if then\n  var :=\nend.\n",
         )),
-        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::WaitForDiagnostics(uri.to_string(), 1),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);

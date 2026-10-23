@@ -95,6 +95,20 @@ impl MemoryDomain {
         })
     }
 
+    /// Access for one bounded cell operation, reusing the executing owner's exclusion.
+    ///
+    /// Only the executing owner thread observes its own token, and only it can park or
+    /// reach a safe point. Callers must therefore keep the guard inside one operation that
+    /// never escapes, parks, reaches a safe point or runs FPAS/host code. Every other
+    /// caller gets a counted borrow.
+    pub(in crate::value) fn operation_access(&self) -> Option<DomainAccess> {
+        if self.0.roots.exec_owner.load(Ordering::Acquire) == super::thread_token() {
+            None
+        } else {
+            Some(self.access())
+        }
+    }
+
     pub(in crate::value) fn require_collection(&self) -> Result<(), super::super::OwnershipError> {
         use super::super::OwnershipError;
         let state = self

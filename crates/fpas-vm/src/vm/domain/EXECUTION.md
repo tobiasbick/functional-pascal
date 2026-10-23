@@ -39,6 +39,10 @@ acknowledgement and release share the gate mutex with request recording. A later
 request sees the idle domain and services itself; an earlier request is handed to
 the owner. A busy/poisoned provider or unwinding hook leaves work pending.
 
+Public `DomainAccess` guards are always counted, also on the executing owner thread,
+because they may outlive execution or span a safe point or native wait. A single
+blocking cell read or replacement on that thread instead reuses the execution permit;
+it cannot escape, park, reach a safe point or run FPAS/host code.
 Same-thread nested external access postpones root removal until its outer release.
 Another thread can commit root retirement during opaque execution without waiting
 for that execution: an in-flight removal counter excludes maintenance until all

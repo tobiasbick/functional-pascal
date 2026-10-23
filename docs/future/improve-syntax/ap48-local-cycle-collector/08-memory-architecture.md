@@ -30,8 +30,9 @@ it with another unchecked owner shortcut would repeat the bug.
 The performance motivation is not yet quantified. [Benchmark history](../../../bench/history.md)
 shows `mutable_capture` at 196 ms before AP48 (`76ac7d6df`), about 545 ms after
 delivery and 234 ms on `ea5a9ee7d`; `closure_call` improved from 145 ms to 135 ms.
-All of these predate the exclusion fix and later capture changes, so the current
-cost is unknown.
+The exclusion fix raised it to about 342 ms; [permit reuse for cell operations](execution-access-follow-up.md)
+brought it back to about 200 ms. These are single-machine readings without a profile,
+so the remaining cost distribution is unknown.
 
 1. On one machine, run `mutable_capture`, `closure_call`, `array_callbacks` and the
    `concurrency` group for the current branch and for `76ac7d6df`, with release
@@ -47,9 +48,8 @@ Gate, presented to the user with the numbers (no fixed threshold):
 - Memory-protocol costs are a small share and the gap to pre-AP48 is small: the
   performance motivation is gone. Continue only if simplification alone justifies
   the effort, or stop the extension.
-- Domain access checks dominate, but cell storage does not: try the narrower
-  permit-reuse alternative in [execution access follow-up](execution-access-follow-up.md)
-  first and measure again.
+- Remaining domain access checks dominate, but cell storage does not: extend the
+  delivered permit reuse to those paths first and measure again.
 - Cell storage, reference counting or classification dominate: continue with Q50
   and the architecture below.
 

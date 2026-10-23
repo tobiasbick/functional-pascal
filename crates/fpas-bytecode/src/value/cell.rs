@@ -239,7 +239,7 @@ impl OwnedCell {
     /// Rejects foreign ownership or a poisoned cell.
     pub fn read_snapshot(&self, domain: &MemoryDomain) -> Result<CellSnapshot, OwnershipError> {
         self.check_owner(domain)?;
-        let _access = domain.access();
+        let _access = domain.operation_access();
         Ok(CellSnapshot(Some(Arc::clone(&*self.lock(false)?))))
     }
 
@@ -279,7 +279,7 @@ impl OwnedCell {
     ) -> Result<Option<i64>, OwnershipError> {
         self.check_owner(domain)?;
         let snapshot = {
-            let access = domain.access();
+            let access = domain.operation_access();
             let slot = self.lock(false)?;
             if let Value::Integer(integer) = &**slot {
                 return Ok(Some(*integer));
@@ -334,9 +334,9 @@ impl OwnedCell {
         let value = PendingValue::new(value);
         self.check_owner(domain)?;
         let _access = if nonblocking {
-            domain.try_access()?
+            Some(domain.try_access()?)
         } else {
-            domain.access()
+            domain.operation_access()
         };
         if !is_inline_scalar(&value) {
             graph::validate_storable(domain, &value)?;

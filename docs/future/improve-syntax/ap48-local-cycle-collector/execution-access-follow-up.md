@@ -1,37 +1,32 @@
 # Execution access follow-up
 
-Status: alternative investigation; no runtime change implemented. The
-[AP48.8 Phase 0 gate](08-memory-architecture.md#phase-0-measure-the-corrected-baseline)
-selects this narrower alternative if domain access checks dominate the measured
-cost but cell storage does not. The Lua findings and access-safety requirements
-apply to either direction.
+Status: permit reuse for blocking cell reads and replacements is implemented.
+The Lua findings and access-safety requirements also apply to the
+[AP48.8 redesign](08-memory-architecture.md).
 
 See also the [QuickJS, BEAM and Wren comparison](runtime-memory-comparison.md)
 for additional source-based findings and their limits for FPAS.
 
-If pursuing the narrower alternative, keep reference counting, copy-on-write values
-and local cycle collection. Investigate
-whether short internal cell operations can reuse an existing execution permit
-without acquiring and releasing a separate external domain guard for every read
-or write.
+## Delivered permit reuse
 
-The API must constrain the operation to the lifetime of that permit. It must not
-allow a borrowed access to escape, park execution, cross a collection safe point,
-or re-enter arbitrary host code while relying on the permit. Public and retained
-external accesses must remain independently counted and retain their domain.
-External roots, debugger inspection, native waits, task migration and cancellation
-must preserve their current contracts.
+The exclusion fix counts every public `DomainAccess`, including guards the
+executing owner acquires, because such a guard may outlive execution or span a
+safe point or native wait. Cell operations took the same counted path, so each
+captured read or write locked the domain gate twice. `mutable_capture` rose from
+234 ms to about 342 ms.
 
-The removed execution-owner shortcut did not enforce these lifetime constraints.
-The regression tests in `crates/fpas-bytecode/src/value/roots/protocol_tests/lifecycle.rs`
-cover collection at a safe point, published waits, and an external access that
-outlives execution. They must continue to pass with any future optimization.
+`MemoryDomain::operation_access` (`crates/fpas-bytecode/src/value/roots/access.rs`)
+returns no guard when the calling thread is the published executing owner, and a
+counted guard otherwise. It is visible only inside the value modules and used by
+`OwnedCell::read_snapshot`, `read_integer_or_value` and blocking `replace`. Those
+operations never escape the guard, park, reach a safe point or run FPAS/host code;
+maintenance requested during them defers because execution is active. Nonblocking
+variants and `update`, whose closure is caller code, keep counted access.
 
-Validate any candidate against the corrected access implementation, including GC
-allocation-balance and peak-memory tests. Compare the same precompiled VM workloads
-before and after in the same environment; store raw measurements under `.temp-data`.
-Existing GC thresholds and language ownership rules are not tuning substitutes for
-a correct access protocol.
+The lifecycle regressions in `crates/fpas-bytecode/src/value/roots/protocol_tests/lifecycle.rs`
+still cover collection at a safe point, published waits and an external access that
+outlives execution. After the change, `mutable_capture` measures about 200 ms
+(local release build, 3,000,000 iterations).
 
 ## Lua comparison
 

@@ -1,6 +1,6 @@
 # Benchmark history
 
-Committed snapshots from `cargo bench-fpas record`. Absolute times are machine-specific; use them
+Snapshots from the `cargo bench-fpas` harness. Absolute times are machine-specific; use them
 to track relative progress on the same machine and to see which changes moved which benches.
 
 Do **not** record hostnames, usernames, paths, or other machine-identifying metadata.
@@ -13,6 +13,53 @@ cargo bench-fpas record "vm-only note" --group vm
 ```
 
 Newest entries are prepended below this header.
+
+## 2026-10-23 — VM comparison: median of three runs (on 4ad57426c)
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+- Measurement: three sequential local release runs, 23 workloads each; all 69 executions succeeded.
+  `elapsed_ms` is the per-workload median; throughput comes from a run with that elapsed time.
+- Recorded from existing `save` snapshots, without rerunning `record`:
+  `vm-20261023-80e55e662-run1`, `vm-20261023-80e55e662-run2`,
+  `vm-20261023-80e55e662-run3`. Preparation started on `80e55e662`;
+  the intervening commit to `4ad57426c` changes only AP48 documentation.
+- Reference: the preceding Nachtlauf on `ea5a9ee7d`. VM workload sources, selection
+  and arguments are unchanged. This is a historical comparison, not a paired rerun
+  of the old executable. Historical load and power conditions are unverified;
+  dependencies changed and the current checkout pins Rust 1.99.1. Differences cannot
+  be attributed solely to VM changes. Build time is excluded from these measurements.
+- Sum of VM row times: 5132 ms reference, 4974 ms current medians, a 3.08% reduction.
+  The geometric mean of elapsed-time ratios is 3.04% lower. Neither aggregate is a
+  general application-throughput measurement; 5–10 ms rows have coarse resolution.
+- `mutable_capture` is the only higher median: 234 ms reference versus 345 ms,
+  up 47.44%. Individual runs were 347, 343 and 345 ms. The cause is not diagnosed.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 577 | throughput: 86655112 iters/s |
+| typed_real | 119 | - |
+| typed_boolean | 224 | - |
+| typed_string | 99 | - |
+| global_access | 100 | throughput: 50000000 global updates/s |
+| record_field_access | 313 | throughput: 47923322 field accesses/s |
+| closure_call | 127 | throughput: 23622047 closure calls/s |
+| mutable_capture | 345 | throughput: 8695652 captured updates/s |
+| branch_dispatch | 268 | throughput: 74626865 branches/s |
+| dynamic_numeric | 259 | throughput: 19305019 dynamic numeric ops/s |
+| array_push | 54 | throughput: 37037037 pushes/s |
+| array_length | 5 | throughput: 100000000 lengths/s |
+| string_concat | 729 | throughput: 6858710 concats/s |
+| string_length | 5 | throughput: 100000000 lengths/s |
+| intrinsic_dispatch | 139 | throughput: 107913669 intrinsic calls/s |
+| function_call | 227 | throughput: 26431718 calls/s |
+| array_callbacks | 682 | throughput: 14076246 callbacks/s |
+| record_update | 82 | throughput: 12195121 updates/s |
+| unicode_char_at | 235 | throughput: 12765957 chars/s |
+| wrapper_payload | 305 | throughput: 32786885 wrappers/s |
+| string_search | 64 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
 
 ## 2026-10-23 — Nachtlauf: Inline-Schnellpfade, Cancellation-Fastpath, flache Arrays, Lowering-Typtabelle, IR-Lookups, Source-Index (auf ea5a9ee7d)
 

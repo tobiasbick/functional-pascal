@@ -114,7 +114,7 @@ pub(super) struct DomainRoots {
     scheduled: AtomicBool,
     /// Token of the thread that holds an unparked execution gate, else zero.
     ///
-    /// Written only under the access mutex; lets that thread re-enter graph access without it.
+    /// Written under the access mutex; lets pressure accounting skip quiescence lookups.
     exec_owner: AtomicU64,
     installed: AtomicBool,
     serviced: AtomicU64,

@@ -1,6 +1,61 @@
 use super::*;
 
 #[test]
+fn execution_nested_external_access_defers_safe_point_collection() {
+    let domain = MemoryDomain::new();
+    let probe = automatic(&domain);
+    let owner = domain.execution_roots().unwrap();
+    let execution = owner.enter().unwrap();
+    let external = domain.access();
+    owner.publish(vec![]);
+    domain.request_maintenance();
+    assert_eq!(execution.safe_point(), MaintenanceOutcome::Deferred);
+    assert_eq!(probe.passes.load(Ordering::SeqCst), 0);
+    drop(external);
+    assert!(matches!(
+        execution.safe_point(),
+        MaintenanceOutcome::Serviced(_)
+    ));
+}
+
+#[test]
+fn execution_nested_external_access_prevents_published_wait() {
+    let domain = MemoryDomain::new();
+    let owner = domain.execution_roots().unwrap();
+    let _execution = owner.enter().unwrap();
+    let external = domain.access();
+    owner.publish(vec![]);
+    assert!(domain.publish_wait().is_none());
+    drop(external);
+    assert!(domain.publish_wait().is_some());
+}
+
+#[test]
+fn execution_nested_external_access_outlives_execution_exclusion() {
+    let domain = MemoryDomain::new();
+    let probe = automatic(&domain);
+    let owner = domain.execution_roots().unwrap();
+    let execution = owner.enter().unwrap();
+    let external = domain.access();
+    owner.publish(vec![]);
+    domain.request_maintenance();
+    drop(execution);
+    assert_eq!(probe.passes.load(Ordering::SeqCst), 0);
+    let other = domain.clone();
+    std::thread::spawn(move || {
+        assert_eq!(other.try_access().err(), Some(OwnershipError::Busy));
+    })
+    .join()
+    .unwrap();
+    drop(external);
+    assert_eq!(probe.passes.load(Ordering::SeqCst), 1);
+    let other = domain.clone();
+    std::thread::spawn(move || assert!(other.try_access().is_ok()))
+        .join()
+        .unwrap();
+}
+
+#[test]
 fn retired_domain_services_nonfinal_root_release_without_a_worker_or_vm() {
     let domain = MemoryDomain::new();
     let probe = automatic(&domain);

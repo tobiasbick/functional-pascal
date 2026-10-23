@@ -29,7 +29,7 @@ pub(super) struct AccessState {
 /// Registered providers and cell locks must be released before this guard. Collection
 /// hooks use their prepared root view, never re-enter graph access or FPAS execution.
 pub struct DomainAccess {
-    domain: Option<MemoryDomain>,
+    domain: MemoryDomain,
     not_send: PhantomData<Rc<()>>,
 }
 
@@ -37,13 +37,7 @@ impl MemoryDomain {
     /// Enter guarded external access. Re-entry from a collection hook is forbidden.
     #[must_use]
     pub fn access(&self) -> DomainAccess {
-        // The executing owner thread already excludes every other accessor and collector.
-        if self.0.roots.exec_owner.load(Ordering::Acquire) == super::thread_token() {
-            return DomainAccess {
-                domain: None,
-                not_send: PhantomData,
-            };
-        }
+        // Count every borrow: it may outlive execution or span a safe point/native wait.
         let current = super::current_thread();
         let mut state = self
             .0
@@ -70,7 +64,7 @@ impl MemoryDomain {
         state.owner = Some(current);
         state.external += 1;
         DomainAccess {
-            domain: Some(self.clone()),
+            domain: self.clone(),
             not_send: PhantomData,
         }
     }
@@ -96,7 +90,7 @@ impl MemoryDomain {
         state.owner = Some(current);
         state.external += 1;
         Ok(DomainAccess {
-            domain: Some(self.clone()),
+            domain: self.clone(),
             not_send: PhantomData,
         })
     }
@@ -132,10 +126,10 @@ impl MemoryDomain {
         self.refresh_fast_owner(&state);
     }
 
-    /// Publish whether the calling thread may skip the access mutex. Requires the state lock.
+    /// Publish the executing owner for pressure accounting. Requires the state lock.
     ///
     /// Holds only while this thread owns an unparked execution gate with no collection or
-    /// poison, so re-entry from a collection hook still reaches the checked slow path.
+    /// poison, so only its mutations can skip the quiescent-state lookup.
     pub(super) fn refresh_fast_owner(&self, state: &AccessState) {
         let token = if state.execution != 0
             && !state.collecting
@@ -186,7 +180,7 @@ impl MemoryDomain {
             drop(state);
             drop(root);
             drop(DomainAccess {
-                domain: Some(self.clone()),
+                domain: self.clone(),
                 not_send: PhantomData,
             });
         }
@@ -239,8 +233,6 @@ impl MemoryDomain {
 }
 impl Drop for DomainAccess {
     fn drop(&mut self) {
-        if let Some(domain) = &self.domain {
-            domain.release_access(false);
-        }
+        self.domain.release_access(false);
     }
 }

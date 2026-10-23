@@ -51,12 +51,23 @@ impl Worker {
             receiver.as_slice(),
             capture_count,
         )?;
-        for index in 0..capture_count {
-            let Value::Function(function) = &self.registers[function_index] else {
+        if capture_count != 0 {
+            // The caller's function register precedes the callee's capture window,
+            // so borrow both regions once without cloning the function itself.
+            let (caller, captures) = self.registers.split_at_mut(capture_start);
+            let Value::Function(function) = &caller[function_index] else {
                 unreachable!("the caller's function register lies below the capture slots");
             };
-            let capture = function.captures[index].clone();
-            self.store_register(capture_start + index, capture)?;
+            let initialized =
+                &mut self.register_initialized[capture_start..capture_start + capture_count];
+            for ((slot, initialized), capture) in captures[..capture_count]
+                .iter_mut()
+                .zip(initialized)
+                .zip(&function.captures)
+            {
+                *slot = capture.clone();
+                *initialized = true;
+            }
         }
         Ok(())
     }

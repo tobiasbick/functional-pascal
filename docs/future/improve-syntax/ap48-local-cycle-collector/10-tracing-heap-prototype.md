@@ -1,6 +1,6 @@
 # AP48.10: Bounded tracing-heap prototype
 
-Package: [AP48](README.md). Status: planned; no implementation or measurements.
+Package: [AP48](README.md). Status: deferred; see [AP48](README.md#deferred-extension).
 Prerequisites: the AP48.8 Phase 0 gate selected the architecture work, Q50 is
 decided, and the [AP48.8](08-memory-architecture.md) and
 [AP48.9](09-task-and-host-boundaries.md) contracts suffice for the prototype.

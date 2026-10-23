@@ -1,6 +1,6 @@
 # AP48.11: Replace runtime memory management and migrate consumers
 
-Package: [AP48](README.md). Status: placeholder; blocked on prototype evaluation.
+Package: [AP48](README.md). Status: deferred; see [AP48](README.md#deferred-extension).
 Prerequisite: [AP48.10](10-tracing-heap-prototype.md) proceed decision, with
 AP48.8/AP48.9 contracts resolved. Effort: very large. Decisions: Q44 through Q48, Q50.
 

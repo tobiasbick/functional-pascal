@@ -1,6 +1,6 @@
 # AP48.9: Task transfer, captures and host boundaries
 
-Package: [AP48](README.md). Status: planned.
+Package: [AP48](README.md). Status: deferred; see [AP48](README.md#deferred-extension).
 Prerequisite: [AP48.8](08-memory-architecture.md), including the Q50 decision.
 Effort: medium with Q50 candidate A, large with candidate B. Decisions: Q46 and Q47.
 

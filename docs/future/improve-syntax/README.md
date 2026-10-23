@@ -56,7 +56,7 @@ Add new packages here when planning begins; keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP48: Task ownership and memory management](ap48-local-cycle-collector/README.md) | Very large | None | AP48.1–.7 delivered; AP48.8–.12 planned: baseline measurement (Phase 0), replacement architecture, boundary rules, tracing-heap prototype, integration and acceptance |
+| [x] | [AP48: Task ownership and memory management](ap48-local-cycle-collector/README.md) | Very large | None | Complete: AP48.1–.7 delivered; replacement-architecture extension AP48.8–.12 deferred after its Phase 0 gate |
 | [x] | [AP49: Runtime profiler for agents](ap49-runtime-profiler/README.md) | Medium | None | Complete: `run --profile` report version 2 with time shares, parallelism, structured findings and comparison metadata |
 
 The central table is the only package-completion index. Each package README

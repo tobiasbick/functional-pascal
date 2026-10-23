@@ -1,6 +1,6 @@
 # AP48.12: Memory correctness, performance and package acceptance
 
-Package: [AP48](README.md). Status: planned.
+Package: [AP48](README.md). Status: deferred; see [AP48](README.md#deferred-extension).
 Prerequisite: [AP48.11](11-runtime-replacement.md) integrated replacement.
 Effort: large. Decision: Q49.
 

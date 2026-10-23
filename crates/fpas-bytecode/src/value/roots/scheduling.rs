@@ -4,10 +4,12 @@ use super::super::MemoryDomain;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// Collection thresholds between successful passes, with heuristic initial defaults.
+/// Minimum collection thresholds between successful passes, with heuristic defaults.
 ///
-/// Counts apply between successful whole-domain passes. External root releases and
-/// quiescent edge-removing mutations bypass these running-execution thresholds.
+/// Counts apply between successful whole-domain passes. Each threshold grows with the
+/// graph the last pass traced, so a pass's cost stays proportional to the work between
+/// passes: allocations and mutations by one per traced value, batches by two. External
+/// root releases and quiescent edge-removing mutations bypass these thresholds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CollectionSchedule {
     /// Cell allocations before requesting a pass.
@@ -38,7 +40,15 @@ pub(super) struct Pressure {
     /// Allocation, mutation and safe-point thresholds; zero while unscheduled.
     limits: [AtomicUsize; 3],
     counts: [AtomicUsize; 3],
+    /// Shared allocations visited by the last completed pass.
+    traced: AtomicUsize,
 }
+
+/// Threshold growth per traced value for allocations, mutations and batches.
+///
+/// One allocation or mutation per traced value bounds unreachable cells like a doubling
+/// heap. Tracing costs far more per value than a batch instruction, so batches get two.
+const GROWTH: [usize; 3] = [1, 1, 2];
 impl Pressure {
     /// Install a schedule, or clear it, and restart counting. Callers hold the gate
     /// mutex or install before the domain is shared.
@@ -53,7 +63,20 @@ impl Pressure {
         for (slot, limit) in self.limits.iter().zip(limits) {
             slot.store(limit, Ordering::Relaxed);
         }
+        self.traced.store(0, Ordering::Relaxed);
         self.reset();
+    }
+    /// Effective threshold: the configured minimum or the traced-graph share, if larger.
+    fn limit(&self, event: Event) -> usize {
+        let minimum = self.limits[event as usize].load(Ordering::Relaxed);
+        if minimum == 0 {
+            return 0;
+        }
+        let scaled = self
+            .traced
+            .load(Ordering::Relaxed)
+            .saturating_mul(GROWTH[event as usize]);
+        minimum.max(scaled)
     }
     pub(super) fn reset(&self) {
         for count in &self.counts {
@@ -85,6 +108,14 @@ impl MemoryDomain {
     pub fn collection_schedule(&self) -> Option<CollectionSchedule> {
         self.0.roots.pressure.schedule()
     }
+    /// Record the cost of a completed pass; later thresholds scale with it.
+    pub(in crate::value) fn note_traced_graph(&self, visited: usize) {
+        self.0
+            .roots
+            .pressure
+            .traced
+            .store(visited, Ordering::Relaxed);
+    }
     pub(in crate::value) fn note_cell_allocation(&self) {
         if self.0.roots.scheduled.load(Ordering::Acquire) {
             self.note_pressure(Event::Allocation);
@@ -104,7 +135,7 @@ impl MemoryDomain {
     }
     fn note_pressure(&self, event: Event) {
         let pressure = &self.0.roots.pressure;
-        let limit = pressure.limits[event as usize].load(Ordering::Relaxed);
+        let limit = pressure.limit(event);
         if limit == 0 {
             return;
         }

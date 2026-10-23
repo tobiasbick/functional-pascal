@@ -36,8 +36,9 @@ reduce interpretation errors.
 | Q53 | How are routines and lines attributed? | At dispatch-batch boundaries: each batch's instructions and wall time go to the routine and line active when the batch ends; inclusive time adds every distinct routine on the call stack. Deterministic and cheap, with bounded attribution error per batch | AP49.2 |
 | Q54 | Where do runtime counters live? | Process-wide, striped atomic counters in `fpas-bytecode`, enabled for one profiled run; VM and value modules report events there | AP49.1 |
 
-Q52 to Q54 were chosen by the agent under the Q51 delegation. Changes to
-collection defaults found while profiling are out of scope: Q42 belongs to AP48.
+Q52 to Q54 were chosen by the agent under the Q51 delegation. The collection
+threshold amendment found while profiling was approved separately and is recorded
+under Q42 in AP48.
 
 ## Open decisions
 

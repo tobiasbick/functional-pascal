@@ -23,6 +23,8 @@ pub struct GraphClassification {
     pub task_bound: bool,
     /// Code instances required by all contained callables.
     pub executable_identities: HashSet<ExecutableIdentity>,
+    /// Shared allocations visited, a measure of the walk's cost.
+    pub visited: usize,
 }
 
 impl GraphClassification {
@@ -148,22 +150,24 @@ fn insert<T: std::hash::Hash + Eq>(set: &mut HashSet<T>, value: T) -> Result<(),
 
 /// Mark cells with the same edge inventory used by validation and inspection.
 /// Foreign cells are rejected before taking a snapshot outside collection authority.
+/// Returns the marked cells and the number of visited shared allocations.
 pub(super) fn reachable_cells(
     domain: &MemoryDomain,
     values: &[Value],
     limit: usize,
-) -> Result<HashSet<usize>, OwnershipError> {
+) -> Result<(HashSet<usize>, usize), OwnershipError> {
     let mut cells = HashSet::new();
-    trace_collection_roots(domain, values, limit, Some(&mut cells))?;
-    Ok(cells)
+    let visited = trace_collection_roots(domain, values, limit, Some(&mut cells))?;
+    Ok((cells, visited))
 }
 
 /// Empty candidate sets still require ownership checks, but no cell marking.
+/// Returns the number of visited shared allocations.
 pub(super) fn validate_collection_roots(
     domain: &MemoryDomain,
     values: &[Value],
     limit: usize,
-) -> Result<(), OwnershipError> {
+) -> Result<usize, OwnershipError> {
     trace_collection_roots(domain, values, limit, None)
 }
 
@@ -172,7 +176,7 @@ fn trace_collection_roots(
     values: &[Value],
     limit: usize,
     mut cells: Option<&mut HashSet<usize>>,
-) -> Result<(), OwnershipError> {
+) -> Result<usize, OwnershipError> {
     // Finite diagnostic bounds count every value even when there is nothing to mark.
     let inspect_aggregates = cells.is_some() || limit != usize::MAX;
     let mut visit = |value: &Value| {
@@ -192,7 +196,9 @@ fn trace_collection_roots(
     for value in values {
         walker.enqueue(value)?;
     }
-    walker.finish()?.validate_domain(domain)
+    let classification = walker.finish()?;
+    classification.validate_domain(domain)?;
+    Ok(classification.visited)
 }
 
 type Observer<'a> = &'a mut dyn FnMut(&Value) -> Result<(), OwnershipError>;
@@ -346,6 +352,7 @@ impl<'a> Walker<'a> {
                 _ => unreachable!("only shared graph nodes enter the traversal queue"),
             }
         }
+        self.classification.visited = self.visited.len();
         if let Some(counter) = self.visits {
             profile::add(counter, self.visited.len() as u64);
         }

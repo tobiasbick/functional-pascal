@@ -177,7 +177,8 @@ callables, globals, inspection roots and selection cases.
 
 VM-created domains automatically request collection after 4096 cell allocations,
 8192 successful cell mutations or 256 completed execution batches, whichever comes
-first. Periodic checks cover dropped values even without new allocations. Root
+first. These minimums grow with the shared values the last pass traced: by one
+allocation or mutation and two batches per value. Periodic checks cover dropped values even without new allocations. Root
 release, retirement, published parking and quiescent edge-removing mutations request
 service without waiting for running thresholds. Collection still waits for complete
 roots and exclusive access. Busy passes retain pending work; successful passes reset

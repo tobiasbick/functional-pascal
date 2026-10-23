@@ -233,7 +233,7 @@ new-file rule. Only `run` accepts this option. See [profile reports](../tools/pr
 ## Collection scheduling
 
 `fpas run`, `fpas test` and `fpas debug` use automatic local cycle collection.
-These positive decimal integer options override the per-domain initial defaults:
+These positive decimal integer options override the per-domain minimum thresholds:
 
 | Option | Default | Meaning |
 | --- | --- | --- |
@@ -241,6 +241,10 @@ These positive decimal integer options override the per-domain initial defaults:
 | `--gc-mutation-threshold=N` | 8192 | Successful cell mutations before a running-task request |
 | `--gc-poll-interval=N` | 256 | Completed execution batches before a periodic request |
 
+Each threshold grows with the graph the last pass traced: allocations and
+mutations by one per traced shared value, batches by two. A large live graph is
+therefore traced in proportion to the work between passes; unreachable cycles can
+then grow to about the size of the live graph before they are collected.
 The first reached threshold requests collection at the next safe point. A batch is
 an execution dispatch unit, not a millisecond or individual instruction. Busy passes
 keep pending work. Root releases and quiescent mutations are serviced without

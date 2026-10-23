@@ -11,6 +11,9 @@ No FPAS collection unit or manual collection command is exposed.
 
 Heuristic per-domain defaults request collection after 4096 cell allocations, 8192
 successful cell mutations or 256 completed dispatch batches, whichever comes first.
+These are minimums: after a completed pass each threshold grows to one allocation or
+mutation and two batches per shared value that pass traced, so tracing a large live
+graph stays proportional to the work between passes.
 The periodic counter advances once per batch, including nested callbacks. Retries
 at the same safe point do not consume additional ticks. Pressure resets only after
 successful service; incomplete/busy passes keep pending work. Requests are serviced

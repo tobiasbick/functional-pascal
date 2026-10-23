@@ -22,8 +22,8 @@ relevant CLI option or source location. No finding changes runtime behavior.
 
 Profile the headless Mandelbrot benchmark and a live graph of records with
 closures. Fix confirmed runtime defects whose cause the report identifies, with
-regression tests; record collection-policy observations for AP48 without changing
-Q42 defaults.
+regression tests. Collection-policy changes need user approval because Q42 belongs
+to AP48.
 
 ## Dogfooding results
 
@@ -37,8 +37,14 @@ Q42 defaults.
 - The same program then reported collection at 93 % of execution time: with
   20,000 live closures the periodic poll ran 144 passes tracing 5.6 million
   values (424 ms); with polling disabled, 4 passes (28 ms). Pass cost grows with
-  the live graph while the poll interval is fixed. Collection defaults are Q42
-  in AP48 and stay unchanged; the measurement is recorded in
+  the live graph while the poll interval was fixed. With user approval, the Q42
+  thresholds became minimums that grow with the last traced graph (one
+  allocation or mutation, two batches per traced value). Profiled afterwards:
+  6 passes and 46 ms instead of 144 passes and 456 ms; with 100,000 live
+  closures 60 ms instead of 3.6 s. Cycle churn beside 20,000 live closures went
+  from 968 ms to 707 ms (153 to 20 passes) at a peak of 32 MB instead of 22 MB,
+  because unreachable cycles may now grow to about the live graph's size.
+  Mandelbrot and the VM benchmarks are unchanged. See
   [AP48.8](../ap48-local-cycle-collector/08-memory-architecture.md#phase-0-measure-the-corrected-baseline).
 - Headless Mandelbrot: about 62 % of worker time is in the `Complex` record
   methods, which allocate per iteration, and pool workers are idle 77 % of the

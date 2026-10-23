@@ -43,11 +43,11 @@ so the remaining cost distribution is unknown.
 3. Record the summary in this file. Raw samples, scripts and logs go under
    `.temp-data/ap48-phase0/`.
 
-Collection policy observation (via `fpas run --profile`): the periodic poll
-collects every 256 batches regardless of heap size. With 20,000 live closures,
-144 passes traced 5.6 million values and took 93 % of execution time (424 ms
-versus 28 ms with polling disabled). Q48 should scale the poll with the live
-graph or back off after passes that reclaim nothing.
+Collection policy (measured with `fpas run --profile`): the fixed poll collected
+every 256 batches regardless of heap size. With 20,000 live closures, 144 passes
+traced 5.6 million values and took 93 % of execution time. Thresholds now grow
+with the last traced graph (Q42 amendment): the same run needs 6 passes and
+46 ms instead of 456 ms. A replacement collector should keep this proportionality.
 
 Gate, presented to the user with the numbers (no fixed threshold):
 

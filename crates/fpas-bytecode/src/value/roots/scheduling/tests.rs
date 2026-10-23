@@ -203,3 +203,40 @@ fn failed_preparation_keeps_pressure_and_pending_work_for_retry() {
     ));
     assert!(weak.upgrade().is_none());
 }
+#[test]
+fn thresholds_grow_with_the_graph_the_last_pass_traced() {
+    let domain = domain(schedule(usize::MAX, usize::MAX, 1));
+    let owner = domain.execution_roots().unwrap();
+    let access = owner.enter().unwrap();
+    let cells: Vec<Value> = (0..10)
+        .map(|_| Value::Cell(domain.new_cell(Value::Unit).unwrap()))
+        .collect();
+    owner.publish(cells.clone());
+    assert!(matches!(
+        access.batch_safe_point(),
+        MaintenanceOutcome::Serviced(_)
+    ));
+    // Ten traced cells raise the one-batch minimum to twenty batches.
+    let mut batches = 0;
+    loop {
+        batches += 1;
+        owner.publish(cells.clone());
+        if matches!(access.batch_safe_point(), MaintenanceOutcome::Serviced(_)) {
+            break;
+        }
+        assert!(batches < 100, "the scaled threshold never triggered");
+    }
+    assert_eq!(batches, 20);
+    // A smaller traced graph lowers the threshold again.
+    owner.publish(vec![]);
+    domain.request_maintenance();
+    assert!(matches!(
+        access.safe_point(),
+        MaintenanceOutcome::Serviced(_)
+    ));
+    owner.publish(vec![]);
+    assert!(matches!(
+        access.batch_safe_point(),
+        MaintenanceOutcome::Serviced(_)
+    ));
+}

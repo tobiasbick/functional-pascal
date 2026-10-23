@@ -1,6 +1,6 @@
 # AP48.8: Replacement memory architecture
 
-Package: [AP48](README.md). Status: planned; Phase 0 not started.
+Package: [AP48](README.md). Status: deferred; see [AP48](README.md#deferred-extension).
 Prerequisite: delivered AP48.1 through AP48.7, including the external-access
 exclusion fix. Effort: large. Decisions: Q45, Q49 (Phase 0 gate) and Q50.
 

@@ -1,20 +1,21 @@
 # AP48: Task ownership and memory management
 
-Status: extension planned. Effort: very large, across runtime values, VM, sema
-and host tooling. AP48.1 through AP48.7 are delivered, independently reviewed and
-verified. AP48.8 through AP48.12 evaluate and possibly replace the memory
-architecture; none is implemented. The current runtime remains the corrected local
-cycle collector. Completion is tracked in the [central plan](../README.md#package-status).
+Status: complete. AP48.1 through AP48.7 are delivered, independently reviewed and
+verified. The replacement-architecture extension AP48.8 through AP48.12 is
+[deferred](#deferred-extension): its Phase 0 gate found no remaining performance
+motivation. The runtime is the corrected local cycle collector.
+Completion is tracked in the [central plan](../README.md#package-status).
 
 ## Goal
 
-Simplify ownership, local access and reclamation, evaluating a single-owner tracing
-heap per task/domain against the delivered reference-counted runtime. AP48.8 first
-measures what the corrected access protocol actually costs; the replacement proceeds
-only if that measurement and a bounded prototype justify it. Parallel task execution
-remains a design goal; no fixed pause or speedup is promised.
+Task-owned memory domains, checked transfers, registered roots and automatic local
+cycle collection for closures with mutable captures, without a VM-wide execution
+lock. A later extension evaluated replacing the memory model with a single-owner
+tracing heap; it is deferred.
 
 ## Redesign mandate
+
+This mandate governs the deferred extension if it is reopened.
 
 The user permits replacing all internals, APIs, bytecode and semantics without
 backward compatibility, adapters or a second production memory model. Syntax
@@ -150,7 +151,7 @@ Q43 completed activation acceptance for AP48.1 through AP48.7 without a fixed
 performance or pause budget. Q44 through Q50 govern the planned extension and may
 replace the delivered contract through a coherent redesign.
 
-### Replacement architecture decisions
+### Replacement architecture decisions (deferred)
 
 | ID | Question | Current decision or remaining choice | Affected work packages |
 | --- | --- | --- | --- |
@@ -162,15 +163,15 @@ replace the delivered contract through a coherent redesign.
 | Q49 | What justifies adopting the replacement? | Phase 0 first quantifies the corrected baseline's memory-protocol costs. Then a prototype gate; adoption requires correct lifetime/reclamation, a simpler explained model and measured tradeoffs. No promised speedup or numerical budget. | AP48.8, AP48.10 through AP48.12 |
 | Q50 | Where do strings and aggregates live? | Open, decided in AP48.8 after Phase 0. Recommended first candidate: hybrid, tracing only cells and closure environments while aggregates stay reference-counted with copy-on-write. Alternative: complete local heap with copying or uniqueness tracking. | AP48.8 through AP48.11 |
 
-These are design tasks, not completed implementations. Record selected rules and
-their consequences in the owning files before changing consumers.
+These decisions belong to the deferred extension. Q44 through Q47, Q49 and Q50
+stay open until a new decision reopens it; the Q48 policy question was answered by
+the Q42 amendment for the current collector.
 
 ## Dependencies and work packages
 
 No prerequisite AP. AP48.1 through AP48.7 are complete, including consumer
 migration, verification, independent review and original package acceptance.
-AP48.8 through AP48.12 are the new ordered extension, using the delivered runtime
-as the corrected baseline. The work packages own their contracts and evidence.
+The work packages own their contracts and evidence.
 
 - [x] [AP48.1: Owned cells and graph classification](01-owned-values.md)
 - [x] [AP48.2: Runtime transfer enforcement](02-transfer-rules.md)
@@ -179,17 +180,10 @@ as the corrected baseline. The work packages own their contracts and evidence.
 - [x] [AP48.5: Safe points and domain lifecycle](05-safe-points.md)
 - [x] [AP48.6: Local cycle reclamation](06-cycle-collector.md)
 - [x] [AP48.7: Automatic scheduling and acceptance](07-activation.md)
-- [ ] [AP48.8: Replacement memory architecture](08-memory-architecture.md)
-- [ ] [AP48.9: Task transfer, captures and host boundaries](09-task-and-host-boundaries.md)
-- [ ] [AP48.10: Bounded tracing-heap prototype](10-tracing-heap-prototype.md)
-- [ ] [AP48.11: Replace runtime memory management and migrate consumers](11-runtime-replacement.md)
-- [ ] [AP48.12: Memory correctness, performance and package acceptance](12-memory-acceptance.md)
 
 This is the only work-package checklist. Finishing AP48.1 through AP48.4 establishes
 the ownership milestone without enabling collection. AP48.5 establishes the
 collection protocol. AP48.6 adds explicit reclamation. AP48.7 enables automatic runs.
-AP48.11 is a placeholder: after a proceed decision in AP48.10 it is replaced by
-separately reviewable work packages before integration starts.
 Follow the [development process](../development-process.md) for delivery and status.
 
 ## Delivered acceptance (AP48.1 through AP48.7)
@@ -208,14 +202,37 @@ resident memory. A falling process memory reading alone does not prove reclamati
 Use the acceptance cases in each work package and the
 [shared constraints](../shared-constraints.md); reuse existing tests where adequate.
 
-## Extension acceptance
+## Deferred extension
 
-[AP48.12](12-memory-acceptance.md) owns final acceptance for the replacement.
-AP48.10 must first demonstrate the design with a bounded prototype. Full delivery
-requires all value kinds, task boundaries, host/debugger lifetimes and retired
-heaps to use a coherent model, removal of temporary bridges, applicable checks,
-and a reported same-environment comparison. Reuse the safety intent of existing
-tests while adapting obsolete APIs and explicitly changed semantics.
+The user deferred the replacement architecture after its Phase 0 gate. Reopening
+needs a new decision, for example when FPAS 2 data types call for a tracing heap
+or simplification alone is to justify the rewrite. The planning files stay as the
+starting point:
+[AP48.8](08-memory-architecture.md), [AP48.9](09-task-and-host-boundaries.md),
+[AP48.10](10-tracing-heap-prototype.md), [AP48.11](11-runtime-replacement.md) and
+[AP48.12](12-memory-acceptance.md).
+
+The extension was motivated by mutable-capture and parallel-task slowdowns after
+AP48.7. Targeted fixes within the delivered model removed them: permit reuse for
+cell operations, a 65536-instruction task time slice, worker-local cancellation
+views, per-thread record layouts, validation of only the stored value in aggregate
+stores, and collection thresholds that grow with the traced graph. Release runs on
+one machine, against the pre-AP48 reference `76ac7d6df` from the
+[benchmark history](../../../bench/history.md):
+
+| Benchmark | Pre-AP48 | After the fixes |
+| --- | --- | --- |
+| `mutable_capture` | 196 ms | about 200 ms |
+| `closure_call` | 145 ms | about 133 ms |
+| `array_callbacks` | 804 ms | about 690 to 736 ms |
+| `record_field_access` | 322 ms | about 305 to 310 ms |
+| `mandelbrot_render` | 1093 ms | about 460 ms |
+
+The gap to pre-AP48 is closed, so the gate's first outcome applies: performance no
+longer motivates the rewrite. Phase 0 was not run in its formal form: the readings
+are repeated single runs, not interleaved with a rebuilt baseline, and no Rust-level
+cost attribution was made. A complete benchmark run after the fixes is recorded in
+the history.
 
 ## Delivered documentation and implementation ownership
 
@@ -242,6 +259,5 @@ verification. All four steps are complete.
 
 [Runtime comparison](runtime-memory-comparison.md) records the QuickJS, BEAM and
 Wren source review. [Execution access follow-up](execution-access-follow-up.md)
-contains the Lua review and the narrower optimization alternative. The next step is
-the AP48.8 Phase 0 measurement; its gate chooses between that narrower alternative,
-the architecture work, or stopping. Neither candidate is implemented.
+contains the Lua review and the narrower optimization alternative, whose permit reuse
+for cell operations is delivered. The tracing-heap candidate is not implemented.

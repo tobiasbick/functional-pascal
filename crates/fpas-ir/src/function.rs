@@ -33,13 +33,21 @@ impl Function {
     /// Returns a block by its typed identifier.
     #[must_use]
     pub fn block(&self, id: BlockId) -> Option<&BasicBlock> {
-        self.blocks.iter().find(|block| block.id == id)
+        by_id(&self.blocks, id.get(), |block| block.id == id)
     }
 
     /// Returns a local by its typed identifier.
     #[must_use]
     pub fn local(&self, id: LocalId) -> Option<&Local> {
-        self.locals.iter().find(|local| local.id == id)
+        by_id(&self.locals, id.get(), |local| local.id == id)
+    }
+}
+
+/// Find an entry whose identifier usually equals its position, falling back to a scan.
+pub(crate) fn by_id<T>(entries: &[T], id: u32, matches: impl Fn(&T) -> bool) -> Option<&T> {
+    match entries.get(id as usize) {
+        Some(entry) if matches(entry) => Some(entry),
+        _ => entries.iter().find(|entry| matches(entry)),
     }
 }
 

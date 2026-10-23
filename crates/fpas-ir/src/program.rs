@@ -36,7 +36,7 @@ impl Program {
     /// Returns a function by its typed identifier.
     #[must_use]
     pub fn function(&self, id: FunctionId) -> Option<&Function> {
-        self.functions.iter().find(|function| function.id == id)
+        crate::function::by_id(&self.functions, id.get(), |function| function.id == id)
     }
 
     /// Returns a global declaration by its typed identifier.

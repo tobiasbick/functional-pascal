@@ -64,14 +64,15 @@ impl Worker {
     /// puts every preceding check on the arithmetic dependency chain; the in-place path avoids it.
     #[inline(always)]
     pub(super) fn store_real_register(&mut self, index: usize, value: f64) -> Result<(), VmError> {
-        if index < self.register_initialized.len()
-            && let Some(Value::Real(slot)) = self.registers.get_mut(index)
-        {
-            *slot = value;
-            self.register_initialized[index] = true;
-            return Ok(());
+        if index >= self.registers.len() || index >= self.register_initialized.len() {
+            return Err(self.register_outside_frame(index));
         }
-        self.store_register(index, Value::Real(value))
+        match &mut self.registers[index] {
+            Value::Real(slot) => *slot = value,
+            slot => *slot = Value::Real(value),
+        }
+        self.register_initialized[index] = true;
+        Ok(())
     }
 
     /// Write an integer to an absolute active register, updating an existing integer in place.
@@ -84,14 +85,15 @@ impl Worker {
         index: usize,
         value: i64,
     ) -> Result<(), VmError> {
-        if index < self.register_initialized.len()
-            && let Some(Value::Integer(slot)) = self.registers.get_mut(index)
-        {
-            *slot = value;
-            self.register_initialized[index] = true;
-            return Ok(());
+        if index >= self.registers.len() || index >= self.register_initialized.len() {
+            return Err(self.register_outside_frame(index));
         }
-        self.store_register(index, Value::Integer(value))
+        match &mut self.registers[index] {
+            Value::Integer(slot) => *slot = value,
+            slot => *slot = Value::Integer(value),
+        }
+        self.register_initialized[index] = true;
+        Ok(())
     }
 
     /// Write a Boolean to an absolute active register, updating an existing Boolean in place.
@@ -101,14 +103,15 @@ impl Worker {
         index: usize,
         value: bool,
     ) -> Result<(), VmError> {
-        if index < self.register_initialized.len()
-            && let Some(Value::Boolean(slot)) = self.registers.get_mut(index)
-        {
-            *slot = value;
-            self.register_initialized[index] = true;
-            return Ok(());
+        if index >= self.registers.len() || index >= self.register_initialized.len() {
+            return Err(self.register_outside_frame(index));
         }
-        self.store_register(index, Value::Boolean(value))
+        match &mut self.registers[index] {
+            Value::Boolean(slot) => *slot = value,
+            slot => *slot = Value::Boolean(value),
+        }
+        self.register_initialized[index] = true;
+        Ok(())
     }
 
     /// Remove an absolute active register value and mark the slot uninitialized.

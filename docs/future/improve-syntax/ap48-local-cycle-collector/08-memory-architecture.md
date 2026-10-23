@@ -8,8 +8,12 @@ Effort: large. Decisions: Q44 and Q45.
 
 This hobby project may replace its runtime, compiler internals, bytecode, Rust
 embedding interfaces and language semantics without backward compatibility.
-Preserve FPAS source syntax where practical; syntax may also change if a concrete
-design need justifies it. Do not build compatibility adapters or retain two
+Syntax changes are valid design options; do not artificially constrain the
+architecture to preserve current syntax. Before implementing a syntax change,
+present its rationale, before/after examples, alternatives and affected consumers
+to the user, obtain explicit approval and record it in the owning work package.
+The general redesign mandate does not approve a specific syntax change.
+Do not build compatibility adapters or retain two
 production memory models merely to preserve old interfaces.
 
 The goal is a smaller, understandable ownership and reclamation model. Faster

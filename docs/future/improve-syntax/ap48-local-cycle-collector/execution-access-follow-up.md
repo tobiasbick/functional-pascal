@@ -3,7 +3,8 @@
 Status: alternative investigation; no runtime change implemented. The preferred
 next direction is the [AP48.8 architecture redesign](08-memory-architecture.md).
 The user permits replacing internals and semantics without backward compatibility,
-preferring unchanged FPAS syntax. This narrower alternative is not a prerequisite
+with syntax changes also eligible after discussion and explicit user approval
+of the concrete proposal before implementation. This narrower alternative is not a prerequisite
 for the redesign; the Lua findings and access-safety requirements remain useful.
 
 See also the [QuickJS, BEAM and Wren comparison](runtime-memory-comparison.md)

@@ -15,8 +15,13 @@ pause or speedup is promised. See [AP48.8](08-memory-architecture.md) for the fu
 mandate, invariants and alternatives.
 
 The user permits replacement of all internals, APIs, bytecode and semantics without
-backward compatibility. Preserve FPAS syntax where practical; change it only for a
-concrete need. This authorization removes compatibility constraints, but does not
+backward compatibility. Syntax changes are explicitly eligible design options;
+the existing syntax must not artificially constrain the architecture. Before
+implementing any FPAS syntax change, discuss its concrete proposal with the user
+and obtain their explicit approval. Record the rationale, before/after examples,
+affected consumers and approval in the owning work package. Broad redesign
+authorization alone does not approve a particular syntax change.
+This authorization removes compatibility constraints, but does not
 choose every transfer or host-lifetime rule. AP48.8/AP48.9 resolve those details.
 The present task records and publishes the plan; runtime implementation has not
 started. Existing behavior below describes the delivered implementation, not a
@@ -146,7 +151,7 @@ and may replace the delivered contract through a coherent redesign.
 
 | ID | Question | Current decision or remaining choice | Affected work packages |
 | --- | --- | --- | --- |
-| Q44 | What may be replaced? | User-authorized: all internal representations, APIs, bytecode and semantics; no backward compatibility. Prefer unchanged FPAS syntax, but permit necessary syntax changes. Current task is documentation, commit and push. | AP48.8 through AP48.12 |
+| Q44 | What may be replaced? | User-authorized: all internal representations, APIs, bytecode and semantics; no backward compatibility. Syntax changes are valid design options without an artificial preservation constraint, but each concrete syntax change requires discussion and explicit user approval before implementation. Record the proposal and approval in its owning work package. | AP48.8 through AP48.12 |
 | Q45 | What architecture should be evaluated? | Preferred candidate: single-owner heap per logical task/domain, nonmoving mark-and-sweep, cheap local references. Resolve value representation, aggregate semantics/storage, safe points and native cleanup in AP48.8. | AP48.8, AP48.10, AP48.11 |
 | Q46 | How do graphs cross task boundaries? | Open design choice: specify copy, proven ownership transfer and constrained immutable/resource sharing. Start from the existing prohibition on foreign local cells; do not assume mutable captures must become transferable. | AP48.9 through AP48.12 |
 | Q47 | How do host/debugger references survive? | Preferred candidate: persistent rooted handles plus scoped exclusive access. Resolve cross-thread access, retired-heap maintenance, re-entry and shutdown before integration. | AP48.9 through AP48.12 |
@@ -156,7 +161,8 @@ and may replace the delivered contract through a coherent redesign.
 These are explicit design tasks, not completed implementations. Record selected
 rules and their consequences in the owning files before changing consumers.
 The broad redesign authorization is already given; do not repeatedly seek
-compatibility approval for internal changes. Escalate a genuine blocker or a
+compatibility approval for internal changes. The explicit user-approval gate for
+FPAS syntax changes still applies. Escalate a genuine blocker or a
 material unresolved product tradeoff rather than silently choosing contradictory
 semantics. The current handbook remains unchanged until implementation delivers
 the selected behavior.

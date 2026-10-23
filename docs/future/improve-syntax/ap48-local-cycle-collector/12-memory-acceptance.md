@@ -97,6 +97,8 @@ inventory, native cleanup and concurrency contracts. Arrange independent review
 when authorized; this planning task itself does not start agents or implementation.
 Fix confirmed findings, repeat affected checks and preserve any coverage limits.
 
+Verify that every implemented FPAS syntax change has recorded explicit user
+approval for its concrete proposal; broad redesign authorization is insufficient.
 Remove temporary bridges and obsolete APIs/options. Update current manuals and
 runtime inventories, mark work packages complete only with evidence, then update
 the central package status. Record the final chosen architecture, remaining

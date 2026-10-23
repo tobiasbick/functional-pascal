@@ -9,9 +9,10 @@ Effort: large. Decisions: Q46 and Q47.
 Make cross-domain behavior explicit enough that local execution needs no
 per-access sharing protocol. Select semantics for task arguments, results,
 channels, callbacks, host exports and debugger inspection before migrating them.
-The user permits semantic and API changes; preserve familiar FPAS syntax where
-practical. This is design freedom, not an instruction to change behavior without
-documenting the replacement.
+The user permits semantic and API changes. Syntax changes may also be proposed
+without treating existing syntax as an architectural constraint, but each requires
+discussion and explicit user approval before implementation. This is design
+freedom, not an instruction to change behavior without documenting the replacement.
 
 ## Current contract and proposed starting point
 
@@ -82,8 +83,10 @@ unless measurements justify the additional machinery.
 
 Specify observable array/record assignment and nested mutation behavior separately
 from storage representation. Any semantic change needs before/after examples and
-updated tests. Syntax changes are a last resort, with a stated need and migration
-of all repository consumers; no legacy syntax mode is required.
+updated tests. Evaluate syntax changes on their merits, with rationale,
+before/after examples, alternatives and a migration inventory. Record explicit
+user approval before implementing the selected syntax; no legacy syntax mode
+is required. Proposal examples remain clearly marked as unimplemented until then.
 
 ## Host handles and external access
 

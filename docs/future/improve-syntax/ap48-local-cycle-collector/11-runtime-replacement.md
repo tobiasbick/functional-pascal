@@ -73,12 +73,15 @@ bridges may support development but must have an explicit removal point before
 AP48.12 acceptance. Keep the corrected baseline available through Git and saved
 measurement artifacts; do not ship a legacy engine to preserve it.
 
-Preserve FPAS syntax by default. Where semantics change, rewrite tests around the
+Do not limit the design artificially to preserve existing FPAS syntax. Where
+semantics change, rewrite tests around the
 selected observable behavior and explain the change. Keep memory-safety and
-reclamation regressions even if their internal APIs disappear. If syntax truly
-must change, update grammar, parser, formatter, diagnostics, editor support and
-every repository example together. Broad user authorization permits redesign;
-it does not make undocumented inconsistencies acceptable.
+reclamation regressions even if their internal APIs disappear. Before implementing
+a syntax change, discuss its concrete proposal with the user and record explicit
+approval, rationale, before/after examples and the affected consumers. Then update
+grammar, parser, formatter, diagnostics, editor support and every repository
+example together. Broad redesign authorization does not replace approval of a
+specific syntax change or make undocumented inconsistencies acceptable.
 
 Update current documentation only with the delivered behavior: closure and
 concurrency rules, variable references, host Rust APIs, debugger and CLI manuals,

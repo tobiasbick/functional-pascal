@@ -14,6 +14,99 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-23 — Nachtlauf: Inline-Schnellpfade, Cancellation-Fastpath, flache Arrays, Lowering-Typtabelle, IR-Lookups, Source-Index (auf ea5a9ee7d)
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 1029 | throughput: enabled/disabled median change 1.7857142857142918% |
+| failure_dump_calls | 1043 | throughput: enabled/disabled median change 0% |
+| failure_dump_globals | 1308 | throughput: enabled/disabled median change 1.3888888888888857% |
+| failure_dump_spawn_wait | 1686 | throughput: enabled/disabled median change 101.61290322580646% |
+| failure_dump_suspension | 9934 | throughput: enabled/disabled median change -0.7207207207207205% |
+| failure_dump_failure | 1279 | throughput: enabled/disabled median change 32.8125% |
+| failure_dump_large_report | 1388 | throughput: enabled/disabled median change 101.9607843137255% |
+| mandelbrot_render | 682 | - |
+| mandelbrot_paint | 747 | - |
+| integer_loop | 604 | throughput: 82781456 iters/s |
+| typed_real | 148 | - |
+| typed_boolean | 233 | - |
+| typed_string | 102 | - |
+| global_access | 103 | throughput: 48543689 global updates/s |
+| record_field_access | 324 | throughput: 46296296 field accesses/s |
+| closure_call | 135 | throughput: 22222222 closure calls/s |
+| mutable_capture | 234 | throughput: 12820512 captured updates/s |
+| branch_dispatch | 295 | throughput: 67796610 branches/s |
+| dynamic_numeric | 276 | throughput: 18115942 dynamic numeric ops/s |
+| array_push | 54 | throughput: 37037037 pushes/s |
+| array_length | 5 | throughput: 100000000 lengths/s |
+| string_concat | 750 | throughput: 6666666 concats/s |
+| string_length | 5 | throughput: 100000000 lengths/s |
+| intrinsic_dispatch | 139 | throughput: 107913669 intrinsic calls/s |
+| function_call | 260 | throughput: 23076923 calls/s |
+| array_callbacks | 721 | throughput: 13314840 callbacks/s |
+| record_update | 90 | throughput: 11111111 updates/s |
+| unicode_char_at | 261 | throughput: 11494252 chars/s |
+| wrapper_payload | 310 | throughput: 32258064 wrappers/s |
+| task_spawn_wait | 562 | throughput: 177935 tasks/s |
+| task_array_callbacks | 294 | throughput: 13061224 callbacks/s |
+| tui_headless | 1462 | throughput: 341 frames/s |
+| notes_headless | 2803 | throughput: 89 frames/s |
+| tui_styled_cells | 354 | - |
+| analysis_queries | 221 | - |
+| string_search | 67 | - |
+| compiler_lowering | 405 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
+| project_queries | 971 | - |
+| project_edits | 798 | - |
+| project_overlapping_queries | 625 | - |
+| project_build_cold | 2272 | - |
+| project_build_warm | 1463 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 2 | - |
+| scalar_membership | 3 | - |
+| array_pop | 1 | - |
+| text_area_locate | 810 | - |
+| http_body_accumulation | 179 | - |
+| local_index_write | 15 | throughput: 42666666 writes/s |
+| cell_grid_headless | 101 | throughput: 990 paints/s |
+| partial_surface_fill | 58 | - |
+| source_utf8_ascii_2048 | 5 | - |
+| source_utf8_ascii_4096 | 11 | - |
+| source_utf8_ascii_8192 | 23 | - |
+| source_utf8_unicode_2048 | 21 | - |
+| source_utf8_unicode_4096 | 43 | - |
+| source_utf8_unicode_8192 | 86 | - |
+| source_notes_ascii_128 | 2 | - |
+| source_notes_ascii_256 | 5 | - |
+| source_notes_ascii_512 | 11 | - |
+| source_queue_ascii_256 | 55 | - |
+| source_queue_ascii_512 | 110 | - |
+| source_queue_ascii_1024 | 223 | - |
+| source_navigation_long_512 | 24 | - |
+| source_navigation_long_1024 | 44 | - |
+| source_navigation_long_2048 | 84 | - |
+| source_navigation_lines_512 | 5 | - |
+| source_navigation_lines_1024 | 8 | - |
+| source_navigation_lines_2048 | 13 | - |
+| errors_enum_construction | 24 | - |
+| errors_typed_construction | 24 | - |
+| errors_generic_direct | 26 | - |
+| errors_generic_helper | 53 | - |
+| errors_generic_callable | 56 | - |
+| errors_map_ok | 259 | - |
+| errors_case_ok | 180 | - |
+| errors_map_error | 786 | - |
+| errors_case_error | 640 | - |
+| errors_constructor_error | 724 | - |
+| errors_cause_message | 1 | - |
+| errors_cause_console | 419 | - |
+| errors_deep_image | 1 | - |
+
 ## 2026-10-22 — Lazy Task-Roots, Transfer-Summary, In-place-Zellen, atomare Druckzähler (auf fefd38b19)
 
 - Group: `all`

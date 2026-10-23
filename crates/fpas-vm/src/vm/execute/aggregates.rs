@@ -139,7 +139,6 @@ impl Worker {
         let value = self.read(register(o.c)?)?.clone();
         self.require_storable_value(&value)?;
         self.require_storable_value(&index)?;
-        self.require_local_value(self.read(destination)?)?;
         let array_index = match self.read(destination)? {
             Value::Array(values) => {
                 let index = self.array_index(&index)?;

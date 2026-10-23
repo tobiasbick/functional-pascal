@@ -14,10 +14,14 @@ impl Worker {
     }
 
     /// Consumes the source array and appends with copy-on-write isolation.
+    ///
+    /// Only the inserted value is validated. Register contents are already local: every
+    /// aggregate store validates its new value, and values entering a domain are checked at
+    /// their task, channel, global and host boundaries. Revalidating the whole destination
+    /// on every store made building a collection of callables quadratic.
     pub fn array_push(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
         self.require_storable_value(&value)?;
-        self.require_local_value(self.read(register(o.b)?)?)?;
         let array = self.take(register(o.b)?)?;
         let Value::Array(mut array) = array else {
             return Err(self.type_mismatch("array", &array));

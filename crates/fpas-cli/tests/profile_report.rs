@@ -115,6 +115,41 @@ fn profile_reports_hot_routine_and_keeps_program_output() {
 }
 
 #[test]
+fn aggregate_stores_validate_only_the_stored_value() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "handlers.fpas",
+        "program Main;
+type Handler = record
+  Id: integer;
+  Run: function(Value: integer): integer;
+end record;
+
+begin
+  var Handlers: array of Handler := [];
+  for Index: integer := 1 to 2000 do
+    begin
+      const Offset: integer := Index;
+      Handlers.PushInPlace(Handler(Id := Index, Run := function(Value: integer): integer begin
+        return Value + Offset;
+      end function));
+      Handlers[Index - 1] := Handlers[Index - 1];
+    end;
+  end for;
+end.
+",
+    );
+    let output = fixture.run(&["run", "--profile", "handlers.json", "handlers.fpas"]);
+    exit(&output, 0);
+    let report = fixture.report("handlers.json");
+    let visited = report["counters"]["classify_visited"]
+        .as_u64()
+        .expect("classification visits");
+    // Revalidating the growing array on each store would visit about four million values.
+    assert!(visited < 100_000, "{visited} classification visits");
+}
+
+#[test]
 fn profile_is_published_after_failure_and_rejects_existing_destinations() {
     let fixture = Fixture::new();
     fixture.write("fail.fpas", "program Main; begin panic('boom'); end.");

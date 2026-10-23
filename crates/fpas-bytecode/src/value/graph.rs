@@ -10,6 +10,7 @@ use super::domain::{DomainId, MemoryDomain};
 use super::drain::PendingValue;
 use super::{ReferenceRoot, Value};
 use crate::ExecutableIdentity;
+use crate::profile::{self, Counter};
 
 /// Independent ownership, invocation and code properties of a complete graph.
 #[derive(Debug, Default)]
@@ -70,7 +71,9 @@ pub fn summarized_transferable(values: &[Value]) -> bool {
 /// # Errors
 /// A busy or poisoned cell prevents complete classification and is never guessed.
 pub fn classify_values(values: &[Value]) -> Result<GraphClassification, OwnershipError> {
+    profile::add(Counter::ClassifyCalls, 1);
     let mut walker = Walker::default();
+    walker.visits = Some(Counter::ClassifyVisited);
     for value in values {
         walker.enqueue(value)?;
     }
@@ -185,6 +188,7 @@ fn trace_collection_roots(
     };
     let mut walker = Walker::observing(&mut visit, Some(limit));
     walker.inspect_aggregates = inspect_aggregates;
+    walker.visits = Some(Counter::CollectionVisited);
     for value in values {
         walker.enqueue(value)?;
     }
@@ -201,6 +205,8 @@ struct Walker<'a> {
     observer: Option<Observer<'a>>,
     remaining: Option<usize>,
     inspect_aggregates: bool,
+    /// Profile counter receiving the number of visited allocations.
+    visits: Option<Counter>,
 }
 
 impl<'a> Walker<'a> {
@@ -212,6 +218,7 @@ impl<'a> Walker<'a> {
             observer: Some(observer),
             remaining,
             inspect_aggregates: true,
+            visits: None,
         }
     }
 
@@ -338,6 +345,9 @@ impl<'a> Walker<'a> {
                 }
                 _ => unreachable!("only shared graph nodes enter the traversal queue"),
             }
+        }
+        if let Some(counter) = self.visits {
+            profile::add(counter, self.visited.len() as u64);
         }
         Ok(std::mem::take(&mut self.classification))
     }

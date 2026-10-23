@@ -20,6 +20,7 @@ use fpas_project as project;
 struct ExecutionOptions {
     program_args: Vec<String>,
     failure_dump: Option<PathBuf>,
+    profile: Option<PathBuf>,
     collection_schedule: fpas_bytecode::CollectionSchedule,
 }
 
@@ -131,6 +132,7 @@ fn run_input(
     let options = ExecutionOptions {
         program_args: config.program_args,
         failure_dump: config.failure_dump,
+        profile: config.profile,
         collection_schedule: config.collection_schedule,
     };
     let input = match config.input {
@@ -374,6 +376,7 @@ fn run_executable(
     let ExecutionOptions {
         program_args,
         failure_dump,
+        profile,
         collection_schedule,
     } = options;
     // Runtime diagnostics carry linked source IDs; callers pass paths indexed by graph source.
@@ -388,6 +391,7 @@ fn run_executable(
         .clone()
         .zip(sources)
         .map(|(path, sources)| crate::cli_failure_dump::Session::start(&mut vm, path, sources));
+    let profile = profile.map(|path| crate::cli_profile::Session::start(&mut vm, path));
     if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
         vm.allow_process_lifecycle();
     }
@@ -399,6 +403,24 @@ fn run_executable(
         session
             .and_then(|session| session.finish(outcome.as_ref().err().map(|error| error.as_ref())))
     });
+    let exit_code = if outcome.is_err() { 2 } else { 0 };
+    if let Some(profile) = profile {
+        let destination = profile.destination().to_path_buf();
+        if let Err(error) = profile.finish(&vm, exit_code, source_paths.as_deref()) {
+            let failure = CliFailure::new(
+                fpas_diagnostics::codes::CLI_OUTPUT_FAILED,
+                format!(
+                    "Cannot publish profile `{}`: {error}",
+                    destination.display()
+                ),
+            )
+            .with_help("Choose a new writable file path.");
+            let code = reporter.failure(&failure);
+            if exit_code == 0 {
+                return code;
+            }
+        }
+    }
     if let Err(diagnostic) = outcome {
         reporter.record(&locate(path, source_paths.as_deref(), &diagnostic));
         if let Some(Err(error)) = publication {

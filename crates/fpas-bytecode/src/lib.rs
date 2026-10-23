@@ -19,6 +19,7 @@ pub mod intrinsic;
 pub mod limits;
 mod metadata;
 mod operand;
+pub mod profile;
 mod validate;
 mod value;
 

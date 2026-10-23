@@ -3,10 +3,10 @@
 use std::{fs, io, path::Path};
 
 /// Reject an existing destination, including a dangling symlink.
-pub(crate) fn validate(path: &Path) -> Result<(), String> {
+pub(crate) fn validate(path: &Path, what: &str) -> Result<(), String> {
     match fs::symlink_metadata(path) {
         Ok(_) => Err(format!(
-            "Failure dump destination `{}` already exists.\n  help: Choose a new file path.",
+            "{what} destination `{}` already exists.\n  help: Choose a new file path.",
             path.display()
         )),
         Err(error)
@@ -18,7 +18,8 @@ pub(crate) fn validate(path: &Path) -> Result<(), String> {
             Ok(())
         }
         Err(error) => Err(format!(
-            "Cannot inspect failure dump destination `{}`: {error}",
+            "Cannot inspect {} destination `{}`: {error}",
+            what.to_lowercase(),
             path.display()
         )),
     }

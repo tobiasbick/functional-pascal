@@ -226,6 +226,10 @@ original diagnostic, retaining runtime exit code `2`. Only `run` accepts this
 option; flags after `--` remain program arguments. See the
 [failure-report schema and limits](../tools/failure-dump.md).
 
+To find where execution time goes, use `fpas run <path> --profile <new-file>`.
+It writes one JSON report after the run, also when the run fails, with the same
+new-file rule. Only `run` accepts this option. See [profile reports](../tools/profiler.md).
+
 ## Collection scheduling
 
 `fpas run`, `fpas test` and `fpas debug` use automatic local cycle collection.

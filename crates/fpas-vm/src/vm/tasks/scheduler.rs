@@ -107,7 +107,22 @@ impl TaskScheduler {
     }
 
     pub fn alloc_id(&self) -> u64 {
+        fpas_bytecode::profile::add(fpas_bytecode::profile::Counter::TaskSpawns, 1);
         self.next_id.fetch_add(1, Ordering::Relaxed)
+    }
+
+    /// Lock the ready queue, counting contended acquisitions while profiling.
+    fn lock_queue(&self) -> std::sync::MutexGuard<'_, std::collections::VecDeque<ScheduledTask>> {
+        if fpas_bytecode::profile::enabled() {
+            match self.queue.try_lock() {
+                Ok(queue) => return queue,
+                Err(std::sync::TryLockError::Poisoned(error)) => return error.into_inner(),
+                Err(std::sync::TryLockError::WouldBlock) => {
+                    fpas_bytecode::profile::add(fpas_bytecode::profile::Counter::QueueContended, 1);
+                }
+            }
+        }
+        self.queue.lock().unwrap_or_else(|e| e.into_inner())
     }
     /// Publish runnable work and wake pool workers and completion-barrier helpers.
     pub fn enqueue(&self, task: TaskState) {
@@ -129,7 +144,7 @@ impl TaskScheduler {
     fn enqueue_owned(&self, task: ScheduledTask) {
         let _maintenance = fpas_bytecode::defer_maintenance();
         {
-            let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
+            let mut queue = self.lock_queue();
             queue.push_back(task);
             self.queued.store(queue.len(), Ordering::Release);
         }
@@ -145,7 +160,7 @@ impl TaskScheduler {
     /// Transfer the next runnable task to its worker without waiting.
     pub fn try_dequeue(&self) -> Option<TaskState> {
         let _maintenance = fpas_bytecode::defer_maintenance();
-        let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
+        let mut queue = self.lock_queue();
         let task = queue.pop_front();
         self.queued.store(queue.len(), Ordering::Release);
         task.map(ScheduledTask::take)
@@ -153,7 +168,7 @@ impl TaskScheduler {
     /// Transfer runnable ownership, waiting until work or shutdown is available.
     pub fn dequeue(&self) -> Option<TaskState> {
         let _maintenance = fpas_bytecode::defer_maintenance();
-        let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
+        let mut queue = self.lock_queue();
         loop {
             if let Some(task) = queue.pop_front() {
                 self.queued.store(queue.len(), Ordering::Release);
@@ -162,6 +177,9 @@ impl TaskScheduler {
             if self.is_shutdown() {
                 return None;
             }
+            let _idle = fpas_bytecode::profile::Timer::start(
+                fpas_bytecode::profile::Counter::WorkerIdleNanos,
+            );
             queue = self
                 .available
                 .wait(queue)

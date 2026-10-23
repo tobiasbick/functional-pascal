@@ -187,6 +187,8 @@ impl MemoryDomain {
         state.collecting = true;
         self.refresh_fast_owner(&state);
         drop(state);
+        crate::profile::add(crate::profile::Counter::CollectionPasses, 1);
+        let _timer = crate::profile::Timer::start(crate::profile::Counter::CollectionNanos);
         let mut collection = CollectionGuard(self.clone(), true);
         loop {
             // Deferred removals stay roots until committed here; destructors hold no locks.

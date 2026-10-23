@@ -23,6 +23,7 @@ mod cli_input;
 mod cli_lsp;
 mod cli_output;
 mod cli_paths;
+mod cli_profile;
 mod cli_query;
 mod cli_run;
 mod cli_test;

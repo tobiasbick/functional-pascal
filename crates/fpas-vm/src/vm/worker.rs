@@ -81,6 +81,8 @@ pub(super) struct Worker {
     pub(in crate::vm) execution: Option<fpas_bytecode::ExecutionRoots>,
     /// Token states already validated by this worker; polling them needs no registry lock.
     pub(in crate::vm) cancellation_views: RefCell<Vec<super::cancellation::CancellationView>>,
+    /// Local profile samples, created on the first batch of a profiled run.
+    pub(in crate::vm) profile: Option<Box<super::profile::ProfileBuffer>>,
 }
 
 impl Worker {
@@ -247,6 +249,7 @@ impl Worker {
             retain_result: false,
             instructions_until_yield: super::TIMESLICE,
             cancellation_views: RefCell::new(Vec::new()),
+            profile: None,
             suspend_requested: false,
             debug_tasks: false,
             debug_schedule: None,
@@ -325,6 +328,7 @@ impl Worker {
             retain_result: false,
             instructions_until_yield: super::TIMESLICE,
             cancellation_views: RefCell::new(Vec::new()),
+            profile: None,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
             debug_schedule: self.debug_schedule.clone(),
@@ -385,6 +389,7 @@ impl Worker {
             retain_result: task.retain_result,
             instructions_until_yield: super::TIMESLICE,
             cancellation_views: RefCell::new(Vec::new()),
+            profile: None,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
             debug_schedule: self.debug_schedule.clone(),
@@ -436,6 +441,7 @@ impl Worker {
 
     pub(super) fn suspend_and_enqueue(&mut self) {
         if let Some(scheduler) = self.scheduler.clone() {
+            fpas_bytecode::profile::add(fpas_bytecode::profile::Counter::TaskYields, 1);
             let state = self.take_task_state();
             scheduler.enqueue(state);
             self.suspend_requested = true;

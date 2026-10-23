@@ -151,12 +151,13 @@ const RUN_HELP: &str = "\
 Run a Functional Pascal source, project, workspace, or compiled program.
 
 Usage:
-  fpas run [--std-lib <dir>] [--diagnostics <text | json>] [--failure-dump <path>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
+  fpas run [--std-lib <dir>] [--diagnostics <text | json>] [--failure-dump <path>] [--profile <path>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
 
 With no path, discovers the workspace program or `.fpasprj` in the current directory.
 Direct `.fpascp` execution does not load sources or the source standard library.
 `--failure-dump` writes a bounded JSON report only for an escaping runtime error.
-The destination must be a new file; existing files are never overwritten.
+`--profile` writes a JSON report of hot routines, lines and runtime costs after the run.
+Report destinations must be new files; existing files are never overwritten.
 
 Options:
   --gc-cell-threshold <N>      Cell allocations per collection request (default: 4096)
@@ -167,6 +168,7 @@ Options:
                    Diagnostic format on stderr; `json` writes one record per line
   --failure-dump <path>
                    Write a runtime failure report to a new JSON file
+  --profile <path> Write a profile report to a new JSON file
   -h, --help       Print this help
   -V, --version    Print version
 
@@ -176,6 +178,7 @@ Examples:
   fpas run suite.fpasworkspace
   fpas run my-app.fpascp
   fpas run my-app.fpascp --failure-dump .temp-data/failure.json
+  fpas run my-app.fpasprj --profile .temp-data/profile.json -- input.txt
   fpas run --std-lib ./lib hello.fpas
 
 ";

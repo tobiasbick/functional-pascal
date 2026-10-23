@@ -10,7 +10,7 @@ use std::{
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
 /// Publish complete bytes by an atomic hard link; unsupported filesystems report an error.
-pub(super) fn publish(destination: &Path, bytes: &[u8]) -> io::Result<()> {
+pub(crate) fn publish(destination: &Path, bytes: &[u8]) -> io::Result<()> {
     let parent = destination
         .parent()
         .filter(|path| !path.as_os_str().is_empty())

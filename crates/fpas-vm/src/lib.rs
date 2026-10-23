@@ -53,3 +53,5 @@ pub use vm::{
 };
 
 pub use vm::{DebugScheduleReport, SCHEDULE_ALGORITHM};
+
+pub use vm::{LineProfile, ProfileReport, ProfileSample, RoutineProfile};

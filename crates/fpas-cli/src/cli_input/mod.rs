@@ -140,17 +140,22 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
     let options = parse_options(mode, cli_args)?;
     let diagnostics = options.diagnostics.unwrap_or_default();
+    let report_destination = |path: std::path::PathBuf, what: &str| {
+        let path = if path.is_absolute() {
+            path
+        } else {
+            cwd.join(path)
+        };
+        crate::cli_failure_dump::validate_destination(&path, what)?;
+        Ok::<_, String>(path)
+    };
     let failure_dump = options
         .failure_dump
-        .map(|path| {
-            let path = if path.is_absolute() {
-                path
-            } else {
-                cwd.join(path)
-            };
-            crate::cli_failure_dump::validate_destination(&path)?;
-            Ok::<_, String>(path)
-        })
+        .map(|path| report_destination(path, "Failure dump"))
+        .transpose()?;
+    let profile = options
+        .profile
+        .map(|path| report_destination(path, "Profile"))
         .transpose()?;
     let positional = options.positional;
 
@@ -275,6 +280,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             standard_library: options.standard_library,
             diagnostics,
             failure_dump,
+            profile,
             fix: false,
         }),
         CliMode::Debug => {
@@ -325,6 +331,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             standard_library: options.standard_library,
             diagnostics,
             failure_dump: None,
+            profile: None,
             fix: options.fix,
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),

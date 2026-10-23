@@ -52,9 +52,16 @@ impl Worker {
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
         let access = self.execution_access()?;
+        let started = self.hosted.profile.get().map(|_| std::time::Instant::now());
         let result = self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget);
+        if let (Some(started), Ok(batch)) = (started, &result) {
+            self.record_profile_batch(batch.steps, started.elapsed());
+        }
         access.note_completed_batch();
         if access.outermost() || self.domain.maintenance_pending() {
+            let _timer = fpas_bytecode::profile::Timer::start(
+                fpas_bytecode::profile::Counter::SafePointNanos,
+            );
             let extra = match &result {
                 Ok(batch) => match &batch.step {
                     DispatchStep::Return(value) => std::slice::from_ref(value),

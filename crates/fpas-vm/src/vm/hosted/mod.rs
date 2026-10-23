@@ -84,6 +84,8 @@ pub(super) struct HostedState {
     pub(super) test_scratch_dir: Mutex<PathBuf>,
     /// Receiver for stderr lines of `Std.Proc.Run` children; inherited when `None`.
     pub(super) program_stderr: Mutex<Option<fpas_std::ProgramStderr>>,
+    /// Routine and line samples, installed only for `fpas run --profile`.
+    pub(in crate::vm) profile: std::sync::OnceLock<Arc<super::profile::ProfileSink>>,
 }
 
 impl HostedState {
@@ -105,6 +107,7 @@ impl HostedState {
             cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
             program_stderr: Mutex::new(None),
+            profile: std::sync::OnceLock::new(),
         }
     }
 
@@ -132,6 +135,7 @@ impl HostedState {
             cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
             program_stderr: Mutex::new(None),
+            profile: std::sync::OnceLock::new(),
         }
     }
 

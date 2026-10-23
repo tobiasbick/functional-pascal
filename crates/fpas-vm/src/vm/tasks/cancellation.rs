@@ -111,6 +111,7 @@ impl Worker {
             return Ok(cancelled);
         }
         views.retain(|view| !view.is_for(token));
+        fpas_bytecode::profile::add(fpas_bytecode::profile::Counter::CancellationLookups, 1);
         let view = self
             .hosted
             .cancellations

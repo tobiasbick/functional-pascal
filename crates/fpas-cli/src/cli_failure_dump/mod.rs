@@ -24,6 +24,7 @@ use std::{
 };
 
 pub(crate) use destination::validate as validate_destination;
+pub(crate) use publication::publish as publish_report;
 pub(crate) use sources::Sources;
 
 enum Message {

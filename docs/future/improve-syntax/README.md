@@ -44,9 +44,9 @@ The example is a template, not an active AP or an approved proposal.
    missing. Record the user's decision before implementing affected behavior.
    Follow the [development process](development-process.md) for delivery.
 
-Use `AP49` for the next package and `AP49.1`, `AP49.2`, and so on for its work
-packages. Decision IDs continue at `Q51`; Q01 through Q36 belong to closed
-packages and Q37 through Q50 belong to AP48. Record each decision and its affected
+Use `AP50` for the next package and `AP50.1`, `AP50.2`, and so on for its work
+packages. Decision IDs continue at `Q55`; Q01 through Q36 belong to closed
+packages, Q37 through Q50 belong to AP48 and Q51 through Q54 belong to AP49. Record each decision and its affected
 work packages in the owning package README. Do not create a second decision or
 completion index.
 
@@ -57,6 +57,7 @@ Add new packages here when planning begins; keep the example out of this table.
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [ ] | [AP48: Task ownership and memory management](ap48-local-cycle-collector/README.md) | Very large | None | AP48.1–.7 delivered; AP48.8–.12 planned: baseline measurement (Phase 0), replacement architecture, boundary rules, tracing-heap prototype, integration and acceptance |
+| [ ] | [AP49: Runtime profiler for agents](ap49-runtime-profiler/README.md) | Medium | None | In progress: runtime counters, routine/line report via `run --profile`, findings and dogfooding |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

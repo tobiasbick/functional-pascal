@@ -39,7 +39,8 @@ divide by `sampled_ms`; instruction shares follow from the counts and
 `instructions`. Inclusive rows overlap and do not sum to 100 %. Rows rank by
 self time because one instruction can allocate, validate a graph or call native
 code; instruction counts are deterministic and suit comparisons between runs.
-Sources are relative to the current directory when possible; `null` when unknown.
+Sources are relative to the current directory when possible, otherwise only the
+file name; `null` when unknown.
 `total` above the row limit means rows were omitted.
 
 ### Run metadata

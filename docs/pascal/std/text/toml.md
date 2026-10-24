@@ -38,18 +38,14 @@ Import with `uses Std.Toml as Toml;` and access public symbols as `Toml.Name`. U
 ### `TomlValue`
 
 ```pascal id=example-2 fragment context=declarations
-type TomlText = string;
-type TomlInteger = integer;
-type TomlBoolean = boolean;
-
 type TomlValue = enum
-  String(Value: TomlText);
-  Integer(Value: TomlInteger);
+  String(Value: string);
+  Integer(Value: integer);
   Float(Value: real);
-  Boolean(Value: TomlBoolean);
-  Datetime(Value: TomlText);
+  Boolean(Value: boolean);
+  Datetime(Value: string);
   ArrayValue(Items: array of TomlValue);
-  Table(Fields: dict of TomlText to TomlValue);
+  Table(Fields: dict of string to TomlValue);
 end enum;
 ```
 

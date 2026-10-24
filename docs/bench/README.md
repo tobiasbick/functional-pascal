@@ -226,7 +226,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 
-The curated suite currently uses 120 seconds per entry. Give intentionally longer workloads an explicit larger value instead of disabling the bound.
+The curated suite uses 120 seconds for most entries and 60 seconds for the `analysis_queries` and `compiler_lowering` tooling entries. Give intentionally longer workloads an explicit larger value instead of disabling the bound.
 
 Excluded from the suite: `examples/pascal/concurrency/task_memory_benchmark.fpas` (long sleep / memory focus).
 

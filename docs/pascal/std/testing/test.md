@@ -199,15 +199,14 @@ with `--script`, or through `[test.overrides]`. Test input and screen assertions
 
 ## Golden sidecars (runner assertions)
 
-After a successful test run, `fpas test` may compare optional golden files beside the test. All are **runner-side** checks (not `Std.Test` procedures). Omit a sidecar to skip that check.
+After a successful test run, `fpas test` may compare an optional golden file beside the test. It is a **runner-side** check (not a `Std.Test` procedure). Omit the sidecar to skip that check.
 
 | Sidecar | Compares | Typical use |
 |---------|----------|-------------|
 | `<test>.expect.stdout` | Captured `WriteLn` lines | Console output |
-| `<test>.expect.screen` | Compact CRT screen rows | `Std.Console` paint |
 
-Golden sidecars are documented here because they are runner-side checks, not `Std.Test`
-procedures.
+The golden sidecar is documented here because it is a runner-side check, not a `Std.Test`
+procedure.
 
 ---
 

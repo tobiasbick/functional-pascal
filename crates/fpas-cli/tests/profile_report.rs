@@ -166,6 +166,39 @@ fn run_metadata_identifies_the_executable_without_arguments_or_environment() {
 }
 
 #[test]
+fn sources_outside_the_current_directory_report_only_file_names() {
+    let fixture = Fixture::new();
+    fixture.write("main.fpas", HOT);
+    fs::create_dir_all(fixture.0.join("work")).expect("work directory");
+    let program = fixture.0.join("main.fpas");
+    let output = Command::new(env!("CARGO_BIN_EXE_fpas"))
+        .current_dir(fixture.0.join("work"))
+        .args(["run", "--profile", "outside.json"])
+        .arg(&program)
+        .output()
+        .expect("CLI process");
+    exit(&output, 0);
+    let report = fixture.report("work/outside.json");
+    assert_eq!(report["run"]["target"]["name"], "main.fpas");
+    let mut sources = Vec::new();
+    for table in ["routines", "lines"] {
+        for row in report[table]["rows"].as_array().expect("rows") {
+            if let Some(source) = row["source"].as_str() {
+                sources.push(source.to_owned());
+            }
+        }
+    }
+    assert!(
+        sources.iter().any(|source| source == "main.fpas"),
+        "{sources:?}"
+    );
+    for source in &sources {
+        assert!(!Path::new(source).is_absolute(), "absolute source {source}");
+        assert!(!source.contains(':'), "absolute source {source}");
+    }
+}
+
+#[test]
 fn aggregate_stores_validate_only_the_stored_value() {
     let fixture = Fixture::new();
     fixture.write(

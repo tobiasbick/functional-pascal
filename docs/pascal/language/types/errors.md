@@ -83,7 +83,7 @@ constrained type parameter in Result and other signatures.
 | --- | --- |
 | `Value.Message(): string` | Complete automatic error text, including typed causes; read-only and without I/O |
 
-Console.Write and WriteLn use the same renderer as Message(). Its deterministic
+Console.WriteText and WriteLn use the same renderer as Message(). Its deterministic
 text has the defining qualified family and variant name, an optional literal
 message, ordinary fields in declaration order and then `caused by` frames.
 Fields use two-space indentation. Strings inside payloads are JSON-quoted and

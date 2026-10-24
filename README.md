@@ -265,7 +265,7 @@ end.
 ### Parsing and error propagation
 
 Import `Std.Parse` through an alias. Its `Int`, `Real`, `Bool`, and `HexInt`
-operations take `Text: string` and return `Result of (T, string)`. Use `try`
+operations take `Text: string` and return `Result of (T, Parse.ParseError)`. Use `try`
 inside a compatible function and `case` to handle the result locally:
 
 ```pascal id=example-14

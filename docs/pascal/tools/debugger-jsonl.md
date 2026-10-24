@@ -159,7 +159,7 @@ leaves the old references usable.
 `expression.set` addresses a target without first requesting variable handles:
 
 ```json
-{"type":"request","id":8,"command":"expression.set","arguments":{"frame_id":4294967296,"target":"State.Items[Selected].Value","expression":"Counter + 1"}}
+{"type":"request","id":8,"command":"expression.set","arguments":{"frame_id":4294967297,"target":"State.Items[Selected].Value","expression":"Counter + 1"}}
 {"type":"response","request_id":8,"command":"expression.set","success":true,"body":{"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0}}
 ```
 
@@ -220,9 +220,9 @@ Dictionary structure commands target the dictionary container rather than one
 entry value:
 
 ```json
-{"type":"request","id":20,"command":"dictionary.insert","arguments":{"frame_id":4294967296,"target":"State.Scores","key":"'Ada'","expression":"42"}}
-{"type":"request","id":21,"command":"dictionary.remove","arguments":{"frame_id":8589934592,"target":"State.Scores","key":"'Ada'"}}
-{"type":"request","id":22,"command":"dictionary.replace_key","arguments":{"frame_id":12884901888,"target":"State.Scores","key":"'Grace'","new_key":"'Hopper'"}}
+{"type":"request","id":20,"command":"dictionary.insert","arguments":{"frame_id":4294967297,"target":"State.Scores","key":"'Ada'","expression":"42"}}
+{"type":"request","id":21,"command":"dictionary.remove","arguments":{"frame_id":8589934593,"target":"State.Scores","key":"'Ada'"}}
+{"type":"request","id":22,"command":"dictionary.replace_key","arguments":{"frame_id":12884901889,"target":"State.Scores","key":"'Grace'","new_key":"'Hopper'"}}
 ```
 
 `target` uses the same bounded root/selector grammar as `expression.set`, but
@@ -243,9 +243,9 @@ failures write nothing and preserve old IDs. `initialize` advertises
 Sequence commands target a complete array or string container:
 
 ```json
-{"type":"request","id":23,"command":"array.insert","arguments":{"frame_id":17179869184,"target":"State.Items","index":"Selected","expression":"42"}}
-{"type":"request","id":24,"command":"array.remove","arguments":{"frame_id":21474836480,"target":"State.Items","index":"0"}}
-{"type":"request","id":25,"command":"string.replace_character","arguments":{"frame_id":25769803776,"target":"State.Label","index":"1","expression":"'é'"}}
+{"type":"request","id":23,"command":"array.insert","arguments":{"frame_id":17179869185,"target":"State.Items","index":"Selected","expression":"42"}}
+{"type":"request","id":24,"command":"array.remove","arguments":{"frame_id":21474836481,"target":"State.Items","index":"0"}}
+{"type":"request","id":25,"command":"string.replace_character","arguments":{"frame_id":25769803777,"target":"State.Label","index":"1","expression":"'é'"}}
 ```
 
 Array insertion permits `0..=length`; removal permits `0..<length`. String
@@ -322,14 +322,14 @@ advertises `task_result_replacement`.
 enum, `Result`, or `Option` target without changing live state:
 
 ```json
-{"type":"request","id":20,"command":"variant.describe","arguments":{"frame_id":3,"target":"Selected"}}
+{"type":"request","id":20,"command":"variant.describe","arguments":{"frame_id":4294967297,"target":"Selected"}}
 {"type":"response","request_id":20,"command":"variant.describe","success":true,"body":{"target":"Selected","type_name":"Choice","variants":[{"name":"Choice.Empty","fields":[]},{"name":"Choice.Pair","fields":[{"name":"Left","type_name":"Integer"},{"name":"Right","type_name":"Integer"}]}]}}
 ```
 
 `variant.construct` builds one complete variant and commits it atomically:
 
 ```json
-{"type":"request","id":21,"command":"variant.construct","arguments":{"frame_id":3,"target":"Selected","variant":"Choice.Pair","fields":{"Left":"1","Right":"2"}}}
+{"type":"request","id":21,"command":"variant.construct","arguments":{"frame_id":4294967297,"target":"Selected","variant":"Choice.Pair","fields":{"Left":"1","Right":"2"}}}
 ```
 
 `fields` maps canonical or ASCII-case-insensitive field names to debugger
@@ -347,7 +347,7 @@ selectors, and replacement once under one shared budget, resolves the path
 against the detached seed, and commits the rebuilt complete root atomically:
 
 ```json
-{"type":"request","id":30,"command":"storage.initialize","arguments":{"frame_id":3,"target":"State.Items[0].Count","initializer":"MakeInitialState()","expression":"42"}}
+{"type":"request","id":30,"command":"storage.initialize","arguments":{"frame_id":4294967297,"target":"State.Items[0].Count","initializer":"MakeInitialState()","expression":"42"}}
 {"type":"response","request_id":30,"command":"storage.initialize","success":true,"body":{"root":"State","target":"State.Items[0].Count","root_value":"Holder {...}","value":"42","type":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0}}
 ```
 

@@ -1,7 +1,7 @@
 # Rust review resource regressions
 
 These measurements close the targeted resource-evidence gaps in the
-[2026-09-23 Rust review](../future/rust-code-review-2026-09-23/README.md).
+2026-09-23 Rust review, whose report was removed after delivery.
 They count actual operations and requested allocation bytes in Windows Rust tests.
 They are not elapsed-time benchmarks and do not establish a general speedup.
 

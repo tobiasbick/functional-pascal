@@ -116,7 +116,7 @@ VM regressions exercise a self-recursive closure export after VM destruction, na
 caller re-entry, published native waits, saved completion/continuation state, actual
 inspection handles and owner/abandoned-attempt case cleanup with an independent
 inspection root. Root publication and generation/exclusion races remain covered by
-AP48.5 tests. Automatic acceptance also covers repeated closure creation during real
+the safe-point protocol tests. Automatic acceptance also covers repeated closure creation during real
 dispatch, surviving mutable aliases, inherited task configuration, callback/inspection
 churn, native publication, request races and independent VM progress. CLI fixtures
 cover defaults, validation, subprocess propagation and source/cached/debug launches.

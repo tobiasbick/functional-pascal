@@ -13,6 +13,11 @@ The [typed error workloads](errors.md) add the `errors` group: construction,
 generic helpers/callables, MapError/case controls, cause rendering and a structural
 deep-image round trip. The configured suite contains 85 workloads.
 
+The [debugger runtime comparison](debugger-runtime.md) measures sustained DAP
+gameplay against one fixed client image. It records paired wall times and the
+ownership/publication boundaries covered by the runtime change; it is separate
+from the ordinary `fpas run` suite.
+
 The `tui_styled_cells` row builds 128-by-44 frames of half-block cells with a concrete RGB
 style per cell, the per-frame path of pixel renderers such as terminal raycasters. A checksum
 over the built cells validates the result.

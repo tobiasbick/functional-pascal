@@ -14,6 +14,27 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-24 — Bounded debugger root publication
+
+- Scope: paired local DAP gameplay measurements, separate from the configured
+  `fpas run` suite. See [method, samples and limits](debugger-runtime.md).
+- One fixed Into the Dungeon client image, seed 25, region size 1, virtual terminal
+  4 by 4; three alternating release runs per runtime. Startup and save loading
+  are outside the timer; protocol, inspection and controller polling are included.
+- Eight acknowledged westward steps: median 17905 ms before, 1521 ms after
+  (91.5% lower wall time, factor 11.8). Every run reaches the same position at
+  full health. A separate 64-step smoke check completes in 9219 ms.
+- The debugger retains execution access for at most 256 resume-loop iterations
+  and publishes before returning or waiting. Instruction scheduling, breakpoint
+  checks, tracing and execution limits retain their existing boundaries.
+- Direct profiling of a debug target remains unavailable; temporary target phase
+  timers identified the cost and were removed before these measurements.
+- All 85 configured workloads complete against the saved `dap-before` baseline.
+  Initial Notes/integer/Mandelbrot deviations were checked with three paired
+  controls. Notes, integer and paint medians are within 0.6%; a longer render
+  control changes from 5579 to 5491 ms. The linked report retains the initial
+  deviations and explains the longer control rather than replacing suite rows.
+
 ## 2026-10-23 — Full suite after AP48/AP49: parallel-task, aggregate-store and collection-threshold fixes (on ace31bf21)
 
 - Group: `all`

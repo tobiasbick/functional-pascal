@@ -34,7 +34,9 @@ impl DebugTaskRuntime {
                     progress = true;
                     if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
                         slot.state = state_from_suspension(&slot.worker);
-                        if slot.worker.publish_execution(&[]).is_ok() {
+                        if (access.outermost() || slot.worker.domain.maintenance_pending())
+                            && slot.worker.publish_execution(&[]).is_ok()
+                        {
                             access.safe_point();
                         }
                         continue;
@@ -45,7 +47,9 @@ impl DebugTaskRuntime {
                     slot.state = DebugTaskState::Runnable;
                 }
             }
-            if slot.worker.publish_execution(&[]).is_ok() {
+            if (access.outermost() || slot.worker.domain.maintenance_pending())
+                && slot.worker.publish_execution(&[]).is_ok()
+            {
                 access.safe_point();
             }
             progress |= before != readiness_progress(slot);

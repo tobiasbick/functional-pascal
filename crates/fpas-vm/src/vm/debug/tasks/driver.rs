@@ -318,7 +318,9 @@ impl DebugTaskRuntime {
                 }
             }
         };
-        if slot.worker.publish_execution(&[]).is_ok() {
+        if (access.outermost() || slot.worker.domain.maintenance_pending())
+            && slot.worker.publish_execution(&[]).is_ok()
+        {
             access.safe_point();
         }
         drop(access);

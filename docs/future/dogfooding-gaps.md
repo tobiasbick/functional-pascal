@@ -134,24 +134,34 @@ Remove an entry once the gap is fixed and covered by tests and current documenta
   and retain explicit resize events. Native writer consoles still follow the
   host. The test also checks dimensions after text output and screen clearing.
 
-### Sustained gameplay through DAP remains expensive
+### Repeated root publication made sustained DAP execution expensive
 
 - **Date:** 2026-10-24
-- **Kind:** awkward (done in FPAS)
+- **Kind:** runtime cost reduced; debug-target profiling still missing
 - **Area:** debugger execution and performance investigation
 - **Task:** Play the seed-25 settlement acceptance route through real terminal
   key events, without assigning game state or bypassing the client.
-- **Observed:** Walking packets of 64 keys take minutes under DAP, even with a
+- **Observed before the change:** Walking packets of 64 keys took minutes under
+  DAP, even with a
   4-by-4 virtual terminal and a source breakpoint reached only by the final
-  menu key. The debugger child consumes most of the CPU time; controller polling
-  is not the dominant CPU consumer. This is an end-to-end observation, not an
-  isolated debugger benchmark or an identified runtime cause.
+  menu key. The debugger child consumed most of the CPU time; controller polling
+  was not the dominant CPU consumer. This initially established end-to-end cost;
+  it did not identify the runtime cause.
 - **Fallback:** No other language. The FPAS helper uses a small initial terminal,
   bounded key packets, confirmed positions and explicit save checkpoints. It
   resizes for rendered map, inventory and dialogue checks. Earlier conditional
   view breakpoints added inspection stops and were replaced with the menu source
-  point, but execution remains slow.
+  point, but execution remained slow.
 - **Goal:** Make sustained continue practical for interactive FPAS applications.
   Measure debugger dispatch, scheduling, root publication and inspection costs
   before changing their behavior; provide profiling of the actual debug target
   rather than inferring its costs from the controller's `run --profile` report.
+- **Runtime improvement:** Temporary phase timers identified repeated root
+  publication during single-instruction scheduling. Bounded execution access and
+  publication by the enclosing owner reduce an eight-step packet from a median
+  17905 ms to 1521 ms on the same compiled client image. A 64-step packet completes
+  in 9219 ms. See the [measurement and its limits](../bench/debugger-runtime.md).
+  Instruction boundaries, task ordering and early maintenance remain intact.
+- **Open:** `run --profile` still measures only the controller. The debugger
+  required temporary Rust timers for target phase attribution; a supported
+  profiling path for the debug target remains absent.

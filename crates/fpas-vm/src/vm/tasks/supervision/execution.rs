@@ -109,7 +109,7 @@ impl Worker {
             Ok(DispatchStep::Return(value)) => std::slice::from_ref(value),
             _ => &[],
         };
-        if self.publish_execution(extra).is_ok() {
+        if access.outermost() && self.publish_execution(extra).is_ok() {
             access.safe_point();
         }
         result

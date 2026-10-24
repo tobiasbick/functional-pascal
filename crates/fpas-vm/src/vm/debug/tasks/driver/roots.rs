@@ -1,7 +1,50 @@
-//! Stopped debugger domain access and complete direct-root enumeration.
+//! Debugger execution gates, stopped access and complete direct-root enumeration.
 use super::*;
 
 impl DebugTaskRuntime {
+    /// Hold execution exclusion across a bounded group of scheduler rounds. The
+    /// tokens stay on the resume thread; newly spawned workers use their own gates.
+    pub(in crate::vm::debug) fn begin_execution_batch(
+        &self,
+    ) -> Result<Vec<(u64, fpas_bytecode::ExecutionAccess)>, (u64, VmError)> {
+        let mut accesses = Vec::new();
+        for (&task_id, slot) in &self.tasks {
+            if slot.worker.execution.is_none() {
+                continue;
+            }
+            match slot.worker.execution_access() {
+                Ok(access) => accesses.push((task_id, access)),
+                Err(error) => {
+                    self.finish_execution_batch(&mut accesses);
+                    return Err((task_id, error));
+                }
+            }
+        }
+        Ok(accesses)
+    }
+
+    /// Publish all retained owners before releasing exclusion, including on a
+    /// stop, limit, failure or idle wait. Failed publication keeps maintenance busy.
+    pub(in crate::vm::debug) fn finish_execution_batch(
+        &self,
+        accesses: &mut Vec<(u64, fpas_bytecode::ExecutionAccess)>,
+    ) {
+        let published: Vec<_> = accesses
+            .iter()
+            .map(|(id, _)| {
+                self.tasks
+                    .get(id)
+                    .is_some_and(|slot| slot.worker.publish_execution(&[]).is_ok())
+            })
+            .collect();
+        for ((_, access), published) in accesses.iter().zip(published) {
+            if published {
+                access.safe_point();
+            }
+        }
+        accesses.clear();
+    }
+
     pub(in crate::vm::debug) fn configure_collection(
         &mut self,
         schedule: fpas_bytecode::CollectionSchedule,

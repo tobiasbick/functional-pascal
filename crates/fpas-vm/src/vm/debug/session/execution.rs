@@ -112,161 +112,181 @@ impl DebugSession {
         self.refresh_data_watch_snapshots();
         let mut pause_pending = false;
         let started = Instant::now();
-        loop {
-            if let Some((task_id, error)) = self.runtime.scheduling_rejection() {
-                return Ok(self.stop_for_runtime_error(task_id, error));
-            }
-            if let Some(error) = self.trace_error() {
-                self.state = DebugSessionState::Stopped;
-                self.refresh_inspection();
-                return Err(error);
-            }
-            if let Some(value) = self.runtime.take_finished_root_result() {
-                let instruction_count = self.runtime.instruction_count();
-                self.state = DebugSessionState::Terminated;
-                let worker = self.runtime.worker(0).ok_or_else(|| unknown_task(0))?;
-                let exports = crate::vm::host_value::HostValues::for_executable(
-                    worker.domain.clone(),
-                    &self.executable,
-                    Arc::clone(&worker.globals),
-                );
-                let value = exports.export_value(value);
-                self.runtime.release_finished_root_result();
-                self.inspections.clear();
-                return Ok(DebugRunResult::Terminated(DebugTermination {
-                    value,
-                    instruction_count,
-                }));
-            }
-            self.enforce_execution_limits(started)?;
-            if self.pause_requested.swap(false, Ordering::AcqRel) {
-                pause_pending = true;
-            }
-            let preferred = (mode != ResumeMode::Continue).then_some(selected_task);
-            let schedule = match self.runtime.schedule(preferred) {
-                Ok(schedule) => schedule,
-                Err((task_id, diagnostic)) => {
-                    if let Some(error) = self.trace_error() {
-                        self.state = DebugSessionState::Stopped;
-                        self.refresh_inspection();
-                        return Err(error);
-                    }
-                    return Ok(self.stop_for_runtime_error(task_id, diagnostic));
+        let mut accesses = Vec::new();
+        let mut remaining = 0;
+        // Every normal exit publishes retained workers before returning a stop or error.
+        let result = (|| {
+            loop {
+                if remaining == 0 {
+                    self.runtime.finish_execution_batch(&mut accesses);
+                    accesses = match self.runtime.begin_execution_batch() {
+                        Ok(accesses) => accesses,
+                        Err((task_id, error)) => {
+                            return Ok(self.stop_for_runtime_error(task_id, error));
+                        }
+                    };
+                    remaining = crate::vm::BATCH_STEPS;
                 }
-            };
-            // Scheduling admits newly spawned parameters before their first source stop.
-            if let Some(error) = self.trace_error() {
-                self.state = DebugSessionState::Stopped;
-                self.refresh_inspection();
-                return Err(error);
-            }
-            let (task_id, resumed_at_boundary) = match schedule {
-                DebugSchedule::Runnable {
-                    task_id,
-                    resumed_at_boundary,
-                } => (task_id, resumed_at_boundary),
-                DebugSchedule::Idle(wait) => {
-                    if pause_pending {
+                remaining -= 1;
+                if let Some((task_id, error)) = self.runtime.scheduling_rejection() {
+                    return Ok(self.stop_for_runtime_error(task_id, error));
+                }
+                if let Some(error) = self.trace_error() {
+                    self.state = DebugSessionState::Stopped;
+                    self.refresh_inspection();
+                    return Err(error);
+                }
+                if let Some(value) = self.runtime.take_finished_root_result() {
+                    let instruction_count = self.runtime.instruction_count();
+                    self.state = DebugSessionState::Terminated;
+                    let worker = self.runtime.worker(0).ok_or_else(|| unknown_task(0))?;
+                    let exports = crate::vm::host_value::HostValues::for_executable(
+                        worker.domain.clone(),
+                        &self.executable,
+                        Arc::clone(&worker.globals),
+                    );
+                    let value = exports.export_value(value);
+                    self.runtime.release_finished_root_result();
+                    self.inspections.clear();
+                    return Ok(DebugRunResult::Terminated(DebugTermination {
+                        value,
+                        instruction_count,
+                    }));
+                }
+                self.enforce_execution_limits(started)?;
+                if self.pause_requested.swap(false, Ordering::AcqRel) {
+                    pause_pending = true;
+                }
+                let preferred = (mode != ResumeMode::Continue).then_some(selected_task);
+                let schedule = match self.runtime.schedule(preferred) {
+                    Ok(schedule) => schedule,
+                    Err((task_id, diagnostic)) => {
+                        if let Some(error) = self.trace_error() {
+                            self.state = DebugSessionState::Stopped;
+                            self.refresh_inspection();
+                            return Err(error);
+                        }
+                        return Ok(self.stop_for_runtime_error(task_id, diagnostic));
+                    }
+                };
+                // Scheduling admits newly spawned parameters before their first source stop.
+                if let Some(error) = self.trace_error() {
+                    self.state = DebugSessionState::Stopped;
+                    self.refresh_inspection();
+                    return Err(error);
+                }
+                let (task_id, resumed_at_boundary) = match schedule {
+                    DebugSchedule::Runnable {
+                        task_id,
+                        resumed_at_boundary,
+                    } => (task_id, resumed_at_boundary),
+                    DebugSchedule::Idle(wait) => {
+                        if pause_pending {
+                            return Ok(self.stop_for_reason(
+                                selected_task,
+                                DebugStopReason::Pause,
+                                Vec::new(),
+                            ));
+                        }
+                        self.runtime.finish_execution_batch(&mut accesses);
+                        remaining = 0;
+                        self.runtime.wait(wait);
+                        continue;
+                    }
+                    DebugSchedule::NoUnpausedWork => {
                         return Ok(self.stop_for_reason(
                             selected_task,
                             DebugStopReason::Pause,
                             Vec::new(),
                         ));
                     }
-                    self.runtime.wait(wait);
-                    continue;
-                }
-                DebugSchedule::NoUnpausedWork => {
-                    return Ok(self.stop_for_reason(
-                        selected_task,
-                        DebugStopReason::Pause,
-                        Vec::new(),
-                    ));
-                }
-                DebugSchedule::Deadlock | DebugSchedule::ClockExhausted => {
-                    self.state = DebugSessionState::Failed;
-                    self.refresh_inspection();
-                    let deadlock = matches!(schedule, DebugSchedule::Deadlock);
-                    return Err(DebugSessionError {
+                    DebugSchedule::Deadlock | DebugSchedule::ClockExhausted => {
+                        self.state = DebugSessionState::Failed;
+                        self.refresh_inspection();
+                        let deadlock = matches!(schedule, DebugSchedule::Deadlock);
+                        return Err(DebugSessionError {
                         kind: if deadlock { DebugErrorKind::ScheduleDeadlock } else { DebugErrorKind::ScheduleClockLimit },
                         message: if deadlock { "Seeded scheduling settled with blocked tasks and no internal wake source." } else { "Seeded scheduling cannot advance virtual time further." }.into(),
                         hint: "Inspect the blocked tasks and channel/timer dependencies, then rerun with the same seed.".into(),
                     });
-                }
-            };
-            if resumed_at_boundary
-                && let Some(result) = self.stop_at_boundary(
-                    task_id,
-                    mode,
-                    selected_task,
-                    starting_depth,
-                    pause_pending,
-                )
-            {
-                return Ok(result);
-            }
-            if let Some(diagnostic) = self.reject_unsupported_recording_effect(task_id) {
-                return Ok(self.stop_for_runtime_error(task_id, diagnostic.into()));
-            }
-            let dispatch = match self.runtime.dispatch(task_id) {
-                Ok(dispatch) => dispatch,
-                Err((task_id, diagnostic)) => {
-                    if let Some(error) = self.trace_error() {
-                        self.state = DebugSessionState::Stopped;
-                        self.refresh_inspection();
-                        return Err(error);
                     }
-                    return Ok(self.stop_for_runtime_error(task_id, diagnostic));
-                }
-            };
-            if let Some(error) = self.trace_error() {
-                self.state = DebugSessionState::Stopped;
-                self.refresh_inspection();
-                return Err(error);
-            }
-            match dispatch {
-                DebugDispatch::Completed {
-                    task_id,
-                    main: true,
-                } => {
-                    debug_assert_eq!(task_id, 0);
-                    self.runtime.finish_main();
-                    continue;
-                }
-                DebugDispatch::Completed {
-                    task_id,
-                    main: false,
-                    ..
-                } if mode != ResumeMode::Continue && task_id == selected_task => {
-                    return Ok(self.stop_for_completed_task(task_id));
-                }
-                DebugDispatch::Completed { .. } => continue,
-                DebugDispatch::Suspended(task_id)
-                    if self.runtime.task_state(task_id)
-                        != Some(super::super::types::DebugTaskState::Runnable) =>
-                {
-                    if pause_pending {
-                        return Ok(self.stop_for_reason(
-                            task_id,
-                            DebugStopReason::Pause,
-                            Vec::new(),
-                        ));
-                    }
-                    continue;
-                }
-                DebugDispatch::Instruction(task_id) | DebugDispatch::Suspended(task_id) => {
-                    if let Some(result) = self.stop_at_boundary(
+                };
+                if resumed_at_boundary
+                    && let Some(result) = self.stop_at_boundary(
                         task_id,
                         mode,
                         selected_task,
                         starting_depth,
                         pause_pending,
-                    ) {
-                        return Ok(result);
+                    )
+                {
+                    return Ok(result);
+                }
+                if let Some(diagnostic) = self.reject_unsupported_recording_effect(task_id) {
+                    return Ok(self.stop_for_runtime_error(task_id, diagnostic.into()));
+                }
+                let dispatch = match self.runtime.dispatch(task_id) {
+                    Ok(dispatch) => dispatch,
+                    Err((task_id, diagnostic)) => {
+                        if let Some(error) = self.trace_error() {
+                            self.state = DebugSessionState::Stopped;
+                            self.refresh_inspection();
+                            return Err(error);
+                        }
+                        return Ok(self.stop_for_runtime_error(task_id, diagnostic));
+                    }
+                };
+                if let Some(error) = self.trace_error() {
+                    self.state = DebugSessionState::Stopped;
+                    self.refresh_inspection();
+                    return Err(error);
+                }
+                match dispatch {
+                    DebugDispatch::Completed {
+                        task_id,
+                        main: true,
+                    } => {
+                        debug_assert_eq!(task_id, 0);
+                        self.runtime.finish_main();
+                        continue;
+                    }
+                    DebugDispatch::Completed {
+                        task_id,
+                        main: false,
+                        ..
+                    } if mode != ResumeMode::Continue && task_id == selected_task => {
+                        return Ok(self.stop_for_completed_task(task_id));
+                    }
+                    DebugDispatch::Completed { .. } => continue,
+                    DebugDispatch::Suspended(task_id)
+                        if self.runtime.task_state(task_id)
+                            != Some(super::super::types::DebugTaskState::Runnable) =>
+                    {
+                        if pause_pending {
+                            return Ok(self.stop_for_reason(
+                                task_id,
+                                DebugStopReason::Pause,
+                                Vec::new(),
+                            ));
+                        }
+                        continue;
+                    }
+                    DebugDispatch::Instruction(task_id) | DebugDispatch::Suspended(task_id) => {
+                        if let Some(result) = self.stop_at_boundary(
+                            task_id,
+                            mode,
+                            selected_task,
+                            starting_depth,
+                            pause_pending,
+                        ) {
+                            return Ok(result);
+                        }
                     }
                 }
             }
-        }
+        })();
+        self.runtime.finish_execution_batch(&mut accesses);
+        result
     }
 
     fn stop_at_boundary(

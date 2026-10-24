@@ -179,7 +179,9 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
             DebugEffectSet::HOST_IO.union(DebugEffectSet::BLOCKING)
         }
         Intrinsic::Fs(_) | Intrinsic::Console(_) | Intrinsic::Test(_) => DebugEffectSet::HOST_IO,
-        Intrinsic::Proc(crate::ProcIntrinsic::DefaultOptions) => DebugEffectSet::EMPTY,
+        Intrinsic::Proc(
+            crate::ProcIntrinsic::DefaultOptions | crate::ProcIntrinsic::DefaultStartOptions,
+        ) => DebugEffectSet::EMPTY,
         Intrinsic::Proc(_) => DebugEffectSet::HOST_IO
             .union(DebugEffectSet::BLOCKING)
             .union(DebugEffectSet::NONDETERMINISTIC),

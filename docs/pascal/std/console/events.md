@@ -108,7 +108,8 @@ end.
 - **Effect:** acquires exclusive interactive terminal ownership. When a terminal writer is attached,
   enables raw mode (on a real TTY), the alternate screen, mouse, focus, and paste reporting, then
   hides the cursor. Failed steps roll back earlier steps. Without a writer the call only records
-  ownership so a second acquire fails.
+  ownership so a second acquire fails. Debugger-owned, queue-only input never inspects host stdin
+  or enables OS raw mode.
 - **Errors:** a second acquire while one session is already open is a runtime error.
 
 ### `procedure ReleaseInteractiveTerminal()`

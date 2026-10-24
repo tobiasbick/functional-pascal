@@ -47,7 +47,10 @@ impl Console {
 
         // Shared-buffer and piped CI writers are not interactive TTYs; skip raw mode there so
         // acquire remains usable in tests while still owning screen/mouse/focus/paste/cursor.
-        if std::io::stdin().is_terminal()
+        // Debugger-owned input must not inspect the protocol pipe. On Windows
+        // that host query can wait behind the reader's pending native read.
+        if key_input.allows_os_events()
+            && std::io::stdin().is_terminal()
             && let Err(error) = key_input.enable_raw_mode_explicit(location)
         {
             self.interactive.acquired = false;

@@ -1282,6 +1282,15 @@ is still Ok. Timeout/Cancelled/LimitExceeded/ExecutionFailed preserve captured
 output, and owned process trees are terminated and reaped before return.
 See [processes](std/host/proc.md) for limits and exact error payloads.
 
+`Proc.Start(Command, Args, Proc.DefaultStartOptions())` returns an opaque Process
+with raw binary pipes. ReadStdout/ReadStderr return `None` when pending,
+`Some(Bytes)` for data and `Some([])` at EOF. WriteStdin returns a partial byte
+count, including zero when pending; CloseStdin returns false until flushing
+finishes. Drain both streams and bound polling with your own deadline or
+cancellation policy. TryWait probes completion; Terminate stops the owned group;
+Close reaps it and invalidates all aliases. VM teardown closes remaining children.
+Each read/write is bounded to 1 MiB; at most 64 interactive handles may be open.
+
 For source navigation, use `fpas query refs file.fpas:12:5`, `fpas query definition
 file.fpas:12:5`, or `fpas query type file.fpas:12:5`. Each returns one JSON document
 without writing artifacts. Lines and Unicode-scalar columns start at 1;

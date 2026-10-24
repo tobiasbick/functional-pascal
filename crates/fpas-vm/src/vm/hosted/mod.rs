@@ -77,6 +77,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::vm::hosted) files: fs::Files,
     pub(in crate::vm::hosted) processes: proc::Processes,
+    pub(in crate::vm::hosted) piped_processes: proc::PipedProcesses,
     pub(in crate::vm::hosted) random: Mutex<random::state::RandomState>,
     pub(in crate::vm) cancellations: CancellationRegistry,
     pub(in crate::vm) channels: ChannelRegistry,
@@ -101,6 +102,7 @@ impl HostedState {
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),
+            piped_processes: proc::PipedProcesses::default(),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
@@ -129,6 +131,7 @@ impl HostedState {
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),
+            piped_processes: proc::PipedProcesses::default(),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
@@ -141,6 +144,7 @@ impl HostedState {
 
     /// Interrupt blocking hosted operations during VM shutdown.
     pub(super) fn shutdown_blocking_operations(&self) {
+        self.piped_processes.shutdown();
         self.processes.shutdown();
         self.files.shutdown();
         self.channels.shutdown();
@@ -155,11 +159,13 @@ impl HostedState {
 
     /// Request process-group termination without waiting in an active host callback.
     pub(super) fn close_process_handles(&self) {
+        self.piped_processes.shutdown();
         self.processes.shutdown();
     }
 
     /// Wait for process calls after workers and host callbacks have returned.
     pub(super) fn wait_process_handles(&self) {
+        self.piped_processes.wait_idle();
         self.processes.wait_idle();
     }
 }

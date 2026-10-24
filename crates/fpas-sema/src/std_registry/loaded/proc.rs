@@ -35,12 +35,76 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
         s::STD_PROC_PROCESS_OPTIONS,
         vec![
             ("WorkingDirectory".into(), Ty::Option(Box::new(Ty::String))),
-            ("Environment".into(), Ty::Array(Box::new(environment))),
+            (
+                "Environment".into(),
+                Ty::Array(Box::new(environment.clone())),
+            ),
             ("Input".into(), Ty::String),
             ("TimeoutMillis".into(), Ty::Option(Box::new(Ty::Integer))),
             ("MaxOutputBytes".into(), Ty::Integer),
             ("CancellationToken".into(), Ty::Option(Box::new(token))),
         ],
+    );
+    let process = type_registration::register_opaque_type(checker, s::STD_PROC_PROCESS);
+    let start_options = type_registration::register_record_type(
+        checker,
+        s::STD_PROC_START_OPTIONS,
+        vec![
+            ("WorkingDirectory".into(), Ty::Option(Box::new(Ty::String))),
+            ("Environment".into(), Ty::Array(Box::new(environment))),
+        ],
+    );
+    let result = |ty| Ty::Result(Box::new(ty), Box::new(error_ty.clone()));
+    define_func(
+        checker,
+        s::STD_PROC_DEFAULT_START_OPTIONS,
+        vec![],
+        start_options.clone(),
+    );
+    define_func(
+        checker,
+        s::STD_PROC_START,
+        vec![
+            p("Command", Ty::String),
+            p("Args", Ty::Array(Box::new(Ty::String))),
+            p("Options", start_options),
+        ],
+        result(process.clone()),
+    );
+    for name in [s::STD_PROC_READ_STDOUT, s::STD_PROC_READ_STDERR] {
+        define_func(
+            checker,
+            name,
+            vec![p("Process", process.clone()), p("MaxBytes", Ty::Integer)],
+            result(Ty::Option(Box::new(Ty::Array(Box::new(Ty::Integer))))),
+        );
+    }
+    define_func(
+        checker,
+        s::STD_PROC_WRITE_STDIN,
+        vec![
+            p("Process", process.clone()),
+            p("Bytes", Ty::Array(Box::new(Ty::Integer))),
+        ],
+        result(Ty::Integer),
+    );
+    for name in [
+        s::STD_PROC_CLOSE_STDIN,
+        s::STD_PROC_TERMINATE,
+        s::STD_PROC_CLOSE,
+    ] {
+        define_func(
+            checker,
+            name,
+            vec![p("Process", process.clone())],
+            result(Ty::Boolean),
+        );
+    }
+    define_func(
+        checker,
+        s::STD_PROC_TRY_WAIT,
+        vec![p("Process", process)],
+        result(Ty::Option(Box::new(Ty::Integer))),
     );
     define_func(
         checker,

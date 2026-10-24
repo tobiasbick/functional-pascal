@@ -1,4 +1,4 @@
-// Blocking host process execution for FPAS programs.
+// Host process execution and interactive binary pipes for FPAS programs.
 //
 // Handbook: `docs/pascal/std/host/proc.md`.
 unit Std.Proc;
@@ -70,6 +70,11 @@ public type ProcError = error
   ExecutionFailed(Cause: Errors.HostError; Stdout: string; Stderr: string) = 'Process execution failed';
 end error;
 
+// Intrinsic `Process` data type.
+public type Process = record
+  _IntrinsicHandle: integer;
+end record;
+
 // Child configuration; start from `DefaultOptions()`.
 public type ProcessOptions = record
   public WorkingDirectory: option of string;
@@ -87,6 +92,30 @@ public type ProcessOutput = record
   public Stderr: string;
 end record;
 
+// Intrinsic `ProcessStartOptions` data type.
+public type ProcessStartOptions = record
+  public WorkingDirectory: option of string;
+  public Environment: array of EnvironmentVariable;
+end record;
+
+// Runs the intrinsic `Close` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `Close`.
+public function Close(Process: Process): result of (boolean, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `CloseStdin` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `CloseStdin`.
+public function CloseStdin(Process: Process): result of (boolean, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Returns the absolute path of the running FPAS host executable.
 public function CurrentExecutable(): result of (string, ProcError);
 begin
@@ -95,6 +124,32 @@ end function;
 
 // Returns default configuration without launching a process.
 public function DefaultOptions(): ProcessOptions;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `DefaultStartOptions` function.
+public function DefaultStartOptions(): ProcessStartOptions;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `ReadStderr` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `ReadStderr`.
+// - `MaxBytes`: `integer` input value used by `ReadStderr`.
+public function ReadStderr(Process: Process; MaxBytes: integer): result of (option of array of integer, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `ReadStdout` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `ReadStdout`.
+// - `MaxBytes`: `integer` input value used by `ReadStdout`.
+public function ReadStdout(Process: Process; MaxBytes: integer): result of (option of array of integer, ProcError);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -137,6 +192,45 @@ end function;
 // - `Args`: Command-line arguments in invocation order.
 // - `Options`: `Std.Proc.ProcessOptions` input value used by `RunWithOptions`.
 public function RunWithOptions(Command: string; Args: array of string; Options: ProcessOptions): result of (integer, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `Start` function.
+//
+// Parameters:
+// - `Command`: Executable name or path to start.
+// - `Args`: Command-line arguments in invocation order.
+// - `Options`: `Std.Proc.ProcessStartOptions` input value used by `Start`.
+public function Start(Command: string; Args: array of string; Options: ProcessStartOptions): result of (Process, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `Terminate` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `Terminate`.
+public function Terminate(Process: Process): result of (boolean, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `TryWait` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `TryWait`.
+public function TryWait(Process: Process): result of (option of integer, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Runs the intrinsic `WriteStdin` function.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `WriteStdin`.
+// - `Bytes`: `array of integer` input value used by `WriteStdin`.
+public function WriteStdin(Process: Process; Bytes: array of integer): result of (integer, ProcError);
 begin
   panic('Intrinsic API declaration');
 end function;

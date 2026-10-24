@@ -1,6 +1,6 @@
 # `Std.Proc`
 
-Blocking host process execution for FPAS programs. This page is the full API for the unit.
+Host process execution and interactive binary pipes for FPAS programs.
 
 ```pascal id=example-1
 program Example;
@@ -23,7 +23,8 @@ end.
 `Std.Proc` starts a host process and waits for it to finish. A call can either
 inherit the parent's output streams or capture stdout and stderr. The options
 forms configure child stdin, environment, working directory, timeout,
-cancellation, and capture bounds. There is no public process-handle API.
+cancellation, and capture bounds. `Start` returns an owned process handle for
+incremental binary I/O.
 
 **Trust boundary:** `Run` and `RunCapture` execute arbitrary host commands with
 the same privileges as the FPAS process. The runtime does not sandbox or
@@ -242,6 +243,51 @@ on Unix. TimeoutMillis must be nonnegative when present.
 
 Capture-limit errors identify `stdout bytes` or `stderr bytes` and the
 configured MaxOutputBytes. Other resource errors use the labels above.
+
+## Interactive processes
+
+`Process` is an opaque VM-owned handle. Copies alias the same child and pipes.
+`ProcessStartOptions` contains `WorkingDirectory: Option of string` and
+`Environment: array of EnvironmentVariable`; `DefaultStartOptions()` initializes
+them to `None` and `[]`. Launch validation follows the configuration rules above.
+
+| Function | Result | Meaning |
+|----------|--------|---------|
+| `DefaultStartOptions()` | `ProcessStartOptions` | Construct default launch options without host effects. |
+| `Start(Command: string; Args: array of string; Options: ProcessStartOptions)` | `Result of (Process, ProcError)` | Start a child with separate raw stdin, stdout and stderr pipes. |
+| `ReadStdout(Process: Process; MaxBytes: integer)` | `Result of (Option of array of integer, ProcError)` | Probe stdout: `None` pending, `Some(Bytes)` data, `Some([])` EOF. |
+| `ReadStderr(Process: Process; MaxBytes: integer)` | `Result of (Option of array of integer, ProcError)` | Probe stderr with the same pending/data/EOF distinction. |
+| `WriteStdin(Process: Process; Bytes: array of integer)` | `Result of (integer, ProcError)` | Write a possibly partial prefix; zero means retry when a nonempty write is pending. |
+| `CloseStdin(Process: Process)` | `Result of (boolean, ProcError)` | Flush accepted writes and send EOF; false means pending, true means closed. |
+| `TryWait(Process: Process)` | `Result of (Option of integer, ProcError)` | Return `None` while running or `Some(ExitCode)` after exit. |
+| `Terminate(Process: Process)` | `Result of (boolean, ProcError)` | Request termination of the owned process group; retain the pipes and handle. |
+| `Close(Process: Process)` | `Result of (boolean, ProcError)` | Terminate, reap, release pipes and invalidate every alias. |
+
+Pipe probes and `TryWait` do not wait for data, a newline or child completion.
+Read both output streams regularly, retry pending operations with a short sleep,
+and advance writes only by their returned byte count. The caller owns its polling
+deadline and cancellation policy; `Terminate` or `Close` stops the child. No
+output is captured in an unbounded runtime buffer. Each read accepts
+`MaxBytes` in `1..1048576`; each write validates at most 1 MiB of integer bytes
+in `0..255` before sending anything. Empty writes return zero on open stdin.
+Bytes are never decoded or normalized; a Unicode sequence may span reads.
+
+`CloseStdin` is idempotent. While it returns false, keep draining outputs and
+retry it until true. Writing after stdin closure fails. EOF reads are repeatable
+and can become available after `TryWait` has already returned an exit code.
+Nonzero exits are successful results; signal termination without a native exit
+code is represented by `-1`. Remaining owned descendants are terminated when
+`TryWait` observes direct-child completion. This shares the process-group rules
+of the blocking APIs above.
+
+At most 64 interactive handles may be open per VM, independently of the blocking
+process-call limit. Close handles explicitly, including completed children.
+VM shutdown, normal completion and escaping runtime failures terminate and reap
+all remaining children and release their pipes. A closed or foreign handle
+returns `InvalidArgument('Process', ...)`; repeated Close fails. Invalid byte or
+read-size arguments use InvalidArgument, oversized writes use LimitExceeded,
+and native launch/I/O/wait failures retain their typed host cause. Interactive
+calls have no accumulated capture, so capture fields in errors are empty.
 
 ---
 

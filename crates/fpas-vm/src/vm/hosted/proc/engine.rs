@@ -1,7 +1,7 @@
 //! Supervise the leader, owned process group and all stdio through completion.
 
 use std::io;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::time::{Duration, Instant};
 
 use super::failure::{Failure, Kind};
@@ -41,18 +41,7 @@ impl Processes {
         if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
             return Err(Failure::new(Kind::Timeout));
         }
-        let mut command = Command::new(request.command);
-        command.args(&request.arguments);
-        if let Some(directory) = request.options.directory {
-            command.current_dir(directory);
-        }
-        for (name, value) in &request.options.environment {
-            if let Some(value) = value {
-                command.env(name, value);
-            } else {
-                command.env_remove(name);
-            }
-        }
+        let mut command = request.command();
         command.stdin(if request.inherit_input {
             Stdio::inherit()
         } else if request.options.input.is_empty() {

@@ -3,6 +3,8 @@
 mod arguments;
 mod engine;
 mod failure;
+mod interactive;
+mod interactive_dispatch;
 mod options;
 mod pipes;
 pub(super) mod platform;
@@ -14,6 +16,7 @@ mod tests;
 #[cfg(all(test, unix))]
 mod failure_tests;
 
+pub(super) use interactive::PipedProcesses;
 pub(super) use registry::Processes;
 
 use fpas_bytecode::{Intrinsic, ProcIntrinsic, SourceLocation, Value};
@@ -31,6 +34,9 @@ impl Worker {
         let Intrinsic::Proc(operation) = intrinsic else {
             return Ok(None);
         };
+        if let Some(value) = self.execute_interactive_process(operation, arguments, location)? {
+            return Ok(Some(Some(value)));
+        }
         let options = matches!(
             operation,
             ProcIntrinsic::RunWithOptions | ProcIntrinsic::RunCaptureWithOptions
@@ -50,16 +56,7 @@ impl Worker {
         }
         let name = intrinsic.debugger_name();
         let request = arguments::parse(arguments, options, capture);
-        let command = arguments
-            .first()
-            .and_then(|value| {
-                if let Value::Str(text) = value {
-                    Some(text.as_ref())
-                } else {
-                    None
-                }
-            })
-            .unwrap_or("");
+        let command = arguments::command_context(arguments);
         let result = request.and_then(|request| {
             if let Some(token) = request.options.token {
                 self.hosted

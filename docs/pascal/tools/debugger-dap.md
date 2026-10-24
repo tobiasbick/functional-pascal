@@ -64,6 +64,8 @@ events. Supported `kind` values are `key`, `mouse`, `resize`, `paste`,
 `text`, and optional `shift`, `ctrl`, `alt`, and `meta` flags. Mouse events
 carry `action`, `button`, one-based `x` and `y`, and the same modifier flags.
 Resize events carry positive `width` and `height`; paste events carry `text`.
+Debugger screen dimensions are virtual: rendering retains the latest resize
+instead of querying the host terminal size.
 The request is accepted while initialized, running, or stopped and returns the
 accepted byte count for the request and session. Terminal bytes are emitted as
 `fpas/terminalOutput` events with an `output` string. This channel remains DAP

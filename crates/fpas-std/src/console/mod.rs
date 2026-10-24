@@ -89,14 +89,18 @@ impl Console {
         Self::with_writer_capture_mode(writer, CaptureMode::Disabled)
     }
 
-    /// Creates a console that streams output and also retains logical lines for debugger events.
+    /// Creates a virtual console that streams output and retains logical debugger lines.
+    /// Its dimensions change only through explicit resize events, never host terminal queries.
     pub fn with_capturing_writer(writer: Box<dyn Write + Send>) -> Self {
         Self::with_writer_capture_mode(writer, CaptureMode::Full)
     }
 
     fn with_writer_capture_mode(writer: Box<dyn Write + Send>, capture_mode: CaptureMode) -> Self {
-        let (width, height) =
-            crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT));
+        let (width, height) = if capture_mode == CaptureMode::Full {
+            (DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT)
+        } else {
+            crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT))
+        };
         Self {
             captured: CapturedOutput::default(),
             capture_mode,

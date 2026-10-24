@@ -27,6 +27,23 @@ fn proc_run_rejects_non_string_args_array() {
 }
 
 #[test]
+fn interactive_processes_reject_forged_and_foreign_handles() {
+    for body in [
+        "discard Proc.Process()",
+        "discard Proc.ReadStdout(Fs.Open('file', Fs.FileMode.Read).Unwrap(), 1)",
+        "discard Proc.Start('tool', [], Proc.DefaultOptions())",
+    ] {
+        assert!(
+            !check_errors(&format!(
+                "program T; uses Std.Proc as Proc, Std.Fs as Fs; begin {body}; end."
+            ))
+            .is_empty(),
+            "accepted {body}"
+        );
+    }
+}
+
+#[test]
 fn proc_run_capture_rejects_non_string_args_array() {
     let errs = check_errors(
         "program T;\nuses Std.Proc as Proc;\nbegin\n    const Captured: Result of (Proc.ProcessOutput, Proc.ProcError) := Proc.RunCapture('tool', [1, 2, 3]);\nend.",

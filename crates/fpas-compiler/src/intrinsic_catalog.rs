@@ -124,7 +124,16 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 RunCapture,
                 RunWithOptions,
                 RunCaptureWithOptions,
-                DefaultOptions
+                DefaultOptions,
+                DefaultStartOptions,
+                Start,
+                ReadStdout,
+                ReadStderr,
+                WriteStdin,
+                CloseStdin,
+                TryWait,
+                Terminate,
+                Close
             ]
         ),
         "Fs" => family!(

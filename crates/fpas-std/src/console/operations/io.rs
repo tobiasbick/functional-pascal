@@ -9,7 +9,7 @@ use std::time::Duration;
 impl Console {
     /// Updates the logical screen dimensions from the attached terminal.
     pub fn sync_terminal_size(&mut self) {
-        if self.writer.is_none() {
+        if self.writer.is_none() || self.capture_mode == CaptureMode::Full {
             return;
         }
         if let Some((width, height)) = self.current_terminal_size() {

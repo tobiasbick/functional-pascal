@@ -47,7 +47,15 @@ impl Intrinsic {
                 ProcIntrinsic::Run
                 | ProcIntrinsic::RunCapture
                 | ProcIntrinsic::RunWithOptions
-                | ProcIntrinsic::RunCaptureWithOptions,
+                | ProcIntrinsic::RunCaptureWithOptions
+                | ProcIntrinsic::Start
+                | ProcIntrinsic::ReadStdout
+                | ProcIntrinsic::ReadStderr
+                | ProcIntrinsic::WriteStdin
+                | ProcIntrinsic::CloseStdin
+                | ProcIntrinsic::TryWait
+                | ProcIntrinsic::Terminate
+                | ProcIntrinsic::Close,
             )
             | Self::Fs(
                 FsIntrinsic::Open

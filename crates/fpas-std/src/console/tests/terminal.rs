@@ -1,6 +1,21 @@
 use super::*;
 
 #[test]
+fn debugger_console_keeps_explicit_dimensions_instead_of_host_terminal_size() {
+    let mut console = Console::with_capturing_writer(Box::new(Vec::<u8>::new()));
+    console.terminal_size_override = Some(Some((90, 31)));
+    console.resize(60, 22);
+    assert_eq!(console.screen_width(), 60);
+    assert_eq!(console.screen_height(), 22);
+    console
+        .write_ln(&Value::Str("ready".into()), test_location())
+        .unwrap();
+    console.clr_scr(test_location()).unwrap();
+    assert_eq!(console.screen_width(), 60);
+    assert_eq!(console.screen_height(), 22);
+}
+
+#[test]
 fn console_sound_rejects_non_positive_frequencies() {
     let mut c = Console::new();
 

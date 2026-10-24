@@ -40,6 +40,22 @@ pub(super) struct Request<'a> {
 }
 
 impl Request<'_> {
+    pub(super) fn command(&self) -> Command {
+        let mut command = Command::new(self.command);
+        command.args(&self.arguments);
+        if let Some(directory) = self.options.directory {
+            command.current_dir(directory);
+        }
+        for (name, value) in &self.options.environment {
+            if let Some(value) = value {
+                command.env(name, value);
+            } else {
+                command.env_remove(name);
+            }
+        }
+        command
+    }
+
     pub(super) fn validate(&self) -> Result<(), Failure> {
         if self.arguments.len() > 4096 {
             return Err(Failure::limit("arguments", 4096));

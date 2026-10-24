@@ -216,6 +216,19 @@ fn process_configuration_appends_ids_and_splits_hosted_execution_from_pure_defau
             IntrinsicOwner::Hosted,
         ),
         (ProcIntrinsic::DefaultOptions, 723, IntrinsicOwner::Standard),
+        (
+            ProcIntrinsic::DefaultStartOptions,
+            724,
+            IntrinsicOwner::Standard,
+        ),
+        (ProcIntrinsic::Start, 725, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::ReadStdout, 726, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::ReadStderr, 727, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::WriteStdin, 728, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::CloseStdin, 729, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::TryWait, 730, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::Terminate, 731, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::Close, 732, IntrinsicOwner::Hosted),
     ] {
         let intrinsic = Intrinsic::Proc(operation);
         assert_eq!(u16::from(intrinsic), wire);

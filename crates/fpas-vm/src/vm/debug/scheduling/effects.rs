@@ -63,7 +63,10 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
         Intrinsic::Time(_) => Some("wall-clock Std.Time"),
         Intrinsic::Fs(_) => Some("Std.Fs"),
         Intrinsic::Env(_) => Some("Std.Env"),
-        Intrinsic::Proc(fpas_bytecode::ProcIntrinsic::DefaultOptions) => None,
+        Intrinsic::Proc(
+            fpas_bytecode::ProcIntrinsic::DefaultOptions
+            | fpas_bytecode::ProcIntrinsic::DefaultStartOptions,
+        ) => None,
         Intrinsic::Proc(_) => Some("Std.Proc"),
         Intrinsic::Net(_) => Some("Std.Net"),
         Intrinsic::Http(_) => Some("Std.Http"),

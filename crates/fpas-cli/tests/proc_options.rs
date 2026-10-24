@@ -129,7 +129,7 @@ end unit;"#).expect("bridge");
 #[test]
 fn seeded_scheduling_allows_pure_defaults() {
     let fixture = Fixture::new(
-        "program Defaults; uses Std.Proc as Proc, Std.Test as Test; begin const Options := Proc.DefaultOptions(); Test.AssertEquals(1048576, Options.MaxOutputBytes); end.",
+        "program Defaults; uses Std.Proc as Proc, Std.Test as Test; begin const Options := Proc.DefaultOptions(); Test.AssertEquals(1048576, Options.MaxOutputBytes); const StartOptions := Proc.DefaultStartOptions(); Test.AssertTrue(StartOptions.WorkingDirectory is None); Test.AssertTrue(StartOptions.Environment.IsEmpty()); end.",
     );
     let output = fixture.run(&["debug", "app.fpasprj", "--schedule-seed", "42"]);
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("debug JSON");

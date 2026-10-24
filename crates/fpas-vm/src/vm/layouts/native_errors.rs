@@ -50,7 +50,11 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
                 | fpas_bytecode::TaskIntrinsic::SendCase,
             )) => Some(Family::Task),
             Some(Intrinsic::Proc(operation))
-                if operation != fpas_bytecode::ProcIntrinsic::DefaultOptions =>
+                if !matches!(
+                    operation,
+                    fpas_bytecode::ProcIntrinsic::DefaultOptions
+                        | fpas_bytecode::ProcIntrinsic::DefaultStartOptions
+                ) =>
             {
                 Some(Family::Proc)
             }

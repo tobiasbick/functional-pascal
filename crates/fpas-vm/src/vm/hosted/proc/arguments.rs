@@ -7,6 +7,13 @@ use fpas_bytecode::Value;
 use super::failure::Failure;
 use super::options::{MAX_IO, Options, Request};
 
+pub(super) fn command_context(values: &[Value]) -> &str {
+    match values.first() {
+        Some(Value::Str(text)) => text,
+        _ => "",
+    }
+}
+
 pub(super) fn parse(
     values: &[Value],
     options: bool,
@@ -44,8 +51,21 @@ pub(super) fn parse(
     Ok(request)
 }
 
-fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
-    let fields = record(value, "Std.Proc.ProcessOptions", 6)?;
+pub(super) fn parse_start(values: &[Value]) -> Result<Request<'_>, Failure> {
+    if values.len() != 3 {
+        return Err(Failure::argument(
+            "Arguments",
+            "Expected command, arguments and start options",
+        ));
+    }
+    let mut request = parse(&values[..2], false, true)?;
+    request.options = configuration(record(&values[2], "Std.Proc.ProcessStartOptions", 2)?)?;
+    request.validate()?;
+    Ok(request)
+}
+
+fn configuration(fields: &[Value]) -> Result<Options<'_>, Failure> {
+    require_option(&fields[0])?;
     let directory = optional(&fields[0])
         .map(|value| text(value, "WorkingDirectory"))
         .transpose()?;
@@ -58,6 +78,7 @@ fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
     let mut entries = Vec::with_capacity(environment.len());
     for value in environment {
         let fields = record(value, "Std.Proc.EnvironmentVariable", 2)?;
+        require_option(&fields[1])?;
         entries.push((
             text(&fields[0], "Environment")?,
             optional(&fields[1])
@@ -65,6 +86,16 @@ fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
                 .transpose()?,
         ));
     }
+    Ok(Options {
+        directory,
+        environment: entries,
+        ..Options::default()
+    })
+}
+
+fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
+    let fields = record(value, "Std.Proc.ProcessOptions", 6)?;
+    let configuration = configuration(fields)?;
     let input = text(&fields[2], "Input")?;
     let timeout = optional(&fields[3])
         .map(|value| {
@@ -93,16 +124,12 @@ fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
     for index in [0, 3, 5] {
         require_option(&fields[index])?;
     }
-    for value in environment {
-        require_option(&record(value, "Std.Proc.EnvironmentVariable", 2)?[1])?;
-    }
     Ok(Options {
-        directory,
-        environment: entries,
         input,
         timeout,
         maximum,
         token,
+        ..configuration
     })
 }
 
@@ -140,7 +167,7 @@ fn text<'a>(value: &'a Value, name: &'static str) -> Result<&'a str, Failure> {
     }
 }
 
-fn integer(value: &Value, name: &'static str) -> Result<i64, Failure> {
+pub(super) fn integer(value: &Value, name: &'static str) -> Result<i64, Failure> {
     if let Value::Integer(number) = value {
         Ok(*number)
     } else {

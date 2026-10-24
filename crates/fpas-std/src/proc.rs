@@ -29,6 +29,13 @@ pub(crate) fn run(
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
+        Intrinsic::Proc(ProcIntrinsic::DefaultStartOptions) => {
+            call.push(call.factory().record(
+                "Std.Proc.ProcessStartOptions",
+                vec![Value::OptionNone, Value::Array(Vec::new().into())],
+                location,
+            )?);
+        }
         Intrinsic::Proc(ProcIntrinsic::DefaultOptions) => {
             call.push(options::defaults(call.factory(), location)?);
         }

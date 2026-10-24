@@ -1,4 +1,4 @@
-//! Whole-domain mark and cell-edge removal under the AP48.5 exclusive permit.
+//! Whole-domain mark and cell-edge removal under the exclusive collection permit.
 //!
 //! Only registered roots mark cells. Candidate handles, payload locks and release
 //! queues are administrative owners. No reference-count heuristic grants liveness.

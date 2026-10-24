@@ -16,7 +16,7 @@ requests in quiescent or retired domains.
 | Shared session globals | `GlobalRoots` registered once by `HostValues` or `DebugTaskRuntime` in the original domain; synchronized reads report contention |
 | `Worker.local_globals` | Enumerated directly by the owning worker |
 | Worker pending completion and `OwnerCleanup.outcome` | Successful values remain execution roots until completion or cleanup commits |
-| Channel send suspension and timeout | Retained send values are enumerated; AP48.2 additionally rejects local graphs at publication |
+| Channel send suspension and timeout | Retained send values are enumerated; task-transfer validation additionally rejects local graphs at publication |
 | Supervised retry input | `SupervisedTask.function`, including captures and receiver, is enumerated throughout retries |
 | Synchronous callback caller | Native root registration captures all caller execution edges before entering another worker |
 | Cached callback worker | Successful cache retains register capacity only; faulted cache retains live frames for existing failure inspection and is recursively enumerated |
@@ -28,7 +28,7 @@ requests in quiescent or retired domains.
 | Scheduler queues and timers | `ScheduledTask` enumerates the original direct or observed `TaskState`; no copied shadow registers |
 | Failure catalog | Saved state is traced under its original owner mutex. The saved task relinquishes its catalog back-reference. Active workers remain execution owners; templates have no live registers |
 | Failure responses, global capture and public reports | `ValueSnapshot` trees contain detached strings/scalars/metadata; no cell, function, reference or host resource owner survives capture |
-| Debug task driver | Its workers and pending main result implement `TraceRoots`; published child results retain AP48.2 transfer checks |
+| Debug task driver | Its workers and pending main result implement `TraceRoots`; published child results retain task-transfer checks |
 | Inspection frames and globals | Bounded captured values and raw capture-source bindings have registered roots; writable closure-cell origins retain the cell even when the displayed payload is scalar |
 | Inspection handles and prepared results | Registrations follow the exact retained child values and writable origins; generation invalidation releases handles |
 | Debugger evaluation sandbox | Separate domain; registered construction map, temporary references/results and synchronized globals. Error drops all construction registrations |
@@ -40,8 +40,8 @@ requests in quiescent or retired domains.
 | `Execution.value` and `DebugTermination.value` | Sealed `HostValue` registrations preserve domain and code identity without retaining worker/session/hosted state; independent clones own independent registrations |
 | Host ingress batch | Source-domain guarded validation and copying apply Q41 before target execution; no raw local-value compatibility export |
 | File lifecycle callback file value | Opaque resource identity only; callback ingress and session globals follow the same host boundary |
-| Channel queue, pending rendezvous send and retained task results | AP48.2 transfer validation excludes cells, task-bound callables and escaping references; these are not roots of a local cell graph |
-| HTTP handle registry | AP48.2 validates retained response values; resource-shaped records contain identities, not hidden local graph owners |
+| Channel queue, pending rendezvous send and retained task results | Task-transfer validation excludes cells, task-bound callables and escaping references; these are not roots of a local cell graph |
+| HTTP handle registry | Task-transfer validation covers retained response values; resource-shaped records contain identities, not hidden local graph owners |
 | Dispatch results, restart/return/mutation preparation, render children and native arguments | Temporary values remain under their execution/inspection owner or registered evaluation/native scope; no FPAS call or eligible maintenance boundary may bypass these owners |
 
 Root entries are weakly indexed. Each registration retains its domain; its entry

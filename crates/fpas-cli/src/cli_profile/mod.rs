@@ -31,14 +31,9 @@ impl Target {
         path: &Path,
         executable: &fpas_bytecode::Executable,
     ) -> Self {
-        let name = std::env::current_dir()
-            .ok()
-            .and_then(|cwd| path.strip_prefix(cwd).ok().map(Path::to_path_buf))
-            .or_else(|| path.file_name().map(PathBuf::from))
-            .unwrap_or_default();
         Self {
             kind,
-            name: portable(&name),
+            name: display_path(path),
             digest: fpas_program::executable_digest(executable)
                 .ok()
                 .map(|digest| format!("blake3:{digest:?}")),
@@ -265,17 +260,15 @@ fn render(
     })
 }
 
+/// Path relative to the current directory, else only the file name: reports never
+/// contain absolute paths.
 fn display_path(path: &Path) -> String {
-    portable(
-        &std::env::current_dir()
-            .ok()
-            .and_then(|cwd| path.strip_prefix(cwd).ok().map(Path::to_path_buf))
-            .unwrap_or_else(|| path.to_path_buf()),
-    )
-}
-
-fn portable(path: &Path) -> String {
-    path.to_string_lossy().replace('\\', "/")
+    let shown = std::env::current_dir()
+        .ok()
+        .and_then(|cwd| path.strip_prefix(cwd).ok().map(Path::to_path_buf))
+        .or_else(|| path.file_name().map(PathBuf::from))
+        .unwrap_or_default();
+    shown.to_string_lossy().replace('\\', "/")
 }
 
 /// Share of `whole` in percent with one decimal; zero for an empty whole.

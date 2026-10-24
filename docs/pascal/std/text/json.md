@@ -38,15 +38,13 @@ Import with `uses Std.Json as Json;` and access public symbols as `Json.Name`. U
 ### `JsonValue`
 
 ```pascal id=example-2 fragment context=declarations
-type JsonText = string;
-
 type JsonValue = enum
   NullValue;
   Bool(Value: boolean);
   Number(Value: real);
-  String(Value: JsonText);
+  String(Value: string);
   ArrayValue(Items: array of JsonValue);
-  Object(Fields: dict of JsonText to JsonValue);
+  Object(Fields: dict of string to JsonValue);
 end enum;
 ```
 

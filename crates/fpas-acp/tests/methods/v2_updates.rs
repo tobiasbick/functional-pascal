@@ -1,0 +1,27 @@
+//! Independent examples for the complete draft-v2 session-update family.
+
+pub const UPDATES: &[&str] = &[
+    r#"{"sessionUpdate":"user_message_chunk","messageId":"m","content":{"type":"text","text":"hi"}}"#,
+    r#"{"sessionUpdate":"user_message","messageId":"m","content":[]}"#,
+    r#"{"sessionUpdate":"agent_message_chunk","messageId":"m","content":{"type":"text","text":"hi"}}"#,
+    r#"{"sessionUpdate":"agent_message","messageId":"m","content":null}"#,
+    r#"{"sessionUpdate":"agent_thought_chunk","messageId":"m","content":{"type":"text","text":"hi"}}"#,
+    r#"{"sessionUpdate":"agent_thought","messageId":"m"}"#,
+    r#"{"sessionUpdate":"state_update","state":"idle","stopReason":"end_turn"}"#,
+    r#"{"sessionUpdate":"tool_call_content_chunk","toolCallId":"t","content":{"type":"content","content":{"type":"text","text":"hi"}}}"#,
+    r#"{"sessionUpdate":"tool_call_update","toolCallId":"t","title":null,"content":[]}"#,
+    r#"{"sessionUpdate":"terminal_update","terminalId":"t","command":"echo","cwd":"/workspace","output":{"data":"AA=="},"exitStatus":{"exitCode":4294967295}}"#,
+    r#"{"sessionUpdate":"terminal_output_chunk","terminalId":"t","data":"AA=="}"#,
+    r#"{"sessionUpdate":"plan_update","plan":{"type":"items","planId":"p","entries":[]}}"#,
+    r#"{"sessionUpdate":"plan_removed","planId":"p"}"#,
+    r#"{"sessionUpdate":"available_commands_update","availableCommands":[]}"#,
+    r#"{"sessionUpdate":"config_option_update","configOptions":[]}"#,
+    r#"{"sessionUpdate":"session_info_update","title":null,"updatedAt":"now","_meta":{}}"#,
+    r#"{"sessionUpdate":"usage_update","used":9007199254740993,"size":18446744073709551615}"#,
+    r#"{"sessionUpdate":"notice","severity":"info","title":"Notice"}"#,
+    r#"{"sessionUpdate":"compaction_update","compactionId":"c","status":"completed","summary":[]}"#,
+    r#"{"sessionUpdate":"compaction_summary_chunk","compactionId":"c","content":{"type":"text","text":"summary"}}"#,
+    r#"{"sessionUpdate":"subagent_update","sessionId":"child","title":null,"state":{"state":"running"}}"#,
+    r#"{"sessionUpdate":"session_message","messageId":"m","content":[]}"#,
+    r#"{"sessionUpdate":"session_message_chunk","messageId":"m","content":{"type":"text","text":"hi"}}"#,
+];

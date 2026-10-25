@@ -2,6 +2,8 @@
 
 #[path = "export_intrinsic_std_api/documentation.rs"]
 mod documentation;
+#[path = "export_intrinsic_std_api/generics.rs"]
+mod generics;
 #[path = "export_intrinsic_std_api/qualified_names.rs"]
 mod qualified_names;
 #[path = "export_intrinsic_std_api/unit_pages.rs"]
@@ -76,10 +78,9 @@ fn documentation_rows(root: &Path) -> io::Result<HashMap<(String, String), Docum
     for path in paths {
         let source = fs::read_to_string(path)?;
         let heading = source.lines().find(|line| line.starts_with("# "));
-        let Some(unit) = known_units
-            .iter()
-            .find(|unit| heading.is_some_and(|line| line.contains(**unit)))
-        else {
+        let Some(unit) = known_units.iter().find(|unit| {
+            heading.is_some_and(|line| line.trim_start_matches("# ").trim_matches('`') == **unit)
+        }) else {
             continue;
         };
         for line in source.lines().filter(|line| line.starts_with('|')) {
@@ -203,7 +204,24 @@ fn render_types(
         let symbol = take_symbol(symbols, &name, "type")?;
         output.push('\n');
         render_documentation(output, unit, &name, symbol, documentation, "");
+        let nominal = match &symbol.ty {
+            Ty::Enum(value) => Some(&value.name),
+            Ty::Record(value) => Some(&value.name),
+            Ty::Distinct(value) => Some(&value.name),
+            _ => None,
+        };
+        if nominal.is_some_and(|actual| !actual.eq_ignore_ascii_case(&format!("{unit}.{name}"))) {
+            let _ = writeln!(output, "public type {name} = {};", symbol.ty);
+            continue;
+        }
         match &symbol.ty {
+            Ty::Distinct(value) => {
+                let _ = writeln!(
+                    output,
+                    "public type {name} = distinct {};",
+                    value.underlying
+                );
+            }
             Ty::Enum(value) => render_enum(output, unit, &name, value),
             Ty::Record(value) => {
                 let member_names = symbols
@@ -231,6 +249,7 @@ fn render_types(
 
 fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::EnumTy) {
     let kind = if value.is_error { "error" } else { "enum" };
+    let name = generics::declaration(name, &value.type_params);
     let _ = writeln!(output, "public type {name} = {kind}");
     for variant in &value.variants {
         let _ = writeln!(output, "  // `{}` enum member.", variant.name);
@@ -286,7 +305,8 @@ fn render_record(
     symbols: &mut BTreeMap<String, &IntrinsicStdSymbol>,
     documentation: &HashMap<(String, String), DocumentationRow>,
 ) -> Result<(), String> {
-    let _ = writeln!(output, "public type {name} = record");
+    let declaration = generics::declaration(name, &value.type_params);
+    let _ = writeln!(output, "public type {declaration} = record");
     if value.fields.is_empty() && member_names.is_empty() {
         output.push_str("  // Compiler-owned storage for this opaque handle.\n");
         output.push_str("  _IntrinsicHandle: integer;\n");

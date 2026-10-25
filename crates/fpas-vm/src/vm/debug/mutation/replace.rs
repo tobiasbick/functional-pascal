@@ -146,6 +146,7 @@ mod tests {
                 SharedEnum::try_new(
                     Arc::new(RuntimeEnumLayout {
                         error: Some(RuntimeErrorVariant {
+                            hide_payload: false,
                             message: None,
                             cause: None,
                         }),
@@ -164,6 +165,7 @@ mod tests {
             SharedEnum::try_new(
                 Arc::new(RuntimeEnumLayout {
                     error: Some(RuntimeErrorVariant {
+                        hide_payload: false,
                         message: None,
                         cause: Some(ErrorCause {
                             field: 0,

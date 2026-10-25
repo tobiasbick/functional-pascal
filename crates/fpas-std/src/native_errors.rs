@@ -1,5 +1,6 @@
 //! Shared nominal error catalog for hosted operations and parsers.
 
+mod acp;
 mod proc;
 
 /// Public native error family, indexed once in an admitted executable.
@@ -28,6 +29,8 @@ pub enum NativeErrorFamily {
     Server,
     /// `Std.Encoding.EncodingError`.
     Encoding,
+    /// `Std.Acp.Types.AcpError`.
+    Acp,
 }
 
 /// Payload type in a native error declaration.
@@ -47,6 +50,10 @@ pub enum ErrorFieldType {
     Host,
     /// Network operation cause.
     Net,
+    /// Registered detached record.
+    Record(&'static str),
+    /// Optional registered detached record.
+    OptionalRecord(&'static str),
 }
 impl ErrorFieldType {
     /// Native family carried by a typed Cause payload.
@@ -68,6 +75,12 @@ pub struct ErrorVariant {
     pub fields: &'static [(&'static str, ErrorFieldType)],
 }
 impl NativeErrorFamily {
+    /// Whether ordinary display must omit associated values and nested causes.
+    /// Explicit field inspection retains the complete returned error.
+    pub const fn hide_payload(self) -> bool {
+        matches!(self, Self::Acp)
+    }
+
     /// Every native family in stable catalog order.
     pub const ALL: &'static [Self] = &[
         Self::Host,
@@ -81,6 +94,7 @@ impl NativeErrorFamily {
         Self::Net,
         Self::Server,
         Self::Encoding,
+        Self::Acp,
     ];
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
@@ -96,12 +110,14 @@ impl NativeErrorFamily {
             Self::Net => crate::std_symbols::STD_NET_ERROR,
             Self::Server => crate::std_symbols::STD_SERVER_ERROR,
             Self::Encoding => crate::std_symbols::STD_ENCODING_ERROR,
+            Self::Acp => "Std.Acp.Types.AcpError",
         }
     }
     /// Ordered declared variants.
     pub const fn variants(self) -> &'static [ErrorVariant] {
         use ErrorFieldType::*;
         match self {
+            Self::Acp => acp::VARIANTS,
             Self::Encoding => &[
                 ErrorVariant {
                     name: "InvalidByte",

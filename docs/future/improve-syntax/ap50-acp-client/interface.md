@@ -40,10 +40,12 @@ through `real`. Finite binary64 fields use `real`; IDs use nominal string
 types. Arrays and objects retain their ordering.
 
 Use `Option` where the pinned schema equates absence and null. Use
-`Field of T` with `Missing`, `Null` and `Value(T)` where a patch distinguishes
+`Field of T` with `Missing`, `NullValue` and `Value(T)` where a patch distinguishes
 them. Open enums retain an `Unknown(Tag, RawJson)` variant when payloads exist,
 or an unknown string for string-only enums. An unknown mode is never treated
 as a known mode. Preserve custom metadata and arbitrary protocol error data.
+
+`NullValue` represents explicit JSON null; `null` itself is a reserved FPAS keyword.
 
 ## Connection setup
 
@@ -145,13 +147,28 @@ connection failure. Late results are settled once; they are not reassigned.
 | Connections per VM | 16 | Fixed initial bound |
 | Pending outgoing requests per connection | 128 | 1..4096 |
 | Pending incoming responders per connection | 128 | 1..4096 |
+| Retained sessions per connection | 64 | 1..4096 |
+| Terminals per connection, including exited unreleased terminals | 16 | 1..256 |
+| MCP routes per connection, across all scopes | 128 | 1..4096 |
 | Received events | 256 entries and 16 MiB aggregate | 1..4096 entries; 1..64 MiB aggregate |
 | Outbound admission | 128 entries and 16 MiB aggregate | Same configurable ceilings |
 | Complete message including JSON envelope | 16 MiB | 1 KiB..64 MiB |
 | Retained agent stderr | 256 KiB | 0..4 MiB |
 | Shutdown grace before process-group termination | 2000 ms | 0..60000 ms |
 | Experimental features | All false | Individual booleans |
-| Default terminal retained output | 1 MiB | Subject to the host's explicit maximum |
+| Retained output per terminal | 1 MiB | 0..16 MiB |
+| Aggregate reserved terminal output per connection | 16 MiB | 0..64 MiB |
+
+Reserve session capacity before publishing new/load/resume/fork operations that
+retain a new session. Observed restricted sessions count too; listing detached
+session descriptions does not. Release a reservation on failed setup or when
+its retained session state is removed. Reserve route capacity before exposing
+an endpoint. Reserve terminal count and its requested output budget before
+launch; retain both reservations after exit/kill until release. Aggregate output
+includes retained UTF-8 and decoder carry buffers. Reject exhaustion with
+`LimitExceeded` before publication or host effects, and return reservations
+exactly once during release/teardown. Locally initiated growth is rejected;
+unavoidable inbound growth beyond a bound fails the connection explicitly.
 
 Count retained native and FPAS representations in byte budgets, including
 detached pending responders, inbound/outbound frames and extension payloads.
@@ -179,6 +196,16 @@ that it is still active before admitting an effect. Host calls return typed
 protocol responses that are passed to `Respond`; they do not consume the
 responder behind the application's back. Cancellation after admission cannot
 undo completed I/O, but cancellation before admission prevents the effect.
+
+Host execution has a separate atomic single-use right per Responder. Method,
+identity and argument validation failures before admission leave this right
+available. Once admitted, even a failed operation cannot be repeated with that
+Responder. A concurrent helper call returns `Busy`; a subsequent call after
+completion returns `InvalidArgument`, without repeating the effect. Responding
+while the helper is running returns `Busy` without consuming the response
+right. After helper completion the application may send its response or map
+its error through `RespondError`. Cancellation/close can expire the response
+right while an already admitted effect finishes under owned cleanup.
 
 Disk reads obey one-based line ranges. Editor applications can instead answer
 from unsaved buffers. Terminal adapters retain bounded combined output, preserve

@@ -21,6 +21,17 @@ fn stable_intrinsics_have_only_their_canonical_source_route() {
 
 fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
     match intrinsic {
+        Intrinsic::Acp(operation) if operation.codec().is_some() => {
+            let (version, decode, root) = operation.codec().expect("payload codec");
+            (
+                format!(
+                    "Std.Acp.{}.{}{root}",
+                    if version == 2 { "V2" } else { "Types" },
+                    if decode { "Decode" } else { "Encode" }
+                ),
+                None,
+            )
+        }
         Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => ("Std.Errors.Message".into(), None),
         Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Net.Utf8.EncodeBytes".into(), None),
         Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
@@ -66,6 +77,7 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
                 .split_once('(')
                 .expect("intrinsic debug form contains family and member");
             let family = match family {
+                "Acp" => "Acp.Types",
                 "Array" => "Arrays",
                 "Dict" => "Dictionaries",
                 "Result" => "Results",

@@ -7,6 +7,27 @@ use fpas_std::KeyInput;
 use fpas_std::TextInput;
 
 impl DebugSession {
+    /// Supply separate child-process streams without exposing debugger protocol stdin.
+    /// Seeded scheduling still rejects external process effects.
+    pub fn set_interactive_process_terminal(
+        &mut self,
+        terminal: crate::InteractiveProcessTerminal,
+    ) -> Result<(), DebugSessionError> {
+        self.require_stopped("process.terminal")?;
+        let Some(worker) = self.runtime.worker(0) else {
+            return Err(DebugSessionError::invalid_state(
+                "process.terminal",
+                self.state,
+            ));
+        };
+        *worker
+            .hosted
+            .process_terminal
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(terminal);
+        Ok(())
+    }
+
     /// Return whether the session-owned debuggee channel is still open.
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`

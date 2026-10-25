@@ -42,10 +42,21 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
             ("Input".into(), Ty::String),
             ("TimeoutMillis".into(), Ty::Option(Box::new(Ty::Integer))),
             ("MaxOutputBytes".into(), Ty::Integer),
-            ("CancellationToken".into(), Ty::Option(Box::new(token))),
+            (
+                "CancellationToken".into(),
+                Ty::Option(Box::new(token.clone())),
+            ),
         ],
     );
     let process = type_registration::register_opaque_type(checker, s::STD_PROC_PROCESS);
+    let exit_status = type_registration::register_record_type(
+        checker,
+        s::STD_PROC_EXIT_STATUS,
+        vec![
+            ("ExitCode".into(), Ty::Option(Box::new(Ty::Integer))),
+            ("Signal".into(), Ty::Option(Box::new(Ty::String))),
+        ],
+    );
     let start_options = type_registration::register_record_type(
         checker,
         s::STD_PROC_START_OPTIONS,
@@ -67,7 +78,7 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
         vec![
             p("Command", Ty::String),
             p("Args", Ty::Array(Box::new(Ty::String))),
-            p("Options", start_options),
+            p("Options", start_options.clone()),
         ],
         result(process.clone()),
     );
@@ -100,6 +111,24 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
             result(Ty::Boolean),
         );
     }
+    define_func(
+        checker,
+        s::STD_PROC_TRY_WAIT_STATUS,
+        vec![p("Process", process.clone())],
+        result(Ty::Option(Box::new(exit_status.clone()))),
+    );
+    define_func(
+        checker,
+        s::STD_PROC_RUN_INTERACTIVE,
+        vec![
+            p("Command", Ty::String),
+            p("Args", Ty::Array(Box::new(Ty::String))),
+            p("Options", start_options),
+            p("TimeoutMillis", Ty::Option(Box::new(Ty::Integer))),
+            p("CancellationToken", Ty::Option(Box::new(token))),
+        ],
+        result(exit_status),
+    );
     define_func(
         checker,
         s::STD_PROC_TRY_WAIT,

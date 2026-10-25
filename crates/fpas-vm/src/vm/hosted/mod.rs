@@ -8,6 +8,7 @@ use fpas_std::{Console, KeyInput, TextInput};
 pub(super) mod console_cell_records;
 pub(super) mod console_records;
 
+mod acp;
 mod args;
 pub(super) mod callbacks;
 mod console;
@@ -37,6 +38,7 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         let result = match intrinsic {
+            Intrinsic::Acp(_) => self.execute_acp_intrinsic(intrinsic, arguments, location),
             Intrinsic::Server(_) => self.execute_server_intrinsic(intrinsic, arguments, location),
             Intrinsic::Args(_) => self.execute_args_intrinsic(intrinsic, arguments, location),
             Intrinsic::Console(_) => self.execute_console_intrinsic(intrinsic, arguments, location),
@@ -78,6 +80,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) files: fs::Files,
     pub(in crate::vm::hosted) processes: proc::Processes,
     pub(in crate::vm::hosted) piped_processes: proc::PipedProcesses,
+    pub(in crate::vm) process_terminal: Mutex<Option<crate::InteractiveProcessTerminal>>,
     pub(in crate::vm::hosted) random: Mutex<random::state::RandomState>,
     pub(in crate::vm) cancellations: CancellationRegistry,
     pub(in crate::vm) channels: ChannelRegistry,
@@ -103,6 +106,7 @@ impl HostedState {
             files: fs::Files::new(),
             processes: proc::Processes::new(),
             piped_processes: proc::PipedProcesses::default(),
+            process_terminal: Mutex::new(None),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
@@ -132,6 +136,7 @@ impl HostedState {
             files: fs::Files::new(),
             processes: proc::Processes::new(),
             piped_processes: proc::PipedProcesses::default(),
+            process_terminal: Mutex::new(None),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),

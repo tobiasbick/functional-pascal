@@ -47,12 +47,15 @@ Requires `uses Std.Proc as Proc;`.
 | type | `ProcessOutput` | captured `ExitCode`, `Stdout`, and `Stderr` |
 | type | `EnvironmentVariable` | `Name: string` and `Value: Option of string`; `None` removes the child variable |
 | type | `ProcessOptions` | child configuration; start from `DefaultOptions()` |
+| type | `ProcessExitStatus` | optional native `ExitCode` and terminating `Signal` |
 | function | `CurrentExecutable(): Result of (string, Proc.ProcError)` | returns the absolute path of the running FPAS host executable |
 | function | `Run(Command: string; Args: array of string): Result of (integer, Proc.ProcError)` | starts a process, waits for completion, and returns the exit code |
 | function | `RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, Proc.ProcError)` | captures output with a 1 MiB limit per raw stream and stdin at EOF |
 | function | `DefaultOptions(): ProcessOptions` | returns default configuration without launching a process |
 | function | `RunWithOptions(Command: string; Args: array of string; Options: ProcessOptions): Result of (integer, Proc.ProcError)` | configures stdin/environment/cwd and inherits output |
 | function | `RunCaptureWithOptions(Command: string; Args: array of string; Options: ProcessOptions): Result of (ProcessOutput, Proc.ProcError)` | configures the child and captures bounded output |
+| function | `RunInteractive(Command: string; Args: array of string; Options: ProcessStartOptions; TimeoutMillis: Option of integer; CancellationToken: Option of Tasks.CancellationToken): Result of (ProcessExitStatus, Proc.ProcError)` | uses an explicit host terminal with owned timeout/cancellation cleanup |
+| function | `TryWaitStatus(Process: Process): Result of (Option of ProcessExitStatus, Proc.ProcError)` | probes exact native completion without consuming the cached status or closing pipes |
 
 Fallible operations return `Error(Cause)` with a typed `Proc.ProcError`. Host-backed
 variants retain the original native `HostError` cause; operational failures do not
@@ -85,7 +88,7 @@ Returns `Error(Cause)` if the host cannot determine its executable path.
 
 ## Blocking and concurrency
 
-All four Run functions block the thread that executes them until the child
+The Run functions, including RunInteractive, block the thread that executes them until the child
 process exits. When a call runs inside `go`, it blocks that worker thread only.
 Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 
@@ -260,10 +263,11 @@ them to `None` and `[]`. Launch validation follows the configuration rules above
 | `WriteStdin(Process: Process; Bytes: array of integer)` | `Result of (integer, ProcError)` | Write a possibly partial prefix; zero means retry when a nonempty write is pending. |
 | `CloseStdin(Process: Process)` | `Result of (boolean, ProcError)` | Flush accepted writes and send EOF; false means pending, true means closed. |
 | `TryWait(Process: Process)` | `Result of (Option of integer, ProcError)` | Return `None` while running or `Some(ExitCode)` after exit. |
+| `TryWaitStatus(Process: Process)` | `Result of (Option of ProcessExitStatus, ProcError)` | Return `None` while running or the exact cached native completion status. |
 | `Terminate(Process: Process)` | `Result of (boolean, ProcError)` | Request termination of the owned process group; retain the pipes and handle. |
 | `Close(Process: Process)` | `Result of (boolean, ProcError)` | Terminate, reap, release pipes and invalidate every alias. |
 
-Pipe probes and `TryWait` do not wait for data, a newline or child completion.
+Pipe probes, `TryWait` and `TryWaitStatus` do not wait for data, a newline or child completion.
 Read both output streams regularly, retry pending operations with a short sleep,
 and advance writes only by their returned byte count. The caller owns its polling
 deadline and cancellation policy; `Terminate` or `Close` stops the child. No
@@ -289,6 +293,64 @@ read-size arguments use InvalidArgument, oversized writes use LimitExceeded,
 and native launch/I/O/wait failures retain their typed host cause. Interactive
 calls have no accumulated capture, so capture fields in errors are empty.
 
+## `ProcessExitStatus` and `TryWaitStatus`
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ExitCode` | `Option of integer` | Native exit code; absent on Unix signal termination |
+| `Signal` | `Option of string` | Unix canonical signal name, such as `SIGTERM`, or decimal signal text when no canonical name is known; absent on Windows |
+
+`TryWaitStatus` reads the same cached native completion as `TryWait`. Both views
+remain available after pipe EOF and repeated probes; neither consumes the other.
+On Windows the precise view preserves the unsigned 32-bit native exit code in
+`integer`, including values above 2147483647. The legacy integer view retains
+its signed host-code conversion and `-1` fallback for signal termination.
+Observing either status view retains the handle and output pipes until `Close`
+and terminates remaining owned descendants according to the process-group rules.
+
+## `RunInteractive`
+
+```pascal id=interactive-login-check
+program InteractiveLogin;
+
+uses Std.Proc as Proc;
+
+begin
+  const Status := Proc.RunInteractive('agent', ['login'], Proc.DefaultStartOptions(), Some(60000), None);
+end.
+```
+
+`RunInteractive` uses the host's explicitly supplied interactive input, output
+and error streams while applying `ProcessStartOptions`. It never uses ACP
+protocol pipes, queued Console input or debugger protocol stdin. Commands and
+arguments are passed separately, without shell interpolation. A nonzero exit
+or Unix signal termination is `Ok(ProcessExitStatus)`; the application decides
+whether that status represents successful authentication.
+
+The CLI and native executable runner offer inherited streams only when stdin,
+stdout and stderr are actual terminals. Without terminal support the function
+returns `InvalidArgument('Terminal', ...)` before launching a child. Embedded
+VMs and debugger hosts explicitly install a native `InteractiveProcessTerminal`
+provider using `set_interactive_process_terminal`; VM/debugger constructors do
+not grant access to OS streams. Providers can supply independent scripted
+streams or a host terminal. A Unix controlling-terminal provider transfers
+foreground ownership to the child's process group and restores the previous
+foreground group on completion or failure. This does not create a PTY.
+
+`None` timeout or cancellation token leaves that bound absent. Negative timeout
+and invalid configuration are rejected first; an already-cancelled token
+returns `Cancelled`, including with zero timeout. A zero timeout returns
+`Timeout` without opening terminal streams or launching a child. During a run,
+cancellation precedes a ready status, which precedes timeout. Invalid or foreign
+cancellation tokens fail before launch. No process output is captured; error
+capture fields remain empty. Timeout, cancellation, VM shutdown and escaping
+runtime failure terminate and reap the owned group before releasing ownership.
+An enclosing task-scope failure also interrupts the call when no explicit
+cancellation token or timeout was supplied; the scope retains its original
+failure after child cleanup.
+Applications should release any active raw Console terminal mode before handing
+the terminal to an interactive child.
+
 ---
 
 ## Implementation (contributors)
@@ -297,6 +359,7 @@ calls have no accumulated capture, so capture fields in errors are empty.
 |---------|----------|
 | Pure defaults and executable path | [`proc.rs`](../../../../crates/fpas-std/src/proc.rs) |
 | Hosted process supervision | [`hosted/proc/mod.rs`](../../../../crates/fpas-vm/src/vm/hosted/proc/mod.rs) |
+| Explicit native terminal provider | [`process_terminal.rs`](../../../../crates/fpas-vm/src/process_terminal.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/proc.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/proc.rs) |
 | Intrinsic ids | [`intrinsic/proc.rs`](../../../../crates/fpas-bytecode/src/intrinsic/proc.rs) |

@@ -12,6 +12,11 @@ macro_rules! standard_unit_names {
 }
 
 standard_unit_names! {
+    STD_UNIT_ACP = "Std.Acp";
+    STD_UNIT_ACP_HOST = "Std.Acp.Host";
+    STD_UNIT_ACP_EXPERIMENTAL = "Std.Acp.Experimental";
+    STD_UNIT_ACP_V2 = "Std.Acp.V2";
+    STD_UNIT_ACP_TYPES = "Std.Acp.Types";
     STD_UNIT_ERRORS = "Std.Errors";
     STD_UNIT_SERVER = "Std.Server";
     STD_UNIT_ARGS = "Std.Args";
@@ -46,6 +51,11 @@ standard_unit_names! {
 
 /// Standard units supplied entirely by compiler, VM, or runtime intrinsics.
 pub const STD_UNITS_INTRINSIC: &[&str] = &[
+    STD_UNIT_ACP,
+    STD_UNIT_ACP_HOST,
+    STD_UNIT_ACP_EXPERIMENTAL,
+    STD_UNIT_ACP_V2,
+    STD_UNIT_ACP_TYPES,
     STD_UNIT_ERRORS,
     STD_UNIT_SERVER,
     STD_UNIT_ARGS,
@@ -71,6 +81,11 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
 
 /// Standard units recognized by tooling, including source-defined units.
 pub const STD_UNITS_KNOWN: &[&str] = &[
+    STD_UNIT_ACP,
+    STD_UNIT_ACP_HOST,
+    STD_UNIT_ACP_EXPERIMENTAL,
+    STD_UNIT_ACP_V2,
+    STD_UNIT_ACP_TYPES,
     STD_UNIT_ERRORS,
     STD_UNIT_SERVER,
     STD_UNIT_ARGS,

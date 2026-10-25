@@ -53,6 +53,9 @@ since they are another protocol. This is a complete ACP transport binding,
 not a promise that FPAS implements every independent MCP server tool.
 
 Provide public connection/session-scoped endpoint registration and removal.
+Reserve the connection's bounded route capacity before registration. Fork and
+observed subagent state obey the same retained-session limit as stable setup;
+no experimental route or session bypasses connection resource accounting.
 The application forwards endpoint messages through the production message
 transport or supplies its own tools. Register routes before publishing setup
 requests, including fork/resume replay. Retain routes for the lifetime required

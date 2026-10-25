@@ -8,6 +8,9 @@ use std::process::{Command, ExitStatus};
 
 use process_wrap::std::{ChildWrapper, CommandWrap};
 
+mod foreground;
+pub(super) use foreground::Foreground;
+
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]
@@ -29,6 +32,10 @@ pub(super) struct GroupChild {
 }
 
 impl GroupChild {
+    pub(super) fn id(&self) -> u32 {
+        self.child.id()
+    }
+
     pub(super) fn spawn(command: Command) -> io::Result<Self> {
         #[cfg(unix)]
         unix::ensure_supported()?;

@@ -14,13 +14,15 @@ pub(super) fn source_names(owner: &str, source: &str) -> Result<String, String> 
     let mut references = Vec::new();
     let mut path_tokens = HashSet::new();
     let mut index = 0;
+    let mut units = fpas_sema::intrinsic_std_units().to_vec();
+    units.sort_by_key(|unit| std::cmp::Reverse(unit.len()));
     while index < tokens.len() {
         if index > 0 && matches!(tokens[index - 1].token, Token::Unit | Token::Dot) {
             index += 1;
             continue;
         }
         let mut matched = None;
-        for unit in fpas_sema::intrinsic_std_units() {
+        for unit in &units {
             let mut end = index;
             let parts = unit.split('.').collect::<Vec<_>>();
             let valid = parts.iter().enumerate().all(|(part_index, part)| {

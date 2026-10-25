@@ -1,0 +1,105 @@
+program AcpProtocolTest;
+
+uses
+  Std.Acp as Acp, Std.Acp.Types as Types, Std.Acp.Host as Host,
+  Std.Acp.Experimental as Exp, Std.Acp.V2 as V2,
+  Std.Tasks as Tasks, Std.Test as Test;
+
+function Prompt(Value: Types.ClientRequest): Types.PromptRequest;
+begin
+  case Value of
+    when Types.ClientRequest.PromptRequest(const Payload):
+      return Payload;
+    when Types.ClientRequest.InitializeRequest(_), Types.ClientRequest.AuthenticateRequest(_), Types.ClientRequest.ListProvidersRequest(_), Types.ClientRequest.SetProviderRequest(_), Types.ClientRequest.DisableProviderRequest(_), Types.ClientRequest.LogoutRequest(_), Types.ClientRequest.NewSessionRequest(_), Types.ClientRequest.LoadSessionRequest(_), Types.ClientRequest.ListSessionsRequest(_), Types.ClientRequest.DeleteSessionRequest(_), Types.ClientRequest.ForkSessionRequest(_), Types.ClientRequest.ResumeSessionRequest(_), Types.ClientRequest.CloseSessionRequest(_), Types.ClientRequest.SetSessionModeRequest(_), Types.ClientRequest.SetSessionConfigOptionRequest(_), Types.ClientRequest.ExtRequest(_):
+      panic('expected prompt request');
+  end case;
+end function;
+
+function ReadRequest(Value: Types.AgentRequest): Host.ReadTextFileRequest;
+begin
+  case Value of
+    when Types.AgentRequest.ReadTextFileRequest(const Payload):
+      return Payload;
+    when Types.AgentRequest.WriteTextFileRequest(_), Types.AgentRequest.RequestPermissionRequest(_), Types.AgentRequest.CreateTerminalRequest(_), Types.AgentRequest.TerminalOutputRequest(_), Types.AgentRequest.ReleaseTerminalRequest(_), Types.AgentRequest.WaitForTerminalExitRequest(_), Types.AgentRequest.KillTerminalRequest(_), Types.AgentRequest.CreateElicitationRequest(_), Types.AgentRequest.MessageMcpRequest(_), Types.AgentRequest.ExtRequest(_):
+      panic('expected host request');
+  end case;
+end function;
+
+begin
+  const Text := '{"sessionId":"s","prompt":[{"type":"text","text":"hi"},{"type":"_future","large":18446744073709551616}],"_meta":{"exact":9007199254740993,"beyond":1e400},"ignored":true}';
+  const Decoded := Types.DecodeClientRequest(
+    'session/prompt',
+    Types.ParseRawJson(Text).Unwrap()
+  ).Unwrap();
+  Test.AssertEquals(Text, Decoded.RawPayload.Text);
+  const Payload := Prompt(Decoded.Payload);
+  Test.AssertTrue(Payload.SessionId = Types.SessionId('s'));
+  Test.AssertEquals(2, Payload.Prompt.Length());
+  Test.AssertTrue(Payload.Prompt[0] is Types.ContentBlock.Text(_));
+  Test.AssertTrue(Payload.Prompt[1] is Types.ContentBlock.Unknown('_future', _));
+  Test.AssertEquals('{"exact":9007199254740993,"beyond":1e400}', Payload.Meta.Unwrap().Text);
+  const Encoded := Types.EncodeClientRequest('session/prompt', Decoded.Payload).Unwrap();
+  Test.AssertTrue('18446744073709551616' in Encoded.Text);
+  Test.AssertTrue('9007199254740993' in Encoded.Text);
+  Test.AssertTrue('1e400' in Encoded.Text);
+  Test.AssertTrue(Types.EncodeClientRequest('initialize', Decoded.Payload) is Error(_));
+  Test.AssertTrue(
+    Types.DecodeClientRequest('session/prompt', Types.RawJson(Text := '{}')) is Error(_)
+  );
+  const Constructed := Types.ClientRequest.PromptRequest(
+    Types.PromptRequest(
+      SessionId := Types.SessionId('manual'), Prompt := [], Meta := None
+    )
+  );
+  Test.AssertEquals(
+    '{"sessionId":"manual","prompt":[]}',
+    Types.EncodeClientRequest('session/prompt', Constructed).Unwrap().Text
+  );
+  const Pipe: channel of Types.ClientRequest := Tasks.CreateChannel(1);
+  Test.AssertTrue(Tasks.Send(Pipe, Decoded.Payload).Unwrap());
+  Test.AssertTrue(Prompt(Tasks.Receive(Pipe).Unwrap()).SessionId = Types.SessionId('s'));
+  Test.AssertTrue(Tasks.CloseChannel(Pipe));
+  const Request := Types.DecodeAgentRequest(
+    'fs/read_text_file',
+    Types.ParseRawJson('{"sessionId":"s","path":"/example","line":2}').Unwrap()
+  ).Unwrap();
+  const Read: Host.ReadTextFileRequest := ReadRequest(Request.Payload);
+  Test.AssertEquals('/example', Read.Path);
+  Test.AssertEquals(2, Read.Line.Unwrap());
+  const V2Request := V2.DecodeClientRequest(
+    'initialize',
+    Types.ParseRawJson(
+      '{"protocolVersion":2,"info":{"name":"fixture","version":"1"},"capabilities":{}}'
+    ).Unwrap()
+  ).Unwrap();
+  Test.AssertTrue(V2Request.Payload is V2.ClientRequest.InitializeRequest(_));
+  Test.AssertTrue(
+    '"protocolVersion":2' in V2.EncodeClientRequest('initialize', V2Request.Payload).Unwrap().Text
+  );
+  const V2Update := V2.DecodeAgentNotification(
+    'session/update',
+    Types.ParseRawJson(
+      '{"sessionId":"s","update":{"sessionUpdate":"tool_call_update","toolCallId":"tool","title":null,"content":[]}}'
+    ).Unwrap()
+  ).Unwrap();
+  Test.AssertTrue(
+    '"title":null' in V2.EncodeAgentNotification('session/update', V2Update.Payload).Unwrap().Text
+  );
+  Test.AssertTrue(
+    '"content":[]' in V2.EncodeAgentNotification('session/update', V2Update.Payload).Unwrap().Text
+  );
+  const Extra := Types.ClientRequest.ExtRequest(
+    Types.ExtRequest(
+      Method := '__custom',
+      Params := Types.ParseRawJson('[1e400,18446744073709551616]').Unwrap()
+    )
+  );
+  Test.AssertEquals(
+    '[1e400,18446744073709551616]',
+    Types.EncodeClientRequest('__custom', Extra).Unwrap().Text
+  );
+  const Provider: Exp.ListProvidersRequest := Exp.ListProvidersRequest(Meta := None);
+  Test.AssertTrue(
+    Types.ClientRequest.ListProvidersRequest(Provider) is Types.ClientRequest.ListProvidersRequest(_)
+  );
+end.

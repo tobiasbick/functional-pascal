@@ -229,6 +229,8 @@ fn process_configuration_appends_ids_and_splits_hosted_execution_from_pure_defau
         (ProcIntrinsic::TryWait, 730, IntrinsicOwner::Hosted),
         (ProcIntrinsic::Terminate, 731, IntrinsicOwner::Hosted),
         (ProcIntrinsic::Close, 732, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::TryWaitStatus, 733, IntrinsicOwner::Hosted),
+        (ProcIntrinsic::RunInteractive, 734, IntrinsicOwner::Hosted),
     ] {
         let intrinsic = Intrinsic::Proc(operation);
         assert_eq!(u16::from(intrinsic), wire);

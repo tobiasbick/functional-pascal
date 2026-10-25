@@ -34,6 +34,7 @@ macro_rules! fpas_suite_tests {
 }
 
 fpas_suite_tests! {
+    (fpas_suite_stdlib_acp, "tests/stdlib/acp/"),
     (fpas_suite_stdlib_array, "tests/stdlib/array/"),
     (fpas_suite_stdlib_calendar, "tests/stdlib/calendar/"),
     (fpas_suite_stdlib_cli, "tests/stdlib/cli/"),

@@ -7,6 +7,11 @@ use super::failure::Failure;
 use super::interactive::MAX_BYTES;
 use crate::vm::{VmError, worker::Worker};
 
+enum Output {
+    Value(Value),
+    Status(Option<std::process::ExitStatus>),
+}
+
 impl Worker {
     pub(super) fn execute_interactive_process(
         &self,
@@ -15,11 +20,20 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         use ProcIntrinsic::{
-            Close, CloseStdin, ReadStderr, ReadStdout, Start, Terminate, TryWait, WriteStdin,
+            Close, CloseStdin, ReadStderr, ReadStdout, Start, Terminate, TryWait, TryWaitStatus,
+            WriteStdin,
         };
         if !matches!(
             operation,
-            Start | ReadStdout | ReadStderr | WriteStdin | CloseStdin | TryWait | Terminate | Close
+            Start
+                | ReadStdout
+                | ReadStderr
+                | WriteStdin
+                | CloseStdin
+                | TryWait
+                | TryWaitStatus
+                | Terminate
+                | Close
         ) {
             return Ok(None);
         }
@@ -28,7 +42,7 @@ impl Worker {
             if operation == Start {
                 return arguments::parse_start(values)
                     .and_then(|request| processes.start(&request))
-                    .map(Value::OpaqueHandle);
+                    .map(|handle| Output::Value(Value::OpaqueHandle(handle)));
             }
             let count = if matches!(operation, ReadStdout | ReadStderr | WriteStdin) {
                 2
@@ -45,39 +59,58 @@ impl Worker {
                 return Err(Failure::argument("Process", "Expected a process handle"));
             };
             if operation == Close {
-                return processes.close(handle).map(|()| Value::Boolean(true));
+                return processes
+                    .close(handle)
+                    .map(|()| Output::Value(Value::Boolean(true)));
             }
-            processes.with(handle, |process| match operation {
-                ReadStdout | ReadStderr => process
-                    .read(
-                        arguments::integer(&values[1], "MaxBytes")?,
-                        operation == ReadStderr,
-                    )
-                    .map(|bytes| {
-                        bytes.map_or(Value::OptionNone, |bytes| {
-                            Value::option_some(Value::Array(
-                                bytes
-                                    .into_iter()
-                                    .map(|b| Value::Integer(i64::from(b)))
-                                    .collect(),
-                            ))
+            if operation == TryWaitStatus {
+                return processes
+                    .with(handle, |process| process.try_wait())
+                    .map(Output::Status);
+            }
+            processes
+                .with(handle, |process| match operation {
+                    ReadStdout | ReadStderr => process
+                        .read(
+                            arguments::integer(&values[1], "MaxBytes")?,
+                            operation == ReadStderr,
+                        )
+                        .map(|bytes| {
+                            bytes.map_or(Value::OptionNone, |bytes| {
+                                Value::option_some(Value::Array(
+                                    bytes
+                                        .into_iter()
+                                        .map(|b| Value::Integer(i64::from(b)))
+                                        .collect(),
+                                ))
+                            })
+                        }),
+                    WriteStdin => process
+                        .write(&bytes(&values[1])?)
+                        .map(|count| Value::Integer(count as i64)),
+                    CloseStdin => process.close_stdin().map(Value::Boolean),
+                    TryWait => process.try_wait().map(|status| {
+                        status.map_or(Value::OptionNone, |status| {
+                            Value::option_some(Value::Integer(i64::from(
+                                status.code().unwrap_or(-1),
+                            )))
                         })
                     }),
-                WriteStdin => process
-                    .write(&bytes(&values[1])?)
-                    .map(|count| Value::Integer(count as i64)),
-                CloseStdin => process.close_stdin().map(Value::Boolean),
-                TryWait => process.try_wait().map(|code| {
-                    code.map_or(Value::OptionNone, |code| {
-                        Value::option_some(Value::Integer(code))
-                    })
-                }),
-                Terminate => process.terminate().map(|()| Value::Boolean(true)),
-                _ => unreachable!("interactive operation was admitted above"),
-            })
+                    Terminate => process.terminate().map(|()| Value::Boolean(true)),
+                    _ => unreachable!("interactive operation was admitted above"),
+                })
+                .map(Output::Value)
         })();
         Ok(Some(match outcome {
-            Ok(value) => Value::result_ok(value),
+            Ok(Output::Value(value)) => Value::result_ok(value),
+            Ok(Output::Status(status)) => Value::result_ok(match status {
+                None => Value::OptionNone,
+                Some(status) => Value::option_some(super::status::value(
+                    self.layouts.as_ref(),
+                    status,
+                    location,
+                )?),
+            }),
             Err(error) => Value::result_error(error.into_value(
                 self.layouts.as_ref(),
                 &Intrinsic::Proc(operation).debugger_name(),

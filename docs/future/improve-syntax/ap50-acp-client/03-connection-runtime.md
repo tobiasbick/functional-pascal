@@ -58,6 +58,10 @@ driver after its retained responders and transport workers have been resolved.
 Implement the reserved failure/close path and byte budgets in
 [interface.md](interface.md#defaults-and-bounds). Reject a full outbound queue
 before publication. A full inbound queue fails visibly and remains closeable.
+Apply the session, terminal, route and aggregate-output reservations from that
+contract too. Release reservations exactly once, including on failed admission,
+cancelled setup and teardown. Keep host-execution admission separate from
+response admission so aliases cannot repeat an effect while awaiting a reply.
 Keep draining stderr within its separate bound even if the application is slow.
 Fragmented UTF-8, partial writes and an unterminated overlong line must not
 corrupt another frame or cause unbounded buffering. EOF with an incomplete

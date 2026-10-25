@@ -45,8 +45,8 @@ The example is a template, not an active AP or an approved proposal.
    Follow the [development process](development-process.md) for delivery.
 
 Use `AP51` for the next package and `AP51.1`, `AP51.2`, and so on for its work
-packages. AP50 is assigned below. Decision IDs continue at `Q56`; Q55 belongs
-to AP50 and Q01 through Q54 belong to closed packages. Record each decision
+packages. AP50 is assigned below. Decision IDs continue at `Q58`; Q55 through
+Q57 belong to AP50 and Q01 through Q54 belong to closed packages. Record each decision
 and its affected work packages in the owning package README. Do not create a
 second decision or completion index.
 
@@ -56,7 +56,7 @@ Active packages are listed below; keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP50: Complete ACP client](ap50-acp-client/README.md) | Large; seven work packages | Existing process, task and native-library infrastructure on main | Planned |
+| [ ] | [AP50: Complete ACP client](ap50-acp-client/README.md) | Large; seven work packages | Existing process, task and native-library infrastructure on main | In progress |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

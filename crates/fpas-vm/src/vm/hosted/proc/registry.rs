@@ -17,6 +17,15 @@ pub(super) struct Process {
 }
 
 impl Process {
+    pub(super) fn id(&self) -> io::Result<u32> {
+        self.child
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+            .map(GroupChild::id)
+            .ok_or_else(|| io::Error::other("Process ownership lost"))
+    }
+
     pub(super) fn stopped(&self) -> bool {
         self.stopped.load(Ordering::Acquire)
     }

@@ -1,0 +1,89 @@
+program AcpTypesTest;
+
+uses Std.Acp.Types as Acp, Std.Tasks as Tasks, Std.Test as Test;
+
+function PatchSize(Patch: Acp.Field of array of string): integer;
+begin
+  return case Patch of
+    when Acp.Field.Missing: -2;
+    when Acp.Field.NullValue: -1;
+    when Acp.Field.Value(const Items): Items.Length();
+  end case;
+end function;
+
+begin
+  const Text := '{"z":9007199254740993,"a":[18446744073709551615,18446744073709551616,1e400,-0]}';
+  const Raw := Acp.ParseRawJson(Text).Unwrap();
+  Test.AssertEquals(Text, Raw.Text);
+  Test.AssertEquals(Text, Acp.RawJsonText(Raw).Unwrap());
+  Test.AssertEquals('9007199254740993', Acp.RawJsonMember(Raw, 'z').Unwrap().Unwrap().Text);
+  Test.AssertTrue(Acp.RawJsonMember(Raw, 'missing').Unwrap() is None);
+  Test.AssertEquals(
+    'null',
+    Acp.RawJsonMember(Acp.ParseRawJson('{"x":null}').Unwrap(), 'x').Unwrap().Unwrap().Text
+  );
+  Test.AssertTrue(Acp.RawJsonMember(Acp.ParseRawJson('[]').Unwrap(), 'x') is Error(_));
+  for Invalid: string in [
+    '',
+    '{} []',
+    'NaN',
+    '[1,]',
+    '"\ud800"',
+    '{"a":1,"\u0061":2}',
+    '{"x":[{"n":1,"n":2}]}'
+  ] do
+    Test.AssertTrue(Acp.ParseRawJson(Invalid) is Error(Acp.AcpError.InvalidMessage(_, _, _)));
+  end for;
+
+  Test.AssertTrue(
+    Acp.RawJsonText(Acp.RawJson(Text := '{')) is Error(Acp.AcpError.InvalidMessage(_, _, _))
+  );
+
+  for Digits: string in ['0', '9007199254740993', '9223372036854775807', '18446744073709551615'] do
+    const Number := Acp.ParseUInt64(Digits).Unwrap();
+    Test.AssertEquals(Digits, Number.Digits);
+    Test.AssertEquals(Digits, Acp.UInt64Text(Number).Unwrap());
+  end for;
+
+  Test.AssertEquals('42', Acp.ParseUInt64('00042').Unwrap().Digits);
+  Test.AssertEquals(
+    9223372036854775807,
+    Acp.UInt64ToInteger(Acp.UInt64FromInteger(9223372036854775807).Unwrap()).Unwrap()
+  );
+  for Invalid: string in ['', '-1', '+1', '1.0', '1e3', '１２', '18446744073709551616'] do
+    Test.AssertTrue(Acp.ParseUInt64(Invalid) is Error(Acp.AcpError.InvalidArgument(_, _)));
+  end for;
+
+  Test.AssertTrue(Acp.UInt64FromInteger(-1) is Error(Acp.AcpError.InvalidArgument(_, _)));
+  Test.AssertTrue(
+    Acp.UInt64ToInteger(Acp.ParseUInt64('18446744073709551615').Unwrap()) is Error(Acp.AcpError.InvalidArgument(_, _))
+  );
+  Test.AssertTrue(
+    Acp.UInt64Text(Acp.UInt64(Digits := '00')) is Error(Acp.AcpError.InvalidArgument(_, _))
+  );
+
+  Test.AssertEquals(-2, PatchSize(Acp.Field.Missing));
+  Test.AssertEquals(-1, PatchSize(Acp.Field.NullValue));
+  Test.AssertEquals(0, PatchSize(Acp.Field.Value([])));
+  Test.AssertEquals(1, PatchSize(Acp.Field.Value(['entry'])));
+  const Failure := Acp.AcpError.Peer(
+    Acp.ProtocolError(Code := -32603, Message := 'peer-message', Data := Some(Raw))
+  );
+  Test.AssertFalse('peer-message' in Failure.Message());
+  Test.AssertFalse('9007199254740993' in Failure.Message());
+  scope
+    const Queue: channel of Acp.AcpError := Tasks.CreateChannel(1);
+    Test.AssertTrue(Tasks.Send(Queue, Failure).Unwrap());
+    const Received := Tasks.Receive(Queue).Unwrap();
+    case Received of
+      when Acp.AcpError.Peer(const Protocol):
+        Test.AssertEquals(-32603, Protocol.Code);
+        Test.AssertEquals('peer-message', Protocol.Message);
+        Test.AssertEquals(Text, Acp.RawJsonText(Protocol.Data.Unwrap()).Unwrap());
+      when Acp.AcpError.InvalidArgument(_, _), Acp.AcpError.UnsupportedCapability(_), Acp.AcpError.UnsupportedVersion(_), Acp.AcpError.Busy(_), Acp.AcpError.Closed(_), Acp.AcpError.Timeout(_), Acp.AcpError.Cancelled(_), Acp.AcpError.LimitExceeded(_, _), Acp.AcpError.InvalidMessage(_, _, _), Acp.AcpError.Host(_):
+        Test.Fail('Expected preserved peer error');
+    end case;
+
+    Test.AssertTrue(Tasks.CloseChannel(Queue));
+  end scope;
+end.

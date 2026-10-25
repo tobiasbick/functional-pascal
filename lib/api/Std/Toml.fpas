@@ -12,8 +12,8 @@ public type TomlError = error
   // `InvalidSyntax` enum member.
   //
   // Parameters:
-  // - `Line`: Input line queued for the next read.
-  // - `Column`: `Option of integer` input value used by `InvalidSyntax`.
+  // - `Line`: One-based parser line, when available.
+  // - `Column`: One-based parser column, when available.
   // - `Detail`: `string` input value used by `InvalidSyntax`.
   InvalidSyntax(Line: option of integer; Column: option of integer; Detail: string) = 'Invalid TOML';
 end error;

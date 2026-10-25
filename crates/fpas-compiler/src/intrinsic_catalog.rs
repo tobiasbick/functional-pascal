@@ -29,6 +29,9 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     if name == "Std.Net.Utf8.EncodeBytes" {
         return Some(Intrinsic::Str(StrIntrinsic::Utf8Encode));
     }
+    if name.starts_with("Std.Acp.") {
+        return Intrinsic::all().find(|intrinsic| matches!(intrinsic, Intrinsic::Acp(operation) if operation.source_name() == name));
+    }
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.split_once('.')?;
     match unit {
@@ -132,6 +135,8 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 WriteStdin,
                 CloseStdin,
                 TryWait,
+                TryWaitStatus,
+                RunInteractive,
                 Terminate,
                 Close
             ]

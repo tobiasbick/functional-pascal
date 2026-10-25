@@ -37,6 +37,10 @@ pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String
 
     let root_is_std = is_reserved_std_root_segment(&q.parts[0]);
 
+    if root_is_std && let Some(unit) = canonical_std_unit_from_tail(&q.parts[1..].join(".")) {
+        return Ok(unit.to_string());
+    }
+
     if q.parts.len() == 1 {
         if root_is_std {
             return Err(
@@ -98,23 +102,28 @@ pub fn parse_std_qualified_call(name: &str) -> Option<(String, String)> {
     if !is_std_root_segment(parts[0]) {
         return None;
     }
-    let unit = canonical_std_unit_from_tail(parts[1])?;
-    let member = parts[2..].join(".");
-    Some((unit.to_string(), member))
+    for end in (2..parts.len()).rev() {
+        if let Some(unit) = canonical_std_unit_from_tail(&parts[1..end].join(".")) {
+            return Some((unit.to_string(), parts[end..].join(".")));
+        }
+    }
+    None
 }
 
 /// Returns the canonical `Std.*` unit a qualified name starts with when that unit is not in `uses`.
 ///
 /// Qualified names never import a unit implicitly, so such a name is always an error.
 pub fn missing_std_unit(name: &str, loaded: &HashSet<String>) -> Option<String> {
-    let mut parts = name.split('.');
-    let root = parts.next()?;
-    let tail = parts.next()?;
-    if !is_std_root_segment(root) {
+    let parts = name.split('.').collect::<Vec<_>>();
+    if parts.len() < 2 || !is_std_root_segment(parts[0]) {
         return None;
     }
-    let unit = canonical_std_unit_from_tail(tail)?.to_string();
-    (!loaded.contains(&unit)).then_some(unit)
+    for end in (2..=parts.len()).rev() {
+        if let Some(unit) = canonical_std_unit_from_tail(&parts[1..end].join(".")) {
+            return (!loaded.contains(unit)).then(|| unit.to_string());
+        }
+    }
+    None
 }
 
 /// LLM-friendly hint when a call or identifier is missing from scope.

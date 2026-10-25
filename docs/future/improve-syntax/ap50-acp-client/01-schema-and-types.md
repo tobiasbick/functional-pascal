@@ -1,12 +1,40 @@
 # AP50.1: Lossless schema types and codec
 
-Package: [AP50](README.md). Status: planned; implementation not started.
+Package: [AP50](README.md). Status: complete.
 
 ## Prerequisites
 
 Q55 is recorded in the package README. The pinned SDK and schema releases
 are available. Existing native records, data enums, generic fields and error
 families provide the representation; no syntax prerequisite is missing.
+
+## Delivered value boundary
+
+`fpas-acp` pins the SDK and derives the complete v1/v2 declaration graphs from
+its schema. Generated validator tables instantiate the actual SDK serde types;
+the binding contains no handwritten method table or JSON-RPC envelope driver.
+Native registration and VM conversion consume the same detached type graph.
+Stable values live in `Std.Acp.Types`, v1 extensions in `Std.Acp.Experimental`,
+and v2 has its own nominal family. `Std.Acp.Host` aliases the filesystem and
+terminal DTOs. The namespace unit declares opaque connection identities.
+
+Each version exposes decode/encode pairs for all seven request, response and
+notification roots. Decoding returns a typed Payload and original RawPayload;
+encoding checks the root, method, complete value shape and SDK validation.
+The connection driver and negotiated protocol state remain AP50.3 onward.
+
+RawJson retains arbitrary number spellings and provides original object
+subtrees through `RawJsonMember`, independently of SDK normalization. UInt64
+conversions are exact, IDs are distinct strings, and Field distinguishes
+Missing, NullValue and replacement. Shared record metadata checks structured
+error payloads; ordinary ACP diagnostics omit associated values.
+
+The serde adapter presents finite decimal tokens normally to untagged SDK
+numeric enums while preserving oversized arbitrary JSON numbers. Patch overlays
+retain SDK MaybeUndefined fields and untagged v1 defaults that JSON Schema
+alone does not distinguish.
+VM conversion handles generic enum storage erasure using the concrete protocol
+graph and validates record/enum identities and layouts before returning a value.
 
 ## Deliverable and contract
 
@@ -51,12 +79,24 @@ focused family of new files, split by protocol concern, normally below 500 lines
 | Create | `crates/fpas-acp/src/codec/` | Stable, v2 and experimental payload validation/conversion |
 | Create | `crates/fpas-acp/src/value.rs`, `crates/fpas-acp/src/error.rs` | Lossless values and operational errors |
 | Create/modify | `crates/fpas-std/src/std_units/symbols/std_symbols/acp.rs`, parent symbol/units modules | Canonical ACP names and hierarchical intrinsic-unit lookup |
-| Create/modify | `crates/fpas-sema/src/std_registry/loaded/acp/`, `loaded/mod.rs` | Focused type and function registration for all public ACP modules |
+| Create/modify | `crates/fpas-sema/src/std_registry/loaded/acp/`, `loaded/mod.rs`, `loaded/native_records.rs`, `loaded/errors.rs` | Focused type and function registration, including shared nested record shapes |
 | Create/modify | `crates/fpas-std/src/native_errors/acp.rs`, native-error registry | Nominal AcpError and preserved host/protocol causes |
 | Create | `crates/fpas-vm/src/vm/hosted/acp/values/` | Native-to-FPAS detached layout conversion |
 | Generate | `lib/api/Std/Acp.fpas`, `Acp.Types.fpas`, `Acp.Host.fpas`, `Acp.Experimental.fpas`, `Acp.V2.fpas` | Editor declarations under the existing `lib/api/Std/` layout |
-| Create | `crates/fpas-acp/tests/codec/`, `tests/stdlib/acp/types_test.fpas` | Independent wire fixtures and public type behavior |
-| Create | `docs/pascal/std/ai/acp/types.md` | Delivered value, nullability, unknown-value and precision contracts |
+| Create | `crates/fpas-acp/tests/{binding,codec,schema,method_fixtures,tagged_fixtures}.rs`, `tests/methods/`, `tests/stdlib/acp/` | Independent wire fixtures, complete method coverage and public type behavior |
+| Create | `docs/pascal/std/ai/acp/` | Module, codec, nullability, unknown-value and precision contracts |
+| Create/modify | `crates/fpas-bytecode/src/intrinsic/acp.rs`, parent intrinsic/export modules, `crates/fpas-compiler/src/intrinsic_catalog.rs`, `intrinsic_catalog/tests.rs` | Value-operation selectors, lowering and canonical route coverage |
+| Create/modify | `crates/fpas-std/src/acp/`, `src/native_records.rs`, aggregate/runtime dispatch | Checked detached value operations and shared record shapes |
+| Modify | `crates/fpas-std/src/json/parse.rs`, `Cargo.toml` | Preserve existing finite-number behavior under JSON feature unification |
+| Create/modify | `crates/fpas-cli/tests/acp_types.rs`, `crates/fpas-vm/src/vm/layouts/native_records.rs` | Compiled-unit reuse and image admission checks |
+| Modify | `crates/fpas-cli/src/main_tests/test_suite.rs` | Include public ACP tests in Cargo's themed library suite |
+| Modify | `crates/fpas-sema/examples/export_intrinsic_std_api.rs`, supporting `generics.rs`, `documentation.rs`, `qualified_names.rs` | Preserve generic parameters, distinct types, aliases, nested unit references and diagnostic descriptions |
+| Modify | `crates/fpas-bytecode/src/value/aggregate.rs`, `display.rs`, affected display fixtures | Apply native ACP payload-display policy while retaining inspectable values |
+| Create | `crates/fpas-acp/src/binding/`, `src/normalizers/`, `examples/generate_normalizers.rs` | SDK-derived declarations, lossless detached codec and generated direct SDK validators |
+| Modify | `crates/fpas-acp/src/schema.rs`, `src/lib.rs` | Include protocol-level cancellation roots and expose the binding contract |
+| Modify | `crates/fpas-sema/Cargo.toml`, `crates/fpas-vm/Cargo.toml` | Consume the shared protocol declarations and detached values |
+| Modify | `crates/fpas-compiler/src/object/mod.rs`, API exporter helpers | Retain native DTO layouts and export distinct types and aliases |
+| Create/modify | `crates/fpas-vm/src/vm/hosted/acp/`, hosted dispatch, intrinsic ownership metadata | VM conversion and typed payload codecs, without a connection driver |
 
 Also update `crates/fpas-std/src/native_errors.rs`, affected error metadata,
 artifact serialization under `crates/fpas-sema/src/interface/` and layout

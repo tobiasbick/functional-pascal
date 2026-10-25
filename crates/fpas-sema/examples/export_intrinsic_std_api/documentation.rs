@@ -72,6 +72,16 @@ pub(super) fn render_documentation(
 
 /// Describes generated parameters, including bit-shift bounds and task observation roles.
 pub(super) fn parameter_description(parameter: &str, routine: &str, ty: Option<&str>) -> String {
+    if matches!(
+        routine.rsplit('.').next(),
+        Some("InvalidSyntax" | "InvalidMessage")
+    ) {
+        match parameter.to_ascii_lowercase().as_str() {
+            "line" => return "One-based parser line, when available.".into(),
+            "column" => return "One-based parser column, when available.".into(),
+            _ => {}
+        }
+    }
     let description = match parameter.to_ascii_lowercase().as_str() {
         "path" => "File or directory path processed by the operation",
         "pattern" => "Glob or matching pattern evaluated by the operation",

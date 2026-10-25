@@ -24,6 +24,7 @@ macro_rules! documented_intrinsic_enum {
     };
 }
 
+pub mod acp;
 pub mod args;
 pub mod array;
 /// Signed 64-bit bit-operation identifiers; see `docs/pascal/std/numeric/bits.md`.
@@ -53,6 +54,7 @@ pub mod test;
 pub mod time;
 pub mod toml;
 
+pub use acp::AcpIntrinsic;
 pub use args::ArgsIntrinsic;
 pub use array::ArrayIntrinsic;
 pub use bits::BitsIntrinsic;
@@ -86,6 +88,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Detached ACP value operation.
+    Acp(AcpIntrinsic),
     /// Hosted server lifetime operation.
     Server(ServerIntrinsic),
     /// Process-argument operation.
@@ -155,6 +159,7 @@ impl Intrinsic {
     #[must_use]
     pub fn debugger_name(self) -> String {
         match self {
+            Self::Acp(operation) => operation.source_name(),
             Self::Conv(ConvIntrinsic::ErrorMessage) => "Std.Errors.Message".to_string(),
             Self::Conv(ConvIntrinsic::ErrorMatchesVariant) => "$error.MatchesVariant".to_string(),
             Self::Str(StrIntrinsic::Utf8Encode) => "Std.Net.Utf8.EncodeBytes".to_string(),
@@ -205,6 +210,7 @@ impl Intrinsic {
                     .split_once('(')
                     .expect("intrinsic debug representation has family and member");
                 let family = match family {
+                    "Acp" => "Acp.Types",
                     "Array" => "Arrays",
                     "Dict" => "Dictionaries",
                     "Option" => "Options",
@@ -241,6 +247,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    Acp(AcpIntrinsic),
     Server(ServerIntrinsic),
     Args(ArgsIntrinsic),
     Bits(BitsIntrinsic),

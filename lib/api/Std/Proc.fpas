@@ -75,6 +75,12 @@ public type Process = record
   _IntrinsicHandle: integer;
 end record;
 
+// Optional native `ExitCode` and terminating `Signal`.
+public type ProcessExitStatus = record
+  public ExitCode: option of integer;
+  public Signal: option of string;
+end record;
+
 // Child configuration; start from `DefaultOptions()`.
 public type ProcessOptions = record
   public WorkingDirectory: option of string;
@@ -185,6 +191,19 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Uses an explicit host terminal with owned timeout/cancellation cleanup.
+//
+// Parameters:
+// - `Command`: Executable name or path to start.
+// - `Args`: Command-line arguments in invocation order.
+// - `Options`: `Std.Proc.ProcessStartOptions` input value used by `RunInteractive`.
+// - `TimeoutMillis`: `Option of integer` input value used by `RunInteractive`.
+// - `CancellationToken`: `Option of Std.Tasks.CancellationToken` input value used by `RunInteractive`.
+public function RunInteractive(Command: string; Args: array of string; Options: ProcessStartOptions; TimeoutMillis: option of integer; CancellationToken: option of Tasks.CancellationToken): result of (ProcessExitStatus, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Configures stdin/environment/cwd and inherits output.
 //
 // Parameters:
@@ -221,6 +240,15 @@ end function;
 // Parameters:
 // - `Process`: `Std.Proc.Process` input value used by `TryWait`.
 public function TryWait(Process: Process): result of (option of integer, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Probes exact native completion without consuming the cached status or closing pipes.
+//
+// Parameters:
+// - `Process`: `Std.Proc.Process` input value used by `TryWaitStatus`.
+public function TryWaitStatus(Process: Process): result of (option of ProcessExitStatus, ProcError);
 begin
   panic('Intrinsic API declaration');
 end function;

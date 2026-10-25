@@ -22,6 +22,10 @@ actually serve. The application can answer directly or invoke a built-in
 Responder and corresponding typed request. They validate method, connection,
 session and active request identity before admitting effects. They return the
 corresponding typed response or AcpError, without consuming the responder.
+Atomically claim the separate host-execution right defined in
+[interface.md](interface.md#host-and-interaction-contract). One Responder cannot
+launch two commands or repeat another helper effect, even through aliases or
+after an admitted operation fails. Response publication remains a separate step.
 Host errors are mapped
 to an explicit protocol error by application code. A sample dispatcher shows
 this route without auto-approving requests or converting typed errors to strings.
@@ -69,6 +73,9 @@ reaps the process, invalidates aliases and frees the registry entry. Repeated
 release is a typed closed error. Connection close releases every terminal;
 session close releases that session's terminals after applicable final output.
 Previously emitted detached output may remain in application-owned UI state.
+Reserve terminal count and retained-output capacity before launch according to
+[the connection limits](interface.md#defaults-and-bounds). Exited terminals keep
+their reservations until release; kill alone does not free them.
 
 ## Interactive authentication
 
@@ -113,6 +120,10 @@ arguments, extract their native operation once. Do not duplicate them in ACP.
   Unsupported terminal hosts, cancellation and nonzero exits do not reconnect.
 - Try to use the same Responder twice and respond after cancellation. The peer
   observes exactly one response and no authorized effect from a stale answer.
+- Race two helpers on one Responder and attempt a second call after success or
+  admitted failure. At most one host execution occurs; the application can
+  still publish its corresponding response/error. Exhaust terminal count and
+  aggregate output reservations before launch, then release and reuse capacity.
 
 Run owning interaction/host/process tests and public FPAS cases. Each work
 package retains its current handbook/examples and required checks.

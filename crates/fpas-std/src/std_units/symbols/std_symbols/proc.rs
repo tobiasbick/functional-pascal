@@ -14,6 +14,9 @@ std_symbol!(STD_PROC_READ_STDERR = std_proc!("ReadStderr"));
 std_symbol!(STD_PROC_WRITE_STDIN = std_proc!("WriteStdin"));
 std_symbol!(STD_PROC_CLOSE_STDIN = std_proc!("CloseStdin"));
 std_symbol!(STD_PROC_TRY_WAIT = std_proc!("TryWait"));
+std_symbol!(STD_PROC_TRY_WAIT_STATUS = std_proc!("TryWaitStatus"));
+std_symbol!(STD_PROC_EXIT_STATUS = std_proc!("ProcessExitStatus"));
+std_symbol!(STD_PROC_RUN_INTERACTIVE = std_proc!("RunInteractive"));
 std_symbol!(STD_PROC_TERMINATE = std_proc!("Terminate"));
 std_symbol!(STD_PROC_CLOSE = std_proc!("Close"));
 
@@ -36,6 +39,9 @@ pub(in crate::std_units) const STD_PROC_SYMBOLS: &[&str] = &[
     STD_PROC_WRITE_STDIN,
     STD_PROC_CLOSE_STDIN,
     STD_PROC_TRY_WAIT,
+    STD_PROC_TRY_WAIT_STATUS,
+    STD_PROC_EXIT_STATUS,
+    STD_PROC_RUN_INTERACTIVE,
     STD_PROC_TERMINATE,
     STD_PROC_CLOSE,
     STD_PROC_ENVIRONMENT_VARIABLE,

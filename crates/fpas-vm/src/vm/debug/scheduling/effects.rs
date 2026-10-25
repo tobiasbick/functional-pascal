@@ -58,7 +58,7 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
         Intrinsic::Server(_) => Some("Std.Server"),
         Intrinsic::Random(_) => Some("Std.Random"),
         Intrinsic::Crypto(_) => Some("Std.Crypto"),
-        Intrinsic::Encoding(_) => None,
+        Intrinsic::Acp(_) | Intrinsic::Encoding(_) => None,
         Intrinsic::Time(TimeIntrinsic::Sleep) => None,
         Intrinsic::Time(_) => Some("wall-clock Std.Time"),
         Intrinsic::Fs(_) => Some("Std.Fs"),

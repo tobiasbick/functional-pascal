@@ -167,7 +167,7 @@ pub fn compile_program_object_with_options(
 }
 
 fn runtime_aggregate_types() -> impl Iterator<Item = String> {
-    fpas_std::RUNTIME_AGGREGATE_TYPES
+    fpas_std::runtime_aggregate_types()
         .iter()
         .map(|name| name.to_ascii_lowercase())
 }

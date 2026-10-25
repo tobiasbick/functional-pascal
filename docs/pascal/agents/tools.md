@@ -33,6 +33,11 @@ machine-applicable compiler fixes in place; format and inspect the result.
 Run the owning test project for runtime behavior. Interactive programs can be
 checked without launching their UI; use scripted/headless tests for execution.
 
+For interactive child login, `Std.Proc.RunInteractive` needs an explicit host
+terminal provider. Debugger protocol stdin is unavailable to children. Use
+`TryWaitStatus` for precise native process completion; see
+[processes](../std/host/proc.md#processexitstatus-and-trywaitstatus).
+
 Handbook Pascal fences are checked directly by
 `fpas run tools/doc-examples/doc-examples.fpasprj`. The
 [example instructions](../tools/documentation-examples.md) explain compile-only,

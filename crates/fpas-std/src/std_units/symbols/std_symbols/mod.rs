@@ -116,6 +116,7 @@ macro_rules! std_symbol {
     };
 }
 
+mod acp;
 mod args;
 mod array;
 mod bits;
@@ -142,6 +143,7 @@ mod test;
 mod time;
 mod toml;
 
+pub use acp::*;
 pub use args::*;
 pub use array::*;
 pub use bits::*;

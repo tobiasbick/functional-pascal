@@ -19,6 +19,7 @@ pub(super) fn register(checker: &mut Checker, family: NativeErrorFamily) -> Ty {
             | NativeErrorFamily::Crypto
             | NativeErrorFamily::Net
             | NativeErrorFamily::Server
+            | NativeErrorFamily::Acp
     ) {
         Some(register(checker, NativeErrorFamily::Host))
     } else {
@@ -45,6 +46,12 @@ pub(super) fn register(checker: &mut Checker, family: NativeErrorFamily) -> Ty {
                             ErrorFieldType::OptionalString => Ty::Option(Box::new(Ty::String)),
                             ErrorFieldType::OptionalInteger => Ty::Option(Box::new(Ty::Integer)),
                             ErrorFieldType::Integer => Ty::Integer,
+                            ErrorFieldType::Record(name) => {
+                                super::native_records::register(checker, name)
+                            }
+                            ErrorFieldType::OptionalRecord(name) => {
+                                Ty::Option(Box::new(super::native_records::register(checker, name)))
+                            }
                             ErrorFieldType::Net => net
                                 .clone()
                                 .unwrap_or(Ty::Named(NativeErrorFamily::Net.name().into())),

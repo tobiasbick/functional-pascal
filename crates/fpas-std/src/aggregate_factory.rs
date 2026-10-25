@@ -9,6 +9,10 @@ use crate::StdError;
 /// Compilers retain these layouts when present because their constructors are not represented by a
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
+    "Std.Acp.Types.AcpError",
+    "Std.Acp.Types.RawJson",
+    "Std.Acp.Types.UInt64",
+    "Std.Acp.Types.ProtocolError",
     "Std.Errors.HostError",
     "Std.Fs.FsError",
     "Std.Proc.ProcError",
@@ -31,6 +35,41 @@ pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
     "Std.Console.Color",
     "Std.Console.Cell",
 ];
+
+/// Native aggregate names retained even when only a payload decoder constructs them.
+pub fn runtime_aggregate_types() -> &'static [String] {
+    static NAMES: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(|| {
+        let mut names = RUNTIME_AGGREGATE_TYPES
+            .iter()
+            .map(|name| (*name).to_owned())
+            .collect::<Vec<_>>();
+        for version in [fpas_acp::schema::Version::V1, fpas_acp::schema::Version::V2] {
+            if let Ok(catalog) = fpas_acp::binding::catalog(version) {
+                names.extend(
+                    catalog
+                        .declarations
+                        .values()
+                        .filter(|declaration| {
+                            !matches!(declaration.shape, fpas_acp::binding::Shape::Scalar(_))
+                        })
+                        .map(|declaration| declaration.name.clone()),
+                );
+                let module = if version == fpas_acp::schema::Version::V1 {
+                    "Std.Acp.Types"
+                } else {
+                    "Std.Acp.V2"
+                };
+                names.extend(
+                    fpas_acp::binding::ROOTS
+                        .into_iter()
+                        .map(|root| format!("{module}.Decoded{root}")),
+                );
+            }
+        }
+        names
+    });
+    &NAMES
+}
 
 /// Constructs aggregate values against the layouts of the executing program.
 pub trait AggregateFactory {

@@ -128,6 +128,8 @@ pub struct RuntimeEnumLayout {
 /// Shared error information resolved from admitted executable metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RuntimeErrorVariant {
+    /// Native display policy; associated values remain available for explicit inspection.
+    pub hide_payload: bool,
     /// Optional literal message, without formatting placeholders.
     pub message: Option<String>,
     /// Exact original cause field and family.
@@ -144,6 +146,7 @@ impl RuntimeErrorVariant {
         strings: &crate::StringTable,
     ) -> Result<Self, EnumConstructionError> {
         Ok(Self {
+            hide_payload: false,
             message: error
                 .message
                 .map(|id| {

@@ -12,6 +12,19 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
             continue;
         }
         let family = match Intrinsic::from_u16(instruction.abc_payload().b) {
+            Some(Intrinsic::Acp(operation)) => {
+                let record = if matches!(
+                    operation,
+                    fpas_bytecode::AcpIntrinsic::ParseRawJson
+                        | fpas_bytecode::AcpIntrinsic::RawJsonText
+                ) {
+                    "Std.Acp.Types.RawJson"
+                } else {
+                    "Std.Acp.Types.UInt64"
+                };
+                super::native_records::require(image, record, address)?;
+                Some(Family::Acp)
+            }
             Some(Intrinsic::Fs(operation))
                 if !matches!(
                     operation,
@@ -130,6 +143,11 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
             return Err(failure());
         }
         for expected in family.variants() {
+            for (_, shape) in expected.fields {
+                if let ErrorFieldType::Record(name) | ErrorFieldType::OptionalRecord(name) = shape {
+                    super::native_records::require(image, name, address)?;
+                }
+            }
             let variant = variants
                 .iter()
                 .find(|v| image.strings.get(v.name) == Some(expected.name))
@@ -192,6 +210,14 @@ fn identity(ty: ErrorFieldType) -> TypeIdentity {
         ErrorFieldType::Strings => TypeIdentity::Array(Box::new(TypeIdentity::String)),
         ErrorFieldType::OptionalString => TypeIdentity::Option(Box::new(TypeIdentity::String)),
         ErrorFieldType::OptionalInteger => TypeIdentity::Option(Box::new(TypeIdentity::Integer)),
+        ErrorFieldType::Record(name) => TypeIdentity::Nominal {
+            kind: NominalKind::Record,
+            declaration: name.to_ascii_lowercase(),
+            arguments: vec![],
+        },
+        ErrorFieldType::OptionalRecord(name) => {
+            TypeIdentity::Option(Box::new(identity(ErrorFieldType::Record(name))))
+        }
         ErrorFieldType::Host | ErrorFieldType::Net => TypeIdentity::Nominal {
             kind: NominalKind::Error,
             declaration: (if matches!(ty, ErrorFieldType::Host) {

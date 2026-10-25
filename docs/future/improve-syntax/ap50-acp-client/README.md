@@ -1,6 +1,6 @@
 # AP50: Complete ACP client
 
-Status: Planned. Effort: large; seven separately reviewable work packages.
+Status: In progress. Effort: large; seven separately reviewable work packages.
 Completion is tracked only in the [central plan](../README.md#package-status).
 Package branch: `codex/ap50-acp-client`, based on `main`.
 
@@ -12,13 +12,16 @@ The client covers the pinned Rust SDK's stable protocol and its explicitly
 enabled experimental client features. A text-only prompt wrapper does not
 satisfy this package.
 
-This is an implementation-ready design. Implementation, commit, push and merge
+Implementation on the package branch is authorized. Commit, push and merge
 still require the corresponding user instruction. None is recorded as delivered
 by the existence of these planning documents.
 
 ## Current behavior and proposed contract
 
-The checkout has no ACP dependency, module or public connection contract.
+The package branch pins the ACP SDK and provides complete detached v1,
+experimental and v2 protocol DTOs with native payload codecs and lossless raw
+values. Native protocol-value conversion, nominal IDs and generated editor
+declarations are available. Connection operations remain in AP50.3 onward.
 [Std.Proc](../../../pascal/std/host/proc.md#interactive-processes) already has
 owned processes, nonblocking binary pipes, launch cwd/environment and cleanup.
 [Std.Tasks](../../../pascal/std/concurrency/task.md) supplies channels, task
@@ -61,13 +64,15 @@ are not completeness criteria.
 | ID | Question | User decision | Affected work packages |
 | --- | --- | --- | --- |
 | Q55 | Which ACP role and how much functionality? | Client only. FPAS connects to agents, with complete client support. Prepare the AP before implementation. | AP50.1 through AP50.7 |
+| Q56 | Can one inbound request admit multiple host effects? | No. Atomically admit at most one host execution per Responder, independently of its single response right. | AP50.3, AP50.5 |
+| Q57 | How are long-lived resources bounded? | Configure explicit session, terminal, MCP-route and aggregate terminal-output limits with fixed defaults; reserve capacity before publication or effects. | AP50.3 through AP50.6 |
 
 The architecture, dependency pins and defaults below are the design selected
-within Q55. They do not introduce a language decision or authorize implementation.
+within Q55 through Q57. No new syntax or language semantics are introduced.
 
 ## Open decisions
 
-None blocks beginning the described implementation once authorized. Native
+None blocks the described implementation. Native
 registration and source modules may be split further to keep files focused;
 the public contract and coverage must remain the same. A dependency defect
 that prevents the pinned contract is a concrete blocker to repair or bring
@@ -90,11 +95,11 @@ back with evidence, not permission to mark a feature complete through raw RPC.
 ## Dependencies and work packages
 
 Existing infrastructure on `main` is sufficient to start AP50.1 and AP50.2.
-Dependencies are explicit in each file. The package branch can retain their
-results for subsequent work once implementation on this branch is authorized.
+Dependencies are explicit in each file. The package branch retains their
+results for subsequent work.
 
-- [ ] [AP50.1: Lossless schema types and codec](01-schema-and-types.md)
-- [ ] [AP50.2: Process status and interactive launch](02-process-support.md)
+- [x] [AP50.1: Lossless schema types and codec](01-schema-and-types.md)
+- [x] [AP50.2: Process status and interactive launch](02-process-support.md)
 - [ ] [AP50.3: Native connection driver and transports](03-connection-runtime.md)
 - [ ] [AP50.4: Complete stable v1 client](04-v1-client.md)
 - [ ] [AP50.5: Inbound requests and host adapters](05-host-requests.md)
@@ -135,9 +140,12 @@ only a happy-path conversation or a raw escape hatch for missing typed methods.
   [Std implementation touchpoints](../../../pascal/std/README.md#shared-implementation-touchpoints)
   and the [test runner handbook](../../../pascal/std/testing/test.md).
 
-## Planning-only file scope
+## Live interoperability
 
-This planning change modifies the central `improve-syntax/README.md` and adds
-this README, `interface.md`, `protocol-coverage.md`, and the seven numbered
-work-package files in this directory. No implemented handbook, library source,
-dependency manifest or generated declaration changes belong to this step.
+Use the separately maintained [Codex ACP adapter](https://github.com/agentclientprotocol/codex-acp)
+for authorized live smoke tests, selecting `gpt-6-luna` explicitly. Launch the
+published `@agentclientprotocol/codex-acp` package and pass model configuration
+through `CODEX_CONFIG` or the advertised session configuration. Never fall back
+silently to a more expensive model. Use existing authentication without copying
+credentials into the repository or test output. Automated acceptance remains
+deterministic and independent of account access.

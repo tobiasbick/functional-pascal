@@ -13,6 +13,7 @@
 //! **Documentation:** `docs/pascal/std/README.md` and per-unit files under `docs/pascal/std/` (from the repository root).
 //! **Maintenance:** Keep those Markdown files aligned with this crate, `fpas-vm`, `fpas-compiler`, `fpas-bytecode`, and `fpas-sema` `std_registry.rs`.
 
+mod acp;
 mod aggregate_factory;
 mod array;
 /// Shared `Std.Bits` primitives; see `docs/pascal/std/numeric/bits.md`.
@@ -34,6 +35,8 @@ mod limits;
 mod math;
 /// Shared typed operational error catalog and value builders.
 pub mod native_errors;
+/// Shared detached native record declarations.
+pub mod native_records;
 mod parse;
 mod path;
 mod proc;
@@ -45,7 +48,7 @@ mod text;
 mod time;
 mod toml;
 
-pub use aggregate_factory::{AggregateFactory, RUNTIME_AGGREGATE_TYPES};
+pub use aggregate_factory::{AggregateFactory, RUNTIME_AGGREGATE_TYPES, runtime_aggregate_types};
 pub use array::sorting::sort_by_cached_keys;
 pub use console::{
     CONSOLE_COLOR_KIND_VARIANTS, CapturedOutput, Console, ConsoleCell, ConsoleColor, ConsoleRect,
@@ -63,7 +66,8 @@ pub use intrinsics::run_intrinsic_borrowed;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
 pub use proc::ProgramStderr;
 pub use std_units::{
-    STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CALENDAR, STD_UNIT_CLI,
+    STD_UNIT_ACP, STD_UNIT_ACP_EXPERIMENTAL, STD_UNIT_ACP_HOST, STD_UNIT_ACP_TYPES,
+    STD_UNIT_ACP_V2, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CALENDAR, STD_UNIT_CLI,
     STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_DICT, STD_UNIT_ENCODING,
     STD_UNIT_ENV, STD_UNIT_ERRORS, STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET,
     STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM,

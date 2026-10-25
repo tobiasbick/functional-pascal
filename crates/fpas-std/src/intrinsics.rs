@@ -43,6 +43,7 @@ fn dispatch_intrinsic(
     }
 
     let handled = match intrinsic {
+        Intrinsic::Acp(_) => crate::acp::run(intrinsic, call, location),
         Intrinsic::Str(_) => str::run(intrinsic, call, location),
         Intrinsic::Conv(_) => conv::run(intrinsic, call, location),
         Intrinsic::Parse(_) => parse::run(intrinsic, call, location),

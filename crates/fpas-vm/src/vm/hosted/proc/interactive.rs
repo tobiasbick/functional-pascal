@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::io::{self, Read, Write};
-use std::process::Stdio;
+use std::process::{ExitStatus, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -80,10 +80,9 @@ impl Process {
         }
     }
 
-    pub(super) fn try_wait(&mut self) -> Result<Option<i64>, Failure> {
+    pub(super) fn try_wait(&mut self) -> Result<Option<ExitStatus>, Failure> {
         self.child
             .try_wait()
-            .map(|status| status.map(|s| i64::from(s.code().unwrap_or(-1))))
             .map_err(|error| Failure::new(Kind::Wait(error)))
     }
 

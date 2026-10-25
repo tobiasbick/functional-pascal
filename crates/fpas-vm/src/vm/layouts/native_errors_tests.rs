@@ -93,6 +93,32 @@ fn unused_native_families_are_not_required() {
 }
 
 #[test]
+fn acp_error_records_require_their_registered_nested_layouts() {
+    let original =
+        image("program T; uses Std.Acp.Types as Acp; begin discard Acp.ParseUInt64('1'); end.");
+    let address = InstructionAddress::new(0);
+    RuntimeLayouts::build(&original, address).expect("structured error contract");
+    for name in ["Std.Acp.Types.RawJson", "Std.Acp.Types.ProtocolError"] {
+        let mut changed = original.clone();
+        let index = changed
+            .records
+            .iter()
+            .position(|record| changed.strings.get(record.name) == Some(name))
+            .expect("native record");
+        let wrong = changed
+            .debug_types
+            .iter()
+            .position(|ty| matches!(ty, fpas_bytecode::DebugType::Boolean))
+            .expect("boolean type");
+        changed.records[index].fields[0].ty = fpas_bytecode::DebugTypeId::new(wrong as u32);
+        assert!(
+            RuntimeLayouts::build(&changed, address).is_err(),
+            "{name} field cannot change shape"
+        );
+    }
+}
+
+#[test]
 fn hosted_families_require_the_exact_host_cause_contract() {
     for source in [
         "program T; uses Std.Fs as Fs; begin discard Fs.ReadText('file'); end.",

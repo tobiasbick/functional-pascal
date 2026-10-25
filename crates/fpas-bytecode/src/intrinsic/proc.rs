@@ -29,6 +29,10 @@ pub enum ProcIntrinsic {
     Terminate = 731,
     /// Close all aliases and reap the owned process.
     Close = 732,
+    /// Probe the exact native exit code or terminating signal.
+    TryWaitStatus = 733,
+    /// Run a supervised child using the host's explicit interactive terminal.
+    RunInteractive = 734,
     /// `Std.Proc.RunWithOptions` process configuration API.
     RunWithOptions = 721,
     /// `Std.Proc.RunCaptureWithOptions` process configuration API.

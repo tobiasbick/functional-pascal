@@ -92,6 +92,9 @@ fn run(json: bool) -> i32 {
     let mut vm =
         fpas_vm::Vm::with_writer_and_args(image.into_executable(), Box::new(io::stdout()), args);
     vm.allow_process_lifecycle();
+    if let Some(terminal) = fpas_vm::InteractiveProcessTerminal::inherited() {
+        vm.set_interactive_process_terminal(terminal);
+    }
     if json {
         vm.set_program_stderr(Arc::new(|text: &str| {
             if let Ok(line) = fpas_diagnostics::render_program_stderr_json(text) {

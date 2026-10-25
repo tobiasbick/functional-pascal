@@ -1,3 +1,4 @@
+mod acp;
 mod args;
 mod bits;
 mod channel_task;
@@ -10,6 +11,7 @@ mod errors;
 mod fs;
 mod json;
 mod math;
+mod native_records;
 mod net;
 mod parse;
 mod path;
@@ -42,6 +44,11 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
+        fpas_std::STD_UNIT_ACP
+        | fpas_std::STD_UNIT_ACP_TYPES
+        | fpas_std::STD_UNIT_ACP_HOST
+        | fpas_std::STD_UNIT_ACP_EXPERIMENTAL
+        | fpas_std::STD_UNIT_ACP_V2 => acp::register(checker),
         fpas_std::STD_UNIT_SERVER => server::register(checker),
         fpas_std::STD_UNIT_ERRORS => {
             errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Host);

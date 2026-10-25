@@ -1,0 +1,137 @@
+//! V2 method examples; intentionally distinct from the v1 initialization/auth contract.
+
+pub const FIXTURES: &[(&str, &str, &str)] = &[
+    (
+        "ClientRequest",
+        "initialize",
+        r#"{"protocolVersion":2,"info":{"name":"test","version":"1"}}"#,
+    ),
+    (
+        "AgentResponse",
+        "initialize",
+        r#"{"protocolVersion":2,"info":{"name":"agent","version":"1"}}"#,
+    ),
+    ("ClientRequest", "auth/login", r#"{"methodId":"token"}"#),
+    ("AgentResponse", "auth/login", "{}"),
+    ("ClientRequest", "auth/logout", "{}"),
+    ("AgentResponse", "auth/logout", "{}"),
+    ("ClientRequest", "providers/list", "{}"),
+    ("AgentResponse", "providers/list", r#"{"providers":[]}"#),
+    (
+        "ClientRequest",
+        "providers/set",
+        r#"{"providerId":"p","apiType":"openai","baseUrl":"https://example.test"}"#,
+    ),
+    ("AgentResponse", "providers/set", "{}"),
+    (
+        "ClientRequest",
+        "providers/disable",
+        r#"{"providerId":"p"}"#,
+    ),
+    ("AgentResponse", "providers/disable", "{}"),
+    (
+        "ClientRequest",
+        "session/new",
+        r#"{"cwd":"/workspace","mcpServers":[]}"#,
+    ),
+    ("AgentResponse", "session/new", r#"{"sessionId":"s"}"#),
+    (
+        "ClientRequest",
+        "session/resume",
+        r#"{"sessionId":"s","cwd":"/workspace"}"#,
+    ),
+    ("AgentResponse", "session/resume", "{}"),
+    (
+        "ClientRequest",
+        "session/list",
+        r#"{"cwd":"/workspace","cursor":"page"}"#,
+    ),
+    ("AgentResponse", "session/list", r#"{"sessions":[]}"#),
+    ("ClientRequest", "session/delete", r#"{"sessionId":"s"}"#),
+    ("AgentResponse", "session/delete", "{}"),
+    ("ClientRequest", "session/close", r#"{"sessionId":"s"}"#),
+    ("AgentResponse", "session/close", "{}"),
+    (
+        "ClientRequest",
+        "session/fork",
+        r#"{"sessionId":"s","cwd":"/workspace"}"#,
+    ),
+    ("AgentResponse", "session/fork", r#"{"sessionId":"fork"}"#),
+    (
+        "ClientRequest",
+        "session/set_config_option",
+        r#"{"sessionId":"s","configId":"model","type":"id","value":"luna"}"#,
+    ),
+    (
+        "AgentResponse",
+        "session/set_config_option",
+        r#"{"configOptions":[]}"#,
+    ),
+    (
+        "ClientRequest",
+        "session/prompt",
+        r#"{"sessionId":"s","prompt":[]}"#,
+    ),
+    ("AgentResponse", "session/prompt", r#"{"messageId":"m"}"#),
+    (
+        "ClientNotification",
+        "session/cancel",
+        r#"{"sessionId":"s"}"#,
+    ),
+    (
+        "AgentNotification",
+        "session/update",
+        r#"{"sessionId":"s","update":{"sessionUpdate":"tool_call_update","toolCallId":"t","title":null,"content":[]}}"#,
+    ),
+    (
+        "AgentNotification",
+        "elicitation/complete",
+        r#"{"elicitationId":"e"}"#,
+    ),
+    (
+        "AgentRequest",
+        "session/request_permission",
+        r#"{"sessionId":"s","title":"Run?","subject":{"type":"tool_call","toolCall":{"toolCallId":"t"}},"options":[{"optionId":"o","name":"Once","kind":"allow_once"}]}"#,
+    ),
+    (
+        "ClientResponse",
+        "session/request_permission",
+        r#"{"outcome":{"outcome":"cancelled"}}"#,
+    ),
+    (
+        "AgentRequest",
+        "elicitation/create",
+        r#"{"message":"Name?","mode":"form","sessionId":"s","requestedSchema":{"type":"object","properties":{}}}"#,
+    ),
+    (
+        "ClientResponse",
+        "elicitation/create",
+        r#"{"action":"decline"}"#,
+    ),
+    ("ClientRequest", "_custom", "{}"),
+    ("AgentResponse", "_custom", "[1e400]"),
+    ("AgentRequest", "_custom", "null"),
+    ("ClientResponse", "_custom", "false"),
+    ("ClientNotification", "_custom", "[]"),
+    ("AgentNotification", "_custom", "{}"),
+    (
+        "ClientNotification",
+        "mcp/message",
+        r#"{"serverId":"m","requestId":"r","method":"notify"}"#,
+    ),
+    (
+        "AgentRequest",
+        "mcp/message",
+        r#"{"serverId":"m","requestId":"1","method":"tools/list"}"#,
+    ),
+    (
+        "ClientResponse",
+        "mcp/message",
+        r#"{"result":{"tools":[]}}"#,
+    ),
+    (
+        "ProtocolLevelNotification",
+        "$/cancel_request",
+        r#"{"requestId":null}"#,
+    ),
+];

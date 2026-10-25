@@ -1,6 +1,7 @@
 //! Runtime-shared positional aggregate names derived from verified metadata.
 
 mod native_errors;
+mod native_records;
 use std::sync::Arc;
 
 use fpas_bytecode::{
@@ -70,10 +71,17 @@ impl RuntimeLayouts {
                         .error
                         .as_ref()
                         .map(|error| {
-                            fpas_bytecode::RuntimeErrorVariant::from_metadata(
+                            let mut runtime = fpas_bytecode::RuntimeErrorVariant::from_metadata(
                                 error,
                                 &executable.strings,
-                            )
+                            )?;
+                            runtime.hide_payload = fpas_std::native_errors::NativeErrorFamily::ALL
+                                .iter()
+                                .any(|family| {
+                                    family.name().eq_ignore_ascii_case(&type_name)
+                                        && family.hide_payload()
+                                });
+                            Ok::<_, fpas_bytecode::EnumConstructionError>(runtime)
                         })
                         .transpose()
                         .map_err(|error| {

@@ -9,6 +9,8 @@ mod options;
 mod pipes;
 pub(super) mod platform;
 mod registry;
+mod run_interactive;
+mod status;
 
 #[cfg(test)]
 mod tests;
@@ -34,6 +36,11 @@ impl Worker {
         let Intrinsic::Proc(operation) = intrinsic else {
             return Ok(None);
         };
+        if operation == ProcIntrinsic::RunInteractive {
+            return self
+                .execute_run_interactive(arguments, location)
+                .map(|value| Some(Some(value)));
+        }
         if let Some(value) = self.execute_interactive_process(operation, arguments, location)? {
             return Ok(Some(Some(value)));
         }

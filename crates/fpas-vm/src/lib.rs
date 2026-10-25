@@ -18,7 +18,9 @@
 /// Canonical bounded serialization for detached diagnostic and trace values.
 pub mod snapshot_value;
 
+mod process_terminal;
 mod vm;
+pub use process_terminal::{InteractiveProcessStdio, InteractiveProcessTerminal};
 pub use vm::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 
 pub use fpas_std::ScreenSnapshot;

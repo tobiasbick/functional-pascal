@@ -418,6 +418,9 @@ fn run_executable(
         .map(|_| crate::cli_failure_dump::Sources::new(&executable, source_paths.as_deref()));
     let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args)
         .with_collection_schedule(collection_schedule);
+    if let Some(terminal) = fpas_vm::InteractiveProcessTerminal::inherited() {
+        vm.set_interactive_process_terminal(terminal);
+    }
     let session = failure_dump
         .clone()
         .zip(sources)

@@ -136,6 +136,9 @@ fn error_frame<'a>(
         formatter.write_str(": ")?;
         escaped(formatter, message, false)?;
     }
+    if error.hide_payload {
+        return Ok(());
+    }
     if let Some(cause) = &error.cause {
         match body.values.get(usize::from(cause.field)) {
             Some(value) => pending.push(DisplayPart::Value(value, false)),

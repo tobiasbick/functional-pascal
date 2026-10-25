@@ -64,6 +64,21 @@ pub(super) fn parse_start(values: &[Value]) -> Result<Request<'_>, Failure> {
     Ok(request)
 }
 
+pub(super) fn parse_interactive(values: &[Value]) -> Result<Request<'_>, Failure> {
+    if values.len() != 5 {
+        return Err(Failure::argument(
+            "Arguments",
+            "Expected command, arguments, start options, timeout and cancellation token",
+        ));
+    }
+    let mut request = parse_start(&values[..3])?;
+    request.capture = false;
+    request.inherit_input = true;
+    request.options.timeout = timeout(&values[3])?;
+    request.options.token = token(&values[4])?;
+    Ok(request)
+}
+
 fn configuration(fields: &[Value]) -> Result<Options<'_>, Failure> {
     require_option(&fields[0])?;
     let directory = optional(&fields[0])
@@ -97,33 +112,14 @@ fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
     let fields = record(value, "Std.Proc.ProcessOptions", 6)?;
     let configuration = configuration(fields)?;
     let input = text(&fields[2], "Input")?;
-    let timeout = optional(&fields[3])
-        .map(|value| {
-            let millis = integer(value, "TimeoutMillis")?;
-            u64::try_from(millis)
-                .map(Duration::from_millis)
-                .map_err(|_| Failure::argument("TimeoutMillis", "Timeout must not be negative"))
-        })
-        .transpose()?;
+    let timeout = timeout(&fields[3])?;
     let maximum = usize::try_from(integer(&fields[4], "MaxOutputBytes")?)
         .ok()
         .filter(|value| *value <= MAX_IO)
         .ok_or_else(|| {
             Failure::argument("MaxOutputBytes", "Output limit must be in 0..67108864")
         })?;
-    let token = optional(&fields[5])
-        .map(|value| match value {
-            Value::OpaqueHandle(token) => Ok(*token),
-            _ => Err(Failure::argument(
-                "CancellationToken",
-                "Expected a cancellation token",
-            )),
-        })
-        .transpose()?;
-    // Optional fields are checked separately so malformed wrappers never become defaults.
-    for index in [0, 3, 5] {
-        require_option(&fields[index])?;
-    }
+    let token = token(&fields[5])?;
     Ok(Options {
         input,
         timeout,
@@ -131,6 +127,31 @@ fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
         token,
         ..configuration
     })
+}
+
+fn timeout(value: &Value) -> Result<Option<Duration>, Failure> {
+    require_option(value)?;
+    optional(value)
+        .map(|value| {
+            let millis = integer(value, "TimeoutMillis")?;
+            u64::try_from(millis)
+                .map(Duration::from_millis)
+                .map_err(|_| Failure::argument("TimeoutMillis", "Timeout must not be negative"))
+        })
+        .transpose()
+}
+
+fn token(value: &Value) -> Result<Option<u64>, Failure> {
+    require_option(value)?;
+    optional(value)
+        .map(|value| match value {
+            Value::OpaqueHandle(token) => Ok(*token),
+            _ => Err(Failure::argument(
+                "CancellationToken",
+                "Expected a cancellation token",
+            )),
+        })
+        .transpose()
 }
 
 fn optional(value: &Value) -> Option<&Value> {

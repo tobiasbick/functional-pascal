@@ -36,6 +36,7 @@ impl Intrinsic {
     #[must_use]
     pub const fn owner(self) -> IntrinsicOwner {
         match self {
+            Self::Acp(operation) if operation.codec().is_some() => IntrinsicOwner::Hosted,
             Self::Server(_)
             | Self::Args(_)
             | Self::Console(_)
@@ -54,6 +55,8 @@ impl Intrinsic {
                 | ProcIntrinsic::WriteStdin
                 | ProcIntrinsic::CloseStdin
                 | ProcIntrinsic::TryWait
+                | ProcIntrinsic::TryWaitStatus
+                | ProcIntrinsic::RunInteractive
                 | ProcIntrinsic::Terminate
                 | ProcIntrinsic::Close,
             )

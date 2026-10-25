@@ -21,6 +21,7 @@ fn layout(
 ) -> Arc<RuntimeEnumLayout> {
     Arc::new(RuntimeEnumLayout {
         error: Some(RuntimeErrorVariant {
+            hide_payload: false,
             message: message.map(str::to_owned),
             cause,
         }),

@@ -61,7 +61,8 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
             | ConsoleIntrinsic::WriteLn,
         ) => None,
         Intrinsic::Console(_) => Some("Std.Console"),
-        Intrinsic::Str(_)
+        Intrinsic::Acp(_)
+        | Intrinsic::Str(_)
         | Intrinsic::Conv(_)
         | Intrinsic::Encoding(_)
         | Intrinsic::Parse(_)

@@ -181,6 +181,7 @@ begin
   discard ReadUntil(Child, [0, 255, 114, 101, 97, 100, 121], false);
   discard ReadUntil(Child, [0, 254, 102, 97, 117, 108, 116], true);
   Test.AssertTrue(Proc.TryWait(Child).Unwrap() is None);
+  Test.AssertTrue(Proc.TryWaitStatus(Child).Unwrap() is None);
   Test.AssertTrue(Proc.ReadStdout(Child, 2).Unwrap() is None);
   Test.AssertTrue(Proc.WriteStdin(Child, [256]) is Error(_));
   Test.AssertTrue(Proc.WriteStdin(Child, [-1]) is Error(_));
@@ -211,6 +212,12 @@ begin
     Time.Sleep(1);
   end while;
   Test.AssertEquals(0, Proc.TryWait(Child).Unwrap().Unwrap());
+  const Status := Proc.TryWaitStatus(Alias).Unwrap().Unwrap();
+  Test.AssertEquals(0, Status.ExitCode.Unwrap());
+  Test.AssertTrue(Status.Signal is None);
+  const Again := Proc.TryWaitStatus(Child).Unwrap().Unwrap();
+  Test.AssertTrue(Status.ExitCode = Again.ExitCode);
+  Test.AssertTrue(Status.Signal = Again.Signal);
   var StderrEof := false;
   while not StderrEof and (Time.MonotonicMillis() < Deadline) do
     case Proc.ReadStderr(Child, 4096).Unwrap() of
@@ -222,6 +229,7 @@ begin
   Test.AssertTrue(Proc.ReadStdout(Child, 4096).Unwrap().Unwrap().IsEmpty());
   discard Proc.Close(Child).Unwrap();
   Test.AssertTrue(Proc.TryWait(Alias) is Error(_));
+  Test.AssertTrue(Proc.TryWaitStatus(Alias) is Error(_));
   Test.AssertTrue(Proc.Close(Alias) is Error(_));
   Test.AssertTrue(Proc.Start('', [], Options) is Error(_));
 end.

@@ -186,8 +186,8 @@ workspace-aware `run` also produces or reuses the program's `.fpascp`. Running
 artifact reuse is silent.
 
 The compiler validates content hashes, compiler and bytecode compatibility, compilation options,
-and direct dependency interface hashes rather than relying on timestamps. Invalid derived files
-are rebuilt from their `.fpas` source. Plain standalone `.fpas` programs and directory checks do
+and interface hashes of direct and transitive dependencies rather than relying on timestamps.
+Invalid derived files are rebuilt from their `.fpas` source. Plain standalone `.fpas` programs and directory checks do
 not create compiled-unit sidecars. A directory check may reuse compatible sidecars that already
 exist, but newly compiled units remain in memory.
 

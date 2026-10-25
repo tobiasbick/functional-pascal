@@ -2,7 +2,7 @@
 
 pub use fpas_binary::Digest;
 
-/// Interface identity expected from one direct unit dependency.
+/// Interface identity expected from one direct or transitive unit dependency.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DependencyIdentity {
     /// Canonical case-insensitive unit name.
@@ -28,7 +28,7 @@ pub struct UnitIdentity {
     pub bytecode_version: u32,
     /// Hash of all semantic and code-generation options.
     pub options_hash: Digest,
-    /// Direct dependencies and the interface hashes used during compilation.
+    /// Imported dependency closure and the interface hashes used during compilation.
     pub dependencies: Vec<DependencyIdentity>,
 }
 
@@ -45,7 +45,7 @@ pub struct ExpectedUnitIdentity {
     pub bytecode_version: u32,
     /// Current semantic and code-generation option hash.
     pub options_hash: Digest,
-    /// Current direct dependency interface hashes.
+    /// Current direct and transitive dependency interface hashes.
     pub dependencies: Vec<DependencyIdentity>,
 }
 

@@ -22,6 +22,8 @@ mod coverage;
 mod enum_values;
 #[path = "incremental/initialization.rs"]
 mod initialization;
+#[path = "incremental/nested_records.rs"]
+mod nested_records;
 #[path = "incremental/worker_state.rs"]
 mod worker_state;
 

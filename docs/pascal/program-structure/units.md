@@ -158,7 +158,12 @@ Project units are compiled independently. Compiling `Geometry.fpas` creates the 
 - the unit's public semantic interface;
 - relocatable bytecode and source locations;
 - source, compiler, bytecode-format, and compilation-option identities;
-- direct dependency interface hashes.
+- direct and transitive dependency interface hashes.
+
+The dependency closure includes nested imported type layouts. Extending a record
+therefore rebuilds unchanged transitive consumers whose compiled code or debug
+projections use that record. Implementation-only changes still reuse consumers,
+and unrelated units remain reusable.
 
 `fpas check`, `fpas run`, and `fpas test` automatically rebuild a missing, stale, corrupt, or
 incompatible sidecar. Sources and manifests remain authoritative; `.fpascu` files are replaceable

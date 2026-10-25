@@ -135,7 +135,7 @@ fn compile_units<Backend: UnitBackend>(
                 format!("internal build graph error: selected unit `{unit_name}` is missing"),
             )
         })?;
-        let dependencies = interfaces.direct_dependency_identities(node.direct_uses());
+        let dependencies = interfaces.dependency_identities(node.direct_uses());
         let source = UnitSourceSnapshot::read(node)?;
         let expected = ExpectedUnitIdentity {
             unit_name: unit_name.clone(),
@@ -143,7 +143,7 @@ fn compile_units<Backend: UnitBackend>(
             compiler_version: options.compiler_version.clone(),
             bytecode_version: options.bytecode_version,
             options_hash: options.options_hash,
-            dependencies: dependencies.clone(),
+            dependencies,
         };
 
         let reusable = Backend::load(node.path(), &expected)?;
@@ -199,7 +199,7 @@ fn compile_units<Backend: UnitBackend>(
                     compiler_version: options.compiler_version.clone(),
                     bytecode_version: options.bytecode_version,
                     options_hash: options.options_hash,
-                    dependencies,
+                    dependencies: expected.dependencies.clone(),
                 },
                 interface: interface_bytes,
                 object: object_bytes,
@@ -219,7 +219,12 @@ fn compile_units<Backend: UnitBackend>(
             (interface, object, interface_hash, object_hash)
         };
         Backend::normalize(&mut object, node.source_id());
-        interfaces.insert(unit_name.clone(), interface, interface_hash);
+        interfaces.insert(
+            unit_name.clone(),
+            interface,
+            interface_hash,
+            expected.dependencies,
+        );
         linked_units.push(LinkedUnitIdentity {
             unit_name: unit_name.clone(),
             object_hash,

@@ -100,7 +100,7 @@ results for subsequent work.
 
 - [x] [AP50.1: Lossless schema types and codec](01-schema-and-types.md)
 - [x] [AP50.2: Process status and interactive launch](02-process-support.md)
-- [ ] [AP50.3: Native connection driver and transports](03-connection-runtime.md)
+- [x] [AP50.3: Native connection driver and transports](03-connection-runtime.md)
 - [ ] [AP50.4: Complete stable v1 client](04-v1-client.md)
 - [ ] [AP50.5: Inbound requests and host adapters](05-host-requests.md)
 - [ ] [AP50.6: Draft v2 and experimental client features](06-experimental-client.md)
@@ -141,6 +141,11 @@ only a happy-path conversation or a raw escape hatch for missing typed methods.
   and the [test runner handbook](../../../pascal/std/testing/test.md).
 
 ## Live interoperability
+
+During implementation, run the owning tests and checks needed by each change.
+Full Rust workspace and FPAS suite runs are reserved for AP50's final acceptance.
+This user-selected validation scope overrides the generic per-package full-run
+guidance in the development process.
 
 Use the separately maintained [Codex ACP adapter](https://github.com/agentclientprotocol/codex-acp)
 for authorized live smoke tests, selecting `gpt-6-luna` explicitly. Launch the

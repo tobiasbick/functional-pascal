@@ -1,6 +1,28 @@
 # AP50.3: Native connection driver and transports
 
-Package: [AP50](README.md). Status: planned; implementation not started.
+Package: [AP50](README.md). Status: implemented; targeted verification passed.
+
+## Delivered
+
+The SDK driver, production message endpoint, shared process adapter, opaque VM
+registries, typed event conversion and cooperative receive/close/release paths
+are implemented. SDK transport handoffs retain admission credits; deferred
+requests never wait for application interaction in an ordered callback. Local
+close has a separate cancellation path for blocked physical output. Failed
+cleanup retains its host ownership and connection slot until VM teardown.
+
+Targeted Windows verification covers transport fragmentation, entry/byte
+pressure, request/responder capacity, alias identity, response validation,
+cancellation order, reserved terminal settlement, blocked output, cleanup
+failure, VM completion/failure and one-worker receive/process-close progress.
+The two owning FPAS regressions pass through the test runner; ordinary batch
+debugging also completes. A live read-only Codex ACP 2.2.2 run selected
+`gpt-6-luna`, returned the exact requested marker through typed SDK events,
+and completed native close/release. No full workspace or FPAS suite was run.
+
+Initialization/session state, host-execution rights and session/terminal/route
+reservations attach to their operations in AP50.4 through AP50.6. Their limits
+and explicit configuration are already registered and validated here.
 
 ## Prerequisites
 
@@ -80,6 +102,7 @@ descendants and clear all native registries, including unreleased closed handles
 | Action | Path | Purpose |
 | --- | --- | --- |
 | Create | `crates/fpas-acp/src/connection/`, `src/transport/` | SDK driver, deferred responders, message and byte adapters |
+| Create | `crates/fpas-acp/src/connection/{limits,error,events,queue,driver}.rs`, `src/transport/{messages,framing}.rs` | Shared bounded admission, detached outcomes and SDK transport ownership |
 | Create | `crates/fpas-acp/tests/transport.rs`, `tests/connection.rs` | Framing, raw extension routing, ordered dispatch and bounded failure |
 | Modify | `crates/fpas-vm/Cargo.toml`, `Cargo.toml`, `Cargo.lock` | Adapter dependency and cross-platform Tokio/compatibility features |
 | Create | `crates/fpas-vm/src/vm/hosted/acp/mod.rs`, `registry.rs`, `dispatch.rs`, `transport.rs` | VM ownership, intrinsic bridge, process/message endpoint lifecycle |
@@ -114,7 +137,8 @@ Do not postpone a catalog, artifact or debugger update to AP50.7.
 - Repeat near-threshold close/cancellation races without timing-based sleeps
   as the assertion mechanism. Coordinate through actual messages and receipts.
 
-Run owning Rust VM/adapter tests and required workspace checks. Investigate any
-observed FPAS responsiveness/performance issue with `fpas run --profile` before
+Run owning Rust VM/adapter tests. The user has deferred full workspace and FPAS
+suite runs until the end of AP50; do not repeat them for each work package.
+Investigate any observed FPAS responsiveness/performance issue with `fpas run --profile` before
 adding a sampler or benchmark variant. Record a forced dogfooding fallback in
 the existing gaps file with a minimal reproducer.

@@ -1,14 +1,16 @@
-//! Lossless ACP value and codec boundary for the pinned Rust SDK.
+//! Lossless values and bounded native connections for the pinned Rust ACP SDK.
 //!
-//! This crate owns no VM values, compiler types, processes or executors.
+//! This crate owns no VM values, compiler types or host processes.
 //! Protocol serialization delegates to the SDK schema; arbitrary JSON stays raw.
 
 pub mod binding;
 pub mod codec;
+pub mod connection;
 pub mod error;
 mod normalizers;
 pub mod raw;
 pub mod schema;
+pub mod transport;
 pub mod value;
 
 pub use agent_client_protocol::schema as protocol;

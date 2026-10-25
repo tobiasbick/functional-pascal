@@ -188,7 +188,7 @@ impl Worker {
         self.write(destination, value)
     }
 
-    fn intrinsic_location(&self) -> SourceLocation {
+    pub(in crate::vm) fn intrinsic_location(&self) -> SourceLocation {
         self.executable
             .executable()
             .source_map

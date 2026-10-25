@@ -18,6 +18,11 @@ pub struct DecodedPayload {
 }
 
 impl Catalog {
+    /// Whether an SDK root recognizes this method, including protocol extensions.
+    pub fn supports_method(&self, root: &str, method: &str) -> bool {
+        self.method_variant(root, method).is_ok()
+    }
+
     fn method_variant(
         &self,
         root: &str,

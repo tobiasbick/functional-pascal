@@ -1,6 +1,14 @@
 //! Typed protocol value conversion, without process or connection state.
 
+mod arguments;
+mod dispatch;
+mod outcomes;
+mod registry;
+#[cfg(test)]
+mod tests;
 mod values;
+pub(in crate::vm) mod wait;
+pub(in crate::vm) use registry::Registry;
 
 use crate::vm::{VmError, worker::Worker};
 use fpas_acp::{
@@ -21,6 +29,11 @@ impl Worker {
         let Intrinsic::Acp(operation) = intrinsic else {
             return Ok(None);
         };
+        if operation.connection() {
+            return self
+                .execute_acp_connection(operation, arguments, location)
+                .map(|value| Some(Some(value)));
+        }
         let Some((version, decode, root)) = operation.codec() else {
             return Ok(None);
         };

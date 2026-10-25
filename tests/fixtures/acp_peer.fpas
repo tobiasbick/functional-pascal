@@ -1,0 +1,21 @@
+program AcpPeer;
+
+uses Std.Args as Args, Std.Console as Console, Std.Acp.Types as Types, Std.Test as Test;
+
+begin
+  Console.WriteText('{"jsonrpc":"2.0","method":"peer/');
+  Console.WriteText('ready","params":{"text":"Grüße"}}' + #10);
+  const Incoming := Console.ReadLn().Unwrap();
+  const Message := Types.ParseRawJson(Incoming).Unwrap();
+  const Id := Types.RawJsonMember(Message, 'id').Unwrap().Unwrap();
+  if Args.ParamStr(0) = 'malformed' then
+    Console.WriteText('{"jsonrpc":');
+  else
+    Test.AssertTrue(Incoming.Length() > 262144);
+    Console.WriteText('{"jsonrpc":"2.0","id":' + Id.Text);
+    Console.WriteText(',"result":{"text":"Grüße","n":18446744073709551615}}' + #10);
+    if Args.ParamStr(0) = 'stderr' then
+      panic('stderr'.RepeatStr(32768));
+    end if;
+  end if;
+end.

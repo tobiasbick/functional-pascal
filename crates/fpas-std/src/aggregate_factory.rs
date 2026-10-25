@@ -9,6 +9,17 @@ use crate::StdError;
 /// Compilers retain these layouts when present because their constructors are not represented by a
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
+    "Std.Acp.Options",
+    "Std.Acp.Limits",
+    "Std.Acp.ExperimentalOptions",
+    "Std.Acp.ProtocolVersion",
+    "Std.Acp.MessageConnection",
+    "Std.Acp.ConnectionState",
+    "Std.Acp.Lifecycle",
+    "Std.Acp.Event",
+    "Std.Acp.EventPayload",
+    "Std.Acp.ClosedStatus",
+    "Std.Acp.ProcessExitStatus",
     "Std.Acp.Types.AcpError",
     "Std.Acp.Types.RawJson",
     "Std.Acp.Types.UInt64",

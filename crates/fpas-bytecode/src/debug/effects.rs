@@ -158,6 +158,17 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
 #[must_use]
 pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
     match intrinsic {
+        Intrinsic::Acp(operation)
+            if operation.connection()
+                && !matches!(operation, crate::AcpIntrinsic::DefaultOptions) =>
+        {
+            let effects = DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC);
+            if operation.waits() {
+                effects.union(DebugEffectSet::BLOCKING)
+            } else {
+                effects
+            }
+        }
         Intrinsic::Acp(_)
         | Intrinsic::Str(_)
         | Intrinsic::Conv(_)

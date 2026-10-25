@@ -1,6 +1,8 @@
 //! Owned process execution with bounded capture and cooperative supervision.
 
+mod acp;
 mod arguments;
+pub(super) use acp::{AcpLaunch, AcpProcess};
 mod engine;
 mod failure;
 mod interactive;

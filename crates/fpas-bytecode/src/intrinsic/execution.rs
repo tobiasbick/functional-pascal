@@ -36,7 +36,9 @@ impl Intrinsic {
     #[must_use]
     pub const fn owner(self) -> IntrinsicOwner {
         match self {
-            Self::Acp(operation) if operation.codec().is_some() => IntrinsicOwner::Hosted,
+            Self::Acp(operation) if operation.codec().is_some() || operation.connection() => {
+                IntrinsicOwner::Hosted
+            }
             Self::Server(_)
             | Self::Args(_)
             | Self::Console(_)
@@ -111,6 +113,7 @@ impl Intrinsic {
     #[must_use]
     pub const fn requires_mutable_dispatch(self) -> bool {
         matches!(self, Self::Task(_) | Self::Time(TimeIntrinsic::Sleep))
+            || matches!(self, Self::Acp(operation) if operation.waits())
     }
 }
 

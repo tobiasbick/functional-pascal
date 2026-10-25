@@ -44,7 +44,7 @@ impl TaskClock {
     }
 
     /// Round realtime deadlines upward so a relative wait never expires before its budget.
-    pub(super) fn deadline_after(&self, duration: Duration) -> u64 {
+    pub(in crate::vm) fn deadline_after(&self, duration: Duration) -> u64 {
         if duration.is_zero() {
             return self.now_millis();
         }
@@ -74,6 +74,8 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::vm) enum TaskSuspension {
+    /// Native ACP wait state containing no FPAS values or callback-owned roots.
+    Acp(Box<crate::vm::hosted::acp::wait::Wait>),
     /// Retain a terminal body outcome until the creating task's groups have joined.
     OwnerCleanup {
         groups: Vec<u64>,
@@ -159,6 +161,7 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::Acp(wait) => wait.debug_state(clock),
             Self::OwnerCleanup { .. } => TaskSuspensionState::Waiting,
             Self::GroupClose {
                 deadline_millis: None,

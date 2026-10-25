@@ -9,6 +9,8 @@ repository.workspace = true
 
 [dependencies]
 fpas-acp = { path = "../fpas-acp" }
+futures.workspace = true
+tokio.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 fpas-numeric = { path = "../fpas-numeric" }
@@ -31,7 +33,7 @@ nix = { version = "0.31.3", features = ["fs", "signal", "term", "process"] }
 rustix = { version = "1.1.5", features = ["process"] }
 
 [target.'cfg(windows)'.dependencies]
-tokio = { version = "1.54.1", features = ["rt-multi-thread", "process", "io-util"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "process", "io-util"] }
 
 [dev-dependencies]
 fpas-compiler = { path = "../fpas-compiler" }

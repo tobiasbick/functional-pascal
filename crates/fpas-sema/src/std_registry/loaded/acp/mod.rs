@@ -1,6 +1,7 @@
 //! Complete, detached ACP protocol types and value codecs.
 
 mod codecs;
+mod connection;
 mod declarations;
 mod outcomes;
 
@@ -22,6 +23,7 @@ pub(super) fn register(checker: &mut Checker) {
     declarations::register(checker);
     outcomes::register(checker);
     codecs::register(checker);
+    connection::register(checker);
     define_func(
         checker,
         s::STD_ACP_RAW_JSON_MEMBER,

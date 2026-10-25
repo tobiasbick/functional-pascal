@@ -8,7 +8,7 @@ use fpas_std::{Console, KeyInput, TextInput};
 pub(super) mod console_cell_records;
 pub(super) mod console_records;
 
-mod acp;
+pub(in crate::vm) mod acp;
 mod args;
 pub(super) mod callbacks;
 mod console;
@@ -69,6 +69,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    pub(in crate::vm) acp: acp::Registry,
     pub(in crate::vm) servers: server::ServerRegistry,
     pub program_args: Vec<String>,
     pub console: Arc<Mutex<Console>>,
@@ -79,7 +80,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::vm::hosted) files: fs::Files,
     pub(in crate::vm::hosted) processes: proc::Processes,
-    pub(in crate::vm::hosted) piped_processes: proc::PipedProcesses,
+    pub(in crate::vm::hosted) piped_processes: Arc<proc::PipedProcesses>,
     pub(in crate::vm) process_terminal: Mutex<Option<crate::InteractiveProcessTerminal>>,
     pub(in crate::vm::hosted) random: Mutex<random::state::RandomState>,
     pub(in crate::vm) cancellations: CancellationRegistry,
@@ -95,6 +96,7 @@ pub(super) struct HostedState {
 impl HostedState {
     pub(super) fn new(console: Console, program_args: Vec<String>) -> Self {
         Self {
+            acp: Default::default(),
             servers: Default::default(),
             program_args,
             console: Arc::new(Mutex::new(console)),
@@ -105,7 +107,7 @@ impl HostedState {
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),
-            piped_processes: proc::PipedProcesses::default(),
+            piped_processes: Default::default(),
             process_terminal: Mutex::new(None),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
@@ -125,6 +127,7 @@ impl HostedState {
         program_args: Vec<String>,
     ) -> Self {
         Self {
+            acp: Default::default(),
             servers: Default::default(),
             program_args,
             console,
@@ -135,7 +138,7 @@ impl HostedState {
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),
-            piped_processes: proc::PipedProcesses::default(),
+            piped_processes: Default::default(),
             process_terminal: Mutex::new(None),
             random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
@@ -149,6 +152,7 @@ impl HostedState {
 
     /// Interrupt blocking hosted operations during VM shutdown.
     pub(super) fn shutdown_blocking_operations(&self) {
+        self.acp.shutdown();
         self.piped_processes.shutdown();
         self.processes.shutdown();
         self.files.shutdown();
@@ -164,12 +168,14 @@ impl HostedState {
 
     /// Request process-group termination without waiting in an active host callback.
     pub(super) fn close_process_handles(&self) {
+        self.acp.shutdown();
         self.piped_processes.shutdown();
         self.processes.shutdown();
     }
 
     /// Wait for process calls after workers and host callbacks have returned.
     pub(super) fn wait_process_handles(&self) {
+        self.acp.wait_idle();
         self.piped_processes.wait_idle();
         self.processes.wait_idle();
     }

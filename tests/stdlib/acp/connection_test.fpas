@@ -1,0 +1,117 @@
+program AcpConnectionTest;
+
+uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
+
+function Peer(Endpoint: Acp.MessageEndpoint): boolean;
+begin
+  var Waiting := true;
+  while Waiting do
+    case Acp.TryTakeMessage(Endpoint).Unwrap() of
+      when Some(const Message):
+        const Id := Types.RawJsonMember(Message, 'id').Unwrap().Unwrap();
+        Test.AssertTrue(
+          Acp.FeedMessage(
+            Endpoint,
+            Types.RawJson(
+              Text := '{"jsonrpc":"2.0","id":' + Id.Text +
+              ',"result":{"exact":18446744073709551615},"unknown":1e400}'
+            )
+          ).Unwrap()
+        );
+        Waiting := false;
+      when None:
+        Time.Sleep(1);
+    end case;
+  end while;
+
+  return true;
+end function;
+
+function Receiver(Connection: Acp.Connection; Started: channel of boolean): boolean;
+begin
+  discard Tasks.Send(Started, true);
+  const Received := Acp.Receive(Connection, Some(5000), None).Unwrap();
+  Test.AssertTrue(Received.Payload is Acp.EventPayload.Response(_, _));
+  const Original := Received.RawMessage.Unwrap();
+  Test.AssertEquals('1e400', Types.RawJsonMember(Original, 'unknown').Unwrap().Unwrap().Text);
+  return true;
+end function;
+
+begin
+  const Messages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+  const Connection := Messages.Connection;
+  Test.AssertTrue(Acp.State(Connection).Unwrap().Lifecycle is Acp.Lifecycle.Uninitialized);
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  Test.AssertTrue(Tasks.Cancel(Source));
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(0), Some(Token)) is Error(Types.AcpError.Cancelled(_))
+  );
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(-1), Some(Token)) is Error(Types.AcpError.InvalidArgument(_, _))
+  );
+  Test.AssertTrue(Acp.Receive(Connection, Some(0), None) is Error(Types.AcpError.Timeout(_)));
+  const Request := Types.DecodeClientRequest(
+    '_echo',
+    Types.RawJson(Text := '{"value":9007199254740993}')
+  ).Unwrap().Payload;
+  const RequestToken := Acp.Send(Connection, Request).Unwrap();
+  scope
+    const Started: channel of boolean := Tasks.CreateChannel(1);
+    const Receiving := go Receiver(Connection, Started);
+    discard Tasks.Receive(Started).Unwrap();
+    const Responding := go Peer(Messages.Endpoint);
+    Test.AssertTrue(Tasks.Wait(Receiving));
+    Test.AssertTrue(Tasks.Wait(Responding));
+    discard Tasks.CloseChannel(Started);
+  end scope;
+
+  Test.AssertFalse(Acp.CancelRequest(Connection, RequestToken).Unwrap());
+  Test.AssertTrue(
+    Acp.FeedMessage(
+      Messages.Endpoint,
+      Types.RawJson(
+        Text := '{"jsonrpc":"2.0","id":"host","method":"fs/read_text_file","params":{"sessionId":"s","path":"/unused"}}'
+      )
+    ).Unwrap()
+  );
+  const Incoming := Acp.Receive(Connection, Some(5000), None).Unwrap();
+  case Incoming.Payload of
+    when Acp.EventPayload.Request(_, const Responder):
+      const Wrong := Types.DecodeClientResponse(
+        'terminal/create',
+        Types.RawJson(Text := '{"terminalId":"t"}')
+      ).Unwrap().Payload;
+      Test.AssertTrue(Acp.Respond(Responder, Wrong) is Error(Types.AcpError.InvalidArgument(_, _)));
+      const Answer := Types.DecodeClientResponse(
+        'fs/read_text_file',
+        Types.RawJson(Text := '{"content":"provided by application"}')
+      ).Unwrap().Payload;
+      Test.AssertTrue(Acp.Respond(Responder, Answer).Unwrap());
+      Test.AssertTrue(Acp.Respond(Responder, Answer) is Error(Types.AcpError.Closed(_)));
+    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.Closed(_), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _):
+      panic('Expected deferred request');
+  end case;
+
+  Test.AssertTrue(
+    Acp.FeedMessage(
+      Messages.Endpoint,
+      Types.RawJson(Text := '{"jsonrpc":"2.0","method":"retained","params":{}}')
+    ).Unwrap()
+  );
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(0), Some(Token)) is Error(Types.AcpError.Cancelled(_))
+  );
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(5000), None).Unwrap().Payload is Acp.EventPayload.UnknownNotification('retained', _)
+  );
+  Test.AssertTrue(Acp.Close(Connection).Unwrap());
+  Test.AssertFalse(Acp.Close(Connection).Unwrap());
+  Test.AssertTrue(
+    Acp.Receive(Connection, None, None).Unwrap().Payload is Acp.EventPayload.Closed(_)
+  );
+  Test.AssertTrue(Acp.TryReceive(Connection) is Error(Types.AcpError.Closed(_)));
+  Test.AssertTrue(Acp.Release(Connection).Unwrap());
+  Test.AssertTrue(Acp.State(Connection) is Error(Types.AcpError.Closed(_)));
+  Test.AssertTrue(Acp.CloseInput(Messages.Endpoint) is Error(Types.AcpError.Closed(_)));
+end.

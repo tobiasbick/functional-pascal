@@ -1,0 +1,59 @@
+program AcpProcessTest;
+
+uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Proc as Proc, Std.Test as Test;
+
+procedure Exercise(Mode: string);
+begin
+  const Options := Acp.DefaultOptions();
+  const Limits := Options.Limits with StderrBytes := 1024; ShutdownMillis := 1000; end with;
+  const Child := Acp.ConnectProcess(
+    Acp.Launch(
+      Command := Proc.CurrentExecutable().Unwrap(),
+      Arguments := ['run', 'tests/fixtures/acp_peer.fpas', '--', Mode],
+      WorkingDirectory := None,
+      Environment := []
+    ),
+    Options with Limits := Limits; end with
+  ).Unwrap();
+  const Request := Types.DecodeClientRequest(
+    '_echo',
+    Types.RawJson(Text := '{"text":"' + 'x'.RepeatStr(262145) + '"}')
+  ).Unwrap().Payload;
+  discard Acp.Send(Child, Request).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Child, Some(15000), None).Unwrap().Payload is Acp.EventPayload.UnknownNotification('peer/ready', _)
+  );
+  if Mode = 'malformed' then
+    Test.AssertTrue(
+      Acp.Receive(Child, Some(15000), None).Unwrap().Payload is Acp.EventPayload.RequestFailed(_, Types.AcpError.InvalidMessage(_, _, _))
+    );
+  else
+    Test.AssertTrue(
+      Acp.Receive(Child, Some(15000), None).Unwrap().Payload is Acp.EventPayload.Response(_, _)
+    );
+  end if;
+  const Last := Acp.Receive(Child, Some(15000), None).Unwrap();
+  case Last.Payload of
+    when Acp.EventPayload.Closed(const Status):
+      Test.AssertTrue(Status.ProcessExit is Some(Acp.ProcessExitStatus.Exited(_)));
+      if Mode = 'stderr' then
+        Test.AssertTrue(Status.StderrTruncated);
+        Test.AssertTrue(Status.Stderr.Length() <= 1024);
+        Test.AssertTrue(Status.ProcessExit is Some(Acp.ProcessExitStatus.Exited(2)));
+      elsif Mode = 'malformed' then
+        Test.AssertTrue(Status.Cause is Some(Types.AcpError.InvalidMessage(_, _, _)));
+      else
+        Test.AssertTrue(Status.ProcessExit is Some(Acp.ProcessExitStatus.Exited(0)));
+      end if;
+    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.Request(_, _), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _):
+      panic('Expected final ACP event');
+  end case;
+
+  Test.AssertTrue(Acp.Release(Child).Unwrap());
+end procedure;
+
+begin
+  Exercise('clean');
+  Exercise('stderr');
+  Exercise('malformed');
+end.

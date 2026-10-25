@@ -42,10 +42,40 @@ pub enum AcpIntrinsic {
     V2DecodeProtocolLevelNotification = 767,
     V2EncodeProtocolLevelNotification = 768,
     RawJsonMember = 769,
+    DefaultOptions = 770,
+    ConnectMessages = 771,
+    FeedMessage = 772,
+    TryTakeMessage = 773,
+    CloseInput = 774,
+    ConnectProcess = 775,
+    Send = 776,
+    Notify = 777,
+    TryReceive = 778,
+    Receive = 779,
+    Respond = 780,
+    RespondError = 781,
+    CancelRequest = 782,
+    State = 783,
+    Close = 784,
+    Release = 785,
+    V2Send = 786,
+    V2Notify = 787,
+    V2Respond = 788,
 }
 }
 
 impl AcpIntrinsic {
+    /// Operations requiring connection-owned host state rather than pure value codecs.
+    #[must_use]
+    pub const fn connection(self) -> bool {
+        self as u16 >= 770
+    }
+
+    /// Operations retaining cooperative VM wait state.
+    #[must_use]
+    pub const fn waits(self) -> bool {
+        matches!(self, Self::Receive | Self::Close | Self::Release)
+    }
     /// Protocol version, decode/encode direction, and typed root for a payload codec.
     #[must_use]
     pub const fn codec(self) -> Option<(u8, bool, &'static str)> {
@@ -72,6 +102,8 @@ impl AcpIntrinsic {
         let name = format!("{self:?}");
         if let Some(name) = name.strip_prefix("V2") {
             format!("Std.Acp.V2.{name}")
+        } else if self.connection() {
+            format!("Std.Acp.{name}")
         } else {
             format!("Std.Acp.Types.{name}")
         }

@@ -577,9 +577,11 @@ version = "0.0.1"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
+ "futures",
  "schemars 1.2.3",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -885,6 +887,7 @@ dependencies = [
  "fpas-numeric",
  "fpas-parser",
  "fpas-std",
+ "futures",
  "getrandom 0.4.3",
  "libc",
  "nix",

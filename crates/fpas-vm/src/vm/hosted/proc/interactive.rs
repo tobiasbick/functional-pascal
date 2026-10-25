@@ -80,6 +80,17 @@ impl Process {
         }
     }
 
+    pub(super) fn flush(&mut self) -> Result<bool, Failure> {
+        let Some(writer) = &mut self.stdin else {
+            return Ok(true);
+        };
+        match writer.flush() {
+            Ok(()) => Ok(true),
+            Err(error) if pending(&error) => Ok(false),
+            Err(error) => Err(Failure::new(Kind::Execution(error))),
+        }
+    }
+
     pub(super) fn try_wait(&mut self) -> Result<Option<ExitStatus>, Failure> {
         self.child
             .try_wait()
@@ -92,7 +103,7 @@ impl Process {
             .map_err(|error| Failure::new(Kind::Execution(error)))
     }
 
-    fn close(mut self) -> Result<(), Failure> {
+    fn close(&mut self) -> Result<(), Failure> {
         self.terminate()?;
         self.stdin = None;
         self.child
@@ -184,14 +195,20 @@ impl PipedProcesses {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .entries
-            .remove(&handle)
+            .get(&handle)
+            .cloned()
             .ok_or_else(closed)?;
-        let process = entry
+        let mut state = entry.lock().unwrap_or_else(|e| e.into_inner());
+        state.as_mut().ok_or_else(closed)?.close()?;
+        let process = state.take();
+        drop(state);
+        self.registry
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .take()
-            .ok_or_else(closed)?;
-        process.close()
+            .entries
+            .remove(&handle);
+        drop(process);
+        Ok(())
     }
 
     pub(in crate::vm::hosted) fn shutdown(&self) {
@@ -213,7 +230,7 @@ impl PipedProcesses {
                 .entries,
         );
         for entry in entries.into_values() {
-            if let Some(process) = entry.lock().unwrap_or_else(|e| e.into_inner()).take() {
+            if let Some(mut process) = entry.lock().unwrap_or_else(|e| e.into_inner()).take() {
                 let _ = process.close();
             }
         }

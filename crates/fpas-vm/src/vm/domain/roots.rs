@@ -73,6 +73,7 @@ impl TraceRoots for super::super::tasks::TaskState {
 impl TraceRoots for super::super::tasks::TaskSuspension {
     fn trace_roots(&self, visit: &mut dyn FnMut(&Value)) -> Result<(), OwnershipError> {
         match self {
+            Self::Acp(_) => {} // Native ACP waits retain no FPAS values.
             Self::OwnerCleanup {
                 outcome: Ok(value), ..
             }

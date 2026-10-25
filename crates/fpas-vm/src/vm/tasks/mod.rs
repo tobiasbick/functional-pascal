@@ -63,6 +63,9 @@ impl Worker {
         arguments: &[Value],
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
+        if let Some(value) = self.acp_wait_intrinsic(intrinsic, arguments, destination)? {
+            return Ok(Some(value));
+        }
         if let Some(value) = self.group_intrinsic(intrinsic, arguments, destination)? {
             return Ok(Some(value));
         }
@@ -297,6 +300,7 @@ impl Worker {
             self.check_task_cancellation()?;
         }
         let ready = match suspension {
+            TaskSuspension::Acp(wait) => self.poll_acp_wait(*wait),
             TaskSuspension::OwnerCleanup { groups, outcome } => {
                 self.poll_owned_groups(groups, outcome)
             }
@@ -402,7 +406,7 @@ impl Worker {
             )
         })
     }
-    fn task_clock_ref(&self) -> &TaskClock {
+    pub(in crate::vm) fn task_clock_ref(&self) -> &TaskClock {
         let Some(clock) = self.task_clock.as_deref() else {
             unreachable!("task suspension requires a monotonic task clock")
         };

@@ -23,6 +23,7 @@ impl DebugSession {
         start: usize,
         count: usize,
     ) -> Result<Paginated<DebugFrame>, DebugSessionError> {
+        let _timer = profile::inspection();
         self.require_inspectable("stack")?;
         self.current_inspection()?.stack(start, count)
     }
@@ -101,6 +102,7 @@ impl DebugSession {
     ///
     /// Returns an invalid-state or expired-frame error.
     pub fn scopes(&self, frame_id: u64) -> Result<Vec<DebugScope>, DebugSessionError> {
+        let _timer = profile::inspection();
         self.require_inspectable("scopes")?;
         self.inspection_for_item(frame_id)?.scopes(frame_id)
     }
@@ -116,6 +118,7 @@ impl DebugSession {
         start: usize,
         count: usize,
     ) -> Result<Paginated<DebugVariable>, DebugSessionError> {
+        let _timer = profile::inspection();
         self.require_inspectable("variables")?;
         self.inspection_for_item_mut(reference)?
             .variables(reference, start, count)
@@ -149,6 +152,7 @@ impl DebugSession {
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
         let _evaluation_scope = self.evaluation_roots.enter();
+        let _timer = profile::inspection();
         let _domain_access = self.runtime.access_domains();
         self.require_inspectable("evaluate")?;
         let task_id = self.task_for_frame(frame_id)?;

@@ -16,6 +16,58 @@ must be a new file, like [`--failure-dump`](failure-dump.md): an existing path,
 published atomically. The report never contains program values, program
 arguments, environment variables or absolute paths.
 
+## Debug targets
+
+`fpas debug --profile <new-file>` profiles the actual debug target in batch,
+DAP and JSONL sessions. Profiling an FPAS controller with `run --profile` instead
+measures that controller; child processes have separate runtimes and counters.
+
+```sh
+fpas debug app.fpasprj --break src/main.fpas:42 --profile .temp-data/debug.json
+fpas debug app.fpasprj --protocol dap --profile .temp-data/debug.json
+fpas debug app.fpasprj --protocol jsonl --commands session.jsonl --profile .temp-data/debug.json
+```
+
+The report uses the same `fpas-profile` version 2 envelope, bounded routine/line
+rows, counters, findings and target digest as `run`. `run.runtime.execution` is
+`debug_serial`: logical tasks share the debugger's single execution lane and
+`workers` is zero. Ordinary debug dispatch samples one instruction at a time;
+synchronous callbacks retain the reported `max_batch_instructions` bound.
+
+The additional `debug` object contains:
+
+| Field | Meaning |
+| --- | --- |
+| `protocol` | `batch`, `dap` or `jsonl` |
+| `outcome` | Last resume result: `not_started`, `stopped`, `completed`, `runtime_error` or `error` (for example an execution limit) |
+| `timing` | `inclusive_wall`: elapsed wall time, including instrumentation overhead |
+| `resume_ms` | Continue and step operations, including scheduler, dispatch, waits and stop preparation |
+| `schedule_ms` | Readiness polling, task admission and task selection |
+| `dispatch_ms` | Single-instruction dispatch and task lifecycle work |
+| `root_publication_ms` | Execution-root snapshot creation and publication |
+| `inspection_ms` | VM inspection snapshots, stack/scope/variable queries and expression evaluation |
+| `wait_ms` | Scheduler waits during a resume, including waits for program input |
+
+These durations overlap: resume includes scheduling, dispatch, waits and stop
+inspection; root publication also occurs inside scheduling, dispatch and
+inspection. Do not add them as a partition of wall time. Routine/line time
+covers sampled instruction dispatch, rather than all debugger work. The top-level
+`wall_ms` includes client pauses between requests; `resume_ms` does not. Protocol
+encoding and transport time are outside the VM phase timers.
+
+The file is published after the session and its workers are dropped: at the end
+of a batch invocation, on normal protocol termination, disconnect, or handled
+transport failure. A stopped session reports the work completed before its stop.
+Runtime failures and execution limits retain their samples. The profile's status
+and exit code describe target execution or a host failure; DAP/JSONL keep their
+transport exit codes. A hard-killed process cannot guarantee a report. Preparation
+failures before profiling starts create no file.
+
+Profiling is opt-in and adds timing overhead to every debug instruction. Compare
+equally instrumented workloads; use ordinary unprofiled runs for final latency
+measurements. Live image replacement is rejected during profiling so one report
+always describes one executable. Launch a new session for changed code.
+
 ## Report
 
 | Field | Content |
@@ -64,8 +116,8 @@ Each batch's steps and wall time are attributed to the line and routine active
 when the batch ends (self) and to every distinct routine on its call stack
 (inclusive). Rows are therefore exact in total and statistically accurate per
 routine; a routine much shorter than a batch is attributed to its neighbours.
-Milliseconds include native intrinsic work called from FPAS code, but not blocked
-waits, collection or root publication; those appear in counters.
+Milliseconds include native intrinsic work called from FPAS code. Scheduler idle
+waits and post-dispatch collection/root publication appear in counters.
 
 ## Counters
 
@@ -77,6 +129,9 @@ waits, collection or root publication; those appear in counters.
 | `task_spawns`, `task_yields`, `task_parks` | Spawned tasks, time-slice yields and cooperative suspensions |
 | `queue_contended`, `worker_idle_nanos` | Contended ready-queue locks and time pool workers waited for work |
 | `cancellation_lookups` | Cancellation-token lookups that missed the worker cache |
+| `root_publication_nanos` | Execution-root snapshots and publication, excluding subsequent safe-point maintenance |
+| `debug_resume_nanos`, `debug_schedule_nanos`, `debug_dispatch_nanos` | Inclusive debugger resume, scheduling and dispatch times |
+| `debug_inspection_nanos`, `debug_wait_nanos` | VM inspection and scheduler-wait times |
 
 Counters are process-wide. `fpas run` profiles one VM; an embedding host that
 profiles several VMs at once shares the counters between them, which the report
@@ -94,11 +149,17 @@ how to confirm a cause. Findings appear in this order, at most eight:
 | --- | --- |
 | `collection_time` | Collection takes at least 10 % of `busy_ms` (`sampled_ms` plus safe points) |
 | `safe_point_time` | Root publication outside collection takes at least 10 % of `busy_ms` |
+| `debug_root_publication` | In a debug session, all execution-root publication takes at least 10 % of session wall time |
 | `classification_walks` | Classification visits at least 1,000 values per call on average |
 | `task_yields` | Time-slice yields exceed spawned tasks by more than 100 times |
 | `worker_idle` | Pool workers are idle for at least half of `workers * wall_ms` while tasks exist |
 | `dominant_routine` | The slowest routine other than the program entry takes at least half of `sampled_ms` |
 | `costly_instructions` | One of the five slowest routines spends at least ten times the average time per instruction and at least 10 % of `sampled_ms` |
+
+For debug reports, `busy_ms` is session wall time, since collection and root
+publication also occur outside sampled dispatch. `debug_root_publication`
+replaces `safe_point_time` and uses all measured root publications. Client pauses
+can dilute these shares; compare the absolute phase times as well.
 
 ## Agent workflow
 

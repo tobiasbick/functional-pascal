@@ -16,17 +16,36 @@ pub(crate) fn debug_cli(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let target = match prepare(&config) {
+    let mut target = match prepare(&config) {
         Ok(target) => target,
         Err(error) => return fail(stderr, error),
     };
+    let profile = crate::cli_profile::DebugSession::start(&mut target, &config);
+    let result = serve(target, &config, stdout);
+    let exit = match result {
+        Ok(()) => 0,
+        Err(error) => fail(stderr, format!("Debugger transport failed: {error}")),
+    };
+    if let Some(profile) = profile
+        && let Err(error) = profile.finish(exit)
+    {
+        return fail(stderr, format!("Cannot write debug profile: {error}"));
+    }
+    exit
+}
+
+fn serve(
+    target: fpas_debug::PreparedDebugTarget,
+    config: &DebugCliConfig,
+    stdout: Box<dyn Write + Send>,
+) -> Result<(), String> {
     let result = match config.protocol {
         DebugProtocol::Jsonl => {
             let server = match fpas_debug::jsonl::JsonlServer::new(target) {
                 Ok(server) => server,
-                Err(error) => return fail(stderr, error.to_string()),
+                Err(error) => return Err(error.to_string()),
             };
-            match config.commands {
+            match &config.commands {
                 Some(path) => File::open(path)
                     .and_then(|reader| fpas_debug::jsonl::serve_script(reader, stdout, server)),
                 None => fpas_debug::jsonl::serve(io::stdin(), stdout, server),
@@ -35,16 +54,13 @@ pub(crate) fn debug_cli(
         DebugProtocol::Dap => {
             let server = match fpas_debug::dap::DapServer::new(target) {
                 Ok(server) => server,
-                Err(error) => return fail(stderr, error.to_string()),
+                Err(error) => return Err(error.to_string()),
             };
             fpas_debug::dap::serve(io::stdin(), stdout, server)
         }
-        DebugProtocol::Batch => return fail(stderr, "Batch requests use the isolated CLI host."),
+        DebugProtocol::Batch => return Err("Batch requests use the isolated CLI host.".into()),
     };
-    match result {
-        Ok(()) => 0,
-        Err(error) => fail(stderr, format!("Debugger transport failed: {error}")),
-    }
+    result.map_err(|error| error.to_string())
 }
 
 /// Compiles/loads a verified target with the selected execution limits.

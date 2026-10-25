@@ -27,8 +27,9 @@ Newest entries are prepended below this header.
 - The debugger retains execution access for at most 256 resume-loop iterations
   and publishes before returning or waiting. Instruction scheduling, breakpoint
   checks, tracing and execution limits retain their existing boundaries.
-- Direct profiling of a debug target remains unavailable; temporary target phase
-  timers identified the cost and were removed before these measurements.
+- Temporary target phase timers identified the cost and were removed before
+  these measurements. Supported attribution is available through
+  [`fpas debug --profile`](../pascal/tools/profiler.md#debug-targets).
 - All 85 configured workloads complete against the saved `dap-before` baseline.
   Initial Notes/integer/Mandelbrot deviations were checked with three paired
   controls. Notes, integer and paint medians are within 0.6%; a longer render

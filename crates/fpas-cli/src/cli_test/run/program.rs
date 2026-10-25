@@ -50,6 +50,7 @@ impl RunOutput {
 
 /// Per-execution settings for one compiled or source-backed test program.
 pub(super) struct ProgramRunOptions<'a> {
+    pub no_contracts: bool,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     /// Optional scripted input configuration.
     pub script_override: Option<&'a Path>,
@@ -69,6 +70,7 @@ pub(super) struct ProgramRunOptions<'a> {
 
 /// Fully compiled test input transferable to an isolated worker process.
 pub(in crate::cli_test) struct PreparedProgram {
+    pub no_contracts: bool,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub test_path: PathBuf,
     pub executable: fpas_bytecode::VerifiedExecutable,
@@ -115,6 +117,7 @@ fn prepare_test_program(
     options: ProgramRunOptions<'_>,
 ) -> Result<PreparedProgram, TestOutcome> {
     let ProgramRunOptions {
+        no_contracts,
         collection_schedule,
         script_override,
         timeout: _,
@@ -133,7 +136,11 @@ fn prepare_test_program(
     } else if let Some(link) = link {
         super::load::reject_unit_test_entry(path, link)
             .and_then(|()| {
-                crate::project_build::build_test_program_with_graph(path, &link.program_graph)
+                crate::project_build::build_test_program_with_graph(
+                    path,
+                    &link.program_graph,
+                    no_contracts,
+                )
             })
             .map(|built| {
                 (
@@ -144,9 +151,14 @@ fn prepare_test_program(
             })
     } else {
         super::load::load_program(path).and_then(|(program, source)| {
-            fpas_compiler::compile(&program)
-                .map(|executable| (executable, None, Arc::new(vec![source])))
-                .map_err(|diagnostics| CliFailure::from_diagnostics(path, &diagnostics))
+            fpas_compiler::compile_with_options(
+                &program,
+                fpas_compiler::CompileOptions {
+                    contracts: !no_contracts,
+                },
+            )
+            .map(|executable| (executable, None, Arc::new(vec![source])))
+            .map_err(|diagnostics| CliFailure::from_diagnostics(path, &diagnostics))
         })
     };
     let (executable, source_paths, sources) = match built {
@@ -158,6 +170,7 @@ fn prepare_test_program(
     };
 
     Ok(PreparedProgram {
+        no_contracts,
         collection_schedule,
         test_path: path.to_path_buf(),
         executable,
@@ -193,6 +206,7 @@ pub(in crate::cli_test) fn run_prepared_program(
     gate: impl FnOnce() -> Result<(), String>,
 ) -> Result<TestOutcome, String> {
     let PreparedProgram {
+        no_contracts: _,
         collection_schedule,
         test_path,
         executable,

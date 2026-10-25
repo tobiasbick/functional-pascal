@@ -229,6 +229,7 @@ fn resolve_cli_config_splits_program_arguments_after_separator() {
     assert_eq!(
         result,
         Ok(ResolvedCli::Run(CliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::SourceFile(cwd.join("main.fpas")),
             program_args: vec![String::from("one"), String::from("-two")],

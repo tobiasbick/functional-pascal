@@ -18,6 +18,7 @@ fn test_cli_compares_golden_stdout_sidecar() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.join("echo_test.fpas")),
             cwd: cwd.clone(),
@@ -56,6 +57,7 @@ fn test_cli_fails_on_stdout_mismatch() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.join("echo_test.fpas")),
             cwd: cwd.clone(),

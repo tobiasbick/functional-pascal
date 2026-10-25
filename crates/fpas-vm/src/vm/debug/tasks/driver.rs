@@ -194,6 +194,9 @@ impl DebugTaskRuntime {
         &mut self,
         preferred: Option<u64>,
     ) -> Result<DebugSchedule, (u64, VmError)> {
+        let _timer = fpas_bytecode::profile::Timer::start(
+            fpas_bytecode::profile::Counter::DebugScheduleNanos,
+        );
         if self.seeded.is_some() {
             return self.seeded_schedule();
         }
@@ -247,6 +250,9 @@ impl DebugTaskRuntime {
         &mut self,
         task_id: u64,
     ) -> Result<DebugDispatch, (u64, VmError)> {
+        let _timer = fpas_bytecode::profile::Timer::start(
+            fpas_bytecode::profile::Counter::DebugDispatchNanos,
+        );
         if let Some(rounds) = &mut self.seeded {
             rounds.dispatched();
         }
@@ -390,6 +396,8 @@ impl DebugTaskRuntime {
 
     /// Wait for the next scheduler poll using the configured monotonic clock.
     pub(in crate::vm::debug) fn wait(&self, duration: Duration) {
+        let _timer =
+            fpas_bytecode::profile::Timer::start(fpas_bytecode::profile::Counter::DebugWaitNanos);
         self.clock.wait(duration);
     }
 

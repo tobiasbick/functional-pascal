@@ -21,6 +21,10 @@ The runner accepts the three [collection scheduling overrides](../../program-str
 The effective configuration also applies to setup/teardown hooks, parallel runs
 and isolated timeout workers. Omitted options use the shared runtime defaults.
 
+`--no-contracts` omits contract evaluation and checks in test bodies, dependencies
+and hooks, including isolated workers. Test assertions retain their behavior.
+See [contract policy](../../program-structure/cli.md#contract-policy).
+
 ## Importing and names
 
 Import with `uses Std.Test as Test;` and access public symbols as `Test.Name`. User enum variants require `Test.Type.Variant`.

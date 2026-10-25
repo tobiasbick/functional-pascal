@@ -251,6 +251,7 @@ fn write_worker_inputs(
         .map(|index| format!("source-{index}.fpas"))
         .collect();
     let identity = ProgramIdentity {
+        contracts_enabled: !prepared.no_contracts,
         compiler_version: env!("CARGO_PKG_VERSION").to_string(),
         bytecode_version: fpas_bytecode::BYTECODE_VERSION,
         source_hash: Digest::of(b"isolated-test-program"),

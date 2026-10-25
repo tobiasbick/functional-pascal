@@ -29,10 +29,29 @@ fn execute(files: &Files) -> std::io::Result<()> {
     let mut report = match crate::resolve_cli_config(&request.args, &request.cwd) {
         Ok(crate::ResolvedCli::Debug(config)) if config.protocol == crate::DebugProtocol::Batch => {
             match prepare(&config) {
-                Ok((target, options)) => {
-                    fpas_debug::batch::run(target, options, Box::new(std::io::stdout()), || {
-                        files.cancel().is_file()
-                    })
+                Ok((mut target, options)) => {
+                    let profile = crate::cli_profile::DebugSession::start(&mut target, &config);
+                    let mut report = fpas_debug::batch::run(
+                        target,
+                        options,
+                        Box::new(std::io::stdout()),
+                        || files.cancel().is_file(),
+                    );
+                    if let Some(profile) = profile
+                        && let Err(error) =
+                            profile.finish(report["exit_code"].as_i64().unwrap_or(3) as i32)
+                    {
+                        report["outcome"] = json!("error");
+                        report["exit_code"] = json!(1);
+                        if let Some(diagnostics) = report["diagnostics"].as_array_mut() {
+                            diagnostics.push(diagnostic(
+                                "profile_publication",
+                                "publication",
+                                &error.to_string(),
+                            ));
+                        }
+                    }
+                    report
                 }
                 Err(error) => error.report(),
             }

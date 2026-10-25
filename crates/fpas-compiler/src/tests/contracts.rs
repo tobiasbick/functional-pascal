@@ -4,6 +4,52 @@ use super::{assert_succeeds, run_program};
 mod postconditions;
 
 #[test]
+fn disabled_contracts_emit_no_conditions_branches_or_diagnostic_preparation() {
+    use fpas_bytecode::Opcode;
+    let program = super::parse_ok(
+        "program T;
+        function Guard(Value: integer): integer;
+        requires 10 div Value > 0;
+        ensures (Returned): 20 div Value > Returned;
+        begin return Value; end function;
+        begin discard Guard(0); end.",
+    );
+    for contracts in [true, false] {
+        let image =
+            crate::compile_with_options(&program, crate::CompileOptions { contracts }).unwrap();
+        let opcodes: Vec<_> = image
+            .decoded()
+            .iter()
+            .map(|instruction| instruction.opcode())
+            .collect();
+        assert_eq!(opcodes.contains(&Opcode::Panic), contracts);
+        assert_eq!(opcodes.contains(&Opcode::MakeDictionary), contracts);
+        assert_eq!(
+            opcodes.iter().any(|opcode| matches!(
+                opcode,
+                Opcode::BranchIfFalse
+                    | Opcode::BranchIfTrue
+                    | Opcode::BranchIfEqualInteger
+                    | Opcode::BranchIfNotEqualInteger
+                    | Opcode::BranchIfLessInteger
+                    | Opcode::BranchIfGreaterInteger
+                    | Opcode::BranchIfLessEqualInteger
+                    | Opcode::BranchIfGreaterEqualInteger
+            )),
+            contracts
+        );
+        assert_eq!(
+            opcodes
+                .iter()
+                .any(|opcode| matches!(opcode, Opcode::DivideInteger | Opcode::DivideIntegerImm)),
+            contracts
+        );
+        let result = fpas_vm::Vm::new(image).run();
+        assert_eq!(result.is_err(), contracts);
+    }
+}
+
+#[test]
 fn preconditions_do_not_supply_a_missing_function_return() {
     for condition in ["true", "false"] {
         let program = super::parse_ok(&format!(

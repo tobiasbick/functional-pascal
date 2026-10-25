@@ -15,6 +15,7 @@ fn encoded_program() -> Vec<u8> {
     let executable = fpas_compiler::compile(&program).expect("fixture must compile");
     let image = ProgramImage::new(
         ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: "test".to_string(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash: Digest::of(b"source"),

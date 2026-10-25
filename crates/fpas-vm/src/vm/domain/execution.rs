@@ -17,6 +17,9 @@ impl Worker {
         let Some(execution) = &self.execution else {
             return Ok(());
         };
+        let _timer = fpas_bytecode::profile::Timer::start(
+            fpas_bytecode::profile::Counter::RootPublicationNanos,
+        );
         let mut values = Vec::new();
         if let Err(error) = self.trace_roots(&mut |value| values.push(value.clone())) {
             execution.invalidate();

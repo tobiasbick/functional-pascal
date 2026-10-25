@@ -34,6 +34,7 @@ pub(super) fn run(iterations: usize, depth: usize) -> Result<(), String> {
     let executable = executable.verify().map_err(|error| error.to_string())?;
     let image = ProgramImage::new(
         ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: "benchmark".to_owned(),
             bytecode_version: BYTECODE_VERSION,
             source_hash: Digest::of(source),

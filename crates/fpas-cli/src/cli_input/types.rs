@@ -53,6 +53,7 @@ pub(crate) enum CliInput {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CliConfig {
+    pub no_contracts: bool,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub input: CliInput,
     pub program_args: Vec<String>,
@@ -76,6 +77,8 @@ pub(crate) enum DebugProtocol {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DebugCliConfig {
+    pub no_contracts: bool,
+    pub profile: Option<PathBuf>,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub batch: DebugBatchConfig,
     pub cwd: PathBuf,
@@ -105,6 +108,7 @@ pub(crate) struct DebugBatchConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct BuildCliConfig {
+    pub no_contracts: bool,
     pub input: CliInput,
     pub standard_library: Option<PathBuf>,
     pub executable: bool,
@@ -171,6 +175,7 @@ pub(crate) struct FmtCliConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct TestCliConfig {
+    pub no_contracts: bool,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     pub input: CliInput,
     pub cwd: PathBuf,
@@ -197,7 +202,7 @@ pub(crate) enum ResolvedCli {
     Init(InitCliConfig),
     Build(BuildCliConfig),
     Run(CliConfig),
-    Debug(DebugCliConfig),
+    Debug(Box<DebugCliConfig>),
     Check(CliConfig),
     Doc(DocCliConfig),
     Query(super::QueryCliConfig),

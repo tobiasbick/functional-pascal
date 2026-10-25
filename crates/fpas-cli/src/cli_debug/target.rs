@@ -45,14 +45,20 @@ fn prepare_executable(
                 path.display()
             ).into());
         }
-        CliInput::SourceFile(path) => prepare_source(path, &config.cwd, standard_library)?,
-        CliInput::ProjectFile(path) => prepare_project(path, standard_library)?,
+        CliInput::SourceFile(path) => {
+            prepare_source(path, &config.cwd, standard_library, config.no_contracts)?
+        }
+        CliInput::ProjectFile(path) => {
+            prepare_project(path, standard_library, config.no_contracts)?
+        }
         CliInput::WorkspaceFile(path) => {
             let project = fpas_project::discover_run_project_in_workspace(path)
                 .map_err(|error| Failure::from(crate::cli_output::CliFailure::from(error)))?;
-            prepare_project(&project, standard_library)?
+            prepare_project(&project, standard_library, config.no_contracts)?
         }
-        CliInput::CompiledProgramFile(path) => prepare_image(path, config.source_root.as_deref())?,
+        CliInput::CompiledProgramFile(path) => {
+            prepare_image(path, config.source_root.as_deref(), config.no_contracts)?
+        }
     };
     Ok(prepared)
 }
@@ -70,6 +76,7 @@ fn prepare_source(
     path: &Path,
     cwd: &Path,
     standard_library: Option<&fpas_project::StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<PreparedExecutable, Failure> {
     if standard_library.is_some() {
         let built = crate::project_build::build_test_program(
@@ -77,6 +84,7 @@ fn prepare_source(
             &[],
             &fpas_project::ProjectLinkMeta::default(),
             standard_library,
+            no_contracts,
         )
         .map_err(Failure::from)?;
         return install_debug_sources(
@@ -84,6 +92,7 @@ fn prepare_source(
             &built.source_paths,
             &built.selected_sources,
             Some(cwd),
+            no_contracts,
         );
     }
     let source = fs::read_to_string(path)
@@ -101,7 +110,13 @@ fn prepare_source(
         .with_source(path, &source)
         .into());
     }
-    let executable = fpas_compiler::compile(&program).map_err(|diagnostics| {
+    let executable = fpas_compiler::compile_with_options(
+        &program,
+        fpas_compiler::CompileOptions {
+            contracts: !no_contracts,
+        },
+    )
+    .map_err(|diagnostics| {
         crate::cli_output::CliFailure::from_diagnostics(path, &diagnostics)
             .with_source(path, &source)
     })?;
@@ -110,12 +125,14 @@ fn prepare_source(
         &[path.to_path_buf()],
         &[path.to_path_buf()],
         Some(cwd),
+        no_contracts,
     )
 }
 
 fn prepare_project(
     path: &Path,
     standard_library: Option<&fpas_project::StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<PreparedExecutable, Failure> {
     let loaded = fpas_project::load_project(path)
         .map_err(|error| Failure::from(crate::cli_output::CliFailure::from(error)))?;
@@ -125,13 +142,14 @@ fn prepare_project(
             path.display()
         ).into());
     }
-    let built =
-        crate::project_build::build_program(&loaded, standard_library).map_err(Failure::from)?;
+    let built = crate::project_build::build_program(&loaded, standard_library, no_contracts)
+        .map_err(Failure::from)?;
     install_debug_sources(
         built.executable,
         &built.source_paths,
         &built.selected_sources,
         path.parent(),
+        no_contracts,
     )
 }
 
@@ -140,6 +158,7 @@ fn install_debug_sources(
     source_paths: &[PathBuf],
     selected: &[PathBuf],
     root: Option<&Path>,
+    no_contracts: bool,
 ) -> Result<PreparedExecutable, Failure> {
     let root = root.unwrap_or_else(|| Path::new("."));
     let portable = match crate::project_build::SourceLayout::derive(root, source_paths, selected)? {
@@ -179,6 +198,7 @@ fn install_debug_sources(
     let source_hash = hashes.first().copied().unwrap_or_else(|| Digest::of([]));
     let executable = ProgramImage::new(
         ProgramIdentity {
+            contracts_enabled: !no_contracts,
             compiler_version: env!("CARGO_PKG_VERSION").to_string(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash,
@@ -212,7 +232,11 @@ fn portable_path(path: &Path, root: &Path, index: usize) -> String {
         )
 }
 
-fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExecutable, Failure> {
+fn prepare_image(
+    path: &Path,
+    source_root: Option<&Path>,
+    no_contracts: bool,
+) -> Result<PreparedExecutable, Failure> {
     let source_root = source_root.ok_or_else(|| format!("Compiled debug target `{}` requires `--source-root <dir>`.\n  help: Point it at the root used to build the image.", path.display()))?;
     let root = source_root.canonicalize().map_err(|error| {
         format!(
@@ -225,6 +249,9 @@ fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExec
             format!("Cannot read compiled program `{}`: {error}", path.display())
         })?)
         .map_err(|error| format!("Cannot load compiled program `{}`: {error}", path.display()))?;
+    if no_contracts && image.identity().contracts_enabled {
+        return Err("The compiled program contains contracts. Rebuild its source project with `fpas build --no-contracts project.fpasprj`, then debug the new image.".to_string().into());
+    }
     let mut sources = Vec::new();
     for (portable, expected) in image.source_paths().iter().zip(image.source_hashes()) {
         let candidate = root.join(portable).canonicalize().map_err(|error| {
@@ -281,6 +308,7 @@ mod tests {
         let executable = fpas_compiler::compile(&program).expect("compile image fixture");
         let image = ProgramImage::new(
             ProgramIdentity {
+                contracts_enabled: true,
                 compiler_version: "test".into(),
                 bytecode_version: fpas_bytecode::BYTECODE_VERSION,
                 source_hash: Digest::of(source.as_bytes()),
@@ -298,7 +326,8 @@ mod tests {
             fpas_program::encode(&image).expect("encode image"),
         )
         .expect("write image");
-        let prepared = prepare_image(&image_path, Some(&root)).expect("matching source accepted");
+        let prepared =
+            prepare_image(&image_path, Some(&root), false).expect("matching source accepted");
         assert_eq!(prepared.sources[0].path, "main.fpas");
         assert_eq!(
             prepared.sources[0].original_path.as_deref(),
@@ -310,7 +339,8 @@ mod tests {
             )
         );
         crate::test_support::write_text(&source_path, "program Main; begin var X := 1; end.\n");
-        let error = prepare_image(&image_path, Some(&root)).expect_err("stale source rejected");
+        let error =
+            prepare_image(&image_path, Some(&root), false).expect_err("stale source rejected");
         assert!(error.to_string().contains("is stale"));
         fs::remove_dir_all(root).expect("remove image temp directory");
     }

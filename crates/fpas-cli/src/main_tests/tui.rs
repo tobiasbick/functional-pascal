@@ -177,9 +177,12 @@ begin
 end.
 "#,
     );
-    let built =
-        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
-            .expect("Tui theme-switch regression program must build");
+    let built = crate::project_build::build_test_program_with_graph(
+        &program,
+        repo_tui_program_graph(),
+        false,
+    )
+    .expect("Tui theme-switch regression program must build");
     let mut vm = fpas_vm::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::resize(10, 2));
     vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
@@ -240,9 +243,12 @@ begin
 end.
 "#,
     );
-    let built =
-        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
-            .expect("Tui resize-debounce regression program must build");
+    let built = crate::project_build::build_test_program_with_graph(
+        &program,
+        repo_tui_program_graph(),
+        false,
+    )
+    .expect("Tui resize-debounce regression program must build");
     let mut vm = fpas_vm::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::resize(80, 24));
     vm.push_console_event(ConsoleEvent::resize(100, 30));
@@ -299,9 +305,12 @@ begin
 end.
 "#,
     );
-    let built =
-        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
-            .expect("Tui idle regression program must build");
+    let built = crate::project_build::build_test_program_with_graph(
+        &program,
+        repo_tui_program_graph(),
+        false,
+    )
+    .expect("Tui idle regression program must build");
     let mut vm = fpas_vm::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::focus_gained());
     vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
@@ -380,9 +389,12 @@ begin
 end.
 "#,
     );
-    let built =
-        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
-            .expect("Tui background wakeup regression program must build");
+    let built = crate::project_build::build_test_program_with_graph(
+        &program,
+        repo_tui_program_graph(),
+        false,
+    )
+    .expect("Tui background wakeup regression program must build");
     let mut vm = fpas_vm::Vm::new(built.executable);
 
     vm.run()

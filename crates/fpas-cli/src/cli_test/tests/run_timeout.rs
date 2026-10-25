@@ -15,6 +15,7 @@ fn test_cli_timeout_aborts_infinite_loop() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.join("hang_test.fpas")),
             cwd: cwd.clone(),

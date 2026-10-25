@@ -25,12 +25,20 @@ pub(crate) fn build_cli(
         return build_native_cli(config, standard_library, stdout, reporter);
     }
     match config.input {
-        CliInput::ProjectFile(path) => {
-            build_project_file(&path, standard_library, stdout, reporter)
-        }
-        CliInput::WorkspaceFile(path) => {
-            build_workspace_file(&path, standard_library, stdout, reporter)
-        }
+        CliInput::ProjectFile(path) => build_project_file(
+            &path,
+            standard_library,
+            config.no_contracts,
+            stdout,
+            reporter,
+        ),
+        CliInput::WorkspaceFile(path) => build_workspace_file(
+            &path,
+            standard_library,
+            config.no_contracts,
+            stdout,
+            reporter,
+        ),
         CliInput::SourceFile(path) => reporter.failure(
             &CliFailure::new(
                 CLI_INPUT_UNSUPPORTED,
@@ -66,6 +74,7 @@ fn build_native_cli(
                 path.parent(),
                 name,
                 standard_library,
+                config.no_contracts,
                 stdout,
                 reporter,
             )
@@ -85,6 +94,7 @@ fn build_native_cli(
                 path.parent(),
                 name,
                 standard_library,
+                config.no_contracts,
                 stdout,
                 reporter,
             )
@@ -109,6 +119,7 @@ fn build_native_project(
     output_directory: Option<&Path>,
     application_name: &str,
     standard_library: Option<&project::StandardLibrary>,
+    no_contracts: bool,
     stdout: &mut dyn Write,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -141,12 +152,15 @@ fn build_native_project(
         );
     }
     reporter.records(&loaded.warnings);
-    let artifact =
-        match crate::project_build::build_program_artifact(project_path, &loaded, standard_library)
-        {
-            Ok(artifact) => artifact,
-            Err(failure) => return reporter.failure(&failure),
-        };
+    let artifact = match crate::project_build::build_program_artifact(
+        project_path,
+        &loaded,
+        standard_library,
+        no_contracts,
+    ) {
+        Ok(artifact) => artifact,
+        Err(failure) => return reporter.failure(&failure),
+    };
     match crate::native_executable::package(&artifact.path, output_directory, application_name) {
         Ok(output) => {
             let _ = writeln!(
@@ -163,6 +177,7 @@ fn build_native_project(
 fn build_project_file(
     path: &Path,
     standard_library: Option<&project::StandardLibrary>,
+    no_contracts: bool,
     stdout: &mut dyn Write,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -174,7 +189,7 @@ fn build_project_file(
 
     let result = match loaded.kind {
         project::ProjectKind::Program => {
-            crate::project_build::build_program_artifact(path, &loaded, standard_library).map(
+            crate::project_build::build_program_artifact(path, &loaded, standard_library, no_contracts).map(
                 |artifact| {
                     let action = if artifact.reused { "Reused" } else { "Built" };
                     let source_root = artifact.source_root.as_ref().map_or_else(
@@ -190,11 +205,11 @@ fn build_project_file(
             )
         }
         project::ProjectKind::Library => {
-            crate::project_build::check_library(&loaded, standard_library)
+            crate::project_build::check_library(&loaded, standard_library, no_contracts)
                 .map(|()| format!("Built library `{}`.", loaded.name))
         }
         project::ProjectKind::Test => {
-            crate::project_build::check_test_project(&loaded, standard_library)
+            crate::project_build::check_test_project(&loaded, standard_library, no_contracts)
                 .map(|()| format!("Built test project `{}`.", loaded.name))
         }
     };
@@ -211,6 +226,7 @@ fn build_project_file(
 fn build_workspace_file(
     path: &Path,
     standard_library: Option<&project::StandardLibrary>,
+    no_contracts: bool,
     stdout: &mut dyn Write,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -221,7 +237,8 @@ fn build_workspace_file(
 
     let mut exit_code = 0;
     for member in &workspace.member_projects {
-        let member_exit = build_project_file(member, standard_library, stdout, reporter);
+        let member_exit =
+            build_project_file(member, standard_library, no_contracts, stdout, reporter);
         if member_exit != 0 {
             exit_code = member_exit;
         }

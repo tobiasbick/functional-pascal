@@ -142,7 +142,7 @@ fn compile_units<Backend: UnitBackend>(
             source_hash: source.hash(),
             compiler_version: options.compiler_version.clone(),
             bytecode_version: options.bytecode_version,
-            options_hash: options.options_hash,
+            options_hash: options.effective_options_hash(),
             dependencies,
         };
 
@@ -162,22 +162,25 @@ fn compile_units<Backend: UnitBackend>(
             let parsed = node
                 .parse_source_snapshot(source.bytes())
                 .map_err(BuildError::from)?;
-            let (interface, object) =
-                Backend::compile(&parsed, &direct_interfaces, interfaces.all()).map_err(
-                    |diagnostics| {
-                        BuildError::from_diagnostics(
-                            diagnostics
-                                .into_iter()
-                                .map(|diagnostic| *diagnostic)
-                                .collect(),
-                            Some((node.source_id(), node.path())),
-                        )
-                        .with_source(
-                            node.source_id(),
-                            std::str::from_utf8(source.bytes()).unwrap_or(""),
-                        )
-                    },
-                )?;
+            let (interface, object) = Backend::compile(
+                &parsed,
+                &direct_interfaces,
+                interfaces.all(),
+                options.compile_options(),
+            )
+            .map_err(|diagnostics| {
+                BuildError::from_diagnostics(
+                    diagnostics
+                        .into_iter()
+                        .map(|diagnostic| *diagnostic)
+                        .collect(),
+                    Some((node.source_id(), node.path())),
+                )
+                .with_source(
+                    node.source_id(),
+                    std::str::from_utf8(source.bytes()).unwrap_or(""),
+                )
+            })?;
             events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
             events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
             events.push(event(unit_name, BuildEventKind::Compiled));
@@ -198,7 +201,7 @@ fn compile_units<Backend: UnitBackend>(
                     object_hash,
                     compiler_version: options.compiler_version.clone(),
                     bytecode_version: options.bytecode_version,
-                    options_hash: options.options_hash,
+                    options_hash: options.effective_options_hash(),
                     dependencies: expected.dependencies.clone(),
                 },
                 interface: interface_bytes,
@@ -243,7 +246,7 @@ pub fn build_program(
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let units = build_library_units(graph, selection, options)?;
-    link_program(units, program, None)
+    link_program(units, program, None, options)
 }
 
 /// Compile and link a program without publishing newly compiled unit sidecars.
@@ -260,19 +263,21 @@ pub fn check_program(
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let units = check_library_units(graph, selection, options)?;
-    link_program(units, program, None)
+    link_program(units, program, None, options)
 }
 
 pub(crate) fn link_program(
     mut units: BuiltUnits,
     program: &Program,
     source_path: Option<&std::path::Path>,
+    options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
-    let mut program_object = fpas_compiler::compile_program_object_with_support(
+    let mut program_object = fpas_compiler::compile_program_object_with_options(
         program,
         &root_interfaces,
         units.supporting_interfaces(),
+        options.compile_options(),
     )
     .map_err(|diagnostics| {
         BuildError::from_program_diagnostics(

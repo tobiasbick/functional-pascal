@@ -8,6 +8,7 @@ use super::types::{DebugProtocol, TestReportFormat};
 use crate::cli_output::DiagnosticFormat;
 
 pub(super) struct ParsedOptions {
+    pub(super) no_contracts: bool,
     pub(super) collection_schedule: fpas_bytecode::CollectionSchedule,
     pub(super) check_only: bool,
     pub(super) fix: bool,
@@ -41,6 +42,7 @@ pub(super) struct ParsedOptions {
 /// Parses the options accepted by one CLI subcommand.
 pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<ParsedOptions, String> {
     let mut options = ParsedOptions {
+        no_contracts: false,
         collection_schedule: Default::default(),
         check_only: false,
         fix: false,
@@ -86,6 +88,17 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
             continue;
         }
         match cli_args[index].as_str() {
+            "--no-contracts"
+                if matches!(
+                    mode,
+                    CliMode::Run | CliMode::Build | CliMode::Test | CliMode::Debug
+                ) =>
+            {
+                if options.no_contracts {
+                    return Err("Duplicate `--no-contracts` option.".into());
+                }
+                options.no_contracts = true;
+            }
             "--failure-dump" if mode == CliMode::Run => {
                 let value = take_option_value(
                     cli_args,
@@ -103,7 +116,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--failure-dump` option.".into());
                 }
             }
-            "--profile" if mode == CliMode::Run => {
+            "--profile" if matches!(mode, CliMode::Run | CliMode::Debug) => {
                 let value = take_option_value(
                     cli_args,
                     &mut index,
@@ -412,6 +425,7 @@ fn is_known_option(value: &str) -> bool {
     matches!(
         value,
         "--std-lib"
+            | "--no-contracts"
             | "--failure-dump"
             | "--profile"
             | "--executable"

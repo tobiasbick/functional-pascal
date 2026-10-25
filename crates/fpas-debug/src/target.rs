@@ -23,6 +23,7 @@ pub struct PreparedDebugTarget {
     reloader: Option<DebugReloadProvider>,
     schedule_seed: Option<u64>,
     collection_schedule: fpas_bytecode::CollectionSchedule,
+    profile: Option<fpas_vm::DebugProfile>,
 }
 
 impl PreparedDebugTarget {
@@ -37,6 +38,7 @@ impl PreparedDebugTarget {
             reloader: None,
             schedule_seed: None,
             collection_schedule: fpas_bytecode::CollectionSchedule::default(),
+            profile: None,
         }
     }
 
@@ -70,6 +72,14 @@ impl PreparedDebugTarget {
             .iter()
             .filter_map(|source| executable.strings.get(*source).map(str::to_owned))
             .collect()
+    }
+
+    /// Collect samples of this target, including workers on asynchronous resume threads.
+    /// Read the returned recorder only after the owning debugger has been dropped.
+    pub fn enable_profile(&mut self) -> fpas_vm::DebugProfile {
+        self.profile
+            .get_or_insert_with(|| fpas_vm::DebugProfile::new(self.executable.clone()))
+            .clone()
     }
 
     /// Attach exact verified source text for DAP `source` requests.
@@ -117,6 +127,12 @@ impl PreparedDebugTarget {
             self.execution_limits,
             self.schedule_seed,
         )
-        .map(|session| session.with_collection_schedule(self.collection_schedule))
+        .map(|session| {
+            let session = session.with_collection_schedule(self.collection_schedule);
+            match self.profile {
+                Some(profile) => session.with_profile(profile),
+                None => session,
+            }
+        })
     }
 }

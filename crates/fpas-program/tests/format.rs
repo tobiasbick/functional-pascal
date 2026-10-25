@@ -47,6 +47,40 @@ fn deterministic_round_trip_preserves_every_register_table() {
 }
 
 #[test]
+fn contract_policy_round_trips_in_the_program_header_and_unknown_flags_are_rejected() {
+    let original = program_image();
+    for contracts_enabled in [true, false] {
+        let mut identity = original.identity().clone();
+        identity.contracts_enabled = contracts_enabled;
+        let image = fpas_program::ProgramImage::new(
+            identity,
+            original.source_paths().to_vec(),
+            original.source_hashes().to_vec(),
+            original.executable().clone(),
+        )
+        .unwrap();
+        let bytes = encode(&image).unwrap();
+        assert_eq!(
+            u16::from_le_bytes([bytes[14], bytes[15]]),
+            u16::from(!contracts_enabled)
+        );
+        assert_eq!(
+            decode(&bytes).unwrap().identity().contracts_enabled,
+            contracts_enabled
+        );
+    }
+    let mut bytes = encode(&original).unwrap();
+    bytes[14..16].copy_from_slice(&2_u16.to_le_bytes());
+    assert!(matches!(
+        decode_error(&bytes),
+        FormatError::UnsupportedFlags {
+            field: "header",
+            flags: 2
+        }
+    ));
+}
+
+#[test]
 fn canonical_image_has_target_independent_digest() {
     let bytes = encode(&program_image()).expect("encoded image");
 

@@ -124,6 +124,14 @@ impl DebugSession {
         if self.recording.capturing() {
             return Err(recording_active());
         }
+        if self.profile.is_some() {
+            return Err(DebugSessionError {
+                kind: DebugErrorKind::LiveImageIncompatible,
+                message: "live image replacement is unavailable while profiling".into(),
+                hint: "Finish this profile and launch a new session for the changed executable."
+                    .into(),
+            });
+        }
         let next_version = self
             .live_image_version
             .checked_add(1)

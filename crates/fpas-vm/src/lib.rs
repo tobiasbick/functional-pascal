@@ -54,4 +54,6 @@ pub use vm::{
 
 pub use vm::{DebugScheduleReport, SCHEDULE_ALGORITHM};
 
-pub use vm::{LineProfile, MAX_BATCH_STEPS, ProfileReport, ProfileSample, RoutineProfile};
+pub use vm::{
+    DebugProfile, LineProfile, MAX_BATCH_STEPS, ProfileReport, ProfileSample, RoutineProfile,
+};

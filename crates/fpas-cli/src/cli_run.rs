@@ -18,6 +18,7 @@ use fpas_project as project;
 
 #[derive(Default)]
 struct ExecutionOptions {
+    no_contracts: bool,
     program_args: Vec<String>,
     failure_dump: Option<PathBuf>,
     profile: Option<PathBuf>,
@@ -118,7 +119,7 @@ pub(crate) fn run_cli(
             let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             crate::cli_test::test_cli(config, stdout.as_mut(), &mut reporter)
         }
-        ResolvedCli::Debug(config) => crate::cli_debug::debug_cli(config, stdout, stderr),
+        ResolvedCli::Debug(config) => crate::cli_debug::debug_cli(*config, stdout, stderr),
         ResolvedCli::Run(config) => {
             let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             run_input(config, stdout, &mut reporter)
@@ -138,6 +139,7 @@ fn run_input(
         CliInput::CompiledProgramFile(path) => ("compiled", path.clone()),
     };
     let options = ExecutionOptions {
+        no_contracts: config.no_contracts,
         program_args: config.program_args,
         failure_dump: config.failure_dump,
         profile: config.profile,
@@ -204,6 +206,7 @@ fn run_source_file(
             &[],
             &project::ProjectLinkMeta::default(),
             Some(standard_library),
+            options.no_contracts,
         ) {
             Ok(built) => built,
             Err(failure) => return reporter.failure(&failure),
@@ -236,12 +239,15 @@ fn run_project_file(
 
     match loaded.kind {
         project::ProjectKind::Program => {
-            let artifact =
-                match crate::project_build::build_program_artifact(path, &loaded, standard_library)
-                {
-                    Ok(artifact) => artifact,
-                    Err(failure) => return reporter.failure(&failure),
-                };
+            let artifact = match crate::project_build::build_program_artifact(
+                path,
+                &loaded,
+                standard_library,
+                options.no_contracts,
+            ) {
+                Ok(artifact) => artifact,
+                Err(failure) => return reporter.failure(&failure),
+            };
             reporter.load_sources(&artifact.sources);
             run_executable(
                 &artifact.path,
@@ -304,6 +310,11 @@ fn run_compiled_program_file(
         .iter()
         .map(PathBuf::from)
         .collect::<Vec<_>>();
+    if options.no_contracts && image.identity().contracts_enabled {
+        return reporter.failure(&CliFailure::new(CLI_INPUT_UNSUPPORTED,
+            "The compiled program contains contracts; `--no-contracts` cannot remove code from an existing image.")
+            .with_help("Rebuild its source project with `fpas build --no-contracts project.fpasprj`, then run the new image."));
+    }
     // Portable image labels are not source roots. Only exact paths with matching hashes qualify.
     reporter.load_sources(
         &source_paths
@@ -346,7 +357,12 @@ fn run_source_impl(
         return 1;
     }
 
-    let executable = match fpas_compiler::compile(&program) {
+    let executable = match fpas_compiler::compile_with_options(
+        &program,
+        fpas_compiler::CompileOptions {
+            contracts: !options.no_contracts,
+        },
+    ) {
         Ok(executable) => executable,
         Err(diagnostics) => {
             return reporter.failure(&CliFailure::from_diagnostics(path, &diagnostics));
@@ -383,6 +399,7 @@ fn run_executable(
     reporter: &mut Reporter<'_>,
 ) -> i32 {
     let ExecutionOptions {
+        no_contracts: _,
         program_args,
         failure_dump,
         profile,

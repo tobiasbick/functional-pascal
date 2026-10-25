@@ -85,7 +85,12 @@ fn build_program_artifact_before_publish(
         }
     }
 
-    let built = link_program(units, &program, target.source_paths.first().map(Path::new))?;
+    let built = link_program(
+        units,
+        &program,
+        target.source_paths.first().map(Path::new),
+        options,
+    )?;
     let BuiltProgram { executable, events } = built;
     let image = ProgramImage::new(
         expected,

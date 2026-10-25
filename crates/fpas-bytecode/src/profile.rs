@@ -1,4 +1,4 @@
-//! Process-wide runtime event counters for `fpas run --profile`.
+//! Process-wide runtime event counters for `fpas run/debug --profile`.
 //!
 //! Counting is off by default; an event site then costs one relaxed load. Enabled counts go
 //! to one of several cache-line-aligned stripes chosen per thread, so pool workers do not
@@ -36,11 +36,23 @@ pub enum Counter {
     WorkerIdleNanos,
     /// Cancellation registry lookups from `IsCancellationRequested`.
     CancellationLookups,
+    /// Time inside debugger continue and step operations, including nested phases.
+    DebugResumeNanos,
+    /// Debugger task readiness and selection, including root publication.
+    DebugScheduleNanos,
+    /// Debugger single-instruction dispatch, including root publication.
+    DebugDispatchNanos,
+    /// Execution-root snapshots in ordinary and debugger-owned workers.
+    RootPublicationNanos,
+    /// Debugger inspection snapshots and stored-value queries.
+    DebugInspectionNanos,
+    /// Debugger waits for input, task readiness or real-time deadlines during resume.
+    DebugWaitNanos,
 }
 
 impl Counter {
     /// Every counter, in report order.
-    pub const ALL: [Self; 12] = [
+    pub const ALL: [Self; 18] = [
         Self::ClassifyCalls,
         Self::ClassifyVisited,
         Self::CollectionPasses,
@@ -53,6 +65,12 @@ impl Counter {
         Self::QueueContended,
         Self::WorkerIdleNanos,
         Self::CancellationLookups,
+        Self::DebugResumeNanos,
+        Self::DebugScheduleNanos,
+        Self::DebugDispatchNanos,
+        Self::RootPublicationNanos,
+        Self::DebugInspectionNanos,
+        Self::DebugWaitNanos,
     ];
 
     /// Stable report field name.
@@ -71,6 +89,12 @@ impl Counter {
             Self::QueueContended => "queue_contended",
             Self::WorkerIdleNanos => "worker_idle_nanos",
             Self::CancellationLookups => "cancellation_lookups",
+            Self::DebugResumeNanos => "debug_resume_nanos",
+            Self::DebugScheduleNanos => "debug_schedule_nanos",
+            Self::DebugDispatchNanos => "debug_dispatch_nanos",
+            Self::RootPublicationNanos => "root_publication_nanos",
+            Self::DebugInspectionNanos => "debug_inspection_nanos",
+            Self::DebugWaitNanos => "debug_wait_nanos",
         }
     }
 }

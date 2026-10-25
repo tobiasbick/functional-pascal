@@ -121,7 +121,7 @@ const BUILD_HELP: &str = "\
 Build Functional Pascal project artifacts.
 
 Usage:
-  fpas build [--std-lib <dir>] [--diagnostics <text | json>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]
+  fpas build [--std-lib <dir>] [--no-contracts] [--diagnostics <text | json>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]
 
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 Program projects produce or reuse `<project.name>.fpascp`. Library projects build
@@ -135,12 +135,14 @@ Options:
                    Diagnostic format on stderr; `json` writes one record per line
   --executable     Bundle one program with the native FPAS runner
   --name <name>    Application/output base name (requires --executable)
+  --no-contracts   Omit contract evaluation and checks throughout the program and its dependencies
   -h, --help       Print this help
   -V, --version    Print version
 
 Examples:
   fpas build my-app.fpasprj
   fpas build --executable my-app.fpasprj
+  fpas build --no-contracts my-app.fpasprj
   fpas build --executable --name hello suite.fpasworkspace
   fpas build suite.fpasworkspace
   fpas build
@@ -151,7 +153,7 @@ const RUN_HELP: &str = "\
 Run a Functional Pascal source, project, workspace, or compiled program.
 
 Usage:
-  fpas run [--std-lib <dir>] [--diagnostics <text | json>] [--failure-dump <path>] [--profile <path>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
+  fpas run [--std-lib <dir>] [--no-contracts] [--diagnostics <text | json>] [--failure-dump <path>] [--profile <path>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
 
 With no path, discovers the workspace program or `.fpasprj` in the current directory.
 Direct `.fpascp` execution does not load sources or the source standard library.
@@ -169,6 +171,7 @@ Options:
   --failure-dump <path>
                    Write a runtime failure report to a new JSON file
   --profile <path> Write a profile report to a new JSON file
+  --no-contracts   Omit contract code; existing images must already be built with this policy
   -h, --help       Print this help
   -V, --version    Print version
 
@@ -179,6 +182,7 @@ Examples:
   fpas run my-app.fpascp
   fpas run my-app.fpascp --failure-dump .temp-data/failure.json
   fpas run my-app.fpasprj --profile .temp-data/profile.json -- input.txt
+  fpas run my-app.fpasprj --no-contracts
   fpas run --std-lib ./lib hello.fpas
 
 ";
@@ -268,6 +272,8 @@ Options:
   --instruction-limit <count>   Session instruction limit (default: 100000000)
   --output-limit <bytes>        Batch output bound (default/ceiling: 1048576)
   --source-root <dir>           Root containing sources for a compiled image
+  --profile <path>              Write target routines, lines and debugger phase timings to a new JSON file
+  --no-contracts                Omit contract code; existing images must already be built with this policy
   --std-lib <dir>               Replace the complete source standard library
   --protocol <jsonl | dap>      Select a long-lived session instead of batch
   --commands <path>             JSONL request file (requires --protocol jsonl)
@@ -286,6 +292,8 @@ Examples:
   fpas debug app.fpascp --source-root . --script input.toml --timeout 5
   fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
   fpas debug app.fpasprj --protocol dap
+  fpas debug app.fpasprj --protocol dap --profile .temp-data/debug-profile.json
+  fpas debug app.fpasprj --no-contracts
 
 ";
 
@@ -332,6 +340,7 @@ Options:
   --list              Print discovered tests without running them
   --fail-fast         Stop after the first failing test
   --strict            Treat skipped tests as a failure
+  --no-contracts      Omit contracts in test bodies, dependencies and setup/teardown hooks
   --show-output       Print standard output of passing tests (failing tests always show it)
   --filter <pattern>  Run matching test paths only
   --file <path>       Select an exact discovered test path (repeatable; relative to cwd)
@@ -344,6 +353,7 @@ Options:
 
 Examples:
   fpas test tests/
+  fpas test tests/ --no-contracts
   fpas test --filter tui --jobs 4 tests/
   fpas test --file tests/a/same_test.fpas tests/suite.fpasprj
   fpas test --report json tests/ > test-report.json

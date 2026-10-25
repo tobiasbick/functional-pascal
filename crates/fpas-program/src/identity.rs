@@ -14,6 +14,8 @@ pub struct LinkedUnitIdentity {
 /// Compatibility and input identity recorded in a compiled program.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProgramIdentity {
+    /// Contract code-generation policy used for the root and every linked dependency.
+    pub contracts_enabled: bool,
     /// Compiler build identity that emitted the image.
     pub compiler_version: String,
     /// Executable bytecode version expected by the image.

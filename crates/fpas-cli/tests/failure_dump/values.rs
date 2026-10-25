@@ -70,6 +70,7 @@ fn images_without_binding_metadata_keep_stored_positions_without_invented_locals
         .expect("metadata-free executable is valid");
     let image = fpas_program::ProgramImage::new(
         fpas_program::ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: env!("CARGO_PKG_VERSION").into(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"bare"),
@@ -168,6 +169,7 @@ fn source_name_budget_keeps_known_diagnostic_coordinates() {
     }
     let image = fpas_program::ProgramImage::new(
         fpas_program::ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: env!("CARGO_PKG_VERSION").into(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"many sources"),

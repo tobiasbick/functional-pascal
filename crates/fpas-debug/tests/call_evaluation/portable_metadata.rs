@@ -30,6 +30,7 @@ begin end.",
     );
     let image = ProgramImage::new(
         ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: "test".into(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash: Digest::of(b"source"),

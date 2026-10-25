@@ -17,7 +17,7 @@ Formal syntax: [grammar.ebnf](../../../specs/grammar.ebnf) (`requires_clause`, `
 Each `requires Expression;` must have type `boolean`. Repeated clauses run in
 source order with short-circuit `and` behavior: the first false clause stops
 the call. The checks run before local initialization and every body statement,
-on every invocation, in debug and release builds. They also apply to nested
+on every invocation by default, in debug and release builds. They also apply to nested
 routines, generic routines, instance and static record routines, imported
 routines, and calls through callable values or bound methods.
 
@@ -26,7 +26,12 @@ routines, and calls through callable values or bound methods.
 Write `ensures Expression;` after any `requires` clauses and before nested
 declarations or `begin`. Each expression must have type `boolean`; repeated
 clauses run in source order and stop at the first false clause. Checks run in
-every build mode, including release builds.
+every build mode by default, including release builds.
+
+The explicit [`--no-contracts` CLI policy](../../program-structure/cli.md#contract-policy)
+on `run`, `build`, `test` and `debug` omits both condition evaluation and checks
+from the whole program, including dependencies. Contract expressions are still
+parsed and type-checked. Ordinary body validation and assertions still execute.
 
 ```pascal id=example-2 fragment context=declarations
 function Increment(Value: integer): integer;

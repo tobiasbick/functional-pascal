@@ -19,6 +19,10 @@ Batch [tracepoints](debugger-tracepoints.md) record scalar paths through globals
 locals, parameters and active captures without evaluating expressions or stopping,
 with actual writing locations and typed old/new values.
 
+`--profile <new-file>` writes a [profile of the debug target](profiler.md#debug-targets)
+with routine/line samples and debugger phase times. It works with batch, DAP and
+JSONL; protocol stdout keeps its normal format.
+
 ```text
 fpas debug app.fpasprj --break src/main.fpas:42 --print Total
 fpas debug app.fpasprj --protocol jsonl

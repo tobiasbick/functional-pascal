@@ -46,6 +46,7 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
             script: value.script,
         });
     let prepared = PreparedProgram {
+        no_contracts: !image.identity().contracts_enabled,
         collection_schedule: request.collection_schedule,
         test_path: request.test_path,
         executable: image.into_executable(),

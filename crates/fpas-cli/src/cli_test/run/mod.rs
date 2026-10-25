@@ -27,6 +27,7 @@ use program::{ProgramRunOptions, RunOutput, run_test_program};
 /// Per-run settings shared by every test of one `fpas test` invocation.
 #[derive(Clone, Copy)]
 pub(super) struct TestRunSettings<'a> {
+    pub no_contracts: bool,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     /// Optional scripted input configuration.
     pub script_override: Option<&'a Path>,
@@ -68,6 +69,7 @@ pub(super) fn run_single_test_capture(
         path,
         link,
         TestRunSettings {
+            no_contracts: false,
             collection_schedule: Default::default(),
             script_override,
             timeout,
@@ -100,6 +102,7 @@ pub(super) fn run_single_test_prepared(
     compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
     let TestRunSettings {
+        no_contracts,
         collection_schedule,
         script_override,
         timeout,
@@ -125,6 +128,7 @@ pub(super) fn run_single_test_prepared(
             hook,
             "Setup",
             HookRunContext {
+                no_contracts,
                 collection_schedule,
                 test_path: path,
                 link,
@@ -142,7 +146,7 @@ pub(super) fn run_single_test_prepared(
                 reporter,
                 &display,
                 scratch.path(),
-                collection_schedule,
+                settings,
             );
             return outcome;
         }
@@ -160,6 +164,7 @@ pub(super) fn run_single_test_prepared(
         link,
         reporter,
         ProgramRunOptions {
+            no_contracts,
             collection_schedule,
             script_override,
             timeout,
@@ -179,7 +184,7 @@ pub(super) fn run_single_test_prepared(
             reporter,
             &display,
             scratch.path(),
-            collection_schedule,
+            settings,
         )
         && outcome == TestOutcome::Pass
         && teardown_outcome.is_failure()

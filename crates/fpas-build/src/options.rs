@@ -5,6 +5,8 @@ use fpas_unit::Digest;
 /// Compatibility and option identity for one build invocation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BuildOptions {
+    /// Generate contract conditions and checks throughout the complete dependency graph.
+    pub contracts: bool,
     /// Compiler build identity.
     pub compiler_version: String,
     /// Persistent bytecode instruction-set version.
@@ -16,6 +18,7 @@ pub struct BuildOptions {
 impl Default for BuildOptions {
     fn default() -> Self {
         Self {
+            contracts: true,
             compiler_version: concat!(
                 env!("CARGO_PKG_VERSION"),
                 "-",
@@ -24,6 +27,28 @@ impl Default for BuildOptions {
             .to_string(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             options_hash: Digest::of(b"fpas-default-compilation-options-v1"),
+        }
+    }
+}
+
+impl BuildOptions {
+    /// Bind every code-generation policy to the reusable artifact identity.
+    #[must_use]
+    pub fn effective_options_hash(&self) -> Digest {
+        if self.contracts {
+            return self.options_hash;
+        }
+        let mut bytes = [0; Digest::LENGTH + 1];
+        bytes[..Digest::LENGTH].copy_from_slice(self.options_hash.as_bytes());
+        bytes[Digest::LENGTH] = u8::from(self.contracts);
+        Digest::of(bytes)
+    }
+
+    /// Compiler policy used by every root and dependency in this invocation.
+    #[must_use]
+    pub const fn compile_options(&self) -> fpas_compiler::CompileOptions {
+        fpas_compiler::CompileOptions {
+            contracts: self.contracts,
         }
     }
 }

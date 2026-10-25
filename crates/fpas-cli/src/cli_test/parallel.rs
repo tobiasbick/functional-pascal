@@ -100,6 +100,7 @@ pub(super) fn run_tests_parallel(
                 let result = run_prepared_test(
                     test,
                     TestRunSettings {
+                        no_contracts: settings.no_contracts,
                         collection_schedule,
                         script_override: script_path.as_deref(),
                         timeout,
@@ -241,6 +242,7 @@ mod tests {
 
     fn text_settings() -> TestRunSettings<'static> {
         TestRunSettings {
+            no_contracts: false,
             collection_schedule: Default::default(),
             script_override: None,
             timeout: None,

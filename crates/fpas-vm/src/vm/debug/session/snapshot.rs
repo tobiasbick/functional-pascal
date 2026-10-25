@@ -66,6 +66,7 @@ impl DebugSession {
         selected_task: Option<u64>,
         frame: Option<usize>,
     ) -> DebugSnapshot {
+        let _timer = super::profile::inspection();
         let completed = self.state == DebugSessionState::Terminated;
         if completed && let Some(worker) = self.runtime.worker(0) {
             self.inspection_generation = self.inspection_generation.wrapping_add(1).max(1);

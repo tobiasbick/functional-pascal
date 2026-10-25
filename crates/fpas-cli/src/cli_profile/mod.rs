@@ -1,8 +1,10 @@
-//! `fpas run --profile`: one JSON report of hot routines, lines and runtime costs.
+//! `fpas run/debug --profile`: one JSON report of routines, lines and runtime costs.
 //!
 //! Contract: `docs/pascal/tools/profiler.md`.
 
+mod debug;
 mod findings;
+pub(crate) use debug::Session as DebugSession;
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -84,6 +86,7 @@ impl Session {
             collection: self.collection,
             workers: vm.worker_count(),
             counters_exclusive: counters.exclusive,
+            debug: false,
         };
         let document = render(&report, &counters.counts, wall, &run, exit_code, sources);
         let mut bytes = serde_json::to_vec_pretty(&document)?;
@@ -103,10 +106,12 @@ struct Run<'a> {
     collection: CollectionSchedule,
     workers: usize,
     counters_exclusive: bool,
+    debug: bool,
 }
 
 /// Totals and counters the finding rules read.
 pub(crate) struct Evidence<'a> {
+    pub debug: bool,
     pub report: &'a ProfileReport,
     pub counters: &'a [(Counter, u64)],
     pub wall: Duration,
@@ -192,6 +197,7 @@ fn render(
         .map(|(counter, value)| (counter.name().to_owned(), json!(value)))
         .collect();
     let evidence = Evidence {
+        debug: run.debug,
         report,
         counters,
         wall,

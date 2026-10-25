@@ -7,7 +7,7 @@ use crate::{Digest, LinkedUnitIdentity, ProgramIdentity};
 use super::{FormatError, PROGRAM_FORMAT_VERSION, check_limit, checked_u32};
 
 const MAGIC: &[u8; 8] = b"FPASCP\0\0";
-const FLAGS: u16 = 0;
+const CONTRACTS_DISABLED: u16 = 1;
 
 pub(super) struct DecodedHeader<'a> {
     pub(super) identity: ProgramIdentity,
@@ -34,7 +34,14 @@ pub(super) fn encode(
     output.extend_from_slice(MAGIC);
     write_u16(&mut output, PROGRAM_FORMAT_VERSION);
     write_u32(&mut output, identity.bytecode_version);
-    write_u16(&mut output, FLAGS);
+    write_u16(
+        &mut output,
+        if identity.contracts_enabled {
+            0
+        } else {
+            CONTRACTS_DISABLED
+        },
+    );
     write_string(&mut output, "compiler_version", &identity.compiler_version)?;
     write_digest(&mut output, identity.source_hash);
     write_digest(&mut output, identity.options_hash);
@@ -79,7 +86,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
         });
     }
     let flags = reader.u16("flags")?;
-    if flags != FLAGS {
+    if flags & !CONTRACTS_DISABLED != 0 {
         return Err(FormatError::UnsupportedFlags {
             field: "header",
             flags,
@@ -142,6 +149,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     }
     Ok(DecodedHeader {
         identity: ProgramIdentity {
+            contracts_enabled: flags & CONTRACTS_DISABLED == 0,
             compiler_version,
             bytecode_version,
             source_hash,

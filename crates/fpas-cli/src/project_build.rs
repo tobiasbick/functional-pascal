@@ -17,6 +17,13 @@ use fpas_project::{LoadedProject, ResolvedUnitGraph, StandardLibrary, UnitGraph}
 
 use crate::cli_output::{CliFailure, RuntimeSource};
 
+pub(crate) fn build_options(no_contracts: bool) -> fpas_build::BuildOptions {
+    fpas_build::BuildOptions {
+        contracts: !no_contracts,
+        ..Default::default()
+    }
+}
+
 /// Linked bytecode and source identities retained from its compilation inputs.
 pub(crate) struct ProjectProgram {
     pub(crate) executable: fpas_bytecode::VerifiedExecutable,
@@ -41,13 +48,14 @@ pub(crate) struct ProgramArtifact {
 pub(crate) fn build_program(
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<ProjectProgram, CliFailure> {
     let prepared = prepare_program(loaded, standard_library)?;
     let built = fpas_build::build_program(
         &prepared.graph,
         &prepared.selection,
         &prepared.program,
-        &fpas_build::BuildOptions::default(),
+        &build_options(no_contracts),
     )
     .map_err(|error| {
         CliFailure::from_build(&error, prepared.graph.source_paths())
@@ -66,6 +74,7 @@ pub(crate) fn build_program_artifact(
     project_path: &Path,
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<ProgramArtifact, CliFailure> {
     let prepared = prepare_program(loaded, standard_library)?;
     let artifact_path = program_artifact_path(project_path, &loaded.name)?;
@@ -90,7 +99,7 @@ pub(crate) fn build_program_artifact(
             source: prepared.source.as_bytes(),
             source_paths: &source_paths,
         },
-        &fpas_build::BuildOptions::default(),
+        &build_options(no_contracts),
     )
     .map_err(|error| {
         CliFailure::from_build(&error, prepared.graph.source_paths())
@@ -118,10 +127,11 @@ pub(crate) fn build_test_program(
     source_files: &[PathBuf],
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<ProjectProgram, CliFailure> {
     let (source, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
-    build_graph_program(main, &graph, &program, &source)
+    build_graph_program(main, &graph, &program, &source, no_contracts)
         .map_err(|failure| failure.with_source(main, &source))
 }
 
@@ -129,10 +139,11 @@ pub(crate) fn build_test_program(
 pub(crate) fn build_test_program_with_graph(
     main: &Path,
     program_graph: &fpas_project::ProgramUnitGraph,
+    no_contracts: bool,
 ) -> Result<ProjectProgram, CliFailure> {
     let (source, program) = parse_program(main)?;
     let graph = program_graph.instantiate(main);
-    build_graph_program(main, &graph, &program, &source)
+    build_graph_program(main, &graph, &program, &source, no_contracts)
         .map_err(|failure| failure.with_source(main, &source))
 }
 
@@ -141,15 +152,11 @@ fn build_graph_program(
     graph: &UnitGraph,
     program: &fpas_parser::Program,
     source: &str,
+    no_contracts: bool,
 ) -> Result<ProjectProgram, CliFailure> {
     let selection = fpas_project::resolve_program_units(graph, &program.uses, Some(main))?;
-    let built = fpas_build::build_program(
-        graph,
-        &selection,
-        program,
-        &fpas_build::BuildOptions::default(),
-    )
-    .map_err(|error| CliFailure::from_build(&error, graph.source_paths()))?;
+    let built = fpas_build::build_program(graph, &selection, program, &build_options(no_contracts))
+        .map_err(|error| CliFailure::from_build(&error, graph.source_paths()))?;
     Ok(ProjectProgram {
         executable: built.executable,
         source_paths: graph.source_paths().to_vec(),
@@ -202,13 +209,20 @@ fn test_program_graph(
 pub(crate) fn check_library(
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<(), CliFailure> {
-    check_units(&loaded.source_files, &loaded.link_meta, standard_library)
+    check_units(
+        &loaded.source_files,
+        &loaded.link_meta,
+        standard_library,
+        no_contracts,
+    )
 }
 
 pub(crate) fn check_test_project(
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<(), CliFailure> {
     let unit_files = loaded
         .source_files
@@ -218,7 +232,12 @@ pub(crate) fn check_test_project(
         .collect::<Vec<_>>();
 
     if !unit_files.is_empty() {
-        check_units(&unit_files, &loaded.link_meta, standard_library)?;
+        check_units(
+            &unit_files,
+            &loaded.link_meta,
+            standard_library,
+            no_contracts,
+        )?;
     }
 
     for test_path in loaded
@@ -226,7 +245,13 @@ pub(crate) fn check_test_project(
         .iter()
         .filter(|source| fpas_project::is_test_source_file(source))
     {
-        build_test_program(test_path, &unit_files, &loaded.link_meta, standard_library)?;
+        build_test_program(
+            test_path,
+            &unit_files,
+            &loaded.link_meta,
+            standard_library,
+            no_contracts,
+        )?;
     }
 
     Ok(())
@@ -237,10 +262,11 @@ pub(crate) fn check_units(
     source_files: &[PathBuf],
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
+    no_contracts: bool,
 ) -> Result<(), CliFailure> {
     let graph = library_graph(source_files, link_meta, standard_library)?;
     let selection = fpas_project::resolve_library_units(&graph)?;
-    fpas_build::build_library_units(&graph, &selection, &fpas_build::BuildOptions::default())
+    fpas_build::build_library_units(&graph, &selection, &build_options(no_contracts))
         .map(|_| ())
         .map_err(|error| CliFailure::from_build(&error, graph.source_paths()))
 }

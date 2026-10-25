@@ -10,10 +10,11 @@ pub(super) fn expected(
     options: &BuildOptions,
 ) -> ProgramIdentity {
     ProgramIdentity {
+        contracts_enabled: options.contracts,
         compiler_version: options.compiler_version.clone(),
         bytecode_version: options.bytecode_version,
         source_hash: Digest::of(source),
-        options_hash: options.options_hash,
+        options_hash: options.effective_options_hash(),
         units: units.linked_units.clone(),
     }
 }

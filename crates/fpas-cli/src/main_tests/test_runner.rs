@@ -16,6 +16,7 @@ fn test_cli_runs_passing_tests_in_directory() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::SourceFile(cwd.clone()),
             cwd,

@@ -14,7 +14,7 @@ use compile::{ImageBatch, ImageCandidate, compile_image_batches};
 ///
 /// Compilation failures deliberately leave tests untouched so
 /// the normal single-test path can render the original diagnostic in isolation.
-pub(super) fn attach_test_images(prepared: &mut [PreparedTest]) {
+pub(super) fn attach_test_images(prepared: &mut [PreparedTest], no_contracts: bool) {
     let batches = prepared
         .iter()
         .enumerate()
@@ -29,7 +29,7 @@ pub(super) fn attach_test_images(prepared: &mut [PreparedTest]) {
         })
         .collect();
 
-    for assignment in compile_image_batches(batches) {
+    for assignment in compile_image_batches(batches, no_contracts) {
         prepared[assignment.prepared_index].compiled = Some(assignment.compiled);
     }
 }
@@ -71,7 +71,7 @@ mod tests {
             },
         ];
 
-        attach_test_images(&mut prepared);
+        attach_test_images(&mut prepared, false);
 
         let first_image = prepared[0]
             .compiled
@@ -88,6 +88,7 @@ mod tests {
                 &test.path,
                 None,
                 TestRunSettings {
+                    no_contracts: false,
                     collection_schedule: Default::default(),
                     script_override: None,
                     timeout: None,
@@ -145,7 +146,7 @@ mod tests {
             });
         }
 
-        attach_test_images(&mut prepared);
+        attach_test_images(&mut prepared, false);
 
         for test in &prepared {
             let compiled = test.compiled.as_ref().expect("linked test must use image");
@@ -153,6 +154,7 @@ mod tests {
                 &test.path,
                 test.link.as_ref(),
                 TestRunSettings {
+                    no_contracts: false,
                     collection_schedule: Default::default(),
                     script_override: None,
                     timeout: None,
@@ -196,7 +198,7 @@ mod tests {
             },
         ];
 
-        attach_test_images(&mut prepared);
+        attach_test_images(&mut prepared, false);
 
         for test in &prepared {
             assert!(test.compiled.is_some());
@@ -204,6 +206,7 @@ mod tests {
                 &test.path,
                 None,
                 TestRunSettings {
+                    no_contracts: false,
                     collection_schedule: Default::default(),
                     script_override: None,
                     timeout: None,

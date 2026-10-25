@@ -32,6 +32,7 @@ fn routine(name: &str, entry: bool, own: ProfileSample) -> RoutineProfile {
 
 fn codes(report: &ProfileReport, counters: &[(Counter, u64)], workers: usize) -> Vec<String> {
     let evidence = Evidence {
+        debug: false,
         report,
         counters,
         wall: Duration::from_millis(10),
@@ -58,6 +59,7 @@ fn classification_finding_reports_measurements_without_claiming_a_cause() {
         (Counter::ClassifyVisited, 50_000),
     ];
     let evidence = Evidence {
+        debug: false,
         report: &report,
         counters: &counters,
         wall: Duration::from_millis(10),
@@ -76,6 +78,29 @@ fn classification_finding_reports_measurements_without_claiming_a_cause() {
     assert_eq!((per_call.value, per_call.unit), (5000.0, "values"));
     let text = format!("{} {:?}", finding.message, finding.next_steps);
     assert!(!text.contains("whole"), "{text}");
+}
+
+#[test]
+fn debug_runtime_findings_use_session_wall_time_and_all_root_publications() {
+    let report = plain(sample(1000, 1));
+    let counters = [
+        (Counter::CollectionNanos, 30_000_000),
+        (Counter::RootPublicationNanos, 50_000_000),
+    ];
+    let evidence = Evidence {
+        debug: true,
+        report: &report,
+        counters: &counters,
+        wall: Duration::from_millis(100),
+        workers: 0,
+    };
+    let findings = findings::derive(&evidence);
+    assert_eq!(findings.len(), 2);
+    assert_eq!(findings[0].code, "collection_time");
+    assert_eq!(findings[0].evidence[0].value, 30.0);
+    assert_eq!(findings[1].code, "debug_root_publication");
+    assert_eq!(findings[1].evidence[0].value, 50.0);
+    assert_eq!(findings[1].evidence[2].value, 100.0);
 }
 
 #[test]
@@ -101,6 +126,7 @@ fn dominant_routine_skips_the_entry_routine_and_reports_its_location() {
     report.routines[1].self_sample = sample(600, 6);
     report.routines.swap(0, 1);
     let evidence = Evidence {
+        debug: false,
         report: &report,
         counters: &[],
         wall: Duration::from_millis(10),
@@ -118,6 +144,7 @@ fn dominant_routine_skips_the_entry_routine_and_reports_its_location() {
 fn rules_stay_silent_on_empty_measurements() {
     let report = ProfileReport::default();
     let evidence = Evidence {
+        debug: false,
         report: &report,
         counters: &[(Counter::TaskSpawns, 1)],
         wall: Duration::ZERO,

@@ -9,12 +9,13 @@ use fpas_diagnostics::codes::TEST_RUNNER_FAILED;
 use super::super::hooks::{TestHook, hook_program_source};
 use super::super::log;
 use super::super::report::TestOutcome;
-use super::LinkContext;
 use super::program::{ProgramRunOptions, RunOutput, run_test_program};
+use super::{LinkContext, TestRunSettings};
 use crate::cli_output::{CliFailure, Reporter};
 
 /// Shared execution inputs for one setup or teardown hook.
 pub(super) struct HookRunContext<'a> {
+    pub no_contracts: bool,
     pub collection_schedule: fpas_bytecode::CollectionSchedule,
     /// Test entry whose hook is running.
     pub test_path: &'a Path,
@@ -35,14 +36,15 @@ pub(super) fn run_optional_teardown(
     reporter: &mut Reporter<'_>,
     display: &str,
     scratch_dir: &Path,
-    collection_schedule: fpas_bytecode::CollectionSchedule,
+    settings: TestRunSettings<'_>,
 ) -> Option<TestOutcome> {
     link.hooks.teardown.as_ref().map(|hook| {
         run_test_hook(
             hook,
             "Teardown",
             HookRunContext {
-                collection_schedule,
+                no_contracts: settings.no_contracts,
+                collection_schedule: settings.collection_schedule,
                 test_path: path,
                 link,
                 timeout,
@@ -61,6 +63,7 @@ pub(super) fn run_test_hook(
     reporter: &mut Reporter<'_>,
 ) -> TestOutcome {
     let HookRunContext {
+        no_contracts,
         collection_schedule,
         test_path,
         link,
@@ -86,6 +89,7 @@ pub(super) fn run_test_hook(
         Some(link),
         reporter,
         ProgramRunOptions {
+            no_contracts,
             collection_schedule,
             show_output: false,
             script_override: None,

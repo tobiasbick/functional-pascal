@@ -26,6 +26,7 @@ fn test_cli_runs_tests_from_test_project_file() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -72,6 +73,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::WorkspaceFile(cwd.join("root.fpasworkspace")),
             cwd: cwd.clone(),
@@ -117,6 +119,7 @@ fn test_cli_uses_manifest_script_override() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -162,6 +165,7 @@ fn test_cli_runs_setup_and_teardown_hooks() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -208,6 +212,7 @@ fn test_cli_fails_when_teardown_hook_fails() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -257,6 +262,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
     let mut stdout = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -312,6 +318,7 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
         let mut stdout = Vec::new();
         let exit = test_cli_with_stderr(
             TestCliConfig {
+                no_contracts: false,
                 collection_schedule: Default::default(),
                 input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
                 cwd: cwd.clone(),

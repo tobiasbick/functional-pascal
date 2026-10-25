@@ -15,6 +15,9 @@ fpas debug <target> --protocol jsonl
 fpas debug <target> --protocol jsonl --commands <path>
 ```
 
+Add `--profile <new-file>` for a [debug-target profile](profiler.md#debug-targets)
+published after the session closes; protocol records stay on stdout.
+
 ```json
 {"type":"request","id":1,"command":"initialize","arguments":{"version":2}}
 {"type":"response","request_id":1,"command":"initialize","success":true,"body":{"protocol":"fpas-debug-jsonl","version":2}}

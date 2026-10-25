@@ -267,6 +267,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             unreachable!("init and doc are handled before shared option parsing")
         }
         CliMode::Build => ResolvedCli::Build(BuildCliConfig {
+            no_contracts: options.no_contracts,
             input,
             standard_library: options.standard_library,
             executable: options.executable,
@@ -274,6 +275,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             diagnostics,
         }),
         CliMode::Run => ResolvedCli::Run(CliConfig {
+            no_contracts: options.no_contracts,
             collection_schedule: options.collection_schedule,
             input,
             program_args,
@@ -303,7 +305,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             {
                 return Err("Batch --output-limit cannot exceed 1048576 bytes.".into());
             }
-            ResolvedCli::Debug(DebugCliConfig {
+            ResolvedCli::Debug(Box::new(DebugCliConfig {
+                no_contracts: options.no_contracts,
+                profile,
                 collection_schedule: options.collection_schedule,
                 batch,
                 cwd: cwd.to_path_buf(),
@@ -322,9 +326,10 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 )),
                 instruction_limit: options.instruction_limit.unwrap_or(100_000_000),
                 output_limit: options.output_limit.unwrap_or(1_048_576),
-            })
+            }))
         }
         CliMode::Check => ResolvedCli::Check(CliConfig {
+            no_contracts: false,
             collection_schedule: options.collection_schedule,
             input,
             program_args,
@@ -336,6 +341,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {
+            no_contracts: options.no_contracts,
             collection_schedule: options.collection_schedule,
             input,
             cwd: cwd.to_path_buf(),

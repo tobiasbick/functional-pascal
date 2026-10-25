@@ -100,6 +100,7 @@ fn isolated_worker_request_preserves_effective_collection_configuration() {
     assert!(errors.is_empty());
     let files = WorkerFiles::create().unwrap();
     let prepared = PreparedProgram {
+        no_contracts: false,
         collection_schedule: config,
         test_path: files.root.join("worker_test.fpas"),
         executable: fpas_compiler::compile(&program).unwrap(),

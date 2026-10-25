@@ -97,6 +97,7 @@ fn check_source_file(
             &[],
             &project::ProjectLinkMeta::default(),
             Some(standard_library),
+            false,
         ) {
             Ok(_) => 0,
             Err(failure) => reporter.failure(&failure),
@@ -125,13 +126,13 @@ fn check_project_file(
 
     let checked = match loaded.kind {
         project::ProjectKind::Program => {
-            crate::project_build::build_program(&loaded, standard_library).map(|_| ())
+            crate::project_build::build_program(&loaded, standard_library, false).map(|_| ())
         }
         project::ProjectKind::Library => {
-            crate::project_build::check_library(&loaded, standard_library)
+            crate::project_build::check_library(&loaded, standard_library, false)
         }
         project::ProjectKind::Test => {
-            crate::project_build::check_test_project(&loaded, standard_library)
+            crate::project_build::check_test_project(&loaded, standard_library, false)
         }
     };
     match checked {

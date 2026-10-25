@@ -15,6 +15,7 @@ use crate::{Digest, ProgramIdentity};
 
 fn identity() -> ProgramIdentity {
     ProgramIdentity {
+        contracts_enabled: true,
         compiler_version: "test".to_string(),
         bytecode_version: fpas_bytecode::BYTECODE_VERSION,
         source_hash: Digest::of(b"source"),

@@ -36,6 +36,8 @@ covering the program and resolved dependencies, including sibling projects.
 | `--instruction-limit count` | Positive dispatched-instruction bound; default 100,000,000. |
 | `--output-limit bytes` | Positive combined output bound; default and ceiling 1,048,576 bytes. |
 | `--source-root dir` | Common source root printed by `fpas build`; required for a compiled image. |
+| `--profile path` | Write a new [target profile](profiler.md#debug-targets) with routine/line samples and debugger phase times. |
+| `--no-contracts` | Omit contract code throughout the target; existing images must already use this [build policy](../program-structure/cli.md#contract-policy). |
 | `--std-lib dir` | Replace the complete source standard library. |
 | `--gc-cell-threshold N` | Positive minimum cell-allocation threshold; default 4096. |
 | `--gc-mutation-threshold N` | Positive minimum successful-mutation threshold; default 8192. |

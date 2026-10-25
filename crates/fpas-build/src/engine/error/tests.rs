@@ -42,9 +42,10 @@ fn linking_preserves_the_native_error_and_error_chain() {
         linked_units: Vec::new(),
         supporting_interfaces: Vec::new(),
     };
-    let failure = crate::engine::link_program(units, &program, None)
-        .err()
-        .expect("a dependency must not have a program entry");
+    let failure =
+        crate::engine::link_program(units, &program, None, &crate::BuildOptions::default())
+            .err()
+            .expect("a dependency must not have a program entry");
     let native = failure.link_error().expect("typed link failure");
     assert!(matches!(native, LinkError::UnitEntry(_)));
     assert_eq!(

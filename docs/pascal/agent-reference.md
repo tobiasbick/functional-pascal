@@ -1332,6 +1332,11 @@ without launching them in unattended validation. See [CLI](program-structure/cli
 and [formatter style](tools/fmt-style.md).
 
 For a targeted stop, run `fpas debug file.fpas --break file.fpas:42 --print Total`.
+`run`, `build`, `test` and `debug` accept [`--no-contracts`](program-structure/cli.md#contract-policy)
+to omit contract code across dependencies while still type-checking the clauses.
+Direct images retain their build policy and reject a conflicting explicit request.
+Add `--profile .temp-data/debug.json` for [target routine/line samples and debugger
+phase timings](tools/profiler.md#debug-targets); this also works with DAP/JSONL.
 The default [batch debugger](tools/debugger-batch.md) returns one JSON document
 with task stacks, stored values, globals and captured output. Repeat `--print`
 for separate expressions; calls and constructors are forbidden. `--script`

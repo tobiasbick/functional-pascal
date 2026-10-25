@@ -32,6 +32,7 @@ pub(super) fn lower_analyzed_root(
     metadata: fpas_sema::AnalysisMetadata,
     interfaces: &[fpas_unit::interface::UnitInterface],
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],
+    options: crate::CompileOptions,
 ) -> Result<LoweredUnit, Vec<CompileError>> {
     let SourceRoot {
         name,
@@ -188,6 +189,7 @@ pub(super) fn lower_analyzed_root(
             routine,
             &mut type_table,
             routines::LoweringInput {
+                contracts: options.contracts,
                 id,
                 runtime_name: runtime_names.get(index).map(String::as_str).unwrap_or(""),
                 source_name: name,
@@ -211,6 +213,7 @@ pub(super) fn lower_analyzed_root(
             &routine.routine,
             &mut type_table,
             routines::LoweringInput {
+                contracts: options.contracts,
                 id: routine.id,
                 runtime_name: &routine.name,
                 source_name: name,

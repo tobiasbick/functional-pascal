@@ -1,4 +1,4 @@
-//! Routine and source-line samples for `fpas run --profile`.
+//! Routine and source-line samples for `fpas run/debug --profile`.
 //!
 //! Each dispatch batch adds its steps and wall time to the instruction address active when
 //! the batch ends (self) and to every distinct function on the call stack (inclusive).
@@ -12,6 +12,9 @@ use std::time::Duration;
 use fpas_bytecode::{Executable, InstructionAddress};
 
 use super::worker::Worker;
+
+mod debug;
+pub use debug::DebugProfile;
 
 /// Most instructions attributed by one sample: the dispatch batch size.
 pub const MAX_BATCH_STEPS: u32 = super::BATCH_STEPS;

@@ -44,6 +44,7 @@ mod live_image;
 mod location;
 mod location_assign;
 mod mutation;
+mod profile;
 mod recording;
 mod scheduling;
 mod sequence;
@@ -106,6 +107,7 @@ pub struct DebugSession {
     debuggee: Arc<Mutex<DebuggeeChannel>>,
     terminal: DebugTerminalHandle,
     recording: DebugRecordingLog,
+    profile: Option<crate::vm::DebugProfile>,
     pub(in crate::vm::debug) trace: Option<Arc<Mutex<super::trace::TraceHistory>>>,
 }
 
@@ -272,6 +274,7 @@ impl DebugSession {
             debuggee,
             terminal,
             recording: DebugRecordingLog::default(),
+            profile: None,
             trace: None,
         })
     }
@@ -354,6 +357,7 @@ impl DebugSession {
     }
 
     fn refresh_inspection_with_reserved_handles(&mut self, reservation: Option<(u64, usize)>) {
+        let _timer = profile::inspection();
         let task_id = self.last_stop.task_id;
         self.inspections.clear();
         for inspectable_task_id in self.runtime.inspectable_task_ids() {

@@ -59,6 +59,7 @@ fn image(executable: VerifiedExecutable, source: &str) -> Result<ProgramImage, S
     let hashes = vec![Digest::of(source); paths.len()];
     ProgramImage::new(
         ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: "error-benchmark".into(),
             bytecode_version: BYTECODE_VERSION,
             source_hash: Digest::of(source),

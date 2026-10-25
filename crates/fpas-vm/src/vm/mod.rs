@@ -68,7 +68,9 @@ pub use failure_capture::{
     FailureValue,
 };
 pub use host_value::{HostArgument, HostChild, HostEnumInfo, HostValue, HostValueError};
-pub use profile::{LineProfile, MAX_BATCH_STEPS, ProfileReport, ProfileSample, RoutineProfile};
+pub use profile::{
+    DebugProfile, LineProfile, MAX_BATCH_STEPS, ProfileReport, ProfileSample, RoutineProfile,
+};
 
 /// Captured console output produced by the virtual machine.
 pub type VmOutput = fpas_std::CapturedOutput;

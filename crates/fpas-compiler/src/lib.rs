@@ -16,12 +16,14 @@ mod intrinsic_catalog;
 mod lowering;
 mod object;
 mod optimize;
+mod options;
+pub use options::CompileOptions;
 
 pub use error::CompileError;
 pub use lowering::lower;
 pub use object::{
-    CompiledUnitObject, compile_program_object_with_support, compile_unit_object,
-    compile_unit_object_with_support,
+    CompiledUnitObject, compile_program_object_with_options, compile_program_object_with_support,
+    compile_unit_object, compile_unit_object_with_options, compile_unit_object_with_support,
 };
 
 /// Compile one program directly to a verified executable.
@@ -34,7 +36,18 @@ pub use object::{
 /// Returns semantic diagnostics, a structured lowering diagnostic, or a bytecode
 /// construction/verifier diagnostic represented as an internal compiler failure.
 pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
-    let lowered = lowering::lower_with_metadata(program)?;
+    compile_with_options(program, CompileOptions::default())
+}
+
+/// Compile a complete, semantically checked program with an explicit code-generation policy.
+///
+/// # Errors
+/// Returns semantic, lowering or bytecode diagnostics, including errors in disabled contracts.
+pub fn compile_with_options(
+    program: &Program,
+    options: CompileOptions,
+) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
+    let lowered = lowering::lower_with_options(program, options)?;
     bytecode::compile_with_errors(lowered.program, &lowered.errors).map_err(|error| vec![error])
 }
 

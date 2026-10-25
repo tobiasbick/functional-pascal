@@ -37,6 +37,7 @@ pub(super) trait UnitBackend {
         unit: &fpas_parser::Unit,
         direct_interfaces: &[UnitInterface],
         supporting_interfaces: &[UnitInterface],
+        options: fpas_compiler::CompileOptions,
     ) -> Result<(UnitInterface, Self::Object), Vec<fpas_compiler::CompileError>>;
 
     fn encode(object: &Self::Object) -> Result<Vec<u8>, BuildError>;
@@ -80,11 +81,13 @@ impl UnitBackend for Backend {
         unit: &fpas_parser::Unit,
         direct_interfaces: &[UnitInterface],
         supporting_interfaces: &[UnitInterface],
+        options: fpas_compiler::CompileOptions,
     ) -> Result<(UnitInterface, Self::Object), Vec<fpas_compiler::CompileError>> {
-        fpas_compiler::compile_unit_object_with_support(
+        fpas_compiler::compile_unit_object_with_options(
             unit,
             direct_interfaces,
             supporting_interfaces,
+            options,
         )
         .map(|compiled| (compiled.interface, compiled.object))
     }

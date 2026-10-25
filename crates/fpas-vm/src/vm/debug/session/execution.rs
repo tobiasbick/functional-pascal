@@ -89,6 +89,8 @@ impl DebugSession {
         selected_task: Option<u64>,
     ) -> Result<DebugRunResult, DebugSessionError> {
         self.require_stopped(mode.command())?;
+        let _timer =
+            fpas_bytecode::profile::Timer::start(fpas_bytecode::profile::Counter::DebugResumeNanos);
         let selected_task = selected_task.unwrap_or(self.last_stop.task_id);
         if mode != ResumeMode::Continue {
             if !self.runtime.task_is_inspectable(selected_task) {
@@ -286,6 +288,9 @@ impl DebugSession {
             }
         })();
         self.runtime.finish_execution_batch(&mut accesses);
+        if let Some(profile) = &self.profile {
+            profile.record_resume(&result);
+        }
         result
     }
 

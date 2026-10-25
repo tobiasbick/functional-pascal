@@ -57,6 +57,13 @@ pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
 }
 
 pub(crate) fn lower_with_metadata(program: &AstProgram) -> Result<LoweredUnit, Vec<CompileError>> {
+    lower_with_options(program, crate::CompileOptions::default())
+}
+
+pub(crate) fn lower_with_options(
+    program: &AstProgram,
+    options: crate::CompileOptions,
+) -> Result<LoweredUnit, Vec<CompileError>> {
     let metadata = fpas_sema::analyze_with_types(program);
     if !metadata.errors.is_empty() {
         return Err(metadata.errors.into_iter().map(Box::new).collect());
@@ -72,6 +79,7 @@ pub(crate) fn lower_with_metadata(program: &AstProgram) -> Result<LoweredUnit, V
         metadata,
         &[],
         &[],
+        options,
     )
 }
 
@@ -81,6 +89,7 @@ pub(crate) fn lower_unit(
     unit: &Unit,
     interfaces: &[fpas_unit::interface::UnitInterface],
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],
+    options: crate::CompileOptions,
 ) -> Result<LoweredUnit, Vec<CompileError>> {
     let analysis =
         fpas_sema::analyze_unit_with_interface_support(unit, interfaces, supporting_interfaces)
@@ -106,6 +115,7 @@ pub(crate) fn lower_unit(
         analysis.metadata,
         interfaces,
         supporting_interfaces,
+        options,
     )
 }
 
@@ -115,6 +125,7 @@ pub(crate) fn lower_program_with_support(
     program: &AstProgram,
     interfaces: &[fpas_unit::interface::UnitInterface],
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],
+    options: crate::CompileOptions,
 ) -> Result<LoweredUnit, Vec<CompileError>> {
     let metadata = fpas_sema::analyze_program_with_interface_support(
         program,
@@ -143,5 +154,6 @@ pub(crate) fn lower_program_with_support(
         metadata,
         interfaces,
         supporting_interfaces,
+        options,
     )
 }

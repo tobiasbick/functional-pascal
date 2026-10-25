@@ -95,8 +95,9 @@ To reproduce the comparison:
 The regression test exercises aggressive collection during continued execution,
 retained closure aliases across a breakpoint and collection from another thread
 while stopped. Existing VM and protocol tests cover stepping, limits, watchpoints,
-task ordering, supervision and idle wakeups. Profiling a debug target directly
-remains a separate tooling gap; this change adds no profiling switch or wire field.
+task ordering, supervision and idle wakeups. For supported target attribution, use
+[`fpas debug --profile`](../pascal/tools/profiler.md#debug-targets). Its instrumented
+phase timings are separate from the unprofiled latency measurements above.
 
 Validation passes for 916 VM tests (two ignored), the full `fpas-debug` unit and
 integration suite, 95 CLI batch-debug tests and VM Clippy with all targets and

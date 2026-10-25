@@ -139,6 +139,7 @@ end.
         .collect();
     let image = fpas_program::ProgramImage::new(
         fpas_program::ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: "native-error-source-fixture".into(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"source"),

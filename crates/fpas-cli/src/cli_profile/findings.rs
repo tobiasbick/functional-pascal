@@ -58,14 +58,19 @@ pub(super) fn derive<'a>(evidence: &Evidence<'a>) -> Vec<Finding<'a>> {
     let total = report.total;
     let collection = evidence.counter(Counter::CollectionNanos);
     let safe_points = evidence.counter(Counter::SafePointNanos);
-    // Batch time excludes safe points, and collection runs inside safe points.
-    let busy = total.nanos.saturating_add(safe_points);
+    // Debugger collection and publication also occur outside sampled dispatch.
+    let busy = if evidence.debug {
+        u64::try_from(evidence.wall.as_nanos()).unwrap_or(u64::MAX)
+    } else {
+        total.nanos.saturating_add(safe_points)
+    };
     if busy > 0 && collection * 10 >= busy {
         findings.push(Finding {
             code: "collection_time",
             message: format!(
-                "Collection took {}% of execution time.",
-                percent(collection, busy)
+                "Collection took {}% of {}.",
+                percent(collection, busy),
+                if evidence.debug { "session wall time" } else { "execution time" }
             ),
             evidence: vec![
                 share("collection_time_percent", collection, busy, "busy_ms"),
@@ -88,13 +93,19 @@ pub(super) fn derive<'a>(evidence: &Evidence<'a>) -> Vec<Finding<'a>> {
             ],
         });
     }
-    let publication = safe_points.saturating_sub(collection);
+    let publication = if evidence.debug {
+        evidence.counter(Counter::RootPublicationNanos)
+    } else {
+        safe_points.saturating_sub(collection)
+    };
     if busy > 0 && publication * 10 >= busy {
         findings.push(Finding {
-            code: "safe_point_time",
+            code: if evidence.debug { "debug_root_publication" } else { "safe_point_time" },
             message: format!(
-                "Root publication and safe points outside collection took {}% of execution time.",
-                percent(publication, busy)
+                "{} took {}% of {}.",
+                if evidence.debug { "Execution-root publication" } else { "Root publication and safe points outside collection" },
+                percent(publication, busy),
+                if evidence.debug { "session wall time" } else { "execution time" }
             ),
             evidence: vec![
                 share("publication_time_percent", publication, busy, "busy_ms"),

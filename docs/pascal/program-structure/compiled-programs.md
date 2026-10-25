@@ -9,10 +9,15 @@ the build, that builder fails instead of replacing an image produced from newer 
 
 ## Identity and paths
 
-The recorded identity includes the compiler and bytecode versions, source and option hashes, and
+The recorded identity includes the contract policy, compiler and bytecode versions, source and option hashes, and
 the object hash of every reachable Unit in deterministic link order. Unit names are
 case-insensitive and are stored in canonical ASCII lowercase, so case-only input differences
 produce identical image bytes.
+
+Header flag bit 0 records disabled contracts; zero means contracts enabled.
+Unknown flag bits are rejected. The policy also participates in unit and program
+option identities, preventing cache reuse across policies. Direct execution
+retains the image's policy; see [CLI contract policy](cli.md#contract-policy).
 
 Source paths must be relative. Validation recognizes Unix roots, Windows drive roots, Windows
 root-relative paths, and UNC paths independently of the host operating system. Relative paths may

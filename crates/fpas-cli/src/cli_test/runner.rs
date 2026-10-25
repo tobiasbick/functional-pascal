@@ -65,7 +65,7 @@ pub(super) fn run_tests_sequential(
             }
         }
     }
-    attach_test_images(&mut prepared);
+    attach_test_images(&mut prepared, config.no_contracts);
     let mut prepared = prepared
         .into_iter()
         .map(|test| (test.index, test))
@@ -89,6 +89,7 @@ pub(super) fn run_tests_sequential(
             &test.path,
             test.link.as_ref(),
             TestRunSettings {
+                no_contracts: config.no_contracts,
                 collection_schedule: config.collection_schedule,
                 script_override: config.script_path.as_deref(),
                 timeout: config.timeout,
@@ -163,13 +164,14 @@ pub(super) fn run_tests_parallel(
         ));
     }
 
-    attach_test_images(&mut prepared);
+    attach_test_images(&mut prepared, config.no_contracts);
 
     let mut results = preload_results;
     results.extend(parallel::run_tests_parallel(
         prepared,
         config.jobs,
         TestRunSettings {
+            no_contracts: config.no_contracts,
             collection_schedule: config.collection_schedule,
             script_override: config.script_path.as_deref(),
             timeout: config.timeout,

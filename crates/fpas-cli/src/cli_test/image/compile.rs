@@ -35,11 +35,17 @@ pub(super) struct ImageAssignment {
 }
 
 /// Compiles independent image batches without changing test order.
-pub(super) fn compile_image_batches(batches: Vec<ImageBatch>) -> Vec<ImageAssignment> {
-    batches.into_iter().flat_map(compile_image_batch).collect()
+pub(super) fn compile_image_batches(
+    batches: Vec<ImageBatch>,
+    no_contracts: bool,
+) -> Vec<ImageAssignment> {
+    batches
+        .into_iter()
+        .flat_map(|batch| compile_image_batch(batch, no_contracts))
+        .collect()
 }
 
-fn compile_image_batch(mut batch: ImageBatch) -> Vec<ImageAssignment> {
+fn compile_image_batch(mut batch: ImageBatch, no_contracts: bool) -> Vec<ImageAssignment> {
     batch
         .candidates
         .drain(..)
@@ -54,12 +60,14 @@ fn compile_image_batch(mut batch: ImageBatch) -> Vec<ImageAssignment> {
                             &[],
                             &fpas_project::ProjectLinkMeta::default(),
                             None,
+                            no_contracts,
                         )
                     },
                     |link| {
                         crate::project_build::build_test_program_with_graph(
                             &candidate.path,
                             &link.program_graph,
+                            no_contracts,
                         )
                     },
                 )
@@ -82,7 +90,7 @@ mod tests {
 
     #[test]
     fn empty_batch_collection_produces_no_assignments() {
-        assert!(compile_image_batches(Vec::new()).is_empty());
+        assert!(compile_image_batches(Vec::new(), false).is_empty());
     }
 
     #[test]
@@ -98,7 +106,7 @@ mod tests {
             }],
             None,
         );
-        assert_eq!(compile_image_batches(vec![batch]).len(), 1);
+        assert_eq!(compile_image_batches(vec![batch], false).len(), 1);
         std::fs::remove_dir_all(root).ok();
     }
 }

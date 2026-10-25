@@ -23,6 +23,7 @@ pub(super) enum Routine<'a> {
 
 /// Resolved bindings and captures required to lower a named routine.
 pub(super) struct LoweringInput<'a> {
+    pub contracts: bool,
     pub id: FunctionId,
     pub runtime_name: &'a str,
     pub source_name: &'a str,
@@ -306,6 +307,7 @@ pub(super) fn lower(
     input: LoweringInput<'_>,
 ) -> Result<(Function, types::TypeTable), CompileError> {
     let LoweringInput {
+        contracts,
         id,
         runtime_name,
         source_name,
@@ -357,16 +359,18 @@ pub(super) fn lower(
         type_table: types.clone(),
     })?;
     let FuncBody::Block { stmts, .. } = routine.body();
-    context.lower_preconditions(
-        &format!("{source_name}.{runtime_name}"),
-        routine.params(),
-        routine.requires(),
-    )?;
-    context.prepare_postconditions(
-        &format!("{source_name}.{runtime_name}"),
-        routine.params(),
-        routine.ensures(),
-    )?;
+    if contracts {
+        context.lower_preconditions(
+            &format!("{source_name}.{runtime_name}"),
+            routine.params(),
+            routine.requires(),
+        )?;
+        context.prepare_postconditions(
+            &format!("{source_name}.{runtime_name}"),
+            routine.params(),
+            routine.ensures(),
+        )?;
+    }
     context.lower_statements(stmts)?;
     context.finish(routine.span())
 }

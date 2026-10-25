@@ -19,6 +19,7 @@ fn test_cli_json_report_writes_summary_to_stdout() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -143,6 +144,7 @@ fn report_config(report: TestReportFormat) -> TestCliConfig {
 fn report_config_without_json() -> TestCliConfig {
     let cwd = std::path::PathBuf::from("unused-report-output-config");
     TestCliConfig {
+        no_contracts: false,
         collection_schedule: Default::default(),
         input: crate::CliInput::SourceFile(cwd.clone()),
         cwd,

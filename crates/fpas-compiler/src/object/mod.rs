@@ -42,6 +42,24 @@ pub fn compile_unit_object_with_support(
     interfaces: &[UnitInterface],
     supporting_interfaces: &[UnitInterface],
 ) -> Result<CompiledUnitObject, Vec<CompileError>> {
+    compile_unit_object_with_options(
+        unit,
+        interfaces,
+        supporting_interfaces,
+        crate::CompileOptions::default(),
+    )
+}
+
+/// Compile a source unit with explicit code-generation options and full contract type checking.
+///
+/// # Errors
+/// Returns semantic, lowering, bytecode or object-construction diagnostics.
+pub fn compile_unit_object_with_options(
+    unit: &Unit,
+    interfaces: &[UnitInterface],
+    supporting_interfaces: &[UnitInterface],
+    options: crate::CompileOptions,
+) -> Result<CompiledUnitObject, Vec<CompileError>> {
     let analysis =
         fpas_sema::analyze_unit_with_interface_support(unit, interfaces, supporting_interfaces)
             .map_err(|error| {
@@ -63,7 +81,8 @@ pub fn compile_unit_object_with_support(
             unit.span.column,
         )]);
     };
-    let mut lowered = crate::lowering::lower_unit(unit, interfaces, supporting_interfaces)?;
+    let mut lowered =
+        crate::lowering::lower_unit(unit, interfaces, supporting_interfaces, options)?;
     lowered
         .errors
         .export_requirements(&mut interface, &lowered.program.functions);
@@ -105,8 +124,30 @@ pub fn compile_program_object_with_support(
     interfaces: &[UnitInterface],
     supporting_interfaces: &[UnitInterface],
 ) -> Result<RelocatableObject, Vec<CompileError>> {
-    let mut lowered =
-        crate::lowering::lower_program_with_support(program, interfaces, supporting_interfaces)?;
+    compile_program_object_with_options(
+        program,
+        interfaces,
+        supporting_interfaces,
+        crate::CompileOptions::default(),
+    )
+}
+
+/// Compile a program object with explicit code-generation policy and checked contract expressions.
+///
+/// # Errors
+/// Returns semantic, lowering, bytecode or object-construction diagnostics.
+pub fn compile_program_object_with_options(
+    program: &Program,
+    interfaces: &[UnitInterface],
+    supporting_interfaces: &[UnitInterface],
+    options: crate::CompileOptions,
+) -> Result<RelocatableObject, Vec<CompileError>> {
+    let mut lowered = crate::lowering::lower_program_with_support(
+        program,
+        interfaces,
+        supporting_interfaces,
+        options,
+    )?;
     let executable = crate::bytecode::compile_for_object(lowered.program, &lowered.errors)
         .map_err(|error| vec![error])?;
     let mut object = RelocatableObject::from_executable(&program.name, executable)

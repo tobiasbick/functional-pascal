@@ -82,6 +82,7 @@ fn two_generic_instances_share_erased_code_and_survive_source_less_round_trips()
         .collect::<Vec<_>>();
     let image = fpas_program::ProgramImage::new(
         fpas_program::ProgramIdentity {
+            contracts_enabled: true,
             compiler_version: "error-artifact-fixture".to_owned(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"fixture"),

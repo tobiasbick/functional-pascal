@@ -228,7 +228,39 @@ option; flags after `--` remain program arguments. See the
 
 To find where execution time goes, use `fpas run <path> --profile <new-file>`.
 It writes one JSON report after the run, also when the run fails, with the same
-new-file rule. Only `run` accepts this option. See [profile reports](../tools/profiler.md).
+new-file rule. `debug` also accepts `--profile` to measure the debug target and
+debugger phases. See [profile reports](../tools/profiler.md).
+
+## Contract policy
+
+Contracts are enabled by default in every build mode. `--no-contracts` on
+`run`, `build`, `test` and `debug` omits `requires` and `ensures` evaluation,
+contract-only branches and diagnostic preparation. Parsing, type checking and
+contract scope/effect checks still apply to the complete source. Body validation,
+`Result` handling, runtime safety checks and `Std.Test` assertions still execute.
+`check` does not accept this code-generation option.
+
+```sh
+fpas run app.fpasprj --no-contracts
+fpas build app.fpasprj --no-contracts
+fpas build app.fpasprj --executable --no-contracts
+fpas test tests.fpasprj --no-contracts --jobs 4
+fpas debug app.fpasprj --no-contracts
+```
+
+The policy applies to the root, transitive source dependencies, generics,
+indirect calls and record routines. Test bodies, setup/teardown hooks and
+isolated timeout workers use the same policy. Every unit's option identity
+includes it: switching policy rebuilds incompatible `.fpascu` sidecars and
+`.fpascp` images. Repeating a build with the same policy reuses them normally.
+Sources are never rewritten.
+
+A directly loaded `.fpascp` or a native application retains its build policy.
+Running an image without this option executes the code stored in that image.
+Explicit `run/debug --no-contracts` rejects an image built with contracts enabled
+and asks for `fpas build --no-contracts <project>`. Existing machine code is not
+rewritten; build the source project with the desired policy first. Native bundles
+inherit the policy selected by `build --executable`.
 
 ## Collection scheduling
 

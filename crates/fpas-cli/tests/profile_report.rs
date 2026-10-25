@@ -7,6 +7,8 @@
 )]
 
 use serde_json::Value;
+#[path = "profile_report/debug.rs"]
+mod debug;
 use std::{
     fs,
     path::{Path, PathBuf},

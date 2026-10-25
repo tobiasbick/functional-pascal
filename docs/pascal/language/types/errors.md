@@ -121,11 +121,12 @@ validation failure uses MissingSetting or InvalidSetting rather than a fabricate
 file or host cause.
 
 The [complete configuration example](../../../../examples/pascal/errors/config_error.fpas)
-and its [compact-reference fence](../../agent-reference.md) load a real file,
-retain the FsError, validate the port separately, match the original cause and
-print the error directly. Its generic ContextError wrapper is used with both
-ConfigError and ParseError; the two concrete families keep distinct identities.
+loads a real file, retains the FsError, validates the port separately, matches
+the original cause and prints the error directly. Its generic ContextError wrapper
+is used with both ConfigError and ParseError; the two concrete families keep distinct identities.
 Constructor values and captured closures use the same explicit error mapping.
+The [agent reference](../../agents/patterns-errors.md) gives a shorter introduction
+to typed error mapping and propagation.
 
 Compiled libraries and standalone images from before native error metadata must
 be rebuilt. The loader rejects unsupported formats and inconsistent native

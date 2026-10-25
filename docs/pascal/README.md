@@ -1,6 +1,6 @@
 # Functional Pascal
 
-A function-first programming language built on Pascal's readable syntax and clean structure. Runs on a managed virtual machine — no pointers, no manual memory management.
+A functional-first Pascal language with selected Ada conventions. Runs on a managed virtual machine — no pointers, no manual memory management.
 
 Language specification: [`docs/pascal/`](.) — implemented behavior and stdlib reference.
 
@@ -21,17 +21,18 @@ Topic-based layout (Microsoft Learn style).
 
 | Area | Hub | Topics |
 |------|-----|--------|
-| Compact reference | [agent-reference.md](agent-reference.md) | Whole-language authoring guide, Pascal/Delphi/Ada comparison, tested examples |
+| Agent reference | [agents/](agents/README.md) | Short entrypoint, focused language topics, tested examples |
 | Getting started | [getting-started/](getting-started/README.md) | Overview, hello world, keywords |
 | Language | [language/](language/README.md) | Types, basics, control flow, functions, pattern matching, errors, concurrency |
 | Program structure | [program-structure/](program-structure/README.md) | Units, projects, CLI, workspaces |
 | Standard library | [std/](std/README.md) | `Std.*` reference |
-| Tools | [tools/](tools/README.md) | `fpas fmt`, VS Code-compatible editors |
+| Tools | [tools/](tools/README.md) | Declaration lookup, source queries, diagnostics, debugging, profiling, formatting, editors |
 | Formal grammar | [../specs/grammar.ebnf](../specs/grammar.ebnf) | Lexer and parser syntax |
 
 ## Start here
 
-For a single-file authoring reference, start with [Compact FPAS language reference](agent-reference.md).
+For authoring without prior FPAS knowledge, start with the
+[agent reference](agents/README.md), then read the topics needed for the task.
 
 Ordered learning path for newcomers:
 
@@ -45,7 +46,7 @@ Ordered learning path for newcomers:
 8. [Concurrency](language/concurrency/README.md) — `go`, task scopes, channels, and scheduling; [Std.Tasks](std/concurrency/task.md) covers cancellation, selection, task groups, supervised retries, and timed close
 9. [Units](program-structure/units.md) — `uses`, namespaces, visibility
 10. [Projects](program-structure/projects.md) — `.fpasprj`, workspaces
-11. [CLI](program-structure/cli.md) — `fpas`, `check`, `test`, `fmt`
+11. [CLI](program-structure/cli.md) — scaffolding, builds, runs, checks, tests, and declaration lookup
 12. [Standard library](std/README.md) — `Std.*` built-in units
 13. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
 14. [Editor integration](tools/editor-integration.md) — highlighting, diagnostics, formatting, navigation

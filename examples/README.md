@@ -84,7 +84,6 @@ Prefer the curated harness (before/after save/compare). Full steps: [`docs/bench
 ```sh
 cargo bench-fpas save before          # known-good checkout
 # … change code …
-cargo build --release -p fpas-cli
 cargo bench-fpas compare before
 ```
 
@@ -170,7 +169,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/for/downto_example.fpas` | `for I: integer := N downto M do` |
 | `pascal/for-in/for_in_example.fpas` | `for V: integer in Items do` |
 | `pascal/for-in/dict_for_in_example.fpas` | `for Name: string in Ages do` (key iteration) |
-| `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
+| `pascal/concurrency/go_statement_example.fpas` | `discard go` inside a task scope; scope exit joins the child |
 | [`pascal/concurrency/select_events.fpas`](pascal/concurrency/select_events.fpas) | Typed channel delivery selected against a timer |
 | [`pascal/concurrency/task_group_workers.fpas`](pascal/concurrency/task_group_workers.fpas) | Group-owned workers, cooperative cancellation, and collected failures |
 | [`pascal/concurrency/supervised_worker.fpas`](pascal/concurrency/supervised_worker.fpas) | Bounded worker retries with one task identity |
@@ -183,7 +182,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Tui` project benchmark |
 | `pascal/tui/mandelbrot-headless/mandelbrot-benchmark.fpasprj` | Production Mandelbrot tasks and bounded delivery, optionally including headless grid painting; `cargo bench-fpas run --group mandelbrot` |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
-| `pascal/vm/array_push_benchmark.fpas` | Growing `Items.Push` for VM array locals / SharedArray COW |
+| `pascal/vm/array_push_benchmark.fpas` | Growing `Items.PushInPlace` for VM array locals / SharedArray COW |
 | `pascal/vm/array_length_benchmark.fpas` | Repeated `Items.Length` on a shared live array (read-only COW path) |
 | `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
 | `pascal/vm/string_length_benchmark.fpas` | Repeated `Text.Length` on a long live string |
@@ -191,7 +190,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/vm/function_call_benchmark.fpas` | Direct and captured function-call throughput |
 | `pascal/vm/array_callbacks_benchmark.fpas` | `Map`, `Filter`, and `Reduce` callback throughput |
 | `pascal/vm/record_update_benchmark.fpas` | Record construction, field access, and `with` update throughput |
-| `pascal/vm/unicode_char_at_benchmark.fpas` | `Text.CharAt` throughput over multi-byte Unicode text |
+| `pascal/vm/unicode_char_at_benchmark.fpas` | `Text[Index]` scalar-indexing throughput over multi-byte Unicode text |
 | `pascal/vm/wrapper_payload_benchmark.fpas` | `Result` and `Option` payload construction and unwrap throughput |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |

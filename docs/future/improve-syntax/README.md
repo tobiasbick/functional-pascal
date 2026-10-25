@@ -28,7 +28,7 @@ The example is a template, not an active AP or an approved proposal.
 1. Select a concrete problem and inspect its current implementation, handbook,
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
-2. Copy `example-apNN-topic/` to `ap50-<topic>/` for the next package. Continue
+2. Copy `example-apNN-topic/` to `ap51-<topic>/` for the next package. Continue
    with the next unused number for later packages. AP01 through AP49 are
    closed; do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
@@ -44,18 +44,19 @@ The example is a template, not an active AP or an approved proposal.
    missing. Record the user's decision before implementing affected behavior.
    Follow the [development process](development-process.md) for delivery.
 
-Use `AP50` for the next package and `AP50.1`, `AP50.2`, and so on for its work
-packages. Decision IDs continue at `Q55`; Q01 through Q54 belong to closed
-packages. Record each decision and its affected work packages in the owning
-package README. Do not create a second decision or completion index.
+Use `AP51` for the next package and `AP51.1`, `AP51.2`, and so on for its work
+packages. AP50 is assigned below. Decision IDs continue at `Q56`; Q55 belongs
+to AP50 and Q01 through Q54 belong to closed packages. Record each decision
+and its affected work packages in the owning package README. Do not create a
+second decision or completion index.
 
 ## Package status
 
-No active AP packages. Add new packages here when planning begins; keep the
-example out of this table.
+Active packages are listed below; keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
+| [ ] | [AP50: Complete ACP client](ap50-acp-client/README.md) | Large; seven work packages | Existing process, task and native-library infrastructure on main | Planned |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

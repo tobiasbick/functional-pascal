@@ -1,4 +1,4 @@
-//! Compile and execute the literal examples in `docs/pascal/agent-reference.md`.
+//! Compile and execute the literal examples throughout `docs/pascal/agents/`.
 
 use super::{handbook::code_blocks, repo_root, support};
 use crate::test_support::{
@@ -11,39 +11,39 @@ use std::fs;
 #[test]
 fn agent_reference_examples_check_and_run() {
     let root = repo_root();
-    let markdown = fs::read_to_string(root.join("docs/pascal/agent-reference.md"))
-        .expect("read compact reference");
-    let blocks = code_blocks(&markdown);
-    assert!(!blocks.is_empty(), "reference must contain examples");
+    let mut documents: Vec<_> = fs::read_dir(root.join("docs/pascal/agents"))
+        .expect("read agent reference directory")
+        .map(|entry| entry.expect("read reference entry").path())
+        .filter(|path| path.extension().is_some_and(|extension| extension == "md"))
+        .collect();
+    documents.sort();
     let dir = create_temp_dir("agent-reference");
     let mut names = HashSet::new();
     let mut examples = Vec::new();
     // Write all sources before checking any: programs may import the documented units.
-    for block in blocks {
-        assert_eq!(
-            block.language, "pascal",
-            "line {}: every fence must be a tested Pascal source",
-            block.line
-        );
-        let (unit, diagnostics) = fpas_parser::parse_compilation_unit(&block.source);
-        assert!(
-            diagnostics.is_empty(),
-            "line {}: {diagnostics:?}",
-            block.line
-        );
-        let (name, runnable) = match unit {
-            CompilationUnit::Program(program) => (program.name, true),
-            CompilationUnit::Unit(unit) => (unit.name.parts.join("."), false),
-        };
-        assert!(
-            names.insert(name.to_ascii_lowercase()),
-            "line {}: duplicate source name {name}",
-            block.line
-        );
-        let path = dir.join(format!("{name}.fpas"));
-        write_text(&path, &block.source);
-        examples.push((block.line, path, runnable));
+    for document in documents {
+        let markdown = fs::read_to_string(&document).expect("read reference topic");
+        for block in code_blocks(&markdown)
+            .into_iter()
+            .filter(|block| block.language == "pascal")
+        {
+            let location = format!("{}:{}", document.display(), block.line);
+            let (unit, diagnostics) = fpas_parser::parse_compilation_unit(&block.source);
+            assert!(diagnostics.is_empty(), "{location}: {diagnostics:?}");
+            let (name, runnable) = match unit {
+                CompilationUnit::Program(program) => (program.name, true),
+                CompilationUnit::Unit(unit) => (unit.name.parts.join("."), false),
+            };
+            assert!(
+                names.insert(name.to_ascii_lowercase()),
+                "{location}: duplicate source name {name}"
+            );
+            let path = dir.join(format!("{name}.fpas"));
+            write_text(&path, &block.source);
+            examples.push((location, path, runnable));
+        }
     }
+    assert!(!examples.is_empty(), "reference must contain examples");
     let unit_files: Vec<_> = examples
         .iter()
         .filter(|(_, _, runnable)| !runnable)
@@ -51,7 +51,7 @@ fn agent_reference_examples_check_and_run() {
         .collect();
     let includes: Vec<_> = unit_files.iter().map(String::as_str).collect();
     let mut failures = Vec::new();
-    for (line, path, runnable) in examples {
+    for (location, path, runnable) in examples {
         let project = path.with_extension("fpasprj");
         if runnable {
             write_program_fpasprj(
@@ -79,7 +79,7 @@ fn agent_reference_examples_check_and_run() {
             );
             if exit != 0 || !stderr.is_empty() {
                 failures.push(format!(
-                    "line {line}: {command} {} (exit {exit})\n{stdout}{stderr}",
+                    "{location}: {command} {} (exit {exit})\n{stdout}{stderr}",
                     path.display()
                 ));
                 break;

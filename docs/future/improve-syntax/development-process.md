@@ -136,7 +136,7 @@ Every work package names the documentation it affects. Rust doc comments that
 cite handbook files must point to their current paths.
 
 Language and authoring changes also update or confirm the
-[compact reference](../../pascal/agent-reference.md) under its
-[maintenance guide](../../pascal/agent-reference-maintenance.md).
+[agent reference](../../pascal/agents/README.md) under its
+[maintenance guide](../../pascal/agents/maintenance.md).
 Reuse its existing executable example test. For `Std.*` changes, check the
 [shared implementation touchpoints](../../pascal/std/README.md#shared-implementation-touchpoints).

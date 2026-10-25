@@ -1,6 +1,6 @@
 # Overview
 
-Functional Pascal is a modern, function-first programming language built on Pascal's readable syntax. It runs on a managed virtual machine — no pointers, no manual memory management, no unsafe operations.
+Functional Pascal is a functional-first Pascal language with selected Ada conventions. It runs on a managed virtual machine — no pointers, no manual memory management, no unsafe operations.
 
 ## Design philosophy
 

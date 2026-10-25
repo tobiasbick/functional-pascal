@@ -5,13 +5,15 @@ description: Create or edit FPAS .fpasprj and .fpasworkspace manifests, dependen
 
 # FPAS projects
 
-Keep sources and manifests authoritative. Shared repository rules and completion
-checks live in [AGENTS.md](../../../AGENTS.md).
+Keep sources and manifests authoritative. Repository rules live in
+[AGENTS.md](../../../AGENTS.md); verification workflows live in
+[CONTRIBUTING.md](../../../CONTRIBUTING.md).
 
 ## Read for the task
 
 | Task | Reference |
 |------|-----------|
+| New program, library, or workspace scaffold | [Initializing](../../../docs/pascal/program-structure/initializing.md) |
 | Project kind, main source, dependencies, exports | [Projects](../../../docs/pascal/program-structure/projects.md) |
 | Workspace members and discovery | [Workspaces](../../../docs/pascal/program-structure/workspaces.md) |
 | CLI discovery, build and run inputs, flags | [CLI](../../../docs/pascal/program-structure/cli.md) |

@@ -59,7 +59,7 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 | Text | [text/](text/README.md) | Conv, Encoding (Base64/Base64url/hex), Parse, Json, Json.Fields, Toml, Toml.Fields |
 | Numeric | [numeric/](numeric/README.md) | Math, Bits, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |
-| Concurrency | [concurrency/](concurrency/README.md) | Task (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |
+| Concurrency | [concurrency/](concurrency/README.md) | Tasks (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |
 | Terminal UI | [tui/](tui/README.md) | MVU element trees, deterministic headless routing and snapshots |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 | Version | [version.md](version.md) | Compiler and library version constants |

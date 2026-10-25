@@ -263,8 +263,9 @@ This table is the catalog of recognized habits. When a new habit is found, for e
 agent writes FPAS without the docs, add its detection in the `foreign` module of the stage that
 can recognize it (`fpas-lexer`, `fpas-parser` or `fpas-sema`), build the help through
 `fpas_diagnostics::ForeignHabit`, add positive, negative and recovery tests beside the existing
-`foreign_*` tests, and add a row here and, if authors should learn it up front, in the habit table
-of the [compact language reference](../agent-reference.md#1-translate-habits-before-writing).
+`foreign_*` tests, and add a row here. Update the relevant
+[agent-reference topic](../agents/README.md#read-for-the-task) when authors need
+the rule before writing.
 A package specification is skipped, because its routine declarations have no bodies; the
 declarations of a following `package body` become the unit's declarations. One-based indexing
 is valid FPAS and only fails at run time: when an index equals the string or array length,

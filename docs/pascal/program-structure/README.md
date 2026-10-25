@@ -11,7 +11,7 @@ Units, projects, workspaces, and the `fpas` CLI.
 | [Compiled programs](compiled-programs.md) | `.fpascp` identity, validation, and format versions |
 | [Runtime ownership](runtime-ownership.md) | Rust host cells, task domains and callable provenance |
 | [Workspaces](workspaces.md) | `.fpasworkspace` multi-project layout |
-| [CLI](cli.md) | `fpas init`, `build`, `run`, `check`, `test`, and `fmt` |
+| [CLI](cli.md) | Scaffolding, builds, runs, checks, tests, declaration lookup, source queries, debugging, formatting, and toolchain discovery |
 
 ## See also
 

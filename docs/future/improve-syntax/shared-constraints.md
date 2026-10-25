@@ -44,7 +44,7 @@ do not add native test syntax or model-based acceptance gates.
 
 ## Current references
 
-- [Language reference](../../pascal/agent-reference.md)
+- [Language reference](../../pascal/agents/README.md)
 - [Built-in type operations](../../pascal/language/types/README.md)
 - [Dot calls](../../pascal/language/functions/fluent-calls.md)
 - [Standard-library implementation touchpoints](../../pascal/std/README.md#shared-implementation-touchpoints)

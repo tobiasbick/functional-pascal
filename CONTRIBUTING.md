@@ -27,9 +27,12 @@ documentation together. Keep resolved dependency versions in `Cargo.lock`.
 
 1. Read the relevant area under [`docs/pascal/`](docs/pascal/README.md) (stdlib:
    [`docs/pascal/std/README.md`](docs/pascal/std/README.md)).
+   For language rules or authoring APIs, also check the
+   [agent reference](docs/pascal/agents/README.md) and follow its
+   [maintenance guide](docs/pascal/agents/maintenance.md).
 2. Inspect the existing implementation before adding code.
 3. Add or update tests for meaningful behavior.
-4. Verify locally:
+4. Verify the affected behavior. For Rust implementation changes, run:
 
    ```text
    cargo fmt
@@ -37,8 +40,22 @@ documentation together. Keep resolved dependency versions in `Cargo.lock`.
    cargo test --workspace
    ```
 
-   For touched `.fpas` under `examples/`, `tests/`, or `apps/`, also run
-   `fpas fmt --check` (or `scripts/format-fpas-sources.sh`).
+   For touched `.fpas` sources, also run `fpas fmt --check <paths>` and the
+   relevant program checks or tests. The repository-wide formatting wrappers use
+   `scripts/format-fpas-sources.sh --check` or
+   `scripts/format-fpas-sources.ps1 -Check`.
+
+For documentation-only changes, validate changed local links and run
+`git diff --check`. When changing Pascal examples in the README or handbook,
+run the [documentation example checker](docs/pascal/tools/documentation-examples.md):
+
+```text
+fpas run tools/doc-examples/doc-examples.fpasprj
+```
+
+Changes to `docs/pascal/agents/` also follow its maintenance guide's focused
+example test and token budgets. Documentation-only changes do not require a
+full Rust build or workspace test run.
 
 For Windows distribution-script changes, run
 `pwsh -NoProfile -File scripts/tests/dist.ps1` to check Cargo failure handling
@@ -72,7 +89,7 @@ When validating examples, use the curated allowlists in
 
 Functional Pascal explicitly welcomes AI-assisted development.
 
-If you are a coding agent, a autocomplete goblin, a terminal clanker, or a human
+If you are a coding agent, an autocomplete goblin, a terminal clanker, or a human
 pasting model output: you are allowed to open issues, write code, update docs,
 and **commit** to this project. Slop is not a license to merge garbage — but
 generated patches that make the codebase simpler, clearer, smaller, or more

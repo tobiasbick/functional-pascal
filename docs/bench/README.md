@@ -1,6 +1,14 @@
 # FPAS benchmarks
 
-End-to-end performance measurements use Functional Pascal programs under `examples/pascal/`, driven by the release `fpas` CLI. There is no Criterion / Rust `cargo bench` suite for these workloads.
+Runtime measurements use Functional Pascal programs under `examples/pascal/`,
+driven by the release `fpas` CLI. Native drivers measure compiler, editor and
+artifact work directly. Both run through `cargo bench-fpas`; these workloads do
+not use Criterion or Rust's `cargo bench` command.
+
+When investigating FPAS execution cost, first
+[profile the actual program](../pascal/tools/profiler.md) with `fpas run --profile`
+or `fpas debug --profile` for a debug target. Use unprofiled benchmark runs for
+controlled before/after timing comparisons.
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`). The `typed_real`, `typed_boolean`, and `typed_string` VM rows exercise typed scalar handlers separately.
 
@@ -174,11 +182,8 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
    cargo bench-fpas save before --group vm
    ```
 
-2. Apply your change and rebuild so the release CLI picks up Rust std/VM edits:
-
-   ```sh
-   cargo build --release -p fpas-cli
-   ```
+2. Apply your change and verify correctness. Each suite command builds the release
+   CLI through Cargo, so no separate rebuild is needed before comparison.
 
 3. Re-run and compare against the saved baseline:
 

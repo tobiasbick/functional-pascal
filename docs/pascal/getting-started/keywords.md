@@ -23,11 +23,12 @@ distinct  requires  ensures   scope
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
-member access. Some keywords are valid only in their dedicated syntax positions:
-the three constraint keywords follow a generic type parameter, `self` names
-the first receiver parameter and receiver expression of an instance record method,
-and `distinct` introduces a [distinct type](../language/types/distinct-types.md)
-body after `type Name =`.
+member access. The generic constraints are `Numeric`, `Comparable`, `Printable`,
+and `Error`. The first three have no other syntax role; `Error` also constructs
+and matches a Result failure and declares an error family.
+The keyword `self` names the first receiver parameter and receiver expression of
+an instance record method, and `distinct` introduces a
+[distinct type](../language/types/distinct-types.md) body after `type Name =`.
 
 `requires` introduces a precondition and `ensures` a postcondition after a named
 routine heading. Both are reserved; see [contracts](../language/functions/contracts.md).

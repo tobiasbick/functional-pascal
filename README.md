@@ -1,6 +1,6 @@
 # Functional Pascal
 
-A modern, function-first programming language built on Pascal's readable syntax. Compiles `.fpas` source files to bytecode and runs them on a managed virtual machine.
+A functional-first Pascal language with selected Ada conventions. Compiles `.fpas` source files to bytecode and runs them on a managed virtual machine.
 
 > **⚠️ Disclaimer:** This is a small hobby project, entirely vibe-coded. It started as an experiment in learning how to effectively communicate and collaborate with LLMs. The future is uncertain — no idea where this will end up, or if it will.
 
@@ -9,10 +9,10 @@ A modern, function-first programming language built on Pascal's readable syntax.
 ## Features
 
 - **Function-first** — Functions are the primary building block. No classical classes.
-- **Immutable by default** — All bindings are immutable unless declared with `var`.
+- **Explicit binding mutability** — `const` bindings are immutable; `var` bindings permit reassignment. Parameters are read-only unless declared with `var`, which also marks the caller's argument.
 - **Pattern matching** — Exhaustive `case` statements with enum, `Result`, and `Option` destructuring.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
-- **Contracts** — Declare routine preconditions with `requires` and postconditions with `ensures`.
+- **Contracts** — Declare routine preconditions with `requires` and postconditions with `ensures`. Checks run by default in every build mode; [`--no-contracts`](docs/pascal/program-structure/cli.md#contract-policy) omits their execution while retaining type checking.
 - **Generic records and enums** — Declare type parameters with `of` and infer type arguments from supplied constructor fields or payloads.
 - **Subranges and distinct types** — Restrict integer values with checked bounds and give scalar domain types their own identity.
 - **Error handling** — Built-in `Result of (T, E)` and `Option of T`: `try` propagates, nonbinding `is` tests variants, and exhaustive `case` handles payloads and defaults. [Std.Parse](docs/pascal/std/text/parse.md) text parsers return `Result`; `Unwrap` deliberately aborts on failure.
@@ -105,7 +105,7 @@ attached. Multiline statement conditions put `then` on its own line; wrapped
 Run `fpas fmt` manually for command-line workflows. The repository's
 [VS Code-compatible editor integration](docs/pascal/tools/editor-integration.md)
 also provides diagnostics, **Format Document**, document symbols, hover,
-definition, references, rename, and basic completion. Its bounded project catalog follows
+definition, references, rename, completion, signature help, and import quick fixes. Its bounded project catalog follows
 manifest dependencies and refreshes navigation after watched source or manifest changes. It
 works with the editor's standard format-on-save setting; no FPAS watch mode is required.
 
@@ -284,8 +284,8 @@ begin
     case DoubleInput(Text := Text) of
       when Ok(const Value):
         Console.WriteLn('Doubled: ', Value);
-      when Error(const Message):
-        Console.WriteLn('Input error: ', Message);
+      when Error(const Cause):
+        Console.WriteLn('Input error: ', Cause.Message());
     end case;
   end for;
 end.
@@ -337,8 +337,10 @@ fpas run                           # run the sole program member
 
 The full language specification lives in [`docs/pascal/`](docs/pascal). Start with the [documentation hub](docs/pascal/README.md) for area navigation and the learning path.
 
-For authoring with an LLM, start with the [compact FPAS language reference](docs/pascal/agent-reference.md).
-Its [maintenance guide](docs/pascal/agent-reference-maintenance.md) defines how to keep the rules and executable examples current.
+For authoring with an LLM, start with the [FPAS reference for agents](docs/pascal/agents/README.md).
+The short entrypoint links to focused language topics. Its
+[maintenance guide](docs/pascal/agents/maintenance.md) defines the total token
+budget and how to keep the rules and executable examples current.
 
 For runtime failures, `fpas run app.fpasprj --failure-dump .temp-data/failure.json`
 retains a [bounded JSON report](docs/pascal/tools/failure-dump.md) with the original
@@ -350,7 +352,7 @@ error, task states, frames and values. Choose a fresh report path for each run.
 | Language | [language/](docs/pascal/language/README.md) |
 | Program structure | [program-structure/](docs/pascal/program-structure/README.md) |
 | Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/`, `console/`, `tui/`, `network/`, …) |
-| Tools | [tools/](docs/pascal/tools/README.md) — formatter and editor integration |
+| Tools | [tools/](docs/pascal/tools/README.md) — declaration lookup, source queries, diagnostics, debugging, profiling, formatting, and editor integration |
 | Formal grammar | [grammar.ebnf](docs/specs/grammar.ebnf) |
 
 Ordered learning path:
@@ -389,6 +391,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-cli` | Command-line interface (`fpas` binary) |
 | `fpas-lexer` | Tokenizer / lexical analysis |
 | `fpas-parser` | Parser producing the AST |
+| `fpas-numeric` | Shared numeric parsing, arithmetic, and conversion rules |
 | `fpas-project` | Project/workspace loading and unit-graph resolution |
 | `fpas-build` | Incremental compiled-unit build engine |
 | `fpas-sema` | Semantic analysis and type checking |

@@ -25,4 +25,16 @@ Remove an entry once the gap is fixed and covered by tests and current documenta
 
 ## Open entries
 
-None.
+### Model-token counts need an external tokenizer
+
+- **Date:** 2026-10-25
+- **Kind:** awkward (helper written in FPAS)
+- **Area:** `Std.*` API
+- **Task:** Verify the agent reference's total token budget and entrypoint size.
+- **Missing or wrong:** FPAS has no model tokenizer for exact BPE counts; byte,
+  scalar and word counts cannot establish the requested token limit.
+- **Minimal example:** `Text.Length()` counts Unicode scalars, while the required
+  count is `o200k_base` tokens. The FPAS helper passes the text to
+  `Proc.RunCaptureWithOptions` with `Input := Text`.
+- **Fallback:** The installed Python `tiktoken` library performs encoding through
+  that child process; file discovery, reporting and budget checks stay in FPAS.

@@ -1,7 +1,7 @@
 # AGENTS
 
 FPAS is a functional-first Pascal language with selected Ada conventions.
-Read [agent-reference.md](docs/pascal/agent-reference.md) for the language rules.
+Read the [agent reference](docs/pascal/agents/README.md) for the language rules.
 
 ## Code
 

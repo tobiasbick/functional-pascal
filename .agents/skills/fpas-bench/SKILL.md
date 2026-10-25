@@ -10,6 +10,12 @@ defines workloads; [benchmark documentation](../../../docs/bench/README.md)
 explains drivers and measurement boundaries. Use `cargo bench-fpas --help` for
 configured groups and `cargo bench-fpas native --help` for native drivers.
 
+When diagnosing FPAS runtime cost, first profile the actual program with
+`fpas run <file-or-project> --profile .temp-data/<fresh-name>.json`, or
+`fpas debug ... --profile <fresh-path>` for a debug target. The
+[profile report](../../../docs/pascal/tools/profiler.md) identifies which costs
+need a controlled comparison. Use unprofiled benchmark runs for final timings.
+
 ## Execution environment
 
 In a cloud environment, run correctness checks only. Do not collect timing
@@ -30,7 +36,7 @@ verification without creating benchmark reports.
    Omit `--group` for a full-suite baseline. Snapshots live under
    `.temp-data/bench/`.
 2. Implement the authorized change and verify correctness according to
-   [AGENTS.md](../../../AGENTS.md). The harness builds the release CLI before
+   [CONTRIBUTING.md](../../../CONTRIBUTING.md). The harness builds the release CLI before
    each suite command and obtains its executable path from Cargo.
 3. Compare using the same group selection, benchmark IDs, and workload arguments:
 

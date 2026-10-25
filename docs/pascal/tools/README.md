@@ -4,10 +4,11 @@ Compiler and editor tooling for Functional Pascal projects.
 
 | Tool | Description |
 |------|-------------|
+| [Declaration lookup](../program-structure/cli.md#looking-up-declarations) | `fpas doc` signatures, declaration documentation, and handbook links |
 | [Shared diagnostics](diagnostics.md) | Codes, source positions and Rust text/JSON rendering |
 | [Source queries](source-queries.md) | JSON references, definitions, checked expression types, and safe rename through `fpas query` |
 | [Runtime failure reports](failure-dump.md) | Opt-in `fpas run --failure-dump` with bounded task/frame/value JSON and atomic new-file publication |
-| [Profile reports](profiler.md) | Opt-in `fpas run --profile` with hot routines, lines, runtime counters and findings as one JSON report |
+| [Profile reports](profiler.md) | `fpas run --profile` and `fpas debug --profile` with hot routines, lines, runtime counters and debugger timings as one JSON report |
 | [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |
 | [Documentation examples](documentation-examples.md) | FPAS extractor and automatic compilation/execution checks for Markdown examples |
 | [Debugger](debugger.md) | Source debugging through batch runs, JSONL, DAP, and VS Code |
@@ -17,7 +18,7 @@ Compiler and editor tooling for Functional Pascal projects.
 | [Debugger JSONL protocol](debugger-jsonl.md) | Versioned machine-facing debugger contract |
 | [Debugger DAP contract](debugger-dap.md) | VS Code-compatible capabilities and request mapping |
 | [Editor integration](editor-integration.md) | VS Code-compatible highlighting, diagnostics, formatting, and navigation |
-| [CLI](../program-structure/cli.md) | `fpas`, `check`, `test`, `fmt` discovery |
+| [CLI](../program-structure/cli.md) | Command help, project discovery, build/run/check/test workflows, and toolchain configuration |
 
 ## See also
 

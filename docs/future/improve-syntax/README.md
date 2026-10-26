@@ -1,7 +1,7 @@
 # AP planning and work packages
 
-The FPAS 1 syntax campaign is closed. This directory keeps its planning workflow
-and a copyable package template for later work, including
+The FPAS 1 syntax campaign is closed. This directory keeps active work packages,
+their planning workflow and a copyable package template for later work, including
 [FPAS 2 language directions](../fpas2-language-directions.md).
 Completed plans are removed after delivery; implemented behavior remains in the
 current handbook and grammar.
@@ -28,9 +28,9 @@ The example is a template, not an active AP or an approved proposal.
 1. Select a concrete problem and inspect its current implementation, handbook,
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
-2. Copy `example-apNN-topic/` to `ap51-<topic>/` for the next package. Continue
+2. Copy `example-apNN-topic/` to `ap52-<topic>/` for the next package. Continue
    with the next unused number for later packages. AP01 through AP50 are
-   closed; do not reuse or renumber those IDs.
+   closed; AP51 is allocated below. Do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
    and one numbered file per work package, such as `01-decision.md` and
    `02-implementation.md`. Delete template instructions from the copied files.
@@ -44,18 +44,21 @@ The example is a template, not an active AP or an approved proposal.
    missing. Record the user's decision before implementing affected behavior.
    Follow the [development process](development-process.md) for delivery.
 
-Use `AP51` for the next package and `AP51.1`, `AP51.2`, and so on for its work
-packages. Decision IDs continue at `Q58`; Q01 through Q57 belong to closed
-packages. Record each decision
+Use `AP52` for the next package and `AP52.1`, `AP52.2`, and so on for its work
+packages. Decision IDs continue at `Q65`; Q01 through Q57 belong to closed
+packages, and Q58 through Q64 belong to AP51. Record each decision
 and its affected work packages in the owning package README. Do not create a
 second decision or completion index.
 
 ## Package status
 
-There are no active packages. Add new packages below; keep the example out of this table.
+AP51 plans an FPAS wrapper around the official Rust MCP SDK (`rmcp`) for clients
+and servers, following the ACP integration's FPAS conventions.
+Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
+| [ ] | [AP51: MCP wrapper](ap51-mcp-wrapper/README.md) | Large; client and server, authentication scope pending | Delivered AP50 runtime/process patterns and server lifetime infrastructure; no open AP prerequisite | Decision pending |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

@@ -1,0 +1,52 @@
+program McpDebugServer;
+
+uses Std.Mcp as Mcp, Std.Proc as Proc, Std.Time as Time, Std.Test as Test;
+
+procedure Register(Server: Mcp.Server);
+begin
+  var Calls := 0;
+  const Handler: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    Calls := Calls + 1;
+    Test.AssertEquals(1, Calls);
+    Time.Sleep(10);
+    Test.AssertFalse(Mcp.IsCancelled(Context));
+    Test.AssertTrue(Context.SessionId is None);
+    Test.AssertEquals('21', Mcp.JsonMember(Arguments, 'number').Unwrap().Unwrap().Text);
+    return Mcp.StructuredResult(Mcp.ParseJson('{"value":42}').Unwrap());
+  end function;
+  const Definition := Mcp.ToolDefinition(
+    Name := 'double_probe', Description := 'Double an integer',
+    InputSchema := Mcp.ParseJson(
+      '{"type":"object","properties":{"number":{"type":"integer"}},"required":["number"],"additionalProperties":false}'
+    ).Unwrap(),
+    OutputSchema := Some(
+      Mcp.ParseJson(
+        '{"type":"object","properties":{"value":{"type":"integer"}},"required":["value"]}'
+      ).Unwrap()
+    ),
+    Annotations := None, Meta := None
+  );
+  Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Handler).Unwrap());
+end procedure;
+
+begin
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  Register(Server);
+  const Endpoint := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+  const Access := Mcp.Access(Endpoint).Unwrap();
+  const Child := Proc.Start(
+    Proc.CurrentExecutable().Unwrap(),
+    ['run', 'tests/fixtures/mcp_client.fpas', '--', Access.Url, Access.Headers[0].Value],
+    Proc.DefaultStartOptions()
+  ).Unwrap();
+  Test.AssertTrue(Mcp.ServeOne(Server, Some(10000), None).Unwrap());
+  while Proc.TryWait(Child).Unwrap() is None do
+    Time.Sleep(1);
+  end while;
+
+  Test.AssertTrue(Proc.Close(Child).Unwrap());
+
+  Test.AssertTrue(Mcp.CloseEndpoint(Endpoint).Unwrap());
+  Test.AssertTrue(Mcp.Close(Server).Unwrap());
+  Test.AssertTrue(Mcp.Release(Server).Unwrap());
+end.

@@ -40,6 +40,7 @@ pub mod fs;
 pub mod http;
 pub mod json;
 pub mod math;
+pub mod mcp;
 pub mod net;
 pub mod option;
 pub mod parse;
@@ -69,6 +70,7 @@ pub use fs::FsIntrinsic;
 pub use http::HttpIntrinsic;
 pub use json::JsonIntrinsic;
 pub use math::MathIntrinsic;
+pub use mcp::McpIntrinsic;
 pub use net::NetIntrinsic;
 pub use option::OptionIntrinsic;
 pub use parse::ParseIntrinsic;
@@ -88,6 +90,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Registered MCP tool and publication operation.
+    Mcp(McpIntrinsic),
     /// Detached ACP value operation.
     Acp(AcpIntrinsic),
     /// Hosted server lifetime operation.
@@ -159,6 +163,7 @@ impl Intrinsic {
     #[must_use]
     pub fn debugger_name(self) -> String {
         match self {
+            Self::Mcp(operation) => operation.source_name(),
             Self::Acp(operation) => operation.source_name(),
             Self::Conv(ConvIntrinsic::ErrorMessage) => "Std.Errors.Message".to_string(),
             Self::Conv(ConvIntrinsic::ErrorMatchesVariant) => "$error.MatchesVariant".to_string(),
@@ -247,6 +252,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    Mcp(McpIntrinsic),
     Acp(AcpIntrinsic),
     Server(ServerIntrinsic),
     Args(ArgsIntrinsic),

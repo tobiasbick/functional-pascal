@@ -1,0 +1,218 @@
+program AcpMcpTools;
+
+uses
+  Demo.ToolStore as Store, Std.Mcp as Mcp, Std.Tasks as Tasks, Std.Args as Args, Std.Acp as Acp, Std.Acp.Types as Types, Std.Console as Console,
+  Std.Json as Json, Std.Json.Fields as Fields, Std.Test as Test;
+
+type Message = dict of string to Json.JsonValue;
+
+function Quote(Value: string): string;
+begin
+  return Json.Stringify(Json.JsonValue.String(Value));
+end function;
+
+function Request(Connection: Acp.Connection; Method: string; Params: string; var Text: string): Message;
+begin
+  const Payload := Types.DecodeClientRequest(
+    Method,
+    Types.RawJson(Text := Params)
+  ).Unwrap().Payload;
+  const Expected := Acp.Send(Connection, Payload).Unwrap();
+  while true do
+    const Event := Acp.Receive(Connection, Some(90000), None).Unwrap();
+    case Event.Payload of
+      when Acp.EventPayload.Response(const Token, _):
+        Test.AssertTrue(Token = Expected);
+        const ResultValue := Types.RawJsonMember(
+          Event.RawMessage.Unwrap(),
+          'result'
+        ).Unwrap().Unwrap();
+        return Fields.ParseObject(ResultValue.Text).Unwrap();
+      when Acp.EventPayload.Notification(_):
+        const Raw := Event.RawMessage.Unwrap();
+        const Params := Fields.ParseObject(
+          Types.RawJsonMember(Raw, 'params').Unwrap().Unwrap().Text
+        ).Unwrap();
+        if Params.Get('update') is Some(_) then
+          const Update := Fields.ObjectField(Params, 'update').Unwrap();
+          if Fields.StringField(Update, 'sessionUpdate').Unwrap() = 'agent_message_chunk' then
+            const Content := Fields.ObjectField(Update, 'content').Unwrap();
+            if Fields.StringField(Content, 'type').Unwrap() = 'text' then
+              Text := Text + Fields.StringField(Content, 'text').Unwrap();
+              Test.AssertTrue(Text.Length() <= 4096);
+            end if;
+          end if;
+        end if;
+      when Acp.EventPayload.Request(const Payload, const Responder):
+        if Payload is Types.AgentRequest.RequestPermissionRequest(_) then
+          const Raw := Event.RawMessage.Unwrap();
+          const Params := Fields.ParseObject(
+            Types.RawJsonMember(Raw, 'params').Unwrap().Unwrap().Text
+          ).Unwrap();
+          Console.WriteLn('Agent requests permission. Offered options:');
+          for Choice: Json.JsonValue in Fields.ArrayField(Params, 'options').Unwrap() do
+            case Choice of
+              when Json.JsonValue.Object(const Item):
+                Console.WriteLn(
+                  Fields.StringField(Item, 'optionId').Unwrap(),
+                  ': ',
+                  Fields.StringField(Item, 'name').Unwrap()
+                );
+              when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
+                panic('Invalid permission option');
+            end case;
+          end for;
+
+          Console.WriteLn('Enter an offered optionId, or an empty line to cancel:');
+          var Answer := '';
+          case Console.ReadLn() of
+            when Some(const Entered):
+              Answer := Entered;
+            when None:
+              Answer := '';
+          end case;
+          var Body := '{"outcome":{"outcome":"cancelled"}}';
+          if Answer <> '' then
+            Body := '{"outcome":{"outcome":"selected","optionId":' + Quote(Answer) + '}}';
+          end if;
+
+          discard Acp.Respond(
+            Responder,
+            Types.DecodeClientResponse(
+              'session/request_permission',
+              Types.RawJson(Text := Body)
+            ).Unwrap().Payload
+          ).Unwrap();
+          continue;
+        end if;
+
+        Test.AssertTrue(
+          Acp.RespondError(
+            Responder,
+            Types.ProtocolError(
+              Code := -32601,
+              Message := 'Host effects unavailable in smoke test',
+              Data := None
+            )
+          ).Unwrap()
+        );
+      when Acp.EventPayload.RequestFailed(_, const Cause):
+        panic('ACP request failed: ' + Cause.Message());
+      when Acp.EventPayload.Closed(_):
+        panic('ACP transport closed before response');
+      when Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.RequestCancelled(_):
+        continue;
+      when Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
+        panic('Unexpected V2 event');
+    end case;
+  end while;
+
+  panic('ACP receive loop ended unexpectedly');
+end function;
+
+function SelectedModel(Reply: Message): string;
+begin
+  for Config: Json.JsonValue in Fields.ArrayField(Reply, 'configOptions').Unwrap() do
+    case Config of
+      when Json.JsonValue.Object(const Values):
+        if Fields.StringField(Values, 'category').Unwrap() = 'model' then
+          return Fields.StringField(Values, 'currentValue').Unwrap();
+        end if;
+      when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
+        panic('Invalid model configuration');
+    end case;
+  end for;
+
+  panic('No model configuration');
+end function;
+
+function RunAgent(Connection: Acp.Connection; Directory: string; Prompt: string; Stop: Tasks.CancellationSource): boolean;
+begin
+  var Text: string := '';
+  discard Request(
+    Connection,
+    'initialize',
+    '{"protocolVersion":1,"clientCapabilities":{}}',
+    var Text
+  );
+  const Session := Request(
+    Connection,
+    'session/new',
+    '{"cwd":' + Quote(Directory) + ',"mcpServers":[]}',
+    var Text
+  );
+  const SessionId := Fields.StringField(Session, 'sessionId').Unwrap();
+  discard Request(
+    Connection,
+    'session/prompt',
+    '{"sessionId":' + Quote(SessionId) + ',"prompt":[{"type":"text","text":' + Quote(Prompt) +
+    '}]}',
+    var Text
+  );
+  Console.WriteLn(Text);
+  discard Acp.Close(Connection).Unwrap();
+  discard Acp.Release(Connection).Unwrap();
+  discard Tasks.Cancel(Stop);
+  return true;
+end function;
+
+begin
+  if Args.ParamCount() < 3 then
+    panic(
+      'Arguments: agent-command absolute-directory prompt [agent-args...] [--attach] [--allow-write]'
+    );
+  end if;
+  var Attached := false;
+  var Writable := false;
+  var AgentArguments: array of string := [];
+  for Index: integer := 3 to Args.ParamCount() - 1 do
+    const Argument := Args.ParamStr(Index);
+    if Argument = '--attach' then
+      Attached := true;
+    elsif Argument = '--allow-write' then
+      Writable := true;
+    else
+      AgentArguments := AgentArguments.Concat([Argument]);
+    end if;
+  end for;
+  const Connection := Acp.ConnectProcess(
+    Acp.Launch(
+      Command := Args.ParamStr(0),
+      Arguments := AgentArguments,
+      WorkingDirectory := Some(Args.ParamStr(1)),
+      Environment := []
+    ),
+    Acp.DefaultOptions()
+  ).Unwrap();
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  for Entry: Store.Entry in Store.Create(Writable) do
+    if Attached then
+      discard Mcp.RegisterTool(Server, Entry.Definition, Entry.Handler).Unwrap();
+    else
+      discard Acp.RegisterTool(Connection, Entry.Definition, Entry.Handler).Unwrap();
+    end if;
+  end for;
+
+  if Attached then
+    discard Acp.AttachMcpServer(Connection, Server).Unwrap();
+  end if;
+  const Stop := Tasks.CreateCancellationSource();
+  scope
+    const Agent := go RunAgent(Connection, Args.ParamStr(1), Args.ParamStr(2), Stop);
+    if Attached then
+      discard Mcp.Serve(Server, Some(Tasks.GetCancellationToken(Stop)));
+    else
+      discard Acp.ServeTools(Connection, Some(Tasks.GetCancellationToken(Stop)));
+    end if;
+
+    discard Tasks.Wait(Agent);
+  end scope;
+
+  if Attached then
+    const Independent := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+    Console.WriteLn('Borrowed server remains publishable after ACP closes.');
+    discard Mcp.CloseEndpoint(Independent).Unwrap();
+  end if;
+
+  discard Mcp.Release(Server).Unwrap();
+end.

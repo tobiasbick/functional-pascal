@@ -36,6 +36,8 @@ impl Intrinsic {
     #[must_use]
     pub const fn owner(self) -> IntrinsicOwner {
         match self {
+            Self::Mcp(operation) if operation.waits() => IntrinsicOwner::Task,
+            Self::Mcp(_) => IntrinsicOwner::Hosted,
             Self::Acp(operation) if operation.codec().is_some() || operation.connection() => {
                 IntrinsicOwner::Hosted
             }
@@ -114,6 +116,7 @@ impl Intrinsic {
     pub const fn requires_mutable_dispatch(self) -> bool {
         matches!(self, Self::Task(_) | Self::Time(TimeIntrinsic::Sleep))
             || matches!(self, Self::Acp(operation) if operation.waits())
+            || matches!(self, Self::Mcp(operation) if operation.waits())
     }
 }
 
@@ -232,6 +235,14 @@ mod tests {
                 Intrinsic::Acp(AcpIntrinsic::Close),
                 Intrinsic::Acp(AcpIntrinsic::Release),
                 Intrinsic::Acp(AcpIntrinsic::HostWaitForTerminalExit),
+                Intrinsic::Mcp(super::super::McpIntrinsic::Publish),
+                Intrinsic::Mcp(super::super::McpIntrinsic::CloseEndpoint),
+                Intrinsic::Mcp(super::super::McpIntrinsic::Close),
+                Intrinsic::Mcp(super::super::McpIntrinsic::Release),
+                Intrinsic::Mcp(super::super::McpIntrinsic::ServeOne),
+                Intrinsic::Mcp(super::super::McpIntrinsic::Serve),
+                Intrinsic::Acp(AcpIntrinsic::ServeTools),
+                Intrinsic::Acp(AcpIntrinsic::DetachMcpServer),
             ]
         );
     }

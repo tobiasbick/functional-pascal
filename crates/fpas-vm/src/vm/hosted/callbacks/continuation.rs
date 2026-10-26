@@ -54,6 +54,10 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
         AdvanceError::Sorting(error) => error,
     })?;
     match action {
+        Advance::McpComplete(invocation, value) => {
+            worker.callback_continuations.pop();
+            worker.finish_mcp_callback(*invocation, value)?;
+        }
         Advance::Call(arguments) => {
             worker.enter_callback_inline(&callback, arguments.into_values())?;
             let awaiting_depth = worker.call_stack.len();

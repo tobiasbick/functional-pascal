@@ -12,6 +12,8 @@ macro_rules! standard_unit_names {
 }
 
 standard_unit_names! {
+    STD_UNIT_MCP = "Std.Mcp";
+    STD_UNIT_MCP_TYPES = "Std.Mcp.Types";
     STD_UNIT_ACP = "Std.Acp";
     STD_UNIT_ACP_HOST = "Std.Acp.Host";
     STD_UNIT_ACP_EXPERIMENTAL = "Std.Acp.Experimental";
@@ -51,6 +53,8 @@ standard_unit_names! {
 
 /// Standard units supplied entirely by compiler, VM, or runtime intrinsics.
 pub const STD_UNITS_INTRINSIC: &[&str] = &[
+    STD_UNIT_MCP,
+    STD_UNIT_MCP_TYPES,
     STD_UNIT_ACP,
     STD_UNIT_ACP_HOST,
     STD_UNIT_ACP_EXPERIMENTAL,
@@ -81,6 +85,8 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
 
 /// Standard units recognized by tooling, including source-defined units.
 pub const STD_UNITS_KNOWN: &[&str] = &[
+    STD_UNIT_MCP,
+    STD_UNIT_MCP_TYPES,
     STD_UNIT_ACP,
     STD_UNIT_ACP_HOST,
     STD_UNIT_ACP_EXPERIMENTAL,

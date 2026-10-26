@@ -1,4 +1,4 @@
-# AI clients
+# AI protocols
 
 Protocol clients for model servers. Model execution remains outside the FPAS runtime.
 
@@ -10,6 +10,8 @@ Protocol clients for model servers. Model execution remains outside the FPAS run
 | [`Std.Acp.Host`](acp/host.md) | Explicit file, terminal, interaction and login adapters |
 | [`Std.Acp.Experimental`](acp/experimental.md) | Independent feature opt-ins and scoped MCP carriers |
 | [`Std.Acp.V2`](acp/v2.md) | Separate v2 negotiation, asynchronous prompts and protocol values |
+| [`Std.Mcp`](mcp/README.md) | Registered FPAS tools over authenticated loopback HTTP, independently or through ACP |
+| [`Std.Mcp.Types`](mcp/types.md) | Shared tool definitions, request context, results and errors |
 
 ## See also
 

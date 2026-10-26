@@ -45,6 +45,10 @@ pub(super) enum CallbackOperation {
         arguments: Option<CallbackArguments>,
         wrapper: SingleWrapper,
     },
+    Mcp {
+        arguments: Option<CallbackArguments>,
+        invocation: Option<Box<crate::vm::hosted::mcp::wait::Invocation>>,
+    },
 }
 
 /// Cursor over immutable callback inputs.
@@ -88,6 +92,7 @@ pub(super) enum SingleWrapper {
 pub(super) enum Advance {
     Call(CallbackArguments),
     Complete(Value),
+    McpComplete(Box<crate::vm::hosted::mcp::wait::Invocation>, Value),
 }
 
 /// Failure while advancing a hosted callback operation.
@@ -133,6 +138,22 @@ impl CallbackContinuation {
     /// Consume a pending result and choose the next invocation or final value.
     pub(super) fn advance(&mut self) -> Result<Advance, AdvanceError> {
         match &mut self.operation {
+            CallbackOperation::Mcp {
+                arguments,
+                invocation,
+            } => {
+                if let Some(value) = self.pending.take() {
+                    return Ok(Advance::McpComplete(
+                        invocation
+                            .take()
+                            .ok_or(AdvanceError::InvalidState("MCP invocation is missing"))?,
+                        value,
+                    ));
+                }
+                Ok(Advance::Call(arguments.take().ok_or(
+                    AdvanceError::InvalidState("MCP callback was advanced twice"),
+                )?))
+            }
             CallbackOperation::ArraySortBy(sort) => sort.advance(self.pending.take()),
             CallbackOperation::ArrayMap(sequence) => {
                 sequence.push_pending(self.pending.take());
@@ -293,6 +314,7 @@ impl CallbackOperation {
     pub(super) fn first_arity(&self) -> usize {
         match self {
             Self::ArrayReduce { .. } | Self::DictFilter(_) | Self::StringReduce(_) => 2,
+            Self::Mcp { .. } => 2,
             Self::DictReduce(_) => 3,
             Self::Single { arguments, .. } => arguments.as_ref().map_or(0, CallbackArguments::len),
             _ => 1,

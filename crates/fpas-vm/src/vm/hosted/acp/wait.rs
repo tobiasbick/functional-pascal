@@ -53,6 +53,12 @@ impl Worker {
         let Intrinsic::Acp(operation) = intrinsic else {
             return Ok(None);
         };
+        if operation == Op::ServeTools {
+            return self.acp_serve_tools(arguments, destination);
+        }
+        if operation == Op::DetachMcpServer {
+            return self.acp_detach_tools(arguments, destination);
+        }
         if !operation.waits() {
             return Ok(None);
         }
@@ -184,6 +190,7 @@ impl Worker {
                 destination,
             } => {
                 let result = if connection.is_closed() {
+                    self.hosted.mcp.release_owned(connection.id());
                     Some(connection.cleanup_result().and_then(|()| {
                         if *release {
                             self.hosted.acp.release(connection).map(Value::Boolean)

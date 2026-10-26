@@ -47,10 +47,13 @@ pub(super) async fn run(shared: Arc<Shared>, transport: Arc<dyn Transport>) {
     .catch_unwind()
     .await
     .unwrap_or(Err(Fault::Host));
-    let (status, cleanup_fault) = match transport_status {
+    let (status, mut cleanup_fault) = match transport_status {
         Ok(status) => (status, None),
         Err(fault) => (TransportStatus::default(), Some(fault)),
     };
+    if let Err(fault) = shared.tools.join().await {
+        cleanup_fault = Some(fault);
+    }
     let process_fault = if !local_close
         && matches!(status.exit, Some(crate::transport::ExitStatus::Exited(code)) if code != 0)
         || !local_close && matches!(status.exit, Some(crate::transport::ExitStatus::Signaled(_)))
@@ -84,7 +87,7 @@ async fn commands(
             return Ok(());
         }
         if let Some(command) = shared.commands.pop() {
-            publish(&shared, &cx, command)?;
+            publish(&shared, &cx, command).await?;
             // Let transport/dispatch tasks make progress under sustained local admission.
             tokio::task::yield_now().await;
             continue;
@@ -96,7 +99,7 @@ async fn commands(
     }
 }
 
-fn publish(
+async fn publish(
     shared: &Arc<Shared>,
     cx: &ConnectionTo<Agent>,
     command: super::queue::Item<Command>,
@@ -144,8 +147,53 @@ fn publish(
                 cancellation.cancel()?;
             }
         }
-        Command::Send { token, method, raw } => {
+        Command::Send {
+            token,
+            method,
+            raw,
+            tools,
+        } => {
             let token = *token;
+            let prepared_raw = if let Some(setup) = tools {
+                match shared.tools.prepare(shared, token, raw, setup).await {
+                    Ok(raw) if raw.text().len() <= shared.limits.message_bytes => raw,
+                    result => {
+                        let fault = result.err().unwrap_or(Fault::LimitExceeded(
+                            "MessageBytes",
+                            shared.limits.message_bytes,
+                        ));
+                        shared
+                            .response(
+                                token,
+                                Event {
+                                    payload: Payload::RequestFailed(token, fault),
+                                    raw: None,
+                                },
+                            )
+                            .map_err(|_| sdk_error())?;
+                        return Ok(());
+                    }
+                }
+            } else {
+                raw.clone()
+            };
+            let cancelled = shared
+                .lock()
+                .pending
+                .get(&token)
+                .is_none_or(|p| p.cancel_requested);
+            if cancelled {
+                shared
+                    .response(
+                        token,
+                        Event {
+                            payload: Payload::RequestFailed(token, Fault::Cancelled),
+                            raw: None,
+                        },
+                    )
+                    .map_err(|_| sdk_error())?;
+                return Ok(());
+            }
             let retired = {
                 let state = shared.lock();
                 state.pending.get(&token).is_some_and(|pending| matches!(pending.action, super::client::Action::Mcp(id) if !state.routes.values().any(|endpoint| endpoint.id == id)))
@@ -162,7 +210,7 @@ fn publish(
                     .map_err(|_| sdk_error())?;
                 return Ok(());
             }
-            let prepared = cx.prepare_request(UntypedMessage::new(method, json(raw)?)?);
+            let prepared = cx.prepare_request(UntypedMessage::new(method, json(&prepared_raw)?)?);
             let id = prepared.id().clone();
             let cancellation = prepared.cancellation_handle();
             {

@@ -1,0 +1,104 @@
+program McpStateTest;
+
+uses
+  Demo.ToolStore as Store, Std.Mcp as Mcp, Std.Http as Http, Std.Net.Utf8 as Utf8,
+  Std.Json as Json, Std.Json.Fields as Fields, Std.Tasks as Tasks, Std.Test as Test;
+
+type ObjectValue = dict of string to Json.JsonValue;
+
+function Post(Access: Mcp.HttpAccess; Body: string): Http.Response;
+begin
+  var Request := Http.Request.Create('POST', Access.Url);
+  Request.Headers := [
+    Http.Header.Create('Content-Type', 'application/json'),
+    Http.Header.Create('Accept', 'application/json, text/event-stream'),
+    Http.Header.Create('MCP-Protocol-Version', '2025-06-18'),
+    Http.Header.Create(Access.Headers[0].Name, Access.Headers[0].Value)
+  ];
+  Request.Body := Utf8.Encode(Body);
+  Request.TimeoutMillis := 10000;
+  return Http.Send(Request).Unwrap();
+end function;
+
+function Call(Access: Mcp.HttpAccess; Name: string; Arguments: string): ObjectValue;
+begin
+  const Reply := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"' + Name + '","arguments":' +
+    Arguments + '}}'
+  );
+  return Fields.ObjectField(
+    Fields.ParseObject(Http.BodyText(Reply).Unwrap()).Unwrap(),
+    'result'
+  ).Unwrap();
+end function;
+
+function Peer(Access: Mcp.HttpAccess; Writable: boolean): boolean;
+begin
+  discard Post(
+    Access,
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"state-test","version":"1"}}}'
+  );
+  const Before := Fields.ObjectField(
+    Call(Access, 'read_value', '{}'),
+    'structuredContent'
+  ).Unwrap();
+  Test.AssertEquals(10, Fields.IntegerField(Before, 'value').Unwrap());
+  Test.AssertEquals(0, Fields.IntegerField(Before, 'effects').Unwrap());
+  const Updated := Call(Access, 'set_value', '{"value":42,"expectedRevision":0}');
+  if Writable then
+    const Accepted := Fields.ObjectField(Updated, 'structuredContent').Unwrap();
+    Test.AssertEquals(42, Fields.IntegerField(Accepted, 'value').Unwrap());
+    Test.AssertEquals(1, Fields.IntegerField(Accepted, 'effects').Unwrap());
+    Test.AssertTrue(
+      Fields.BooleanField(
+        Call(Access, 'set_value', '{"value":99,"expectedRevision":0}'),
+        'isError'
+      ).Unwrap()
+    );
+  else
+    Test.AssertTrue(Fields.BooleanField(Updated, 'isError').Unwrap());
+  end if;
+
+  Test.AssertTrue(
+    Fields.BooleanField(
+      Call(Access, 'set_value', '{"value":"wrong","expectedRevision":0}'),
+      'isError'
+    ).Unwrap()
+  );
+  const After := Fields.ObjectField(Call(Access, 'read_value', '{}'), 'structuredContent').Unwrap();
+  if Writable then
+    Test.AssertEquals(42, Fields.IntegerField(After, 'value').Unwrap());
+    Test.AssertEquals(1, Fields.IntegerField(After, 'effects').Unwrap());
+  else
+    Test.AssertEquals(10, Fields.IntegerField(After, 'value').Unwrap());
+    Test.AssertEquals(0, Fields.IntegerField(After, 'effects').Unwrap());
+  end if;
+
+  return true;
+end function;
+
+procedure Verify(Writable: boolean);
+begin
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  for Entry: Store.Entry in Store.Create(Writable) do
+    discard Mcp.RegisterTool(Server, Entry.Definition, Entry.Handler).Unwrap();
+  end for;
+  const Endpoint := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+  scope
+    const Client := go Peer(Mcp.Access(Endpoint).Unwrap(), Writable);
+    const Expected := if Writable then 4 else 3 end if;
+    for Index: integer := 1 to Expected do
+      Test.AssertTrue(Mcp.ServeOne(Server, Some(10000), None).Unwrap());
+    end for;
+
+    Test.AssertTrue(Tasks.Wait(Client));
+  end scope;
+
+  Test.AssertTrue(Mcp.Release(Server).Unwrap());
+end procedure;
+
+begin
+  Verify(true);
+  Verify(false);
+end.

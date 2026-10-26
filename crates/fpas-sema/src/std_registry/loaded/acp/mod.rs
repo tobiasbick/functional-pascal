@@ -5,6 +5,7 @@ mod connection;
 mod declarations;
 mod host;
 mod outcomes;
+mod tools;
 
 use std::sync::Arc;
 
@@ -25,6 +26,7 @@ pub(super) fn register(checker: &mut Checker) {
     outcomes::register(checker);
     codecs::register(checker);
     connection::register(checker);
+    tools::register(checker);
     host::register(checker);
     define_func(
         checker,

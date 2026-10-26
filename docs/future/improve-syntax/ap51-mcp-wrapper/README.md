@@ -1,109 +1,155 @@
-# AP51: MCP tools for Codex over ACP
+# AP51: MCP tool registration and ACP integration
 
-Status: Planned. Effort: Medium. Product implementation is paused; the current
-authorization covers plan maintenance only. Completion is tracked in the
-[central plan](../README.md#package-status).
+Status: Complete. Effort: Medium. Completion is tracked in the
+[central plan](../README.md#package-status). This package specifies planned FPAS
+library behavior; its checklist records delivery.
 
 ## Goal
 
-An FPAS application connects to Codex through `Std.Acp` and exposes its own
-tools through an MCP server built on the official Rust SDK `rmcp`. Codex
-discovers a tool, calls it, and receives the result of an explicitly dispatched
-FPAS function. Codex is the MCP client; FPAS supplies the MCP server.
+FPAS applications expose functions as tools through an independent MCP server.
+`Std.Mcp` owns tool registration and serving. `Std.Acp` connects to external
+agents and offers convenient registration through the same MCP implementation.
+An application can use MCP alone, use ACP's convenience interface, or attach an
+existing MCP server to an ACP connection.
 
-Codex is the first target. The user schedules target-agent transport/version
-checks and live end-to-end acceptance at home. Do not attempt that live
-verification in the cloud or count local fixtures as Codex interoperability.
+## Public interface
 
-## Current behavior
+Keep `Std.Acp` for connections, sessions, prompts, updates and cancellation.
+Add `Std.Mcp` for server creation, registration, cooperative serving and
+shutdown, with supporting values in `Std.Mcp.Types`.
 
-- [Std.Acp](../../../pascal/std/ai/acp/README.md) can advertise MCP server
-  descriptors during session setup. Stdio, HTTP and MCP-over-ACP have distinct
-  capability and lifecycle requirements.
-- [ACP MCP endpoints](../../../pascal/std/ai/acp/experimental.md#mcp-carrier-endpoints)
-  route opaque messages; registration does not implement a tool server or
-  execute a tool. There is no `Std.Mcp.Server` binding in the checkout.
-- ACP tool-call updates report agent activity. Execution of FPAS tools requires
-  actual MCP requests, not interpreting those updates as commands.
-- Existing handles, cooperative waits and
-  [Std.Server](../../../pascal/std/network/server.md) provide lifetime patterns.
-  AP50 is delivered; AP51 has no unfinished AP prerequisite.
+These call shapes describe the proposed interface. AP51.1 settles complete
+types, serving operations and error results before implementation.
 
-## Agreed architecture and scope
+```text
+Mcp.RegisterTool(Server, Definition, Handler)
+Acp.RegisterTool(Connection, Definition, Handler)
+Acp.AttachMcpServer(Connection, Server)
+```
 
-Use [modelcontextprotocol/rust-sdk](https://github.com/modelcontextprotocol/rust-sdk)
-and its `rmcp` crate. The SDK owns MCP values, serialization, request handling
-and transport protocol behavior. FPAS supplies conversion, explicit dispatch,
-resource ownership, bounded queues and ACP integration.
-
-Product scope is the MCP server role. Outbound FPAS MCP clients, external-server
-proxying and a public client API are excluded. Test peers may use client
-libraries without introducing a product client role.
-
-The first tool workflow covers `tools/list`, `tools/call`, typed results,
-tool/protocol errors, explicit permission policy, cancellation and shutdown.
-Resources, prompts, sampling, roots, tasks, MCP Apps, MRTR, subscriptions,
-managed OAuth and generic remote hosting are outside this delivery. Advertise
-only implemented capabilities.
-
-ACP integration is required. Select a transport from actual Codex support:
-
-| Route | Required verification |
+| Usage | Registration and ownership |
 | --- | --- |
-| MCP-over-ACP | Codex and its ACP adapter support the carrier; SDK requests/replies preserve IDs and lifetime |
-| Local Streamable HTTP | Codex accepts the descriptor and reaches an owned loopback server with access to the running FPAS application's state |
-| Stdio server process | Codex launches the descriptor; the process boundary fits tool state and keeps protocol output separate |
+| MCP only | An application creates a server, registers tools with `Mcp.RegisterTool` and serves it without ACP or an agent process. |
+| ACP convenience | `Acp.RegisterTool` uses a connection-owned MCP server and delegates to the shared registration implementation. ACP advertises it during session setup. |
+| Existing server with ACP | `Acp.AttachMcpServer` borrows a caller-owned server and advertises its existing catalog. Definitions and handlers are registered once. |
 
-Choose the smallest suitable route; do not require all alternatives. A stdio
-child does not share the ACP-host application's memory. Define any required
-state transfer explicitly rather than introducing an unplanned IPC/proxy system.
+Both registration paths use the same tool definitions, schemas, validation,
+handlers, policy, results and resource limits. Ordinary callers register
+functions and use a cooperative serving operation. The library owns the MCP
+receive/dispatch/respond loop.
 
-The [MCP introduction](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
-is a reference, not a mandate to support only that revision. Select the MCP
-revision/lifecycle supported by Codex and the official SDK. Do not impose modern
-discovery or legacy initialization without verifying the target.
+Register tools before publishing the catalog. Keep the catalog fixed while
+published; dynamic registration and tool-list change notifications are outside
+this package. ACP registration and attachment precede the relevant session
+setup request. Each setup receives a distinct attachment identity, including
+when several sessions share one catalog. Sharing application state is explicit.
+
+Closing an ACP session retires its attachment and outstanding reply rights.
+Closing its connection also closes the ACP-owned convenience server.
+Caller-owned servers survive ACP detach or close. Explicitly closing an MCP
+server invalidates every attachment to it. Borrowed ownership never becomes
+implicit ownership through registration.
+
+## Implementation and transport
+
+Use the official [Rust MCP SDK](https://github.com/modelcontextprotocol/rust-sdk)
+with an exact published `rmcp` pin. The SDK owns models, wire serialization,
+protocol validation and transport behavior. Compile application-supplied JSON
+schemas with the offline `jsonschema` validator before publication. FPAS owns
+callable registration, callback execution, policy, admission and resource lifetime.
+
+`Std.Mcp` requires no ACP connection or ACP protocol types. ACP convenience
+operations delegate to the MCP implementation. Both registration paths use one
+catalog, one schema-validation implementation and one handler execution path.
+
+Local Streamable HTTP is the planned first transport. The listener and tool
+handlers belong to the hosting application, so tools can access its live state.
+AP51.1 verifies the route, MCP revision and lifecycle against Codex and its ACP
+adapter. MCP-over-ACP requires actual target support. Additional transports
+require a concrete consumer or evidence that the planned route is unsuitable.
+
+Bind the listener to loopback and define its access policy. Give ACP attachments
+distinct access identities and enforce body/message limits before dispatch.
+Standalone access has an explicit policy independent of ACP. Keep credentials
+out of logs and example output.
+
+## Callable and state contract
+
+A registration contains a name, description, explicit JSON schemas and an FPAS
+function. The library validates arguments and invokes the function with request
+context. Start with a uniform handler type and structured JSON arguments and
+results. Automatic schema derivation from arbitrary FPAS signatures is separate
+work.
+
+FPAS tasks execute handlers; the SDK executor handles protocol work. Specify the
+owning serving task, cooperative waits and reentry rules. Retain callbacks and
+their captures through the VM's GC. Registration grants no concurrent mutable
+access to another task's captures.
+
+Applications can forward requests through a bounded channel to their state
+owner and await its result. Request context identifies the server, attachment
+and call and exposes cancellation. Applications bind any additional context,
+check current state and decide which effects are allowed. Closing or replacing
+a context cannot redirect its outstanding calls to a new context.
+
+## Scope
+
+Deliver tool discovery/invocation, structured results, tool/protocol errors,
+explicit execution policy, cancellation and shutdown. Verify standalone MCP,
+ACP convenience registration and attachment of an existing MCP server with
+neutral examples and deterministic fixtures.
+
+The product has the MCP server role. Outbound MCP clients, external-server
+proxying, resources, prompts, sampling, roots, tasks, MCP Apps, MRTR,
+subscriptions, managed OAuth and generic remote hosting are outside this
+delivery. Test peers may be MCP clients. Application-specific rules and data
+models belong to their applications.
 
 ## Decisions
 
-| ID | Topic | Current decision or required check | Owner |
+| ID | Topic | Decision or required check | Owner |
 | --- | --- | --- | --- |
-| Q58 | Role | FPAS server only; Codex is the client | AP51.1–AP51.6 |
-| Q59 | Target/API/protocol | Codex first; proposed `Std.Mcp.Types` and `Std.Mcp.Server`; verify actual revision/lifecycle at home | AP51.1, AP51.2, AP51.6 |
-| Q60 | Transport | Select a working ACP-advertised route from Codex capabilities at home; all alternatives are not mandatory | AP51.1, AP51.4 |
-| Q61 | Initial features | Tool discovery/invocation, results/errors, permission policy, cancellation and cleanup; additional MCP features are separate work | AP51.2, AP51.3, AP51.5 |
-| Q62 | Authority/auth | Explicit tool exposure and authorization before effects; define any access policy/credentials with the chosen local route; no managed OAuth | AP51.4, AP51.5 |
-| Q63 | ACP integration | Required outcome; MCP-over-ACP is a candidate route rather than an assumed capability | AP51.1, AP51.4, AP51.6 |
-| Q64 | Implementation | Official `rmcp` SDK with an FPAS server wrapper, following ACP conventions | AP51.1–AP51.6 |
+| Q58 | Role | Reusable FPAS MCP server usable independently of ACP | AP51.1 through AP51.6 |
+| Q59 | Public interface | `Std.Mcp`, `Std.Mcp.Types`, both `RegisterTool` entry points and existing-server attachment share one implementation | AP51.1, AP51.2, AP51.5 |
+| Q60 | Transport and protocol | Plan local Streamable HTTP in the application process; verify target support, revision and lifecycle | AP51.1, AP51.4, AP51.6 |
+| Q61 | Callable execution | Explicit definitions, uniform FPAS handler type and cooperative serving; validation and policy precede effects | AP51.2, AP51.3, AP51.5 |
+| Q62 | Authority and lifetime | Bounded work, scoped access, terminal reply rights, VM-owned callbacks and distinct borrowed/ACP-owned server lifetimes | AP51.1, AP51.3, AP51.4 |
+| Q63 | ACP integration | Automatic descriptor advertisement during setup, fresh attachment per session and reuse without duplicate registration | AP51.1, AP51.4, AP51.6 |
+| Q64 | Implementation | Exact official `rmcp` server SDK pin and one shared MCP implementation | AP51.1 through AP51.6 |
 
-The transport/version compatibility check remains open until verified at home.
-No FPAS syntax change is expected; any concrete syntax change requires user
-agreement. Exact signatures follow existing ACP conventions and the selected route.
+AP51.1 resolves exact signatures, callback servicing, limits and target protocol
+details. No FPAS syntax change is planned. Any required syntax or language
+semantics change needs explicit user agreement.
 
 ## Work packages and dependencies
 
-- [ ] [AP51.1: Server contract and Codex compatibility](01-contract-and-sdk.md)
-- [ ] [AP51.2: Server protocol types and API registration](02-types-and-codecs.md)
-- [ ] [AP51.3: Owned server runtime and dispatch](03-server-runtime.md)
-- [ ] [AP51.4: ACP-advertised MCP transport](04-acp-transport.md)
-- [ ] [AP51.5: FPAS tool providers and execution](05-tool-execution.md)
-- [ ] [AP51.6: Verification and Codex acceptance at home](06-acceptance.md)
+- [x] [AP51.1: Public contract and target compatibility](01-contract-and-sdk.md)
+- [x] [AP51.2: Shared types and public API registration](02-types-and-codecs.md)
+- [x] [AP51.3: Owned runtime and FPAS handler dispatch](03-server-runtime.md)
+- [x] [AP51.4: Standalone transport and ACP attachments](04-acp-transport.md)
+- [x] [AP51.5: Tool registration and application examples](05-tool-execution.md)
+- [x] [AP51.6: Verification and live Codex acceptance](06-acceptance.md)
 
-This is the only work-package checklist. AP51.1 settles the SDK/server boundary
-and target route/version; AP51.2 registers its API; AP51.3 owns dispatch;
-AP51.4 connects it to ACP; AP51.5 supplies tools; AP51.6 accepts the result.
-This plan update does not authorize product implementation.
+This is the only work-package checklist. AP51.1 defines the executable contract;
+AP51.2 and AP51.3 implement types and runtime; AP51.4 supplies transport and
+attachments; AP51.5 completes callable registration and examples; AP51.6
+verifies all public usage paths.
 
 ## Acceptance
 
-At home, FPAS establishes its ACP session with Codex and advertises the selected
-MCP server. Codex discovers and calls a deterministic FPAS tool, which executes
-once under the configured policy and returns the correct result. Invalid/denied
-calls, tool errors, cancellation and close follow the agreed contract without
-duplicate effects or retained rights/resources. Reopening a session/endpoint
-never revives an old responder. Unrelated ACP events continue to progress.
+A standalone FPAS program serves registered tools without ACP. An ACP program
+uses `Acp.RegisterTool` and normal session setup to expose tools to Codex.
+Another program attaches an existing MCP server and reuses its handlers.
+Closing ACP preserves borrowed servers and releases its owned server resources.
 
-Local automated tests cover the server independently of live Codex. AP51 remains
-incomplete until the actual Codex compatibility check and end-to-end acceptance
-at home pass. Cloud fixtures and SDK feasibility probes cannot check that box.
+Neutral fixtures verify current application state, accepted effects,
+denied/invalid calls, tool errors, stale contexts, cancellation, full queues and
+cleanup. Terminal reply rights remain invalid after reopen. Uncertain effects
+are never automatically replayed; the transport does not promise exactly-once
+application effects.
+
+Live Codex acceptance runs locally with Luna selected. Automated tests need no
+account or model access. Record fixture and live evidence separately; target
+compatibility remains open until the real discovery/call workflow passes.
 Follow the [development process](../development-process.md) and
 [shared constraints](../shared-constraints.md).

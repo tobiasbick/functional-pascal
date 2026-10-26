@@ -48,8 +48,15 @@ impl TraceRoots for CallbackOperation {
             Self::Single {
                 arguments: Some(arguments),
                 ..
+            }
+            | Self::Mcp {
+                arguments: Some(arguments),
+                ..
             } => arguments.as_slice().trace_roots(visit)?,
             Self::Single {
+                arguments: None, ..
+            }
+            | Self::Mcp {
                 arguments: None, ..
             }
             | Self::StringMap(_)

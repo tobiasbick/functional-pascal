@@ -31,6 +31,15 @@ impl Worker {
         let Intrinsic::Acp(operation) = intrinsic else {
             return Ok(None);
         };
+        if matches!(
+            operation,
+            fpas_bytecode::AcpIntrinsic::RegisterTool
+                | fpas_bytecode::AcpIntrinsic::AttachMcpServer
+        ) {
+            return self
+                .execute_acp_tools(operation, arguments, location)
+                .map(|v| Some(Some(v)));
+        }
         if operation.connection() {
             return self
                 .execute_acp_connection(operation, arguments, location)

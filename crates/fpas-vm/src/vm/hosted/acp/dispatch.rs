@@ -133,6 +133,7 @@ impl Worker {
                     };
                     let (method, raw) = self.acp_encode(version, root, payload)?;
                     if root == "ClientRequest" {
+                        self.prepare_acp_tools(&connection, &method)?;
                         Value::OpaqueHandle(connection.send_for(version, &method, raw)?.id())
                     } else {
                         Value::Boolean(connection.notify_for(version, &method, raw)?)

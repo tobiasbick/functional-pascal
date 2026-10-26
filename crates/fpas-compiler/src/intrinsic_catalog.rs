@@ -32,6 +32,9 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     if name.starts_with("Std.Acp.") {
         return Intrinsic::all().find(|intrinsic| matches!(intrinsic, Intrinsic::Acp(operation) if operation.source_name() == name));
     }
+    if name.starts_with("Std.Mcp.") {
+        return Intrinsic::all().find(|intrinsic| matches!(intrinsic, Intrinsic::Mcp(operation) if operation.source_name() == name));
+    }
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.split_once('.')?;
     match unit {

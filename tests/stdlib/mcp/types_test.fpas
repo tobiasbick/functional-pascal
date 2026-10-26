@@ -1,0 +1,28 @@
+program McpTypesTest;
+
+uses Std.Mcp as Mcp, Std.Test as Test;
+
+function Echo(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError);
+begin
+  Test.AssertFalse(Mcp.IsCancelled(Context));
+  return Ok(Mcp.TextResult(Arguments.Text));
+end function;
+
+begin
+  const Raw := Mcp.ParseJson('{"value":9007199254740993}').Unwrap();
+  Test.AssertEquals('9007199254740993', Mcp.JsonMember(Raw, 'value').Unwrap().Unwrap().Text);
+  Test.AssertTrue(Mcp.ParseJson('{') is Error(_));
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  const Definition := Mcp.ToolDefinition(
+    Name := 'echo', Description := 'Return the supplied value',
+    InputSchema := Mcp.ParseJson('{"type":"object"}').Unwrap(),
+    OutputSchema := None, Annotations := None, Meta := None
+  );
+  Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Echo).Unwrap());
+  Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Echo) is Error(Mcp.McpError.DuplicateTool));
+  Test.AssertFalse(Mcp.ServeOne(Server, Some(0), None).Unwrap());
+  Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Echo) is Error(Mcp.McpError.Busy));
+  Test.AssertTrue(Mcp.Close(Server).Unwrap());
+  Test.AssertFalse(Mcp.Close(Server).Unwrap());
+  Test.AssertTrue(Mcp.Release(Server) is Ok(_));
+end.

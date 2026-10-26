@@ -1,84 +1,130 @@
-# AP51.1: Server contract and Codex compatibility
+# AP51.1: Public contract and target compatibility
 
-Package: [AP51](README.md). Status: SDK feasibility evidence available; target
-transport/version verification is pending at home. Product work remains paused.
+Package: [AP51](README.md). Status: Complete.
 
 ## Deliverable
 
-Specify the FPAS MCP server whose tools Codex calls while connected over ACP.
-Record the tested Codex/ACP-adapter versions, selected route, MCP revision,
-tool-state boundary and SDK configuration. The product has no MCP client role.
-The package README owns decisions Q58–Q64.
+Specify independent `Std.Mcp` serving, ACP convenience registration and
+attachment of a caller-owned server. Verify the planned local Streamable HTTP
+route against the actual Codex ACP adapter. The package README owns decisions
+Q58 through Q64.
 
-## SDK baseline and evidence
+## Public contract
 
-The published official `rmcp` 3.7.0 is an available baseline. It is not yanked,
-requires Rust 1.88 and identifies upstream revision
-[`5d6a11f2ae022f513aec0f6e0f10f89a57891a7f`](https://github.com/modelcontextprotocol/rust-sdk/tree/5d6a11f2ae022f513aec0f6e0f10f89a57891a7f).
-Its registry SHA-256 is
-`ece64e19631fc38758181e637c15509a2c2709ee53bfde1e1d58f9dc991f919e`.
-Choose an exact published pin after confirming its target-route support.
+Define `Std.Mcp` and `Std.Mcp.Types` independently of ACP. Specify server
+creation, `Mcp.RegisterTool`, cooperative serving, close and release.
+Registration pairs a definition with an FPAS function. Define a uniform handler
+type accepting request context and structured arguments and returning a typed
+tool result or failure.
 
-Existing probes under `.temp-data/ap51-research/` built that release with both
-SDK roles, HTTP and extra features on Rust 1.99.1. They exercised same-SDK
-discovery, MRTR, cancellation, state integrity and dynamic JSON. Preserve them
-as feasibility evidence; they do not verify the reduced server-only feature
-set, FPAS binding or Codex compatibility. Their feature scope is not AP51 scope.
+Specify `Acp.RegisterTool` as delegation to the same registration implementation
+using a connection-owned convenience server. Specify `Acp.AttachMcpServer` for
+a caller-owned server. Attachment reuses its existing catalog and handlers.
+Both ACP paths advertise a descriptor during the relevant session setup.
 
-Start the product feature audit with `default-features = false`, `server`
-and `schemars`. Add `transport-async-rw` for a selected byte-stream route or
-`transport-streamable-http-server` for HTTP as required. Product client,
-HTTP-client and automatic MRTR features are unnecessary. Reuse existing
-crypto/TLS policy if needed. No floating Git dependency or replacement engine.
+Settle these details before AP51.2:
 
-## Target check at home
+- Complete types, error results and exact operation names beyond the agreed
+  `RegisterTool` entry points.
+- The serving operation that invokes handlers on a designated FPAS task without
+  a caller-written protocol loop, including cancellation and reentry.
+- Registration before publication, duplicate names and catalog freezing.
+- Context identity and access for pending setup and established sessions,
+  including several sessions using one catalog.
+- Ownership and reply-right outcomes on detach, failed setup, server closure,
+  ACP closure and release.
+- Concrete limits for bodies, catalog size, pending requests, retained bytes,
+  active handlers and shutdown.
 
-1. Inspect the actual Codex ACP adapter's capabilities and MCP descriptors.
-   Record Codex and adapter behavior separately.
-2. Verify MCP-over-ACP support. Otherwise test a suitable local HTTP or stdio
-   descriptor. Prove a real request reaches the SDK server.
-3. Establish where tool state lives. A launched stdio server is a separate
-   process; it does not automatically access the running ACP host's memory.
-4. Verify MCP revision/lifecycle on the chosen route. Do not force modern
-   discovery or remove initialization based solely on the linked introduction.
-   Use the official SDK's selected lifecycle and validation.
-5. Define endpoint identity, route access policy and cancellation/response
-   ownership when ACP sessions or endpoints close.
+Callbacks follow FPAS task ownership and GC rules. Applications can queue
+requests to a task that owns mutable state. Registration cannot grant unsafe
+access to another task's mutable captures.
 
-Live target investigation is deferred to home. Do not attempt live Codex
-experiments in the cloud; local fixtures cannot establish this target contract.
+## SDK configuration
 
-## Server API and ownership
+Use the official [rmcp crate](https://crates.io/crates/rmcp/3.7.0).
+Pin `rmcp` to 3.7.0 with `default-features = false`, `server`, `schemars` and
+`transport-streamable-http-server`. Reuse existing crypto/TLS policy where
+applicable. The product dependency graph enables no SDK client, HTTP-client or
+automatic MRTR feature.
 
-Proposed units: `Std.Mcp.Types` and `Std.Mcp.Server`. Expose create/attach,
-receive, respond/reject and stop/close/release through VM-local handles.
-FPAS code explicitly dispatches requests; it does not run on the SDK executor.
-No outbound Connect/Send, client continuation or external-server proxy API.
+The SDK owns models, serialization, protocol lifecycle and server handling.
+Its typed Rust parameter extractors do not validate arbitrary registered JSON
+schemas. Use `jsonschema` 0.60.1 with default features disabled,
+`arbitrary-precision` enabled and offline compilation. External schema retrieval
+is disabled. Both public registration paths share these compiled validators.
+FPAS owns conversion, callable registration, scheduling, policy and resource
+bounds. Research probes stay under `.temp-data/ap51-research/`.
 
-| Contract | SDK owner | FPAS owner |
+## Native implementation
+
+`crates/fpas-mcp/` provides the catalog and SDK `ServerHandler` adapter. Native
+`Catalog::register` pairs a definition with an application handler identity.
+`Server::new` consumes and freezes that catalog. Independent `Endpoint` values
+scope request rights. One `Reader` receives detached calls; aliased `Responder`
+values consume one reply right. Native HTTP publications own loopback listeners,
+accepted sockets, attachment credentials and bounded shutdown. FPAS types,
+callback retention and serving operations remain part of the public contract
+work.
+
+The native defaults are 128 tools, 1 MiB of serialized catalog definitions,
+1 MiB per call/result, 64 pending calls, 8 MiB of retained call representations
+and 16 endpoints. Pending limits include claimed calls and request metadata.
+Cancellation, close and abandoned responders release admission independently
+of an application callback finishing. Applications own effect deduplication.
+
+## Verified local target contract
+
+| Part | Verified configuration |
+| --- | --- |
+| Codex executable used by the adapter | 0.160.1 |
+| ACP adapter | `@agentclientprotocol/codex-acp` 2.2.2 |
+| Model | `gpt-6-luna`, low reasoning |
+| ACP | Version 1; HTTP supported, MCP-over-ACP and SSE unsupported |
+| MCP route | Native authenticated HTTP publication in the hosting application |
+| Access | Fresh bearer credential supplied through the ACP HTTP descriptor |
+| MCP revision | `2025-06-18` |
+| Lifecycle | `initialize`, `notifications/initialized`, `tools/list`, `tools/call` |
+| SDK HTTP configuration | `legacy_session_mode = false`, `json_response = true` |
+
+The route supports calls to the native catalog and detached application queue.
+Keep SDK negotiation for other peers; this table establishes one tested target
+combination. VM-owned authenticated listeners, automatic ACP advertisement and
+task-owned FPAS callbacks use this route. Both ACP convenience registration and
+borrowed-server registration pass live read/update verification with Luna.
+
+## Local target verification
+
+1. Record Codex and ACP-adapter versions separately. Initialize the real adapter
+   and inspect its MCP capabilities.
+2. Serve a minimal SDK tool through loopback HTTP and provide its descriptor
+   during ACP setup. Prove a real discovery/call reaches the hosting process.
+3. Record the negotiated MCP revision and lifecycle, including initialization
+   or discovery as implemented by the target and SDK.
+4. Define access identity and its relation to standalone callers and each ACP
+   setup/session. Verify that the handler can use hosting-application state.
+5. Verify standalone serving without ACP and attachment of the same server to
+   ACP without transferring ownership or registering its tools again.
+
+Use Luna for live model requests. Live verification runs locally. Account-free
+fixtures establish protocol behavior but do not prove Codex interoperability.
+If the planned route fails, establish its cause before changing transport or
+adding a state-transfer protocol. MCP-over-ACP requires explicit target evidence.
+
+## Implementation owners
+
+| Action | Path | Purpose |
 | --- | --- | --- |
-| Values/codec | `rmcp::model`, schema and serialization | Type conversion/registration; AP51.2 |
-| Requests/context | `ServerHandler`, `RequestContext<RoleServer>` | Bounded dispatch and one-use response rights; AP51.3 |
-| Tool discovery/calls | `ServerHandler::{list_tools,get_tool,call_tool}` and validation | Catalog, arguments, policy and FPAS execution; AP51.5 |
-| Cancellation/close | Request stop token and service close facilities | Cooperative work and ACP endpoint lifetime; AP51.3/AP51.4 |
-| Chosen transport | Official server transport/service APIs | ACP routing and stream/listener ownership; AP51.4 |
+| Specify | Package README and AP51.2 through AP51.6 | Exact public contract, ownership, limits and acceptance |
+| Inspect | `crates/fpas-acp/src/connection/`, `crates/fpas-vm/src/vm/hosted/acp/` | Session setup, capabilities and native lifetime |
+| Inspect | `crates/fpas-vm/src/vm/hosted/server/`, `docs/pascal/agents/concurrency.md` | Callback ownership, serving and shutdown |
+| Reuse | `crates/fpas-vm/src/vm/hosted/callbacks/` | Task-owned resumable callback frames and GC roots |
+| Inspect | Published `rmcp` sources and Codex ACP adapter | Exact SDK configuration and target behavior |
 
-Distinguish invalid arguments, denied work, tool errors, protocol failure, I/O,
-capacity, cancellation and closed resources. ACP tool status updates are
-observations, not tool execution requests or permission grants.
+## Acceptance
 
-## Limits and acceptance
-
-Retain useful SDK findings: fixed service queues/pending work need FPAS admission
-bounds; server bodies and stream frames need size limits; cancellation/shutdown
-must remain live when ordinary admission is full. Bound payloads, catalogs,
-responders and handlers, and check GC retention of application state.
-
-Choose concrete defaults with the selected server route. Outbound HTTP body
-adapters, client response caches, external-server polling, client continuations
-and task managers are not prerequisites.
-
-Update the package README and align AP51.2–AP51.6 after the home target check.
-AP51.1 stays open until the actual route/version and concrete server contract
-are verified. SDK probes alone do not complete it. Check links, scope consistency
-and `git diff --check`.
+The contract covers all three usage paths, borrowed-server survival,
+per-attachment isolation and task-owned state. The reduced SDK configuration
+builds. Real Codex traffic reaches the selected route and its protocol/lifecycle
+is recorded. Keep unverified target details open. Align dependent packages,
+check links and run `git diff --check`.

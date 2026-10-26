@@ -115,6 +115,12 @@ impl Worker {
                 }
                 if result? {
                     steps += 1;
+                    if self.suspend_requested && self.task_suspension.is_some() {
+                        return Ok(DispatchBatch {
+                            step: DispatchStep::Suspend,
+                            steps,
+                        });
+                    }
                     // Requested maintenance is serviced at this boundary, as before.
                     if self.domain.maintenance_pending() {
                         break;

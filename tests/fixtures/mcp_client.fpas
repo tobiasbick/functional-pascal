@@ -1,0 +1,42 @@
+program McpClient;
+
+uses Std.Args as Args, Std.Mcp as Mcp, Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+
+function Post(Access: Mcp.HttpAccess; Body: string): Http.Response;
+begin
+  var Request := Http.Request.Create('POST', Access.Url);
+  Request.Headers := [
+    Http.Header.Create('Content-Type', 'application/json'),
+    Http.Header.Create('Accept', 'application/json, text/event-stream'),
+    Http.Header.Create('MCP-Protocol-Version', '2025-06-18'),
+    Http.Header.Create(Access.Headers[0].Name, Access.Headers[0].Value)
+  ];
+  Request.Body := Utf8.Encode(Body);
+  Request.TimeoutMillis := 10000;
+  return Http.Send(Request).Unwrap();
+end function;
+
+function CallTool(Access: Mcp.HttpAccess): string;
+begin
+  const Init := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"fpas-test","version":"1"}}}'
+  );
+  Test.AssertEquals(200, Init.StatusCode);
+  const Notification := Post(Access, '{"jsonrpc":"2.0","method":"notifications/initialized"}');
+  Test.AssertEquals(202, Notification.StatusCode);
+  const Response := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"double_probe","arguments":{"number":21}}}'
+  );
+  Test.AssertEquals(200, Response.StatusCode);
+  return Http.BodyText(Response).Unwrap();
+end function;
+
+begin
+  const Access := Mcp.HttpAccess(
+    Url := Args.ParamStr(0),
+    Headers := [Mcp.HttpHeader(Name := 'Authorization', Value := Args.ParamStr(1))]
+  );
+  Test.AssertTrue('"value":42' in CallTool(Access));
+end.

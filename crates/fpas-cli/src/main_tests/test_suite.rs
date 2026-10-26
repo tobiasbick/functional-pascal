@@ -79,6 +79,30 @@ fn fpas_suite_stdlib_acp() {
 }
 
 #[test]
+fn fpas_suite_stdlib_mcp() {
+    // The shared state example is an explicit dependency of the regression bundle.
+    let output =
+        std::process::Command::new(crate::process_tree::executable().expect("installed FPAS CLI"))
+            .current_dir(repo_root())
+            .args([
+                "test",
+                "tests/suite.fpasprj",
+                "--filter",
+                "mcp",
+                "--jobs",
+                "2",
+            ])
+            .output()
+            .expect("MCP public suite process");
+    assert!(
+        output.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
 fn fpas_suite_runner() {
     let root = repo_root();
     let (exit, _, stderr) = super::support::run_cli_args_and_capture_output(

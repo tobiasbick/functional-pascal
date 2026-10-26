@@ -64,7 +64,8 @@ fn test_cli_reports_skipped_tests_with_timeout() {
             filter: None,
             files: Vec::new(),
             report: None,
-            timeout: Some(Duration::from_secs(1)),
+            // Allow process startup under load; run_timeout.rs protects actual expiry.
+            timeout: Some(Duration::from_secs(60)),
             jobs: 1,
             strict: false,
             show_output: false,

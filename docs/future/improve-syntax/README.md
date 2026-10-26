@@ -52,14 +52,17 @@ second decision or completion index.
 
 ## Package status
 
-AP51 plans an MCP server wrapper around the official Rust SDK (`rmcp`) so Codex,
-connected through ACP, can call FPAS-provided tools. Target-agent transport and
-protocol checks, followed by live acceptance, take place at home.
+AP51 adds independent `Std.Mcp` tool registration and serving through the
+official Rust SDK (`rmcp`). `Std.Acp` offers `RegisterTool` through the same
+implementation and can attach an existing MCP server. Both interfaces expose
+registered FPAS functions to external clients with explicit handler ownership,
+bounded execution and defined server/session lifetimes. Examples and acceptance
+use neutral application state. Target checks and live Luna acceptance run locally.
 Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP51: MCP tools for Codex over ACP](ap51-mcp-wrapper/README.md) | Medium; server and ACP integration | Delivered AP50; Codex transport/version checks and live acceptance at home | Planned |
+| [x] | [AP51: MCP tool registration and ACP integration](ap51-mcp-wrapper/README.md) | Medium; shared tool server and ACP convenience | Delivered ACP support; verified local HTTP target | Complete |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

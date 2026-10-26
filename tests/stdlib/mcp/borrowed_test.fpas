@@ -1,0 +1,163 @@
+program BorrowedMcpTest;
+
+uses
+  Std.Acp as Acp, Std.Acp.Types as Types, Std.Mcp as Mcp, Std.Json as Json,
+  Std.Json.Fields as Fields, Std.Http as Http, Std.Net.Utf8 as Utf8,
+  Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
+
+type ObjectValue = dict of string to Json.JsonValue;
+
+function AsObject(Value: Json.JsonValue): ObjectValue;
+begin
+  case Value of
+    when Json.JsonValue.Object(const Members):
+      return Members;
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
+      panic('Expected object');
+  end case;
+end function;
+
+function Exchange(Connection: Acp.Connection; Endpoint: Acp.MessageEndpoint; Method: string; Params: string; Reply: string): ObjectValue;
+begin
+  const Token := Acp.Send(
+    Connection,
+    Types.DecodeClientRequest(Method, Types.RawJson(Text := Params)).Unwrap().Payload
+  ).Unwrap();
+  while true do
+    case Acp.TryTakeMessage(Endpoint).Unwrap() of
+      when Some(const Message):
+        const Id := Types.RawJsonMember(Message, 'id').Unwrap().Unwrap();
+        Test.AssertTrue(
+          Acp.FeedMessage(
+            Endpoint,
+            Types.RawJson(Text := '{"jsonrpc":"2.0","id":' + Id.Text + ',"result":' + Reply + '}')
+          ).Unwrap()
+        );
+        const Event := Acp.Receive(Connection, Some(5000), None).Unwrap();
+        Test.AssertTrue(Event.Payload is Acp.EventPayload.Response(_, _));
+        return Fields.ParseObject(Message.Text).Unwrap();
+      when None:
+        Time.Sleep(1);
+    end case;
+  end while;
+
+  panic('No request');
+end function;
+
+function Post(Access: Mcp.HttpAccess; Body: string): Http.Response;
+begin
+  var Request := Http.Request.Create('POST', Access.Url);
+  Request.Headers := [
+    Http.Header.Create('Content-Type', 'application/json'),
+    Http.Header.Create('Accept', 'application/json, text/event-stream'),
+    Http.Header.Create('MCP-Protocol-Version', '2025-06-18'),
+    Http.Header.Create(Access.Headers[0].Name, Access.Headers[0].Value)
+  ];
+  Request.Body := Utf8.Encode(Body);
+  Request.TimeoutMillis := 10000;
+  return Http.Send(Request).Unwrap();
+end function;
+
+function Agent(Connection: Acp.Connection; Endpoint: Acp.MessageEndpoint; Server: Mcp.Server): boolean;
+begin
+  discard Exchange(
+    Connection,
+    Endpoint,
+    'initialize',
+    '{"protocolVersion":1,"clientCapabilities":{}}',
+    '{"protocolVersion":1,"agentCapabilities":{"mcpCapabilities":{"http":true}}}'
+  );
+  const Setup := Exchange(
+    Connection,
+    Endpoint,
+    'session/new',
+    '{"cwd":"/workspace","mcpServers":[]}',
+    '{"sessionId":"trusted"}'
+  );
+  const Params := Fields.ObjectField(Setup, 'params').Unwrap();
+  const Descriptor := AsObject(Fields.ArrayField(Params, 'mcpServers').Unwrap()[0]);
+  const Header := AsObject(Fields.ArrayField(Descriptor, 'headers').Unwrap()[0]);
+  const Access := Mcp.HttpAccess(
+    Url := Fields.StringField(Descriptor, 'url').Unwrap(),
+    Headers := [
+      Mcp.HttpHeader(
+        Name := Fields.StringField(Header, 'name').Unwrap(),
+        Value := Fields.StringField(Header, 'value').Unwrap()
+      )
+    ]
+  );
+  Test.AssertEquals(
+    200,
+    Post(
+      Access,
+      '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}'
+    ).StatusCode
+  );
+  const Reply := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{}}}'
+  );
+  Test.AssertTrue('owned-handler' in Http.BodyText(Reply).Unwrap());
+  Test.AssertTrue(Acp.DetachMcpServer(Connection, Server).Unwrap());
+  Test.AssertFalse(Acp.DetachMcpServer(Connection, Server).Unwrap());
+  Test.AssertTrue(Acp.Close(Connection).Unwrap());
+  Test.AssertTrue(Acp.Release(Connection).Unwrap());
+  return true;
+end function;
+
+function Independent(Access: Mcp.HttpAccess): boolean;
+begin
+  discard Post(
+    Access,
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"independent","version":"1"}}}'
+  );
+  const Reply := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{}}}'
+  );
+  Test.AssertTrue('owned-handler' in Http.BodyText(Reply).Unwrap());
+  return true;
+end function;
+
+begin
+  const Messages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  var Calls := 0;
+  const Handler: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    Calls := Calls + 1;
+    if Context.SessionId is Some(_) then
+      Test.AssertEquals('trusted', Context.SessionId.Unwrap());
+      Test.AssertTrue(Context.ConnectionId is Some(_));
+    else
+      Test.AssertTrue(Context.ConnectionId is None);
+    end if;
+
+    Time.Sleep(1);
+    return Ok(Mcp.TextResult('owned-handler'));
+  end function;
+  const Definition := Mcp.ToolDefinition(
+    Name := 'echo',
+    Description := 'Test owned handler',
+    InputSchema := Mcp.ParseJson('{"type":"object"}').Unwrap(),
+    OutputSchema := None,
+    Annotations := None,
+    Meta := None
+  );
+  Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Handler).Unwrap());
+  Test.AssertTrue(Acp.AttachMcpServer(Messages.Connection, Server).Unwrap());
+  scope
+    const Peer := go Agent(Messages.Connection, Messages.Endpoint, Server);
+    Test.AssertTrue(Mcp.ServeOne(Server, Some(10000), None).Unwrap());
+    Test.AssertTrue(Tasks.Wait(Peer));
+    Test.AssertEquals(1, Calls);
+  end scope;
+  const Endpoint := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+  scope
+    const Client := go Independent(Mcp.Access(Endpoint).Unwrap());
+    Test.AssertTrue(Mcp.ServeOne(Server, Some(10000), None).Unwrap());
+    Test.AssertTrue(Tasks.Wait(Client));
+  end scope;
+
+  Test.AssertEquals(2, Calls);
+  Test.AssertTrue(Mcp.Release(Server).Unwrap());
+end.

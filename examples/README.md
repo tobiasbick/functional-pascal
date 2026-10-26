@@ -71,6 +71,9 @@ fpas run examples/pascal/std/task_basics.fpas
 
 ### Network examples
 
+Registered application tools are demonstrated by [independent MCP serving](network/mcp-tools/README.md)
+and [ACP registration/attachment](network/acp-mcp-tools/README.md).
+
 The [`network/`](network/README.md) examples include paired HTTP and raw TCP
 clients and servers, HTTPS programs with explicit trust and PEM requirements,
 an incremental SSE decoder, and URI/UTF-8 helpers. The local pairs accept a

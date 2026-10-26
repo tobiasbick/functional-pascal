@@ -11,6 +11,7 @@ mod errors;
 mod fs;
 mod json;
 mod math;
+mod mcp;
 mod native_records;
 mod net;
 mod parse;
@@ -44,6 +45,7 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
+        fpas_std::STD_UNIT_MCP | fpas_std::STD_UNIT_MCP_TYPES => mcp::register(checker),
         fpas_std::STD_UNIT_ACP
         | fpas_std::STD_UNIT_ACP_TYPES
         | fpas_std::STD_UNIT_ACP_HOST

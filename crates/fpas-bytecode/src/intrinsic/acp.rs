@@ -76,6 +76,10 @@ pub enum AcpIntrinsic {
     SendMcp = 801,
     V2SendMcp = 802,
     HostV2RunTerminalAuthentication = 803,
+    RegisterTool = 822,
+    AttachMcpServer = 823,
+    ServeTools = 824,
+    DetachMcpServer = 825,
 }
 }
 
@@ -91,7 +95,12 @@ impl AcpIntrinsic {
     pub const fn waits(self) -> bool {
         matches!(
             self,
-            Self::Receive | Self::Close | Self::Release | Self::HostWaitForTerminalExit
+            Self::Receive
+                | Self::Close
+                | Self::Release
+                | Self::HostWaitForTerminalExit
+                | Self::ServeTools
+                | Self::DetachMcpServer
         )
     }
     /// Protocol version, decode/encode direction, and typed root for a payload codec.

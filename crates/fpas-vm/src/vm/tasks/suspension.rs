@@ -76,6 +76,8 @@ impl TaskClock {
 pub(in crate::vm) enum TaskSuspension {
     /// Native ACP wait state containing no FPAS values or callback-owned roots.
     Acp(Box<crate::vm::hosted::acp::wait::Wait>),
+    /// Native MCP serving/publication state; callbacks retain their own VM roots.
+    Mcp(Box<crate::vm::hosted::mcp::wait::Wait>),
     /// Retain a terminal body outcome until the creating task's groups have joined.
     OwnerCleanup {
         groups: Vec<u64>,
@@ -162,6 +164,7 @@ impl TaskSuspension {
     pub(in crate::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
             Self::Acp(wait) => wait.debug_state(clock),
+            Self::Mcp(wait) => wait.debug_state(clock),
             Self::OwnerCleanup { .. } => TaskSuspensionState::Waiting,
             Self::GroupClose {
                 deadline_millis: None,

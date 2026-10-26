@@ -9,6 +9,7 @@ repository.workspace = true
 
 [dependencies]
 fpas-acp = { path = "../fpas-acp" }
+fpas-mcp = { path = "../fpas-mcp" }
 futures.workspace = true
 tokio.workspace = true
 serde = { workspace = true, features = ["derive"] }

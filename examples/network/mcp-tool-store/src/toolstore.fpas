@@ -1,0 +1,88 @@
+// Application state and policy stay with the FPAS task that creates these handlers.
+unit Demo.ToolStore;
+
+uses Std.Mcp as Mcp, Std.Json.Fields as Fields, Std.Conv as Conv;
+
+public type Entry = record
+  public Definition: Mcp.ToolDefinition;
+  public Handler: Mcp.ToolHandler;
+end record;
+
+function Definition(Name: string; Description: string; Schema: string; ReadOnly: boolean): Mcp.ToolDefinition;
+begin
+  return Mcp.ToolDefinition(
+    Name := Name, Description := Description, InputSchema := Mcp.ParseJson(Schema).Unwrap(),
+    OutputSchema := None,
+    Annotations := Some(
+      Mcp.ParseJson(
+        '{"readOnlyHint":' + (if ReadOnly then 'true' else 'false' end if) +
+        ',"openWorldHint":false}'
+      ).Unwrap()
+    ), Meta := None
+  );
+end function;
+
+public function Create(Writable: boolean): array of Entry;
+begin
+  var Value := 10;
+  var Revision := 0;
+  var Effects := 0;
+  const Read: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    if Mcp.IsCancelled(Context) then
+      return Ok(Mcp.ErrorResult('Request cancelled'));
+    end if;
+
+    return Mcp.StructuredResult(
+      Mcp.ParseJson(
+        '{"value":' + Conv.IntToStr(Value) + ',"revision":' + Conv.IntToStr(Revision) +
+        ',"effects":' + Conv.IntToStr(Effects) + '}'
+      ).Unwrap()
+    );
+  end function;
+  const Update: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    if Mcp.IsCancelled(Context) then
+      return Ok(Mcp.ErrorResult('Request cancelled'));
+    end if;
+
+    if not Writable then
+      return Ok(Mcp.ErrorResult('Updates are disabled by application policy'));
+    end if;
+    const Input := Fields.ParseObject(Arguments.Text).Unwrap();
+    const Expected := Fields.IntegerField(Input, 'expectedRevision').Unwrap();
+    if Expected <> Revision then
+      return Ok(Mcp.ErrorResult('Stale revision'));
+    end if;
+
+    Value := Fields.IntegerField(Input, 'value').Unwrap();
+    Revision := Revision + 1;
+    Effects := Effects + 1;
+    return Mcp.StructuredResult(
+      Mcp.ParseJson(
+        '{"value":' + Conv.IntToStr(Value) + ',"revision":' + Conv.IntToStr(Revision) +
+        ',"effects":' + Conv.IntToStr(Effects) + '}'
+      ).Unwrap()
+    );
+  end function;
+
+  return [
+    Entry(
+      Definition := Definition(
+        'read_value',
+        'Read the current application value, revision and effect count',
+        '{"type":"object","properties":{},"additionalProperties":false}',
+        true
+      ),
+      Handler := Read
+    ),
+    Entry(
+      Definition := Definition(
+        'set_value',
+        'Set the value if expectedRevision still matches; application policy must allow updates',
+        '{"type":"object","properties":{"value":{"type":"integer","minimum":-1000000,"maximum":1000000},"expectedRevision":{"type":"integer","minimum":0,"maximum":1000000}},"required":["value","expectedRevision"],"additionalProperties":false}',
+        false
+      ),
+      Handler := Update
+    )
+  ];
+end function;
+end unit;

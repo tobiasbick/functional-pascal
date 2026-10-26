@@ -39,6 +39,13 @@ pub(crate) fn pending_unsupported_recording_effect(
 
 const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str> {
     match intrinsic {
+        Intrinsic::Mcp(_) => {
+            if fpas_bytecode::intrinsic_debug_effects(intrinsic).is_debug_safe() {
+                None
+            } else {
+                Some("Std.Mcp")
+            }
+        }
         Intrinsic::Server(_) => Some("Std.Server"),
         Intrinsic::Random(_) => Some("Std.Random"),
         Intrinsic::Crypto(_) => Some("Std.Crypto"),

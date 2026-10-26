@@ -1,0 +1,28 @@
+program AcpOnlyToolsTest;
+
+uses Std.Acp as Acp, Std.Test as Test;
+
+function Handler(Context: Acp.ToolContext; Arguments: Acp.ToolJson): result of (Acp.ToolResult, Acp.McpError);
+begin
+  return Ok(
+    Acp.ToolResult(Payload := Acp.ToolJson(Text := '{"content":[{"type":"text","text":"ready"}]}'))
+  );
+end function;
+
+begin
+  const Messages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+  const Definition := Acp.ToolDefinition(
+    Name := 'application',
+    Description := 'ACP-only registration',
+    InputSchema := Acp.ToolJson(Text := '{"type":"object"}'),
+    OutputSchema := None,
+    Annotations := None,
+    Meta := None
+  );
+  Test.AssertTrue(Acp.RegisterTool(Messages.Connection, Definition, Handler).Unwrap());
+  Test.AssertTrue(
+    Acp.RegisterTool(Messages.Connection, Definition, Handler) is Error(Acp.McpError.DuplicateTool)
+  );
+  Test.AssertTrue(Acp.Close(Messages.Connection).Unwrap());
+  Test.AssertTrue(Acp.Release(Messages.Connection).Unwrap());
+end.

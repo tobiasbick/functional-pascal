@@ -27,6 +27,7 @@ pub(super) enum Command {
         token: RequestToken,
         method: String,
         raw: RawJson,
+        tools: Option<super::tools::Setup>,
     },
     Notify {
         method: String,
@@ -89,6 +90,7 @@ pub(super) struct State {
 }
 
 pub(super) struct Shared {
+    pub tools: super::tools::Bridge,
     pub outgoing_metadata: Arc<super::budget::Budget>,
     pub incoming_metadata: Arc<super::budget::Budget>,
     pub id: u64,
@@ -106,6 +108,7 @@ impl Shared {
         let version = settings.requested_version()?;
         let client = super::client::Client::new(settings, &limits)?;
         Ok(Arc::new(Self {
+            tools: Default::default(),
             outgoing_metadata: super::budget::Budget::new("OutgoingMetadata", limits.queue_bytes),
             incoming_metadata: super::budget::Budget::new("IncomingMetadata", limits.queue_bytes),
             id,
@@ -267,6 +270,7 @@ impl Shared {
                 }
             }
             if !closed_sessions.is_empty() && matches!(event.payload, Payload::Response(_, _, _)) {
+                self.tools.retire_sessions(&closed_sessions);
                 cancelled = super::client::cancellation::select_closed(&state, &closed_sessions);
                 super::client::cancellation::mark(&mut state, &cancelled);
                 let endpoints: Vec<_> = state
@@ -285,6 +289,17 @@ impl Shared {
                 }
             }
         }
+        let response = if matches!(event.payload, Payload::Response(_, _, _)) {
+            event
+                .raw
+                .as_ref()
+                .map(|r| r.member("result"))
+                .transpose()?
+                .flatten()
+        } else {
+            None
+        };
+        self.tools.settle(token, response.as_ref())?;
         let bytes = event_size(&event);
         if !self.events.push(event, bytes)? {
             let fault = Fault::LimitExceeded("EventQueue", self.limits.queue_bytes);
@@ -340,6 +355,7 @@ impl Shared {
     }
 
     pub fn stop_admission(&self) {
+        self.tools.shutdown();
         self.commands.close();
         self.commands.discard();
         let (responders, publications) = {

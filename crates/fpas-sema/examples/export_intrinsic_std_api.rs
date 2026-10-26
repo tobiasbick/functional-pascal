@@ -16,7 +16,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use documentation::{
-    default_value, documentation_row, parameter_description, render_documentation,
+    default_value, documentation_row, render_documentation, render_variant_documentation,
 };
 use fpas_sema::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, ParamTy, Ty, intrinsic_std_symbols,
@@ -203,7 +203,6 @@ fn render_types(
     for name in type_names {
         let symbol = take_symbol(symbols, &name, "type")?;
         output.push('\n');
-        render_documentation(output, unit, &name, symbol, documentation, "");
         let nominal = match &symbol.ty {
             Ty::Enum(value) => Some(&value.name),
             Ty::Record(value) => Some(&value.name),
@@ -211,9 +210,17 @@ fn render_types(
             _ => None,
         };
         if nominal.is_some_and(|actual| !actual.eq_ignore_ascii_case(&format!("{unit}.{name}"))) {
+            if let Ty::Enum(value) = &symbol.ty {
+                for variant in &value.variants {
+                    render_variant_documentation(output, &name, variant);
+                    output.push('\n');
+                }
+            }
+            render_documentation(output, unit, &name, symbol, documentation, "");
             let _ = writeln!(output, "public type {name} = {};", symbol.ty);
             continue;
         }
+        render_documentation(output, unit, &name, symbol, documentation, "");
         match &symbol.ty {
             Ty::Distinct(value) => {
                 let _ = writeln!(
@@ -252,21 +259,7 @@ fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::
     let name = generics::declaration(name, &value.type_params);
     let _ = writeln!(output, "public type {name} = {kind}");
     for variant in &value.variants {
-        let _ = writeln!(output, "  // `{}` enum member.", variant.name);
-        if !variant.fields.is_empty() {
-            output.push_str("  //\n  // Parameters:\n");
-            for (field, ty) in &variant.fields {
-                let _ = writeln!(
-                    output,
-                    "  // - `{field}`: {}",
-                    parameter_description(
-                        field,
-                        &format!("{name}.{}", variant.name),
-                        Some(&ty.to_string())
-                    )
-                );
-            }
-        }
+        render_variant_documentation(output, &name, variant);
         if !is_source_identifier(&variant.name) {
             continue;
         }

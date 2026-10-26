@@ -116,7 +116,7 @@ impl Registry {
         Ok(id)
     }
 
-    pub(super) fn connection(&self, id: u64) -> Result<Connection, Fault> {
+    pub(in crate::vm) fn connection(&self, id: u64) -> Result<Connection, Fault> {
         self.state
             .lock()
             .unwrap_or_else(|e| e.into_inner())

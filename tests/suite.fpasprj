@@ -6,6 +6,7 @@ kind = "test"
 projects = [
   "../examples/math/explorer/explorer.fpasprj",
   "../examples/math/julia/julia-core.fpasprj",
+  "../examples/network/mcp-tool-store/mcp-tool-store.fpasprj",
   "../examples/math/mandelbrot/mandelbrot-core.fpasprj",
   "../apps/local-chat/local-chat-core.fpasprj",
   "../apps/notes/notes-core.fpasprj",

@@ -1,4 +1,4 @@
-//! Registry declarations for intrinsic enum members that are FPAS keywords.
+//! Registry declarations for keyword enum members and documented enum aliases.
 
 use fpas_diagnostics::SourceSpan;
 use fpas_sema::{IntrinsicStdSymbolKind, Ty, intrinsic_std_symbols};
@@ -81,20 +81,37 @@ fn documented_variant_spans(
     source_id: u32,
 ) -> Option<(SourceSpan, SourceSpan)> {
     let source = snapshot.source();
-    let start = parent_span.offset();
+    // Alias members have documentation blocks immediately before their type alias.
+    let mut start = source[..parent_span.offset()]
+        .rfind('\n')
+        .map_or(0, |p| p + 1);
+    while start > 0 {
+        let previous = source[..start - 1].rfind('\n').map_or(0, |p| p + 1);
+        let line = source[previous..start].trim();
+        if !line.is_empty() && !line.starts_with("//") {
+            break;
+        }
+        start = previous;
+    }
     let end = parent_span.end().min(source.len());
     let marker = format!("// `{name}` enum member.");
     let comment_offset = start + source.get(start..end)?.find(&marker)?;
     let selection_offset = comment_offset + marker.find(name)?;
     let after_summary = comment_offset + marker.len();
     let remaining = source.get(after_summary..end)?;
-    let next_member = remaining
-        .find("\n    // `")
-        .map(|offset| after_summary + offset + 1);
-    let enum_end = remaining
-        .find("\n  end;")
-        .map(|offset| after_summary + offset + 1);
-    let declaration_offset = next_member.or(enum_end).unwrap_or(end);
+    let mut line_offset = after_summary;
+    let mut declaration_offset = end;
+    for (index, line) in remaining.split_inclusive('\n').enumerate() {
+        let trimmed = line.trim();
+        if index != 0
+            && (trimmed.starts_with("// `") && trimmed.ends_with("enum member.")
+                || !trimmed.starts_with("//"))
+        {
+            declaration_offset = line_offset;
+            break;
+        }
+        line_offset += line.len();
+    }
     Some((
         source_span(snapshot, declaration_offset, 0, source_id)?,
         source_span(snapshot, selection_offset, name.len(), source_id)?,
@@ -164,6 +181,59 @@ mod tests {
         assert_eq!(
             &snapshot.source()[array.selection_span.offset()..array.selection_span.end()],
             "ArrayValue"
+        );
+    }
+
+    #[test]
+    fn enum_alias_members_keep_their_own_documentation_and_shared_identity() {
+        let source = Arc::<str>::from(
+            "unit Std.Mcp;\n// `InvalidArgument` enum member.\n//\n// Parameters:\n// - `Argument`: Rejected input.\n\n// `Busy` enum member.\n\n// Shared MCP error alias.\npublic type McpError = Std.Mcp.Types.McpError;\nend unit;\n",
+        );
+        let snapshot = DocumentSnapshot::parse(
+            std::path::Path::new("Mcp.fpas"),
+            SourceVersion::Disk(0),
+            0,
+            source,
+        );
+        let symbols = DocumentSymbols::from_editor_snapshot(&snapshot);
+        let alias = &symbols.entries()[0].children[0];
+        let invalid = alias
+            .children
+            .iter()
+            .find(|v| v.name == "InvalidArgument")
+            .expect("aliased constructor");
+        let busy = alias
+            .children
+            .iter()
+            .find(|v| v.name == "Busy")
+            .expect("aliased member");
+        assert_eq!(invalid.qualified_name, "Std.Mcp.McpError.InvalidArgument");
+        assert_eq!(
+            invalid.callable.as_ref().expect("constructor").parameters,
+            ["Argument: string"]
+        );
+        let documentation = crate::documentation::preceding_documentation(
+            snapshot.source(),
+            invalid.full_span.offset(),
+        )
+        .expect("constructor documentation");
+        assert!(documentation.contains("- `Argument`: Rejected input."));
+        assert!(!documentation.contains("Busy"));
+        assert_eq!(
+            crate::documentation::preceding_documentation(
+                snapshot.source(),
+                busy.full_span.offset()
+            )
+            .as_deref(),
+            Some("`Busy` enum member.")
+        );
+        assert_eq!(
+            crate::documentation::preceding_documentation(
+                snapshot.source(),
+                alias.full_span.offset()
+            )
+            .as_deref(),
+            Some("Shared MCP error alias.")
         );
     }
 }

@@ -107,6 +107,7 @@ fn dispatch_intrinsic(
         | Intrinsic::Http(_)
         | Intrinsic::Random(_)
         | Intrinsic::Crypto(_)
+        | Intrinsic::Mcp(_)
         | Intrinsic::Task(_) => {
             return Err(std_internal_error(
                 format!(

@@ -16,6 +16,7 @@ mod console_args;
 mod crypto;
 mod fs;
 mod http_handles;
+pub(in crate::vm) mod mcp;
 mod net;
 mod proc;
 mod random;
@@ -39,6 +40,7 @@ impl Worker {
     ) -> Result<Option<Value>, VmError> {
         let result = match intrinsic {
             Intrinsic::Acp(_) => self.execute_acp_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Mcp(_) => self.execute_mcp_intrinsic(intrinsic, arguments, location),
             Intrinsic::Server(_) => self.execute_server_intrinsic(intrinsic, arguments, location),
             Intrinsic::Args(_) => self.execute_args_intrinsic(intrinsic, arguments, location),
             Intrinsic::Console(_) => self.execute_console_intrinsic(intrinsic, arguments, location),
@@ -70,6 +72,7 @@ impl Worker {
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
     pub(in crate::vm) acp: acp::Registry,
+    pub(in crate::vm) mcp: mcp::Registry,
     pub(in crate::vm) servers: server::ServerRegistry,
     pub program_args: Vec<String>,
     pub console: Arc<Mutex<Console>>,
@@ -97,6 +100,7 @@ impl HostedState {
     pub(super) fn new(console: Console, program_args: Vec<String>) -> Self {
         Self {
             acp: Default::default(),
+            mcp: Default::default(),
             servers: Default::default(),
             program_args,
             console: Arc::new(Mutex::new(console)),
@@ -128,6 +132,7 @@ impl HostedState {
     ) -> Self {
         Self {
             acp: Default::default(),
+            mcp: Default::default(),
             servers: Default::default(),
             program_args,
             console,
@@ -152,6 +157,7 @@ impl HostedState {
 
     /// Interrupt blocking hosted operations during VM shutdown.
     pub(super) fn shutdown_blocking_operations(&self) {
+        self.mcp.shutdown();
         self.acp.shutdown();
         self.piped_processes.shutdown();
         self.processes.shutdown();
@@ -168,6 +174,7 @@ impl HostedState {
 
     /// Request process-group termination without waiting in an active host callback.
     pub(super) fn close_process_handles(&self) {
+        self.mcp.shutdown();
         self.acp.shutdown();
         self.piped_processes.shutdown();
         self.processes.shutdown();
@@ -175,6 +182,7 @@ impl HostedState {
 
     /// Wait for process calls after workers and host callbacks have returned.
     pub(super) fn wait_process_handles(&self) {
+        self.mcp.wait_idle();
         self.acp.wait_idle();
         self.piped_processes.wait_idle();
         self.processes.wait_idle();

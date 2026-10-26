@@ -1,6 +1,7 @@
 //! Shared nominal error catalog for hosted operations and parsers.
 
 mod acp;
+mod mcp;
 mod proc;
 
 /// Public native error family, indexed once in an admitted executable.
@@ -31,6 +32,8 @@ pub enum NativeErrorFamily {
     Encoding,
     /// `Std.Acp.Types.AcpError`.
     Acp,
+    /// Independent MCP registration and serving failures.
+    Mcp,
 }
 
 /// Payload type in a native error declaration.
@@ -78,7 +81,7 @@ impl NativeErrorFamily {
     /// Whether ordinary display must omit associated values and nested causes.
     /// Explicit field inspection retains the complete returned error.
     pub const fn hide_payload(self) -> bool {
-        matches!(self, Self::Acp)
+        matches!(self, Self::Acp | Self::Mcp)
     }
 
     /// Every native family in stable catalog order.
@@ -95,6 +98,7 @@ impl NativeErrorFamily {
         Self::Server,
         Self::Encoding,
         Self::Acp,
+        Self::Mcp,
     ];
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
@@ -111,6 +115,7 @@ impl NativeErrorFamily {
             Self::Server => crate::std_symbols::STD_SERVER_ERROR,
             Self::Encoding => crate::std_symbols::STD_ENCODING_ERROR,
             Self::Acp => "Std.Acp.Types.AcpError",
+            Self::Mcp => "Std.Mcp.Types.McpError",
         }
     }
     /// Ordered declared variants.
@@ -118,6 +123,7 @@ impl NativeErrorFamily {
         use ErrorFieldType::*;
         match self {
             Self::Acp => acp::VARIANTS,
+            Self::Mcp => mcp::VARIANTS,
             Self::Encoding => &[
                 ErrorVariant {
                     name: "InvalidByte",

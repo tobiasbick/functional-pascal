@@ -158,6 +158,20 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
 #[must_use]
 pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
     match intrinsic {
+        Intrinsic::Mcp(operation) => match operation {
+            crate::McpIntrinsic::DefaultLimits
+            | crate::McpIntrinsic::DefaultHttpOptions
+            | crate::McpIntrinsic::ParseJson
+            | crate::McpIntrinsic::JsonMember
+            | crate::McpIntrinsic::ParseToolResult
+            | crate::McpIntrinsic::TextResult
+            | crate::McpIntrinsic::ErrorResult
+            | crate::McpIntrinsic::StructuredResult => DebugEffectSet::EMPTY,
+            operation if operation.waits() => DebugEffectSet::HOST_IO
+                .union(DebugEffectSet::BLOCKING)
+                .union(DebugEffectSet::NONDETERMINISTIC),
+            _ => DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC),
+        },
         Intrinsic::Acp(operation)
             if operation.connection()
                 && !matches!(operation, crate::AcpIntrinsic::DefaultOptions) =>

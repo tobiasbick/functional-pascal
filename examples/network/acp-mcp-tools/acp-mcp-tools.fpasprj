@@ -1,0 +1,10 @@
+[project]
+name = "acp-mcp-tools"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+
+[dependencies]
+projects = ["../mcp-tool-store/mcp-tool-store.fpasprj"]

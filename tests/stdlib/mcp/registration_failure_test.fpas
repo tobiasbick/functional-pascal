@@ -1,0 +1,32 @@
+program McpRegistrationFailureTest;
+
+uses Std.Acp as Acp, Std.Mcp as Mcp, Std.Test as Test;
+
+function Handler(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError);
+begin
+  return Ok(Mcp.TextResult('unused'));
+end function;
+
+begin
+  var Connections: array of Acp.Connection := [];
+  const Invalid := Mcp.ToolDefinition(
+    Name := 'invalid',
+    Description := 'Rejected before allocation',
+    InputSchema := Mcp.RawJson(Text := '{"type":"string"}'),
+    OutputSchema := None,
+    Annotations := None,
+    Meta := None
+  );
+  for Index: integer := 1 to 16 do
+    const Messages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+    Connections := Connections.Concat([Messages.Connection]);
+    Test.AssertTrue(Acp.RegisterTool(Messages.Connection, Invalid, Handler) is Error(_));
+  end for;
+  // Failed convenience registration must leave the shared server budget available.
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  Test.AssertTrue(Mcp.Release(Server).Unwrap());
+  for Connection: Acp.Connection in Connections do
+    Test.AssertTrue(Acp.Close(Connection).Unwrap());
+    Test.AssertTrue(Acp.Release(Connection).Unwrap());
+  end for;
+end.

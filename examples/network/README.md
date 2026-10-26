@@ -3,6 +3,10 @@
 The [ACP console clients](acp-client/README.md) connect an ordinary FPAS program
 to a separately installed agent, with explicit v1/v2 selection and host decisions.
 
+The [MCP tools](mcp-tools/README.md) expose application state independently of
+ACP. The [ACP tool example](acp-mcp-tools/README.md) registers the same handlers
+through `Acp.RegisterTool` or attaches a caller-owned MCP server.
+
 These examples cover the implemented `Std.Net`, `Std.Server`, `Std.Http`, `Std.Net.Uri`, and
 `Std.Net.Utf8` APIs. The OpenAI-compatible chat demo remains in
 [`examples/openai-chat/`](../openai-chat).

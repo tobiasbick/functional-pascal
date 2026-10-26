@@ -40,9 +40,10 @@ pub use instruction::{
 pub use intrinsic::{
     AcpIntrinsic, ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, ConsoleIntrinsic, ConvIntrinsic,
     CryptoIntrinsic, DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic,
-    Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic,
-    ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic,
-    ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic, McpIntrinsic, NetIntrinsic,
+    OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
+    ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
+    TomlIntrinsic,
 };
 pub use metadata::{
     Constant, DistinctTypeName, EnumLayout, EnumVariant, ErrorCause, ErrorInstanceKey,

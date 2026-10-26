@@ -1,0 +1,9 @@
+[project]
+name = "mcp-tool-store"
+kind = "library"
+
+[exports]
+units = ["Demo.ToolStore"]
+
+[sources]
+include = ["src/**/*.fpas"]

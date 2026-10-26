@@ -66,6 +66,9 @@ impl Worker {
         if let Some(value) = self.acp_wait_intrinsic(intrinsic, arguments, destination)? {
             return Ok(Some(value));
         }
+        if let Some(value) = self.mcp_wait_intrinsic(intrinsic, arguments, destination)? {
+            return Ok(Some(value));
+        }
         if let Some(value) = self.group_intrinsic(intrinsic, arguments, destination)? {
             return Ok(Some(value));
         }
@@ -301,6 +304,7 @@ impl Worker {
         }
         let ready = match suspension {
             TaskSuspension::Acp(wait) => self.poll_acp_wait(*wait),
+            TaskSuspension::Mcp(wait) => self.poll_mcp_wait(*wait),
             TaskSuspension::OwnerCleanup { groups, outcome } => {
                 self.poll_owned_groups(groups, outcome)
             }

@@ -23,6 +23,26 @@ pub(in crate::vm) enum CallbackOutcome {
 }
 
 impl Worker {
+    pub(in crate::vm) fn start_mcp_callback(
+        &mut self,
+        callback: fpas_bytecode::SharedFunction,
+        context: Value,
+        argument: Value,
+        invocation: Box<crate::vm::hosted::mcp::wait::Invocation>,
+    ) -> Result<(), VmError> {
+        let origin = invocation.origin();
+        self.callback_continuations.push(CallbackContinuation::new(
+            callback,
+            None,
+            operation::CallbackOperation::Mcp {
+                arguments: Some(arguments::CallbackArguments::two(context, argument)),
+                invocation: Some(invocation),
+            },
+            origin,
+        ));
+        continuation::resume(self)?;
+        Ok(())
+    }
     /// Invoke the winning selection callback through the resumable task-owned path.
     pub(in crate::vm) fn start_selection_callback(
         &mut self,

@@ -100,7 +100,14 @@ impl Connection {
         method: &str,
         raw: RawJson,
     ) -> Result<RequestToken, Fault> {
+        let (raw, tools) = self.shared.tools.plan(method, &raw)?;
         let bytes = self.validate_for(version, "ClientRequest", method, &raw)?;
+        // Prepared HTTP descriptors and their native source snapshots coexist until wire receipt.
+        let bytes = if tools.is_some() {
+            bytes.saturating_mul(2)
+        } else {
+            bytes
+        };
         let mut state = self.shared.lock();
         Shared::active(&state)?;
         if self.version() != version {
@@ -157,6 +164,7 @@ impl Connection {
                 token,
                 method: method.into(),
                 raw,
+                tools,
             },
             bytes,
         )? {
@@ -167,6 +175,12 @@ impl Connection {
         }
         state.request_serial += 1;
         state.client.admit(&mut action, token);
+        if let super::client::Action::Close(id) = &action {
+            // Closing application context stops granting MCP effects before the peer acknowledges.
+            self.shared
+                .tools
+                .retire_sessions(&state.client.session_tree(id));
+        }
         if matches!(
             action,
             super::client::Action::Initialize | super::client::Action::InitializeV2
@@ -360,6 +374,7 @@ impl Connection {
         }
         state.lifecycle = Lifecycle::Closing;
         state.local_close = true;
+        self.shared.tools.shutdown();
         drop(state);
         self.shared.changed.notify_waiters();
         Ok(true)

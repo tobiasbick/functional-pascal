@@ -9,6 +9,16 @@ std_symbol!(STD_ACP_UINT64_FROM_INTEGER = "Std.Acp.Types.UInt64FromInteger");
 std_symbol!(STD_ACP_UINT64_TO_INTEGER = "Std.Acp.Types.UInt64ToInteger");
 
 pub(in crate::std_units) const STD_ACP_SYMBOLS: &[&str] = &[
+    "Std.Acp.RegisterTool",
+    "Std.Acp.AttachMcpServer",
+    "Std.Acp.DetachMcpServer",
+    "Std.Acp.ServeTools",
+    "Std.Acp.ToolDefinition",
+    "Std.Acp.ToolHandler",
+    "Std.Acp.ToolResult",
+    "Std.Acp.ToolContext",
+    "Std.Acp.ToolJson",
+    "Std.Acp.McpError",
     "Std.Acp.DefaultOptions",
     "Std.Acp.RegisterMcpEndpoint",
     "Std.Acp.RemoveMcpEndpoint",

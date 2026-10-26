@@ -250,3 +250,26 @@ pub(super) fn default_value(ty: &Ty) -> &'static str {
         _ => "0",
     }
 }
+
+/// Documents enum variants and the members exposed through a shared type alias.
+pub(super) fn render_variant_documentation(
+    output: &mut String,
+    name: &str,
+    variant: &fpas_sema::EnumVariantTy,
+) {
+    let _ = writeln!(output, "  // `{}` enum member.", variant.name);
+    if !variant.fields.is_empty() {
+        output.push_str("  //\n  // Parameters:\n");
+        for (field, ty) in &variant.fields {
+            let _ = writeln!(
+                output,
+                "  // - `{field}`: {}",
+                parameter_description(
+                    field,
+                    &format!("{name}.{}", variant.name),
+                    Some(&ty.to_string())
+                )
+            );
+        }
+    }
+}

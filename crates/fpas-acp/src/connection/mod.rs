@@ -16,6 +16,7 @@ mod mcp;
 mod replies;
 mod runtime;
 mod shared;
+mod tools;
 mod wire;
 pub use api::{Connection, Reader};
 pub use client::{Experimental, Settings, Snapshot};

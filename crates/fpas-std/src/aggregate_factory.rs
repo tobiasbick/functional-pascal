@@ -9,6 +9,15 @@ use crate::StdError;
 /// Compilers retain these layouts when present because their constructors are not represented by a
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
+    "Std.Mcp.Limits",
+    "Std.Mcp.HttpOptions",
+    "Std.Mcp.Types.RawJson",
+    "Std.Mcp.Types.ToolDefinition",
+    "Std.Mcp.Types.ToolResult",
+    "Std.Mcp.Types.RequestContext",
+    "Std.Mcp.Types.HttpHeader",
+    "Std.Mcp.Types.HttpAccess",
+    "Std.Mcp.Types.McpError",
     "Std.Acp.Options",
     "Std.Acp.Limits",
     "Std.Acp.ExperimentalOptions",

@@ -1,0 +1,25 @@
+[package]
+name = "fpas-mcp"
+description = "SDK-backed MCP tool catalogs and bounded application dispatch"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bytes = "1.12.1"
+getrandom.workspace = true
+http = "1.5.0"
+http-body-util = "0.1.5"
+hyper = { version = "1.12.0", default-features = false, features = ["http1", "server"] }
+hyper-util = { version = "0.1.21", default-features = false, features = ["tokio"] }
+jsonschema = { version = "=0.60.1", default-features = false, features = ["arbitrary-precision"] }
+rmcp.workspace = true
+serde_json = { workspace = true, features = ["arbitrary_precision"] }
+subtle = "2.6.1"
+tokio = { workspace = true, features = ["net"] }
+tokio-util = { version = "0.7.20", features = ["rt"] }
+
+[lints]
+workspace = true

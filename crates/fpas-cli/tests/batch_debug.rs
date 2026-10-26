@@ -10,6 +10,8 @@
 mod inspection;
 #[path = "batch_debug/limits.rs"]
 mod limits;
+#[path = "batch_debug/mcp.rs"]
+mod mcp;
 #[path = "batch_debug/requests.rs"]
 mod requests;
 #[path = "batch_debug/scheduling.rs"]

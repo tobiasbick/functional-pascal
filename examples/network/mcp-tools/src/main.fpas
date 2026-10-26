@@ -1,0 +1,18 @@
+program McpTools;
+
+uses Demo.ToolStore as Store, Std.Mcp as Mcp, Std.Args as Args, Std.Console as Console;
+
+begin
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  const Writable := Args.ParamCount() = 1 and Args.ParamStr(0) = '--allow-write';
+  for Entry: Store.Entry in Store.Create(Writable) do
+    discard Mcp.RegisterTool(Server, Entry.Definition, Entry.Handler).Unwrap();
+  end for;
+  const Endpoint := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+  const Access := Mcp.Access(Endpoint).Unwrap();
+  Console.WriteLn('Local MCP URL: ', Access.Url);
+  Console.WriteLn('Confidential header: ', Access.Headers[0].Name, ': ', Access.Headers[0].Value);
+  Console.WriteLn('Keep this terminal private. Stop with Ctrl+C.');
+  discard Mcp.Serve(Server, None).Unwrap();
+  discard Mcp.Release(Server).Unwrap();
+end.

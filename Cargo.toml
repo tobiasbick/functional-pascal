@@ -38,6 +38,7 @@ libc = "0.2.191"
 mimalloc = "0.1.52"
 rand = "0.10.3"
 rand_chacha = "0.10.0"
+rmcp = { version = "=3.7.0", default-features = false, features = ["server", "schemars", "transport-streamable-http-server"] }
 rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 rustls-platform-verifier = "0.7.1"

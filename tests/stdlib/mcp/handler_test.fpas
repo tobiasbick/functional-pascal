@@ -1,0 +1,75 @@
+program McpHandlerTest;
+
+uses
+  Std.Mcp as Mcp, Std.Http as Http, Std.Net.Utf8 as Utf8,
+  Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
+
+function Post(Access: Mcp.HttpAccess; Body: string): Http.Response;
+begin
+  var Request := Http.Request.Create('POST', Access.Url);
+  Request.Headers := [
+    Http.Header.Create('Content-Type', 'application/json'),
+    Http.Header.Create('Accept', 'application/json, text/event-stream'),
+    Http.Header.Create('MCP-Protocol-Version', '2025-06-18'),
+    Http.Header.Create(Access.Headers[0].Name, Access.Headers[0].Value)
+  ];
+  Request.Body := Utf8.Encode(Body);
+  Request.TimeoutMillis := 10000;
+  return Http.Send(Request).Unwrap();
+end function;
+
+function CallTool(Access: Mcp.HttpAccess): string;
+begin
+  const Init := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"fpas-test","version":"1"}}}'
+  );
+  Test.AssertEquals(200, Init.StatusCode);
+  const Notification := Post(Access, '{"jsonrpc":"2.0","method":"notifications/initialized"}');
+  Test.AssertEquals(202, Notification.StatusCode);
+  const Response := Post(
+    Access,
+    '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"double_probe","arguments":{"number":21}}}'
+  );
+  Test.AssertEquals(200, Response.StatusCode);
+  return Http.BodyText(Response).Unwrap();
+end function;
+
+begin
+  var Calls := 0;
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  const Handler: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    Calls := Calls + 1;
+    Time.Sleep(10);
+    Test.AssertFalse(Mcp.IsCancelled(Context));
+    Test.AssertTrue(Context.SessionId is None);
+    Test.AssertEquals('21', Mcp.JsonMember(Arguments, 'number').Unwrap().Unwrap().Text);
+    return Mcp.StructuredResult(Mcp.ParseJson('{"value":42}').Unwrap());
+  end function;
+  const Definition := Mcp.ToolDefinition(
+    Name := 'double_probe', Description := 'Double an integer',
+    InputSchema := Mcp.ParseJson(
+      '{"type":"object","properties":{"number":{"type":"integer"}},"required":["number"],"additionalProperties":false}'
+    ).Unwrap(),
+    OutputSchema := Some(
+      Mcp.ParseJson(
+        '{"type":"object","properties":{"value":{"type":"integer"}},"required":["value"]}'
+      ).Unwrap()
+    ),
+    Annotations := None, Meta := None
+  );
+  Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Handler).Unwrap());
+  const Endpoint := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+  const Access := Mcp.Access(Endpoint).Unwrap();
+  scope
+    const Peer := go CallTool(Access);
+    Test.AssertTrue(Mcp.ServeOne(Server, Some(10000), None).Unwrap());
+    const Response := Tasks.Wait(Peer);
+    Test.AssertTrue('"value":42' in Response);
+    Test.AssertEquals(1, Calls);
+  end scope;
+
+  Test.AssertTrue(Mcp.CloseEndpoint(Endpoint).Unwrap());
+  Test.AssertTrue(Mcp.Close(Server).Unwrap());
+  Test.AssertTrue(Mcp.Release(Server).Unwrap());
+end.

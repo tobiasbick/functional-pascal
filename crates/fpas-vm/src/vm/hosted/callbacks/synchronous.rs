@@ -64,6 +64,9 @@ impl Worker {
                         .map_err(|message| self.callback_state_error(message))?;
                 }
                 Advance::Complete(value) => return Ok(Some(Some(value))),
+                Advance::McpComplete(_, _) => {
+                    return Err(self.callback_state_error("MCP callbacks require a serving task"));
+                }
             }
         }
     }

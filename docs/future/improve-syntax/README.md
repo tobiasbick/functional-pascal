@@ -29,8 +29,8 @@ The example is a template, not an active AP or an approved proposal.
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
 2. Copy `example-apNN-topic/` to `ap52-<topic>/` for the next package. Continue
-   with the next unused number for later packages. AP01 through AP50 are
-   closed; AP51 is allocated below. Do not reuse or renumber those IDs.
+   with the next unused number for later packages. AP01 through AP51 are
+   closed. Do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
    and one numbered file per work package, such as `01-decision.md` and
    `02-implementation.md`. Delete template instructions from the copied files.
@@ -45,24 +45,18 @@ The example is a template, not an active AP or an approved proposal.
    Follow the [development process](development-process.md) for delivery.
 
 Use `AP52` for the next package and `AP52.1`, `AP52.2`, and so on for its work
-packages. Decision IDs continue at `Q65`; Q01 through Q57 belong to closed
-packages, and Q58 through Q64 belong to AP51. Record each decision
-and its affected work packages in the owning package README. Do not create a
-second decision or completion index.
+packages. Decision IDs continue at `Q65`; Q01 through Q64 belong to closed
+packages. Record each decision and its affected work packages in the owning
+package README. Do not create a second decision or completion index.
 
 ## Package status
 
-AP51 adds independent `Std.Mcp` tool registration and serving through the
-official Rust SDK (`rmcp`). `Std.Acp` offers `RegisterTool` through the same
-implementation and can attach an existing MCP server. Both interfaces expose
-registered FPAS functions to external clients with explicit handler ownership,
-bounded execution and defined server/session lifetimes. Examples and acceptance
-use neutral application state. Target checks and live Luna acceptance run locally.
+No active packages.
+
 Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [x] | [AP51: MCP tool registration and ACP integration](ap51-mcp-wrapper/README.md) | Medium; shared tool server and ACP convenience | Delivered ACP support; verified local HTTP target | Complete |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

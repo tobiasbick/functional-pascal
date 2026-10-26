@@ -12,6 +12,49 @@ use fpas_acp::{
 };
 
 #[test]
+fn transport_construction_follows_admission_and_failure_returns_its_reservation() {
+    use fpas_acp::connection::Settings;
+    let runtime = Runtime::new().unwrap();
+    let mut settings = Settings::for_version(Version::V1);
+    settings.client_info = Some(fpas_acp::protocol::v1::Implementation::new("test", "1"));
+    let rejected = runtime.connect_configured_with(
+        settings,
+        Limits {
+            queue_bytes: 1,
+            ..Limits::default()
+        },
+        || panic!("invalid client metadata must be rejected before starting a transport"),
+    );
+    assert!(matches!(
+        rejected,
+        Err(Fault::LimitExceeded("ClientStateBytes", 1))
+    ));
+    for _ in 0..32 {
+        assert!(matches!(
+            runtime.connect_configured_with(
+                Settings::for_version(Version::V1),
+                Limits::default(),
+                || Err(Fault::Host)
+            ),
+            Err(Fault::Host)
+        ));
+    }
+    for _ in 0..16 {
+        runtime
+            .connect_messages(Version::V1, Limits::default())
+            .unwrap();
+    }
+    assert!(matches!(
+        runtime.connect_configured_with(
+            Settings::for_version(Version::V1),
+            Limits::default(),
+            || { panic!("capacity must be reserved before starting a transport") }
+        ),
+        Err(Fault::LimitExceeded("Connections", 16))
+    ));
+}
+
+#[test]
 fn every_configurable_ceiling_rejects_one_past_each_boundary() {
     type Ceiling = (&'static str, fn(&mut Limits) -> &mut usize, usize, usize);
     let ceilings: &[Ceiling] = &[

@@ -105,7 +105,7 @@ impl Worker {
                                 vec![Value::Str(raw.text().into())],
                                 location,
                             )
-                            .map(|value| Value::option_some(value))
+                            .map(Value::option_some)
                             .map_err(|_| Fault::Host),
                         None => Ok(Value::OptionNone),
                     };
@@ -391,7 +391,7 @@ impl Worker {
                     "ACP v2 capability layout unavailable",
                 )
             })?;
-        Ok(self.layouts.record(
+        self.layouts.record(
             "Std.Acp.Options",
             vec![
                 Value::OptionNone,
@@ -402,6 +402,6 @@ impl Worker {
                 v2_capabilities,
             ],
             location,
-        )?)
+        )
     }
 }

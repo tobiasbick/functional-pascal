@@ -28,6 +28,9 @@ JSON-RPC batches are rejected as invalid messages.
 An environment entry is `Acp.EnvironmentVariable(Name, Value)`; `None` removes
 the inherited variable. Launch uses the validation and process-group ownership
 of [Std.Proc](../../host/proc.md). It starts the executable directly.
+Client metadata budgets and connection/driver capacity are validated and reserved
+before starting the process. Failed admission starts no child; abandoned process
+transports terminate and reap their child and return the process-registry slot.
 
 The process transport exchanges newline-delimited JSON. It handles fragmented
 UTF-8 and partial writes, drains stderr separately, and rejects an unfinished

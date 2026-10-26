@@ -11,5 +11,7 @@ mod cancellation;
 mod client;
 #[path = "v1/content.rs"]
 mod content;
+#[path = "v1/lifecycle.rs"]
+mod lifecycle;
 #[path = "v1/peer.rs"]
 mod peer;

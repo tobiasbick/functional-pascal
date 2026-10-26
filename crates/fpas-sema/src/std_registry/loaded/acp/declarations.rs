@@ -14,6 +14,10 @@ use std::{
     sync::Arc,
 };
 
+#[expect(
+    clippy::expect_used,
+    reason = "Both pinned SDK declaration graphs are validated by the ACP schema tests"
+)]
 pub(super) fn register(checker: &mut Checker) {
     for version in [Version::V1, Version::V2] {
         let catalog = binding::catalog(version).expect("pinned ACP declaration graph");
@@ -84,10 +88,9 @@ impl Registry<'_> {
             .scopes
             .imports
             .lookup_metadata(&declaration.name)
+            && declaration.name == "Std.Acp.Types.ProtocolError"
         {
-            if declaration.name == "Std.Acp.Types.ProtocolError" {
-                return symbol.ty.clone();
-            }
+            return symbol.ty.clone();
         }
         if !self.active.insert(key.into()) {
             return Ty::Named(declaration.name.clone());
@@ -175,6 +178,10 @@ impl Registry<'_> {
         ty
     }
 
+    #[expect(
+        clippy::expect_used,
+        reason = "ACP registration installs shared foundation types before payload declarations"
+    )]
     fn shared(&self, name: &str) -> Ty {
         self.checker
             .scopes

@@ -1,6 +1,10 @@
 //! Explicit host adapters retain the application's separate response right.
 use super::super::super::{define_func, p};
 use crate::{check::Checker, types::Ty};
+#[expect(
+    clippy::panic,
+    reason = "Host signatures reference types installed earlier in ACP registration"
+)]
 fn named(checker: &Checker, name: &str) -> Ty {
     checker
         .scopes

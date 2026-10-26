@@ -320,6 +320,10 @@ fn precise_status_retains_platform_completion_without_consuming_legacy_status() 
 
 #[test]
 #[ignore = "independent interactive child fixture"]
+#[expect(
+    clippy::zombie_processes,
+    reason = "The fixture deliberately leaves a descendant for the owning process-group cleanup test"
+)]
 fn terminal_child() {
     if let Ok(status) = std::env::var("FPAS_TERMINAL_EXIT") {
         #[cfg(unix)]

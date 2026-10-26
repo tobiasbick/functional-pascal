@@ -106,7 +106,7 @@ impl Client {
             self.sessions
                 .insert(id.clone(), Session::new(&id, &self.budget)?);
         }
-        Ok(self.sessions.contains_key(&id))
+        Ok(self.has_session(&id))
     }
 
     pub fn cancel_session(&self, raw: &RawJson) -> Result<String, Fault> {

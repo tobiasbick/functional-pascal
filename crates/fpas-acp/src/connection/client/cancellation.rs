@@ -1,4 +1,4 @@
-//! Permission cancellation consumes the same single-use responder as application replies.
+//! Session cancellation and closure consume the same responder as application replies.
 
 use super::super::{
     Event, Fault, Payload, Responder,
@@ -9,7 +9,28 @@ pub(in super::super) fn select(state: &State, session: &str) -> Vec<Responder> {
     state
         .responders
         .iter()
-        .filter(|(_, entry)| !entry.queued && entry.permission_session.as_deref() == Some(session))
+        .filter(|(_, entry)| {
+            !entry.queued
+                && entry.sdk.method() == "session/request_permission"
+                && entry.session.as_deref() == Some(session)
+        })
+        .map(|(token, _)| *token)
+        .collect()
+}
+pub(in super::super) fn select_closed(
+    state: &State,
+    sessions: &std::collections::BTreeSet<String>,
+) -> Vec<Responder> {
+    state
+        .responders
+        .iter()
+        .filter(|(_, entry)| {
+            !entry.queued
+                && entry
+                    .session
+                    .as_ref()
+                    .is_some_and(|id| sessions.contains(id))
+        })
         .map(|(token, _)| *token)
         .collect()
 }

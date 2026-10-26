@@ -154,7 +154,7 @@ fn protocol_families_and_distinct_ids_are_not_interchangeable() {
         "const Wrong: V2.ClientRequest := B.Request();",
         "const Wrong: Acp.ToolCallId := Acp.SessionId('s');",
     ] {
-        fs::write(fixture.0.join("main.fpas"), format!("program Wrong; uses Bridge as B, Std.Acp.Types as Acp, Std.Acp.V2 as V2; begin {body} end.")).unwrap();
+        fs::write(fixture.0.join("main.fpas"), format!("program Wrong; uses Bridge as B, Std.Acp.Types as Acp, Std.Acp.V2 as V2; begin {body} end.")).expect("write invalid ACP type fixture");
         let output = fixture.invoke(&["check", "app.fpasprj"]);
         assert!(!output.status.success(), "{body}");
         assert!(

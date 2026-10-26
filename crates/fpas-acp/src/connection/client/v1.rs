@@ -345,7 +345,8 @@ impl Client {
             }
             Action::Close(id) => {
                 if response.is_some() {
-                    self.sessions.remove(id);
+                    let closed = self.session_tree(id);
+                    self.sessions.retain(|id, _| !closed.contains(id));
                 } else if let Some(session) = self.sessions.get_mut(id)
                     && session.closing == Some(token)
                 {

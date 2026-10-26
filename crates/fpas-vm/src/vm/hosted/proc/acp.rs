@@ -20,6 +20,9 @@ use std::{
     time::Duration,
 };
 
+#[cfg(test)]
+mod tests;
+
 /// Detached launch data, validated by the same preflight as Std.Proc.
 #[derive(Clone)]
 pub(in crate::vm::hosted) struct AcpLaunch {
@@ -275,9 +278,15 @@ impl Transport for AcpProcess {
 impl Drop for AcpProcess {
     fn drop(&mut self) {
         if !self.closed.load(Ordering::Acquire) {
-            let _ = self
-                .processes
-                .with(self.handle, |process| process.terminate());
+            let processes = self.processes.clone();
+            let handle = self.handle;
+            // Closing also reaps the child and returns its process-registry slot.
+            // Windows pipe runtimes must be dropped outside async execution.
+            if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+                runtime.spawn_blocking(move || processes.close(handle));
+            } else {
+                let _ = processes.close(handle);
+            }
         }
     }
 }

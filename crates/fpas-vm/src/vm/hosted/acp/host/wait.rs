@@ -28,15 +28,14 @@ impl Worker {
         let token = args::optional(cancellation)?
             .map(args::handle)
             .transpose()?;
-        if let Some(token) = token {
-            if self
+        if let Some(token) = token
+            && self
                 .hosted
                 .cancellations
                 .is_cancelled(token)
                 .map_err(|_| Fault::InvalidArgument("CancellationToken"))?
-            {
-                return Err(Fault::Cancelled);
-            }
+        {
+            return Err(Fault::Cancelled);
         }
         let (connection, responder) = self.hosted.acp.responder(args::handle(owner)?)?;
         let (method, key, _) = operation(fpas_bytecode::AcpIntrinsic::HostWaitForTerminalExit)
@@ -51,7 +50,7 @@ impl Worker {
             token,
             deadline: timeout.map(|value| {
                 self.task_clock_ref()
-                    .deadline_after(std::time::Duration::from_millis(value as u64))
+                    .deadline_after(std::time::Duration::from_millis(value))
             }),
             terminals,
             session,

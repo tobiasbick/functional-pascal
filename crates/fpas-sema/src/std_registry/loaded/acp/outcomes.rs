@@ -7,6 +7,10 @@ use crate::{
 };
 use std::sync::Arc;
 
+#[expect(
+    clippy::expect_used,
+    reason = "Initialization payloads are registered before outcome wrappers"
+)]
 pub(super) fn register(checker: &mut Checker) {
     let response = |checker: &Checker, module: &str| {
         checker

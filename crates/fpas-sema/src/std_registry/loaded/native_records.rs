@@ -3,6 +3,10 @@
 use crate::{check::Checker, types::Ty};
 use fpas_std::{native_errors::ErrorFieldType, native_records};
 
+#[expect(
+    clippy::expect_used,
+    reason = "Only static native record names and their declared dependencies reach registration"
+)]
 pub(super) fn register(checker: &mut Checker, name: &str) -> Ty {
     if let Some(symbol) = checker.scopes.lookup(name) {
         return symbol.ty.clone();

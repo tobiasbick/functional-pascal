@@ -83,7 +83,8 @@ An admitted wait still uses that Responder's execution right.
 
 Terminal IDs belong to one connection and session. Kill retains the terminal;
 release terminates/reaps remaining work and invalidates aliases. Repeated
-release returns Closed. Successful session close releases its terminals;
+release returns Closed. Successful session close releases its terminals and those
+of its observed descendants, and invalidates unanswered host requests;
 connection close and VM teardown release all remaining terminal resources.
 
 ## Permission and elicitation

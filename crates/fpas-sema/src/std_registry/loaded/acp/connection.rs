@@ -11,6 +11,10 @@ use crate::{
 };
 use std::sync::Arc;
 
+#[expect(
+    clippy::panic,
+    reason = "Connection signatures reference types installed earlier in ACP registration"
+)]
 fn named(checker: &Checker, name: &str) -> Ty {
     checker
         .scopes

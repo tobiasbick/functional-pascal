@@ -7,6 +7,10 @@ use fpas_acp::{
     schema::Version,
 };
 
+#[expect(
+    clippy::expect_used,
+    reason = "ACP registration installs foundation types before codecs; SDK catalogs are pinned and covered by schema tests"
+)]
 pub(super) fn register(checker: &mut Checker) {
     let raw = checker
         .scopes

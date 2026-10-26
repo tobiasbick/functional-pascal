@@ -166,3 +166,40 @@ pub(super) fn retained_size(raw: &RawJson) -> usize {
 }
 
 pub(super) type Sessions = BTreeMap<String, Session>;
+
+impl super::v1::Client {
+    /// Include all observed descendants, regardless of their current activity state.
+    pub fn session_tree(&self, root: &str) -> std::collections::BTreeSet<String> {
+        let mut sessions = std::collections::BTreeSet::from([root.to_owned()]);
+        loop {
+            let before = sessions.len();
+            for (id, session) in &self.sessions {
+                if session
+                    .observed_parent
+                    .as_ref()
+                    .is_some_and(|(parent, _)| sessions.contains(parent))
+                {
+                    sessions.insert(id.clone());
+                }
+            }
+            if sessions.len() == before {
+                return sessions;
+            }
+        }
+    }
+
+    /// Exclude new host effects throughout asynchronous terminal cleanup.
+    pub fn closing_tree(
+        &mut self,
+        root: &str,
+        token: RequestToken,
+    ) -> std::collections::BTreeSet<String> {
+        let sessions = self.session_tree(root);
+        for id in &sessions {
+            if let Some(session) = self.sessions.get_mut(id) {
+                session.closing = Some(token);
+            }
+        }
+        sessions
+    }
+}

@@ -63,8 +63,14 @@ response and are delivered once in received order. The application keeps the
 session ID; the connection retains only bounded admission/config state.
 List cursors and entries are returned unchanged without automatic paging.
 Delete and close have separate meanings: deleting history does not release an
-active local session. Closing cancels its pending permission responders and
-releases its local modes/config state after a successful peer response.
+active local session. Successful close invalidates all unanswered session-scoped
+requests, including filesystem, terminal and elicitation requests. Permissions
+receive the cancelled outcome; other requests receive a protocol cancellation
+error. Replies already admitted remain valid. Observed descendants, their request
+rights, terminals and MCP routes are retired with the parent, returning session
+capacity and local modes/config state. Other sessions remain active. Reopening
+the same session ID never restores old request rights. A failed close leaves
+the existing session and request rights available.
 
 ## Prompts and cancellation
 

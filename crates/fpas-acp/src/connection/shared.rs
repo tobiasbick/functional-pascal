@@ -55,7 +55,7 @@ pub(super) struct Deferred {
     pub route: Option<u64>,
     pub params: RawJson,
     pub execution: super::host::Execution,
-    pub permission_session: Option<String>,
+    pub session: Option<String>,
     pub _metadata: super::budget::Permit,
     pub sdk: agent_client_protocol::Responder<serde_json::Value>,
     pub cancellation: RequestCancellation,
@@ -222,6 +222,14 @@ impl Shared {
     pub fn response(&self, token: RequestToken, mut event: Event) -> Result<(), Fault> {
         let mut state = self.lock();
         let mut cancelled = Vec::new();
+        let closed_sessions = match state.pending.get(&token).map(|pending| &pending.action) {
+            Some(super::client::Action::Close(id))
+                if matches!(event.payload, Payload::Response(_, _, _)) =>
+            {
+                state.client.session_tree(id)
+            }
+            _ => Default::default(),
+        };
         {
             let response = event
                 .raw
@@ -258,17 +266,18 @@ impl Shared {
                     }
                 }
             }
-            if matches!(event.payload, Payload::Response(_, _, _))
-                && let Some(pending) = state.pending.get(&token)
-                && let super::client::Action::Close(id) = &pending.action
-            {
-                let id = id.clone();
-                cancelled = super::client::cancellation::select(&state, &id);
+            if !closed_sessions.is_empty() && matches!(event.payload, Payload::Response(_, _, _)) {
+                cancelled = super::client::cancellation::select_closed(&state, &closed_sessions);
                 super::client::cancellation::mark(&mut state, &cancelled);
                 let endpoints: Vec<_> = state
                     .routes
                     .iter()
-                    .filter(|(_, endpoint)| endpoint.session.as_ref() == Some(&id))
+                    .filter(|(_, endpoint)| {
+                        endpoint
+                            .session
+                            .as_ref()
+                            .is_some_and(|id| closed_sessions.contains(id))
+                    })
                     .map(|(key, endpoint)| (key.clone(), endpoint.id))
                     .collect();
                 for (key, id) in endpoints {

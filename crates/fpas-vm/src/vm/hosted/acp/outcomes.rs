@@ -108,9 +108,8 @@ impl Worker {
                 }
             }
         };
-        Ok(self
-            .layouts
-            .enumeration("Std.Acp.Types.AcpError", variant, fields, location)?)
+        self.layouts
+            .enumeration("Std.Acp.Types.AcpError", variant, fields, location)
     }
 
     pub(super) fn acp_event(
@@ -243,9 +242,8 @@ impl Worker {
             )?),
             None => Value::OptionNone,
         };
-        Ok(self
-            .layouts
-            .record("Std.Acp.Event", vec![payload, raw], location)?)
+        self.layouts
+            .record("Std.Acp.Event", vec![payload, raw], location)
     }
 
     fn acp_closed(&self, closed: Closed, location: SourceLocation) -> Result<Value, VmError> {
@@ -271,7 +269,7 @@ impl Worker {
             }
             None => Value::OptionNone,
         };
-        Ok(self.layouts.record(
+        self.layouts.record(
             "Std.Acp.ClosedStatus",
             vec![
                 error,
@@ -280,6 +278,6 @@ impl Worker {
                 Value::Boolean(closed.transport.stderr_truncated),
             ],
             location,
-        )?)
+        )
     }
 }

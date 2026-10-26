@@ -10,6 +10,9 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Default)]
 struct State {
     runtime: Option<Arc<Runtime>>,
@@ -93,17 +96,14 @@ impl Registry {
         processes: Arc<PipedProcesses>,
     ) -> Result<u64, Fault> {
         let (_reservation, runtime) = self.reserve(&limits)?;
-        settings.requested_version()?;
         let terminals = AcpTerminals::new(processes.clone(), limits.clone());
-        let transport = AcpProcess::start(processes, &launch, limits.clone())?;
-        let connection = runtime.connect_configured(
-            settings,
-            limits,
-            Arc::new(super::host::resources::OwnedTransport {
+        let connection = runtime.connect_configured_with(settings, limits.clone(), || {
+            let transport = AcpProcess::start(processes, &launch, limits)?;
+            Ok(Arc::new(super::host::resources::OwnedTransport {
                 inner: transport,
                 terminals: terminals.clone(),
-            }),
-        )?;
+            }))
+        })?;
         let id = connection.id();
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         if state.stopping {

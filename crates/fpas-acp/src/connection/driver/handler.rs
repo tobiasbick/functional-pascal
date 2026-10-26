@@ -53,14 +53,15 @@ impl Handler {
                         return Ok(());
                     }
                 };
-                let permission_session = if request.method() == "session/request_permission" {
-                    params
-                        .member("sessionId")?
-                        .map(|id| crate::codec::deserialize::<String>(&id))
-                        .transpose()?
-                } else {
-                    None
-                };
+                let session =
+                    if !request.method().starts_with('_') && request.method() != "mcp/message" {
+                        params
+                            .member("sessionId")?
+                            .map(|id| crate::codec::deserialize::<String>(&id))
+                            .transpose()?
+                    } else {
+                        None
+                    };
                 let token = {
                     let id_bytes = serde_json::to_string(responder.id())
                         .map_err(|_| Fault::InvalidMessage)?
@@ -73,9 +74,7 @@ impl Handler {
                             .saturating_mul(2)
                             .saturating_add(params.text().len().saturating_mul(16))
                             .saturating_add(
-                                permission_session
-                                    .as_ref()
-                                    .map_or(0, |id| id.len().saturating_mul(4)),
+                                session.as_ref().map_or(0, |id| id.len().saturating_mul(4)),
                             )
                             .saturating_add(512),
                     )?;
@@ -107,9 +106,10 @@ impl Handler {
                                 request_scope,
                             )?
                         };
-                        let cancelled = permission_session
-                            .as_ref()
-                            .is_some_and(|id| state.client.cancelled(id));
+                        let cancelled = request.method() == "session/request_permission"
+                            && session
+                                .as_ref()
+                                .is_some_and(|id| state.client.cancelled(id));
                         let allowed = allowed
                             && (request.method() != "mcp/message"
                                 || super::mcp::route(&state, &params, false).is_ok());
@@ -157,7 +157,7 @@ impl Handler {
                             route,
                             params,
                             execution: super::host::Execution::Available,
-                            permission_session,
+                            session,
                             _metadata: metadata,
                             sdk: responder,
                             cancellation,
@@ -301,7 +301,10 @@ impl Handler {
                     if let Some(session) = session
                         && matches!(payload, Payload::Response(_, _, _))
                     {
-                        self.wire.session_closed(&session).await?;
+                        let sessions = shared.lock().client.closing_tree(&session, token);
+                        for session in sessions {
+                            self.wire.session_closed(&session).await?;
+                        }
                     }
                     shared.response(
                         token,

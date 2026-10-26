@@ -303,7 +303,7 @@ fn status_value(status: std::process::ExitStatus) -> sdk::TerminalExitStatus {
     #[cfg(unix)]
     {
         use std::os::unix::process::ExitStatusExt;
-        return value.signal(status.signal().map(|signal| signal.to_string()));
+        value.signal(status.signal().map(|signal| signal.to_string()))
     }
     #[cfg(not(unix))]
     {

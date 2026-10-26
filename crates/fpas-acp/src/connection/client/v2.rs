@@ -215,8 +215,7 @@ impl Client {
             return Ok(match request.mode.scope() {
                 sdk::ElicitationScope::Request(_) => request_scope,
                 sdk::ElicitationScope::Session(scope) => {
-                    lifecycle == Lifecycle::Ready
-                        && self.sessions.contains_key(scope.session_id.0.as_ref())
+                    lifecycle == Lifecycle::Ready && self.has_session(scope.session_id.0.as_ref())
                 }
                 _ => false,
             });
@@ -228,7 +227,7 @@ impl Client {
             return Ok(self.settings.experimental.mcp);
         }
         if method == "session/request_permission" {
-            return Ok(self.sessions.contains_key(&sessions::id(raw)?));
+            return Ok(self.has_session(&sessions::id(raw)?));
         }
         Ok(false)
     }

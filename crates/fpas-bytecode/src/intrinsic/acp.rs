@@ -111,7 +111,11 @@ impl AcpIntrinsic {
             5 => "AgentNotification",
             _ => "ProtocolLevelNotification",
         };
-        Some((if wire >= 755 { 2 } else { 1 }, index % 2 == 0, root))
+        Some((
+            if wire >= 755 { 2 } else { 1 },
+            index.is_multiple_of(2),
+            root,
+        ))
     }
 
     /// Canonical public source name.

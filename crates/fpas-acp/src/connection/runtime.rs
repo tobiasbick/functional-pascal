@@ -121,6 +121,17 @@ impl Runtime {
         limits: Limits,
         transport: Arc<dyn Transport>,
     ) -> Result<Connection, Fault> {
+        self.connect_configured_with(settings, limits, || Ok(transport))
+    }
+
+    /// Validate and reserve admission before constructing a physical transport.
+    /// The constructor runs under the admission lock and must not re-enter this runtime.
+    pub fn connect_configured_with(
+        &self,
+        settings: super::Settings,
+        limits: Limits,
+        create: impl FnOnce() -> Result<Arc<dyn Transport>, Fault>,
+    ) -> Result<Connection, Fault> {
         limits.validate()?;
         settings.requested_version()?;
         if self.state.stopping.load(Ordering::Acquire) {
@@ -147,9 +158,12 @@ impl Runtime {
         let connection = Connection {
             shared: shared.clone(),
         };
-        self.opens
-            .try_send((shared, transport))
+        let opening = self
+            .opens
+            .try_reserve()
             .map_err(|_| Fault::Busy("Connect"))?;
+        let transport = create()?;
+        opening.send((shared, transport));
         connections.insert(connection.id(), connection.clone());
         Ok(connection)
     }

@@ -78,10 +78,9 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
             Ok(())
         }
         Ok(None) => {
-            if matches!(
-                worker.task_suspension,
-                Some(super::TaskSuspension::OwnerCleanup { .. })
-            ) {
+            // Hosted callbacks can suspend without returning through task_intrinsic.
+            // Publish any wait still owned by this lane before releasing the worker.
+            if worker.task_suspension.is_some() {
                 worker.park_pool_suspension()?;
             }
             if scheduler.is_aborted() {

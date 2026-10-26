@@ -17,7 +17,7 @@ mod crypto;
 mod fs;
 mod http_handles;
 pub(in crate::vm) mod mcp;
-mod net;
+pub(in crate::vm) mod net;
 mod proc;
 mod random;
 pub(in crate::vm) mod server;

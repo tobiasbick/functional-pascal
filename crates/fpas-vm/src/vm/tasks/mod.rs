@@ -303,6 +303,7 @@ impl Worker {
             self.check_task_cancellation()?;
         }
         let ready = match suspension {
+            TaskSuspension::Net(wait) => self.poll_net_wait(*wait),
             TaskSuspension::Acp(wait) => self.poll_acp_wait(*wait),
             TaskSuspension::Mcp(wait) => self.poll_mcp_wait(*wait),
             TaskSuspension::OwnerCleanup { groups, outcome } => {

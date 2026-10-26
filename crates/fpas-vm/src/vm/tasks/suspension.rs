@@ -74,6 +74,8 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::vm) enum TaskSuspension {
+    /// Debugger-owned socket I/O retains native data only and joins on abandonment.
+    Net(Box<crate::vm::hosted::net::wait::Wait>),
     /// Native ACP wait state containing no FPAS values or callback-owned roots.
     Acp(Box<crate::vm::hosted::acp::wait::Wait>),
     /// Native MCP serving/publication state; callbacks retain their own VM roots.
@@ -163,6 +165,7 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::Net(_) => TaskSuspensionState::Waiting,
             Self::Acp(wait) => wait.debug_state(clock),
             Self::Mcp(wait) => wait.debug_state(clock),
             Self::OwnerCleanup { .. } => TaskSuspensionState::Waiting,

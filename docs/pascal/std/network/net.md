@@ -79,7 +79,13 @@ minutes. Client certificates and multiple certificates selected through SNI are 
 so `SetTimeout`, `ReceiveBytes`, `SendBytes`, and `Close` apply to both. A TLS listener completes the handshake
 before returning and discards failed or timed-out handshakes while waiting for a valid client.
 Listener handles are closed separately with `CloseListener`. Both accept functions and connection
-I/O block the VM worker that executes them.
+I/O block the ordinary VM worker that executes them. In the default all-stop
+debugger, accepts and connection byte reads/writes suspend only the calling
+FPAS task while an owned native worker performs the socket operation. Other
+FPAS tasks and debugger requests remain runnable. Cancelling or abandoning the
+wait joins its native worker; an accepted connection not delivered to FPAS is
+closed. Synchronous native callbacks retain synchronous host-call behavior.
+Seeded scheduling continues to reject network effects rather than replaying them.
 
 `AcceptWithCancellation` observes a `Std.Tasks.CancellationToken`. If cancellation wins before a
 connection is returned, the function returns `Error(NetError.Cancelled(Operation))`. It leaves the

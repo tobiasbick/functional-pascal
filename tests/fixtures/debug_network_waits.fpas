@@ -1,0 +1,71 @@
+// Network waits must let other all-stop tasks run and join cancelled nested groups.
+program DebugNetworkWaits;
+
+uses Std.Tasks as Tasks, Std.Net as Net, Std.Console as Console, Std.Test as Test;
+
+function Echo(Listener: Net.Listener): boolean;
+begin
+  const Client := Net.Accept(Listener).Unwrap();
+  const Bytes := Net.ReceiveBytes(Client, 3).Unwrap();
+  Test.AssertEquals(3, Bytes.Length());
+  Test.AssertEquals(41, Bytes[0]);
+  Test.AssertEquals(3, Net.SendBytes(Client, [42, 43, 44]).Unwrap());
+  discard Net.Close(Client).Unwrap();
+  return true;
+end function;
+
+begin
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Started: channel of boolean := Tasks.CreateChannel(1);
+  const Group := Tasks.CreateTaskGroup();
+  const Parent := Tasks.StartTaskInGroup(
+    Group, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+      const Children := Tasks.CreateTaskGroup();
+      const Child := Tasks.StartTaskInGroup(
+        Children, function(ChildToken: Tasks.CancellationToken): result of (boolean, string) begin
+          discard Net.AcceptWithCancellation(Listener, ChildToken);
+          return Ok(true);
+        end function
+      );
+      discard Tasks.Send(Started, true);
+      discard Tasks.Select([
+        Tasks.TaskCase(
+          Child, procedure() begin
+            null;
+          end procedure
+        ),
+        Tasks.CancellationCase(
+          Token, procedure() begin
+            null;
+          end procedure
+        )
+      ]);
+      discard Tasks.CancelTaskGroup(Children);
+      discard Tasks.CloseTaskGroup(Children);
+      return Ok(true);
+    end function
+  );
+  discard Tasks.ReceiveWithTimeout(Started, 1000).Unwrap();
+  discard Tasks.CancelTaskGroup(Group);
+  discard Tasks.CloseTaskGroupWithTimeout(Group, 1000).Unwrap();
+  Console.WriteLn('nested accept joined');
+  scope
+    const Server := go Echo(Listener);
+    const Client := Net.Connect(
+      '127.0.0.1',
+      Net.ListenerLocalAddress(Listener).Unwrap().Port,
+      1000
+    ).Unwrap();
+    Test.AssertEquals(3, Net.SendBytes(Client, [41, 42, 43]).Unwrap());
+    const Reply := Net.ReceiveBytes(Client, 3).Unwrap();
+    Test.AssertEquals(3, Reply.Length());
+    Test.AssertEquals(42, Reply[0]);
+    Test.AssertEquals(44, Reply[2]);
+    discard Net.Close(Client).Unwrap();
+    Test.AssertTrue(Tasks.Wait(Server));
+  end scope;
+
+  discard Net.CloseListener(Listener).Unwrap();
+  discard Tasks.CloseChannel(Started);
+  Console.WriteLn('network exchange completed');
+end.

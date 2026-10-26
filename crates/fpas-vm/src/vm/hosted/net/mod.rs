@@ -7,6 +7,7 @@ mod connections;
 mod listeners;
 mod tls;
 mod transport;
+pub(in crate::vm) mod wait;
 
 pub(super) use connections::NetworkConnections;
 pub(super) use listeners::NetworkListeners;

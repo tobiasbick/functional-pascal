@@ -1,0 +1,79 @@
+// Verifies a background MCP reader can be joined after serving and server closure.
+program McpWorkerServer;
+
+uses
+  Std.Mcp as Mcp, Std.Proc as Proc, Std.Tasks as Tasks, Std.Time as Time,
+  Std.Args as Args, Std.Test as Test, Std.Console as Console;
+
+function Serve(Server: Mcp.Server): result of (boolean, Mcp.McpError);
+begin
+  return Mcp.Serve(Server, None);
+end function;
+
+function WaitPeer(Child: Proc.Process): boolean;
+begin
+  while Proc.TryWait(Child).Unwrap() is None do
+    Time.Sleep(1);
+  end while;
+
+  return Proc.TryWait(Child).Unwrap().Unwrap() = 0;
+end function;
+
+procedure RunWorker();
+begin
+  const Seen: channel of boolean := Tasks.CreateChannel(1);
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  const Handler: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    discard Tasks.TrySend(Seen, true);
+    return Mcp.StructuredResult(Mcp.ParseJson('{"value":42}').Unwrap());
+  end function;
+
+  discard Mcp.RegisterTool(
+    Server, Mcp.ToolDefinition(
+      Name := 'double_probe', Description := 'Independent worker lifecycle probe',
+      InputSchema := Mcp.ParseJson(
+        '{"type":"object","properties":{"number":{"type":"integer"}},"required":["number"]}'
+      ).Unwrap(),
+      OutputSchema := None, Annotations := None, Meta := None
+    ), Handler
+  ).Unwrap();
+  const Endpoint := Mcp.Publish(Server, Mcp.DefaultHttpOptions()).Unwrap();
+  const Access := Mcp.Access(Endpoint).Unwrap();
+  const Peer := Proc.Start(
+    Proc.CurrentExecutable().Unwrap(),
+    ['run', 'tests/fixtures/mcp_client.fpas', '--', Access.Url, Access.Headers[0].Value],
+    Proc.DefaultStartOptions()
+  ).Unwrap();
+  scope
+    const Worker := go Serve(Server);
+    const Client := go WaitPeer(Peer);
+    Test.AssertTrue(Tasks.Wait(Client));
+    Test.AssertTrue(Tasks.TryReceive(Seen).Unwrap().Unwrap());
+    Console.WriteLn('callback completed');
+    Test.AssertTrue(Mcp.Close(Server).Unwrap());
+    Console.WriteLn('server closed');
+    Test.AssertTrue(Tasks.Wait(Worker).Unwrap());
+    Console.WriteLn('worker joined');
+  end scope;
+
+  Test.AssertTrue(Proc.Close(Peer).Unwrap());
+  Test.AssertTrue(Mcp.Release(Server).Unwrap());
+end procedure;
+
+begin
+  if Args.ParamCount() > 0 then
+    RunWorker();
+  else
+    var Options := Proc.DefaultOptions();
+    Options.TimeoutMillis := Some(10000);
+    const Output := Proc.RunCaptureWithOptions(
+      Proc.CurrentExecutable().Unwrap(),
+      ['run', 'tests/fixtures/mcp_worker_server.fpas', '--', 'worker'], Options
+    ).Unwrap();
+    Test.AssertEquals(0, Output.ExitCode);
+    Test.AssertTrue('callback completed' in Output.Stdout);
+    Test.AssertTrue('server closed' in Output.Stdout);
+    Test.AssertTrue('worker joined' in Output.Stdout);
+    Console.WriteLn('worker lifecycle verified');
+  end if;
+end.

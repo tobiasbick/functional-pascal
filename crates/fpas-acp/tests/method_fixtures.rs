@@ -1,3 +1,9 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "Protocol fixtures fail directly at their observable boundary"
+)]
 //! Literal protocol examples cover every SDK client-role method in both directions.
 
 #[path = "methods/v1.rs"]

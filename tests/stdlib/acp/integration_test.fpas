@@ -1,0 +1,108 @@
+// Whole-client composition over an independently implemented stdio peer.
+program AcpIntegrationTest;
+
+uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Args as Args, Std.Proc as Proc, Std.Test as Test;
+
+function Send(Connection: Acp.Connection; Method: string; Body: string): Acp.RequestToken;
+begin
+  return Acp.Send(
+    Connection,
+    Types.DecodeClientRequest(Method, Types.RawJson(Text := Body)).Unwrap().Payload
+  ).Unwrap();
+end function;
+
+procedure Completed(Connection: Acp.Connection; Token: Acp.RequestToken);
+begin
+  const Event := Acp.Receive(Connection, Some(15000), None).Unwrap();
+  Test.AssertTrue(Event.Payload is Acp.EventPayload.Response(_, _));
+  Test.AssertFalse(Acp.CancelRequest(Connection, Token).Unwrap());
+end procedure;
+
+begin
+  var Executable := Proc.CurrentExecutable().Unwrap();
+  var Peer := 'tests/support/acp/scripted_agent.fpas';
+  if Args.ParamCount() > 0 then
+    Executable := Args.ParamStr(0);
+  end if;
+
+  if Args.ParamCount() > 1 then
+    Peer := Args.ParamStr(1);
+  end if;
+  var Options := Acp.DefaultOptions();
+  Options.ClientCapabilities.Fs.ReadTextFile := true;
+  Options.ClientCapabilities.Elicitation := Some(
+    Types.ElicitationCapabilities(
+      Form := Some(Types.ElicitationFormCapabilities(Meta := None)), Url := None, Meta := None
+    )
+  );
+  const Connection := Acp.ConnectProcess(
+    Acp.Launch(
+      Command := Executable,
+      Arguments := ['run', Peer, '--', 'v1'], WorkingDirectory := None, Environment := []
+    ), Options
+  ).Unwrap();
+  Completed(
+    Connection,
+    Send(
+      Connection,
+      'initialize',
+      '{"protocolVersion":1,"clientCapabilities":{"fs":{"readTextFile":true},"elicitation":{"form":{}}}}'
+    )
+  );
+  Completed(Connection, Send(Connection, 'authenticate', '{"methodId":"local"}'));
+  Completed(Connection, Send(Connection, 'session/new', '{"cwd":"/workspace","mcpServers":[]}'));
+  Completed(Connection, Send(Connection, 'session/new', '{"cwd":"/other","mcpServers":[]}'));
+  const First := Send(
+    Connection,
+    'session/prompt',
+    '{"sessionId":"s1","prompt":[{"type":"text","text":"Hello"},{"type":"image","data":"AA==","mimeType":"image/png"}]}'
+  );
+  const Second := Send(Connection, 'session/prompt', '{"sessionId":"s2","prompt":[]}');
+  var Responses := 0;
+  var Notifications := 0;
+  var Requests := 0;
+  while Responses < 2 do
+    const Event := Acp.Receive(Connection, Some(15000), None).Unwrap();
+    case Event.Payload of
+      when Acp.EventPayload.Response(_, _):
+        Responses := Responses + 1;
+      when Acp.EventPayload.Notification(_):
+        Notifications := Notifications + 1;
+      when Acp.EventPayload.Request(_, const Responder):
+        const Method := Types.RawJsonMember(
+          Event.RawMessage.Unwrap(),
+          'method'
+        ).Unwrap().Unwrap().Text;
+        var Body := '{"action":"cancel"}';
+        var Name := 'elicitation/create';
+        if Method = '"fs/read_text_file"' then
+          Name := 'fs/read_text_file';
+          Body := '{"content":"unsaved buffer"}';
+        elsif Method = '"session/request_permission"' then
+          Name := 'session/request_permission';
+          Body := '{"outcome":{"outcome":"cancelled"}}';
+        end if;
+
+        discard Acp.Respond(
+          Responder,
+          Types.DecodeClientResponse(Name, Types.RawJson(Text := Body)).Unwrap().Payload
+        ).Unwrap();
+        Requests := Requests + 1;
+      when Acp.EventPayload.Closed(_), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
+        panic('Unexpected event');
+    end case;
+  end while;
+
+  Test.AssertEquals(2, Notifications);
+  Test.AssertEquals(3, Requests);
+  Test.AssertFalse(Acp.CancelRequest(Connection, First).Unwrap());
+  Test.AssertFalse(Acp.CancelRequest(Connection, Second).Unwrap());
+  Completed(Connection, Send(Connection, 'session/close', '{"sessionId":"s1"}'));
+  Completed(Connection, Send(Connection, 'session/close', '{"sessionId":"s2"}'));
+  Completed(Connection, Send(Connection, 'logout', '{}'));
+  discard Acp.Close(Connection).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.Closed(_)
+  );
+  Test.AssertTrue(Acp.Release(Connection).Unwrap());
+end.

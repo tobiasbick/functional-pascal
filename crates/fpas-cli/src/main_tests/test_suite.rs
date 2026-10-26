@@ -34,7 +34,6 @@ macro_rules! fpas_suite_tests {
 }
 
 fpas_suite_tests! {
-    (fpas_suite_stdlib_acp, "tests/stdlib/acp/"),
     (fpas_suite_stdlib_array, "tests/stdlib/array/"),
     (fpas_suite_stdlib_calendar, "tests/stdlib/calendar/"),
     (fpas_suite_stdlib_cli, "tests/stdlib/cli/"),
@@ -59,6 +58,24 @@ fpas_suite_tests! {
     (fpas_suite_stdlib_toml, "tests/stdlib/toml/"),
     (fpas_suite_concurrency, "tests/concurrency/"),
     (fpas_suite_console, "tests/console/"),
+}
+
+#[test]
+fn fpas_suite_stdlib_acp() {
+    // These programs use CurrentExecutable to launch independent FPAS peers.
+    // Run through the installed CLI rather than the Rust unit-test harness.
+    let output =
+        std::process::Command::new(crate::process_tree::executable().expect("installed FPAS CLI"))
+            .current_dir(repo_root())
+            .args(["test", "tests/stdlib/acp/", "--jobs", "2"])
+            .output()
+            .expect("ACP public suite process");
+    assert!(
+        output.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]

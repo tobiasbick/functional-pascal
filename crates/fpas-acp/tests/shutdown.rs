@@ -1,3 +1,9 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "Protocol fixtures fail directly at their observable boundary"
+)]
 //! Owned generic transports must remain closeable while physical output is blocked.
 
 use fpas_acp::{

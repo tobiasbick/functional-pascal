@@ -27,7 +27,13 @@ pub(super) fn register(checker: &mut Checker) {
             registry.named(key);
         }
     }
-    for name in ["Connection", "RequestToken", "Responder", "MessageEndpoint"] {
+    for name in [
+        "Connection",
+        "RequestToken",
+        "Responder",
+        "MessageEndpoint",
+        "McpEndpoint",
+    ] {
         super::super::type_registration::register_opaque_type(checker, &format!("Std.Acp.{name}"));
     }
     for name in [

@@ -27,6 +27,7 @@ mod encoding;
 mod env;
 mod error;
 mod fs;
+pub use fs::{read_text_for_host, write_text_for_host};
 mod intrinsic_args;
 mod intrinsics;
 mod json;

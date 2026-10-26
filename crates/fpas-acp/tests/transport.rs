@@ -1,3 +1,9 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "Protocol fixtures fail directly at their observable boundary"
+)]
 //! Frame boundaries, bytes and alias ownership at the production message interface.
 
 use fpas_acp::{

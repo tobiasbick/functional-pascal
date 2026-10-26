@@ -2633,4 +2633,14 @@ public function Send(Owner: StdAcp.Connection; Payload: ClientRequest): result o
 begin
   panic('Intrinsic API declaration');
 end function;
+
+// Runs the intrinsic `SendMcp` function.
+//
+// Parameters:
+// - `Endpoint`: `Std.Acp.McpEndpoint` input value used by `SendMcp`.
+// - `Payload`: `Std.Acp.V2.MessageMcpRequest` input value used by `SendMcp`.
+public function SendMcp(Endpoint: StdAcp.McpEndpoint; Payload: MessageMcpRequest): result of (StdAcp.RequestToken, Types.AcpError);
+begin
+  panic('Intrinsic API declaration');
+end function;
 end unit;

@@ -1,0 +1,7 @@
+[project]
+name = "acp-v2"
+kind = "program"
+main = "v2.fpas"
+
+[sources]
+include = ["v2.fpas", "demo.fpas"]

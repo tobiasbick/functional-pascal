@@ -1,3 +1,9 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "Protocol fixtures fail directly at their observable boundary"
+)]
 //! Public resource contract boundaries, including retained closed-handle slots.
 
 use fpas_acp::{

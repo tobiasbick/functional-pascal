@@ -89,14 +89,12 @@ fn mark_stable(schemas: &BTreeMap<String, Value>, schema: &Value, seen: &mut BTr
     }
     if let Some(name) = reference(schema)
         && let Some(target) = schemas.get(name)
-    {
-        if !target["description"]
+        && !target["description"]
             .as_str()
             .is_some_and(|text| text.starts_with("**UNSTABLE**"))
-            && seen.insert(name.into())
-        {
-            mark_stable(schemas, target, seen);
-        }
+        && seen.insert(name.into())
+    {
+        mark_stable(schemas, target, seen);
     }
     match schema {
         Value::Object(fields) => {

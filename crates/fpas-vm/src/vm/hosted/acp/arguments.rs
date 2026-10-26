@@ -52,16 +52,24 @@ pub(super) fn array(value: &Value) -> Result<&[Value], Fault> {
 pub(super) fn raw(value: &Value) -> Result<RawJson, Fault> {
     RawJson::parse(text(&record(value, "Std.Acp.Types.RawJson", 1)?[0])?).map_err(Fault::from)
 }
-fn unsigned(value: &Value) -> Result<usize, Fault> {
+pub(super) fn unsigned(value: &Value) -> Result<usize, Fault> {
     if let Value::Integer(value) = value {
         usize::try_from(*value).map_err(|_| Fault::InvalidArgument("Limits"))
     } else {
         Err(Fault::InvalidArgument("Limits"))
     }
 }
+pub(super) fn timeout(value: &Value) -> Result<Option<u64>, Fault> {
+    optional(value)?
+        .map(|value| match value {
+            Value::Integer(value) if *value >= 0 => Ok(*value as u64),
+            _ => Err(Fault::InvalidArgument("TimeoutMillis")),
+        })
+        .transpose()
+}
 
 pub(super) fn options(value: &Value) -> Result<(Version, Limits), Fault> {
-    let fields = record(value, "Std.Acp.Options", 5)?;
+    let fields = record(value, "Std.Acp.Options", 6)?;
     let versions = array(&fields[2])?;
     if versions.is_empty() || versions.len() > 2 {
         return Err(Fault::InvalidArgument("SupportedVersions"));
@@ -85,7 +93,7 @@ pub(super) fn options(value: &Value) -> Result<(Version, Limits), Fault> {
     let experimental = record(&fields[3], "Std.Acp.ExperimentalOptions", 7)?;
     if experimental
         .iter()
-        .any(|value| !matches!(value, Value::Boolean(false)))
+        .any(|value| !matches!(value, Value::Boolean(_)))
     {
         return Err(Fault::InvalidArgument("ExperimentalOptions"));
     }

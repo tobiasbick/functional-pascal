@@ -120,7 +120,7 @@ impl Intrinsic {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ArgsIntrinsic, ConsoleIntrinsic, NetIntrinsic, TaskIntrinsic};
+    use crate::{AcpIntrinsic, ArgsIntrinsic, ConsoleIntrinsic, NetIntrinsic, TaskIntrinsic};
 
     #[test]
     fn complete_intrinsic_families_have_one_non_standard_owner() {
@@ -228,6 +228,10 @@ mod tests {
                 Intrinsic::Task(TaskIntrinsic::StartSupervisedTask),
                 Intrinsic::Task(TaskIntrinsic::CloseTaskGroupWithTimeout),
                 Intrinsic::Task(TaskIntrinsic::TryCloseCompletedTaskGroup),
+                Intrinsic::Acp(AcpIntrinsic::Receive),
+                Intrinsic::Acp(AcpIntrinsic::Close),
+                Intrinsic::Acp(AcpIntrinsic::Release),
+                Intrinsic::Acp(AcpIntrinsic::HostWaitForTerminalExit),
             ]
         );
     }

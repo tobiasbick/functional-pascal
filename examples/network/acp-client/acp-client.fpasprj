@@ -1,0 +1,7 @@
+[project]
+name = "acp-client"
+kind = "program"
+main = "main.fpas"
+
+[sources]
+include = ["main.fpas", "demo.fpas"]

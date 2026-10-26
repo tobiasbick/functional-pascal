@@ -101,6 +101,10 @@ pub(super) fn register(checker: &mut Checker) {
             ("SupportedVersions".into(), array(version)),
             ("ExperimentalOptions".into(), experimental),
             ("Limits".into(), limits),
+            (
+                "V2ClientCapabilities".into(),
+                named(checker, "Std.Acp.V2.ClientCapabilities"),
+            ),
         ],
     );
     let environment = record(
@@ -159,9 +163,46 @@ pub(super) fn register(checker: &mut Checker) {
                 "AgentCapabilities".into(),
                 option(named(checker, "Std.Acp.Types.AgentCapabilities")),
             ),
+            (
+                "AgentInfo".into(),
+                option(named(checker, "Std.Acp.Types.ImplementationValue")),
+            ),
+            (
+                "AuthMethods".into(),
+                array(named(checker, "Std.Acp.Types.AuthMethod")),
+            ),
+            (
+                "V2AgentCapabilities".into(),
+                option(named(checker, "Std.Acp.V2.AgentCapabilities")),
+            ),
+            (
+                "V2AgentInfo".into(),
+                option(named(checker, "Std.Acp.V2.ImplementationValue")),
+            ),
+            (
+                "V2AuthMethods".into(),
+                array(named(checker, "Std.Acp.V2.AuthMethod")),
+            ),
         ],
     );
     let mut variants = vec![
+        (
+            "McpResponse",
+            vec![
+                ("Token", token.clone()),
+                (
+                    "Payload",
+                    named(checker, "Std.Acp.Experimental.MessageMcpResponse"),
+                ),
+            ],
+        ),
+        (
+            "V2McpResponse",
+            vec![
+                ("Token", token.clone()),
+                ("Payload", named(checker, "Std.Acp.V2.MessageMcpResponse")),
+            ],
+        ),
         (
             "RequestFailed",
             vec![("Token", token.clone()), ("Cause", error.clone())],
@@ -221,6 +262,28 @@ pub(super) fn register(checker: &mut Checker) {
         record(checker, "Std.Tasks.CancellationToken", vec![])
     };
     define_func(checker, "Std.Acp.DefaultOptions", vec![], options.clone());
+    define_func(
+        checker,
+        "Std.Acp.RegisterMcpEndpoint",
+        vec![
+            p("Connection", connection.clone()),
+            p("ServerId", Ty::String),
+            p("SessionId", option(Ty::String)),
+        ],
+        Ty::Result(
+            Box::new(named(checker, "Std.Acp.McpEndpoint")),
+            Box::new(error.clone()),
+        ),
+    );
+    define_func(
+        checker,
+        "Std.Acp.RemoveMcpEndpoint",
+        vec![
+            p("Connection", connection.clone()),
+            p("Endpoint", named(checker, "Std.Acp.McpEndpoint")),
+        ],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(error.clone())),
+    );
     for (name, parameters, output) in [
         (
             "ConnectMessages",
@@ -295,6 +358,23 @@ pub(super) fn register(checker: &mut Checker) {
         } else {
             module
         };
+        let payload = named(
+            checker,
+            if module == "Std.Acp.Types" {
+                "Std.Acp.Experimental.MessageMcpRequest"
+            } else {
+                "Std.Acp.V2.MessageMcpRequest"
+            },
+        );
+        define_func(
+            checker,
+            &format!("{unit}.SendMcp"),
+            vec![
+                p("Endpoint", named(checker, "Std.Acp.McpEndpoint")),
+                p("Payload", payload),
+            ],
+            Ty::Result(Box::new(token.clone()), Box::new(error.clone())),
+        );
         for (operation, input, receiver, output) in [
             ("Send", "ClientRequest", connection.clone(), token.clone()),
             (

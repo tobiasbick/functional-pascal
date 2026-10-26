@@ -63,6 +63,10 @@ pub struct Event {
 /// Versioned protocol data and terminal outcomes.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Payload {
+    /// V2 initialization selected this protocol family without an implicit retry.
+    Initialized(RequestToken, Version, crate::binding::Value),
+    /// Typed reverse-direction MCP outcome, absent from the SDK agent response enum.
+    McpResponse(RequestToken, Version, crate::binding::Value),
     /// Successful response to a local request.
     Response(RequestToken, Version, Value),
     /// Peer error or terminal failure for a local request.

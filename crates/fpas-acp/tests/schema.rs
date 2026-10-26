@@ -1,3 +1,9 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "Protocol fixtures fail directly at their observable boundary"
+)]
 //! The SDK schema graph preserves the information needed by native type registration.
 
 use fpas_acp::schema::{self, Version};

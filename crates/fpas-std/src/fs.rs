@@ -24,6 +24,21 @@ use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 use crate::error::StdError;
 use crate::intrinsic_args::{IntrinsicCall, expect_array, pop_string, pop_value};
 
+/// Read a bounded UTF-8 file through the same implementation as Std.Fs.ReadText.
+pub fn read_text_for_host(path: &str) -> std::io::Result<String> {
+    read::read_text_limited(path).map_err(|error| match error {
+        failure::Failure::Io(error) => error,
+        failure::Failure::LimitExceeded(_, _) => {
+            std::io::Error::from(std::io::ErrorKind::FileTooLarge)
+        }
+        _ => std::io::Error::from(std::io::ErrorKind::InvalidData),
+    })
+}
+/// Write a UTF-8 file through the same implementation as Std.Fs.WriteText.
+pub fn write_text_for_host(path: &str, text: &str) -> std::io::Result<()> {
+    fs::write(path, text)
+}
+
 /// Execute a `Std.Fs` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
@@ -80,7 +95,7 @@ pub(crate) fn run(
                 call.factory(),
                 "Std.Fs.WriteText",
                 std::slice::from_ref(&path),
-                (fs::write(&path, text)).map_err(Into::into),
+                write_text_for_host(&path, &text).map_err(Into::into),
                 |()| Value::Boolean(true),
                 location,
             )?);

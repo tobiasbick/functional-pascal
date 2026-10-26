@@ -1,0 +1,115 @@
+program AcpV2Test;
+
+uses
+  Std.Acp as Acp, Std.Acp.Types as Types, Std.Acp.V2 as V2, Std.Args as Args,
+  Std.Proc as Proc, Std.Test as Test, Std.Time as Time;
+
+function Request(Method: string; Body: string): V2.ClientRequest;
+begin
+  return V2.DecodeClientRequest(Method, Types.RawJson(Text := Body)).Unwrap().Payload;
+end function;
+
+function Options(): Acp.Options;
+begin
+  var Value := Acp.DefaultOptions();
+  Value.SupportedVersions := [Acp.ProtocolVersion.V2, Acp.ProtocolVersion.V1];
+  Value.ClientInfo := Some(
+    Types.ImplementationValue(Name := 'fpas-v2-test', Title := None, Version := '1', Meta := None)
+  );
+  Value.ExperimentalOptions.McpOverAcp := true;
+  return Value;
+end function;
+
+function Initialize(): V2.ClientRequest;
+begin
+  return Request(
+    'initialize',
+    '{"protocolVersion":2,"info":{"name":"fpas-v2-test","version":"1"}}'
+  );
+end function;
+
+procedure LowerVersion();
+begin
+  const Messages := Acp.ConnectMessages(Options()).Unwrap();
+  discard V2.Send(Messages.Connection, Initialize()).Unwrap();
+  var Outbound: option of Types.RawJson := None;
+  while Outbound is None do
+    Outbound := Acp.TryTakeMessage(Messages.Endpoint).Unwrap();
+    Time.Sleep(1);
+  end while;
+  const Id := Types.RawJsonMember(Outbound.Unwrap(), 'id').Unwrap().Unwrap().Text;
+  discard Acp.FeedMessage(
+    Messages.Endpoint, Types.RawJson(
+      Text := '{"jsonrpc":"2.0","id":' + Id +
+      ',"result":{"protocolVersion":1,"agentCapabilities":{}}}'
+    )
+  ).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Messages.Connection, Some(5000), None).Unwrap().Payload is Acp.EventPayload.V2Initialized(_, V2.InitializeOutcome.LowerVersion(_))
+  );
+  Test.AssertEquals(1, Acp.State(Messages.Connection).Unwrap().NegotiatedVersion.Unwrap());
+  Test.AssertTrue(
+    V2.Send(Messages.Connection, Request('_wrong_family', '{}')) is Error(Types.AcpError.InvalidArgument(_, _))
+  );
+  discard Acp.Close(Messages.Connection).Unwrap();
+  discard Acp.Receive(Messages.Connection, Some(5000), None).Unwrap();
+  discard Acp.Release(Messages.Connection).Unwrap();
+end procedure;
+
+begin
+  LowerVersion();
+  var Executable := Proc.CurrentExecutable().Unwrap();
+  var Peer := 'tests/support/acp/scripted_agent.fpas';
+  if Args.ParamCount() > 0 then
+    Executable := Args.ParamStr(0);
+  end if;
+
+  if Args.ParamCount() > 1 then
+    Peer := Args.ParamStr(1);
+  end if;
+  const Connection := Acp.ConnectProcess(
+    Acp.Launch(
+      Command := Executable,
+      Arguments := ['run', Peer, '--', 'v2'], WorkingDirectory := None, Environment := []
+    ), Options()
+  ).Unwrap();
+  discard V2.Send(Connection, Initialize()).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2Initialized(_, V2.InitializeOutcome.Initialized(_))
+  );
+  Test.AssertEquals('independent-peer', Acp.State(Connection).Unwrap().V2AgentInfo.Unwrap().Name);
+  discard V2.Send(Connection, Request('session/new', '{"cwd":"/workspace"}')).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2Response(_, V2.AgentResponse.NewSessionResponse(_))
+  );
+  discard V2.Send(Connection, Request('session/prompt', '{"sessionId":"s1","prompt":[]}')).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2Response(_, V2.AgentResponse.PromptResponse(_))
+  );
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2Notification(V2.AgentNotification.UpdateSessionNotification(_))
+  );
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2Notification(V2.AgentNotification.UpdateSessionNotification(_))
+  );
+  const Endpoint := Acp.RegisterMcpEndpoint(Connection, 'tools', Some('s1')).Unwrap();
+  discard V2.SendMcp(
+    Endpoint, V2.MessageMcpRequest(
+      ServerId := V2.McpServerAcpId('tools'),
+      RequestId := V2.McpRequestId('nested'), Method := 'tools/list', Params := None, Meta := None
+    )
+  ).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2McpResponse(_, V2.MessageMcpResponse.Variant1(_))
+  );
+  discard V2.Send(Connection, Request('session/close', '{"sessionId":"s1"}')).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.V2Response(_, V2.AgentResponse.CloseSessionResponse(_))
+  );
+  Test.AssertTrue(Acp.RemoveMcpEndpoint(Connection, Endpoint) is Error(Types.AcpError.Closed(_)));
+  discard Acp.Close(Connection).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(15000), None).Unwrap().Payload is Acp.EventPayload.Closed(_)
+  );
+  Test.AssertTrue(Acp.Release(Connection).Unwrap());
+end.

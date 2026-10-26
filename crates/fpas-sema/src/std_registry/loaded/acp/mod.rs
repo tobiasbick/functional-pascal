@@ -3,6 +3,7 @@
 mod codecs;
 mod connection;
 mod declarations;
+mod host;
 mod outcomes;
 
 use std::sync::Arc;
@@ -24,6 +25,7 @@ pub(super) fn register(checker: &mut Checker) {
     outcomes::register(checker);
     codecs::register(checker);
     connection::register(checker);
+    host::register(checker);
     define_func(
         checker,
         s::STD_ACP_RAW_JSON_MEMBER,

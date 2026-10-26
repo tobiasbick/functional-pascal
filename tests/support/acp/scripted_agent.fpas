@@ -1,0 +1,102 @@
+// Independent wire peer: fixed protocol messages, parsed only with Std.Json.
+program ScriptedAcpAgent;
+
+uses Std.Args as Args, Std.Console as Console, Std.Json as Json, Std.Test as Test;
+
+function Member(Value: Json.JsonValue; Name: string): Json.JsonValue;
+begin
+  case Value of
+    when Json.JsonValue.Object(const Fields):
+      return Fields[Name];
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
+      panic('Expected object');
+  end case;
+end function;
+
+function ReadRequest(Method: string): string;
+begin
+  const Message := Json.Parse(Console.ReadLn().Unwrap()).Unwrap();
+  Test.AssertEquals(
+    Json.Stringify(Json.JsonValue.String(Method)),
+    Json.Stringify(Member(Message, 'method'))
+  );
+  return Json.Stringify(Member(Message, 'id'));
+end function;
+
+procedure Reply(Id: string; Body: string);
+begin
+  Console.WriteLn('{"jsonrpc":"2.0","id":' + Id + ',"result":' + Body + '}');
+end procedure;
+
+procedure Update(Session: string; Body: string);
+begin
+  Console.WriteLn(
+    '{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"' +
+    Session + '","update":' + Body + '}}'
+  );
+end procedure;
+
+begin
+  const Initialize := ReadRequest('initialize');
+  if Args.ParamStr(0) = 'v2' then
+    Reply(
+      Initialize,
+      '{"protocolVersion":2,"info":{"name":"independent-peer","version":"1"},"capabilities":{"session":{"mcp":{"acp":{}}}}}'
+    );
+    Reply(ReadRequest('session/new'), '{"sessionId":"s1"}');
+    Reply(ReadRequest('session/prompt'), '{"messageId":"accepted-1"}');
+    Update('s1', '{"sessionUpdate":"state_update","state":"running"}');
+    Update('s1', '{"sessionUpdate":"state_update","state":"idle","stopReason":"end_turn"}');
+    const Mcp := ReadRequest('mcp/message');
+    Reply(Mcp, '{"result":{"tools":[]}}');
+    Reply(ReadRequest('session/close'), '{}');
+  else
+    Reply(
+      Initialize,
+      '{"protocolVersion":1,"agentInfo":{"name":"independent-peer","version":"1"},"agentCapabilities":{"promptCapabilities":{"image":true},"sessionCapabilities":{"close":{}},"auth":{"logout":{}}},"authMethods":[{"id":"local","name":"Local"}]}'
+    );
+    Reply(ReadRequest('authenticate'), '{}');
+    Reply(ReadRequest('session/new'), '{"sessionId":"s1"}');
+    Reply(ReadRequest('session/new'), '{"sessionId":"s2"}');
+    const First := ReadRequest('session/prompt');
+    const Second := ReadRequest('session/prompt');
+    Update(
+      's1',
+      '{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"Grüße"}}'
+    );
+    Update(
+      's2',
+      '{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"Other session"}}'
+    );
+    Reply(Second, '{"stopReason":"end_turn"}');
+    Console.WriteLn(
+      '{"jsonrpc":"2.0","id":"permission","method":"session/request_permission","params":{"sessionId":"s1","toolCall":{"toolCallId":"t","title":"Read"},"options":[{"optionId":"deny","name":"Deny","kind":"reject_once"}]}}'
+    );
+    Console.WriteLn(
+      '{"jsonrpc":"2.0","id":"buffer","method":"fs/read_text_file","params":{"sessionId":"s1","path":"/unsaved/buffer.txt"}}'
+    );
+    Console.WriteLn(
+      '{"jsonrpc":"2.0","id":"form","method":"elicitation/create","params":{"sessionId":"s1","mode":"form","message":"Input","requestedSchema":{"type":"object","properties":{}}}}'
+    );
+    for Index: integer := 0 to 2 do
+      const Response := Json.Parse(Console.ReadLn().Unwrap()).Unwrap();
+      const Id := Json.Stringify(Member(Response, 'id'));
+      const ResultValue := Member(Response, 'result');
+      if Id = '"buffer"' then
+        Test.AssertTrue(Member(ResultValue, 'content') is Json.JsonValue.String('unsaved buffer'));
+      elsif Id = '"permission"' then
+        Test.AssertTrue(
+          Member(Member(ResultValue, 'outcome'), 'outcome') is Json.JsonValue.String('cancelled')
+        );
+      else
+        Test.AssertEquals('"form"', Id);
+        Test.AssertTrue(Member(ResultValue, 'action') is Json.JsonValue.String('cancel'));
+      end if;
+    end for;
+
+    Reply(First, '{"stopReason":"end_turn","_meta":{"exact":18446744073709551615}}');
+    Reply(ReadRequest('session/close'), '{}');
+    Reply(ReadRequest('session/close'), '{}');
+    Reply(ReadRequest('logout'), '{}');
+  end if;
+end.

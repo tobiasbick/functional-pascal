@@ -1,8 +1,7 @@
 //! Native admission state. SDK calls and transport cleanup happen outside its lock.
 
 use super::{
-    Closed, Event, Fault, Lifecycle, Limits, Payload, RequestToken, Responder,
-    queue::{Item, Queue},
+    Closed, Event, Fault, Lifecycle, Limits, Payload, RequestToken, Responder, queue::Queue,
 };
 use crate::{RawJson, binding::Value, protocol::v1::RequestId, schema::Version};
 use agent_client_protocol::{RequestCancellation, RequestCancellationHandle};
@@ -17,6 +16,10 @@ pub(super) const RESPONDER_TAG: u64 = 0x4146_0000_0000_0000;
 pub(super) const SERIAL_MASK: u64 = 0xff_ffff;
 
 pub(super) enum Command {
+    RetireRoute {
+        tokens: Vec<RequestToken>,
+        responders: Vec<Responder>,
+    },
     Cancel {
         token: RequestToken,
     },
@@ -28,6 +31,7 @@ pub(super) enum Command {
     Notify {
         method: String,
         raw: RawJson,
+        cancelled: Vec<Responder>,
     },
     Reply {
         responder: Responder,
@@ -37,6 +41,8 @@ pub(super) enum Command {
 }
 
 pub(super) struct Pending {
+    pub version: Version,
+    pub action: super::client::Action,
     pub _metadata: super::budget::Permit,
     pub method: String,
     pub wire: Option<RequestId>,
@@ -45,6 +51,11 @@ pub(super) struct Pending {
 }
 
 pub(super) struct Deferred {
+    pub version: Version,
+    pub route: Option<u64>,
+    pub params: RawJson,
+    pub execution: super::host::Execution,
+    pub permission_session: Option<String>,
     pub _metadata: super::budget::Permit,
     pub sdk: agent_client_protocol::Responder<serde_json::Value>,
     pub cancellation: RequestCancellation,
@@ -59,6 +70,10 @@ pub(super) enum Publication {
 }
 
 pub(super) struct State {
+    pub routes: BTreeMap<String, super::mcp::Endpoint>,
+    pub route_serial: u64,
+    pub client: super::client::Client,
+    pub cancelled_replies: BTreeMap<RequestId, super::budget::Permit>,
     pub local_close: bool,
     pub lifecycle: Lifecycle,
     pub fault: Option<Fault>,
@@ -70,7 +85,7 @@ pub(super) struct State {
     pub responder_serial: u64,
     pub pending: BTreeMap<RequestToken, Pending>,
     pub responders: BTreeMap<Responder, Deferred>,
-    pub publications: VecDeque<(Publication, Item<Command>)>,
+    pub publications: VecDeque<(Publication, Box<dyn Send>)>,
 }
 
 pub(super) struct Shared {
@@ -78,6 +93,7 @@ pub(super) struct Shared {
     pub incoming_metadata: Arc<super::budget::Budget>,
     pub id: u64,
     pub version: Version,
+    pub family: std::sync::atomic::AtomicU8,
     pub limits: Limits,
     pub state: Mutex<State>,
     pub commands: Arc<Queue<Command>>,
@@ -86,15 +102,22 @@ pub(super) struct Shared {
 }
 
 impl Shared {
-    pub fn new(id: u64, version: Version, limits: Limits) -> Arc<Self> {
-        Arc::new(Self {
+    pub fn new(id: u64, settings: super::Settings, limits: Limits) -> Result<Arc<Self>, Fault> {
+        let version = settings.requested_version()?;
+        let client = super::client::Client::new(settings, &limits)?;
+        Ok(Arc::new(Self {
             outgoing_metadata: super::budget::Budget::new("OutgoingMetadata", limits.queue_bytes),
             incoming_metadata: super::budget::Budget::new("IncomingMetadata", limits.queue_bytes),
             id,
             version,
+            family: std::sync::atomic::AtomicU8::new(if version == Version::V1 { 1 } else { 2 }),
             commands: Queue::new(limits.outbound_entries, limits.queue_bytes),
             events: Queue::new(limits.queue_entries, limits.queue_bytes),
             state: Mutex::new(State {
+                routes: BTreeMap::new(),
+                route_serial: 0,
+                client,
+                cancelled_replies: BTreeMap::new(),
                 local_close: false,
                 lifecycle: Lifecycle::Uninitialized,
                 fault: None,
@@ -110,11 +133,18 @@ impl Shared {
             }),
             limits,
             changed: tokio::sync::Notify::new(),
-        })
+        }))
     }
 
     pub fn lock(&self) -> MutexGuard<'_, State> {
         self.state.lock().unwrap_or_else(|e| e.into_inner())
+    }
+    pub fn family(&self) -> Version {
+        if self.family.load(std::sync::atomic::Ordering::Acquire) == 1 {
+            Version::V1
+        } else {
+            Version::V2
+        }
     }
 
     pub fn active(state: &State) -> Result<(), Fault> {
@@ -189,19 +219,77 @@ impl Shared {
         Ok(())
     }
 
-    pub fn response(&self, token: RequestToken, event: Event) -> Result<(), Fault> {
-        let bytes = event_size(&event);
+    pub fn response(&self, token: RequestToken, mut event: Event) -> Result<(), Fault> {
         let mut state = self.lock();
+        let mut cancelled = Vec::new();
+        {
+            let response = event
+                .raw
+                .as_ref()
+                .map(|raw| raw.member("result"))
+                .transpose()?
+                .flatten();
+            let State {
+                client, pending, ..
+            } = &mut *state;
+            if let Some(pending) = pending.get(&token) {
+                let initialized = matches!(
+                    pending.action,
+                    super::client::Action::Initialize | super::client::Action::InitializeV2
+                );
+                if let Err(fault) = client.settle(&pending.action, token, response.as_ref()) {
+                    event.payload = Payload::RequestFailed(token, fault.clone());
+                    state.fault = Some(fault);
+                    state.lifecycle = Lifecycle::Closing;
+                } else if initialized {
+                    if let Payload::RequestFailed(_, fault) = &event.payload {
+                        state.fault = Some(fault.clone());
+                        state.lifecycle = Lifecycle::Closing;
+                    } else {
+                        state.lifecycle = Lifecycle::Ready;
+                        self.family.store(
+                            if state.client.negotiated_version() == Some(Version::V1) {
+                                1
+                            } else {
+                                2
+                            },
+                            std::sync::atomic::Ordering::Release,
+                        );
+                    }
+                }
+            }
+            if matches!(event.payload, Payload::Response(_, _, _))
+                && let Some(pending) = state.pending.get(&token)
+                && let super::client::Action::Close(id) = &pending.action
+            {
+                let id = id.clone();
+                cancelled = super::client::cancellation::select(&state, &id);
+                super::client::cancellation::mark(&mut state, &cancelled);
+                let endpoints: Vec<_> = state
+                    .routes
+                    .iter()
+                    .filter(|(_, endpoint)| endpoint.session.as_ref() == Some(&id))
+                    .map(|(key, endpoint)| (key.clone(), endpoint.id))
+                    .collect();
+                for (key, id) in endpoints {
+                    super::mcp::retire(self, &mut state, &key, id)?;
+                }
+            }
+        }
+        let bytes = event_size(&event);
         if !self.events.push(event, bytes)? {
-            drop(state);
             let fault = Fault::LimitExceeded("EventQueue", self.limits.queue_bytes);
-            self.fail(fault.clone());
+            state.fault = Some(fault.clone());
+            state.lifecycle = Lifecycle::Closing;
+            drop(state);
+            self.changed.notify_waiters();
             return Err(fault);
         }
         // Readers hold the same state lock: a visible response has already
         // retired its token and returned the pending-request reservation.
         state.pending.remove(&token);
         drop(state);
+        super::client::cancellation::settle(self, &cancelled)?;
         self.changed.notify_waiters();
         Ok(())
     }
@@ -248,6 +336,9 @@ impl Shared {
         let (responders, publications) = {
             let mut state = self.lock();
             state.lifecycle = Lifecycle::Closing;
+            state.client.close();
+            state.routes.clear();
+            state.cancelled_replies.clear();
             (
                 std::mem::take(&mut state.responders),
                 std::mem::take(&mut state.publications),
@@ -262,6 +353,8 @@ fn event_size(event: &Event) -> usize {
     let raw = event.raw.as_ref().map_or(0, |raw| raw.text().len());
     raw.saturating_add(match &event.payload {
         Payload::Request(_, _, value)
+        | Payload::Initialized(_, _, value)
+        | Payload::McpResponse(_, _, value)
         | Payload::Response(_, _, value)
         | Payload::Notification(_, value) => value_size(value),
         Payload::UnknownNotification(method, value) => {

@@ -1,0 +1,389 @@
+program AcpHostRequestsTest;
+
+uses
+  Std.Acp as Acp, Std.Acp.Host as Host, Std.Acp.Types as Types, Std.Fs as Fs,
+  Std.Json as Json, Std.Proc as Proc, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
+
+var TerminalId: string := '';
+var ExpectedText: string := '';
+var ExpectFailure: boolean := false;
+var ExpectCapacity: boolean := false;
+var ExpectedExit: integer := 0;
+var CancelWait: boolean := false;
+var CurrentMarker: string := '';
+
+function CancelWhenReady(Source: Tasks.CancellationSource; Marker: string): boolean;
+begin
+  while not Fs.IsFile(Marker + '.ready') do
+    Time.Sleep(1);
+  end while;
+
+  return Tasks.Cancel(Source);
+end function;
+
+function Quote(Value: string): string;
+begin
+  return Json.Stringify(Json.JsonValue.String(Value));
+end function;
+
+function Take(Endpoint: Acp.MessageEndpoint): Types.RawJson;
+begin
+  while true do
+    case Acp.TryTakeMessage(Endpoint).Unwrap() of
+      when Some(const Message):
+        return Message;
+      when None:
+        Time.Sleep(1);
+    end case;
+  end while;
+
+  panic('Missing peer output');
+end function;
+
+function Exchange(Connection: Acp.Connection; Endpoint: Acp.MessageEndpoint; Method: string; Params: string; ResultText: string): boolean;
+begin
+  discard Acp.Send(
+    Connection,
+    Types.DecodeClientRequest(Method, Types.RawJson(Text := Params)).Unwrap().Payload
+  ).Unwrap();
+  const Request := Take(Endpoint);
+  const Id := Types.RawJsonMember(Request, 'id').Unwrap().Unwrap();
+  discard Acp.FeedMessage(
+    Endpoint,
+    Types.RawJson(Text := '{"jsonrpc":"2.0","id":' + Id.Text + ',"result":' + ResultText + '}')
+  ).Unwrap();
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(5000), None).Unwrap().Payload is Acp.EventPayload.Response(_, _)
+  );
+  return true;
+end function;
+
+function Serve(Event: Acp.Event): boolean;
+begin
+  case Event.Payload of
+    when Acp.EventPayload.Request(const Payload, const Responder):
+      case Payload of
+        when Types.AgentRequest.ReadTextFileRequest(const Request):
+          var Changed := Request;
+          Changed.Path := 'relative';
+          Test.AssertTrue(
+            Host.ReadTextFile(Responder, Changed) is Error(Types.AcpError.InvalidArgument(_, _))
+          );
+          const Reply := Host.ReadTextFile(Responder, Request).Unwrap();
+          Test.AssertEquals(ExpectedText, Reply.Content);
+          Test.AssertTrue(
+            Host.ReadTextFile(Responder, Request) is Error(Types.AcpError.InvalidArgument(_, _))
+          );
+          discard Acp.Respond(Responder, Types.ClientResponse.ReadTextFileResponse(Reply)).Unwrap();
+        when Types.AgentRequest.WriteTextFileRequest(const Request):
+          const Reply := Host.WriteTextFile(Responder, Request);
+          if ExpectFailure then
+            Test.AssertTrue(Reply is Error(Types.AcpError.Host(_)));
+            Test.AssertTrue(
+              Host.WriteTextFile(Responder, Request) is Error(Types.AcpError.InvalidArgument(_, _))
+            );
+            discard Acp.RespondError(
+              Responder,
+              Types.ProtocolError(Code := -32603, Message := 'Host write failed', Data := None)
+            ).Unwrap();
+          else
+            discard Acp.Respond(
+              Responder,
+              Types.ClientResponse.WriteTextFileResponse(Reply.Unwrap())
+            ).Unwrap();
+          end if;
+        when Types.AgentRequest.CreateTerminalRequest(const Request):
+          const Reply := Host.CreateTerminal(Responder, Request);
+          if ExpectCapacity then
+            Test.AssertTrue(Reply is Error(Types.AcpError.LimitExceeded('Terminals', 1)));
+            discard Acp.RespondError(
+              Responder,
+              Types.ProtocolError(Code := -32603, Message := 'Capacity unavailable', Data := None)
+            ).Unwrap();
+          else
+            TerminalId := string(Reply.Unwrap().TerminalId);
+            Test.AssertTrue(
+              Host.CreateTerminal(Responder, Request) is Error(Types.AcpError.InvalidArgument(_, _))
+            );
+            discard Acp.Respond(
+              Responder,
+              Types.ClientResponse.CreateTerminalResponse(Reply.Unwrap())
+            ).Unwrap();
+          end if;
+        when Types.AgentRequest.WaitForTerminalExitRequest(const Request):
+          if CancelWait then
+            const Source := Tasks.CreateCancellationSource();
+            scope
+              const Cancelled := go CancelWhenReady(Source, CurrentMarker);
+              Test.AssertTrue(
+                Host.WaitForTerminalExit(
+                  Responder,
+                  Request,
+                  Some(10000),
+                  Some(Tasks.GetCancellationToken(Source))
+                ) is Error(Types.AcpError.Cancelled(_))
+              );
+              Test.AssertTrue(Tasks.Wait(Cancelled));
+            end scope;
+
+            Test.AssertTrue(
+              Host.WaitForTerminalExit(Responder, Request, Some(0), None) is Error(Types.AcpError.InvalidArgument(_, _))
+            );
+            discard Acp.RespondError(
+              Responder,
+              Types.ProtocolError(Code := -32800, Message := 'Local wait cancelled', Data := None)
+            ).Unwrap();
+          else
+            const Reply := Host.WaitForTerminalExit(Responder, Request, Some(10000), None).Unwrap();
+            Test.AssertEquals(ExpectedExit, Reply.ExitCode.Unwrap());
+            discard Acp.Respond(
+              Responder,
+              Types.ClientResponse.WaitForTerminalExitResponse(Reply)
+            ).Unwrap();
+          end if;
+        when Types.AgentRequest.TerminalOutputRequest(const Request):
+          if ExpectFailure then
+            Test.AssertTrue(
+              Host.TerminalOutput(Responder, Request) is Error(Types.AcpError.InvalidArgument(_, _))
+            );
+            discard Acp.RespondError(
+              Responder,
+              Types.ProtocolError(
+                Code := -32603,
+                Message := 'Wrong terminal session',
+                Data := None
+              )
+            ).Unwrap();
+          else
+            const Reply := Host.TerminalOutput(Responder, Request).Unwrap();
+            Test.AssertTrue(Reply.Truncated);
+            Test.AssertTrue(Reply.Output.Length() <= 5);
+            if ExpectedExit = 0 then
+              Test.AssertEquals('END', Reply.Output);
+            end if;
+
+            discard Acp.Respond(
+              Responder,
+              Types.ClientResponse.TerminalOutputResponse(Reply)
+            ).Unwrap();
+          end if;
+        when Types.AgentRequest.KillTerminalRequest(const Request):
+          discard Acp.Respond(
+            Responder,
+            Types.ClientResponse.KillTerminalResponse(
+              Host.KillTerminal(Responder, Request).Unwrap()
+            )
+          ).Unwrap();
+        when Types.AgentRequest.ReleaseTerminalRequest(const Request):
+          discard Acp.Respond(
+            Responder,
+            Types.ClientResponse.ReleaseTerminalResponse(
+              Host.ReleaseTerminal(Responder, Request).Unwrap()
+            )
+          ).Unwrap();
+        when Types.AgentRequest.CreateElicitationRequest(_):
+          const Defaults := Host.ElicitationDefaults(Responder).Unwrap();
+          Test.AssertEquals('true', Types.RawJsonMember(Defaults, 'flag').Unwrap().Unwrap().Text);
+          const Reply := Types.CreateElicitationResponse(
+            Kind := Types.CreateElicitationResponseKind.Cancel,
+            Meta := None
+          );
+          Test.AssertTrue(Host.ValidateElicitation(Responder, Reply).Unwrap());
+          discard Acp.Respond(
+            Responder,
+            Types.ClientResponse.CreateElicitationResponse(Reply)
+          ).Unwrap();
+        when Types.AgentRequest.RequestPermissionRequest(_), Types.AgentRequest.MessageMcpRequest(_), Types.AgentRequest.ExtRequest(_):
+          panic('Unexpected host fixture request');
+      end case;
+    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.Closed(_), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
+      panic('Expected host request');
+  end case;
+
+  return true;
+end function;
+
+function Incoming(Connection: Acp.Connection; Endpoint: Acp.MessageEndpoint; Method: string; Params: string): boolean;
+begin
+  discard Acp.FeedMessage(
+    Endpoint,
+    Types.RawJson(
+      Text := '{"jsonrpc":"2.0","id":"host","method":' + Quote(Method) + ',"params":' + Params +
+      '}'
+    )
+  ).Unwrap();
+  discard Serve(Acp.Receive(Connection, Some(10000), None).Unwrap());
+  const Reply := Take(Endpoint);
+  Test.AssertTrue(
+    Types.RawJsonMember(Reply, 'result').Unwrap() is Some(_)
+    or
+    Types.RawJsonMember(Reply, 'error').Unwrap() is Some(_)
+  );
+  return true;
+end function;
+
+function Signal(Marker: string): boolean;
+begin
+  while not Fs.IsFile(Marker + '.ready') do
+    Time.Sleep(1);
+  end while;
+
+  discard Fs.WriteText(Marker, 'done').Unwrap();
+  return true;
+end function;
+
+begin
+  const Directory := Fs.CreateTempDir().Unwrap();
+  const Path := Directory + '/file.txt';
+  var Options := Acp.DefaultOptions();
+  Options.ClientCapabilities.Fs.ReadTextFile := true;
+  Options.ClientCapabilities.Fs.WriteTextFile := true;
+  Options.ClientCapabilities.Terminal := true;
+  Options.ClientCapabilities.Elicitation := Some(
+    Types.ElicitationCapabilities(
+      Form := Some(Types.ElicitationFormCapabilities(Meta := None)),
+      Url := None,
+      Meta := None
+    )
+  );
+  Options.Limits.Terminals := 1;
+  Options.Limits.TerminalBytes := 5;
+  Options.Limits.AllTerminalBytes := 5;
+  const Messages := Acp.ConnectMessages(Options).Unwrap();
+  const Connection := Messages.Connection;
+  discard Exchange(
+    Connection,
+    Messages.Endpoint,
+    'initialize',
+    '{"protocolVersion":1,"clientCapabilities":{"fs":{"readTextFile":true,"writeTextFile":true},"terminal":true,"elicitation":{"form":{}}}}',
+    '{"protocolVersion":1,"agentCapabilities":{"sessionCapabilities":{"close":{}}}}'
+  );
+  discard Exchange(
+    Connection,
+    Messages.Endpoint,
+    'session/new',
+    '{"cwd":"/workspace","mcpServers":[]}',
+    '{"sessionId":"s"}'
+  );
+  discard Exchange(
+    Connection,
+    Messages.Endpoint,
+    'session/new',
+    '{"cwd":"/workspace","mcpServers":[]}',
+    '{"sessionId":"other"}'
+  );
+  discard Incoming(
+    Connection,
+    Messages.Endpoint,
+    'fs/write_text_file',
+    '{"sessionId":"s","path":' + Quote(Path) + ',"content":"ä\r\n😀"}'
+  );
+  Test.AssertEquals('ä' + #13 + #10 + '😀', Fs.ReadText(Path).Unwrap());
+  for Line: integer in [1, 2, 3] do
+    ExpectedText := if Line = 1 then 'ä' + #13 + #10
+      else if Line = 2 then '😀' else '' end if
+      end if;
+    discard Incoming(
+      Connection,
+      Messages.Endpoint,
+      'fs/read_text_file',
+      '{"sessionId":"s","path":' + Quote(Path) + ',"line":' + '%d'.Format(Line) + ',"limit":1}'
+    );
+  end for;
+
+  ExpectedText := '';
+  discard Incoming(
+    Connection,
+    Messages.Endpoint,
+    'fs/read_text_file',
+    '{"sessionId":"s","path":' + Quote(Path) + ',"limit":0}'
+  );
+  ExpectFailure := true;
+  discard Incoming(
+    Connection,
+    Messages.Endpoint,
+    'fs/write_text_file',
+    '{"sessionId":"s","path":' + Quote(Directory + '/missing/file.txt') + ',"content":"no"}'
+  );
+  ExpectFailure := false;
+  const Executable := Proc.CurrentExecutable().Unwrap();
+  const Fixture := Fs.CurrentDir().Unwrap() + '/tests/fixtures/acp_terminal.fpas';
+  for Mode: string in ['normal', 'fail'] do
+    const Marker := Directory + '/' + Mode;
+    const Params := '{"sessionId":"s","command":' + Quote(Executable) + ',"args":["run",' +
+      Quote(Fixture) + ',"--",' + Quote(Marker) + ',' + Quote(Mode) + '],"outputByteLimit":5}';
+    discard Incoming(Connection, Messages.Endpoint, 'terminal/create', Params);
+    ExpectCapacity := true;
+    discard Incoming(Connection, Messages.Endpoint, 'terminal/create', Params);
+    ExpectCapacity := false;
+    ExpectedExit := if Mode = 'normal' then 0 else 2 end if;
+    CurrentMarker := Marker;
+    CancelWait := true;
+    discard Incoming(
+      Connection,
+      Messages.Endpoint,
+      'terminal/wait_for_exit',
+      '{"sessionId":"s","terminalId":' + Quote(TerminalId) + '}'
+    );
+    CancelWait := false;
+    scope
+      const Done := go Signal(Marker);
+      discard Incoming(
+        Connection,
+        Messages.Endpoint,
+        'terminal/wait_for_exit',
+        '{"sessionId":"s","terminalId":' + Quote(TerminalId) + '}'
+      );
+      Test.AssertTrue(Tasks.Wait(Done));
+    end scope;
+
+    discard Incoming(
+      Connection,
+      Messages.Endpoint,
+      'terminal/output',
+      '{"sessionId":"s","terminalId":' + Quote(TerminalId) + '}'
+    );
+    ExpectFailure := true;
+    discard Incoming(
+      Connection,
+      Messages.Endpoint,
+      'terminal/output',
+      '{"sessionId":"other","terminalId":' + Quote(TerminalId) + '}'
+    );
+    ExpectFailure := false;
+    discard Incoming(
+      Connection,
+      Messages.Endpoint,
+      'terminal/kill',
+      '{"sessionId":"s","terminalId":' + Quote(TerminalId) + '}'
+    );
+    discard Incoming(
+      Connection,
+      Messages.Endpoint,
+      'terminal/release',
+      '{"sessionId":"s","terminalId":' + Quote(TerminalId) + '}'
+    );
+  end for;
+
+  discard Incoming(
+    Connection,
+    Messages.Endpoint,
+    'elicitation/create',
+    '{"mode":"form","sessionId":"s","message":"Question","requestedSchema":{"type":"object","properties":{"flag":{"type":"boolean","default":true}}}}'
+  );
+  const Active := '{"sessionId":"s","command":' + Quote(Executable) + ',"args":["run",' +
+    Quote(Fixture) + ',"--",' + Quote(Directory + '/active') + ',"normal"],"outputByteLimit":5}';
+  discard Incoming(Connection, Messages.Endpoint, 'terminal/create', Active);
+  discard Exchange(Connection, Messages.Endpoint, 'session/close', '{"sessionId":"s"}', '{}');
+  discard Exchange(
+    Connection,
+    Messages.Endpoint,
+    'session/new',
+    '{"cwd":"/workspace","mcpServers":[]}',
+    '{"sessionId":"s"}'
+  );
+  discard Incoming(Connection, Messages.Endpoint, 'terminal/create', Active);
+  discard Acp.Close(Connection).Unwrap();
+  discard Acp.Release(Connection).Unwrap();
+  discard Fs.DeleteDirAll(Directory).Unwrap();
+end.

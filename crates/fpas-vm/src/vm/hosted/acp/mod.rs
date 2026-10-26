@@ -1,7 +1,9 @@
 //! Typed protocol value conversion, without process or connection state.
 
 mod arguments;
+mod client;
 mod dispatch;
+mod host;
 mod outcomes;
 mod registry;
 #[cfg(test)]

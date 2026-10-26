@@ -14,6 +14,8 @@ use futures::{sink, stream};
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
 
+type ReceivedLine = (String, Option<oneshot::Receiver<()>>);
+
 pub(super) struct Receipt {
     pub frame: Frame,
     _acknowledge: oneshot::Sender<()>,
@@ -27,6 +29,9 @@ pub(super) struct Wire {
 }
 
 impl Wire {
+    pub async fn session_closed(&self, session: &str) -> Result<(), Fault> {
+        self.transport.session_closed(session).await
+    }
     pub fn new(shared: Arc<Shared>, transport: Arc<dyn Transport>) -> Arc<Self> {
         Arc::new(Self {
             shared,
@@ -131,13 +136,14 @@ impl Wire {
                     continue;
                 }
                 RawJsonRpcMessage::Request(request) => {
-                    if self
-                        .shared
-                        .lock()
+                    let state = self.shared.lock();
+                    let duplicate = state
                         .responders
                         .values()
                         .any(|entry| entry.sdk.id() == &request.id)
-                    {
+                        || state.cancelled_replies.contains_key(&request.id);
+                    drop(state);
+                    if duplicate {
                         return Err(Fault::InvalidMessage);
                     }
                     return self.capture(frame);
@@ -147,10 +153,7 @@ impl Wire {
         }
     }
 
-    fn capture(
-        &self,
-        frame: Frame,
-    ) -> Result<Option<(String, Option<oneshot::Receiver<()>>)>, Fault> {
+    fn capture(&self, frame: Frame) -> Result<Option<ReceivedLine>, Fault> {
         let line = frame.raw.text().to_owned();
         let (acknowledge, acknowledged) = oneshot::channel();
         *self.captured.lock().unwrap_or_else(|e| e.into_inner()) = Some(Receipt {
@@ -198,6 +201,10 @@ impl Wire {
         };
         drop(publication);
         if let RawJsonRpcMessage::Response(response) = message {
+            self.shared
+                .lock()
+                .cancelled_replies
+                .remove(response_id(&response));
             let mut automatic = self.automatic.lock().unwrap_or_else(|e| e.into_inner());
             if automatic
                 .as_ref()

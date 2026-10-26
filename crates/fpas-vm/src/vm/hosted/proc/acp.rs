@@ -21,6 +21,7 @@ use std::{
 };
 
 /// Detached launch data, validated by the same preflight as Std.Proc.
+#[derive(Clone)]
 pub(in crate::vm::hosted) struct AcpLaunch {
     pub command: String,
     pub arguments: Vec<String>,
@@ -281,10 +282,12 @@ impl Drop for AcpProcess {
     }
 }
 
-fn fault(error: Failure) -> Fault {
+pub(super) fn fault(error: Failure) -> Fault {
     match error.kind {
         Kind::Argument(name, _) => Fault::InvalidArgument(name),
         Kind::Limit(resource, maximum) => Fault::LimitExceeded(resource, maximum),
+        Kind::Cancelled => Fault::Cancelled,
+        Kind::Timeout => Fault::Timeout,
         _ => Fault::Host,
     }
 }

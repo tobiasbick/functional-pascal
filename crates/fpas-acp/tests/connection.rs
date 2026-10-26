@@ -1,3 +1,9 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    reason = "Protocol fixtures fail directly at their observable boundary"
+)]
 //! Observable production-endpoint behavior with a deterministic peer, without network access.
 
 use fpas_acp::{
@@ -132,13 +138,31 @@ fn delayed_request_does_not_block_responses_notifications_or_cancellation() {
 #[test]
 fn responder_validation_preserves_its_single_use_right_and_foreign_ids_fail() {
     let runtime = Runtime::new().unwrap();
+    let mut settings = fpas_acp::connection::Settings::for_version(Version::V1);
+    settings.client_capabilities.fs.read_text_file = true;
     let (connection, endpoint) = runtime
-        .connect_messages(Version::V1, Limits::default())
+        .connect_messages_configured(settings, Limits::default())
         .unwrap();
     let (foreign, _) = runtime
         .connect_messages(Version::V1, Limits::default())
         .unwrap();
     let reader = connection.reader().unwrap();
+    for (method, params, result) in [
+        (
+            "initialize",
+            r#"{"protocolVersion":1,"clientCapabilities":{"fs":{"readTextFile":true}}}"#,
+            r#"{"protocolVersion":1}"#,
+        ),
+        (
+            "session/new",
+            r#"{"cwd":"/workspace","mcpServers":[]}"#,
+            r#"{"sessionId":"s"}"#,
+        ),
+    ] {
+        connection.send(method, raw(params)).unwrap();
+        respond(&endpoint, &take(&endpoint), result);
+        assert!(matches!(event(&reader).payload, Payload::Response(_, _, _)));
+    }
     assert!(endpoint.feed(raw(r#"{"jsonrpc":"2.0","id":1,"method":"fs/read_text_file","params":{"sessionId":"s","path":"/example"}}"#)).unwrap());
     let Payload::Request(responder, _, _) = event(&reader).payload else {
         panic!("request");

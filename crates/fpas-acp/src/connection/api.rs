@@ -32,7 +32,7 @@ impl Connection {
     }
     /// Selected payload schema. Negotiation is an explicit higher-level operation.
     pub fn version(&self) -> Version {
-        self.shared.version
+        self.shared.family()
     }
     /// Detached lifecycle snapshot.
     pub fn state(&self) -> Result<Lifecycle, Fault> {
@@ -42,6 +42,19 @@ impl Connection {
         } else {
             Ok(state.lifecycle)
         }
+    }
+    /// Atomic lifecycle and initialization snapshot without retaining a transcript.
+    pub fn snapshot(&self) -> Result<super::Snapshot, Fault> {
+        let state = self.shared.lock();
+        if state.released {
+            return Err(Fault::Closed);
+        }
+        Ok(super::Snapshot {
+            lifecycle: state.lifecycle,
+            requested_version: self.shared.version,
+            negotiated_version: state.client.negotiated_version(),
+            initialization: state.client.initialization.clone(),
+        })
     }
     /// Whether physical cleanup and SDK shutdown have completed.
     pub fn is_closed(&self) -> bool {
@@ -60,9 +73,39 @@ impl Connection {
 
     /// Admit one schema-validated request, without waiting for a peer response.
     pub fn send(&self, method: &str, raw: RawJson) -> Result<RequestToken, Fault> {
-        let bytes = self.validate("ClientRequest", method, &raw)?;
+        self.admit(self.version(), None, method, raw)
+    }
+    /// Admit a request only in its caller's explicitly selected protocol family.
+    pub fn send_for(
+        &self,
+        version: Version,
+        method: &str,
+        raw: RawJson,
+    ) -> Result<RequestToken, Fault> {
+        self.admit(version, None, method, raw)
+    }
+    /// Send a typed reverse-direction MCP carrier, absent from the SDK client-role enum.
+    pub fn send_mcp(
+        &self,
+        endpoint: u64,
+        version: Version,
+        raw: RawJson,
+    ) -> Result<RequestToken, Fault> {
+        self.admit(version, Some(endpoint), "mcp/message", raw)
+    }
+    fn admit(
+        &self,
+        version: Version,
+        endpoint: Option<u64>,
+        method: &str,
+        raw: RawJson,
+    ) -> Result<RequestToken, Fault> {
+        let bytes = self.validate_for(version, "ClientRequest", method, &raw)?;
         let mut state = self.shared.lock();
         Shared::active(&state)?;
+        if self.version() != version {
+            return Err(Fault::InvalidArgument("ProtocolVersion"));
+        }
         if state.pending.len() == self.shared.limits.outgoing_requests {
             return Err(Fault::LimitExceeded(
                 "OutgoingRequests",
@@ -73,10 +116,42 @@ impl Connection {
             return Err(Fault::LimitExceeded("RequestTokens", SERIAL_MASK as usize));
         }
         let token = RequestToken(self.shared.identity(REQUEST_TAG, state.request_serial + 1));
-        let metadata = self
-            .shared
-            .outgoing_metadata
-            .reserve(method.len().saturating_mul(2).saturating_add(512))?;
+        let mut action = if self.version() == Version::V1 {
+            state
+                .client
+                .prepare(state.lifecycle, method, &raw, &self.shared.limits)?
+        } else {
+            state
+                .client
+                .prepare_v2(state.lifecycle, method, &raw, &self.shared.limits)?
+        };
+        if method == "mcp/message" {
+            let route = super::mcp::route(&state, &raw, false)?;
+            if endpoint.is_some_and(|endpoint| endpoint != route) {
+                return Err(Fault::InvalidArgument("McpEndpoint"));
+            }
+            action = super::client::Action::Mcp(route);
+        }
+        if matches!(
+            method,
+            "session/new" | "session/load" | "session/resume" | "session/fork"
+        ) {
+            super::mcp::setup(&state, &raw, method)?;
+        }
+        let metadata = self.shared.outgoing_metadata.reserve(
+            method
+                .len()
+                .saturating_mul(2)
+                .saturating_add(match &action {
+                    super::client::Action::Setup(id, _)
+                    | super::client::Action::Prompt(id)
+                    | super::client::Action::V2Prompt(id)
+                    | super::client::Action::Close(id)
+                    | super::client::Action::Session(id, _) => id.len().saturating_mul(4),
+                    _ => 0,
+                })
+                .saturating_add(512),
+        )?;
         if !self.shared.commands.push(
             Command::Send {
                 token,
@@ -91,9 +166,18 @@ impl Connection {
             ));
         }
         state.request_serial += 1;
+        state.client.admit(&mut action, token);
+        if matches!(
+            action,
+            super::client::Action::Initialize | super::client::Action::InitializeV2
+        ) {
+            state.lifecycle = Lifecycle::Initializing;
+        }
         state.pending.insert(
             token,
             Pending {
+                version,
+                action,
                 _metadata: metadata,
                 method: method.into(),
                 wire: None,
@@ -108,96 +192,55 @@ impl Connection {
 
     /// Admit one typed notification. Queue-full failures publish nothing.
     pub fn notify(&self, method: &str, raw: RawJson) -> Result<bool, Fault> {
-        let bytes = self.validate("ClientNotification", method, &raw)?;
-        let state = self.shared.lock();
+        self.notify_for(self.version(), method, raw)
+    }
+    /// Admit a notification only in its caller's explicitly selected family.
+    pub fn notify_for(&self, version: Version, method: &str, raw: RawJson) -> Result<bool, Fault> {
+        let bytes = self.validate_for(version, "ClientNotification", method, &raw)?;
+        let mut state = self.shared.lock();
         Shared::active(&state)?;
+        if self.version() != version {
+            return Err(Fault::InvalidArgument("ProtocolVersion"));
+        }
+        if !method.starts_with('_') && method != "session/cancel" && method != "mcp/message" {
+            return Err(Fault::UnsupportedCapability("ExperimentalMethod"));
+        }
+        if method == "mcp/message" {
+            state.client.require_mcp()?;
+            super::mcp::route(&state, &raw, false)?;
+        }
+        let cancelled_session = if method == "session/cancel" {
+            if state.lifecycle != Lifecycle::Ready {
+                return Err(Fault::Busy("Initialize"));
+            }
+            Some(state.client.cancel_session(&raw)?)
+        } else {
+            None
+        };
+        let cancelled = cancelled_session.as_ref().map_or_else(Vec::new, |id| {
+            super::client::cancellation::select(&state, id)
+        });
         if !self.shared.commands.push(
             Command::Notify {
                 method: method.into(),
-                raw,
+                raw: raw.clone(),
+                cancelled: cancelled.clone(),
             },
-            bytes,
+            bytes.saturating_add(
+                cancelled
+                    .len()
+                    .saturating_mul(std::mem::size_of::<Responder>()),
+            ),
         )? {
             return Err(Fault::LimitExceeded(
                 "CommandQueue",
                 self.shared.limits.queue_bytes,
             ));
         }
-        drop(state);
-        self.shared.changed.notify_waiters();
-        Ok(true)
-    }
-
-    /// Validate a successful reply before consuming the deferred response right.
-    pub fn respond(&self, responder: Responder, raw: RawJson) -> Result<bool, Fault> {
-        self.reply(responder, raw, false)
-    }
-    /// Validate a protocol error before consuming the deferred response right.
-    pub fn respond_error(&self, responder: Responder, raw: RawJson) -> Result<bool, Fault> {
-        self.reply(responder, raw, true)
-    }
-
-    fn reply(&self, token: Responder, raw: RawJson, error: bool) -> Result<bool, Fault> {
-        let (method, id_bytes) = {
-            let state = self.shared.lock();
-            self.check_responder(&state, token)?;
-            let Some(entry) = state.responders.get(&token) else {
-                return Err(Fault::Closed);
-            };
-            if entry.queued {
-                return Err(Fault::Closed);
-            }
-            (
-                entry.sdk.method().to_owned(),
-                serde_json::to_string(entry.sdk.id())
-                    .map_err(|_| Fault::InvalidMessage)?
-                    .len(),
-            )
-        };
-        if error {
-            crate::codec::decode::<agent_client_protocol::Error>(raw.clone())?;
-        } else {
-            self.validate("ClientResponse", &method, &raw)
-                .map_err(|_| Fault::InvalidArgument("Response"))?;
+        if let Some(id) = cancelled_session {
+            state.client.mark_cancelled(&id);
         }
-        if raw.text().len().saturating_add(id_bytes).saturating_add(64)
-            > self.shared.limits.message_bytes
-        {
-            return Err(Fault::LimitExceeded(
-                "MessageBytes",
-                self.shared.limits.message_bytes,
-            ));
-        }
-        let value: serde_json::Value =
-            serde_json::from_str(raw.text()).map_err(|_| Fault::InvalidMessage)?;
-        let bytes = raw
-            .text()
-            .len()
-            .saturating_add(super::budget::json_size(&value).saturating_mul(2))
-            .saturating_add(id_bytes)
-            .saturating_add(128);
-        let mut state = self.shared.lock();
-        Shared::active(&state)?;
-        let Some(entry) = state.responders.get_mut(&token) else {
-            return Err(Fault::Closed);
-        };
-        if entry.queued {
-            return Err(Fault::Closed);
-        }
-        if !self.shared.commands.push(
-            Command::Reply {
-                responder: token,
-                raw,
-                error,
-            },
-            bytes,
-        )? {
-            return Err(Fault::LimitExceeded(
-                "CommandQueue",
-                self.shared.limits.queue_bytes,
-            ));
-        }
-        entry.queued = true;
+        super::client::cancellation::mark(&mut state, &cancelled);
         drop(state);
         self.shared.changed.notify_waiters();
         Ok(true)
@@ -268,7 +311,11 @@ impl Connection {
         Ok(entry.sdk.method().into())
     }
 
-    fn check_responder(&self, state: &super::shared::State, token: Responder) -> Result<(), Fault> {
+    pub(super) fn check_responder(
+        &self,
+        state: &super::shared::State,
+        token: Responder,
+    ) -> Result<(), Fault> {
         if state.released
             || !self
                 .shared
@@ -342,7 +389,13 @@ impl Connection {
         Ok(true)
     }
 
-    fn validate(&self, root: &str, method: &str, raw: &RawJson) -> Result<usize, Fault> {
+    pub(super) fn validate_for(
+        &self,
+        version: Version,
+        root: &str,
+        method: &str,
+        raw: &RawJson,
+    ) -> Result<usize, Fault> {
         let method_bytes = serde_json::to_string(method)
             .map_err(|_| Fault::InvalidMessage)?
             .len();
@@ -358,7 +411,11 @@ impl Connection {
                 self.shared.limits.message_bytes,
             ));
         }
-        binding::catalog(self.shared.version)?.decode_message(root, method, raw.clone())?;
+        if root == "ClientRequest" && method == "mcp/message" {
+            binding::catalog(version)?.decode("MessageMcpRequest", raw)?;
+        } else {
+            binding::catalog(version)?.decode_message(root, method, raw.clone())?;
+        }
         let value: serde_json::Value =
             serde_json::from_str(raw.text()).map_err(|_| Fault::InvalidMessage)?;
         if root != "ClientResponse" {

@@ -1,0 +1,7 @@
+program AcpV2ConsoleClient;
+
+uses AcpDemo as Demo;
+
+begin
+  Demo.Run(true);
+end.

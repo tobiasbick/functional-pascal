@@ -27,7 +27,11 @@ fn vm_completion_and_failure_close_unreleased_native_connections() {
         let (id, endpoint_id) = vm
             .hosted
             .acp
-            .connect_messages(Version::V1, Limits::default())
+            .connect_messages(
+                fpas_acp::connection::Settings::for_version(Version::V1),
+                Limits::default(),
+                vm.hosted.piped_processes.clone(),
+            )
             .unwrap();
         let connection = vm.hosted.acp.connection(id).unwrap();
         let endpoint = vm.hosted.acp.endpoint(endpoint_id).unwrap();
@@ -77,7 +81,7 @@ begin
   case Event.Payload of
     when Acp.EventPayload.Closed(const Status):
       Test.AssertTrue(Status.ProcessExit is Some(Acp.ProcessExitStatus.Exited(0)));
-    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.Request(_, _), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _):
+    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.Request(_, _), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
       panic('Expected closed process');
   end case;
   Test.AssertTrue(Acp.Release(Connection).Unwrap());

@@ -5,7 +5,7 @@ use crate::vm::{VmError, worker::Worker};
 use fpas_acp::{
     RawJson,
     binding::{self, Type, Value as Detached},
-    connection::{Fault, Limits},
+    connection::{Fault, Limits, Settings},
     schema::Version,
 };
 use fpas_bytecode::{AcpIntrinsic as Op, SourceLocation, Value};
@@ -18,15 +18,51 @@ impl Worker {
         arguments: &[Value],
         location: SourceLocation,
     ) -> Result<Value, VmError> {
+        if (789..=798).contains(&(operation as u16))
+            || operation == Op::HostV2RunTerminalAuthentication
+        {
+            return self.execute_acp_host(operation, arguments, location);
+        }
         if operation == Op::DefaultOptions {
             return self.acp_default_options(location);
         }
         let result: Result<Value, Fault> = (|| {
             Ok(match (operation, arguments) {
+                (Op::SendMcp | Op::V2SendMcp, [endpoint, payload]) => {
+                    let endpoint = args::handle(endpoint)?;
+                    let connection = self.hosted.acp.mcp_connection(endpoint)?;
+                    let version = if operation == Op::SendMcp {
+                        Version::V1
+                    } else {
+                        Version::V2
+                    };
+                    let mut converter = self.acp_converter(version)?;
+                    let value = converter.unpack(
+                        &Type::Named("MessageMcpRequest".into()),
+                        payload,
+                        None,
+                    )?;
+                    let raw = converter.catalog.encode("MessageMcpRequest", &value)?;
+                    Value::OpaqueHandle(connection.send_mcp(endpoint, version, raw)?.id())
+                }
+                (Op::RegisterMcpEndpoint, [owner, server, session]) => {
+                    let connection = self.hosted.acp.connection(args::handle(owner)?)?;
+                    Value::OpaqueHandle(connection.register_mcp_endpoint(
+                        args::text(server)?,
+                        args::optional(session)?.map(args::text).transpose()?,
+                    )?)
+                }
+                (Op::RemoveMcpEndpoint, [owner, endpoint]) => {
+                    let connection = self.hosted.acp.connection(args::handle(owner)?)?;
+                    Value::Boolean(connection.remove_mcp_endpoint(args::handle(endpoint)?)?)
+                }
                 (Op::ConnectMessages, [options]) => {
                     let (version, limits) = self.acp_options(options)?;
-                    let (connection, endpoint) =
-                        self.hosted.acp.connect_messages(version, limits)?;
+                    let (connection, endpoint) = self.hosted.acp.connect_messages(
+                        version,
+                        limits,
+                        self.hosted.piped_processes.clone(),
+                    )?;
                     return self
                         .layouts
                         .record(
@@ -97,9 +133,9 @@ impl Worker {
                     };
                     let (method, raw) = self.acp_encode(version, root, payload)?;
                     if root == "ClientRequest" {
-                        Value::OpaqueHandle(connection.send(&method, raw)?.id())
+                        Value::OpaqueHandle(connection.send_for(version, &method, raw)?.id())
                     } else {
-                        Value::Boolean(connection.notify(&method, raw)?)
+                        Value::Boolean(connection.notify_for(version, &method, raw)?)
                     }
                 }
                 (Op::Respond | Op::V2Respond | Op::RespondError, [owner, payload]) => {
@@ -117,7 +153,7 @@ impl Worker {
                         } else {
                             Version::V1
                         };
-                        if connection.version() != version {
+                        if connection.responder_version(responder)? != version {
                             return Err(Fault::InvalidArgument("ProtocolVersion"));
                         }
                         let method = connection.responder_method(responder)?;
@@ -150,9 +186,7 @@ impl Worker {
                 }
                 (Op::State, [owner]) => {
                     let connection = self.hosted.acp.connection(args::handle(owner)?)?;
-                    return self
-                        .acp_state(connection.state()?, connection.version(), location)
-                        .map_err(|_| Fault::Host);
+                    return self.acp_state(connection.snapshot()?, location);
                 }
                 _ => return Err(Fault::InvalidArgument("Arguments")),
             })
@@ -160,17 +194,64 @@ impl Worker {
         self.acp_result(&operation.source_name(), result, location)
     }
 
-    fn acp_options(&self, options: &Value) -> Result<(Version, Limits), Fault> {
-        let selected = args::options(options)?;
-        let fields = args::record(options, "Std.Acp.Options", 5)?;
+    fn acp_options(&self, options: &Value) -> Result<(Settings, Limits), Fault> {
+        let (_, limits) = args::options(options)?;
+        let fields = args::record(options, "Std.Acp.Options", 6)?;
         let mut converter = self.acp_converter(Version::V1)?;
-        converter.unpack(
+        let info = converter.unpack(
             &Type::Option(Box::new(Type::Named("Implementation".into()))),
             &fields[0],
             None,
         )?;
-        converter.unpack(&Type::Named("ClientCapabilities".into()), &fields[1], None)?;
-        Ok(selected)
+        let caps = converter.unpack(&Type::Named("ClientCapabilities".into()), &fields[1], None)?;
+        let raw = converter.catalog.encode("ClientCapabilities", &caps)?;
+        let client_capabilities = fpas_acp::codec::decode(raw)?.value;
+        let client_info = match info {
+            Detached::None => None,
+            Detached::Some(info) => Some(
+                fpas_acp::codec::decode(converter.catalog.encode("Implementation", &info)?)?.value,
+            ),
+            _ => return Err(Fault::InvalidArgument("ClientInfo")),
+        };
+        let supported_versions = args::array(&fields[2])?
+            .iter()
+            .map(|value| {
+                if matches!(value, Value::Integer(0)) {
+                    Version::V1
+                } else {
+                    Version::V2
+                }
+            })
+            .collect();
+        let flags = args::record(&fields[3], "Std.Acp.ExperimentalOptions", 7)?;
+        let enabled = |index| matches!(flags[index], Value::Boolean(true));
+        let mut v2_converter = self.acp_converter(Version::V2)?;
+        let v2_caps =
+            v2_converter.unpack(&Type::Named("ClientCapabilities".into()), &fields[5], None)?;
+        let v2_client_capabilities = fpas_acp::codec::decode(
+            v2_converter
+                .catalog
+                .encode("ClientCapabilities", &v2_caps)?,
+        )?
+        .value;
+        Ok((
+            Settings {
+                supported_versions,
+                client_info,
+                client_capabilities,
+                v2_client_capabilities,
+                experimental: fpas_acp::connection::Experimental {
+                    token_usage: enabled(0),
+                    providers: enabled(1),
+                    mcp: enabled(2),
+                    plans: enabled(3),
+                    fork: enabled(4),
+                    system_prompt: enabled(5),
+                    subagents: enabled(6),
+                },
+            },
+            limits,
+        ))
     }
 
     fn acp_encode(
@@ -281,6 +362,35 @@ impl Worker {
                     "ACP default capability layout unavailable",
                 )
             })?;
+        let mut v2_converter = self.acp_converter(Version::V2).map_err(|_| {
+            crate::vm::diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                "ACP v2 catalog unavailable",
+            )
+        })?;
+        let v2_capabilities = v2_converter
+            .catalog
+            .decode(
+                "ClientCapabilities",
+                &RawJson::parse("{}").map_err(|_| {
+                    crate::vm::diagnostics::internal(
+                        self.executable.executable(),
+                        self.current_address,
+                        "ACP defaults unavailable",
+                    )
+                })?,
+            )
+            .and_then(|value| {
+                v2_converter.pack(&Type::Named("ClientCapabilities".into()), value, None)
+            })
+            .map_err(|_| {
+                crate::vm::diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "ACP v2 capability layout unavailable",
+                )
+            })?;
         Ok(self.layouts.record(
             "Std.Acp.Options",
             vec![
@@ -289,6 +399,7 @@ impl Worker {
                 Value::Array(vec![version].into()),
                 experimental,
                 limits,
+                v2_capabilities,
             ],
             location,
         )?)

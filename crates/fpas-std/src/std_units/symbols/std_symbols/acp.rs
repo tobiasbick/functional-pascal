@@ -10,12 +10,15 @@ std_symbol!(STD_ACP_UINT64_TO_INTEGER = "Std.Acp.Types.UInt64ToInteger");
 
 pub(in crate::std_units) const STD_ACP_SYMBOLS: &[&str] = &[
     "Std.Acp.DefaultOptions",
+    "Std.Acp.RegisterMcpEndpoint",
+    "Std.Acp.RemoveMcpEndpoint",
     "Std.Acp.ConnectMessages",
     "Std.Acp.FeedMessage",
     "Std.Acp.TryTakeMessage",
     "Std.Acp.CloseInput",
     "Std.Acp.ConnectProcess",
     "Std.Acp.Send",
+    "Std.Acp.SendMcp",
     "Std.Acp.Notify",
     "Std.Acp.TryReceive",
     "Std.Acp.Receive",
@@ -50,9 +53,23 @@ pub(in crate::std_units) const STD_ACP_TYPES_SYMBOLS: &[&str] = &[
     "Std.Acp.Types.DecodeProtocolLevelNotification",
     "Std.Acp.Types.EncodeProtocolLevelNotification",
 ];
+pub(in crate::std_units) const STD_ACP_HOST_SYMBOLS: &[&str] = &[
+    "Std.Acp.Host.ReadTextFile",
+    "Std.Acp.Host.WriteTextFile",
+    "Std.Acp.Host.CreateTerminal",
+    "Std.Acp.Host.TerminalOutput",
+    "Std.Acp.Host.WaitForTerminalExit",
+    "Std.Acp.Host.KillTerminal",
+    "Std.Acp.Host.ReleaseTerminal",
+    "Std.Acp.Host.RunTerminalAuthentication",
+    "Std.Acp.Host.V2RunTerminalAuthentication",
+    "Std.Acp.Host.ValidateElicitation",
+    "Std.Acp.Host.ElicitationDefaults",
+];
 
 pub(in crate::std_units) const STD_ACP_V2_SYMBOLS: &[&str] = &[
     "Std.Acp.V2.Send",
+    "Std.Acp.V2.SendMcp",
     "Std.Acp.V2.Notify",
     "Std.Acp.V2.Respond",
     "Std.Acp.V2.DecodeClientRequest",

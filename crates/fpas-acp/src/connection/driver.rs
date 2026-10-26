@@ -1,4 +1,7 @@
 //! One SDK task per connection. Callbacks detach data and never await application work.
+mod handler;
+use super::{client, host, mcp};
+use handler::Handler;
 
 use super::{
     Closed, Event, Fault, Payload, Responder,
@@ -99,6 +102,32 @@ fn publish(
     command: super::queue::Item<Command>,
 ) -> Result<(), agent_client_protocol::Error> {
     match &command.value {
+        Command::RetireRoute { tokens, responders } => {
+            let tokens = tokens.clone();
+            let responders = responders.clone();
+            let command = Arc::new(command);
+            for token in tokens {
+                let cancellation = {
+                    let mut state = shared.lock();
+                    if let Some(pending) = state.pending.get_mut(&token)
+                        && !pending.cancel_requested
+                    {
+                        pending.cancel_requested = true;
+                        pending.cancellation.clone().zip(pending.wire.clone())
+                    } else {
+                        None
+                    }
+                };
+                if let Some((cancellation, id)) = cancellation {
+                    shared
+                        .lock()
+                        .publications
+                        .push_back((Publication::Cancellation(id), Box::new(command.clone())));
+                    cancellation.cancel()?;
+                }
+            }
+            super::client::cancellation::settle(shared, &responders).map_err(|_| sdk_error())?;
+        }
         Command::Cancel { token } => {
             let cancellation = {
                 let state = shared.lock();
@@ -111,12 +140,28 @@ fn publish(
                 shared
                     .lock()
                     .publications
-                    .push_back((Publication::Cancellation(id), command));
+                    .push_back((Publication::Cancellation(id), Box::new(command)));
                 cancellation.cancel()?;
             }
         }
         Command::Send { token, method, raw } => {
             let token = *token;
+            let retired = {
+                let state = shared.lock();
+                state.pending.get(&token).is_some_and(|pending| matches!(pending.action, super::client::Action::Mcp(id) if !state.routes.values().any(|endpoint| endpoint.id == id)))
+            };
+            if retired {
+                shared
+                    .response(
+                        token,
+                        Event {
+                            payload: Payload::RequestFailed(token, Fault::Cancelled),
+                            raw: None,
+                        },
+                    )
+                    .map_err(|_| sdk_error())?;
+                return Ok(());
+            }
             let prepared = cx.prepare_request(UntypedMessage::new(method, json(raw)?)?);
             let id = prepared.id().clone();
             let cancellation = prepared.cancellation_handle();
@@ -129,18 +174,24 @@ fn publish(
                 pending.cancellation = Some(cancellation.clone());
                 state
                     .publications
-                    .push_back((Publication::Request(id), command));
+                    .push_back((Publication::Request(id), Box::new(command)));
             }
             prepared.on_receiving_result(async |_result| Ok(()))?;
         }
-        Command::Notify { method, raw } => {
+        Command::Notify {
+            method,
+            raw,
+            cancelled,
+        } => {
             let notification = UntypedMessage::new(method, json(raw)?)?;
             let method = method.clone();
+            let cancelled = cancelled.clone();
             shared
                 .lock()
                 .publications
-                .push_back((Publication::Notification(method), command));
+                .push_back((Publication::Notification(method), Box::new(command)));
             cx.send_notification(notification)?;
+            super::client::cancellation::settle(shared, &cancelled).map_err(|_| sdk_error())?;
         }
         Command::Reply {
             responder,
@@ -163,172 +214,12 @@ fn publish(
                 shared
                     .lock()
                     .publications
-                    .push_back((Publication::Response(id), command));
+                    .push_back((Publication::Response(id), Box::new(command)));
                 entry.sdk.respond_with_result(payload)?;
             }
         }
     }
     Ok(())
-}
-
-struct Handler {
-    wire: Arc<Wire>,
-}
-
-impl HandleDispatchFrom<Agent> for Handler {
-    async fn handle_dispatch_from(
-        &mut self,
-        message: Dispatch,
-        _cx: ConnectionTo<Agent>,
-    ) -> Result<Handled<Dispatch>, agent_client_protocol::Error> {
-        let result = self.dispatch(message);
-        if let Err(fault) = result {
-            self.wire.shared.fail(fault);
-            return Err(sdk_error());
-        }
-        Ok(Handled::Yes)
-    }
-    fn describe_chain(&self) -> impl std::fmt::Debug {
-        "FPAS detached ACP dispatch"
-    }
-}
-
-impl Handler {
-    fn dispatch(&self, message: Dispatch) -> Result<(), Fault> {
-        let receipt = self.wire.take()?;
-        let raw = receipt.frame.raw.clone();
-        let shared = &self.wire.shared;
-        let version = shared.version;
-        let catalog = binding::catalog(version)?;
-        match message {
-            Dispatch::Request(request, responder) => {
-                // Install the SDK cancellation marker before exposing the response right.
-                let cancellation = responder.cancellation();
-                let params = raw.member("params")?.unwrap_or(RawJson::parse("null")?);
-                let payload = match catalog.decode_message("AgentRequest", request.method(), params)
-                {
-                    Ok(decoded) => decoded.payload,
-                    Err(_) => {
-                        self.wire.automatic(responder.id().clone(), receipt);
-                        let error = if catalog.supports_method("AgentRequest", request.method()) {
-                            agent_client_protocol::Error::invalid_params()
-                        } else {
-                            agent_client_protocol::Error::method_not_found()
-                        };
-                        responder
-                            .respond_with_error(error)
-                            .map_err(|_| Fault::Host)?;
-                        return Ok(());
-                    }
-                };
-                let token = {
-                    let id_bytes = serde_json::to_string(responder.id())
-                        .map_err(|_| Fault::InvalidMessage)?
-                        .len();
-                    let metadata = shared.incoming_metadata.reserve(
-                        request
-                            .method()
-                            .len()
-                            .saturating_add(id_bytes)
-                            .saturating_mul(2)
-                            .saturating_add(512),
-                    )?;
-                    let mut state = shared.lock();
-                    Shared::active(&state)?;
-                    if state.responders.len() == shared.limits.incoming_requests {
-                        return Err(Fault::LimitExceeded(
-                            "IncomingRequests",
-                            shared.limits.incoming_requests,
-                        ));
-                    }
-                    if state.responder_serial == SERIAL_MASK {
-                        return Err(Fault::LimitExceeded("Responders", SERIAL_MASK as usize));
-                    }
-                    state.responder_serial += 1;
-                    let token = Responder(shared.identity(RESPONDER_TAG, state.responder_serial));
-                    state.responders.insert(
-                        token,
-                        Deferred {
-                            _metadata: metadata,
-                            sdk: responder,
-                            cancellation,
-                            queued: false,
-                        },
-                    );
-                    token
-                };
-                shared.event(Event {
-                    payload: Payload::Request(token, version, payload),
-                    raw: Some(raw),
-                })?;
-            }
-            Dispatch::Notification(notification) => {
-                let params = raw.member("params")?.unwrap_or(RawJson::parse("null")?);
-                if notification.method() == "$/cancel_request" {
-                    let cancelled: crate::protocol::v1::CancelRequestNotification =
-                        crate::codec::deserialize(&params)?;
-                    let token = shared
-                        .lock()
-                        .responders
-                        .iter()
-                        .find(|(_, entry)| {
-                            entry.sdk.id() == &cancelled.request_id
-                                && entry.cancellation.is_cancelled()
-                        })
-                        .map(|(token, _)| *token);
-                    if let Some(token) = token {
-                        shared.cancel_incoming(token, raw)?;
-                    }
-                    return Ok(());
-                }
-                let payload = match catalog.decode_message(
-                    "AgentNotification",
-                    notification.method(),
-                    params.clone(),
-                ) {
-                    Ok(decoded) => Payload::Notification(version, decoded.payload),
-                    Err(_)
-                        if !catalog.supports_method("AgentNotification", notification.method()) =>
-                    {
-                        Payload::UnknownNotification(notification.method().into(), params)
-                    }
-                    Err(_) => return Err(Fault::InvalidMessage),
-                };
-                shared.event(Event {
-                    payload,
-                    raw: Some(raw),
-                })?;
-            }
-            Dispatch::Response(result, router) => {
-                let pending = {
-                    let state = shared.lock();
-                    state
-                        .pending
-                        .iter()
-                        .find(|(_, pending)| pending.wire.as_ref() == Some(router.id()))
-                        .map(|(token, pending)| (*token, pending.method.clone()))
-                };
-                if let Some((token, method)) = pending {
-                    let payload = if let Some(error) = raw.member("error")? {
-                        Payload::RequestFailed(token, Fault::Peer(error))
-                    } else {
-                        let response = raw.member("result")?.ok_or(Fault::InvalidMessage)?;
-                        let decoded = catalog.decode_message("AgentResponse", &method, response)?;
-                        Payload::Response(token, version, decoded.payload)
-                    };
-                    shared.response(
-                        token,
-                        Event {
-                            payload,
-                            raw: Some(raw),
-                        },
-                    )?;
-                }
-                router.route_with_result(result).map_err(|_| Fault::Host)?;
-            }
-        }
-        Ok(())
-    }
 }
 
 fn json(raw: &RawJson) -> Result<serde_json::Value, agent_client_protocol::Error> {

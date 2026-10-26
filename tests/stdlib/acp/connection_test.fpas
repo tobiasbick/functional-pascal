@@ -2,6 +2,32 @@ program AcpConnectionTest;
 
 uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
 
+function Exchange(Connection: Acp.Connection; Endpoint: Acp.MessageEndpoint; Method: string; Params: string; Reply: string): boolean;
+begin
+  const Token := Acp.Send(
+    Connection,
+    Types.DecodeClientRequest(Method, Types.RawJson(Text := Params)).Unwrap().Payload
+  ).Unwrap();
+  var Waiting := true;
+  while Waiting do
+    case Acp.TryTakeMessage(Endpoint).Unwrap() of
+      when Some(const Message):
+        const Id := Types.RawJsonMember(Message, 'id').Unwrap().Unwrap();
+        discard Acp.FeedMessage(
+          Endpoint,
+          Types.RawJson(Text := '{"jsonrpc":"2.0","id":' + Id.Text + ',"result":' + Reply + '}')
+        ).Unwrap();
+        Waiting := false;
+      when None:
+        Time.Sleep(1);
+    end case;
+  end while;
+  const Received := Acp.Receive(Connection, Some(5000), None).Unwrap();
+  Test.AssertTrue(Received.Payload is Acp.EventPayload.Response(_, _));
+  Test.AssertFalse(Acp.CancelRequest(Connection, Token).Unwrap());
+  return true;
+end function;
+
 function Peer(Endpoint: Acp.MessageEndpoint): boolean;
 begin
   var Waiting := true;
@@ -38,7 +64,9 @@ begin
 end function;
 
 begin
-  const Messages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+  var Options := Acp.DefaultOptions();
+  Options.ClientCapabilities.Fs.ReadTextFile := true;
+  const Messages := Acp.ConnectMessages(Options).Unwrap();
   const Connection := Messages.Connection;
   Test.AssertTrue(Acp.State(Connection).Unwrap().Lifecycle is Acp.Lifecycle.Uninitialized);
   const Source := Tasks.CreateCancellationSource();
@@ -67,6 +95,20 @@ begin
   end scope;
 
   Test.AssertFalse(Acp.CancelRequest(Connection, RequestToken).Unwrap());
+  discard Exchange(
+    Connection,
+    Messages.Endpoint,
+    'initialize',
+    '{"protocolVersion":1,"clientCapabilities":{"fs":{"readTextFile":true}}}',
+    '{"protocolVersion":1}'
+  );
+  discard Exchange(
+    Connection,
+    Messages.Endpoint,
+    'session/new',
+    '{"cwd":"/workspace","mcpServers":[]}',
+    '{"sessionId":"s"}'
+  );
   Test.AssertTrue(
     Acp.FeedMessage(
       Messages.Endpoint,
@@ -89,7 +131,7 @@ begin
       ).Unwrap().Payload;
       Test.AssertTrue(Acp.Respond(Responder, Answer).Unwrap());
       Test.AssertTrue(Acp.Respond(Responder, Answer) is Error(Types.AcpError.Closed(_)));
-    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.Closed(_), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _):
+    when Acp.EventPayload.Response(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.Closed(_), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
       panic('Expected deferred request');
   end case;
 

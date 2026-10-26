@@ -5,6 +5,9 @@ behavior. Commands below assume `fpas` is the intended toolchain. Use focused
 command help for current flags. In this repository, `--std-lib lib` explicitly
 selects the checkout's standard library.
 
+For agent-to-agent client programs, start with the [ACP handbook](../std/ai/acp/README.md)
+for connection ownership, typed requests, host decisions and explicit v2 selection.
+
 ## Ask the matching tool
 
 | Question | Command or reference |

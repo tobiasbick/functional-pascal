@@ -1,10 +1,10 @@
 # Connections and transports
 
 Import `Std.Acp as Acp` and `Std.Acp.Types as Types`. A connection starts in
-`Lifecycle.Uninitialized`. The operations below deliver the transport and
-typed dispatch layer. Initialization/session policy is tracked in
-[AP50.4](../../../../future/improve-syntax/ap50-acp-client/04-v1-client.md);
-host adapters and experimental negotiation have their own work packages.
+`Lifecycle.Uninitialized`. Send an explicit typed initialize request before
+using stable session methods. See [sessions](sessions.md) for negotiation,
+capability checks and prompt ownership. [Host adapters](host.md),
+[experimental options](experimental.md) and [v2](v2.md) describe their policy.
 
 ## Setup
 
@@ -35,12 +35,16 @@ nonempty final frame. Complete preceding frames remain deliverable. A chunk
 size never replaces the complete-message limit.
 
 `Options` contains `ClientInfo`, `ClientCapabilities`, `SupportedVersions`,
-`ExperimentalOptions` and `Limits`. The default is `[Acp.ProtocolVersion.V1]`,
+`ExperimentalOptions`, `Limits` and `V2ClientCapabilities`. The default is `[Acp.ProtocolVersion.V1]`,
 absent client information, unsupported client capabilities, and false
 experimental flags. V2 payload dispatch requires explicit V2 selection.
-Experimental flags currently reject activation while their runtime support
-is being implemented. Opening a connection grants no filesystem or terminal
-access.
+Experimental flags are independent opt-ins and also require the corresponding
+peer capabilities. Opening a connection grants no filesystem or terminal access.
+
+The explicit initialize request must match the configured `ClientInfo`,
+`ClientCapabilities` and highest supported version. Configure the options
+before connecting, then include the same values in `Types.InitializeRequest`.
+Changing the offered capabilities after opening a transport is rejected.
 
 ## Messages and events
 
@@ -59,13 +63,19 @@ Send/notify return after local admission. SDK-assigned wire IDs remain separate
 from opaque request tokens. `Std.Acp.V2.Send`, `Notify` and `Respond` use the
 separate V2 payload types; a family mismatch fails before admission.
 
+Each request and responder retains its admission family until it settles.
+A lower-version negotiation changes the family for new work; it does not
+reinterpret outstanding values or trigger a resend.
+
 `Event` contains `Payload: EventPayload` and `RawMessage: Option of Types.RawJson`.
 The raw document retains ignored envelope/payload fields and exact JSON number
 spellings. Events include `Response(Token, Payload)`, `RequestFailed(Token, Cause)`,
 `Notification(Payload)`, `Request(Payload, Responder)`, `RequestCancelled(Responder)`,
 `UnknownNotification(Method, Payload)` and `Closed(Status)`. V2 data uses the
 corresponding `V2Response`, `V2Notification` and `V2Request` variants. The
-`V2Initialized` variant reserves the separately typed initialization outcome.
+`V2Initialized` carries the separately typed initialization outcome. MCP carrier
+requests have separate `McpResponse` and `V2McpResponse` outcomes because the
+pinned SDK omits their reverse-direction root variants; see [MCP endpoints](experimental.md#mcp-carrier-endpoints).
 
 Exactly one reader may own reception, including while suspended. Another
 reader gets `Busy`. Timeout is `Option of integer`, cancellation is
@@ -86,9 +96,12 @@ for an already completed/cancelled token. The request remains pending until
 its actual response or connection termination. Incoming cancellation expires
 the responder and emits `RequestCancelled` in received order.
 
-`ConnectionState` contains `Lifecycle`, `RequestedVersion`, `NegotiatedVersion`
-and `AgentCapabilities`. The transport layer leaves negotiation fields absent;
-the initialization work package owns those transitions.
+`ConnectionState` contains `Lifecycle`, `RequestedVersion`, `NegotiatedVersion`,
+`NegotiatedVersion`, `AgentCapabilities`, `AgentInfo` and `AuthMethods`, plus
+separate `V2AgentCapabilities`, `V2AgentInfo` and `V2AuthMethods`. Negotiated values remain
+absent until successful initialization; auth methods start as an empty array.
+The original typed response and its raw message remain available through the
+response event. Closing retains the bounded negotiation snapshot for diagnosis.
 
 ## Bounds and cleanup
 
@@ -112,6 +125,9 @@ until release. All limits are validated before starting a process.
 
 Queues account for retained raw/detached payloads and SDK publication work.
 Retained request/responder metadata has bounded reservations too. A full
+client-state budget reports `LimitExceeded('ClientStateBytes', ...)`; it uses
+`QueueBytes` as its separate bound for negotiated data and session modes/config.
+Session slots include pending setup requests. A full
 outbound admission queue rejects publication. A full event queue fails the
 connection visibly. Terminal request failures and the final close event use
 reserved state: drain admitted events, then unanswered-request failures, then

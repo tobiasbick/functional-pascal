@@ -1,9 +1,8 @@
 //! VM-local connection/endpoint identities, with launch reservations before native effects.
 
-use super::super::proc::{AcpLaunch, AcpProcess, PipedProcesses};
+use super::super::proc::{AcpLaunch, AcpProcess, AcpTerminals, PipedProcesses};
 use fpas_acp::{
-    connection::{Connection, Fault, Limits, Responder, Runtime},
-    schema::Version,
+    connection::{Connection, Fault, Limits, Responder, Runtime, Settings},
     transport::MessageEndpoint,
 };
 use std::{
@@ -16,6 +15,7 @@ struct State {
     runtime: Option<Arc<Runtime>>,
     connections: BTreeMap<u64, Connection>,
     endpoints: BTreeMap<u64, (u64, MessageEndpoint)>,
+    terminals: BTreeMap<u64, Arc<AcpTerminals>>,
     opening: usize,
     stopping: bool,
 }
@@ -56,11 +56,21 @@ impl Registry {
 
     pub(super) fn connect_messages(
         &self,
-        version: Version,
+        settings: Settings,
         limits: Limits,
+        processes: Arc<PipedProcesses>,
     ) -> Result<(u64, u64), Fault> {
         let (_reservation, runtime) = self.reserve(&limits)?;
-        let (connection, endpoint) = runtime.connect_messages(version, limits)?;
+        let (endpoint, transport) = fpas_acp::transport::messages(&limits)?;
+        let terminals = AcpTerminals::new(processes, limits.clone());
+        let connection = runtime.connect_configured(
+            settings,
+            limits,
+            Arc::new(super::host::resources::OwnedTransport {
+                inner: Arc::new(transport),
+                terminals: terminals.clone(),
+            }),
+        )?;
         let id = connection.id();
         let endpoint_id = (id & 0x0000_ffff_ffff_ffff) | 0x4145_0000_0000_0000;
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
@@ -70,20 +80,30 @@ impl Registry {
             return Err(Fault::Closed);
         }
         state.connections.insert(id, connection);
+        state.terminals.insert(id, terminals);
         state.endpoints.insert(endpoint_id, (id, endpoint));
         Ok((id, endpoint_id))
     }
 
     pub(super) fn connect_process(
         &self,
-        version: Version,
+        settings: Settings,
         limits: Limits,
         launch: AcpLaunch,
         processes: Arc<PipedProcesses>,
     ) -> Result<u64, Fault> {
         let (_reservation, runtime) = self.reserve(&limits)?;
+        settings.requested_version()?;
+        let terminals = AcpTerminals::new(processes.clone(), limits.clone());
         let transport = AcpProcess::start(processes, &launch, limits.clone())?;
-        let connection = runtime.connect(version, limits, transport)?;
+        let connection = runtime.connect_configured(
+            settings,
+            limits,
+            Arc::new(super::host::resources::OwnedTransport {
+                inner: transport,
+                terminals: terminals.clone(),
+            }),
+        )?;
         let id = connection.id();
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         if state.stopping {
@@ -92,6 +112,7 @@ impl Registry {
             return Err(Fault::Closed);
         }
         state.connections.insert(id, connection);
+        state.terminals.insert(id, terminals);
         Ok(id)
     }
 
@@ -136,10 +157,29 @@ impl Registry {
         let result = connection.release()?;
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         state.connections.remove(&connection.id());
+        state.terminals.remove(&connection.id());
         state
             .endpoints
             .retain(|_, (owner, _)| *owner != connection.id());
         Ok(result)
+    }
+    pub(super) fn mcp_connection(&self, id: u64) -> Result<Connection, Fault> {
+        let state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        state
+            .connections
+            .values()
+            .find(|connection| connection.mcp_endpoint(id).is_ok())
+            .cloned()
+            .ok_or(Fault::Closed)
+    }
+    pub(super) fn terminals(&self, connection: u64) -> Result<Arc<AcpTerminals>, Fault> {
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .terminals
+            .get(&connection)
+            .cloned()
+            .ok_or(Fault::Closed)
     }
 
     pub(in crate::vm) fn shutdown(&self) {
@@ -166,6 +206,7 @@ impl Registry {
         }
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         state.connections.clear();
+        state.terminals.clear();
         state.endpoints.clear();
     }
 }

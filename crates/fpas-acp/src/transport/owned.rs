@@ -48,6 +48,10 @@ pub struct TransportStatus {
 /// Owned physical transport driven exclusively by the connection executor.
 /// Methods must yield rather than sleep when native I/O is pending.
 pub trait Transport: Send + Sync + 'static {
+    /// Release explicitly created host resources after a session closes.
+    fn session_closed<'a>(&'a self, _session: &'a str) -> BoxFuture<'a, Result<(), Fault>> {
+        Box::pin(async { Ok(()) })
+    }
     /// Read one frame, or EOF after all previously admitted frames.
     fn receive(&self) -> BoxFuture<'_, Result<Option<Frame>, Fault>>;
     /// Write one complete frame, preserving partial-write ownership until completion.

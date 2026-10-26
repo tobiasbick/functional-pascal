@@ -11,6 +11,10 @@ use fpas_bytecode::{AcpIntrinsic as Op, Intrinsic, Register, SourceLocation, Val
 use std::time::Duration;
 
 pub(in crate::vm) enum Wait {
+    Terminal {
+        wait: super::host::wait::TerminalWait,
+        destination: Option<Register>,
+    },
     Receive {
         reader: Reader,
         token: Option<u64>,
@@ -54,6 +58,10 @@ impl Worker {
         }
         let location = self.intrinsic_location();
         let wait = (|| match (operation, arguments) {
+            (Op::HostWaitForTerminalExit, _) => Ok(Wait::Terminal {
+                wait: self.acp_terminal_wait(arguments)?,
+                destination,
+            }),
             (Op::Receive, [owner, timeout, cancellation]) => {
                 let connection = self.hosted.acp.connection(args::handle(owner)?)?;
                 let timeout = args::optional(timeout)?
@@ -125,6 +133,11 @@ impl Worker {
     pub(in crate::vm) fn poll_acp_wait(&mut self, wait: Wait) -> Result<bool, VmError> {
         let location = self.intrinsic_location();
         let (operation, destination, result) = match &wait {
+            Wait::Terminal { wait, destination } => (
+                "WaitForTerminalExit",
+                *destination,
+                self.poll_acp_terminal(wait, location),
+            ),
             Wait::Receive {
                 reader,
                 token,

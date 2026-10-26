@@ -5,11 +5,11 @@ Protocol clients for model servers. Model execution remains outside the FPAS run
 | Unit | Description |
 |------|-------------|
 | [`Std.Ai.OpenAi`](openai.md) | OpenAI-compatible non-streaming chat completions |
-| [`Std.Acp`](acp/README.md) | ACP namespace and opaque connection identities |
+| [`Std.Acp`](acp/README.md) | Bounded native ACP connections, events and deferred replies |
 | [`Std.Acp.Types`](acp/types.md) | Stable v1 DTOs, lossless values and typed payload codecs |
-| [`Std.Acp.Host`](acp/host.md) | Filesystem and terminal payload aliases |
-| [`Std.Acp.Experimental`](acp/experimental.md) | Pinned v1 experimental DTOs |
-| [`Std.Acp.V2`](acp/v2.md) | Separate v2 DTOs, outcomes and typed payload codecs |
+| [`Std.Acp.Host`](acp/host.md) | Explicit file, terminal, interaction and login adapters |
+| [`Std.Acp.Experimental`](acp/experimental.md) | Independent feature opt-ins and scoped MCP carriers |
+| [`Std.Acp.V2`](acp/v2.md) | Separate v2 negotiation, asynchronous prompts and protocol values |
 
 ## See also
 

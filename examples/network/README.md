@@ -1,5 +1,8 @@
 # Network examples
 
+The [ACP console clients](acp-client/README.md) connect an ordinary FPAS program
+to a separately installed agent, with explicit v1/v2 selection and host decisions.
+
 These examples cover the implemented `Std.Net`, `Std.Server`, `Std.Http`, `Std.Net.Uri`, and
 `Std.Net.Utf8` APIs. The OpenAI-compatible chat demo remains in
 [`examples/openai-chat/`](../openai-chat).

@@ -1,0 +1,69 @@
+program AcpClientTest;
+
+uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Test as Test, Std.Time as Time;
+
+function Take(Endpoint: Acp.MessageEndpoint): Types.RawJson;
+begin
+  while true do
+    case Acp.TryTakeMessage(Endpoint).Unwrap() of
+      when Some(const Message):
+        return Message;
+      when None:
+        Time.Sleep(1);
+    end case;
+  end while;
+
+  panic('Peer output closed');
+end function;
+
+begin
+  var Options := Acp.DefaultOptions();
+  Options.ClientInfo := Some(
+    Types.ImplementationValue(Name := 'fpas-test', Title := None, Version := '1', Meta := None)
+  );
+  Options.ClientCapabilities.Terminal := true;
+  const Messages := Acp.ConnectMessages(Options).Unwrap();
+  const Connection := Messages.Connection;
+  const Initialize := Types.DecodeClientRequest(
+    'initialize',
+    Types.RawJson(
+      Text := '{"protocolVersion":1,"clientInfo":{"name":"fpas-test","version":"1"},"clientCapabilities":{"terminal":true}}'
+    )
+  ).Unwrap().Payload;
+  const Token := Acp.Send(Connection, Initialize).Unwrap();
+  Test.AssertTrue(Acp.State(Connection).Unwrap().Lifecycle is Acp.Lifecycle.Initializing);
+  Test.AssertTrue(Acp.Send(Connection, Initialize) is Error(Types.AcpError.Busy(_)));
+  const Request := Take(Messages.Endpoint);
+  const Id := Types.RawJsonMember(Request, 'id').Unwrap().Unwrap();
+  Test.AssertTrue(
+    Acp.FeedMessage(
+      Messages.Endpoint,
+      Types.RawJson(
+        Text := '{"jsonrpc":"2.0","id":' + Id.Text +
+        ',"result":{"protocolVersion":1,"agentInfo":{"name":"peer","version":"2"},"agentCapabilities":{"sessionCapabilities":{"list":{}}},"authMethods":[{"id":"token","name":"Token"}]}}'
+      )
+    ).Unwrap()
+  );
+  const Received := Acp.Receive(Connection, Some(5000), None).Unwrap();
+  Test.AssertTrue(Received.Payload is Acp.EventPayload.Response(_, _));
+  Test.AssertFalse(Acp.CancelRequest(Connection, Token).Unwrap());
+  const State := Acp.State(Connection).Unwrap();
+  Test.AssertTrue(State.Lifecycle is Acp.Lifecycle.Ready);
+  Test.AssertEquals(1, State.NegotiatedVersion.Unwrap());
+  Test.AssertEquals('peer', State.AgentInfo.Unwrap().Name);
+  Test.AssertEquals(1, State.AuthMethods.Length());
+  Test.AssertTrue(State.AgentCapabilities.Unwrap().SessionCapabilities.List is Some(_));
+  const Unsupported := Types.DecodeClientRequest(
+    'logout',
+    Types.RawJson(Text := '{}')
+  ).Unwrap().Payload;
+  Test.AssertTrue(
+    Acp.Send(Connection, Unsupported) is Error(Types.AcpError.UnsupportedCapability('Logout'))
+  );
+  Test.AssertTrue(Acp.TryTakeMessage(Messages.Endpoint).Unwrap() is None);
+  Test.AssertTrue(Acp.Close(Connection).Unwrap());
+  Test.AssertTrue(
+    Acp.Receive(Connection, Some(5000), None).Unwrap().Payload is Acp.EventPayload.Closed(_)
+  );
+  Test.AssertTrue(Acp.Release(Connection).Unwrap());
+end.

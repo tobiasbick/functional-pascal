@@ -29,7 +29,7 @@ The example is a template, not an active AP or an approved proposal.
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
 2. Copy `example-apNN-topic/` to `ap51-<topic>/` for the next package. Continue
-   with the next unused number for later packages. AP01 through AP49 are
+   with the next unused number for later packages. AP01 through AP50 are
    closed; do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
    and one numbered file per work package, such as `01-decision.md` and
@@ -45,18 +45,17 @@ The example is a template, not an active AP or an approved proposal.
    Follow the [development process](development-process.md) for delivery.
 
 Use `AP51` for the next package and `AP51.1`, `AP51.2`, and so on for its work
-packages. AP50 is assigned below. Decision IDs continue at `Q58`; Q55 through
-Q57 belong to AP50 and Q01 through Q54 belong to closed packages. Record each decision
+packages. Decision IDs continue at `Q58`; Q01 through Q57 belong to closed
+packages. Record each decision
 and its affected work packages in the owning package README. Do not create a
 second decision or completion index.
 
 ## Package status
 
-Active packages are listed below; keep the example out of this table.
+There are no active packages. Add new packages below; keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP50: Complete ACP client](ap50-acp-client/README.md) | Large; seven work packages | Existing process, task and native-library infrastructure on main | In progress |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

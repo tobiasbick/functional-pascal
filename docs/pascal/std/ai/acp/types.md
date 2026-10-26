@@ -118,4 +118,4 @@ message and data; code that displays them chooses what to disclose.
 
 - [AI clients](../README.md)
 - [Ordinary channels](../../concurrency/task.md)
-- [AP50 plan](../../../../future/improve-syntax/ap50-acp-client/README.md)
+- [Client overview and lifecycle](README.md)

@@ -32,6 +32,17 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
                 None,
             )
         }
+        Intrinsic::Acp(operation) if operation.connection() => {
+            let member = format!("{operation:?}");
+            let name = if let Some(member) = member.strip_prefix("Host") {
+                format!("Std.Acp.Host.{member}")
+            } else if let Some(member) = member.strip_prefix("V2") {
+                format!("Std.Acp.V2.{member}")
+            } else {
+                format!("Std.Acp.{member}")
+            };
+            (name, None)
+        }
         Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => ("Std.Errors.Message".into(), None),
         Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Net.Utf8.EncodeBytes".into(), None),
         Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),

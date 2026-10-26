@@ -8,6 +8,10 @@ use std::fmt;
 pub enum Fault {
     /// Invalid caller-supplied configuration or payload.
     InvalidArgument(&'static str),
+    /// The peer has not advertised the optional operation.
+    UnsupportedCapability(&'static str),
+    /// The initialization offer or response selects an unsupported version.
+    UnsupportedVersion(u16),
     /// Resource admission failed before publication.
     LimitExceeded(&'static str, usize),
     /// Invalid JSON, UTF-8, protocol envelope or typed payload.
@@ -30,6 +34,8 @@ impl fmt::Display for Fault {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(match self {
             Self::InvalidArgument(_) => "Invalid ACP argument",
+            Self::UnsupportedCapability(_) => "Unsupported ACP capability",
+            Self::UnsupportedVersion(_) => "Unsupported ACP version",
             Self::LimitExceeded(_, _) => "ACP resource limit exceeded",
             Self::InvalidMessage => "Invalid ACP message",
             Self::Busy(_) => "ACP operation is busy",

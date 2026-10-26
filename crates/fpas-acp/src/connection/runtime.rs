@@ -90,8 +90,17 @@ impl Runtime {
         version: Version,
         limits: Limits,
     ) -> Result<(Connection, MessageEndpoint), Fault> {
+        self.connect_messages_configured(super::Settings::for_version(version), limits)
+    }
+
+    /// Open an endpoint with the initialization offer fixed before admission.
+    pub fn connect_messages_configured(
+        &self,
+        settings: super::Settings,
+        limits: Limits,
+    ) -> Result<(Connection, MessageEndpoint), Fault> {
         let (endpoint, transport) = transport::messages(&limits)?;
-        let connection = self.connect(version, limits, Arc::new(transport))?;
+        let connection = self.connect_configured(settings, limits, Arc::new(transport))?;
         Ok((connection, endpoint))
     }
 
@@ -102,7 +111,18 @@ impl Runtime {
         limits: Limits,
         transport: Arc<dyn Transport>,
     ) -> Result<Connection, Fault> {
+        self.connect_configured(super::Settings::for_version(version), limits, transport)
+    }
+
+    /// Attach a transport with its initialization offer validated before effects.
+    pub fn connect_configured(
+        &self,
+        settings: super::Settings,
+        limits: Limits,
+        transport: Arc<dyn Transport>,
+    ) -> Result<Connection, Fault> {
         limits.validate()?;
+        settings.requested_version()?;
         if self.state.stopping.load(Ordering::Acquire) {
             return Err(Fault::Closed);
         }
@@ -123,7 +143,7 @@ impl Runtime {
                 (next <= SERIAL_MASK).then_some(next + 1)
             })
             .map_err(|_| Fault::LimitExceeded("Connections", CONNECTIONS))?;
-        let shared = Shared::new(CONNECTION_TAG | serial, version, limits);
+        let shared = Shared::new(CONNECTION_TAG | serial, settings, limits)?;
         let connection = Connection {
             shared: shared.clone(),
         };

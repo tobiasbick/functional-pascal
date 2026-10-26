@@ -1,0 +1,344 @@
+// Small application event loop shared by the two console examples.
+unit AcpDemo;
+
+uses
+  Std.Acp as Acp, Std.Acp.Types as Types, Std.Acp.V2 as V2, Std.Acp.Host as Host,
+  Std.Args as Args, Std.Console as Console, Std.Json as Json;
+
+function Quote(Text: string): string;
+begin
+  return Json.Stringify(Json.JsonValue.String(Text));
+end function;
+
+function ReadAnswer(): string;
+begin
+  case Console.ReadLn() of
+    when Some(const Text):
+      return Text;
+    when None:
+      return '';
+  end case;
+end function;
+
+function Member(Value: Types.RawJson; Name: string): Types.RawJson;
+begin
+  return Types.RawJsonMember(Value, Name).Unwrap().Unwrap();
+end function;
+
+function Send(Connection: Acp.Connection; Draft: boolean; Method: string; Body: string): Acp.RequestToken;
+begin
+  const Raw := Types.RawJson(Text := Body);
+  if Draft then
+    return V2.Send(Connection, V2.DecodeClientRequest(Method, Raw).Unwrap().Payload).Unwrap();
+  end if;
+
+  return Acp.Send(Connection, Types.DecodeClientRequest(Method, Raw).Unwrap().Payload).Unwrap();
+end function;
+
+procedure Refuse(Responder: Acp.Responder);
+begin
+  discard Acp.RespondError(
+    Responder, Types.ProtocolError(
+      Code := -32000,
+      Message := 'Host declined this request', Data := None
+    )
+  ).Unwrap();
+end procedure;
+
+procedure Answer(Responder: Acp.Responder; Raw: Types.RawJson; Draft: boolean);
+begin
+  const Method := Member(Raw, 'method').Text;
+  Console.WriteLn('Agent request: ' + Raw.Text);
+  var Body := '';
+  var Name := '';
+  if Method = '"session/request_permission"' then
+    Console.WriteLn('Enter an offered optionId, or an empty line to cancel:');
+    const Selected := ReadAnswer();
+    Name := 'session/request_permission';
+    Body := '{"outcome":{"outcome":"cancelled"}}';
+    if Selected <> '' then
+      Body := '{"outcome":{"outcome":"selected","optionId":' + Quote(Selected) + '}}';
+    end if;
+  elsif Method = '"elicitation/create"' then
+    Console.WriteLn(
+      'Enter a response JSON object (action accept/decline/cancel; form content if accepting). Empty cancels:'
+    );
+    Name := 'elicitation/create';
+    Body := ReadAnswer();
+    if Body = '' then
+      Body := '{"action":"cancel"}';
+    end if;
+  end if;
+
+  if Name = '' then
+    Refuse(Responder);
+    return;
+  end if;
+
+  if Draft then
+    case V2.DecodeClientResponse(Name, Types.RawJson(Text := Body)) of
+      when Ok(const Decoded):
+        case V2.Respond(Responder, Decoded.Payload) of
+          when Ok(_):
+            return;
+          when Error(const Cause):
+            Console.WriteLn(Cause.Message());
+        end case;
+      when Error(const Cause):
+        Console.WriteLn(Cause.Message());
+    end case;
+  else
+    case Types.DecodeClientResponse(Name, Types.RawJson(Text := Body)) of
+      when Ok(const Decoded):
+        case Acp.Respond(Responder, Decoded.Payload) of
+          when Ok(_):
+            return;
+          when Error(const Cause):
+            Console.WriteLn(Cause.Message());
+        end case;
+      when Error(const Cause):
+        Console.WriteLn(Cause.Message());
+    end case;
+  end if;
+
+  // Invalid input leaves the response right available. Cancel it explicitly.
+  Refuse(Responder);
+end procedure;
+
+procedure HostRequest(Request: Types.AgentRequest; Responder: Acp.Responder; Raw: Types.RawJson; Allowed: boolean);
+begin
+  const Method := Member(Raw, 'method').Text;
+  if (Method = '"session/request_permission"') or (Method = '"elicitation/create"') then
+    Answer(Responder, Raw, false);
+    return;
+  end if;
+
+  if not Allowed then
+    Refuse(Responder);
+    return;
+  end if;
+
+  Console.WriteLn('Host request: ' + Raw.Text);
+  Console.WriteLn('Execute this host operation? Type yes:');
+  if ReadAnswer() <> 'yes' then
+    Refuse(Responder);
+    return;
+  end if;
+
+  case Request of
+    when Types.AgentRequest.ReadTextFileRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.ReadTextFileResponse(Host.ReadTextFile(Responder, Value).Unwrap())
+      ).Unwrap();
+    when Types.AgentRequest.WriteTextFileRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.WriteTextFileResponse(Host.WriteTextFile(Responder, Value).Unwrap())
+      ).Unwrap();
+    when Types.AgentRequest.CreateTerminalRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.CreateTerminalResponse(Host.CreateTerminal(Responder, Value).Unwrap())
+      ).Unwrap();
+    when Types.AgentRequest.TerminalOutputRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.TerminalOutputResponse(Host.TerminalOutput(Responder, Value).Unwrap())
+      ).Unwrap();
+    when Types.AgentRequest.WaitForTerminalExitRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.WaitForTerminalExitResponse(
+          Host.WaitForTerminalExit(Responder, Value, Some(30000), None).Unwrap()
+        )
+      ).Unwrap();
+    when Types.AgentRequest.KillTerminalRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.KillTerminalResponse(Host.KillTerminal(Responder, Value).Unwrap())
+      ).Unwrap();
+    when Types.AgentRequest.ReleaseTerminalRequest(const Value):
+      discard Acp.Respond(
+        Responder,
+        Types.ClientResponse.ReleaseTerminalResponse(
+          Host.ReleaseTerminal(Responder, Value).Unwrap()
+        )
+      ).Unwrap();
+    when Types.AgentRequest.RequestPermissionRequest(_), Types.AgentRequest.CreateElicitationRequest(_), Types.AgentRequest.MessageMcpRequest(_), Types.AgentRequest.ExtRequest(_):
+      Refuse(Responder);
+  end case;
+end procedure;
+
+procedure ObserveState(Raw: Types.RawJson; var Idle: boolean);
+begin
+  if Member(Raw, 'method').Text <> '"session/update"' then
+    return;
+  end if;
+  const Update := Member(Member(Raw, 'params'), 'update');
+  case Types.RawJsonMember(Update, 'state').Unwrap() of
+    when Some(const State):
+      Idle := State.Text = '"idle"';
+    when None:
+      return;
+  end case;
+end procedure;
+
+function Wait(Connection: Acp.Connection; Token: Acp.RequestToken; Draft: boolean; Allowed: boolean; var Idle: boolean): Types.RawJson;
+begin
+  while true do
+    const Event := Acp.Receive(Connection, Some(30000), None).Unwrap();
+    case Event.Payload of
+      when Acp.EventPayload.Response(const Actual, _), Acp.EventPayload.V2Response(const Actual, _), Acp.EventPayload.V2Initialized(const Actual, _):
+        if Actual = Token then
+          return Member(Event.RawMessage.Unwrap(), 'result');
+        end if;
+      when Acp.EventPayload.Request(const Request, const Responder):
+        HostRequest(Request, Responder, Event.RawMessage.Unwrap(), Allowed);
+      when Acp.EventPayload.V2Request(_, const Responder):
+        Answer(Responder, Event.RawMessage.Unwrap(), true);
+      when Acp.EventPayload.Notification(_), Acp.EventPayload.V2Notification(_), Acp.EventPayload.UnknownNotification(_, _):
+        Console.WriteLn(Event.RawMessage.Unwrap().Text);
+        if Draft then
+          ObserveState(Event.RawMessage.Unwrap(), var Idle);
+        end if;
+      when Acp.EventPayload.RequestFailed(_, const Cause):
+        panic(Cause.Message());
+      when Acp.EventPayload.Closed(_):
+        panic('Agent connection closed');
+      when Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
+        Console.WriteLn('Request retired');
+    end case;
+  end while;
+
+  panic('No response');
+end function;
+
+public procedure Run(Draft: boolean);
+begin
+  if Args.ParamCount() < 3 then
+    Console.WriteLn(
+      'Usage: <agent executable> <absolute cwd> <prompt> [--allow-host] [agent arguments...]'
+    );
+    return;
+  end if;
+  var AgentArguments: array of string := [];
+  var Allowed := false;
+  for Index: integer := 3 to Args.ParamCount() - 1 do
+    if Args.ParamStr(Index) = '--allow-host' then
+      Allowed := true;
+    else
+      AgentArguments := AgentArguments.Concat([Args.ParamStr(Index)]);
+    end if;
+  end for;
+  var Options := Acp.DefaultOptions();
+  Options.ClientInfo := Some(
+    Types.ImplementationValue(Name := 'fpas-console', Title := None, Version := '1', Meta := None)
+  );
+  Options.ClientCapabilities.Fs.ReadTextFile := Allowed;
+  Options.ClientCapabilities.Fs.WriteTextFile := Allowed;
+  Options.ClientCapabilities.Terminal := Allowed;
+  Options.ClientCapabilities.Elicitation := Some(
+    Types.ElicitationCapabilities(
+      Form := Some(Types.ElicitationFormCapabilities(Meta := None)),
+      Url := Some(Types.ElicitationUrlCapabilities(Meta := None)),
+      Meta := None
+    )
+  );
+  Options.V2ClientCapabilities.Elicitation := Some(
+    V2.ElicitationCapabilities(
+      Form := Some(V2.ElicitationFormCapabilities(Meta := None)),
+      Url := Some(V2.ElicitationUrlCapabilities(Meta := None)),
+      Meta := None
+    )
+  );
+  const HostEnabled := Json.Stringify(Json.JsonValue.Bool(Allowed));
+  var Offer := '{"protocolVersion":1,"clientInfo":{"name":"fpas-console","version":"1"},"clientCapabilities":{"fs":{"readTextFile":' +
+    HostEnabled + ',"writeTextFile":' + HostEnabled + '},"terminal":' + HostEnabled +
+    ',"elicitation":{"form":{},"url":{}}}}';
+  if Draft then
+    Options.SupportedVersions := [Acp.ProtocolVersion.V2];
+    Options.ExperimentalOptions.TokenUsage := true;
+    Offer := '{"protocolVersion":2,"info":{"name":"fpas-console","version":"1"},"capabilities":{"elicitation":{"form":{},"url":{}}}}';
+  end if;
+  const Connection := Acp.ConnectProcess(
+    Acp.Launch(
+      Command := Args.ParamStr(0), Arguments := AgentArguments,
+      WorkingDirectory := Some(Args.ParamStr(1)), Environment := []
+    ), Options
+  ).Unwrap();
+  var Idle := false;
+  discard Wait(Connection, Send(Connection, Draft, 'initialize', Offer), Draft, Allowed, var Idle);
+  const Created := Wait(
+    Connection,
+    Send(
+      Connection,
+      Draft,
+      'session/new',
+      '{"cwd":' + Quote(Args.ParamStr(1)) + ',"mcpServers":[]}'
+    ),
+    Draft,
+    Allowed,
+    var Idle
+  );
+  const Session := Member(Created, 'sessionId').Text;
+  const PromptToken := Send(
+    Connection, Draft, 'session/prompt',
+    '{"sessionId":' + Session + ',"prompt":[{"type":"text","text":' + Quote(Args.ParamStr(2)) +
+    '}]}'
+  );
+  Console.WriteLn(
+    'Prompt sent. Type cancel to cancel it, or Enter to display the stream:'
+  );
+  if ReadAnswer() = 'cancel' then
+    if Draft then
+      discard V2.Notify(
+        Connection,
+        V2.DecodeClientNotification(
+          'session/cancel',
+          Types.RawJson(Text := '{"sessionId":' + Session + '}')
+        ).Unwrap().Payload
+      ).Unwrap();
+    else
+      discard Acp.Notify(
+        Connection,
+        Types.DecodeClientNotification(
+          'session/cancel',
+          Types.RawJson(Text := '{"sessionId":' + Session + '}')
+        ).Unwrap().Payload
+      ).Unwrap();
+    end if;
+  end if;
+
+  discard Wait(
+    Connection,
+    PromptToken,
+    Draft,
+    Allowed,
+    var Idle
+  );
+  if Draft then
+    Console.WriteLn(
+      'Prompt accepted; waiting for foreground idle. Background activity has a separate lifetime.'
+    );
+    while not Idle do
+      const Event := Acp.Receive(Connection, Some(30000), None).Unwrap();
+      case Event.Payload of
+        when Acp.EventPayload.V2Notification(_):
+          const Raw := Event.RawMessage.Unwrap();
+          Console.WriteLn(Raw.Text);
+          ObserveState(Raw, var Idle);
+        when Acp.EventPayload.V2Request(_, const Responder):
+          Answer(Responder, Event.RawMessage.Unwrap(), true);
+        when Acp.EventPayload.Closed(_), Acp.EventPayload.RequestFailed(_, _):
+          Idle := true;
+        when Acp.EventPayload.Response(_, _), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.Request(_, _), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.V2Initialized(_, _), Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _):
+          Console.WriteLn('Other event');
+      end case;
+    end while;
+  end if;
+
+  discard Acp.Close(Connection).Unwrap();
+  discard Acp.Release(Connection).Unwrap();
+end procedure;
+end unit;

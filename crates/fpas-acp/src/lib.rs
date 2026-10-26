@@ -7,6 +7,7 @@ pub mod binding;
 pub mod codec;
 pub mod connection;
 pub mod error;
+pub mod interaction;
 mod normalizers;
 pub mod raw;
 pub mod schema;

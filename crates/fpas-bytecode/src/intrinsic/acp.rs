@@ -61,6 +61,21 @@ pub enum AcpIntrinsic {
     V2Send = 786,
     V2Notify = 787,
     V2Respond = 788,
+    HostReadTextFile = 789,
+    HostWriteTextFile = 790,
+    HostCreateTerminal = 791,
+    HostTerminalOutput = 792,
+    HostWaitForTerminalExit = 793,
+    HostKillTerminal = 794,
+    HostReleaseTerminal = 795,
+    HostRunTerminalAuthentication = 796,
+    HostValidateElicitation = 797,
+    HostElicitationDefaults = 798,
+    RegisterMcpEndpoint = 799,
+    RemoveMcpEndpoint = 800,
+    SendMcp = 801,
+    V2SendMcp = 802,
+    HostV2RunTerminalAuthentication = 803,
 }
 }
 
@@ -74,7 +89,10 @@ impl AcpIntrinsic {
     /// Operations retaining cooperative VM wait state.
     #[must_use]
     pub const fn waits(self) -> bool {
-        matches!(self, Self::Receive | Self::Close | Self::Release)
+        matches!(
+            self,
+            Self::Receive | Self::Close | Self::Release | Self::HostWaitForTerminalExit
+        )
     }
     /// Protocol version, decode/encode direction, and typed root for a payload codec.
     #[must_use]
@@ -100,6 +118,9 @@ impl AcpIntrinsic {
     #[must_use]
     pub fn source_name(self) -> String {
         let name = format!("{self:?}");
+        if let Some(name) = name.strip_prefix("Host") {
+            return format!("Std.Acp.Host.{name}");
+        }
         if let Some(name) = name.strip_prefix("V2") {
             format!("Std.Acp.V2.{name}")
         } else if self.connection() {

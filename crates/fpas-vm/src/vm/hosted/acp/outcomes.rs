@@ -4,7 +4,7 @@ use super::values::Converter;
 use crate::vm::{VmError, worker::Worker};
 use fpas_acp::{
     binding::{self, Type},
-    connection::{Closed, Event, Fault, Lifecycle, Payload},
+    connection::{Closed, Event, Fault, Payload},
     schema::Version,
     transport::ExitStatus,
 };
@@ -54,6 +54,13 @@ impl Worker {
                 vec![Value::Str(name.into()), Value::Integer(maximum as i64)],
             ),
             Fault::Busy(operation) => ("Busy", vec![Value::Str(operation.into())]),
+            Fault::UnsupportedCapability(name) => {
+                ("UnsupportedCapability", vec![Value::Str(name.into())])
+            }
+            Fault::UnsupportedVersion(version) => (
+                "UnsupportedVersion",
+                vec![Value::Integer(i64::from(version))],
+            ),
             Fault::Closed => ("Closed", vec![Value::Str(operation.into())]),
             Fault::Cancelled => ("Cancelled", vec![Value::Str(operation.into())]),
             Fault::Timeout => ("Timeout", vec![Value::Str(operation.into())]),
@@ -127,6 +134,50 @@ impl Worker {
                 })
         };
         let (variant, fields) = match event.payload {
+            Payload::McpResponse(token, version, payload) => (
+                if version == Version::V1 {
+                    "McpResponse"
+                } else {
+                    "V2McpResponse"
+                },
+                vec![
+                    Value::OpaqueHandle(token.id()),
+                    typed(version, "MessageMcpResponse", payload)?,
+                ],
+            ),
+            Payload::Initialized(token, version, payload) => {
+                let response = typed(version, "InitializeResponse", payload)?;
+                let outcome = if version == Version::V2 {
+                    self.layouts.enumeration(
+                        "Std.Acp.V2.InitializeOutcome",
+                        "Initialized",
+                        vec![response],
+                        location,
+                    )?
+                } else {
+                    let response = self.layouts.enumeration(
+                        "Std.Acp.V2.SelectedInitializeResponse",
+                        "V1",
+                        vec![response],
+                        location,
+                    )?;
+                    let mismatch = self.layouts.record(
+                        "Std.Acp.V2.InitializationVersionMismatch",
+                        vec![Value::Integer(2), Value::Integer(1), response],
+                        location,
+                    )?;
+                    self.layouts.enumeration(
+                        "Std.Acp.V2.InitializeOutcome",
+                        "LowerVersion",
+                        vec![mismatch],
+                        location,
+                    )?
+                };
+                (
+                    "V2Initialized",
+                    vec![Value::OpaqueHandle(token.id()), outcome],
+                )
+            }
             Payload::Response(token, version, payload) => (
                 if version == Version::V1 {
                     "Response"
@@ -227,32 +278,6 @@ impl Worker {
                 status,
                 Value::Str(closed.transport.stderr.into()),
                 Value::Boolean(closed.transport.stderr_truncated),
-            ],
-            location,
-        )?)
-    }
-
-    pub(super) fn acp_state(
-        &self,
-        lifecycle: Lifecycle,
-        version: Version,
-        location: SourceLocation,
-    ) -> Result<Value, VmError> {
-        let lifecycle = Value::Integer(match lifecycle {
-            Lifecycle::Uninitialized => 0,
-            Lifecycle::Initializing => 1,
-            Lifecycle::Ready => 2,
-            Lifecycle::Closing => 3,
-            Lifecycle::Closed => 4,
-            Lifecycle::Failed => 5,
-        });
-        Ok(self.layouts.record(
-            "Std.Acp.ConnectionState",
-            vec![
-                lifecycle,
-                Value::Integer(if version == Version::V1 { 1 } else { 2 }),
-                Value::OptionNone,
-                Value::OptionNone,
             ],
             location,
         )?)

@@ -1,6 +1,12 @@
 //! Owned process execution with bounded capture and cooperative supervision.
 
 mod acp;
+mod acp_auth;
+pub(in crate::vm::hosted) use acp_auth::Authentication as AcpAuthentication;
+pub(in crate::vm::hosted) use acp_auth::authenticate as acp_authenticate;
+mod acp_output;
+mod acp_terminals;
+pub(in crate::vm::hosted) use acp_terminals::Terminals as AcpTerminals;
 mod arguments;
 pub(super) use acp::{AcpLaunch, AcpProcess};
 mod engine;

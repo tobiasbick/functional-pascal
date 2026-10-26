@@ -1,172 +1,109 @@
-# AP51: MCP wrapper
+# AP51: MCP tools for Codex over ACP
 
-Status: Decision pending. Effort: Large; both client and server are required,
-with transport and authentication details still open. Completion is tracked in the
+Status: Planned. Effort: Medium. Product implementation is paused; the current
+authorization covers plan maintenance only. Completion is tracked in the
 [central plan](../README.md#package-status).
 
-## Goal and authorization
+## Goal
 
-Expose the Model Context Protocol to FPAS programs through a native Rust-SDK
-wrapper, following the typed values, explicit effects, cooperative waits and
-bounded resource ownership used by `Std.Acp`.
+An FPAS application connects to Codex through `Std.Acp` and exposes its own
+tools through an MCP server built on the official Rust SDK `rmcp`. Codex
+discovers a tool, calls it, and receives the result of an explicitly dispatched
+FPAS function. Codex is the MCP client; FPAS supplies the MCP server.
 
-The user requested a new AP51 branch and a wrapper analogous to ACP, referencing
-the MCP `2026-07-28` introduction. This authorizes the branch and planning.
-The user explicitly selected both client and server support (Q58).
-The user also requires the official Rust SDK `rmcp`, with an FPAS wrapper around
-it analogous to ACP (Q64).
-The detailed API and implementation are proposals until agreed. No FPAS syntax
-change is currently needed; any concrete syntax change requires user approval.
+Codex is the first target. The user schedules target-agent transport/version
+checks and live end-to-end acceptance at home. Do not attempt that live
+verification in the cloud or count local fixtures as Codex interoperability.
 
 ## Current behavior
 
-- [Std.Acp](../../../pascal/std/ai/acp/README.md) provides ACP clients and
-  [experimental MCP carrier endpoints](../../../pascal/std/ai/acp/experimental.md#mcp-carrier-endpoints).
-  Those endpoints route opaque MCP messages inside ACP; they are not a standalone
-  MCP client or server and do not execute tools automatically.
-- There is no `Std.Mcp` unit or `fpas-mcp` crate in the current checkout.
-- Existing ACP protocol types and session rules belong to ACP. The process
-  registry, task cancellation, VM ownership and API export infrastructure are
-  reusable foundations; copying the ACP protocol state machine is not appropriate.
-- [Std.Server](../../../pascal/std/network/server.md) already owns cooperative
-  listener/task shutdown. MCP serving must integrate with that lifetime contract
-  or define an explicit adapter; it must not imply process-exit authority.
-- AP50 is delivered on `main`. AP51 has no unfinished AP prerequisite.
+- [Std.Acp](../../../pascal/std/ai/acp/README.md) can advertise MCP server
+  descriptors during session setup. Stdio, HTTP and MCP-over-ACP have distinct
+  capability and lifecycle requirements.
+- [ACP MCP endpoints](../../../pascal/std/ai/acp/experimental.md#mcp-carrier-endpoints)
+  route opaque messages; registration does not implement a tool server or
+  execute a tool. There is no `Std.Mcp.Server` binding in the checkout.
+- ACP tool-call updates report agent activity. Execution of FPAS tools requires
+  actual MCP requests, not interpreting those updates as commands.
+- Existing handles, cooperative waits and
+  [Std.Server](../../../pascal/std/network/server.md) provide lifetime patterns.
+  AP50 is delivered; AP51 has no unfinished AP prerequisite.
 
-## Protocol and SDK evidence
+## Agreed architecture and scope
 
-The requested reference is the
-[MCP introduction](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro).
-Its [official source](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/c254060614b5a7d5f40ecbab6234e47c8d74cd5a/docs/docs/2026-07-28/getting-started/intro.mdx)
-and the versioned specification establish the planning baseline:
+Use [modelcontextprotocol/rust-sdk](https://github.com/modelcontextprotocol/rust-sdk)
+and its `rmcp` crate. The SDK owns MCP values, serialization, request handling
+and transport protocol behavior. FPAS supplies conversion, explicit dispatch,
+resource ownership, bounded queues and ACP integration.
 
-- [`2026-07-28` core](https://modelcontextprotocol.io/specification/2026-07-28/basic):
-  requests are self-contained; there is no `initialize`/`initialized` handshake
-  or protocol-level session. `server/discover` is optional.
-- [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http):
-  POST requests receive JSON or request-scoped SSE. There is no legacy GET
-  event channel, `Mcp-Session-Id`, or resumable `Last-Event-ID` stream.
-- [MRTR](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr):
-  input requests arrive in `input_required` results. Continuation resends the
-  original operation with a fresh wire ID, exact opaque `requestState`, and
-  matching `inputResponses`.
-- [Subscriptions](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions)
-  use `subscriptions/listen`. Tasks are a separately negotiated extension.
-- [Deprecations](https://modelcontextprotocol.io/specification/2026-07-28/deprecated)
-  include roots, sampling, logging, dynamic client registration and legacy
-  HTTP+SSE. These should not become accidental requirements of a new wrapper.
+Product scope is the MCP server role. Outbound FPAS MCP clients, external-server
+proxying and a public client API are excluded. Test peers may use client
+libraries without introducing a product client role.
 
-The [official Rust SDK](https://github.com/modelcontextprotocol/rust-sdk/tree/8aec3891dd07fc537b21c2eb2596235640de9025)
-declares `rmcp` 3.7.0, Rust 1.88, and support for this protocol revision in the
-inspected source. The official SDK is selected; 3.7.0 is a candidate version,
-not a verified dependency pin. AP51.1 must check a released artifact and actual
-API behavior. The SDK's default
-`serve()` still selects legacy initialization; the wrapper must explicitly
-select the modern lifecycle. SDK defaults must not choose FPAS's public contract.
+The first tool workflow covers `tools/list`, `tools/call`, typed results,
+tool/protocol errors, explicit permission policy, cancellation and shutdown.
+Resources, prompts, sampling, roots, tasks, MCP Apps, MRTR, subscriptions,
+managed OAuth and generic remote hosting are outside this delivery. Advertise
+only implemented capabilities.
 
-## Agreed implementation boundary
+ACP integration is required. Select a transport from actual Codex support:
 
-Use the official `modelcontextprotocol/rust-sdk` project and its `rmcp` crate for
-both roles. The SDK owns MCP protocol types, serialization, request processing
-and supported transport/authentication mechanisms. Call and configure those
-facilities rather than implementing a parallel MCP or JSON-RPC engine.
+| Route | Required verification |
+| --- | --- |
+| MCP-over-ACP | Codex and its ACP adapter support the carrier; SDK requests/replies preserve IDs and lifetime |
+| Local Streamable HTTP | Codex accepts the descriptor and reaches an owned loopback server with access to the running FPAS application's state |
+| Stdio server process | Codex launches the descriptor; the process boundary fits tool state and keeps protocol output separate |
 
-The FPAS layer supplies type/value conversion, public units, native handles,
-cooperative waits, application dispatch, resource limits and lifetime adapters
-to FPAS processes, streams and listeners. Transport and authorization work
-packages describe adapters and application policy around SDK facilities, not
-replacement implementations. Reuse SDK validation at its owning boundary;
-additional checks address FPAS values, ownership or verified SDK gaps.
+Choose the smallest suitable route; do not require all alternatives. A stdio
+child does not share the ACP-host application's memory. Define any required
+state transfer explicitly rather than introducing an unplanned IPC/proxy system.
 
-If the selected release lacks required functionality, identify the gap and
-resolve it through the official SDK or an agreed scope adjustment. A custom
-protocol implementation is outside AP51's agreed architecture.
-
-## Proposed contract
-
-The agreed scope includes MCP clients and MCP servers written in FPAS. Proposed
-units are `Std.Mcp`, `Std.Mcp.Types` and `Std.Mcp.Server`, implemented by
-`crates/fpas-mcp/` and a VM bridge under `hosted/mcp/`. Unit names and handler API
-details remain part of Q59; the server role itself is decided.
-
-- Cover the selected modern revision directly, without automatic legacy fallback.
-- Offer owned child-process stdio, Streamable HTTP, and a bounded message
-  transport for embedding and protocol tests on the client side. Offer explicit
-  process stdin/stdout ownership and HTTP listeners on the server side.
-- Use typed SDK-backed request/result values while retaining dynamic JSON,
-  metadata, unknown extension data and peer error details where the spec permits.
-- Expose tools, resources, prompts, completion, progress, subscriptions and MRTR
-  elicitation with explicit caller participation. Capability advertisement
-  reflects only configured, implemented behavior.
-- A local connection handle owns transport/runtime resources, not an MCP
-  session. Request tokens, continuation rights and subscriptions have distinct
-  identities, cancellation and release rules.
-- Preserve caller-controlled pagination and cache metadata. Do not invent a
-  shared cache, automatic tool execution, LLM provider, browser launch or retry
-  of an uncertain side-effecting request.
-- Reuse FPAS process, cancellation and GC ownership foundations. Do not run
-  FPAS closures on the SDK executor or block VM workers on native I/O.
-- Let FPAS servers provide tools, resources and prompts through explicitly
-  dispatched, bounded requests with single-use response rights. Authorize each
-  request before application effects, validate modern HTTP headers, and keep
-  simultaneous clients and MRTR state isolated without protocol sessions.
+The [MCP introduction](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
+is a reference, not a mandate to support only that revision. Select the MCP
+revision/lifecycle supported by Codex and the official SDK. Do not impose modern
+discovery or legacy initialization without verifying the target.
 
 ## Decisions
 
-The wrapper direction, referenced documentation, both protocol roles and use of
-the official Rust SDK are user-specified. Other recommendations in this table
-are not user decisions.
+| ID | Topic | Current decision or required check | Owner |
+| --- | --- | --- | --- |
+| Q58 | Role | FPAS server only; Codex is the client | AP51.1–AP51.6 |
+| Q59 | Target/API/protocol | Codex first; proposed `Std.Mcp.Types` and `Std.Mcp.Server`; verify actual revision/lifecycle at home | AP51.1, AP51.2, AP51.6 |
+| Q60 | Transport | Select a working ACP-advertised route from Codex capabilities at home; all alternatives are not mandatory | AP51.1, AP51.4 |
+| Q61 | Initial features | Tool discovery/invocation, results/errors, permission policy, cancellation and cleanup; additional MCP features are separate work | AP51.2, AP51.3, AP51.5 |
+| Q62 | Authority/auth | Explicit tool exposure and authorization before effects; define any access policy/credentials with the chosen local route; no managed OAuth | AP51.4, AP51.5 |
+| Q63 | ACP integration | Required outcome; MCP-over-ACP is a candidate route rather than an assumed capability | AP51.1, AP51.4, AP51.6 |
+| Q64 | Implementation | Official `rmcp` SDK with an FPAS server wrapper, following ACP conventions | AP51.1–AP51.6 |
 
-| ID | Question | Recommendation | User decision | Affected work packages |
-| --- | --- | --- | --- | --- |
-| Q58 | Client only, or client and server? | Both roles, with explicit server ownership and dispatch | Client and server | AP51.1–AP51.9 |
-| Q59 | Protocol revision, legacy behavior and public API shape? | Modern `2026-07-28`, explicit discovery, no legacy fallback; typed `Std.Mcp`/`Std.Mcp.Types`/`Std.Mcp.Server` and explicit request dispatch | Pending | AP51.1–AP51.9 |
-| Q60 | Transport scope? | Client child-process stdio and HTTP; server stdin/stdout and HTTP listeners; bounded message embedding for both; no legacy HTTP+SSE | Pending | AP51.1, AP51.3, AP51.4, AP51.7–AP51.9 |
-| Q61 | Core features, deprecated features and extensions? | Core methods/patterns and elicitation for both roles; tasks as explicit opt-in; exclude deprecated roots/sampling/logging, MCP Apps and automatic caching | Pending | AP51.1, AP51.2, AP51.5–AP51.9 |
-| Q62 | HTTP authentication scope? | Caller-supplied client credentials; explicit server token validation/authorization configuration and typed auth failures; no implicit OAuth login, token store or authorization server | Pending | AP51.1, AP51.4, AP51.8, AP51.9 |
-| Q63 | Should AP51 integrate MCP-over-ACP? | Keep existing carriers unchanged initially; add an adapter only if expressly selected and role/direction compatibility is proven | Pending | AP51.1, AP51.6, AP51.9 |
-| Q64 | SDK wrapper or independent MCP implementation? | Official Rust SDK with an FPAS integration layer | Use official `rmcp` for client and server; wrap it as with ACP | AP51.1–AP51.9 |
+The transport/version compatibility check remains open until verified at home.
+No FPAS syntax change is expected; any concrete syntax change requires user
+agreement. Exact signatures follow existing ACP conventions and the selected route.
 
-## Open decisions
+## Work packages and dependencies
 
-Q58 and Q64 are resolved. Q59–Q63 still block the affected implementation: the concrete
-handler API, transport policy, deprecated features, OAuth/credential validation
-and ACP integration remain open. AP51.7 and AP51.8 own server delivery, including
-stdio ownership, HTTP listeners, handler execution, request-state integrity and
-server authorization. Both roles are mandatory for package completion.
+- [ ] [AP51.1: Server contract and Codex compatibility](01-contract-and-sdk.md)
+- [ ] [AP51.2: Server protocol types and API registration](02-types-and-codecs.md)
+- [ ] [AP51.3: Owned server runtime and dispatch](03-server-runtime.md)
+- [ ] [AP51.4: ACP-advertised MCP transport](04-acp-transport.md)
+- [ ] [AP51.5: FPAS tool providers and execution](05-tool-execution.md)
+- [ ] [AP51.6: Verification and Codex acceptance at home](06-acceptance.md)
 
-## Dependencies and work packages
-
-- [ ] [AP51.1: Agree scope and validate the SDK](01-contract-and-sdk.md)
-- [ ] [AP51.2: Protocol values and FPAS API registration](02-types-and-codecs.md)
-- [ ] [AP51.3: Owned runtime, message transport and stdio](03-runtime-and-stdio.md)
-- [ ] [AP51.4: Streamable HTTP and authentication boundary](04-http-and-auth.md)
-- [ ] [AP51.5: Core operations and interaction patterns](05-client-features.md)
-- [ ] [AP51.6: Extensions and ACP boundary](06-extensions-and-acp.md)
-- [ ] [AP51.7: Server dispatch, features and stdio](07-server-runtime-and-stdio.md)
-- [ ] [AP51.8: HTTP server and authorization](08-server-http-and-auth.md)
-- [ ] [AP51.9: Interoperability, documentation and acceptance](09-acceptance.md)
-
-This is the only AP51 work-package checklist. AP51.1 precedes all implementation;
-AP51.2 precedes AP51.3; AP51.4 and AP51.5 use that runtime. AP51.7 builds on
-AP51.2/AP51.3 and the approved interaction contract; AP51.8 builds on AP51.7.
-AP51.6 uses the selected transports/features and, for server-side extensions,
-AP51.7/AP51.8. AP51.9 accepts the complete client and server result. Package
-numbering does not override these dependencies.
+This is the only work-package checklist. AP51.1 settles the SDK/server boundary
+and target route/version; AP51.2 registers its API; AP51.3 owns dispatch;
+AP51.4 connects it to ACP; AP51.5 supplies tools; AP51.6 accepts the result.
+This plan update does not authorize product implementation.
 
 ## Acceptance
 
-An FPAS client can use the agreed transports against an independently implemented
-MCP server, and an FPAS server can serve an independently implemented MCP client.
-Both exercise every advertised capability, handle multi-round interactions
-explicitly and shut down without retained process slots, pending rights,
-listeners or live native resources. Tests distinguish JSON-RPC errors, tool-level
-errors, transport failures, cancellation and timeouts. Concurrent operations and
-unrelated ACP clients continue to progress. Repeated connect/fail/close and
-continuation/subscription cycles return to the allocation/resource baseline.
+At home, FPAS establishes its ACP session with Codex and advertises the selected
+MCP server. Codex discovers and calls a deterministic FPAS tool, which executes
+once under the configured policy and returns the correct result. Invalid/denied
+calls, tool errors, cancellation and close follow the agreed contract without
+duplicate effects or retained rights/resources. Reopening a session/endpoint
+never revives an old responder. Unrelated ACP events continue to progress.
 
-The delivered handbook, generated API, CLI/editor signatures and examples must
-agree. Unsupported capabilities and versions fail explicitly. All relevant
-[shared boundaries](../shared-constraints.md) and
-[required checks](../development-process.md#required-checks) pass. Deferred
-features are documented rather than silently counted as implemented.
+Local automated tests cover the server independently of live Codex. AP51 remains
+incomplete until the actual Codex compatibility check and end-to-end acceptance
+at home pass. Cloud fixtures and SDK feasibility probes cannot check that box.
+Follow the [development process](../development-process.md) and
+[shared constraints](../shared-constraints.md).

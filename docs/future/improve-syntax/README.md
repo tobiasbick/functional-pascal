@@ -52,13 +52,14 @@ second decision or completion index.
 
 ## Package status
 
-AP51 plans an FPAS wrapper around the official Rust MCP SDK (`rmcp`) for clients
-and servers, following the ACP integration's FPAS conventions.
+AP51 plans an MCP server wrapper around the official Rust SDK (`rmcp`) so Codex,
+connected through ACP, can call FPAS-provided tools. Target-agent transport and
+protocol checks, followed by live acceptance, take place at home.
 Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP51: MCP wrapper](ap51-mcp-wrapper/README.md) | Large; client and server, authentication scope pending | Delivered AP50 runtime/process patterns and server lifetime infrastructure; no open AP prerequisite | Decision pending |
+| [ ] | [AP51: MCP tools for Codex over ACP](ap51-mcp-wrapper/README.md) | Medium; server and ACP integration | Delivered AP50; Codex transport/version checks and live acceptance at home | Planned |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

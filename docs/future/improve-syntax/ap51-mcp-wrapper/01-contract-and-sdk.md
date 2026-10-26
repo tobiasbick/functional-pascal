@@ -1,58 +1,84 @@
-# AP51.1: Agree scope and validate the SDK
+# AP51.1: Server contract and Codex compatibility
 
-Package: [AP51](README.md). Status: Decision pending.
+Package: [AP51](README.md). Status: SDK feasibility evidence available; target
+transport/version verification is pending at home. Product work remains paused.
 
-## Deliverable and prerequisites
+## Deliverable
 
-Record the user's Q58–Q64 decisions in the package README and produce a concrete
-API/SDK coverage matrix for both roles and the selected protocol. Q58 and Q64 are
-resolved: client and server use the official Rust SDK `rmcp` with an FPAS wrapper.
-SDK selection is settled; validate its release, features and integration. This is a decision
-and feasibility work package, not authorization to implement the public API.
-Prerequisites are the delivered ACP/process infrastructure and the versioned
-MCP sources linked from the package README.
+Specify the FPAS MCP server whose tools Codex calls while connected over ACP.
+Record the tested Codex/ACP-adapter versions, selected route, MCP revision,
+tool-state boundary and SDK configuration. The product has no MCP client role.
+The package README owns decisions Q58–Q64.
 
-## Investigation
+## SDK baseline and evidence
 
-1. Verify a published `rmcp` release, pin its exact version and necessary Cargo
-   features, and confirm the workspace Rust toolchain and TLS backend fit.
-   The inspected 3.7.0 source is a candidate; do not depend on floating `main`.
-2. Map core and selected extension methods, result variants, schema types,
-   discovery/version rules, MRTR, subscriptions and cancellation onto SDK APIs.
-   Separate missing SDK support from missing FPAS binding support. Any SDK gap
-   requires a bounded repair or an explicit scope decision, not a second engine.
-3. Inspect the SDK's internal queues, eager decode behavior, HTTP buffering,
-   cancellation, child cleanup and handler futures. An outer queue limit does
-   not prove bounded memory inside the SDK or transport.
-4. Specify FPAS unit names, handles, events, typed errors, request/continuation
-   state transitions, limits and explicit effects. Follow `Std.Acp` conventions
-   without transplanting ACP sessions or the legacy MCP handshake.
-5. Confirm that the chosen SDK configuration supports modern discovery without
-   silently falling back to `initialize`. Define behavior when discovery is
-   skipped and a method or capability is unavailable.
-6. For HTTP, decide credential ownership and auth-failure behavior. Full OAuth
-   would additionally require issuer/resource validation, registration policy,
-   callbacks, refresh and storage; it cannot be hidden inside a token parameter.
+The published official `rmcp` 3.7.0 is an available baseline. It is not yanked,
+requires Rust 1.88 and identifies upstream revision
+[`5d6a11f2ae022f513aec0f6e0f10f89a57891a7f`](https://github.com/modelcontextprotocol/rust-sdk/tree/5d6a11f2ae022f513aec0f6e0f10f89a57891a7f).
+Its registry SHA-256 is
+`ece64e19631fc38758181e637c15509a2c2709ee53bfde1e1d58f9dc991f919e`.
+Choose an exact published pin after confirming its target-route support.
 
-Specify the server APIs delivered by AP51.7 and AP51.8 before closing
-this decision step. Cover native listener ownership, per-request caller identity,
-bounded concurrent handlers, local execution policy, transport headers and the
-integrity/replay rules of application-owned MRTR `requestState`.
+Existing probes under `.temp-data/ap51-research/` built that release with both
+SDK roles, HTTP and extra features on Rust 1.99.1. They exercised same-SDK
+discovery, MRTR, cancellation, state integrity and dynamic JSON. Preserve them
+as feasibility evidence; they do not verify the reduced server-only feature
+set, FPAS binding or Codex compatibility. Their feature scope is not AP51 scope.
 
-## Affected files
+Start the product feature audit with `default-features = false`, `server`
+and `schemars`. Add `transport-async-rw` for a selected byte-stream route or
+`transport-streamable-http-server` for HTTP as required. Product client,
+HTTP-client and automatic MRTR features are unnecessary. Reuse existing
+crypto/TLS policy if needed. No floating Git dependency or replacement engine.
 
-| Action | Path | Purpose |
+## Target check at home
+
+1. Inspect the actual Codex ACP adapter's capabilities and MCP descriptors.
+   Record Codex and adapter behavior separately.
+2. Verify MCP-over-ACP support. Otherwise test a suitable local HTTP or stdio
+   descriptor. Prove a real request reaches the SDK server.
+3. Establish where tool state lives. A launched stdio server is a separate
+   process; it does not automatically access the running ACP host's memory.
+4. Verify MCP revision/lifecycle on the chosen route. Do not force modern
+   discovery or remove initialization based solely on the linked introduction.
+   Use the official SDK's selected lifecycle and validation.
+5. Define endpoint identity, route access policy and cancellation/response
+   ownership when ACP sessions or endpoints close.
+
+Live target investigation is deferred to home. Do not attempt live Codex
+experiments in the cloud; local fixtures cannot establish this target contract.
+
+## Server API and ownership
+
+Proposed units: `Std.Mcp.Types` and `Std.Mcp.Server`. Expose create/attach,
+receive, respond/reject and stop/close/release through VM-local handles.
+FPAS code explicitly dispatches requests; it does not run on the SDK executor.
+No outbound Connect/Send, client continuation or external-server proxy API.
+
+| Contract | SDK owner | FPAS owner |
 | --- | --- | --- |
-| Modify | `docs/future/improve-syntax/ap51-mcp-wrapper/README.md` | Record decisions and the final capability/API coverage matrix |
-| Modify | `docs/future/improve-syntax/ap51-mcp-wrapper/02-types-and-codecs.md` through `09-acceptance.md` | Align scope, owners, dependencies and acceptance |
-| Modify | `docs/future/improve-syntax/README.md` | Update package status and next free IDs if the breakdown grows |
+| Values/codec | `rmcp::model`, schema and serialization | Type conversion/registration; AP51.2 |
+| Requests/context | `ServerHandler`, `RequestContext<RoleServer>` | Bounded dispatch and one-use response rights; AP51.3 |
+| Tool discovery/calls | `ServerHandler::{list_tools,get_tool,call_tool}` and validation | Catalog, arguments, policy and FPAS execution; AP51.5 |
+| Cancellation/close | Request stop token and service close facilities | Cooperative work and ACP endpoint lifetime; AP51.3/AP51.4 |
+| Chosen transport | Official server transport/service APIs | ACP routing and stream/listener ownership; AP51.4 |
 
-SDK experiments and downloaded sources belong under `.temp-data/`. They do not
-become product dependencies or current handbook claims at this stage.
+Distinguish invalid arguments, denied work, tool errors, protocol failure, I/O,
+capacity, cancellation and closed resources. ACP tool status updates are
+observations, not tool execution requests or permission grants.
 
-## Acceptance
+## Limits and acceptance
 
-All seven decisions are recorded, the chosen release and features are verified,
-and each selected capability has an implementation and test owner. Public API
-examples remain proposals until approved. Resolve the remaining API/transport/auth
-boundaries before implementation; check links and `git diff --check`.
+Retain useful SDK findings: fixed service queues/pending work need FPAS admission
+bounds; server bodies and stream frames need size limits; cancellation/shutdown
+must remain live when ordinary admission is full. Bound payloads, catalogs,
+responders and handlers, and check GC retention of application state.
+
+Choose concrete defaults with the selected server route. Outbound HTTP body
+adapters, client response caches, external-server polling, client continuations
+and task managers are not prerequisites.
+
+Update the package README and align AP51.2–AP51.6 after the home target check.
+AP51.1 stays open until the actual route/version and concrete server contract
+are verified. SDK probes alone do not complete it. Check links, scope consistency
+and `git diff --check`.

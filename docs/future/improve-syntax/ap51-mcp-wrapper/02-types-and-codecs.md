@@ -1,52 +1,36 @@
-# AP51.2: Protocol values and FPAS API registration
+# AP51.2: Server protocol types and API registration
 
-Package: [AP51](README.md). Status: Not started; blocked on AP51.1.
+Package: [AP51](README.md). Status: Not started; depends on AP51.1.
 
-## Contract and scope
+## Contract
 
-Expose the approved MCP types and lossless payload codecs through `Std.Mcp.Types`
-and the agreed client/server operational units. Include server configuration,
-incoming requests and single-use response identities. Use the pinned official
-`rmcp` SDK as protocol owner. The codec layer converts FPAS values to and from
-SDK values and delegates wire serialization to the SDK. Preserve
-arbitrary tool arguments, JSON Schema, structured tool output, content blocks,
-metadata and peer error data. `structuredContent` may be any JSON value, not
-only an object. Keep omitted fields, explicit null and protocol defaults distinct
-where the specification makes them distinct.
+Bind official SDK server values to `Std.Mcp.Types` and `Std.Mcp.Server`:
+tool descriptions/input schemas, list/call requests, context, content/results
+and typed errors. Preserve dynamic JSON, protocol metadata, omission/default
+behavior and numeric bounds. A tool's `isError` differs from a JSON-RPC error.
+Delegate wire serialization and protocol validation to the SDK.
 
-Model `complete`, `input_required` and selected extension result types explicitly.
-Apply specified missing-field defaults, and reject unsupported result variants
-according to the agreed protocol rules. Preserve raw diagnostic data without
-turning unsupported methods into enabled capabilities. Keep local failures
-separate from peer JSON-RPC errors and tool results with `isError`.
+Publish only server operations and supported features. Incoming client metadata
+is server context, not an outbound FPAS client API.
 
-Schema-derived registration is preferable to parallel handwritten DTO catalogs.
-Inspect ACP's binding implementation before choosing reuse: shared generic code
-must have a protocol-neutral owner; `fpas-mcp` must not depend on ACP sessions or
-the ACP wire schema. Keep compiler syntax and existing ACP names unchanged.
-
-## Affected files and owners
+## Implementation owners
 
 | Action | Path | Purpose |
 | --- | --- | --- |
-| Create | `crates/fpas-mcp/Cargo.toml`, `crates/fpas-mcp/src/lib.rs`, `crates/fpas-mcp/src/binding/`, `crates/fpas-mcp/src/codec/` | SDK-backed values, schema registration and codec boundary |
-| Modify | `Cargo.toml`, `Cargo.lock` | Register the crate and pinned SDK/features |
-| Modify | `crates/fpas-std/src/std_units/`, `crates/fpas-std/src/intrinsics.rs` | Publish agreed units and intrinsic dispatch metadata |
-| Create/modify | `crates/fpas-bytecode/src/intrinsic/mcp.rs`, `crates/fpas-bytecode/src/intrinsic/mod.rs` | Intrinsic identities and signatures |
-| Create/modify | `crates/fpas-sema/src/std_registry/loaded/mcp/`, `crates/fpas-sema/src/std_registry/loaded/mod.rs` | Register protocol types and native APIs |
-| Inspect/modify | `crates/fpas-compiler/src/intrinsic_catalog.rs`, `crates/fpas-compiler/src/bytecode/selection/intrinsics.rs` | Wire native calls through existing lowering/catalog mechanisms |
-| Generate | `lib/api/Std/Mcp.fpas`, `lib/api/Std/Mcp.Types.fpas`, `lib/api/Std/Mcp.Server.fpas` | Editor declarations from the canonical client/server API |
-| Create | `docs/pascal/std/ai/mcp/types.md`, `crates/fpas-mcp/tests/codec.rs`, `tests/stdlib/mcp/types_test.fpas` | Delivered type contract and round-trip coverage |
+| Create | `crates/fpas-mcp/` | Exact official SDK pin and server value/codec bridge |
+| Modify | `Cargo.toml`, `Cargo.lock`, consuming manifests | Server-only product features |
+| Create/modify | `crates/fpas-sema/src/std_registry/loaded/mcp/`, `crates/fpas-std/src/std_units/`, `crates/fpas-std/src/intrinsics.rs` | Units, types and signatures |
+| Create/modify | `crates/fpas-bytecode/src/intrinsic/mcp.rs`, native compiler catalog/selection owners | Intrinsic metadata and lowering |
+| Generate | `lib/api/Std/Mcp.Types.fpas`, `lib/api/Std/Mcp.Server.fpas` | Canonical editor declarations |
+| Create | `docs/pascal/std/ai/mcp/types.md`, `tests/stdlib/mcp/types_test.fpas` | Contract and FPAS coverage |
 
-Finalize any necessary cross-crate extraction paths in AP51.1 before editing.
-Apply the standard-library implementation touchpoint checklist, including Cargo
-dependencies of every consuming crate and artifact identity when required.
+Inspect registration/export touchpoints before implementation. Extract generic
+ACP binding helpers only where actual reuse warrants it; MCP does not depend on
+the ACP wire schema.
 
-## Acceptance and verification
+## Acceptance
 
-Test SDK-to-FPAS-to-wire round trips, nested enums, exact numeric bounds,
-null/missing/default distinctions, extensible metadata, dynamic schemas and
-malformed payloads. Test native naming and reserved-word collisions, forged
-handles and unsupported schema forms. Generated declarations must match CLI
-checking, editor navigation and typed error handling. Run the owning Rust and
-FPAS cases, formatting, build and the applicable workspace checks.
+Test SDK/FPAS round trips for schemas, arguments, results and error data,
+malformed values, dynamic JSON and numeric boundaries. Verify native names,
+CLI/editor typing, generated declarations and artifact identity. No outbound
+MCP client API or client transport dependency is introduced.

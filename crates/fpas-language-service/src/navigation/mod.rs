@@ -53,6 +53,10 @@ pub struct HoverInfo {
     pub contents: String,
     /// Markdown documentation attached to the resolved declaration.
     pub documentation: Option<String>,
+    /// Exact declaration snapshot for a source link, when the symbol has source.
+    pub definition: Option<ReferenceLocation>,
+    /// Repository-relative handbook page for a compiler-native operation.
+    pub handbook: Option<String>,
     /// Identifier range under the cursor.
     pub range: fpas_diagnostics::SourceSpan,
 }

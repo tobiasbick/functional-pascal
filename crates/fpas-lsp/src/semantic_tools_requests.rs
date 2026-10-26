@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use fpas_language_service::{NavigationResult, SemanticToken as FpasSemanticToken};
-use tower_lsp_server::ls_types::Diagnostic;
+use tower_lsp_server::ls_types::{Diagnostic, Range};
 
 use crate::documents::{
     CodeActionResult, DocumentRequestError, SynchronizedDocuments, require_open, tasks,
@@ -11,6 +11,25 @@ use crate::documents::{
 use crate::semantic_tools;
 
 impl SynchronizedDocuments {
+    pub(crate) async fn refactorings_open(
+        &self,
+        path: &Path,
+        range: Range,
+    ) -> Result<NavigationResult<Vec<fpas_language_service::Refactoring>>, DocumentRequestError>
+    {
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let start = crate::convert::position_to_byte_offset(&snapshot, range.start)?;
+            let end = crate::convert::position_to_byte_offset(&snapshot, range.end)?;
+            let result = service.refactorings(&path, start..end)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
+    }
+
     pub(crate) async fn semantic_tokens_open(
         &self,
         path: &Path,

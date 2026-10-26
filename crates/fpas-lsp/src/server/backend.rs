@@ -35,6 +35,7 @@ pub struct Backend {
     pub(super) documents: Arc<SynchronizedDocuments>,
     diagnostics: DiagnosticPublisher,
     document_changes: AtomicBool,
+    pub(super) definition_links: AtomicBool,
     watched_files_dynamic_registration: AtomicBool,
     shutdown_started: watch::Sender<bool>,
 }
@@ -48,6 +49,7 @@ impl Backend {
             client,
             documents,
             document_changes: AtomicBool::new(false),
+            definition_links: AtomicBool::new(false),
             watched_files_dynamic_registration: AtomicBool::new(false),
             shutdown_started: watch::channel(false).0,
         }
@@ -89,6 +91,16 @@ impl Backend {
 
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
+        self.definition_links.store(
+            params
+                .capabilities
+                .text_document
+                .as_ref()
+                .and_then(|text| text.definition.as_ref())
+                .and_then(|definition| definition.link_support)
+                .unwrap_or(false),
+            Ordering::Release,
+        );
         let supports_document_changes = params
             .capabilities
             .workspace

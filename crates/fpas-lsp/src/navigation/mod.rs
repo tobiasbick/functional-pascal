@@ -10,7 +10,7 @@ mod workspace_symbols;
 use fpas_diagnostics::SourceSpan;
 use fpas_language_service::{DocumentSnapshot, HoverInfo, SymbolKind, SymbolLocation};
 use tower_lsp_server::ls_types::{
-    Hover, HoverContents, Location, MarkupContent, MarkupKind, Range, Uri,
+    Hover, HoverContents, Location, LocationLink, MarkupContent, MarkupKind, Range, Uri,
 };
 
 use crate::convert::{PositionConversionError, byte_offset_to_position};
@@ -25,10 +25,23 @@ pub(crate) fn hover(
     snapshot: &DocumentSnapshot,
     value: HoverInfo,
 ) -> Result<Hover, PositionConversionError> {
-    let mut markdown = format!("```pascal\n{}\n```", value.contents);
-    if let Some(documentation) = value.documentation {
-        markdown.push_str("\n\n");
-        markdown.push_str(&documentation);
+    let mut markdown =
+        crate::presentation::declaration_markdown(&value.contents, value.documentation.as_deref());
+    if let Some(definition) = value.definition
+        && let Some(uri) = Uri::from_file_path(&definition.path)
+    {
+        let position = byte_offset_to_position(&definition.snapshot, definition.span.offset())?;
+        markdown.push_str(&format!(
+            "\n\n[Go to definition](<{uri}#L{},{}>)",
+            position.line + 1,
+            position.character + 1,
+            uri = uri.as_str(),
+        ));
+    }
+    if let Some(handbook) = value.handbook {
+        markdown.push_str(&format!(
+            "\n\n[FPAS reference](https://github.com/tobiasbick/functional-pascal/blob/main/{handbook})"
+        ));
     }
     Ok(Hover {
         contents: HoverContents::Markup(MarkupContent {
@@ -48,6 +61,19 @@ pub(crate) fn location(
         uri,
         span_range(snapshot, value.symbol.selection_span)?,
     ))
+}
+
+pub(crate) fn definition_link(
+    snapshot: &DocumentSnapshot,
+    value: &SymbolLocation,
+) -> Result<LocationLink, NavigationConversionError> {
+    Ok(LocationLink {
+        origin_selection_range: None,
+        target_uri: Uri::from_file_path(&value.path)
+            .ok_or(NavigationConversionError::InvalidPath)?,
+        target_range: span_range(snapshot, value.symbol.full_span)?,
+        target_selection_range: span_range(snapshot, value.symbol.selection_span)?,
+    })
 }
 
 pub(crate) fn span_range(

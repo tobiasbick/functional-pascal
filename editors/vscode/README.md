@@ -1,318 +1,214 @@
 # Functional Pascal
 
-This is the local editor extension for Functional Pascal. It provides `.fpas`
-language detection, TextMate syntax highlighting, comment and bracket
-configuration, indentation, and folding. The selected installed toolchain's
-`fpas lsp` server provides parser and semantic diagnostics, canonical
-whole-document formatting,
-document symbols, hover, same- and cross-unit go to definition, find all
-references, workspace symbol search, document highlights, go to type
-definition, syntax-aware selection expansion, validated project-wide rename,
-rich visibility-aware completion, lazy completion documentation, signature
-help, checked FPAS snippets, and safe unambiguous auto-imports. The repository
-builds and tests the extension without a Marketplace. Compiler-backed semantic
-tokens distinguish resolved declarations and references, and an `FP3001` or
-`FP3003` diagnostic can offer a safe import quick fix when exactly one public,
-accessible unit provides the missing type or callable.
-The extension resolves `fpas` from `functionalPascal.executablePath` or `PATH`
-for project check, build, run, test, format, and format-check commands, Problems
-integration, and the Testing view.
-The extension runs in the local desktop extension host and uses a locally
-installed FPAS toolchain. Remote workspaces (SSH, containers, and WSL opened
-through VS Code Remote) are unsupported; toolchain commands report that
-limitation. The extension does not declare support for Restricted Mode, so VS
-Code disables its executable tooling until the workspace is trusted.
-The extension also contributes the `fpas` debugger. Press **F5** with a
-`.fpas`, `.fpasprj`, or `.fpasworkspace` editor active. For a `.fpas` program
-main, zero-configuration launch discovers and debugs the owning `.fpasprj`, so
-its project dependencies are retained. Use **Run and Debug** with the generated
-**Debug Functional Pascal** configuration, or set `program` to a `.fpas`,
-program `.fpasprj`, `.fpasworkspace`, or `.fpascp` target. Compiled
-images additionally require `sourceRoot`. Set source breakpoints in an `.fpas`
-editor gutter or with **F9**. Breakpoints, stepping, stack frames, scopes,
-variables, read-only watches/hover/Debug Console evaluation, conditional
-breakpoints, exact positive-integer hit conditions, non-stopping logpoints,
-and program output use the selected CLI's DAP adapter and its adjacent source
-standard library. The
-language server remains responsible only for static editor features.
-Use the Debug toolbar for Continue, Pause, Step Into, Step Over, Step Out, and
-Stop. While stopped, **Functional Pascal: Debug: Force Return** completes the
-selected ordinary callee — including an older frame — with a validated result
-and stays stopped in that frame's caller. The Run and Debug sidebar exposes the
-call stack, lexical scopes, locals, parameters, globals, and expandable
-aggregate values. Evaluated aggregates are also expandable until execution
-resumes. Program terminal output appears in a dedicated integrated terminal by
-default. Keyboard, mouse, paste, focus, and resize events are forwarded to
-`Std.Console` and `Std.Tui` while the program is running. Set `console` to
-`debugConsole` to retain non-interactive output-only behavior. Logpoint text
-and structured runtime failures appear in the Debug Console. Log messages use
-`{expression}` interpolation and `{{`/`}}` for literal braces. Debugger-side
-calls may invoke deterministic functions, procedures, record methods,
-constructors, visible closures, and pure `Std.*`
-intrinsics. They run against a detached copy of stopped state; writes are
-discarded, and calls involving output, files, processes, environment, time,
-randomness, blocking, tasks, or unknown dynamic effects are rejected.
-Use **Functional Pascal: Debug: Reload Compatible Changes** to rebuild the
-exact launch target while initialized or stopped. Changes limited to inactive
-function bodies commit atomically and refresh sources, breakpoints, stacks, and
-variables. **Debug: Roll Back Last Reload** restores the single preceding image
-as a new version. Active bodies, function-set or layout changes, captures, and
-anonymous closures are rejected before the live image changes. This reloads
-FPAS program code only; it does not debug or replace the native Rust VM.
-While stopped, the Variables view can edit mutable locals and globals,
-closure captures, record fields, array elements, existing dictionary
-values, active enum payload fields, `Result`/`Option` `.value` children, and
-complete mutable enum, `Result`, and `Option` values using constructor
-expressions such as `Choice.Pair(1, 2)` or `None`. A function-typed Variables
-or Watch target can be replaced by copying one visible binding that already
-holds a compatible function value, or by assigning a unique
-executable routine such as `AddTwo`, `AddBase`, or `AddCell`. Named nested
-routines materialize from the selected lexical-owner frame using recorded
-immutable values and existing mutable cells. Constructed cell-capturing
-functions are task-bound to the selected task and may be stored only in a
-mutable local register of that owner frame. An already
-materialized task-bound function may be copied only within that selected owner
-task and frame; the exact function and cell handles are preserved. A task-typed Variables or
-Watch target can be replaced by copying one visible binding that already holds
-a compatible task handle, for example `Pending`. The editor uses the standard
-Variables/Watch edit flow; it does not add a custom command. Numeric IDs,
-`<task N>` display text, Dynamic endpoints, and complete aggregates that
-contain task handles remain rejected. Editor clients can also use
-the standard DAP `setExpression` request for an explicit inactive
-single-payload variant such as `Optional.Some.value` or
-`Selected.Count.Value`; in VS Code this is the **Set Value** action on a Watch
-expression. Uninitialized mutable
-locals and globals can be assigned one complete value through the same
-Variables and Watch edits.
-Rejected edits leave the session stopped and unchanged. A successful
-edit refreshes the Variables view; continuing execution observes the committed
-value unless a later source initializer overwrites it. Dictionary keys are not
-edited through the standard Variables request; immutable bindings,
-evaluation-only results, and opaque host values are not editable.
-Function values are editable by copying an already materialized, visible,
-function binding, or by assigning a unique executable routine
-including a named nested routine whose captures are immutable values or
-existing mutable cells. Task handles are editable by copying one visible
-initialized binding whose declared task result type matches the destination.
-Uninitialized bindings have no writable
-descendants. Variables does not list inactive variants as children. A write to
-an old payload-child handle never selects a
-different variant. Task debugging is deterministic and all-stop;
-attach remains unsupported.
+Language support, project tools, and source debugging for Functional Pascal in
+VS Code-compatible desktop editors. Diagnostics, completion, formatting, and
+debugging use your installed FPAS toolchain.
 
-Use **Functional Pascal: Debug: Insert Dictionary Entry**, **Debug: Remove
-Dictionary Entry**, or **Debug: Replace Dictionary Key** while stopped to
-change dictionary structure. The commands prompt for a complete mutable
-dictionary target and FPAS key/value expressions. Insert appends a missing
-pair, remove deletes an existing pair, and key replacement preserves the
-associated value and iteration position. Failures and cancelled prompts leave
-the stopped program unchanged.
+## Get started
 
-Use **Functional Pascal: Debug: Insert Array Element**, **Debug: Remove Array
-Element**, or **Debug: Replace String Character** for bounded sequence changes.
-Array insertion accepts indexes from zero through the current length; removal
-uses an existing zero-based index. String indexes count Unicode characters and
-the replacement must be a one-character FPAS string. Successful commands
-refresh debugger variables; failures and cancelled prompts send no mutation.
+1. Install the extension through **Extensions: Install from VSIX**.
+2. Install the [FPAS toolchain](https://github.com/tobiasbick/functional-pascal#build-from-source).
+   Keep `fpas`, `fpas-lsp`, and the source standard library (`lib/`) together.
+   The distribution also includes `fpas-runner` for building native executables.
+3. Add the toolchain directory to `PATH`, or run **Functional Pascal: Select
+   FPAS Executable** from the Command Palette and select `fpas` (`fpas.exe` on
+   Windows).
+4. Open your local project folder. Open a program's `.fpas` source, `.fpasprj`,
+   or `.fpasworkspace`, then press **F5** to debug it.
 
-Use **Functional Pascal: Debug: Force Return** while stopped on a selected
-ordinary callee. Procedures complete without a prompt; functions prompt for one
-FPAS return expression unless the command is invoked with an expression. The
-command completes the selected frame and every younger frame, leaves the
-session stopped in the selected frame's caller, and refreshes the call stack
-and Variables view. It does not resume the program.
+The extension requires VS Code 1.91 or newer and a trusted local workspace.
+The VSIX contains the editor integration; install the compiler, language server,
+runner, and standard library separately. The selected toolchain supplies all
+language and runtime services.
 
-Use **Functional Pascal: Debug: Construct Variant** while stopped on a mutable
-enum, `Result`, or `Option` target. The command discovers legal variants,
-prompts for each declared field expression, and commits one complete value
-without resuming. Fieldless variants need no field expressions. Cancelled
-prompts leave the stopped program unchanged.
+## Settings
 
-Use **Functional Pascal: Debug: Initialize Empty Storage** while stopped on an
-empty mutable local or global. The command prompts for a descendant target, a
-complete root initializer, and a replacement expression, then commits the
-rebuilt root once without resuming. Cancelled prompts leave the stopped
-program unchanged. A later source initializer still overwrites the debugger
-value.
+Open Settings and search for `@ext:functional-pascal.functional-pascal`.
 
-## Build
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `functionalPascal.executablePath` | Empty | Absolute path to `fpas`. When empty, searches `PATH`. This setting applies to the local machine. |
+| `functionalPascal.programTerminal` | `integratedTerminal` | Choose the editor terminal or a separate OS window (`externalTerminal`) for program runs and F5. |
+| `functionalPascal.testTimeoutSeconds` | `10` | Per-test timeout in seconds for the Testing view. |
 
-Node.js 22 or newer is required. From the
-repository root, install the pinned Node dependencies once:
+For example, use a separate terminal window and format FPAS sources on save:
 
-```text
-npm ci --prefix editors/vscode
+```json
+{
+  "functionalPascal.programTerminal": "externalTerminal",
+  "[fpas]": {
+    "editor.formatOnSave": true
+  }
+}
 ```
 
-Then build the VSIX:
+Selecting another executable restarts the language server automatically. Its
+standard-library location comes from `fpas env --json`.
 
-```text
+## Editing
+
+| Feature | What you get |
+| --- | --- |
+| Diagnostics and quick fixes | Parser and type errors for unsaved source, compiler-supplied fixes, and unambiguous import fixes. |
+| Completion and help | Parameter and type previews, colored signatures, context-aware names, generic record fields, native operations, aliased imports, signature help, and snippets. |
+| Navigation | Colored, multiline hover with documentation and source links; definition, type definition, references, Outline, workspace symbols, and read/write highlights. |
+| Refactoring | Validated symbol rename, local variable extraction, import organization, and syntax-aware selection expansion. |
+| Formatting and highlighting | The canonical `fpas fmt` style, semantic highlighting, and TextMate highlighting during startup. |
+| Public signatures | **Show Public Signatures** opens a read-only view of a unit's public declarations and contracts, updated as you edit. |
+
+The language server discovers nested projects and workspaces in the opened
+folder and follows their dependencies, visibility, and exports. Unsaved buffers
+take precedence over disk contents. Source and manifest changes refresh analysis
+without a server restart.
+
+**Format Document** and format on save use the same formatter as the CLI:
+two-space structural indentation and a 100-column expression target. A source
+with parser errors is left unchanged.
+
+Use **F12** or **Ctrl+Click** to open a resolved declaration (**Cmd+Click** on
+macOS; **Alt+Click** when Ctrl/Cmd is configured for multiple cursors).
+Select a complete expression and choose **Refactor... > Extract variable** to
+introduce a local `const`; use **F2** to give it your preferred name. Run
+**Organize Imports** to sort imports and remove safely unused aliases. Both
+actions check the result before offering an edit. Expressions whose evaluation
+would move across other work, and import clauses containing comments, are kept
+unchanged. See the [refactoring rules](https://github.com/tobiasbick/functional-pascal/blob/main/docs/pascal/tools/editor-integration.md#refactoring).
+
+## Projects and tests
+
+Run **Functional Pascal: Select Project or Workspace** when the folder contains
+several manifests. The active selection appears in the status bar.
+
+All commands below have the **Functional Pascal:** prefix in the Command Palette.
+
+| Command | Action |
+| --- | --- |
+| **Check Project** / **Build Project** | Check or compile the selected project and show failures in Problems. |
+| **Run Project in Terminal** | Run interactively; program arguments are entered as a JSON string array, such as `["--help"]`. |
+| **Test Project** / **Refresh Tests** | Run or rediscover project tests in the Testing view. |
+| **Format Project** / **Check Project Formatting** | Format project sources or check their formatting. |
+| **Cancel Active Operation** | Cancel the current check, build, formatting operation, or test run. |
+
+The Testing view discovers `*_test.fpas` files. Run all tests, selected files,
+or a filtered set, and rerun failures. Results distinguish assertion failures,
+skips, compile errors, runtime errors, and timeouts.
+
+## Debugging
+
+Press **F9** or click the editor gutter to set a breakpoint, then **F5** to
+start. When the active source is a project's program main, F5 launches its
+owning `.fpasprj` so project dependencies are available.
+
+Use the normal Debug toolbar to continue, pause, step, and stop. The Run and
+Debug view shows task threads, call stacks, scopes, variables, and watches.
+Conditional breakpoints, positive-integer hit counts, and logpoints are
+supported. Logpoints interpolate `{expression}`; `{{` and `}}` insert braces.
+
+### Launch configuration
+
+F5 works without a `launch.json`. For a fixed target or program arguments,
+create a configuration like this:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "fpas",
+      "request": "launch",
+      "name": "Debug FPAS project",
+      "program": "${workspaceFolder}/app.fpasprj",
+      "args": [],
+      "stopOnEntry": false
+    }
+  ]
+}
+```
+
+Replace `app.fpasprj` with your program project, `.fpas` source, or
+`.fpasworkspace`. Compiled `.fpascp` images also require `sourceRoot`.
+The optional `cwd` sets the working directory. An explicit `console` value
+(`integratedTerminal`, `externalTerminal`, or `debugConsole`) overrides the
+terminal setting for this configuration.
+
+### Terminal and program input
+
+Integrated and external debug terminals support interactive `Std.Console` and
+`Std.Tui` programs, including keyboard, mouse, paste, focus, and resize events.
+`debugConsole` provides output-only operation. Expressions entered in the
+Debug Console inspect stopped state; they are not program input.
+
+Use **Debug: Send Program Input** to queue a line for `ReadText`/`ReadLn`.
+**Debug: Signal Program Input EOF** and **Debug: Cancel Queued Program Input**
+control the input queue.
+
+### Inspect and change stopped state
+
+Watch, hover, and Debug Console evaluation support expressions and controlled
+deterministic calls. Calls use a detached copy of stopped state; their writes
+are discarded, and calls with external effects are rejected.
+
+Use **Set Value** in Variables or Watch to edit supported mutable values.
+Command Palette actions cover dictionary entries, array insertion/removal,
+string characters, variant construction, empty storage initialization, and
+replacement of an unconsumed completed task result.
+
+Tasks appear separately in the Threads view. Select a task to inspect its stack
+or step it. Stops pause all tasks; **Debug: Pause Task**, **Debug: Resume Task**,
+and **Debug: Cancel Task** control an individual task's execution state.
+
+**Restart Frame** restarts the selected live frame with its current parameters
+and captures. **Debug: Force Return** completes a selected frame, including a
+program or task entry; completing the program entry ends the session.
+
+**Debug: Reload Compatible Changes** rebuilds the launch target and applies
+changes to inactive function bodies. **Debug: Roll Back Last Reload** restores
+the preceding image. Changes to active bodies, layouts, captures, or the
+function set require a new session.
+
+See the [editor handbook](https://github.com/tobiasbick/functional-pascal/blob/main/docs/pascal/tools/editor-integration.md#source-debugging-and-variable-editing)
+for supported edits and task operations, and the
+[debugger reference](https://github.com/tobiasbick/functional-pascal/blob/main/docs/pascal/tools/debugger.md)
+for evaluation and reload rules.
+
+## Troubleshooting and limits
+
+- Run **Functional Pascal: Show Output** to inspect startup and toolchain errors.
+  Check the selected installation with `fpas env --json`.
+- Run **Functional Pascal: Restart Language Server** to restart editor analysis.
+- Remote SSH, WSL, and container workspaces are unsupported. Open the project
+  in a local desktop extension host.
+- Debugging supports launch sessions. Attach, reverse execution, native memory
+  inspection, and Set Next Statement are unsupported.
+
+The extension collects no telemetry and submits no reports automatically.
+Use the [bug-report template](BUG_REPORT.md) for a reproducible problem.
+
+## Build the extension
+
+Contributors need Node.js 22 or newer. From the FPAS repository root:
+
+```sh
+npm ci --prefix editors/vscode
 npm run package --prefix editors/vscode
 ```
 
-The command compiles the extension, creates a platform-independent archive,
-and verifies that no compiler, language-server binary, or standard-library
-source is included. It does not build FPAS or run integration tests. It produces:
+The result is `editors/vscode/dist/functional-pascal-<version>.vsix`.
+Packaging compiles the extension and verifies the archive contents. It does
+not build FPAS or run integration tests.
 
-```text
-editors/vscode/dist/functional-pascal-<version>.vsix
-```
+To build FPAS and run the full extension suite before packaging, use the
+repository's pinned Rust toolchain and run:
 
-To run the full extension test suite before packaging, use:
-
-```text
+```sh
 npm run package:verified --prefix editors/vscode
 ```
 
-This command additionally requires a stable Rust toolchain. It builds the current
-debug `fpas` toolchain and runs the extension tests before creating the VSIX.
-If a test fails, packaging stops and an existing VSIX is left unchanged.
-Run `npm test --prefix editors/vscode` for the tests alone.
+A failed test stops packaging and preserves an existing VSIX.
+Run `npm test --prefix editors/vscode` for tests alone, or
+`npm run test:restricted --prefix editors/vscode` for Restricted Mode.
+The test editor is pinned in `scripts/run-tests.mjs`;
+`FPAS_VSCODE_TEST_VERSION=1.91.0` selects the minimum supported version.
 
-Install an FPAS distribution containing `fpas`, `fpas-lsp`, `fpas-runner`, and
-`lib/` separately. Put its directory on `PATH`, or use **Functional Pascal:
-Select FPAS Executable**. The corresponding machine-scoped
-`functionalPascal.executablePath` setting overrides `PATH`.
-
-Install the resulting file through **Extensions: Install from VSIX** in a
-VS Code-compatible desktop editor. No registry login or publication is
-required.
-
-## Verify
-
-Open a `.fpas` file and confirm the status bar identifies the language as
-**Functional Pascal**. `.fpasprj` and `.fpasworkspace` files are recognized as
-**Functional Pascal Project** and can be launched with **F5**. Syntax highlighting works before the extension's
-TypeScript entry point is activated.
-
-Introduce a syntax or type error and confirm the editor reports an `FPnxxx`
-diagnostic for the unsaved buffer. Run **Format Document** and confirm the
-result matches `fpas fmt`. The editor's standard `editor.formatOnSave` setting
-uses the same formatter without an FPAS-specific setting.
-
-Open the Outline view to inspect FPAS declarations. A contiguous standalone `//` block immediately
-before a declaration is Markdown documentation; hover and resolved completion items display it.
-The selected toolchain's standard library contains editor-only declarations for Rust-backed intrinsic
-`Std.*` units. They provide the same hover, completion, signature, and definition experience and
-open as ordinary read-only `.fpas` files without becoming part of program compilation.
-Hover a declaration or
-reference, use **Go to Definition** or **Go to Type Definition**, search all
-project declarations with **Go to Symbol in Workspace** (`Ctrl+T`), and invoke
-completion in a routine body or after a unit/record `.`. Resolved identifiers
-highlight their declaration, reads, and writes in the current document.
-Selection expansion follows enclosing FPAS syntax. Project-aware results use
-the same `.fpasprj`,
-`.fpasworkspace`, visibility, and library-export boundaries as the compiler.
-Use **Find All References** (`Shift+F12`) to list resolved declarations and
-usages, including uses in indexed programs that consume a directly owned
-library, and **Rename Symbol** (`F2`) to validate and edit a normal declaration
-across those loaded projects. Program/unit renames and declarations outside
-the opened folder are intentionally rejected.
-
-Run **Functional Pascal: Show Public Signatures** from a unit source to open its
-read-only public declarations beside the editor. The view follows unsaved changes
-and includes imports, public types/members, binding types and routine contracts,
-without private declarations or routine bodies. Syntax errors show an actionable
-message. It is derived from source and is not a separately saved interface.
-
-Completion includes parameters, locals, imported declarations, record and enum
-members, and context-appropriate keywords with accurate kinds, owners, types,
-signatures, and replacement ranges. Signature help tracks nested and multiline
-calls. Type a prefix such as `function`, `record`, `if`, or `for` to select a
-repository-owned snippet. A completion may add a `uses` entry only when one
-accessible public declaration has one unambiguous unit import; ambiguous or
-inaccessible names are never guessed.
-
-Semantic highlighting refines the TextMate colors for resolved units, types,
-enums, type parameters, routines, parameters, variables, members, enum values,
-and constants. TextMate highlighting remains the startup and recovery fallback.
-Use **Quick Fix** (`Ctrl+.`) on an unknown type or callable diagnostic to add a
-`uses` import when that edit is uniquely determined and the resulting source is
-parseable and canonically formatted. Stale, ambiguous, or inaccessible
-diagnostics produce no edit.
-
-The folder opened in the editor may be the complete Functional Pascal Rust
-repository or another parent folder without an FPAS manifest. The server
-catalogs the `.fpasprj` and `.fpasworkspace` manifests in that folder and uses
-the normal project loader to determine their sources and relationships.
-Multiple nested FPAS projects can be used in one editor session; files without
-a matching manifest remain available as loose files. External source and
-manifest changes refresh affected analysis, references, and rename results
-without a language-server restart, while unsaved open buffers remain
-authoritative.
-
-The extension obtains the source standard-library directory from
-`fpas env --json`. `Std.Tui` and the other source-defined `Std.*` units
-therefore come from the same installed toolchain used for builds and debugging,
-not from the opened project or the VSIX.
-
-Select **Functional Pascal: Select Project or Workspace** before using project
-commands in a folder containing multiple manifests. The remembered selection
-appears in the status bar. Run the selection command again to switch projects.
-**Check Project**, **Build Project**, **Test
-Project**, **Format Project**, and **Check Project Formatting** run the selected
-CLI without a shell and publish compiler failures in Problems. **Cancel Active
-Operation** stops a running non-interactive command. **Run Project in Terminal**
-starts the normal interactive CLI and accepts program arguments as a JSON
-string array. `functionalPascal.programTerminal` chooses an integrated editor
-terminal or a separate operating-system terminal window. F5 uses the same
-default; an explicit `console` value in `launch.json` overrides it. External
-debug terminals retain the same keyboard, mouse, resize, paste, focus, and TUI
-event bridge as the integrated terminal.
-
-The Testing view discovers `*_test.fpas` files for the selected manifest and
-supports all, selected, filtered, excluded, and rerun requests. Selected files
-are passed to `fpas test --file` by exact path, so nested tests with the same
-basename retain separate results. Outcomes distinguish
-pass, assertion failure, skip, compile error, runtime error, and timeout. Set
-`functionalPascal.testTimeoutSeconds` to change the default 10-second per-test
-limit.
-
-CLI output captured for a workflow command is limited to 16 MiB per stream;
-an overlong report stops the command with an error instead of parsing partial
-JSON. Terminal input is limited to 1 MiB per paste and 4 MiB in its pending
-queue. The external terminal buffers at most 4 MiB of output awaiting its
-local socket; exceeding that limit stops the debug session with an error.
-
-Run **Functional Pascal: Show Output** from the Command Palette. The
-`Functional Pascal` output channel must contain:
-
-```text
-Functional Pascal extension activated.
-```
-
-The test command builds `target/debug/fpas[.exe]`, adds that directory to the
-Extension Host's test-only `PATH`, and starts `fpas lsp` from a real VS Code
-Extension Host. It verifies diagnostics, formatting, document symbols,
-hover, cross-unit definition and type definition, workspace symbols, document
-highlights, references, rename, rich completion, signature help, snippets, and
-a safe auto-import, semantic tokens, an applied diagnostic quick fix, project
-commands, Problems, cancellation, Testing API outcomes, read-only evaluation
-and controlled calls in every supported DAP context, detached-state recovery,
-mutable scalar and aggregate Variables-view edits with invalidation and
-continued-execution checks, function-value and task-handle assignment through
-the standard edit flow, conditional and exact-hit stops, and non-stopping
-logpoints,
-restarts it once, and shuts it down with the extension:
-
-```text
-npm test --prefix editors/vscode
-```
-
-The runner pins VS Code 1.142.0 and creates a fresh user-data directory for each
-run, removing it after the Extension Host exits. Downloaded VS Code binaries
-remain cached. Set `FPAS_VSCODE_TEST_VERSION=1.91.0` when running the test
-command to check the minimum declared editor version. The `@types/vscode`
-dependency stays at 1.91.0 to type-check against that minimum API; newer editor
-releases do not by themselves require a new SDK or a higher minimum version.
-Node.js types stay on the Node 24 line used for development. Run
-`npm run test:restricted --prefix editors/vscode` to check that the extension
-stays inactive in an untrusted workspace. The F9 check opens the source with its breakpoint selection
-already applied before invoking the editor command.
-Debugger tests capture sessions through the start event and normally wait for
-their session to become active. The non-stopping logpoint test skips the active
-session wait because its program can finish before the UI selects the session.
-
-For daily use, record reproducible problems with the local
-[bug-report template](BUG_REPORT.md). The extension has no telemetry and sends
-nothing automatically.
+See the [editor handbook](https://github.com/tobiasbick/functional-pascal/blob/main/docs/pascal/tools/editor-integration.md)
+for the full integration contract and implementation references.

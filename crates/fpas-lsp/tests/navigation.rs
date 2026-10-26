@@ -10,16 +10,20 @@ mod support;
 
 use serde_json::{Value, json};
 
-use support::{exit, initialize, initialized, response, run, shutdown};
+use support::{
+    TempDirectory, exit, initialize, initialize_with_root, initialized, response, run, shutdown,
+};
 
 #[test]
 fn local_inference_hover_is_serialized_for_unsaved_declarations_and_uses() {
-    let uri = "file:///local-inference/main.fpas";
+    let temp = TempDirectory::new("hover-inference");
+    let main_uri = temp.uri("main.fpas");
+    let uri = main_uri.as_str();
     let source = "program T; begin const Text := '𝄞'; const Values := [1, 2]; discard Values; end.";
     let declaration = source.find("Values :=").expect("declaration");
     let usage = source.find("discard Values").expect("use") + "discard ".len();
     let transcript = run(&[
-        initialize(1),
+        initialize_with_root(1, Some(&temp.uri("."))),
         initialized(),
         open(uri, 1, source),
         hover(2, uri, position(source, declaration)),
@@ -29,9 +33,15 @@ fn local_inference_hover_is_serialized_for_unsaved_declarations_and_uses() {
     ]);
     assert_success(&transcript);
     for id in [2, 3] {
+        let column = position(source, declaration)["character"]
+            .as_u64()
+            .expect("column")
+            + 1;
         assert_eq!(
             response(&transcript.messages, id)["result"]["contents"]["value"],
-            json!("```pascal\nconst Values: array of integer\n```")
+            json!(format!(
+                "```fpas\nconst Values: array of integer\n```\n\n[Go to definition](<{uri}#L1,{column}>)"
+            ))
         );
     }
     assert_eq!(
@@ -42,12 +52,16 @@ fn local_inference_hover_is_serialized_for_unsaved_declarations_and_uses() {
 
 #[test]
 fn navigation_capabilities_and_requests_use_utf16_ranges() {
-    let uri = "file:///phase6/navigation.fpas";
-    let source = "program Nav;\n\n// Adds one **integer** value.\nfunction Add(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\nbegin\n  const Music: string := '𝄞';\n  const Total: integer := Add(1);\nend.\n";
-    let add_use = source.rfind("Add(1)").expect("function use");
+    let temp = TempDirectory::new("hover-navigation");
+    let main_uri = temp.uri("navigation.fpas");
+    let uri = main_uri.as_str();
+    let source = "program Nav;\n\n// Adds two **integer** values.\nfunction Add(Value: integer; Extra: integer): integer;\nbegin\n  return Value + Extra;\nend function;\n\nbegin\n  const Music: string := '𝄞';\n  const Total: integer := Add(1, 2);\nend.\n";
+    let add_use = source.rfind("Add(1, 2)").expect("function use");
     let string_value = source.find("𝄞").expect("Unicode string");
+    let mut init = initialize_with_root(1, Some(&temp.uri(".")));
+    init["params"]["capabilities"]["textDocument"]["definition"] = json!({"linkSupport": true});
     let transcript = run(&[
-        initialize(1),
+        init,
         initialized(),
         open(uri, 1, source),
         document_symbols(2, uri),
@@ -93,20 +107,24 @@ fn navigation_capabilities_and_requests_use_utf16_ranges() {
         response(&transcript.messages, 3)["result"]["contents"]["value"]
             .as_str()
             .is_some_and(|value| value
-                == "```pascal\nfunction Add(Value: integer): integer\n```\n\nAdds one **integer** value.")
+                == format!("```fpas\nfunction Add(\n  Value: integer;\n  Extra: integer\n): integer\n```\n\n---\n\nAdds two **integer** values.\n\n[Go to definition](<{uri}#L4,10>)"))
     );
     let definitions = response(&transcript.messages, 4)["result"]
         .as_array()
         .expect("definition locations");
     assert_eq!(definitions.len(), 1);
     assert!(
-        definitions[0]["uri"]
+        definitions[0]["targetUri"]
             .as_str()
-            .is_some_and(|value| value.ends_with("/phase6/navigation.fpas"))
+            .is_some_and(|value| value == uri)
     );
     assert_eq!(
-        definitions[0]["range"]["start"],
+        definitions[0]["targetSelectionRange"]["start"],
         json!({"line": 3, "character": 9})
+    );
+    assert_eq!(
+        definitions[0]["targetRange"]["start"],
+        json!({"line": 3, "character": 0})
     );
 
     let completions = response(&transcript.messages, 5)["result"]

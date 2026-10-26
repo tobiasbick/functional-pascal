@@ -1,6 +1,7 @@
 //! LSP request handlers for symbols, navigation, references, and rename.
 
 use std::collections::BTreeMap;
+use std::sync::atomic::Ordering;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
@@ -75,6 +76,16 @@ impl Backend {
             .definitions_open(&path, text.position)
             .await
             .map_err(errors::request)?;
+        if self.definition_links.load(Ordering::Acquire) {
+            let links = definitions
+                .iter()
+                .map(|definition| {
+                    navigation::definition_link(&definition.snapshot, &definition.location)
+                })
+                .collect::<std::result::Result<Vec<_>, _>>()
+                .map_err(conversion_error)?;
+            return Ok((!links.is_empty()).then_some(GotoDefinitionResponse::Link(links)));
+        }
         let locations = definitions
             .iter()
             .map(|definition| navigation::location(&definition.snapshot, &definition.location))

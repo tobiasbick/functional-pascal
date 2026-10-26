@@ -5,5 +5,6 @@ mod legend;
 mod tokens;
 
 pub(crate) use code_actions::{code_action, diagnostic_identity};
+pub(crate) use code_actions::{refactoring_action, refactoring_kind};
 pub(crate) use legend::semantic_tokens_legend;
 pub(crate) use tokens::semantic_tokens;

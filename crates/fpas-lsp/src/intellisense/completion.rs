@@ -33,6 +33,18 @@ pub(crate) fn completion_item(
     snapshot: &DocumentSnapshot,
     value: CompletionCandidate,
 ) -> Result<CompletionItem, PositionConversionError> {
+    let callable = matches!(
+        value.kind,
+        CompletionKind::Symbol(SymbolKind::Function | SymbolKind::Procedure | SymbolKind::Method)
+    );
+    let label_detail = callable
+        .then(|| {
+            value
+                .detail
+                .find('(')
+                .map(|start| value.detail[start..].to_owned())
+        })
+        .flatten();
     let data = value
         .documentation
         .as_ref()
@@ -50,13 +62,23 @@ pub(crate) fn completion_item(
     Ok(CompletionItem {
         label: value.label,
         label_details: Some(CompletionItemLabelDetails {
-            detail: None,
+            detail: label_detail,
             description: value.owner,
         }),
         kind: Some(completion_kind(value.kind)),
+        commit_characters: if callable {
+            Some(vec!["(".into()])
+        } else if matches!(
+            value.kind,
+            CompletionKind::Symbol(SymbolKind::ImportAlias | SymbolKind::Unit)
+        ) {
+            Some(vec![".".into()])
+        } else {
+            None
+        },
         detail: Some(match value.source {
             CompletionSource::AutoImport => format!("{} (auto import)", value.detail),
-            CompletionSource::Declaration | CompletionSource::Keyword => value.detail,
+            CompletionSource::Declaration | CompletionSource::Keyword => value.detail.clone(),
         }),
         sort_text: Some(value.sort_text),
         filter_text: Some(value.filter_text),
@@ -65,10 +87,13 @@ pub(crate) fn completion_item(
             value.insert_text,
         ))),
         additional_text_edits,
-        documentation: value.inline_documentation.map(|value| {
+        documentation: (value.kind != CompletionKind::Keyword).then(|| {
             Documentation::MarkupContent(MarkupContent {
                 kind: MarkupKind::Markdown,
-                value,
+                value: crate::presentation::declaration_markdown(
+                    &value.detail,
+                    value.inline_documentation.as_deref(),
+                ),
             })
         }),
         data,
@@ -83,7 +108,14 @@ pub(crate) fn resolve_completion_item(
     item.documentation = documentation.map(|value| {
         Documentation::MarkupContent(MarkupContent {
             kind: MarkupKind::Markdown,
-            value,
+            value: crate::presentation::declaration_markdown(
+                item.detail
+                    .as_deref()
+                    .unwrap_or(&item.label)
+                    .strip_suffix(" (auto import)")
+                    .unwrap_or_else(|| item.detail.as_deref().unwrap_or(&item.label)),
+                Some(&value),
+            ),
         })
     });
     item

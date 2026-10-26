@@ -70,11 +70,20 @@ impl LanguageService {
                     contents: crate::intellisense::native::signature(entry, receiver.as_ref())
                         .label,
                     documentation: Some(entry.documentation.into()),
+                    definition: None,
+                    handbook: Some(entry.receiver.handbook().to_owned()),
                     range: token.span.diagnostic_span_or_synthetic(),
                 });
             }
             resolve(&context.documents, target_index, offset).map(
                 |(document_index, symbol, range)| HoverInfo {
+                    definition: Some(ReferenceLocation {
+                        path: context.documents[document_index].path.clone(),
+                        span: symbol.selection_span,
+                        is_declaration: true,
+                        snapshot: Arc::clone(&context.documents[document_index].snapshot),
+                    }),
+                    handbook: None,
                     documentation: preceding_documentation(
                         context.documents[document_index].snapshot.source(),
                         symbol.full_span.offset(),

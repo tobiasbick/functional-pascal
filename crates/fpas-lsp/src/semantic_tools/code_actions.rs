@@ -2,7 +2,8 @@
 
 use fpas_diagnostics::{DiagnosticCode, SourceSpan};
 use fpas_language_service::{
-    DiagnosticIdentity, DocumentSnapshot, SemanticCodeAction, SourceVersion,
+    DiagnosticIdentity, DocumentSnapshot, Refactoring, RefactoringKind, SemanticCodeAction,
+    SemanticEdit, SourceVersion,
 };
 use tower_lsp_server::ls_types::{
     CodeAction, CodeActionKind, Diagnostic, DocumentChanges, NumberOrString, OneOf,
@@ -57,8 +58,42 @@ pub(crate) fn code_action(
     value: SemanticCodeAction,
     diagnostic: Diagnostic,
 ) -> Result<CodeAction, PositionConversionError> {
-    let edits = value
-        .edits
+    Ok(CodeAction {
+        title: value.title,
+        kind: Some(CodeActionKind::QUICKFIX),
+        diagnostics: Some(vec![diagnostic]),
+        edit: Some(workspace_edit(snapshot, uri, value.edits)?),
+        is_preferred: Some(value.preferred),
+        ..CodeAction::default()
+    })
+}
+
+pub(crate) fn refactoring_action(
+    snapshot: &DocumentSnapshot,
+    uri: Uri,
+    value: Refactoring,
+) -> Result<CodeAction, PositionConversionError> {
+    Ok(CodeAction {
+        title: value.title,
+        kind: Some(refactoring_kind(value.kind)),
+        edit: Some(workspace_edit(snapshot, uri, value.edits)?),
+        ..CodeAction::default()
+    })
+}
+
+pub(crate) fn refactoring_kind(kind: RefactoringKind) -> CodeActionKind {
+    match kind {
+        RefactoringKind::ExtractVariable => CodeActionKind::REFACTOR_EXTRACT,
+        RefactoringKind::OrganizeImports => CodeActionKind::SOURCE_ORGANIZE_IMPORTS,
+    }
+}
+
+fn workspace_edit(
+    snapshot: &DocumentSnapshot,
+    uri: Uri,
+    edits: Vec<SemanticEdit>,
+) -> Result<WorkspaceEdit, PositionConversionError> {
+    let edits = edits
         .into_iter()
         .map(|edit| {
             Ok(TextEdit::new(
@@ -67,24 +102,17 @@ pub(crate) fn code_action(
             ))
         })
         .collect::<Result<Vec<_>, PositionConversionError>>()?;
-    Ok(CodeAction {
-        title: value.title,
-        kind: Some(CodeActionKind::QUICKFIX),
-        diagnostics: Some(vec![diagnostic]),
-        edit: Some(WorkspaceEdit {
-            document_changes: Some(DocumentChanges::Edits(vec![TextDocumentEdit {
-                text_document: OptionalVersionedTextDocumentIdentifier {
-                    uri,
-                    version: match snapshot.version() {
-                        SourceVersion::Editor(version) => i32::try_from(version).ok(),
-                        SourceVersion::Disk(_) => None,
-                    },
+    Ok(WorkspaceEdit {
+        document_changes: Some(DocumentChanges::Edits(vec![TextDocumentEdit {
+            text_document: OptionalVersionedTextDocumentIdentifier {
+                uri,
+                version: match snapshot.version() {
+                    SourceVersion::Editor(version) => i32::try_from(version).ok(),
+                    SourceVersion::Disk(_) => None,
                 },
-                edits: edits.into_iter().map(OneOf::Left).collect(),
-            }])),
-            ..WorkspaceEdit::default()
-        }),
-        is_preferred: Some(value.preferred),
-        ..CodeAction::default()
+            },
+            edits: edits.into_iter().map(OneOf::Left).collect(),
+        }])),
+        ..WorkspaceEdit::default()
     })
 }

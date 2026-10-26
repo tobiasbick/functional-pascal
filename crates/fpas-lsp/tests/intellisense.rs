@@ -142,6 +142,8 @@ end.
     );
 
     let imported = item(response(&transcript.messages, 3), "Importable.UniqueValue");
+    assert_eq!(imported["labelDetails"]["detail"], "(): integer");
+    assert_eq!(imported["commitCharacters"], json!(["("]));
     assert_eq!(
         imported["detail"],
         "function UniqueValue(): integer (auto import)"
@@ -158,7 +160,7 @@ end.
     );
     assert_eq!(
         response(&transcript.messages, 4)["result"]["documentation"]["value"],
-        "Returns a value from the importable unit."
+        "```fpas\nfunction UniqueValue(): integer\n```\n\n---\n\nReturns a value from the importable unit."
     );
 
     let signature = &response(&transcript.messages, 5)["result"];

@@ -9,7 +9,7 @@ use fpas_lexer::SourceComment;
 use crate::{LanguageService, LanguageServiceError};
 
 impl LanguageService {
-    /// Resolves Markdown documentation for a completion declaration identity.
+    /// Resolves Markdown for a known declaration; an empty string means it has no comment.
     pub fn completion_documentation(
         &mut self,
         path: &Path,
@@ -32,9 +32,8 @@ impl LanguageService {
             return Ok(None);
         }
         let snapshot = self.snapshot(path)?;
-        Ok(preceding_documentation(
-            snapshot.source(),
-            declaration_offset,
+        Ok(Some(
+            preceding_documentation(snapshot.source(), declaration_offset).unwrap_or_default(),
         ))
     }
 }

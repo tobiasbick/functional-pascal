@@ -24,6 +24,7 @@ mod intellisense;
 mod intellisense_requests;
 mod navigation;
 mod navigation_requests;
+mod presentation;
 mod semantic_tools;
 mod semantic_tools_requests;
 mod server;

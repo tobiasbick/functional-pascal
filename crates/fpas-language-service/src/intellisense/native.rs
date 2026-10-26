@@ -31,6 +31,8 @@ pub(crate) fn pop_field_hover(
         .iter()
         .find(|(field, _)| field.eq_ignore_ascii_case(&name))?;
     Some(crate::navigation::HoverInfo {
+        definition: None,
+        handbook: Some("docs/pascal/language/types/array/README.md".into()),
         contents: format!("field {name}: {ty}"),
         documentation: Some(
             if name == "Remaining" {

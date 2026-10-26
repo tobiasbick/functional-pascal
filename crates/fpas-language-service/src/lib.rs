@@ -25,6 +25,7 @@ mod formatting;
 mod intellisense;
 mod navigation;
 mod public_signatures;
+mod refactoring;
 mod semantic_tools;
 mod symbols;
 mod workspace;
@@ -47,6 +48,7 @@ pub use navigation::{
     ReferenceLocation, RenameEdit, RenameError, RenameTarget, SelectionRange, SourceQueryOperation,
     SourceQueryResult, SourceQueryTarget, WORKSPACE_SYMBOL_LIMIT,
 };
+pub use refactoring::{Refactoring, RefactoringKind};
 pub use semantic_tools::{
     DiagnosticIdentity, SemanticCodeAction, SemanticEdit, SemanticToken, SemanticTokenKind,
     SemanticTokenModifiers,

@@ -107,7 +107,7 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
     );
     assert_eq!(
         capabilities["codeActionProvider"]["codeActionKinds"],
-        json!(["quickfix"])
+        json!(["quickfix", "refactor.extract", "source.organizeImports"])
     );
     assert_eq!(
         capabilities["codeActionProvider"]["resolveProvider"],

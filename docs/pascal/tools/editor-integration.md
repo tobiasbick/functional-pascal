@@ -12,6 +12,7 @@ desktop editors. The implemented editor features are:
 - workspace symbol search and same-document read/write highlights
 - syntax-aware selection-range expansion
 - validated project-wide symbol rename
+- checked extraction of local values and import organization
 - read-only public signatures for the current unit
 - rich visibility-aware completion with lazy declaration documentation
 - signature help, repository snippets, and unambiguous auto-import completion
@@ -423,6 +424,20 @@ and library `[exports].units`. For hierarchical unit names, navigation checks
 every matching imported owner and returns a target only when the complete
 qualified identity resolves unambiguously.
 
+Hover and completion details use fenced `fpas` code, so the extension's grammar
+colors the signature. Signatures with multiple explicit parameters span several
+lines, including when a parameter itself has a callable type. Hover separates
+declaration documentation from the signature and links to the exact source
+declaration. Native type operations link to their handbook page. Source comment
+Markdown retains its lists, code examples, and links.
+
+**Go to Definition** works through **F12** and the editor's definition-click
+gesture (normally **Ctrl+Click**, or **Cmd+Click** on macOS). Changing VS Code's
+`editor.multiCursorModifier` can move that gesture to **Alt+Click**. Clients
+with definition-link support receive the full target declaration for previews
+and the precise identifier range for selection. Other clients receive ordinary
+definition locations.
+
 For `uses Demo.Math as M;`, `M.Answer` resolves to the original public
 declaration in `Demo.Math`. The alias `M` has a local definition at its import
 declaration; the unit path inside `uses` navigates to the unit source. Short
@@ -559,6 +574,35 @@ match. Open-buffer changes remain isolated from requests already in progress;
 late results from older buffers or project configurations cannot satisfy queries
 for the new state.
 
+## Refactoring
+
+Select an expression and use **Refactor...** (`Ctrl+Shift+R`) or the lightbulb to
+choose **Extract variable**. The action inserts an inferred `const ExtractedValue`
+immediately before the containing statement and replaces the selected expression.
+A numeric suffix avoids existing names; use **F2** on the new name to rename it.
+The action preserves surrounding text, comments, indentation, and line endings.
+
+Extraction supports local initializers, returns, discarded values, simple
+assignments, and the first evaluated operand or argument of a statically resolved
+call. It also works in nested statement blocks, named routines, and record methods.
+It does not move loop tests, conditional branches, later operands/arguments,
+mutable reference arguments, or a receiver-dependent call ahead of earlier work.
+Selections must cover one complete expression; an expression that needs its
+original contextual type, such as a bare `None`, may not be extractable.
+
+Run **Organize Imports** from the Command Palette to sort unit imports and remove
+unused aliases. Written aliases are preserved. Imports with runtime bindings or
+unknown initialization effects are retained, including their transitive
+dependencies; their ordering forms a barrier between sortable groups. A `uses`
+clause containing comments is left unchanged rather than detaching the comments.
+Already organized sources receive no edit.
+
+Both actions use the current unsaved source, require a valid checked document,
+and recheck the proposed result in an isolated overlay before returning edits.
+They cannot edit generated APIs or sources outside the opened editor folder.
+LSP actions use `refactor.extract` and `source.organizeImports` and include the
+analyzed document version. They work with normal undo and do not save files.
+
 ## Semantic highlighting and quick fixes
 
 The server emits full-document semantic tokens for resolved units, types,
@@ -601,8 +645,8 @@ fail the language server.
 ## Current limits
 
 Semantic-token delta responses are not implemented; the server sends complete
-document token sets. The only current code-action family is an unambiguous
-`uses` import for eligible unknown-type and unknown-callable diagnostics.
+document token sets. Code actions offer compiler-supplied fixes and unambiguous
+`uses` imports for eligible unknown-type and unknown-callable diagnostics.
 Remote SSH, WSL, and container extension hosts are outside the local
 hobby-project packaging contract.
 

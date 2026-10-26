@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 
 import type { FunctionalPascalExtensionApi } from "../src/extension";
 import { verifyIntelliSense } from "./intellisense";
+import { verifyRefactoring } from "./refactoring";
 import { verifySemanticTools } from "./semantic_tools";
 import { verifyStructuredEditing } from "./structured_editing";
 import { verifyWorkflowHost } from "./workflow/host";
@@ -115,7 +116,9 @@ export async function run(): Promise<void> {
     navigationDocument.uri,
     greetingPosition
   );
-  assert.ok(hovers?.some((hover) => hover.contents.length > 0));
+  assert.ok(hovers?.some((hover) => hover.contents.some((content) =>
+    typeof content === "object" && "value" in content && content.value.startsWith("```fpas\n")
+  )), "hover uses the registered FPAS grammar");
   const definitions = await vscode.commands.executeCommand<
     Array<vscode.Location | vscode.LocationLink>
   >(
@@ -124,6 +127,15 @@ export async function run(): Promise<void> {
     greetingPosition
   );
   assert.ok(definitions?.length);
+  const definitionUri = "targetUri" in definitions[0] ? definitions[0].targetUri : definitions[0].uri;
+  const activeEditor = vscode.window.activeTextEditor;
+  assert.ok(activeEditor);
+  activeEditor.selection = new vscode.Selection(greetingPosition, greetingPosition);
+  await vscode.commands.executeCommand("editor.action.revealDefinition");
+  assert.equal(vscode.window.activeTextEditor?.document.uri.toString(), definitionUri.toString(),
+    "Go to Definition, also used by Ctrl+Click, opens the resolved declaration");
+  await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+  await vscode.window.showTextDocument(navigationDocument);
   const references = await vscode.commands.executeCommand<vscode.Location[]>(
     "vscode.executeReferenceProvider",
     navigationDocument.uri,
@@ -146,6 +158,7 @@ export async function run(): Promise<void> {
   await verifyExternalProjectChanges();
   await verifyWorkspaceNavigation();
   await verifyIntelliSense(extension.extensionPath);
+  await verifyRefactoring();
   await verifySemanticTools(extension);
   await verifyStructuredEditing();
   await verifyWorkflowHost(api);

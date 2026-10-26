@@ -100,7 +100,7 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     );
     assert_eq!(
         capabilities["codeActionProvider"]["codeActionKinds"],
-        json!(["quickfix"])
+        json!(["quickfix", "refactor.extract", "source.organizeImports"])
     );
     assert_eq!(
         capabilities["codeActionProvider"]["resolveProvider"],

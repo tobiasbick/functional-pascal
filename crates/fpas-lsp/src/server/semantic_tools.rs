@@ -31,43 +31,72 @@ impl Backend {
         &self,
         params: CodeActionParams,
     ) -> Result<Option<CodeActionResponse>> {
-        if !quick_fixes_requested(params.context.only.as_deref()) {
-            return Ok(Some(Vec::new()));
-        }
         if !self.supports_document_changes() {
             return Ok(Some(Vec::new()));
         }
         let uri = params.text_document.uri;
         let path =
             file_uri_to_path(&uri).map_err(|error| Error::invalid_params(error.to_string()))?;
-        let diagnostics = params
-            .context
-            .diagnostics
-            .into_iter()
-            .filter(|diagnostic| ranges_overlap(params.range, diagnostic.range))
-            .collect();
-        let result = self
-            .documents
-            .code_actions_open(&path, diagnostics)
-            .await
-            .map_err(errors::request)?;
-        let actions = result
-            .actions
-            .into_iter()
-            .map(|(action, diagnostic)| {
-                semantic_tools::code_action(&result.snapshot, uri.clone(), action, diagnostic)
-                    .map(CodeActionOrCommand::CodeAction)
-            })
-            .collect::<std::result::Result<Vec<_>, _>>()
-            .map_err(conversion_error)?;
+        let mut actions = Vec::new();
+        if kind_requested(params.context.only.as_deref(), &CodeActionKind::QUICKFIX) {
+            let diagnostics = params
+                .context
+                .diagnostics
+                .into_iter()
+                .filter(|diagnostic| ranges_overlap(params.range, diagnostic.range))
+                .collect();
+            let result = self
+                .documents
+                .code_actions_open(&path, diagnostics)
+                .await
+                .map_err(errors::request)?;
+            actions = result
+                .actions
+                .into_iter()
+                .map(|(action, diagnostic)| {
+                    semantic_tools::code_action(&result.snapshot, uri.clone(), action, diagnostic)
+                        .map(CodeActionOrCommand::CodeAction)
+                })
+                .collect::<std::result::Result<Vec<_>, _>>()
+                .map_err(conversion_error)?;
+        }
+        if kind_requested(
+            params.context.only.as_deref(),
+            &CodeActionKind::REFACTOR_EXTRACT,
+        ) || kind_requested(
+            params.context.only.as_deref(),
+            &CodeActionKind::SOURCE_ORGANIZE_IMPORTS,
+        ) {
+            let result = self
+                .documents
+                .refactorings_open(&path, params.range)
+                .await
+                .map_err(errors::request)?;
+            for action in result.value {
+                if kind_requested(
+                    params.context.only.as_deref(),
+                    &semantic_tools::refactoring_kind(action.kind),
+                ) {
+                    actions.push(CodeActionOrCommand::CodeAction(
+                        semantic_tools::refactoring_action(&result.snapshot, uri.clone(), action)
+                            .map_err(conversion_error)?,
+                    ));
+                }
+            }
+        }
         Ok(Some(actions))
     }
 }
 
-fn quick_fixes_requested(only: Option<&[CodeActionKind]>) -> bool {
+fn kind_requested(only: Option<&[CodeActionKind]>, offered: &CodeActionKind) -> bool {
     only.is_none_or(|kinds| {
         kinds.iter().any(|kind| {
-            kind.as_str().is_empty() || kind.as_str() == CodeActionKind::QUICKFIX.as_str()
+            kind.as_str().is_empty()
+                || kind == offered
+                || offered
+                    .as_str()
+                    .strip_prefix(kind.as_str())
+                    .is_some_and(|suffix| suffix.starts_with('.'))
         })
     })
 }

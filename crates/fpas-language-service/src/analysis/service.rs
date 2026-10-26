@@ -73,6 +73,14 @@ impl LanguageService {
         }
     }
 
+    /// Keeps speculative edits from evicting completed analysis of the live editor buffers.
+    pub(crate) fn fork_for_edits(&self) -> Self {
+        Self {
+            analysis_cache: AnalysisCache::default(),
+            ..self.fork_for_queries()
+        }
+    }
+
     /// Discovers and loads source, project, or workspace context.
     #[must_use]
     pub fn load(input: &Path) -> Self {

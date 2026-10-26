@@ -52,7 +52,7 @@ representation as an open decision.
 every boundary call converts and range-checks values, and FPAS code cannot describe a vertex layout
 precisely. Exact monetary amounts also have no type: `real` accumulates binary rounding errors.
 The agreed design is maintained in
-[FPAS 2 numeric types and money](fpas2-language-directions.md#21-explicit-width-numeric-types-and-money).
+[FPAS 2 numeric types, money and decimal](fpas2-language-directions.md#21-explicit-width-numeric-types-money-and-decimal).
 
 ### Small value aggregates
 
@@ -100,7 +100,7 @@ headless servers and the test runner.
 
 ### Language
 
-- [Fixed-width numeric types and money](fpas2-language-directions.md#21-explicit-width-numeric-types-and-money):
+- [Numeric types, money and decimal](fpas2-language-directions.md#21-explicit-width-numeric-types-money-and-decimal):
   agreed numeric design with remaining open points; no implementation is scheduled.
 - [Packed numeric data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers):
   open proposal for contiguous numeric and fixed-layout record data without
@@ -121,11 +121,13 @@ an implementation decision before work begins.
 
 ## Agreed design: numeric types
 
-The [full numeric design](fpas2-language-directions.md#21-explicit-width-numeric-types-and-money)
+The [full numeric design](fpas2-language-directions.md#21-explicit-width-numeric-types-money-and-decimal)
 is maintained in the FPAS 2 directions, including names, literals, conversions,
-arithmetic, bit operations, runtime representation and open money-rounding
-questions. Explicit widths address GPU data; the agreed `money` type also serves
-non-graphics consumers.
+arithmetic, bit operations, runtime representation and open rounding and storage
+questions. Explicit widths address GPU data; `money` serves fixed-scale amounts
+and arbitrary-precision `decimal` serves exact decimal calculations and lossless
+JSON number values. Neither decimal GPU storage nor a JSON/TOML parser migration
+is implied by this shared design.
 
 ## Non-goals
 

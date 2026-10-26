@@ -3,7 +3,7 @@
 Status: proposal collection; delivered topics are recorded in their sections.
 Topics are open proposals unless their section explicitly records an agreement. The
 [typed operational error direction](#1-typed-operational-errors) and
-[numeric design](#21-explicit-width-numeric-types-and-money) are agreed at the
+[numeric design](#21-explicit-width-numeric-types-money-and-decimal) are agreed at the
 scope stated in those sections, with their listed open points. Design agreement
 does not change the current specification or authorize implementation.
 FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
@@ -578,12 +578,14 @@ Evaluation should compare visible output and input routing with uncached
 execution, including focus, resize, menus, editing and background updates. Verify
 unaffected work is skipped and measure benefits on representative TUI workloads.
 
-## 21. Explicit-width numeric types and money
+## 21. Explicit-width numeric types, money and decimal
 
 Status: agreed numeric design, carried forward from the
-[graphics application case](graphics.md#numeric-types); the open points below
-still need decisions. No implementation is scheduled. These types are not FPAS 1
-prerequisites, and graphics is only one consumer of the design.
+[graphics application case](graphics.md#numeric-types) and extended with
+arbitrary-precision `decimal` for exact decimal calculations and lossless JSON
+number values. The open points below still need decisions. No implementation is
+scheduled. These types are not FPAS 1 prerequisites, and graphics is only one
+consumer of the design.
 
 FPAS offers exactly one way to express each numeric concept: every built-in
 numeric type has one name, without alternative built-in aliases.
@@ -596,6 +598,7 @@ numeric type has one name, without alternative built-in aliases.
 | Unsigned integer | `unsigned8`, `unsigned16`, `unsigned32`, `unsigned64` |
 | Binary floating point | `real32`, `real64` |
 | Exact monetary amount | `money` |
+| Arbitrary-precision decimal | `decimal` |
 
 - `integer` is renamed to `integer64` and `real` to `real64`. The old names are
   removed, without an alias. This rename is a separate, mechanical step before
@@ -646,32 +649,89 @@ arguments, and return values.
 - `money` is an amount, not a currency. A currency code is an ordinary record
   field next to it.
 - It is stored as a 64-bit integer scaled by 10,000, giving four exact decimal
-  places. This is a fixed-scale amount, not a general-purpose Decimal type.
+  places. This fixed-scale type remains separate from general-purpose `decimal`.
 - Literals in a `money` context are parsed as exact decimals:
   `var Price: money := 19.99;`. `money(X)` converts integers exactly.
 - A runtime `real64` becomes `money` only through an explicit rounding function
   in `Std.Math`.
 - Addition and subtraction are exact.
 
+### Decimal
+
+- `decimal` is the single type name for arbitrary-precision finite decimal
+  values, not a fixed-precision `decimal128` or an alias for `money`.
+- Conceptually, a value is an arbitrarily large signed integer coefficient
+  multiplied by a power of ten: `123.456` is `123456 * 10^-3`. Precision is not
+  capped at a fixed number of digits. Storage layout, exponent bounds and
+  resource limits remain implementation decisions; no public big-integer type
+  is implied.
+- Literals in a `decimal` context and decimal text parsing construct the value
+  directly from decimal digits, never through `real32` or `real64`.
+- Addition, subtraction and multiplication are exact within resource limits;
+  for example, decimal `0.1 + 0.2` equals decimal `0.3`. Exceeding a limit must
+  report a failure, not silently discard digits or round the result.
+- Division may have a non-terminating expansion, such as `1 / 3`. Without an
+  explicit rounding request, a result that is not a finite decimal must fail.
+  Rounded division and precision reduction require an explicit target scale or
+  precision and rounding mode, not an ambient mutable precision setting.
+- Equality and ordering are numeric: `1.0` and `1.00` compare equal. Original
+  spelling, trailing zeros and requested display scale are formatting or source
+  metadata, not distinct numeric identities.
+- Conversion from integer types and `money` to `decimal` is exact. Conversions
+  to fixed-width integers check integrality and range. Conversions to `money`
+  check range and require explicit rounding if four decimal places do not suffice.
+  Binary-floating conversions are always explicit; their precise rounding and
+  failure contracts remain open.
+- The type represents finite decimal values, not exact repeating fractions,
+  infinity or NaN. TOML special floats need a separate format-level representation.
+
+JSON is a concrete consumer: the current `JsonValue.Number(real)` loses integer
+precision beyond binary64's exact range and cannot retain arbitrary decimal
+digits. A future JSON value model can use `decimal` without routing numbers
+through binary floating point. Exact numeric round trips do not preserve lexical
+spelling: `1e2` and `100.00` may normalize to the same value. Preserve original
+text separately when that distinction matters. TOML integration must retain its
+integer/float distinction and explicitly decide how decimal precision relates
+to its binary64 float interoperability rules; it is not changed by this agreement.
+
 ### Runtime representation
 
-Registers keep computing in 64-bit integers or 64-bit floats. The width of a
-typed operation is an instruction operand, and the result is checked or narrowed
-when it is stored. This keeps the opcode set small and the runtime value at 16
-bytes. The width matters for storage only in packed arrays.
+Fixed-width operations keep computing in 64-bit integers or 64-bit floats. The
+width of a typed operation is an instruction operand, and the result is checked
+or narrowed when it is stored. This keeps the opcode set small and the runtime
+value at 16 bytes. The width matters for storage only in packed arrays.
+
+`decimal` needs variable-sized coefficient storage rather than the fixed-width
+register-only representation. Evaluate shared heap-backed value storage without
+enlarging common runtime values. Decimal layout and packed-storage eligibility
+are not agreed by this numeric design.
 
 ### Open points and evaluation
 
 - The rounding rule for `money` multiplication and division, for example four
   places with ties to even, as `Math.Round` uses.
 - The name of the rounding function from `real64` to `money`.
+- Decimal parsing, formatting, exact and rounded division interfaces, including
+  the meaning and names of target scale, precision and rounding modes.
+- Exactness, rounding, signed zero and range behavior for conversions between
+  `decimal` and binary floating point, and applicable generic constraints.
+- Decimal coefficient storage, exponent bounds, allocation/work limits and
+  failure contracts, including oversized or adversarial numeric input.
+- JSON integration and any TOML integration, including typed field access,
+  source-spelling preservation and nonfinite TOML values. Parser migration is a
+  separate implementation decision, not a prerequisite for the numeric design.
 
 Before implementation, assess migration of source code, standard-library
 signatures, compiler/runtime formats and editor tooling. Coordinate storage with
 [packed numeric data](#22-packed-numeric-data-and-binary-buffers). Evaluation must
 cover literal boundaries, mixed-type rejection, checked arithmetic and
 conversions, shifts, `real32` rounding, exact money literals and the selected
-money-rounding rules. Verify diagnostics for the removed type names.
+money-rounding rules. Decimal evaluation must cover values beyond binary64 and
+fixed-width integer precision, more than four fractional places, exact arithmetic,
+numeric equality across scales, terminating and non-terminating division,
+explicit rounding and conversion, resource-limit failures and exact text round
+trips. Include portable-image persistence and editor support. Verify diagnostics
+for the removed type names.
 
 ## 22. Packed numeric data and binary buffers
 
@@ -684,7 +744,7 @@ for a canonical byte representation. The
 [standard-library roadmap](std-roadmap.md#open-decisions) leaves that choice open.
 
 Consider one shared design for byte buffers and typed contiguous numeric data,
-using the [explicit-width types](#21-explicit-width-numeric-types-and-money).
+using the [explicit-width types](#21-explicit-width-numeric-types-money-and-decimal).
 Evaluate a language-level packed array against a standard-library buffer type
 before choosing either. Native intrinsics should be able to access supported
 layouts without per-element conversion. Include binary reads and writes in
@@ -818,8 +878,6 @@ handle leaks on early `return` and panics.
 
 ## Other deferred scope
 
-A general-purpose Decimal type remains deferred and is not part of the agreed
-fixed-scale `money` design. It needs a separate use case and design decision.
 A purity/effects system was rejected and is not reopened here. Reconsideration
 would require a new decision and a demonstrated benefit. FPAS currently remains
 function-oriented with explicit binding mutation, rather than a guarantee that

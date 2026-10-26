@@ -1,0 +1,49 @@
+// A continuously due tick must not starve an already queued application message.
+program InteractiveTickFairnessTest;
+
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
+
+type Model = record
+  Ticks: integer := 0;
+  Received: boolean := false;
+end record;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  var Next := State;
+  case Msg of
+    when Tui.TuiMsg.Started:
+      Cmd.RequestTick(0);
+    when Tui.TuiMsg.Tick(_):
+      Next.Ticks := State.Ticks + 1;
+      if Next.Ticks >= 5 then
+        Cmd.Set(Tui.TuiCmd.Quit);
+      else
+        Cmd.RequestTick(0);
+      end if;
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+      null;
+  end case;
+
+  return Next;
+end function;
+
+function Receive(State: Model; Message: integer; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  Test.AssertEquals(42, Message);
+  Cmd.Set(Tui.TuiCmd.Quit);
+  return State with Received := true; end with;
+end function;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeEmpty();
+end function;
+
+begin
+  const Inbox: channel of integer := Tasks.CreateChannel(1);
+  Test.AssertTrue(Tasks.TrySend(Inbox, 42).Unwrap());
+  const Final := Tui.TuiApplication.RunWithBackground(Model(), Inbox, Update, Receive, View);
+  Test.AssertTrue(Final.Received);
+  Test.AssertTrue(Final.Ticks < 5);
+end.

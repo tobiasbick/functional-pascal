@@ -307,18 +307,8 @@ begin
           continue;
         end;
       end if;
-      // A due tick is queued like any framework message; a pending one bounds the wait below.
+      // Select due ticks with input so slow rendering cannot starve ready messages.
       const TickWait: integer := ApplicationState.TuiAppTickWait(ApplicationId);
-      if TickWait = 0 then
-        begin
-          ApplicationState.TuiAppPushMessages(
-            ApplicationId, [
-              ApplicationState.TuiAppTakeTick(ApplicationId)
-            ]
-          );
-          continue;
-        end;
-      end if;
       var ConsoleInput: option of RuntimeInput.TuiHostInput := None;
       var ApplicationInput: option of TMessage := None;
       var Cases: array of Tasks.WaitCase := [];
@@ -375,9 +365,17 @@ begin
         end;
       end if;
 
-      if TickWait > 0 then
+      if TickWait >= 0 then
         begin
-          Cases.PushInPlace(Tasks.TimerCase(TickWait, procedure() begin end procedure));
+          Cases.PushInPlace(
+            Tasks.TimerCase(
+              TickWait, procedure() begin
+                ApplicationState.TuiAppPushMessages(
+                  ApplicationId, [ApplicationState.TuiAppTakeTick(ApplicationId)]
+                );
+              end procedure
+            )
+          );
         end;
       end if;
 

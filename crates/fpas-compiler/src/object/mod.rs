@@ -85,7 +85,8 @@ pub fn compile_unit_object_with_options(
         crate::lowering::lower_unit(unit, interfaces, supporting_interfaces, options)?;
     lowered
         .errors
-        .export_requirements(&mut interface, &lowered.program.functions);
+        .export_requirements(&mut interface, &lowered.program.functions)
+        .map_err(|message| vec![crate::errors::error(message)])?;
     let executable = crate::bytecode::compile_for_object(lowered.program, &lowered.errors)
         .map_err(|error| vec![error])?;
     let owner = unit.name.parts.join(".").to_ascii_lowercase();

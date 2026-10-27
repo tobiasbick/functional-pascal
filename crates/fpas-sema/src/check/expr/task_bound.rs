@@ -207,9 +207,14 @@ impl Checker {
         visited_types: &mut std::collections::HashSet<String>,
     ) -> bool {
         match self.resolve_visible_type(ty) {
-            Ty::GenericParam(_, Some(TypeConstraint::Numeric | TypeConstraint::Comparable)) => {
-                false
-            }
+            Ty::GenericParam(
+                _,
+                Some(
+                    TypeConstraint::Numeric
+                    | TypeConstraint::Comparable
+                    | TypeConstraint::Equatable,
+                ),
+            ) => false,
             Ty::Function(_) | Ty::Procedure(_) | Ty::GenericParam(_, _) | Ty::Named(_) => true,
             Ty::Array(inner) | Ty::Option(inner) => {
                 self.type_can_contain_callable_inner(&inner, visited_types)

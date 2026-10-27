@@ -3,6 +3,31 @@
 use super::super::assert_succeeds;
 
 #[test]
+fn equatable_generics_execute_structural_comparison_and_error_construction() {
+    assert_succeeds(
+        r#"
+program EqualityGenerics;
+type Point = record X: integer; end record;
+type Tree = enum Leaf(Value: Point); Branch(Child: option of Tree); end enum;
+type Marker of T: Equatable = error Failed; end error;
+function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function;
+function Find<K: Equatable, V>(D: dict of K to V; Key: K): option of V; begin return D.Get(Key); end function;
+function Mark<T: Equatable>(Value: T): Marker of T; begin return Marker.Failed; end function;
+begin
+  const P := Point(X := 4);
+  if not Same(P, Point(X := 4)) or Same(P, Point(X := 3)) then panic('record equality'); end if;
+  const T := Tree.Branch(Some(Tree.Leaf(P)));
+  if not Same(T, T) then panic('recursive equality'); end if;
+  const D: dict of Point to string := [P: 'value'];
+  if Find(D, P) <> Some('value') then panic('record key'); end if;
+  const M := Mark(P);
+  if not (M is Marker.Failed) then panic('record constructor metadata'); end if;
+end.
+"#,
+    );
+}
+
+#[test]
 fn records_and_payload_enums_compare_structurally() {
     assert_succeeds(
         r#"

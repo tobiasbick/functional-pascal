@@ -45,3 +45,35 @@ fn public_view_rejects_programs_and_recovered_invalid_units() {
         assert!(error.to_string().contains(expected), "{error}");
     }
 }
+
+#[test]
+fn equality_constraints_work_in_unsaved_analysis_and_public_signatures() {
+    let temp = TempDirectory::new("equatable-public-view");
+    let path = temp.write("equal.fpas", "unit Demo; end unit;");
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let source = "unit Demo; public function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function; end unit;";
+    service
+        .documents_mut()
+        .open_document(&path, 1, source)
+        .expect("overlay");
+    assert!(
+        service
+            .analyze_document(&path)
+            .expect("analysis")
+            .diagnostics()
+            .is_empty()
+    );
+    let view = service.public_signatures(&path).expect("public signature");
+    assert!(view.value.contains("Same<T: Equatable>"), "{}", view.value);
+    service
+        .documents_mut()
+        .open_document(&path, 2, source.replace("A = B", "A < B"))
+        .expect("changed overlay");
+    assert!(
+        !service
+            .analyze_document(&path)
+            .expect("invalid ordering")
+            .diagnostics()
+            .is_empty()
+    );
+}

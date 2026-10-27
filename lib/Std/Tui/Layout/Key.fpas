@@ -113,19 +113,4 @@ begin
   TuiCollectLayoutKey(Node, var Key);
   return Key;
 end function;
-
-public function TuiLayoutKeysEqual(Left: array of TuiLayoutToken; Right: array of TuiLayoutToken): boolean;
-begin
-  if Left.Length() <> Right.Length() then
-    return false;
-  end if;
-
-  for I: integer := 0 to Left.Length() - 1 do
-    if Left[I] <> Right[I] then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
 end unit;

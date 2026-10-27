@@ -51,7 +51,7 @@ begin
   end if;
   const Reuse := Previous.Ready and (Previous.Size = Extent)
     and
-    Key.TuiLayoutKeysEqual(Previous.LayoutKey, LayoutKey);
+    Tree.TuiSameItems(Previous.LayoutKey, LayoutKey);
   var Next := Previous;
   if Reuse then
     if Previous.Pressed <> Pressed then

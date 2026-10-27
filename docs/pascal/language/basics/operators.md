@@ -90,6 +90,10 @@ equality, and neither does an `Option`, `Result`, record, or enum that contains 
 `Option of array of integer`; compare their relevant fields or contents explicitly. Ordering operators (`<`, `>`, `<=`, `>=`) never apply to records or
 enums with data.
 
+Generic `=` and `<>` require `T: Equatable` or a stronger Comparable/Numeric
+guarantee. Ordering requires Comparable or Numeric. Equatable follows these same
+field/payload rules and does not add whole-array or dictionary equality.
+
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 
 ```pascal id=example-2 fragment context=body-console

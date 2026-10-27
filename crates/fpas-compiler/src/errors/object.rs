@@ -16,6 +16,15 @@ impl ErrorMetadata {
         object: &mut RelocatableObject,
         plan: &mut crate::lowering::ImportPlan,
     ) -> Result<(), fpas_unit::object::ObjectError> {
+        if self.schemas.values().any(|schema| {
+            schema
+                .parameters
+                .contains(&Some(fpas_unit::interface::TypeConstraint::Equatable))
+        }) {
+            object.equality_declarations = self.equality_declarations().map_err(|_| {
+                fpas_unit::object::ObjectError::InvalidTableReference("equality declarations")
+            })?;
+        }
         for (&id, signature) in &self.requirements {
             if let Some(function) = object.functions.get_mut(id.get() as usize)
                 && !signature.requirements.is_empty()
@@ -122,7 +131,7 @@ impl ErrorMetadata {
         &self,
         interface: &mut fpas_unit::interface::UnitInterface,
         functions: &[fpas_ir::Function],
-    ) {
+    ) -> Result<(), String> {
         let mut routines = std::collections::BTreeSet::new();
         for symbol in &interface.symbols {
             match &symbol.ty {
@@ -233,5 +242,17 @@ impl ErrorMetadata {
             .errors
             .schemas
             .sort_by(|left, right| left.declaration.cmp(&right.declaration));
+        if interface.errors.schemas.iter().any(|schema| {
+            schema
+                .parameters
+                .contains(&Some(fpas_unit::interface::TypeConstraint::Equatable))
+        }) {
+            interface.errors.equality_declarations = self.equality_declarations()?;
+            interface
+                .errors
+                .equality_declarations
+                .sort_by(|left, right| left.identity.cmp(&right.identity));
+        }
+        Ok(())
     }
 }

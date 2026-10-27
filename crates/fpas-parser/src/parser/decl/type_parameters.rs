@@ -52,13 +52,14 @@ impl Parser {
         let constraint = if self.eat(&Token::Colon) {
             let constraint_name = match self.current_token() {
                 Token::Comparable => "Comparable",
+                Token::Equatable => "Equatable",
                 Token::Numeric => "Numeric",
                 Token::Printable => "Printable",
                 Token::Error => "Error",
                 _ => {
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
-                        "Expected generic constraint `Comparable`, `Numeric`, `Printable`, or `Error`",
+                        "Expected generic constraint `Equatable`, `Comparable`, `Numeric`, `Printable`, or `Error`",
                         "Use one of the supported generic constraints.",
                         self.current_span(),
                     );

@@ -41,11 +41,13 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 17;
+pub const OBJECT_VERSION: u16 = 18;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct RelocatableObject {
+    /// Essential nominal fields for equality-constrained error construction.
+    pub equality_declarations: Vec<crate::equality::EqualityDeclaration>,
     /// Error declaration templates retained for concrete source-less callers.
     pub error_schemas: Vec<ObjectErrorSchema>,
     /// Object schema version.

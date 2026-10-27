@@ -48,7 +48,7 @@ arguments require parentheses. Arguments may themselves be containers, callable
 types, or generic records and enums, such as `Box of Lookup of array of integer`.
 Arity and constraints are checked at each application. A type parameter used as
 an argument must guarantee the required constraint; `Numeric` also guarantees
-`Comparable` and `Printable`.
+`Comparable`, `Equatable` and `Printable`; `Comparable` also guarantees `Equatable`.
 
 Each instantiation retains the record's nominal identity and its arguments.
 `Box of integer` and `Box of string` are incompatible. Aliases retain the same
@@ -252,7 +252,7 @@ hidden read-only constructor values rather than being copied for each instance.
 
 ## Constraints
 
-`Comparable`, `Numeric`, `Printable`, and `Error` are built-in constraints,
+`Equatable`, `Comparable`, `Numeric`, `Printable`, and `Error` are built-in constraints,
 written after `:` in a generic type-parameter declaration. Error also introduces
 a native error declaration and remains the Result constructor in expressions.
 
@@ -262,6 +262,7 @@ Type parameters can be constrained to require specific capabilities from the con
 
 | Constraint | Satisfied by | Description |
 |------------|-------------|-------------|
+| `Equatable` | Every type supporting `=` and `<>`, including records, payload enums, Option and Result whose fields/payloads support equality | Supports equality and generic dictionary keys; does not imply ordering or printing |
 | `Comparable` | `integer`, `real`, `boolean`, `string`, [distinct scalar types](distinct-types.md), [subranges](subranges.md), [enums without payload fields](enums.md) | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`, and array sorting |
 | `Numeric` | `integer`, `real` | Supports arithmetic operators: `+`, `-`, `*`, `/`; does not establish integer-only `div`/`mod` operands |
 | `Printable` | All types except `function`, `procedure`, and distinct types | Can be converted to a string representation |
@@ -270,11 +271,34 @@ Type parameters can be constrained to require specific capabilities from the con
 Subranges satisfy `Comparable` and `Printable`, but not `Numeric`: arithmetic
 widens to integer values and does not preserve their bounds.
 
-Comparisons, `Comparable`, and array `Sort`/`SortInPlace` use the same ordering
-capability. Payload-free enums follow their integer backing values. Records, payload-carrying
-enums, Option, and Result may support equality but do not satisfy `Comparable`.
-Arrays, dictionaries, callables, tasks, and channels are also excluded. Generic
-sorting requires `T: Comparable` or `T: Numeric`, including for empty arrays.
+The hierarchy is `Numeric` → `Comparable` → `Equatable`. Equality-only routines
+and dictionary helpers can use `T: Equatable`; ordering and array Sort/SortInPlace
+require Comparable or Numeric, including for empty arrays. Payload-free enums
+follow their integer backing values. Records, payload enums, Option and Result
+can satisfy Equatable without satisfying Comparable. Recursive types use the
+same field-based rules; an unsupported field in any variant prevents equality.
+Arrays, dictionaries, callables, tasks, channels and aggregates containing them
+do not satisfy Equatable. Equatable and Comparable do not imply Printable;
+distinct scalar types support equality but do not implicitly support printing.
+Error alone implies Printable, not Equatable.
+
+```pascal id=equatable-records run
+program EquatableRecords;
+
+uses Std.Test as Test;
+
+type Point = record X: integer; end record;
+
+function Same<T: Equatable>(Left: T; Right: T): boolean;
+begin
+  return Left = Right;
+end function;
+
+begin
+  Test.AssertTrue(Same(Point(X := 1), Point(X := 1)));
+  Test.AssertFalse(Same(Point(X := 1), Point(X := 2)));
+end.
+```
 
 Numeric operators require the same operand type. In a generic body, `A + B`
 is valid when both operands have the same `T: Numeric`; combining T with another

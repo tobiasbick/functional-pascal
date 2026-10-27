@@ -19,6 +19,7 @@ pub(super) fn object(
     schemas: &BTreeMap<String, super::SchemaSource<'_>>,
 ) -> Result<RelocatableObject, LinkError> {
     let mut result = RelocatableObject {
+        equality_declarations: Vec::new(),
         error_schemas: vec![],
         version: OBJECT_VERSION,
         owner: "$error_constructors".to_owned(),

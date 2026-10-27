@@ -59,7 +59,7 @@ impl Checker {
                 continue;
             }
             let hint = if matches!(key, Ty::GenericParam(_, None)) {
-                "Add `: Comparable` to the type parameter, for example `function Index<K: Comparable>(...)`."
+                "Add `: Equatable` to the type parameter, for example `function Index<K: Equatable>(...)`."
             } else {
                 "Use a key type whose values compare with `=`: integer, real, boolean, string, an enum, a distinct type, or a record, enum, Option, or Result whose fields all compare."
             };

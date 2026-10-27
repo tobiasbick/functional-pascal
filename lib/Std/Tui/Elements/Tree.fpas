@@ -19,67 +19,7 @@ begin
   end case;
 end function;
 
-function TuiSameTextItems(Left: array of string; Right: array of string): boolean;
-begin
-  if Left.Length() <> Right.Length() then
-    return false;
-  end if;
-
-  for I: integer := 0 to Left.Length() - 1 do
-    if Left[I] <> Right[I] then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
-
-public function TuiSameCells(Left: array of Cell.TuiCell; Right: array of Cell.TuiCell): boolean;
-begin
-  if Left.Length() <> Right.Length() then
-    return false;
-  end if;
-
-  for I: integer := 0 to Left.Length() - 1 do
-    if Left[I] <> Right[I] then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
-
-function TuiSameMenuItems(Left: array of MenuItem.TuiMenuItem; Right: array of MenuItem.TuiMenuItem): boolean;
-begin
-  if Left.Length() <> Right.Length() then
-    return false;
-  end if;
-
-  for I: integer := 0 to Left.Length() - 1 do
-    if Left[I] <> Right[I] then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
-
-function TuiSameMenuNodes(Left: array of MenuNode.TuiMenuNode; Right: array of MenuNode.TuiMenuNode): boolean;
-begin
-  if Left.Length() <> Right.Length() then
-    return false;
-  end if;
-
-  for I: integer := 0 to Left.Length() - 1 do
-    if Left[I] <> Right[I] then
-      return false;
-    end if;
-  end for;
-
-  return true;
-end function;
-
-function TuiSameStatusItems(Left: array of StatusItem.TuiStatusItem; Right: array of StatusItem.TuiStatusItem): boolean;
+public function TuiSameItems<T: Equatable>(Left: array of T; Right: array of T): boolean;
 begin
   if Left.Length() <> Right.Length() then
     return false;
@@ -109,23 +49,23 @@ begin
         and
         (A.Hint = B.Hint) and (A.HistoryDraft = B.HistoryDraft)
         and
-        (A.ChangeAction = B.ChangeAction) and TuiSameTextItems(A.History, B.History);
+        (A.ChangeAction = B.ChangeAction) and TuiSameItems(A.History, B.History);
     when TuiNodePair.Nodes(Element.TuiElement.TextArea(const A, const AT, const AC, const AO, const AA), Element.TuiElement.TextArea(const B, const BT, const BC, const BO, const BA)):
       return (A = B) and (AT = BT) and (AC = BC) and (AO = BO) and (AA = BA);
     when TuiNodePair.Nodes(Element.TuiElement.CheckBox(const A, const AT, const AC, const AA), Element.TuiElement.CheckBox(const B, const BT, const BC, const BA)):
       return (A = B) and (AT = BT) and (AC = BC) and (AA = BA);
     when TuiNodePair.Nodes(Element.TuiElement.List(const A, const AT, const SelectedA, const AA), Element.TuiElement.List(const B, const BT, const BS, const BA)):
-      return (A = B) and (SelectedA = BS) and (AA = BA) and TuiSameTextItems(AT, BT);
+      return (A = B) and (SelectedA = BS) and (AA = BA) and TuiSameItems(AT, BT);
     when TuiNodePair.Nodes(Element.TuiElement.Scroll(const A, const AO, const AA, _), Element.TuiElement.Scroll(const B, const BO, const BA, _)):
       return (A = B) and (AO = BO) and (AA = BA);
     when TuiNodePair.Nodes(Element.TuiElement.MenuBar(const A), Element.TuiElement.MenuBar(const B)):
-      return TuiSameMenuItems(A, B);
+      return TuiSameItems(A, B);
     when TuiNodePair.Nodes(Element.TuiElement.Menu(const A, const AN, const StateA, const AA), Element.TuiElement.Menu(const B, const BN, const BS, const BA)):
-      return (A = B) and (StateA = BS) and (AA = BA) and TuiSameMenuNodes(AN, BN);
+      return (A = B) and (StateA = BS) and (AA = BA) and TuiSameItems(AN, BN);
     when TuiNodePair.Nodes(Element.TuiElement.StatusLine(const A), Element.TuiElement.StatusLine(const B)):
-      return TuiSameStatusItems(A, B);
+      return TuiSameItems(A, B);
     when TuiNodePair.Nodes(Element.TuiElement.CellGrid(const A), Element.TuiElement.CellGrid(const B)):
-      return (A.Width = B.Width) and (A.Height = B.Height) and TuiSameCells(A.Cells, B.Cells);
+      return (A.Width = B.Width) and (A.Height = B.Height) and TuiSameItems(A.Cells, B.Cells);
     when TuiNodePair.Nodes(Element.TuiElement.Gauge(const A), Element.TuiElement.Gauge(const B)):
       return A = B;
     when TuiNodePair.Nodes(Element.TuiElement.Row(_, const A), Element.TuiElement.Row(_, const B)), TuiNodePair.Nodes(Element.TuiElement.Column(_, const A), Element.TuiElement.Column(_, const B)):

@@ -21,7 +21,7 @@ impl Checker {
                 continue;
             }
             if let Some(constraint) = param.constraint
-                && !constraint.satisfied_by(arg)
+                && !constraint.satisfied_by_resolving(arg, &|ty| self.resolve_visible_type(ty))
             {
                 self.error_with_code(
                     SEMA_CONSTRAINT_VIOLATION,
@@ -34,6 +34,7 @@ impl Checker {
                         "The `{}` constraint requires a type that supports {}.",
                         constraint.display_name(),
                         match constraint {
+                            crate::types::TypeConstraint::Equatable => "equality operators (=, <>)",
                             crate::types::TypeConstraint::Comparable =>
                                 "comparison operators (=, <>, <, >, <=, >=)",
                             crate::types::TypeConstraint::Numeric =>

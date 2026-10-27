@@ -139,3 +139,49 @@ fn generic_option_payloads_compare_only_with_a_comparable_constraint() {
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH, "{errors:#?}");
 }
+
+#[test]
+fn equatable_accepts_structural_values_and_rejects_ordering() {
+    check_ok(&format!(
+        "{TYPES}
+      function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function;
+      function Forward<T: Comparable>(A: T; B: T): boolean; begin return Same(A, B); end function;
+      begin
+        const P := Point(X := 1, Y := 2.0);
+        const Equal := Same(P, P);
+        const O: option of Point := Some(P);
+        const OptionalEqual := Same(O, O);
+      end."
+    ));
+    let errors = check_errors(
+        "program T; function Less<T: Equatable>(A: T; B: T): boolean; begin return A < B; end function; begin end.",
+    );
+    assert!(!errors.is_empty(), "ordering must be rejected");
+    let errors = check_errors(&format!(
+        "{TYPES} function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function; begin const B := Bag(Items := []); const R := Same(B, B); end."
+    ));
+    assert!(
+        !errors.is_empty(),
+        "unsupported nested array must be rejected"
+    );
+}
+
+#[test]
+fn equality_does_not_imply_printing_ordering_or_arithmetic() {
+    for body in [
+        "function Need<T: Printable>(A: T): integer; begin return 1; end function; function F<T: Equatable>(A: T): integer; begin return Need(A); end function;",
+        "function Need<T: Comparable>(A: T): integer; begin return 1; end function; function F<T: Equatable>(A: T): integer; begin return Need(A); end function;",
+        "function F<T: Equatable>(A: T): array of T; begin return [A].Sort(); end function;",
+        "function F<T: Equatable>(A: T): T; begin return A + A; end function;",
+        "type E of T: Equatable = error Bad(Value: T); end error;",
+        "function F<E: Error>(A: E): boolean; begin return A = A; end function;",
+    ] {
+        assert!(
+            !check_errors(&format!("program T; {body} begin end.")).is_empty(),
+            "{body}"
+        );
+    }
+    check_ok(
+        "program T; function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function; function Forward<T: Numeric>(A: T): boolean; begin return Same(A, A); end function; begin end.",
+    );
+}

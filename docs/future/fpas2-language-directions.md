@@ -2,8 +2,9 @@
 
 Status: proposal collection; delivered topics are recorded in their sections.
 Topics are open proposals unless their section explicitly records an agreement. The
-[typed operational error direction](#1-typed-operational-errors) and
-[numeric design](#21-explicit-width-numeric-types-money-and-decimal) are agreed at the
+[typed operational error direction](#1-typed-operational-errors),
+[numeric design](#21-explicit-width-numeric-types-money-and-decimal), and
+[equality/ordering contract](#3-separate-equality-from-ordering-constraints) are agreed at the
 scope stated in those sections, with their listed open points. Design agreement
 does not change the current specification or authorize implementation.
 For graphics and packed multimedia data, native library buffers without new
@@ -131,18 +132,21 @@ generic specialization and the cost of consistent compiler/editor support.
 
 ## 3. Separate equality from ordering constraints
 
-A concrete record with equality-capable fields may be a dictionary key, but a
-generic key currently needs Comparable, which excludes records. See
+Status: Implemented.
+
+Concrete and generic dictionary keys use the same equality eligibility. See
 [dictionaries](../pascal/language/types/dictionaries.md) and
 [constraints](../pascal/language/types/generics.md#built-in-constraints).
 
-Consider a distinct equality capability so generic code can accept every key
-type accepted by equivalent concrete code. Keep ordering as the requirement for
-sorting. Determine whether collection equality belongs in the same design;
-do not automatically add interfaces, arbitrary constraints or user-defined operators.
+`Equatable` permits `=` and `<>`; `Comparable` permits ordering and sorting.
+The implication hierarchy is `Numeric` → `Comparable` → `Equatable`. Existing
+concrete equality eligibility propagates through record fields and variant,
+Option and Result payloads, including cycle-safe recursive type checks.
+Generic dictionary keys require Equatable. Printable and Error guarantees remain
+independent; equality does not imply printing.
 
-Open questions: the smallest constraint vocabulary, structural propagation,
-recursive types, and effects on existing dictionary and comparison checking.
+Whole-array/dictionary equality and user-defined operators remain outside this
+feature. The TUI uses one shared generic array-element comparison helper.
 
 ## 4. Task completion and result retrieval
 

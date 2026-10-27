@@ -22,12 +22,14 @@ begin
     Text := 'x';
   end if;
   const RootId := Tui.TuiMenuNodeId.Create(1);
+  const Key := if State mod 2 = 0 then 'o' else 'p' end if;
+  const KeyLabel := if State mod 2 = 0 then 'Ctrl+O' else 'Ctrl+P' end if;
   const Nodes := [
     Tui.TuiMenuNodeBuilders.Submenu(RootId, None, 'File', 'F'),
     Tui.TuiMenuNodeBuilders.CommandWithShortcut(
       Tui.TuiMenuNodeId.Create(2), Some(RootId),
-      'Open', 'O', Tui.TuiAction.Create(20),
-      Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')
+      'Open', 'O', Tui.TuiAction.Create(20 + State),
+      Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, Key, false, true, false, false, KeyLabel)
     )
   ];
   var Menu := Tui.TuiMenuState.Closed();

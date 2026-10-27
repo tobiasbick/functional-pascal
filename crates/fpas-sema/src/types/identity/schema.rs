@@ -39,6 +39,7 @@ pub fn error_schema(
             .map(|parameter| {
                 parameter.constraint.map(|constraint| match constraint {
                     TypeConstraint::Comparable => interface::TypeConstraint::Comparable,
+                    TypeConstraint::Equatable => interface::TypeConstraint::Equatable,
                     TypeConstraint::Numeric => interface::TypeConstraint::Numeric,
                     TypeConstraint::Printable => interface::TypeConstraint::Printable,
                     TypeConstraint::Error => interface::TypeConstraint::Error,

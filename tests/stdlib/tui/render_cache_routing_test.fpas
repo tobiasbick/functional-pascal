@@ -5,6 +5,8 @@ uses Std.Test as Test, Std.Tui as Tui;
 var Views: integer := 0;
 var Updates: integer := 0;
 var ActionValue: integer := 1;
+var MenuActionValue: integer := 2;
+var ShortcutKey: string := 'o';
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
@@ -31,6 +33,43 @@ begin
   );
 end function;
 
+function MenuView(State: integer): Tui.TuiElement;
+begin
+  const Root := Tui.TuiMenuNodeId.Create(1);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(100)), [
+      Tui.TuiElementBuilders.MakeMenu(
+        Tui.TuiControlId.Create(100),
+        [
+          Tui.TuiMenuNodeBuilders.Submenu(Root, None, 'File', 'F'),
+          Tui.TuiMenuNodeBuilders.CommandWithShortcut(
+            Tui.TuiMenuNodeId.Create(2), Some(Root), 'Open', 'O',
+            Tui.TuiAction.Create(MenuActionValue),
+            Tui.TuiKeyGesture.Create(
+              Tui.TuiKeyKind.Character,
+              ShortcutKey,
+              false,
+              true,
+              false,
+              false,
+              'shortcut'
+            )
+          )
+        ],
+        Tui.TuiMenuState.Closed(), Tui.TuiAction.Create(101)
+      )
+    ]
+  );
+end function;
+
+function Shortcut(Character: string): Tui.TuiKeyEvent;
+begin
+  return Tui.TuiKeyEvent(
+    kind := Tui.TuiKeyKind.Character, ch := Character,
+    shift := false, ctrl := true, alt := false, meta := false
+  );
+end function;
+
 begin
   const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 2));
   Test.AssertEquals(0, App.RunIterations(0, Update, View, 3, 0));
@@ -48,4 +87,17 @@ begin
   );
   Test.AssertEquals(2, App.RunIterations(0, Update, View, 1, 0));
   App.Close();
+  const MenuApp := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
+  discard MenuApp.RunIterations(0, Update, MenuView, 0, 0);
+  MenuActionValue := 7;
+  discard MenuApp.RunIterations(0, Update, MenuView, 0, 0);
+  MenuApp.InjectKeyForTest(Shortcut('o'));
+  Test.AssertEquals(7, MenuApp.RunIterations(0, Update, MenuView, 2, 0));
+  ShortcutKey := 'p';
+  discard MenuApp.RunIterations(0, Update, MenuView, 0, 0);
+  MenuApp.InjectKeyForTest(Shortcut('o'));
+  Test.AssertEquals(0, MenuApp.RunIterations(0, Update, MenuView, 2, 0));
+  MenuApp.InjectKeyForTest(Shortcut('p'));
+  Test.AssertEquals(7, MenuApp.RunIterations(0, Update, MenuView, 2, 0));
+  MenuApp.Close();
 end.

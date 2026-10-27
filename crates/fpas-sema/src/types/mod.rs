@@ -4,6 +4,7 @@ mod array_pop;
 mod category;
 /// Type equality, assignment compatibility, and scalar capabilities.
 mod compatibility;
+mod equality;
 pub use array_pop::{array_pop_result, array_pop_result_declaration};
 
 /// Enum identities, generic arguments, and resolved payloads.

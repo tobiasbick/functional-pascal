@@ -4,6 +4,149 @@
 use super::*;
 
 #[test]
+fn equatable_private_types_cross_transitive_constructor_abis_and_reused_sidecars() {
+    let cwd = create_temp_dir("equatable-private-abi");
+    let project = cwd.join("app.fpasprj");
+    support::write_program_project_file(&project, "src/main.fpas", &["src/**/*.fpas"]);
+    let hidden = cwd.join("src/hidden.fpas");
+    let source = r#"unit Data.Hidden;
+type Box of T = record Value: T; end record;
+type Marker of T: Equatable = error Failed; end error;
+function Mark<T: Equatable>(Value: T): Marker of T;
+begin return Marker.Failed; end function;
+public function Work<T: Equatable>(Value: T): boolean;
+begin
+  const M := Mark(Box(Value := Value));
+  return M is Marker.Failed;
+end function;
+end unit;"#;
+    write_text(&hidden, source);
+    write_text(
+        &cwd.join("src/facade.fpas"),
+        r#"unit Data.Facade;
+uses Data.Hidden as Hidden;
+public function Run<T: Equatable>(Value: T): boolean;
+begin return Hidden.Work(Value); end function;
+end unit;"#,
+    );
+    let main = cwd.join("src/main.fpas");
+    let mut program = String::from(
+        r#"program T;
+uses Data.Facade as Facade;
+begin
+  if not Facade.Run(1) or not Facade.Run('text') then panic('private ABI'); end if;
+end."#,
+    );
+    let mut sidecars = None;
+    for _ in 0..2 {
+        // Change only the program to exercise imported metadata from reused units.
+        program.push('\n');
+        write_text(&main, &program);
+        for command in ["check", "run"] {
+            let (code, _, stderr) = support::run_cli_args_and_capture_output(
+                &[command.into(), project.to_string_lossy().into_owned()],
+                &cwd,
+            );
+            assert_eq!(code, 0, "{command}: {stderr}");
+        }
+        let current = ["hidden", "facade"].map(|name| {
+            let path = cwd.join(format!("src/{name}.fpascu"));
+            (
+                fs::read(&path).expect("compiled dependency sidecar"),
+                fs::metadata(path)
+                    .expect("sidecar metadata")
+                    .modified()
+                    .expect("sidecar modification time"),
+            )
+        });
+        if let Some(previous) = &sidecars {
+            assert_eq!(
+                &current, previous,
+                "unchanged units must reuse their sidecars"
+            );
+        }
+        sidecars = Some(current);
+    }
+    write_text(
+        &hidden,
+        &source
+            .replace("Value: T; end record", "Value: array of T; end record")
+            .replace("Box(Value := Value)", "Box(Value := [Value])"),
+    );
+    let (code, _, stderr) = support::run_cli_args_and_capture_output(
+        &["check".into(), project.to_string_lossy().into_owned()],
+        &cwd,
+    );
+    assert_ne!(code, 0, "unsupported private fields must stay rejected");
+    assert!(stderr.contains("Equatable"), "{stderr}");
+    assert!(!stderr.contains("FP9001"), "{stderr}");
+    fs::remove_dir_all(cwd).expect("remove private ABI fixture");
+}
+
+#[test]
+fn equatable_records_and_native_errors_cross_reused_sidecars() {
+    let cwd = create_temp_dir("equatable-units");
+    let project = cwd.join("equal.fpasprj");
+    support::write_program_project_file(&project, "src/main.fpas", &["src/**/*.fpas"]);
+    let unit = cwd.join("src/equal.fpas");
+    let source = r#"unit Data.Equal;
+public type Marker of T: Equatable = error Failed; end error;
+public type Box of T = record public Value: T; end record;
+public function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function;
+public function Mark<T: Equatable>(Value: T): Marker of T; begin return Marker.Failed; end function;
+end unit;"#;
+    write_text(&unit, source);
+    write_text(
+        &cwd.join("src/main.fpas"),
+        r#"program T;
+uses Data.Equal as Equal;
+type Point = record X: integer; end record;
+begin
+  const P := Point(X := 5);
+  if not Equal.Same(P, Point(X := 5)) then panic('imported equality'); end if;
+  const M := Equal.Mark(Equal.Box(Value := P));
+  if not (M is Equal.Marker.Failed) then panic('imported error'); end if;
+end."#,
+    );
+    for _ in 0..2 {
+        // Rebuild the program while retaining the unchanged dependency sidecar.
+        let main = cwd.join("src/main.fpas");
+        let text = fs::read_to_string(&main).expect("main source");
+        write_text(&main, &(text + "\n"));
+        let (code, _, stderr) = support::run_cli_args_and_capture_output(
+            &["run".into(), project.to_string_lossy().into_owned()],
+            &cwd,
+        );
+        assert_eq!(code, 0, "{stderr}");
+        assert!(cwd.join("src/equal.fpascu").exists());
+    }
+    let image = fs::read_dir(&cwd)
+        .expect("project artifacts")
+        .map(|entry| entry.expect("artifact entry").path())
+        .find(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "fpascp")
+        })
+        .expect("linked program image");
+    let (code, _, stderr) = support::run_cli_args_and_capture_output(
+        &["run".into(), image.to_string_lossy().into_owned()],
+        &cwd,
+    );
+    assert_eq!(code, 0, "{stderr}");
+    write_text(
+        &unit,
+        &source.replace("Same<T: Equatable>", "Same<T: Comparable>"),
+    );
+    let (code, _, stderr) = support::run_cli_args_and_capture_output(
+        &["run".into(), project.to_string_lossy().into_owned()],
+        &cwd,
+    );
+    assert_ne!(code, 0);
+    assert!(stderr.contains("Comparable"), "{stderr}");
+    fs::remove_dir_all(cwd).expect("remove equality fixture");
+}
+
+#[test]
 fn generic_records_keep_arguments_methods_defaults_and_aliases_across_sidecars() {
     let cwd = create_temp_dir("generic-record-units");
     let project = cwd.join("records.fpasprj");

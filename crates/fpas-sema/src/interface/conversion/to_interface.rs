@@ -280,6 +280,7 @@ pub(crate) fn ty_to_interface_reference(
 fn constraint_to_interface(constraint: TypeConstraint) -> artifact::TypeConstraint {
     match constraint {
         TypeConstraint::Comparable => artifact::TypeConstraint::Comparable,
+        TypeConstraint::Equatable => artifact::TypeConstraint::Equatable,
         TypeConstraint::Numeric => artifact::TypeConstraint::Numeric,
         TypeConstraint::Printable => artifact::TypeConstraint::Printable,
         TypeConstraint::Error => artifact::TypeConstraint::Error,

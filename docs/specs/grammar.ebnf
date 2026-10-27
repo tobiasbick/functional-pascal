@@ -99,7 +99,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'discard'
                 | 'go'        | 'dict'      | 'with'      | 'static'
-                | 'comparable' | 'numeric'  | 'printable' | 'self'
+                | 'equatable' | 'comparable' | 'numeric'  | 'printable' | 'self'
                 | 'channel'   | 'task'
                 | 'elsif'     | 'when'      | 'null'      | 'is'
                 | 'distinct' | 'requires' | 'ensures'   | 'scope' ;
@@ -225,7 +225,7 @@ type_params         = '<' type_param { ',' type_param } '>' ;
 data_type_params    = 'of' type_param
                     | 'of' '(' type_param ',' type_param { ',' type_param } ')' ;
 type_param          = identifier [ ':' constraint_name ] ;
-constraint_name     = 'Comparable' | 'Numeric' | 'Printable' | 'Error' ;
+constraint_name     = 'Equatable' | 'Comparable' | 'Numeric' | 'Printable' | 'Error' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 

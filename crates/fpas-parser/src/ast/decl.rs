@@ -48,7 +48,7 @@ impl Decl {
 pub struct TypeParam {
     /// The type parameter name.
     pub name: String,
-    /// Optional constraint name: `Comparable`, `Numeric`, `Printable`.
+    /// Optional constraint name: `Equatable`, `Comparable`, `Numeric`, `Printable`, `Error`.
     pub constraint: Option<String>,
 }
 

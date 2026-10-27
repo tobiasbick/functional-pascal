@@ -44,7 +44,7 @@ begin
         for Y: integer := 0 to Height - 1 do
           const SurfaceY := Entry.Bounds.Y + Y;
           if (SurfaceY >= Entry.Clip.Y) and (SurfaceY < Entry.Clip.Bottom()) then
-            if not Tree.TuiSameCells(
+            if not Tree.TuiSameItems(
               A.Cells.Slice(Y * A.Width, Width),
               B.Cells.Slice(Y * B.Width, Width)
             )

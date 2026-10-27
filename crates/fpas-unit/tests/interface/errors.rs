@@ -2,12 +2,44 @@
 
 use fpas_bytecode::{ErrorInstanceKey, NominalKind, TypeIdentity};
 use fpas_unit::{
+    equality::EqualityDeclaration,
     errors::{
         ErrorConstructorRequest, ErrorConstructorSignature, ErrorRoutineConstructors, ErrorSchema,
         ErrorSchemaField, ErrorSchemaVariant,
     },
     interface::{TypeConstraint, decode_interface, encode_interface},
 };
+
+#[test]
+fn private_equality_evidence_round_trips_and_affects_interface_identity() {
+    let mut interface = super::sample_interface();
+    let private = EqualityDeclaration {
+        identity: TypeIdentity::Nominal {
+            kind: NominalKind::Record,
+            declaration: "demo.api.privatebox".into(),
+            arguments: vec![TypeIdentity::Parameter(0)],
+        },
+        parameters: 1,
+        fields: vec![TypeIdentity::Parameter(0)],
+    };
+    interface.errors.equality_declarations.push(private.clone());
+    assert!(!interface.errors.is_empty());
+    let before = interface.digest().expect("equality evidence fingerprint");
+    let decoded = decode_interface(&encode_interface(&interface).expect("equality evidence"))
+        .expect("private field evidence round trip");
+    assert_eq!(decoded.errors.equality_declarations, vec![private.clone()]);
+    assert_eq!(decoded.symbols, interface.clone().canonicalized().symbols);
+    interface.errors.equality_declarations[0].fields =
+        vec![TypeIdentity::Option(Box::new(TypeIdentity::Parameter(0)))];
+    assert_ne!(before, interface.digest().expect("changed private fields"));
+    interface.errors.equality_declarations.push(private.clone());
+    assert!(
+        encode_interface(&interface).is_err(),
+        "conflicting evidence"
+    );
+    interface.errors.equality_declarations = vec![private.clone(), private];
+    assert!(encode_interface(&interface).is_err(), "duplicate evidence");
+}
 
 #[test]
 fn messages_constraints_and_private_constructor_requirements_affect_interface_identity() {

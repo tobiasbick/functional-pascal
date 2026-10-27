@@ -6,6 +6,7 @@ use fpas_bytecode::{ErrorInstanceKey, TypeIdentity};
 use fpas_ir::EnumLayoutId;
 use fpas_sema::{EnumTy, GenericParamDef, Ty};
 use std::collections::BTreeMap;
+mod equality;
 mod object;
 
 #[derive(Debug, Clone, Default)]
@@ -14,6 +15,7 @@ pub(crate) struct ErrorMetadata {
     pub named: std::sync::Arc<BTreeMap<String, Ty>>,
     pub layouts: BTreeMap<EnumLayoutId, EnumTy>,
     pub schemas: BTreeMap<String, fpas_unit::errors::ErrorSchema>,
+    pub imported_equality: Vec<fpas_unit::equality::EqualityDeclaration>,
     pub locations: BTreeMap<String, fpas_lexer::Span>,
     pub instances: BTreeMap<EnumLayoutId, (ErrorInstanceKey, fpas_unit::errors::ErrorSchema)>,
     pub requirements: BTreeMap<fpas_ir::FunctionId, fpas_unit::errors::ErrorConstructorSignature>,

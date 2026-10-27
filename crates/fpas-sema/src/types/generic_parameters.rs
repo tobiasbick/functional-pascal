@@ -6,6 +6,8 @@ use super::Ty;
 /// Built-in capabilities required by a generic parameter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TypeConstraint {
+    /// Supports equality comparisons.
+    Equatable,
     /// Supports equality and ordering comparisons.
     Comparable,
     /// Supports arithmetic operations.
@@ -19,7 +21,9 @@ pub enum TypeConstraint {
 impl TypeConstraint {
     /// Resolve a constraint name without case sensitivity.
     pub fn from_name(name: &str) -> Option<Self> {
-        if name.eq_ignore_ascii_case("comparable") {
+        if name.eq_ignore_ascii_case("equatable") {
+            Some(Self::Equatable)
+        } else if name.eq_ignore_ascii_case("comparable") {
             Some(Self::Comparable)
         } else if name.eq_ignore_ascii_case("numeric") {
             Some(Self::Numeric)
@@ -35,6 +39,7 @@ impl TypeConstraint {
     /// Human-readable name for diagnostics.
     pub fn display_name(self) -> &'static str {
         match self {
+            Self::Equatable => "Equatable",
             Self::Comparable => "Comparable",
             Self::Numeric => "Numeric",
             Self::Printable => "Printable",
@@ -44,15 +49,22 @@ impl TypeConstraint {
 
     /// Check a concrete type or the guarantees of an enclosing parameter.
     pub fn satisfied_by(self, ty: &Ty) -> bool {
+        self.satisfied_by_resolving(ty, &Clone::clone)
+    }
+
+    /// Check a constraint with visible declarations available for structural types.
+    pub fn satisfied_by_resolving(self, ty: &Ty, resolve: &impl Fn(&Ty) -> Ty) -> bool {
         if let Ty::GenericParam(_, constraint) = ty {
             return constraint.is_some_and(|actual| {
                 actual == self
+                    || (actual == Self::Comparable && self == Self::Equatable)
                     || (actual == Self::Error && self == Self::Printable)
                     || (actual == Self::Numeric
-                        && matches!(self, Self::Comparable | Self::Printable))
+                        && matches!(self, Self::Equatable | Self::Comparable | Self::Printable))
             });
         }
         match self {
+            Self::Equatable => ty.supports_equality_resolving(resolve),
             // Distinct scalar types inherit comparisons, not arithmetic or printing.
             // See docs/pascal/language/types/distinct-types.md.
             Self::Comparable => ty.is_comparable(),

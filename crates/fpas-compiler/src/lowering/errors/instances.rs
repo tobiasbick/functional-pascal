@@ -23,7 +23,14 @@ pub(super) fn ensure_instance(
         .schemas
         .get(&key.declaration)
         .ok_or_else(|| error(format!("error schema {} is unavailable", key.declaration)))?
-        .instantiate(key)
+        .instantiate_with_declarations(
+            key,
+            &mut fpas_unit::errors::ErrorInstantiationBudget::default(),
+            &fpas_unit::equality::EqualityDeclarations::new(
+                types.errors.equality_declarations().map_err(error)?,
+            )
+            .map_err(error)?,
+        )
         .map_err(error)?;
     let id =
         EnumLayoutId::try_from_index(types.enum_layouts.len()).map_err(|e| error(e.to_string()))?;

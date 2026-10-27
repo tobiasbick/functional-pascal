@@ -28,6 +28,8 @@ pub struct ObjectErrorVariant {
 
 pub(super) fn validate(object: &RelocatableObject) -> Result<(), ObjectError> {
     let invalid = ObjectError::InvalidTableReference;
+    crate::equality::EqualityDeclarations::new(object.equality_declarations.clone())
+        .map_err(invalid)?;
     let mut declarations = std::collections::BTreeSet::new();
     for retained in &object.error_schemas {
         let schema = &retained.schema;

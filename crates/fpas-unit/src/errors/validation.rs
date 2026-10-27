@@ -62,12 +62,17 @@ impl ErrorSchema {
     }
 }
 
-pub(super) fn satisfies(ty: &TypeIdentity, bound: Option<TypeConstraint>) -> bool {
+pub(super) fn satisfies(
+    ty: &TypeIdentity,
+    bound: Option<TypeConstraint>,
+    declarations: &crate::equality::EqualityDeclarations,
+) -> bool {
     match bound {
         None => true,
         Some(TypeConstraint::Error) => is_error(ty, &[]),
         Some(TypeConstraint::Printable) => printable(ty, &[]),
         Some(TypeConstraint::Numeric) => matches!(ty, TypeIdentity::Integer | TypeIdentity::Real),
+        Some(TypeConstraint::Equatable) => declarations.supports(ty),
         Some(TypeConstraint::Comparable) => matches!(
             ty,
             TypeIdentity::Integer

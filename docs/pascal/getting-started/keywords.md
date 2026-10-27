@@ -20,11 +20,12 @@ dict      with      static    numeric
 comparable printable self     elsif
 when      null      discard   is
 distinct  requires  ensures   scope
+equatable
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
-member access. The generic constraints are `Numeric`, `Comparable`, `Printable`,
-and `Error`. The first three have no other syntax role; `Error` also constructs
+member access. The generic constraints are `Equatable`, `Comparable`, `Numeric`,
+`Printable`, and `Error`. The first four have no other syntax role; `Error` also constructs
 and matches a Result failure and declares an error family.
 The keyword `self` names the first receiver parameter and receiver expression of
 an instance record method, and `distinct` introduces a

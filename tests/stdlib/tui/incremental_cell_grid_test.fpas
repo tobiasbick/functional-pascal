@@ -40,6 +40,12 @@ begin
       Test.AssertTrue(Expected.Cells[I] = Actual.Cells[I]);
     end for;
 
+    discard Cached.RunIterations(Grid, Update, View, 0, 0);
+    const Repeated := Cached.SurfaceSnapshot();
+    for I: integer := 0 to Expected.Cells.Length() - 1 do
+      Test.AssertTrue(Expected.Cells[I] = Repeated.Cells[I]);
+    end for;
+
     Fresh.Close();
     Test.AssertEquals('#', Actual.CellAt(0, 0).Glyph);
   end for;

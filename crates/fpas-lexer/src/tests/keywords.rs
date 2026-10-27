@@ -207,6 +207,7 @@ fn case_insensitive_mixed() {
     assert_eq!(toks("ReTuRn"), vec![Token::Return]);
     assert_eq!(toks("SeLf"), vec![Token::SelfKw]);
     assert_eq!(toks("CoMpArAbLe"), vec![Token::Comparable]);
+    assert_eq!(toks("eQuAtAbLe"), vec![Token::Equatable]);
 }
 
 #[test]

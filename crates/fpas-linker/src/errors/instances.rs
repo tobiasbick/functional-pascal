@@ -15,6 +15,13 @@ pub(super) fn expand<'a>(
     schemas: &BTreeMap<String, super::SchemaSource<'_>>,
     requests: &BTreeSet<ErrorConstructorRequest>,
 ) -> Result<BTreeMap<ErrorInstanceKey, ObjectEnumLayout>, LinkError> {
+    let objects = objects.collect::<Vec<_>>();
+    let declarations = fpas_unit::equality::EqualityDeclarations::new(
+        objects
+            .iter()
+            .flat_map(|object| object.equality_declarations.iter().cloned()),
+    )
+    .map_err(invalid)?;
     let mut layouts = BTreeMap::new();
     for object in objects {
         for layout in &object.enums {
@@ -50,7 +57,7 @@ pub(super) fn expand<'a>(
         if let Some(schema) = schemas.get(&key.declaration) {
             let instantiated = schema
                 .schema
-                .instantiate_with_budget(&key, &mut budget)
+                .instantiate_with_declarations(&key, &mut budget, &declarations)
                 .map_err(invalid)?;
             let declared = layout(key.clone(), &instantiated);
             if let Some(existing) = layouts.get(&key) {

@@ -278,6 +278,7 @@ fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceCo
 fn constraint_from_interface(constraint: artifact::TypeConstraint) -> TypeConstraint {
     match constraint {
         artifact::TypeConstraint::Comparable => TypeConstraint::Comparable,
+        artifact::TypeConstraint::Equatable => TypeConstraint::Equatable,
         artifact::TypeConstraint::Numeric => TypeConstraint::Numeric,
         artifact::TypeConstraint::Printable => TypeConstraint::Printable,
         artifact::TypeConstraint::Error => TypeConstraint::Error,

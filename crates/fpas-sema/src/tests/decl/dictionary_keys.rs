@@ -57,7 +57,7 @@ fn keys_without_equality_are_rejected_once_per_written_type() {
 }
 
 #[test]
-fn unconstrained_generic_keys_ask_for_comparable() {
+fn unconstrained_generic_keys_ask_for_equatable() {
     let errors = check_errors(
         "program T;
          function Index<K>(Key: K): dict of K to integer;
@@ -69,7 +69,7 @@ fn unconstrained_generic_keys_ask_for_comparable() {
         errors[0]
             .help
             .as_deref()
-            .is_some_and(|help| help.contains("`: Comparable`")),
+            .is_some_and(|help| help.contains("`: Equatable`")),
         "{errors:#?}"
     );
 }

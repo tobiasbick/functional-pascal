@@ -402,6 +402,7 @@ impl RelocatableObject {
             })
             .collect::<Result<Vec<_>, ObjectError>>()?;
         let mut object = Self {
+            equality_declarations: Vec::new(),
             error_schemas: Vec::new(),
             version: OBJECT_VERSION,
             owner: canonical(&owner.into()),

@@ -114,8 +114,19 @@ fn batch_target_samples_keep_program_output_and_include_spawned_work() {
     exit(&profiled, 0);
     let plain: Value = serde_json::from_slice(&plain.stdout).expect("batch result");
     let actual: Value = serde_json::from_slice(&profiled.stdout).expect("batch result");
-    for field in ["outcome", "output", "globals", "expressions"] {
+    for field in ["outcome", "globals", "expressions"] {
         assert_eq!(actual[field], plain[field], "{field}");
+    }
+    // Captured writes may be drained separately or combined in one output chunk.
+    for result in [&plain, &actual] {
+        let chunks = result["output"].as_array().expect("output chunks");
+        let mut text = String::new();
+        for chunk in chunks {
+            assert_eq!(chunk["stream"], "stdout");
+            assert_eq!(chunk["truncated"], false);
+            text.push_str(chunk["text"].as_str().expect("output text"));
+        }
+        assert_eq!(text, "done\n");
     }
     let report = fixture.report("debug.json");
     assert_target(&report, "batch");

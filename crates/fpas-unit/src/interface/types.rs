@@ -3,6 +3,8 @@
 /// Built-in constraint attached to a generic parameter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TypeConstraint {
+    /// Values support equality comparisons.
+    Equatable,
     /// Values support equality and ordering comparisons.
     Comparable,
     /// Values support arithmetic operations.

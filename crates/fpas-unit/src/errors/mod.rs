@@ -7,6 +7,7 @@ mod substitution;
 mod validation;
 
 pub use budget::ErrorInstantiationBudget;
+pub(crate) use substitution::substitute_identity;
 
 use crate::interface::TypeConstraint;
 pub use fpas_bytecode::{ErrorInstanceKey, IdentityParameter, NominalKind, TypeIdentity};
@@ -89,13 +90,15 @@ pub struct ErrorInterface {
     pub schemas: Vec<ErrorSchema>,
     /// Public routine requirements, sorted by routine identity.
     pub routines: Vec<ErrorRoutineConstructors>,
+    /// Private and public nominal fields needed by hidden constructor arguments.
+    pub equality_declarations: Vec<crate::equality::EqualityDeclaration>,
 }
 
 impl ErrorInterface {
     /// Whether this interface retains the ordinary pre-error shape.
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.schemas.is_empty() && self.routines.is_empty()
+        self.schemas.is_empty() && self.routines.is_empty() && self.equality_declarations.is_empty()
     }
 
     /// Validate error schemas and construction ABI before hashing or installation.
@@ -103,6 +106,7 @@ impl ErrorInterface {
     /// # Errors
     /// Returns an invalid declaration, generic bound or requirement invariant.
     pub fn validate(&self) -> Result<(), &'static str> {
+        crate::equality::EqualityDeclarations::new(self.equality_declarations.iter().cloned())?;
         for schema in &self.schemas {
             schema.validate()?;
         }
@@ -110,9 +114,13 @@ impl ErrorInterface {
             routine.signature.validate()?;
         }
         if self
-            .schemas
+            .equality_declarations
             .windows(2)
-            .any(|pair| pair[0].declaration >= pair[1].declaration)
+            .any(|pair| pair[0].identity >= pair[1].identity)
+            || self
+                .schemas
+                .windows(2)
+                .any(|pair| pair[0].declaration >= pair[1].declaration)
             || self
                 .routines
                 .windows(2)

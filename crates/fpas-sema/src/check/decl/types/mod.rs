@@ -106,7 +106,7 @@ impl Checker {
                         "Unknown type constraint `{}`",
                         tp.constraint.as_deref().unwrap_or("")
                     ),
-                    "Valid constraints: Comparable, Numeric, Printable.",
+                    "Valid constraints: Equatable, Comparable, Numeric, Printable, Error.",
                     span,
                 );
             }

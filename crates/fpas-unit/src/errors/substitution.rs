@@ -22,13 +22,27 @@ impl ErrorSchema {
         key: &ErrorInstanceKey,
         budget: &mut ErrorInstantiationBudget,
     ) -> Result<Self, &'static str> {
+        self.instantiate_with_declarations(
+            key,
+            budget,
+            &crate::equality::EqualityDeclarations::default(),
+        )
+    }
+
+    /// Instantiate with verified nominal fields for equality-constrained arguments.
+    pub fn instantiate_with_declarations(
+        &self,
+        key: &ErrorInstanceKey,
+        budget: &mut ErrorInstantiationBudget,
+        declarations: &crate::equality::EqualityDeclarations,
+    ) -> Result<Self, &'static str> {
         self.validate()?;
         key.validate(0)?;
         if self.declaration != key.declaration || self.parameters.len() != key.arguments.len() {
             return Err("error instance does not match its schema arity or declaration");
         }
         for (argument, bound) in key.arguments.iter().zip(&self.parameters) {
-            if !validation::satisfies(argument, *bound) {
+            if !validation::satisfies(argument, *bound, declarations) {
                 return Err("error instance violates a generic constraint");
             }
         }
@@ -114,6 +128,16 @@ fn expansion(
         _ => {}
     }
     Ok(())
+}
+
+pub(crate) fn substitute_identity(
+    ty: &TypeIdentity,
+    arguments: &[TypeIdentity],
+    budget: &mut ErrorInstantiationBudget,
+) -> Result<TypeIdentity, &'static str> {
+    let mut remaining = fpas_bytecode::limits::MAX_LAYOUT_FIELDS;
+    expansion(ty, arguments, 0, &mut remaining, budget)?;
+    replace(ty, arguments)
 }
 
 fn replace(ty: &TypeIdentity, arguments: &[TypeIdentity]) -> Result<TypeIdentity, &'static str> {

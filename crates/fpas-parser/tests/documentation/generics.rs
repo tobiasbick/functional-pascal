@@ -26,7 +26,11 @@ fn documented_generic_record_and_routine_examples_parse() {
     let blocks = pascal_blocks(markdown);
     assert!(!blocks.is_empty(), "generic examples");
     for block in blocks {
-        let source = format!("program Doc;\n{}\nbegin end.", block.source);
+        let source = if block.source.trim_start().starts_with("program ") {
+            block.source
+        } else {
+            format!("program Doc;\n{}\nbegin end.", block.source)
+        };
         let (_, errors) = parse(&source);
         assert!(
             errors.is_empty(),

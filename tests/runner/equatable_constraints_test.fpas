@@ -1,0 +1,56 @@
+program EquatableConstraintsTest;
+
+uses Std.Test as Test, Std.Tasks as Tasks;
+
+type Point = record
+  X: integer;
+end record;
+
+type Box of T: Equatable = record
+  Value: T;
+end record;
+
+type Marker of T: Equatable = error
+  Failed;
+end error;
+
+function Same<T: Equatable>(Left: T; Right: T): boolean;
+begin
+  return Left = Right;
+end function;
+
+function Find<K: Equatable, V>(Items: dict of K to V; Key: K): option of V;
+begin
+  return Items.Get(Key);
+end function;
+
+function Mark<T: Equatable>(Value: T): Marker of T;
+begin
+  return Marker.Failed;
+end function;
+
+function SameInTask<T: Equatable>(Left: T; Right: T): boolean;
+begin
+  scope
+    const Job := go Same(Left, Right);
+    return Tasks.Wait(Job);
+  end scope;
+end function;
+
+begin
+  const P := Point(X := 2);
+  const A := Box(Value := P);
+  Test.AssertTrue(Same(A, Box(Value := Point(X := 2))));
+  Test.AssertTrue(SameInTask(A, A));
+  Test.AssertFalse(Same(A, Box(Value := Point(X := 3))));
+  const Present: option of Point := Some(P);
+  const Success: result of (Point, string) := Ok(P);
+  const Failure: result of (Point, string) := Error('failed');
+  Test.AssertTrue(Same(Present, Some(Point(X := 2))));
+  Test.AssertTrue(Same(Success, Ok(Point(X := 2))));
+  Test.AssertFalse(Same(Success, Failure));
+  const Items: dict of Point to string := [P: 'point'];
+  Test.AssertTrue(Find(Items, P) = Some('point'));
+  Test.AssertTrue(Find(Items, Point(X := 9)) is None);
+  Test.AssertTrue(Mark(A) is Marker.Failed);
+end.

@@ -36,9 +36,11 @@ from supplied values and fill missing ones from the expected result type.
 Explicit angle-bracket call arguments are unavailable. Constructors use the plain
 type name, as in `Box(Value := 3)`, with inference or an expected type.
 
-Constraints are `Numeric`, `Comparable`, `Printable`, and `Error`, written
-`T: Comparable`. Numeric permits integer/real arithmetic and implies Comparable
-and Printable; generic `div`/`mod` are unavailable because T may be real.
+Constraints are `Equatable`, `Numeric`, `Comparable`, `Printable`, and `Error`,
+written `T: Equatable`. Numeric implies Comparable and Printable; Comparable
+implies Equatable. Equatable permits `=`/`<>` and generic dictionary keys, including
+records/variants whose fields compare; it does not imply printing or ordering.
+Numeric permits integer/real arithmetic; generic `div`/`mod` are unavailable because T may be real.
 Comparable supports scalar ordering, including fieldless enums, distinct scalars
 and subranges. Printable permits output. Error accepts native error families,
 implies Printable and exposes `.Message()`. Unconstrained T permits storage and

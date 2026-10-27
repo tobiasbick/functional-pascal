@@ -3,6 +3,61 @@
 use super::*;
 
 #[test]
+fn equatable_recursive_imported_enums_and_keys_survive_sidecar_reuse() {
+    let cwd = create_temp_dir("equatable-recursive-enum-units");
+    let project = cwd.join("enums.fpasprj");
+    support::write_program_project_file(&project, "src/main.fpas", &["src/**/*.fpas"]);
+    write_text(
+        &cwd.join("src/values.fpas"),
+        r#"unit Data.Values;
+public type Tree of T = enum Leaf(Value: T); Node(Child: option of Tree of T); Empty; end enum;
+public type Bad of T = enum Full(Values: array of T); Empty; end enum;
+end unit;"#,
+    );
+    let main = cwd.join("src/main.fpas");
+    let source = r#"program T;
+uses Data.Values as Values;
+type Point = record X: integer; end record;
+function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function;
+function Find<K: Equatable, V>(D: dict of K to V; Key: K): option of V; begin return D.Get(Key); end function;
+begin
+  const A: Values.Tree of Point := Values.Tree.Node(Some(Values.Tree.Leaf(Point(X := 1))));
+  const B: Values.Tree of Point := Values.Tree.Node(Some(Values.Tree.Leaf(Point(X := 2))));
+  if not Same(A, A) or Same(A, B) then panic('recursive imported equality'); end if;
+  var D: dict of Values.Tree of Point to string := [A: 'one', B: 'two'];
+  D[A] := 'updated';
+  if (Find(D, A) <> Some('updated')) or (Find(D, B) <> Some('two')) then panic('imported keys'); end if;
+  const Keys := D.Keys();
+  if not Same(Keys[0], A) or not Same(Keys[1], B) then panic('key order'); end if;
+  const Missing: Values.Tree of Point := Values.Tree.Empty;
+  if not (Find(D, Missing) is None) then panic('missing key'); end if;
+end."#;
+    for newline_count in 1..=2 {
+        write_text(&main, &format!("{source}{}", "\n".repeat(newline_count)));
+        let (code, _, stderr) = support::run_cli_args_and_capture_output(
+            &["run".into(), project.to_string_lossy().into_owned()],
+            &cwd,
+        );
+        assert_eq!(code, 0, "{stderr}");
+        assert!(cwd.join("src/values.fpascu").exists());
+    }
+    write_text(
+        &main,
+        r#"program T; uses Data.Values as Values;
+function Same<T: Equatable>(A: T; B: T): boolean; begin return A = B; end function;
+begin const X: Values.Bad of integer := Values.Bad.Empty; discard Same(X, X); end."#,
+    );
+    let (code, _, stderr) = support::run_cli_args_and_capture_output(
+        &["check".into(), project.to_string_lossy().into_owned()],
+        &cwd,
+    );
+    assert_ne!(code, 0, "unused array payload must reject equality");
+    assert!(stderr.contains("Equatable"), "{stderr}");
+    assert!(!stderr.contains("FP9001"), "{stderr}");
+    fs::remove_dir_all(cwd).expect("remove recursive equality fixture");
+}
+
+#[test]
 fn imported_generic_enums_preserve_payloads_aliases_and_named_order() {
     let cwd = create_temp_dir("generic-enum-units");
     let project = cwd.join("enums.fpasprj");

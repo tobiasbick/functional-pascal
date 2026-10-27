@@ -22,6 +22,14 @@ pub(super) fn prepare(
     declarations: &[fpas_parser::Decl],
     interfaces: &[fpas_unit::interface::UnitInterface],
 ) -> Result<(), CompileError> {
+    types.errors.imported_equality = fpas_unit::equality::EqualityDeclarations::new(
+        interfaces
+            .iter()
+            .flat_map(|interface| &interface.errors.equality_declarations)
+            .cloned(),
+    )
+    .map_err(error)?
+    .into_declarations();
     for schema in interfaces
         .iter()
         .flat_map(|interface| &interface.errors.schemas)

@@ -14,9 +14,14 @@ impl Checker {
     fn type_may_hold_task(&self, ty: &Ty, seen: &mut HashSet<String>) -> bool {
         match ty {
             Ty::Task(_) | Ty::Function(_) | Ty::Procedure(_) => true,
-            Ty::GenericParam(_, Some(TypeConstraint::Numeric | TypeConstraint::Comparable)) => {
-                false
-            }
+            Ty::GenericParam(
+                _,
+                Some(
+                    TypeConstraint::Numeric
+                    | TypeConstraint::Comparable
+                    | TypeConstraint::Equatable,
+                ),
+            ) => false,
             Ty::GenericParam(..) => true,
             Ty::Channel(inner) if inner.is_error() => true,
             Ty::Array(inner) | Ty::Channel(inner) | Ty::Option(inner) => {

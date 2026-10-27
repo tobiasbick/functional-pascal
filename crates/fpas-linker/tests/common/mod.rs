@@ -41,6 +41,7 @@ pub fn function(name: &str) -> ObjectFunction {
 
 pub fn unit(public: bool) -> RelocatableObject {
     RelocatableObject {
+        equality_declarations: Vec::new(),
         error_schemas: Vec::new(),
         version: OBJECT_VERSION,
         owner: "library.unit".to_string(),
@@ -80,6 +81,7 @@ pub fn program() -> RelocatableObject {
         .expect("call")
         .word();
     RelocatableObject {
+        equality_declarations: Vec::new(),
         error_schemas: Vec::new(),
         version: OBJECT_VERSION,
         owner: "demo".to_string(),

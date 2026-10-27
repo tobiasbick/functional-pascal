@@ -96,6 +96,9 @@ impl UnitInterface {
     #[must_use]
     pub fn canonicalized(mut self) -> Self {
         self.errors
+            .equality_declarations
+            .sort_by(|left, right| left.identity.cmp(&right.identity));
+        self.errors
             .schemas
             .sort_by(|left, right| left.declaration.cmp(&right.declaration));
         self.errors

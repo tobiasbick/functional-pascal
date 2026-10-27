@@ -103,14 +103,22 @@ layouts, source maps, and the entry function before the VM can execute the image
 ## Format validation
 
 The sectioned envelope uses program format version 23 and register-bytecode version 28.
-Relocatable unit objects use schema version 17 and compiled-unit envelopes use
-version 22. Error layouts retain complete nominal instance keys, literal labels,
+Relocatable unit objects use schema version 18 and compiled-unit envelopes use
+version 24. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
 debugger information. Keys retain all generic arguments; ordinary enum layouts keep
 their existing erasure. Bounded postfix type identities avoid recursive wire decoding.
 
 Unit objects retain error declaration schemas, their source provenance and hidden
-generic constructor requirements. Linking resolves concrete requests to shared
+generic constructor requirements. Equality-constrained error arguments use bounded nominal
+field declarations retained independently of debugger metadata. Their identities
+keep declaration names and arguments; equality does not become part of identity.
+Interfaces carry these field declarations with hidden constructor requirements,
+including private generic types used inside exported routines. Importing and
+forwarding those requirements preserves the evidence without exposing private
+source symbols. Field evidence participates in the interface fingerprint.
+Linking checks structural eligibility, missing declarations and conflicting
+copies before instantiation. Linking resolves concrete requests to shared
 noncapturing functions using the existing instruction set. Error values reuse shared
 enum storage. A shared expansion budget rejects amplified schemas before copying
 their fields or labels. Error values use

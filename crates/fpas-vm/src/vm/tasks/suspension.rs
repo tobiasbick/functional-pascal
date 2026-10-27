@@ -6,7 +6,7 @@ mod clock_tests;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-use fpas_bytecode::{Register, Value};
+use fpas_bytecode::{Register, SourceLocation, Value};
 
 enum TaskClockMode {
     Realtime(Instant),
@@ -74,6 +74,12 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::vm) enum TaskSuspension {
+    /// Debugger terminal input waits without running a polling loop in FPAS.
+    ConsoleRead {
+        deadline_millis: u64,
+        destination: Option<Register>,
+        location: SourceLocation,
+    },
     /// Debugger-owned socket I/O retains native data only and joins on abandonment.
     Net(Box<crate::vm::hosted::net::wait::Wait>),
     /// Native ACP wait state containing no FPAS values or callback-owned roots.
@@ -197,6 +203,9 @@ impl TaskSuspension {
             | Self::ChannelSend { .. }
             | Self::ChannelReceive { .. } => TaskSuspensionState::Waiting,
             Self::ChannelSendTimeout {
+                deadline_millis, ..
+            }
+            | Self::ConsoleRead {
                 deadline_millis, ..
             }
             | Self::ChannelReceiveTimeout {

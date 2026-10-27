@@ -13,6 +13,7 @@ mod args;
 pub(super) mod callbacks;
 mod console;
 mod console_args;
+mod console_wait;
 mod crypto;
 mod fs;
 mod http_handles;

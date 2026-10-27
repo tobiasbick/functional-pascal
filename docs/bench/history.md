@@ -14,6 +14,22 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-26 — Debugger console waits: ordinary TUI controls
+
+- Group: `tui`
+- Suite: [`suite.toml`](suite.toml)
+- Paired unprofiled DAP console runs are recorded separately in the
+  [debugger runtime report](debugger-runtime.md#timed-terminal-input-2026-10-26).
+  F2-route medians fall from 2678 to 1646 ms at 80x24 and from 5816 to 3603 ms
+  at 144x45, reductions of 38.5% and 38.1%.
+- The rows below are ordinary-execution controls, not attributed debugger gains.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| tui_headless | 1414 | throughput: 353 frames/s |
+| notes_headless | 2641 | throughput: 94 frames/s |
+| tui_styled_cells | 341 | - |
+
 ## 2026-10-24 — Bounded debugger root publication
 
 - Scope: paired local DAP gameplay measurements, separate from the configured

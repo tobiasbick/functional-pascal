@@ -3,8 +3,8 @@
 mod unary;
 
 use fpas_bytecode::{
-    AbcOperands, Intrinsic, IntrinsicOwner, NO_REGISTER, NetIntrinsic, Register, SourceLocation,
-    Value,
+    AbcOperands, ConsoleIntrinsic, Intrinsic, IntrinsicOwner, NO_REGISTER, NetIntrinsic, Register,
+    SourceLocation, Value,
 };
 
 use super::scalar::register;
@@ -44,6 +44,18 @@ impl Worker {
         let destination = (operands.a != NO_REGISTER)
             .then(|| register(operands.a))
             .transpose()?;
+        if self.debug_tasks
+            && INLINE_CALLBACKS
+            && intrinsic == Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout)
+        {
+            let arguments = self.registers[start..end].to_vec();
+            if let Some(value) = self.debug_console_wait(&arguments, destination, location)?
+                && let Some(destination) = destination
+            {
+                self.write(destination, value)?;
+            }
+            return Ok(());
+        }
         if self.debug_tasks
             && INLINE_CALLBACKS
             && let Intrinsic::Net(operation) = intrinsic

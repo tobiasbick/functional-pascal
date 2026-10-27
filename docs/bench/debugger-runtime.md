@@ -1,4 +1,4 @@
-# Debugger execution with retained task roots
+# Debugger runtime
 
 The debugger still schedules one instruction at a time. Source, function and data
 breakpoints, tracing, pause and execution limits keep their instruction boundaries.
@@ -106,3 +106,54 @@ the release binary by SHA-256. All 161 game test programs pass with that
 distribution, and a final owned server/client DAP run confirms eight accepted
 steps and normal shutdown. That final smoke runs alongside the game tests and
 is not included in the paired timing results above.
+
+## Timed terminal input, 2026-10-26
+
+An empty `Std.Console.ReadEventTimeout(50)` returned immediately in the debugger's
+queue-only terminal. The TUI input pump therefore repeatedly polled and yielded
+while the all-stop scheduler walked the rendering task one instruction at a time.
+Positive timed reads now suspend the calling task until an event or deadline.
+Polling and result delivery remain on the VM thread, with ordinary task
+cancellation and no additional native thread. Zero-timeout reads stay immediate.
+
+The workload is Into the Dungeon's server console at game commit
+`c2e3da6e929e1ff96ecf602dd5c3ca956296f110`. The baseline executable is the installed
+FPAS distribution at `7c6e886ccdd2db3a8b761b3988d4d628d0fe2c76`, copied unchanged
+before rebuilding. Both release runtimes use the same server sources and source
+standard library, including the earlier fix that selects due ticks alongside input.
+Each run owns a fresh data root and loopback listener; no agent is queried.
+
+A local FPAS controller adapted from the game's `Acceptance.Dap` times F2 followed
+by an unbound Ctrl+G marker. Timing starts at the listening view breakpoint and
+ends after reading the completed settings view. It includes finishing the pending
+dashboard frame, opening and painting settings, routing the marker, protocol
+requests, inspection and controller file polling. Compilation and listener startup
+are outside this timer. Every run asserts `SettingsOpen = true`, reaches its marker
+without a forced pause, disconnects and waits for its owned server process to exit.
+
+Three old/new pairs alternate at each virtual terminal size. No build, test suite
+or profiler runs during these measurements; neither debugger nor controller has
+profiling enabled. The initial standalone measurements varied more, so this table
+uses only the later paired runs under matching conditions.
+
+| Pair | 80x24 before (ms) | 80x24 after (ms) | 144x45 before (ms) | 144x45 after (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 2677 | 1646 | 5812 | 3601 |
+| 2 | 2778 | 1653 | 5816 | 3603 |
+| 3 | 2678 | 1635 | 5825 | 3618 |
+| Median | 2678 | 1646 | 5816 | 3603 |
+
+The medians fall by 38.5% and 38.1%. Larger surfaces still take longer; these
+measurements describe this console route rather than arbitrary TUI applications.
+
+The existing `tui` benchmark group checks ordinary execution separately. Its
+headless renderer, Notes and styled-cell rows changed from 1694/2867/355 ms to
+1427/2690/344 ms, with unchanged IDs and arguments. None regressed. These ordinary
+controls do not establish a native-execution gain from the debugger-only repair.
+The [history](history.md) records a separate settled control run.
+
+The timeout regression failed before the repair: the read completed before its
+deadline and before a peer task. It passes afterward, together with delayed event
+delivery, a subsequent zero-timeout poll and cancellation during scope return.
+The full Rust workspace passes, including 932 VM tests with three ignored; regular
+and release builds and VM Clippy with all targets and warnings denied also pass.

@@ -27,6 +27,11 @@ end if;
 - **Returns:** `Some(E)` if an event arrived within the timeout; `None` otherwise.
 - **Live terminal input:** call `EnableRawMode()` to poll the live terminal. Queued or buffered events, including injected test events, are returned before raw-mode state is checked.
 
+In a debugger session, a positive timeout with no queued event suspends the
+calling task until input arrives or the deadline expires. Other tasks continue
+to run, and cancellation or a debugger pause remains available. A zero timeout
+still returns immediately.
+
 Terminal key-release notifications are not FPAS events. When one arrives, the
 runtime continues waiting with the remaining deadline instead of returning
 `None`. An immediately ready key press is still returned when the remaining

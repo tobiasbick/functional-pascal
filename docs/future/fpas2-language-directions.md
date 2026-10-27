@@ -163,24 +163,88 @@ necessary. Until a replacement is agreed, retrieve once and pass the value on.
 
 ## 5. Scope-bound cleanup actions
 
+Status: preferred syntax proposal; behavior and implementation remain open.
+
 Tasks already have [lexical ownership and cleanup](../pascal/language/concurrency/README.md).
 Other resources still have explicit close operations; for example, callers must
 [close an HTTP body stream](../pascal/std/network/http.md#streaming-responses)
 when abandoning a response early. Adding a return or failed `try` can otherwise
 leave application cleanup missing from an exit path.
 
-Consider one explicit cleanup-registration construct inspired by
-[Go's defer](https://go.dev/doc/effective_go#defer), placing cleanup beside resource
-acquisition. Go attaches deferred calls to the enclosing function; decide whether
-FPAS should attach them to a lexical block or a routine before selecting syntax.
-Reuse the existing task ownership and failure rules when the constructs interact.
+### Preferred syntax
 
-Open questions: ownership and registration lifetime, argument evaluation and
-capture timing, reverse registration order, captured `var` storage, repeated
-registration in loops, and behavior on return, break, continue, failed `try`,
-cancellation and panic. Define cleanup-error handling, precedence over an
-existing failure, and ordering relative to postconditions and task joins.
-Cooperative cleanup must not imply a hard shutdown deadline.
+The preferred form attaches an indented `finally` section to an explicit
+`begin ... end` block and closes it with `end finally;`. It follows FPAS's named
+closers and is inspired by Pascal cleanup blocks and Ada's scope-bound resource
+management. This is a proposal, not implemented syntax or an approval to implement.
+The existing `try` expression continues to propagate Result/Option failures.
+
+```pascal
+uses Std.Fs as Fs;
+
+function ReadFirstLine(Path: string): result of (option of string, Fs.FsError);
+begin
+  const File := try Fs.Open(Path, Fs.FileMode.Read);
+
+  begin
+    return Fs.ReadLine(File);
+
+    finally
+      discard Fs.Close(File);
+    end finally;
+  end;
+end function;
+```
+
+The proposed `finally` section belongs to its surrounding block rather than
+being an ordinary statement after `return`. It runs when that block is left,
+including by `return` or a failed `try`. If opening the file fails before the
+block is entered, there is no close action. The explicit `discard` in this example
+deliberately ignores a possible close error; it is not a general error policy.
+
+Nested blocks can close resources in the reverse order of acquisition:
+
+```pascal
+function CopyChunk(SourcePath: string; TargetPath: string): result of (integer, Fs.FsError);
+begin
+  const Source := try Fs.Open(SourcePath, Fs.FileMode.Read);
+
+  begin
+    const Target := try Fs.Open(TargetPath, Fs.FileMode.Create);
+
+    begin
+      const Bytes := try Fs.Read(Source, 4096);
+      const Written := try Fs.Write(Target, Bytes);
+      return Ok(Written);
+
+      finally
+        discard Fs.Close(Target);
+      end finally;
+    end;
+
+    finally
+      discard Fs.Close(Source);
+    end finally;
+  end;
+end function;
+```
+
+If opening `Target` fails, the outer block still closes `Source`. This example
+writes one chunk and returns the number of bytes actually written; partial writes
+remain possible. The proposal concerns explicit resource cleanup and does not
+make the existing task `scope` automatically close file handles.
+
+### Open questions and evaluation
+
+Define visibility and initialization of values used in `finally`, and whether
+the form is allowed on every block or also directly on routines and task scopes.
+Specify exit behavior for normal completion, `return`, failed `try`, `break`,
+`continue`, cancellation and `panic`; nested blocks and loop iterations need
+clear lifetimes. Define which control transfers are permitted inside cleanup,
+cleanup failure handling and precedence over an existing failure, and ordering
+relative to postconditions and task joins. Cooperative cleanup must not imply
+a hard shutdown deadline. Go-style function-level `defer` remains an alternative,
+not the selected form.
 
 Evaluation should cover real resource consumers, nested cleanup, every supported
 exit path, multiple cleanup failures and interactions with task cancellation.

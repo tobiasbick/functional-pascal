@@ -382,39 +382,63 @@ application consistent; existing task ownership and cleanup rules must still hol
 
 ## 13. Managed host processes and interactive pipes
 
-[Std.Proc](../pascal/std/host/proc.md) starts external programs and waits for
-completion. It does not expose live process handles, interactive stdin/stdout/
-stderr pipes, per-process environment or working-directory settings, timeouts or
-process-tree termination. Running a process call in go still occupies its worker.
+Status: core process management and interactive pipes are implemented. Selectable
+waits, scope-bound cleanup and native-buffer payloads remain separate proposals.
 
-Consider managed process handles with separate start, status observation and wait
-operations, incremental pipe I/O, bounded capture and explicit stop policies.
-Include working-directory and environment settings per launch. This would support
-long-running command-line tools, stdio protocol servers and independently
-terminable FPAS worker processes. Prefer a bundled Rust-backed implementation
-integrated with existing task ownership, cancellation and error handling.
+[Std.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
+environment overrides, supplied stdin, bounded stdout/stderr capture, timeouts
+and cancellation through its options APIs. Those calls supervise the owned
+process tree, reap the child and finish pipe cleanup before returning. Unix
+process-group and Windows Job Object ownership and their limits are documented
+in the [options contract](../pascal/std/host/proc.md#calls-with-options).
 
-Open questions: process ownership, pipe and binary-buffer types, EOF and stdin
-closure, exit-status representation, repeated waits, output limits, and cleanup
-when an owning task exits. Define cancellation, grace periods, termination
-requests, confirmed exit and child-process reaping separately. Process-tree
-handling and platform differences need an explicit contract.
+[Interactive process handles](../pascal/std/host/proc.md#interactive-processes)
+provide `Start`, `ReadStdout`, `ReadStderr`, `WriteStdin`, `CloseStdin`, `TryWait`,
+`TryWaitStatus`, `Terminate` and `Close`. Pipe operations probe pending/data/EOF
+or partial-write progress; status observation is repeatable and does not consume
+the pipes or handle. `ProcessExitStatus` preserves native exit codes and Unix
+signal information. `RunInteractive` uses an explicitly provided host terminal
+with timeout, cancellation and process cleanup.
 
-Use the shared [binary-buffer design](#22-packed-numeric-data-and-binary-buffers)
-for pipe payloads rather than defining a process-specific byte representation.
+Handles are VM-owned and aliases share the same child and close state. Callers
+close completed handles explicitly; VM teardown releases remaining children and
+pipes. A lexical task scope is not a general process-handle close scope. Blocking
+Run calls still occupy their executing thread. Interactive callers currently
+compose polling, deadlines and cancellation around the probe API.
 
-Evaluation should cover interactive request/reply, simultaneous stdout/stderr
-draining, full pipes, output limits, launch failure, nonzero exit, cancellation,
-timeout and process-tree cleanup. Include an FPAS worker process without requiring
-general in-process task termination.
+Remaining work belongs to [worker-releasing host I/O](#14-host-io-that-releases-vm-workers),
+[scope-bound cleanup](#5-scope-bound-cleanup-actions), and any selected readiness
+integration with [host events](#25-native-event-loops-and-selectable-host-events).
+Pipe payloads currently use bounded `array of integer` bytes. Coordinate a future
+change with the shared [native-buffer design](#22-packed-numeric-data-and-binary-buffers).
+Further stop/grace-period policies require their own scope decision.
+
+Existing regression coverage includes configuration validation, interactive and
+captured I/O, partial progress, EOF, repeated status observation, timeout,
+cancellation, output limits and owned process cleanup. Future wait integration
+must additionally demonstrate progress without retaining a VM worker and preserve
+those lifecycle contracts.
 
 ## 14. Host I/O that releases VM workers
 
+Status: partially implemented for selected hosted operations. General
+worker-releasing network, process and filesystem I/O remains open.
+
 [Task waits and channels](../pascal/std/concurrency/task.md#waiting-and-execution)
-already suspend a task and release its pool thread. Process execution and other
-host I/O can still occupy workers; even
-[cancellable network I/O](../pascal/std/network/net.md) polls while retaining its
-VM worker. Enough pending host calls can therefore occupy the available pool.
+already suspend a task and release its pool thread. Selected ACP/MCP receive,
+serve, publication and cleanup waits also retain suspension state rather than
+occupying a pool worker. Synchronous hosted callbacks can suspend with their
+owner task and resume their partially completed operation.
+
+The all-stop debugger suspends socket accept/read/write operations, including
+their cancellable forms, while native jobs perform the I/O. This keeps the
+debugger scheduler available; it does not make ordinary pool socket calls
+worker-releasing. [Network I/O](../pascal/std/network/net.md), blocking
+[process calls](../pascal/std/host/proc.md#blocking-and-concurrency) and
+[regular-file operations](../pascal/std/host/fs-streams.md) can still occupy their
+executing thread. Interactive process pipe probes return pending status instead
+of waiting, but provide no selectable readiness source. Enough pending blocking
+host calls can still occupy the available pool.
 
 Consider integrating pending network, pipe and process operations with task
 suspension so waiting does not retain a VM worker. Assess filesystem and native
@@ -561,6 +585,9 @@ actions and shutdown. Include background-message integration and two independent
 application instances.
 
 ## 20. Selective TUI updates
+
+Status: tree comparison, layout reuse and damaged-row painting are implemented.
+Explicit dependencies, selectors and cached subview construction remain open.
 
 The [TUI host](../pascal/std/tui/application.md#headless-frame-and-routing-order)
 calls View for each render request, compares the resulting immutable tree with
@@ -903,36 +930,47 @@ chosen platforms before claiming a performance or latency improvement.
 
 ## 26. File handles and random-access file I/O
 
-Status: open proposal; no handle type, open modes or byte API is agreed.
+Status: partially implemented. Regular-file handles, incremental binary and
+UTF-8 line I/O, seek/tell, flush and close are available. Remaining extensions
+are listed below rather than treating the delivered file API as missing.
 
-`Std.Fs` reads and writes whole files only. Turbo Pascal programs used
-`Assign`/`Reset`/`Rewrite`/`Append`, `Seek`, `FilePos`, `FileSize`, `Eof`,
-`BlockRead`/`BlockWrite`, `Truncate`, `Flush` and `Close` for large files, logs,
-record files and binary formats. FPAS has no equivalent: a 64 MiB text file
-cannot be processed line by line, and no file can be read or written at an offset.
+[Std.Fs file streaming](../pascal/std/host/fs-streams.md) provides the opaque
+`File` handle and `Open` modes `Read`, `Create`, `Append` and `ReadWrite`.
+`Create` truncates on opening. `Read`, `Write`, `ReadLine`, `Seek`, `Tell`,
+`Flush` and `Close` operate on the handle; read, write and line-read operations
+also have cancellation-aware forms. Opening returns a handle directly, without
+an `Assign` step. Whole-file `ReadBytes` and `WriteBytes` are also implemented.
 
-Consider one opaque handle type in `Std.Fs` with an explicit open mode
-(read, write, read-write, append; create, truncate or require existing), plus
-`Seek`, `Position`, `Size`, `AtEnd`, `ReadLine`, `WriteText`, byte block reads and
-writes, `Truncate`, `Flush` and `Close`. Byte operations depend on the canonical
-byte representation from [packed numeric data and binary buffers](#22-packed-numeric-data-and-binary-buffers);
-whole-file `ReadBytes` and `WriteBytes` should land with the same design.
-Keep `Assign` out: opening returns a handle in one step.
+Byte I/O uses bounded `array of integer` values in `0..255`; nonempty short reads
+and partial writes are valid. EOF is represented by an empty byte read or `None`
+from `ReadLine`. Line reads distinguish blank lines, LF/CRLF, a final unterminated
+line and invalid UTF-8. Positions and seeks are byte-based and account for
+buffered lookahead when mixing line and binary operations. Files larger than the
+whole-file read limits can be processed incrementally within per-call limits.
 
-Open questions: who closes a handle and when (explicit `Close`,
-[scope-bound cleanup](#5-scope-bound-cleanup-actions) or both); behavior after
-close; sharing a handle between tasks; positions as byte offsets versus
-character positions for text; line-ending and UTF-8 boundary handling for
-`ReadLine` and `Seek`; buffering and flush-on-close; Windows sharing modes;
-[worker-releasing host I/O](#14-host-io-that-releases-vm-workers); and
-[typed operational errors](#1-typed-operational-errors) for end of file,
-missing files and permission failures. Typed record files (`file of T`) need a
-fixed layout and are out of scope until packed records are decided.
+Aliases share the logical position and close state, and operations on one handle
+are serialized. Explicit `Close` invalidates every alias; later operations return
+typed `FsError.Closed` failures. VM teardown releases remaining files. Task scopes
+do not close file handles, and cooperative cancellation cannot interrupt every
+blocking OS call. These are established contracts, not open design questions.
 
-Evaluation should cover streaming a file larger than the `ReadText` limit,
-random reads and in-place updates at offsets, append from several tasks,
-truncate and extend, use after close, partial reads at end of file, and
-handle leaks on early `return` and panics.
+Remaining proposals: querying size through an open handle, changing its length
+with truncation/extension, handle-based text-write conveniences and explicit
+platform sharing/locking options. `FileSize(Path)` already queries a regular
+file's size by path. Decide whether a separate `AtEnd` convenience adds value
+over existing EOF results; no such handle operation is implemented.
+
+Coordinate native-buffer payloads with
+[packed data](#22-packed-numeric-data-and-binary-buffers), automatic lexical
+release with [scope-bound cleanup](#5-scope-bound-cleanup-actions), and releasing
+workers during file I/O with [host I/O](#14-host-io-that-releases-vm-workers).
+Typed record files (`file of T`) remain outside the delivered API and need a
+separate fixed-layout decision.
+
+Existing regression coverage includes modes, resource limits, byte/line mixing,
+seek/tell, partial reads, line limits, invalid UTF-8, cancellation, alias close,
+concurrent handle access and VM cleanup. Evaluate remaining extensions against
+those contracts, including length changes and early-exit resource cleanup.
 
 ## Other deferred scope
 

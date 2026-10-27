@@ -1,0 +1,109 @@
+program TuiIncrementalRenderTest;
+
+uses Std.Console as Console, Std.Test as Test, Std.Tui as Tui;
+
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  return State;
+end function;
+
+function View(State: integer): Tui.TuiElement;
+begin
+  var Text := 'A界';
+  if State mod 2 = 1 then
+    Text := '界A';
+  end if;
+
+  if State = 2 then
+    Text := 'longer é text';
+  end if;
+
+  if State = 3 then
+    Text := 'x';
+  end if;
+  const RootId := Tui.TuiMenuNodeId.Create(1);
+  const Nodes := [
+    Tui.TuiMenuNodeBuilders.Submenu(RootId, None, 'File', 'F'),
+    Tui.TuiMenuNodeBuilders.CommandWithShortcut(
+      Tui.TuiMenuNodeId.Create(2), Some(RootId),
+      'Open', 'O', Tui.TuiAction.Create(20),
+      Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')
+    )
+  ];
+  var Menu := Tui.TuiMenuState.Closed();
+  if (State = 4) or (State = 5) then
+    Menu := Tui.TuiMenuState.OpenAt(RootId);
+  end if;
+  const Title := if State mod 2 = 0 then 'Frame' else 'Other' end if;
+  var Children := [
+    Tui.TuiElementBuilders.MakePanel(
+      Title, [
+        Tui.TuiElementBuilders.MakeColumn([
+          Tui.TuiElementBuilders.MakeMenu(
+            Tui.TuiControlId.Create(9),
+            Nodes,
+            Menu,
+            Tui.TuiAction.Create(9)
+          ),
+          Tui.TuiElementBuilders.MakeLabel(Text),
+          Tui.TuiElementBuilders.MakeCheckBox(
+            Tui.TuiControlId.Create(1),
+            'Check',
+            State mod 2 = 1,
+            Tui.TuiAction.Create(1)
+          ),
+          Tui.TuiElementBuilders.MakeGauge('Value', State mod 4, 4),
+          Tui.TuiElementBuilders.MakeLabel('background ' + Text)
+        ])
+      ]
+    )
+  ];
+  if (State >= 6) and (State <= 8) then
+    Children.PushInPlace(
+      Tui.TuiElementBuilders.MakeOverlay(
+        'Modal', [
+          Tui.TuiElementBuilders.MakeLabel('opaque')
+        ]
+      )
+    );
+  end if;
+  var Focus: option of Tui.TuiControlId := None;
+  if State = 10 then
+    Focus := Some(Tui.TuiControlId.Create(1));
+  end if;
+
+  return Tui.TuiElementBuilders.MakeDesktop(Focus, Children);
+end function;
+
+procedure AssertSame(Left: Tui.TuiSurfaceSnapshot; Right: Tui.TuiSurfaceSnapshot);
+begin
+  Test.AssertEquals(Left.Width, Right.Width);
+  Test.AssertEquals(Left.Height, Right.Height);
+  for I: integer := 0 to Left.Cells.Length() - 1 do
+    Test.AssertTrue(Left.Cells[I] = Right.Cells[I]);
+  end for;
+end procedure;
+
+begin
+  const Size := Tui.TuiSize.Create(24, 9);
+  const Cached := Tui.TuiApplication.OpenForTest(Size);
+  for State: integer := 0 to 11 do
+    discard Cached.RunIterations(State, Update, View, 0, 0);
+    const Fresh := Tui.TuiApplication.OpenForTest(Size);
+    discard Fresh.RunIterations(State, Update, View, 0, 0);
+    AssertSame(Fresh.SurfaceSnapshot(), Cached.SurfaceSnapshot());
+    Fresh.Close();
+  end for;
+
+  for Extent: Tui.TuiSize in [Size, Tui.TuiSize.Create(12, 5), Tui.TuiSize.Create(0, 0), Size] do
+    Cached.InjectResizeForTest(Extent);
+    discard Cached.RunIterations(11, Update, View, 1, 0);
+    const Fresh := Tui.TuiApplication.OpenForTest(Extent);
+    discard Fresh.RunIterations(11, Update, View, 0, 0);
+    AssertSame(Fresh.SurfaceSnapshot(), Cached.SurfaceSnapshot());
+    Fresh.Close();
+  end for;
+  const Saved := Cached.SurfaceSnapshot();
+  Cached.Close();
+  AssertSame(Saved, Cached.SurfaceSnapshot());
+end.

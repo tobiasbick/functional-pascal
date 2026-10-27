@@ -41,74 +41,6 @@ remaining hot paths:
 `ArrayPush` is an internal IR and bytecode optimization. Source-visible
 `Items.PushInPlace(Value)` behavior, including copy-on-write aliasing, is unchanged.
 
-## Profile evidence
-
-Process-scoped sampling profiles used a release Windows `fpas.exe` with Rust debug information. The
-profiled commands executed the production `fpas run` path for
-`integer_loop_benchmark.fpas -- 50000000` and `function_call_benchmark.fpas -- 30000000`.
-Absolute profiler-run timings were not used for acceptance because other desktop load was present;
-the sample proportions below describe only the profiled FPAS process.
-
-For the integer loop, 8,319 main-thread samples showed:
-
-| stack | self | inclusive | interpretation |
-|---|---:|---:|---|
-| `Worker::dispatch_one` | 41.44% | 93.65% | packed decode and opcode dispatch dominate the loop |
-| `Worker::execute_binary_integer` | 20.83% | 22.30% | integer helper and result handling remain material |
-| `Worker::execute_divide_integer` | 7.54% | 8.47% | benchmark arithmetic includes division |
-| integer comparison | 7.09% | 7.46% | loop control remains visible |
-| `Value::clone` | 5.61% | below top inclusive rows | value movement is still measurable |
-
-For the call workload, 10,367 main-thread samples taken before reusable register storage showed:
-
-| stack | self | inclusive | interpretation |
-|---|---:|---:|---|
-| `Worker::dispatch_one` | 32.60% | 94.55% | call and callee instructions share the dispatch cost |
-| `Value::clone` | 14.19% | below top inclusive rows | argument and result values still require value semantics |
-| `Vec<Value>::extend_with` | 11.10% | 16.18% | repeated callee frame growth was still material |
-| `Worker::execute_binary_integer` | 10.08% | below top inclusive rows | the called function performs integer work |
-| `Worker::enter_call` | 2.36% | 23.79% | frame preparation is the dominant call-specific stack |
-| `Vec<Value>::resize` | 3.30% | 19.52% | frame initialization remained visible after removing temporary argument vectors |
-
-The profiles supported the accepted decode, register-move, argument-window, callback reuse, and
-copy-on-write changes. The later reusable-register-storage change addressed the observed frame-growth
-cost as a separately measured follow-up.
-
-The profile-driven copy-window change removes the unused register from one-argument call frames.
-Three loaded-host spot checks moved the `function_call` median from 930 ms to 851 ms, an 8.5%
-reduction. Those spot checks cover that implementation step only; the quiet full-suite medians
-below are the acceptance measurements.
-
-### TUI follow-up profile
-
-The current `tui_headless` workload was sampled again after the global-index-path and reusable
-register-storage changes. A process-scoped, main-thread release profile executed the unchanged
-`headless_render_benchmark.fpas -- 500` workload in 3,458 ms, or 144 frames/s. Its most useful stacks
-were:
-
-| stack | self | inclusive | interpretation |
-|---|---:|---:|---|
-| `Worker::dispatch_one` | 28.22% | 93.65% | bytecode dispatch remains the broad runtime cost |
-| `Value` drop glue | 14.27% | 14.30% | releasing aggregate-rich temporary values is now a primary cost |
-| numeric hosted calls | 5.13% | 16.24% | TUI geometry and layout execute many numeric calls |
-| synchronous callback calls | 4.55% | 5.27% | higher-order array operations retain visible callback overhead |
-| aggregate-window iteration | 4.05% | below top inclusive rows | aggregate traversal remains material |
-| aggregate-window collection | 2.93% | 8.81% | building result aggregates remains material |
-
-Optimized symbol ranges merge some neighboring functions, so smaller symbol-labelled rows are not
-used as exact source attribution. The important negative result is reliable: neither
-`Vec<Value>::resize` nor `Vec<Value>::extend_with` remains in the leading stacks, whereas they were
-19.52% and 16.18% inclusive in the earlier call profile. Reusable register storage removed that
-identified bottleneck.
-
-A separate public-API microbenchmark rebuilt the same 43-element view tree 500 times after 50
-warm-up iterations. Three runs took 12 ms, 12 ms, and 11 ms. View construction is therefore below
-0.4% of the complete 3,458 ms render workload and is not the remaining TUI bottleneck. Validation,
-arrangement, and paint are internal `Std.Tui` units and are intentionally not exported for direct
-source-level timing. The native profile instead points to dispatch, value destruction, numeric and
-callback calls, and aggregate traversal as the next areas to investigate; this record makes no new
-optimization claim for them.
-
 ## Benchmark method
 
 The committed suite and workload arguments were unchanged. The baseline is the complete
@@ -157,8 +89,7 @@ code 0. The quiet three-run medians pass every mandatory numerical gate without 
 reduced threshold.
 
 No benchmark source, iteration count, correctness check, or suite argument was weakened to obtain a
-gain. The settled snapshot is also recorded in [Benchmark history](history.md) with the title
-`quiet portable register VM acceptance`.
+gain.
 
 ## Windows verification
 

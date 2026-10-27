@@ -11,13 +11,11 @@ uses
 
 procedure TuiLoopRender(ApplicationId: integer; Tree: Element.TuiElement; Present: boolean);
 begin
-  Frame.TuiRenderFrame(
-    ApplicationState.TuiAppSurfaces[ApplicationId - 1], ApplicationState.TuiAppFrames[
-      ApplicationId -
-      1
-    ], Tree, Pointer.TuiPointerRoutingPressed(ApplicationId)
+  const Slot := ApplicationId - 1;
+  ApplicationState.TuiAppRenderStates[Slot] := Frame.TuiRenderFrame(
+    ApplicationState.TuiAppSurfaces[Slot], ApplicationState.TuiAppRenderStates[Slot],
+    Tree, Pointer.TuiPointerRoutingPressed(ApplicationId)
   );
-  ApplicationState.TuiAppTrees[ApplicationId - 1] := Tree;
   if Present then
     begin
       TerminalRenderer.TuiFlushSurface(

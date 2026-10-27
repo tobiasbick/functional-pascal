@@ -1,0 +1,48 @@
+program TuiIncrementalCellGridTest;
+
+uses Std.Test as Test, Std.Tui as Tui;
+
+function Update(State: Tui.TuiCellGrid; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiCellGrid;
+begin
+  return State;
+end function;
+
+function View(State: Tui.TuiCellGrid): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeCellGrid(State);
+end function;
+
+begin
+  var Grid := Tui.TuiCellGrid.Create(
+    8,
+    4,
+    array.Fill(Tui.TuiCell.Create('#', Tui.TuiStyleRole.Normal), 32)
+  );
+  const Size := Tui.TuiSize.Create(10, 5);
+  const Cached := Tui.TuiApplication.OpenForTest(Size);
+  for Phase: integer := 0 to 5 do
+    const Cell := if Phase mod 2 = 0 then Tui.TuiCell.Create('界', Tui.TuiStyleRole.Accent)
+      else Tui.TuiCell.Create('x', Tui.TuiStyleRole.Selected)
+      end if;
+    Grid.Cells[9] := Cell;
+    Grid.Cells[25] := Cell;
+    Grid.Cells[12] := Tui.TuiCell.Styled(
+      '#', Tui.TuiStyle.FromColors(
+        Tui.TuiColor.FromRgb(Phase, 20, 30), Tui.TuiColor.FromRgb(0, 0, 0)
+      )
+    );
+    discard Cached.RunIterations(Grid, Update, View, 0, 0);
+    const Fresh := Tui.TuiApplication.OpenForTest(Size);
+    discard Fresh.RunIterations(Grid, Update, View, 0, 0);
+    const Expected := Fresh.SurfaceSnapshot();
+    const Actual := Cached.SurfaceSnapshot();
+    for I: integer := 0 to Expected.Cells.Length() - 1 do
+      Test.AssertTrue(Expected.Cells[I] = Actual.Cells[I]);
+    end for;
+
+    Fresh.Close();
+    Test.AssertEquals('#', Actual.CellAt(0, 0).Glyph);
+  end for;
+
+  Cached.Close();
+end.

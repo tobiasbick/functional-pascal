@@ -10,6 +10,8 @@ public type TuiArrangedEntry = record
   public Bounds: Rect.TuiRect;
   // Clipping rectangle in surface coordinates.
   public Clip: Rect.TuiRect;
+  // First preorder entry after this node and all its descendants.
+  public SubtreeEnd: integer;
 end record;
 
 var TuiFrameEntries: array of array of TuiArrangedEntry := [];
@@ -49,32 +51,6 @@ public type TuiArrangedFrame = record
     TuiFrameEntries[Slot - 1] := Empty;
   end procedure;
 
-  // Appends one preorder entry and returns its index.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  // - `ParentIndex`: Index of the parent arranged entry.
-  // - `Bounds`: Rectangle affected by the operation.
-  // - `Clip`: Clipping rectangle for drawing.
-  public function Push(
-    Self: TuiArrangedFrame;
-    ParentIndex: integer;
-    Bounds: Rect.TuiRect;
-    Clip: Rect.TuiRect
-  ): integer;
-  begin
-    const Slot: integer := TuiFrameRequire(Self.Slot);
-    var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
-    const Index: integer := Entries.Length();
-    TuiFrameEntries[Slot - 1] := [];
-    Entries.PushInPlace(
-      TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip)
-    );
-    TuiFrameEntries[Slot - 1] := Entries;
-    return Index;
-  end function;
-
-  // Drop the shared slot handle before Push so copy-on-write stays unique.
   // Replaces every entry atomically after a successful arrange pass.
   //
   // Parameters:

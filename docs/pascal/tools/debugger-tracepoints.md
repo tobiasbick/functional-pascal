@@ -357,7 +357,7 @@ and invocations without tracing:
 | Field | Meaning |
 | --- | --- |
 | `trace.requested` | Ordered selectors; successful binding deduplicates equivalent requests. Setup failures retain available raw requests. |
-| `trace.watches` | Zero-based `id`, first `request`, canonical `name`, `identity` and declared `type`. Global identity has `global_slot`, `field_slots`; local identity has `function_id`, `binding_id`, `scope_id`, `kind` (`local`, `parameter` or `capture`), plus `field_slots` for selected fields (omitted for a scalar root). Indexed selectors additionally have the full `path`; their legacy field slots are empty/omitted. |
+| `trace.watches` | Zero-based `id`, first `request`, canonical `name`, `identity` and declared `type`. Global identity has `global_slot`, `field_slots`; local identity has `function_id`, `binding_id`, `scope_id`, `kind` (`local`, `parameter` or `capture`), plus `field_slots` for selected fields (omitted for a scalar root). Indexed selectors additionally have the full `path`; their field slots are empty/omitted. |
 | `trace.events` | Earliest complete event prefix in execution order. |
 | `trace.complete` | Every qualifying event through the actual final stop/end is retained. |
 | `trace.reasons` | Explicit missing-history or value-presentation truncation reasons. |
@@ -374,7 +374,7 @@ are attributed to their original call statement and appear before a breakpoint
 on the following statement. A suspended operation keeps its declaring scope live
 through the final callback/result commit, even at the end of a lexical block.
 Location uses portable `source`, one-based `line` and `column`. Values share the
-[D1/D3 representation](failure-dump.md), including decimal strings for integers
+[failure-report representation](failure-dump.md), including decimal strings for integers
 and explicit truncation/uninitialized markers. No live inspection handles escape.
 
 Capture identities additionally contain `capture_source`: original source

@@ -152,7 +152,7 @@ impl DebugSession {
                     breakpoint.requested.clone(),
                 )
             })
-            .collect();
+            .collect::<Vec<_>>();
         let function_breakpoints = self
             .function_breakpoints
             .iter()
@@ -163,7 +163,9 @@ impl DebugSession {
                     breakpoint.requested.clone(),
                 )
             })
-            .collect();
+            .collect::<Vec<_>>();
+        let breakpoint_index =
+            super::breakpoints::BreakpointIndex::new(&source_breakpoints, &function_breakpoints);
         let previous = Arc::clone(&self.executable);
         self.runtime.commit_live_image(&commit);
         self.executable = Arc::clone(commit.candidate());
@@ -171,6 +173,7 @@ impl DebugSession {
         self.live_image_version = next_version;
         self.source_breakpoints = source_breakpoints;
         self.function_breakpoints = function_breakpoints;
+        self.breakpoint_index = breakpoint_index;
         self.refresh_after_live_image_commit();
 
         Ok(LiveImageReplaceResult::new(

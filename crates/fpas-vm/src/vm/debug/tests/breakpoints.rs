@@ -3,6 +3,77 @@
 use super::*;
 
 #[test]
+fn mixed_breakpoints_keep_id_order_after_clearing_a_shared_address() {
+    let mut session = DebugSession::new(call_executable()).expect("debug session");
+    let function = session
+        .replace_function_breakpoints(vec![FunctionBreakpoint {
+            name: "helper".into(),
+        }])
+        .expect("function breakpoint")[0]
+        .id;
+    let request = SourceBreakpoint {
+        source: "test.fpas".into(),
+        line: 10,
+        column: None,
+    };
+    let source = session
+        .set_breakpoint(request.clone())
+        .expect("source breakpoint")
+        .id;
+    let missing = session
+        .set_breakpoint(SourceBreakpoint {
+            line: 999,
+            ..request.clone()
+        })
+        .expect("unbound source breakpoint");
+    assert!(!missing.is_verified());
+    let duplicate = session
+        .set_breakpoint(request)
+        .expect("same-address breakpoint");
+    session
+        .clear_breakpoint(duplicate.id)
+        .expect("clear only the duplicate");
+
+    let stop = stopped(session.continue_execution().expect("shared stop"));
+    assert_eq!(stop.instruction, 4);
+    assert_eq!(stop.breakpoint_ids, [function, source]);
+    assert_eq!(stop.breakpoint_id, Some(function));
+}
+
+#[test]
+fn clearing_and_replacing_function_breakpoints_remove_old_stops() {
+    for replacement in [
+        None,
+        Some(Vec::new()),
+        Some(vec![FunctionBreakpoint {
+            name: "missing".into(),
+        }]),
+    ] {
+        let mut session = DebugSession::new(call_executable()).expect("debug session");
+        let bound = session
+            .replace_function_breakpoints(vec![FunctionBreakpoint {
+                name: "helper".into(),
+            }])
+            .expect("function breakpoint");
+        if let Some(replacement) = replacement {
+            session
+                .replace_function_breakpoints(replacement)
+                .expect("replace the bound function breakpoint");
+        } else {
+            session
+                .clear_breakpoint(bound[0].id)
+                .expect("clear function breakpoint");
+        }
+        assert!(matches!(
+            session
+                .continue_execution()
+                .expect("no stale breakpoint stop"),
+            DebugRunResult::Terminated(_)
+        ));
+    }
+}
+
+#[test]
 fn function_breakpoint_binds_exact_identity_and_stops_at_first_sequence_point() {
     let mut session = DebugSession::new(call_executable()).expect("debug session");
     let bound = session

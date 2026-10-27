@@ -2,6 +2,10 @@
 //!
 //! Documentation: `docs/pascal/std/console/events.md`.
 
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
 use std::time::Duration;
 
 use fpas_bytecode::{Register, SourceLocation, Value};
@@ -18,19 +22,26 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         let milliseconds = integer(arguments, 0, 1, self)?;
-        let event = self
+        let mut input = self
             .hosted
             .key_input
             .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .read_event_timeout(0, location)?;
+            .unwrap_or_else(|p| p.into_inner());
+        let event = input.read_event_timeout(0, location)?;
         if event.is_some() || milliseconds <= 0 {
+            drop(input);
             return Ok(Some(optional_event(self, event, location)?));
         }
+        // Snapshot while holding the queue lock so an arriving event cannot be missed.
+        let input_revision = input.event_revision();
+        let observed_revision = input_revision.load(Ordering::Acquire);
+        drop(input);
         self.task_suspension = Some(TaskSuspension::ConsoleRead {
             deadline_millis: self
                 .task_clock_ref()
                 .deadline_after(Duration::from_millis(milliseconds as u64)),
+            input_revision,
+            observed_revision,
             destination,
             location,
         });
@@ -44,16 +55,21 @@ impl Worker {
         deadline_millis: u64,
         destination: Option<Register>,
         location: SourceLocation,
+        input_revision: Arc<AtomicU64>,
     ) -> Result<bool, VmError> {
-        let event = self
+        let mut input = self
             .hosted
             .key_input
             .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .read_event_timeout(0, location)?;
+            .unwrap_or_else(|p| p.into_inner());
+        let event = input.read_event_timeout(0, location)?;
+        let observed_revision = input_revision.load(Ordering::Acquire);
+        drop(input);
         if event.is_none() && self.task_clock_ref().now_millis() < deadline_millis {
             self.task_suspension = Some(TaskSuspension::ConsoleRead {
                 deadline_millis,
+                input_revision,
+                observed_revision,
                 destination,
                 location,
             });

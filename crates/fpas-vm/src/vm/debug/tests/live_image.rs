@@ -3,6 +3,8 @@
 #[path = "live_image/errors.rs"]
 mod errors;
 
+mod breakpoint_index;
+
 use super::*;
 use crate::vm::debug::{DebugErrorKind, LiveImageClassification, LiveImageUpdateClass};
 use fpas_bytecode::{

@@ -5,10 +5,13 @@ Public layout values are `TuiSizePolicy`, `TuiAlignment`, `TuiMargins`,
 `TuiLayoutFit`. `TuiMeasure(Node, Spec)` is pure.
 
 Arrangement creates an internal host-owned frame containing preorder parent
-indices, bounds, and clips. Applications cannot create, retain, or inspect this
-frame. Painting reads the matching frame and does not remeasure. The application
-host replaces its previous tree/frame pair only after validation, arrangement,
-and painting have succeeded.
+indices, bounds, clips, and subtree boundaries. Applications cannot create,
+retain, or inspect this frame. Painting reads the matching frame and does not
+remeasure. The host reuses geometry while the viewport and the tree's geometry
+inputs match. Geometry changes arrange into a reusable staging frame. The host
+publishes its tree/frame pair only after validation and rendering succeed.
+Each host retains only its last tree, geometry key, and two frame buffers;
+closing the host releases their contents.
 
 `Row` and `Column` reserve spacing, assign child minimum extents, grow in stable
 child order toward preferred extents, then distribute remaining cells through

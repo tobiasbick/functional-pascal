@@ -76,7 +76,7 @@ An interactive-host regression waits for a background message and exits without 
 That regression and both Mandelbrot regressions also pass with only one CPU available to the process.
 The complete FPAS suite passes with 425 passed, one intentionally skipped, and no failures.
 The repeatable `mandelbrot` benchmark group covers result delivery with and without headless
-grid painting; measurements and their limits are recorded in [benchmark history](../../bench/history.md).
+grid painting. See the [benchmark method](../../bench/README.md#mandelbrot-workload).
 
 No public CPU-count or RAM API was added. The existing pool already derives its size from
 available parallelism, leaving one logical processor for the root where possible and retaining

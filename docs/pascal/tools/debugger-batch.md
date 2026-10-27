@@ -192,8 +192,6 @@ Uninterruptible OS operations and a blocked final stdout write are outside the
 wall-clock return guarantee. External host kills, OOM and crashes cannot promise
 a final JSON result. Stderr is otherwise empty except a final publication error.
 
-Existing JSONL and DAP protocols, documentation and tests remain supported.
-
 ## Tracepoints
 
 `fpas debug app.fpasprj --trace Total --trace State.Selected` keeps a bounded

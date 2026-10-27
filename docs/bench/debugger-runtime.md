@@ -1,159 +1,69 @@
 # Debugger runtime
 
-The debugger still schedules one instruction at a time. Source, function and data
-breakpoints, tracing, pause and execution limits keep their instruction boundaries.
-Execution access now spans at most 256 scheduler iterations. The runtime publishes
-the retained task roots before releasing that access, returning a stop or error,
-or waiting for input. Pending maintenance can publish earlier. Newly spawned tasks
-use their ordinary ownership boundary until the next group begins.
+The debugger schedules one instruction at a time on a single execution lane.
+Source, function and data breakpoints, tracing, pause and execution limits are
+checked at instruction boundaries. Batch, DAP and JSONL sessions use this runtime.
+See the [source debugger](../pascal/tools/debugger.md) for the supported commands
+and protocol contracts.
 
-This removes repeated root snapshots during sustained continue. The supervision
-wrapper also leaves publication to its enclosing execution owner instead of
-publishing the same worker twice. The ordinary `fpas run` path is unchanged.
+## Execution ownership and roots
 
-## Local DAP gameplay comparison, 2026-10-24
+Execution access spans at most 256 scheduler iterations. The runtime publishes
+retained task roots before releasing that access, returning a stop or error, or
+waiting for input. Pending maintenance can publish earlier. Tasks spawned during
+a batch use their own execution ownership boundary until the next batch begins.
+The supervision wrapper delegates root publication to its enclosing execution
+owner.
 
-The workload is Into the Dungeon at game commit
-`6635dea83210f7f6c50a6632196fcb448cc50054`, seed 25, dungeon region size 1.
-The baseline runtime is FPAS commit `5ae070828a30a6664cdc5bfc42d040596604edc1`.
-Both versions execute the same copied client image, with SHA-256
-`3CE0659E638ECF4317F0AE462684DFAFC947421366CECA599C2A767BB8A8D42F`.
-Sources and collection thresholds are unchanged.
+The ordinary `fpas run` path uses its own scheduling and root-publication policy.
 
-The FPAS acceptance controller launches a normal server and the DAP client with a
-4-by-4 virtual terminal. Each run starts from a fresh copy of the same save at
-`(10912,-10144)`, health 20. The timed command queues eight westward keyboard
-events and waits for the final menu breakpoint, completed view and confirmed
-position `(10904,-10144)`. It includes protocol traffic, inspection and controller
-file polling, and excludes startup and loading the save. No debugger assignments
-or direct game-state mutations are used. The controller and server use the same
-PATH runtime in both cases; only the debugger child executable changes.
+## Breakpoint lookup
 
-Measurements alternate baseline and changed runtime, with no concurrent builds,
-tests or benchmark jobs. Both release executables have the temporary phase timers
-removed. These are end-to-end wall times, not CPU samples.
+Source and function breakpoints share a session-local index of executable
+instruction addresses. Each address retains its sorted logical breakpoint IDs.
+The runtime looks up the next sequence-point address in this index; matching
+source, function and data breakpoint IDs are reported together in ascending order.
 
-| Eight confirmed steps | Baseline (ms) | Changed (ms) |
-|---|---:|---:|
-| Run 1 | 17905 | 1472 |
-| Run 2 | 17972 | 1521 |
-| Run 3 | 17454 | 1570 |
-| Median | 17905 | 1521 |
+Setting, clearing or replacing code breakpoints rebuilds the index. Reload and
+rollback prepare it from the candidate image's bound locations before committing
+the image. Unverified breakpoints retain their logical identities without an
+address entry. Conditions, hit counts, logpoints and breakpoint assignments use
+the resulting logical IDs in the protocol layer.
 
-The median falls by 91.5%, a factor of 11.8 for this workload. All six runs reach
-the same position with health 20 and close their owned processes normally.
-A separate 64-key packet reaches `(10848,-10144)` with health 20 in 9219 ms.
-That longer packet is a functional smoke check with one timing, not a paired
-performance comparison. These results do not predict the gain at other terminal
-sizes or in arbitrary FPAS applications.
+## Terminal input and readiness
 
-## Ordinary execution controls
+The debugger owns a queue-only terminal. A positive `Std.Console.ReadEventTimeout`
+suspends the calling task until input arrives or its deadline expires.
+Zero-timeout reads return immediately. Input consumption and result delivery run
+on the VM thread. Other runnable tasks can execute while the reader waits.
 
-All 85 configured workloads completed with `cargo bench-fpas compare dap-before`,
-using the original IDs and arguments. The first comparison showed 6.9% higher
-wall time for Notes, 5.7% for the integer loop, and about 11% for both Mandelbrot
-rows. Three alternating executable comparisons checked those deviations:
+Readiness checks use an input revision and the task's deadline. Until input arrives
+or the deadline expires, the debugger checks the revision without locking the
+input queue or entering the full suspension poll. Pure sleeps use their deadline
+to determine readiness. Scope cancellation is checked at each scheduling boundary.
+New input, expiry and cancellation use the guarded poll and cleanup path.
 
-| Control | Baseline median (ms) | Changed median (ms) |
-|---|---:|---:|
-| Notes, 250 frames | 2747 | 2762 |
-| Integer, 50000000 iterations | 564 | 567 |
-| Mandelbrot paint, 12 iterations | 562 | 563 |
-| Mandelbrot render, 120 iterations | 5579 | 5491 |
+Each reader snapshots its input revision while holding the queue lock, so input
+arriving between an empty read and suspension is visible on a later readiness
+check. Queued input takes precedence when a read's deadline expires.
 
-The short render control varied from 423 to 502 ms with the old executable and
-422 to 517 ms with the changed one. The separate 120-iteration control uses ten
-times the configured render workload, with the same arguments in each old/new
-pair and reversed executable order in the middle pair. The configured 85-row
-suite remains unchanged. These controls did not reproduce a material slowdown.
+Other suspension kinds use their own readiness checks. Inspecting tasks, stacks
+and variables does not dispatch tasks or consume queued terminal events.
 
-## Investigation and reproduction
+## Profiling and timing
 
-`fpas run --profile` on the controller establishes end-to-end latency but does
-not attribute the debugger child's work. Small scalar, aggregate and TUI debug
-probes did not reproduce the sustained gameplay cost. Temporary timers around
-the actual debugger scheduler, instruction dispatch and publication showed that
-the outer dispatch/readiness root publications alone consumed about 45% of an
-instrumented continue. The nested supervision publication added more work.
-The timers changed absolute latency and were removed before the comparison.
+Use [`fpas debug --profile`](../pascal/tools/profiler.md#debug-targets) to inspect
+routine and line samples together with scheduling, dispatch, root-publication,
+waiting and inspection times for the debug target. Profiling an FPAS controller
+with `fpas run --profile` reports the controller's work; it does not attribute the
+debugger child's phases.
 
-To reproduce the comparison:
+Profiling adds timing overhead. For end-to-end latency measurements, use
+unprofiled release executables, identical compiled images and source roots, fixed
+input and terminal dimensions, and checked program results. Define which startup,
+protocol, inspection, rendering and shutdown work belongs inside the timer.
+Keep builds, tests and other benchmark jobs outside the measurement interval.
 
-1. Retain the baseline release executable before rebuilding FPAS with `dist.ps1`.
-2. Build the client once and keep a copied `.fpascp` image unchanged. Launch both
-   debugger versions against that image with the same `--source-root`.
-3. Use the game's `tools/dap-acceptance` controller with an isolated copy of the
-   seed-25, region-1 spawn save, virtual size 4 by 4 and its menu source breakpoint.
-   Select the debugger child executable explicitly; keep the controller and server
-   fixed. Continue the save before starting each timer.
-4. Measure one `Acceptance.Commands.Batch(Directory, var Id, 'a', 8)` call with
-   `Std.Time.MonotonicMillis` and `ElapsedMillis`. Assert the final coordinates
-   and health, stop the controller, and repeat from a fresh data directory.
-5. Run three alternating pairs and compare medians. Keep normal workload arguments
-   unchanged for `cargo bench-fpas compare dap-before`.
-
-The regression test exercises aggressive collection during continued execution,
-retained closure aliases across a breakpoint and collection from another thread
-while stopped. Existing VM and protocol tests cover stepping, limits, watchpoints,
-task ordering, supervision and idle wakeups. For supported target attribution, use
-[`fpas debug --profile`](../pascal/tools/profiler.md#debug-targets). Its instrumented
-phase timings are separate from the unprofiled latency measurements above.
-
-Validation passes for 916 VM tests (two ignored), the full `fpas-debug` unit and
-integration suite, 95 CLI batch-debug tests and VM Clippy with all targets and
-warnings denied. After the final `dist.ps1` build, the PATH executable matches
-the release binary by SHA-256. All 161 game test programs pass with that
-distribution, and a final owned server/client DAP run confirms eight accepted
-steps and normal shutdown. That final smoke runs alongside the game tests and
-is not included in the paired timing results above.
-
-## Timed terminal input, 2026-10-26
-
-An empty `Std.Console.ReadEventTimeout(50)` returned immediately in the debugger's
-queue-only terminal. The TUI input pump therefore repeatedly polled and yielded
-while the all-stop scheduler walked the rendering task one instruction at a time.
-Positive timed reads now suspend the calling task until an event or deadline.
-Polling and result delivery remain on the VM thread, with ordinary task
-cancellation and no additional native thread. Zero-timeout reads stay immediate.
-
-The workload is Into the Dungeon's server console at game commit
-`c2e3da6e929e1ff96ecf602dd5c3ca956296f110`. The baseline executable is the installed
-FPAS distribution at `7c6e886ccdd2db3a8b761b3988d4d628d0fe2c76`, copied unchanged
-before rebuilding. Both release runtimes use the same server sources and source
-standard library, including the earlier fix that selects due ticks alongside input.
-Each run owns a fresh data root and loopback listener; no agent is queried.
-
-A local FPAS controller adapted from the game's `Acceptance.Dap` times F2 followed
-by an unbound Ctrl+G marker. Timing starts at the listening view breakpoint and
-ends after reading the completed settings view. It includes finishing the pending
-dashboard frame, opening and painting settings, routing the marker, protocol
-requests, inspection and controller file polling. Compilation and listener startup
-are outside this timer. Every run asserts `SettingsOpen = true`, reaches its marker
-without a forced pause, disconnects and waits for its owned server process to exit.
-
-Three old/new pairs alternate at each virtual terminal size. No build, test suite
-or profiler runs during these measurements; neither debugger nor controller has
-profiling enabled. The initial standalone measurements varied more, so this table
-uses only the later paired runs under matching conditions.
-
-| Pair | 80x24 before (ms) | 80x24 after (ms) | 144x45 before (ms) | 144x45 after (ms) |
-| --- | ---: | ---: | ---: | ---: |
-| 1 | 2677 | 1646 | 5812 | 3601 |
-| 2 | 2778 | 1653 | 5816 | 3603 |
-| 3 | 2678 | 1635 | 5825 | 3618 |
-| Median | 2678 | 1646 | 5816 | 3603 |
-
-The medians fall by 38.5% and 38.1%. Larger surfaces still take longer; these
-measurements describe this console route rather than arbitrary TUI applications.
-
-The existing `tui` benchmark group checks ordinary execution separately. Its
-headless renderer, Notes and styled-cell rows changed from 1694/2867/355 ms to
-1427/2690/344 ms, with unchanged IDs and arguments. None regressed. These ordinary
-controls do not establish a native-execution gain from the debugger-only repair.
-The [history](history.md) records a separate settled control run.
-
-The timeout regression failed before the repair: the read completed before its
-deadline and before a peer task. It passes afterward, together with delayed event
-delivery, a subsequent zero-timeout poll and cancellation during scope return.
-The full Rust workspace passes, including 932 VM tests with three ignored; regular
-and release builds and VM Clippy with all targets and warnings denied also pass.
+Use the [benchmark workflow](README.md) for controlled comparisons and ordinary
+execution controls. Keep raw profiles, controller output and temporary benchmark
+data under `.temp-data/`.

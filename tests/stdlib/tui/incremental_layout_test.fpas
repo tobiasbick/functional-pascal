@@ -1,0 +1,87 @@
+program TuiIncrementalLayoutTest;
+
+uses Std.Test as Test, Std.Tui as Tui;
+
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  return State;
+end function;
+
+function View(State: integer): Tui.TuiElement;
+begin
+  const Action := Tui.TuiAction.Create(1);
+  const Text := if State mod 2 = 0 then 'A界' else '界B' end if;
+  var Items := [Text, 'second', 'third'];
+  if State mod 5 = 0 then
+    Items := ['short'];
+  end if;
+  const Content := Tui.TuiElementBuilders.MakeColumn([
+    Tui.TuiElementBuilders.MakeLabel(Text),
+    Tui.TuiElementBuilders.MakeLabel('abcdefghijklmnop'),
+    Tui.TuiElementBuilders.MakeLabel('bottom'),
+    Tui.TuiElementBuilders.MakeLabel(Text)
+  ]);
+  var Editor := Tui.TuiElementBuilders.MakeTextArea(
+    Tui.TuiControlId.Create(3),
+    Text + #10 + 'line', State mod 3, Tui.TuiPoint.Create(0, 0), Action
+  );
+  if State mod 7 = 0 then
+    Editor := Tui.TuiElementBuilders.MakeInput(
+      Tui.TuiControlId.Create(3),
+      Text,
+      State mod 3,
+      Action
+    );
+  end if;
+  var Children := [
+    Tui.TuiElementBuilders.MakeScroll(
+      Tui.TuiControlId.Create(1),
+      Tui.TuiPoint.Create(State mod 3, State mod 2), Action, Content
+    ),
+    Tui.TuiElementBuilders.MakeList(
+      Tui.TuiControlId.Create(2),
+      Items,
+      State mod Items.Length(),
+      Action
+    ),
+    Editor
+  ];
+  if State mod 4 = 0 then
+    Children := [Children[2], Children[0], Children[1]];
+  end if;
+
+  if State mod 6 = 0 then
+    Children := Children.Slice(0, 2);
+  end if;
+  const Settings := Tui.TuiLayoutSettings.Create(
+    Tui.TuiMargins.Uniform(State mod 2),
+    Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), State mod 3
+  ).WithFixedHeight(5 + State mod 3);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    None, [
+      Tui.TuiElementBuilders.MakeLayout(
+        Settings,
+        Tui.TuiElementBuilders.MakeRowSpaced(Children, State mod 2)
+      )
+    ]
+  );
+end function;
+
+begin
+  const Size := Tui.TuiSize.Create(20, 8);
+  const Cached := Tui.TuiApplication.OpenForTest(Size);
+  for State: integer := 0 to 23 do
+    discard Cached.RunIterations(State, Update, View, 0, 0);
+    const Fresh := Tui.TuiApplication.OpenForTest(Size);
+    discard Fresh.RunIterations(State, Update, View, 0, 0);
+    const Actual := Cached.SurfaceSnapshot();
+    const Expected := Fresh.SurfaceSnapshot();
+    for I: integer := 0 to Expected.Cells.Length() - 1 do
+      Test.AssertTrue(Expected.Cells[I] = Actual.Cells[I]);
+    end for;
+
+    Fresh.Close();
+  end for;
+
+  Cached.Close();
+end.

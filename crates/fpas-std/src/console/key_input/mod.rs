@@ -6,6 +6,10 @@ use crossterm::event::{
 use crossterm::terminal::disable_raw_mode;
 use fpas_bytecode::SourceLocation;
 use std::collections::VecDeque;
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
 
 mod event_source;
 mod mapping;
@@ -24,6 +28,7 @@ pub(super) enum LiveConsoleEvent {
 /// CRT-style keyboard buffer: test queue plus optional raw-mode stdin via crossterm.
 #[derive(Debug)]
 pub struct KeyInput {
+    event_revision: Arc<AtomicU64>,
     test_queue: VecDeque<char>,
     /// Second character of a two-byte extended sequence (`#0` then scan code), CRT-style.
     pending: VecDeque<char>,
@@ -52,6 +57,7 @@ impl KeyInput {
     /// Creates an input buffer that may poll the process terminal.
     pub fn new() -> Self {
         Self {
+            event_revision: Arc::new(AtomicU64::new(0)),
             test_queue: VecDeque::new(),
             pending: VecDeque::new(),
             event_queue: VecDeque::new(),
@@ -67,6 +73,7 @@ impl KeyInput {
     /// Construct a queue-only stream that never polls the process terminal.
     pub fn without_os_events() -> Self {
         Self {
+            event_revision: Arc::new(AtomicU64::new(0)),
             os_events: false,
             test_queue: VecDeque::new(),
             pending: VecDeque::new(),
@@ -83,24 +90,33 @@ impl KeyInput {
         self.os_events && !self.test_mode
     }
 
+    /// Observe newly queued input without locking the queue; reading still requires its owner.
+    #[doc(hidden)]
+    pub fn event_revision(&self) -> Arc<AtomicU64> {
+        Arc::clone(&self.event_revision)
+    }
+
     /// Queues characters and switches the buffer to deterministic test mode.
     pub fn push_chars(&mut self, s: &str) {
         self.test_mode = true;
         for c in s.chars() {
             self.test_queue.push_back(c);
         }
+        self.event_revision.fetch_add(1, Ordering::Release);
     }
 
     /// Queue a structured key event for the next `ReadKeyEvent` (tests).
     pub fn push_key_event(&mut self, ev: ConsoleKeyEvent) {
         self.test_mode = true;
         self.event_queue.push_back(ev);
+        self.event_revision.fetch_add(1, Ordering::Release);
     }
 
     /// Queues a unified console event and switches to deterministic test mode.
     pub fn push_console_event(&mut self, ev: ConsoleEvent) {
         self.test_mode = true;
         self.console_event_queue.push_back(ev);
+        self.event_revision.fetch_add(1, Ordering::Release);
     }
 
     /// Queue one terminal-host event without polling the process terminal.
@@ -121,7 +137,7 @@ impl KeyInput {
     }
 
     pub(crate) fn queue_live_event(&mut self, ev: Event) -> bool {
-        match ev {
+        let queued = match ev {
             Event::Key(key) if key.kind != KeyEventKind::Release => {
                 // Mirror into both API queues so `KeyPressed` and `EventPending` agree,
                 // then remove the sibling when either consumer takes the key (see
@@ -164,7 +180,11 @@ impl KeyInput {
                 true
             }
             Event::Key(_) => false,
+        };
+        if queued {
+            self.event_revision.fetch_add(1, Ordering::Release);
         }
+        queued
     }
 
     /// Pop one live key for `ReadKey` / `ReadKeyEvent`, and drop its mirrored `ReadEvent` entry.

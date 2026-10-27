@@ -3,6 +3,54 @@
 use super::*;
 use crate::vm::debug::breakpoints as binding;
 
+/// Session-local physical addresses and their ordered logical breakpoint IDs.
+#[derive(Default)]
+pub(super) struct BreakpointIndex {
+    entries: Vec<(u32, Vec<u64>)>,
+}
+
+impl BreakpointIndex {
+    pub(super) fn new(sources: &[BoundBreakpoint], functions: &[BoundFunctionBreakpoint]) -> Self {
+        let mut addresses = BTreeMap::<u32, Vec<u64>>::new();
+        for breakpoint in sources {
+            if let Some(instruction) = breakpoint.instruction {
+                addresses
+                    .entry(instruction)
+                    .or_default()
+                    .push(breakpoint.id);
+            }
+        }
+        for breakpoint in functions {
+            for &instruction in &breakpoint.instructions {
+                addresses
+                    .entry(instruction)
+                    .or_default()
+                    .push(breakpoint.id);
+            }
+        }
+        let entries = addresses
+            .into_iter()
+            .map(|(instruction, mut ids)| {
+                ids.sort_unstable();
+                ids.dedup();
+                (instruction, ids)
+            })
+            .collect();
+        Self { entries }
+    }
+
+    #[inline]
+    pub(super) fn at(&self, instruction: InstructionAddress) -> &[u64] {
+        match self
+            .entries
+            .binary_search_by_key(&instruction.get(), |(address, _)| *address)
+        {
+            Ok(index) => &self.entries[index].1,
+            Err(_) => &[],
+        }
+    }
+}
+
 impl DebugSession {
     /// Return the breakpoint resource bounds enforced by this session.
     #[must_use]
@@ -29,6 +77,7 @@ impl DebugSession {
         let id = self.take_breakpoint_ids(1)?;
         let breakpoint = binding::bind_source(&self.executable, id, requested);
         self.source_breakpoints.push(breakpoint.clone());
+        self.rebuild_breakpoint_index();
         Ok(breakpoint)
     }
 
@@ -88,6 +137,7 @@ impl DebugSession {
             bound.push(breakpoint);
         }
         self.function_breakpoints.clone_from(&bound);
+        self.rebuild_breakpoint_index();
         self.next_breakpoint_id = next_id;
         Ok(bound)
     }
@@ -105,6 +155,7 @@ impl DebugSession {
             .position(|breakpoint| breakpoint.id == id)
         {
             self.source_breakpoints.remove(index);
+            self.rebuild_breakpoint_index();
             return Ok(());
         }
         if let Some(index) = self
@@ -113,6 +164,7 @@ impl DebugSession {
             .position(|breakpoint| breakpoint.id == id)
         {
             self.function_breakpoints.remove(index);
+            self.rebuild_breakpoint_index();
             return Ok(());
         }
         if let Some(index) = self
@@ -146,6 +198,11 @@ impl DebugSession {
             ),
             hint: "Clear breakpoints or send a smaller replace request.".to_string(),
         })
+    }
+
+    fn rebuild_breakpoint_index(&mut self) {
+        self.breakpoint_index =
+            BreakpointIndex::new(&self.source_breakpoints, &self.function_breakpoints);
     }
 
     fn take_breakpoint_ids(&mut self, count: u64) -> Result<u64, DebugSessionError> {

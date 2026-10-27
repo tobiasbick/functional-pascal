@@ -164,4 +164,4 @@ ceilings and exit precedence still apply. The total report remains at most
 8 MiB. Schedule metadata survives optional-state clipping. Scheduling retains
 one round's task IDs and constant-size counters, alongside the existing task
 catalog. There is no extra unbounded schedule log, automatic seed sweep,
-interactive scheduling protocol, reverse execution or D2 record/replay.
+interactive scheduling protocol, reverse execution or record/replay.

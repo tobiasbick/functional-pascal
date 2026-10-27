@@ -1,8 +1,8 @@
 unit Std.Tui.Runtime.Application.State;
 
 uses
-  Std.Tui.Cells.Palette as CellsPalette, Std.Tui.Elements.Element as Element,
-  Std.Tui.Geometry.Size as GeometrySize, Std.Tui.Layout.Frame as Frame,
+  Std.Tui.Cells.Palette as CellsPalette,
+  Std.Tui.Geometry.Size as GeometrySize, Std.Tui.Runtime.Frame as Frame,
   Std.Tui.Rendering.Surface as Surface, Std.Tui.Runtime.Application.Background as Background,
   Std.Tui.Runtime.Cmd as Cmd, Std.Tui.Runtime.Input as RuntimeInput,
   Std.Tui.Runtime.Msg as RuntimeMsg, Std.Tui.Runtime.Routing as Routing,
@@ -15,8 +15,7 @@ public var TuiAppOpen: array of boolean := [];
 public var TuiAppInputs: array of array of RuntimeInput.TuiHostInput := [];
 public var TuiAppMessages: array of array of RuntimeMsg.TuiMsg := [];
 public var TuiAppSurfaces: array of Surface.TuiWorkingSurface := [];
-public var TuiAppFrames: array of Frame.TuiArrangedFrame := [];
-public var TuiAppTrees: array of Element.TuiElement := [];
+public var TuiAppRenderStates: array of Frame.TuiRenderState := [];
 public var TuiAppCommands: array of Cmd.TuiCmdOutput := [];
 public var TuiAppInteractive: array of boolean := [];
 public var TuiAppPalettes: array of CellsPalette.TuiPalette := [];
@@ -38,8 +37,7 @@ begin
   TuiAppInputs := TuiAppInputs.Concat([[]]);
   TuiAppMessages := TuiAppMessages.Concat([[]]);
   TuiAppSurfaces := TuiAppSurfaces.Concat([Surface.TuiWorkingSurface.Create(Size)]);
-  TuiAppFrames := TuiAppFrames.Concat([Frame.TuiArrangedFrame.Create()]);
-  TuiAppTrees := TuiAppTrees.Concat([Element.TuiElement.Empty]);
+  TuiAppRenderStates.PushInPlace(Frame.TuiRenderState.Create());
   TuiAppCommands := TuiAppCommands.Concat([Cmd.TuiCmdOutput.Create()]);
   TuiAppInteractive := TuiAppInteractive.Concat([Interactive]);
   TuiAppPalettes := TuiAppPalettes.Concat([Palette]);
@@ -73,6 +71,9 @@ begin
   TuiAppMessageHead[ApplicationId - 1] := 0;
   TuiAppInputs[ApplicationId - 1] := [];
   TuiAppMessages[ApplicationId - 1] := [];
+  TuiAppRenderStates[ApplicationId - 1] := Frame.TuiReleaseRenderState(
+    TuiAppRenderStates[ApplicationId - 1]
+  );
   RoutingPointer.TuiPointerRoutingClose(ApplicationId);
   if TuiAppInteractive[ApplicationId - 1] then
     begin
@@ -222,6 +223,7 @@ end procedure;
 public procedure TuiAppApplyResize(ApplicationId: integer; Size: GeometrySize.TuiSize);
 begin
   TuiAppSurfaces[ApplicationId - 1].Resize(Size);
+  TuiAppRenderStates[ApplicationId - 1].Ready := false;
 end procedure;
 
 public procedure TuiAppRouteInput(ApplicationId: integer; Input: RuntimeInput.TuiHostInput);
@@ -235,10 +237,10 @@ begin
       begin
         TuiAppPushMessages(
           ApplicationId, Routing.TuiRouteKey(
-            TuiAppTrees[ApplicationId - 1], TuiAppFrames[
+            TuiAppRenderStates[ApplicationId - 1].Tree, TuiAppRenderStates[
               ApplicationId -
               1
-            ], Key
+            ].Frame, Key
           )
         );
       end;
@@ -246,13 +248,13 @@ begin
       begin
         TuiAppPushMessages(
           ApplicationId, RoutingPointer.TuiRouteApplicationPointer(
-            Pointer, ApplicationId, TuiAppTrees[
+            Pointer, ApplicationId, TuiAppRenderStates[
               ApplicationId -
               1
-            ], TuiAppFrames[
+            ].Tree, TuiAppRenderStates[
               ApplicationId -
               1
-            ]
+            ].Frame
           )
         );
       end;

@@ -161,3 +161,64 @@ end.
     ));
     assert_eq!(session.output().lines, ["7"]);
 }
+
+#[test]
+fn input_arrival_wakes_each_waiting_reader_after_a_debugger_stop() {
+    let source = r#"program TwoReaders;
+uses Std.Console as Console, Std.Time as Time;
+procedure ReadLater();
+begin
+  Console.WriteLn(Console.ReadEventTimeout(5000) is Some(_));
+end procedure;
+begin
+  scope
+    discard go ReadLater();
+    discard go ReadLater();
+    Time.Sleep(5);
+    Console.WriteLn('checkpoint');
+  end scope;
+end.
+"#;
+    let mut session = compile_session(source);
+    let line = source
+        .lines()
+        .position(|line| line.contains("'checkpoint'"))
+        .expect("checkpoint");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "<memory>".into(),
+            line: u32::try_from(line + 1).expect("source line"),
+            column: None,
+        })
+        .expect("checkpoint breakpoint");
+    assert!(matches!(
+        session.continue_execution().expect("checkpoint"),
+        DebugRunResult::Stopped(_)
+    ));
+    assert_eq!(
+        session
+            .tasks(0, 8)
+            .expect("tasks")
+            .items
+            .iter()
+            .filter(|task| task.state == DebugTaskState::Sleeping)
+            .count(),
+        2
+    );
+    session.test_push_console_event(ConsoleEvent::key(escape_key()));
+    session.test_push_console_event(ConsoleEvent::key(escape_key()));
+    assert!(matches!(
+        session.continue_execution().expect("readers"),
+        DebugRunResult::Terminated(_)
+    ));
+    assert_eq!(
+        session
+            .output()
+            .lines
+            .iter()
+            .filter(|line| *line == "true")
+            .count(),
+        2
+    );
+    assert!(!session.output().lines.iter().any(|line| line == "false"));
+}

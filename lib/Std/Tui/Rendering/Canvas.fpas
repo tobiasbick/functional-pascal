@@ -228,10 +228,14 @@ public type TuiCanvas = record
     Role: StyleRole.TuiStyleRole
   );
   begin
+    if (Width <= 0) or (Y < Self.Clip.Y) or (Y >= Self.Clip.Bottom()) then
+      return;
+    end if;
+    const Visible := Rect.TuiRect.Create(X, Y, Width, 1).Intersect(Self.Clip);
     const Cell: CellsCell.TuiCell := CellsCell.TuiCell.Create('─', Role);
-    for Offset: integer := 0 to Width - 1 do
+    for Offset: integer := 0 to Visible.Width - 1 do
       begin
-        Self.PutCell(Point.TuiPoint.Create(X + Offset, Y), Cell);
+        Self.PutCell(Point.TuiPoint.Create(Visible.X + Offset, Y), Cell);
       end;
     end for;
   end procedure;
@@ -252,10 +256,14 @@ public type TuiCanvas = record
     Role: StyleRole.TuiStyleRole
   );
   begin
+    if (Height <= 0) or (X < Self.Clip.X) or (X >= Self.Clip.Right()) then
+      return;
+    end if;
+    const Visible := Rect.TuiRect.Create(X, Y, 1, Height).Intersect(Self.Clip);
     const Cell: CellsCell.TuiCell := CellsCell.TuiCell.Create('│', Role);
-    for Offset: integer := 0 to Height - 1 do
+    for Offset: integer := 0 to Visible.Height - 1 do
       begin
-        Self.PutCell(Point.TuiPoint.Create(X, Y + Offset), Cell);
+        Self.PutCell(Point.TuiPoint.Create(X, Visible.Y + Offset), Cell);
       end;
     end for;
   end procedure;

@@ -3,7 +3,10 @@
 #[cfg(test)]
 mod clock_tests;
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
 use std::time::{Duration, Instant};
 
 use fpas_bytecode::{Register, SourceLocation, Value};
@@ -77,6 +80,8 @@ pub(in crate::vm) enum TaskSuspension {
     /// Debugger terminal input waits without running a polling loop in FPAS.
     ConsoleRead {
         deadline_millis: u64,
+        input_revision: Arc<AtomicU64>,
+        observed_revision: u64,
         destination: Option<Register>,
         location: SourceLocation,
     },

@@ -304,25 +304,14 @@ impl DebugSession {
     ) -> Option<DebugRunResult> {
         let data_ids = self.take_data_breakpoint_hits(task_id);
         let sequence = self.next_sequence_point(task_id);
-        let mut breakpoint_ids = Vec::new();
-        if let Some((instruction, _)) = sequence {
-            breakpoint_ids.extend(
-                self.source_breakpoints
-                    .iter()
-                    .filter(|breakpoint| breakpoint.instruction == Some(instruction.get()))
-                    .map(|breakpoint| breakpoint.id),
-            );
-            breakpoint_ids.extend(
-                self.function_breakpoints
-                    .iter()
-                    .filter(|breakpoint| breakpoint.instructions.contains(&instruction.get()))
-                    .map(|breakpoint| breakpoint.id),
-            );
-        }
-        let source_or_function = !breakpoint_ids.is_empty();
-        breakpoint_ids.extend(data_ids);
-        breakpoint_ids.sort_unstable();
-        if !breakpoint_ids.is_empty() {
+        let code_ids = sequence
+            .map(|(instruction, _)| self.breakpoint_index.at(instruction))
+            .unwrap_or_default();
+        let source_or_function = !code_ids.is_empty();
+        if source_or_function || !data_ids.is_empty() {
+            let mut breakpoint_ids = code_ids.to_vec();
+            breakpoint_ids.extend(data_ids);
+            breakpoint_ids.sort_unstable();
             let reason = if source_or_function {
                 DebugStopReason::Breakpoint
             } else {

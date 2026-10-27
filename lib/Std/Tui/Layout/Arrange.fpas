@@ -205,7 +205,12 @@ begin
   var Entries: array of LayoutFrame.TuiArrangedEntry := TuiArrangeBuilding;
   TuiArrangeBuilding := [];
   Entries.PushInPlace(
-    LayoutFrame.TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := NodeBounds, Clip := Clip)
+    LayoutFrame.TuiArrangedEntry(
+      ParentIndex := ParentIndex,
+      Bounds := NodeBounds,
+      Clip := Clip,
+      SubtreeEnd := Index + 1
+    )
   );
   TuiArrangeBuilding := Entries;
   return Index;
@@ -492,6 +497,8 @@ begin
     when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       null;
   end case;
+
+  TuiArrangeBuilding[SelfIndex].SubtreeEnd := TuiArrangeBuilding.Length();
 end procedure;
 begin
   TuiArrangeBuilding := [];

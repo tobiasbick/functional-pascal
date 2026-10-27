@@ -200,8 +200,19 @@ transferred as damage runs; an unchanged frame performs no Console frame write.
 Every processed message follows:
 
 ```text
-dequeue → Update → command check → View → validate → layout → paint
+dequeue → Update → command check → View → render → present
 ```
+
+`View` runs for every render request, including the initial frame. The host
+compares its result with the last successfully rendered tree. An unchanged
+tree, viewport, and pressed control reuse the working surface. Changed trees
+are validated before use. Layout is reused when node kinds, child order, and
+geometry inputs match; geometry or viewport changes arrange and paint a full
+frame. Content changes with stable geometry repaint damaged full-width rows
+in stacking order, including overlays and menu popups. Cell grids invalidate
+only changed visible rows. Resize invalidates the cache even at the same size;
+palette changes invalidate terminal presentation. Closing a host releases its
+cached tree and layout storage.
 
 Injected events are FIFO. Pending routed messages are drained before another
 external input is read. Unsupported Console events and empty routing results

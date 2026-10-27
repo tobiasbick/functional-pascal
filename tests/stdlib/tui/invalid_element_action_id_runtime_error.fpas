@@ -9,7 +9,7 @@ end function;
 
 function View(State: integer): Tui.TuiElement;
 begin
-  const InvalidAction: Tui.TuiAction := Tui.TuiAction(Value := 0);
+  const InvalidAction: Tui.TuiAction := Tui.TuiAction(Value := if State = 0 then 10 else 0 end if);
   return Tui.TuiElement.Button(
     Tui.TuiButtonSpec.Normal(Tui.TuiControlId.Create(1), 'Invalid', '', InvalidAction)
   );
@@ -18,4 +18,5 @@ end function;
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
   discard App.RunIterations(0, Update, View, 0, 0);
+  discard App.RunIterations(1, Update, View, 0, 0);
 end.

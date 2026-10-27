@@ -57,8 +57,12 @@ begin
   const Clipped: RenderingCanvas.TuiCanvas := RenderingCanvas.TuiCanvas.CreateLocal(
     Canvas.Surface,
     Point.TuiPoint.Create(0, 0),
-    Entry.Clip
+    Entry.Clip.Intersect(Canvas.Clip)
   );
+  if Clipped.Clip.IsEmpty() then
+    return Entry.SubtreeEnd;
+  end if;
+
   case Node of
     when Element.TuiElement.Empty:
       begin
@@ -391,6 +395,42 @@ begin
       panic('Tui menu overlay paint did not consume the complete arranged frame');
     end;
   end if;
+end procedure;
+
+// Repaints complete damaged scanlines in normal stacking order, including popups.
+public procedure TuiPaintRows(
+  Surface: RenderingSurface.TuiWorkingSurface;
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Root: Element.TuiElement;
+  Pressed: option of ControlId.TuiControlId;
+  Rows: array of boolean
+);
+begin
+  const Size := Surface.Size();
+  var Y := 0;
+  while Y < Size.Height do
+    if not Rows[Y] then
+      Y := Y + 1;
+    else
+      const Start := Y;
+      while (Y < Size.Height) and Rows[Y] do
+        Y := Y + 1;
+      end while;
+      const Bounds := Rect.TuiRect.Create(0, Start, Size.Width, Y - Start);
+      RenderingSurface.TuiSurfaceFillRect(
+        Surface, Bounds,
+        Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal)
+      );
+      const Canvas := RenderingCanvas.TuiCanvas.Create(Surface, Bounds);
+      if TuiPaintArranged(Canvas, Frame, Root, 0, None, Pressed) <> Frame.Count() then
+        panic('Tui paint did not consume the complete arranged frame');
+      end if;
+
+      if TuiPaintMenuOverlays(Canvas, Frame, Root, 0, true) <> Frame.Count() then
+        panic('Tui menu overlay paint did not consume the complete arranged frame');
+      end if;
+    end if;
+  end while;
 end procedure;
 
 // Overwrites the surface with a terminal-too-small notice when layout overflows.

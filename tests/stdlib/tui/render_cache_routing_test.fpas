@@ -1,0 +1,51 @@
+program TuiRenderCacheRoutingTest;
+
+uses Std.Test as Test, Std.Tui as Tui;
+
+var Views: integer := 0;
+var Updates: integer := 0;
+var ActionValue: integer := 1;
+
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  Updates := Updates + 1;
+  case Msg of
+    when Tui.TuiMsg.Action(_, const Action):
+      return State + Action.Value;
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+      return State;
+  end case;
+end function;
+
+function View(State: integer): Tui.TuiElement;
+begin
+  Views := Views + 1;
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeButton(
+        Tui.TuiControlId.Create(1),
+        'go',
+        Tui.TuiAction.Create(ActionValue)
+      )
+    ]
+  );
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 2));
+  Test.AssertEquals(0, App.RunIterations(0, Update, View, 3, 0));
+  Test.AssertEquals(3, Updates);
+  Test.AssertEquals(4, Views);
+  discard App.RunIterations(0, Update, View, 0, 0);
+  Test.AssertEquals(5, Views);
+  ActionValue := 2;
+  discard App.RunIterations(0, Update, View, 0, 0);
+  App.InjectKeyForTest(
+    Tui.TuiKeyEvent(
+      kind := Tui.TuiKeyKind.Enter, ch := '',
+      shift := false, ctrl := false, alt := false, meta := false
+    )
+  );
+  Test.AssertEquals(2, App.RunIterations(0, Update, View, 1, 0));
+  App.Close();
+end.

@@ -6,6 +6,10 @@ Topics are open proposals unless their section explicitly records an agreement. 
 [numeric design](#21-explicit-width-numeric-types-money-and-decimal) are agreed at the
 scope stated in those sections, with their listed open points. Design agreement
 does not change the current specification or authorize implementation.
+For graphics and packed multimedia data, native library buffers without new
+scalar numeric types are the current preference; see
+[packed numeric data](#22-packed-numeric-data-and-binary-buffers). This is a
+preferred alternative, not an agreed buffer API or an implementation decision.
 FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 [AP workflow and templates](improve-syntax/README.md); selecting a topic still
 requires an explicit decision before implementation.
@@ -558,10 +562,11 @@ application instances.
 
 ## 20. Selective TUI updates
 
-The [TUI renderer](../pascal/std/tui/application.md#interactive-terminal) already
-transfers only changed terminal cells. After each processed message, however,
-the host calls View and performs validation, layout and painting again. Terminal
-damage tracking does not itself skip view construction or layout work.
+The [TUI host](../pascal/std/tui/application.md#headless-frame-and-routing-order)
+calls View for each render request, compares the resulting immutable tree with
+the last successful tree, reuses stable layout, and repaints damaged rows.
+Unchanged trees can skip validation, layout and painting. Terminal presentation
+then transfers only changed cells. View construction itself is not skipped.
 
 Consider explicit dependencies and cached subviews that reuse unaffected view
 and layout results after a model change. Connect invalidation to selectors where
@@ -586,6 +591,13 @@ arbitrary-precision `decimal` for exact decimal calculations and lossless JSON
 number values. The open points below still need decisions. No implementation is
 scheduled. These types are not FPAS 1 prerequisites, and graphics is only one
 consumer of the design.
+
+The [preferred native-buffer alternative](#22-packed-numeric-data-and-binary-buffers)
+can meet graphics storage needs without adding these scalar types or renaming
+`integer` and `real`. Graphics therefore does not require implementing this
+numeric design first. The design remains recorded for independent numeric
+language work; the buffer preference does not cancel it. `money` and `decimal`
+are outside this comparison of storage alternatives and retain their existing status.
 
 FPAS offers exactly one way to express each numeric concept: every built-in
 numeric type has one name, without alternative built-in aliases.
@@ -735,29 +747,75 @@ for the removed type names.
 
 ## 22. Packed numeric data and binary buffers
 
-Status: open proposal; no language form, library API or storage layout is agreed.
+Status: open proposal. Native library buffers without new scalar numeric types
+are the current preference. No language form, library API or storage layout is
+agreed, and implementation is not authorized by this preference.
 
 The [graphics application case](graphics.md#bulk-numeric-data) needs contiguous
-vertex, index and pixel data without one tagged runtime value or conversion per
-element. Binary files, codecs, audio, process pipes and native FFI share the need
+vertex, index and pixel data without one tagged runtime value per element or
+repeated conversion at each native handoff. Binary files, codecs, audio, process pipes and native FFI share the need
 for a canonical byte representation. The
 [standard-library roadmap](std-roadmap.md#open-decisions) leaves that choice open.
 
-Consider one shared design for byte buffers and typed contiguous numeric data,
-using the [explicit-width types](#21-explicit-width-numeric-types-money-and-decimal).
-Evaluate a language-level packed array against a standard-library buffer type
-before choosing either. Native intrinsics should be able to access supported
-layouts without per-element conversion. Include binary reads and writes in
-`Std.Fs`; image decoding and GPU upload policy remain graphics-specific consumers.
+### Preferred alternative: native buffers with existing scalar types
+
+Use one shared native binary-buffer foundation, with specialized interfaces for
+pixels, vertices, indices and audio samples. Illustrative names are `ByteBuffer`,
+`PixelBuffer`, `VertexBuffer`, `IndexBuffer` and `AudioBuffer`; these are possible
+opaque standard-library types, not agreed declarations or new built-in types.
+Binary files, codecs, process pipes and native consumers should share the byte
+representation instead of introducing a separate one for each subsystem.
+
+FPAS continues to calculate with its existing `integer` and `real`. Storage
+formats such as `RGBA8`, `Float32`, `Index16` or signed 16-bit PCM select a native
+layout; they do not introduce scalar types such as `unsigned8`, `integer16` or
+`real32` into FPAS expressions. Neither adding these types nor renaming the
+existing scalar types is a prerequisite for this route.
+
+Buffer writes check ranges and perform any required narrowing or rounding once
+when data enters the selected representation. Reads return ordinary FPAS scalar
+values. Native decoders and generators can fill compatible buffers directly.
+Bulk operations such as fill, blit and rectangular writes should avoid making
+FPAS execute a call for every byte or sample. A vertex-layout description must
+identify attribute formats, offsets, stride and alignment without depending on
+the heap representation of ordinary FPAS records.
+
+Native consumers should accept compatible storage without unpacking tagged FPAS
+arrays or converting every element again at each handoff. GPU upload can still
+require a copy, staging storage or row padding; contiguous host storage alone
+does not promise zero-copy GPU access or a stable C ABI. GPU resources and native
+audio delivery remain owned by their respective host layers.
+
+This route keeps numeric expression rules smaller, at the cost of explicit
+buffer-format APIs and runtime boundary checks. It does not supply general
+fixed-width scalar arithmetic, arbitrary C FFI layouts, or an allocation-free
+representation for vector and matrix calculations. Coordinate those separate
+needs with the numeric, FFI and small-record proposals. `money` and `decimal`
+are outside this comparison.
+
+### Alternative: language-level packed arrays and explicit-width types
+
+Keep packed arrays using the
+[explicit-width numeric design](#21-explicit-width-numeric-types-money-and-decimal)
+as an alternative. They could expose general typed contiguous numeric and
+eligible fixed-layout record data, with corresponding compiler, VM, tooling and
+image-format work. Compare this generality with the preferred library-buffer
+route before selecting an implementation. Graphics alone does not require it.
+
+### Open questions and evaluation
 
 Open questions: construction, indexing and slicing, value semantics and mutation,
 borrowing across native calls, task sharing, bounds and allocation limits,
-alignment, byte order and record padding. Decide which numeric types and
-fixed-layout records are eligible and how layouts are described and checked.
+alignment, byte order and record padding, asynchronous resource lifetimes and
+release. Define supported storage formats, range and rounding rules, bulk access,
+and layout validation. For the packed-array alternative, also decide which
+numeric types and fixed-layout records are eligible.
 Contiguous FPAS storage does not automatically establish C-ABI compatibility.
 
 Evaluation should include binary-file round trips, embedded zero bytes, malformed
-input, typed upload and download, bounds, aliasing and native-buffer lifetimes.
+input, typed upload and download, bounds, aliasing and native-buffer lifetimes,
+including task transfer, cancellation and cleanup. Include image, vertex/index
+and audio consumers, scalar conversion boundaries and bulk operations.
 Measure memory use and conversion costs on representative data before claiming
 an improvement over ordinary arrays. Preserve one byte representation across
 the affected standard units.

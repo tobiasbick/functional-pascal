@@ -3,7 +3,9 @@
 > Graphics application case only. No graphics implementation plan, unit name,
 > or API is agreed. Shared foundations and their decision status are maintained
 > in [FPAS 2 language directions](fpas2-language-directions.md), including the
-> agreed numeric design and the remaining open proposals.
+> recorded numeric design and the remaining open proposals. Native library
+> buffers with existing FPAS scalar types are the preferred graphics-data
+> alternative; no buffer API or implementation is agreed.
 
 Functional Pascal has no way to open a window, draw pixels, or use a GPU. This note records the
 runtime and language gaps that a graphics capability would expose, and the properties that would
@@ -40,18 +42,22 @@ These parts of the current runtime already fit a graphics capability:
 
 Arrays store one tagged runtime value per element. A vertex buffer of `N` floats therefore costs
 several times the memory of a packed `f32` buffer, and every upload converts each element at the
-native boundary. Bytes are `array of integer` with a range check per element, and `Std.Fs` reads
-and writes UTF-8 text only. Large or frequently changing meshes, image data, and audio samples pay
-this cost. The [standard library roadmap](std-roadmap.md) already lists the canonical byte
+native boundary. Bytes are `array of integer` with a range check per element;
+`Std.Fs` already supports binary reads and writes using that representation.
+Large or frequently changing meshes, image data, and audio samples pay the
+tagged-storage and conversion cost. The [standard library roadmap](std-roadmap.md) lists the canonical byte
 representation as an open decision.
 
 ### Numeric types
 
 `real` is always 64-bit and `integer` is always 64-bit signed. GPU data is mostly 32-bit float,
-16-bit or 32-bit unsigned integer, and packed 8-bit color channels. Without fixed-width types,
-every boundary call converts and range-checks values, and FPAS code cannot describe a vertex layout
-precisely. Exact monetary amounts also have no type: `real` accumulates binary rounding errors.
-The agreed design is maintained in
+16-bit or 32-bit unsigned integer, and packed 8-bit color channels. Ordinary FPAS
+arrays do not provide these packed layouts. New scalar numeric types are one
+possible route; native buffers with explicit storage formats are another and
+are currently preferred. They can describe vertex layouts without changing
+FPAS scalar arithmetic. Range checks and conversions happen when filling a
+buffer rather than being repeated for every compatible native handoff.
+The separate numeric design is maintained in
 [FPAS 2 numeric types, money and decimal](fpas2-language-directions.md#21-explicit-width-numeric-types-money-and-decimal).
 
 ### Small value aggregates
@@ -87,9 +93,10 @@ headless servers and the test runner.
 
 ### Runtime and standard library
 
-- A canonical packed buffer type for bytes, together with binary file reads and writes in `Std.Fs`.
-- Typed numeric buffers (`real32`, `unsigned16`, `unsigned32`, `unsigned8`) that native
-  intrinsics can borrow without per-element conversion.
+- A shared native binary-buffer foundation integrated with binary `Std.Fs` access.
+- Specialized pixel, vertex, index and audio buffers with explicit storage
+  formats, bulk operations and compatible native handoffs without per-element
+  conversion. Existing `integer` and `real` remain the FPAS scalar interface.
 - Main-thread event pumping as a selectable source, so `Select` can combine window events, channels,
   task completion, and timeouts.
 - A monotonic clock with sub-millisecond resolution.
@@ -101,11 +108,12 @@ headless servers and the test runner.
 ### Language
 
 - [Numeric types, money and decimal](fpas2-language-directions.md#21-explicit-width-numeric-types-money-and-decimal):
-  agreed numeric design with remaining open points; no implementation is scheduled.
+  recorded agreed numeric design with remaining open points; no implementation
+  is scheduled. Small scalar numeric types are not a prerequisite for the
+  preferred buffer route. `money` and `decimal` are outside this comparison.
 - [Packed numeric data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers):
-  open proposal for contiguous numeric and fixed-layout record data without
-  per-element native conversion. Language-level arrays versus library buffers
-  remain undecided.
+  native library buffers are the preferred alternative to language-level packed
+  arrays. The API, storage and ownership contracts still need decisions.
 - [Small records without heap allocation](fpas2-language-directions.md#23-small-records-without-heap-allocation):
   open proposal for vectors, matrices, colors and rectangles. First evaluate
   optimizing existing records; no separate value-record form is agreed.
@@ -124,10 +132,29 @@ an implementation decision before work begins.
 The [full numeric design](fpas2-language-directions.md#21-explicit-width-numeric-types-money-and-decimal)
 is maintained in the FPAS 2 directions, including names, literals, conversions,
 arithmetic, bit operations, runtime representation and open rounding and storage
-questions. Explicit widths address GPU data; `money` serves fixed-scale amounts
-and arbitrary-precision `decimal` serves exact decimal calculations and lossless
-JSON number values. Neither decimal GPU storage nor a JSON/TOML parser migration
-is implied by this shared design.
+questions. That design remains available for independent numeric language work.
+Graphics storage can instead use the preferred native-buffer alternative without
+new small scalar types or a rename of `integer` and `real`. The buffer comparison
+does not change the status of `money` or `decimal` or imply parser migration.
+
+## Preferred alternative: native buffers
+
+One native binary-buffer core would support specialized pixel, vertex, index
+and audio interfaces. A format such as `RGBA8`, `Float32` or `Index16` describes
+storage rather than an FPAS scalar type. FPAS supplies ordinary `integer` and
+`real` values; native code checks and packs writes and can decode assets directly
+into compatible buffers. Bulk operations avoid routing every byte through FPAS.
+
+Rust owns GPU resources, uploads and draw submission. Compatible host buffers
+avoid repeated element conversion, but GPU transfers may still copy or require
+staging. Layout descriptions, lifetimes and task sharing need explicit contracts;
+ordinary FPAS records do not automatically acquire a GPU or C layout.
+
+The shared design, tradeoffs and comparison with packed arrays belong in
+[FPAS 2 packed data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers).
+This preference also applies to the [alternative multimedia foundations](graphics-alternative.md).
+Small-record allocation, vector arithmetic notation and native event integration
+remain separate topics. The preference does not authorize implementation.
 
 ## Non-goals
 

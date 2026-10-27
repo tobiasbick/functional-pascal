@@ -16,8 +16,11 @@ how a native graphics and audio layer could be assembled for both 3D games and
 applications with custom 2D interfaces.
 
 Neither document specifies an agreed graphics API. This note does not replace
-the existing note or change the status of the shared proposals in
-[FPAS 2 language directions](fpas2-language-directions.md).
+the existing note. Shared designs and their status belong in
+[FPAS 2 language directions](fpas2-language-directions.md). For graphics and audio
+data, native library buffers without new scalar numeric types are the human's
+current preference. This is a preferred alternative, not an agreed buffer API
+or authorization to implement it.
 
 Two routes are under consideration:
 
@@ -54,6 +57,32 @@ rather than being built on top of a simple 2D drawing API.
 Audio must continue independently of frame rendering and FPAS update work.
 Native audio callbacks must not synchronously depend on arbitrary FPAS execution.
 Equalization, mixing, and analysis would need an explicit native processing path.
+
+## Preferred data alternative: native buffers
+
+Both backends can use one shared native binary-buffer foundation with specialized
+pixel, vertex, index and audio interfaces. FPAS would continue calculating with
+`integer` and `real`. Formats such as `RGBA8`, `Float32`, `Index16` and signed
+16-bit PCM describe storage, without introducing matching scalar types into the
+language or requiring a rename of the existing ones.
+
+Native code checks ranges and narrows or rounds values when buffers are filled.
+Decoders, generators and bulk operations can produce compatible data directly.
+Rendering and audio consume supported layouts without repeatedly unpacking
+tagged FPAS arrays. GPU uploads may still copy or need staging; this does not
+promise zero-copy delivery to a device.
+
+This matches the proposed responsibility split: FPAS controls application state,
+scenes and playback; Rust owns native storage, GPU resources and continuous audio
+delivery. The buffer preference is independent of choosing SDL3 or the Rust
+library route. Pixel, vertex and audio layouts need distinct APIs over a common
+binary foundation, not backend-specific handles in application code.
+
+The [shared packed-data proposal](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers)
+owns the comparison with language-level packed arrays and explicit-width scalar
+types. API names, supported formats, rounding, layout validation, borrowing,
+task sharing and cleanup remain open. Small-record allocation and native event
+integration remain separate work; `money` and `decimal` are outside this comparison.
 
 ## Route A: SDL3
 
@@ -139,9 +168,11 @@ could retain their meaning without depending on terminal cells or GPU details.
 This is an architectural consideration, not a decision to reuse the current
 terminal host unchanged.
 
-The current TUI host calls View and performs validation, layout, and painting
-after each processed message. Transferring only changed terminal cells reduces
-terminal output; it does not skip that earlier work. The existing proposals for
+The [current TUI host](../pascal/std/tui/application.md#headless-frame-and-routing-order)
+still calls View for each render request, then compares trees, reuses stable
+layout and repaints damaged rows. Unchanged trees can skip validation, layout
+and painting; terminal output also transfers only changed cells. Selective
+subview construction remains an open direction. The existing proposals for
 [application stores and selectors](fpas2-language-directions.md#19-application-stores-and-selectors)
 and [selective TUI updates](fpas2-language-directions.md#20-selective-tui-updates)
 could also inform graphical interfaces without changing their current status.
@@ -238,9 +269,11 @@ configuration must be checked for each target before claiming this goal works.
 ## Shared prerequisites and open questions
 
 Both routes still need the shared foundations recorded in the existing graphics
-note: packed binary/numeric data, binary file access, suitable numeric types,
-native event integration, precise monotonic time, and optional native capabilities.
-Choosing a backend does not settle these language and runtime designs.
+note: compact binary/numeric storage integrated with binary file access, native
+event integration, precise monotonic time, and optional native capabilities.
+The preferred buffer route supplies storage formats without making new small
+scalar types a prerequisite. Choosing a backend does not settle buffer APIs,
+ownership or the remaining language and runtime designs.
 
 Questions for a later decision include:
 

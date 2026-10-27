@@ -14,6 +14,123 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-27: Full suite with PATH FPAS (on 0f31bb8b0)
+
+- Group: `all`; all 87 workloads succeeded (74 FPAS processes and 13 native drivers).
+- Suite: [`suite.toml`](suite.toml), unchanged workload selection and arguments.
+- One unprofiled local release run per workload, with each workload's existing warmup
+  and internal sampling. This table contains single-run results, not the earlier VM medians.
+- FPAS workloads used the executable resolved from `PATH`. Its SHA-256 remained
+  `1ccc2f114d02839d0943d682226c6f5fc53c9471d25a58be350574cd71e46c43`
+  before and after the run. Native drivers were built from this revision before measuring;
+  `FPAS_BENCH_CLI` selected the same PATH executable for their child processes.
+- The suite entries were invoked directly because `cargo bench-fpas record` always
+  rebuilds and selects its own CLI. No Rust build ran during measurement. The results
+  were saved in the harness snapshot format as `full-path-20261027` and recorded here.
+- Reference: the complete post-change run in `dist-acp-bench-after.log`, captured on
+  2026-10-27 at 21:44 Europe/Berlin. This is a historical comparison, not an alternating
+  rerun of the previous executable. It does not isolate individual commits.
+- `outlier` means an absolute elapsed-time change strictly greater than 3%, evaluated
+  before rounding. There are 35 such rows, including five short rows. These are observed
+  changes in one run, not confirmed regressions or improvements.
+- `short` marks either time at or below 10 ms (19 rows). Their integer-millisecond
+  resolution makes percentage comparisons coarse. A reported 0 ms means below the
+  reporting resolution; its percentage change is not defined.
+- `failure_dump_*` includes child-process startup. The native tooling and project-build
+  rows measure compiler, editor or artifact work rather than FPAS program execution.
+- Sum of row times: 41328 ms reference, 41544 ms current. This mixes different
+  measurement boundaries and is not an application-throughput score.
+
+| bench | reference_ms | elapsed_ms | change | flags | throughput |
+|-------|-------------:|-----------:|-------:|-------|------------|
+| acp_codec_roundtrip | 109 | 109 | 0.000% | - | - |
+| mcp_catalog | 8 | 9 | +12.500% | outlier, short | - |
+| failure_dump_scalar | 1249 | 1132 | -9.367% | outlier | throughput: enabled/disabled median change 0% |
+| failure_dump_calls | 1461 | 1216 | -16.769% | outlier | throughput: enabled/disabled median change 0% |
+| failure_dump_globals | 1438 | 2137 | +48.609% | outlier | throughput: enabled/disabled median change 0.952380952380949% |
+| failure_dump_spawn_wait | 1288 | 1595 | +23.835% | outlier | throughput: enabled/disabled median change 19.718309859154928% |
+| failure_dump_suspension | 10000 | 10111 | +1.110% | - | throughput: enabled/disabled median change -0.914076782449726% |
+| failure_dump_failure | 1059 | 1534 | +44.854% | outlier | throughput: enabled/disabled median change 2.3809523809523796% |
+| failure_dump_large_report | 1609 | 1906 | +18.459% | outlier | throughput: enabled/disabled median change 95.23809523809524% |
+| mandelbrot_render | 451 | 473 | +4.878% | outlier | - |
+| mandelbrot_paint | 510 | 431 | -15.490% | outlier | - |
+| integer_loop | 608 | 590 | -2.961% | - | throughput: 84745762 iters/s |
+| typed_real | 122 | 120 | -1.639% | - | - |
+| typed_boolean | 244 | 233 | -4.508% | outlier | - |
+| typed_string | 103 | 96 | -6.796% | outlier | - |
+| global_access | 114 | 103 | -9.649% | outlier | throughput: 48543689 global updates/s |
+| record_field_access | 323 | 303 | -6.192% | outlier | throughput: 49504950 field accesses/s |
+| closure_call | 181 | 138 | -23.757% | outlier | throughput: 21739130 closure calls/s |
+| mutable_capture | 203 | 200 | -1.478% | - | throughput: 15000000 captured updates/s |
+| branch_dispatch | 278 | 270 | -2.878% | - | throughput: 74074074 branches/s |
+| dynamic_numeric | 290 | 324 | +11.724% | outlier | throughput: 15432098 dynamic numeric ops/s |
+| array_push | 54 | 54 | 0.000% | - | throughput: 37037037 pushes/s |
+| array_length | 5 | 5 | 0.000% | short | throughput: 100000000 lengths/s |
+| string_concat | 779 | 762 | -2.182% | - | throughput: 6561679 concats/s |
+| string_length | 5 | 5 | 0.000% | short | throughput: 100000000 lengths/s |
+| intrinsic_dispatch | 138 | 136 | -1.449% | - | throughput: 110294117 intrinsic calls/s |
+| function_call | 238 | 238 | 0.000% | - | throughput: 25210084 calls/s |
+| array_callbacks | 721 | 723 | +0.277% | - | throughput: 13278008 callbacks/s |
+| record_update | 86 | 88 | +2.326% | - | throughput: 11363636 updates/s |
+| unicode_char_at | 236 | 238 | +0.847% | - | throughput: 12605042 chars/s |
+| wrapper_payload | 333 | 323 | -3.003% | outlier | throughput: 30959752 wrappers/s |
+| task_spawn_wait | 567 | 561 | -1.058% | - | throughput: 178253 tasks/s |
+| task_array_callbacks | 294 | 289 | -1.701% | - | throughput: 13287197 callbacks/s |
+| tui_headless | 347 | 345 | -0.576% | - | throughput: 1449 frames/s |
+| notes_headless | 122 | 114 | -6.557% | outlier | throughput: 2192 frames/s |
+| tui_styled_cells | 379 | 363 | -4.222% | outlier | - |
+| analysis_queries | 241 | 243 | +0.830% | - | - |
+| string_search | 72 | 70 | -2.778% | - | - |
+| compiler_lowering | 545 | 455 | -16.514% | outlier | - |
+| substring_ascii | 7 | 7 | 0.000% | short | - |
+| substring_unicode | 12 | 10 | -16.667% | outlier, short | - |
+| project_queries | 1325 | 1088 | -17.887% | outlier | - |
+| project_edits | 977 | 884 | -9.519% | outlier | - |
+| project_overlapping_queries | 816 | 675 | -17.279% | outlier | - |
+| project_build_cold | 4972 | 4665 | -6.175% | outlier | - |
+| project_build_warm | 2257 | 2040 | -9.615% | outlier | - |
+| unit_artifact_shared_types | 0 | 0 | n/a | short | - |
+| program_artifact_shared_types | 0 | 0 | n/a | short | - |
+| dictionary_reads | 2 | 2 | 0.000% | short | - |
+| scalar_membership | 3 | 3 | 0.000% | short | - |
+| array_pop | 1 | 1 | 0.000% | short | - |
+| text_area_locate | 0 | 0 | n/a | short | - |
+| http_body_accumulation | 187 | 186 | -0.535% | - | - |
+| local_index_write | 19 | 15 | -21.053% | outlier | throughput: 42666666 writes/s |
+| cell_grid_headless | 43 | 43 | 0.000% | - | throughput: 2325 paints/s |
+| partial_surface_fill | 57 | 55 | -3.509% | outlier | - |
+| source_utf8_ascii_2048 | 5 | 4 | -20.000% | outlier, short | - |
+| source_utf8_ascii_4096 | 10 | 10 | 0.000% | short | - |
+| source_utf8_ascii_8192 | 20 | 20 | 0.000% | - | - |
+| source_utf8_unicode_2048 | 20 | 19 | -5.000% | outlier | - |
+| source_utf8_unicode_4096 | 41 | 40 | -2.439% | - | - |
+| source_utf8_unicode_8192 | 82 | 80 | -2.439% | - | - |
+| source_notes_ascii_128 | 2 | 3 | +50.000% | outlier, short | - |
+| source_notes_ascii_256 | 5 | 5 | 0.000% | short | - |
+| source_notes_ascii_512 | 10 | 11 | +10.000% | outlier, short | - |
+| source_queue_ascii_256 | 23 | 24 | +4.348% | outlier | - |
+| source_queue_ascii_512 | 47 | 46 | -2.128% | - | - |
+| source_queue_ascii_1024 | 93 | 92 | -1.075% | - | - |
+| source_navigation_long_512 | 23 | 23 | 0.000% | - | - |
+| source_navigation_long_1024 | 44 | 43 | -2.273% | - | - |
+| source_navigation_long_2048 | 86 | 88 | +2.326% | - | - |
+| source_navigation_lines_512 | 7 | 7 | 0.000% | short | - |
+| source_navigation_lines_1024 | 11 | 11 | 0.000% | - | - |
+| source_navigation_lines_2048 | 19 | 18 | -5.263% | outlier | - |
+| errors_enum_construction | 24 | 24 | 0.000% | - | - |
+| errors_typed_construction | 26 | 26 | 0.000% | - | - |
+| errors_generic_direct | 27 | 27 | 0.000% | - | - |
+| errors_generic_helper | 54 | 57 | +5.556% | outlier | - |
+| errors_generic_callable | 57 | 58 | +1.754% | - | - |
+| errors_map_ok | 266 | 262 | -1.504% | - | - |
+| errors_case_ok | 183 | 187 | +2.186% | - | - |
+| errors_map_error | 826 | 852 | +3.148% | outlier | - |
+| errors_case_error | 656 | 640 | -2.439% | - | - |
+| errors_constructor_error | 741 | 725 | -2.159% | - | - |
+| errors_cause_message | 1 | 1 | 0.000% | short | - |
+| errors_cause_console | 430 | 424 | -1.395% | - | - |
+| errors_deep_image | 1 | 1 | 0.000% | short | - |
+
 ## 2026-10-23 — Full suite after AP48/AP49: parallel-task, aggregate-store and collection-threshold fixes (on ace31bf21)
 
 - Group: `all`

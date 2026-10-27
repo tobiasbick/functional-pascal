@@ -82,10 +82,11 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
-There is no accepted timing baseline for the current 87-row suite. Capture a
-fresh baseline on a controlled local performance host before comparing elapsed
-times. Historical snapshots with different workload selections cannot be used
-against the expanded suite; group/row validation remains strict.
+The complete 87-row baseline from 2026-10-27 is recorded in [history.md](history.md).
+It uses the release FPAS executable resolved from PATH and matching native drivers.
+The entry includes its reference values and marks changes above 3% and timings at
+or below 10 ms. Repeat suspected regressions before interpreting single-run
+differences. Comparisons still require matching workload selections and arguments.
 
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
 and full-range slices of a 32,768-scalar string. Input construction and warmup

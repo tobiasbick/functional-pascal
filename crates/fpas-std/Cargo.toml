@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-fpas-acp = { path = "../fpas-acp" }
+fpas-acp-model = { path = "../fpas-acp-model" }
 fpas-numeric = { path = "../fpas-numeric" }
 atomic-write-file = "0.3.1"
 crossterm = { workspace = true }

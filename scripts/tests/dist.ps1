@@ -1,31 +1,46 @@
-# Verify distribution failure handling without invoking Cargo or replacing bin/.
-param([string]$ScriptPath = (Join-Path $PSScriptRoot '../../dist.ps1'))
+# Verify distribution failure handling with an isolated copy of the built compiler.
+param(
+    [string]$ScriptPath = (Join-Path $PSScriptRoot '../../dist.ps1'),
+    [string]$FpasPath = (Join-Path $PSScriptRoot '../../target/debug/fpas.exe')
+)
 $ErrorActionPreference = 'Stop'
 $scriptSource = Get-Content -Raw -LiteralPath $ScriptPath
+$compiler = (Resolve-Path -LiteralPath $FpasPath).Path
 $fixture = Join-Path ([System.IO.Path]::GetTempPath()) ('fpas-dist-test-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $fixture | Out-Null
 $fixture = (Resolve-Path -LiteralPath $fixture).Path
 $initialLocation = (Get-Location).Path
 
 function cargo {
-    $global:fpasDistTestCargoCalls++
     $global:fpasDistTestCargoArguments += ,(($args | ForEach-Object { "$_" }) -join ' ')
-    $global:LASTEXITCODE = 0
-    if ($global:fpasDistTestCargoCalls -eq $global:fpasDistTestFailCall) {
-        $global:LASTEXITCODE = 42
-    }
+    $global:LASTEXITCODE = if ($global:fpasDistTestFailure -eq 'build') { 42 } else { 0 }
 }
 
 try {
     Set-Content -LiteralPath (Join-Path $fixture 'dist.ps1') -Value $scriptSource
-    New-Item -ItemType Directory -Path (Join-Path $fixture 'target/release') -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $fixture 'target/release/lib/Std') -Force | Out-Null
     New-Item -ItemType Directory -Path (Join-Path $fixture 'bin') -Force | Out-Null
-    foreach ($failure in @(1, 2, 0)) {
-        $global:fpasDistTestFailCall = $failure
-        $global:fpasDistTestCargoCalls = 0
+    Copy-Item -LiteralPath $compiler -Destination (Join-Path $fixture 'target/release/fpas.exe')
+    Set-Content -LiteralPath (Join-Path $fixture 'target/release/lib/stdlib.fpasprj') -Value @'
+[project]
+name = "distribution-fixture"
+kind = "library"
+[exports]
+units = ["Std.DistributionFixture"]
+[sources]
+include = ["Std/**/*.fpas"]
+'@
+    foreach ($failure in @('build', 'stage', 'success')) {
+        $global:fpasDistTestFailure = $failure
         $global:fpasDistTestCargoArguments = @()
+        $source = if ($failure -eq 'stage') { 'invalid Pascal' } else {
+            'unit Std.DistributionFixture; const Answer: integer := 42; end unit;'
+        }
+        Set-Content -LiteralPath (Join-Path $fixture 'target/release/lib/Std/DistributionFixture.fpas') -Value $source
         foreach ($binary in @('fpas.exe', 'fpas-runner.exe', 'fpas-lsp.exe')) {
-            Set-Content -LiteralPath (Join-Path $fixture "target/release/$binary") -Value 'new'
+            if ($binary -ne 'fpas.exe') {
+                Set-Content -LiteralPath (Join-Path $fixture "target/release/$binary") -Value 'new'
+            }
             Set-Content -LiteralPath (Join-Path $fixture "bin/$binary") -Value 'old'
         }
         $failed = $false
@@ -36,21 +51,27 @@ try {
         catch {
             $failed = $true
         }
-        if ($failed -ne ($failure -ne 0)) { throw "Wrong failure outcome for Cargo call $failure" }
-        $expectedCalls = if ($failure -eq 1) { 1 } else { 2 }
-        if ($global:fpasDistTestCargoCalls -ne $expectedCalls) { throw 'Cargo continued after failure' }
-        if ($global:fpasDistTestCargoArguments[0] -ne 'build --release -p fpas-cli -p fpas-lsp') {
-            throw 'Release build does not include fpas-lsp'
+        if ($failed -ne ($failure -ne 'success')) { throw "Wrong failure outcome for $failure" }
+        if ($global:fpasDistTestCargoArguments.Count -ne 1) { throw 'Expected one Cargo invocation' }
+        if ($global:fpasDistTestCargoArguments[0] -ne 'build --locked --release -p fpas-cli -p fpas-lsp') {
+            throw 'Incorrect release build arguments'
         }
         $reportedSuccess = [bool]($output -match '^Built:')
-        if ($reportedSuccess -ne ($failure -eq 0)) { throw 'Incorrect success report' }
-        $expectedBinary = if ($failure -eq 0) { 'new' } else { 'old' }
+        if ($reportedSuccess -ne ($failure -eq 'success')) { throw 'Incorrect success report' }
         foreach ($binary in @('fpas.exe', 'fpas-runner.exe', 'fpas-lsp.exe')) {
-            $actual = (Get-Content -Raw -LiteralPath (Join-Path $fixture "bin/$binary")).Trim()
-            if ($actual -ne $expectedBinary) { throw "Incorrect published binary: $binary" }
+            $published = Join-Path $fixture "bin/$binary"
+            if ($failure -eq 'success') {
+                $expected = (Get-FileHash -LiteralPath (Join-Path $fixture "target/release/$binary")).Hash
+                if ((Get-FileHash -LiteralPath $published).Hash -ne $expected) { throw "Incorrect binary: $binary" }
+            }
+            elseif ((Get-Content -Raw -LiteralPath $published).Trim() -ne 'old') {
+                throw "Published binary after failure: $binary"
+            }
         }
+        $sidecar = Join-Path $fixture 'bin/lib/Std/DistributionFixture.fpascu'
+        if ((Test-Path -LiteralPath $sidecar) -ne ($failure -eq 'success')) { throw 'Incorrect staged library' }
         if ((Get-Location).Path -ne $initialLocation) { throw 'Working directory was not restored' }
-        Write-Output "PASS: Cargo failure call $failure"
+        Write-Output "PASS: $failure"
     }
 }
 finally {

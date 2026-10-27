@@ -3,7 +3,7 @@
 mod records;
 mod unions;
 
-use super::{Catalog, Shape, Type, Value, build::invalid, wire::Wire};
+use super::{Catalog, Shape, Type, Value, invalid, wire::Wire};
 use crate::{CodecError, ErrorKind, RawJson, normalizers};
 use std::collections::HashSet;
 
@@ -13,59 +13,61 @@ pub(super) struct Encoder<'a> {
     pub depth: usize,
 }
 
-impl Catalog {
-    /// Encode a detached nominal value after validating its complete shape with the SDK.
-    pub fn encode(&self, key: &str, value: &Value) -> Result<RawJson, CodecError> {
-        Encoder {
-            catalog: self,
-            mask_unknown: false,
-            depth: 0,
-        }
-        .named(key, value)?
-        .finish()
+/// Encode a detached nominal value after validating its complete shape with the SDK.
+pub(super) fn encode(catalog: &Catalog, key: &str, value: &Value) -> Result<RawJson, CodecError> {
+    Encoder {
+        catalog,
+        mask_unknown: false,
+        depth: 0,
     }
+    .named(key, value)?
+    .finish()
+}
 
-    pub(super) fn encode_masked(&self, key: &str, value: &Value) -> Result<RawJson, CodecError> {
-        Encoder {
-            catalog: self,
-            mask_unknown: true,
-            depth: 0,
-        }
-        .named(key, value)?
-        .finish()
+pub(super) fn encode_masked(
+    catalog: &Catalog,
+    key: &str,
+    value: &Value,
+) -> Result<RawJson, CodecError> {
+    Encoder {
+        catalog,
+        mask_unknown: true,
+        depth: 0,
     }
+    .named(key, value)?
+    .finish()
+}
 
-    pub(super) fn wire_properties(&self, ty: &Type, names: &mut HashSet<String>) {
-        if let Type::Named(key) = ty
-            && let Some(declaration) = self.declarations.get(key)
-        {
-            match &declaration.shape {
-                Shape::Record(fields) => {
-                    for field in fields {
-                        match &field.wire {
-                            super::WireField::Property(name) => {
-                                names.insert(name.clone());
-                            }
-                            super::WireField::Flatten => self.wire_properties(&field.ty, names),
-                            super::WireField::Extra => {}
-                        }
-                    }
-                }
-                Shape::Enum { variants, unknown } => {
-                    for variant in variants {
-                        if let Some((Some(name), _)) = &variant.tag {
+pub(super) fn wire_properties(catalog: &Catalog, ty: &Type, names: &mut HashSet<String>) {
+    if let Type::Named(key) = ty
+        && let Some(declaration) = catalog.declarations.get(key)
+    {
+        match &declaration.shape {
+            Shape::Record(fields) => {
+                for field in fields {
+                    match &field.wire {
+                        super::WireField::Property(name) => {
                             names.insert(name.clone());
                         }
-                        if let Some(ty) = &variant.payload {
-                            self.wire_properties(ty, names);
-                        }
-                    }
-                    if let Some(super::Unknown::Tagged(name)) = unknown {
-                        names.insert(name.clone());
+                        super::WireField::Flatten => wire_properties(catalog, &field.ty, names),
+                        super::WireField::Extra => {}
                     }
                 }
-                _ => {}
             }
+            Shape::Enum { variants, unknown } => {
+                for variant in variants {
+                    if let Some((Some(name), _)) = &variant.tag {
+                        names.insert(name.clone());
+                    }
+                    if let Some(ty) = &variant.payload {
+                        wire_properties(catalog, ty, names);
+                    }
+                }
+                if let Some(super::Unknown::Tagged(name)) = unknown {
+                    names.insert(name.clone());
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -148,7 +150,7 @@ impl Encoder<'_> {
             && let Some(normalize) = normalizers::lookup(self.catalog.version, key)
         {
             if value.contains_unknown() {
-                normalize(&self.catalog.encode_masked(key, value)?)?;
+                normalize(&encode_masked(self.catalog, key, value)?)?;
             } else {
                 normalize(&raw)?;
             }

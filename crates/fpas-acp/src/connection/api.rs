@@ -4,6 +4,7 @@ use super::{
     Event, Fault, Lifecycle, Payload, RequestToken, Responder,
     shared::{Command, Pending, REQUEST_TAG, RESPONDER_TAG, SERIAL_MASK, Shared},
 };
+use crate::binding::CatalogCodec as _;
 use crate::{RawJson, binding, schema::Version};
 use std::sync::Arc;
 

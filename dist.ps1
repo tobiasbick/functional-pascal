@@ -2,11 +2,11 @@
 $ErrorActionPreference = 'Stop'
 Push-Location $PSScriptRoot
 try {
-    cargo build --release -p fpas-cli -p fpas-lsp
+    cargo build --locked --release -p fpas-cli -p fpas-lsp
     if ($LASTEXITCODE -ne 0) {
         throw "Release build failed (exit code $LASTEXITCODE)."
     }
-    cargo run --release -p fpas-build --example precompile_stdlib -- target\release\lib bin\lib
+    & .\target\release\fpas.exe stdlib stage --source target\release\lib --output bin\lib
     if ($LASTEXITCODE -ne 0) {
         throw "Standard-library staging failed (exit code $LASTEXITCODE)."
     }

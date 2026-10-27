@@ -5,6 +5,7 @@ pub(in super::super) mod wait;
 
 use super::arguments as args;
 use crate::vm::{VmError, worker::Worker};
+use fpas_acp::binding::CatalogCodec as _;
 use fpas_acp::{RawJson, binding::Type, connection::Fault, protocol::v1 as sdk, schema::Version};
 use fpas_bytecode::{AcpIntrinsic as Op, SourceLocation, Value};
 use fpas_std::AggregateFactory;

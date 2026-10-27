@@ -162,7 +162,6 @@ impl Builder {
                 name,
                 module,
                 shape,
-                sdk: crate::normalizers::lookup(self.version, key).is_some(),
                 method: schema["x-method"].as_str().map(str::to_owned),
             },
         );

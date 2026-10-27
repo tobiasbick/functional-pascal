@@ -32,7 +32,9 @@ impl Encoder<'_> {
                 WireField::Property(name) => {
                     occupied.insert(name.clone());
                 }
-                WireField::Flatten => self.catalog.wire_properties(&field.ty, &mut occupied),
+                WireField::Flatten => {
+                    super::wire_properties(self.catalog, &field.ty, &mut occupied)
+                }
                 WireField::Extra => {}
             }
         }

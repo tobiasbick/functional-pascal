@@ -156,6 +156,7 @@ pub(crate) enum HelpTopic {
     Check,
     Doc,
     Query,
+    Stdlib,
     QueryRefs,
     QueryDef,
     QueryType,
@@ -206,6 +207,7 @@ pub(crate) enum ResolvedCli {
     Check(CliConfig),
     Doc(DocCliConfig),
     Query(super::QueryCliConfig),
+    StageStdlib(super::StdlibCliConfig),
     Fmt(FmtCliConfig),
     Test(TestCliConfig),
     /// Print the selected toolchain environment as JSON.

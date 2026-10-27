@@ -2,7 +2,7 @@
 
 use super::super::super::{define_func, p};
 use crate::{check::Checker, types::Ty};
-use fpas_acp::{
+use fpas_acp_model::{
     binding::{self, ROOTS},
     schema::Version,
 };

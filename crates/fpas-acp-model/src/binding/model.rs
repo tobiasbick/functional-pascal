@@ -123,8 +123,6 @@ pub struct Declaration {
     pub module: &'static str,
     /// Full value shape.
     pub shape: Shape,
-    /// Exact SDK serde validator exists for this declaration.
-    pub sdk: bool,
     /// Method metadata provided by the SDK schema.
     pub method: Option<String>,
 }

@@ -34,7 +34,7 @@ impl Wire {
                     .map(|(name, raw)| Ok((name, Self::parse(raw.get())?)))
                     .collect()
             }
-            _ => Err(super::build::invalid()),
+            _ => Err(super::invalid()),
         }
     }
 }

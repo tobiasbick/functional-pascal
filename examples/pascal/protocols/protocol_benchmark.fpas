@@ -1,0 +1,63 @@
+program ProtocolBenchmark;
+
+uses
+  Std.Acp.Types as Acp, Std.Mcp as Mcp, Std.Args as Args, Std.Parse as Parse,
+  Std.Time as Time, Std.Console as Console, Std.Conv as Conv, Std.Test as Test;
+
+function Handler(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError);
+begin
+  return Ok(Mcp.TextResult('unused'));
+end function;
+
+procedure RunAcp(Iterations: integer);
+begin
+  const Raw := Acp.ParseRawJson(
+    '{"sessionId":"bench","prompt":[{"type":"text","text":"hello"}],"_meta":{"exact":9007199254740993}}'
+  ).Unwrap();
+  for Index: integer := 1 to Iterations do
+    const Decoded := Acp.DecodeClientRequest('session/prompt', Raw).Unwrap();
+    Test.AssertEquals(Raw.Text, Decoded.RawPayload.Text);
+    const Encoded := Acp.EncodeClientRequest('session/prompt', Decoded.Payload).Unwrap();
+    const RoundTrip := Acp.DecodeClientRequest('session/prompt', Encoded).Unwrap();
+    Test.AssertTrue(RoundTrip.Payload is Acp.ClientRequest.PromptRequest(_));
+  end for;
+end procedure;
+
+procedure RunMcp(Iterations: integer);
+begin
+  const Definition := Mcp.ToolDefinition(
+    Name := 'bench', Description := 'Bounded catalog benchmark',
+    InputSchema := Mcp.ParseJson(
+      '{"type":"object","properties":{"value":{"type":"integer"}},"required":["value"]}'
+    ).Unwrap(),
+    OutputSchema := None, Annotations := None, Meta := None
+  );
+  for Index: integer := 1 to Iterations do
+    const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+    Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Handler).Unwrap());
+    Test.AssertTrue(Mcp.Release(Server).Unwrap());
+  end for;
+end procedure;
+
+procedure Run(Mode: string; Iterations: integer);
+begin
+  if Mode = 'acp' then
+    RunAcp(Iterations);
+  else
+    RunMcp(Iterations);
+  end if;
+end procedure;
+
+begin
+  Test.AssertEquals(2, Args.ParamCount());
+  const Mode := Args.ParamStr(0);
+  Test.AssertTrue((Mode = 'acp') or (Mode = 'mcp'));
+  const Iterations := Parse.Int(Args.ParamStr(1)).Unwrap();
+  Test.AssertTrue(Iterations > 0);
+  Run(Mode, 20);
+  const Started := Time.MonotonicMillis();
+  Run(Mode, Iterations);
+  const Elapsed := Time.ElapsedMillis(Started);
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
+  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations));
+end.

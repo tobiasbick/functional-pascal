@@ -41,7 +41,8 @@ impl CodecError {
         }
     }
 
-    pub(crate) fn json(error: serde_json::Error) -> Self {
+    /// Convert a JSON failure without retaining input content.
+    pub fn json(error: serde_json::Error) -> Self {
         Self {
             kind: ErrorKind::InvalidMessage,
             line: (error.line() != 0).then_some(error.line()),

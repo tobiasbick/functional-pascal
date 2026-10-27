@@ -24,7 +24,8 @@ pub fn decode<T: DeserializeOwned>(raw: RawJson) -> Result<Decoded<T>, CodecErro
     Ok(Decoded { value, raw })
 }
 
-pub(crate) fn deserialize<T: DeserializeOwned>(raw: &RawJson) -> Result<T, CodecError> {
+/// Deserialize a borrowed payload using the SDK's finite-number rules.
+pub fn deserialize<T: DeserializeOwned>(raw: &RawJson) -> Result<T, CodecError> {
     let node = serde_json::from_str(raw.text()).map_err(CodecError::json)?;
     T::deserialize(de::Sdk(node)).map_err(CodecError::json)
 }

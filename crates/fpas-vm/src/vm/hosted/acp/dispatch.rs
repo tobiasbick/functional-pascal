@@ -2,6 +2,7 @@
 
 use super::arguments as args;
 use crate::vm::{VmError, worker::Worker};
+use fpas_acp::binding::CatalogCodec as _;
 use fpas_acp::{
     RawJson,
     binding::{self, Type, Value as Detached},

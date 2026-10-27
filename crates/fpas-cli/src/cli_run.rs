@@ -59,6 +59,10 @@ pub(crate) fn run_cli(
     };
 
     match resolved {
+        ResolvedCli::StageStdlib(config) => {
+            let mut reporter = Reporter::new(DiagnosticFormat::Text, stderr).with_color(color);
+            crate::cli_stdlib::stage(config, stdout.as_mut(), &mut reporter)
+        }
         ResolvedCli::Init(config) => crate::cli_init::init_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Help(topic) => {
             match crate::cli_output::write_stdout(

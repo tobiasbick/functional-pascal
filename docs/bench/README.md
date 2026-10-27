@@ -19,7 +19,12 @@ performance conclusions; cloud smoke checks establish correctness only.
 
 The [typed error workloads](errors.md) add the `errors` group: construction,
 generic helpers/callables, MapError/case controls, cause rendering and a structural
-deep-image round trip. The configured suite contains 85 workloads.
+deep-image round trip. The configured suite contains 87 workloads.
+
+The `protocols` group exercises ACP V1 typed request decode/encode with lossless
+raw JSON checks, and MCP server creation, tool registration and release. It uses
+no remote agent or network listener. Each workload warms its path before timing;
+the ACP declaration catalog's first initialization is outside the timer.
 
 The [debugger runtime guide](debugger-runtime.md) describes instruction scheduling,
 execution ownership, terminal waits and profiling for batch, DAP and JSONL
@@ -77,7 +82,7 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
-There is no accepted timing baseline for the current 85-row suite. Capture a
+There is no accepted timing baseline for the current 87-row suite. Capture a
 fresh baseline on a controlled local performance host before comparing elapsed
 times. Historical snapshots with different workload selections cannot be used
 against the expanded suite; group/row validation remains strict.

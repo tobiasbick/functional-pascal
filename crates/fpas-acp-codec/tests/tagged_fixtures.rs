@@ -9,7 +9,8 @@
 #[path = "methods/v2_updates.rs"]
 mod v2_updates;
 
-use fpas_acp::{
+use fpas_acp_codec::binding::CatalogCodec as _;
+use fpas_acp_codec::{
     RawJson,
     binding::{Shape, Value, catalog},
     schema::Version,

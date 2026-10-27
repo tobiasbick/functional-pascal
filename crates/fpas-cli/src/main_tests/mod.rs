@@ -25,6 +25,7 @@ mod output;
 mod projects;
 mod query;
 mod standard_library;
+mod stdlib_stage;
 #[path = "../../stdlib_sync.rs"]
 mod stdlib_sync;
 mod support;

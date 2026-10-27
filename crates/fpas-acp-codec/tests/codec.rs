@@ -6,7 +6,7 @@
 )]
 //! Independent wire documents protect numeric precision, presence and SDK normalization.
 
-use fpas_acp::{
+use fpas_acp_codec::{
     CodecError, ErrorKind, RawJson, UInt64, codec,
     protocol::{self, v1},
 };
@@ -190,14 +190,14 @@ fn untagged_decimal_values_and_raw_arbitrary_numbers_can_share_one_document() {
 #[test]
 fn deep_values_are_rejected_before_unbounded_encode_recursion() {
     let mut value = serde_json::Value::Null;
-    for _ in 0..=fpas_acp::raw::MAX_DEPTH {
+    for _ in 0..=fpas_acp_codec::raw::MAX_DEPTH {
         value = serde_json::Value::Array(vec![value]);
     }
     assert_eq!(kind(codec::encode(&value, 4096)), ErrorKind::DepthExceeded);
     let text = format!(
         "{}null{}",
-        "[".repeat(fpas_acp::raw::MAX_DEPTH + 1),
-        "]".repeat(fpas_acp::raw::MAX_DEPTH + 1)
+        "[".repeat(fpas_acp_codec::raw::MAX_DEPTH + 1),
+        "]".repeat(fpas_acp_codec::raw::MAX_DEPTH + 1)
     );
     assert_eq!(kind(RawJson::parse(&text)), ErrorKind::DepthExceeded);
 }

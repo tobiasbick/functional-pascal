@@ -12,7 +12,9 @@ mod init;
 mod mode;
 mod options;
 mod query;
+mod stdlib;
 mod types;
+pub(crate) use stdlib::StdlibCliConfig;
 
 use std::path::Path;
 use std::time::Duration;
@@ -54,6 +56,7 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
         ResolvedCli::Test(_)
         | ResolvedCli::Doc(_)
         | ResolvedCli::Query(_)
+        | ResolvedCli::StageStdlib(_)
         | ResolvedCli::Environment
         | ResolvedCli::Lsp
         | ResolvedCli::Help(_)
@@ -79,6 +82,13 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             "-V" | "--version" => return Ok(ResolvedCli::Version),
             _ => {}
         }
+    }
+
+    if cli_args[0] == "stdlib" {
+        if !program_args.is_empty() {
+            return Err("`fpas stdlib` does not accept program arguments.\n  help: `fpas stdlib stage --help`.".into());
+        }
+        return stdlib::resolve(&cli_args[1..], cwd);
     }
 
     if cli_args[0] == "query" {

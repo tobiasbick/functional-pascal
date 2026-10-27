@@ -3,6 +3,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 const COMPILER_CRATES: &[&str] = &[
+    "fpas-acp-model",
     "fpas-build",
     "fpas-bytecode",
     "fpas-compiler",

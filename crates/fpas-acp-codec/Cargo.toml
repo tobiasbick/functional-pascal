@@ -1,0 +1,17 @@
+[package]
+name = "fpas-acp-codec"
+description = "SDK-validated ACP payload codecs without MCP or connection ownership"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-acp-model = { path = "../fpas-acp-model" }
+agent-client-protocol.workspace = true
+serde.workspace = true
+serde_json = { workspace = true, features = ["raw_value", "arbitrary_precision"] }
+
+[lints]
+workspace = true

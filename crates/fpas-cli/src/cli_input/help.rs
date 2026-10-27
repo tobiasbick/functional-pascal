@@ -17,6 +17,7 @@ Usage:
     fpas fmt [<path>...]                 Format sources in place
     fpas env --json                      Print installed toolchain paths
     fpas lsp                             Serve LSP over standard I/O
+    fpas stdlib stage [options]          Prepare a distributable standard library
 
 Options:
   -h, --help      Print this help
@@ -399,6 +400,7 @@ Examples:
 pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
     match topic {
         HelpTopic::General => GENERAL_HELP,
+        HelpTopic::Stdlib => super::stdlib::HELP,
         HelpTopic::Init => INIT_HELP,
         HelpTopic::InitProject => INIT_PROJECT_HELP,
         HelpTopic::InitLibrary => INIT_LIBRARY_HELP,

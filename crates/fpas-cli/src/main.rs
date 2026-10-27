@@ -26,6 +26,7 @@ mod cli_paths;
 mod cli_profile;
 mod cli_query;
 mod cli_run;
+mod cli_stdlib;
 mod cli_test;
 mod native_executable;
 mod oneshot;

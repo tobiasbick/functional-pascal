@@ -2,6 +2,7 @@
 
 use super::values::Converter;
 use crate::vm::{VmError, worker::Worker};
+use fpas_acp::binding::CatalogCodec as _;
 use fpas_acp::{
     binding::{self, Type},
     connection::{Closed, Event, Fault, Payload},

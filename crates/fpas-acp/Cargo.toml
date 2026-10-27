@@ -1,6 +1,6 @@
 [package]
 name = "fpas-acp"
-description = "Lossless ACP SDK values, protocol codec and bounded connection driver"
+description = "Bounded ACP connection driver, interaction state and MCP bridge"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,13 +8,13 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+fpas-acp-model = { path = "../fpas-acp-model" }
+fpas-acp-codec = { path = "../fpas-acp-codec" }
 fpas-mcp = { path = "../fpas-mcp" }
 agent-client-protocol.workspace = true
-agent-client-protocol-schema.workspace = true
 futures.workspace = true
 fancy-regex = "0.16"
 tokio.workspace = true
-schemars = "1"
 serde.workspace = true
 serde_json = { workspace = true, features = ["raw_value", "arbitrary_precision"] }
 

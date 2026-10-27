@@ -1,6 +1,6 @@
 //! Checked, detached ACP values; no process or connection effects.
 
-use fpas_acp::{CodecError, ErrorKind, RawJson, UInt64};
+use fpas_acp_model::{CodecError, ErrorKind, RawJson, UInt64};
 use fpas_bytecode::{AcpIntrinsic, Intrinsic, SourceLocation, Value};
 
 use crate::{
@@ -114,7 +114,7 @@ fn error_value(
             "LimitExceeded",
             vec![
                 Value::Str("RawJsonBytes".into()),
-                Value::Integer(fpas_acp::raw::MAX_RAW_BYTES as i64),
+                Value::Integer(fpas_acp_model::raw::MAX_RAW_BYTES as i64),
             ],
         ),
         ErrorKind::InvalidInteger => (

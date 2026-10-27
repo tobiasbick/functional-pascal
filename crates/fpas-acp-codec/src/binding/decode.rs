@@ -3,7 +3,7 @@
 mod records;
 mod unions;
 
-use super::{Catalog, Shape, Type, Value, build::invalid, wire::Object};
+use super::{Catalog, Shape, Type, Value, invalid, wire::Object};
 use crate::{CodecError, ErrorKind, RawJson, normalizers};
 use serde_json::value::RawValue;
 
@@ -12,16 +12,8 @@ pub(super) struct Decoder<'a> {
     pub depth: usize,
 }
 
-impl Catalog {
-    /// Decode one named protocol value with the pinned SDK's defaults and validation.
-    /// Arbitrary subtrees and unknown variants retain their original JSON text.
-    pub fn decode(&self, key: &str, raw: &RawJson) -> Result<Value, CodecError> {
-        Decoder {
-            catalog: self,
-            depth: 0,
-        }
-        .named(key, raw)
-    }
+pub(super) fn decode(catalog: &Catalog, key: &str, raw: &RawJson) -> Result<Value, CodecError> {
+    Decoder { catalog, depth: 0 }.named(key, raw)
 }
 
 impl Decoder<'_> {
@@ -157,7 +149,7 @@ impl Decoder<'_> {
             if !value.contains_unknown() {
                 return Err(error);
             }
-            let placeholder = self.catalog.encode_masked(key, &value)?;
+            let placeholder = super::encode::encode_masked(self.catalog, key, &value)?;
             normalizers::lookup(self.catalog.version, key).ok_or_else(invalid)?(&placeholder)?;
         }
         Ok(value)

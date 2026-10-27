@@ -1,6 +1,7 @@
 //! A host execution lease is independent of the SDK's single reply right.
 
 use super::{Connection, Fault, Responder, shared::Shared};
+use crate::binding::CatalogCodec as _;
 use crate::{RawJson, binding};
 use std::sync::Arc;
 

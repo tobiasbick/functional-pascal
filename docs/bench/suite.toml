@@ -7,6 +7,20 @@
 # FPAS rows run through the production `fpas run` path.
 
 [[bench]]
+id = "acp_codec_roundtrip"
+group = "protocols"
+path = "examples/pascal/protocols/protocol_benchmark.fpas"
+args = ["acp", "5000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "mcp_catalog"
+group = "protocols"
+path = "examples/pascal/protocols/protocol_benchmark.fpas"
+args = ["mcp", "2000"]
+timeout_ms = 120000
+
+[[bench]]
 id = "failure_dump_scalar"
 group = "failure-dump"
 path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"

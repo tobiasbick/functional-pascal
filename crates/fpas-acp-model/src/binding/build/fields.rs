@@ -78,7 +78,6 @@ impl Builder {
                     key: key.clone(),
                     module: self.module(owner),
                     shape,
-                    sdk: false,
                     method: None,
                 },
             );

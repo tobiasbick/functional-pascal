@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-fpas-acp = { path = "../fpas-acp" }
+fpas-acp-model = { path = "../fpas-acp-model" }
 fpas-numeric = { path = "../fpas-numeric" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-lexer = { path = "../fpas-lexer" }

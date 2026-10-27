@@ -674,14 +674,34 @@ name = "fpas-acp"
 version = "0.0.1"
 dependencies = [
  "agent-client-protocol",
- "agent-client-protocol-schema",
  "fancy-regex 0.16.2",
+ "fpas-acp-codec",
+ "fpas-acp-model",
  "fpas-mcp",
  "futures",
- "schemars 1.2.3",
  "serde",
  "serde_json",
  "tokio",
+]
+
+[[package]]
+name = "fpas-acp-codec"
+version = "0.0.1"
+dependencies = [
+ "agent-client-protocol",
+ "fpas-acp-model",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "fpas-acp-model"
+version = "0.0.1"
+dependencies = [
+ "agent-client-protocol-schema",
+ "schemars 1.2.3",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -952,7 +972,7 @@ dependencies = [
 name = "fpas-sema"
 version = "0.0.1"
 dependencies = [
- "fpas-acp",
+ "fpas-acp-model",
  "fpas-diagnostics",
  "fpas-fmt",
  "fpas-lexer",
@@ -969,7 +989,7 @@ dependencies = [
  "allocation-counter",
  "atomic-write-file",
  "crossterm",
- "fpas-acp",
+ "fpas-acp-model",
  "fpas-bytecode",
  "fpas-diagnostics",
  "fpas-numeric",

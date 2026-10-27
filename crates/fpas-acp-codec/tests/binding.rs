@@ -6,7 +6,8 @@
 )]
 //! Independent wire fixtures protect nominal families, defaults, patches and raw data.
 
-use fpas_acp::{
+use fpas_acp_codec::binding::CatalogCodec as _;
+use fpas_acp_codec::{
     RawJson,
     binding::{Catalog, Shape, Value, catalog},
     schema::Version,

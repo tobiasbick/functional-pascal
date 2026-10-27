@@ -1,21 +1,13 @@
-//! Shared protocol declarations and detached values for language adapters.
-
+//! SDK-derived declaration catalog shared by the compiler and protocol codecs.
 mod build;
-mod decode;
-mod encode;
 mod model;
 mod names;
-mod roots;
-mod value;
-mod wire;
 pub use model::*;
-pub use roots::DecodedPayload;
-pub use value::Value;
 
 use crate::{CodecError, schema::Version};
 use std::sync::LazyLock;
 
-/// The complete declaration graph derived from the pinned SDK.
+/// The complete declaration graph derived from the pinned SDK schema.
 pub fn catalog(version: Version) -> Result<&'static Catalog, CodecError> {
     static V1: LazyLock<Result<Catalog, CodecError>> =
         LazyLock::new(|| build::catalog(Version::V1));

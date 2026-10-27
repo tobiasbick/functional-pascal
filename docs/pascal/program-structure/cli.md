@@ -25,6 +25,11 @@ the source debugger and in-process test hosts do not grant this authority automa
   Projects default to `project.name`; workspaces default to `workspace.name`.
   Windows outputs `<name>.exe`; Linux outputs executable `<name>`. There is no
   cross-compilation.
+- `fpas stdlib stage --source <dir> --output <dir>` — recompile a disposable
+  standard-library tree and replace the distribution library after success.
+  `--dry-run` only prints resolved paths; `--help` explains path constraints and
+  source cleanup. The distribution scripts use this command with
+  `target/release/lib` as the source. See [Rust builds and distribution](../../bench/build-times.md).
 - `fpas run` — discovers what to run in the current directory:
   - If a `.fpasworkspace` file exists: runs the sole `kind = "program"` member; errors when there are zero or multiple program members.
   - Otherwise searches for a `.fpasprj` file and requires exactly one match.

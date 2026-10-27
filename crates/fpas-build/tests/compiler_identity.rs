@@ -10,6 +10,7 @@ const COMPILER_IDENTITY_SOURCE: &str = include_str!("../build/compiler_identity.
 #[test]
 fn compiler_identity_lists_every_build_relevant_workspace_crate() {
     let expected = [
+        "fpas-acp-model",
         "fpas-build",
         "fpas-bytecode",
         "fpas-compiler",

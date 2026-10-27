@@ -1,5 +1,6 @@
 //! SDK dispatch converts messages into detached, bounded events.
 use super::*;
+use crate::binding::CatalogCodec as _;
 pub(super) struct Handler {
     pub(super) wire: Arc<Wire>,
 }

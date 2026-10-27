@@ -49,7 +49,11 @@ Run the compiler directly or add the whole `target/release` directory to your
 
 To prepare the distributable layout under `bin/`, run `./dist.sh` on Linux or
 `./dist.ps1` on Windows. Both scripts copy `fpas`, `fpas-runner`, `fpas-lsp`,
-and `lib/` together.
+and `lib/` together. They build the Rust binaries in one Cargo invocation, then
+use the built compiler's `stdlib stage` command to precompile and stage `lib/`.
+Release builds retain fat LTO and one codegen unit. The
+[build guide](docs/bench/build-times.md) describes the ACP dependency boundaries
+and how to measure rebuilds.
 Both scripts resolve paths from their own directory and stop on build,
 standard-library staging, or copy failures. They report success only after all
 steps finish.

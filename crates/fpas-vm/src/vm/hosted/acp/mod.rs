@@ -13,6 +13,7 @@ pub(in crate::vm) mod wait;
 pub(in crate::vm) use registry::Registry;
 
 use crate::vm::{VmError, worker::Worker};
+use fpas_acp::binding::CatalogCodec as _;
 use fpas_acp::{
     CodecError, ErrorKind, RawJson,
     binding::{self, Type},

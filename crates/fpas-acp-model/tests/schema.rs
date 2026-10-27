@@ -6,7 +6,7 @@
 )]
 //! The SDK schema graph preserves the information needed by native type registration.
 
-use fpas_acp::schema::{self, Version};
+use fpas_acp_model::schema::{self, Version};
 
 #[test]
 fn pinned_schema_keeps_nominal_ids_discriminators_and_deserialization_rules() {
@@ -34,7 +34,7 @@ fn pinned_schema_keeps_nominal_ids_discriminators_and_deserialization_rules() {
 #[test]
 fn every_reachable_sdk_declaration_has_a_native_shape() {
     for version in [Version::V1, Version::V2] {
-        let catalog = fpas_acp::binding::catalog(version).expect("SDK native catalog");
+        let catalog = fpas_acp_model::binding::catalog(version).expect("SDK native catalog");
         for name in schema::document(version)["$defs"]
             .as_object()
             .unwrap()

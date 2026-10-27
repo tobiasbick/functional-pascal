@@ -1,6 +1,7 @@
 //! Negotiated SDK state becomes FPAS values only on the VM lane.
 
 use crate::vm::worker::Worker;
+use fpas_acp::binding::CatalogCodec as _;
 use fpas_acp::{
     binding::{Shape, Value as Detached},
     connection::{Fault, Lifecycle, Snapshot},

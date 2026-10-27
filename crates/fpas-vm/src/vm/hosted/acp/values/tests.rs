@@ -1,13 +1,14 @@
 //! Exercise the actual compiler layouts with independent SDK wire fixtures.
 
-#[path = "../../../../../../fpas-acp/tests/methods/v1.rs"]
+#[path = "../../../../../../fpas-acp-codec/tests/methods/v1.rs"]
 mod v1;
-#[path = "../../../../../../fpas-acp/tests/methods/v2.rs"]
+#[path = "../../../../../../fpas-acp-codec/tests/methods/v2.rs"]
 mod v2;
-#[path = "../../../../../../fpas-acp/tests/methods/v2_updates.rs"]
+#[path = "../../../../../../fpas-acp-codec/tests/methods/v2_updates.rs"]
 mod v2_updates;
 
 use super::{Converter, RuntimeLayouts};
+use fpas_acp::binding::CatalogCodec as _;
 use fpas_acp::{
     RawJson,
     binding::{Type, catalog},

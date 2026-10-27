@@ -5,7 +5,7 @@ use crate::{
     scope::{Symbol, SymbolKind},
     types::{DistinctTy, EnumTy, EnumVariantTy, RecordTy, Ty},
 };
-use fpas_acp::{
+use fpas_acp_model::{
     binding::{self, Catalog, Shape, Type, Unknown},
     schema::Version,
 };

@@ -11,7 +11,8 @@ mod v1;
 #[path = "methods/v2.rs"]
 mod v2;
 
-use fpas_acp::{
+use fpas_acp_codec::binding::CatalogCodec as _;
+use fpas_acp_codec::{
     RawJson,
     binding::{self, Shape, Type, Value},
     schema::Version,

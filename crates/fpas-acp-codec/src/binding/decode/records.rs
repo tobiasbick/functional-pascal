@@ -68,7 +68,11 @@ impl Decoder<'_> {
                                 excluded.insert(name.clone());
                             }
                             WireField::Flatten => {
-                                self.catalog.wire_properties(&field.ty, &mut excluded);
+                                crate::binding::encode::wire_properties(
+                                    self.catalog,
+                                    &field.ty,
+                                    &mut excluded,
+                                );
                             }
                             WireField::Extra => {}
                         }

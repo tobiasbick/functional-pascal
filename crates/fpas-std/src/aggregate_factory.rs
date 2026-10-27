@@ -63,24 +63,27 @@ pub fn runtime_aggregate_types() -> &'static [String] {
             .iter()
             .map(|name| (*name).to_owned())
             .collect::<Vec<_>>();
-        for version in [fpas_acp::schema::Version::V1, fpas_acp::schema::Version::V2] {
-            if let Ok(catalog) = fpas_acp::binding::catalog(version) {
+        for version in [
+            fpas_acp_model::schema::Version::V1,
+            fpas_acp_model::schema::Version::V2,
+        ] {
+            if let Ok(catalog) = fpas_acp_model::binding::catalog(version) {
                 names.extend(
                     catalog
                         .declarations
                         .values()
                         .filter(|declaration| {
-                            !matches!(declaration.shape, fpas_acp::binding::Shape::Scalar(_))
+                            !matches!(declaration.shape, fpas_acp_model::binding::Shape::Scalar(_))
                         })
                         .map(|declaration| declaration.name.clone()),
                 );
-                let module = if version == fpas_acp::schema::Version::V1 {
+                let module = if version == fpas_acp_model::schema::Version::V1 {
                     "Std.Acp.Types"
                 } else {
                     "Std.Acp.V2"
                 };
                 names.extend(
-                    fpas_acp::binding::ROOTS
+                    fpas_acp_model::binding::ROOTS
                         .into_iter()
                         .map(|root| format!("{module}.Decoded{root}")),
                 );

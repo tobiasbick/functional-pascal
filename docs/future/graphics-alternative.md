@@ -23,6 +23,12 @@ data, native library buffers without new scalar numeric types are the human's
 current preference. This is a preferred alternative, not an agreed buffer API
 or authorization to implement it.
 
+The binding [namespace specification](../specs/std-namespaces.md) assigns public
+homes to graphics, audio, windows, input and UI independently of either native
+backend. General byte storage belongs to `Std.Bytes`; specialized image and
+sample storage belongs to the consuming domain. Those allocations neither
+select a backend nor define its interfaces or optional delivery requirements.
+
 Two routes are under consideration:
 
 1. SDL3 as a common native foundation for windows, input, graphics, and audio.

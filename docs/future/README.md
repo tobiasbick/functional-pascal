@@ -11,7 +11,8 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
 | Agent tools | [Source queries for coding agents](agent-source-queries.md) | Proposed name selection, bounded inspection, direct call relationships, and later checked refactorings |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
-| Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
+| FPAS 2 | [Language directions](fpas2-language-directions.md) | Recorded decisions and open proposals; namespace migration planned in AP53, implementation not authorized |
+| Standard library | [Standard library roadmap](std-roadmap.md) | Namespace migration before buffers, future capabilities and links to their owning plans |
 | UI | [Shared terminal and graphical UI](shared-ui.md) | Planned common UI and application migration during graphics work, after FPAS 2 |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |
@@ -19,9 +20,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 ## Ideas and designs without an implementation plan
 
-- [FPAS 2 language directions](fpas2-language-directions.md): open language and
-  runtime proposals plus the agreed numeric design with remaining open points;
-  no implementation is scheduled. Selected work uses the [AP workflow](improve-syntax/README.md).
 - [Hardware information](hardware-information.md): access to CPU parallelism, RAM, and related
   hardware information; recorded as an idea only.
 - [Graphics and 3D rendering](graphics.md): application case for the shared FPAS 2
@@ -36,6 +34,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Document | Scope |
 |------|----------|-------|
 | Planning | [AP workflow and templates](improve-syntax/README.md) | Package index, reusable decision/implementation work packages, dependencies and completion checks |
+| Standard-library architecture | [Binding namespace specification](../specs/std-namespaces.md) | Permanent naming policy, migration targets and future allocations; availability remains documented in the handbook |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
 
@@ -46,3 +45,5 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 - Keep each future plan updated with status, next steps, and verification notes when work starts.
 - Record compiler panics and language limitations with source-level workarounds in [compiler-panic-followups.md](compiler-panic-followups.md).
 - Remove completed planning notes once implemented docs and tests cover their scope.
+- Keep permanent contributor policies under `docs/specs/`; their target
+  allocations must distinguish planned names from implemented APIs.

@@ -8,6 +8,12 @@ authenticated messages, version negotiation, retry-safe delivery, synchronizatio
 explicit conflict policy. WebSocket or HTTPS can carry the protocol; UDP is optional and must not be
 assumed.
 
+Compose the domains allocated by the binding
+[namespace specification](../../specs/std-namespaces.md), including networking,
+databases, cryptography and diagnostics. This application-level plan does not
+reserve a separate `Std.Distributed` framework. Any reusable public interface
+must follow the specification's extension procedure.
+
 ## Node identity and trust
 
 - Each node owns a persistent identifier and Ed25519 key pair stored outside committed source.

@@ -6,6 +6,12 @@ Long-running applications need machine-readable evidence about requests, backgro
 dependencies, resource limits, and shutdown. Observability should report facts without coupling
 application logic to a console, file, or network collector.
 
+Use the [namespace specification](../../specs/std-namespaces.md) allocations
+`Std.Diagnostics.Log`, `Std.Diagnostics.Metrics`, `Std.Diagnostics.Trace` and
+`Std.Diagnostics.Health` for the corresponding public capabilities. Design
+their concrete interfaces when this plan is selected; no empty modules are
+required by the allocation.
+
 ## Proposed scope
 
 - Structured log events with level, timestamp, event name, message, and typed fields.

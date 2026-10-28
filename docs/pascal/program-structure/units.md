@@ -138,7 +138,10 @@ The five former type-helper units and their free API have been removed; see
 
 The first segment `Std` (ASCII, any case) is reserved for the standard library. User-defined units use another root segment (for example `MyApp.Utils`).
 
-Intrinsic standard-library entries are two-part names such as `Std.Console`. Trusted source standard-library manifests may also export multi-segment units such as `Std.Tools.Format`; only units listed in that manifest's `[exports].units` may appear in an application `uses` clause.
+Intrinsic standard-library entries have registered names such as `Std.Console`
+and `Std.Acp.Types`. Trusted source standard-library manifests also export
+qualified units, such as `Std.Ai.OpenAi`; only source units listed in that
+manifest's `[exports].units` may appear in an application `uses` clause.
 
 Unknown `uses` entries referring to `Std.*`, and private source standard-library units, are rejected with an error.
 

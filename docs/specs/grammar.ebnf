@@ -153,10 +153,10 @@ unit_heading        = 'unit' qualified_id ';' ;
    their reserved language forms. Each unit occurs at most
    once per file's direct imports, comparing names case-insensitively. `as` is contextual immediately
    after the imported unit name, not a reserved keyword. User-defined project and library units may use qualified
-   names but must not use `Std` as their leading segment. Intrinsic standard-library units use
-   two-part names such as `Std.Console`. The trusted source-standard-library manifest may additionally
-   export multi-segment `Std.*` units such as `Std.Tools.Format`; applications may import only the
-   units exported by that manifest. Unknown or non-exported `Std.*` units are rejected. *)
+   names but must not use `Std` as their leading segment. Intrinsic standard-library units have
+   registered names such as `Std.Console` and `Std.Acp.Types`. The trusted source-standard-library
+   manifest also exports qualified units such as `Std.Ai.OpenAi`; applications may import only
+   source units exported by that manifest. Unknown or non-exported `Std.*` units are rejected. *)
 
 uses_clause         = 'uses' import_entry { ',' import_entry } ';' ;
 import_entry        = qualified_id 'as' identifier ;

@@ -6,6 +6,12 @@ The user accepts rewriting all existing TUI applications, including the dungeon
 client and server console, for the new API. No new FPAS syntax is assumed;
 syntax changes require explicit user approval.
 
+The binding [namespace specification](../specs/std-namespaces.md) allocates
+`Std.Ui` for the common interface and `Std.Ui.Terminal` / `Std.Ui.Graphical`
+for the hosts. [AP53](improve-syntax/ap53-std-namespaces/README.md) first moves
+the existing `Std.Tui` interface to `Std.Ui.Terminal` with unchanged behavior.
+That naming migration does not implement this shared UI plan.
+
 ## Sequence and relationship to other plans
 
 The intended order is:
@@ -59,9 +65,9 @@ equivalent; the host must not silently pretend it supports that capability.
 
 ## API direction
 
-Explore an immutable element tree in a common `Std.Ui`-like unit. Exact names,
-signatures and host selection are open. Use the existing FPAS language and
-evaluate the design against real application Views before freezing it.
+Explore an immutable element tree in `Std.Ui`, using the allocated host units.
+Member names, signatures and host selection are open. Use the existing FPAS
+language and evaluate the design against real application Views before freezing it.
 
 - Provide text, buttons, inputs, text areas, check boxes, lists, menus, panels,
   scroll views and dialogs with explicit identities and actions where needed.
@@ -89,8 +95,9 @@ are not part of the initial scope.
 
 ### 1. Inventory and contract
 
-Inventory current `Std.Tui` features, public interfaces and callers, including
+Inventory terminal UI features, public interfaces and callers, including
 examples, tests, benchmarks, documentation and tools in both repositories.
+Use `Std.Ui.Terminal` after AP53; its pre-migration name is `Std.Tui`.
 Cover menus, modal and focus routing, pointer and keyboard input, text editing,
 themes, cells, background work, resize and incremental rendering. Map each to a
 shared contract, a host extension or an intentional replacement. Design example
@@ -169,7 +176,7 @@ callers have moved and the replacement is verified.
 
 ## Open decisions
 
-Public names and builders; supported flex/grid subset and default sizing;
+Public member names and builders; supported flex/grid subset and default sizing;
 precise units and rounding; accessibility and input-method behavior; supported
 platforms; graphical text and renderer; backend choice; host capabilities and
 fallbacks; shared versus host-specific input and layout implementation; theme

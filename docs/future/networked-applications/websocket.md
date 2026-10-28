@@ -6,6 +6,10 @@ WebSocket should be a message transport over the existing TCP/TLS and HTTP found
 interface should hide handshake headers, frame fragmentation, masking, control frames, and close
 state while preserving explicit limits and cancellation.
 
+The binding [namespace specification](../../specs/std-namespaces.md) assigns
+the public interface to `Std.Net.WebSocket`, alongside `Std.Net.Http` and
+`Std.Net.Sockets`. This allocation does not settle the API or schedule work.
+
 ## Proposed scope
 
 - Client connections for `ws` and verified `wss` URLs.

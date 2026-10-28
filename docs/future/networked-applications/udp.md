@@ -6,6 +6,11 @@ UDP provides message-oriented delivery without connections, ordering, retry, con
 or duplicate suppression. The module must expose those limitations instead of resembling the
 reliable `Std.Net.Connection` interface.
 
+UDP endpoints belong to `Std.Net.Sockets` under the binding
+[namespace specification](../../specs/std-namespaces.md). AP53 moves the
+existing TCP/TLS interface there first. Datagram operations and their distinct
+types remain future work under this plan; the namespace move does not add them.
+
 ## Proposed scope
 
 - Opaque UDP socket and endpoint values with IPv4 and IPv6 support.

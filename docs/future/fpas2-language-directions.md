@@ -15,7 +15,15 @@ FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 [AP workflow and templates](improve-syntax/README.md); selecting a topic still
 requires an explicit decision before implementation.
 
-The intended sequence is to continue FPAS 2 first, then graphics and the
+The [standard-library namespace policy](../specs/std-namespaces.md) is binding
+for contributor naming decisions. Its existing-unit migration is planned in
+[AP53](improve-syntax/ap53-std-namespaces/README.md); only planning and
+documentation are currently authorized. The policy does not change which
+imports the compiler accepts before that migration is implemented.
+
+The next selected work is namespace migration, followed by the byte-buffer
+contract under `Std.Bytes`. Continue the remaining selected FPAS 2 work before
+graphics and the
 [shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
 runtime and application topics, consult its coordination note so those decisions
 do not accidentally preclude the later UI. This does not authorize early UI work
@@ -855,6 +863,13 @@ Status: open proposal. Native library buffers without new scalar numeric types
 are the current preference. No language form, library API or storage layout is
 agreed, and implementation is not authorized by this preference.
 
+The first selected scope is a byte buffer under `Std.Bytes`, after
+[AP53 namespace migration](improve-syntax/ap53-std-namespaces/README.md).
+The binding [namespace specification](../specs/std-namespaces.md) allocates its
+home and puts specialized media buffers in their respective domains. This
+naming decision leaves the buffer API, value/mutation semantics, limits,
+storage layout and implementation authorization open.
+
 The [graphics application case](graphics.md#bulk-numeric-data) needs contiguous
 vertex, index and pixel data without one tagged runtime value per element or
 repeated conversion at each native handoff. Binary files, codecs, audio, process pipes and native FFI share the need
@@ -1049,6 +1064,28 @@ Existing regression coverage includes modes, resource limits, byte/line mixing,
 seek/tell, partial reads, line limits, invalid UTF-8, cancellation, alias close,
 concurrent handle access and VM cleanup. Evaluate remaining extensions against
 those contracts, including length changes and early-exit resource cleanup.
+
+## 27. Standard-library namespaces
+
+Status: naming direction agreed; migration planned, implementation not
+authorized. [AP53](improve-syntax/ap53-std-namespaces/README.md) records the
+decisions and owns the work-package checklist. It precedes byte-buffer work.
+
+The permanent [namespace specification](../specs/std-namespaces.md) defines the
+existing-unit mapping, future domain allocations and how to place new
+capabilities. The [Std roadmap](std-roadmap.md) retains feature priorities and
+links to their plans. Future plans must follow the same naming policy.
+
+Migrate existing public units, split `Std.Conv` between text formatting and
+numeric conversion, and update compiler/runtime identities, tooling,
+documentation and consumers in FPAS and `fpas-into-the-dungeon`. Preserve
+behavior except for the agreed canonical-name changes. Use one public home
+per capability without legacy import aliases.
+
+Qualified unit syntax and import aliases already exist. This work does not
+add a namespace language construct, implement reserved modules or start the
+shared UI rewrite. Current handbook examples keep their implemented names
+until the migration delivers their replacements.
 
 ## Other deferred scope
 

@@ -7,11 +7,15 @@ queries, multi-step transactions, constraints, indexes, or coordinated concurren
 database module should expose SQLite directly instead of introducing a generic SQL interface with
 only one adapter.
 
+The binding [namespace specification](../../specs/std-namespaces.md) allocates
+this capability to `Std.Db.Sqlite`. Naming does not authorize implementation.
+
 ## Proposed scope
 
-- An explicit `Std.Sqlite` unit with opaque connection, statement, row, and transaction handles.
+- An explicit `Std.Db.Sqlite` unit with opaque connection, statement, row, and transaction handles.
 - Open read-only, read-write, and create modes with documented path and in-memory behavior.
-- Parameter binding for null, Boolean, integer, real, string, and bounded byte-array values.
+- Parameter binding for null, Boolean, integer, real, string, and bounded binary
+  values using the canonical byte representation.
 - Prepared execution and row iteration without constructing SQL through string interpolation.
 - Explicit begin, commit, and rollback, including automatic rollback when an owned transaction is
   closed or the VM exits.

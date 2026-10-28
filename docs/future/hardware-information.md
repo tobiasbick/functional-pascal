@@ -9,4 +9,7 @@ or a memory budget.
 The Mandelbrot investigation prompted this idea. Its current fix uses the existing VM worker
 pool and does not require a public hardware-information API.
 
-No unit names, signatures, platform coverage, milestones, or implementation work are proposed here.
+The binding [namespace specification](../specs/std-namespaces.md) allocates
+portable host hardware information to `Std.Os.Hardware`. Signatures, platform
+coverage, milestones and implementation remain open; assigning the name does
+not activate this idea.

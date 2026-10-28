@@ -8,6 +8,9 @@ Read the [agent reference](docs/pascal/agents/README.md) for the language rules.
 - Keep files focused on one concern and usually below 500 lines.
 - Group related files in directories by topic.
 - Write all code comments in English.
+- Before adding, moving, splitting or renaming a public `Std.*` unit, or naming
+  one in a plan, follow the binding [namespace specification](docs/specs/std-namespaces.md).
+  Update that specification in the same change when revising an allocation.
 
 ## Approach
 

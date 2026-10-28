@@ -17,6 +17,12 @@ This plan keeps those concerns in separate modules. The first approved language 
 implemented `channel of T` type; any additional syntax or semantic change still requires its own
 explicit decision.
 
+Public names follow the binding [namespace specification](../../specs/std-namespaces.md).
+[AP53](../improve-syntax/ap53-std-namespaces/README.md) migrates existing names
+before byte-buffer work. Descriptions of implemented behavior below retain
+current names until that migration; future capability plans use their allocated
+homes. A namespace allocation does not change a feature's deferred status.
+
 ## Capability plans
 
 | Concern | Plan | Intended seam |

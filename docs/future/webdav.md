@@ -6,9 +6,14 @@ WebDAV may later build on the FPAS HTTP client and server modules. Standard HTTP
 including `PROPFIND`, can already be expressed through `Request.Create`; WebDAV-specific request,
 response, and XML handling are not implemented.
 
+The binding [namespace specification](../specs/std-namespaces.md) assigns this
+protocol to `Std.Net.WebDav`, using `Std.Net.Http` after AP53 migrates the
+current `Std.Http`. A filesystem adapter over WebDAV would belong to `Std.Io`
+and needs a separate contract. These allocations do not schedule either API.
+
 ## Possible scope
 
-- WebDAV request and response types on top of `Std.Http`.
+- WebDAV request and response types on top of the HTTP interface.
 - Bounded XML parsing and serialization for WebDAV bodies.
 - Client helpers for resource discovery and file operations.
 - Server-side routing for the supported WebDAV methods.

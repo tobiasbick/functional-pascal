@@ -1,7 +1,7 @@
 # Future: Graphics and 3D Rendering
 
-> Graphics application case only. No graphics implementation plan, unit name,
-> or API is agreed. Shared foundations and their decision status are maintained
+> Graphics application case only. No graphics implementation plan or API is
+> agreed. Shared foundations and their decision status are maintained
 > in [FPAS 2 language directions](fpas2-language-directions.md), including the
 > recorded numeric design and the remaining open proposals. Native library
 > buffers with existing FPAS scalar types are the preferred graphics-data
@@ -10,6 +10,13 @@
 The [shared terminal and graphical UI plan](shared-ui.md) is intended to proceed
 during graphics work after the intended FPAS 2 work. It depends on the graphics
 foundations described here but does not select their backend or graphics API.
+
+Public homes follow the binding [namespace specification](../specs/std-namespaces.md):
+`Std.Graphics.Image`, `Std.Graphics.Draw2D`, `Std.Graphics.Render3D` and
+`Std.Graphics.Gpu`, with independent `Std.Window`, `Std.Input` and `Std.Audio`
+domains. Their interfaces and implementations remain open. General byte storage
+belongs to `Std.Bytes`; graphics-specific buffers belong to `Std.Graphics`.
+References to existing APIs below keep current names until AP53 migrates them.
 
 Functional Pascal has no way to open a window, draw pixels, or use a GPU. This note records the
 runtime and language gaps that a graphics capability would expose, and the properties that would
@@ -97,7 +104,8 @@ headless servers and the test runner.
 
 ### Runtime and standard library
 
-- A shared native binary-buffer foundation integrated with binary `Std.Fs` access.
+- A shared native binary-buffer foundation under `Std.Bytes`, integrated with
+  binary filesystem access, whose target home is `Std.Io.Fs`.
 - Specialized pixel, vertex, index and audio buffers with explicit storage
   formats, bulk operations and compatible native handoffs without per-element
   conversion. Existing `integer` and `real` remain the FPAS scalar interface.

@@ -7,7 +7,7 @@ use crate::{
     scope::{Symbol, SymbolKind},
     types::{FunctionTy, Ty},
 };
-use fpas_std::{native_errors::NativeErrorFamily, std_symbols as s};
+use fpas_builtins::{native_errors::NativeErrorFamily, std_symbols as s};
 
 fn option(ty: Ty) -> Ty {
     Ty::Option(Box::new(ty))

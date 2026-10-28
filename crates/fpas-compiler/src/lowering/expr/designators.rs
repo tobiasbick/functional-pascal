@@ -115,8 +115,8 @@ impl LoweringContext {
             && let Some(value) = super::super::builtin_constants::value(name)
         {
             let (constant, ty) = match value {
-                fpas_bytecode::Value::Integer(value) => (Constant::Integer(value), types::INTEGER),
-                fpas_bytecode::Value::Real(value) => (Constant::Real(value), types::REAL),
+                Constant::Integer(value) => (Constant::Integer(value), types::INTEGER),
+                Constant::Real(value) => (Constant::Real(value), types::REAL),
                 _ => return Err(unsupported(designator.span, "built-in constant value")),
             };
             return self.emit_value(Operation::Const(constant), ty, designator.span);

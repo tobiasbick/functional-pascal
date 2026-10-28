@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_code::{Instruction, Opcode};
 
 use crate::object::{ImportShape, ObjectError, ObjectFunction, RelocationKind};
 
@@ -125,11 +125,11 @@ pub(super) fn validate_debug_info(
                 .code
                 .get(initializer as usize)
                 .copied()
-                .map(fpas_bytecode::Instruction::from_word)
+                .map(fpas_code::Instruction::from_word)
                 .ok_or(ObjectError::InvalidTableReference(
                     "debug binding initializer instruction",
                 ))?;
-            if instruction.opcode().ok() != Some(fpas_bytecode::Opcode::Move)
+            if instruction.opcode().ok() != Some(fpas_code::Opcode::Move)
                 || instruction.abc_payload().a != binding.register
             {
                 return Err(ObjectError::InvalidTableReference(

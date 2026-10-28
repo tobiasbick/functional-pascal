@@ -1,6 +1,6 @@
 //! Checked packed-instruction relocation into final numeric tables.
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_code::{Instruction, Opcode};
 use fpas_unit::object::{
     DefinitionTarget, RelocatableObject, Relocation, RelocationKind, SymbolKind,
 };

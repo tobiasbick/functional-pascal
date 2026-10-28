@@ -19,7 +19,7 @@ impl DebugEngine {
         let mut data_breakpoints = Vec::with_capacity(requested.len());
         let mut assigns = Vec::with_capacity(requested.len());
         for (index, item) in requested.into_iter().enumerate() {
-            data_breakpoints.push(fpas_vm::DataBreakpoint {
+            data_breakpoints.push(fpas_runtime::execution::DataBreakpoint {
                 identity: item.identity,
                 access: item.access,
             });

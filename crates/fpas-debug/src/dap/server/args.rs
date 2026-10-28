@@ -86,19 +86,23 @@ pub(super) fn parse_assign(value: Option<&Value>) -> Result<Option<AssignOp>, St
 }
 
 /// Parse a DAP or JSONL-shaped location identity.
-pub(super) fn parse_identity(value: &Value) -> Option<fpas_vm::DebugDataLocationIdentity> {
+pub(super) fn parse_identity(
+    value: &Value,
+) -> Option<fpas_runtime::execution::DebugDataLocationIdentity> {
     let object = value.as_object()?;
     if let Some(index) = object.get("index").and_then(Value::as_u64) {
-        return Some(fpas_vm::DebugDataLocationIdentity::Global { index });
+        return Some(fpas_runtime::execution::DebugDataLocationIdentity::Global { index });
     }
-    Some(fpas_vm::DebugDataLocationIdentity::FrameRegister {
-        task_id: object
-            .get("taskId")
-            .or_else(|| object.get("task_id"))
-            .and_then(Value::as_u64)?,
-        function: object.get("function").and_then(Value::as_u64)?,
-        register: object.get("register").and_then(Value::as_u64)?,
-    })
+    Some(
+        fpas_runtime::execution::DebugDataLocationIdentity::FrameRegister {
+            task_id: object
+                .get("taskId")
+                .or_else(|| object.get("task_id"))
+                .and_then(Value::as_u64)?,
+            function: object.get("function").and_then(Value::as_u64)?,
+            register: object.get("register").and_then(Value::as_u64)?,
+        },
+    )
 }
 
 /// Parse DAP function-breakpoint descriptors.
@@ -146,9 +150,9 @@ pub(super) fn parse_data_breakpoints(arguments: &Value) -> Result<Vec<DataBreakp
             );
         };
         let access = match breakpoint.get("accessType").and_then(Value::as_str) {
-            None | Some("write") => fpas_vm::DataBreakpointAccess::Write,
-            Some("change") => fpas_vm::DataBreakpointAccess::Change,
-            Some("read" | "readWrite") => fpas_vm::DataBreakpointAccess::Read,
+            None | Some("write") => fpas_runtime::execution::DataBreakpointAccess::Write,
+            Some("change") => fpas_runtime::execution::DataBreakpointAccess::Change,
+            Some("read" | "readWrite") => fpas_runtime::execution::DataBreakpointAccess::Read,
             Some(other) => {
                 return Err(format!("Unsupported data-breakpoint accessType `{other}`."));
             }
@@ -209,7 +213,9 @@ pub(super) fn reject_unknown_fields(arguments: &Value, allowed: &[&str]) -> Resu
     }
 }
 
-fn identity_from_data_id(data_id: &str) -> Option<fpas_vm::DebugDataLocationIdentity> {
+fn identity_from_data_id(
+    data_id: &str,
+) -> Option<fpas_runtime::execution::DebugDataLocationIdentity> {
     let index = data_id.strip_prefix("g:")?.parse::<u64>().ok()?;
-    Some(fpas_vm::DebugDataLocationIdentity::Global { index })
+    Some(fpas_runtime::execution::DebugDataLocationIdentity::Global { index })
 }

@@ -9,7 +9,7 @@ mod projections;
 mod selection;
 mod superinstructions;
 
-use fpas_bytecode::{Executable, FunctionId};
+use fpas_code::{Executable, FunctionId};
 use fpas_ir::Program;
 
 use crate::CompileError;
@@ -24,14 +24,14 @@ pub(crate) use self::superinstructions::integer_immediate;
 #[cfg(test)]
 pub(super) fn compile_program(
     program: Program,
-) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
+) -> Result<fpas_code::VerifiedExecutable, CompileError> {
     compile_with_errors(program, &crate::errors::ErrorMetadata::default())
 }
 
 pub(super) fn compile_for_object(
     mut program: Program,
     errors: &crate::errors::ErrorMetadata,
-) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
+) -> Result<fpas_code::VerifiedExecutable, CompileError> {
     for function in &mut program.functions {
         if errors.displays.contains_key(&function.id) {
             function.name = if let Some(request) = errors.factories.get(&function.id) {
@@ -55,7 +55,7 @@ fn compile_error_owned(message: String) -> CompileError {
 pub(super) fn compile_with_errors(
     mut program: Program,
     errors: &crate::errors::ErrorMetadata,
-) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
+) -> Result<fpas_code::VerifiedExecutable, CompileError> {
     program
         .validate()
         .map_err(|error| compile_error(&error.to_string()))?;
@@ -104,17 +104,17 @@ pub(super) fn compile_with_errors(
                             compile_error("global initializer has no emitted store instruction")
                         })?;
                     let function = u16::try_from(initializer.function.get())
-                        .map(fpas_bytecode::FunctionId::new)
+                        .map(fpas_code::FunctionId::new)
                         .map_err(|_| compile_error("global initializer function overflow"))?;
-                    Ok::<_, CompileError>(fpas_bytecode::GlobalInitializer {
+                    Ok::<_, CompileError>(fpas_code::GlobalInitializer {
                         function,
                         instruction,
                     })
                 })
                 .transpose()?;
-            Ok::<_, CompileError>(fpas_bytecode::GlobalInfo {
+            Ok::<_, CompileError>(fpas_code::GlobalInfo {
                 name,
-                ty: fpas_bytecode::DebugTypeId::new(global.ty.get()),
+                ty: fpas_code::DebugTypeId::new(global.ty.get()),
                 type_name: global
                     .type_name
                     .as_deref()
@@ -139,9 +139,9 @@ pub(super) fn compile_with_errors(
                 .fields
                 .iter()
                 .map(|field| {
-                    Ok::<_, CompileError>(fpas_bytecode::RecordField {
+                    Ok::<_, CompileError>(fpas_code::RecordField {
                         name: metadata.intern_string(&field.name)?,
-                        ty: fpas_bytecode::DebugTypeId::new(field.ty.get()),
+                        ty: fpas_code::DebugTypeId::new(field.ty.get()),
                         type_name: field
                             .type_name
                             .as_deref()
@@ -154,13 +154,13 @@ pub(super) fn compile_with_errors(
                 .methods
                 .iter()
                 .map(|method| {
-                    Ok(fpas_bytecode::RecordMethod {
+                    Ok(fpas_code::RecordMethod {
                         name: metadata.intern_string(&method.name)?,
                         routine: metadata.intern_string(&method.routine)?,
                     })
                 })
                 .collect::<Result<Vec<_>, CompileError>>()?;
-            Ok(fpas_bytecode::RecordLayout {
+            Ok(fpas_code::RecordLayout {
                 name,
                 fields,
                 methods,
@@ -168,7 +168,7 @@ pub(super) fn compile_with_errors(
                     .construction
                     .as_ref()
                     .map(|info| {
-                        Ok::<_, CompileError>(fpas_bytecode::RecordConstructionInfo {
+                        Ok::<_, CompileError>(fpas_code::RecordConstructionInfo {
                             owner_unit: info
                                 .owner_unit
                                 .as_deref()
@@ -179,8 +179,8 @@ pub(super) fn compile_with_errors(
                                 .aliases
                                 .iter()
                                 .map(|alias| {
-                                    Ok(fpas_bytecode::RecordTypeAlias {
-                                        source: fpas_bytecode::SourceId::new(0),
+                                    Ok(fpas_code::RecordTypeAlias {
+                                        source: fpas_code::SourceId::new(0),
                                         name: metadata.intern_string(alias)?,
                                         unit: metadata.intern_string(&info.scope_unit)?,
                                     })
@@ -204,7 +204,7 @@ pub(super) fn compile_with_errors(
     let mut enums = Vec::new();
     let mut enum_variants = Vec::new();
     for layout in &program.enum_layouts {
-        enums.push(fpas_bytecode::EnumLayout {
+        enums.push(fpas_code::EnumLayout {
             error: errors.concrete(layout.id),
             name: metadata.intern_string(
                 &errors
@@ -220,10 +220,10 @@ pub(super) fn compile_with_errors(
                 .iter()
                 .map(|name| metadata.intern_string(name))
                 .collect::<Result<Vec<_>, _>>()?;
-            enum_variants.push(fpas_bytecode::EnumVariant {
+            enum_variants.push(fpas_code::EnumVariant {
                 error: errors
                     .variant(layout.id, index, &mut |text| metadata.intern_string(text))?,
-                owner: fpas_bytecode::EnumTypeId::new(
+                owner: fpas_code::EnumTypeId::new(
                     u16::try_from(layout.id.get())
                         .map_err(|_| compile_error("enum layout exceeds u16"))?,
                 ),
@@ -232,7 +232,7 @@ pub(super) fn compile_with_errors(
                 field_types: variant
                     .fields
                     .iter()
-                    .map(|ty| fpas_bytecode::DebugTypeId::new(ty.get()))
+                    .map(|ty| fpas_code::DebugTypeId::new(ty.get()))
                     .collect(),
             });
         }
@@ -242,10 +242,10 @@ pub(super) fn compile_with_errors(
         .distinct_types
         .iter()
         .map(|distinct| {
-            Ok(fpas_bytecode::DistinctTypeName {
-                source: fpas_bytecode::SourceId::new(0),
+            Ok(fpas_code::DistinctTypeName {
+                source: fpas_code::SourceId::new(0),
                 name: metadata.intern_string(&distinct.name)?,
-                underlying: fpas_bytecode::DebugTypeId::new(distinct.underlying.get()),
+                underlying: fpas_code::DebugTypeId::new(distinct.underlying.get()),
             })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;

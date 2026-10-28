@@ -43,7 +43,7 @@ impl LoweringContext {
         let appended = self.emit_value(Operation::MakeArray(vec![value]), array_ty, span)?;
         self.record_call_arguments(2, span)?;
         let updated = self.emit_intrinsic_value(
-            fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Concat),
+            fpas_code::Intrinsic::Array(fpas_code::ArrayIntrinsic::Concat),
             vec![array, appended],
             array_ty,
             span,

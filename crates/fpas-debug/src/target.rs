@@ -16,28 +16,28 @@ pub struct DebugSourceContent {
 
 /// One verified executable, its process arguments, and optional source content.
 pub struct PreparedDebugTarget {
-    executable: fpas_bytecode::VerifiedExecutable,
+    executable: fpas_runtime::VerifiedExecutable,
     arguments: Vec<String>,
-    execution_limits: fpas_vm::DebugExecutionLimits,
+    execution_limits: fpas_runtime::execution::DebugExecutionLimits,
     sources: Vec<DebugSourceContent>,
     reloader: Option<DebugReloadProvider>,
     schedule_seed: Option<u64>,
-    collection_schedule: fpas_bytecode::CollectionSchedule,
-    profile: Option<fpas_vm::DebugProfile>,
+    collection_schedule: fpas_runtime::CollectionSchedule,
+    profile: Option<fpas_runtime::execution::DebugProfile>,
 }
 
 impl PreparedDebugTarget {
     /// Construct a protocol-ready debugger target.
     #[must_use]
-    pub fn new(executable: fpas_bytecode::VerifiedExecutable, arguments: Vec<String>) -> Self {
+    pub fn new(executable: fpas_runtime::VerifiedExecutable, arguments: Vec<String>) -> Self {
         Self {
             executable,
             arguments,
-            execution_limits: fpas_vm::DebugExecutionLimits::default(),
+            execution_limits: fpas_runtime::execution::DebugExecutionLimits::default(),
             sources: Vec::new(),
             reloader: None,
             schedule_seed: None,
-            collection_schedule: fpas_bytecode::CollectionSchedule::default(),
+            collection_schedule: fpas_runtime::CollectionSchedule::default(),
             profile: None,
         }
     }
@@ -46,7 +46,7 @@ impl PreparedDebugTarget {
     #[must_use]
     pub const fn with_collection_schedule(
         mut self,
-        schedule: fpas_bytecode::CollectionSchedule,
+        schedule: fpas_runtime::CollectionSchedule,
     ) -> Self {
         self.collection_schedule = schedule;
         self
@@ -56,7 +56,7 @@ impl PreparedDebugTarget {
     #[must_use]
     pub const fn with_execution_limits(
         mut self,
-        execution_limits: fpas_vm::DebugExecutionLimits,
+        execution_limits: fpas_runtime::execution::DebugExecutionLimits,
     ) -> Self {
         self.execution_limits = execution_limits;
         self
@@ -76,9 +76,11 @@ impl PreparedDebugTarget {
 
     /// Collect samples of this target, including workers on asynchronous resume threads.
     /// Read the returned recorder only after the owning debugger has been dropped.
-    pub fn enable_profile(&mut self) -> fpas_vm::DebugProfile {
+    pub fn enable_profile(&mut self) -> fpas_runtime::execution::DebugProfile {
         self.profile
-            .get_or_insert_with(|| fpas_vm::DebugProfile::new(self.executable.clone()))
+            .get_or_insert_with(|| {
+                fpas_runtime::execution::DebugProfile::new(self.executable.clone())
+            })
             .clone()
     }
 
@@ -96,7 +98,9 @@ impl PreparedDebugTarget {
     #[must_use]
     pub fn with_reloader<F>(mut self, reloader: F) -> Self
     where
-        F: FnMut() -> Result<ReloadedDebugTarget, fpas_vm::DebugSessionError> + Send + 'static,
+        F: FnMut() -> Result<ReloadedDebugTarget, fpas_runtime::execution::DebugSessionError>
+            + Send
+            + 'static,
     {
         self.reloader = Some(Box::new(reloader));
         self
@@ -111,7 +115,7 @@ impl PreparedDebugTarget {
         self
     }
 
-    pub(crate) const fn execution_limits(&self) -> fpas_vm::DebugExecutionLimits {
+    pub(crate) const fn execution_limits(&self) -> fpas_runtime::execution::DebugExecutionLimits {
         self.execution_limits
     }
 
@@ -119,11 +123,14 @@ impl PreparedDebugTarget {
         self.reloader.take()
     }
 
-    pub(crate) fn into_session(self) -> Result<fpas_vm::DebugSession, fpas_vm::DebugSessionError> {
-        fpas_vm::DebugSession::with_limits_and_schedule(
+    pub(crate) fn into_session(
+        self,
+    ) -> Result<fpas_runtime::execution::DebugSession, fpas_runtime::execution::DebugSessionError>
+    {
+        fpas_runtime::execution::DebugSession::with_limits_and_schedule(
             self.executable,
             self.arguments,
-            fpas_vm::DebugInspectionLimits::default(),
+            fpas_runtime::execution::DebugInspectionLimits::default(),
             self.execution_limits,
             self.schedule_seed,
         )

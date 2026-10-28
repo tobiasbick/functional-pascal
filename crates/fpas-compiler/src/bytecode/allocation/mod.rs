@@ -7,7 +7,7 @@ mod uses;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use fpas_bytecode::Register;
+use fpas_code::Register;
 use fpas_ir::{BlockId, Function, LocalId, Operation, ValueId};
 
 use crate::CompileError;

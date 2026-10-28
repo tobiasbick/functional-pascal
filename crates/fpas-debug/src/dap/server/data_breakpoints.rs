@@ -62,9 +62,9 @@ pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value>
     }
 }
 
-fn info_body(identity: Option<fpas_vm::DebugDataLocationIdentity>) -> Value {
+fn info_body(identity: Option<fpas_runtime::execution::DebugDataLocationIdentity>) -> Value {
     match identity {
-        Some(fpas_vm::DebugDataLocationIdentity::Global { index }) => json!({
+        Some(fpas_runtime::execution::DebugDataLocationIdentity::Global { index }) => json!({
             "dataId": format!("g:{index}"),
             "description": format!("global slot {index}"),
             "accessTypes": ["write"],

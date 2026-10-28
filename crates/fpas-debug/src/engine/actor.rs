@@ -3,7 +3,7 @@
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::thread::JoinHandle;
 
-use fpas_vm::{
+use fpas_runtime::execution::{
     DebugEvaluateResult, DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExpression,
     DebugPauseHandle, DebugRunResult, DebugSession, DebugSessionError,
 };
@@ -48,7 +48,7 @@ pub(crate) enum ActorCompletion {
 
 pub(crate) struct SessionActor {
     state: ActorState,
-    terminal: fpas_vm::DebugTerminalHandle,
+    terminal: fpas_runtime::execution::DebugTerminalHandle,
 }
 
 enum ActorState {
@@ -77,8 +77,8 @@ impl SessionActor {
 
     pub(crate) fn push_terminal_events(
         &self,
-        events: &[fpas_vm::DebugTerminalEvent],
-    ) -> Result<fpas_vm::DebuggeeInputResult, DebugSessionError> {
+        events: &[fpas_runtime::execution::DebugTerminalEvent],
+    ) -> Result<fpas_runtime::execution::DebuggeeInputResult, DebugSessionError> {
         self.terminal.push_events(events)
     }
 

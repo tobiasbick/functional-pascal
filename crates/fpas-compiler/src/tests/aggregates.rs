@@ -416,7 +416,7 @@ end.";
     let program = super::parse_ok(source);
     let executable = crate::compile(&program).expect("compilation should succeed");
     assert!(executable.executable().code.iter().any(|instruction| {
-        instruction.opcode() == Ok(fpas_bytecode::Opcode::StoreGlobalIndexPath)
+        instruction.opcode() == Ok(fpas_runtime::Opcode::StoreGlobalIndexPath)
     }));
 }
 

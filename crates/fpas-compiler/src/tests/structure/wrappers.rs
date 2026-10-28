@@ -1,6 +1,6 @@
 //! Last-use transfers preserve live wrapper sources and borrowed intrinsic arguments.
 use super::*;
-use fpas_bytecode::{Intrinsic, Opcode, OptionIntrinsic, ResultIntrinsic};
+use fpas_runtime::{Intrinsic, Opcode, OptionIntrinsic, ResultIntrinsic};
 
 #[test]
 fn wrapper_construction_consumes_temporaries_and_preserves_live_locals() {

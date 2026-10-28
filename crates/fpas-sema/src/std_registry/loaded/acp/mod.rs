@@ -15,7 +15,7 @@ use crate::{
     scope::{Symbol, SymbolKind},
     types::{EnumTy, EnumVariantTy, GenericParamDef, Ty},
 };
-use fpas_std::{native_errors::NativeErrorFamily, std_symbols as s};
+use fpas_builtins::{native_errors::NativeErrorFamily, std_symbols as s};
 
 pub(super) fn register(checker: &mut Checker) {
     let raw = super::native_records::register(checker, "Std.Acp.Types.RawJson");

@@ -1,6 +1,6 @@
 //! Calls in tail position that reuse the caller's frame.
 
-use fpas_bytecode::{Instruction, NO_REGISTER, Opcode};
+use fpas_code::{Instruction, NO_REGISTER, Opcode};
 use fpas_ir::{Function, IrType, Program, Terminator, TypeId};
 
 use super::super::allocation::Allocation;

@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use fpas_bytecode::VerifiedExecutable;
+use fpas_code::VerifiedExecutable;
 
 /// Return the compiler-local label of one unit-graph source.
 pub(crate) fn source_label(source_id: u32) -> String {

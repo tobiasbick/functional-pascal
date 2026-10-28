@@ -9,7 +9,7 @@ impl DebugEngine {
         &mut self,
         request_id: u64,
         command: &str,
-        events: Vec<fpas_vm::DebugTerminalEvent>,
+        events: Vec<fpas_runtime::execution::DebugTerminalEvent>,
     ) -> Vec<DebugRecord> {
         if !matches!(
             self.status,

@@ -154,8 +154,8 @@ impl LoweringContext {
         };
         if matches!(
             intrinsic,
-            fpas_bytecode::Intrinsic::Console(
-                fpas_bytecode::ConsoleIntrinsic::Write | fpas_bytecode::ConsoleIntrinsic::WriteLn
+            fpas_code::Intrinsic::Console(
+                fpas_code::ConsoleIntrinsic::Write | fpas_code::ConsoleIntrinsic::WriteLn
             )
         ) {
             return self.lower_console_write(intrinsic, arguments, span);
@@ -164,7 +164,7 @@ impl LoweringContext {
         let mut values = self.lower_call_arguments(arguments, span)?;
         if matches!(
             intrinsic,
-            fpas_bytecode::Intrinsic::Str(fpas_bytecode::StrIntrinsic::Format)
+            fpas_code::Intrinsic::Str(fpas_code::StrIntrinsic::Format)
         ) {
             let argument_count = i64::try_from(arguments.len().saturating_sub(1))
                 .map_err(|_| unsupported(span, "format argument count overflow"))?;
@@ -186,12 +186,12 @@ impl LoweringContext {
 
     fn lower_console_write(
         &mut self,
-        intrinsic: fpas_bytecode::Intrinsic,
+        intrinsic: fpas_code::Intrinsic,
         arguments: &[Expr],
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        let write = fpas_bytecode::Intrinsic::Console(fpas_bytecode::ConsoleIntrinsic::Write);
-        let write_ln = fpas_bytecode::Intrinsic::Console(fpas_bytecode::ConsoleIntrinsic::WriteLn);
+        let write = fpas_code::Intrinsic::Console(fpas_code::ConsoleIntrinsic::Write);
+        let write_ln = fpas_code::Intrinsic::Console(fpas_code::ConsoleIntrinsic::WriteLn);
         if arguments.is_empty() {
             if intrinsic == write {
                 return self.emit_value(Operation::Const(Constant::Unit), super::types::UNIT, span);
@@ -227,7 +227,7 @@ impl LoweringContext {
 
     fn emit_intrinsic_value(
         &mut self,
-        intrinsic: fpas_bytecode::Intrinsic,
+        intrinsic: fpas_code::Intrinsic,
         arguments: Vec<ValueId>,
         result: TypeId,
         span: fpas_lexer::Span,

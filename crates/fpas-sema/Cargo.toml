@@ -9,11 +9,11 @@ repository.workspace = true
 
 [dependencies]
 fpas-acp-model = { path = "../fpas-acp-model" }
+fpas-builtins = { path = "../fpas-builtins" }
 fpas-numeric = { path = "../fpas-numeric" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
-fpas-std = { path = "../fpas-std" }
 fpas-unit = { path = "../fpas-unit" }
 
 [dev-dependencies]
@@ -21,4 +21,3 @@ fpas-fmt = { path = "../fpas-fmt" }
 
 [lints]
 workspace = true
-

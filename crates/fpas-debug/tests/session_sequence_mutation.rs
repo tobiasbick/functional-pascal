@@ -12,7 +12,7 @@ use parameter_copy::initialized_local_frame;
 
 use std::{thread, time::Duration};
 
-use fpas_vm::{
+use fpas_runtime::execution::{
     DebugAssignmentSelector, DebugAssignmentTarget, DebugErrorKind, DebugEvaluationLimits,
     DebugExpression, DebugRunResult, DebugSession,
 };

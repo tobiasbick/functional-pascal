@@ -208,9 +208,9 @@ pattern with concurrent row calculation and RGB cell colors.
 |---------|----------|
 | Public type and call registration | [`loaded/console.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/console.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Cell/color values | [`console/cell.rs`](../../../../crates/fpas-std/src/console/cell.rs) |
-| Cell, frame, and region operations | [`console/operations/`](../../../../crates/fpas-std/src/console/operations/mod.rs) |
-| Retained screen storage | [`console/screen/`](../../../../crates/fpas-std/src/console/screen/mod.rs) |
+| Cell/color values | [`console/cell.rs`](../../../../crates/fpas-runtime/src/stdlib/console/cell.rs) |
+| Cell, frame, and region operations | [`console/operations/`](../../../../crates/fpas-runtime/src/stdlib/console/operations/mod.rs) |
+| Retained screen storage | [`console/screen/`](../../../../crates/fpas-runtime/src/stdlib/console/screen/mod.rs) |
 
 ## See also
 

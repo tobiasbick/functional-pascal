@@ -14,4 +14,3 @@ fpas-diagnostics = { path = "../fpas-diagnostics" }
 
 [lints]
 workspace = true
-

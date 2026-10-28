@@ -11,7 +11,7 @@ use fpas_debug::snapshot_value as value;
 mod wire;
 
 use fpas_diagnostics::Diagnostic;
-use fpas_vm::{FailureObservation, Vm};
+use fpas_runtime::execution::{FailureObservation, Vm};
 use std::{
     io,
     path::PathBuf,

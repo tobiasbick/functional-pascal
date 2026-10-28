@@ -1,0 +1,16 @@
+[package]
+name = "fpas-code"
+description = "Portable bytecode, program metadata and validation for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+num_enum = "0.7.6"
+serde.workspace = true
+
+[lints]
+workspace = true

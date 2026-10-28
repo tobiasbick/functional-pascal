@@ -17,7 +17,7 @@ fn encoded_program() -> Vec<u8> {
         ProgramIdentity {
             contracts_enabled: true,
             compiler_version: "test".to_string(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_code::BYTECODE_VERSION,
             source_hash: Digest::of(b"source"),
             options_hash: Digest::of(b"options"),
             units: Vec::new(),

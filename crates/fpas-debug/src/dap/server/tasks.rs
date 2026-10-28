@@ -55,14 +55,15 @@ impl ThreadMap {
     }
 
     /// Refresh the active cache from one stopped task catalog.
-    pub(super) fn synchronize(&mut self, tasks: &[fpas_vm::DebugTask]) {
+    pub(super) fn synchronize(&mut self, tasks: &[fpas_runtime::execution::DebugTask]) {
         for entry in self.tasks.values_mut() {
             entry.active = false;
         }
         for task in tasks {
             if matches!(
                 task.state,
-                fpas_vm::DebugTaskState::Completed | fpas_vm::DebugTaskState::Cancelled
+                fpas_runtime::execution::DebugTaskState::Completed
+                    | fpas_runtime::execution::DebugTaskState::Cancelled
             ) {
                 continue;
             }

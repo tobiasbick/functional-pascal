@@ -25,7 +25,7 @@ mod toml;
 mod type_registration;
 
 use crate::check::Checker;
-use fpas_std::{
+use fpas_builtins::{
     STD_UNIT_ARGS, STD_UNIT_BITS, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_ENV,
     STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET, STD_UNIT_PARSE, STD_UNIT_PATH,
     STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML,
@@ -45,15 +45,18 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
-        fpas_std::STD_UNIT_MCP | fpas_std::STD_UNIT_MCP_TYPES => mcp::register(checker),
-        fpas_std::STD_UNIT_ACP
-        | fpas_std::STD_UNIT_ACP_TYPES
-        | fpas_std::STD_UNIT_ACP_HOST
-        | fpas_std::STD_UNIT_ACP_EXPERIMENTAL
-        | fpas_std::STD_UNIT_ACP_V2 => acp::register(checker),
-        fpas_std::STD_UNIT_SERVER => server::register(checker),
-        fpas_std::STD_UNIT_ERRORS => {
-            errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Host);
+        fpas_builtins::STD_UNIT_MCP | fpas_builtins::STD_UNIT_MCP_TYPES => mcp::register(checker),
+        fpas_builtins::STD_UNIT_ACP
+        | fpas_builtins::STD_UNIT_ACP_TYPES
+        | fpas_builtins::STD_UNIT_ACP_HOST
+        | fpas_builtins::STD_UNIT_ACP_EXPERIMENTAL
+        | fpas_builtins::STD_UNIT_ACP_V2 => acp::register(checker),
+        fpas_builtins::STD_UNIT_SERVER => server::register(checker),
+        fpas_builtins::STD_UNIT_ERRORS => {
+            errors::register(
+                checker,
+                fpas_builtins::native_errors::NativeErrorFamily::Host,
+            );
         }
         STD_UNIT_ARGS => args::register_std_args(checker),
         STD_UNIT_ENV => env::register_std_env(checker),
@@ -63,7 +66,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_CONSOLE => console::register_std_console(checker),
         STD_UNIT_CONV => conv::register_std_conv(checker),
         STD_UNIT_CRYPTO => crypto::register_std_crypto(checker),
-        fpas_std::STD_UNIT_ENCODING => encoding::register_std_encoding(checker),
+        fpas_builtins::STD_UNIT_ENCODING => encoding::register_std_encoding(checker),
         STD_UNIT_PARSE => parse::register_std_parse(checker),
         STD_UNIT_MATH => math::register_std_math(checker),
         STD_UNIT_BITS => bits::register_std_bits(checker),
@@ -74,17 +77,17 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         SOURCE_STD_UNIT_VERSION => {}
         STD_UNIT_JSON => json::register_std_json(checker),
         STD_UNIT_TOML => toml::register_std_toml(checker),
-        STD_UNIT_TUI | fpas_std::STD_UNIT_CLI | fpas_std::STD_UNIT_CALENDAR => {}
+        STD_UNIT_TUI | fpas_builtins::STD_UNIT_CLI | fpas_builtins::STD_UNIT_CALENDAR => {}
         STD_UNIT_TEST => test::register_std_test(checker),
         _ => unreachable!(
-            "register_single_std_unit: unhandled std unit `{unit}` — add a match arm for every entry in fpas_std::STD_UNITS_KNOWN"
+            "register_single_std_unit: unhandled std unit `{unit}` — add a match arm for every entry in fpas_builtins::STD_UNITS_KNOWN"
         ),
     }
 }
 
 /// Install only native error metadata referenced by an imported type.
 pub(crate) fn register_error_type(checker: &mut Checker, name: &str) {
-    if let Some(family) = fpas_std::native_errors::NativeErrorFamily::ALL
+    if let Some(family) = fpas_builtins::native_errors::NativeErrorFamily::ALL
         .iter()
         .find(|family| family.name().eq_ignore_ascii_case(name))
     {
@@ -95,7 +98,7 @@ pub(crate) fn register_error_type(checker: &mut Checker, name: &str) {
 /// Resolve a native family for nested builtin signatures.
 pub(crate) fn native_error_type(
     checker: &mut Checker,
-    family: fpas_std::native_errors::NativeErrorFamily,
+    family: fpas_builtins::native_errors::NativeErrorFamily,
 ) -> crate::types::Ty {
     errors::register(checker, family)
 }

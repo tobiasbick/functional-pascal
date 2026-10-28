@@ -155,12 +155,12 @@ Reference: [`examples/math/newton/newton.fpas`](../../../../examples/math/newton
 | Concern | Location |
 |---------|-----------|
 | User-facing registration | [`loaded/console.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/console.rs) |
-| Console backend | [`console/mod.rs`](../../../../crates/fpas-std/src/console/mod.rs) |
-| Interactive terminal acquire/release | [`console/interactive.rs`](../../../../crates/fpas-std/src/console/interactive.rs) |
-| Cell/frame/region operations | [`console/operations/`](../../../../crates/fpas-std/src/console/operations/mod.rs) |
-| Retained screen model | [`console/screen/`](../../../../crates/fpas-std/src/console/screen/mod.rs) |
-| Key and event types | [`key_event.rs`](../../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../../crates/fpas-std/src/console_event.rs) |
-| Bytecode / VM | [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs), [`vm/mod.rs`](../../../../crates/fpas-vm/src/vm/mod.rs) |
+| Console backend | [`console/mod.rs`](../../../../crates/fpas-runtime/src/stdlib/console/mod.rs) |
+| Interactive terminal acquire/release | [`console/interactive.rs`](../../../../crates/fpas-runtime/src/stdlib/console/interactive.rs) |
+| Cell/frame/region operations | [`console/operations/`](../../../../crates/fpas-runtime/src/stdlib/console/operations/mod.rs) |
+| Retained screen model | [`console/screen/`](../../../../crates/fpas-runtime/src/stdlib/console/screen/mod.rs) |
+| Key and event types | [`key_event.rs`](../../../../crates/fpas-runtime/src/stdlib/key_event.rs), [`console_event.rs`](../../../../crates/fpas-runtime/src/stdlib/console_event.rs) |
+| Bytecode / VM | [`intrinsic/mod.rs`](../../../../crates/fpas-code/src/intrinsic/mod.rs), [`vm/mod.rs`](../../../../crates/fpas-runtime/src/execution/vm/mod.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 
 ## See also

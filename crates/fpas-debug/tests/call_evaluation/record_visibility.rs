@@ -12,7 +12,7 @@ begin
 end procedure;
 end unit;";
 
-fn linked(source: &str) -> fpas_bytecode::VerifiedExecutable {
+fn linked(source: &str) -> fpas_runtime::VerifiedExecutable {
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(UNIT);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let fpas_parser::CompilationUnit::Unit(unit) = unit else {

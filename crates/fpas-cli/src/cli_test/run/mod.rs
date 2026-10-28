@@ -28,7 +28,7 @@ use program::{ProgramRunOptions, RunOutput, run_test_program};
 #[derive(Clone, Copy)]
 pub(super) struct TestRunSettings<'a> {
     pub no_contracts: bool,
-    pub collection_schedule: fpas_bytecode::CollectionSchedule,
+    pub collection_schedule: fpas_runtime::CollectionSchedule,
     /// Optional scripted input configuration.
     pub script_override: Option<&'a Path>,
     /// Optional wall-clock timeout per test.

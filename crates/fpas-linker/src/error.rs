@@ -115,7 +115,7 @@ pub enum LinkError {
         variant: String,
     },
     /// The final numeric executable failed full admission verification.
-    InvalidExecutable(fpas_bytecode::ValidationError),
+    InvalidExecutable(fpas_code::ValidationError),
 }
 
 impl fmt::Display for LinkError {

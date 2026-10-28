@@ -357,12 +357,12 @@ the terminal to an interactive child.
 
 | Concern | Location |
 |---------|----------|
-| Pure defaults and executable path | [`proc.rs`](../../../../crates/fpas-std/src/proc.rs) |
-| Hosted process supervision | [`hosted/proc/mod.rs`](../../../../crates/fpas-vm/src/vm/hosted/proc/mod.rs) |
-| Explicit native terminal provider | [`process_terminal.rs`](../../../../crates/fpas-vm/src/process_terminal.rs) |
+| Pure defaults and executable path | [`proc.rs`](../../../../crates/fpas-runtime/src/stdlib/proc.rs) |
+| Hosted process supervision | [`hosted/proc/mod.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/proc/mod.rs) |
+| Explicit native terminal provider | [`process_terminal.rs`](../../../../crates/fpas-runtime/src/execution/process_terminal.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/proc.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/proc.rs) |
-| Intrinsic ids | [`intrinsic/proc.rs`](../../../../crates/fpas-bytecode/src/intrinsic/proc.rs) |
+| Intrinsic ids | [`intrinsic/proc.rs`](../../../../crates/fpas-code/src/intrinsic/proc.rs) |
 
 ## See also
 

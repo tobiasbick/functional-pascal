@@ -35,7 +35,7 @@ pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value>
             "truncated": truncated,
             "replayable": false,
             "eventCount": events.len(),
-            "eventLimit": fpas_vm::MAX_RECORDING_EVENTS,
+            "eventLimit": fpas_runtime::execution::MAX_RECORDING_EVENTS,
             "events": events.iter().map(dap_event).collect::<Vec<_>>(),
         })),
         (
@@ -49,19 +49,19 @@ pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value>
             "capturing": capturing,
             "truncated": truncated,
             "eventCount": event_count,
-            "eventLimit": fpas_vm::MAX_RECORDING_EVENTS,
+            "eventLimit": fpas_runtime::execution::MAX_RECORDING_EVENTS,
         })),
         _ => None,
     }
 }
 
-fn dap_event(event: &fpas_vm::DebugRecordingEvent) -> Value {
+fn dap_event(event: &fpas_runtime::execution::DebugRecordingEvent) -> Value {
     match event {
-        fpas_vm::DebugRecordingEvent::Input { text } => json!({
+        fpas_runtime::execution::DebugRecordingEvent::Input { text } => json!({
             "kind": "input",
             "text": text,
         }),
-        fpas_vm::DebugRecordingEvent::Stop {
+        fpas_runtime::execution::DebugRecordingEvent::Stop {
             task_id,
             reason,
             instruction,

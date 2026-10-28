@@ -75,7 +75,7 @@ fn dap_step_back_after_stop_does_not_resume() {
     assert_eq!(recorded[0]["body"]["truncated"], false);
     assert_eq!(
         recorded[0]["body"]["eventLimit"],
-        fpas_vm::MAX_RECORDING_EVENTS
+        fpas_runtime::execution::MAX_RECORDING_EVENTS
     );
     assert_eq!(recorded.len(), 1, "{recorded:?}");
 
@@ -93,7 +93,7 @@ fn dap_recording_describe_names_portable_identity_without_step_back() {
     assert_eq!(described[0]["body"]["version"], 1);
     assert_eq!(
         described[0]["body"]["bytecodeVersion"],
-        fpas_bytecode::BYTECODE_VERSION
+        fpas_runtime::BYTECODE_VERSION
     );
     assert_eq!(described[0]["body"]["program"], "recordreplay");
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
@@ -103,7 +103,7 @@ fn dap_recording_describe_names_portable_identity_without_step_back() {
     assert_eq!(described[0]["body"]["eventCount"], 0);
     assert_eq!(
         described[0]["body"]["eventLimit"],
-        fpas_vm::MAX_RECORDING_EVENTS
+        fpas_runtime::execution::MAX_RECORDING_EVENTS
     );
     assert_eq!(described[0]["body"]["events"], json!([]));
     assert_eq!(described.len(), 1, "{described:?}");

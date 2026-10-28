@@ -8,7 +8,9 @@ use std::sync::Arc;
 use super::DiagnosticFormat;
 
 /// Wraps child-process stderr as JSON records on process stderr; text mode inherits stderr.
-pub(crate) fn program_stderr_receiver(format: DiagnosticFormat) -> Option<fpas_std::ProgramStderr> {
+pub(crate) fn program_stderr_receiver(
+    format: DiagnosticFormat,
+) -> Option<fpas_runtime::stdlib::ProgramStderr> {
     program_stderr_receiver_with(format, |bytes| {
         let _ = std::io::stderr().write_all(bytes);
     })
@@ -18,12 +20,12 @@ pub(crate) fn program_stderr_receiver(format: DiagnosticFormat) -> Option<fpas_s
 pub(crate) fn program_stderr_receiver_with(
     format: DiagnosticFormat,
     write: impl Fn(&[u8]) + Send + Sync + 'static,
-) -> Option<fpas_std::ProgramStderr> {
+) -> Option<fpas_runtime::stdlib::ProgramStderr> {
     (format == DiagnosticFormat::Json).then(|| {
         Arc::new(move |text: &str| {
             if let Ok(line) = fpas_diagnostics::render_program_stderr_json(text) {
                 write(format!("{line}\n").as_bytes());
             }
-        }) as fpas_std::ProgramStderr
+        }) as fpas_runtime::stdlib::ProgramStderr
     })
 }

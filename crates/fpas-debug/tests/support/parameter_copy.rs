@@ -5,7 +5,7 @@
     reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
 )]
 
-use fpas_vm::{DebugRunResult, DebugSession};
+use fpas_runtime::execution::{DebugRunResult, DebugSession};
 
 /// Finds the current frame with a live, initialized local copy.
 pub(crate) fn initialized_local_frame(session: &mut DebugSession, name: &str) -> u64 {

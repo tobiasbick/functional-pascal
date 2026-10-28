@@ -1,12 +1,14 @@
 use super::super::{define_func, p};
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Registers the four Result parsers documented in `docs/pascal/std/text/parse.md`.
 pub(super) fn register_std_parse(checker: &mut Checker) {
-    let error_ty =
-        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Parse);
+    let error_ty = super::errors::register(
+        checker,
+        fpas_builtins::native_errors::NativeErrorFamily::Parse,
+    );
     define_func(
         checker,
         s::STD_PARSE_INT,

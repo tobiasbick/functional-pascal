@@ -70,7 +70,7 @@ pub(crate) fn prepare(config: &DebugCliConfig) -> Result<fpas_debug::PreparedDeb
             .map_err(Failure::from)?;
     Ok(prepare_target(config, library.as_ref())?
         .with_collection_schedule(config.collection_schedule)
-        .with_execution_limits(fpas_vm::DebugExecutionLimits {
+        .with_execution_limits(fpas_runtime::execution::DebugExecutionLimits {
             max_instructions: config.instruction_limit,
             timeout: config.timeout,
             max_output_bytes: config.output_limit,

@@ -109,11 +109,11 @@ Time.Sleep(250);
 
 | Concern | Location |
 |---------|----------|
-| Runtime execution | [`time.rs`](../../../../crates/fpas-std/src/time.rs) |
-| Spawned-task timers | [`tasks/mod.rs`](../../../../crates/fpas-vm/src/vm/tasks/mod.rs), [`timers.rs`](../../../../crates/fpas-vm/src/vm/shared/timers.rs) |
+| Runtime execution | [`time.rs`](../../../../crates/fpas-runtime/src/stdlib/time.rs) |
+| Spawned-task timers | [`tasks/mod.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/mod.rs), [`timers.rs`](../../../../crates/fpas-runtime/src/execution/vm/shared/timers.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/time.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/time.rs) |
-| Intrinsic ids | [`intrinsic/time.rs`](../../../../crates/fpas-bytecode/src/intrinsic/time.rs) |
+| Intrinsic ids | [`intrinsic/time.rs`](../../../../crates/fpas-code/src/intrinsic/time.rs) |
 
 ## See also
 

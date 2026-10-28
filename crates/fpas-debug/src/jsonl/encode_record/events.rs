@@ -27,8 +27,8 @@ pub(super) fn encode_event(debug_event: DebugEvent) -> Value {
         ),
         DebugEvent::Task(change) => {
             let reason = match change.kind {
-                fpas_vm::DebugTaskEventKind::Started => "started",
-                fpas_vm::DebugTaskEventKind::Exited => "exited",
+                fpas_runtime::execution::DebugTaskEventKind::Started => "started",
+                fpas_runtime::execution::DebugTaskEventKind::Exited => "exited",
             };
             event("task", json!({"reason": reason, "task_id": change.task_id}))
         }

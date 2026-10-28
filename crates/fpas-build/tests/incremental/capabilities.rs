@@ -40,7 +40,7 @@ fn cached_factory_results_preserve_dynamic_transfer_checks() {
             if binding == "const" {
                 assert_output(built, "42");
             } else {
-                let error = fpas_vm::Vm::new(built.executable)
+                let error = fpas_runtime::execution::Vm::new(built.executable)
                     .run()
                     .expect_err("cached interface must preserve runtime transfer guard");
                 assert!(error.message.contains("task-bound"), "{error:?}");

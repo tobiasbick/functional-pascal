@@ -72,7 +72,7 @@ fn images_without_binding_metadata_keep_stored_positions_without_invented_locals
         fpas_program::ProgramIdentity {
             contracts_enabled: true,
             compiler_version: env!("CARGO_PKG_VERSION").into(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"bare"),
             options_hash: fpas_program::Digest::of(b"bare-options"),
             units: Vec::new(),
@@ -158,20 +158,20 @@ fn source_name_budget_keeps_known_diagnostic_coordinates() {
         .iter()
         .map(|path| {
             let id =
-                fpas_bytecode::StringId::try_from_index(strings.len()).expect("source string id");
+                fpas_runtime::StringId::try_from_index(strings.len()).expect("source string id");
             strings.push(path.clone());
             id
         })
         .collect();
-    executable.strings = fpas_bytecode::StringTable::new(strings);
+    executable.strings = fpas_runtime::StringTable::new(strings);
     for run in &mut executable.source_map.runs {
-        run.source = fpas_bytecode::SourceId::try_from_index(299).expect("source id");
+        run.source = fpas_runtime::SourceId::try_from_index(299).expect("source id");
     }
     let image = fpas_program::ProgramImage::new(
         fpas_program::ProgramIdentity {
             contracts_enabled: true,
             compiler_version: env!("CARGO_PKG_VERSION").into(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"many sources"),
             options_hash: fpas_program::Digest::of(b"many source options"),
             units: Vec::new(),

@@ -709,13 +709,12 @@ name = "fpas-bench"
 version = "0.0.1"
 dependencies = [
  "atomic-write-file",
- "fpas-bytecode",
  "fpas-compiler",
  "fpas-language-service",
  "fpas-parser",
  "fpas-program",
+ "fpas-runtime",
  "fpas-unit",
- "fpas-vm",
  "mimalloc",
  "process-wrap",
  "serde",
@@ -736,15 +735,23 @@ version = "0.0.1"
 dependencies = [
  "atomic-write-file",
  "blake3",
- "fpas-bytecode",
+ "fpas-code",
  "fpas-compiler",
  "fpas-diagnostics",
  "fpas-linker",
  "fpas-parser",
  "fpas-program",
  "fpas-project",
+ "fpas-runtime",
  "fpas-unit",
- "fpas-vm",
+ "toml",
+]
+
+[[package]]
+name = "fpas-builtins"
+version = "0.0.1"
+dependencies = [
+ "fpas-acp-model",
 ]
 
 [[package]]
@@ -752,19 +759,10 @@ name = "fpas-bundle"
 version = "0.0.1"
 dependencies = [
  "atomic-write-file",
- "fpas-bytecode",
+ "fpas-code",
  "fpas-compiler",
  "fpas-parser",
  "fpas-program",
-]
-
-[[package]]
-name = "fpas-bytecode"
-version = "0.0.1"
-dependencies = [
- "fpas-diagnostics",
- "num_enum",
- "serde",
 ]
 
 [[package]]
@@ -774,7 +772,6 @@ dependencies = [
  "atomic-write-file",
  "fpas-build",
  "fpas-bundle",
- "fpas-bytecode",
  "fpas-compiler",
  "fpas-debug",
  "fpas-diagnostics",
@@ -785,8 +782,7 @@ dependencies = [
  "fpas-parser",
  "fpas-program",
  "fpas-project",
- "fpas-std",
- "fpas-vm",
+ "fpas-runtime",
  "mimalloc",
  "nix",
  "process-wrap",
@@ -800,11 +796,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "fpas-code"
+version = "0.0.1"
+dependencies = [
+ "fpas-diagnostics",
+ "num_enum",
+ "serde",
+]
+
+[[package]]
 name = "fpas-compiler"
 version = "0.0.1"
 dependencies = [
  "allocation-counter",
- "fpas-bytecode",
+ "fpas-builtins",
+ "fpas-code",
  "fpas-diagnostics",
  "fpas-ir",
  "fpas-lexer",
@@ -812,25 +818,23 @@ dependencies = [
  "fpas-numeric",
  "fpas-parser",
  "fpas-program",
+ "fpas-runtime",
  "fpas-sema",
- "fpas-std",
  "fpas-unit",
- "fpas-vm",
 ]
 
 [[package]]
 name = "fpas-debug"
 version = "0.0.1"
 dependencies = [
- "fpas-bytecode",
  "fpas-compiler",
  "fpas-diagnostics",
  "fpas-lexer",
  "fpas-linker",
  "fpas-parser",
  "fpas-program",
+ "fpas-runtime",
  "fpas-unit",
- "fpas-vm",
  "serde",
  "serde_json",
 ]
@@ -885,11 +889,11 @@ dependencies = [
 name = "fpas-linker"
 version = "0.0.1"
 dependencies = [
- "fpas-bytecode",
+ "fpas-code",
  "fpas-diagnostics",
  "fpas-program",
+ "fpas-runtime",
  "fpas-unit",
- "fpas-vm",
  "serde_json",
 ]
 
@@ -947,8 +951,8 @@ version = "0.0.1"
 dependencies = [
  "allocation-counter",
  "fpas-binary",
- "fpas-bytecode",
- "fpas-vm",
+ "fpas-code",
+ "fpas-runtime",
  "serde_json",
 ]
 
@@ -957,11 +961,11 @@ name = "fpas-project"
 version = "0.0.1"
 dependencies = [
  "caseless",
+ "fpas-builtins",
  "fpas-diagnostics",
  "fpas-lexer",
  "fpas-parser",
  "fpas-sema",
- "fpas-std",
  "fpas-unit",
  "glob",
  "serde",
@@ -969,65 +973,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "fpas-sema"
-version = "0.0.1"
-dependencies = [
- "fpas-acp-model",
- "fpas-diagnostics",
- "fpas-fmt",
- "fpas-lexer",
- "fpas-numeric",
- "fpas-parser",
- "fpas-std",
- "fpas-unit",
-]
-
-[[package]]
-name = "fpas-std"
+name = "fpas-runtime"
 version = "0.0.1"
 dependencies = [
  "allocation-counter",
  "atomic-write-file",
  "crossterm",
- "fpas-acp-model",
- "fpas-bytecode",
- "fpas-diagnostics",
- "fpas-numeric",
- "glob",
- "serde",
- "serde_json",
- "toml",
- "unicode-segmentation",
- "unicode-width",
-]
-
-[[package]]
-name = "fpas-unit"
-version = "0.0.1"
-dependencies = [
- "atomic-write-file",
- "fpas-binary",
- "fpas-bytecode",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "fpas-vm"
-version = "0.0.1"
-dependencies = [
- "crossterm",
  "ctrlc",
  "fpas-acp",
- "fpas-bytecode",
+ "fpas-acp-model",
+ "fpas-builtins",
+ "fpas-code",
  "fpas-compiler",
  "fpas-diagnostics",
  "fpas-mcp",
  "fpas-numeric",
  "fpas-parser",
- "fpas-std",
  "futures",
  "getrandom 0.4.3",
+ "glob",
  "libc",
  "nix",
  "process-wrap",
@@ -1042,6 +1006,34 @@ dependencies = [
  "socket2",
  "stats_alloc",
  "tokio",
+ "toml",
+ "unicode-segmentation",
+ "unicode-width",
+]
+
+[[package]]
+name = "fpas-sema"
+version = "0.0.1"
+dependencies = [
+ "fpas-acp-model",
+ "fpas-builtins",
+ "fpas-diagnostics",
+ "fpas-fmt",
+ "fpas-lexer",
+ "fpas-numeric",
+ "fpas-parser",
+ "fpas-unit",
+]
+
+[[package]]
+name = "fpas-unit"
+version = "0.0.1"
+dependencies = [
+ "atomic-write-file",
+ "fpas-binary",
+ "fpas-code",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
 //! Coalesced record aliases and declaration-bound defaults after source relocation.
 //! See `docs/pascal/language/types/records.md` and `docs/pascal/tools/debugger.md`.
 
-use fpas_bytecode::{RecordConstructionInfo, RecordTypeAlias, SourceId, SourceMap};
+use fpas_code::{RecordConstructionInfo, RecordTypeAlias, SourceId, SourceMap};
 use fpas_unit::object::RelocatableObject;
 
 use super::strings::StringInterner;
@@ -14,7 +14,7 @@ pub(super) fn merge(
     ids: &LinkIds,
     sources: &SourceMap,
     strings: &mut StringInterner,
-    records: &mut [fpas_bytecode::RecordLayout],
+    records: &mut [fpas_code::RecordLayout],
 ) -> Result<(), LinkError> {
     for (final_index, record) in records.iter_mut().enumerate() {
         let mut merged: Option<RecordConstructionInfo> = None;

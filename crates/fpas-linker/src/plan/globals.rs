@@ -1,6 +1,6 @@
 //! Deterministic dense global ID assignment.
 
-use fpas_bytecode::GlobalId;
+use fpas_code::GlobalId;
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
 use crate::LinkError;

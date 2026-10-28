@@ -1,6 +1,6 @@
 //! Canonical `Std.*` call names to stable intrinsic wire identifiers.
 
-use fpas_bytecode::{
+use fpas_code::{
     ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic,
     DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic,
     JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic,

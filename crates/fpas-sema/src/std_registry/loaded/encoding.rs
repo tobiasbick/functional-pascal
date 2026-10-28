@@ -2,12 +2,12 @@
 
 use super::super::{define_func, p};
 use crate::{check::Checker, types::Ty};
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 pub(super) fn register_std_encoding(checker: &mut Checker) {
     let error = super::errors::register(
         checker,
-        fpas_std::native_errors::NativeErrorFamily::Encoding,
+        fpas_builtins::native_errors::NativeErrorFamily::Encoding,
     );
     let bytes = Ty::Array(Box::new(Ty::Integer));
     for name in [

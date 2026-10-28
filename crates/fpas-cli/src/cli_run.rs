@@ -24,7 +24,7 @@ struct ExecutionOptions {
     profile: Option<PathBuf>,
     /// Input kind and path recorded by profile reports.
     target: (&'static str, PathBuf),
-    collection_schedule: fpas_bytecode::CollectionSchedule,
+    collection_schedule: fpas_runtime::CollectionSchedule,
 }
 
 static PROCESS_LIFECYCLE_AUTHORIZED: std::sync::atomic::AtomicBool =
@@ -396,7 +396,7 @@ pub(crate) fn run_source(
 
 fn run_executable(
     path: &Path,
-    executable: fpas_bytecode::VerifiedExecutable,
+    executable: fpas_runtime::VerifiedExecutable,
     source_paths: Option<&[PathBuf]>,
     options: ExecutionOptions,
     stdout: Box<dyn Write + Send>,
@@ -420,9 +420,10 @@ fn run_executable(
     let sources = failure_dump
         .as_ref()
         .map(|_| crate::cli_failure_dump::Sources::new(&executable, source_paths.as_deref()));
-    let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args)
-        .with_collection_schedule(collection_schedule);
-    if let Some(terminal) = fpas_vm::InteractiveProcessTerminal::inherited() {
+    let mut vm =
+        fpas_runtime::execution::Vm::with_writer_and_args(executable, stdout, program_args)
+            .with_collection_schedule(collection_schedule);
+    if let Some(terminal) = fpas_runtime::execution::InteractiveProcessTerminal::inherited() {
         vm.set_interactive_process_terminal(terminal);
     }
     let session = failure_dump

@@ -59,7 +59,7 @@ impl DebugEngine {
             }
         };
         let breakpoint = match self.actor.session_mut().map(|session| {
-            session.set_breakpoint(fpas_vm::SourceBreakpoint {
+            session.set_breakpoint(fpas_runtime::execution::SourceBreakpoint {
                 source,
                 line,
                 column,
@@ -109,7 +109,7 @@ impl DebugEngine {
 pub(super) fn assign_from_op(assign: AssignOp) -> Result<BreakpointAssign, String> {
     let expression = parse_debug_expression(
         &assign.expression,
-        fpas_vm::DebugEvaluationLimits::default(),
+        fpas_runtime::execution::DebugEvaluationLimits::default(),
     )
     .map_err(|error| format!("{} Help: {}", error.message, error.hint))?;
     BreakpointAssign::new(assign.identity, expression)

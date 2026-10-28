@@ -6,15 +6,17 @@ use super::super::{define_func, p};
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 use std::sync::Arc;
 
 /// Register the user-facing `Std.Json` API.
 ///
 /// **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 pub(super) fn register_std_json(checker: &mut Checker) {
-    let error_ty =
-        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Json);
+    let error_ty = super::errors::register(
+        checker,
+        fpas_builtins::native_errors::NativeErrorFamily::Json,
+    );
     let json_ref = Ty::Named(s::STD_JSON_VALUE.into());
     let variants = vec![
         EnumVariantTy {

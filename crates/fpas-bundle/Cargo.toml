@@ -12,9 +12,10 @@ atomic-write-file = "0.3.1"
 fpas-program = { path = "../fpas-program" }
 
 [dev-dependencies]
-fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-parser = { path = "../fpas-parser" }
+
+fpas-code = { path = "../fpas-code" }
 
 [lints]
 workspace = true

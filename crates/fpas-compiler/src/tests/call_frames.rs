@@ -1,6 +1,6 @@
 //! Tail calls and overlapping argument windows keep call semantics.
 
-use fpas_bytecode::Opcode;
+use fpas_runtime::Opcode;
 
 use super::{assert_succeeds, parse_ok, run_program};
 

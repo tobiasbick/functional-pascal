@@ -2,7 +2,7 @@
 
 #![allow(clippy::unwrap_used, reason = "fixtures use direct assertions")]
 
-use fpas_bytecode::{NominalKind, TypeIdentity as T};
+use fpas_code::{NominalKind, TypeIdentity as T};
 use fpas_unit::{
     equality::{EqualityDeclaration, EqualityDeclarations},
     errors::{ErrorInstanceKey, ErrorInstantiationBudget, ErrorSchema, ErrorSchemaVariant},

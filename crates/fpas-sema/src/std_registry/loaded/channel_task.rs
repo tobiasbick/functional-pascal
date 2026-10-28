@@ -6,11 +6,11 @@ use super::super::{define_builtin_std, define_func, p};
 use super::type_registration;
 use crate::check::Checker;
 use crate::types::{FunctionTy, Ty};
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the Task unit's handles and task-aware intrinsic declarations.
 pub fn register_std_task(c: &mut Checker) {
-    let error = super::errors::register(c, fpas_std::native_errors::NativeErrorFamily::Task);
+    let error = super::errors::register(c, fpas_builtins::native_errors::NativeErrorFamily::Task);
     let case = type_registration::register_record_type(c, s::STD_TASK_WAIT_CASE, Vec::new());
     define_func(
         c,

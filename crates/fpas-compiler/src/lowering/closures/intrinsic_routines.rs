@@ -80,13 +80,12 @@ impl ClosureRegistry<'_> {
             .ok_or_else(|| unsupported(routine.span, "resolved intrinsic entry"))?;
         if matches!(
             selected,
-            fpas_bytecode::Intrinsic::Console(
-                fpas_bytecode::ConsoleIntrinsic::Write | fpas_bytecode::ConsoleIntrinsic::WriteLn
+            fpas_code::Intrinsic::Console(
+                fpas_code::ConsoleIntrinsic::Write | fpas_code::ConsoleIntrinsic::WriteLn
             )
         ) {
-            let write = fpas_bytecode::Intrinsic::Console(fpas_bytecode::ConsoleIntrinsic::Write);
-            let write_ln =
-                fpas_bytecode::Intrinsic::Console(fpas_bytecode::ConsoleIntrinsic::WriteLn);
+            let write = fpas_code::Intrinsic::Console(fpas_code::ConsoleIntrinsic::Write);
+            let write_ln = fpas_code::Intrinsic::Console(fpas_code::ConsoleIntrinsic::WriteLn);
             if arguments.is_empty() && selected == write_ln {
                 arguments.push(context.emit_value(
                     Operation::Const(Constant::String(String::new())),
@@ -117,7 +116,7 @@ impl ClosureRegistry<'_> {
         context.can_spawn_tasks |= selected.starts_task();
         if matches!(
             selected,
-            fpas_bytecode::Intrinsic::Str(fpas_bytecode::StrIntrinsic::Format)
+            fpas_code::Intrinsic::Str(fpas_code::StrIntrinsic::Format)
         ) {
             let count = i64::try_from(arguments.len().saturating_sub(1))
                 .map_err(|_| unsupported(routine.span, "format argument count overflow"))?;

@@ -108,11 +108,14 @@ impl DebugEngine {
     /// incompatible.
     pub fn replace_live_image(
         &mut self,
-        candidate: &fpas_bytecode::VerifiedExecutable,
-    ) -> Result<fpas_vm::LiveImageReplaceResult, fpas_vm::DebugSessionError> {
+        candidate: &fpas_runtime::VerifiedExecutable,
+    ) -> Result<
+        fpas_runtime::execution::LiveImageReplaceResult,
+        fpas_runtime::execution::DebugSessionError,
+    > {
         let Some(session) = self.actor.session_mut() else {
-            return Err(fpas_vm::DebugSessionError {
-                kind: fpas_vm::DebugErrorKind::InvalidState,
+            return Err(fpas_runtime::execution::DebugSessionError {
+                kind: fpas_runtime::execution::DebugErrorKind::InvalidState,
                 message: "live-image replace is invalid while the debug session is not inspectable"
                     .to_string(),
                 hint: "Wait for initialize or a stopped event before replacing the live image."
@@ -138,7 +141,7 @@ impl DebugEngine {
     }
 }
 
-fn replacement_body(result: fpas_vm::LiveImageReplaceResult) -> ResponseBody {
+fn replacement_body(result: fpas_runtime::execution::LiveImageReplaceResult) -> ResponseBody {
     live_image_body(
         result.class,
         result.accepted,
@@ -149,7 +152,7 @@ fn replacement_body(result: fpas_vm::LiveImageReplaceResult) -> ResponseBody {
 }
 
 fn live_image_body(
-    class: fpas_vm::LiveImageUpdateClass,
+    class: fpas_runtime::execution::LiveImageUpdateClass,
     accepted: bool,
     applied: bool,
     version: u64,

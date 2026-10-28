@@ -1,9 +1,9 @@
 //! Production error rendering, essential image metadata and constructor sharing.
 use std::time::Instant;
 
-use fpas_bytecode::{BYTECODE_VERSION, DebugType, Value, VerifiedExecutable};
 use fpas_program::{Digest, ProgramIdentity, ProgramImage, decode, encode};
-use fpas_vm::Vm;
+use fpas_runtime::execution::Vm;
+use fpas_runtime::{BYTECODE_VERSION, DebugType, Value, VerifiedExecutable};
 
 const CAUSES: &str = include_str!("../../../../examples/pascal/errors/cause_benchmark.fpas");
 const CONSTRUCTION: &str =
@@ -141,7 +141,7 @@ fn metadata() -> Result<(), String> {
     println!(
         "value_bytes: {}\nconcrete_instances: 2\nshared_factories: 2\nfactory_instruction_bytes: {}",
         std::mem::size_of::<Value>(),
-        instructions as usize * std::mem::size_of::<fpas_bytecode::Instruction>()
+        instructions as usize * std::mem::size_of::<fpas_runtime::Instruction>()
     );
     let keys = data
         .enums

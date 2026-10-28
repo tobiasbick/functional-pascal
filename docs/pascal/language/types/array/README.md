@@ -80,9 +80,9 @@ array of T and Value: T; see [stack operations](mutating.md).
 
 | Concern | Location |
 |---------|-----------|
-| Value algorithms | [`array.rs`](../../../../../crates/fpas-std/src/array.rs) |
-| Key-selector callbacks | [`sorting.rs`](../../../../../crates/fpas-vm/src/vm/hosted/callbacks/sorting.rs) |
-| `Push` / `Pop` | [`vm/mod.rs`](../../../../../crates/fpas-vm/src/vm/mod.rs), [`lowering/calls.rs`](../../../../../crates/fpas-compiler/src/lowering/calls.rs) |
+| Value algorithms | [`array.rs`](../../../../../crates/fpas-runtime/src/stdlib/array.rs) |
+| Key-selector callbacks | [`sorting.rs`](../../../../../crates/fpas-runtime/src/execution/vm/hosted/callbacks/sorting.rs) |
+| `Push` / `Pop` | [`vm/mod.rs`](../../../../../crates/fpas-runtime/src/execution/vm/mod.rs), [`lowering/calls.rs`](../../../../../crates/fpas-compiler/src/lowering/calls.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

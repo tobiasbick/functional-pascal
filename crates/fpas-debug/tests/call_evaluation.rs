@@ -9,7 +9,7 @@
 use std::thread;
 use std::time::Duration;
 
-use fpas_vm::{
+use fpas_runtime::execution::{
     DebugErrorKind, DebugEvaluationLimits, DebugExpression, DebugRunResult, DebugSession,
     SourceBreakpoint,
 };
@@ -33,7 +33,7 @@ mod references;
 #[path = "call_evaluation/var_parameters.rs"]
 mod var_parameters;
 
-fn compile(source: &str) -> fpas_bytecode::VerifiedExecutable {
+fn compile(source: &str) -> fpas_runtime::VerifiedExecutable {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     fpas_compiler::compile(&program).expect("compile controlled-call fixture")

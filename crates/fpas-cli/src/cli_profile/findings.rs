@@ -3,8 +3,8 @@
 //! Each rule reports the measurements that triggered it. Messages state observations;
 //! next steps suggest checks and never assert an unmeasured cause.
 
-use fpas_bytecode::profile::Counter;
-use fpas_vm::RoutineProfile;
+use fpas_runtime::execution::RoutineProfile;
+use fpas_runtime::profile::Counter;
 
 use super::{Evidence, percent};
 

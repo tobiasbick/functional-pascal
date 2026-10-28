@@ -206,10 +206,10 @@ end.
 
 | Concern | Location |
 |---------|----------|
-| Runtime execution | [`path.rs`](../../../../crates/fpas-std/src/path.rs) |
+| Runtime execution | [`path.rs`](../../../../crates/fpas-runtime/src/stdlib/path.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/path.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/path.rs) |
-| Intrinsic ids | [`intrinsic/path.rs`](../../../../crates/fpas-bytecode/src/intrinsic/path.rs) |
+| Intrinsic ids | [`intrinsic/path.rs`](../../../../crates/fpas-code/src/intrinsic/path.rs) |
 
 ## See also
 

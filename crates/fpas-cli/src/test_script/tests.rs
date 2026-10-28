@@ -60,7 +60,7 @@ fn apply_readln_script_runs_readln_test_program() {
     let source = "program T;\nuses Std.Console as Console, Std.Test as Test;\nbegin\n  Test.AssertTrue(Console.ReadLn().Unwrap() = 'Alice');\nend.";
     let (program, _) = parse(source);
     let executable = compile(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(executable);
+    let mut vm = fpas_runtime::execution::Vm::new(executable);
 
     let script = parse_script_text(
         r#"
@@ -80,7 +80,7 @@ fn apply_readln_events_are_consumed_in_script_order() {
     let source = "program T;\nuses Std.Console as Console, Std.Test as Test;\nbegin\n  Test.AssertEquals(Console.ReadLn().Unwrap(), 'first');\n  Test.AssertEquals(Console.ReadLn().Unwrap(), 'second');\n  Test.AssertEquals(Console.ReadLn().Unwrap(), 'third');\nend.";
     let (program, _) = parse(source);
     let executable = compile(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(executable);
+    let mut vm = fpas_runtime::execution::Vm::new(executable);
 
     let script = parse_script_text(
         r#"

@@ -158,14 +158,14 @@ few temporary values alone does not authorize a wait to release execution access
 Maintenance uses a per-domain generation/permit handshake; idle and retired domains
 can service requests on the requesting thread. VM-created domains install scheduled
 local collection with inherited per-domain thresholds. See the
-[execution protocol and native blocking inventory](../../../crates/fpas-vm/src/vm/domain/EXECUTION.md).
+[execution protocol and native blocking inventory](../../../crates/fpas-runtime/src/execution/vm/domain/EXECUTION.md).
 
 Debugger inspection registers bounded live copies and writable cell origins.
 Evaluation uses a separate domain with registered partial construction and error
 cleanup. Local output copied for inspection carries its detached domain until the
 handle expires; ordinary live closure assignment preserves source cell identity.
 Failure reports and trace histories retain detached observations rather than live
-cell graphs. See the [runtime holder inventory](../../../crates/fpas-vm/src/vm/domain/ROOTS.md).
+cell graphs. See the [runtime holder inventory](../../../crates/fpas-runtime/src/execution/vm/domain/ROOTS.md).
 
 Invocation checks executable provenance as well as domain ownership. Compatible
 live-image address mapping does not by itself rebind stored callable targets.
@@ -218,4 +218,4 @@ requests use the same generation handshake as execution safe points.
 `collection_stats` observes allocated/released storage, cleared nonempty payloads,
 completed/aborted collector passes and live cell registrations. An administrative
 handle may retain an already cleared cell; it is not evidence of a program root.
-See the [collector contract and regression owners](../../../crates/fpas-vm/src/vm/domain/COLLECTION.md).
+See the [collector contract and regression owners](../../../crates/fpas-runtime/src/execution/vm/domain/COLLECTION.md).

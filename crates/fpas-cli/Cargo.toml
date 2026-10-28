@@ -26,18 +26,17 @@ fpas-language-service = { path = "../fpas-language-service" }
 fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }
-fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-build = { path = "../fpas-build" }
 fpas-bundle = { path = "../fpas-bundle" }
 fpas-program = { path = "../fpas-program" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
-fpas-vm = { path = "../fpas-vm" }
 fpas-debug = { path = "../fpas-debug" }
 fpas-lsp = { path = "../fpas-lsp" }
-fpas-std = { path = "../fpas-std" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 toml = { workspace = true }
+
+fpas-runtime = { path = "../fpas-runtime" }
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.31.3", features = ["process", "signal"] }
@@ -53,4 +52,3 @@ nix = { version = "0.31.3", features = ["term", "fs"] }
 
 [lints]
 workspace = true
-

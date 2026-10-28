@@ -4,7 +4,7 @@
     reason = "compiler debug tests keep fixture failures local"
 )]
 
-use fpas_bytecode::{DebugBindingKind, DebugType, Opcode};
+use fpas_runtime::{DebugBindingKind, DebugType, Opcode};
 
 use super::parse_ok;
 
@@ -422,7 +422,7 @@ end.
     assert_eq!(add_base.debug.capture_sources.len(), 1);
     assert_eq!(
         add_base.debug.capture_sources[0].kind,
-        fpas_bytecode::DebugCaptureKind::Value
+        fpas_runtime::DebugCaptureKind::Value
     );
     let owner_binding = &image.functions[usize::from(owner.get())].debug.bindings
         [add_base.debug.capture_sources[0].binding.get() as usize];
@@ -447,18 +447,18 @@ end.
     let add_cell = function("mutating.addcell");
     assert_eq!(
         add_cell.debug.capture_sources[0].kind,
-        fpas_bytecode::DebugCaptureKind::Cell
+        fpas_runtime::DebugCaptureKind::Cell
     );
 
     let add_enclosed = function("outercell.mid.addenclosed");
     assert_eq!(
         add_enclosed.debug.capture_sources[0].kind,
-        fpas_bytecode::DebugCaptureKind::EnclosingCell
+        fpas_runtime::DebugCaptureKind::EnclosingCell
     );
     let mid = function("outercell.mid");
     assert_eq!(
         mid.debug.capture_sources[0].kind,
-        fpas_bytecode::DebugCaptureKind::Cell
+        fpas_runtime::DebugCaptureKind::Cell
     );
 }
 

@@ -113,9 +113,9 @@ programmer errors and raise a runtime diagnostic with a construction hint.
 | Concern | Location |
 | --- | --- |
 | Registration | [`loaded/toml.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/toml.rs) |
-| Runtime | [`toml/mod.rs`](../../../../crates/fpas-std/src/toml/mod.rs) |
+| Runtime | [`toml/mod.rs`](../../../../crates/fpas-runtime/src/stdlib/toml/mod.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Intrinsics | [`intrinsic/toml.rs`](../../../../crates/fpas-bytecode/src/intrinsic/toml.rs) |
+| Intrinsics | [`intrinsic/toml.rs`](../../../../crates/fpas-code/src/intrinsic/toml.rs) |
 
 ## See also
 

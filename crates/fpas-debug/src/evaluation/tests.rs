@@ -4,7 +4,7 @@
     reason = "parser tests use direct assertions to keep failures local"
 )]
 
-use fpas_vm::{DebugAssignmentSelector, DebugEvaluationLimits, DebugExpression};
+use fpas_runtime::execution::{DebugAssignmentSelector, DebugEvaluationLimits, DebugExpression};
 
 use super::{
     LogMessage, LogMessageLimits, LogSegment, parse_debug_assignment_target, parse_debug_expression,

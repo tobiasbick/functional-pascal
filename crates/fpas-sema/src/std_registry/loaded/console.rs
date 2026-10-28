@@ -2,9 +2,9 @@ use super::super::{define_const, define_func, define_proc, define_proc_variadic,
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
-use fpas_std::key_event::KEY_KIND_VARIANTS;
-use fpas_std::std_symbols as s;
-use fpas_std::{
+use fpas_builtins::key_event::KEY_KIND_VARIANTS;
+use fpas_builtins::std_symbols as s;
+use fpas_builtins::{
     CONSOLE_COLOR_KIND_VARIANTS, EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
 };
 

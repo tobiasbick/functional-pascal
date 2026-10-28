@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use fpas_bytecode::{
+use fpas_code::{
     DebugBinding, DebugBindingKind, DebugCaptureKind, DebugCaptureSource, DebugScope,
     DebugSourceLocation, FunctionDebugInfo, FunctionId, InstructionAddress, Register,
     SequencePoint, SourceId, SourceMap, SourceRun,
@@ -99,7 +99,7 @@ fn merge_debug(
     object_index: usize,
     function_maps: &[Vec<Option<FunctionId>>],
     code_base: u32,
-    source_paths: &mut Vec<fpas_bytecode::StringId>,
+    source_paths: &mut Vec<fpas_code::StringId>,
     source_ids: &mut HashMap<String, SourceId>,
     debug_types: &DebugTypeIds,
     strings: &mut StringInterner,
@@ -203,7 +203,7 @@ fn merge_debug(
             .iter()
             .map(|source| {
                 Ok(DebugCaptureSource {
-                    binding: fpas_bytecode::DebugBindingId::new(source.binding),
+                    binding: fpas_code::DebugBindingId::new(source.binding),
                     ty: debug_types.translate(object_index, source.ty)?,
                     kind: match source.kind {
                         fpas_unit::object::ObjectCaptureKind::Value => DebugCaptureKind::Value,
@@ -221,7 +221,7 @@ fn merge_debug(
 fn merge_location(
     object: &RelocatableObject,
     location: ObjectDebugLocation,
-    source_paths: &mut Vec<fpas_bytecode::StringId>,
+    source_paths: &mut Vec<fpas_code::StringId>,
     source_ids: &mut HashMap<String, SourceId>,
     strings: &mut StringInterner,
 ) -> Result<DebugSourceLocation, LinkError> {
@@ -235,7 +235,7 @@ fn merge_location(
 fn intern_source(
     object: &RelocatableObject,
     local_source: u32,
-    source_paths: &mut Vec<fpas_bytecode::StringId>,
+    source_paths: &mut Vec<fpas_code::StringId>,
     source_ids: &mut HashMap<String, SourceId>,
     strings: &mut StringInterner,
 ) -> Result<SourceId, LinkError> {

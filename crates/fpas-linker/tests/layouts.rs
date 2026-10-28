@@ -9,8 +9,8 @@ mod common;
 #[path = "layouts/variant_order.rs"]
 mod variant_order;
 
-use fpas_bytecode::{Instruction, Opcode};
 use fpas_linker::{LinkError, link_objects};
+use fpas_runtime::{Instruction, Opcode};
 use fpas_unit::object::{
     DefinitionTarget, ImportShape, ObjectDefinition, ObjectImport, Relocation, RelocationKind,
     SymbolReference,
@@ -421,10 +421,10 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     assert_eq!(
         linked.executable().debug_types[..4],
         [
-            fpas_bytecode::DebugType::Integer,
-            fpas_bytecode::DebugType::Record(fpas_bytecode::RecordTypeId::new(0)),
-            fpas_bytecode::DebugType::Enum(fpas_bytecode::EnumTypeId::new(0)),
-            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(0)),
+            fpas_runtime::DebugType::Integer,
+            fpas_runtime::DebugType::Record(fpas_runtime::RecordTypeId::new(0)),
+            fpas_runtime::DebugType::Enum(fpas_runtime::EnumTypeId::new(0)),
+            fpas_runtime::DebugType::Array(fpas_runtime::DebugTypeId::new(0)),
         ]
     );
     assert_eq!(linked.executable().globals[0].ty.get(), 0);

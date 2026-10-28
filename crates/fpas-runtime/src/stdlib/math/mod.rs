@@ -1,0 +1,332 @@
+//! `Std.Math.*` intrinsic implementations (`Pi` is compile-time in `fpas-compiler`).
+//!
+//! **Documentation:** `docs/pascal/std/numeric/math.md` (from the repository root).
+//! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
+//! `fpas_code::Intrinsic`, `fpas-compiler` (`Std.Math.Pi` and call lowering), and `fpas-sema` `std_registry.rs`.
+
+use crate::stdlib::error::{StdError, std_runtime_error};
+use crate::stdlib::intrinsic_args::{IntrinsicCall, pop_real, pop_value};
+use crate::{Intrinsic, MathIntrinsic, SourceLocation, Value};
+use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
+
+const INTEGER_RANGE_HINT: &str = "Use a finite value whose rounded result fits in the integer range -9223372036854775808..9223372036854775807.";
+
+/// Executes Std.Math operations with finite operands and checked numeric results.
+pub(crate) fn run(
+    intrinsic: Intrinsic,
+    call: &mut IntrinsicCall<'_>,
+    location: SourceLocation,
+) -> Result<Option<()>, StdError> {
+    match intrinsic {
+        Intrinsic::Math(MathIntrinsic::Sqrt) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            if r < 0.0 {
+                return Err(std_runtime_error(
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    "Sqrt of negative number",
+                    "Ensure the argument to Std.Math.Sqrt is >= 0.",
+                    location,
+                ));
+            }
+            call.push(Value::Real(ensure_finite(r.sqrt(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Pow) => {
+            let exp = pop_real(pop_value(call, location)?, location)?;
+            let base = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(base.powf(exp), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Floor) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Integer(checked_real_to_int(
+                r.floor(),
+                "Floor",
+                location,
+            )?));
+        }
+        Intrinsic::Math(MathIntrinsic::Ceil) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Integer(checked_real_to_int(
+                r.ceil(),
+                "Ceil",
+                location,
+            )?));
+        }
+        Intrinsic::Math(MathIntrinsic::Round) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Integer(checked_real_to_int(
+                r.round_ties_even(),
+                "Round",
+                location,
+            )?));
+        }
+        Intrinsic::Math(MathIntrinsic::Sin) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(r.sin(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Cos) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(r.cos(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Log) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            if r <= 0.0 {
+                return Err(std_runtime_error(
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    "Log expects a positive real",
+                    "Ensure the argument to Std.Math.Log is > 0.",
+                    location,
+                ));
+            }
+            call.push(Value::Real(ensure_finite(r.ln(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Min) => {
+            let b = pop_value(call, location)?;
+            let a = pop_value(call, location)?;
+            call.push(minmax_value(a.clone(), b.clone(), true, location)?);
+        }
+        Intrinsic::Math(MathIntrinsic::Max) => {
+            let b = pop_value(call, location)?;
+            let a = pop_value(call, location)?;
+            call.push(minmax_value(a.clone(), b.clone(), false, location)?);
+        }
+        Intrinsic::Math(MathIntrinsic::Abs) => {
+            let v = pop_value(call, location)?;
+            call.push(abs_value(v.clone(), location)?);
+        }
+        Intrinsic::Math(MathIntrinsic::Tan) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(r.tan(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::ArcSin) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            if !(-1.0..=1.0).contains(&r) {
+                return Err(std_runtime_error(
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    format!("ArcSin argument {r} out of range [-1, 1]"),
+                    "Ensure the argument to Std.Math.ArcSin is in [-1, 1].",
+                    location,
+                ));
+            }
+            call.push(Value::Real(ensure_finite(r.asin(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::ArcCos) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            if !(-1.0..=1.0).contains(&r) {
+                return Err(std_runtime_error(
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    format!("ArcCos argument {r} out of range [-1, 1]"),
+                    "Ensure the argument to Std.Math.ArcCos is in [-1, 1].",
+                    location,
+                ));
+            }
+            call.push(Value::Real(ensure_finite(r.acos(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::ArcTan) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(r.atan(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::ArcTan2) => {
+            let x = pop_real(pop_value(call, location)?, location)?;
+            let y = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(y.atan2(x), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Exp) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(r.exp(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Log10) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            if r <= 0.0 {
+                return Err(std_runtime_error(
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    "Log10 expects a positive real",
+                    "Ensure the argument to Std.Math.Log10 is > 0.",
+                    location,
+                ));
+            }
+            call.push(Value::Real(ensure_finite(r.log10(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Log2) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            if r <= 0.0 {
+                return Err(std_runtime_error(
+                    RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    "Log2 expects a positive real",
+                    "Ensure the argument to Std.Math.Log2 is > 0.",
+                    location,
+                ));
+            }
+            call.push(Value::Real(ensure_finite(r.log2(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Trunc) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Integer(checked_real_to_int(
+                r.trunc(),
+                "Trunc",
+                location,
+            )?));
+        }
+        Intrinsic::Math(MathIntrinsic::Frac) => {
+            let r = pop_real(pop_value(call, location)?, location)?;
+            call.push(Value::Real(ensure_finite(r.fract(), location)?));
+        }
+        Intrinsic::Math(MathIntrinsic::Sign) => {
+            let v = pop_value(call, location)?;
+            call.push(sign_value(v.clone(), location)?);
+        }
+        Intrinsic::Math(MathIntrinsic::Clamp) => {
+            let hi = pop_value(call, location)?;
+            let lo = pop_value(call, location)?;
+            let x = pop_value(call, location)?;
+            call.push(clamp_value(x.clone(), lo.clone(), hi.clone(), location)?);
+        }
+        _ => return Ok(None),
+    }
+    Ok(Some(()))
+}
+
+fn abs_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
+    match v {
+        Value::Integer(n) => n.checked_abs().map(Value::Integer).ok_or_else(|| {
+            std_runtime_error(
+                RUNTIME_NUMERIC_DOMAIN_ERROR,
+                "Abs overflow for minimum integer value",
+                "Use a wider numeric type or avoid taking Abs of -9223372036854775808.",
+                location,
+            )
+        }),
+        Value::Real(x) => Ok(Value::Real(ensure_finite(x, location)?.abs())),
+        other => Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("Abs expects numeric value, got {}", other.type_name()),
+            "Pass an integer or real value to Std.Math.Abs.",
+            location,
+        )),
+    }
+}
+
+fn checked_real_to_int(
+    value: f64,
+    intrinsic_name: &str,
+    location: SourceLocation,
+) -> Result<i64, StdError> {
+    fpas_numeric::real::to_integer(value).map_err(|_| {
+        std_runtime_error(
+            RUNTIME_NUMERIC_DOMAIN_ERROR,
+            format!("{intrinsic_name} result {value} is outside the integer range"),
+            INTEGER_RANGE_HINT,
+            location,
+        )
+    })
+}
+
+fn minmax_value(
+    a: Value,
+    b: Value,
+    min: bool,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    match (&a, &b) {
+        (Value::Integer(x), Value::Integer(y)) => Ok(if min {
+            Value::Integer(*x.min(y))
+        } else {
+            Value::Integer(*x.max(y))
+        }),
+        (Value::Real(x), Value::Real(y)) => {
+            ensure_finite(*x, location)?;
+            ensure_finite(*y, location)?;
+            Ok(if min {
+                Value::Real(x.min(*y))
+            } else {
+                Value::Real(x.max(*y))
+            })
+        }
+        _ => Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!(
+                "Min/Max expects two integers or two reals, got {} and {}",
+                a.type_name(),
+                b.type_name()
+            ),
+            "Both arguments must be the same numeric kind.",
+            location,
+        )),
+    }
+}
+
+fn sign_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
+    match v {
+        Value::Integer(n) => Ok(Value::Integer(n.signum())),
+        Value::Real(x) => {
+            ensure_finite(x, location)?;
+            if x > 0.0 {
+                Ok(Value::Integer(1))
+            } else if x < 0.0 {
+                Ok(Value::Integer(-1))
+            } else {
+                Ok(Value::Integer(0))
+            }
+        }
+        other => Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("Sign expects numeric value, got {}", other.type_name()),
+            "Pass an integer or real value to Std.Math.Sign.",
+            location,
+        )),
+    }
+}
+
+fn clamp_value(
+    x: Value,
+    lo: Value,
+    hi: Value,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    if let (Value::Integer(v), Value::Integer(a), Value::Integer(b)) = (&x, &lo, &hi) {
+        ensure_valid_clamp_bounds(*a, *b, location)?;
+        return Ok(Value::Integer((*v).clamp(*a, *b)));
+    }
+    if let (Value::Real(v), Value::Real(a), Value::Real(b)) = (&x, &lo, &hi) {
+        ensure_finite(*v, location)?;
+        ensure_finite(*a, location)?;
+        ensure_finite(*b, location)?;
+        ensure_valid_clamp_bounds(*a, *b, location)?;
+        return Ok(Value::Real(v.clamp(*a, *b)));
+    }
+    Err(std_runtime_error(
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+        "Clamp expects all three arguments to be the same numeric kind",
+        "All arguments must be integer or all must be real.",
+        location,
+    ))
+}
+
+fn ensure_valid_clamp_bounds<T>(lo: T, hi: T, location: SourceLocation) -> Result<(), StdError>
+where
+    T: PartialOrd + std::fmt::Display,
+{
+    if lo <= hi {
+        Ok(())
+    } else {
+        Err(std_runtime_error(
+            RUNTIME_NUMERIC_DOMAIN_ERROR,
+            format!("Clamp lower bound {lo} must be <= upper bound {hi}"),
+            "Pass bounds where `Lo <= Hi` to Std.Math.Clamp(X, Lo, Hi).",
+            location,
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests;
+
+fn ensure_finite(value: f64, location: SourceLocation) -> Result<f64, StdError> {
+    fpas_numeric::real::finite(value).map_err(|error| {
+        std_runtime_error(
+            RUNTIME_NUMERIC_DOMAIN_ERROR,
+            error.message(),
+            error.hint(),
+            location,
+        )
+    })
+}

@@ -5,7 +5,7 @@ mod postconditions;
 
 #[test]
 fn disabled_contracts_emit_no_conditions_branches_or_diagnostic_preparation() {
-    use fpas_bytecode::Opcode;
+    use fpas_runtime::Opcode;
     let program = super::parse_ok(
         "program T;
         function Guard(Value: integer): integer;
@@ -44,7 +44,7 @@ fn disabled_contracts_emit_no_conditions_branches_or_diagnostic_preparation() {
                 .any(|opcode| matches!(opcode, Opcode::DivideInteger | Opcode::DivideIntegerImm)),
             contracts
         );
-        let result = fpas_vm::Vm::new(image).run();
+        let result = fpas_runtime::execution::Vm::new(image).run();
         assert_eq!(result.is_err(), contracts);
     }
 }

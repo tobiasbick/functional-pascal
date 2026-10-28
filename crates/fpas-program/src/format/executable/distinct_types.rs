@@ -1,7 +1,7 @@
 //! Binary source-visible distinct type names for debugger conversions.
 //! See `docs/pascal/language/types/distinct-types.md` and `docs/pascal/tools/debugger.md`.
 
-use fpas_bytecode::{DebugTypeId, DistinctTypeName, Executable, SourceId, StringId};
+use fpas_code::{DebugTypeId, DistinctTypeName, Executable, SourceId, StringId};
 
 use super::super::FormatError;
 use super::super::sections::{DecodedSection, EncodedSection, SectionReader, TAGS, write_u32};
@@ -14,7 +14,7 @@ pub(super) fn encode(executable: &Executable) -> Result<EncodedSection, FormatEr
     check_count(
         TAGS[11],
         executable.distinct_types.len(),
-        fpas_bytecode::limits::MAX_STRINGS,
+        fpas_code::limits::MAX_STRINGS,
     )?;
     let mut bytes = Vec::with_capacity(executable.distinct_types.len() * ENTRY_BYTES);
     for distinct in &executable.distinct_types {
@@ -34,7 +34,7 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DistinctTypeName
     check_count(
         section.tag,
         section.item_count,
-        fpas_bytecode::limits::MAX_STRINGS,
+        fpas_code::limits::MAX_STRINGS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "distinct type section");
     reader.ensure_entries(section.item_count, ENTRY_BYTES, "distinct_type")?;

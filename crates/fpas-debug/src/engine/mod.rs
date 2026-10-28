@@ -69,7 +69,7 @@ pub(crate) struct DebugEngine {
     status: DebugStatus,
     fatal_termination: bool,
     actor: SessionActor,
-    execution_limits: fpas_vm::DebugExecutionLimits,
+    execution_limits: fpas_runtime::execution::DebugExecutionLimits,
     request_ids: HashSet<u64>,
     output_cursor: usize,
     breakpoint_policies: HashMap<u64, BreakpointPolicy>,
@@ -90,7 +90,9 @@ impl DebugEngine {
     /// # Errors
     ///
     /// Returns a debugger initialization error for invalid runtime state.
-    pub(crate) fn new(mut target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
+    pub(crate) fn new(
+        mut target: PreparedDebugTarget,
+    ) -> Result<Self, fpas_runtime::execution::DebugSessionError> {
         let execution_limits = target.execution_limits();
         let reloader = target.take_reloader();
         let sources = target.sources().to_vec();

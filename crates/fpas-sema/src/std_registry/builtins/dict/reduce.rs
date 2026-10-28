@@ -4,10 +4,10 @@
 
 use crate::check::Checker;
 use crate::types::Ty;
+use fpas_builtins::std_symbols as s;
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use fpas_std::std_symbols as s;
 
 use super::super::callbacks::{TernaryFunctionCallbackSpec, expect_ternary_function_callback};
 use super::super::check_argument_count;

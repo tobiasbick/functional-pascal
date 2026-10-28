@@ -31,12 +31,12 @@ pub(crate) enum ResponseBody {
     Eof,
     Cleared,
     Initialize {
-        execution: fpas_vm::DebugExecutionLimits,
+        execution: fpas_runtime::execution::DebugExecutionLimits,
         hot_reload: bool,
     },
-    Evaluate(fpas_vm::DebugEvaluateResult),
+    Evaluate(fpas_runtime::execution::DebugEvaluateResult),
     Tasks {
-        tasks: Vec<fpas_vm::DebugTask>,
+        tasks: Vec<fpas_runtime::execution::DebugTask>,
         total: usize,
     },
     TaskHold {
@@ -47,22 +47,22 @@ pub(crate) enum ResponseBody {
         task_id: u64,
     },
     Stack {
-        frames: Vec<fpas_vm::DebugFrame>,
+        frames: Vec<fpas_runtime::execution::DebugFrame>,
         total: usize,
         task_id: u64,
     },
     Scopes {
-        scopes: Vec<fpas_vm::DebugScope>,
+        scopes: Vec<fpas_runtime::execution::DebugScope>,
     },
     Variables {
-        variables: Vec<fpas_vm::DebugVariable>,
+        variables: Vec<fpas_runtime::execution::DebugVariable>,
         total: usize,
     },
     InputQueued {
         bytes: usize,
         session_bytes: usize,
     },
-    Breakpoint(fpas_vm::BoundBreakpoint),
+    Breakpoint(fpas_runtime::execution::BoundBreakpoint),
     UnverifiedBreakpoint {
         source: String,
         line: u32,
@@ -76,24 +76,24 @@ pub(crate) enum ResponseBody {
         breakpoint_id: u64,
     },
     FunctionBreakpoints {
-        breakpoints: Vec<fpas_vm::BoundFunctionBreakpoint>,
+        breakpoints: Vec<fpas_runtime::execution::BoundFunctionBreakpoint>,
     },
     DataBreakpoints {
-        breakpoints: Vec<fpas_vm::BoundDataBreakpoint>,
+        breakpoints: Vec<fpas_runtime::execution::BoundDataBreakpoint>,
     },
     RuntimeFilters {
         filters: Vec<String>,
     },
-    Dictionary(fpas_vm::DebugDictionaryMutationResult),
-    Array(fpas_vm::DebugArrayMutationResult),
-    StringCharacter(fpas_vm::DebugStringMutationResult),
-    ForcedReturn(fpas_vm::DebugForcedReturnResult),
-    FrameRestart(fpas_vm::DebugFrameRestartResult),
-    Location(fpas_vm::DebugDataLocation),
+    Dictionary(fpas_runtime::execution::DebugDictionaryMutationResult),
+    Array(fpas_runtime::execution::DebugArrayMutationResult),
+    StringCharacter(fpas_runtime::execution::DebugStringMutationResult),
+    ForcedReturn(fpas_runtime::execution::DebugForcedReturnResult),
+    FrameRestart(fpas_runtime::execution::DebugFrameRestartResult),
+    Location(fpas_runtime::execution::DebugDataLocation),
     Recording {
-        envelope: fpas_vm::DebugRecordingEnvelope,
+        envelope: fpas_runtime::execution::DebugRecordingEnvelope,
         capturing: bool,
-        events: Vec<fpas_vm::DebugRecordingEvent>,
+        events: Vec<fpas_runtime::execution::DebugRecordingEvent>,
         truncated: bool,
     },
     RecordingStarted {
@@ -102,7 +102,7 @@ pub(crate) enum ResponseBody {
         event_count: usize,
     },
     LiveImage {
-        class: fpas_vm::LiveImageUpdateClass,
+        class: fpas_runtime::execution::LiveImageUpdateClass,
         accepted: bool,
         applied: bool,
         version: u64,
@@ -110,25 +110,25 @@ pub(crate) enum ResponseBody {
     },
     VariantDescription {
         target: String,
-        description: fpas_vm::DebugVariantDescription,
+        description: fpas_runtime::execution::DebugVariantDescription,
     },
-    VariantConstruct(fpas_vm::DebugVariantConstructionResult),
-    Storage(fpas_vm::DebugStorageInitializationResult),
-    TaskResult(fpas_vm::DebugTaskResultReplacement),
+    VariantConstruct(fpas_runtime::execution::DebugVariantConstructionResult),
+    Storage(fpas_runtime::execution::DebugStorageInitializationResult),
+    TaskResult(fpas_runtime::execution::DebugTaskResultReplacement),
 }
 
 /// Engine-owned debugger event.
 #[derive(Debug, Clone)]
 pub(crate) enum DebugEvent {
     Initialized,
-    Stopped(fpas_vm::DebugStop),
-    Task(fpas_vm::DebugTaskEvent),
+    Stopped(fpas_runtime::execution::DebugStop),
+    Task(fpas_runtime::execution::DebugTaskEvent),
     Output {
         category: &'static str,
         text: String,
         sequence: Option<usize>,
         breakpoint_id: Option<u64>,
-        location: Option<fpas_vm::SourceLocation>,
+        location: Option<fpas_runtime::execution::SourceLocation>,
     },
     Terminated {
         reason: &'static str,
@@ -141,9 +141,9 @@ pub(crate) enum DebugEvent {
         task_id: u64,
     },
     ProtocolError(EngineFailure),
-    SourceBreakpoint(fpas_vm::BoundBreakpoint),
-    FunctionBreakpoint(fpas_vm::BoundFunctionBreakpoint),
-    DataBreakpoint(fpas_vm::BoundDataBreakpoint),
+    SourceBreakpoint(fpas_runtime::execution::BoundBreakpoint),
+    FunctionBreakpoint(fpas_runtime::execution::BoundFunctionBreakpoint),
+    DataBreakpoint(fpas_runtime::execution::BoundDataBreakpoint),
 }
 
 impl DebugRecord {

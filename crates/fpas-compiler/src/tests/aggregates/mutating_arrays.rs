@@ -48,7 +48,7 @@ end."#,
 
 #[test]
 fn writes_before_panic_and_failed_pop_remain_in_caller_storage() {
-    use fpas_vm::{DebugExpression, DebugRunResult, DebugSession, DebugStopReason};
+    use fpas_runtime::execution::{DebugExpression, DebugRunResult, DebugSession, DebugStopReason};
 
     for tail in [
         "panic('stopped');",
@@ -103,7 +103,7 @@ begin Change(var Global); end."#
 
 #[test]
 fn failed_callback_does_not_commit_a_partial_in_place_result() {
-    use fpas_vm::{DebugExpression, DebugRunResult, DebugSession, DebugStopReason};
+    use fpas_runtime::execution::{DebugExpression, DebugRunResult, DebugSession, DebugStopReason};
     let program = super::super::parse_ok(
         r#"program T;
 var Items: array of integer := [1, 2];

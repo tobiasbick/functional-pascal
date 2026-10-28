@@ -4,7 +4,7 @@ use super::super::{define_func, p};
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the `Std.Net` functions made visible by `uses Std.Net`.
 /// See `docs/pascal/std/network/net.md`.
@@ -20,7 +20,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     let error = Box::new(super::errors::register(
         checker,
-        fpas_std::native_errors::NativeErrorFamily::Net,
+        fpas_builtins::native_errors::NativeErrorFamily::Net,
     ));
     let address = type_registration::register_record_type(
         checker,

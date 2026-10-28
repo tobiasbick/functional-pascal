@@ -231,7 +231,7 @@ pub(crate) fn canonical_unit_key(id: &QualifiedId) -> String {
 pub(crate) fn is_intrinsic_std_unit(used: &fpas_parser::Import, graph: &UnitGraph) -> bool {
     let key = canonical_unit_key(&used.unit);
     !graph.contains(&key)
-        && fpas_std::STD_UNITS_INTRINSIC
+        && fpas_builtins::STD_UNITS_INTRINSIC
             .iter()
             .any(|known| known.eq_ignore_ascii_case(&key))
 }

@@ -91,7 +91,7 @@ fn isolated_worker_request_preserves_effective_collection_configuration() {
     use super::{WorkerRequest, write_worker_inputs};
     use crate::cli_test::run::program::{PreparedProgram, RunOutput};
     use std::{num::NonZeroUsize, sync::Arc};
-    let config = fpas_bytecode::CollectionSchedule {
+    let config = fpas_runtime::CollectionSchedule {
         allocations: NonZeroUsize::new(13).unwrap(),
         mutations: NonZeroUsize::new(17).unwrap(),
         safe_points: NonZeroUsize::new(19).unwrap(),

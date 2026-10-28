@@ -227,8 +227,8 @@ pub(super) fn rewrite(
                         });
                         instruction.operation = Operation::Intrinsic {
                             intrinsic: IntrinsicId::new(u32::from(u16::from(
-                                fpas_bytecode::Intrinsic::Conv(
-                                    fpas_bytecode::ConvIntrinsic::ErrorMatchesVariant,
+                                fpas_code::Intrinsic::Conv(
+                                    fpas_code::ConvIntrinsic::ErrorMatchesVariant,
                                 ),
                             ))),
                             arguments: vec![tested, expected.id],

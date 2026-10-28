@@ -189,7 +189,7 @@ end."
                 &object,
             )
             .expect("linked consumer");
-            fpas_vm::Vm::new(executable)
+            fpas_runtime::execution::Vm::new(executable)
                 .run()
                 .expect("qualified enum comparisons should execute");
         }

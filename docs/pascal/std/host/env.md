@@ -68,10 +68,10 @@ end if;
 
 | Concern | Location |
 |---------|----------|
-| Runtime execution | [`env.rs`](../../../../crates/fpas-std/src/env.rs) |
+| Runtime execution | [`env.rs`](../../../../crates/fpas-runtime/src/stdlib/env.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
-| Intrinsic ids | [`intrinsic/env.rs`](../../../../crates/fpas-bytecode/src/intrinsic/env.rs) |
+| Intrinsic ids | [`intrinsic/env.rs`](../../../../crates/fpas-code/src/intrinsic/env.rs) |
 
 ## See also
 

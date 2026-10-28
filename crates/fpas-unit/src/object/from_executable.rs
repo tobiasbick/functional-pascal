@@ -1,7 +1,7 @@
 //! Convert a verified executable into a relocatable object.
 //! Documentation: `docs/pascal/program-structure/compiled-programs.md`.
 
-use fpas_bytecode::VerifiedExecutable;
+use fpas_code::VerifiedExecutable;
 use std::collections::BTreeSet;
 
 use super::conversion::{localize_branch, object_debug_type, relocation_for_instruction};
@@ -28,7 +28,7 @@ impl RelocatableObject {
         verified: VerifiedExecutable,
     ) -> Result<Self, ObjectError> {
         let executable = verified.into_unverified();
-        let strings = |id: fpas_bytecode::StringId| {
+        let strings = |id: fpas_code::StringId| {
             executable
                 .strings
                 .get(id)
@@ -45,12 +45,12 @@ impl RelocatableObject {
             .constants
             .iter()
             .map(|constant| match constant {
-                fpas_bytecode::Constant::Integer(value) => Ok(ObjectConstant::Integer(*value)),
-                fpas_bytecode::Constant::Real(bits) => Ok(ObjectConstant::Real(*bits)),
-                fpas_bytecode::Constant::Boolean(value) => Ok(ObjectConstant::Boolean(*value)),
-                fpas_bytecode::Constant::String(id) => strings(*id).map(ObjectConstant::String),
-                fpas_bytecode::Constant::Unit => Ok(ObjectConstant::Unit),
-                fpas_bytecode::Constant::Function {
+                fpas_code::Constant::Integer(value) => Ok(ObjectConstant::Integer(*value)),
+                fpas_code::Constant::Real(bits) => Ok(ObjectConstant::Real(*bits)),
+                fpas_code::Constant::Boolean(value) => Ok(ObjectConstant::Boolean(*value)),
+                fpas_code::Constant::String(id) => strings(*id).map(ObjectConstant::String),
+                fpas_code::Constant::Unit => Ok(ObjectConstant::Unit),
+                fpas_code::Constant::Function {
                     function,
                     task_bound,
                 } => Ok(ObjectConstant::Function {
@@ -294,13 +294,11 @@ impl RelocatableObject {
                             ty: binding.ty.get(),
                             register: binding.register.get(),
                             kind: match binding.kind {
-                                fpas_bytecode::DebugBindingKind::Parameter => {
+                                fpas_code::DebugBindingKind::Parameter => {
                                     ObjectDebugBindingKind::Parameter
                                 }
-                                fpas_bytecode::DebugBindingKind::Local => {
-                                    ObjectDebugBindingKind::Local
-                                }
-                                fpas_bytecode::DebugBindingKind::Capture => {
+                                fpas_code::DebugBindingKind::Local => ObjectDebugBindingKind::Local,
+                                fpas_code::DebugBindingKind::Capture => {
                                     ObjectDebugBindingKind::Capture
                                 }
                             },
@@ -354,13 +352,13 @@ impl RelocatableObject {
                         binding: source.binding.get(),
                         ty: source.ty.get(),
                         kind: match source.kind {
-                            fpas_bytecode::DebugCaptureKind::Value => {
+                            fpas_code::DebugCaptureKind::Value => {
                                 crate::object::ObjectCaptureKind::Value
                             }
-                            fpas_bytecode::DebugCaptureKind::Cell => {
+                            fpas_code::DebugCaptureKind::Cell => {
                                 crate::object::ObjectCaptureKind::Cell
                             }
-                            fpas_bytecode::DebugCaptureKind::EnclosingCell => {
+                            fpas_code::DebugCaptureKind::EnclosingCell => {
                                 crate::object::ObjectCaptureKind::EnclosingCell
                             }
                         },
@@ -376,8 +374,8 @@ impl RelocatableObject {
                 capture_count: function.capture_count,
                 register_count: function.register_count,
                 returns: match function.return_convention {
-                    fpas_bytecode::ReturnConvention::Unit => ObjectReturn::Unit,
-                    fpas_bytecode::ReturnConvention::Value => ObjectReturn::Value,
+                    fpas_code::ReturnConvention::Unit => ObjectReturn::Unit,
+                    fpas_code::ReturnConvention::Value => ObjectReturn::Value,
                 },
                 uses_spawn_tasks: function.flags.uses_spawn_tasks,
                 source_runs,

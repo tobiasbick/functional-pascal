@@ -9,7 +9,7 @@ use crate::types::Ty;
 /// Returns every standard-library unit implemented as compiler or runtime intrinsics.
 #[must_use]
 pub fn intrinsic_std_units() -> &'static [&'static str] {
-    fpas_std::STD_UNITS_INTRINSIC
+    fpas_builtins::STD_UNITS_INTRINSIC
 }
 
 /// Editor-facing category of an intrinsic standard-library declaration.
@@ -41,10 +41,10 @@ pub struct IntrinsicStdSymbol {
 /// Returns the declarations registered for one intrinsic standard-library unit.
 ///
 /// Source-defined units return an empty list. Callers should pass names from
-/// [`fpas_std::STD_UNITS_INTRINSIC`].
+/// [`fpas_builtins::STD_UNITS_INTRINSIC`].
 #[must_use]
 pub fn intrinsic_std_symbols(unit: &str) -> Vec<IntrinsicStdSymbol> {
-    if !fpas_std::STD_UNITS_INTRINSIC
+    if !fpas_builtins::STD_UNITS_INTRINSIC
         .iter()
         .any(|known| known.eq_ignore_ascii_case(unit))
     {
@@ -60,7 +60,7 @@ pub fn intrinsic_std_symbols(unit: &str) -> Vec<IntrinsicStdSymbol> {
         .metadata_symbols_with_prefix(&prefix)
         .into_iter()
         .filter(|(name, _)| {
-            !fpas_std::STD_UNITS_INTRINSIC.iter().any(|candidate| {
+            !fpas_builtins::STD_UNITS_INTRINSIC.iter().any(|candidate| {
                 candidate.len() > unit.len() && name.starts_with(&format!("{candidate}."))
             })
         })
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn intrinsic_std_symbols_returns_registered_fs_signatures() {
-        let symbols = intrinsic_std_symbols(fpas_std::STD_UNIT_FS);
+        let symbols = intrinsic_std_symbols(fpas_builtins::STD_UNIT_FS);
         let read_text = symbols
             .iter()
             .find(|symbol| symbol.qualified_name == "Std.Fs.ReadText")
@@ -108,14 +108,14 @@ mod tests {
 
     #[test]
     fn intrinsic_std_symbols_excludes_source_units() {
-        assert!(intrinsic_std_symbols(fpas_std::STD_UNIT_TUI).is_empty());
+        assert!(intrinsic_std_symbols(fpas_builtins::STD_UNIT_TUI).is_empty());
     }
 
     #[test]
     fn intrinsic_std_symbols_cover_every_registered_public_name() {
-        for unit in fpas_std::STD_UNITS_INTRINSIC {
+        for unit in fpas_builtins::STD_UNITS_INTRINSIC {
             let symbols = intrinsic_std_symbols(unit);
-            for name in fpas_std::std_unit_symbols(unit) {
+            for name in fpas_builtins::std_unit_symbols(unit) {
                 assert!(
                     symbols
                         .iter()

@@ -32,8 +32,8 @@ impl<'de> DeserializeSeed<'de> for Node<'_> {
         deserializer: D,
     ) -> Result<Self::Value, D::Error> {
         self.budget.nodes += 1;
-        if self.depth > fpas_bytecode::MAX_DEBUG_PROJECTION_DEPTH
-            || self.budget.nodes > fpas_bytecode::MAX_DEBUG_PROJECTION_NODES
+        if self.depth > fpas_code::MAX_DEBUG_PROJECTION_DEPTH
+            || self.budget.nodes > fpas_code::MAX_DEBUG_PROJECTION_NODES
         {
             return Err(de::Error::custom(
                 "debug projection depth or node count exceeds limit",
@@ -248,7 +248,7 @@ impl<'de> Visitor<'de> for NameText<'_> {
     }
     fn visit_str<E: de::Error>(self, value: &str) -> Result<Self::Value, E> {
         self.budget.names = self.budget.names.saturating_add(value.len());
-        if value.is_empty() || self.budget.names > fpas_bytecode::MAX_DEBUG_PROJECTION_NAME_BYTES {
+        if value.is_empty() || self.budget.names > fpas_code::MAX_DEBUG_PROJECTION_NAME_BYTES {
             return Err(E::custom("debug projection nominal names exceed limit"));
         }
         Ok(value.to_owned())

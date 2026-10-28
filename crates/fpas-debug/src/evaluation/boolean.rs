@@ -3,7 +3,7 @@
 //! Operator semantics: `docs/pascal/language/basics/operators.md`.
 
 use fpas_parser::Expr;
-use fpas_vm::{DebugBinaryOperation, DebugExpression, DebugUnaryOperation};
+use fpas_runtime::execution::{DebugBinaryOperation, DebugExpression, DebugUnaryOperation};
 
 use super::parse::EvaluationParseError;
 
@@ -113,7 +113,7 @@ fn kind(expression: &DebugExpression) -> Kind {
 #[cfg(test)]
 mod tests {
     use crate::evaluation::parse_debug_expression;
-    use fpas_vm::DebugEvaluationLimits;
+    use fpas_runtime::execution::DebugEvaluationLimits;
 
     #[test]
     fn logical_watches_reject_non_booleans_including_skipped_operands() {

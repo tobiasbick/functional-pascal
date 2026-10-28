@@ -80,7 +80,8 @@ pub(super) fn run_program_with_graph_and_capture_output(
                 );
             }
         };
-    let mut vm = fpas_vm::Vm::with_writer(built.executable, Box::new(stdout.clone()));
+    let mut vm =
+        fpas_runtime::execution::Vm::with_writer(built.executable, Box::new(stdout.clone()));
     let exit_code = match vm.run() {
         Ok(_) => 0,
         Err(diagnostic) => {

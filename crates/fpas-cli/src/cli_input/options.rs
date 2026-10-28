@@ -9,7 +9,7 @@ use crate::cli_output::DiagnosticFormat;
 
 pub(super) struct ParsedOptions {
     pub(super) no_contracts: bool,
-    pub(super) collection_schedule: fpas_bytecode::CollectionSchedule,
+    pub(super) collection_schedule: fpas_runtime::CollectionSchedule,
     pub(super) check_only: bool,
     pub(super) fix: bool,
     pub(super) stdout_mode: bool,

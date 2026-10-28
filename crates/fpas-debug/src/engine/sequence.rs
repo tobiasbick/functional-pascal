@@ -1,6 +1,6 @@
 //! Array insertion/removal and string character replacement requests.
 
-use fpas_vm::{DebugSession, DebugSessionError};
+use fpas_runtime::execution::{DebugSession, DebugSessionError};
 
 use super::record::{DebugRecord, ResponseBody};
 use super::reply::{invalid_state, ok, parse_error, session_error};
@@ -8,10 +8,10 @@ use super::{DebugEngine, DebugStatus};
 use crate::evaluation::{parse_debug_assignment_target, parse_debug_expression};
 
 struct SequenceRequest {
-    target: fpas_vm::DebugAssignmentTarget,
-    expressions: Vec<fpas_vm::DebugExpression>,
+    target: fpas_runtime::execution::DebugAssignmentTarget,
+    expressions: Vec<fpas_runtime::execution::DebugExpression>,
     frame_id: Option<u64>,
-    limits: fpas_vm::DebugEvaluationLimits,
+    limits: fpas_runtime::execution::DebugEvaluationLimits,
 }
 
 fn parse_request(
@@ -27,7 +27,7 @@ fn parse_request(
             request_id, command, status,
         )));
     }
-    let limits = fpas_vm::DebugEvaluationLimits::default();
+    let limits = fpas_runtime::execution::DebugEvaluationLimits::default();
     let target = parse_debug_assignment_target(target_source, limits)
         .map_err(|error| Box::new(parse_error(request_id, command, error)))?;
     let mut expressions = Vec::with_capacity(expression_sources.len());

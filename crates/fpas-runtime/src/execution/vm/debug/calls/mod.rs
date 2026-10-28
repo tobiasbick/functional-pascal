@@ -1,0 +1,56 @@
+//! Detached, effect-checked execution of debugger-side calls.
+
+mod detach;
+mod distinct_conversion;
+mod enum_constructor;
+mod execute;
+mod function;
+mod lazy;
+mod named_arguments;
+mod parameters;
+mod record_construction;
+mod references;
+mod resolution;
+
+use std::sync::Arc;
+
+use crate::{RuntimeEnumLayout, Value, VerifiedExecutable};
+
+use crate::execution::vm::debug::types::DebugSessionError;
+
+pub(in crate::execution::vm::debug) use detach::ValueDetacher;
+pub(super) use execute::CallSandbox;
+pub(super) use lazy::LazyCallSandbox;
+
+/// Construct one detached enum value from verified variant metadata and field values.
+pub(in crate::execution::vm::debug) fn construct_enum(
+    executable: &VerifiedExecutable,
+    layout: Arc<RuntimeEnumLayout>,
+    arguments: Vec<Value>,
+    max_depth: usize,
+    max_detached_values: usize,
+    schedule: crate::CollectionSchedule,
+) -> Result<Value, DebugSessionError> {
+    let mut detacher = detach::ValueDetacher::new(max_detached_values);
+    crate::execution::vm::domain::configure(&detacher.domain, schedule);
+    enum_constructor::construct(executable, layout, arguments, &mut detacher, max_depth)
+}
+
+/// Construct one detached single-payload enum value from verified variant metadata.
+pub(in crate::execution::vm::debug) fn construct_enum_payload(
+    executable: &VerifiedExecutable,
+    layout: Arc<RuntimeEnumLayout>,
+    payload: Value,
+    max_depth: usize,
+    max_detached_values: usize,
+    schedule: crate::CollectionSchedule,
+) -> Result<Value, DebugSessionError> {
+    construct_enum(
+        executable,
+        layout,
+        vec![payload],
+        max_depth,
+        max_detached_values,
+        schedule,
+    )
+}

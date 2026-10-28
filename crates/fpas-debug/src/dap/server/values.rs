@@ -3,7 +3,7 @@
 use serde_json::{Value, json};
 
 /// DAP stack frame object.
-pub(super) fn frame_json(frame: &fpas_vm::DebugFrame) -> Value {
+pub(super) fn frame_json(frame: &fpas_runtime::execution::DebugFrame) -> Value {
     json!({
         "id": frame.id,
         "name": frame.name,
@@ -14,7 +14,7 @@ pub(super) fn frame_json(frame: &fpas_vm::DebugFrame) -> Value {
 }
 
 /// DAP evaluate / hover body.
-pub(super) fn evaluate_json(result: &fpas_vm::DebugEvaluateResult) -> Value {
+pub(super) fn evaluate_json(result: &fpas_runtime::execution::DebugEvaluateResult) -> Value {
     json!({
         "result": result.value,
         "type": result.type_name,
@@ -26,7 +26,7 @@ pub(super) fn evaluate_json(result: &fpas_vm::DebugEvaluateResult) -> Value {
 
 /// DAP setVariable / setExpression / mutation body.
 pub(super) fn variable_value_json(
-    result: &fpas_vm::DebugEvaluateResult,
+    result: &fpas_runtime::execution::DebugEvaluateResult,
 ) -> serde_json::Map<String, Value> {
     serde_json::Map::from_iter([
         ("value".into(), Value::String(result.value.clone())),
@@ -44,10 +44,12 @@ pub(super) fn variable_value_json(
 }
 
 /// DAP location identity object.
-pub(super) fn identity_json(identity: fpas_vm::DebugDataLocationIdentity) -> Value {
+pub(super) fn identity_json(identity: fpas_runtime::execution::DebugDataLocationIdentity) -> Value {
     match identity {
-        fpas_vm::DebugDataLocationIdentity::Global { index } => json!({"index": index}),
-        fpas_vm::DebugDataLocationIdentity::FrameRegister {
+        fpas_runtime::execution::DebugDataLocationIdentity::Global { index } => {
+            json!({"index": index})
+        }
+        fpas_runtime::execution::DebugDataLocationIdentity::FrameRegister {
             task_id,
             function,
             register,

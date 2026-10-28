@@ -137,9 +137,9 @@ bytes; it does not require them to be valid UTF-8.
 
 | Concern | Location |
 |---------|----------|
-| Runtime codecs | [`encoding/`](../../../../crates/fpas-std/src/encoding) |
+| Runtime codecs | [`encoding/`](../../../../crates/fpas-runtime/src/stdlib/encoding) |
 | Public signatures | [`std_registry/loaded/encoding.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/encoding.rs) |
-| Intrinsic IDs | [`intrinsic/encoding.rs`](../../../../crates/fpas-bytecode/src/intrinsic/encoding.rs) |
+| Intrinsic IDs | [`intrinsic/encoding.rs`](../../../../crates/fpas-code/src/intrinsic/encoding.rs) |
 | Pascal regressions | [`tests/stdlib/encoding/`](../../../../tests/stdlib/encoding) |
 
 ## See also

@@ -16,7 +16,7 @@ use crate::cli_output::{CliFailure, Reporter};
 /// Shared execution inputs for one setup or teardown hook.
 pub(super) struct HookRunContext<'a> {
     pub no_contracts: bool,
-    pub collection_schedule: fpas_bytecode::CollectionSchedule,
+    pub collection_schedule: fpas_runtime::CollectionSchedule,
     /// Test entry whose hook is running.
     pub test_path: &'a Path,
     /// Linked project context containing the hook unit.

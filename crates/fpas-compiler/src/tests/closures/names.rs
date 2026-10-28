@@ -2,7 +2,7 @@
 
 use crate::tests::parse_ok;
 
-fn names(image: &fpas_bytecode::Executable) -> Vec<String> {
+fn names(image: &fpas_runtime::Executable) -> Vec<String> {
     image
         .functions
         .iter()
@@ -53,7 +53,7 @@ end.
         "other.$closure_1",
     ];
     assert_eq!(names(compiled.executable()), expected);
-    fpas_vm::Vm::new(compiled)
+    fpas_runtime::execution::Vm::new(compiled)
         .run()
         .expect("nested closures run");
     // A second parse creates different AST addresses while keeping source identities.
@@ -94,13 +94,17 @@ end.
         "$entry_defaults.$closure_3",
     ];
     assert_eq!(names(compiled.executable()), expected);
-    fpas_vm::Vm::new(compiled).run().expect("defaults run");
+    fpas_runtime::execution::Vm::new(compiled)
+        .run()
+        .expect("defaults run");
     let object = crate::compile_object(&program).expect("object compiles");
     let encoded = fpas_unit::object::encode_object(&object).expect("encode object");
     let decoded = fpas_unit::object::decode_object(&encoded).expect("decode object");
     let linked = fpas_linker::link_objects(&[], &decoded).expect("link object");
     assert_eq!(names(linked.executable()), expected);
-    fpas_vm::Vm::new(linked).run().expect("linked defaults run");
+    fpas_runtime::execution::Vm::new(linked)
+        .run()
+        .expect("linked defaults run");
 }
 
 #[test]
@@ -136,7 +140,7 @@ end.
             "make.$closure_2.identity"
         ]
     );
-    fpas_vm::Vm::new(compiled)
+    fpas_runtime::execution::Vm::new(compiled)
         .run()
         .expect("generic closures run");
 }

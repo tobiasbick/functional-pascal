@@ -1,7 +1,7 @@
 //! Reference calls and live referent mutation. See `docs/pascal/tools/debugger.md`.
 
 use super::*;
-use fpas_vm::{DebugAssignmentSelector, DebugAssignmentTarget};
+use fpas_runtime::execution::{DebugAssignmentSelector, DebugAssignmentTarget};
 
 fn stopped(source: &str, marker: &str) -> (DebugSession, u64) {
     let line = source

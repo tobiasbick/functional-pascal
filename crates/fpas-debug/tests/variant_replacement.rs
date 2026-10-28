@@ -12,7 +12,9 @@ mod parameter_copy;
 use parameter_copy::initialized_local_frame;
 
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
-use fpas_vm::{DebugAssignmentTarget, DebugExpression, DebugRunResult, DebugSession};
+use fpas_runtime::execution::{
+    DebugAssignmentTarget, DebugExpression, DebugRunResult, DebugSession,
+};
 use serde_json::{Value, json};
 
 const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/variant_replacement.fpas");

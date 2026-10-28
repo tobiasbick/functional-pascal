@@ -159,10 +159,10 @@ const Value := Read(Text := '42');
 | Concern | Location |
 |---------|----------|
 | Registration | [`std_registry/loaded/parse.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/parse.rs) |
-| Runtime | [`parse.rs`](../../../../crates/fpas-std/src/parse.rs) |
+| Runtime | [`parse.rs`](../../../../crates/fpas-runtime/src/stdlib/parse.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Shared text | [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs) |
-| Intrinsics | [`intrinsic/parse.rs`](../../../../crates/fpas-bytecode/src/intrinsic/parse.rs) |
+| Shared text | [`intrinsics.rs`](../../../../crates/fpas-runtime/src/stdlib/intrinsics.rs) |
+| Intrinsics | [`intrinsic/parse.rs`](../../../../crates/fpas-code/src/intrinsic/parse.rs) |
 
 ## See also
 

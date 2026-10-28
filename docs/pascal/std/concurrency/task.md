@@ -564,14 +564,14 @@ Runnable example: [`select_events.fpas`](../../../../examples/pascal/concurrency
 |---------|----------|
 | Registration | [`loaded/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/channel_task.rs), [`builtins/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/channel_task.rs) |
 | Compiler | [`lowering/concurrency.rs`](../../../../crates/fpas-compiler/src/lowering/concurrency.rs), [`lowering/stmt.rs`](../../../../crates/fpas-compiler/src/lowering/stmt.rs), [`bytecode/selection.rs`](../../../../crates/fpas-compiler/src/bytecode/selection.rs) |
-| Bytecode | [`instruction.rs`](../../../../crates/fpas-bytecode/src/instruction.rs), [`intrinsic/task.rs`](../../../../crates/fpas-bytecode/src/intrinsic/task.rs) |
-| VM | [`tasks/mod.rs`](../../../../crates/fpas-vm/src/vm/tasks/mod.rs), [`tasks/scheduler.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler.rs), [`tasks/state.rs`](../../../../crates/fpas-vm/src/vm/tasks/state.rs), [`shared/task_results.rs`](../../../../crates/fpas-vm/src/vm/shared/task_results.rs) |
-| Cancellation | [`cancellation/registry.rs`](../../../../crates/fpas-vm/src/vm/cancellation/registry.rs), [`tasks/cancellation.rs`](../../../../crates/fpas-vm/src/vm/tasks/cancellation.rs) |
-| Channels | [`channels/registry.rs`](../../../../crates/fpas-vm/src/vm/channels/registry.rs), [`tasks/channel.rs`](../../../../crates/fpas-vm/src/vm/tasks/channel.rs) |
-| Completion selection | [`tasks/wait_any.rs`](../../../../crates/fpas-vm/src/vm/tasks/wait_any.rs), [`scheduler/result_polling.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler/result_polling.rs) |
-| Mixed selection | [`tasks/selection/`](../../../../crates/fpas-vm/src/vm/tasks/selection/mod.rs), [`shared/wakeups.rs`](../../../../crates/fpas-vm/src/vm/shared/wakeups.rs), [`callbacks/`](../../../../crates/fpas-vm/src/vm/hosted/callbacks/mod.rs) |
-| Task groups | [`tasks/groups/`](../../../../crates/fpas-vm/src/vm/tasks/groups/mod.rs), [`scheduler/group_results.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler/group_results.rs), [`driver/failure.rs`](../../../../crates/fpas-vm/src/vm/debug/tasks/driver/failure.rs) |
-| Supervision | [`tasks/supervision/`](../../../../crates/fpas-vm/src/vm/tasks/supervision/mod.rs), [`tasks/pool.rs`](../../../../crates/fpas-vm/src/vm/tasks/pool.rs) |
+| Bytecode | [`instruction.rs`](../../../../crates/fpas-code/src/instruction.rs), [`intrinsic/task.rs`](../../../../crates/fpas-code/src/intrinsic/task.rs) |
+| VM | [`tasks/mod.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/mod.rs), [`tasks/scheduler.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/scheduler.rs), [`tasks/state.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/state.rs), [`shared/task_results.rs`](../../../../crates/fpas-runtime/src/execution/vm/shared/task_results.rs) |
+| Cancellation | [`cancellation/registry.rs`](../../../../crates/fpas-runtime/src/execution/vm/cancellation/registry.rs), [`tasks/cancellation.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/cancellation.rs) |
+| Channels | [`channels/registry.rs`](../../../../crates/fpas-runtime/src/execution/vm/channels/registry.rs), [`tasks/channel.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/channel.rs) |
+| Completion selection | [`tasks/wait_any.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/wait_any.rs), [`scheduler/result_polling.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/scheduler/result_polling.rs) |
+| Mixed selection | [`tasks/selection/`](../../../../crates/fpas-runtime/src/execution/vm/tasks/selection/mod.rs), [`shared/wakeups.rs`](../../../../crates/fpas-runtime/src/execution/vm/shared/wakeups.rs), [`callbacks/`](../../../../crates/fpas-runtime/src/execution/vm/hosted/callbacks/mod.rs) |
+| Task groups | [`tasks/groups/`](../../../../crates/fpas-runtime/src/execution/vm/tasks/groups/mod.rs), [`scheduler/group_results.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/scheduler/group_results.rs), [`driver/failure.rs`](../../../../crates/fpas-runtime/src/execution/vm/debug/tasks/driver/failure.rs) |
+| Supervision | [`tasks/supervision/`](../../../../crates/fpas-runtime/src/execution/vm/tasks/supervision/mod.rs), [`tasks/pool.rs`](../../../../crates/fpas-runtime/src/execution/vm/tasks/pool.rs) |
 
 ## See also
 

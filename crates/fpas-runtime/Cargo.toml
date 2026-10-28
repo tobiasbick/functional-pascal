@@ -1,0 +1,53 @@
+[package]
+name = "fpas-runtime"
+description = "Execution, values, memory ownership and native operations for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-code = { path = "../fpas-code" }
+fpas-builtins = { path = "../fpas-builtins" }
+fpas-acp-model = { path = "../fpas-acp-model" }
+fpas-acp = { path = "../fpas-acp" }
+fpas-mcp = { path = "../fpas-mcp" }
+fpas-numeric = { path = "../fpas-numeric" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["raw_value"] }
+atomic-write-file = "0.3.1"
+crossterm.workspace = true
+glob.workspace = true
+toml.workspace = true
+unicode-width.workspace = true
+unicode-segmentation.workspace = true
+futures.workspace = true
+tokio.workspace = true
+ctrlc = { version = "3.5.2", features = ["termination"] }
+getrandom.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+rustls.workspace = true
+rustls-platform-verifier.workspace = true
+socket2.workspace = true
+process-wrap = { version = "10.0.1", default-features = false, features = ["std", "process-group", "job-object"] }
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+nix = { version = "0.31.3", features = ["fs", "signal", "term", "process"] }
+rustix = { version = "1.1.5", features = ["process"] }
+
+[target.'cfg(windows)'.dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "process", "io-util"] }
+
+[dev-dependencies]
+fpas-compiler = { path = "../fpas-compiler" }
+fpas-parser = { path = "../fpas-parser" }
+rcgen.workspace = true
+stats_alloc.workspace = true
+allocation-counter.workspace = true
+
+[lints]
+workspace = true

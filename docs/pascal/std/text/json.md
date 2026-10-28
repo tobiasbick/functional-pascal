@@ -113,9 +113,9 @@ Those parser failures also return `Error(Cause)`.
 | Concern | Location |
 |---------|----------|
 | Registration | [`loaded/json.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/json.rs) |
-| Runtime | [`json.rs`](../../../../crates/fpas-std/src/json.rs) |
+| Runtime | [`json.rs`](../../../../crates/fpas-runtime/src/stdlib/json.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Intrinsics | [`intrinsic/json.rs`](../../../../crates/fpas-bytecode/src/intrinsic/json.rs) |
+| Intrinsics | [`intrinsic/json.rs`](../../../../crates/fpas-code/src/intrinsic/json.rs) |
 
 ## See also
 

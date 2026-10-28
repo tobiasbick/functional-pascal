@@ -6,7 +6,7 @@ mod encode;
 mod errors;
 mod record_construction;
 
-use fpas_bytecode::{Executable, SourceMap, VerifiedExecutable};
+use fpas_code::{Executable, SourceMap, VerifiedExecutable};
 
 use super::debug_types;
 use super::sections::{DecodedSection, SectionReader, TAGS};
@@ -42,8 +42,7 @@ pub(super) fn encode(executable: &Executable) -> Result<Vec<u8>, FormatError> {
 
 pub(super) fn decode(payload: &[u8]) -> Result<VerifiedExecutable, FormatError> {
     let sections = sections::decode(payload)?;
-    let strings =
-        decode::decode_strings(section(&sections, 0), fpas_bytecode::limits::MAX_STRINGS)?;
+    let strings = decode::decode_strings(section(&sections, 0), fpas_code::limits::MAX_STRINGS)?;
     let constants = decode::decode_constants(section(&sections, 1))?;
     let sources = decode::decode_sources(section(&sections, 2))?;
     let globals = decode::decode_globals(section(&sections, 3))?;

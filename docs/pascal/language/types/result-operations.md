@@ -137,8 +137,8 @@ const M: result of (integer, string) := R.OrElse(RecoverToZero);
 
 | Concern | Location |
 |---------|-----------|
-| Runtime logic | [`result_option.rs`](../../../../crates/fpas-std/src/result_option.rs) |
-| Direct VM success path | [`intrinsics/unary.rs`](../../../../crates/fpas-vm/src/vm/execute/intrinsics/unary.rs) |
+| Runtime logic | [`result_option.rs`](../../../../crates/fpas-runtime/src/stdlib/result_option.rs) |
+| Direct VM success path | [`intrinsics/unary.rs`](../../../../crates/fpas-runtime/src/execution/vm/execute/intrinsics/unary.rs) |
 | Type checking | [`std_registry/builtins/result_option.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/result_option.rs) |
 | Registration | [`std_registry/native/result.rs`](../../../../crates/fpas-sema/src/std_registry/native/result.rs) |
 

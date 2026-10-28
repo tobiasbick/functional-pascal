@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/getting-started/first-program.md`
 
 use super::super::parse_ok;
-use fpas_bytecode::VerifiedExecutable;
+use fpas_runtime::VerifiedExecutable;
 use fpas_unit::object::DefinitionTarget;
 
 fn compile_and_link(
@@ -13,7 +13,9 @@ fn compile_and_link(
 ) -> VerifiedExecutable {
     let program = parse_ok(source);
     let direct = crate::compile(&program).expect("direct compilation");
-    fpas_vm::Vm::new(direct).run().expect("direct execution");
+    fpas_runtime::execution::Vm::new(direct)
+        .run()
+        .expect("direct execution");
     let object = crate::compile_object(&program).expect("object compilation");
     assert_eq!(object.owner, program.name.to_ascii_lowercase());
     assert!(
@@ -28,7 +30,7 @@ fn compile_and_link(
     let decoded = fpas_unit::object::decode_object(&encoded).expect("decode object");
     assert_eq!(decoded, object);
     let linked = fpas_linker::link_objects(&[], &decoded).expect("link object");
-    fpas_vm::Vm::new(linked.clone())
+    fpas_runtime::execution::Vm::new(linked.clone())
         .run()
         .expect("linked execution");
     linked
@@ -143,7 +145,7 @@ fn debugger_resolves_the_source_routine_without_the_generated_entry() {
         "demo",
         DefinitionTarget::Function(1),
     );
-    let mut session = fpas_vm::DebugSession::new(linked).expect("debug session");
+    let mut session = fpas_runtime::execution::DebugSession::new(linked).expect("debug session");
     assert_eq!(
         session.stack(0, 1).expect("root frame").items[0].name,
         "demo"
@@ -159,8 +161,10 @@ fn debugger_resolves_the_source_routine_without_the_generated_entry() {
     let frame = session.stack(0, 1).expect("source frame").items[0].id;
     let result = session
         .evaluate(
-            &fpas_vm::DebugExpression::Call {
-                callee: Box::new(fpas_vm::DebugExpression::Callable("Demo".to_string())),
+            &fpas_runtime::execution::DebugExpression::Call {
+                callee: Box::new(fpas_runtime::execution::DebugExpression::Callable(
+                    "Demo".to_string(),
+                )),
                 arguments: Vec::new(),
             },
             Some(frame),

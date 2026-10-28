@@ -1,7 +1,9 @@
 //! Exhaustive parser-AST validation and safe-IR lowering.
 
 use fpas_parser::{BinaryOp, Designator, DesignatorPart, Expr, PostfixOperation, UnaryOp};
-use fpas_vm::{DebugBinaryOperation, DebugEvaluationLimits, DebugExpression, DebugUnaryOperation};
+use fpas_runtime::execution::{
+    DebugBinaryOperation, DebugEvaluationLimits, DebugExpression, DebugUnaryOperation,
+};
 
 use super::parse::EvaluationParseError;
 
@@ -157,7 +159,7 @@ fn lower(
             let root = super::target::collect_target(lowered, &mut selectors)
                 .map_err(|()| unsupported_designator(designator))?;
             Ok(DebugExpression::VarArgument(
-                fpas_vm::DebugAssignmentTarget { root, selectors },
+                fpas_runtime::execution::DebugAssignmentTarget { root, selectors },
             ))
         }
         Expr::NamedArgument { .. } => Err(unsupported(

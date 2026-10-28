@@ -1,0 +1,278 @@
+//! Deadline-bounded channel send and receive operations.
+
+use std::time::{Duration, Instant};
+
+use crate::{Register, Value};
+
+use super::super::super::VmError;
+use super::super::super::channels::{CANCELLATION_POLL_INTERVAL, ReceiveState, SendState};
+use super::super::super::worker::Worker;
+use super::super::TaskSuspension;
+use super::ok;
+use crate::execution::vm::tasks::errors::TaskErrorKind;
+
+impl Worker {
+    pub(super) fn timeout_channel_send(
+        &mut self,
+        handle: u64,
+        mut value: Value,
+        timeout: Duration,
+    ) -> Result<Value, VmError> {
+        let started = Instant::now();
+        loop {
+            match self
+                .hosted
+                .channels
+                .send(handle, value, false, None)
+                .map_err(|message| self.channel_runtime_error(message))?
+            {
+                SendState::Sent => return Ok(ok(Value::Boolean(true))),
+                SendState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
+                }
+                SendState::Pending(pending) => value = pending,
+                SendState::Cancelled => {
+                    unreachable!("channel timeout does not observe cancellation")
+                }
+            }
+            let Some(remaining) = remaining(timeout, started) else {
+                return self
+                    .task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.SendWithTimeout");
+            };
+            if self.channel_scheduler_stopped() {
+                return self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
+            }
+            let state = {
+                let _wait = self.native_wait(vec![value.clone()])?;
+                self.hosted.channels.send(
+                    handle,
+                    value,
+                    false,
+                    Some(remaining.min(CANCELLATION_POLL_INTERVAL)),
+                )
+            }
+            .map_err(|message| self.channel_runtime_error(message))?;
+            match state {
+                SendState::Sent => return Ok(ok(Value::Boolean(true))),
+                SendState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout");
+                }
+                SendState::Pending(pending) => value = pending,
+                SendState::Cancelled => {
+                    unreachable!("channel timeout does not observe cancellation")
+                }
+            }
+        }
+    }
+
+    pub(super) fn timeout_channel_receive(
+        &mut self,
+        handle: u64,
+        timeout: Duration,
+    ) -> Result<Value, VmError> {
+        let started = Instant::now();
+        loop {
+            match self
+                .hosted
+                .channels
+                .receive(handle, false, None)
+                .map_err(|message| self.channel_runtime_error(message))?
+            {
+                ReceiveState::Received(value) => return Ok(ok(value)),
+                ReceiveState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
+                }
+                ReceiveState::Pending => {}
+                ReceiveState::Cancelled => {
+                    unreachable!("channel timeout does not observe cancellation")
+                }
+            }
+            let Some(remaining) = remaining(timeout, started) else {
+                return self
+                    .task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.ReceiveWithTimeout");
+            };
+            if self.channel_scheduler_stopped() {
+                return self
+                    .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
+            }
+            let state = {
+                let _wait = self.native_wait(Vec::new())?;
+                self.hosted.channels.receive(
+                    handle,
+                    false,
+                    Some(remaining.min(CANCELLATION_POLL_INTERVAL)),
+                )
+            }
+            .map_err(|message| self.channel_runtime_error(message))?;
+            match state {
+                ReceiveState::Received(value) => return Ok(ok(value)),
+                ReceiveState::Closed => {
+                    return self
+                        .task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout");
+                }
+                ReceiveState::Pending => {}
+                ReceiveState::Cancelled => {
+                    unreachable!("channel timeout does not observe cancellation")
+                }
+            }
+        }
+    }
+
+    /// Probe once, retaining a single monotonic deadline if the send must suspend.
+    pub(super) fn start_timeout_channel_send(
+        &mut self,
+        handle: u64,
+        value: Value,
+        timeout: Duration,
+        destination: Option<Register>,
+    ) -> Result<Option<Option<Value>>, VmError> {
+        let deadline_millis = self.channel_deadline(timeout);
+        match self
+            .hosted
+            .channels
+            .send(handle, value, false, None)
+            .map_err(|message| self.channel_runtime_error(message))?
+        {
+            SendState::Sent => Ok(Some(Some(ok(Value::Boolean(true))))),
+            SendState::Closed => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout")?,
+            ))),
+            SendState::Pending(_) if timeout.is_zero() => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.SendWithTimeout")?,
+            ))),
+            SendState::Pending(value) => {
+                self.task_suspension = Some(TaskSuspension::ChannelSendTimeout {
+                    handle,
+                    value,
+                    deadline_millis,
+                    destination,
+                });
+                self.suspend_requested = true;
+                Ok(Some(None))
+            }
+            SendState::Cancelled => unreachable!("channel timeout does not observe cancellation"),
+        }
+    }
+
+    /// Probe once, retaining a single monotonic deadline if the receive must suspend.
+    pub(super) fn start_timeout_channel_receive(
+        &mut self,
+        handle: u64,
+        timeout: Duration,
+        destination: Option<Register>,
+    ) -> Result<Option<Option<Value>>, VmError> {
+        let deadline_millis = self.channel_deadline(timeout);
+        match self
+            .hosted
+            .channels
+            .receive(handle, false, None)
+            .map_err(|message| self.channel_runtime_error(message))?
+        {
+            ReceiveState::Received(value) => Ok(Some(Some(ok(value)))),
+            ReceiveState::Closed => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout")?,
+            ))),
+            ReceiveState::Pending if timeout.is_zero() => Ok(Some(Some(
+                self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.ReceiveWithTimeout")?,
+            ))),
+            ReceiveState::Pending => {
+                self.task_suspension = Some(TaskSuspension::ChannelReceiveTimeout {
+                    handle,
+                    deadline_millis,
+                    destination,
+                });
+                self.suspend_requested = true;
+                Ok(Some(None))
+            }
+            ReceiveState::Cancelled => {
+                unreachable!("channel timeout does not observe cancellation")
+            }
+        }
+    }
+
+    /// Retry a timed send without extending its original deadline.
+    pub(in crate::execution::vm::tasks) fn poll_channel_send_timeout(
+        &mut self,
+        handle: u64,
+        value: Value,
+        deadline_millis: u64,
+        destination: Option<Register>,
+    ) -> Result<bool, VmError> {
+        let result = match self
+            .hosted
+            .channels
+            .send(handle, value, false, None)
+            .map_err(|message| self.channel_runtime_error(message))?
+        {
+            SendState::Sent => Some(ok(Value::Boolean(true))),
+            SendState::Closed => {
+                Some(self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.SendWithTimeout")?)
+            }
+            SendState::Pending(_) if self.channel_deadline_reached(deadline_millis) => {
+                Some(self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.SendWithTimeout")?)
+            }
+            SendState::Pending(value) => {
+                self.task_suspension = Some(TaskSuspension::ChannelSendTimeout {
+                    handle,
+                    value,
+                    deadline_millis,
+                    destination,
+                });
+                None
+            }
+            SendState::Cancelled => unreachable!("channel timeout does not observe cancellation"),
+        };
+        self.finish_channel_poll(result, destination)
+    }
+
+    /// Retry a timed receive without extending its original deadline.
+    pub(in crate::execution::vm::tasks) fn poll_channel_receive_timeout(
+        &mut self,
+        handle: u64,
+        deadline_millis: u64,
+        destination: Option<Register>,
+    ) -> Result<bool, VmError> {
+        let result = match self
+            .hosted
+            .channels
+            .receive(handle, false, None)
+            .map_err(|message| self.channel_runtime_error(message))?
+        {
+            ReceiveState::Received(value) => Some(ok(value)),
+            ReceiveState::Closed => Some(
+                self.task_outcome_error(TaskErrorKind::Closed, "Std.Tasks.ReceiveWithTimeout")?,
+            ),
+            ReceiveState::Pending if self.channel_deadline_reached(deadline_millis) => Some(
+                self.task_outcome_error(TaskErrorKind::Timeout, "Std.Tasks.ReceiveWithTimeout")?,
+            ),
+            ReceiveState::Pending => {
+                self.task_suspension = Some(TaskSuspension::ChannelReceiveTimeout {
+                    handle,
+                    deadline_millis,
+                    destination,
+                });
+                None
+            }
+            ReceiveState::Cancelled => {
+                unreachable!("channel timeout does not observe cancellation")
+            }
+        };
+        self.finish_channel_poll(result, destination)
+    }
+
+    fn channel_deadline(&self, timeout: Duration) -> u64 {
+        self.task_clock_ref().deadline_after(timeout)
+    }
+
+    fn channel_deadline_reached(&self, deadline_millis: u64) -> bool {
+        self.task_clock_ref().now_millis() >= deadline_millis
+    }
+}
+
+fn remaining(timeout: Duration, started: Instant) -> Option<Duration> {
+    let remaining = timeout.saturating_sub(started.elapsed());
+    (!remaining.is_zero()).then_some(remaining)
+}

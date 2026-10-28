@@ -21,7 +21,7 @@ pub(super) fn payload_value(argument: &Expr) -> Result<&Expr, EvaluationParseErr
     }
     Ok(argument.argument_value())
 }
-use fpas_vm::DebugExpression;
+use fpas_runtime::execution::DebugExpression;
 
 use super::parse::EvaluationParseError;
 

@@ -1,0 +1,320 @@
+//! Runtime implementations for `Std.Toml.*` intrinsics.
+//!
+//! **Documentation:** `docs/pascal/std/text/toml.md`
+
+use crate::stdlib::error::{StdError, std_runtime_error};
+use crate::stdlib::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
+use crate::stdlib::limits::MAX_TOML_DEPTH;
+use crate::stdlib::std_symbols as s;
+use crate::{Intrinsic, SourceLocation, TomlIntrinsic, Value};
+use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
+use toml::Value as TomlValue;
+use toml::map::Map;
+use toml::value::Datetime;
+
+fn toml_variant(
+    call: &IntrinsicCall<'_>,
+    variant: &str,
+    fields: Vec<Value>,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    call.enumeration(s::STD_TOML_VALUE, variant, fields, location)
+}
+
+fn toml_depth_exceeded_message() -> String {
+    format!("TOML nesting exceeds maximum depth of {MAX_TOML_DEPTH}")
+}
+
+fn toml_to_fpas_at_depth(
+    call: &IntrinsicCall<'_>,
+    value: TomlValue,
+    depth: usize,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    if depth > MAX_TOML_DEPTH {
+        return Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            toml_depth_exceeded_message(),
+            format!("Keep TOML trees at most {MAX_TOML_DEPTH} levels deep."),
+            location,
+        ));
+    }
+
+    match value {
+        TomlValue::String(value) => {
+            toml_variant(call, "String", vec![Value::Str(value.into())], location)
+        }
+        TomlValue::Integer(value) => {
+            toml_variant(call, "Integer", vec![Value::Integer(value)], location)
+        }
+        TomlValue::Float(value) => {
+            let value = fpas_numeric::real::finite(value).map_err(|error| {
+                std_runtime_error(
+                    fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    error.message(),
+                    error.hint(),
+                    location,
+                )
+            })?;
+            toml_variant(call, "Float", vec![Value::Real(value)], location)
+        }
+        TomlValue::Boolean(value) => {
+            toml_variant(call, "Boolean", vec![Value::Boolean(value)], location)
+        }
+        TomlValue::Datetime(value) => toml_variant(
+            call,
+            "Datetime",
+            vec![Value::Str(value.to_string().into())],
+            location,
+        ),
+        TomlValue::Array(items) => items
+            .into_iter()
+            .map(|item| toml_to_fpas_at_depth(call, item, depth + 1, location))
+            .collect::<Result<Vec<_>, _>>()
+            .and_then(|items| {
+                toml_variant(
+                    call,
+                    "ArrayValue",
+                    vec![Value::Array(items.into())],
+                    location,
+                )
+            }),
+        TomlValue::Table(fields) => fields
+            .into_iter()
+            .map(|(key, value)| {
+                toml_to_fpas_at_depth(call, value, depth + 1, location)
+                    .map(|value| (Value::Str(key.into()), value))
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .and_then(|fields| toml_variant(call, "Table", vec![Value::dict(fields)], location)),
+    }
+}
+
+fn toml_to_fpas(
+    call: &IntrinsicCall<'_>,
+    value: TomlValue,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    toml_to_fpas_at_depth(call, value, 1, location)
+}
+
+fn expected_toml_value_error(value: &Value, location: SourceLocation) -> StdError {
+    std_runtime_error(
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+        format!("expected Std.Toml.TomlValue, got {}", value.type_name()),
+        "Pass a value constructed with Std.Toml.TomlValue.* or returned by Std.Toml.Parse.",
+        location,
+    )
+}
+
+fn expect_one_field(
+    variant: &str,
+    fields: Vec<Value>,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    if let [field] = fields.as_slice() {
+        return Ok(field.clone());
+    }
+    Err(std_runtime_error(
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+        format!("Std.Toml.TomlValue.{variant} expects exactly one runtime field"),
+        "Use the documented Std.Toml.TomlValue constructors without manually altering enum payloads.",
+        location,
+    ))
+}
+
+fn fpas_to_toml_at_depth(
+    value: Value,
+    location: SourceLocation,
+    depth: usize,
+) -> Result<TomlValue, StdError> {
+    if depth > MAX_TOML_DEPTH {
+        return Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            toml_depth_exceeded_message(),
+            format!("Keep TOML trees at most {MAX_TOML_DEPTH} levels deep."),
+            location,
+        ));
+    }
+
+    let (type_name, variant, fields) = match value {
+        Value::Enum(value) => {
+            let body = value.body();
+            (
+                body.layout.type_name.clone(),
+                body.layout.variant.clone(),
+                body.values.clone(),
+            )
+        }
+        value => return Err(expected_toml_value_error(&value, location)),
+    };
+
+    if !type_name.eq_ignore_ascii_case(s::STD_TOML_VALUE) {
+        return Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("expected Std.Toml.TomlValue, got enum {type_name}"),
+            "Pass a value constructed with Std.Toml.TomlValue.* or returned by Std.Toml.Parse.",
+            location,
+        ));
+    }
+
+    match variant.as_str() {
+        "String" => match expect_one_field("String", fields, location)? {
+            Value::Str(value) => Ok(TomlValue::String(value.into())),
+            other => variant_field_error("String", "string", &other, location),
+        },
+        "Integer" => match expect_one_field("Integer", fields, location)? {
+            Value::Integer(value) => Ok(TomlValue::Integer(value)),
+            other => variant_field_error("Integer", "integer", &other, location),
+        },
+        "Float" => match expect_one_field("Float", fields, location)? {
+            Value::Real(value) => fpas_numeric::real::finite(value).map(TomlValue::Float).map_err(|error| std_runtime_error(
+                fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR, error.message(), error.hint(), location)),
+            Value::Integer(value) => Ok(TomlValue::Float(value as f64)),
+            other => variant_field_error("Float", "real", &other, location),
+        },
+        "Boolean" => match expect_one_field("Boolean", fields, location)? {
+            Value::Boolean(value) => Ok(TomlValue::Boolean(value)),
+            other => variant_field_error("Boolean", "boolean", &other, location),
+        },
+        "Datetime" => match expect_one_field("Datetime", fields, location)? {
+            Value::Str(value) => value.parse::<Datetime>().map(TomlValue::Datetime).map_err(|error| {
+                std_runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!("Std.Toml.TomlValue.Datetime is invalid: {error}"),
+                    "Pass a TOML date, time, or date-time string such as `1979-05-27T07:32:00Z`.",
+                    location,
+                )
+            }),
+            other => variant_field_error("Datetime", "string", &other, location),
+        },
+        "ArrayValue" => match expect_one_field("ArrayValue", fields, location)? {
+            Value::Array(items) => items
+                .into_iter()
+                .map(|item| fpas_to_toml_at_depth(item, location, depth + 1))
+                .collect::<Result<Vec<_>, _>>()
+                .map(TomlValue::Array),
+            other => variant_field_error("ArrayValue", "array", &other, location),
+        },
+        "Table" => match expect_one_field("Table", fields, location)? {
+            Value::Dict(fields) => {
+                let mut table = Map::new();
+                for (key, value) in fields {
+                    let Value::Str(key) = key else {
+                        return Err(std_runtime_error(
+                            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                            format!(
+                                "Std.Toml.TomlValue.Table expects string keys, got {}",
+                                key.type_name()
+                            ),
+                            "Use `dict of string to TomlValue` for TOML tables.",
+                            location,
+                        ));
+                    };
+                    table.insert(
+                        key.into(),
+                        fpas_to_toml_at_depth(value, location, depth + 1)?,
+                    );
+                }
+                Ok(TomlValue::Table(table))
+            }
+            other => variant_field_error("Table", "dict", &other, location),
+        },
+        other => Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("unknown Std.Toml.TomlValue variant `{other}`"),
+            "Use String, Integer, Float, Boolean, Datetime, Array, or Table.",
+            location,
+        )),
+    }
+}
+
+fn variant_field_error(
+    variant: &str,
+    expected: &str,
+    actual: &Value,
+    location: SourceLocation,
+) -> Result<TomlValue, StdError> {
+    Err(std_runtime_error(
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+        format!(
+            "Std.Toml.TomlValue.{variant} expects {expected}, got {}",
+            actual.type_name()
+        ),
+        format!("Construct {variant} with a {expected} value."),
+        location,
+    ))
+}
+
+fn fpas_to_toml(value: Value, location: SourceLocation) -> Result<TomlValue, StdError> {
+    fpas_to_toml_at_depth(value, location, 1)
+}
+
+/// Executes `Std.Toml` intrinsics.
+///
+/// **Documentation:** `docs/pascal/std/text/toml.md`
+pub(crate) fn run(
+    intrinsic: Intrinsic,
+    call: &mut IntrinsicCall<'_>,
+    location: SourceLocation,
+) -> Result<Option<()>, StdError> {
+    match intrinsic {
+        Intrinsic::Toml(TomlIntrinsic::Parse) => {
+            let text = pop_string(pop_value(call, location)?, location)?;
+            match toml::from_str::<TomlValue>(&text) {
+                Ok(value) => match toml_to_fpas(call, value, location) {
+                    Ok(value) => call.push(Value::result_ok(value)),
+                    Err(error)
+                        if error.code == fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE =>
+                    {
+                        return Err(error);
+                    }
+                    Err(error) => call.push(parse_error(call, None, error.message, location)?),
+                },
+                Err(error) => call.push(parse_error(
+                    call,
+                    error.span().map(|span| &text[..span.start]),
+                    error.to_string(),
+                    location,
+                )?),
+            }
+        }
+        Intrinsic::Toml(TomlIntrinsic::Stringify) => {
+            let value = pop_value(call, location)?;
+            let toml = fpas_to_toml(value.clone(), location)?;
+            let text = toml::to_string(&toml).map_err(|error| {
+                std_runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!("cannot stringify TOML value: {error}"),
+                    "Pass a TOML table or a value that can be encoded in TOML.",
+                    location,
+                )
+            })?;
+            call.push(Value::Str(text.into()));
+        }
+        _ => return Ok(None),
+    }
+    Ok(Some(()))
+}
+
+#[cfg(test)]
+mod tests;
+
+fn parse_error(
+    call: &IntrinsicCall<'_>,
+    prefix: Option<&str>,
+    detail: String,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    let line = prefix.map(|s| s.bytes().filter(|b| *b == b'\n').count() + 1);
+    let column = prefix.map(|s| s.rsplit('\n').next().unwrap_or("").chars().count() + 1);
+    crate::stdlib::native_errors::syntax(
+        call.factory(),
+        crate::stdlib::native_errors::NativeErrorFamily::Toml,
+        line,
+        column,
+        detail,
+        location,
+    )
+    .map(Value::result_error)
+}

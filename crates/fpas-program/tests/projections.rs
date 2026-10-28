@@ -3,8 +3,8 @@
 
 mod common;
 
-use fpas_bytecode::{DebugProjection, DebugProjectionKind, DebugTypeId, StringId};
 use fpas_program::{ProgramImage, decode, encode};
+use fpas_runtime::{DebugProjection, DebugProjectionKind, DebugTypeId, StringId};
 
 #[test]
 fn concrete_record_array_and_nominal_scalar_projection_round_trip() {

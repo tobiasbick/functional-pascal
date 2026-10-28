@@ -112,7 +112,7 @@ end.
         2,
         "fieldless families retain applied arguments"
     );
-    fpas_vm::Vm::new(executable.clone())
+    fpas_runtime::execution::Vm::new(executable.clone())
         .run()
         .expect("cached native errors execute");
 
@@ -120,12 +120,12 @@ end.
     // semantic fields and causes must survive independently of those debugger types.
     let mut stripped = executable.into_unverified();
     for ty in &mut stripped.debug_types {
-        if matches!(ty, fpas_bytecode::DebugType::Enum(_)) {
-            *ty = fpas_bytecode::DebugType::Dynamic;
+        if matches!(ty, fpas_runtime::DebugType::Enum(_)) {
+            *ty = fpas_runtime::DebugType::Dynamic;
         }
     }
     for variant in &mut stripped.enum_variants {
-        variant.field_types.fill(fpas_bytecode::DebugTypeId::new(0));
+        variant.field_types.fill(fpas_runtime::DebugTypeId::new(0));
     }
     let paths = stripped
         .source_map
@@ -141,7 +141,7 @@ end.
         fpas_program::ProgramIdentity {
             contracts_enabled: true,
             compiler_version: "native-error-source-fixture".into(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"source"),
             options_hash: fpas_program::Digest::of(b"options"),
             units: vec![],
@@ -153,7 +153,7 @@ end.
     .expect("portable image");
     let bytes = fpas_program::encode(&image).expect("encode image");
     let decoded = fpas_program::decode(&bytes).expect("decode image");
-    fpas_vm::Vm::new(decoded.executable().clone())
+    fpas_runtime::execution::Vm::new(decoded.executable().clone())
         .run()
         .expect("native errors execute after image transport");
 }

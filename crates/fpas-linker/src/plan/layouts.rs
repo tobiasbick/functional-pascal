@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use fpas_bytecode::{EnumTypeId, EnumVariantId, RecordTypeId};
+use fpas_code::{EnumTypeId, EnumVariantId, RecordTypeId};
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
 use super::SymbolTable;
@@ -19,7 +19,7 @@ pub(crate) struct LayoutIds {
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum EnumKey {
     Ordinary(String),
-    Error(fpas_bytecode::ErrorInstanceKey),
+    Error(fpas_code::ErrorInstanceKey),
 }
 
 /// Assigns canonical layout and variant IDs for independently compiled units.

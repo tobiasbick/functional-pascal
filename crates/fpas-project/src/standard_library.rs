@@ -7,8 +7,8 @@ use crate::loading::own::{load_own_project, validate_standard_library_source_uni
 use crate::loading::parse_cache::ParsedSourceCache;
 use crate::paths::{canonical_project_path, canonical_source_path};
 use crate::{LoadedProject, ProjectError, ProjectKind, ProjectLinkMeta, SourceOrigin};
+use fpas_builtins::STD_UNITS_INTRINSIC;
 use fpas_diagnostics::codes::PROJECT_STANDARD_LIBRARY_INVALID;
-use fpas_std::STD_UNITS_INTRINSIC;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -161,7 +161,7 @@ fn validate_intrinsic_collisions(
             unreachable!("standard-library source validation accepts units only")
         };
         let name = crate::source::qualified_id_to_string(&unit.name);
-        if fpas_std::is_retired_type_helper_unit(&name) {
+        if fpas_builtins::is_retired_type_helper_unit(&name) {
             return Err(invalid_standard_library(
                 format!("Source standard-library unit `{name}` uses a removed type-helper namespace."),
                 "Built-in operations have one native dot form and cannot be restored as Std helper units.".to_string(),

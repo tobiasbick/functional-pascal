@@ -2,7 +2,7 @@
 //! Documentation: `docs/pascal/language/types/errors.md`.
 
 use crate::{CompileError, error::internal_compiler_error};
-use fpas_bytecode::{ErrorInstanceKey, TypeIdentity};
+use fpas_code::{ErrorInstanceKey, TypeIdentity};
 use fpas_ir::EnumLayoutId;
 use fpas_sema::{EnumTy, GenericParamDef, Ty};
 use std::collections::BTreeMap;
@@ -76,8 +76,8 @@ impl ErrorMetadata {
         &self,
         layout: EnumLayoutId,
         variant: usize,
-        strings: &mut impl FnMut(&str) -> Result<fpas_bytecode::StringId, CompileError>,
-    ) -> Result<Option<fpas_bytecode::ErrorVariant>, CompileError> {
+        strings: &mut impl FnMut(&str) -> Result<fpas_code::StringId, CompileError>,
+    ) -> Result<Option<fpas_code::ErrorVariant>, CompileError> {
         if self.concrete(layout).is_none() {
             return Ok(None);
         }
@@ -118,15 +118,15 @@ impl ErrorMetadata {
                     .chain(self.instances.keys())
                     .find(|id| self.concrete(**id).as_ref() == Some(&key))
                     .ok_or_else(|| error("concrete Cause layout is unavailable"))?;
-                Ok::<_, CompileError>(fpas_bytecode::ErrorCause {
+                Ok::<_, CompileError>(fpas_code::ErrorCause {
                     field: u16::try_from(field).map_err(|_| error("Cause slot overflow"))?,
-                    family: fpas_bytecode::EnumTypeId::new(
+                    family: fpas_code::EnumTypeId::new(
                         u16::try_from(family.get()).map_err(|_| error("Cause family overflow"))?,
                     ),
                 })
             })
             .transpose()?;
-        Ok(Some(fpas_bytecode::ErrorVariant {
+        Ok(Some(fpas_code::ErrorVariant {
             field_types,
             message: message.as_deref().map(strings).transpose()?,
             cause,

@@ -10,7 +10,7 @@ pub use budget::ErrorInstantiationBudget;
 pub(crate) use substitution::substitute_identity;
 
 use crate::interface::TypeConstraint;
-pub use fpas_bytecode::{ErrorInstanceKey, IdentityParameter, NominalKind, TypeIdentity};
+pub use fpas_code::{ErrorInstanceKey, IdentityParameter, NominalKind, TypeIdentity};
 
 /// Complete error declaration retained for source-less instantiation.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -138,7 +138,7 @@ impl ErrorConstructorSignature {
     /// # Errors
     /// Rejects unknown parameters, repeated requirements and oversized call ABIs.
     pub fn validate(&self) -> Result<(), &'static str> {
-        if self.requirements.len() > fpas_bytecode::limits::MAX_CALL_ARGUMENTS {
+        if self.requirements.len() > fpas_code::limits::MAX_CALL_ARGUMENTS {
             return Err("too many hidden error constructors");
         }
         let mut seen = std::collections::BTreeSet::new();

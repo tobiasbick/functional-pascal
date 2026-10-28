@@ -3,9 +3,7 @@
 
 use super::super::sections::{SectionReader, write_u8, write_u16, write_u32};
 use super::super::{FormatError, check_limit, checked_u32};
-use fpas_bytecode::{
-    EnumTypeId, ErrorCause, ErrorInstanceKey, ErrorVariant, StringId, TypeIdentity,
-};
+use fpas_code::{EnumTypeId, ErrorCause, ErrorInstanceKey, ErrorVariant, StringId, TypeIdentity};
 
 pub(super) fn encode_key(
     bytes: &mut Vec<u8>,
@@ -90,7 +88,7 @@ fn write_json(bytes: &mut Vec<u8>, value: &[u8]) -> Result<(), FormatError> {
     check_limit(
         "error_metadata_bytes",
         value.len(),
-        fpas_bytecode::limits::MAX_STRING_BYTES,
+        fpas_code::limits::MAX_STRING_BYTES,
     )?;
     write_u32(bytes, checked_u32("error_metadata_bytes", value.len())?);
     bytes.extend_from_slice(value);
@@ -102,7 +100,7 @@ fn read_json<'a>(reader: &mut SectionReader<'a>) -> Result<&'a [u8], FormatError
     check_limit(
         "error_metadata_bytes",
         length,
-        fpas_bytecode::limits::MAX_STRING_BYTES,
+        fpas_code::limits::MAX_STRING_BYTES,
     )?;
     reader.take(length, "error_metadata")
 }

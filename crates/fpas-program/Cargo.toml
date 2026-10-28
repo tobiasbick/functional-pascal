@@ -9,12 +9,14 @@ repository.workspace = true
 
 [dependencies]
 fpas-binary = { path = "../fpas-binary" }
-fpas-bytecode = { path = "../fpas-bytecode" }
 serde_json = { workspace = true }
+
+fpas-code = { path = "../fpas-code" }
 
 [dev-dependencies]
 allocation-counter = { workspace = true }
-fpas-vm = { path = "../fpas-vm" }
+
+fpas-runtime = { path = "../fpas-runtime" }
 
 [lints]
 workspace = true

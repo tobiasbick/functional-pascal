@@ -8,10 +8,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
 use fpas_diagnostics::codes::RUNTIME_INVALID_TASK;
+use fpas_runtime::execution::{
+    CallbackSession, HostArgument, HostChild, HostValue, HostValueError,
+};
+use fpas_runtime::{FunctionId, Value, VerifiedExecutable};
 use fpas_unit::interface::UnitInterface;
-use fpas_vm::{CallbackSession, HostArgument, HostChild, HostValue, HostValueError};
 
 fn image(source: &str) -> Arc<VerifiedExecutable> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../lib");

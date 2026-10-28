@@ -9,7 +9,7 @@ impl DebugEngine {
     }
 
     /// Borrows the stable engine-owned session during batch setup or capture.
-    pub(crate) fn batch_session(&mut self) -> Option<&mut fpas_vm::DebugSession> {
+    pub(crate) fn batch_session(&mut self) -> Option<&mut fpas_runtime::execution::DebugSession> {
         self.actor.session_mut()
     }
 }

@@ -8,7 +8,7 @@ pub(super) use fpas_binary::{write_i64, write_u8, write_u16, write_u32, write_u6
 use super::{FormatError, check_limit, checked_u32};
 
 pub(super) const TAGS: [u16; 12] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-const _: () = assert!(TAGS.len() <= fpas_bytecode::limits::MAX_SECTIONS);
+const _: () = assert!(TAGS.len() <= fpas_code::limits::MAX_SECTIONS);
 const DIRECTORY_PREFIX_BYTES: usize = 4;
 const DIRECTORY_ENTRY_BYTES: usize = 16;
 
@@ -41,13 +41,13 @@ pub(super) fn encode(sections: Vec<EncodedSection>) -> Result<Vec<u8>, FormatErr
                 .ok_or(FormatError::LimitExceeded {
                     field: "payload",
                     size: usize::MAX,
-                    maximum: fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+                    maximum: fpas_code::limits::MAX_PAYLOAD_BYTES,
                 })
         })?;
     check_limit(
         "payload",
         payload_bytes,
-        fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+        fpas_code::limits::MAX_PAYLOAD_BYTES,
     )?;
     let mut output = Vec::with_capacity(payload_bytes);
     write_u16(&mut output, sections.len() as u16);
@@ -78,7 +78,7 @@ pub(super) fn encode(sections: Vec<EncodedSection>) -> Result<Vec<u8>, FormatErr
             .ok_or(FormatError::LimitExceeded {
                 field: "payload",
                 size: usize::MAX,
-                maximum: fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+                maximum: fpas_code::limits::MAX_PAYLOAD_BYTES,
             })?;
     }
     for section in sections {
@@ -92,7 +92,7 @@ pub(super) fn decode(payload: &[u8]) -> Result<Vec<DecodedSection<'_>>, FormatEr
     check_limit(
         "payload",
         payload.len(),
-        fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+        fpas_code::limits::MAX_PAYLOAD_BYTES,
     )?;
     let mut reader = SectionReader::new(payload, "section_directory");
     let count = reader.u16("section_count")? as usize;
@@ -188,14 +188,14 @@ fn directory_bytes(count: usize) -> Result<usize, FormatError> {
         .ok_or(FormatError::LimitExceeded {
             field: "section_directory",
             size: usize::MAX,
-            maximum: fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+            maximum: fpas_code::limits::MAX_PAYLOAD_BYTES,
         })?;
     DIRECTORY_PREFIX_BYTES
         .checked_add(entries)
         .ok_or(FormatError::LimitExceeded {
             field: "section_directory",
             size: usize::MAX,
-            maximum: fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+            maximum: fpas_code::limits::MAX_PAYLOAD_BYTES,
         })
 }
 

@@ -1,5 +1,5 @@
 use super::*;
-use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_kind_index};
+use fpas_runtime::stdlib::{ConsoleEvent, ConsoleKeyEvent, key_kind_index};
 use std::sync::OnceLock;
 
 #[test]
@@ -183,7 +183,7 @@ end.
         false,
     )
     .expect("Tui theme-switch regression program must build");
-    let mut vm = fpas_vm::Vm::new(built.executable);
+    let mut vm = fpas_runtime::execution::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::resize(10, 2));
     vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
         key_kind_index("Escape"),
@@ -249,7 +249,7 @@ end.
         false,
     )
     .expect("Tui resize-debounce regression program must build");
-    let mut vm = fpas_vm::Vm::new(built.executable);
+    let mut vm = fpas_runtime::execution::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::resize(80, 24));
     vm.push_console_event(ConsoleEvent::resize(100, 30));
     vm.push_console_event(ConsoleEvent::resize(120, 40));
@@ -311,7 +311,7 @@ end.
         false,
     )
     .expect("Tui idle regression program must build");
-    let mut vm = fpas_vm::Vm::new(built.executable);
+    let mut vm = fpas_runtime::execution::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::focus_gained());
     vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
         key_kind_index("Escape"),
@@ -395,7 +395,7 @@ end.
         false,
     )
     .expect("Tui background wakeup regression program must build");
-    let mut vm = fpas_vm::Vm::new(built.executable);
+    let mut vm = fpas_runtime::execution::Vm::new(built.executable);
 
     vm.run()
         .expect("Tui background wakeup regression program must run");

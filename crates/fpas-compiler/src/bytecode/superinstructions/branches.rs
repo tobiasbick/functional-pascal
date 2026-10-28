@@ -1,6 +1,6 @@
 //! Fuse typed integer comparisons with their conditional branch.
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_code::{Instruction, Opcode};
 
 use super::super::compile_error;
 use crate::CompileError;

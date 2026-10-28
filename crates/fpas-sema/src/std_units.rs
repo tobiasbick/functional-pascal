@@ -1,10 +1,10 @@
 //! Standard library units (`Std.*`) referenced only via `uses`.
 
-use fpas_parser::QualifiedId;
-use fpas_std::{
+use fpas_builtins::{
     STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
     is_std_root_segment, std_unit_symbols,
 };
+use fpas_parser::QualifiedId;
 use std::collections::HashSet;
 
 /// `true` if `name` is at least `Std.<something>` (case-insensitive on `Std`).
@@ -17,7 +17,7 @@ pub fn looks_like_std_qualified_name(name: &str) -> bool {
 
 /// Human-readable list for error hints.
 pub fn std_units_list_for_hint() -> String {
-    fpas_std::std_units_list_for_hint()
+    fpas_builtins::std_units_list_for_hint()
 }
 
 /// `true` if `ident` is the reserved standard-library root segment (`Std`, any ASCII case).

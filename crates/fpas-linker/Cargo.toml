@@ -8,14 +8,16 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-unit = { path = "../fpas-unit" }
+
+fpas-code = { path = "../fpas-code" }
 
 [dev-dependencies]
 serde_json.workspace = true
 fpas-program = { path = "../fpas-program" }
-fpas-vm = { path = "../fpas-vm" }
+
+fpas-runtime = { path = "../fpas-runtime" }
 
 [lints]
 workspace = true

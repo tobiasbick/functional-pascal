@@ -1,6 +1,6 @@
 //! Bounded portable source identities copied before the VM owns its image.
 
-use fpas_bytecode::VerifiedExecutable;
+use fpas_runtime::VerifiedExecutable;
 use std::{collections::BTreeSet, path::PathBuf};
 
 /// Source identities contain no host directory or filesystem lookup.

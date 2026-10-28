@@ -1,6 +1,6 @@
 //! Source projection encoding; operational register types and layouts stay unchanged.
 
-use fpas_bytecode::{DebugProjection, DebugProjectionKind as Kind, DebugTypeId};
+use fpas_code::{DebugProjection, DebugProjectionKind as Kind, DebugTypeId};
 
 use super::metadata::MetadataBuilder;
 use crate::CompileError;

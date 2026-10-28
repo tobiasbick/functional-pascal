@@ -20,7 +20,8 @@ impl DapServer {
         match event {
             DebugEvent::Initialized => vec![self.event("initialized", json!({}))],
             DebugEvent::Stopped(stop) => {
-                self.runtime_failed = stop.reason == fpas_vm::DebugStopReason::RuntimeError;
+                self.runtime_failed =
+                    stop.reason == fpas_runtime::execution::DebugStopReason::RuntimeError;
                 let thread_id = self.threads.thread_id(stop.task_id);
                 vec![self.event(
                     "stopped",
@@ -34,10 +35,13 @@ impl DapServer {
             DebugEvent::Task(change) => {
                 let thread_id = self.threads.thread_id(change.task_id);
                 let reason = match change.kind {
-                    fpas_vm::DebugTaskEventKind::Started => "started",
-                    fpas_vm::DebugTaskEventKind::Exited => "exited",
+                    fpas_runtime::execution::DebugTaskEventKind::Started => "started",
+                    fpas_runtime::execution::DebugTaskEventKind::Exited => "exited",
                 };
-                if matches!(change.kind, fpas_vm::DebugTaskEventKind::Exited) {
+                if matches!(
+                    change.kind,
+                    fpas_runtime::execution::DebugTaskEventKind::Exited
+                ) {
                     self.threads.mark_exited(change.task_id);
                 }
                 vec![self.event("thread", json!({"reason": reason, "threadId": thread_id}))]
@@ -82,13 +86,13 @@ impl DapServer {
     }
 }
 
-fn dap_stop_reason(reason: fpas_vm::DebugStopReason) -> &'static str {
+fn dap_stop_reason(reason: fpas_runtime::execution::DebugStopReason) -> &'static str {
     match reason {
-        fpas_vm::DebugStopReason::Entry => "entry",
-        fpas_vm::DebugStopReason::Breakpoint => "breakpoint",
-        fpas_vm::DebugStopReason::DataBreakpoint => "data breakpoint",
-        fpas_vm::DebugStopReason::Pause => "pause",
-        fpas_vm::DebugStopReason::Step => "step",
-        fpas_vm::DebugStopReason::RuntimeError => "exception",
+        fpas_runtime::execution::DebugStopReason::Entry => "entry",
+        fpas_runtime::execution::DebugStopReason::Breakpoint => "breakpoint",
+        fpas_runtime::execution::DebugStopReason::DataBreakpoint => "data breakpoint",
+        fpas_runtime::execution::DebugStopReason::Pause => "pause",
+        fpas_runtime::execution::DebugStopReason::Step => "step",
+        fpas_runtime::execution::DebugStopReason::RuntimeError => "exception",
     }
 }

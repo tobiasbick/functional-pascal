@@ -61,19 +61,19 @@ executes every workload with one measured pair and validates behavior.
 
 Independent lifecycle tests cover queued, running, waiting, sleeping and terminal
 task states, released snapshots, and a blocked native peer's shared collection
-deadline. See [failure capture tests](../../crates/fpas-vm/src/vm/failure_capture/tests)
+deadline. See [failure capture tests](../../crates/fpas-runtime/src/execution/vm/failure_capture/tests)
 and the [CLI report tests](../../crates/fpas-cli/tests/failure_dump). The paired
 CLI rows include semantic owner cleanup: an escaping failure is selected only
 after its owned tasks are cleaned up.
 
-The [live-peer tests](../../crates/fpas-vm/src/vm/failure_capture/tests/catalog/live_peers.rs)
+The [live-peer tests](../../crates/fpas-runtime/src/execution/vm/failure_capture/tests/catalog/live_peers.rs)
 drive running pool tasks directly at the embedded VM observer. They start peers
 in busy loops, wait for their execution, fail the root and check that every peer
 answers with its live frame. Their ignored profiling test prints the interval
 from root failure to the delivered observation:
 
 ```text
-cargo test -p fpas-vm --release --lib live_peer_collection_profile -- --ignored --nocapture
+cargo test -p fpas-runtime --release --lib live_peer_collection_profile -- --ignored --nocapture
 ```
 
 The implemented JSON contract lives in

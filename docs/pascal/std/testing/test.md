@@ -233,8 +233,8 @@ Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../.
 |---------|----------|
 | Registration | [`std_registry/loaded/test.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/test.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Runtime | [`test/`](../../../../crates/fpas-std/src/test) |
-| Intrinsics | [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs) |
+| Runtime | [`test/`](../../../../crates/fpas-runtime/src/stdlib/test) |
+| Intrinsics | [`intrinsic/test.rs`](../../../../crates/fpas-code/src/intrinsic/test.rs) |
 | In-memory runner images | [`cli_test/image/`](../../../../crates/fpas-cli/src/cli_test/image) |
 
 ## See also

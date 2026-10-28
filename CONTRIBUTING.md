@@ -17,6 +17,8 @@ tests, simplifying tangled code, and keeping docs aligned with what actually run
 - When implementing language behavior in Rust, link to the matching page under `docs/pascal/`.
 
 Agent instructions live in [`AGENTS.md`](AGENTS.md).
+The [Rust architecture](docs/rust-architecture.md) describes crate responsibilities,
+dependency boundaries, and the shared compiler/runtime contracts.
 
 ## How to work
 

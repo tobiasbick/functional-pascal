@@ -1,6 +1,6 @@
 //! Register-window selection for standard-library and hosted intrinsic calls.
 
-use fpas_bytecode::{Instruction, NO_REGISTER, Opcode};
+use fpas_code::{Instruction, NO_REGISTER, Opcode};
 use fpas_ir::{IrType, Operation, ValueId};
 
 use crate::CompileError;
@@ -22,7 +22,7 @@ impl Selector<'_> {
         };
         let wire = u16::try_from(intrinsic.get())
             .map_err(|_| selection_error("intrinsic identifier exceeds u16"))?;
-        fpas_bytecode::Intrinsic::from_u16(wire)
+        fpas_code::Intrinsic::from_u16(wire)
             .ok_or_else(|| selection_error("intrinsic identifier has no stable wire variant"))?;
         let (mut instructions, base) = match arguments.as_slice() {
             [argument] => (Vec::new(), self.allocation.value(*argument)?),

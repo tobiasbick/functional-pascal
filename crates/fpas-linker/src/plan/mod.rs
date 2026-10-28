@@ -6,7 +6,7 @@ mod globals;
 mod layouts;
 mod symbols;
 
-use fpas_bytecode::{DebugType, FunctionId};
+use fpas_code::{DebugType, FunctionId};
 use fpas_unit::object::RelocatableObject;
 
 use crate::LinkError;

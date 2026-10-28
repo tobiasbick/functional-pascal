@@ -5,7 +5,7 @@ mod limits;
 use std::collections::HashSet;
 use std::fmt;
 
-use fpas_bytecode::{StringId, StringTable, ValidationError, VerifiedExecutable};
+use fpas_code::{StringId, StringTable, ValidationError, VerifiedExecutable};
 
 use crate::{Digest, ProgramIdentity};
 
@@ -218,10 +218,10 @@ fn validate_identity(identity: &ProgramIdentity) -> Result<(), ImageError> {
     if identity.compiler_version.trim().is_empty() {
         return Err(ImageError::EmptyIdentityField("compiler_version"));
     }
-    if identity.bytecode_version != fpas_bytecode::BYTECODE_VERSION {
+    if identity.bytecode_version != fpas_code::BYTECODE_VERSION {
         return Err(ImageError::BytecodeVersion {
             image: identity.bytecode_version,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_code::BYTECODE_VERSION,
         });
     }
     let mut units = HashSet::with_capacity(identity.units.len());
@@ -289,7 +289,7 @@ fn install_source_paths(
         let id = StringId::try_from_index(index).map_err(|_| ImageError::ResourceLimit {
             field: "strings",
             size: strings.len(),
-            maximum: fpas_bytecode::limits::MAX_STRINGS,
+            maximum: fpas_code::limits::MAX_STRINGS,
         })?;
         executable.source_map.sources.push(id);
     }

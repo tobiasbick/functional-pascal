@@ -1,8 +1,8 @@
 //! Concrete artifact admission must enforce payload capabilities without schemas.
 
 use super::fixtures::inputs;
-use fpas_bytecode::{NominalKind, TypeIdentity, ValidationErrorKind};
 use fpas_linker::link_objects;
+use fpas_runtime::{NominalKind, TypeIdentity, ValidationErrorKind};
 use fpas_unit::object::{RelocatableObject, decode_object};
 
 #[test]

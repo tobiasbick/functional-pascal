@@ -9,21 +9,22 @@ repository.workspace = true
 
 [dependencies]
 fpas-numeric = { path = "../fpas-numeric" }
-fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-lexer = { path = "../fpas-lexer" }
 fpas-ir = { path = "../fpas-ir" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-sema = { path = "../fpas-sema" }
-fpas-std = { path = "../fpas-std" }
 fpas-unit = { path = "../fpas-unit" }
+
+fpas-code = { path = "../fpas-code" }
+fpas-builtins = { path = "../fpas-builtins" }
 
 [dev-dependencies]
 fpas-program = { path = "../fpas-program" }
 allocation-counter = { workspace = true }
 fpas-linker = { path = "../fpas-linker" }
-fpas-vm = { path = "../fpas-vm" }
+
+fpas-runtime = { path = "../fpas-runtime" }
 
 [lints]
 workspace = true
-

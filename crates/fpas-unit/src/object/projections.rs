@@ -6,10 +6,10 @@ use super::{
 };
 
 pub(super) fn from_executable(
-    node: &fpas_bytecode::DebugProjection,
-    strings: &impl Fn(fpas_bytecode::StringId) -> Result<String, ObjectError>,
+    node: &fpas_code::DebugProjection,
+    strings: &impl Fn(fpas_code::StringId) -> Result<String, ObjectError>,
 ) -> Result<ObjectDebugProjection, ObjectError> {
-    use fpas_bytecode::DebugProjectionKind as Source;
+    use fpas_code::DebugProjectionKind as Source;
     Ok(ObjectDebugProjection {
         ty: node.ty.get(),
         type_name: node.type_name.map(strings).transpose()?,
@@ -62,14 +62,14 @@ fn validate_root(
     let mut names = 0usize;
     while let Some((node, expected, depth)) = pending.pop() {
         nodes += 1;
-        if depth > fpas_bytecode::MAX_DEBUG_PROJECTION_DEPTH
-            || nodes > fpas_bytecode::MAX_DEBUG_PROJECTION_NODES
+        if depth > fpas_code::MAX_DEBUG_PROJECTION_DEPTH
+            || nodes > fpas_code::MAX_DEBUG_PROJECTION_NODES
         {
             return Err(invalid());
         }
         if let Some(name) = &node.type_name {
             names = names.saturating_add(name.len());
-            if name.is_empty() || names > fpas_bytecode::MAX_DEBUG_PROJECTION_NAME_BYTES {
+            if name.is_empty() || names > fpas_code::MAX_DEBUG_PROJECTION_NAME_BYTES {
                 return Err(invalid());
             }
         }
@@ -115,7 +115,7 @@ fn validate_root(
                 pending.push((child, *element, depth + 1))
             }
             (ObjectDebugProjectionKind::Record(fields), ObjectDebugType::Record(name)) => {
-                if fields.len() > fpas_bytecode::MAX_DEBUG_PROJECTION_NODES.saturating_sub(nodes) {
+                if fields.len() > fpas_code::MAX_DEBUG_PROJECTION_NODES.saturating_sub(nodes) {
                     return Err(invalid());
                 }
                 let layout = image
@@ -139,7 +139,7 @@ fn validate_root(
             }
             _ => return Err(invalid()),
         }
-        if pending.len().saturating_add(nodes) > fpas_bytecode::MAX_DEBUG_PROJECTION_NODES {
+        if pending.len().saturating_add(nodes) > fpas_code::MAX_DEBUG_PROJECTION_NODES {
             return Err(invalid());
         }
     }

@@ -1,0 +1,122 @@
+//! CRT screen redraw: emit ANSI SGR for cell colors explicitly so capture buffers see truecolor
+//! and 256-color sequences. See `docs/pascal/std/console/README.md` (from repository root).
+
+use super::Console;
+use super::screen::FrameDamage;
+use crate::SourceLocation;
+use crate::stdlib::error::{StdError, std_runtime_error};
+use crossterm::QueueableCommand;
+use crossterm::cursor::{Hide, MoveTo, SetCursorStyle, Show};
+use crossterm::style::{Print, ResetColor};
+use crossterm::terminal::{Clear, ClearType};
+use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
+use std::io::Write;
+
+impl Console {
+    /// Render only the cells that changed since the last frame (differential rendering).
+    /// On the very first frame, clear the terminal and draw everything.
+    pub(super) fn render_screen(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        let first_frame = self.state.is_first_frame();
+        let damage = self.state.take_frame_damage();
+
+        let Some(writer) = self.writer.as_mut() else {
+            self.state.commit_frame();
+            return Ok(());
+        };
+
+        let state = &self.state;
+
+        let map_err = |e: std::io::Error| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!("Console redraw failed: {e}"),
+                "Run this in a terminal that supports screen control sequences.",
+                location,
+            )
+        };
+
+        if first_frame {
+            // First frame: clear terminal once and draw every cell.
+            writer.queue(Clear(ClearType::All)).map_err(map_err)?;
+            for y in 1..=state.height {
+                writer.queue(MoveTo(0, y - 1)).map_err(map_err)?;
+                for x in 1..=state.width {
+                    let cell = state.cell_at(x, y);
+                    if cell.continuation {
+                        continue;
+                    }
+                    writer
+                        .queue(Print(cell.fg.ansi_set_fg()))
+                        .and_then(|w| w.queue(Print(cell.bg.ansi_set_bg())))
+                        .and_then(|w| w.queue(Print(&cell.glyph)))
+                        .map_err(map_err)?;
+                }
+            }
+        } else if let Some(region) = match damage {
+            Some(FrameDamage::FullFrame) => Some(state.full_screen_rect()),
+            Some(FrameDamage::Rect(region)) => Some(region),
+            None => None,
+        } {
+            // Subsequent frames: only repaint cells that differ from the previous frame.
+            let mut last_fg = None;
+            let mut last_bg = None;
+
+            for y in region.top..=region.bottom {
+                for x in region.left..=region.right {
+                    if !state.cell_changed(x, y) {
+                        continue;
+                    }
+                    let cell = state.cell_at(x, y);
+                    if cell.continuation {
+                        continue;
+                    }
+                    writer.queue(MoveTo(x - 1, y - 1)).map_err(map_err)?;
+                    if last_fg != Some(cell.fg) {
+                        writer
+                            .queue(Print(cell.fg.ansi_set_fg()))
+                            .map_err(map_err)?;
+                        last_fg = Some(cell.fg);
+                    }
+                    if last_bg != Some(cell.bg) {
+                        writer
+                            .queue(Print(cell.bg.ansi_set_bg()))
+                            .map_err(map_err)?;
+                        last_bg = Some(cell.bg);
+                    }
+                    writer.queue(Print(&cell.glyph)).map_err(map_err)?;
+                }
+            }
+        }
+
+        writer.queue(ResetColor).map_err(map_err)?;
+
+        if state.cursor_visible {
+            writer
+                .queue(Show)
+                .and_then(|w| {
+                    if state.cursor_big {
+                        w.queue(SetCursorStyle::SteadyBlock)
+                    } else {
+                        w.queue(SetCursorStyle::DefaultUserShape)
+                    }
+                })
+                .and_then(|w| w.queue(MoveTo(state.abs_x() - 1, state.abs_y() - 1)))
+                .map_err(map_err)?;
+        } else {
+            writer.queue(Hide).map_err(map_err)?;
+        }
+
+        writer.flush().map_err(|e| {
+            std_runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!("Console flush failed: {e}"),
+                "Check stdout availability and try again.",
+                location,
+            )
+        })?;
+
+        // Snapshot current frame for next diff comparison.
+        self.state.commit_frame();
+        Ok(())
+    }
+}

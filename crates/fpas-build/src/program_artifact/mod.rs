@@ -159,7 +159,7 @@ fn reusable_executable(
     expected: &ProgramIdentity,
     source_paths: &[String],
     source_hashes: &[Digest],
-) -> Result<Option<fpas_bytecode::VerifiedExecutable>, BuildError> {
+) -> Result<Option<fpas_code::VerifiedExecutable>, BuildError> {
     let Some(bytes) = publication.read()? else {
         return Ok(None);
     };

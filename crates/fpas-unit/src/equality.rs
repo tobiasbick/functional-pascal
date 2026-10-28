@@ -1,6 +1,6 @@
 //! Essential nominal field declarations for source-less equality admission.
 
-use fpas_bytecode::{NominalKind, TypeIdentity};
+use fpas_code::{NominalKind, TypeIdentity};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// A nominal declaration's fields, independent of optional debugger metadata.
@@ -64,7 +64,7 @@ impl EqualityDeclarations {
             {
                 return Err("conflicting equality declarations");
             }
-            if result.0.len() > fpas_bytecode::limits::MAX_RECORD_LAYOUTS {
+            if result.0.len() > fpas_code::limits::MAX_RECORD_LAYOUTS {
                 return Err("too many equality declarations");
             }
         }
@@ -83,7 +83,7 @@ impl EqualityDeclarations {
         }
         let mut pending = vec![ty.clone()];
         let mut visited = BTreeSet::new();
-        let mut budget = fpas_bytecode::limits::MAX_LAYOUT_FIELDS;
+        let mut budget = fpas_code::limits::MAX_LAYOUT_FIELDS;
         let mut expansion = crate::errors::ErrorInstantiationBudget::default();
         while let Some(ty) = pending.pop() {
             if !visited.insert(ty.clone()) {

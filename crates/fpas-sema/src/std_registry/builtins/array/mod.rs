@@ -1,9 +1,9 @@
 use super::{array_elem_ty, check_argument_count};
 use crate::check::Checker;
 use crate::types::Ty;
+use fpas_builtins::std_symbols as s;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use fpas_std::std_symbols as s;
 
 mod higher_order;
 mod mutation;

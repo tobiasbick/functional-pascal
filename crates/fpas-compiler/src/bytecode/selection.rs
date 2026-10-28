@@ -10,7 +10,7 @@ use self::operators::unary_opcode;
 
 use std::collections::BTreeMap;
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_code::{Instruction, Opcode};
 use fpas_ir::{
     BinaryOperation, Function, IrType, Operation, Program, TypeId, UnaryOperation, ValueId,
 };
@@ -248,7 +248,7 @@ impl<'a> Selector<'a> {
             Some(IrType::Unit)
         );
         let destination = if returns_unit {
-            fpas_bytecode::NO_REGISTER
+            fpas_code::NO_REGISTER
         } else {
             self.result_register(result)?
         };

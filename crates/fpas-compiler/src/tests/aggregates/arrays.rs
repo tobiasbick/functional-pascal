@@ -63,7 +63,7 @@ fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
             .executable()
             .code
             .iter()
-            .any(|instruction| { instruction.opcode() == Ok(fpas_bytecode::Opcode::ArrayPush) })
+            .any(|instruction| { instruction.opcode() == Ok(fpas_runtime::Opcode::ArrayPush) })
     );
 }
 
@@ -98,7 +98,7 @@ end."#;
             .executable()
             .code
             .iter()
-            .any(|instruction| instruction.opcode() == Ok(fpas_bytecode::Opcode::ArrayPop))
+            .any(|instruction| instruction.opcode() == Ok(fpas_runtime::Opcode::ArrayPop))
     );
 }
 
@@ -135,11 +135,11 @@ end.
     let code = &executable.executable().code;
     let index_set = code
         .iter()
-        .position(|instruction| instruction.opcode() == Ok(fpas_bytecode::Opcode::IndexSet))
+        .position(|instruction| instruction.opcode() == Ok(fpas_runtime::Opcode::IndexSet))
         .expect("local index write opcode");
     assert!(
         index_set == 0
-            || code[index_set - 1].opcode() != Ok(fpas_bytecode::Opcode::Move)
+            || code[index_set - 1].opcode() != Ok(fpas_runtime::Opcode::Move)
             || code[index_set - 1].abc_payload().a != code[index_set].abc_payload().a,
         "local index write must not copy the collection before mutation"
     );

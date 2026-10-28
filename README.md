@@ -51,9 +51,9 @@ To prepare the distributable layout under `bin/`, run `./dist.sh` on Linux or
 `./dist.ps1` on Windows. Both scripts copy `fpas`, `fpas-runner`, `fpas-lsp`,
 and `lib/` together. They build the Rust binaries in one Cargo invocation, then
 use the built compiler's `stdlib stage` command to precompile and stage `lib/`.
-Release builds retain fat LTO and one codegen unit. The
-[build guide](docs/bench/build-times.md) describes the ACP dependency boundaries
-and how to measure rebuilds.
+Release builds disable LTO and use Cargo's default parallel code generation. The
+[build guide](docs/bench/build-times.md) describes dependency boundaries and how
+to measure rebuilds.
 Both scripts resolve paths from their own directory and stop on build,
 standard-library staging, or copy failures. They report success only after all
 steps finish.
@@ -401,21 +401,28 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-sema` | Semantic analysis and type checking |
 | `fpas-ir` | Typed control-flow intermediate representation |
 | `fpas-compiler` | AST lowering through typed IR to register bytecode |
-| `fpas-bytecode` | Register-bytecode definitions and executable verification |
+| `fpas-code` | Portable bytecode, executable metadata, and validation |
+| `fpas-builtins` | Standard-library names, native declarations, and shared discriminants |
+| `fpas-runtime` | VM execution, values, memory ownership, native operations, and host integration |
 | `fpas-binary` | Shared little-endian encoding primitives and BLAKE3 digests |
 | `fpas-unit` | Compiled-unit identities, format, and sidecar lifecycle |
 | `fpas-linker` | Deterministic linker from unit objects to verified executables |
 | `fpas-program` | Persistent executable `.fpascp` program images |
 | `fpas-bundle` | Host-native runner bundle format and publication |
-| `fpas-vm` | Virtual machine / bytecode interpreter |
-| `fpas-std` | Standard library intrinsics |
 | `fpas-fmt` | Canonical FPAS source formatter |
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
 | `fpas-language-service` | Compiler-backed editor analysis and language features |
 | `fpas-lsp` | Language Server Protocol transport |
 | `fpas-debug` | Source debug engine with batch, JSONL and DAP adapters |
 | `fpas-bench` | Bounded performance harness, baselines, and comparisons |
+| `fpas-acp-model` | ACP schemas, declaration catalog, and protocol data |
+| `fpas-acp-codec` | Typed ACP wire conversions and SDK normalization |
+| `fpas-acp` | ACP connections, transport, interaction state, and MCP bridge |
+| `fpas-mcp` | MCP tool registration and serving |
 | `editors/vscode` | VS Code-compatible extension, packaging, and Extension Host tests |
+
+See the [Rust architecture](docs/rust-architecture.md) for dependency direction,
+runtime admission, and test boundaries.
 
 ## Status
 

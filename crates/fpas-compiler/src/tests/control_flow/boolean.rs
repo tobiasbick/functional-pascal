@@ -1,6 +1,6 @@
 //! Execution and bytecode contracts for Boolean short-circuit lowering.
 
-use fpas_bytecode::Opcode;
+use fpas_runtime::Opcode;
 
 use super::super::{assert_succeeds, parse_ok, run_program};
 

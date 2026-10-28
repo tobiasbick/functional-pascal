@@ -35,7 +35,7 @@ pub use object::{
 ///
 /// Returns semantic diagnostics, a structured lowering diagnostic, or a bytecode
 /// construction/verifier diagnostic represented as an internal compiler failure.
-pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
+pub fn compile(program: &Program) -> Result<fpas_code::VerifiedExecutable, Vec<CompileError>> {
     compile_with_options(program, CompileOptions::default())
 }
 
@@ -46,7 +46,7 @@ pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, V
 pub fn compile_with_options(
     program: &Program,
     options: CompileOptions,
-) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
+) -> Result<fpas_code::VerifiedExecutable, Vec<CompileError>> {
     let lowered = lowering::lower_with_options(program, options)?;
     bytecode::compile_with_errors(lowered.program, &lowered.errors).map_err(|error| vec![error])
 }

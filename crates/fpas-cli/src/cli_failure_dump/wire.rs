@@ -3,9 +3,9 @@
 //! Contract: `docs/pascal/tools/failure-dump.md`.
 
 use super::value::{Policy, Value};
-use fpas_bytecode::{DebugBindingKind, DebugSourceLocation};
 use fpas_diagnostics::Diagnostic;
-use fpas_vm::{FailureBinding, FailureFrame, FailureGlobal, FailureTask};
+use fpas_runtime::execution::{FailureBinding, FailureFrame, FailureGlobal, FailureTask};
+use fpas_runtime::{DebugBindingKind, DebugSourceLocation};
 use serde::{Serialize, Serializer, ser::SerializeSeq};
 
 /// One complete document; optional missing data remains explicit JSON null.

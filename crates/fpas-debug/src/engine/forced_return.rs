@@ -16,7 +16,7 @@ impl DebugEngine {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let limits = fpas_vm::DebugEvaluationLimits::default();
+        let limits = fpas_runtime::execution::DebugEvaluationLimits::default();
         let expression = match expression_source {
             Some(source) => match parse_debug_expression(&source, limits) {
                 Ok(expression) => Some(expression),

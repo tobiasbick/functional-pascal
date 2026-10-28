@@ -1,6 +1,6 @@
 //! Bounded logpoint template parsing with FPAS expression interpolation.
 
-use fpas_vm::{DebugEvaluationLimits, DebugExpression};
+use fpas_runtime::execution::{DebugEvaluationLimits, DebugExpression};
 
 use super::{EvaluationParseError, parse_debug_expression};
 

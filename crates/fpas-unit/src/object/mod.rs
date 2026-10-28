@@ -16,7 +16,7 @@ mod validation;
 
 use std::collections::BTreeMap;
 
-use fpas_bytecode::Instruction;
+use fpas_code::Instruction;
 
 pub use codec::{decode_object, encode_object};
 pub use error::ObjectError;
@@ -180,7 +180,7 @@ impl RelocatableObject {
                     .ok_or(ObjectError::InvalidTableReference(
                         "global source initializer instruction",
                     ))?;
-                if instruction.opcode().ok() != Some(fpas_bytecode::Opcode::StoreGlobal) {
+                if instruction.opcode().ok() != Some(fpas_code::Opcode::StoreGlobal) {
                     return Err(ObjectError::InvalidTableReference(
                         "global source initializer store",
                     ));
@@ -191,7 +191,7 @@ impl RelocatableObject {
             if let Some(info) = &record.construction
                 && (info.defaults.len() != record.fields.len()
                     || (info.requires_owner && info.owner_unit.is_none())
-                    || info.aliases.len() > fpas_bytecode::limits::MAX_STRINGS
+                    || info.aliases.len() > fpas_code::limits::MAX_STRINGS
                     || info.aliases.iter().any(|alias| {
                         alias.source as usize >= self.sources.len()
                             || alias.name.is_empty()

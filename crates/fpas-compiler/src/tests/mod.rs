@@ -23,13 +23,15 @@ fn compiled_unit(
     compiled
 }
 
-fn run_program(source: &str) -> Result<fpas_vm::Execution, fpas_vm::VmError> {
+fn run_program(
+    source: &str,
+) -> Result<fpas_runtime::execution::Execution, fpas_runtime::execution::VmError> {
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("compilation should succeed");
-    fpas_vm::Vm::new(executable).run()
+    fpas_runtime::execution::Vm::new(executable).run()
 }
 
-fn assert_succeeds(source: &str) -> fpas_vm::Execution {
+fn assert_succeeds(source: &str) -> fpas_runtime::execution::Execution {
     run_program(source).expect("program should succeed")
 }
 

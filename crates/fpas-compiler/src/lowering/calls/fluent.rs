@@ -28,13 +28,13 @@ impl LoweringContext {
             let receiver_ty = self
                 .type_table
                 .id(&target.receiver_ty, span.line, span.column)?;
-            if base == fpas_std::std_symbols::STD_ARRAY_PUSH {
+            if base == fpas_builtins::std_symbols::STD_ARRAY_PUSH {
                 let value = self
                     .argument_for_parameter(args, 0)
                     .ok_or_else(|| unsupported(span, "PushInPlace argument"))?;
                 return self.lower_array_push_target(&receiver, value, receiver_ty, span);
             }
-            if base == fpas_std::std_symbols::STD_ARRAY_POP {
+            if base == fpas_builtins::std_symbols::STD_ARRAY_POP {
                 return self.lower_array_pop_target(&receiver, result, receiver_ty, span);
             }
             let reference = self.lower_var_argument(&receiver)?;
@@ -112,7 +112,7 @@ impl LoweringContext {
                 self.emit_value(Operation::MakeArray(vec![values[1]]), array_ty, span)?;
             self.record_call_arguments(2, span)?;
             return self.emit_intrinsic_value(
-                fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Concat),
+                fpas_code::Intrinsic::Array(fpas_code::ArrayIntrinsic::Concat),
                 vec![values[0], appended],
                 result,
                 span,
@@ -126,7 +126,7 @@ impl LoweringContext {
         self.can_spawn_tasks |= intrinsic.starts_task();
         if matches!(
             intrinsic,
-            fpas_bytecode::Intrinsic::Str(fpas_bytecode::StrIntrinsic::Format)
+            fpas_code::Intrinsic::Str(fpas_code::StrIntrinsic::Format)
         ) {
             let count = i64::try_from(argument_count)
                 .map_err(|_| unsupported(span, "format argument count overflow"))?;

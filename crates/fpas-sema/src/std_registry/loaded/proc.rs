@@ -2,12 +2,14 @@ use super::super::{define_func, p};
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the `Std.Proc` functions made visible by `uses Std.Proc`.
 pub(super) fn register_std_proc(checker: &mut Checker) {
-    let error_ty =
-        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Proc);
+    let error_ty = super::errors::register(
+        checker,
+        fpas_builtins::native_errors::NativeErrorFamily::Proc,
+    );
     let process_output = type_registration::register_record_type(
         checker,
         s::STD_PROC_PROCESS_OUTPUT,

@@ -6,7 +6,7 @@ use super::super::builtins::register_assert_equals_builtin;
 use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the `Std.Test` procedures made visible by `uses Std.Test`.
 pub(super) fn register_std_test(checker: &mut Checker) {

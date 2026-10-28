@@ -18,8 +18,8 @@ pub struct ObjectErrorSchema {
 #[serde(deny_unknown_fields)]
 pub struct ObjectErrorVariant {
     /// Concrete semantic field types, independent of optional debugger metadata.
-    #[serde(deserialize_with = "fpas_bytecode::TypeIdentity::deserialize_list")]
-    pub field_types: Vec<fpas_bytecode::TypeIdentity>,
+    #[serde(deserialize_with = "fpas_code::TypeIdentity::deserialize_list")]
+    pub field_types: Vec<fpas_code::TypeIdentity>,
     /// Optional nonempty literal label.
     pub message: Option<String>,
     /// Original typed cause, absent on leaf variants.
@@ -71,7 +71,7 @@ pub(super) fn validate(object: &RelocatableObject) -> Result<(), ObjectError> {
                     "error semantic field types disagree with payload slots",
                 ));
             }
-            fpas_bytecode::TypeIdentity::validate_all(&error.field_types, 0).map_err(invalid)?;
+            fpas_code::TypeIdentity::validate_all(&error.field_types, 0).map_err(invalid)?;
             if error.field_types.iter().any(|ty| !ty.is_printable()) {
                 return Err(invalid("error payload requires Printable"));
             }

@@ -37,7 +37,7 @@ pub(super) fn register(checker: &mut Checker) {
     }
     let result = Ty::Result(Box::new(Ty::Boolean), Box::new(t.error));
     if let Ty::Result(_, error) = &result {
-        for variant in fpas_std::native_errors::NativeErrorFamily::Mcp.variants() {
+        for variant in fpas_builtins::native_errors::NativeErrorFamily::Mcp.variants() {
             checker.scopes.imports.define_metadata(
                 &format!("Std.Acp.McpError.{}", variant.name),
                 Symbol {

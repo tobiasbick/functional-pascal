@@ -2,7 +2,7 @@
 //! Documentation: `docs/pascal/program-structure/compiled-programs.md`.
 
 use super::{ErrorInstantiationBudget, ErrorSchema, validation};
-use fpas_bytecode::{ErrorInstanceKey, IdentityParameter, TypeIdentity};
+use fpas_code::{ErrorInstanceKey, IdentityParameter, TypeIdentity};
 
 impl ErrorSchema {
     /// Instantiate all payload types, retaining the declaration's messages and Cause slot.
@@ -46,7 +46,7 @@ impl ErrorSchema {
                 return Err("error instance violates a generic constraint");
             }
         }
-        let mut remaining = fpas_bytecode::limits::MAX_LAYOUT_FIELDS;
+        let mut remaining = fpas_code::limits::MAX_LAYOUT_FIELDS;
         budget.text(&self.declaration)?;
         budget.text(&self.display_name)?;
         budget.nodes(self.variants.len())?;
@@ -135,7 +135,7 @@ pub(crate) fn substitute_identity(
     arguments: &[TypeIdentity],
     budget: &mut ErrorInstantiationBudget,
 ) -> Result<TypeIdentity, &'static str> {
-    let mut remaining = fpas_bytecode::limits::MAX_LAYOUT_FIELDS;
+    let mut remaining = fpas_code::limits::MAX_LAYOUT_FIELDS;
     expansion(ty, arguments, 0, &mut remaining, budget)?;
     replace(ty, arguments)
 }

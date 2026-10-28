@@ -33,15 +33,15 @@ The supervisor builds on explicit TaskGroup ownership rather than implicitly ado
 
 ## Verification evidence
 
-- `crates/fpas-vm/src/vm/debug/tests/supervision.rs` covers normal default-pool, single-worker,
+- `crates/fpas-runtime/src/execution/vm/debug/tests/supervision.rs` covers normal default-pool, single-worker,
   and deterministic-debugger execution, including nested children and resume-time failures.
-- `crates/fpas-vm/src/vm/tasks/supervision/tests.rs` checks admission limits and cancellation
+- `crates/fpas-runtime/src/execution/vm/tasks/supervision/tests.rs` checks admission limits and cancellation
   before executing the worker body.
-- `crates/fpas-vm/src/vm/tasks/supervision/lifetime_tests.rs` repeats five direct capture-release
+- `crates/fpas-runtime/src/execution/vm/tasks/supervision/lifetime_tests.rs` repeats five direct capture-release
   checks 100 times each, including retained inputs between retries and timer/queue teardown.
 - `tests/concurrency/supervised_task_retry_test.fpas` and
   `tests/concurrency/supervised_channel_selection_test.fpas` are bundled FPAS regressions.
-- `crates/fpas-vm/src/vm/debug/tests/supervision/channel_compatibility.rs` covers ordinary channel
+- `crates/fpas-runtime/src/execution/vm/debug/tests/supervision/channel_compatibility.rs` covers ordinary channel
   operations and nested waits; `entry_completion.rs` verifies forced terminal completion without retry.
 - The final complete workspace suite passed with all 535 VM tests. Workspace build, affected-crate
   strict Clippy, standalone FPAS execution, editor generation, and formatting checks passed.

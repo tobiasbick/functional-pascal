@@ -1,6 +1,6 @@
 //! Transfer a temporary instead of cloning it at its final read.
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_code::{Instruction, Opcode};
 use fpas_ir::BlockId;
 
 use super::{Selector, abc_aux};

@@ -23,9 +23,9 @@ impl DebugEngine {
         let mut records = output_events(&session, &mut self.output_cursor);
         records.extend(session.take_task_events().into_iter().map(task_event));
         match result {
-            Ok(fpas_vm::DebugRunResult::Stopped(stop)) => {
+            Ok(fpas_runtime::execution::DebugRunResult::Stopped(stop)) => {
                 self.status = DebugStatus::Stopped;
-                if stop.reason == fpas_vm::DebugStopReason::RuntimeError
+                if stop.reason == fpas_runtime::execution::DebugStopReason::RuntimeError
                     && let Some(diagnostic) = &stop.diagnostic
                 {
                     records.push(event(DebugEvent::RuntimeError {
@@ -47,7 +47,8 @@ impl DebugEngine {
                 }
                 if matches!(
                     stop.reason,
-                    fpas_vm::DebugStopReason::Breakpoint | fpas_vm::DebugStopReason::DataBreakpoint
+                    fpas_runtime::execution::DebugStopReason::Breakpoint
+                        | fpas_runtime::execution::DebugStopReason::DataBreakpoint
                 ) && !stop.breakpoint_ids.is_empty()
                 {
                     let frame_id = session
@@ -121,7 +122,7 @@ impl DebugEngine {
                 records.push(event(DebugEvent::Stopped(stop)));
                 self.actor.restore(session);
             }
-            Ok(fpas_vm::DebugRunResult::Terminated(termination)) => {
+            Ok(fpas_runtime::execution::DebugRunResult::Terminated(termination)) => {
                 if self.retain_terminal {
                     self.actor.restore(session);
                 }

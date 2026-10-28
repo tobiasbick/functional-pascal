@@ -20,7 +20,7 @@ impl ProgramStderrBuffer {
     /// Creates a bounded buffer and the JSON-mode VM receiver that writes into it.
     pub(in crate::cli_test) fn new(
         format: DiagnosticFormat,
-    ) -> (Self, Option<fpas_std::ProgramStderr>) {
+    ) -> (Self, Option<fpas_runtime::stdlib::ProgramStderr>) {
         let truncation_record = fpas_diagnostics::render_program_stderr_json(
             "Program stderr was truncated at the 8 MiB capture limit.",
         )

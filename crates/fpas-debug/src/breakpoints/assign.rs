@@ -1,6 +1,6 @@
 //! Optional assignment attached to a logical breakpoint policy.
 
-use fpas_vm::{DebugDataLocationIdentity, DebugExpression};
+use fpas_runtime::execution::{DebugDataLocationIdentity, DebugExpression};
 
 /// One global assignment executed after a breakpoint's condition and hit test.
 #[derive(Debug, Clone, PartialEq)]

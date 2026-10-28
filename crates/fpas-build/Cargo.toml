@@ -9,7 +9,6 @@ repository.workspace = true
 
 [dependencies]
 atomic-write-file = "0.3.1"
-fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-linker = { path = "../fpas-linker" }
@@ -18,6 +17,8 @@ fpas-program = { path = "../fpas-program" }
 fpas-project = { path = "../fpas-project" }
 fpas-unit = { path = "../fpas-unit" }
 
+fpas-code = { path = "../fpas-code" }
+
 [build-dependencies]
 blake3 = { workspace = true }
 
@@ -25,4 +26,5 @@ blake3 = { workspace = true }
 workspace = true
 
 [dev-dependencies]
-fpas-vm = { path = "../fpas-vm" }
+toml.workspace = true
+fpas-runtime = { path = "../fpas-runtime" }

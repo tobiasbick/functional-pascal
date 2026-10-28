@@ -5,13 +5,13 @@
 use super::parse::{ScriptEvent, ScriptFile};
 
 /// Pushes all script events into the VM input queues in order.
-pub fn apply_script(vm: &mut fpas_vm::Vm, script: &ScriptFile) {
+pub fn apply_script(vm: &mut fpas_runtime::execution::Vm, script: &ScriptFile) {
     for event in &script.events {
         apply_one_event(vm, event);
     }
 }
 
-fn apply_one_event(vm: &mut fpas_vm::Vm, event: &ScriptEvent) {
+fn apply_one_event(vm: &mut fpas_runtime::execution::Vm, event: &ScriptEvent) {
     match event {
         ScriptEvent::Readln { line } => {
             vm.push_readln_input(line);

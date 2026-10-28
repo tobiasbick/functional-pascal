@@ -13,7 +13,7 @@ use parameter_copy::initialized_local_frame;
 use std::{thread, time::Duration};
 
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
-use fpas_vm::{
+use fpas_runtime::execution::{
     DebugAssignmentSelector, DebugAssignmentTarget, DebugErrorKind, DebugEvaluationLimits,
     DebugExpression, DebugRunResult, DebugSession,
 };
@@ -269,7 +269,7 @@ end.
             )
             .expect_err("dictionary key is synthetic")
             .kind,
-        fpas_vm::DebugErrorKind::VariablePathUnsupported
+        fpas_runtime::execution::DebugErrorKind::VariablePathUnsupported
     );
 
     let locals = session_scope(&mut session, "Locals").expect("fresh locals");

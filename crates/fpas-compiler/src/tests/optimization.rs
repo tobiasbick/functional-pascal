@@ -1,6 +1,6 @@
 //! IR optimization passes and their effect on emitted register bytecode.
 
-use fpas_bytecode::{Constant, Instruction, Opcode};
+use fpas_runtime::{Constant, Instruction, Opcode};
 
 use super::{assert_succeeds, parse_ok};
 

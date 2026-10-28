@@ -48,7 +48,7 @@ fn jsonl_record_replay_is_advertised_false_and_rejects_without_launch() {
     );
     assert_eq!(
         initialized[0]["body"]["limits"]["recording_events"],
-        fpas_vm::MAX_RECORDING_EVENTS
+        fpas_runtime::execution::MAX_RECORDING_EVENTS
     );
     assert_eq!(initialized[0]["body"]["limits"]["recording_snapshots"], 0);
     assert_eq!(server.status(), ServerStatus::Initialized);
@@ -88,7 +88,7 @@ fn jsonl_record_replay_after_stop_does_not_resume() {
     assert_eq!(recorded[0]["body"]["truncated"], false);
     assert_eq!(
         recorded[0]["body"]["event_limit"],
-        fpas_vm::MAX_RECORDING_EVENTS
+        fpas_runtime::execution::MAX_RECORDING_EVENTS
     );
     assert_eq!(recorded.len(), 1, "{recorded:?}");
     assert_eq!(server.status(), ServerStatus::Stopped);
@@ -106,7 +106,7 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
     assert_eq!(described[0]["body"]["version"], 1);
     assert_eq!(
         described[0]["body"]["bytecode_version"],
-        fpas_bytecode::BYTECODE_VERSION
+        fpas_runtime::BYTECODE_VERSION
     );
     assert_eq!(described[0]["body"]["program"], "recordreplay");
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
@@ -116,7 +116,7 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
     assert_eq!(described[0]["body"]["event_count"], 0);
     assert_eq!(
         described[0]["body"]["event_limit"],
-        fpas_vm::MAX_RECORDING_EVENTS
+        fpas_runtime::execution::MAX_RECORDING_EVENTS
     );
     assert_eq!(described[0]["body"]["events"], json!([]));
     assert_eq!(described.len(), 1, "{described:?}");

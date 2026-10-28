@@ -13,7 +13,7 @@ pub(super) fn validate_debug_types(
     records: &[ObjectRecordLayout],
     enums: &[crate::object::ObjectEnumLayout],
 ) -> Result<(), ObjectError> {
-    if types.len() > fpas_bytecode::limits::MAX_DEBUG_TYPES {
+    if types.len() > fpas_code::limits::MAX_DEBUG_TYPES {
         return Err(ObjectError::InvalidTableReference("debug type count"));
     }
     for ty in types {
@@ -24,7 +24,7 @@ pub(super) fn validate_debug_types(
         }
         match ty {
             ObjectDebugType::Function { parameters, .. }
-                if parameters.len() > fpas_bytecode::limits::MAX_CALL_ARGUMENTS =>
+                if parameters.len() > fpas_code::limits::MAX_CALL_ARGUMENTS =>
             {
                 return Err(ObjectError::InvalidTableReference(
                     "debug function parameter count",

@@ -89,10 +89,13 @@ fn run(json: bool) -> i32 {
         .map(PathBuf::from)
         .collect::<Vec<_>>();
     let args = env::args().skip(1).collect();
-    let mut vm =
-        fpas_vm::Vm::with_writer_and_args(image.into_executable(), Box::new(io::stdout()), args);
+    let mut vm = fpas_runtime::execution::Vm::with_writer_and_args(
+        image.into_executable(),
+        Box::new(io::stdout()),
+        args,
+    );
     vm.allow_process_lifecycle();
-    if let Some(terminal) = fpas_vm::InteractiveProcessTerminal::inherited() {
+    if let Some(terminal) = fpas_runtime::execution::InteractiveProcessTerminal::inherited() {
         vm.set_interactive_process_terminal(terminal);
     }
     if json {

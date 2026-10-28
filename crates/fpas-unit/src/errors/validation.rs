@@ -3,7 +3,7 @@
 
 use super::ErrorSchema;
 use crate::interface::TypeConstraint;
-use fpas_bytecode::{ErrorInstanceKey, NominalKind, TypeIdentity};
+use fpas_code::{ErrorInstanceKey, NominalKind, TypeIdentity};
 use std::collections::BTreeSet;
 
 impl ErrorSchema {
@@ -22,9 +22,7 @@ impl ErrorSchema {
         }
         let parameters =
             u16::try_from(self.parameters.len()).map_err(|_| "too many error schema parameters")?;
-        if self.variants.is_empty()
-            || self.variants.len() > fpas_bytecode::limits::MAX_ENUM_VARIANTS
-        {
+        if self.variants.is_empty() || self.variants.len() > fpas_code::limits::MAX_ENUM_VARIANTS {
             return Err("error schema requires a bounded nonempty variant list");
         }
         let mut variants = BTreeSet::new();
@@ -35,7 +33,7 @@ impl ErrorSchema {
             if variant.message.as_ref().is_some_and(String::is_empty) {
                 return Err("error message must be omitted or nonempty");
             }
-            if variant.fields.len() > fpas_bytecode::limits::MAX_LAYOUT_FIELDS {
+            if variant.fields.len() > fpas_code::limits::MAX_LAYOUT_FIELDS {
                 return Err("too many error payload fields");
             }
             let mut fields = BTreeSet::new();

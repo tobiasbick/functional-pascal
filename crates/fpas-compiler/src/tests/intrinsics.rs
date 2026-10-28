@@ -4,7 +4,7 @@ mod bits;
 
 #[test]
 fn binary_files_keep_their_compiler_catalog_and_argument_shapes() {
-    use fpas_bytecode::{FsIntrinsic, Intrinsic, Opcode};
+    use fpas_runtime::{FsIntrinsic, Intrinsic, Opcode};
 
     assert_eq!(
         crate::intrinsic_catalog::resolve("Std.Fs.ReadBytes", None),
@@ -181,7 +181,7 @@ fn borrowed_standard_intrinsics_execute() {
     );
     assert_eq!(
         execution.value.try_to_data().expect("pure return value"),
-        fpas_bytecode::Value::Unit
+        fpas_runtime::Value::Unit
     );
 }
 
@@ -209,14 +209,14 @@ fn intrinsic_selection_uses_one_verified_register_window_convention() {
         .executable()
         .code
         .iter()
-        .find(|instruction| instruction.opcode() == Ok(fpas_bytecode::Opcode::Intrinsic))
+        .find(|instruction| instruction.opcode() == Ok(fpas_runtime::Opcode::Intrinsic))
         .expect("intrinsic opcode");
     let operands = instruction.abc_operands().expect("ABC operands");
-    assert_ne!(operands.a, fpas_bytecode::NO_REGISTER);
+    assert_ne!(operands.a, fpas_runtime::NO_REGISTER);
     assert_eq!(
-        fpas_bytecode::Intrinsic::from_u16(operands.b),
-        Some(fpas_bytecode::Intrinsic::Str(
-            fpas_bytecode::StrIntrinsic::Length,
+        fpas_runtime::Intrinsic::from_u16(operands.b),
+        Some(fpas_runtime::Intrinsic::Str(
+            fpas_runtime::StrIntrinsic::Length,
         ))
     );
     assert_eq!(operands.auxiliary, 1);
@@ -229,7 +229,7 @@ fn higher_order_intrinsics_invoke_numeric_callbacks() {
     );
     assert_eq!(
         execution.value.try_to_data().expect("pure return value"),
-        fpas_bytecode::Value::Unit
+        fpas_runtime::Value::Unit
     );
 }
 
@@ -247,13 +247,13 @@ fn variadic_console_output_preserves_evaluation_order() {
     );
     assert_eq!(
         execution.value.try_to_data().expect("pure return value"),
-        fpas_bytecode::Value::Unit
+        fpas_runtime::Value::Unit
     );
 }
 
 #[test]
 fn hosted_file_calls_compile_all_public_argument_shapes() {
-    use fpas_bytecode::{FsIntrinsic, Intrinsic};
+    use fpas_runtime::{FsIntrinsic, Intrinsic};
     let operations = [
         ("Open", FsIntrinsic::Open),
         ("Close", FsIntrinsic::Close),
@@ -320,20 +320,20 @@ end."#,
     for (name, operation) in [
         (
             "RunWithOptions",
-            fpas_bytecode::ProcIntrinsic::RunWithOptions,
+            fpas_runtime::ProcIntrinsic::RunWithOptions,
         ),
         (
             "RunCaptureWithOptions",
-            fpas_bytecode::ProcIntrinsic::RunCaptureWithOptions,
+            fpas_runtime::ProcIntrinsic::RunCaptureWithOptions,
         ),
         (
             "DefaultOptions",
-            fpas_bytecode::ProcIntrinsic::DefaultOptions,
+            fpas_runtime::ProcIntrinsic::DefaultOptions,
         ),
     ] {
         assert_eq!(
             crate::intrinsic_catalog::resolve(&format!("Std.Proc.{name}"), None),
-            Some(fpas_bytecode::Intrinsic::Proc(operation))
+            Some(fpas_runtime::Intrinsic::Proc(operation))
         );
     }
 }

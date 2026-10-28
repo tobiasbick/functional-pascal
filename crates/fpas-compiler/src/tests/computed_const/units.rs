@@ -26,7 +26,9 @@ fn computed_and_aggregate_constants_link_through_dependency_initializers() {
     )
     .expect("consumer object");
     let linked = fpas_linker::link_objects(&[original.object, facade.object], &root).expect("link");
-    fpas_vm::Vm::new(linked).run().expect("execution");
+    fpas_runtime::execution::Vm::new(linked)
+        .run()
+        .expect("execution");
 }
 
 #[test]
@@ -69,7 +71,9 @@ fn writable_exports_and_value_parameters_survive_interface_round_trip() {
         );
     }
     let linked = fpas_linker::link_objects(&[state.object], &root).expect("link");
-    fpas_vm::Vm::new(linked).run().expect("execution");
+    fpas_runtime::execution::Vm::new(linked)
+        .run()
+        .expect("execution");
 }
 
 #[test]
@@ -100,7 +104,9 @@ fn static_record_patterns_link_while_aggregate_values_remain_runtime_globals() {
         end."
     ), &interfaces, &interfaces).expect("consumer object");
     let linked = fpas_linker::link_objects(&[original.object, facade.object], &root).expect("link");
-    fpas_vm::Vm::new(linked).run().expect("execution");
+    fpas_runtime::execution::Vm::new(linked)
+        .run()
+        .expect("execution");
 }
 
 #[test]
@@ -151,7 +157,9 @@ fn imported_constant_receivers_link_and_execute_native_calls() {
     )
     .expect("native calls on imported constants compile");
     let linked = fpas_linker::link_objects(&[values.object], &root).expect("link");
-    fpas_vm::Vm::new(linked).run().expect("execution");
+    fpas_runtime::execution::Vm::new(linked)
+        .run()
+        .expect("execution");
 }
 
 #[test]

@@ -216,7 +216,7 @@ pub enum ObjectDebugType {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectEnumLayout {
     /// Concrete semantic identity, absent for ordinary erased enum layouts.
-    pub error: Option<fpas_bytecode::ErrorInstanceKey>,
+    pub error: Option<fpas_code::ErrorInstanceKey>,
     /// Canonical type name.
     pub name: String,
     /// Variants in declaration order.

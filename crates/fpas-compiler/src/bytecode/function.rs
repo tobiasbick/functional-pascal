@@ -4,7 +4,7 @@
 //! selection may emit fewer words (aliased reads, dropped dead values) without a separate width
 //! table.
 
-use fpas_bytecode::{
+use fpas_code::{
     CodeRange, FunctionFlags, FunctionInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode,
     ReturnConvention,
 };

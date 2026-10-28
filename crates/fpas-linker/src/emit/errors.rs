@@ -3,7 +3,7 @@
 
 use super::strings::StringInterner;
 use crate::LinkError;
-use fpas_bytecode::{EnumTypeId, ErrorCause, ErrorInstanceKey, ErrorVariant};
+use fpas_code::{EnumTypeId, ErrorCause, ErrorInstanceKey, ErrorVariant};
 use fpas_unit::object::ObjectErrorVariant;
 use std::collections::BTreeMap;
 
@@ -25,7 +25,7 @@ pub(super) fn variant(
                 let key = error
                     .field_types
                     .get(usize::from(field))
-                    .and_then(fpas_bytecode::TypeIdentity::error_key)
+                    .and_then(fpas_code::TypeIdentity::error_key)
                     .ok_or_else(|| {
                         crate::errors::invalid("Cause has no concrete error field type")
                     })?;

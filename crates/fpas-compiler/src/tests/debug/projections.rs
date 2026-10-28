@@ -9,7 +9,7 @@ fn unit_record_method_receivers_and_scalar_parameters_keep_checked_projection_sh
         &[],
     );
 }
-use fpas_bytecode::{DebugProjectionKind, DebugType};
+use fpas_runtime::{DebugProjectionKind, DebugType};
 
 #[test]
 fn applied_record_projections_do_not_specialize_operational_layouts() {

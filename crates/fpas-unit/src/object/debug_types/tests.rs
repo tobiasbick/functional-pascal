@@ -74,7 +74,7 @@ fn rejects_missing_children_and_excessive_function_parameters() {
         Err(ObjectError::InvalidTableReference("debug type child"))
     );
     let types = [ObjectDebugType::Function {
-        parameters: vec![0; fpas_bytecode::limits::MAX_CALL_ARGUMENTS + 1],
+        parameters: vec![0; fpas_code::limits::MAX_CALL_ARGUMENTS + 1],
         result: 0,
     }];
     assert_eq!(

@@ -4,7 +4,7 @@
 //! appear in the intrinsic API consumed by editor tools.
 //! **Documentation:** `docs/pascal/std/README.md`
 
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Returns the published parameter labels used by a registered polymorphic operation.
 pub(in crate::std_registry) fn parameter_names(name: &str) -> &'static [&'static str] {

@@ -1,6 +1,6 @@
 //! Conversion of verified executable operands to object-local relocations.
 
-use fpas_bytecode::{DebugType, Instruction, Opcode};
+use fpas_code::{DebugType, Instruction, Opcode};
 
 use crate::object::{
     ObjectDebugType, ObjectEnumLayout, ObjectError, RelocationKind, SymbolReference,
@@ -9,7 +9,7 @@ use crate::object::{
 /// Returns the object-local relocation required by one verified instruction.
 pub(super) fn relocation_for_instruction(
     instruction: Instruction,
-    variants: &[fpas_bytecode::EnumVariant],
+    variants: &[fpas_code::EnumVariant],
     enums: &[ObjectEnumLayout],
 ) -> Result<Option<RelocationKind>, ObjectError> {
     let opcode = instruction
@@ -114,10 +114,10 @@ pub(super) fn localize_branch(
 
 pub(super) fn object_debug_type(
     ty: &DebugType,
-    executable: &fpas_bytecode::Executable,
+    executable: &fpas_code::Executable,
 ) -> Result<ObjectDebugType, ObjectError> {
-    let id = |id: fpas_bytecode::DebugTypeId| id.get();
-    let layout_name = |name: fpas_bytecode::StringId| {
+    let id = |id: fpas_code::DebugTypeId| id.get();
+    let layout_name = |name: fpas_code::StringId| {
         executable
             .strings
             .get(name)

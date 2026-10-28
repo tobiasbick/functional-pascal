@@ -3,7 +3,7 @@
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
-use fpas_std::native_errors::{ErrorFieldType, NativeErrorFamily};
+use fpas_builtins::native_errors::{ErrorFieldType, NativeErrorFamily};
 use std::sync::Arc;
 
 pub(super) fn register(checker: &mut Checker, family: NativeErrorFamily) -> Ty {

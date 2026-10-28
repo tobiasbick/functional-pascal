@@ -1,6 +1,6 @@
 //! Bounded standalone parsing before safe-IR validation.
 
-use fpas_vm::{DebugEvaluationLimits, DebugExpression};
+use fpas_runtime::execution::{DebugEvaluationLimits, DebugExpression};
 
 use super::validate::validate_expression;
 

@@ -10,7 +10,7 @@ use crate::{CliInput, DebugCliConfig};
 
 #[derive(Debug)]
 struct PreparedExecutable {
-    executable: fpas_bytecode::VerifiedExecutable,
+    executable: fpas_runtime::VerifiedExecutable,
     sources: Vec<fpas_debug::DebugSourceContent>,
 }
 
@@ -63,9 +63,9 @@ fn prepare_executable(
     Ok(prepared)
 }
 
-fn reload_build_error() -> fpas_vm::DebugSessionError {
-    fpas_vm::DebugSessionError {
-        kind: fpas_vm::DebugErrorKind::LiveImageBuildFailed,
+fn reload_build_error() -> fpas_runtime::execution::DebugSessionError {
+    fpas_runtime::execution::DebugSessionError {
+        kind: fpas_runtime::execution::DebugErrorKind::LiveImageBuildFailed,
         message: "the debugger launch target could not be rebuilt for live reload".to_string(),
         hint: "Fix source or project diagnostics with `fpas check`, then retry reload. Host paths and compiler output are not copied onto the debugger protocol."
             .to_string(),
@@ -154,7 +154,7 @@ fn prepare_project(
 }
 
 fn install_debug_sources(
-    executable: fpas_bytecode::VerifiedExecutable,
+    executable: fpas_runtime::VerifiedExecutable,
     source_paths: &[PathBuf],
     selected: &[PathBuf],
     root: Option<&Path>,
@@ -200,7 +200,7 @@ fn install_debug_sources(
         ProgramIdentity {
             contracts_enabled: !no_contracts,
             compiler_version: env!("CARGO_PKG_VERSION").to_string(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash,
             options_hash: Digest::of(b"debug-session"),
             units: Vec::new(),
@@ -310,7 +310,7 @@ mod tests {
             ProgramIdentity {
                 contracts_enabled: true,
                 compiler_version: "test".into(),
-                bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+                bytecode_version: fpas_runtime::BYTECODE_VERSION,
                 source_hash: Digest::of(source.as_bytes()),
                 options_hash: Digest::of([]),
                 units: Vec::new(),

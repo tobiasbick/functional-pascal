@@ -4,10 +4,10 @@
 
 use crate::check::Checker;
 use crate::types::{FunctionTy, Ty};
+use fpas_builtins::std_symbols as s;
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use fpas_std::std_symbols as s;
 
 /// Checks specialized calls described in `docs/pascal/std/result/`.
 pub(super) fn check_result_option_builtin_std_call(

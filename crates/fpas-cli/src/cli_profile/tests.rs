@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use fpas_bytecode::profile::Counter;
-use fpas_vm::{ProfileReport, ProfileSample, RoutineProfile};
+use fpas_runtime::execution::{ProfileReport, ProfileSample, RoutineProfile};
+use fpas_runtime::profile::Counter;
 
 use super::{Evidence, findings, percent};
 

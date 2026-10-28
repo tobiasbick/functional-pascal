@@ -109,9 +109,9 @@ message and data; code that displays them chooses what to disclose.
 - [`fpas-acp`](../../../../../crates/fpas-acp/src/lib.rs) owns the pinned SDK,
   raw JSON validation and exact unsigned integers.
 - [Native type registration](../../../../../crates/fpas-sema/src/std_registry/loaded/acp/mod.rs)
-  defines the FPAS declarations; [value operations](../../../../../crates/fpas-std/src/acp/mod.rs)
+  defines the FPAS declarations; [value operations](../../../../../crates/fpas-runtime/src/stdlib/acp/mod.rs)
   revalidate detached records at native boundaries.
-- [Native record admission](../../../../../crates/fpas-vm/src/vm/layouts/native_records.rs)
+- [Native record admission](../../../../../crates/fpas-runtime/src/execution/vm/layouts/native_records.rs)
   verifies nested record shapes in executable images.
 
 ## See also

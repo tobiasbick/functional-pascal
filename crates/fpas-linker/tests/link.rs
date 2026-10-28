@@ -7,12 +7,12 @@
 
 mod common;
 
-use fpas_bytecode::{Instruction, Opcode, Value};
 use fpas_linker::{LinkError, link_objects};
+use fpas_runtime::execution::Vm;
+use fpas_runtime::{Instruction, Opcode, Value};
 use fpas_unit::object::{
     DefinitionTarget, ImportShape, ObjectDefinition, Relocation, RelocationKind, SymbolReference,
 };
-use fpas_vm::Vm;
 
 use common::*;
 
@@ -160,7 +160,7 @@ fn linker_rebases_exact_local_and_global_initializer_stores() {
         .expect("linked initializer owner");
     assert_eq!(
         function.debug.bindings[0].initializer,
-        Some(fpas_bytecode::InstructionAddress::new(
+        Some(fpas_runtime::InstructionAddress::new(
             function.code.start.get() + 2
         ))
     );
@@ -170,7 +170,7 @@ fn linker_rebases_exact_local_and_global_initializer_stores() {
         .find(|global| image.strings.get(global.name) == Some("library.unit.counter"))
         .expect("linked initialized global");
     let initializer = global.initializer.expect("linked global initializer");
-    assert_eq!(initializer.function, fpas_bytecode::FunctionId::new(2));
+    assert_eq!(initializer.function, fpas_runtime::FunctionId::new(2));
     assert_eq!(initializer.instruction.get(), function.code.start.get() + 1);
 }
 
@@ -193,7 +193,7 @@ fn linker_retains_result_only_debug_types() {
     let result_type = function.debug.result_type.expect("portable result type");
     assert_eq!(
         image.debug_types.get(result_type.get() as usize),
-        Some(&fpas_bytecode::DebugType::Integer)
+        Some(&fpas_runtime::DebugType::Integer)
     );
 }
 
@@ -257,7 +257,7 @@ fn linker_relocates_lexical_owner_function_ids() {
     assert_eq!(alpha.debug.capture_sources.len(), 1);
     assert_eq!(
         alpha.debug.capture_sources[0].kind,
-        fpas_bytecode::DebugCaptureKind::Value
+        fpas_runtime::DebugCaptureKind::Value
     );
 }
 

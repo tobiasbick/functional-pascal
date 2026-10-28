@@ -2,19 +2,22 @@
 
 use crate::DebugSourceContent;
 
-pub(crate) type DebugReloadProvider =
-    Box<dyn FnMut() -> Result<ReloadedDebugTarget, fpas_vm::DebugSessionError> + Send + 'static>;
+pub(crate) type DebugReloadProvider = Box<
+    dyn FnMut() -> Result<ReloadedDebugTarget, fpas_runtime::execution::DebugSessionError>
+        + Send
+        + 'static,
+>;
 
 /// One rebuilt executable and its exact verified portable source contents.
 pub struct ReloadedDebugTarget {
-    executable: fpas_bytecode::VerifiedExecutable,
+    executable: fpas_runtime::VerifiedExecutable,
     sources: Vec<DebugSourceContent>,
 }
 
 impl ReloadedDebugTarget {
     /// Construct a reload candidate without retained source text.
     #[must_use]
-    pub fn new(executable: fpas_bytecode::VerifiedExecutable) -> Self {
+    pub fn new(executable: fpas_runtime::VerifiedExecutable) -> Self {
         Self {
             executable,
             sources: Vec::new(),
@@ -28,7 +31,7 @@ impl ReloadedDebugTarget {
         self
     }
 
-    pub(crate) fn into_parts(self) -> (fpas_bytecode::VerifiedExecutable, Vec<DebugSourceContent>) {
+    pub(crate) fn into_parts(self) -> (fpas_runtime::VerifiedExecutable, Vec<DebugSourceContent>) {
         (self.executable, self.sources)
     }
 }

@@ -90,7 +90,7 @@ does not turn a timeout into a successful shutdown.
 
 `fpas run` and bundled standalone applications authorize process lifecycle operations. A program
 must still explicitly choose `ForceExit = true` and/or call `ObserveSignals`.
-An embedded `fpas_vm::Vm` defaults to neither authority. Its host may explicitly call
+An embedded `fpas_runtime::execution::Vm` defaults to neither authority. Its host may explicitly call
 `Vm::allow_process_lifecycle()` before running. Source-debugger instances do not authorize process
 control, and recording capture rejects `Std.Server` host effects.
 
@@ -138,9 +138,9 @@ fpas run examples/network/tcp_parallel_echo_server.fpas -- 18082 10000
 | Concern | Location |
 |---------|----------|
 | Signatures | `crates/fpas-sema/src/std_registry/loaded/server.rs` |
-| Intrinsics | `crates/fpas-bytecode/src/intrinsic/server.rs` |
-| Runtime and watchdog | `crates/fpas-vm/src/vm/hosted/server/` |
-| Disposable-process regressions | `crates/fpas-vm/tests/server_lifecycle.rs` |
+| Intrinsics | `crates/fpas-code/src/intrinsic/server.rs` |
+| Runtime and watchdog | `crates/fpas-runtime/src/execution/vm/hosted/server/` |
+| Disposable-process regressions | `crates/fpas-runtime/tests/server_lifecycle.rs` |
 | FPAS ownership regressions | `tests/stdlib/server/` |
 
 ## See also

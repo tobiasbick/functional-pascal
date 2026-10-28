@@ -7,14 +7,14 @@
     reason = "each integration-test crate uses a subset of shared fixtures"
 )]
 
-use fpas_bytecode::{
+use fpas_program::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
+use fpas_runtime::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
     RecordLayout, RecordMethod, Register, ReturnConvention, SequencePoint, SourceId, SourceMap,
     SourceRun, StringId, StringTable,
 };
-use fpas_program::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
 
 pub fn program_image() -> ProgramImage {
     let strings = vec![
@@ -62,7 +62,7 @@ pub fn program_image() -> ProgramImage {
                         projection: None,
                         name: StringId::new(8),
                         type_name: StringId::new(9),
-                        ty: fpas_bytecode::DebugTypeId::new(2),
+                        ty: fpas_runtime::DebugTypeId::new(2),
                         register: Register::new(0).expect("register"),
                         kind: DebugBindingKind::Local,
                         mutable: true,
@@ -85,7 +85,7 @@ pub fn program_image() -> ProgramImage {
                         },
                         scope: 0,
                     }],
-                    result_type: Some(fpas_bytecode::DebugTypeId::new(2)),
+                    result_type: Some(fpas_runtime::DebugTypeId::new(2)),
                     ..FunctionDebugInfo::default()
                 },
             },
@@ -99,12 +99,12 @@ pub fn program_image() -> ProgramImage {
                 flags: FunctionFlags::default(),
                 debug: FunctionDebugInfo {
                     lexical_owner: Some(FunctionId::new(0)),
-                    capture_sources: vec![fpas_bytecode::DebugCaptureSource {
-                        binding: fpas_bytecode::DebugBindingId::new(0),
-                        ty: fpas_bytecode::DebugTypeId::new(2),
-                        kind: fpas_bytecode::DebugCaptureKind::Value,
+                    capture_sources: vec![fpas_runtime::DebugCaptureSource {
+                        binding: fpas_runtime::DebugBindingId::new(0),
+                        ty: fpas_runtime::DebugTypeId::new(2),
+                        kind: fpas_runtime::DebugCaptureKind::Value,
                     }],
-                    result_type: Some(fpas_bytecode::DebugTypeId::new(2)),
+                    result_type: Some(fpas_runtime::DebugTypeId::new(2)),
                     ..FunctionDebugInfo::default()
                 },
             },
@@ -128,10 +128,10 @@ pub fn program_image() -> ProgramImage {
         globals: vec![GlobalInfo {
             projection: None,
             name: StringId::new(3),
-            ty: fpas_bytecode::DebugTypeId::new(2),
+            ty: fpas_runtime::DebugTypeId::new(2),
             type_name: Some(StringId::new(9)),
             mutable: true,
-            initializer: Some(fpas_bytecode::GlobalInitializer {
+            initializer: Some(fpas_runtime::GlobalInitializer {
                 function: FunctionId::new(0),
                 instruction: InstructionAddress::new(2),
             }),
@@ -141,7 +141,7 @@ pub fn program_image() -> ProgramImage {
             name: StringId::new(4),
             fields: vec![RecordField {
                 name: StringId::new(5),
-                ty: fpas_bytecode::DebugTypeId::new(2),
+                ty: fpas_runtime::DebugTypeId::new(2),
                 type_name: Some(StringId::new(9)),
             }],
             methods: vec![RecordMethod {
@@ -158,38 +158,38 @@ pub fn program_image() -> ProgramImage {
             owner: EnumTypeId::new(0),
             name: StringId::new(7),
             fields: vec![StringId::new(5)],
-            field_types: vec![fpas_bytecode::DebugTypeId::new(4)],
+            field_types: vec![fpas_runtime::DebugTypeId::new(4)],
         }],
         debug_types: vec![
-            fpas_bytecode::DebugType::Unit,
-            fpas_bytecode::DebugType::Boolean,
-            fpas_bytecode::DebugType::Integer,
-            fpas_bytecode::DebugType::Real,
-            fpas_bytecode::DebugType::String,
-            fpas_bytecode::DebugType::Dynamic,
-            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(2)),
-            fpas_bytecode::DebugType::Dictionary {
-                key: fpas_bytecode::DebugTypeId::new(4),
-                value: fpas_bytecode::DebugTypeId::new(2),
+            fpas_runtime::DebugType::Unit,
+            fpas_runtime::DebugType::Boolean,
+            fpas_runtime::DebugType::Integer,
+            fpas_runtime::DebugType::Real,
+            fpas_runtime::DebugType::String,
+            fpas_runtime::DebugType::Dynamic,
+            fpas_runtime::DebugType::Array(fpas_runtime::DebugTypeId::new(2)),
+            fpas_runtime::DebugType::Dictionary {
+                key: fpas_runtime::DebugTypeId::new(4),
+                value: fpas_runtime::DebugTypeId::new(2),
             },
-            fpas_bytecode::DebugType::Result {
-                ok: fpas_bytecode::DebugTypeId::new(2),
-                error: fpas_bytecode::DebugTypeId::new(4),
+            fpas_runtime::DebugType::Result {
+                ok: fpas_runtime::DebugTypeId::new(2),
+                error: fpas_runtime::DebugTypeId::new(4),
             },
-            fpas_bytecode::DebugType::Option(fpas_bytecode::DebugTypeId::new(2)),
-            fpas_bytecode::DebugType::Function {
-                parameters: vec![fpas_bytecode::DebugTypeId::new(2)],
-                result: fpas_bytecode::DebugTypeId::new(1),
+            fpas_runtime::DebugType::Option(fpas_runtime::DebugTypeId::new(2)),
+            fpas_runtime::DebugType::Function {
+                parameters: vec![fpas_runtime::DebugTypeId::new(2)],
+                result: fpas_runtime::DebugTypeId::new(1),
             },
-            fpas_bytecode::DebugType::Record(fpas_bytecode::RecordTypeId::new(0)),
-            fpas_bytecode::DebugType::Enum(fpas_bytecode::EnumTypeId::new(0)),
-            fpas_bytecode::DebugType::Cell(fpas_bytecode::DebugTypeId::new(2)),
-            fpas_bytecode::DebugType::Task(fpas_bytecode::DebugTypeId::new(2)),
+            fpas_runtime::DebugType::Record(fpas_runtime::RecordTypeId::new(0)),
+            fpas_runtime::DebugType::Enum(fpas_runtime::EnumTypeId::new(0)),
+            fpas_runtime::DebugType::Cell(fpas_runtime::DebugTypeId::new(2)),
+            fpas_runtime::DebugType::Task(fpas_runtime::DebugTypeId::new(2)),
         ],
-        distinct_types: vec![fpas_bytecode::DistinctTypeName {
+        distinct_types: vec![fpas_runtime::DistinctTypeName {
             source: SourceId::new(0),
             name: StringId::new(8),
-            underlying: fpas_bytecode::DebugTypeId::new(2),
+            underlying: fpas_runtime::DebugTypeId::new(2),
         }],
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
@@ -216,7 +216,7 @@ pub fn program_image() -> ProgramImage {
         ProgramIdentity {
             contracts_enabled: true,
             compiler_version: "test".to_string(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: Digest::of(b"source"),
             options_hash: Digest::of(b"options"),
             units: vec![LinkedUnitIdentity {

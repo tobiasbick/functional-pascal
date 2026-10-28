@@ -4,7 +4,7 @@
     reason = "program image tests use verified fixture construction"
 )]
 
-use fpas_bytecode::{
+use fpas_code::{
     CodeRange, Executable, FunctionFlags, FunctionId, FunctionInfo, Instruction,
     InstructionAddress, Opcode, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
     StringTable,
@@ -17,7 +17,7 @@ fn identity() -> ProgramIdentity {
     ProgramIdentity {
         contracts_enabled: true,
         compiler_version: "test".to_string(),
-        bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+        bytecode_version: fpas_code::BYTECODE_VERSION,
         source_hash: Digest::of(b"source"),
         options_hash: Digest::of(b"options"),
         units: Vec::new(),
@@ -35,7 +35,7 @@ fn executable() -> VerifiedExecutable {
             register_count: 0,
             return_convention: ReturnConvention::Unit,
             flags: FunctionFlags::default(),
-            debug: fpas_bytecode::FunctionDebugInfo::default(),
+            debug: fpas_code::FunctionDebugInfo::default(),
         }],
         constants: Vec::new(),
         strings: StringTable::new(vec!["main".to_string(), "<memory>".to_string()]),
@@ -43,7 +43,7 @@ fn executable() -> VerifiedExecutable {
         records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
-        debug_types: vec![fpas_bytecode::DebugType::Dynamic],
+        debug_types: vec![fpas_code::DebugType::Dynamic],
         distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(1)],

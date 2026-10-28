@@ -195,8 +195,8 @@ impl LoweringContext {
             self.record_call_arguments(1, span)?;
             collection = self.emit_value(
                 Operation::Intrinsic {
-                    intrinsic: intrinsic_id(fpas_bytecode::Intrinsic::Dict(
-                        fpas_bytecode::DictIntrinsic::Keys,
+                    intrinsic: intrinsic_id(fpas_code::Intrinsic::Dict(
+                        fpas_code::DictIntrinsic::Keys,
                     )),
                     arguments: vec![collection],
                 },
@@ -214,8 +214,8 @@ impl LoweringContext {
         self.record_call_arguments(1, span)?;
         let length = self.emit_value(
             Operation::Intrinsic {
-                intrinsic: intrinsic_id(fpas_bytecode::Intrinsic::Array(
-                    fpas_bytecode::ArrayIntrinsic::Length,
+                intrinsic: intrinsic_id(fpas_code::Intrinsic::Array(
+                    fpas_code::ArrayIntrinsic::Length,
                 )),
                 arguments: vec![collection],
             },
@@ -281,6 +281,6 @@ impl LoweringContext {
     }
 }
 
-fn intrinsic_id(intrinsic: fpas_bytecode::Intrinsic) -> IntrinsicId {
+fn intrinsic_id(intrinsic: fpas_code::Intrinsic) -> IntrinsicId {
     IntrinsicId::new(u32::from(u16::from(intrinsic)))
 }

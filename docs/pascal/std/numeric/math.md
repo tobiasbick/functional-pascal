@@ -314,7 +314,7 @@ Console.WriteLn(Math.Clamp(1.5, 0.0, 1.0)); // 1.0
 
 | Concern | Location |
 |---------|-----------|
-| Runtime intrinsics | [`math/mod.rs`](../../../../crates/fpas-std/src/math/mod.rs), shared [`numeric bounds`](../../../../crates/fpas-numeric/src/real.rs) |
+| Runtime intrinsics | [`math/mod.rs`](../../../../crates/fpas-runtime/src/stdlib/math/mod.rs), shared [`numeric bounds`](../../../../crates/fpas-numeric/src/real.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 

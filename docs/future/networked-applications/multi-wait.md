@@ -94,13 +94,13 @@ current Task reference.
 
 | Action | Path | Concern |
 |--------|------|---------|
-| Split | `crates/fpas-vm/src/vm/tasks/scheduler.rs` | Move retained-result polling into the focused module below before growing this roughly 400-line scheduler |
-| Create | `crates/fpas-vm/src/vm/tasks/scheduler/result_polling.rs` | Existing single/batch polling and new atomic any-completion observation |
-| Modify | `crates/fpas-vm/src/vm/shared/task_results.rs` | Explicit pending, winning-index, failed, and unknown outcomes |
-| Create | `crates/fpas-vm/src/vm/tasks/wait_any.rs` | Runtime argument checks, blocking/helping loop, and debugger polling |
-| Modify | `crates/fpas-vm/src/vm/tasks/mod.rs`, `crates/fpas-vm/src/vm/tasks/suspension.rs` | Dispatch and explicit suspended wait state; keep selection logic in the new module |
-| Modify | `crates/fpas-bytecode/src/intrinsic/task.rs`, `crates/fpas-bytecode/src/intrinsic/execution.rs` | Stable intrinsic identity and execution classification |
-| Modify | `crates/fpas-std/src/std_units/symbols/std_symbols/task.rs`, `crates/fpas-sema/src/std_registry/loaded/channel_task.rs`, `crates/fpas-sema/src/std_registry/builtins/channel_task.rs` | Symbol, declaration, and task-array checking |
+| Split | `crates/fpas-runtime/src/execution/vm/tasks/scheduler.rs` | Move retained-result polling into the focused module below before growing this roughly 400-line scheduler |
+| Create | `crates/fpas-runtime/src/execution/vm/tasks/scheduler/result_polling.rs` | Existing single/batch polling and new atomic any-completion observation |
+| Modify | `crates/fpas-runtime/src/execution/vm/shared/task_results.rs` | Explicit pending, winning-index, failed, and unknown outcomes |
+| Create | `crates/fpas-runtime/src/execution/vm/tasks/wait_any.rs` | Runtime argument checks, blocking/helping loop, and debugger polling |
+| Modify | `crates/fpas-runtime/src/execution/vm/tasks/mod.rs`, `crates/fpas-runtime/src/execution/vm/tasks/suspension.rs` | Dispatch and explicit suspended wait state; keep selection logic in the new module |
+| Modify | `crates/fpas-code/src/intrinsic/task.rs`, `crates/fpas-code/src/intrinsic/execution.rs` | Stable intrinsic identity and execution classification |
+| Modify | `crates/fpas-builtins/src/std_units/symbols/std_symbols/task.rs`, `crates/fpas-sema/src/std_registry/loaded/channel_task.rs`, `crates/fpas-sema/src/std_registry/builtins/channel_task.rs` | Symbol, declaration, and task-array checking |
 | Modify | `crates/fpas-compiler/src/intrinsic_catalog.rs` | Intrinsic mapping |
 | Modify | `docs/pascal/std/concurrency/task.md`, `lib/api/Std/Tasks.fpas` | Implemented contract and regenerated editor declaration |
 

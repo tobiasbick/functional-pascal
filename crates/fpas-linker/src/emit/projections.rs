@@ -2,7 +2,7 @@
 
 use super::strings::StringInterner;
 use crate::{LinkError, plan::DebugTypeIds};
-use fpas_bytecode::{
+use fpas_code::{
     DebugProjection, DebugProjectionKind, DebugType, DebugTypeId, Executable, RecordLayout,
 };
 use fpas_unit::object::{ObjectDebugProjection, ObjectDebugProjectionKind};

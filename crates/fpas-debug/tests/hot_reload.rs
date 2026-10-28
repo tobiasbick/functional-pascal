@@ -18,7 +18,7 @@ fn server() -> JsonlServer {
     JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
 }
 
-fn compile_reloadable(value: i64) -> fpas_bytecode::VerifiedExecutable {
+fn compile_reloadable(value: i64) -> fpas_runtime::VerifiedExecutable {
     let source = format!(
         "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value};\nend function;\nbegin\nend."
     );
@@ -146,7 +146,10 @@ fn jsonl_incompatible_replace_is_rejected_before_the_image_changes() {
     let error = server
         .replace_live_image(&candidate)
         .expect_err("incompatible replace");
-    assert_eq!(error.kind, fpas_vm::DebugErrorKind::LiveImageIncompatible);
+    assert_eq!(
+        error.kind,
+        fpas_runtime::execution::DebugErrorKind::LiveImageIncompatible
+    );
     assert_eq!(server.status(), ServerStatus::Stopped);
     let same_stack = server.handle_line(&request(4, "stack", json!({})));
     assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);

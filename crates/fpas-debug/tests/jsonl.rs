@@ -11,7 +11,7 @@ use fpas_debug::{
     PreparedDebugTarget,
     jsonl::{JsonlServer, ServerStatus, serve_script},
 };
-use fpas_vm::DebugExecutionLimits;
+use fpas_runtime::execution::DebugExecutionLimits;
 use serde_json::{Value, json};
 
 fn server(source: &str) -> JsonlServer {

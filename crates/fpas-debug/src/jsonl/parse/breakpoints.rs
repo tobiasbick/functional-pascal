@@ -137,8 +137,8 @@ pub(super) fn parse_data_breakpoints(
                 ));
             };
             let access = match item.get("access").and_then(Value::as_str) {
-                None => fpas_vm::DataBreakpointAccess::Write,
-                Some(value) => fpas_vm::DataBreakpointAccess::parse(value)
+                None => fpas_runtime::execution::DataBreakpointAccess::Write,
+                Some(value) => fpas_runtime::execution::DataBreakpointAccess::parse(value)
                     .ok_or_else(|| invalid_data(index, "access must be write, change, or read"))?,
             };
             let assign = parse_assign(item.get("assign")).map_err(|error| {

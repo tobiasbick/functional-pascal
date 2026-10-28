@@ -1,0 +1,354 @@
+use crate::{
+    ArrayIntrinsic, Constant, EnumLayout, EnumTypeId, EnumVariant, FunctionId, GlobalInfo,
+    Intrinsic, Opcode, RecordField, RecordLayout, StringId, Value,
+};
+use fpas_diagnostics::codes::{
+    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_DICT_KEY_NOT_FOUND, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+};
+
+use super::*;
+
+#[test]
+fn normal_execution_can_use_local_globals() {
+    let executable = verified(
+        vec![return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        0,
+    );
+
+    assert!(crate::execution::vm::globals::can_use_local_globals(
+        &executable
+    ));
+}
+
+#[test]
+fn task_execution_keeps_shared_globals() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc_aux(Opcode::SpawnTask, 0, 0, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::Function {
+            function: FunctionId::new(0),
+            task_bound: false,
+        }],
+        vec!["root", "test.fpas"],
+        1,
+    );
+    image.functions[0].flags.uses_spawn_tasks = true;
+    let executable = image.verify().expect("task image must verify");
+
+    assert!(!crate::execution::vm::globals::can_use_local_globals(
+        &executable
+    ));
+}
+
+#[test]
+fn callback_intrinsics_keep_shared_globals() {
+    let executable = verified(
+        vec![
+            abc_aux(
+                Opcode::Intrinsic,
+                crate::NO_REGISTER,
+                u16::from(Intrinsic::Array(ArrayIntrinsic::Map)),
+                0,
+                0,
+            ),
+            return_unit(),
+        ],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        0,
+    );
+
+    assert!(!crate::execution::vm::globals::can_use_local_globals(
+        &executable
+    ));
+}
+
+#[test]
+fn array_index_updates_preserve_value_semantics() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::MakeArray, 2, 0, 2),
+            abc(Opcode::Move, 3, 2, 0),
+            abx(Opcode::LoadConstant, 4, 2),
+            abc(Opcode::IndexSet, 3, 0, 4),
+            abc(Opcode::IndexGet, 5, 2, 0),
+            abc(Opcode::IndexGet, 6, 3, 0),
+            return_unit(),
+        ],
+        vec![
+            Constant::Integer(0),
+            Constant::Integer(2),
+            Constant::Integer(9),
+        ],
+        vec!["root", "test.fpas"],
+        7,
+    );
+    let (_, registers, _) = execute(executable).expect("aggregate program must run");
+    assert_eq!(registers[5], Value::Integer(0));
+    assert_eq!(registers[6], Value::Integer(9));
+}
+
+#[test]
+fn array_index_updates_reject_out_of_bounds_indexes() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::MakeArray, 2, 0, 1),
+            abc(Opcode::IndexSet, 2, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(4), Constant::Integer(9)],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    let mut worker =
+        crate::execution::vm::worker::Worker::new(Arc::new(executable)).expect("worker");
+    worker.dispatch_one().expect("array element");
+    worker.dispatch_one().expect("invalid index");
+    worker.dispatch_one().expect("array construction");
+    let error = worker
+        .dispatch_one()
+        .err()
+        .expect("out-of-bounds array update must fail");
+    assert_eq!(error.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    assert_eq!(
+        worker.registers[2],
+        Value::Array(vec![Value::Integer(4)].into())
+    );
+    assert!(worker.register_is_initialized(2));
+}
+
+#[test]
+fn array_push_consumes_unique_storage_and_preserves_aliases() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abx(Opcode::LoadConstant, 2, 2),
+            abc(Opcode::MakeArray, 3, 1, 1),
+            abc(Opcode::Move, 4, 3, 0),
+            abc(Opcode::ArrayPush, 3, 3, 2),
+            abc(Opcode::IndexGet, 5, 4, 0),
+            abc(Opcode::IndexGet, 6, 3, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::Integer(0),
+            Constant::Integer(1),
+            Constant::Integer(2),
+        ],
+        vec!["root", "test.fpas"],
+        7,
+    );
+    let (_, registers, _) = execute(executable).expect("array push must run");
+    assert_eq!(registers[5], Value::Integer(1));
+    assert_eq!(registers[6], Value::Integer(2));
+    let (Value::Array(original), Value::Array(updated)) = (&registers[4], &registers[3]) else {
+        panic!("expected array values");
+    };
+    assert_eq!(original.len(), 1);
+    assert_eq!(updated.len(), 2);
+}
+
+#[test]
+fn array_push_rejects_non_array_operands() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::ArrayPush, 2, 0, 1),
+            return_unit(),
+        ],
+        vec![Constant::Integer(1), Constant::Integer(2)],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    let error = execute(executable).expect_err("non-array push must fail");
+    assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    assert_eq!(error.message, "Expected array, got integer");
+}
+
+#[test]
+fn globals_are_dense_and_immutable_slots_initialize_once() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::StoreGlobal, 0, 0),
+            abx(Opcode::LoadGlobal, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(42)],
+        vec!["root", "test.fpas", "answer"],
+        2,
+    );
+    image.globals = vec![GlobalInfo {
+        projection: None,
+        name: StringId::new(2),
+        ty: crate::DebugTypeId::new(0),
+        type_name: None,
+        mutable: false,
+        initializer: None,
+    }];
+    let (_, registers, _) =
+        execute_with_local_globals(image.verify().expect("global image must verify"))
+            .expect("global program must run");
+    assert_eq!(registers[1], Value::Integer(42));
+}
+
+#[test]
+fn record_and_enum_slots_are_positional() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::MakeRecord, 1, 0, 0),
+            abc(Opcode::LoadField, 2, 1, 0),
+            abc(Opcode::MakeEnum, 3, 0, 2),
+            abc(Opcode::TestVariant, 4, 3, 0),
+            abc(Opcode::LoadEnumField, 5, 3, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(7)],
+        vec!["root", "test.fpas", "Point", "x", "Choice", "Some", "value"],
+        6,
+    );
+    image.records = vec![RecordLayout {
+        construction: None,
+        name: StringId::new(2),
+        fields: vec![RecordField {
+            name: StringId::new(3),
+            ty: crate::DebugTypeId::new(0),
+            type_name: None,
+        }],
+        methods: Vec::new(),
+    }];
+    image.enums = vec![EnumLayout {
+        error: None,
+        name: StringId::new(4),
+    }];
+    image.enum_variants = vec![EnumVariant {
+        error: None,
+        owner: EnumTypeId::new(0),
+        name: StringId::new(5),
+        fields: vec![StringId::new(6)],
+        field_types: vec![crate::DebugTypeId::new(0)],
+    }];
+    let (_, registers, _) = execute(image.verify().expect("layout image must verify"))
+        .expect("layout program must run");
+    assert_eq!(registers[5], Value::Integer(7));
+    assert_eq!(registers[2], Value::Integer(7));
+    assert_eq!(registers[4], Value::Boolean(true));
+}
+
+#[test]
+fn result_and_option_operations_preserve_payloads() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::MakeSome, 1, 0, 0),
+            abc(Opcode::IsOptionSome, 2, 1, 0),
+            abc(Opcode::UnwrapSome, 3, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(5)],
+        vec!["root", "test.fpas"],
+        4,
+    );
+    let (_, registers, _) = execute(executable).expect("option program must run");
+    assert_eq!(registers[3], Value::Integer(5));
+    assert_eq!(registers[2], Value::Boolean(true));
+}
+
+#[test]
+fn unwrap_rejects_the_wrong_result_or_option_variant() {
+    let executable = verified(
+        vec![
+            abc(Opcode::MakeNone, 0, 0, 0),
+            abc(Opcode::UnwrapSome, 1, 0, 0),
+            return_unit(),
+        ],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        2,
+    );
+    let error = execute(executable).expect_err("None must not unwrap as Some");
+    assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    assert_eq!(error.message, "Cannot unwrap Some from this value");
+}
+
+#[test]
+fn immutable_global_rejects_a_second_store() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::StoreGlobal, 0, 0),
+            abx(Opcode::StoreGlobal, 0, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(1)],
+        vec!["root", "test.fpas", "answer"],
+        1,
+    );
+    image.globals = vec![GlobalInfo {
+        projection: None,
+        name: StringId::new(2),
+        ty: crate::DebugTypeId::new(0),
+        type_name: None,
+        mutable: false,
+        initializer: None,
+    }];
+    let error = execute_with_local_globals(image.verify().expect("global image must verify"))
+        .expect_err("second immutable store must fail");
+    assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    assert!(error.message.contains("assigned more than once"));
+}
+
+#[test]
+fn missing_indexes_keep_existing_runtime_codes() {
+    let array = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::MakeArray, 2, 0, 1),
+            abc(Opcode::IndexGet, 3, 2, 1),
+            return_unit(),
+        ],
+        vec![Constant::Integer(4), Constant::Integer(9)],
+        vec!["root", "test.fpas"],
+        4,
+    );
+    let error = execute(array).expect_err("out-of-bounds array read must fail");
+    assert_eq!(error.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+
+    let dictionary = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abx(Opcode::LoadConstant, 2, 2),
+            abc(Opcode::MakeDictionary, 3, 0, 1),
+            abc(Opcode::IndexGet, 4, 3, 2),
+            return_unit(),
+        ],
+        vec![
+            Constant::String(StringId::new(2)),
+            Constant::Integer(4),
+            Constant::String(StringId::new(3)),
+        ],
+        vec!["root", "test.fpas", "present", "missing"],
+        5,
+    );
+    let error = execute(dictionary).expect_err("missing dictionary key must fail");
+    assert_eq!(error.code, RUNTIME_DICT_KEY_NOT_FOUND);
+}
+
+mod arrays;
+mod records;
+
+use std::sync::Arc;

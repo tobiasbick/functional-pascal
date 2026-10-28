@@ -22,7 +22,7 @@ fn retained_task_spawn_and_wait_execute() {
     );
     assert_eq!(
         execution.value.try_to_data().expect("pure return value"),
-        fpas_bytecode::Value::Unit
+        fpas_runtime::Value::Unit
     );
 }
 

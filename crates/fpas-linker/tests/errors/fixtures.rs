@@ -1,6 +1,6 @@
 //! Shared public-boundary schema, object and callback fixtures.
 
-use fpas_bytecode::{
+use fpas_runtime::{
     ErrorInstanceKey, FunctionId, Instruction, NominalKind, Opcode, TypeIdentity, Value,
     VerifiedExecutable,
 };
@@ -168,7 +168,7 @@ pub fn function(executable: &VerifiedExecutable, name: &str) -> FunctionId {
 }
 
 pub fn callable(executable: &VerifiedExecutable, id: FunctionId) -> Value {
-    Value::Function(fpas_bytecode::SharedFunction::unbound(
+    Value::Function(fpas_runtime::SharedFunction::unbound(
         executable
             .function_target(id)
             .expect("verified function target"),

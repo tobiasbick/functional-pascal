@@ -20,7 +20,9 @@ pub(super) fn preserve_request(report: &mut Value, args: &[String]) {
         return;
     }
     if report["schedule"]["mode"] != "seeded" {
-        report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(seed));
+        report["schedule"] = json!(fpas_runtime::execution::DebugScheduleReport::requested(
+            seed
+        ));
     }
     normalize(report);
 }

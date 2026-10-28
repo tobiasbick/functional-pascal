@@ -451,18 +451,18 @@ end case;
 
 | Concern | Location |
 |---------|----------|
-| Runtime dispatch | [`fs.rs`](../../../../crates/fpas-std/src/fs.rs) |
-| Atomic publication | [`fs/publication.rs`](../../../../crates/fpas-std/src/fs/publication.rs) |
-| Bounded reads | [`fs/read.rs`](../../../../crates/fpas-std/src/fs/read.rs) |
-| Directory enumeration | [`fs/directory.rs`](../../../../crates/fpas-std/src/fs/directory.rs) |
-| Glob expansion | [`fs/glob.rs`](../../../../crates/fpas-std/src/fs/glob.rs) |
-| Appending | [`fs/append.rs`](../../../../crates/fpas-std/src/fs/append.rs) |
-| Metadata queries | [`fs/metadata.rs`](../../../../crates/fpas-std/src/fs/metadata.rs) |
-| Temporary locations | [`fs/temp.rs`](../../../../crates/fpas-std/src/fs/temp.rs) |
-| Recursive listing and copy | [`fs/tree.rs`](../../../../crates/fpas-std/src/fs/tree.rs) |
+| Runtime dispatch | [`fs.rs`](../../../../crates/fpas-runtime/src/stdlib/fs.rs) |
+| Atomic publication | [`fs/publication.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/publication.rs) |
+| Bounded reads | [`fs/read.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/read.rs) |
+| Directory enumeration | [`fs/directory.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/directory.rs) |
+| Glob expansion | [`fs/glob.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/glob.rs) |
+| Appending | [`fs/append.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/append.rs) |
+| Metadata queries | [`fs/metadata.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/metadata.rs) |
+| Temporary locations | [`fs/temp.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/temp.rs) |
+| Recursive listing and copy | [`fs/tree.rs`](../../../../crates/fpas-runtime/src/stdlib/fs/tree.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/fs.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/fs.rs) |
-| Intrinsic ids | [`intrinsic/fs.rs`](../../../../crates/fpas-bytecode/src/intrinsic/fs.rs) |
+| Intrinsic ids | [`intrinsic/fs.rs`](../../../../crates/fpas-code/src/intrinsic/fs.rs) |
 
 ## See also
 

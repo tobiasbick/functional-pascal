@@ -23,12 +23,12 @@ pub(super) fn encode(
     check_limit(
         "payload",
         payload.len(),
-        fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
+        fpas_code::limits::MAX_PAYLOAD_BYTES,
     )?;
     check_limit(
         "linked_units",
         identity.units.len(),
-        fpas_bytecode::limits::MAX_LINKED_UNITS,
+        fpas_code::limits::MAX_LINKED_UNITS,
     )?;
     let mut output = Vec::new();
     output.extend_from_slice(MAGIC);
@@ -79,10 +79,10 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
         });
     }
     let bytecode_version = reader.u32("bytecode_version")?;
-    if bytecode_version != fpas_bytecode::BYTECODE_VERSION {
+    if bytecode_version != fpas_code::BYTECODE_VERSION {
         return Err(FormatError::UnsupportedBytecodeVersion {
             image: bytecode_version,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_code::BYTECODE_VERSION,
         });
     }
     let flags = reader.u16("flags")?;
@@ -94,7 +94,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     }
     let compiler_version = reader.string(
         "compiler_version",
-        fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
+        fpas_code::limits::MAX_IDENTITY_STRING_BYTES,
     )?;
     let source_hash = reader.digest("source_hash")?;
     let options_hash = reader.digest("options_hash")?;
@@ -102,7 +102,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     check_limit(
         "linked_units",
         unit_count,
-        fpas_bytecode::limits::MAX_LINKED_UNITS,
+        fpas_code::limits::MAX_LINKED_UNITS,
     )?;
     if unit_count > reader.remaining() / 36 {
         return Err(FormatError::Truncated("unit_name"));
@@ -110,10 +110,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     let mut units = Vec::with_capacity(unit_count);
     for _ in 0..unit_count {
         units.push(LinkedUnitIdentity {
-            unit_name: reader.string(
-                "unit_name",
-                fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
-            )?,
+            unit_name: reader.string("unit_name", fpas_code::limits::MAX_IDENTITY_STRING_BYTES)?,
             object_hash: reader.digest("unit_object_hash")?,
         });
     }
@@ -121,7 +118,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     check_limit(
         "source_hashes",
         source_hash_count,
-        fpas_bytecode::limits::MAX_SOURCE_PATHS,
+        fpas_code::limits::MAX_SOURCE_PATHS,
     )?;
     if source_hash_count > reader.remaining() / 32 {
         return Err(FormatError::Truncated("source_hash"));
@@ -131,11 +128,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
         source_hashes.push(reader.digest("source_hash")?);
     }
     let payload_len = reader.u32("payload_len")? as usize;
-    check_limit(
-        "payload",
-        payload_len,
-        fpas_bytecode::limits::MAX_PAYLOAD_BYTES,
-    )?;
+    check_limit("payload", payload_len, fpas_code::limits::MAX_PAYLOAD_BYTES)?;
     let payload_digest = reader.digest("payload_digest")?;
     let payload = reader.take(payload_len, "payload")?;
     if reader.remaining() != 0 {
@@ -165,7 +158,7 @@ fn write_string(output: &mut Vec<u8>, field: &'static str, value: &str) -> Resul
     check_limit(
         field,
         value.len(),
-        fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
+        fpas_code::limits::MAX_IDENTITY_STRING_BYTES,
     )?;
     write_u32(output, checked_u32(field, value.len())?);
     output.extend_from_slice(value.as_bytes());

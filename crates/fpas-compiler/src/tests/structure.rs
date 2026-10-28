@@ -34,7 +34,7 @@ fn object_compilation_is_deterministic_and_linkable() {
         fpas_unit::object::encode_object(&second).expect("second bytes")
     );
     let linked = fpas_linker::link_objects(&[], &first).expect("register link");
-    assert_eq!(linked.executable().entry, fpas_bytecode::FunctionId::new(0));
+    assert_eq!(linked.executable().entry, fpas_runtime::FunctionId::new(0));
 }
 
 #[test]
@@ -56,7 +56,7 @@ end.",
     let add = image
         .code
         .iter()
-        .find(|instruction| instruction.opcode() == Ok(fpas_bytecode::Opcode::AddInteger))
+        .find(|instruction| instruction.opcode() == Ok(fpas_runtime::Opcode::AddInteger))
         .expect("assignment should contain integer addition")
         .abc_operands()
         .expect("integer addition uses ABC operands");
@@ -66,7 +66,7 @@ end.",
             .code
             .iter()
             .filter(|instruction| {
-                instruction.opcode() == Ok(fpas_bytecode::Opcode::Move)
+                instruction.opcode() == Ok(fpas_runtime::Opcode::Move)
                     && instruction
                         .abc_operands()
                         .is_ok_and(|operands| operands.a == 1)
@@ -125,15 +125,15 @@ fn integer_loops_emit_fused_comparison_and_for_loop() {
     let code = &executable.executable().code;
     assert!(
         code.iter()
-            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::ForLoop))
+            .any(|word| word.opcode() == Ok(fpas_runtime::Opcode::ForLoop))
     );
     assert!(
         code.iter()
-            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::BranchIfLessEqualInteger))
+            .any(|word| word.opcode() == Ok(fpas_runtime::Opcode::BranchIfLessEqualInteger))
     );
     assert!(
         code.iter()
-            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::BranchIfNotEqualInteger))
+            .any(|word| word.opcode() == Ok(fpas_runtime::Opcode::BranchIfNotEqualInteger))
     );
 }
 
@@ -145,11 +145,11 @@ fn single_use_integer_literals_emit_immediate_operations() {
     let code = &executable.executable().code;
     assert!(
         code.iter()
-            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::AddIntegerImm))
+            .any(|word| word.opcode() == Ok(fpas_runtime::Opcode::AddIntegerImm))
     );
     assert!(
         code.iter()
-            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::DivideIntegerImm))
+            .any(|word| word.opcode() == Ok(fpas_runtime::Opcode::DivideIntegerImm))
     );
     assert_succeeds(source);
 }
@@ -161,10 +161,10 @@ fn string_ordering_uses_typed_opcodes() {
     let executable = crate::compile(&program).expect("string ordering compiles");
     let code = &executable.executable().code;
     for opcode in [
-        fpas_bytecode::Opcode::LessString,
-        fpas_bytecode::Opcode::GreaterString,
-        fpas_bytecode::Opcode::LessEqualString,
-        fpas_bytecode::Opcode::GreaterEqualString,
+        fpas_runtime::Opcode::LessString,
+        fpas_runtime::Opcode::GreaterString,
+        fpas_runtime::Opcode::LessEqualString,
+        fpas_runtime::Opcode::GreaterEqualString,
     ] {
         assert!(code.iter().any(|word| word.opcode() == Ok(opcode)));
     }
@@ -180,7 +180,7 @@ fn string_append_reuses_dead_left_operands() {
         .executable()
         .code
         .iter()
-        .filter(|word| word.opcode() == Ok(fpas_bytecode::Opcode::ConcatString))
+        .filter(|word| word.opcode() == Ok(fpas_runtime::Opcode::ConcatString))
         .collect::<Vec<_>>();
     assert!(!concatenations.is_empty());
     assert!(
@@ -200,7 +200,7 @@ fn record_self_update_moves_the_dead_temporary_and_keeps_aliases() {
     let executable = crate::compile(&program).expect("record update compiles");
     assert!(
         executable.executable().code.iter().any(|word| {
-            word.opcode() == Ok(fpas_bytecode::Opcode::Move) && word.abc_payload().auxiliary == 1
+            word.opcode() == Ok(fpas_runtime::Opcode::Move) && word.abc_payload().auxiliary == 1
         }),
         "the copied base of `R with` dies at the update and must be moved"
     );

@@ -1,0 +1,229 @@
+//! `Std.Tasks` bounded-channel intrinsic dispatch.
+
+mod blocking;
+mod non_blocking;
+mod suspension;
+mod timeout;
+
+#[cfg(test)]
+mod controlled_tests;
+#[cfg(test)]
+mod ownership_tests;
+#[cfg(test)]
+mod tests;
+
+use crate::{Intrinsic, Register, TaskIntrinsic, Value};
+use fpas_diagnostics::codes::{
+    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+};
+
+use super::super::worker::Worker;
+use super::super::{VmError, diagnostics};
+
+impl Worker {
+    pub(super) fn channel_intrinsic(
+        &mut self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+        destination: Option<Register>,
+    ) -> Result<Option<Option<Value>>, VmError> {
+        let Intrinsic::Task(operation) = intrinsic else {
+            return Ok(None);
+        };
+        match operation {
+            TaskIntrinsic::CreateChannel => {
+                self.require_channel_arguments(arguments, 1)?;
+                let Value::Integer(capacity) = arguments[0] else {
+                    return Err(self.task_type_error("integer", &arguments[0]));
+                };
+                let handle = self
+                    .hosted
+                    .channels
+                    .create(capacity)
+                    .map_err(|message| self.channel_runtime_error(message))?;
+                Ok(Some(Some(Value::OpaqueHandle(handle))))
+            }
+            TaskIntrinsic::Send | TaskIntrinsic::SendWithCancellation => {
+                let cancellable = operation == TaskIntrinsic::SendWithCancellation;
+                self.require_channel_arguments(arguments, if cancellable { 3 } else { 2 })?;
+                let handle = self.channel_handle(&arguments[0])?;
+                let token = cancellable
+                    .then(|| self.cancellation_token(&arguments[2]))
+                    .transpose()?;
+                self.require_transferable_values(&arguments[1..2])?;
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_channel_send(handle, arguments[1].clone(), token, destination)
+                } else {
+                    self.blocking_channel_send(handle, arguments[1].clone(), token)
+                        .map(|value| Some(Some(value)))
+                }
+            }
+            TaskIntrinsic::TrySend => {
+                self.require_channel_arguments(arguments, 2)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                self.require_transferable_values(&arguments[1..2])?;
+                self.try_channel_send(handle, arguments[1].clone())
+                    .map(|value| Some(Some(value)))
+            }
+            TaskIntrinsic::SendWithTimeout => {
+                self.require_channel_arguments(arguments, 3)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                if matches!(arguments[2], Value::Integer(value) if value < 0) {
+                    return Ok(Some(Some(self.task_input_error(
+                        "TimeoutMillis",
+                        "Timeout must be non-negative",
+                    )?)));
+                }
+                let timeout = self.wait_timeout(&arguments[2])?;
+                self.require_transferable_values(&arguments[1..2])?;
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_timeout_channel_send(
+                        handle,
+                        arguments[1].clone(),
+                        timeout,
+                        destination,
+                    )
+                } else {
+                    self.timeout_channel_send(handle, arguments[1].clone(), timeout)
+                        .map(|value| Some(Some(value)))
+                }
+            }
+            TaskIntrinsic::Receive | TaskIntrinsic::ReceiveWithCancellation => {
+                let cancellable = operation == TaskIntrinsic::ReceiveWithCancellation;
+                self.require_channel_arguments(arguments, if cancellable { 2 } else { 1 })?;
+                let handle = self.channel_handle(&arguments[0])?;
+                let token = cancellable
+                    .then(|| self.cancellation_token(&arguments[1]))
+                    .transpose()?;
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_channel_receive(handle, token, destination)
+                } else {
+                    self.blocking_channel_receive(handle, token)
+                        .map(|value| Some(Some(value)))
+                }
+            }
+            TaskIntrinsic::TryReceive => {
+                self.require_channel_arguments(arguments, 1)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                self.try_channel_receive(handle)
+                    .map(|value| Some(Some(value)))
+            }
+            TaskIntrinsic::ReceiveWithTimeout => {
+                self.require_channel_arguments(arguments, 2)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                if matches!(arguments[1], Value::Integer(value) if value < 0) {
+                    return Ok(Some(Some(self.task_input_error(
+                        "TimeoutMillis",
+                        "Timeout must be non-negative",
+                    )?)));
+                }
+                let timeout = self.wait_timeout(&arguments[1])?;
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_timeout_channel_receive(handle, timeout, destination)
+                } else {
+                    self.timeout_channel_receive(handle, timeout)
+                        .map(|value| Some(Some(value)))
+                }
+            }
+            TaskIntrinsic::CloseChannel => {
+                self.require_channel_arguments(arguments, 1)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                let changed = self
+                    .hosted
+                    .channels
+                    .close(handle)
+                    .map_err(|message| self.channel_runtime_error(message))?;
+                Ok(Some(Some(Value::Boolean(changed))))
+            }
+            TaskIntrinsic::CreateCancellationSource
+            | TaskIntrinsic::GetCancellationToken
+            | TaskIntrinsic::Cancel
+            | TaskIntrinsic::IsCancellationRequested
+            | TaskIntrinsic::Wait
+            | TaskIntrinsic::WaitAll
+            | TaskIntrinsic::WaitAny
+            | TaskIntrinsic::WaitAnyWithTimeout
+            | TaskIntrinsic::WaitAnyWithCancellation
+            | TaskIntrinsic::ReceiveCase
+            | TaskIntrinsic::SendCase
+            | TaskIntrinsic::TaskCase
+            | TaskIntrinsic::TimerCase
+            | TaskIntrinsic::CancellationCase
+            | TaskIntrinsic::Select
+            | TaskIntrinsic::CreateTaskGroup
+            | TaskIntrinsic::StartTaskInGroup
+            | TaskIntrinsic::GetTaskGroupToken
+            | TaskIntrinsic::CancelTaskGroup
+            | TaskIntrinsic::CloseTaskGroup
+            | TaskIntrinsic::CloseTaskGroupWithTimeout
+            | TaskIntrinsic::TryCloseCompletedTaskGroup
+            | TaskIntrinsic::StartSupervisedTask
+            | TaskIntrinsic::CloseWaitCase => Ok(None),
+        }
+    }
+
+    pub(super) fn channel_scheduler_stopped(&self) -> bool {
+        self.scheduler
+            .as_ref()
+            .is_some_and(|scheduler| scheduler.is_shutdown())
+    }
+
+    fn channel_cancelled(&self, token: Option<u64>) -> Result<bool, VmError> {
+        token.map_or(Ok(false), |token| {
+            self.hosted
+                .cancellations
+                .is_cancelled(token)
+                .map_err(|message| self.channel_runtime_error(message))
+        })
+    }
+
+    fn cancellation_token(&self, value: &Value) -> Result<u64, VmError> {
+        let Value::OpaqueHandle(token) = value else {
+            return Err(self.task_type_error("CancellationToken", value));
+        };
+        self.hosted
+            .cancellations
+            .is_cancelled(*token)
+            .map_err(|message| self.channel_runtime_error(message))?;
+        Ok(*token)
+    }
+
+    fn channel_handle(&self, value: &Value) -> Result<u64, VmError> {
+        match value {
+            Value::OpaqueHandle(handle) => Ok(*handle),
+            actual => Err(self.task_type_error("channel", actual)),
+        }
+    }
+
+    fn require_channel_arguments(
+        &self,
+        arguments: &[Value],
+        expected: usize,
+    ) -> Result<(), VmError> {
+        if arguments.len() == expected {
+            return Ok(());
+        }
+        Err(self.runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!(
+                "Std.Tasks channel intrinsic expected {expected} arguments, got {}",
+                arguments.len()
+            ),
+            "Check the compiler intrinsic signature and register argument count.",
+        ))
+    }
+
+    fn channel_runtime_error(&self, message: String) -> VmError {
+        diagnostics::at_address(
+            self.executable.executable(),
+            self.current_address,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            message,
+            "Pass a channel or cancellation handle created by this VM and a supported capacity.",
+        )
+    }
+}
+
+fn ok(value: Value) -> Value {
+    Value::result_ok(value)
+}

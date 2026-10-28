@@ -10,9 +10,10 @@ repository.workspace = true
 [dependencies]
 atomic-write-file = "0.3.1"
 fpas-binary = { path = "../fpas-binary" }
-fpas-bytecode = { path = "../fpas-bytecode" }
 serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true }
+
+fpas-code = { path = "../fpas-code" }
 
 [lints]
 workspace = true

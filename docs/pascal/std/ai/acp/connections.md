@@ -157,9 +157,9 @@ execution does not replay agents.
 
 The [native driver](../../../../../crates/fpas-acp/src/connection/mod.rs) owns
 SDK dispatch and bounded detached events. The
-[VM bridge](../../../../../crates/fpas-vm/src/vm/hosted/acp/mod.rs) constructs
+[VM bridge](../../../../../crates/fpas-runtime/src/execution/vm/hosted/acp/mod.rs) constructs
 FPAS values after dequeue. Its
-[process adapter](../../../../../crates/fpas-vm/src/vm/hosted/proc/acp.rs)
+[process adapter](../../../../../crates/fpas-runtime/src/execution/vm/hosted/proc/acp.rs)
 reuses the existing child registry. The
 [production message regression](../../../../../tests/stdlib/acp/connection_test.fpas)
 also runs with one worker in the VM tests.

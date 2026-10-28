@@ -1,6 +1,6 @@
 //! Aggregate and dense-global instruction selection.
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_code::{Instruction, Opcode};
 use fpas_ir::{Operation, ValueId};
 
 use crate::CompileError;

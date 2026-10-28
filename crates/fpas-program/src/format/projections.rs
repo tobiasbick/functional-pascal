@@ -2,7 +2,7 @@
 
 use super::sections::{SectionReader, write_u8, write_u32};
 use super::{FormatError, check_limit};
-use fpas_bytecode::{DebugProjection, DebugProjectionKind, DebugTypeId, StringId};
+use fpas_code::{DebugProjection, DebugProjectionKind, DebugTypeId, StringId};
 
 const UNSUPPORTED: u8 = 0;
 const SCALAR: u8 = 1;
@@ -26,13 +26,13 @@ fn charge(depth: usize, nodes: &mut usize) -> Result<(), FormatError> {
     check_limit(
         "debug_projection_depth",
         depth,
-        fpas_bytecode::MAX_DEBUG_PROJECTION_DEPTH,
+        fpas_code::MAX_DEBUG_PROJECTION_DEPTH,
     )?;
     *nodes += 1;
     check_limit(
         "debug_projection_nodes",
         *nodes,
-        fpas_bytecode::MAX_DEBUG_PROJECTION_NODES,
+        fpas_code::MAX_DEBUG_PROJECTION_NODES,
     )
 }
 
@@ -64,7 +64,7 @@ fn encode_node(
             check_limit(
                 "debug_projection_nodes",
                 nodes.saturating_add(fields.len()),
-                fpas_bytecode::MAX_DEBUG_PROJECTION_NODES,
+                fpas_code::MAX_DEBUG_PROJECTION_NODES,
             )?;
             write_u8(output, RECORD);
             write_u32(output, fields.len() as u32);
@@ -113,7 +113,7 @@ fn decode_node(
             check_limit(
                 "debug_projection_nodes",
                 nodes.saturating_add(count),
-                fpas_bytecode::MAX_DEBUG_PROJECTION_NODES,
+                fpas_code::MAX_DEBUG_PROJECTION_NODES,
             )?;
             reader.ensure_entries(count, 9, "debug_projection_field")?;
             // Charge each decoded child before growing the owned field vector.

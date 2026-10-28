@@ -1,6 +1,6 @@
 //! Object projection preservation and rejection before unbounded allocation.
 
-use fpas_bytecode::{DebugProjection, DebugProjectionKind, DebugType, DebugTypeId, StringId};
+use fpas_code::{DebugProjection, DebugProjectionKind, DebugType, DebugTypeId, StringId};
 use fpas_unit::object::{
     ObjectDebugProjection, ObjectDebugProjectionKind, RelocatableObject, decode_object,
     encode_object,

@@ -98,7 +98,7 @@ end.
     let object = decode_object(&encode_object(&unit.object).expect("encode method unit"))
         .expect("decode method unit");
     let executable = fpas_linker::link_objects(&[object], &root).expect("cached methods link");
-    fpas_vm::Vm::new(executable)
+    fpas_runtime::execution::Vm::new(executable)
         .run()
         .expect("cached error-producing methods execute");
 }

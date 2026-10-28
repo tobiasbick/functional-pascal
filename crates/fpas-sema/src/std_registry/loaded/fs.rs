@@ -2,11 +2,12 @@ use super::super::{define_func, p};
 use super::type_registration;
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the `Std.Fs` functions made visible by `uses Std.Fs`.
 pub(super) fn register_std_fs(checker: &mut Checker) {
-    let error_ty = super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Fs);
+    let error_ty =
+        super::errors::register(checker, fpas_builtins::native_errors::NativeErrorFamily::Fs);
     let file = type_registration::register_opaque_type(checker, s::STD_FS_FILE);
     let mode = type_registration::register_enum_type(
         checker,

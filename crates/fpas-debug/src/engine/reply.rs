@@ -25,7 +25,7 @@ pub(super) fn invalid_state(request_id: u64, command: &str, status: DebugStatus)
 pub(super) fn session_error(
     request_id: u64,
     command: &str,
-    error: fpas_vm::DebugSessionError,
+    error: fpas_runtime::execution::DebugSessionError,
 ) -> DebugRecord {
     fail(request_id, command, EngineFailure::from_session(error))
 }
@@ -69,7 +69,7 @@ pub(super) fn event(event: DebugEvent) -> DebugRecord {
 }
 
 pub(super) fn output_events(
-    session: &fpas_vm::DebugSession,
+    session: &fpas_runtime::execution::DebugSession,
     cursor: &mut usize,
 ) -> Vec<DebugRecord> {
     let output = session.output();
@@ -92,6 +92,6 @@ pub(super) fn output_events(
     records
 }
 
-pub(super) fn task_event(change: fpas_vm::DebugTaskEvent) -> DebugRecord {
+pub(super) fn task_event(change: fpas_runtime::execution::DebugTaskEvent) -> DebugRecord {
     event(DebugEvent::Task(change))
 }

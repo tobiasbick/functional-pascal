@@ -1,5 +1,5 @@
 //! Positive collection threshold overrides shared by every execution command.
-use fpas_bytecode::CollectionSchedule;
+use fpas_runtime::CollectionSchedule;
 use std::num::NonZeroUsize;
 
 pub(super) fn parse(

@@ -4,16 +4,20 @@ use std::path::{Path, PathBuf};
 
 const COMPILER_CRATES: &[&str] = &[
     "fpas-acp-model",
+    "fpas-binary",
     "fpas-build",
-    "fpas-bytecode",
+    "fpas-builtins",
+    "fpas-code",
     "fpas-compiler",
+    "fpas-diagnostics",
+    "fpas-ir",
     "fpas-lexer",
     "fpas-linker",
+    "fpas-numeric",
     "fpas-parser",
     "fpas-program",
     "fpas-project",
     "fpas-sema",
-    "fpas-std",
     "fpas-unit",
 ];
 

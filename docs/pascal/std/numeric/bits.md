@@ -100,9 +100,9 @@ debug and release builds and in debugger watches.
 
 | Layer | Location |
 |-------|----------|
-| Integer primitives and intrinsic runtime | [`fpas-std/src/bits/`](../../../../crates/fpas-std/src/bits/mod.rs) |
+| Integer primitives and intrinsic runtime | [`fpas-runtime/src/stdlib/bits/`](../../../../crates/fpas-runtime/src/stdlib/bits/mod.rs) |
 | Semantic signatures | [`fpas-sema/src/std_registry/loaded/bits.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/bits.rs) |
-| Intrinsic identifiers | [`fpas-bytecode/src/intrinsic/bits.rs`](../../../../crates/fpas-bytecode/src/intrinsic/bits.rs) |
+| Intrinsic identifiers | [`fpas-code/src/intrinsic/bits.rs`](../../../../crates/fpas-code/src/intrinsic/bits.rs) |
 | Compiler call mapping | [`fpas-compiler/src/intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Generated editor declarations | [`lib/api/Std/Bits.fpas`](../../../../lib/api/Std/Bits.fpas) |
 | FPAS regressions | [`tests/stdlib/bits/`](../../../../tests/stdlib/bits) |

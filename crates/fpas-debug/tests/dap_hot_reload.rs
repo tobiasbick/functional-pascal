@@ -15,7 +15,7 @@ fn server() -> DapServer {
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
 }
 
-fn compile_reloadable(value: i64) -> fpas_bytecode::VerifiedExecutable {
+fn compile_reloadable(value: i64) -> fpas_runtime::VerifiedExecutable {
     let source = format!(
         "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value};\nend function;\nbegin\nend."
     );
@@ -155,7 +155,10 @@ fn dap_incompatible_replace_is_rejected_before_the_image_changes() {
     let error = server
         .replace_live_image(&candidate)
         .expect_err("incompatible replace");
-    assert_eq!(error.kind, fpas_vm::DebugErrorKind::LiveImageIncompatible);
+    assert_eq!(
+        error.kind,
+        fpas_runtime::execution::DebugErrorKind::LiveImageIncompatible
+    );
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);

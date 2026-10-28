@@ -26,11 +26,11 @@ fn assert_bounded_rejection(bytes: &[u8], field: &'static str) {
 #[test]
 fn oversized_section_counts_are_rejected_before_table_reservation() {
     for (index, count, field) in [
-        (0_usize, fpas_bytecode::limits::MAX_STRINGS, "string_length"),
-        (7, fpas_bytecode::limits::MAX_INSTRUCTIONS, "instruction"),
+        (0_usize, fpas_runtime::limits::MAX_STRINGS, "string_length"),
+        (7, fpas_runtime::limits::MAX_INSTRUCTIONS, "instruction"),
         (
             8,
-            fpas_bytecode::limits::MAX_SOURCE_RUNS,
+            fpas_runtime::limits::MAX_SOURCE_RUNS,
             "source_instruction",
         ),
     ] {
@@ -49,7 +49,7 @@ fn oversized_header_counts_are_rejected_before_table_reservation() {
     let unit_count_offset = 20 + compiler_len as usize + 64;
     let mut units = base.clone();
     units[unit_count_offset..unit_count_offset + 4]
-        .copy_from_slice(&(fpas_bytecode::limits::MAX_LINKED_UNITS as u32).to_le_bytes());
+        .copy_from_slice(&(fpas_runtime::limits::MAX_LINKED_UNITS as u32).to_le_bytes());
     assert_bounded_rejection(&units, "unit_name");
 
     let unit_name_len = u32::from_le_bytes(
@@ -60,6 +60,6 @@ fn oversized_header_counts_are_rejected_before_table_reservation() {
     let source_count_offset = unit_count_offset + 4 + 4 + unit_name_len + 32;
     let mut sources = base;
     sources[source_count_offset..source_count_offset + 4]
-        .copy_from_slice(&(fpas_bytecode::limits::MAX_SOURCE_PATHS as u32).to_le_bytes());
+        .copy_from_slice(&(fpas_runtime::limits::MAX_SOURCE_PATHS as u32).to_le_bytes());
     assert_bounded_rejection(&sources, "source_hash");
 }

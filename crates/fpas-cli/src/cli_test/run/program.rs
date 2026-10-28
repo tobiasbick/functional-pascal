@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use fpas_diagnostics::codes::{RUNTIME_TEST_ASSERTION_FAILED, TEST_RUNNER_FAILED};
-use fpas_vm::VmError;
+use fpas_runtime::execution::VmError;
 use serde::{Deserialize, Serialize};
 
 use super::super::expect_stdout;
@@ -20,7 +20,7 @@ use super::load::apply_test_script;
 /// One test entry in a shared, memory-only bytecode image.
 #[derive(Clone)]
 pub(in crate::cli_test) struct CompiledTestProgram {
-    pub image: Arc<fpas_bytecode::VerifiedExecutable>,
+    pub image: Arc<fpas_runtime::VerifiedExecutable>,
     pub source_paths: Arc<Vec<PathBuf>>,
     /// Compilation snapshots and hashes retained across earlier tests and hooks.
     pub sources: Arc<Vec<RuntimeSource>>,
@@ -51,7 +51,7 @@ impl RunOutput {
 /// Per-execution settings for one compiled or source-backed test program.
 pub(super) struct ProgramRunOptions<'a> {
     pub no_contracts: bool,
-    pub collection_schedule: fpas_bytecode::CollectionSchedule,
+    pub collection_schedule: fpas_runtime::CollectionSchedule,
     /// Optional scripted input configuration.
     pub script_override: Option<&'a Path>,
     /// Optional wall-clock timeout.
@@ -71,9 +71,9 @@ pub(super) struct ProgramRunOptions<'a> {
 /// Fully compiled test input transferable to an isolated worker process.
 pub(in crate::cli_test) struct PreparedProgram {
     pub no_contracts: bool,
-    pub collection_schedule: fpas_bytecode::CollectionSchedule,
+    pub collection_schedule: fpas_runtime::CollectionSchedule,
     pub test_path: PathBuf,
-    pub executable: fpas_bytecode::VerifiedExecutable,
+    pub executable: fpas_runtime::VerifiedExecutable,
     pub source_paths: Option<Arc<Vec<PathBuf>>>,
     /// Matching source identities transferred to ordinary and isolated runners.
     pub sources: Arc<Vec<RuntimeSource>>,
@@ -223,7 +223,8 @@ pub(in crate::cli_test) fn run_prepared_program(
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, &paths));
     reporter.load_sources(&sources);
-    let mut vm = fpas_vm::Vm::new(executable).with_collection_schedule(collection_schedule);
+    let mut vm =
+        fpas_runtime::execution::Vm::new(executable).with_collection_schedule(collection_schedule);
     vm.set_test_scratch_dir(scratch_dir);
     let (program_stderr, receiver) = process::ProgramStderrBuffer::new(reporter.format());
     if let Some(receiver) = receiver {
@@ -313,13 +314,13 @@ fn classify_execution(
     }
 }
 
-fn execute_vm(mut vm: fpas_vm::Vm) -> VmExecution {
-    fpas_std::reset_test_skip_state();
+fn execute_vm(mut vm: fpas_runtime::execution::Vm) -> VmExecution {
+    fpas_runtime::stdlib::reset_test_skip_state();
 
     let result = vm.run().map(|_| ());
     VmExecution {
         result,
         stdout_lines: vm.output().lines,
-        skipped: fpas_std::test_was_skipped(),
+        skipped: fpas_runtime::stdlib::test_was_skipped(),
     }
 }

@@ -37,8 +37,11 @@ impl DapServer {
     /// candidate is incompatible.
     pub fn replace_live_image(
         &mut self,
-        candidate: &fpas_bytecode::VerifiedExecutable,
-    ) -> Result<fpas_vm::LiveImageReplaceResult, fpas_vm::DebugSessionError> {
+        candidate: &fpas_runtime::VerifiedExecutable,
+    ) -> Result<
+        fpas_runtime::execution::LiveImageReplaceResult,
+        fpas_runtime::execution::DebugSessionError,
+    > {
         self.core.replace_live_image(candidate)
     }
 
@@ -79,11 +82,11 @@ pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value>
         "applied": applied,
         "version": version,
         "rollbackAvailable": rollback_available,
-        "acceptedClasses": fpas_vm::LiveImageUpdateClass::ACCEPTED
+        "acceptedClasses": fpas_runtime::execution::LiveImageUpdateClass::ACCEPTED
             .iter()
             .map(|class| class.as_str())
             .collect::<Vec<_>>(),
-        "rejectedClasses": fpas_vm::LiveImageUpdateClass::REJECTED
+        "rejectedClasses": fpas_runtime::execution::LiveImageUpdateClass::REJECTED
             .iter()
             .map(|class| class.as_str())
             .collect::<Vec<_>>(),

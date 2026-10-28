@@ -21,7 +21,9 @@ impl JsonlServer {
     /// # Errors
     ///
     /// Returns debugger initialization failures for invalid runtime state.
-    pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
+    pub fn new(
+        target: PreparedDebugTarget,
+    ) -> Result<Self, fpas_runtime::execution::DebugSessionError> {
         Ok(Self {
             engine: DebugEngine::new(target)?,
         })
@@ -114,8 +116,11 @@ impl JsonlServer {
     /// the candidate image.
     pub fn replace_live_image(
         &mut self,
-        candidate: &fpas_bytecode::VerifiedExecutable,
-    ) -> Result<fpas_vm::LiveImageReplaceResult, fpas_vm::DebugSessionError> {
+        candidate: &fpas_runtime::VerifiedExecutable,
+    ) -> Result<
+        fpas_runtime::execution::LiveImageReplaceResult,
+        fpas_runtime::execution::DebugSessionError,
+    > {
         self.engine.replace_live_image(candidate)
     }
 

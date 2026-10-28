@@ -17,7 +17,7 @@ use crate::{
     },
     evaluation::parse_debug_expression,
 };
-use fpas_vm::{DebugExpression, SourceBreakpoint};
+use fpas_runtime::execution::{DebugExpression, SourceBreakpoint};
 use serde_json::{Value, json};
 
 /// Input queued before the single resume, sharing the runner's script semantics.
@@ -104,7 +104,7 @@ fn run_inner(
 ) -> Value {
     let limits = target.execution_limits();
     let mut report = empty_report("error", 1);
-    report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(
+    report["schedule"] = json!(fpas_runtime::execution::DebugScheduleReport::requested(
         options.schedule_seed
     ));
     if options.schedule_seed.is_some()
@@ -137,10 +137,12 @@ fn run_inner(
         .expressions
         .iter()
         .map(|text| {
-            let expression =
-                parse_debug_expression(text, fpas_vm::DebugEvaluationLimits::default())
-                    .map_err(|error| error.message)?;
-            if !fpas_vm::non_executing(&expression) {
+            let expression = parse_debug_expression(
+                text,
+                fpas_runtime::execution::DebugEvaluationLimits::default(),
+            )
+            .map_err(|error| error.message)?;
+            if !fpas_runtime::execution::non_executing(&expression) {
                 return Err("Batch --print accepts only non-executing expressions.".into());
             }
             Ok(expression)

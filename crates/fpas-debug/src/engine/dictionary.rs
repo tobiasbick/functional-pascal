@@ -93,20 +93,20 @@ impl DebugEngine {
         expression_sources: Vec<String>,
         frame_id: Option<u64>,
         operate: impl FnOnce(
-            &mut fpas_vm::DebugSession,
-            &fpas_vm::DebugAssignmentTarget,
-            &[fpas_vm::DebugExpression],
+            &mut fpas_runtime::execution::DebugSession,
+            &fpas_runtime::execution::DebugAssignmentTarget,
+            &[fpas_runtime::execution::DebugExpression],
             Option<u64>,
-            fpas_vm::DebugEvaluationLimits,
+            fpas_runtime::execution::DebugEvaluationLimits,
         ) -> Result<
-            fpas_vm::DebugDictionaryMutationResult,
-            fpas_vm::DebugSessionError,
+            fpas_runtime::execution::DebugDictionaryMutationResult,
+            fpas_runtime::execution::DebugSessionError,
         >,
     ) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let limits = fpas_vm::DebugEvaluationLimits::default();
+        let limits = fpas_runtime::execution::DebugEvaluationLimits::default();
         let target = match parse_debug_assignment_target(&target_source, limits) {
             Ok(target) => target,
             Err(error) => return vec![parse_error(request_id, command, error)],

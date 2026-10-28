@@ -6,7 +6,7 @@ use super::{
     wire::*,
 };
 use fpas_diagnostics::Diagnostic;
-use fpas_vm::{FailureObservation, FailureTask, FailureValue};
+use fpas_runtime::execution::{FailureObservation, FailureTask, FailureValue};
 use std::{collections::BTreeSet, io};
 
 /// Reserve causal identities, then primary values, globals, main and other peers.

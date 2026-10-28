@@ -3,7 +3,7 @@
 use super::super::{define_func, p};
 use super::type_registration::register_record_type;
 use crate::{check::Checker, types::Ty};
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the opaque lifetime and its hosted operations.
 pub(super) fn register(checker: &mut Checker) {
@@ -11,8 +11,10 @@ pub(super) fn register(checker: &mut Checker) {
     let group = register_record_type(checker, s::STD_TASK_TASK_GROUP, vec![]);
     let token = register_record_type(checker, s::STD_TASK_CANCELLATION_TOKEN, vec![]);
     let listener = register_record_type(checker, s::STD_NET_LISTENER, vec![]);
-    let error =
-        super::errors::register(checker, fpas_std::native_errors::NativeErrorFamily::Server);
+    let error = super::errors::register(
+        checker,
+        fpas_builtins::native_errors::NativeErrorFamily::Server,
+    );
     let result = |ty| Ty::Result(Box::new(ty), Box::new(error.clone()));
     define_func(
         checker,

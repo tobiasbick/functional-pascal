@@ -6,18 +6,18 @@ pub(super) fn validate_identity_resources(identity: &ProgramIdentity) -> Result<
     check(
         "compiler_version",
         identity.compiler_version.len(),
-        fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
+        fpas_code::limits::MAX_IDENTITY_STRING_BYTES,
     )?;
     check(
         "linked_units",
         identity.units.len(),
-        fpas_bytecode::limits::MAX_LINKED_UNITS,
+        fpas_code::limits::MAX_LINKED_UNITS,
     )?;
     for unit in &identity.units {
         check(
             "unit_name",
             unit.unit_name.len(),
-            fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
+            fpas_code::limits::MAX_IDENTITY_STRING_BYTES,
         )?;
     }
     Ok(())

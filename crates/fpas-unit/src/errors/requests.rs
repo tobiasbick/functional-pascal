@@ -16,7 +16,7 @@ impl ErrorConstructorRequest {
         let arity = u16::try_from(arguments.len()).map_err(|_| "too many error type arguments")?;
         self.instance.validate(arity)?;
         TypeIdentity::validate_all(arguments, parameters)?;
-        let mut budget = fpas_bytecode::limits::MAX_LAYOUT_FIELDS;
+        let mut budget = fpas_code::limits::MAX_LAYOUT_FIELDS;
         let arguments = self
             .instance
             .arguments

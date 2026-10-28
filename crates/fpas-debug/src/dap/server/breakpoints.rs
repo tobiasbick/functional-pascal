@@ -199,7 +199,9 @@ pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value>
     })
 }
 
-fn function_breakpoint_message(breakpoint: &fpas_vm::BoundFunctionBreakpoint) -> Option<String> {
+fn function_breakpoint_message(
+    breakpoint: &fpas_runtime::execution::BoundFunctionBreakpoint,
+) -> Option<String> {
     if breakpoint.functions.is_empty() {
         Some("No executable function metadata matches the requested selector.".to_string())
     } else if breakpoint.instructions.is_empty() {

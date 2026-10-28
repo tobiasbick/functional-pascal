@@ -4,10 +4,10 @@
 
 use crate::check::Checker;
 use crate::types::{ProcedureTy, Ty};
+use fpas_builtins::std_symbols as s;
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use fpas_std::std_symbols as s;
 
 /// Type-checks a `Std.Test` [`SymbolKind::BuiltinStd`](crate::scope::SymbolKind::BuiltinStd) call when `name` matches.
 pub(super) fn check_test_builtin_std_call(

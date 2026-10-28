@@ -59,7 +59,9 @@ impl DapServer {
     /// # Errors
     ///
     /// Returns debugger initialization failures for invalid runtime state.
-    pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
+    pub fn new(
+        target: PreparedDebugTarget,
+    ) -> Result<Self, fpas_runtime::execution::DebugSessionError> {
         let source_paths = SourcePaths::new(&target.source_paths(), target.sources());
         let sources = target
             .sources()

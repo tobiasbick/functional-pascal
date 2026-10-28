@@ -24,5 +24,7 @@ fn native_enum_aliases_link_record_fields_without_a_native_import() {
         &interfaces, &interfaces,
     ).expect("native enum alias consumer");
     let linked = fpas_linker::link_objects(&[keys.object], &root).expect("link");
-    fpas_vm::Vm::new(linked).run().expect("execution");
+    fpas_runtime::execution::Vm::new(linked)
+        .run()
+        .expect("execution");
 }

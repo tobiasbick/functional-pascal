@@ -342,7 +342,7 @@ persistent connections are not handled.
 | Response body-framing selection | [`BodyFraming.fpas`](../../../../lib/Std/Http/BodyFraming.fpas) |
 | Streaming body framing | [`Stream.fpas`](../../../../lib/Std/Http/Stream.fpas) |
 | Server-Sent Events decoder | [`Sse.fpas`](../../../../lib/Std/Http/Sse.fpas) |
-| Synchronized stream and decoder state | [`http_handles.rs`](../../../../crates/fpas-vm/src/vm/hosted/http_handles.rs) |
+| Synchronized stream and decoder state | [`http_handles.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/http_handles.rs) |
 | HTTP wire format | [`Wire.fpas`](../../../../lib/Std/Http/Wire.fpas) |
 | Buffered end-to-end fixture | [`network.rs`](../../../../crates/fpas-cli/src/main_tests/network.rs) |
 | Streaming fixtures | [`network_streaming.rs`](../../../../crates/fpas-cli/src/main_tests/network_streaming.rs) |

@@ -1,6 +1,6 @@
 //! Nominal scalar display metadata survives erasure, object conversion, and linking.
 
-use fpas_bytecode::DebugType;
+use fpas_runtime::DebugType;
 
 use crate::tests::parse_ok;
 
@@ -50,7 +50,7 @@ end.
     assert_names(linked.executable());
 }
 
-fn assert_names(image: &fpas_bytecode::Executable) {
+fn assert_names(image: &fpas_runtime::Executable) {
     let track = image
         .functions
         .iter()

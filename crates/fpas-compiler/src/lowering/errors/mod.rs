@@ -337,7 +337,7 @@ fn construction_instance(
     parameters: &Parameters,
     metadata: &fpas_sema::AnalysisMetadata,
     types: &TypeTable,
-) -> Result<fpas_bytecode::ErrorInstanceKey, CompileError> {
+) -> Result<fpas_code::ErrorInstanceKey, CompileError> {
     let semantic = instruction.source.and_then(|span| {
         metadata
             .source_expr_types

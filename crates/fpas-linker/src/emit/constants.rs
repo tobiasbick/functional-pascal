@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use fpas_bytecode::{Constant, ConstantId, FunctionId};
+use fpas_code::{Constant, ConstantId, FunctionId};
 use fpas_unit::object::{DefinitionTarget, ObjectConstant, RelocatableObject, SymbolKind};
 
 use crate::LinkError;

@@ -38,7 +38,7 @@ impl Checker {
             .uses
             .iter()
             .filter(|used| {
-                fpas_std::is_retired_type_helper_unit(&used.unit.parts.join("."))
+                fpas_builtins::is_retired_type_helper_unit(&used.unit.parts.join("."))
                     || !dependency_names.contains(&used.unit.parts.join(".").to_ascii_lowercase())
             })
             .cloned()
@@ -80,7 +80,7 @@ impl Checker {
             .uses
             .iter()
             .filter(|used| {
-                fpas_std::is_retired_type_helper_unit(&used.unit.parts.join("."))
+                fpas_builtins::is_retired_type_helper_unit(&used.unit.parts.join("."))
                     || !dependency_names.contains(&used.unit.parts.join(".").to_ascii_lowercase())
             })
             .cloned()

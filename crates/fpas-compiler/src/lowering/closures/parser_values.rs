@@ -1,7 +1,7 @@
 //! Callable values for the four public Result parsers.
 //! See `docs/pascal/std/text/parse.md`.
 
-use fpas_bytecode::{Intrinsic, ParseIntrinsic};
+use fpas_code::{Intrinsic, ParseIntrinsic};
 use fpas_ir::FunctionId;
 use fpas_parser::{DesignatorPart, Expr};
 use fpas_sema::{AnalysisMetadata, Ty};

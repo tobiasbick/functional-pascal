@@ -1,6 +1,6 @@
 //! Deterministic function ID assignment.
 
-use fpas_bytecode::FunctionId;
+use fpas_code::FunctionId;
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
 use crate::LinkError;

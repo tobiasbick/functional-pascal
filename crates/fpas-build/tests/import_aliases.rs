@@ -55,7 +55,7 @@ fn try_build(root: &Path, main: &Path) -> Result<fpas_build::BuiltProgram, fpas_
 }
 
 fn run(program: fpas_build::BuiltProgram) -> Vec<String> {
-    let mut vm = fpas_vm::Vm::new(program.executable);
+    let mut vm = fpas_runtime::execution::Vm::new(program.executable);
     vm.run().expect("compiled program execution");
     vm.output().lines.clone()
 }

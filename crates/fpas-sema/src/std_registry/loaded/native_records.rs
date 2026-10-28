@@ -1,7 +1,7 @@
 //! Register shared native record declarations and their nested record dependencies.
 
 use crate::{check::Checker, types::Ty};
-use fpas_std::{native_errors::ErrorFieldType, native_records};
+use fpas_builtins::{native_errors::ErrorFieldType, native_records};
 
 #[expect(
     clippy::expect_used,
@@ -28,11 +28,11 @@ pub(super) fn register(checker: &mut Checker, name: &str) -> Ty {
                 }
                 ErrorFieldType::Host => super::errors::register(
                     checker,
-                    fpas_std::native_errors::NativeErrorFamily::Host,
+                    fpas_builtins::native_errors::NativeErrorFamily::Host,
                 ),
                 ErrorFieldType::Net => super::errors::register(
                     checker,
-                    fpas_std::native_errors::NativeErrorFamily::Net,
+                    fpas_builtins::native_errors::NativeErrorFamily::Net,
                 ),
             };
             (name.to_string(), ty)

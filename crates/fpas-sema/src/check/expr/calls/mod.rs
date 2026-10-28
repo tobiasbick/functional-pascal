@@ -183,7 +183,7 @@ impl Checker {
         }
         if symbol_kind == SymbolKind::BuiltinStd {
             let result = self.check_builtin_std_call(name, &dispatch, args, span);
-            if dispatch == fpas_std::std_symbols::STD_TASK_WAIT && matches!(result, Ty::Unit) {
+            if dispatch == fpas_builtins::std_symbols::STD_TASK_WAIT && matches!(result, Ty::Unit) {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     "`Wait` on a procedure task does not return a value",

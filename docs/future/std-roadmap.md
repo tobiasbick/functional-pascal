@@ -52,7 +52,7 @@ For every new or moved `Std.*` API:
 - add or update the unit page under `docs/pascal/std/`.
 - update the standard-library index in `docs/pascal/std/README.md`.
 - add sema registration in `fpas-sema` standard-unit wiring.
-- add runtime implementation in `fpas-std` where needed.
+- add runtime implementation in `fpas-runtime` where needed.
 - add bytecode intrinsic wiring when the API requires VM support.
 - add focused examples under `examples/pascal/std/` when useful.
 - add tests for successful calls and important edge cases.

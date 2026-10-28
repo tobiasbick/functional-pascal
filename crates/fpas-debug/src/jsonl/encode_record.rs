@@ -193,7 +193,7 @@ fn encode_body(body: ResponseBody) -> Value {
             "truncated": truncated,
             "replayable": false,
             "event_count": events.len(),
-            "event_limit": fpas_vm::MAX_RECORDING_EVENTS,
+            "event_limit": fpas_runtime::execution::MAX_RECORDING_EVENTS,
             "events": events.iter().map(recording_event_json).collect::<Vec<_>>(),
         }),
         ResponseBody::RecordingStarted {
@@ -204,7 +204,7 @@ fn encode_body(body: ResponseBody) -> Value {
             "capturing": capturing,
             "truncated": truncated,
             "event_count": event_count,
-            "event_limit": fpas_vm::MAX_RECORDING_EVENTS,
+            "event_limit": fpas_runtime::execution::MAX_RECORDING_EVENTS,
         }),
         ResponseBody::LiveImage {
             class,
@@ -218,11 +218,11 @@ fn encode_body(body: ResponseBody) -> Value {
             "applied": applied,
             "version": version,
             "rollback_available": rollback_available,
-            "accepted_classes": fpas_vm::LiveImageUpdateClass::ACCEPTED
+            "accepted_classes": fpas_runtime::execution::LiveImageUpdateClass::ACCEPTED
                 .iter()
                 .map(|class| class.as_str())
                 .collect::<Vec<_>>(),
-            "rejected_classes": fpas_vm::LiveImageUpdateClass::REJECTED
+            "rejected_classes": fpas_runtime::execution::LiveImageUpdateClass::REJECTED
                 .iter()
                 .map(|class| class.as_str())
                 .collect::<Vec<_>>(),
@@ -274,11 +274,11 @@ fn encode_body(body: ResponseBody) -> Value {
     }
 }
 
-fn evaluation_json(result: &fpas_vm::DebugEvaluateResult) -> Value {
+fn evaluation_json(result: &fpas_runtime::execution::DebugEvaluateResult) -> Value {
     Value::Object(evaluation_map(result))
 }
 
-fn evaluation_map(result: &fpas_vm::DebugEvaluateResult) -> Map<String, Value> {
+fn evaluation_map(result: &fpas_runtime::execution::DebugEvaluateResult) -> Map<String, Value> {
     Map::from_iter([
         ("result".into(), Value::String(result.value.clone())),
         ("type_name".into(), Value::String(result.type_name.clone())),
@@ -297,9 +297,9 @@ fn evaluation_map(result: &fpas_vm::DebugEvaluateResult) -> Map<String, Value> {
     ])
 }
 
-fn recording_event_json(event: &fpas_vm::DebugRecordingEvent) -> Value {
+fn recording_event_json(event: &fpas_runtime::execution::DebugRecordingEvent) -> Value {
     match event {
-        fpas_vm::DebugRecordingEvent::Stop {
+        fpas_runtime::execution::DebugRecordingEvent::Stop {
             task_id,
             reason,
             instruction,
@@ -309,14 +309,14 @@ fn recording_event_json(event: &fpas_vm::DebugRecordingEvent) -> Value {
             "reason": reason.as_str(),
             "instruction": instruction,
         }),
-        fpas_vm::DebugRecordingEvent::Input { text } => json!({
+        fpas_runtime::execution::DebugRecordingEvent::Input { text } => json!({
             "kind": "input",
             "text": text,
         }),
     }
 }
 
-fn location_json(location: &fpas_vm::SourceLocation) -> Value {
+fn location_json(location: &fpas_runtime::execution::SourceLocation) -> Value {
     json!({"source":location.source,"line":location.line,"column":location.column})
 }
 

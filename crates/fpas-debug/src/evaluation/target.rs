@@ -2,7 +2,7 @@
 
 use fpas_lexer::Token;
 use fpas_parser::{Expr, ParseDiagnostic};
-use fpas_vm::{
+use fpas_runtime::execution::{
     DebugAssignmentSelector, DebugAssignmentTarget, DebugEvaluationLimits, DebugExpression,
 };
 

@@ -16,7 +16,7 @@ impl DebugEngine {
         if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let limits = fpas_vm::DebugBreakpointLimits::default();
+        let limits = fpas_runtime::execution::DebugBreakpointLimits::default();
         let mut function_breakpoints = Vec::with_capacity(requested.len());
         let mut policies = Vec::with_capacity(requested.len());
         for (index, item) in requested.into_iter().enumerate() {
@@ -50,7 +50,8 @@ impl DebugEngine {
                     )];
                 }
             };
-            function_breakpoints.push(fpas_vm::FunctionBreakpoint { name: item.name });
+            function_breakpoints
+                .push(fpas_runtime::execution::FunctionBreakpoint { name: item.name });
             policies.push(policy);
         }
         let bound = match self

@@ -5,7 +5,7 @@
     reason = "focused object fixtures use explicit expectations"
 )]
 
-use fpas_bytecode::{
+use fpas_code::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
@@ -58,7 +58,7 @@ fn candidate() -> Executable {
                         projection: None,
                         name: StringId::new(2),
                         type_name: StringId::new(2),
-                        ty: fpas_bytecode::DebugTypeId::new(0),
+                        ty: fpas_code::DebugTypeId::new(0),
                         register: Register::new(0).expect("register"),
                         kind: DebugBindingKind::Local,
                         mutable: true,
@@ -81,7 +81,7 @@ fn candidate() -> Executable {
                         },
                         scope: 0,
                     }],
-                    result_type: Some(fpas_bytecode::DebugTypeId::new(0)),
+                    result_type: Some(fpas_code::DebugTypeId::new(0)),
                     ..FunctionDebugInfo::default()
                 },
             },
@@ -95,10 +95,10 @@ fn candidate() -> Executable {
                 flags: FunctionFlags::default(),
                 debug: FunctionDebugInfo {
                     lexical_owner: Some(FunctionId::new(0)),
-                    capture_sources: vec![fpas_bytecode::DebugCaptureSource {
-                        binding: fpas_bytecode::DebugBindingId::new(0),
-                        ty: fpas_bytecode::DebugTypeId::new(0),
-                        kind: fpas_bytecode::DebugCaptureKind::Value,
+                    capture_sources: vec![fpas_code::DebugCaptureSource {
+                        binding: fpas_code::DebugBindingId::new(0),
+                        ty: fpas_code::DebugTypeId::new(0),
+                        kind: fpas_code::DebugCaptureKind::Value,
                     }],
                     ..FunctionDebugInfo::default()
                 },
@@ -132,10 +132,10 @@ fn candidate() -> Executable {
         globals: vec![GlobalInfo {
             projection: None,
             name: StringId::new(3),
-            ty: fpas_bytecode::DebugTypeId::new(0),
+            ty: fpas_code::DebugTypeId::new(0),
             type_name: None,
             mutable: true,
-            initializer: Some(fpas_bytecode::GlobalInitializer {
+            initializer: Some(fpas_code::GlobalInitializer {
                 function: FunctionId::new(0),
                 instruction: InstructionAddress::new(1),
             }),
@@ -145,7 +145,7 @@ fn candidate() -> Executable {
             name: StringId::new(4),
             fields: vec![RecordField {
                 name: StringId::new(5),
-                ty: fpas_bytecode::DebugTypeId::new(0),
+                ty: fpas_code::DebugTypeId::new(0),
                 type_name: None,
             }],
             methods: vec![RecordMethod {
@@ -162,13 +162,13 @@ fn candidate() -> Executable {
             owner: EnumTypeId::new(0),
             name: StringId::new(7),
             fields: vec![StringId::new(5)],
-            field_types: vec![fpas_bytecode::DebugTypeId::new(0)],
+            field_types: vec![fpas_code::DebugTypeId::new(0)],
         }],
         debug_types: vec![
-            fpas_bytecode::DebugType::Dynamic,
-            fpas_bytecode::DebugType::Record(fpas_bytecode::RecordTypeId::new(0)),
-            fpas_bytecode::DebugType::Enum(fpas_bytecode::EnumTypeId::new(0)),
-            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(0)),
+            fpas_code::DebugType::Dynamic,
+            fpas_code::DebugType::Record(fpas_code::RecordTypeId::new(0)),
+            fpas_code::DebugType::Enum(fpas_code::EnumTypeId::new(0)),
+            fpas_code::DebugType::Array(fpas_code::DebugTypeId::new(0)),
         ],
         source_map: SourceMap {
             sources: vec![StringId::new(8)],

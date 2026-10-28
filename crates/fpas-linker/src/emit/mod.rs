@@ -11,7 +11,7 @@ mod strings;
 
 use std::collections::BTreeMap;
 
-use fpas_bytecode::{
+use fpas_code::{
     CodeRange, EnumLayout, EnumVariant, Executable, FunctionFlags, FunctionInfo, GlobalInfo,
     Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField, RecordLayout,
     ReturnConvention,
@@ -33,7 +33,7 @@ use crate::plan::LinkPlan;
 pub fn link_objects(
     units: &[fpas_unit::object::RelocatableObject],
     program: &fpas_unit::object::RelocatableObject,
-) -> Result<fpas_bytecode::VerifiedExecutable, LinkError> {
+) -> Result<fpas_code::VerifiedExecutable, LinkError> {
     if let Some((units, program)) = crate::errors::prepare(units, program)? {
         return link_prepared(&units, &program);
     }
@@ -43,7 +43,7 @@ pub fn link_objects(
 fn link_prepared(
     units: &[fpas_unit::object::RelocatableObject],
     program: &fpas_unit::object::RelocatableObject,
-) -> Result<fpas_bytecode::VerifiedExecutable, LinkError> {
+) -> Result<fpas_code::VerifiedExecutable, LinkError> {
     let LinkPlan {
         objects,
         symbols,
@@ -108,7 +108,7 @@ fn link_prepared(
                     .methods
                     .iter()
                     .map(|method| {
-                        Ok(fpas_bytecode::RecordMethod {
+                        Ok(fpas_code::RecordMethod {
                             name: strings.intern(&method.name)?,
                             routine: strings.intern(&method.routine)?,
                         })
@@ -179,7 +179,7 @@ fn link_prepared(
                     "global initializer instruction address",
                 ))?,
         );
-        linked.initializer = Some(fpas_bytecode::GlobalInitializer {
+        linked.initializer = Some(fpas_code::GlobalInitializer {
             function,
             instruction,
         });
@@ -257,7 +257,7 @@ fn link_prepared(
             flags: FunctionFlags {
                 uses_spawn_tasks: function.uses_spawn_tasks,
             },
-            debug: fpas_bytecode::FunctionDebugInfo::default(),
+            debug: fpas_code::FunctionDebugInfo::default(),
         });
     }
     let (source_map, function_debug) = source_map::merge(
@@ -293,7 +293,7 @@ fn link_prepared(
         debug_types: linked_debug_types,
         distinct_types,
         source_map,
-        entry: fpas_bytecode::FunctionId::new(0),
+        entry: fpas_code::FunctionId::new(0),
     };
     projections::rebase_canonical_terminals(&mut executable);
     executable.verify().map_err(LinkError::InvalidExecutable)

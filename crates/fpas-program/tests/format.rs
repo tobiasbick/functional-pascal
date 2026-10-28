@@ -36,13 +36,13 @@ fn deterministic_round_trip_preserves_every_register_table() {
     let executable = decoded.executable().executable();
     assert_eq!(
         executable.functions[0].debug.bindings[0].initializer,
-        Some(fpas_bytecode::InstructionAddress::new(1))
+        Some(fpas_runtime::InstructionAddress::new(1))
     );
     assert_eq!(
         executable.globals[0]
             .initializer
             .map(|initializer| initializer.instruction),
-        Some(fpas_bytecode::InstructionAddress::new(2))
+        Some(fpas_runtime::InstructionAddress::new(2))
     );
 }
 
@@ -128,7 +128,7 @@ fn decoder_rejects_incompatible_bytecode_version() {
         decode_error(&bytes),
         FormatError::UnsupportedBytecodeVersion {
             image: 99,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_runtime::BYTECODE_VERSION,
         }
     );
 }
@@ -142,7 +142,7 @@ fn decoder_rejects_the_previous_console_text_return_abi() {
         decode_error(&bytes),
         FormatError::UnsupportedBytecodeVersion {
             image: 23,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_runtime::BYTECODE_VERSION,
         }
     );
 }
@@ -157,7 +157,7 @@ fn decoder_rejects_the_previous_filesystem_error_abi() {
         decode_error(&bytes),
         FormatError::UnsupportedBytecodeVersion {
             image: 24,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_runtime::BYTECODE_VERSION,
         }
     );
 }
@@ -171,7 +171,7 @@ fn decoder_rejects_the_previous_filesystem_handle_error_abi() {
         decode_error(&bytes),
         FormatError::UnsupportedBytecodeVersion {
             image: 25,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_runtime::BYTECODE_VERSION,
         }
     );
 }
@@ -185,7 +185,7 @@ fn decoder_rejects_the_previous_process_error_abi() {
         decode_error(&bytes),
         FormatError::UnsupportedBytecodeVersion {
             image: 26,
-            runtime: fpas_bytecode::BYTECODE_VERSION,
+            runtime: fpas_runtime::BYTECODE_VERSION,
         }
     );
 }

@@ -38,11 +38,11 @@ fn uses_std_extra_segment_rejected() {
 #[test]
 fn source_cli_import_does_not_register_intrinsic_symbols() {
     check_ok("program T;\nuses Std.Cli as Cli;\nbegin\nend.");
-    assert!(crate::intrinsic_std_symbols(fpas_std::STD_UNIT_CLI).is_empty());
+    assert!(crate::intrinsic_std_symbols(fpas_builtins::STD_UNIT_CLI).is_empty());
 }
 
 #[test]
 fn source_calendar_import_does_not_register_intrinsic_symbols() {
     check_ok("program T;\nuses Std.Calendar as Calendar;\nbegin\nend.");
-    assert!(crate::intrinsic_std_symbols(fpas_std::STD_UNIT_CALENDAR).is_empty());
+    assert!(crate::intrinsic_std_symbols(fpas_builtins::STD_UNIT_CALENDAR).is_empty());
 }

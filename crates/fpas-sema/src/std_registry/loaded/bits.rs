@@ -5,7 +5,7 @@
 use super::super::{define_func, p};
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Registers the six intrinsic bit operations with integer-only parameters.
 pub(super) fn register_std_bits(checker: &mut Checker) {

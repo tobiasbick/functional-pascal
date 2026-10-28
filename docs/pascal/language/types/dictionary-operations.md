@@ -258,9 +258,9 @@ The expression operator `Key in D` is shorthand for checking key membership and 
 | Concern | Location |
 |---------|----------|
 | Registration | [`std_registry/builtins/dict.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/dict.rs) |
-| Runtime | [`dict.rs`](../../../../crates/fpas-std/src/dict.rs) |
+| Runtime | [`dict.rs`](../../../../crates/fpas-runtime/src/stdlib/dict.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Intrinsics | [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
+| Intrinsics | [`intrinsic/mod.rs`](../../../../crates/fpas-code/src/intrinsic/mod.rs) |
 
 ## See also
 

@@ -112,11 +112,11 @@ immutable input storage.
 
 | Concern | Location |
 |---------|-----------|
-| Algorithms | [`str/mod.rs`](../../../../../crates/fpas-std/src/str/mod.rs) |
-| Scalar substring ranges | [`str/substring.rs`](../../../../../crates/fpas-std/src/str/substring.rs) |
-| Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-bytecode/src/value/mod.rs) |
-| String concatenation (sums cached lengths) | [`scalar.rs`](../../../../../crates/fpas-vm/src/vm/value_ops/scalar.rs) |
-| Higher-order callbacks | [`hosted/callbacks/`](../../../../../crates/fpas-vm/src/vm/hosted/callbacks) |
+| Algorithms | [`str/mod.rs`](../../../../../crates/fpas-runtime/src/stdlib/str/mod.rs) |
+| Scalar substring ranges | [`str/substring.rs`](../../../../../crates/fpas-runtime/src/stdlib/str/substring.rs) |
+| Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-runtime/src/value/mod.rs) |
+| String concatenation (sums cached lengths) | [`scalar.rs`](../../../../../crates/fpas-runtime/src/execution/vm/value_ops/scalar.rs) |
+| Higher-order callbacks | [`hosted/callbacks/`](../../../../../crates/fpas-runtime/src/execution/vm/hosted/callbacks) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

@@ -8,7 +8,7 @@ pub use error::BuildError;
 
 use std::collections::HashMap;
 
-use fpas_bytecode::VerifiedExecutable;
+use fpas_code::VerifiedExecutable;
 use fpas_diagnostics::codes::{BUILD_ARTIFACT_ENCODING_FAILED, INTERNAL_PROJECT_INVARIANT_FAILURE};
 use fpas_parser::Program;
 use fpas_program::LinkedUnitIdentity;

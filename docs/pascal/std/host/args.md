@@ -69,10 +69,10 @@ end if;
 
 | Concern | Location |
 |---------|-----------|
-| VM execution | [`args.rs`](../../../../crates/fpas-vm/src/vm/hosted/args.rs) |
+| VM execution | [`args.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/args.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
-| Intrinsic ids | [`intrinsic/args.rs`](../../../../crates/fpas-bytecode/src/intrinsic/args.rs) |
+| Intrinsic ids | [`intrinsic/args.rs`](../../../../crates/fpas-code/src/intrinsic/args.rs) |
 
 ## See also
 

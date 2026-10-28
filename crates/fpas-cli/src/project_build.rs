@@ -26,7 +26,7 @@ pub(crate) fn build_options(no_contracts: bool) -> fpas_build::BuildOptions {
 
 /// Linked bytecode and source identities retained from its compilation inputs.
 pub(crate) struct ProjectProgram {
-    pub(crate) executable: fpas_bytecode::VerifiedExecutable,
+    pub(crate) executable: fpas_runtime::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
     pub(crate) selected_sources: Vec<PathBuf>,
     pub(crate) sources: Vec<RuntimeSource>,
@@ -38,7 +38,7 @@ pub(crate) struct ProgramArtifact {
     pub(crate) reused: bool,
     /// Canonical directory containing the project and selected sources on one drive root.
     pub(crate) source_root: Option<PathBuf>,
-    pub(crate) executable: fpas_bytecode::VerifiedExecutable,
+    pub(crate) executable: fpas_runtime::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
     /// Compilation snapshots and hashes paired with portable diagnostic labels.
     pub(crate) sources: Vec<RuntimeSource>,

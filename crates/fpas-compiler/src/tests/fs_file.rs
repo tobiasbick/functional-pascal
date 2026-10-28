@@ -1,8 +1,8 @@
 //! Opaque file metadata preserves private construction through portable images.
 
 use super::parse_ok;
-use fpas_bytecode::VerifiedExecutable;
-use fpas_vm::{DebugErrorKind, DebugExpression, DebugSession};
+use fpas_runtime::VerifiedExecutable;
+use fpas_runtime::execution::{DebugErrorKind, DebugExpression, DebugSession};
 
 const SOURCE: &str = r#"program FileMetadata;
 uses Std.Fs as Fs;
@@ -31,7 +31,7 @@ fn portable(executable: VerifiedExecutable) -> VerifiedExecutable {
         fpas_program::ProgramIdentity {
             contracts_enabled: true,
             compiler_version: "opaque-file-fixture".into(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(SOURCE.as_bytes()),
             options_hash: fpas_program::Digest::of(b"default"),
             units: vec![],

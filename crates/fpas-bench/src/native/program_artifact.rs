@@ -3,8 +3,8 @@
 use std::hint::black_box;
 use std::time::Instant;
 
-use fpas_bytecode::{BYTECODE_VERSION, DebugType, DebugTypeId};
 use fpas_program::{Digest, ProgramIdentity, ProgramImage, decode, encode};
+use fpas_runtime::{BYTECODE_VERSION, DebugType, DebugTypeId};
 
 /// Measures full image admission, excluding fixture compilation, encoding, and warmup.
 pub(super) fn run(iterations: usize, depth: usize) -> Result<(), String> {

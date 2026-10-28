@@ -1,0 +1,159 @@
+//! Prepare one eligible first-class function replacement for debugger assignment.
+//!
+//! **Documentation:** `docs/pascal/tools/debugger.md`
+
+mod bound_method;
+mod call_signature;
+mod captures;
+mod destination;
+mod routine;
+mod signature;
+mod source;
+
+use crate::{DebugType, DebugTypeId, Executable, SharedFunction, Value};
+
+use super::super::evaluation::DebugEvaluationLimits;
+use super::super::inspection::{InspectionSnapshot, MutationTarget};
+use super::super::types::{DebugErrorKind, DebugSessionError};
+
+pub(in crate::execution::vm::debug) use bound_method::prepare as prepare_bound_method;
+pub(super) use call_signature::validate as validate_call_signature;
+pub(in crate::execution::vm::debug) use routine::prepare as prepare_routine;
+pub(in crate::execution::vm::debug) use source::{FunctionSource, extract as source};
+
+/// Stopped-task context required to prove one function assignment.
+pub(in crate::execution::vm::debug) struct AssignmentContext<'a> {
+    /// Immutable inspection snapshot for the selected task.
+    pub(in crate::execution::vm::debug) inspection: &'a InspectionSnapshot,
+    /// Selected live frame that owns source and destination bindings.
+    pub(in crate::execution::vm::debug) frame_id: Option<u64>,
+    /// Runtime identity of the selected stopped task.
+    pub(in crate::execution::vm::debug) task_id: u64,
+    /// Fully resolved destination whose escape boundary must be checked.
+    pub(in crate::execution::vm::debug) destination: &'a MutationTarget,
+    /// Shared bounded-evaluation limits for source and capture validation.
+    pub(in crate::execution::vm::debug) limits: DebugEvaluationLimits,
+}
+
+/// Whether a portable debugger type is a first-class function signature.
+pub(in crate::execution::vm::debug) fn is_function_type(
+    executable: &Executable,
+    ty: DebugTypeId,
+) -> bool {
+    matches!(
+        executable.debug_types.get(ty.get() as usize),
+        Some(DebugType::Function { .. })
+    )
+}
+
+/// Validate one evaluated, structurally compatible function value for assignment.
+///
+/// The destination must already have been resolved as a function-typed target. The source
+/// name has already been evaluated once through the ordinary expression budget. Cloning
+/// `Value::Function` shares the existing function and capture storage.
+pub(in crate::execution::vm::debug) fn prepare(
+    executable: &Executable,
+    name: &str,
+    value: Value,
+    expected: DebugTypeId,
+    context: AssignmentContext<'_>,
+) -> Result<Value, DebugSessionError> {
+    let AssignmentContext {
+        inspection,
+        frame_id,
+        task_id: _task_id,
+        destination,
+        limits,
+    } = context;
+    if matches!(
+        executable.debug_types.get(expected.get() as usize),
+        Some(DebugType::Dynamic)
+    ) {
+        return Err(dynamic_endpoint("destination"));
+    }
+    let source_type = inspection.resolve_binding_type(frame_id, name)?;
+    match executable.debug_types.get(source_type.get() as usize) {
+        Some(DebugType::Dynamic) => return Err(dynamic_endpoint("source")),
+        Some(DebugType::Function { .. }) => {}
+        Some(_) => {
+            return Err(type_error(
+                "source binding is not a declared function type",
+                "Assign from a binding whose declared type is a function or procedure signature.",
+            ));
+        }
+        None => {
+            return Err(type_error(
+                "source binding does not retain portable function type metadata",
+                "Assign from a source-declared function binding, not an evaluation-only result.",
+            ));
+        }
+    }
+    signature::require_compatible_bounded(
+        &executable.debug_types,
+        source_type,
+        expected,
+        limits.max_depth,
+        limits.max_detached_values,
+    )?;
+    let Value::Function(function) = &value else {
+        return Err(type_error(
+            "source binding does not contain a first-class function value",
+            "Stop after the source binding has received a function value, then assign that name.",
+        ));
+    };
+    if function.task_bound {
+        destination::require_frame_register(Some(destination), frame_id, inspection.generation())?;
+        captures::require_task_owner(function, inspection.domain.id())?;
+        crate::validate_local(&inspection.domain, &value).map_err(|_| {
+            type_error(
+                "source function contains foreign local values",
+                "Select the owning task.",
+            )
+        })?;
+        captures::require_task_owned(function, limits.max_depth, limits.max_detached_values)?;
+    } else {
+        captures::require_eligible(function, limits.max_depth, limits.max_detached_values)?;
+    }
+    Ok(value)
+}
+
+/// Re-check a function replacement at the mutation root before commit.
+pub(super) fn validate_root(
+    function: &SharedFunction,
+    max_depth: usize,
+    max_values: usize,
+) -> Result<(), DebugSessionError> {
+    if function.task_bound {
+        captures::require_task_owned(function, max_depth, max_values)
+    } else {
+        captures::require_eligible(function, max_depth, max_values)
+    }
+}
+
+/// Inactive-variant construction whose payload would be a function value.
+pub(in crate::execution::vm::debug) fn inactive_function_payload() -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableValueType,
+        message: "debug function assignment cannot construct an inactive variant payload"
+            .to_string(),
+        hint: "Assign into an existing function-typed path such as a mutable local or `optional.value` when Some is already active."
+            .to_string(),
+    }
+}
+
+fn dynamic_endpoint(which: &str) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableValueType,
+        message: format!("debug function assignment rejects a Dynamic {which}"),
+        hint: "Assign between bindings with declared function signatures, not Dynamic storage."
+            .to_string(),
+    }
+}
+
+fn type_error(detail: &str, hint: &str) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableValueType,
+        message: format!("debug function assignment is rejected: {detail}"),
+        hint: hint.to_string(),
+    }
+}

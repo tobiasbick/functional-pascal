@@ -103,8 +103,8 @@ fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
         "program MixedSignature; uses Std.Tasks as Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Tasks.Wait(go Work()); if Tasks.Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
     );
     let ir = crate::lower(&ast).expect("mixed task result IR");
-    let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(
-        fpas_bytecode::TaskIntrinsic::Wait,
+    let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_runtime::Intrinsic::Task(
+        fpas_runtime::TaskIntrinsic::Wait,
     ))));
     let signature = ir.intrinsic(wait).expect("Wait signature");
     assert_eq!(
@@ -125,8 +125,8 @@ fn wait_signature_keeps_unit_for_procedure_only_calls() {
         "program UnitSignature; uses Std.Tasks as Tasks; procedure Work(); begin end procedure; begin scope  Tasks.Wait(go Work()); Tasks.Wait(go Work());  end scope; end.",
     );
     let ir = crate::lower(&ast).expect("procedure task result IR");
-    let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(
-        fpas_bytecode::TaskIntrinsic::Wait,
+    let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_runtime::Intrinsic::Task(
+        fpas_runtime::TaskIntrinsic::Wait,
     ))));
     let signature = ir.intrinsic(wait).expect("Wait signature");
     assert_eq!(ir.ty(signature.result).unwrap().kind, fpas_ir::IrType::Unit);

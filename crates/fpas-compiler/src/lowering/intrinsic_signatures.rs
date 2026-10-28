@@ -42,10 +42,8 @@ pub(super) fn collect_intrinsic_signatures(
         .into_iter()
         .map(|(id, (arity, result))| {
             let wire = u16::try_from(id.get()).ok();
-            let variadic = wire.and_then(fpas_bytecode::Intrinsic::from_u16)
-                == Some(fpas_bytecode::Intrinsic::Str(
-                    fpas_bytecode::StrIntrinsic::Format,
-                ));
+            let variadic = wire.and_then(fpas_code::Intrinsic::from_u16)
+                == Some(fpas_code::Intrinsic::Str(fpas_code::StrIntrinsic::Format));
             let parameters = if variadic {
                 vec![types::DYNAMIC, types::DYNAMIC]
             } else {

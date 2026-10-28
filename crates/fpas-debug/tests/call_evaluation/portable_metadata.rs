@@ -2,8 +2,8 @@
 //! See `docs/pascal/tools/debugger.md` and `docs/pascal/program-structure/projects.md`.
 
 use super::*;
-use fpas_bytecode::DebugType;
 use fpas_program::{Digest, ProgramIdentity, ProgramImage};
+use fpas_runtime::DebugType;
 
 #[test]
 fn record_defaults_and_parameter_modes_survive_object_linking_and_program_roundtrip() {
@@ -32,7 +32,7 @@ begin end.",
         ProgramIdentity {
             contracts_enabled: true,
             compiler_version: "test".into(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: Digest::of(b"source"),
             options_hash: Digest::of(b"options"),
             units: vec![],

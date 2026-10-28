@@ -7,8 +7,8 @@
 
 mod common;
 
-use fpas_bytecode::{DebugProjectionKind, DebugType};
 use fpas_linker::link_objects;
+use fpas_runtime::{DebugProjectionKind, DebugType};
 use fpas_unit::object::{
     DefinitionTarget, ObjectDebugProjection, ObjectDebugProjectionKind, ObjectDebugType,
     ObjectDefinition, ObjectGlobal, ObjectRecordLayout,

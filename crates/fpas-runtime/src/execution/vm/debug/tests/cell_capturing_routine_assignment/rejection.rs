@@ -1,0 +1,332 @@
+//! Rejected cell-capturing assignment leaves destination and cells unchanged.
+
+use super::*;
+use crate::MemoryDomain;
+use std::sync::Arc;
+
+fn preserved_identity(session: &mut DebugSession, frame: u64) -> String {
+    rendered(session, call("Current", 1), frame)
+}
+
+#[test]
+fn wrong_owner_stale_and_uninitialized_cell_sources_are_atomic() {
+    let mut session = DebugSession::new(compile_fixture()).expect("debug session");
+    let owner = run_to(&mut session, "const CellStop: integer := 0;");
+    let stack = session.stack(0, 8).expect("stack");
+    let root_frame = stack.items.last().expect("root").id;
+    assert_eq!(preserved_identity(&mut session, owner), "1");
+    let wrong = session
+        .set_expression(&root("Current"), &name("AddCell"), Some(root_frame))
+        .expect_err("root is not Mutating");
+    assert_eq!(wrong.kind, DebugErrorKind::VariableValueType);
+    assert!(
+        wrong.hint.contains("enclosing function") || wrong.message.contains("lexical owner"),
+        "{wrong:?}"
+    );
+    let owner = session.stack(0, 8).expect("unchanged").items[0].id;
+    assert_eq!(preserved_identity(&mut session, owner), "1");
+
+    session
+        .set_expression(&root("Current"), &name("AddCell"), Some(owner))
+        .expect("valid owner assign");
+    let stale = session
+        .set_expression(&root("Current"), &name("Identity"), Some(owner))
+        .expect_err("expired frame");
+    assert_eq!(stale.kind, DebugErrorKind::UnknownFrame);
+
+    let mut late = DebugSession::new(compile_fixture()).expect("late session");
+    let frame = run_to(&mut late, "const LateStop: integer := 0;");
+    let uninitialized = late
+        .set_expression(&root("Current"), &name("AddLate"), Some(frame))
+        .expect_err("Cell is uninitialized");
+    assert_eq!(uninitialized.kind, DebugErrorKind::UninitializedValue);
+    let frame = late.stack(0, 1).expect("preserved").items[0].id;
+    assert_eq!(preserved_identity(&mut late, frame), "1");
+}
+
+#[test]
+fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
+    let mut global = DebugSession::new(compile_fixture()).expect("global dest");
+    let frame = run_to(&mut global, "const CellStop: integer := 0;");
+    let rejected = global
+        .set_expression(&root("Shared"), &name("AddCell"), Some(frame))
+        .expect_err("global");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(
+        rejected.message.contains("global") || rejected.hint.contains("Globals"),
+        "{rejected:?}"
+    );
+    let frame = global.stack(0, 1).expect("preserved").items[0].id;
+    assert_eq!(preserved_identity(&mut global, frame), "1");
+
+    let mut boxed = DebugSession::new(compile_fixture()).expect("descendant dest");
+    let frame = run_to(&mut boxed, "const BoxStop: integer := 0;");
+    let descendant = boxed
+        .set_expression(&field("Packed", "Item"), &name("AddBoxed"), Some(frame))
+        .expect_err("descendant");
+    assert_eq!(descendant.kind, DebugErrorKind::VariableValueType);
+    assert!(
+        descendant.message.contains("descendant") || descendant.hint.contains("complete mutable"),
+        "{descendant:?}"
+    );
+
+    let mut captured = DebugSession::new(compile_fixture()).expect("capture dest");
+    let frame = run_to(&mut captured, "const CaptureDestStop: integer := 0;");
+    let cell_dest = captured
+        .set_expression(&root("Current"), &name("AddCaptured"), Some(frame))
+        .expect_err("capture cell dest");
+    assert_eq!(cell_dest.kind, DebugErrorKind::VariableValueType);
+    assert!(
+        cell_dest.message.contains("capture-cell") || cell_dest.hint.contains("captured mutable"),
+        "{cell_dest:?}"
+    );
+
+    let mut frozen = DebugSession::new(compile_fixture()).expect("immutable dest");
+    let frame = run_to(&mut frozen, "const CellStop: integer := 0;");
+    assert_eq!(
+        frozen
+            .set_expression(&root("Frozen"), &name("AddCell"), Some(frame))
+            .expect_err("immutable")
+            .kind,
+        DebugErrorKind::VariableNotMutable
+    );
+}
+
+#[test]
+fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
+    let mut global = DebugSession::new(compile_fixture()).expect("global copy");
+    let frame = run_to(&mut global, "const CellStop: integer := 0;");
+    global
+        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
+        .expect("construct source");
+    let frame = global.stack(0, 1).expect("fresh").items[0].id;
+    let rejected = global
+        .set_expression(&root("Shared"), &name("Current"), Some(frame))
+        .expect_err("global escape");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("global"), "{rejected:?}");
+    assert_eq!(rendered(&mut global, call("Shared", 1), frame), "1");
+
+    let mut descendant = DebugSession::new(compile_fixture()).expect("descendant copy");
+    let frame = run_to(&mut descendant, "const CellStop: integer := 0;");
+    descendant
+        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
+        .expect("construct source");
+    let frame = descendant.stack(0, 1).expect("fresh").items[0].id;
+    let rejected = descendant
+        .set_expression(&field("Packed", "Item"), &name("Current"), Some(frame))
+        .expect_err("descendant escape");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("descendant"), "{rejected:?}");
+    let packed = runtime(
+        &descendant,
+        &DebugExpression::Field {
+            base: Box::new(name("Packed")),
+            name: "Item".to_string(),
+        },
+        frame,
+    );
+    assert_eq!(&*as_function(&packed).name, "identity");
+
+    let mut captured = DebugSession::new(compile_fixture()).expect("capture copy");
+    let frame = run_to(&mut captured, "const CaptureDestStop: integer := 0;");
+    captured
+        .set_expression(&root("Source"), &name("AddCaptured"), Some(frame))
+        .expect("construct source");
+    let frame = captured.stack(0, 1).expect("fresh").items[0].id;
+    let rejected = captured
+        .set_expression(&root("Current"), &name("Source"), Some(frame))
+        .expect_err("capture-cell escape");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("capture-cell"), "{rejected:?}");
+    let current = runtime(&captured, &name("Current"), frame);
+    assert_eq!(&*as_function(&current).name, "identity");
+}
+
+#[test]
+fn copied_task_owned_functions_reject_foreign_owner_and_stale_frame() {
+    let mut foreign = DebugSession::new(compile_fixture()).expect("foreign copy");
+    let frame = run_to(&mut foreign, "const CellStop: integer := 0;");
+    let original = runtime(&foreign, &name("Original"), frame);
+    let domain = MemoryDomain::new();
+    let cell = domain.new_cell(Value::Integer(8)).expect("foreign cell");
+    let source = Value::task_owned_function(
+        as_function(&original).target().clone(),
+        vec![Value::Cell(cell.clone())],
+        domain.id().clone(),
+    );
+    // Normal task publication now rejects this value before it can reach a caller.
+    // Inject the source to exercise the debugger's independent copy guard directly.
+    foreign
+        .test_inject_frame_binding(frame, "Copy", source)
+        .expect("inject foreign source");
+    let frame = foreign.stack(0, 1).expect("fresh frame").items[0].id;
+    let rejected = foreign
+        .set_expression(&root("Current"), &name("Copy"), Some(frame))
+        .expect_err("foreign owner");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(
+        rejected.message.contains("different memory domain"),
+        "{rejected:?}"
+    );
+    assert_eq!(rendered(&mut foreign, call("Current", 1), frame), "1");
+    assert_eq!(
+        cell.read(&domain).expect("unchanged source cell"),
+        Value::Integer(8)
+    );
+
+    let mut stale = DebugSession::new(compile_fixture()).expect("stale copy");
+    let frame = run_to(&mut stale, "const CellStop: integer := 0;");
+    stale
+        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
+        .expect("construct source");
+    assert_eq!(
+        stale
+            .set_expression(&root("Copy"), &name("Current"), Some(frame))
+            .expect_err("stale frame")
+            .kind,
+        DebugErrorKind::UnknownFrame
+    );
+    let frame = stale.stack(0, 1).expect("preserved frame").items[0].id;
+    assert_eq!(rendered(&mut stale, call("Copy", 1), frame), "1");
+}
+
+#[test]
+fn task_spawn_rejects_the_constructed_function() {
+    let mut session = DebugSession::new(compile_fixture()).expect("spawn session");
+    let frame = run_to(&mut session, "const SpawnStop: integer := 0;");
+    session
+        .set_expression(&root("Current"), &name("RunSpawn"), Some(frame))
+        .expect("assign task-bound procedure");
+    let stop = stopped(
+        session
+            .continue_execution()
+            .expect("go Current is a runtime failure"),
+    );
+    assert_eq!(stop.reason, DebugStopReason::RuntimeError);
+    let diagnostic = stop.diagnostic.expect("runtime diagnostic");
+    assert_eq!(
+        diagnostic.code,
+        fpas_diagnostics::codes::RUNTIME_INVALID_TASK
+    );
+    assert!(
+        diagnostic.message.contains("spawn") || diagnostic.message.contains("task-bound"),
+        "{}",
+        diagnostic.message
+    );
+}
+
+#[test]
+fn foreign_task_invocation_fails_before_callee_entry() {
+    let mut worker =
+        crate::execution::vm::worker::Worker::new(Arc::new(compile_fixture())).expect("worker");
+    let image = worker.executable.executable();
+    let function = image
+        .functions
+        .iter()
+        .position(|function| image.strings.get(function.name) == Some("worker.addworker"))
+        .expect("cell-mutating callee");
+    let target = worker
+        .executable
+        .function_target(FunctionId::new(
+            u16::try_from(function).expect("function index"),
+        ))
+        .expect("verified callee target");
+    let domain = MemoryDomain::new();
+    let cell = domain.new_cell(Value::Integer(8)).expect("foreign cell");
+    // Deliberately bypass the earlier transfer/storage guards to test CallValue itself.
+    worker.registers[0] =
+        Value::task_owned_function(target, vec![Value::Cell(cell.clone())], domain.id().clone());
+    worker.registers[1] = Value::Integer(1);
+    worker.registers[2] = Value::Integer(99);
+    worker.register_initialized[..3].fill(true);
+    let before = (
+        worker.function,
+        worker.ip,
+        worker.base,
+        worker.call_stack.len(),
+    );
+    let before_registers = worker.registers.clone();
+    let before_initialized = worker.register_initialized.clone();
+    let diagnostic = worker
+        .call_value(abc_aux(Opcode::CallValue, 2, 0, 1, 1).abc_payload())
+        .expect_err("foreign CallValue");
+    assert_eq!(
+        diagnostic.code,
+        fpas_diagnostics::codes::RUNTIME_INVALID_TASK
+    );
+    assert!(
+        diagnostic.message.contains("foreign task"),
+        "{}",
+        diagnostic.message
+    );
+    assert_eq!(
+        (
+            worker.function,
+            worker.ip,
+            worker.base,
+            worker.call_stack.len()
+        ),
+        before,
+    );
+    assert_eq!(worker.registers, before_registers);
+    assert_eq!(worker.register_initialized, before_initialized);
+    assert_eq!(
+        cell.read(&domain).expect("unchanged capture"),
+        Value::Integer(8)
+    );
+}
+
+#[test]
+fn capture_graph_limits_and_unknown_names_stay_actionable() {
+    let mut limited = DebugSession::new(compile_fixture()).expect("limit session");
+    let frame = run_to(&mut limited, "const MixStop: integer := 0;");
+    let values = limited
+        .set_expression_with_limits(
+            &root("Current"),
+            &name("MixBoth"),
+            Some(frame),
+            DebugEvaluationLimits {
+                max_detached_values: 0,
+                ..DebugEvaluationLimits::default()
+            },
+        )
+        .expect_err("values");
+    assert_eq!(values.kind, DebugErrorKind::EvaluationLimit);
+    let frame = limited.stack(0, 1).expect("preserved").items[0].id;
+    assert_eq!(preserved_identity(&mut limited, frame), "1");
+
+    let unknown = limited
+        .set_expression(&root("Current"), &name("MissingRoutine"), Some(frame))
+        .expect_err("unknown");
+    assert_eq!(unknown.kind, DebugErrorKind::UnknownName);
+}
+
+#[test]
+fn success_expires_old_variable_references_once() {
+    let mut session = DebugSession::new(compile_fixture()).expect("debug session");
+    let frame = run_to(&mut session, "const CellStop: integer := 0;");
+    let locals = scope_reference(&mut session, "Locals");
+    session
+        .set_variable(locals, "Current", &name("AddCell"))
+        .expect("assign");
+    assert_eq!(
+        session
+            .set_variable(locals, "Current", &name("AddCell"))
+            .expect_err("stale handle")
+            .kind,
+        DebugErrorKind::VariableTargetExpired
+    );
+    let stale = frame;
+    let frame = session.stack(0, 1).expect("fresh").items[0].id;
+    assert_eq!(
+        session
+            .set_expression(&root("Current"), &name("AddCell"), Some(stale))
+            .expect_err("stale frame")
+            .kind,
+        DebugErrorKind::UnknownFrame
+    );
+    let assigned_value = runtime(&session, &name("Current"), frame);
+    let assigned = as_function(&assigned_value);
+    assert!(assigned.task_bound);
+}

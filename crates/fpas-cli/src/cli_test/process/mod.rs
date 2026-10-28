@@ -34,7 +34,7 @@ const MAX_CAPTURED_OUTPUT: usize = 8 * 1024 * 1024;
 
 #[derive(Serialize, Deserialize)]
 struct WorkerRequest {
-    collection_schedule: fpas_bytecode::CollectionSchedule,
+    collection_schedule: fpas_runtime::CollectionSchedule,
     test_path: PathBuf,
     source_paths: Option<Vec<PathBuf>>,
     sources: Vec<crate::cli_output::RuntimeSource>,
@@ -253,7 +253,7 @@ fn write_worker_inputs(
     let identity = ProgramIdentity {
         contracts_enabled: !prepared.no_contracts,
         compiler_version: env!("CARGO_PKG_VERSION").to_string(),
-        bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+        bytecode_version: fpas_runtime::BYTECODE_VERSION,
         source_hash: Digest::of(b"isolated-test-program"),
         options_hash: Digest::of(b"isolated-test-options"),
         units: Vec::new(),

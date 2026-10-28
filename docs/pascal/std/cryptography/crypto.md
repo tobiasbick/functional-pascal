@@ -59,7 +59,7 @@ The unit supplies random material; it does not yet supply hashing, password hash
 
 | Concern | Location |
 |---------|----------|
-| Hosted runtime | [`crypto.rs`](../../../../crates/fpas-vm/src/vm/hosted/crypto.rs) |
+| Hosted runtime | [`crypto.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/crypto.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/crypto.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/crypto.rs) |
 

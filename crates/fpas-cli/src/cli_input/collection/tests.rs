@@ -1,5 +1,5 @@
 use crate::cli_input::{ResolvedCli, resolve_cli_config};
-use fpas_bytecode::CollectionSchedule;
+use fpas_runtime::CollectionSchedule;
 use std::path::Path;
 
 fn parse(parts: &[&str]) -> Result<ResolvedCli, String> {

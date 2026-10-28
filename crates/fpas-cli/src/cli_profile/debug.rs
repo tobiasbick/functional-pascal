@@ -2,7 +2,7 @@
 
 use std::{path::PathBuf, time::Instant};
 
-use fpas_bytecode::profile::{self, Counter};
+use fpas_runtime::profile::{self, Counter};
 use serde_json::json;
 
 use super::{Run, Target, render, round3};
@@ -12,8 +12,8 @@ pub(crate) struct Session {
     destination: PathBuf,
     target: Target,
     sources: Vec<PathBuf>,
-    profile: fpas_vm::DebugProfile,
-    collection: fpas_bytecode::CollectionSchedule,
+    profile: fpas_runtime::execution::DebugProfile,
+    collection: fpas_runtime::CollectionSchedule,
     protocol: &'static str,
     counting: profile::Run,
     started: Instant,

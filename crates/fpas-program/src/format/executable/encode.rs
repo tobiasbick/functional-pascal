@@ -1,6 +1,6 @@
 //! Encode verified executable tables into tagged sections.
 
-use fpas_bytecode::{Constant, Executable, ReturnConvention};
+use fpas_code::{Constant, Executable, ReturnConvention};
 
 use super::super::debug;
 use super::super::sections::{
@@ -16,7 +16,7 @@ pub(super) fn encode_strings(executable: &Executable) -> Result<EncodedSection, 
     check_count(
         TAGS[0],
         executable.strings.len(),
-        fpas_bytecode::limits::MAX_STRINGS,
+        fpas_code::limits::MAX_STRINGS,
     )?;
     let mut bytes = Vec::new();
     let mut cumulative = 0_usize;
@@ -26,12 +26,12 @@ pub(super) fn encode_strings(executable: &Executable) -> Result<EncodedSection, 
             .ok_or(FormatError::LimitExceeded {
                 field: "string_bytes",
                 size: usize::MAX,
-                maximum: fpas_bytecode::limits::MAX_STRING_BYTES,
+                maximum: fpas_code::limits::MAX_STRING_BYTES,
             })?;
         check_limit(
             "string_bytes",
             cumulative,
-            fpas_bytecode::limits::MAX_STRING_BYTES,
+            fpas_code::limits::MAX_STRING_BYTES,
         )?;
         write_u32(&mut bytes, checked_u32("string_length", value.len())?);
         bytes.extend_from_slice(value.as_bytes());
@@ -47,7 +47,7 @@ pub(super) fn encode_constants(executable: &Executable) -> Result<EncodedSection
     check_count(
         TAGS[1],
         executable.constants.len(),
-        fpas_bytecode::limits::MAX_CONSTANTS,
+        fpas_code::limits::MAX_CONSTANTS,
     )?;
     let mut bytes = Vec::new();
     for constant in &executable.constants {
@@ -90,7 +90,7 @@ pub(super) fn encode_sources(executable: &Executable) -> Result<EncodedSection, 
     check_count(
         TAGS[2],
         executable.source_map.sources.len(),
-        fpas_bytecode::limits::MAX_SOURCE_PATHS,
+        fpas_code::limits::MAX_SOURCE_PATHS,
     )?;
     let mut bytes = Vec::with_capacity(executable.source_map.sources.len() * 4);
     for source in &executable.source_map.sources {
@@ -107,7 +107,7 @@ pub(super) fn encode_globals(executable: &Executable) -> Result<EncodedSection, 
     check_count(
         TAGS[3],
         executable.globals.len(),
-        fpas_bytecode::limits::MAX_GLOBALS,
+        fpas_code::limits::MAX_GLOBALS,
     )?;
     let mut bytes = Vec::new();
     for global in &executable.globals {
@@ -136,14 +136,14 @@ pub(super) fn encode_records(executable: &Executable) -> Result<EncodedSection, 
     check_count(
         TAGS[4],
         executable.records.len(),
-        fpas_bytecode::limits::MAX_RECORD_LAYOUTS,
+        fpas_code::limits::MAX_RECORD_LAYOUTS,
     )?;
     let mut bytes = Vec::new();
     for record in &executable.records {
         check_count(
             TAGS[4],
             record.fields.len(),
-            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
+            fpas_code::limits::MAX_LAYOUT_FIELDS,
         )?;
         write_u32(&mut bytes, record.name.get());
         write_u32(
@@ -179,12 +179,12 @@ pub(super) fn encode_enums(executable: &Executable) -> Result<EncodedSection, Fo
     check_count(
         TAGS[5],
         executable.enums.len(),
-        fpas_bytecode::limits::MAX_ENUM_LAYOUTS,
+        fpas_code::limits::MAX_ENUM_LAYOUTS,
     )?;
     check_count(
         TAGS[5],
         executable.enum_variants.len(),
-        fpas_bytecode::limits::MAX_ENUM_VARIANTS,
+        fpas_code::limits::MAX_ENUM_VARIANTS,
     )?;
     let mut bytes = Vec::new();
     write_u32(
@@ -199,7 +199,7 @@ pub(super) fn encode_enums(executable: &Executable) -> Result<EncodedSection, Fo
         check_count(
             TAGS[5],
             variant.fields.len(),
-            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
+            fpas_code::limits::MAX_LAYOUT_FIELDS,
         )?;
         write_u16(&mut bytes, variant.owner.get());
         write_u32(&mut bytes, variant.name.get());
@@ -226,7 +226,7 @@ pub(super) fn encode_functions(executable: &Executable) -> Result<EncodedSection
     check_count(
         TAGS[6],
         executable.functions.len(),
-        fpas_bytecode::limits::MAX_FUNCTIONS,
+        fpas_code::limits::MAX_FUNCTIONS,
     )?;
     let mut bytes = Vec::new();
     for function in &executable.functions {
@@ -262,7 +262,7 @@ pub(super) fn encode_instructions(executable: &Executable) -> Result<EncodedSect
     check_count(
         TAGS[7],
         executable.code.len(),
-        fpas_bytecode::limits::MAX_INSTRUCTIONS,
+        fpas_code::limits::MAX_INSTRUCTIONS,
     )?;
     let mut bytes = Vec::with_capacity(executable.code.len() * 8);
     for instruction in &executable.code {
@@ -279,7 +279,7 @@ pub(super) fn encode_source_runs(executable: &Executable) -> Result<EncodedSecti
     check_count(
         TAGS[8],
         executable.source_map.runs.len(),
-        fpas_bytecode::limits::MAX_SOURCE_RUNS,
+        fpas_code::limits::MAX_SOURCE_RUNS,
     )?;
     let mut bytes = Vec::with_capacity(executable.source_map.runs.len() * 16);
     for run in &executable.source_map.runs {

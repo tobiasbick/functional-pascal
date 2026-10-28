@@ -73,7 +73,9 @@ impl DapServer {
     }
 }
 
-fn terminal_events(arguments: &Value) -> Result<Vec<fpas_vm::DebugTerminalEvent>, String> {
+fn terminal_events(
+    arguments: &Value,
+) -> Result<Vec<fpas_runtime::execution::DebugTerminalEvent>, String> {
     let values = arguments
         .get("events")
         .and_then(Value::as_array)
@@ -84,14 +86,14 @@ fn terminal_events(arguments: &Value) -> Result<Vec<fpas_vm::DebugTerminalEvent>
     values.iter().map(terminal_event).collect()
 }
 
-fn terminal_event(value: &Value) -> Result<fpas_vm::DebugTerminalEvent, String> {
+fn terminal_event(value: &Value) -> Result<fpas_runtime::execution::DebugTerminalEvent, String> {
     let kind = value
         .get("kind")
         .and_then(Value::as_str)
         .ok_or_else(|| "Each terminal event requires a string `kind`.".to_string())?;
     match kind {
-        "key" => Ok(fpas_vm::DebugTerminalEvent::Key(
-            fpas_vm::DebugTerminalKeyEvent {
+        "key" => Ok(fpas_runtime::execution::DebugTerminalEvent::Key(
+            fpas_runtime::execution::DebugTerminalKeyEvent {
                 kind: terminal_key(value)?,
                 shift: flag(value, "shift"),
                 ctrl: flag(value, "ctrl"),
@@ -99,7 +101,7 @@ fn terminal_event(value: &Value) -> Result<fpas_vm::DebugTerminalEvent, String> 
                 meta: flag(value, "meta"),
             },
         )),
-        "mouse" => Ok(fpas_vm::DebugTerminalEvent::Mouse {
+        "mouse" => Ok(fpas_runtime::execution::DebugTerminalEvent::Mouse {
             action: mouse_action(required_string(value, "action")?)?,
             button: mouse_button(required_string(value, "button")?)?,
             x: positive_u16(value, "x")?,
@@ -109,46 +111,46 @@ fn terminal_event(value: &Value) -> Result<fpas_vm::DebugTerminalEvent, String> 
             alt: flag(value, "alt"),
             meta: flag(value, "meta"),
         }),
-        "resize" => Ok(fpas_vm::DebugTerminalEvent::Resize {
+        "resize" => Ok(fpas_runtime::execution::DebugTerminalEvent::Resize {
             width: positive_u16(value, "width")?,
             height: positive_u16(value, "height")?,
         }),
-        "paste" => Ok(fpas_vm::DebugTerminalEvent::Paste(
+        "paste" => Ok(fpas_runtime::execution::DebugTerminalEvent::Paste(
             required_string(value, "text")?.to_string(),
         )),
-        "focusGained" => Ok(fpas_vm::DebugTerminalEvent::FocusGained),
-        "focusLost" => Ok(fpas_vm::DebugTerminalEvent::FocusLost),
+        "focusGained" => Ok(fpas_runtime::execution::DebugTerminalEvent::FocusGained),
+        "focusLost" => Ok(fpas_runtime::execution::DebugTerminalEvent::FocusLost),
         other => Err(format!(
             "Unsupported terminal event kind `{other}`; use key, mouse, resize, paste, focusGained, or focusLost."
         )),
     }
 }
 
-fn terminal_key(value: &Value) -> Result<fpas_vm::DebugTerminalKeyKind, String> {
+fn terminal_key(value: &Value) -> Result<fpas_runtime::execution::DebugTerminalKeyKind, String> {
     let key = required_string(value, "key")?;
     let kind = match key {
-        "Escape" => fpas_vm::DebugTerminalKeyKind::Escape,
-        "Tab" => fpas_vm::DebugTerminalKeyKind::Tab,
-        "Enter" => fpas_vm::DebugTerminalKeyKind::Enter,
-        "Backspace" => fpas_vm::DebugTerminalKeyKind::Backspace,
-        "Space" => fpas_vm::DebugTerminalKeyKind::Space,
-        "Up" => fpas_vm::DebugTerminalKeyKind::Up,
-        "Down" => fpas_vm::DebugTerminalKeyKind::Down,
-        "Left" => fpas_vm::DebugTerminalKeyKind::Left,
-        "Right" => fpas_vm::DebugTerminalKeyKind::Right,
-        "Home" => fpas_vm::DebugTerminalKeyKind::Home,
-        "End" => fpas_vm::DebugTerminalKeyKind::End,
-        "PageUp" => fpas_vm::DebugTerminalKeyKind::PageUp,
-        "PageDown" => fpas_vm::DebugTerminalKeyKind::PageDown,
-        "Insert" => fpas_vm::DebugTerminalKeyKind::Insert,
-        "Delete" => fpas_vm::DebugTerminalKeyKind::Delete,
+        "Escape" => fpas_runtime::execution::DebugTerminalKeyKind::Escape,
+        "Tab" => fpas_runtime::execution::DebugTerminalKeyKind::Tab,
+        "Enter" => fpas_runtime::execution::DebugTerminalKeyKind::Enter,
+        "Backspace" => fpas_runtime::execution::DebugTerminalKeyKind::Backspace,
+        "Space" => fpas_runtime::execution::DebugTerminalKeyKind::Space,
+        "Up" => fpas_runtime::execution::DebugTerminalKeyKind::Up,
+        "Down" => fpas_runtime::execution::DebugTerminalKeyKind::Down,
+        "Left" => fpas_runtime::execution::DebugTerminalKeyKind::Left,
+        "Right" => fpas_runtime::execution::DebugTerminalKeyKind::Right,
+        "Home" => fpas_runtime::execution::DebugTerminalKeyKind::Home,
+        "End" => fpas_runtime::execution::DebugTerminalKeyKind::End,
+        "PageUp" => fpas_runtime::execution::DebugTerminalKeyKind::PageUp,
+        "PageDown" => fpas_runtime::execution::DebugTerminalKeyKind::PageDown,
+        "Insert" => fpas_runtime::execution::DebugTerminalKeyKind::Insert,
+        "Delete" => fpas_runtime::execution::DebugTerminalKeyKind::Delete,
         key if key.starts_with('F') => {
             let number = key[1..]
                 .parse::<u8>()
                 .ok()
                 .filter(|number| (1..=12).contains(number))
                 .ok_or_else(|| format!("Unsupported terminal key `{key}`."))?;
-            fpas_vm::DebugTerminalKeyKind::Function(number)
+            fpas_runtime::execution::DebugTerminalKeyKind::Function(number)
         }
         "Character" => {
             let text = required_string(value, "text")?;
@@ -159,7 +161,7 @@ fn terminal_key(value: &Value) -> Result<fpas_vm::DebugTerminalKeyKind, String> 
                 .ok_or_else(|| {
                     "Terminal Character events require one Unicode scalar in `text`.".to_string()
                 })?;
-            fpas_vm::DebugTerminalKeyKind::Character(character)
+            fpas_runtime::execution::DebugTerminalKeyKind::Character(character)
         }
         other => return Err(format!("Unsupported terminal key `{other}`.")),
     };
@@ -186,26 +188,26 @@ fn flag(value: &Value, field: &str) -> bool {
     value.get(field).and_then(Value::as_bool).unwrap_or(false)
 }
 
-fn mouse_action(value: &str) -> Result<fpas_vm::DebugTerminalMouseAction, String> {
+fn mouse_action(value: &str) -> Result<fpas_runtime::execution::DebugTerminalMouseAction, String> {
     match value {
-        "Down" => Ok(fpas_vm::DebugTerminalMouseAction::Down),
-        "Up" => Ok(fpas_vm::DebugTerminalMouseAction::Up),
-        "Drag" => Ok(fpas_vm::DebugTerminalMouseAction::Drag),
-        "Move" => Ok(fpas_vm::DebugTerminalMouseAction::Move),
-        "ScrollDown" => Ok(fpas_vm::DebugTerminalMouseAction::ScrollDown),
-        "ScrollUp" => Ok(fpas_vm::DebugTerminalMouseAction::ScrollUp),
-        "ScrollLeft" => Ok(fpas_vm::DebugTerminalMouseAction::ScrollLeft),
-        "ScrollRight" => Ok(fpas_vm::DebugTerminalMouseAction::ScrollRight),
+        "Down" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::Down),
+        "Up" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::Up),
+        "Drag" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::Drag),
+        "Move" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::Move),
+        "ScrollDown" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::ScrollDown),
+        "ScrollUp" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::ScrollUp),
+        "ScrollLeft" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::ScrollLeft),
+        "ScrollRight" => Ok(fpas_runtime::execution::DebugTerminalMouseAction::ScrollRight),
         other => Err(format!("Unsupported terminal mouse action `{other}`.")),
     }
 }
 
-fn mouse_button(value: &str) -> Result<fpas_vm::DebugTerminalMouseButton, String> {
+fn mouse_button(value: &str) -> Result<fpas_runtime::execution::DebugTerminalMouseButton, String> {
     match value {
-        "None" => Ok(fpas_vm::DebugTerminalMouseButton::None),
-        "Left" => Ok(fpas_vm::DebugTerminalMouseButton::Left),
-        "Right" => Ok(fpas_vm::DebugTerminalMouseButton::Right),
-        "Middle" => Ok(fpas_vm::DebugTerminalMouseButton::Middle),
+        "None" => Ok(fpas_runtime::execution::DebugTerminalMouseButton::None),
+        "Left" => Ok(fpas_runtime::execution::DebugTerminalMouseButton::Left),
+        "Right" => Ok(fpas_runtime::execution::DebugTerminalMouseButton::Right),
+        "Middle" => Ok(fpas_runtime::execution::DebugTerminalMouseButton::Middle),
         other => Err(format!("Unsupported terminal mouse button `{other}`.")),
     }
 }

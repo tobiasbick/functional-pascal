@@ -73,7 +73,7 @@ const Repeated: integer := Random.RandomInt(1, 100);
 
 | Concern | Location |
 |---------|----------|
-| VM state and runtime | [`hosted/random/`](../../../../crates/fpas-vm/src/vm/hosted/random) |
+| VM state and runtime | [`hosted/random/`](../../../../crates/fpas-runtime/src/execution/vm/hosted/random) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/random.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/random.rs) |
 

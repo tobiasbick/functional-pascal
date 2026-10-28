@@ -275,7 +275,7 @@ cargo test -p fpas-project exclusion_canonicalizations -- --nocapture
 cargo test -p fpas-compiler allocation_traffic -- --nocapture
 cargo test -p fpas-language-service diagnostics_read_closed -- --nocapture
 cargo test -p fpas-build warm_many_import -- --nocapture
-cargo test -p fpas-std parsing_allocations -- --nocapture
+cargo test -p fpas-runtime parsing_allocations -- --nocapture
 cargo test -p fpas-program --test decode_allocations -- --nocapture
 ```
 

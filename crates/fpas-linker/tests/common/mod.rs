@@ -6,7 +6,7 @@
     reason = "focused linker fixtures use explicit expectations and are shared across test binaries"
 )]
 
-use fpas_bytecode::{Instruction, NO_REGISTER, Opcode};
+use fpas_runtime::{Instruction, NO_REGISTER, Opcode};
 use fpas_unit::object::{
     DefinitionTarget, ImportShape, OBJECT_VERSION, ObjectDefinition, ObjectFunction, ObjectImport,
     ObjectReturn, ObjectSourceRun, RelocatableObject, Relocation, RelocationKind, SymbolReference,

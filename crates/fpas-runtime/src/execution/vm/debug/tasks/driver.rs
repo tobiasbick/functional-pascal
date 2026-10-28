@@ -1,0 +1,500 @@
+//! Debug-owned task catalog, readiness polling, and single-instruction dispatch.
+
+mod completed_result;
+mod completion;
+mod control;
+mod failure;
+mod lifecycle;
+mod live_image;
+mod quiescence;
+mod readiness;
+mod recovery;
+mod roots;
+mod seeded;
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
+use std::time::Duration;
+
+use crate::{FunctionId, Value};
+
+use super::super::types::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
+use crate::execution::vm::VmError;
+use crate::execution::vm::dispatch::DispatchStep;
+use crate::execution::vm::tasks::{TaskClock, TaskScheduler, TaskSuspensionState};
+use crate::execution::vm::worker::Worker;
+
+pub(in crate::execution::vm::debug) use completed_result::CompletedResultTargetError;
+pub(in crate::execution::vm::debug) use control::TaskHoldError;
+pub(in crate::execution::vm::debug) use lifecycle::TaskCancelError;
+
+struct TaskSlot {
+    worker: Worker,
+    entry_function: crate::FunctionId,
+    name: String,
+    state: DebugTaskState,
+    failure: Option<VmError>,
+    exited: bool,
+    paused: bool,
+}
+
+impl TaskSlot {
+    fn is_schedulable(&self) -> bool {
+        self.state == DebugTaskState::Runnable && !self.paused
+    }
+
+    fn unpaused_sleep_remaining(&self) -> Option<Duration> {
+        if self.paused {
+            return None;
+        }
+        match self.worker.debug_suspension_state() {
+            Some(TaskSuspensionState::Sleeping { remaining }) => Some(remaining),
+            _ => None,
+        }
+    }
+}
+
+/// Result of polling the deterministic task scheduler for its next action.
+pub(in crate::execution::vm::debug) enum DebugSchedule {
+    /// One task can execute exactly one instruction.
+    Runnable {
+        /// Runtime task identity.
+        task_id: u64,
+        /// Whether the task has just become runnable at a stable boundary.
+        resumed_at_boundary: bool,
+    },
+    /// No task is runnable before the supplied bounded polling delay.
+    Idle(Duration),
+    /// Live work remains, but every unpaused task is blocked on a paused peer.
+    NoUnpausedWork,
+    /// Controlled execution has settled with no runnable task or future deadline.
+    Deadlock,
+    /// Virtual time cannot advance without overflowing its supported range.
+    ClockExhausted,
+}
+
+/// Result of dispatching exactly one task instruction.
+pub(in crate::execution::vm::debug) enum DebugDispatch {
+    /// The task completed an instruction and remains runnable.
+    Instruction(u64),
+    /// The task cooperatively suspended or yielded.
+    Suspended(u64),
+    /// The task returned normally or its failure was contained by its task group.
+    Completed {
+        /// Runtime task identity.
+        task_id: u64,
+        /// Whether this is the main task whose result owns session termination.
+        main: bool,
+    },
+}
+
+/// Single-lane owner of all workers in one debug session.
+pub(in crate::execution::vm::debug) struct DebugTaskRuntime {
+    scheduler: Arc<TaskScheduler>,
+    clock: Arc<TaskClock>,
+    tasks: BTreeMap<u64, TaskSlot>,
+    last_dispatched: u64,
+    resumed_at_boundary: BTreeSet<u64>,
+    events: Vec<DebugTaskEvent>,
+    root_result: Option<Value>,
+    root_result_roots: Option<crate::RootValues>,
+    _globals_roots: crate::RegisteredRoots,
+    seeded: Option<super::super::scheduling::rounds::SeededRounds>,
+}
+
+impl DebugTaskRuntime {
+    /// Create the debugger-owned task runtime around the main worker.
+    pub(in crate::execution::vm::debug) fn new(
+        root: Worker,
+        scheduler: Arc<TaskScheduler>,
+        clock: Arc<TaskClock>,
+    ) -> Self {
+        let globals_roots = root.domain.register_roots(
+            crate::RootKind::Globals,
+            Arc::new(crate::execution::vm::domain::roots::GlobalRoots(
+                Arc::clone(&root.globals),
+            )),
+        );
+        let entry_function = root.function;
+        let tasks = BTreeMap::from([(
+            0,
+            TaskSlot {
+                worker: root,
+                entry_function,
+                name: "FPAS main".to_string(),
+                state: DebugTaskState::Runnable,
+                failure: None,
+                exited: false,
+                paused: false,
+            },
+        )]);
+        Self {
+            _globals_roots: globals_roots,
+            scheduler,
+            clock,
+            tasks,
+            last_dispatched: 0,
+            resumed_at_boundary: BTreeSet::new(),
+            events: Vec::new(),
+            root_result: None,
+            root_result_roots: None,
+            seeded: None,
+        }
+    }
+
+    /// Function identities currently on any retained worker stack.
+    pub(in crate::execution::vm::debug) fn active_function_ids(&self) -> BTreeSet<FunctionId> {
+        let mut ids = BTreeSet::new();
+        for slot in self.tasks.values() {
+            ids.insert(slot.worker.function);
+            ids.extend(slot.worker.call_stack.iter().map(|frame| frame.function));
+        }
+        ids
+    }
+
+    /// Return one retained task worker, including terminal workers.
+    pub(in crate::execution::vm::debug) fn worker(&self, task_id: u64) -> Option<&Worker> {
+        self.tasks.get(&task_id).map(|slot| &slot.worker)
+    }
+
+    /// Return one retained task worker for stopped-state mutation.
+    pub(in crate::execution::vm::debug) fn worker_mut(
+        &mut self,
+        task_id: u64,
+    ) -> Option<&mut Worker> {
+        self.tasks.get_mut(&task_id).map(|slot| &mut slot.worker)
+    }
+
+    /// Drop pending global-store observations before a new resume.
+    pub(in crate::execution::vm::debug) fn clear_debug_global_stores(&mut self) {
+        for slot in self.tasks.values_mut() {
+            slot.worker.take_debug_global_store();
+        }
+    }
+
+    /// Whether a task currently has a stable instruction-boundary snapshot.
+    pub(in crate::execution::vm::debug) fn task_is_inspectable(&self, task_id: u64) -> bool {
+        self.tasks
+            .get(&task_id)
+            .is_some_and(|slot| slot.state.is_inspectable())
+    }
+
+    /// Return one task's current lifecycle state.
+    pub(in crate::execution::vm::debug) fn task_state(
+        &self,
+        task_id: u64,
+    ) -> Option<DebugTaskState> {
+        self.tasks.get(&task_id).map(|slot| slot.state)
+    }
+
+    /// Return stable IDs for every task that can be inspected at this stop.
+    pub(in crate::execution::vm::debug) fn inspectable_task_ids(&self) -> Vec<u64> {
+        self.tasks
+            .iter()
+            .filter_map(|(&task_id, slot)| slot.state.is_inspectable().then_some(task_id))
+            .collect()
+    }
+
+    /// Select the next runnable task or the bounded idle delay before polling again.
+    pub(in crate::execution::vm::debug) fn schedule(
+        &mut self,
+        preferred: Option<u64>,
+    ) -> Result<DebugSchedule, (u64, VmError)> {
+        let _timer = crate::profile::Timer::start(crate::profile::Counter::DebugScheduleNanos);
+        if self.seeded.is_some() {
+            return self.seeded_schedule();
+        }
+        self.drain_spawned();
+        self.refresh_readiness()?;
+        if let Some(task_id) = preferred.filter(|task_id| {
+            self.tasks
+                .get(task_id)
+                .is_some_and(TaskSlot::is_schedulable)
+        }) {
+            return Ok(DebugSchedule::Runnable {
+                task_id,
+                resumed_at_boundary: self.resumed_at_boundary.remove(&task_id),
+            });
+        }
+        let mut runnable = self
+            .tasks
+            .iter()
+            .filter_map(|(&id, slot)| slot.is_schedulable().then_some(id));
+        let first = runnable.next();
+        let selected = first.and_then(|first| {
+            std::iter::once(first)
+                .chain(runnable)
+                .find(|id| *id > self.last_dispatched)
+                .or(Some(first))
+        });
+        if let Some(task_id) = selected {
+            return Ok(DebugSchedule::Runnable {
+                task_id,
+                resumed_at_boundary: self.resumed_at_boundary.remove(&task_id),
+            });
+        }
+        if let Some(wait) = self
+            .tasks
+            .values()
+            .filter_map(TaskSlot::unpaused_sleep_remaining)
+            .min()
+        {
+            return Ok(DebugSchedule::Idle(wait.min(Duration::from_millis(1))));
+        }
+        if self.tasks.values().any(|slot| {
+            slot.paused && slot.state.is_inspectable() && slot.state != DebugTaskState::Failed
+        }) {
+            return Ok(DebugSchedule::NoUnpausedWork);
+        }
+        Ok(DebugSchedule::Idle(Duration::from_millis(1)))
+    }
+
+    /// Execute exactly one instruction in the selected task.
+    pub(in crate::execution::vm::debug) fn dispatch(
+        &mut self,
+        task_id: u64,
+    ) -> Result<DebugDispatch, (u64, VmError)> {
+        let _timer = crate::profile::Timer::start(crate::profile::Counter::DebugDispatchNanos);
+        if let Some(rounds) = &mut self.seeded {
+            rounds.dispatched();
+        }
+        let Some(slot) = self.tasks.get_mut(&task_id) else {
+            unreachable!("scheduled debug task must exist")
+        };
+        debug_assert!(!slot.paused, "paused debug tasks must not be dispatched");
+        let access = slot
+            .worker
+            .execution_access()
+            .map_err(|error| (task_id, error))?;
+        slot.state = DebugTaskState::Running;
+        slot.failure = None;
+        self.last_dispatched = task_id;
+        let dispatch = match slot
+            .worker
+            .dispatch_supervised_debug_one()
+            .or_else(|error| {
+                // A body that ends with open task scopes first waits for their children.
+                slot.worker
+                    .begin_scope_unwind(error)
+                    .map(|()| DispatchStep::Suspend)
+            }) {
+            Ok(dispatch) => dispatch,
+            Err(error) => {
+                if failure::record(slot, task_id, &error, &self.scheduler, &mut self.events) {
+                    self.drain_spawned();
+                    return Ok(DebugDispatch::Completed {
+                        task_id,
+                        main: false,
+                    });
+                }
+                return Err((task_id, error));
+            }
+        };
+        let result = match dispatch {
+            DispatchStep::Continue => {
+                slot.state = DebugTaskState::Runnable;
+                DebugDispatch::Instruction(task_id)
+            }
+            DispatchStep::Suspend => {
+                slot.state = state_from_suspension(&slot.worker);
+                DebugDispatch::Suspended(task_id)
+            }
+            DispatchStep::Return(value) => {
+                slot.state = DebugTaskState::Completed;
+                if task_id == 0 {
+                    self.root_result_roots = Some(
+                        slot.worker
+                            .domain
+                            .root_values(crate::RootKind::Native, vec![value.clone()]),
+                    );
+                    self.root_result = Some(value.clone());
+                }
+                if slot.worker.retain_result {
+                    self.scheduler.store_result(task_id, value);
+                }
+                if task_id != 0 {
+                    slot.exited = true;
+                    self.events.push(DebugTaskEvent {
+                        task_id,
+                        kind: DebugTaskEventKind::Exited,
+                    });
+                }
+                slot.worker.retire_execution();
+                DebugDispatch::Completed {
+                    task_id,
+                    main: task_id == 0,
+                }
+            }
+        };
+        if (access.outermost() || slot.worker.domain.maintenance_pending())
+            && slot.worker.publish_execution(&[]).is_ok()
+        {
+            access.safe_point();
+        }
+        drop(access);
+        self.drain_spawned();
+        if self.scheduler.is_shutdown() {
+            self.cancel_sleeping_tasks();
+        }
+        Ok(result)
+    }
+
+    /// Return the aggregate packed-instruction count for all tasks.
+    pub(in crate::execution::vm::debug) fn instruction_count(&self) -> u64 {
+        self.tasks.values().fold(0, |total, slot| {
+            total.saturating_add(slot.worker.instruction_count)
+        })
+    }
+
+    #[cfg(test)]
+    pub(in crate::execution::vm::debug) fn test_poll_task_result(
+        &self,
+        task_id: u64,
+    ) -> crate::execution::vm::TaskResultPoll {
+        self.scheduler.poll_result(task_id)
+    }
+
+    /// Drain stable task lifecycle events in creation/completion order.
+    pub(in crate::execution::vm::debug) fn take_events(&mut self) -> Vec<DebugTaskEvent> {
+        std::mem::take(&mut self.events)
+    }
+
+    /// Begin normal root teardown and cancel timer-suspended tasks.
+    pub(in crate::execution::vm::debug) fn finish_main(&mut self) {
+        self.scheduler.finish_main();
+        self.cancel_sleeping_tasks();
+    }
+
+    /// Whether every spawned task has reached a terminal lifecycle state.
+    pub(in crate::execution::vm::debug) fn spawned_tasks_finished(&self) -> bool {
+        self.tasks.iter().all(|(&task_id, slot)| {
+            task_id == 0
+                || matches!(
+                    slot.state,
+                    DebugTaskState::Completed | DebugTaskState::Failed | DebugTaskState::Cancelled
+                )
+        })
+    }
+
+    /// Take the root result once normal teardown has finished every spawned task.
+    pub(in crate::execution::vm::debug) fn take_finished_root_result(&mut self) -> Option<Value> {
+        let value = self
+            .spawned_tasks_finished()
+            .then(|| self.root_result.take())
+            .flatten();
+        if value.is_some()
+            && let Some(worker) = self.worker(0)
+        {
+            worker.hosted.close_process_handles();
+            worker.hosted.close_file_handles();
+            worker.hosted.wait_process_handles();
+        }
+        value
+    }
+
+    pub(in crate::execution::vm::debug) fn release_finished_root_result(&mut self) {
+        self.root_result_roots.take();
+    }
+
+    /// Wait for the next scheduler poll using the configured monotonic clock.
+    pub(in crate::execution::vm::debug) fn wait(&self, duration: Duration) {
+        let _timer = crate::profile::Timer::start(crate::profile::Counter::DebugWaitNanos);
+        self.clock.wait(duration);
+    }
+
+    /// Cancel every remaining task immediately for explicit disconnect or fatal teardown.
+    pub(in crate::execution::vm::debug) fn cancel(&mut self) {
+        self.scheduler.request_cancel();
+        if let Some(worker) = self.worker(0) {
+            worker.hosted.close_process_handles();
+            worker.hosted.close_file_handles();
+            worker.hosted.wait_process_handles();
+        }
+        for (&task_id, slot) in &mut self.tasks {
+            slot.worker.supervision = None;
+            // Claimed Select cases belong to the suspended operation, not the closed registry.
+            // Shutdown and hosted cleanup have completed, so no operation can resume.
+            slot.worker.task_suspension = None;
+            slot.worker.retire_execution();
+            if !matches!(
+                slot.state,
+                DebugTaskState::Completed | DebugTaskState::Failed | DebugTaskState::Cancelled
+            ) {
+                slot.state = DebugTaskState::Cancelled;
+            }
+            if task_id != 0 && !slot.exited {
+                slot.exited = true;
+                self.events.push(DebugTaskEvent {
+                    task_id,
+                    kind: DebugTaskEventKind::Exited,
+                });
+            }
+        }
+    }
+
+    fn drain_spawned(&mut self) {
+        while let Some(task) = self.scheduler.try_dequeue() {
+            let task_id = task.id;
+            let function = task.function;
+            let Some(template) = self.tasks.get(&0).map(|slot| &slot.worker) else {
+                break;
+            };
+            let mut worker = template.worker_for_task(task);
+            let access = worker.domain.access();
+            worker.trace_local_begin();
+            let _ = worker.publish_execution(&[]);
+            drop(access);
+            let function_name = worker
+                .executable
+                .executable()
+                .functions
+                .get(usize::from(function.get()))
+                .and_then(|info| worker.executable.executable().strings.get(info.name))
+                .unwrap_or("<task>")
+                .to_string();
+            self.tasks.insert(
+                task_id,
+                TaskSlot {
+                    worker,
+                    entry_function: function,
+                    name: format!("FPAS task {task_id}: {function_name}"),
+                    state: DebugTaskState::Runnable,
+                    failure: None,
+                    exited: false,
+                    paused: false,
+                },
+            );
+            self.resumed_at_boundary.insert(task_id);
+            self.events.push(DebugTaskEvent {
+                task_id,
+                kind: DebugTaskEventKind::Started,
+            });
+        }
+    }
+
+    fn cancel_sleeping_tasks(&mut self) {
+        for (&task_id, slot) in &mut self.tasks {
+            if slot.state != DebugTaskState::Sleeping {
+                continue;
+            }
+            slot.state = DebugTaskState::Cancelled;
+            slot.worker.retire_execution();
+            slot.exited = true;
+            if slot.worker.retain_result {
+                self.scheduler.cancel_result(task_id);
+            }
+            self.events.push(DebugTaskEvent {
+                task_id,
+                kind: DebugTaskEventKind::Exited,
+            });
+        }
+    }
+}
+
+fn state_from_suspension(worker: &Worker) -> DebugTaskState {
+    match worker.debug_suspension_state() {
+        Some(TaskSuspensionState::Waiting) => DebugTaskState::Waiting,
+        Some(TaskSuspensionState::Sleeping { .. }) => DebugTaskState::Sleeping,
+        Some(TaskSuspensionState::Yielded) | None => DebugTaskState::Runnable,
+    }
+}

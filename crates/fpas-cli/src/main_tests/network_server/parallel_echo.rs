@@ -12,7 +12,7 @@ fn parallel_echo_example_serves_second_client_and_cancels_idle_reads() {
         .replace("18082", &port.to_string())
         .replace("10000", "2500")
         // This socket regression embeds the VM in the test runner. Process policy is
-        // covered by disposable-process tests in fpas-vm, never by this thread.
+        // covered by disposable-process tests in fpas-runtime, never by this thread.
         .replace("CreateLifetime(1000, true)", "CreateLifetime(1000, false)")
         .replace("discard Server.ObserveSignals(Life).Unwrap();", "");
     let (cwd, server) = start_server("parallel-echo-example", source);

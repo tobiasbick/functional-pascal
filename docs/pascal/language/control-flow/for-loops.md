@@ -48,8 +48,8 @@ integer index checked against its length.
 |---------|----------|
 | Lowering | [`control_flow.rs`](../../../../crates/fpas-compiler/src/lowering/control_flow.rs) |
 | Counting loops | [`counting.rs`](../../../../crates/fpas-compiler/src/lowering/control_flow/counting.rs) |
-| Opcodes | [`opcode.rs`](../../../../crates/fpas-bytecode/src/instruction/opcode.rs) |
-| VM | [`opcodes.rs`](../../../../crates/fpas-vm/src/vm/dispatch/opcodes.rs) |
+| Opcodes | [`opcode.rs`](../../../../crates/fpas-code/src/instruction/opcode.rs) |
+| VM | [`opcodes.rs`](../../../../crates/fpas-runtime/src/execution/vm/dispatch/opcodes.rs) |
 
 ## See also
 

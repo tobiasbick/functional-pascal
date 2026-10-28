@@ -3,7 +3,7 @@
 
 use super::invalid;
 use crate::LinkError;
-use fpas_bytecode::{ErrorInstanceKey, Instruction, Opcode};
+use fpas_code::{ErrorInstanceKey, Instruction, Opcode};
 use fpas_unit::{
     errors::{ErrorConstructorRequest, constructor_symbol},
     object::{

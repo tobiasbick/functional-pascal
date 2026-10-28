@@ -203,20 +203,20 @@ its VM worker.
 
 | Concern | Location |
 |---------|----------|
-| VM connection registry | [`connections.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections.rs) |
-| Cancellable connection establishment | [`establishment.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections/establishment.rs) |
-| Cancellable TCP attempts | [`establishment/tcp.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections/establishment/tcp.rs) |
-| Cancellable reads | [`cancellable_read.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections/cancellable_read.rs) |
-| Cancellable writes | [`cancellable_write.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections/cancellable_write.rs) |
-| Cancellation and deadline polling | [`polling.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections/polling.rs) |
-| VM listener registry | [`listeners.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/listeners.rs) |
-| Cancellation registry | [`cancellation/registry.rs`](../../../../crates/fpas-vm/src/vm/cancellation/registry.rs) |
-| TCP/TLS transport | [`transport.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/transport.rs) |
-| TLS client verification | [`client.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/tls/client.rs) |
-| TLS server credentials and handshake | [`server.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/tls/server.rs) |
-| Hosted dispatch | [`net/mod.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/mod.rs) |
+| VM connection registry | [`connections.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections.rs) |
+| Cancellable connection establishment | [`establishment.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/establishment.rs) |
+| Cancellable TCP attempts | [`establishment/tcp.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/establishment/tcp.rs) |
+| Cancellable reads | [`cancellable_read.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/cancellable_read.rs) |
+| Cancellable writes | [`cancellable_write.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/cancellable_write.rs) |
+| Cancellation and deadline polling | [`polling.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/polling.rs) |
+| VM listener registry | [`listeners.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/listeners.rs) |
+| Cancellation registry | [`cancellation/registry.rs`](../../../../crates/fpas-runtime/src/execution/vm/cancellation/registry.rs) |
+| TCP/TLS transport | [`transport.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/transport.rs) |
+| TLS client verification | [`client.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/tls/client.rs) |
+| TLS server credentials and handshake | [`server.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/tls/server.rs) |
+| Hosted dispatch | [`net/mod.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/mod.rs) |
 | Registration | [`loaded/net.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/net.rs) |
-| Intrinsic ids | [`intrinsic/net.rs`](../../../../crates/fpas-bytecode/src/intrinsic/net.rs) |
+| Intrinsic ids | [`intrinsic/net.rs`](../../../../crates/fpas-code/src/intrinsic/net.rs) |
 
 ## See also
 

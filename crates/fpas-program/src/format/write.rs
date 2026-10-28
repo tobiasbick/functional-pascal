@@ -23,6 +23,6 @@ pub fn encode(image: &ProgramImage) -> Result<Vec<u8>, FormatError> {
 /// # Errors
 ///
 /// Returns a structured format or resource-limit error.
-pub fn executable_digest(executable: &fpas_bytecode::Executable) -> Result<Digest, FormatError> {
+pub fn executable_digest(executable: &fpas_code::Executable) -> Result<Digest, FormatError> {
     executable::encode(executable).map(Digest::of)
 }

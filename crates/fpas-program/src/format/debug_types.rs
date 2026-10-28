@@ -1,6 +1,6 @@
 //! Binary conversion for portable debugger type graphs.
 
-use fpas_bytecode::{DebugType, DebugTypeId, EnumTypeId, RecordTypeId};
+use fpas_code::{DebugType, DebugTypeId, EnumTypeId, RecordTypeId};
 
 use super::sections::{
     DecodedSection, EncodedSection, SectionReader, write_u8, write_u16, write_u32,
@@ -29,7 +29,7 @@ pub(super) fn encode(types: &[DebugType], tag: u16) -> Result<EncodedSection, Fo
     check_limit(
         "debug_types",
         types.len(),
-        fpas_bytecode::limits::MAX_DEBUG_TYPES,
+        fpas_code::limits::MAX_DEBUG_TYPES,
     )?;
     let mut bytes = Vec::new();
     for ty in types {
@@ -106,7 +106,7 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DebugType>, Form
     check_limit(
         "debug_types",
         section.item_count,
-        fpas_bytecode::limits::MAX_DEBUG_TYPES,
+        fpas_code::limits::MAX_DEBUG_TYPES,
     )?;
     let mut reader = SectionReader::new(section.bytes, "debug type section");
     reader.ensure_entries(section.item_count, 1, "debug_type_tag")?;
@@ -134,7 +134,7 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DebugType>, Form
                 check_limit(
                     "debug_function_parameters",
                     count,
-                    fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
+                    fpas_code::limits::MAX_LAYOUT_FIELDS,
                 )?;
                 reader.ensure_entries(count, 4, "debug_function_parameter_type")?;
                 let mut parameters = Vec::with_capacity(count);

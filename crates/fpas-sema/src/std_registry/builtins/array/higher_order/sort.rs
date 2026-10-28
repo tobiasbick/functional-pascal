@@ -2,10 +2,10 @@
 
 use crate::check::Checker;
 use crate::types::Ty;
+use fpas_builtins::std_symbols as s;
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use fpas_std::std_symbols as s;
 
 use super::super::super::callbacks::expect_unary_function_callback;
 use super::super::{array_elem_ty, check_argument_count};

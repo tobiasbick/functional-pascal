@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use fpas_bytecode::{DebugType, DebugTypeId};
+use fpas_code::{DebugType, DebugTypeId};
 use fpas_unit::object::{DefinitionTarget, ObjectDebugType, RelocatableObject, SymbolKind};
 
 use crate::LinkError;

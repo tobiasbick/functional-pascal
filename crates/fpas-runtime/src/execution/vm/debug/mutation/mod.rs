@@ -1,0 +1,189 @@
+//! Atomic live-root mutation after detached expression evaluation.
+
+mod dictionary;
+pub(in crate::execution::vm::debug) mod empty_storage;
+mod function_value;
+mod model;
+/// Bounded portable type equality, including parameter modes; see `docs/pascal/tools/debugger.md`.
+pub(in crate::execution::vm::debug) mod portable_type;
+mod replace;
+mod resolve;
+mod sequence;
+mod task_value;
+mod transition;
+mod validate;
+mod variant;
+
+use crate::{Value, VerifiedExecutable};
+
+use super::inspection::{MutationRoot, MutationTarget};
+use super::types::{DebugErrorKind, DebugSessionError};
+use crate::execution::vm::worker::Worker;
+
+pub(in crate::execution::vm::debug) use dictionary::{
+    DictionaryTransformation, insert, remove, replace_key,
+};
+pub use empty_storage::DebugStorageInitializationResult;
+pub(in crate::execution::vm::debug) use function_value::{
+    AssignmentContext as FunctionAssignmentContext, FunctionSource, inactive_function_payload,
+    is_function_type, prepare as prepare_function_value,
+    prepare_bound_method as prepare_bound_method_value, prepare_routine as prepare_routine_value,
+    source as function_value_source,
+};
+pub use model::{
+    DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
+    DebugDictionaryMutationResult, DebugStringMutationResult,
+};
+/// Reads an already resolved aggregate path; see `docs/pascal/tools/debugger.md`.
+pub(in crate::execution::vm::debug) use replace::resolve as resolve_value_path;
+pub(in crate::execution::vm::debug) use resolve::{
+    ResolvedAssignment, resolve_assignment, target_with_value,
+};
+pub(in crate::execution::vm::debug) use sequence::{
+    insert_array, remove_array, replace_string_character,
+};
+pub(in crate::execution::vm::debug) use task_value::{
+    inactive_task_payload, is_task_type, prepare as prepare_task_value, source as task_value_source,
+};
+pub(in crate::execution::vm::debug) use transition::construct as construct_transition;
+pub use variant::{
+    DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
+};
+pub(in crate::execution::vm::debug) use variant::{
+    VariantMetadata, WrapperMetadata, complete_value, constructible_description,
+    ordered_field_expressions, require_constructible_fields, require_wrapper, unknown_variant,
+};
+
+pub(in crate::execution::vm::debug) fn validate_replacement(
+    executable: &VerifiedExecutable,
+    target: &MutationTarget,
+    replacement: &Value,
+    max_depth: usize,
+) -> Result<(), DebugSessionError> {
+    validate::value(
+        executable.executable(),
+        target.expected_type,
+        replacement,
+        max_depth,
+    )
+}
+
+/// Validates one detached operation value against portable debugger type metadata.
+pub(in crate::execution::vm::debug) fn validate_value(
+    executable: &VerifiedExecutable,
+    expected: crate::DebugTypeId,
+    value: &Value,
+    max_depth: usize,
+) -> Result<(), DebugSessionError> {
+    validate::value(executable.executable(), expected, value, max_depth)
+}
+
+/// Checks detached call values, including nested function signatures and parameter modes.
+/// See `docs/pascal/tools/debugger.md`.
+pub(in crate::execution::vm::debug) fn validate_call_value(
+    executable: &VerifiedExecutable,
+    expected: crate::DebugTypeId,
+    value: &Value,
+    max_depth: usize,
+) -> Result<(), DebugSessionError> {
+    validate::call_value(executable.executable(), expected, value, max_depth)
+}
+
+pub(in crate::execution::vm::debug) fn commit(
+    worker: &mut Worker,
+    generation: u32,
+    target: &MutationTarget,
+    replacement: Value,
+) -> Result<Value, DebugSessionError> {
+    if target.generation != generation {
+        return Err(expired());
+    }
+    if !target.path.is_empty() && !target.initialized {
+        return Err(uninitialized_path());
+    }
+    worker
+        .require_storable_value(&replacement)
+        .map_err(|_| DebugSessionError {
+            kind: DebugErrorKind::VariableValueType,
+            message: "debug replacement contains foreign or escaping local storage".into(),
+            hint: "Assign values owned by the selected stopped task.".into(),
+        })?;
+    match &target.root {
+        MutationRoot::FrameRegister(register) => {
+            if target.path.is_empty() {
+                worker
+                    .store_register(*register, replacement.clone())
+                    .map_err(|_| unavailable())?;
+                return Ok(replacement);
+            }
+            if !worker.register_is_initialized(*register) {
+                return Err(uninitialized_path());
+            }
+            let root = worker
+                .registers
+                .get(*register)
+                .cloned()
+                .ok_or_else(unavailable)?;
+            let updated = replace::descendant(root, &target.path, replacement)?;
+            worker
+                .store_register(*register, updated.clone())
+                .map_err(|_| unavailable())?;
+            Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
+        }
+        MutationRoot::Global(global) => {
+            let mut globals = worker.globals.write().map_err(|_| unavailable())?;
+            let slot = globals.get_mut(*global).ok_or_else(unavailable)?;
+            if target.path.is_empty() {
+                *slot = Some(replacement.clone());
+                return Ok(replacement);
+            }
+            let current = slot.as_mut().ok_or_else(uninitialized_path)?;
+            let updated = replace::descendant(current.clone(), &target.path, replacement)?;
+            *current = updated.clone();
+            Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
+        }
+        MutationRoot::ClosureCell(cell) => {
+            let mut committed = None;
+            cell.try_update(&worker.domain, |inner| {
+                let updated = replace::descendant(inner.clone(), &target.path, replacement)?;
+                committed =
+                    Some(replaced_value(&updated, &target.path).unwrap_or_else(|| updated.clone()));
+                Ok(updated)
+            })
+            .map_err(|failure| match failure {
+                crate::CellUpdateError::Ownership(_) => unavailable(),
+                crate::CellUpdateError::Update(error) => error,
+            })?;
+            committed.ok_or_else(unavailable)
+        }
+    }
+}
+
+fn replaced_value(root: &Value, path: &[super::inspection::MutationPath]) -> Option<Value> {
+    replace::resolve(root, path).cloned()
+}
+
+fn expired() -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableTargetExpired,
+        message: "debug variable target belongs to an expired stop snapshot".to_string(),
+        hint: "Request scopes and variables again for the current stop.".to_string(),
+    }
+}
+
+fn unavailable() -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableUnavailable,
+        message: "debug variable live storage is unavailable".to_string(),
+        hint: "Retry at a stable stop after the live storage becomes available.".to_string(),
+    }
+}
+
+fn uninitialized_path() -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariablePathUnsupported,
+        message: "debug variable target path is unsupported on uninitialized storage".to_string(),
+        hint: "Initialize the complete binding before editing fields, indexes, or payload descendants."
+            .to_string(),
+    }
+}

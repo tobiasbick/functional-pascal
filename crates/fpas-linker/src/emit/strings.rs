@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use fpas_bytecode::{StringId, StringTable};
+use fpas_code::{StringId, StringTable};
 
 use crate::LinkError;
 

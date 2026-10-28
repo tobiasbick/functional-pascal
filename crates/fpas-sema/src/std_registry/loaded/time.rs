@@ -1,7 +1,7 @@
 use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_std::std_symbols as s;
+use fpas_builtins::std_symbols as s;
 
 /// Register the `Std.Time` functions made visible by `uses Std.Time`.
 pub(super) fn register_std_time(checker: &mut Checker) {

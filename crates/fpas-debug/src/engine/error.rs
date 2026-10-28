@@ -65,7 +65,7 @@ impl EngineFailure {
         )
     }
 
-    pub(crate) fn from_session(error: fpas_vm::DebugSessionError) -> Self {
+    pub(crate) fn from_session(error: fpas_runtime::execution::DebugSessionError) -> Self {
         Self::new(session_code(error.kind), error.message, error.hint)
     }
 
@@ -82,72 +82,102 @@ impl EngineFailure {
 
 /// Stable JSONL/DAP failure code for a debug-session error kind.
 #[must_use]
-pub(crate) fn session_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
+pub(crate) fn session_code(kind: fpas_runtime::execution::DebugErrorKind) -> &'static str {
     match kind {
-        fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
-        fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",
-        fpas_vm::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
-        fpas_vm::DebugErrorKind::BreakpointLimit => "breakpoint_limit",
-        fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
-        fpas_vm::DebugErrorKind::FrameRestartUnsupported => "frame_restart_unsupported",
-        fpas_vm::DebugErrorKind::InstructionChangeUnsupported => "instruction_change_unsupported",
-        fpas_vm::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
-        fpas_vm::DebugErrorKind::TaskRestartUnsupported => "task_restart_unsupported",
-        fpas_vm::DebugErrorKind::LiveInputUnsupported => "live_input_unsupported",
-        fpas_vm::DebugErrorKind::DebuggeeInputLimit => "debuggee_input_limit",
-        fpas_vm::DebugErrorKind::DebuggeeInputClosed => "debuggee_input_closed",
-        fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
-        fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
-        fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",
-        fpas_vm::DebugErrorKind::FrameReturnType => "frame_return_type",
-        fpas_vm::DebugErrorKind::TaskResultReplacementUnsupported => {
+        fpas_runtime::execution::DebugErrorKind::InvalidState => "invalid_state",
+        fpas_runtime::execution::DebugErrorKind::UnknownTask => "unknown_task",
+        fpas_runtime::execution::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
+        fpas_runtime::execution::DebugErrorKind::BreakpointLimit => "breakpoint_limit",
+        fpas_runtime::execution::DebugErrorKind::UnknownFrame => "unknown_frame",
+        fpas_runtime::execution::DebugErrorKind::FrameRestartUnsupported => {
+            "frame_restart_unsupported"
+        }
+        fpas_runtime::execution::DebugErrorKind::InstructionChangeUnsupported => {
+            "instruction_change_unsupported"
+        }
+        fpas_runtime::execution::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
+        fpas_runtime::execution::DebugErrorKind::TaskRestartUnsupported => {
+            "task_restart_unsupported"
+        }
+        fpas_runtime::execution::DebugErrorKind::LiveInputUnsupported => "live_input_unsupported",
+        fpas_runtime::execution::DebugErrorKind::DebuggeeInputLimit => "debuggee_input_limit",
+        fpas_runtime::execution::DebugErrorKind::DebuggeeInputClosed => "debuggee_input_closed",
+        fpas_runtime::execution::DebugErrorKind::FrameReturnUnsupported => {
+            "frame_return_unsupported"
+        }
+        fpas_runtime::execution::DebugErrorKind::FrameReturnValueRequired => {
+            "frame_return_value_required"
+        }
+        fpas_runtime::execution::DebugErrorKind::FrameReturnValueUnexpected => {
+            "frame_return_value_unexpected"
+        }
+        fpas_runtime::execution::DebugErrorKind::FrameReturnType => "frame_return_type",
+        fpas_runtime::execution::DebugErrorKind::TaskResultReplacementUnsupported => {
             "task_result_replacement_unsupported"
         }
-        fpas_vm::DebugErrorKind::TaskResultReplacementType => "task_result_replacement_type",
-        fpas_vm::DebugErrorKind::VariantUnknown => "variant_unknown",
-        fpas_vm::DebugErrorKind::VariantFieldSet => "variant_field_set",
-        fpas_vm::DebugErrorKind::StorageAlreadyInitialized => "storage_already_initialized",
-        fpas_vm::DebugErrorKind::UnknownVariablesReference => "unknown_variables_reference",
-        fpas_vm::DebugErrorKind::VariableTargetUnknown => "variable_target_unknown",
-        fpas_vm::DebugErrorKind::VariableTargetExpired => "variable_target_expired",
-        fpas_vm::DebugErrorKind::VariableNotMutable => "variable_not_mutable",
-        fpas_vm::DebugErrorKind::VariablePathUnsupported => "variable_path_unsupported",
-        fpas_vm::DebugErrorKind::VariableUninitialized => "variable_uninitialized",
-        fpas_vm::DebugErrorKind::VariableValueType => "variable_value_type",
-        fpas_vm::DebugErrorKind::VariableUnavailable => "variable_unavailable",
-        fpas_vm::DebugErrorKind::DictionaryKeyExists => "dictionary_key_exists",
-        fpas_vm::DebugErrorKind::DictionaryKeyMissing => "dictionary_key_missing",
-        fpas_vm::DebugErrorKind::DictionaryKeyUnchanged => "dictionary_key_unchanged",
-        fpas_vm::DebugErrorKind::SequenceIndexOutOfBounds => "sequence_index_out_of_bounds",
-        fpas_vm::DebugErrorKind::StringCharacterRequired => "string_character_required",
-        fpas_vm::DebugErrorKind::StringCharacterUnchanged => "string_character_unchanged",
-        fpas_vm::DebugErrorKind::InspectionLimit => "limit_exceeded",
-        fpas_vm::DebugErrorKind::UnknownName => "unknown_name",
-        fpas_vm::DebugErrorKind::UninitializedValue => "uninitialized_value",
-        fpas_vm::DebugErrorKind::EvaluationType => "evaluation_type",
-        fpas_vm::DebugErrorKind::EvaluationDomain => "evaluation_domain",
-        fpas_vm::DebugErrorKind::EvaluationLimit => "evaluation_limit",
-        fpas_vm::DebugErrorKind::UnavailableValue => "unavailable_value",
-        fpas_vm::DebugErrorKind::UnknownCallable => "call_target_unknown",
-        fpas_vm::DebugErrorKind::AmbiguousCallable => "call_ambiguous",
-        fpas_vm::DebugErrorKind::CallArity => "call_arity",
-        fpas_vm::DebugErrorKind::ForbiddenCallEffect => "call_effect_forbidden",
-        fpas_vm::DebugErrorKind::CallLimit => "call_limit",
-        fpas_vm::DebugErrorKind::CallTimeout => "call_timeout",
-        fpas_vm::DebugErrorKind::CallCancelled => "call_cancelled",
-        fpas_vm::DebugErrorKind::CallRuntime => "call_runtime",
-        fpas_vm::DebugErrorKind::ExecutionTimeout => "timeout",
-        fpas_vm::DebugErrorKind::InstructionLimit => "instruction_limit",
-        fpas_vm::DebugErrorKind::OutputLimit => "output_limit",
-        fpas_vm::DebugErrorKind::ScheduleDeadlock => "schedule_deadlock",
-        fpas_vm::DebugErrorKind::ScheduleClockLimit => "schedule_clock_limit",
-        fpas_vm::DebugErrorKind::TraceEventLimit => "trace_event_limit",
-        fpas_vm::DebugErrorKind::TraceValueLimit => "trace_value_limit",
-        fpas_vm::DebugErrorKind::TraceWorkLimit => "trace_work_limit",
-        fpas_vm::DebugErrorKind::TraceByteLimit => "trace_byte_limit",
-        fpas_vm::DebugErrorKind::RecordingHostPath => "recording_host_path",
-        fpas_vm::DebugErrorKind::LiveImageIncompatible => "live_image_incompatible",
-        fpas_vm::DebugErrorKind::LiveImageBuildFailed => "live_image_build_failed",
-        fpas_vm::DebugErrorKind::LiveImageRollbackUnavailable => "live_image_rollback_unavailable",
+        fpas_runtime::execution::DebugErrorKind::TaskResultReplacementType => {
+            "task_result_replacement_type"
+        }
+        fpas_runtime::execution::DebugErrorKind::VariantUnknown => "variant_unknown",
+        fpas_runtime::execution::DebugErrorKind::VariantFieldSet => "variant_field_set",
+        fpas_runtime::execution::DebugErrorKind::StorageAlreadyInitialized => {
+            "storage_already_initialized"
+        }
+        fpas_runtime::execution::DebugErrorKind::UnknownVariablesReference => {
+            "unknown_variables_reference"
+        }
+        fpas_runtime::execution::DebugErrorKind::VariableTargetUnknown => "variable_target_unknown",
+        fpas_runtime::execution::DebugErrorKind::VariableTargetExpired => "variable_target_expired",
+        fpas_runtime::execution::DebugErrorKind::VariableNotMutable => "variable_not_mutable",
+        fpas_runtime::execution::DebugErrorKind::VariablePathUnsupported => {
+            "variable_path_unsupported"
+        }
+        fpas_runtime::execution::DebugErrorKind::VariableUninitialized => "variable_uninitialized",
+        fpas_runtime::execution::DebugErrorKind::VariableValueType => "variable_value_type",
+        fpas_runtime::execution::DebugErrorKind::VariableUnavailable => "variable_unavailable",
+        fpas_runtime::execution::DebugErrorKind::DictionaryKeyExists => "dictionary_key_exists",
+        fpas_runtime::execution::DebugErrorKind::DictionaryKeyMissing => "dictionary_key_missing",
+        fpas_runtime::execution::DebugErrorKind::DictionaryKeyUnchanged => {
+            "dictionary_key_unchanged"
+        }
+        fpas_runtime::execution::DebugErrorKind::SequenceIndexOutOfBounds => {
+            "sequence_index_out_of_bounds"
+        }
+        fpas_runtime::execution::DebugErrorKind::StringCharacterRequired => {
+            "string_character_required"
+        }
+        fpas_runtime::execution::DebugErrorKind::StringCharacterUnchanged => {
+            "string_character_unchanged"
+        }
+        fpas_runtime::execution::DebugErrorKind::InspectionLimit => "limit_exceeded",
+        fpas_runtime::execution::DebugErrorKind::UnknownName => "unknown_name",
+        fpas_runtime::execution::DebugErrorKind::UninitializedValue => "uninitialized_value",
+        fpas_runtime::execution::DebugErrorKind::EvaluationType => "evaluation_type",
+        fpas_runtime::execution::DebugErrorKind::EvaluationDomain => "evaluation_domain",
+        fpas_runtime::execution::DebugErrorKind::EvaluationLimit => "evaluation_limit",
+        fpas_runtime::execution::DebugErrorKind::UnavailableValue => "unavailable_value",
+        fpas_runtime::execution::DebugErrorKind::UnknownCallable => "call_target_unknown",
+        fpas_runtime::execution::DebugErrorKind::AmbiguousCallable => "call_ambiguous",
+        fpas_runtime::execution::DebugErrorKind::CallArity => "call_arity",
+        fpas_runtime::execution::DebugErrorKind::ForbiddenCallEffect => "call_effect_forbidden",
+        fpas_runtime::execution::DebugErrorKind::CallLimit => "call_limit",
+        fpas_runtime::execution::DebugErrorKind::CallTimeout => "call_timeout",
+        fpas_runtime::execution::DebugErrorKind::CallCancelled => "call_cancelled",
+        fpas_runtime::execution::DebugErrorKind::CallRuntime => "call_runtime",
+        fpas_runtime::execution::DebugErrorKind::ExecutionTimeout => "timeout",
+        fpas_runtime::execution::DebugErrorKind::InstructionLimit => "instruction_limit",
+        fpas_runtime::execution::DebugErrorKind::OutputLimit => "output_limit",
+        fpas_runtime::execution::DebugErrorKind::ScheduleDeadlock => "schedule_deadlock",
+        fpas_runtime::execution::DebugErrorKind::ScheduleClockLimit => "schedule_clock_limit",
+        fpas_runtime::execution::DebugErrorKind::TraceEventLimit => "trace_event_limit",
+        fpas_runtime::execution::DebugErrorKind::TraceValueLimit => "trace_value_limit",
+        fpas_runtime::execution::DebugErrorKind::TraceWorkLimit => "trace_work_limit",
+        fpas_runtime::execution::DebugErrorKind::TraceByteLimit => "trace_byte_limit",
+        fpas_runtime::execution::DebugErrorKind::RecordingHostPath => "recording_host_path",
+        fpas_runtime::execution::DebugErrorKind::LiveImageIncompatible => "live_image_incompatible",
+        fpas_runtime::execution::DebugErrorKind::LiveImageBuildFailed => "live_image_build_failed",
+        fpas_runtime::execution::DebugErrorKind::LiveImageRollbackUnavailable => {
+            "live_image_rollback_unavailable"
+        }
     }
 }

@@ -1,6 +1,6 @@
 //! Debug binding register assignment and portable type display names.
 
-use fpas_bytecode::{
+use fpas_code::{
     DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, DebugType, DebugTypeId,
     EnumTypeId, FunctionDebugInfo, RecordTypeId, SequencePoint, SourceId,
 };
@@ -111,7 +111,7 @@ pub(super) fn compile_debug_info(
         .lexical_owner
         .map(|owner| {
             u16::try_from(owner.get())
-                .map(fpas_bytecode::FunctionId::new)
+                .map(fpas_code::FunctionId::new)
                 .map_err(|_| super::compile_error("lexical owner exceeds bytecode function id"))
         })
         .transpose()?;
@@ -125,14 +125,14 @@ pub(super) fn compile_debug_info(
             .debug
             .capture_sources
             .iter()
-            .map(|source| fpas_bytecode::DebugCaptureSource {
-                binding: fpas_bytecode::DebugBindingId::new(source.binding.get()),
+            .map(|source| fpas_code::DebugCaptureSource {
+                binding: fpas_code::DebugBindingId::new(source.binding.get()),
                 ty: DebugTypeId::new(source.ty.get()),
                 kind: match source.kind {
-                    fpas_ir::CaptureKind::Value => fpas_bytecode::DebugCaptureKind::Value,
-                    fpas_ir::CaptureKind::Cell => fpas_bytecode::DebugCaptureKind::Cell,
+                    fpas_ir::CaptureKind::Value => fpas_code::DebugCaptureKind::Value,
+                    fpas_ir::CaptureKind::Cell => fpas_code::DebugCaptureKind::Cell,
                     fpas_ir::CaptureKind::EnclosingCell => {
-                        fpas_bytecode::DebugCaptureKind::EnclosingCell
+                        fpas_code::DebugCaptureKind::EnclosingCell
                     }
                 },
             })

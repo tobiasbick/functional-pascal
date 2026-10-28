@@ -25,7 +25,7 @@ impl Default for BuildOptions {
                 env!("FPAS_COMPILER_BUILD_ID")
             )
             .to_string(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_code::BYTECODE_VERSION,
             options_hash: Digest::of(b"fpas-default-compilation-options-v1"),
         }
     }

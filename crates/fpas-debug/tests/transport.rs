@@ -14,7 +14,7 @@ use fpas_debug::{
     PreparedDebugTarget,
     jsonl::{JsonlServer, ServerStatus, serve, serve_script},
 };
-use fpas_vm::DebugExecutionLimits;
+use fpas_runtime::execution::DebugExecutionLimits;
 use serde_json::{Value, json};
 
 const OUTPUT_SOURCE: &str = r#"program TransportOutput;

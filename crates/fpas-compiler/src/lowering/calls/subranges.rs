@@ -38,8 +38,8 @@ impl LoweringContext {
         let value = self.emit_value(Operation::ReadLocal(local), INTEGER, span)?;
         let text = self.emit_value(
             Operation::Intrinsic {
-                intrinsic: IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Conv(
-                    fpas_bytecode::ConvIntrinsic::IntToStr,
+                intrinsic: IntrinsicId::new(u32::from(u16::from(fpas_code::Intrinsic::Conv(
+                    fpas_code::ConvIntrinsic::IntToStr,
                 )))),
                 arguments: vec![value],
             },

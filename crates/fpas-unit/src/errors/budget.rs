@@ -11,8 +11,8 @@ pub struct ErrorInstantiationBudget {
 impl Default for ErrorInstantiationBudget {
     fn default() -> Self {
         Self {
-            nodes: fpas_bytecode::limits::MAX_ERROR_EXPANSION_NODES,
-            text_bytes: fpas_bytecode::limits::MAX_STRING_BYTES,
+            nodes: fpas_code::limits::MAX_ERROR_EXPANSION_NODES,
+            text_bytes: fpas_code::limits::MAX_STRING_BYTES,
         }
     }
 }

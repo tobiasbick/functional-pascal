@@ -2,7 +2,9 @@
 
 use std::collections::HashSet;
 
-use fpas_vm::{DebugEvaluationLimits, DebugExpression, DebugSession, DebugSessionError};
+use fpas_runtime::execution::{
+    DebugEvaluationLimits, DebugExpression, DebugSession, DebugSessionError,
+};
 
 use super::BreakpointAssign;
 use super::hit_condition;
@@ -141,7 +143,7 @@ fn render_log_message(
         }
         if output.len() > remaining_log_bytes {
             return Err(DebugSessionError {
-                kind: fpas_vm::DebugErrorKind::EvaluationLimit,
+                kind: fpas_runtime::execution::DebugErrorKind::EvaluationLimit,
                 message: "logpoint output exceeds the remaining session output limit".to_string(),
                 hint: "Use a shorter log message or fewer loop hits.".to_string(),
             });
@@ -150,7 +152,7 @@ fn render_log_message(
     output.push('\n');
     if output.len() > remaining_log_bytes {
         return Err(DebugSessionError {
-            kind: fpas_vm::DebugErrorKind::EvaluationLimit,
+            kind: fpas_runtime::execution::DebugErrorKind::EvaluationLimit,
             message: "logpoint output exceeds the remaining session output limit".to_string(),
             hint: "Use a shorter log message or fewer loop hits.".to_string(),
         });

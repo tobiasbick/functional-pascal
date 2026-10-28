@@ -140,7 +140,7 @@ fn closure_cells_compile_and_execute_through_register_bytecode() {
         distinct_types: Vec::new(),
     };
     let executable = crate::bytecode::compile_program(program).expect("closure IR should compile");
-    fpas_vm::Vm::new(executable)
+    fpas_runtime::execution::Vm::new(executable)
         .run()
         .expect("closure register program should succeed");
 }

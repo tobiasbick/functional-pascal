@@ -1,7 +1,7 @@
 //! Source-visible distinct type names after source and debug-type relocation.
 //! See `docs/pascal/language/types/distinct-types.md` and `docs/pascal/tools/debugger.md`.
 
-use fpas_bytecode::{DistinctTypeName, SourceId, SourceMap};
+use fpas_code::{DistinctTypeName, SourceId, SourceMap};
 use fpas_unit::object::RelocatableObject;
 
 use super::strings::StringInterner;

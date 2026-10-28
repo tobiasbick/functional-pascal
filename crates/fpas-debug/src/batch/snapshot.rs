@@ -2,7 +2,7 @@
 
 use super::diagnostic;
 use crate::snapshot_value::Value as CapturedValue;
-use fpas_vm::{DebugSnapshot, DebugTaskSnapshot, FailureBinding, FailureFrame};
+use fpas_runtime::execution::{DebugSnapshot, DebugTaskSnapshot, FailureBinding, FailureFrame};
 use serde_json::{Value, json};
 
 #[expect(
@@ -83,9 +83,9 @@ fn frame(frame: &FailureFrame) -> Value {
 }
 fn binding(binding: &FailureBinding) -> Value {
     let kind = match binding.kind {
-        fpas_bytecode::DebugBindingKind::Parameter => "parameter",
-        fpas_bytecode::DebugBindingKind::Local => "local",
-        fpas_bytecode::DebugBindingKind::Capture => "capture",
+        fpas_runtime::DebugBindingKind::Parameter => "parameter",
+        fpas_runtime::DebugBindingKind::Local => "local",
+        fpas_runtime::DebugBindingKind::Capture => "capture",
     };
     json!({
         "name":binding.name, "kind":kind, "scope_id":binding.scope_id,

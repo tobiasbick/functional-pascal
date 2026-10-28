@@ -59,7 +59,7 @@ impl DapServer {
                 Ok(task_id) => {
                     let count = args::page_count(
                         arguments.get("levels"),
-                        fpas_vm::DebugInspectionLimits::default().max_frames,
+                        fpas_runtime::execution::DebugInspectionLimits::default().max_frames,
                     );
                     let start = arguments
                         .get("startFrame")
@@ -88,7 +88,7 @@ impl DapServer {
                 Ok(variables_reference) => {
                     let count = args::page_count(
                         arguments.get("count"),
-                        fpas_vm::DebugInspectionLimits::default().max_children,
+                        fpas_runtime::execution::DebugInspectionLimits::default().max_children,
                     );
                     let start = arguments
                         .get("start")

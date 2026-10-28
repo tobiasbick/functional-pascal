@@ -97,12 +97,12 @@ When changing a `Std.*` API, update its handbook and every applicable layer:
 
 | Concern | Location |
 |---------|----------|
-| Intrinsic unit and symbol names | [`fpas-std/src/std_units/`](../../../crates/fpas-std/src/std_units/mod.rs) |
+| Intrinsic unit and symbol names | [`fpas-builtins/src/std_units/`](../../../crates/fpas-builtins/src/std_units/mod.rs) |
 | Types, signatures, and `uses` registration | [`fpas-sema/src/std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
 | Compiler catalog and lowering | [`intrinsic_catalog.rs`](../../../crates/fpas-compiler/src/intrinsic_catalog.rs), [`lowering/calls.rs`](../../../crates/fpas-compiler/src/lowering/calls.rs), [`selection/intrinsics.rs`](../../../crates/fpas-compiler/src/bytecode/selection/intrinsics.rs) |
-| Intrinsic IDs and metadata | [`fpas-bytecode/src/intrinsic/`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
+| Intrinsic IDs and metadata | [`fpas-code/src/intrinsic/`](../../../crates/fpas-code/src/intrinsic/mod.rs) |
 | Numeric arithmetic and text rules | [`fpas-numeric/src/`](../../../crates/fpas-numeric/src/lib.rs), shared by checking, folding, execution, and Std numeric operations |
-| Runtime dispatch and execution | [`fpas-std/src/intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`fpas-vm/src/vm/`](../../../crates/fpas-vm/src/vm) |
+| Runtime dispatch and execution | [`fpas-runtime/src/stdlib/intrinsics.rs`](../../../crates/fpas-runtime/src/stdlib/intrinsics.rs), [`fpas-runtime/src/execution/vm/`](../../../crates/fpas-runtime/src/execution/vm) |
 | Source standard-library API | [`lib/Std/`](../../../lib/Std), [`lib/stdlib.fpasprj`](../../../lib/stdlib.fpasprj) |
 | Regression coverage | Owning crate tests and [`tests/stdlib/`](../../../tests/stdlib) or the relevant runner, console, concurrency, or app tests |
 
@@ -110,7 +110,7 @@ Source units such as `Std.Tui` expose their API directly in `lib/Std/`. A public
 unit with its own handbook page names it in the comment before its `unit` header, in the same
 `Handbook:` form as the generated declarations.
 Console, network, and test hosts live under
-[`fpas-vm/src/vm/hosted/`](../../../crates/fpas-vm/src/vm/hosted).
+[`fpas-runtime/src/execution/vm/hosted/`](../../../crates/fpas-runtime/src/execution/vm/hosted).
 
 Regenerate the intrinsic editor declarations under
 [`lib/api/Std/`](../../../lib/api/Std) after an intrinsic API or handbook change. The unit comment comes from

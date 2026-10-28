@@ -75,11 +75,11 @@ impl ErrorMetadata {
                 {
                     let word = &mut object.functions[relocation.function as usize].code
                         [relocation.instruction as usize];
-                    let instruction = fpas_bytecode::Instruction::from_word(*word);
+                    let instruction = fpas_code::Instruction::from_word(*word);
                     if instruction
                         .opcode()
                         .map_err(|e| fpas_unit::object::ObjectError::Instruction(e.to_string()))?
-                        != fpas_bytecode::Opcode::MakeClosure
+                        != fpas_code::Opcode::MakeClosure
                     {
                         return Err(fpas_unit::object::ObjectError::InvalidTableReference(
                             "error factory must be an ordinary noncapturing value",
@@ -88,8 +88,8 @@ impl ErrorMetadata {
                     let operands = instruction
                         .abc_operands()
                         .map_err(|e| fpas_unit::object::ObjectError::Instruction(e.to_string()))?;
-                    *word = fpas_bytecode::Instruction::abx(
-                        fpas_bytecode::Opcode::LoadConstant,
+                    *word = fpas_code::Instruction::abx(
+                        fpas_code::Opcode::LoadConstant,
                         operands.a,
                         constant,
                     )
@@ -211,14 +211,14 @@ impl ErrorMetadata {
                 .map(|field| &field.ty)
                 .collect::<Vec<_>>();
             while let Some(ty) = fields.pop() {
-                use fpas_bytecode::TypeIdentity as T;
+                use fpas_code::TypeIdentity as T;
                 match ty {
                     T::Nominal {
                         kind,
                         declaration,
                         arguments,
                     } => {
-                        if *kind == fpas_bytecode::NominalKind::Error {
+                        if *kind == fpas_code::NominalKind::Error {
                             pending.push(declaration.clone());
                         }
                         fields.extend(arguments);

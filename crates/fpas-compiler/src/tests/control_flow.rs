@@ -38,7 +38,7 @@ end.",
     );
     assert_eq!(
         execution.value.try_to_data().expect("pure return value"),
-        fpas_bytecode::Value::Unit
+        fpas_runtime::Value::Unit
     );
 }
 

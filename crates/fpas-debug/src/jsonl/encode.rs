@@ -2,10 +2,13 @@
 
 use serde_json::{Value, json};
 
-pub(crate) fn initialize_body(execution: fpas_vm::DebugExecutionLimits, hot_reload: bool) -> Value {
-    let inspection = fpas_vm::DebugInspectionLimits::default();
-    let evaluation = fpas_vm::DebugEvaluationLimits::default();
-    let breakpoints = fpas_vm::DebugBreakpointLimits::default();
+pub(crate) fn initialize_body(
+    execution: fpas_runtime::execution::DebugExecutionLimits,
+    hot_reload: bool,
+) -> Value {
+    let inspection = fpas_runtime::execution::DebugInspectionLimits::default();
+    let evaluation = fpas_runtime::execution::DebugEvaluationLimits::default();
+    let breakpoints = fpas_runtime::execution::DebugBreakpointLimits::default();
     let mut capabilities = json!({
         "source_breakpoints": true,
         "function_breakpoints": true,
@@ -90,7 +93,7 @@ pub(crate) fn initialize_body(execution: fpas_vm::DebugExecutionLimits, hot_relo
             "evaluation_call_timeout_milliseconds": evaluation.call_timeout.as_millis(),
             "captured_output_bytes": execution.max_output_bytes,
             "debuggee_input_bytes": execution.max_input_bytes,
-            "recording_events": fpas_vm::MAX_RECORDING_EVENTS,
+            "recording_events": fpas_runtime::execution::MAX_RECORDING_EVENTS,
             "recording_snapshots": 0,
             "instructions": execution.max_instructions,
             "timeout_milliseconds": execution.timeout.as_millis()
@@ -98,11 +101,13 @@ pub(crate) fn initialize_body(execution: fpas_vm::DebugExecutionLimits, hot_relo
     })
 }
 
-pub(crate) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
+pub(crate) fn breakpoint_body(breakpoint: &fpas_runtime::execution::BoundBreakpoint) -> Value {
     json!({"breakpoint_id":breakpoint.id,"verified":breakpoint.is_verified(),"requested":{"source":breakpoint.requested.source,"line":breakpoint.requested.line,"column":breakpoint.requested.column},"location":breakpoint.location.as_ref().map(location_body),"message":(!breakpoint.is_verified()).then_some("No executable sequence point exists on the requested line.")})
 }
 
-pub(crate) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakpoint) -> Value {
+pub(crate) fn function_breakpoint_body(
+    breakpoint: &fpas_runtime::execution::BoundFunctionBreakpoint,
+) -> Value {
     let message = if breakpoint.functions.is_empty() {
         Some("No executable function metadata matches the requested selector.".to_string())
     } else if breakpoint.instructions.is_empty() {
@@ -126,7 +131,7 @@ pub(crate) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakp
     })
 }
 
-pub(crate) fn task_body(task: &fpas_vm::DebugTask) -> Value {
+pub(crate) fn task_body(task: &fpas_runtime::execution::DebugTask) -> Value {
     json!({
         "task_id": task.id,
         "name": task.name,
@@ -136,7 +141,9 @@ pub(crate) fn task_body(task: &fpas_vm::DebugTask) -> Value {
     })
 }
 
-pub(crate) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) -> Value {
+pub(crate) fn data_breakpoint_body(
+    breakpoint: &fpas_runtime::execution::BoundDataBreakpoint,
+) -> Value {
     json!({
         "breakpoint_id": breakpoint.id,
         "verified": breakpoint.is_verified(),
@@ -148,10 +155,12 @@ pub(crate) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) ->
     })
 }
 
-pub(crate) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Value {
+pub(crate) fn identity_body(identity: fpas_runtime::execution::DebugDataLocationIdentity) -> Value {
     match identity {
-        fpas_vm::DebugDataLocationIdentity::Global { index } => json!({"index": index}),
-        fpas_vm::DebugDataLocationIdentity::FrameRegister {
+        fpas_runtime::execution::DebugDataLocationIdentity::Global { index } => {
+            json!({"index": index})
+        }
+        fpas_runtime::execution::DebugDataLocationIdentity::FrameRegister {
             task_id,
             function,
             register,
@@ -163,18 +172,18 @@ pub(crate) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Val
     }
 }
 
-fn location_body(location: &fpas_vm::SourceLocation) -> Value {
+fn location_body(location: &fpas_runtime::execution::SourceLocation) -> Value {
     json!({"source":location.source,"line":location.line,"column":location.column})
 }
 
-pub(crate) fn frame_body(frame: &fpas_vm::DebugFrame) -> Value {
+pub(crate) fn frame_body(frame: &fpas_runtime::execution::DebugFrame) -> Value {
     json!({"frame_id":frame.id,"name":frame.name,"location":frame.location.as_ref().map(location_body),"depth":frame.depth})
 }
 
-pub(crate) fn scope_body(scope: &fpas_vm::DebugScope) -> Value {
+pub(crate) fn scope_body(scope: &fpas_runtime::execution::DebugScope) -> Value {
     json!({"name":scope.name,"kind":format!("{:?}",scope.kind).to_ascii_lowercase(),"variables_reference":scope.variables_reference,"named_variables":scope.named_variables,"expensive":scope.expensive})
 }
 
-pub(crate) fn variable_body(variable: &fpas_vm::DebugVariable) -> Value {
+pub(crate) fn variable_body(variable: &fpas_runtime::execution::DebugVariable) -> Value {
     json!({"name":variable.name,"value":variable.value,"type_name":variable.type_name,"variables_reference":variable.variables_reference,"named_variables":variable.named_variables,"indexed_variables":variable.indexed_variables,"presentation_hint":variable.presentation_hint})
 }

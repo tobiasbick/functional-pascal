@@ -1,0 +1,172 @@
+//! `Std.Console` - output, line-buffered text input (`Read` / `ReadLn`), and CRT-style
+//! keyboard input (`ReadKey` / `KeyPressed`).
+//!
+//! **Documentation:** `docs/pascal/std/console/README.md` (from the repository root).
+//! **Maintenance:** Keep that Markdown file in sync with this module, runtime
+//! `execution/vm` console intrinsics, and `fpas-compiler` call lowering.
+
+mod cell;
+mod input;
+mod interactive;
+mod key_input;
+mod operations;
+mod render;
+mod screen;
+mod snapshot;
+mod validation;
+
+#[cfg(test)]
+mod tests;
+
+pub use cell::{
+    CONSOLE_COLOR_KIND_VARIANTS, ConsoleCell, ConsoleColor, ConsoleRect, SavedRegionId,
+};
+pub use input::{ReadLnQueue, TextInput, read_line_from_stdin};
+pub use key_input::KeyInput;
+pub use snapshot::ScreenSnapshot;
+pub use validation::validate_packed_crt_color;
+
+use interactive::InteractiveTerminalOwnership;
+use screen::{ConsoleState, DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH};
+use std::io::Write;
+
+/// Captured output from program execution (for testing).
+#[derive(Debug, Clone, Default)]
+pub struct CapturedOutput {
+    /// Complete logical lines emitted by the program.
+    pub lines: Vec<String>,
+}
+
+/// Standard console I/O.
+///
+/// Handles `Std.Console.WriteText` and `Std.Console.WriteLn`.
+/// Headless output is captured for test assertions. A console constructed
+/// with a writer streams output and may optionally retain logical lines.
+pub struct Console {
+    captured: CapturedOutput,
+    capture_mode: CaptureMode,
+    /// Fragments from `Write` not yet ended by `WriteLn`; one logical line for capture.
+    capture_line_buf: String,
+    state: ConsoleState,
+    writer: Option<Box<dyn Write + Send>>,
+    #[cfg(test)]
+    terminal_size_override: Option<Option<(u16, u16)>>,
+    frame_depth: u32,
+    /// Modes owned by `AcquireInteractiveTerminal` / `ReleaseInteractiveTerminal`.
+    interactive: InteractiveTerminalOwnership,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CaptureMode {
+    Disabled,
+    Full,
+}
+
+impl Default for Console {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Console {
+    /// Creates a headless console that captures output without streaming it.
+    pub fn new() -> Self {
+        Self {
+            captured: CapturedOutput::default(),
+            capture_mode: CaptureMode::Full,
+            capture_line_buf: String::new(),
+            state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
+            writer: None,
+            #[cfg(test)]
+            terminal_size_override: None,
+            frame_depth: 0,
+            interactive: InteractiveTerminalOwnership::default(),
+        }
+    }
+
+    /// Creates a console that streams output to `writer` without retaining it.
+    pub fn with_writer(writer: Box<dyn Write + Send>) -> Self {
+        Self::with_writer_capture_mode(writer, CaptureMode::Disabled)
+    }
+
+    /// Creates a virtual console that streams output and retains logical debugger lines.
+    /// Its dimensions change only through explicit resize events, never host terminal queries.
+    pub fn with_capturing_writer(writer: Box<dyn Write + Send>) -> Self {
+        Self::with_writer_capture_mode(writer, CaptureMode::Full)
+    }
+
+    fn with_writer_capture_mode(writer: Box<dyn Write + Send>, capture_mode: CaptureMode) -> Self {
+        let (width, height) = if capture_mode == CaptureMode::Full {
+            (DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT)
+        } else {
+            crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT))
+        };
+        Self {
+            captured: CapturedOutput::default(),
+            capture_mode,
+            capture_line_buf: String::new(),
+            state: ConsoleState::new(width, height),
+            writer: Some(writer),
+            #[cfg(test)]
+            terminal_size_override: None,
+            frame_depth: 0,
+            interactive: InteractiveTerminalOwnership::default(),
+        }
+    }
+
+    /// Access captured output from a headless console.
+    ///
+    /// [`Console::with_writer`] returns an empty capture; headless and debugger
+    /// capturing consoles retain completed logical lines.
+    pub fn output(&self) -> &CapturedOutput {
+        &self.captured
+    }
+
+    /// Returns the current logical CRT screen as a text grid snapshot.
+    pub fn screen_snapshot(&self) -> ScreenSnapshot {
+        ScreenSnapshot::from_state(&self.state)
+    }
+
+    /// Returns the character content of one screen row (`y` is one-based).
+    ///
+    /// **Documentation:** `docs/pascal/std/testing/test.md` (`Std.Test.AssertScreenLine`)
+    pub fn query_screen_line(&self, y: u16) -> String {
+        self.state.row_text(y)
+    }
+
+    /// Returns one CRT cell (`x`/`y` one-based) as `(ch, fg, bg)` with packed colors `0..=15`.
+    ///
+    /// **Documentation:** `docs/pascal/std/testing/test.md` (`Std.Test.AssertScreenCell`)
+    pub fn query_screen_cell(&self, x: u16, y: u16) -> Option<(char, u8, u8)> {
+        self.state.packed_cell_at(x, y)
+    }
+
+    pub(crate) fn has_terminal_writer(&self) -> bool {
+        self.writer.is_some()
+    }
+}
+
+#[cfg(test)]
+impl Console {
+    pub(crate) fn test_line_text(&self, y: u16) -> String {
+        self.state.line_text(y)
+    }
+
+    pub(crate) fn test_cell(&self, x: u16, y: u16) -> (char, u8, u8) {
+        self.state.cell_at_packed(x, y)
+    }
+
+    pub(crate) fn test_cell_colors(&self, x: u16, y: u16) -> (char, String, String) {
+        self.state.cell_color_labels(x, y)
+    }
+
+    pub(crate) fn set_test_terminal_size(&mut self, size: Option<(u16, u16)>) {
+        self.terminal_size_override = Some(size);
+    }
+}
+
+impl Drop for Console {
+    fn drop(&mut self) {
+        self.restore_interactive_console_modes();
+    }
+}

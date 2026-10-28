@@ -13,10 +13,10 @@ mod common;
 mod fixtures;
 
 use fixtures::*;
-use fpas_bytecode::{DebugType, DebugTypeId, EnumTypeId, StringId, TypeIdentity, Value};
 use fpas_linker::{LinkError, link_objects};
+use fpas_runtime::execution::CallbackSession;
+use fpas_runtime::{DebugType, DebugTypeId, EnumTypeId, StringId, TypeIdentity, Value};
 use fpas_unit::object::{decode_object, encode_object};
-use fpas_vm::CallbackSession;
 
 #[test]
 fn two_generic_instances_share_erased_code_and_survive_source_less_round_trips() {
@@ -84,7 +84,7 @@ fn two_generic_instances_share_erased_code_and_survive_source_less_round_trips()
         fpas_program::ProgramIdentity {
             contracts_enabled: true,
             compiler_version: "error-artifact-fixture".to_owned(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+            bytecode_version: fpas_runtime::BYTECODE_VERSION,
             source_hash: fpas_program::Digest::of(b"fixture"),
             options_hash: fpas_program::Digest::of(b"options"),
             units: vec![],
@@ -188,7 +188,7 @@ fn executable_admission_rejects_each_corrupted_error_relationship() {
                 .is_some_and(|key| key.declaration == "example.parse")
         })
         .expect("parse family");
-    let cases: &[fn(&mut fpas_bytecode::Executable, usize, usize)] = &[
+    let cases: &[fn(&mut fpas_runtime::Executable, usize, usize)] = &[
         |image, variant, _| image.enum_variants[variant].error = None,
         |image, variant, _| {
             image.enum_variants[variant]
@@ -249,7 +249,7 @@ fn executable_admission_rejects_each_corrupted_error_relationship() {
         mutate(&mut bad, cause_variant, leaf_family);
         assert!(matches!(
             bad.verify().expect_err("malformed error metadata").kind,
-            fpas_bytecode::ValidationErrorKind::ErrorMetadata { .. }
+            fpas_runtime::ValidationErrorKind::ErrorMetadata { .. }
         ));
     }
 }
@@ -317,13 +317,13 @@ fn nested_causes_and_non_cause_arguments_keep_full_semantic_identity() {
         TypeIdentity::Integer,
         TypeIdentity::String,
         ordinary_nominal_argument("example.record"),
-        fpas_bytecode::TypeIdentity::Nominal {
-            kind: fpas_bytecode::NominalKind::Record,
+        fpas_runtime::TypeIdentity::Nominal {
+            kind: fpas_runtime::NominalKind::Record,
             declaration: "example.record".to_owned(),
             arguments: vec![TypeIdentity::Integer],
         },
-        fpas_bytecode::TypeIdentity::Nominal {
-            kind: fpas_bytecode::NominalKind::Record,
+        fpas_runtime::TypeIdentity::Nominal {
+            kind: fpas_runtime::NominalKind::Record,
             declaration: "example.record".to_owned(),
             arguments: vec![TypeIdentity::String],
         },

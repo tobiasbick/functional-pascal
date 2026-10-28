@@ -4,12 +4,12 @@
 
 use crate::check::Checker;
 use crate::types::Ty;
+use fpas_builtins::std_symbols as s;
 use fpas_diagnostics::codes::{
     SEMA_TASK_BOUND_CALLABLE, SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT,
 };
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use fpas_std::std_symbols as s;
 
 mod groups;
 mod selection;
@@ -294,5 +294,5 @@ fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) 
 }
 
 fn task_error_type(c: &mut Checker) -> Ty {
-    crate::std_registry::native_error_type(c, fpas_std::native_errors::NativeErrorFamily::Task)
+    crate::std_registry::native_error_type(c, fpas_builtins::native_errors::NativeErrorFamily::Task)
 }

@@ -9,9 +9,9 @@ pub(crate) use debug::Session as DebugSession;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use fpas_bytecode::CollectionSchedule;
-use fpas_bytecode::profile::{self, Counter};
-use fpas_vm::{ProfileReport, ProfileSample, Vm};
+use fpas_runtime::CollectionSchedule;
+use fpas_runtime::execution::{ProfileReport, ProfileSample, Vm};
+use fpas_runtime::profile::{self, Counter};
 use serde_json::{Map, Value as Json, json};
 
 const TOP_ROWS: usize = 25;
@@ -31,7 +31,7 @@ impl Target {
     pub(crate) fn new(
         kind: &'static str,
         path: &Path,
-        executable: &fpas_bytecode::Executable,
+        executable: &fpas_runtime::Executable,
     ) -> Self {
         Self {
             kind,
@@ -254,7 +254,7 @@ fn render(
             },
             "sampling": {
                 "method": "dispatch_batch_end",
-                "max_batch_instructions": fpas_vm::MAX_BATCH_STEPS,
+                "max_batch_instructions": fpas_runtime::execution::MAX_BATCH_STEPS,
                 "row_limit": TOP_ROWS,
                 "counters_exclusive": run.counters_exclusive,
             },

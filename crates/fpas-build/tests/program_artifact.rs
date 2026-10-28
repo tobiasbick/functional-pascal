@@ -124,7 +124,7 @@ include = ["src/**/*.fpas"]
 }
 
 fn assert_output(program: fpas_build::BuiltProgram, expected: &str) {
-    let mut vm = fpas_vm::Vm::new(program.executable);
+    let mut vm = fpas_runtime::execution::Vm::new(program.executable);
     vm.run().expect("compiled program execution");
     assert_eq!(vm.output().lines, [expected]);
 }

@@ -74,7 +74,7 @@ pub(crate) enum DebugOp {
     IoEof,
     IoCancel,
     TerminalInput {
-        events: Vec<fpas_vm::DebugTerminalEvent>,
+        events: Vec<fpas_runtime::execution::DebugTerminalEvent>,
     },
     Stack {
         start: usize,
@@ -183,7 +183,7 @@ pub(crate) enum DebugOp {
 /// Assign-on-hit payload owned by the debug engine.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AssignOp {
-    pub identity: fpas_vm::DebugDataLocationIdentity,
+    pub identity: fpas_runtime::execution::DebugDataLocationIdentity,
     pub expression: String,
 }
 
@@ -198,8 +198,8 @@ pub(crate) struct FunctionBreakpointOp {
 /// One data breakpoint in a replace request.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DataBreakpointOp {
-    pub identity: fpas_vm::DebugDataLocationIdentity,
-    pub access: fpas_vm::DataBreakpointAccess,
+    pub identity: fpas_runtime::execution::DebugDataLocationIdentity,
+    pub access: fpas_runtime::execution::DataBreakpointAccess,
     pub assign: Option<AssignOp>,
 }
 

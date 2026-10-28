@@ -211,14 +211,14 @@ fn pure_calendar_is_allowed_by_seeded_debugging_and_recording_capture() {
     let image =
         fpas_program::decode(&fs::read(fixture.0.join("app.fpascp")).expect("program image"))
             .expect("decode image");
-    let mut session =
-        fpas_vm::DebugSession::new(image.into_executable()).expect("recording session");
+    let mut session = fpas_runtime::execution::DebugSession::new(image.into_executable())
+        .expect("recording session");
     session.start_recording();
     assert!(matches!(
         session
             .continue_execution()
             .expect("pure execution while recording"),
-        fpas_vm::DebugRunResult::Terminated(_)
+        fpas_runtime::execution::DebugRunResult::Terminated(_)
     ));
     assert!(!session.recording_truncated());
 }

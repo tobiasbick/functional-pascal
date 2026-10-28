@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use fpas_bytecode::{
+use fpas_code::{
     Constant, ConstantId, InstructionAddress, SourceId, SourceMap, SourceRun, StringId, StringTable,
 };
 use fpas_ir::SourceSpan;
@@ -121,7 +121,7 @@ fn metadata_error(message: &str) -> CompileError {
 
 #[cfg(test)]
 mod tests {
-    use fpas_bytecode::Constant;
+    use fpas_code::Constant;
     use fpas_ir::Constant as IrConstant;
 
     use super::MetadataBuilder;
@@ -143,9 +143,9 @@ mod tests {
                 strings.iter().collect::<Vec<_>>()
             ),
             (
-                fpas_bytecode::StringId::new(2),
-                fpas_bytecode::StringId::new(3),
-                fpas_bytecode::StringId::new(2),
+                fpas_code::StringId::new(2),
+                fpas_code::StringId::new(3),
+                fpas_code::StringId::new(2),
                 vec!["root", "<memory>", "alpha", "beta"]
             )
         );
@@ -168,9 +168,9 @@ mod tests {
                 constants
             ),
             (
-                Some(fpas_bytecode::ConstantId::new(0)),
-                Some(fpas_bytecode::ConstantId::new(1)),
-                Some(fpas_bytecode::ConstantId::new(0)),
+                Some(fpas_code::ConstantId::new(0)),
+                Some(fpas_code::ConstantId::new(1)),
+                Some(fpas_code::ConstantId::new(0)),
                 vec![
                     Constant::Real(0.0_f64.to_bits()),
                     Constant::Real((-0.0_f64).to_bits())

@@ -99,7 +99,7 @@ Console.WriteLn(Conv.IntToHex(255, 4)); // 00FF
 
 | Concern | Location |
 |---------|-----------|
-| Implementations | [`conv/mod.rs`](../../../../crates/fpas-std/src/conv/mod.rs), shared [`numeric text`](../../../../crates/fpas-numeric/src/text.rs) |
+| Implementations | [`conv/mod.rs`](../../../../crates/fpas-runtime/src/stdlib/conv/mod.rs), shared [`numeric text`](../../../../crates/fpas-numeric/src/text.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

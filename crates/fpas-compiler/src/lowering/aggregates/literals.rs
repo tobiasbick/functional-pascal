@@ -157,7 +157,7 @@ impl LoweringContext {
                 .intrinsic_calls
                 .get(&fpas_sema::expr_lookup_key(expression))
                 .is_some_and(|name| {
-                    name.eq_ignore_ascii_case(fpas_std::std_symbols::STD_TASK_CREATE_CHANNEL)
+                    name.eq_ignore_ascii_case(fpas_builtins::std_symbols::STD_TASK_CREATE_CHANNEL)
                 }) =>
             {
                 self.lower_call(

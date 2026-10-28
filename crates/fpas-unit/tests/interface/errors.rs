@@ -1,6 +1,6 @@
 //! Error schemas and construction ABI remain essential semantic interface data.
 
-use fpas_bytecode::{ErrorInstanceKey, NominalKind, TypeIdentity};
+use fpas_code::{ErrorInstanceKey, NominalKind, TypeIdentity};
 use fpas_unit::{
     equality::EqualityDeclaration,
     errors::{
@@ -126,7 +126,7 @@ fn deep_semantic_arguments_use_a_flat_bounded_wire_shape() {
 
 #[test]
 fn callable_variadic_identity_survives_schema_substitution_and_wire_round_trips() {
-    use fpas_bytecode::IdentityParameter;
+    use fpas_code::IdentityParameter;
     let callable = |variadic| TypeIdentity::Callable {
         parameters: vec![IdentityParameter {
             name: "values".to_owned(),

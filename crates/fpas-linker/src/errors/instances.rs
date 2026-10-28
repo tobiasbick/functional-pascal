@@ -3,7 +3,7 @@
 
 use super::invalid;
 use crate::LinkError;
-use fpas_bytecode::ErrorInstanceKey;
+use fpas_code::ErrorInstanceKey;
 use fpas_unit::{
     errors::{ErrorConstructorRequest, ErrorSchema},
     object::{ObjectEnumLayout, ObjectEnumVariant, ObjectErrorVariant, RelocatableObject},
@@ -50,7 +50,7 @@ pub(super) fn expand<'a>(
         if !visited.insert(key.clone()) {
             continue;
         }
-        if visited.len() > fpas_bytecode::limits::MAX_ENUM_LAYOUTS {
+        if visited.len() > fpas_code::limits::MAX_ENUM_LAYOUTS {
             return Err(invalid("error instance expansion exceeds the layout limit"));
         }
         key.validate(0).map_err(invalid)?;
@@ -85,7 +85,7 @@ pub(super) fn expand<'a>(
                 let family = error
                     .field_types
                     .get(usize::from(cause))
-                    .and_then(fpas_bytecode::TypeIdentity::error_key)
+                    .and_then(fpas_code::TypeIdentity::error_key)
                     .ok_or_else(|| invalid("Cause does not name a concrete error instance"))?;
                 pending.insert(family);
             }

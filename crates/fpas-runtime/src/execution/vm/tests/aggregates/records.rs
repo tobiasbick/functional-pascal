@@ -76,6 +76,96 @@ fn store_field_reuses_unique_storage() {
     };
     assert_eq!(record.body().values.as_ptr(), storage);
     assert_eq!(record.body().values[0], Value::Integer(7));
+    assert!(worker.register_is_initialized(1));
+}
+
+#[test]
+fn store_field_from_its_own_record_preserves_the_previous_value() {
+    let image = point_image(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::MakeRecord, 1, 0, 0),
+            abc(Opcode::StoreField, 1, 0, 1),
+            abc(Opcode::LoadField, 2, 1, 0),
+            abc(Opcode::LoadField, 2, 2, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(7)],
+        3,
+    );
+    let (_, registers, _) = execute(image).expect("self-store runs");
+    let Value::Record(outer) = &registers[1] else {
+        panic!("outer record");
+    };
+    let Value::Record(inner) = &outer.body().values[0] else {
+        panic!("stored record snapshot");
+    };
+    assert_eq!(inner.body().values[0], Value::Integer(7));
+    assert_eq!(registers[2], Value::Integer(7));
+}
+
+#[test]
+fn load_field_over_its_source_releases_the_record() {
+    for (constant, expected) in [
+        (Constant::Integer(7), Value::Integer(7)),
+        (Constant::Real((-0.0_f64).to_bits()), Value::Real(-0.0)),
+        (Constant::Boolean(true), Value::Boolean(true)),
+        (Constant::String(StringId::new(3)), Value::Str("x".into())),
+    ] {
+        let image = point_image(
+            vec![
+                abx(Opcode::LoadConstant, 0, 0),
+                abc(Opcode::MakeRecord, 1, 0, 0),
+                abc(Opcode::LoadField, 1, 1, 0),
+                return_unit(),
+            ],
+            vec![constant],
+            2,
+        );
+        let mut worker =
+            crate::execution::vm::worker::Worker::new(Arc::new(image)).expect("worker");
+        let layout = worker.layouts.records[0].clone();
+        let references = Arc::strong_count(&layout);
+        worker.dispatch_one().expect("constant");
+        worker.dispatch_one().expect("record");
+        assert_eq!(Arc::strong_count(&layout), references + 1);
+        worker.dispatch_one().expect("field load over source");
+        assert_eq!(Arc::strong_count(&layout), references);
+        assert_eq!(worker.registers[1], expected);
+        if let Value::Real(value) = worker.registers[1] {
+            assert_eq!(value.to_bits(), (-0.0_f64).to_bits());
+        }
+        assert!(worker.register_is_initialized(1));
+    }
+}
+
+#[test]
+fn invalid_field_store_preserves_the_destination() {
+    let image = point_image(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::MakeRecord, 1, 0, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(7)],
+        2,
+    );
+    let mut worker = crate::execution::vm::worker::Worker::new(Arc::new(image)).expect("worker");
+    worker.dispatch_one().expect("constant");
+    worker.dispatch_one().expect("record");
+    let before = worker.registers[1].clone();
+    let error = worker
+        .store_field(crate::AbcOperands {
+            a: 1,
+            b: 1,
+            c: 0,
+            auxiliary: 0,
+        })
+        .expect_err("invalid field");
+    assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    assert_eq!(error.message, "Verified record field slot 1 is unavailable");
+    assert_eq!(worker.registers[1], before);
+    assert!(worker.register_is_initialized(1));
 }
 
 /// Verified single-field `Point` record image for update tests.

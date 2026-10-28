@@ -41,19 +41,22 @@ fn server_for(source: &str) -> JsonlServer {
 
 fn run_to_completion(server: &mut JsonlServer) -> Vec<Value> {
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
-    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
-    let records = server.wait();
-    assert_eq!(server.status(), ServerStatus::Terminated, "{records:?}");
-    records
+    let records = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
+    wait_for_status(server, records, ServerStatus::Terminated)
 }
 
 fn request(id: u64, command: &str, arguments: Value) -> String {
     json!({"type":"request","id":id,"command":command,"arguments":arguments}).to_string()
 }
 
-fn wait_until_stopped(server: &mut JsonlServer) -> Vec<Value> {
-    let records = server.wait();
-    assert_eq!(server.status(), ServerStatus::Stopped, "{records:?}");
+fn wait_for_status(
+    server: &mut JsonlServer,
+    mut records: Vec<Value>,
+    expected: ServerStatus,
+) -> Vec<Value> {
+    // Request handling can already return completion events before the next wait.
+    records.extend(server.wait());
+    assert_eq!(server.status(), expected, "{records:?}");
     records
 }
 
@@ -68,9 +71,8 @@ fn child_breakpoint_exposes_task_catalog_stack_and_selected_step() {
         json!({"source":"<memory>","line":8}),
     ));
     assert_eq!(breakpoint[0]["body"]["verified"], true, "{breakpoint:?}");
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-
-    let events = wait_until_stopped(&mut server);
+    let launched = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_for_status(&mut server, launched, ServerStatus::Stopped);
     assert!(events.iter().any(|event| {
         event["event"] == "task"
             && event["body"]["reason"] == "started"
@@ -93,16 +95,15 @@ fn child_breakpoint_exposes_task_catalog_stack_and_selected_step() {
 
     let step = server.handle_line(&request(6, "step_into", json!({"task_id":1})));
     assert_eq!(step[0]["success"], true, "{step:?}");
-    let step_events = wait_until_stopped(&mut server);
+    let step_events = wait_for_status(&mut server, step, ServerStatus::Stopped);
     assert!(step_events.iter().any(|event| {
         event["event"] == "stopped"
             && event["body"]["reason"] == "step"
             && event["body"]["task_id"] == 1
     }));
 
-    let _ = server.handle_line(&request(7, "continue", json!({})));
-    let terminated = server.wait();
-    assert_eq!(server.status(), ServerStatus::Terminated, "{terminated:?}");
+    let continued = server.handle_line(&request(7, "continue", json!({})));
+    let terminated = wait_for_status(&mut server, continued, ServerStatus::Terminated);
     assert!(
         terminated
             .iter()
@@ -150,8 +151,8 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
         "breakpoint.set",
         json!({"source":"<memory>","line":8}),
     ));
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let _ = wait_until_stopped(&mut server);
+    let launched = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let _ = wait_for_status(&mut server, launched, ServerStatus::Stopped);
 
     let child_stack = server.handle_line(&request(4, "stack", json!({"task_id":1})));
     let child_frame = child_stack[0]["body"]["frames"][0]["frame_id"]
@@ -206,8 +207,8 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
     let expired_main = server.handle_line(&request(12, "scopes", json!({"frame_id":main_frame})));
     assert_eq!(expired_main[0]["error"]["code"], "unknown_frame");
 
-    let _ = server.handle_line(&request(13, "continue", json!({})));
-    let terminated = server.wait();
+    let continued = server.handle_line(&request(13, "continue", json!({})));
+    let terminated = wait_for_status(&mut server, continued, ServerStatus::Terminated);
     assert!(
         terminated
             .iter()
@@ -241,8 +242,8 @@ begin scope
         json!({"source":"<memory>","line":8}),
     ));
     assert_eq!(breakpoint[0]["body"]["verified"], true, "{breakpoint:?}");
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let _ = wait_until_stopped(&mut server);
+    let launched = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let _ = wait_for_status(&mut server, launched, ServerStatus::Stopped);
 
     let child_stack = server.handle_line(&request(4, "stack", json!({"task_id":1})));
     let child_frame = child_stack[0]["body"]["frames"][0]["frame_id"]
@@ -262,8 +263,8 @@ begin scope
     let expired_main = server.handle_line(&request(7, "scopes", json!({"frame_id":main_frame})));
     assert_eq!(expired_main[0]["error"]["code"], "unknown_frame");
 
-    let _ = server.handle_line(&request(8, "continue", json!({})));
-    let terminated = server.wait();
+    let continued = server.handle_line(&request(8, "continue", json!({})));
+    let terminated = wait_for_status(&mut server, continued, ServerStatus::Terminated);
     assert!(
         terminated
             .iter()
@@ -386,8 +387,8 @@ end.
 
     let mut failure = server_for(FAILURE);
     let _ = failure.handle_line(&request(1, "initialize", json!({"version":2})));
-    let _ = failure.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
-    let failed = wait_until_stopped(&mut failure);
+    let launched = failure.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
+    let failed = wait_for_status(&mut failure, launched, ServerStatus::Stopped);
     let runtime_errors = failed
         .iter()
         .filter(|record| record["event"] == "runtime_error")

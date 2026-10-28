@@ -23,33 +23,39 @@ impl Worker {
 
     pub fn load_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = match self.read(register(o.b)?)? {
-            Value::Record(record) => record.body().values.get(usize::from(o.c)).cloned(),
+            Value::Record(record) => record.body().values.get(usize::from(o.c)),
             other => return Err(self.type_mismatch("record", other)),
         }
         .ok_or_else(|| self.bad_slot("record field", u32::from(o.c)))?;
-        self.write(register(o.a)?, value)
+        match value {
+            Value::Integer(value) => self.write_integer_operand(o.a, *value),
+            Value::Real(value) => self.write_real_operand(o.a, *value),
+            Value::Boolean(value) => self.write_boolean_operand(o.a, *value),
+            value => {
+                let value = value.clone();
+                self.write(register(o.a)?, value)
+            }
+        }
     }
 
     /// Updates a validated field, reusing uniquely owned record storage.
     pub fn store_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
         self.require_storable_value(&value)?;
-        let destination = register(o.a)?;
+        let destination = self.base + usize::from(o.a);
         let field = usize::from(o.b);
-        match self.read(destination)? {
-            Value::Record(record) if field < record.body().values.len() => {}
-            Value::Record(_) => return Err(self.bad_slot("record field", u32::from(o.b))),
-            other => return Err(self.type_mismatch("record", other)),
+        match self.registers.get_mut(destination) {
+            Some(Value::Record(record)) if field < record.body().values.len() => {
+                // Keep the record in its register; cloning the source first preserves self-stores.
+                record.replace_field(field, value);
+                self.register_initialized[destination] = true;
+                Ok(())
+            }
+            _ => match self.read_operand(o.a)? {
+                Value::Record(_) => Err(self.bad_slot("record field", u32::from(o.b))),
+                other => Err(self.type_mismatch("record", other)),
+            },
         }
-        let Value::Record(mut record) = self.take(destination)? else {
-            return Err(diagnostics::internal(
-                self.executable.executable(),
-                self.current_address,
-                "Validated StoreField destination changed type before commit",
-            ));
-        };
-        record.replace_field(field, value);
-        self.write(destination, Value::Record(record))
     }
 
     /// Apply positional overrides to the record in register A.

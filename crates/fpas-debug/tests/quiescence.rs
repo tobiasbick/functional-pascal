@@ -39,8 +39,8 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
     json!({"type":"request","id":id,"command":command,"arguments":arguments}).to_string()
 }
 
-fn wait_until_stopped(server: &mut JsonlServer) -> Vec<Value> {
-    let records = server.wait();
+fn wait_until_stopped(server: &mut JsonlServer, mut records: Vec<Value>) -> Vec<Value> {
+    records.extend(server.wait());
     assert_eq!(server.status(), ServerStatus::Stopped, "{records:?}");
     records
 }
@@ -71,8 +71,8 @@ fn stopped_catalog_is_an_all_stop_snapshot() {
         "breakpoint.set",
         json!({"source":"<memory>","line":8}),
     ));
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stopped(&mut server);
+    let launched = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stopped(&mut server, launched);
     let stopped = stopped_events(&events);
     assert_eq!(stopped.len(), 1, "{events:?}");
     assert_eq!(stopped[0]["body"]["task_id"], 1);
@@ -92,7 +92,7 @@ fn stopped_catalog_is_an_all_stop_snapshot() {
 
     let step = server.handle_line(&request(6, "step_into", json!({"task_id":1})));
     assert_eq!(step[0]["success"], true, "{step:?}");
-    let stepped = wait_until_stopped(&mut server);
+    let stepped = wait_until_stopped(&mut server, step);
     assert!(stopped_events(&stepped).iter().any(|event| {
         event["body"]["reason"] == "step"
             && event["body"]["task_id"] == 1
@@ -109,12 +109,13 @@ fn continue_ignores_task_id_and_resumes_the_session() {
         "breakpoint.set",
         json!({"source":"<memory>","line":8}),
     ));
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let _ = wait_until_stopped(&mut server);
+    let launched = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let _ = wait_until_stopped(&mut server, launched);
 
     let resumed = server.handle_line(&request(4, "continue", json!({"task_id":99})));
     assert_eq!(resumed[0]["success"], true, "{resumed:?}");
-    let terminated = server.wait();
+    let mut terminated = resumed;
+    terminated.extend(server.wait());
     assert_eq!(server.status(), ServerStatus::Terminated, "{terminated:?}");
     assert!(
         terminated
@@ -145,8 +146,8 @@ begin scope
     let mut server =
         JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("debug server");
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
-    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
-    let failed = wait_until_stopped(&mut server);
+    let launched = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
+    let failed = wait_until_stopped(&mut server, launched);
     assert!(
         failed
             .iter()

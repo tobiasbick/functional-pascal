@@ -39,8 +39,8 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
     json!({"type":"request","id":id,"command":command,"arguments":arguments}).to_string()
 }
 
-fn wait_until_stopped(server: &mut JsonlServer) -> Vec<Value> {
-    let records = server.wait();
+fn wait_until_stopped(server: &mut JsonlServer, mut records: Vec<Value>) -> Vec<Value> {
+    records.extend(server.wait());
     assert_eq!(server.status(), ServerStatus::Stopped, "{records:?}");
     records
 }
@@ -52,8 +52,8 @@ fn stop_in_child(server: &mut JsonlServer) {
         "breakpoint.set",
         json!({"source":"<memory>","line":8}),
     ));
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let events = wait_until_stopped(server);
+    let launched = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stopped(server, launched);
     assert!(events.iter().any(|record| {
         record["event"] == "stopped"
             && record["body"]["task_id"] == 1
@@ -111,7 +111,7 @@ fn paused_child_is_catalogued_and_skipped_until_resume() {
 
     let held = server.handle_line(&request(6, "continue", json!({})));
     assert_eq!(held[0]["success"], true, "{held:?}");
-    let blocked = wait_until_stopped(&mut server);
+    let blocked = wait_until_stopped(&mut server, held);
     assert!(
         blocked
             .iter()
@@ -123,8 +123,8 @@ fn paused_child_is_catalogued_and_skipped_until_resume() {
     let resumed = server.handle_line(&request(8, "task.resume", json!({"task_id":1})));
     assert_eq!(resumed[0]["success"], true, "{resumed:?}");
     assert_eq!(resumed[0]["body"]["paused"], false);
-    let _ = server.handle_line(&request(9, "continue", json!({})));
-    let terminated = server.wait();
+    let mut terminated = server.handle_line(&request(9, "continue", json!({})));
+    terminated.extend(server.wait());
     assert_eq!(server.status(), ServerStatus::Terminated, "{terminated:?}");
     assert!(
         terminated

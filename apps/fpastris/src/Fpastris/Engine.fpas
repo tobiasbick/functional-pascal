@@ -1,0 +1,197 @@
+unit Fpastris.Engine;
+
+uses Fpastris.Model as Model, Fpastris.Pieces as Pieces;
+
+public function FallInterval(State: Model.Game): integer;
+begin
+  var Interval := 800;
+  for Level: integer := 2 to Model.Level(State) do
+    Interval := Interval * 4 div 5;
+    if Interval < 60 then
+      return 60;
+    end if;
+  end for;
+
+  return Interval;
+end function;
+
+function Grounded(State: Model.Game): boolean;
+begin
+  return not Model.Fits(State, State.Active with Y := State.Active.Y + 1; end with);
+end function;
+
+procedure Place(var State: Model.Game; Candidate: Model.Piece);
+begin
+  if Grounded(State) and (State.LockResets < 15) then
+    State.LockMillis := 0;
+    State.LockResets := State.LockResets + 1;
+  end if;
+
+  State.Active := Candidate;
+end procedure;
+
+public function Move(State: Model.Game; Direction: integer): Model.Game;
+begin
+  var Next := State;
+  const Candidate := State.Active with X := State.Active.X + Direction; end with;
+
+  if (State.Status = Model.Phase.Playing) and Model.Fits(State, Candidate) then
+    Place(var Next, Candidate);
+  end if;
+
+  return Next;
+end function;
+
+// Try the original position, then nearby wall and floor kicks.
+public function Rotate(State: Model.Game; Direction: integer): Model.Game;
+begin
+  if (State.Status <> Model.Phase.Playing) or (State.Active.Kind = 2) then
+    return State;
+  end if;
+  const Kicks := [
+    Pieces.Cell(X := 0, Y := 0), Pieces.Cell(X := -1, Y := 0),
+    Pieces.Cell(X := 1, Y := 0), Pieces.Cell(X := -2, Y := 0),
+    Pieces.Cell(X := 2, Y := 0), Pieces.Cell(X := 0, Y := -1),
+    Pieces.Cell(X := 0, Y := -2)
+  ];
+  for Kick: Pieces.Cell in Kicks do
+    const Candidate := State.Active with Rotation := (State.Active.Rotation + Direction + 4) mod 4; X := State.Active.X +
+      Kick.X; Y := State.Active.Y + Kick.Y; end with;
+
+    if Model.Fits(State, Candidate) then
+      var Next := State;
+      Place(var Next, Candidate);
+      return Next;
+    end if;
+  end for;
+
+  return State;
+end function;
+
+procedure Award(var State: Model.Game; Points: integer);
+begin
+  State.Score := State.Score + Points;
+  if State.Score > State.Best then
+    State.Best := State.Score;
+  end if;
+end procedure;
+
+procedure Lock(var State: Model.Game);
+begin
+  for Block: Pieces.Cell in Pieces.Cells(State.Active.Kind, State.Active.Rotation) do
+    const Y := State.Active.Y + Block.Y;
+    State.Board[Y * Model.BoardWidth + State.Active.X + Block.X] := State.Active.Kind;
+    if Y < Model.HiddenRows then
+      State.Status := Model.Phase.GameOver;
+    end if;
+  end for;
+
+  if State.Status = Model.Phase.GameOver then
+    State.Notice := 'STACK TOO HIGH';
+    return;
+  end if;
+  var Destination := Model.BoardHeight - 1;
+  var Cleared := 0;
+  for Row: integer := Model.BoardHeight - 1 downto 0 do
+    var Full := true;
+    for X: integer := 0 to Model.BoardWidth - 1 do
+      if State.Board[Row * Model.BoardWidth + X] = 0 then
+        Full := false;
+      end if;
+    end for;
+
+    if Full then
+      Cleared := Cleared + 1;
+    else
+      for X: integer := 0 to Model.BoardWidth - 1 do
+        State.Board[Destination * Model.BoardWidth + X] := State.Board[Row * Model.BoardWidth + X];
+      end for;
+
+      Destination := Destination - 1;
+    end if;
+  end for;
+
+  for Index: integer := 0 to (Destination + 1) * Model.BoardWidth - 1 do
+    State.Board[Index] := 0;
+  end for;
+  const Points := [0, 100, 300, 500, 800];
+  const Notices := ['KEEP GOING', 'SINGLE', 'DOUBLE', 'TRIPLE', 'FP A S T R I S !'];
+  Award(var State, Points[Cleared] * Model.Level(State));
+  State.Notice := Notices[Cleared];
+  State.Lines := State.Lines + Cleared;
+  State.HoldUsed := false;
+  Model.TakeNext(var State);
+end procedure;
+
+public function SoftDrop(State: Model.Game): Model.Game;
+begin
+  var Next := State;
+  if (State.Status = Model.Phase.Playing) and not Grounded(State) then
+    Next.Active.Y := Next.Active.Y + 1;
+    Next.FallMillis := 0;
+    Next.LockMillis := 0;
+    Award(var Next, 1);
+  end if;
+
+  return Next;
+end function;
+
+public function HardDrop(State: Model.Game): Model.Game;
+begin
+  if State.Status <> Model.Phase.Playing then
+    return State;
+  end if;
+  var Next := State;
+  Next.Active := Model.Landing(State);
+  Award(var Next, (Next.Active.Y - State.Active.Y) * 2);
+  Lock(var Next);
+  return Next;
+end function;
+
+public function Hold(State: Model.Game): Model.Game;
+begin
+  if (State.Status <> Model.Phase.Playing) or State.HoldUsed then
+    return State;
+  end if;
+  var Next := State;
+  Next.Held := State.Active.Kind;
+  if State.Held = 0 then
+    Model.TakeNext(var Next);
+  else
+    Model.Spawn(var Next, State.Held);
+  end if;
+
+  Next.HoldUsed := true;
+  return Next;
+end function;
+
+public function Advance(State: Model.Game; Milliseconds: integer): Model.Game;
+begin
+  if State.Status <> Model.Phase.Playing then
+    return State;
+  end if;
+  var Next := State;
+  // Bound catch-up after terminal stalls; never drop a whole stack on resume.
+  var Remaining := if Milliseconds > 1000 then 1000 else Milliseconds end if;
+  while (Remaining > 0) and (Next.Status = Model.Phase.Playing) do
+    const Step := if Remaining > 50 then 50 else Remaining end if;
+    Remaining := Remaining - Step;
+    if Grounded(Next) then
+      Next.LockMillis := Next.LockMillis + Step;
+      if Next.LockMillis >= 500 then
+        Lock(var Next);
+      end if;
+    else
+      Next.LockMillis := 0;
+      Next.FallMillis := Next.FallMillis + Step;
+      const Interval := FallInterval(Next);
+      while (Next.FallMillis >= Interval) and not Grounded(Next) do
+        Next.Active.Y := Next.Active.Y + 1;
+        Next.FallMillis := Next.FallMillis - Interval;
+      end while;
+    end if;
+  end while;
+
+  return Next;
+end function;
+end unit;

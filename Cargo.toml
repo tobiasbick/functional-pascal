@@ -3,7 +3,13 @@ members = ["crates/*"]
 resolver = "3"
 
 [profile.release]
+lto = "fat"
+codegen-units = 1
+
+[profile.dev-fast]
+inherits = "release"
 lto = "thin"
+codegen-units = 16
 
 [workspace.package]
 version = "0.0.1"

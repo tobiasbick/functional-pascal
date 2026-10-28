@@ -1,0 +1,126 @@
+unit Fpastris.Model;
+
+uses Fpastris.Pieces as Pieces, Std.Random as Random;
+
+public const BoardWidth: integer := 10;
+public const BoardHeight: integer := 22;
+public const HiddenRows: integer := 2;
+public const MinimumWidth: integer := 62;
+public const MinimumHeight: integer := 26;
+
+public type Phase = enum
+  Ready;
+  Playing;
+  Paused;
+  GameOver;
+end enum;
+
+public type Piece = record
+  public Kind: integer := 1;
+  public Rotation: integer := 0;
+  public X: integer := 3;
+  public Y: integer := 1;
+end record;
+
+public type Game = record
+  public Board: array of integer;
+  public Active: Piece;
+  public Queue: array of integer;
+  public Held: integer := 0;
+  public HoldUsed: boolean := false;
+  public Status: Phase := Phase.Ready;
+  public Score: integer := 0;
+  public Best: integer := 0;
+  public Lines: integer := 0;
+  public FallMillis: integer := 0;
+  public LockMillis: integer := 0;
+  public LockResets: integer := 0;
+  public Notice: string := 'MAKE SOME SPACE';
+  public Width: integer := 80;
+  public Height: integer := 30;
+end record;
+
+public function Fits(State: Game; Candidate: Piece): boolean;
+begin
+  for Block: Pieces.Cell in Pieces.Cells(Candidate.Kind, Candidate.Rotation) do
+    const X := Candidate.X + Block.X;
+    const Y := Candidate.Y + Block.Y;
+    if (X < 0) or (X >= BoardWidth) or (Y < 0) or (Y >= BoardHeight) then
+      return false;
+    end if;
+
+    if State.Board[Y * BoardWidth + X] <> 0 then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+public function Landing(State: Game): Piece;
+begin
+  var Candidate := State.Active;
+  while Fits(State, Candidate with Y := Candidate.Y + 1; end with) do
+    Candidate.Y := Candidate.Y + 1;
+  end while;
+
+  return Candidate;
+end function;
+
+public function Level(State: Game): integer;
+begin
+  return 1 + State.Lines div 10;
+end function;
+
+public function FitsTerminal(State: Game): boolean;
+begin
+  return (State.Width >= MinimumWidth) and (State.Height >= MinimumHeight);
+end function;
+
+public procedure Refill(var State: Game);
+begin
+  if State.Queue.Length() >= 7 then
+    return;
+  end if;
+  var Bag := [1, 2, 3, 4, 5, 6, 7];
+  for Index: integer := 6 downto 1 do
+    const Other := Random.RandomInt(0, Index);
+    const Saved := Bag[Index];
+    Bag[Index] := Bag[Other];
+    Bag[Other] := Saved;
+  end for;
+
+  State.Queue := State.Queue.Concat(Bag);
+end procedure;
+
+public procedure Spawn(var State: Game; Kind: integer);
+begin
+  State.Active := Piece(Kind := Kind);
+  State.FallMillis := 0;
+  State.LockMillis := 0;
+  State.LockResets := 0;
+  if not Fits(State, State.Active) then
+    State.Status := Phase.GameOver;
+    State.Notice := 'NO MORE ROOM';
+  end if;
+end procedure;
+
+public procedure TakeNext(var State: Game);
+begin
+  Refill(var State);
+  const Kind := State.Queue[0];
+  State.Queue := State.Queue.Slice(1, State.Queue.Length() - 1);
+  Spawn(var State, Kind);
+end procedure;
+
+public function Create(Width: integer; Height: integer): Game;
+begin
+  var State := Game(Board := [], Active := Piece(), Queue := [], Width := Width, Height := Height);
+  for Index: integer := 1 to BoardWidth * BoardHeight do
+    State.Board.PushInPlace(0);
+  end for;
+
+  TakeNext(var State);
+  return State;
+end function;
+end unit;

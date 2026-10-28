@@ -1,0 +1,4 @@
+*.fpascp
+*.fpascp.lock
+*.fpascu
+*.fpascu.lock

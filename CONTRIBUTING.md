@@ -27,6 +27,12 @@ Rust 1.99.1 as its minimum supported version, inherited by every member crate.
 When upgrading Rust, update the toolchain pin, workspace minimum, and build
 documentation together. Keep resolved dependency versions in `Cargo.lock`.
 
+Use `cargo build --profile dev-fast` for development and
+`cargo run --profile dev-fast -p fpas-cli -- <arguments>` to run the CLI.
+This optimized profile uses Thin-LTO and writes to `target/dev-fast/`.
+Release, benchmarks, and dist use Fat-LTO; see the
+[build guide](docs/bench/build-times.md) for the profile settings.
+
 1. Read the relevant area under [`docs/pascal/`](docs/pascal/README.md) (stdlib:
    [`docs/pascal/std/README.md`](docs/pascal/std/README.md)).
    For language rules or authoring APIs, also check the
@@ -38,7 +44,7 @@ documentation together. Keep resolved dependency versions in `Cargo.lock`.
 
    ```text
    cargo fmt
-   cargo build
+   cargo build --profile dev-fast
    cargo test --workspace
    ```
 

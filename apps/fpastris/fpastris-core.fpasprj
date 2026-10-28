@@ -1,0 +1,6 @@
+[project]
+name = "fpastris-core"
+kind = "library"
+
+[sources]
+include = ["src/Fpastris/**/*.fpas"]

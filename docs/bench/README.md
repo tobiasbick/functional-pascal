@@ -5,6 +5,10 @@ driven by the release `fpas` CLI. Native drivers measure compiler, editor and
 artifact work directly. Both run through `cargo bench-fpas`; these workloads do
 not use Criterion or Rust's `cargo bench` command.
 
+The harness and measured CLI use the workspace release profile with Fat-LTO
+and one codegen unit. Keep benchmark comparisons on this profile; `dev-fast`
+uses Thin-LTO for development. See the [build guide](build-times.md).
+
 When investigating FPAS execution cost, first
 [profile the actual program](../pascal/tools/profiler.md) with `fpas run --profile`
 or `fpas debug --profile` for a debug target. Use unprofiled benchmark runs for

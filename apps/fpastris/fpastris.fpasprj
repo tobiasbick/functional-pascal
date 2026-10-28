@@ -1,0 +1,10 @@
+[project]
+name = "fpastris"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/main.fpas"]
+
+[dependencies]
+projects = ["fpastris-core.fpasprj"]

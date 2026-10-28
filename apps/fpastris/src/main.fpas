@@ -1,0 +1,13 @@
+program Fpastris;
+
+uses
+  Fpastris.Model as Model, Fpastris.Theme as Theme, Fpastris.Update as Update,
+  Fpastris.View as View, Std.Console as Console, Std.Random as Random, Std.Tui as Tui;
+
+begin
+  Random.Randomize();
+  discard Tui.TuiApplication.RunWithPalette(
+    Model.Create(Console.ScreenWidth(), Console.ScreenHeight()),
+    Update.Update, View.View, Theme.Palette()
+  );
+end.

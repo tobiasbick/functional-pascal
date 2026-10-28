@@ -1,0 +1,133 @@
+unit Fpastris.Update;
+
+uses Fpastris.Engine as Engine, Fpastris.Model as Model, Std.Tui as Tui;
+
+function Restart(State: Model.Game): Model.Game;
+begin
+  var Next := Model.Create(State.Width, State.Height);
+  Next.Best := State.Best;
+  Next.Status := Model.Phase.Playing;
+  return Next;
+end function;
+
+function TogglePause(State: Model.Game): Model.Game;
+begin
+  var Next := State;
+  if State.Status = Model.Phase.Playing then
+    Next.Status := Model.Phase.Paused;
+  else
+    if (State.Status = Model.Phase.Paused) and Model.FitsTerminal(State) then
+      Next.Status := Model.Phase.Playing;
+    end if;
+  end if;
+
+  return Next;
+end function;
+
+function Key(State: Model.Game; Event: Tui.TuiKeyEvent; Cmd: Tui.TuiCmdOutput): Model.Game;
+begin
+  const Character := Event.ch.ToLower();
+  if ((Character = 'q') or ((Character = 'c') and Event.ctrl))
+    or
+    ((Character = 'x') and Event.alt)
+  then
+    Cmd.Set(Tui.TuiCmd.Quit);
+    return State;
+  end if;
+
+  if Event.ctrl or Event.alt or Event.meta then
+    return State;
+  end if;
+
+  if not Model.FitsTerminal(State) then
+    return State;
+  end if;
+
+  if Character = 'r' then
+    return Restart(State);
+  end if;
+
+  if Event.kind = Tui.TuiKeyKind.Enter then
+    if State.Status = Model.Phase.GameOver then
+      return Restart(State);
+    end if;
+
+    if State.Status = Model.Phase.Ready then
+      return State with Status := Model.Phase.Playing; end with;
+    end if;
+
+    return TogglePause(State);
+  end if;
+
+  if Character = 'p' then
+    return TogglePause(State);
+  end if;
+
+  if State.Status <> Model.Phase.Playing then
+    return State;
+  end if;
+
+  if (Event.kind = Tui.TuiKeyKind.Left) or (Character = 'a') then
+    return Engine.Move(State, -1);
+  end if;
+
+  if (Event.kind = Tui.TuiKeyKind.Right) or (Character = 'd') then
+    return Engine.Move(State, 1);
+  end if;
+
+  if (Event.kind = Tui.TuiKeyKind.Down) or (Character = 's') then
+    return Engine.SoftDrop(State);
+  end if;
+
+  if (Event.kind = Tui.TuiKeyKind.Up) or (Character = 'x') then
+    return Engine.Rotate(State, 1);
+  end if;
+
+  if Character = 'z' then
+    return Engine.Rotate(State, -1);
+  end if;
+
+  if Character = ' ' then
+    return Engine.HardDrop(State);
+  end if;
+
+  if Character = 'c' then
+    return Engine.Hold(State);
+  end if;
+
+  return State;
+end function;
+
+public function Update(State: Model.Game; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model.Game;
+begin
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  var Next := State;
+  var Tick := false;
+  case Msg of
+    when Tui.TuiMsg.Key(const Event):
+      Next := Key(State, Event, Cmd);
+    when Tui.TuiMsg.QuitRequested:
+      Next := TogglePause(State);
+    when Tui.TuiMsg.Tick(const Delta):
+      Next := Engine.Advance(State, Delta);
+      Tick := true;
+    when Tui.TuiMsg.Resize(const Size):
+      Next.Width := Size.Width;
+      Next.Height := Size.Height;
+      if (Next.Status = Model.Phase.Playing) and not Model.FitsTerminal(Next) then
+        Next.Status := Model.Phase.Paused;
+      end if;
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Pointer(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+      null;
+  end case;
+
+  if (Next.Status = Model.Phase.Playing)
+    and
+    (Tick or (State.Status <> Model.Phase.Playing))
+  then
+    Cmd.RequestTick(50);
+  end if;
+
+  return Next;
+end function;
+end unit;

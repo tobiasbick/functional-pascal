@@ -1,0 +1,56 @@
+unit Fpastris.Theme;
+
+uses Std.Tui as Tui;
+
+public function Background(): Tui.TuiColor;
+begin
+  return Tui.TuiColor.FromRgb(10, 15, 23);
+end function;
+
+public function Style(Red: integer; Green: integer; Blue: integer): Tui.TuiStyle;
+begin
+  return Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(Red, Green, Blue), Background());
+end function;
+
+public function Text(): Tui.TuiStyle;
+begin
+  return Style(216, 226, 236);
+end function;
+
+public function Muted(): Tui.TuiStyle;
+begin
+  return Style(126, 145, 160);
+end function;
+
+public function Border(): Tui.TuiStyle;
+begin
+  return Style(42, 61, 75);
+end function;
+
+public function Accent(): Tui.TuiStyle;
+begin
+  return Style(70, 211, 196);
+end function;
+
+public function Piece(Kind: integer; Ghost: boolean): Tui.TuiStyle;
+begin
+  const Reds := [94, 245, 183, 116, 244, 105, 244];
+  const Greens := [214, 204, 151, 209, 112, 155, 170];
+  const Blues := [231, 103, 240, 151, 132, 241, 96];
+  const Divisor := if Ghost then 3 else 1 end if;
+  return Style(
+    Reds[Kind - 1] div Divisor, Greens[Kind - 1] div Divisor,
+    Blues[Kind - 1] div Divisor
+  );
+end function;
+
+public function Palette(): Tui.TuiPalette;
+begin
+  var Colors := Tui.TuiPalette.Default();
+  Colors.Normal := Text();
+  Colors.Title := Accent();
+  Colors.Frame := Border();
+  Colors.Accent := Accent();
+  return Colors;
+end function;
+end unit;

@@ -1,0 +1,35 @@
+unit Fpastris.Pieces;
+
+public type Cell = record
+  public X: integer;
+  public Y: integer;
+end record;
+
+// Piece numbers also identify the seven colors; zero is an empty board cell.
+public function Cells(Kind: integer; Rotation: integer): array of Cell;
+begin
+  const Shapes := [
+    '....####........', '.##..##.........', '.#..###.........',
+    '.##.##..........', '##...##.........', '#...###.........', '..#.###.........'
+  ];
+  const Size := if Kind <= 2 then 4 else 3 end if;
+  var Blocks: array of Cell := [];
+  for Index: integer := 0 to 15 do
+    if Shapes[Kind - 1][Index] = '#' then
+      var X := Index mod 4;
+      var Y := Index div 4;
+      if Kind <> 2 then
+        for Turn: integer := 1 to Rotation do
+          const PreviousX := X;
+          X := Size - 1 - Y;
+          Y := PreviousX;
+        end for;
+      end if;
+
+      Blocks.PushInPlace(Cell(X := X, Y := Y));
+    end if;
+  end for;
+
+  return Blocks;
+end function;
+end unit;

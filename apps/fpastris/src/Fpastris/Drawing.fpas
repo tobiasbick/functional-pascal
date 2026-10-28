@@ -1,0 +1,59 @@
+unit Fpastris.Drawing;
+
+uses Fpastris.Pieces as Pieces, Fpastris.Theme as Theme, Std.Tui as Tui;
+
+public function Grid(Width: integer; Height: integer): Tui.TuiCellGrid;
+begin
+  const Blank := Tui.TuiCell.Styled(' ', Theme.Text());
+  var Cells: array of Tui.TuiCell := [];
+  for Index: integer := 1 to Width * Height do
+    Cells.PushInPlace(Blank);
+  end for;
+
+  return Tui.TuiCellGrid.Create(Width, Height, Cells);
+end function;
+
+public procedure Text(
+  var Grid: Tui.TuiCellGrid; X: integer; Y: integer;
+  Value: string; Style: Tui.TuiStyle
+);
+begin
+  if (Y < 0) or (Y >= Grid.Height) then
+    return;
+  end if;
+
+  for Index: integer := 0 to Value.Length() - 1 do
+    if (X + Index >= 0) and (X + Index < Grid.Width) then
+      Grid.Cells[Y * Grid.Width + X + Index] := Tui.TuiCell.Styled(Value[Index], Style);
+    end if;
+  end for;
+end procedure;
+
+public procedure Panel(
+  var Grid: Tui.TuiCellGrid; X: integer; Y: integer;
+  Width: integer; Height: integer; Title: string
+);
+begin
+  for Row: integer := Y to Y + Height - 1 do
+    Text(var Grid, X, Row, ' '.RepeatStr(Width), Theme.Text());
+    Text(var Grid, X, Row, '│', Theme.Border());
+    Text(var Grid, X + Width - 1, Row, '│', Theme.Border());
+  end for;
+
+  Text(var Grid, X, Y, '╭' + '─'.RepeatStr(Width - 2) + '╮', Theme.Border());
+  Text(var Grid, X, Y + Height - 1, '╰' + '─'.RepeatStr(Width - 2) + '╯', Theme.Border());
+  Text(var Grid, X + 2, Y, ' ' + Title + ' ', Theme.Accent());
+end procedure;
+
+public procedure Preview(var Grid: Tui.TuiCellGrid; X: integer; Y: integer; Kind: integer);
+begin
+  if Kind = 0 then
+    Text(var Grid, X + 2, Y, '──', Theme.Border());
+    return;
+  end if;
+
+  for Block: Pieces.Cell in Pieces.Cells(Kind, 0) do
+    Text(var Grid, X + Block.X * 2, Y + Block.Y, '██', Theme.Piece(Kind, false));
+  end for;
+end procedure;
+end unit;

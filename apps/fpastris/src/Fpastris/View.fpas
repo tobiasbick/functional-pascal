@@ -1,0 +1,149 @@
+unit Fpastris.View;
+
+uses
+  Fpastris.Drawing as Drawing, Fpastris.Model as Model, Fpastris.Pieces as Pieces,
+  Fpastris.Theme as Theme, Std.Conv as Conv, Std.Tui as Tui;
+
+function PhaseText(State: Model.Game): string;
+begin
+  case State.Status of
+    when Model.Phase.Ready:
+      return 'READY';
+    when Model.Phase.Playing:
+      return 'IN PLAY';
+    when Model.Phase.Paused:
+      return 'PAUSED';
+    when Model.Phase.GameOver:
+      return 'GAME OVER';
+  end case;
+end function;
+
+procedure PaintPiece(var Grid: Tui.TuiCellGrid; Piece: Model.Piece; Ghost: boolean);
+begin
+  for Block: Pieces.Cell in Pieces.Cells(Piece.Kind, Piece.Rotation) do
+    const Y := Piece.Y + Block.Y - Model.HiddenRows;
+    if (Y >= 0) and (Y < 20) then
+      Drawing.Text(
+        var Grid, 21 + (Piece.X + Block.X) * 2, 3 + Y,
+        if Ghost then '░░' else '██' end if, Theme.Piece(Piece.Kind, Ghost)
+      );
+    end if;
+  end for;
+end procedure;
+
+procedure Board(var Grid: Tui.TuiCellGrid; State: Model.Game);
+begin
+  for Y: integer := 0 to 19 do
+    for X: integer := 0 to 9 do
+      const Kind := State.Board[(Y + Model.HiddenRows) * Model.BoardWidth + X];
+      if Kind <> 0 then
+        Drawing.Text(var Grid, 21 + X * 2, 3 + Y, '██', Theme.Piece(Kind, false));
+      end if;
+    end for;
+  end for;
+
+  if State.Status <> Model.Phase.GameOver then
+    PaintPiece(var Grid, Model.Landing(State), true);
+    PaintPiece(var Grid, State.Active, false);
+  end if;
+
+  if State.Status <> Model.Phase.Playing then
+    Drawing.Panel(var Grid, 21, 9, 20, 7, PhaseText(State));
+    const Message := if State.Status = Model.Phase.Ready then 'MAKE SOME SPACE.'
+      else if State.Status = Model.Phase.Paused then 'TAKE YOUR TIME.'
+        else 'ONE MORE ROUND?'
+        end if
+      end if;
+    Drawing.Text(var Grid, 23, 11, Message, Theme.Text());
+    Drawing.Text(
+      var Grid, 23, 13, 'Enter  ' +
+      if State.Status = Model.Phase.Paused then 'resume' else 'play' end if, Theme.Accent()
+    );
+    Drawing.Text(var Grid, 23, 14, 'Q      quit', Theme.Muted());
+  end if;
+end procedure;
+
+procedure Sidebar(var Grid: Tui.TuiCellGrid; State: Model.Game);
+begin
+  Drawing.Preview(var Grid, 5, 4, State.Held);
+  Drawing.Text(
+    var Grid, 2, 7,
+    if State.HoldUsed then 'used this turn' else 'C  swap piece' end if, Theme.Muted()
+  );
+  Drawing.Text(var Grid, 2, 13, Conv.IntToStr(State.Score), Theme.Accent());
+  Drawing.Text(var Grid, 2, 15, 'BEST  ' + Conv.IntToStr(State.Best), Theme.Text());
+  Drawing.Text(var Grid, 2, 17, 'LEVEL ' + Conv.IntToStr(Model.Level(State)), Theme.Text());
+  Drawing.Text(var Grid, 2, 18, 'LINES ' + Conv.IntToStr(State.Lines), Theme.Text());
+  const Progress := State.Lines mod 10;
+  Drawing.Text(var Grid, 2, 21, '━'.RepeatStr(Progress), Theme.Accent());
+  Drawing.Text(var Grid, 2 + Progress, 21, '─'.RepeatStr(10 - Progress), Theme.Border());
+  for Index: integer := 0 to 2 do
+    Drawing.Preview(var Grid, 50, 5 + Index * 4, State.Queue[Index]);
+  end for;
+end procedure;
+
+function Background(): Tui.TuiCellGrid;
+begin
+  var Grid := Drawing.Grid(62, 26);
+  Drawing.Text(var Grid, 0, 0, '▀▄ fpastris', Theme.Accent());
+  Drawing.Text(var Grid, 14, 0, 'FALLING BLOCKS / FPAS', Theme.Muted());
+  Drawing.Text(var Grid, 0, 1, '─'.RepeatStr(62), Theme.Border());
+  Drawing.Panel(var Grid, 0, 2, 18, 7, 'HOLD');
+  Drawing.Panel(var Grid, 0, 10, 18, 14, 'SESSION');
+  Drawing.Text(var Grid, 2, 12, 'SCORE', Theme.Muted());
+  Drawing.Text(var Grid, 2, 20, 'NEXT LEVEL', Theme.Muted());
+  Drawing.Panel(var Grid, 44, 2, 18, 16, 'NEXT');
+  for Index: integer := 0 to 2 do
+    Drawing.Text(var Grid, 46, 4 + Index * 4, Conv.IntToStr(Index + 1), Theme.Muted());
+  end for;
+
+  Drawing.Panel(var Grid, 44, 19, 18, 5, 'PLAY');
+  Drawing.Text(var Grid, 46, 21, '7-BAG / GHOST', Theme.Muted());
+  Drawing.Text(var Grid, 46, 22, 'P pause  R new', Theme.Text());
+  Drawing.Panel(var Grid, 20, 2, 22, 22, '10 × 20');
+  for Y: integer := 0 to 19 do
+    Drawing.Text(var Grid, 21, 3 + Y, '· '.RepeatStr(10), Theme.Style(24, 36, 48));
+  end for;
+
+  Drawing.Text(
+    var Grid,
+    0,
+    24,
+    '← → move   ↑/X rotate   Z reverse   ↓ soft   Space drop',
+    Theme.Text()
+  );
+  Drawing.Text(var Grid, 0, 25, 'C hold   P/Esc pause   R restart   Q quit', Theme.Muted());
+  return Grid;
+end function;
+
+// Value semantics keep this frame immutable when a view paints its own copy.
+const Backdrop: Tui.TuiCellGrid := Background();
+
+public function View(State: Model.Game): Tui.TuiElement;
+begin
+  if not Model.FitsTerminal(State) then
+    return Tui.TuiElementBuilders.MakeDesktop(
+      None, [
+        Tui.TuiElementBuilders.MakePanel(
+          'fpastris', [
+            Tui.TuiElementBuilders.MakeLabel('Terminal too small. Use at least 62 × 26 cells.'),
+            Tui.TuiElementBuilders.MakeLabel('Play is stopped. Resize, then press Enter. Q quits.')
+          ]
+        )
+      ]
+    );
+  end if;
+  var Grid := Backdrop;
+  Drawing.Text(var Grid, 48, 0, PhaseText(State), Theme.Accent());
+  Sidebar(var Grid, State);
+  Board(var Grid, State);
+  Drawing.Text(var Grid, 44, 25, State.Notice, Theme.Accent());
+  var Layout := Tui.TuiLayoutSettings.Default();
+  Layout.Alignment := Tui.TuiAlignment.Center();
+  return Tui.TuiElementBuilders.MakeDesktop(
+    None, [
+      Tui.TuiElementBuilders.MakeLayout(Layout, Tui.TuiElementBuilders.MakeCellGrid(Grid))
+    ]
+  );
+end function;
+end unit;

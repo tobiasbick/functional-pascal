@@ -41,8 +41,10 @@ the adjacent `languageServer` executable and `standardLibrary` directory. It
 starts that server directly and passes the library through LSP initialization.
 Other editors can start `fpas-lsp` directly with the same initialization option.
 
-`cargo build --workspace` builds all three programs. Distribution scripts ship
-them together with `lib/`. `fpas build --executable` finds the adjacent runner
+`cargo build --workspace --profile dev-fast` builds all three programs for
+development. Distribution scripts use the release profile and ship them together
+with `lib/`. See the [build profiles](bench/build-times.md#build-profiles).
+`fpas build --executable` finds the adjacent runner
 and appends the verified program image; generated applications need no compiler
 or source library installation. For targeted CLI tests that create native
 executables, build `fpas-runner` first with `cargo build -p fpas-runner`.

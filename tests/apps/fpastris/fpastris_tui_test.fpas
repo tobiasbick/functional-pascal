@@ -1,0 +1,117 @@
+program FpastrisTuiTest;
+
+uses
+  Fpastris.Model as Model, Fpastris.Theme as Theme, Fpastris.Update as Update,
+  Fpastris.View as View, Std.Test as Test, Std.Tui as Tui;
+
+function Key(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
+begin
+  return Tui.TuiKeyEvent(
+    kind := Kind, ch := Character,
+    shift := false, ctrl := false, alt := false, meta := false
+  );
+end function;
+
+function Contains(App: Tui.TuiApplication; Text: string): boolean;
+begin
+  const Screen := App.SurfaceSnapshot();
+  for Y: integer := 0 to Screen.Height - 1 do
+    if Text in Screen.LineAt(Y) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure Press(
+  App: Tui.TuiApplication; var State: Model.Game;
+  Kind: Tui.TuiKeyKind; Character: string
+);
+begin
+  App.InjectKeyForTest(Key(Kind, Character));
+  State := App.RunIterations(State, Update.Update, View.View, 1, 0);
+end procedure;
+
+begin
+  const App := Tui.TuiApplication.OpenForTestWithPalette(
+    Tui.TuiSize.Create(62, 26),
+    Theme.Palette()
+  );
+  var State := Model.Create(62, 26);
+  State.Active := Model.Piece(Kind := 3);
+  State := App.RunIterations(State, Update.Update, View.View, 0, 0);
+  Test.AssertTrue(Contains(App, 'fpastris'));
+  Test.AssertTrue(Contains(App, 'READY'));
+  Test.AssertTrue(Contains(App, 'Enter  play'));
+  Test.AssertTrue(Contains(App, 'Space drop'));
+  Press(App, var State, Tui.TuiKeyKind.Enter, '');
+  Test.AssertTrue(State.Status = Model.Phase.Playing);
+  const Initial := App.SurfaceSnapshot();
+  Test.AssertEquals('╭', Initial.CellAt(20, 2).Glyph);
+  Test.AssertEquals('╯', Initial.CellAt(41, 23).Glyph);
+  Test.AssertEquals('█', Initial.CellAt(27, 3).Glyph);
+  Test.AssertEquals('░', Initial.CellAt(27, 22).Glyph);
+  Test.AssertTrue(Initial.CellAt(27, 3).ConcreteStyle = Some(Theme.Piece(3, false)));
+  Press(App, var State, Tui.TuiKeyKind.Left, '');
+  Test.AssertEquals(2, State.Active.X);
+  Test.AssertEquals('·', App.SurfaceSnapshot().CellAt(31, 3).Glyph);
+  Test.AssertEquals('·', App.SurfaceSnapshot().CellAt(31, 22).Glyph);
+  Press(App, var State, Tui.TuiKeyKind.Up, '');
+  Test.AssertEquals(1, State.Active.Rotation);
+  const BeforeHold := State.Active.Kind;
+  Press(App, var State, Tui.TuiKeyKind.Character, 'c');
+  Test.AssertEquals(BeforeHold, State.Held);
+  Press(App, var State, Tui.TuiKeyKind.Character, ' ');
+  Test.AssertTrue(State.Score > 0);
+  const Best := State.Best;
+  Press(App, var State, Tui.TuiKeyKind.Escape, '');
+  Test.AssertTrue(State.Status = Model.Phase.Paused);
+  Test.AssertTrue(Contains(App, 'TAKE YOUR TIME.'));
+  const Frozen := State.Active;
+  State := App.RunIterations(State, Update.Update, View.View, 1, 1000);
+  Press(App, var State, Tui.TuiKeyKind.Character, ' ');
+  Test.AssertTrue(State.Active = Frozen);
+  Press(App, var State, Tui.TuiKeyKind.Character, 'p');
+  Test.AssertTrue(State.Status = Model.Phase.Playing);
+  App.InjectResizeForTest(Tui.TuiSize.Create(50, 20));
+  State := App.RunIterations(State, Update.Update, View.View, 1, 0);
+  Test.AssertTrue(State.Status = Model.Phase.Paused);
+  Test.AssertTrue(Contains(App, 'Terminal too small'));
+  Press(App, var State, Tui.TuiKeyKind.Enter, '');
+  Test.AssertTrue(State.Status = Model.Phase.Paused);
+  App.InjectResizeForTest(Tui.TuiSize.Create(100, 32));
+  State := App.RunIterations(State, Update.Update, View.View, 1, 0);
+  Test.AssertTrue(State.Status = Model.Phase.Paused);
+  Test.AssertTrue(Contains(App, 'fpastris'));
+  const Wide := App.SurfaceSnapshot();
+  Test.AssertEquals('╭', Wide.CellAt(39, 5).Glyph);
+  Test.AssertEquals('╯', Wide.CellAt(60, 26).Glyph);
+  Press(App, var State, Tui.TuiKeyKind.Character, 'r');
+  Test.AssertTrue(State.Status = Model.Phase.Playing);
+  Test.AssertEquals(0, State.Score);
+  Test.AssertEquals(Best, State.Best);
+  Test.AssertEquals(0, State.Held);
+  Test.AssertEquals(0, State.Lines);
+  for Cell: integer in State.Board do
+    Test.AssertEquals(0, Cell);
+  end for;
+
+  State.Status := Model.Phase.GameOver;
+  State := App.RunIterations(State, Update.Update, View.View, 0, 0);
+  Test.AssertTrue(Contains(App, 'ONE MORE ROUND?'));
+  Press(App, var State, Tui.TuiKeyKind.Enter, '');
+  Test.AssertTrue(State.Status = Model.Phase.Playing);
+  App.Close();
+  const Cmd := Tui.TuiCmdOutput.Create();
+  discard Update.Update(Model.Create(62, 26), Tui.TuiMsg.Key(Key(Tui.TuiKeyKind.Enter, '')), Cmd);
+  Test.AssertTrue(Cmd.ReadTickRequest() = Some(50));
+  Cmd.Reset();
+  discard Update.Update(State, Tui.TuiMsg.Tick(50), Cmd);
+  Test.AssertTrue(Cmd.ReadTickRequest() = Some(50));
+  Cmd.Reset();
+  discard Update.Update(State, Tui.TuiMsg.QuitRequested, Cmd);
+  Test.AssertTrue(Cmd.ReadTickRequest() = None);
+  discard Update.Update(State, Tui.TuiMsg.Key(Key(Tui.TuiKeyKind.Character, 'q')), Cmd);
+  Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.Quit);
+end.

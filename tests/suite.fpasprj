@@ -10,6 +10,7 @@ projects = [
   "../examples/math/mandelbrot/mandelbrot-core.fpasprj",
   "../apps/local-chat/local-chat-core.fpasprj",
   "../apps/notes/notes-core.fpasprj",
+  "../apps/fpastris/fpastris-core.fpasprj",
 ]
 
 [sources]

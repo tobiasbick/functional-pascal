@@ -1,0 +1,164 @@
+program FpastrisRulesTest;
+
+uses
+  Fpastris.Engine as Engine, Fpastris.Model as Model, Fpastris.Pieces as Pieces,
+  Std.Random as Random, Std.Test as Test;
+
+function Playing(): Model.Game;
+begin
+  return Model.Create(80, 30) with Status := Model.Phase.Playing; end with;
+end function;
+
+procedure BagAndRotation();
+begin
+  var State := Playing();
+  var Seen: array of integer := [];
+  for Index: integer := 1 to 28 do
+    Test.AssertFalse(State.Active.Kind in Seen);
+    Seen.PushInPlace(State.Active.Kind);
+    if Index mod 7 = 0 then
+      Test.AssertEquals(7, Seen.Length());
+      Seen := [];
+    end if;
+
+    Model.TakeNext(var State);
+  end for;
+
+  for Kind: integer := 1 to 7 do
+    State.Active := Model.Piece(Kind := Kind, X := 3, Y := 8);
+    const Before := State.Active;
+    for Turn: integer := 1 to 4 do
+      State := Engine.Rotate(State, 1);
+      const Blocks := Pieces.Cells(State.Active.Kind, State.Active.Rotation);
+      Test.AssertEquals(4, Blocks.Length());
+      Test.AssertTrue(Model.Fits(State, State.Active));
+      for A: integer := 0 to 2 do
+        for B: integer := A + 1 to 3 do
+          Test.AssertFalse(Blocks[A] = Blocks[B]);
+        end for;
+      end for;
+    end for;
+
+    Test.AssertTrue(Before = State.Active);
+    State := Engine.Rotate(Engine.Rotate(State, -1), 1);
+    Test.AssertTrue(Before = State.Active);
+  end for;
+end procedure;
+
+procedure MovementAndLock();
+begin
+  var State := Playing();
+  State.Active := Model.Piece(Kind := 1, X := 0, Y := 5);
+  State := Engine.Move(State, -1);
+  Test.AssertEquals(0, State.Active.X);
+  State.Board[6 * 10 + 4] := 2;
+  State := Engine.Move(State, 1);
+  Test.AssertEquals(0, State.Active.X);
+  State := Playing();
+  State.Active := Model.Piece(Kind := 1, Rotation := 1, X := -2, Y := 5);
+  State := Engine.Rotate(State, 1);
+  Test.AssertEquals(2, State.Active.Rotation);
+  Test.AssertEquals(0, State.Active.X);
+  State.Active := Model.Piece(Kind := 1, X := 3, Y := 20);
+  State := Engine.Rotate(State, 1);
+  Test.AssertEquals(1, State.Active.Rotation);
+  Test.AssertEquals(18, State.Active.Y);
+  State := Playing();
+  State.Active := Model.Piece(Kind := 2);
+  State := Engine.Advance(State, 799);
+  Test.AssertEquals(1, State.Active.Y);
+  State := Engine.Advance(State, 1);
+  Test.AssertEquals(2, State.Active.Y);
+  State := Engine.SoftDrop(State);
+  Test.AssertEquals(3, State.Active.Y);
+  Test.AssertEquals(1, State.Score);
+  State.Active := Model.Landing(State);
+  State := Engine.Advance(State, 499);
+  Test.AssertEquals(0, State.Board[214]);
+  State := Engine.Move(State, 1);
+  State := Engine.Advance(State, 499);
+  Test.AssertEquals(0, State.Board[215]);
+  State := Engine.Advance(State, 1);
+  Test.AssertEquals(2, State.Board[215]);
+  Test.AssertEquals(2, State.Board[216]);
+  Test.AssertEquals(2, State.Board[205]);
+  Test.AssertEquals(2, State.Board[206]);
+  State := Playing();
+  State.Active := Model.Piece(Kind := 2, Y := 20);
+  State.LockResets := 15;
+  State.LockMillis := 499;
+  State := Engine.Advance(Engine.Move(State, 1), 1);
+  Test.AssertEquals(2, State.Board[215]);
+end procedure;
+
+procedure LinesAndScoring();
+begin
+  const Awards := [100, 300, 500, 800];
+  for Count: integer := 1 to 4 do
+    var State := Playing();
+    State.Active := Model.Piece(Kind := 1, Rotation := 1, X := 2, Y := 18);
+    State.Lines := 9;
+    State.Board[170] := 6;
+    for Row: integer := 22 - Count to 21 do
+      for X: integer := 0 to 9 do
+        if X <> 4 then
+          State.Board[Row * 10 + X] := 3;
+        end if;
+      end for;
+    end for;
+
+    State := Engine.HardDrop(State);
+    Test.AssertEquals(9 + Count, State.Lines);
+    Test.AssertEquals(Awards[Count - 1], State.Score);
+    Test.AssertEquals(State.Score, State.Best);
+    Test.AssertEquals(2, Model.Level(State));
+    Test.AssertEquals(6, State.Board[(17 + Count) * 10]);
+    Test.AssertEquals(0, State.Board[170]);
+    Test.AssertTrue(Engine.FallInterval(State) < 800);
+  end for;
+  var Drop := Playing();
+  Drop.Active := Model.Piece(Kind := 2);
+  Drop := Engine.HardDrop(Drop);
+  Test.AssertEquals(38, Drop.Score);
+  Test.AssertEquals(2, Drop.Board[214]);
+  Test.AssertEquals(2, Drop.Board[215]);
+end procedure;
+
+procedure HoldAndTopOut();
+begin
+  var State := Playing();
+  State.Active := Model.Piece(Kind := 3);
+  State.Queue := [1, 2, 4, 5, 6, 7, 3];
+  State := Engine.Hold(State);
+  Test.AssertEquals(3, State.Held);
+  Test.AssertEquals(1, State.Active.Kind);
+  State := Engine.Hold(State);
+  Test.AssertEquals(1, State.Active.Kind);
+  State := Engine.HardDrop(State);
+  Test.AssertFalse(State.HoldUsed);
+  Test.AssertEquals(2, State.Active.Kind);
+  State := Engine.Hold(State);
+  Test.AssertEquals(3, State.Active.Kind);
+  Test.AssertEquals(2, State.Held);
+  Test.AssertEquals(0, State.Active.Rotation);
+  Test.AssertEquals(3, State.Active.X);
+  State := Playing();
+  State.Active := Model.Piece(Kind := 2, X := 0, Y := 20);
+  State.Queue := [2, 1, 3, 4, 5, 6, 7];
+  State.Board[14] := 3;
+  State := Engine.HardDrop(State);
+  Test.AssertTrue(State.Status = Model.Phase.GameOver);
+  State := Playing();
+  State.Active := Model.Piece(Kind := 2, Y := 1);
+  State.Board[34] := 1;
+  State := Engine.HardDrop(State);
+  Test.AssertTrue(State.Status = Model.Phase.GameOver);
+end procedure;
+
+begin
+  Random.SetSeed(42);
+  BagAndRotation();
+  MovementAndLock();
+  LinesAndScoring();
+  HoldAndTopOut();
+end.

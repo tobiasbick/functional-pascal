@@ -6,6 +6,7 @@ mod calls;
 mod closure_calls;
 mod console_eof;
 mod dispatch_budget;
+mod dynamic;
 mod global_index_path;
 mod inline_callbacks;
 mod intrinsic_length;

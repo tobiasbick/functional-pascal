@@ -5,6 +5,7 @@ use crate::{AbcOperands, Register, Value};
 use super::super::value_ops::{self, BinaryOperation, UnaryOperation, ValueOperationError};
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
+use super::integer::direct_integer_binary;
 
 impl Worker {
     pub fn execute_value_binary(
@@ -12,12 +13,15 @@ impl Worker {
         operands: AbcOperands,
         operation: BinaryOperation,
     ) -> Result<(), VmError> {
-        let result = value_ops::binary(
-            operation,
-            self.read_operand(operands.b)?,
-            self.read_operand(operands.c)?,
-        )
-        .map_err(|error| self.value_operation_error(error))?;
+        let left = self.read_operand(operands.b)?;
+        let right = self.read_operand(operands.c)?;
+        if let (Value::Integer(left), Value::Integer(right)) = (left, right)
+            && let Some(result) = direct_integer_binary(operation, *left, *right)
+        {
+            return self.write_direct_integer_result(operands.a, result);
+        }
+        let result = value_ops::binary(operation, left, right)
+            .map_err(|error| self.value_operation_error(error))?;
         self.write_operand(operands.a, result)
     }
 
@@ -26,7 +30,11 @@ impl Worker {
         operands: AbcOperands,
         operation: UnaryOperation,
     ) -> Result<(), VmError> {
-        let result = value_ops::unary(operation, self.read_operand(operands.b)?)
+        let value = self.read_operand(operands.b)?;
+        if let (UnaryOperation::Not, Value::Boolean(value)) = (operation, value) {
+            return self.write_boolean_operand(operands.a, !value);
+        }
+        let result = value_ops::unary(operation, value)
             .map_err(|error| self.value_operation_error(error))?;
         self.write_operand(operands.a, result)
     }

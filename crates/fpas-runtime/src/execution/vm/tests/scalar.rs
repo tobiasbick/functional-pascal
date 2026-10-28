@@ -1,4 +1,6 @@
+use crate::execution::vm::worker::Worker;
 use crate::{Constant, Opcode, Value};
+use std::sync::Arc;
 
 use super::*;
 
@@ -393,5 +395,91 @@ fn direct_integer_arithmetic_matches_checked_operations_at_boundaries() {
                 }
             }
         }
+    }
+}
+
+#[test]
+fn typed_boolean_not_initializes_destinations_and_allows_aliasing() {
+    for value in [false, true] {
+        for destination in [0, 1] {
+            let executable = verified(
+                vec![
+                    abx(Opcode::LoadConstant, 0, 0),
+                    abc(Opcode::NotBoolean, destination, 0, 0),
+                    return_unit(),
+                ],
+                vec![Constant::Boolean(value)],
+                vec!["root", "test.fpas"],
+                2,
+            );
+            let mut worker = Worker::new(Arc::new(executable)).expect("worker");
+            worker.dispatch_one().expect("load Boolean");
+            let index = usize::from(destination);
+            assert_eq!(worker.register_is_initialized(index), destination == 0);
+            worker.dispatch_one().expect("negate Boolean");
+            assert_eq!(worker.registers[index], Value::Boolean(!value));
+            assert!(worker.register_is_initialized(index));
+            if destination != 0 {
+                assert_eq!(worker.registers[0], Value::Boolean(value));
+            }
+        }
+    }
+}
+
+#[test]
+fn typed_boolean_not_releases_the_previous_destination() {
+    let executable = verified(
+        vec![abc(Opcode::NotBoolean, 0, 1, 0), return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        2,
+    );
+    let mut worker = Worker::new(Arc::new(executable)).expect("worker");
+    let cell = worker.domain.new_cell(Value::Unit).expect("owned cell");
+    worker.store_register(0, Value::Cell(cell)).expect("cell");
+    worker
+        .store_register(1, Value::Boolean(true))
+        .expect("source");
+    assert_eq!(worker.domain.registered_count(), 1);
+
+    worker.dispatch_one().expect("negate over the cell");
+    assert_eq!(worker.domain.registered_count(), 0);
+    assert_eq!(worker.registers[0], Value::Boolean(false));
+    assert_eq!(worker.registers[1], Value::Boolean(true));
+    assert!(worker.register_is_initialized(0));
+    assert!(worker.register_is_initialized(1));
+}
+
+#[test]
+fn typed_boolean_not_preserves_fallback_errors_and_registers() {
+    use crate::execution::vm::value_ops::{self, UnaryOperation};
+
+    for source in [
+        Value::Integer(1),
+        Value::Real(1.5),
+        Value::Str("x".into()),
+        Value::Unit,
+    ] {
+        let instruction = abc(Opcode::NotBoolean, 1, 0, 0);
+        let executable = verified(
+            vec![instruction, return_unit()],
+            Vec::new(),
+            vec!["root", "test.fpas"],
+            2,
+        );
+        let mut worker = Worker::new(Arc::new(executable)).expect("worker");
+        worker.store_register(0, source).expect("source");
+        let before = worker.registers.clone();
+        let expected = value_ops::unary(UnaryOperation::Not, &worker.registers[0])
+            .expect_err("generic not rejects a non-Boolean");
+        let expected = worker.runtime_error(expected.code, expected.message, expected.hint);
+        let actual = worker
+            .dispatch_one()
+            .err()
+            .expect("typed not rejects a non-Boolean");
+        assert_eq!(actual, expected);
+        assert_eq!(worker.registers, before);
+        assert!(worker.register_is_initialized(0));
+        assert!(!worker.register_is_initialized(1));
     }
 }

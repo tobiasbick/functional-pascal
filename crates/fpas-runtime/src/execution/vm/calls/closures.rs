@@ -60,11 +60,13 @@ impl Worker {
         &mut self,
         operands: AbcOperands,
     ) -> Result<(), VmError> {
-        let value = self.read(self.call_register(operands.b)?)?.clone();
+        let value = self.read(self.call_register(operands.b)?)?;
         match self.read(self.call_register(operands.a)?)? {
-            Value::Cell(cell) => cell
-                .replace(&self.domain, value)
-                .map_err(|error| self.ownership_error(error)),
+            Value::Cell(cell) => match value {
+                Value::Integer(value) => cell.replace_integer(&self.domain, *value),
+                value => cell.replace(&self.domain, value.clone()),
+            }
+            .map_err(|error| self.ownership_error(error)),
             other => Err(self.operand_type_error("cell", other)),
         }
     }

@@ -350,6 +350,36 @@ fn cell_reads_preserve_payloads_and_allow_replacing_the_source_register() {
 }
 
 #[test]
+fn cell_writes_keep_source_registers_and_prior_snapshots() {
+    let mut worker = ownership_worker();
+    let cell = worker.domain.new_cell(Value::Boolean(false)).expect("cell");
+    let _observation = worker
+        .domain
+        .root_values(crate::RootKind::Host, vec![Value::Cell(cell.clone())]);
+    worker.registers[0] = Value::Cell(cell.clone());
+    for value in [
+        Value::Integer(i64::MIN),
+        Value::Integer(i64::MAX),
+        Value::Real(-0.0),
+        Value::option_some(Value::Integer(17)),
+    ] {
+        let snapshot = cell.read_snapshot(&worker.domain).expect("snapshot");
+        let previous = (*snapshot).clone();
+        worker.registers[1] = value.clone();
+        worker
+            .write_cell(abc(Opcode::CellWrite, 0, 1, 0, 0).abc_payload())
+            .expect("replace capture");
+        assert_eq!(worker.registers[1], value);
+        assert_eq!(*snapshot, previous);
+        let actual = cell.read(&worker.domain).expect("replaced cell");
+        assert_eq!(actual, value);
+        if let Value::Real(actual) = actual {
+            assert_eq!(actual.to_bits(), (-0.0_f64).to_bits());
+        }
+    }
+}
+
+#[test]
 fn var_cell_paths_validate_replacements_before_commit() {
     use crate::{ReferenceRoot, ReferenceStep, VariableReference};
     let mut worker = ownership_worker();

@@ -82,6 +82,29 @@ fn successful_mutations_have_an_independent_running_threshold() {
     assert!(weak.upgrade().is_none());
 }
 #[test]
+fn integer_mutations_keep_the_running_collection_threshold() {
+    let domain = domain(schedule(usize::MAX, 3, usize::MAX));
+    let owner = domain.execution_roots().unwrap();
+    let access = owner.enter().unwrap();
+    let garbage = cycle(&domain);
+    let weak = garbage.downgrade();
+    drop(garbage);
+    let cell = domain.new_cell(Value::Integer(0)).unwrap();
+    cell.replace_integer(&domain, 1).unwrap();
+    owner.publish(vec![Value::Cell(cell.clone())]);
+    assert_eq!(access.batch_safe_point(), MaintenanceOutcome::Disabled);
+    assert!(weak.upgrade().is_some());
+    cell.replace_integer(&domain, 2).unwrap();
+    owner.publish(vec![Value::Cell(cell.clone())]);
+    assert!(matches!(
+        access.batch_safe_point(),
+        MaintenanceOutcome::Serviced(_)
+    ));
+    assert!(weak.upgrade().is_none());
+    assert_eq!(cell.read(&domain).unwrap(), Value::Integer(2));
+}
+
+#[test]
 fn periodic_batches_reclaim_dropped_values_without_new_allocations_or_mutations() {
     let domain = domain(schedule(usize::MAX, usize::MAX, 2));
     let owner = domain.execution_roots().unwrap();

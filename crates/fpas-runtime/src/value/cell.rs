@@ -317,6 +317,29 @@ impl OwnedCell {
         self.replace_inner(domain, value, false)
     }
 
+    /// Store an integer directly when no snapshot shares the existing integer payload.
+    /// Ownership, locking, snapshot isolation and mutation scheduling match `replace`.
+    pub(crate) fn replace_integer(
+        &self,
+        domain: &MemoryDomain,
+        value: i64,
+    ) -> Result<(), OwnershipError> {
+        self.check_owner(domain)?;
+        let _access = domain.operation_access();
+        let mut slot = self.lock(false)?;
+        if let Some(Value::Integer(current)) = Arc::get_mut(&mut slot) {
+            *current = value;
+            drop(slot);
+            domain.note_cell_mutation();
+            Ok(())
+        } else {
+            // Keep domain access across the fallback; shared or noninteger payloads
+            // retain the ordinary replacement and iterative-release path.
+            drop(slot);
+            self.replace(domain, Value::Integer(value))
+        }
+    }
+
     /// Replace a validated payload without waiting for the commit lock.
     ///
     /// # Errors
@@ -448,3 +471,6 @@ mod tests;
 
 #[cfg(test)]
 mod rejected_tests;
+
+#[cfg(test)]
+mod integer_tests;

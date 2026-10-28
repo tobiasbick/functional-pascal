@@ -1,0 +1,79 @@
+unit Std.Ui.Terminal.Rendering.Surface.Row;
+
+uses Std.Ui.Terminal.Cells.Cell as Cell, Std.Ui.Terminal.Cells.StyleRole as StyleRole;
+
+// Updated cell and continuation arrays for one working-surface row.
+public type TuiSurfaceRow = record
+  // Leading cells and blanks for continuation columns.
+  public Cells: array of Cell.TuiCell;
+  // Whether each column continues a wide glyph from its left neighbor.
+  public Continuations: array of boolean;
+end record;
+
+// Writes consecutive cells into one row while preserving wide-glyph invariants.
+// The caller clips Values to the row and supplies matching continuation storage.
+// A trailing wide glyph may occupy the column following the supplied batch.
+public function TuiSurfaceWriteRow(
+  Cells: array of Cell.TuiCell;
+  Continuations: array of boolean;
+  FirstX: integer;
+  Values: array of Cell.TuiCell
+): TuiSurfaceRow;
+begin
+  var NextCells: array of Cell.TuiCell := Cells;
+  var NextContinuations: array of boolean := Continuations;
+  const Blank: Cell.TuiCell := Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal);
+  const RightX: integer := Cells.Length();
+  for Offset: integer := 0 to Values.Length() - 1 do
+    begin
+      const X: integer := FirstX + Offset;
+      if NextContinuations[X] then
+        begin
+          NextCells[X - 1] := Blank;
+          NextContinuations[X] := false;
+        end;
+      elsif NextCells[X].Columns = 2 then
+        begin
+          NextCells[X + 1] := Blank;
+          NextContinuations[X + 1] := false;
+        end;
+      end if;
+
+      NextCells[X] := Blank;
+      const Value: Cell.TuiCell := Values[Offset];
+      if (Value.Columns = 2) and (X + 1 >= RightX) then
+        begin
+          continue;
+        end;
+      end if;
+
+      if Value.Columns = 2 then
+        begin
+          if NextContinuations[X + 1] then
+            begin
+              NextCells[X] := Blank;
+              NextContinuations[X + 1] := false;
+            end;
+          elsif NextCells[X + 1].Columns = 2 then
+            begin
+              NextCells[X + 2] := Blank;
+              NextContinuations[X + 2] := false;
+            end;
+          end if;
+
+          NextCells[X + 1] := Blank;
+        end;
+      end if;
+
+      NextCells[X] := Value;
+      if Value.Columns = 2 then
+        begin
+          NextContinuations[X + 1] := true;
+        end;
+      end if;
+    end;
+  end for;
+
+  return TuiSurfaceRow(Cells := NextCells, Continuations := NextContinuations);
+end function;
+end unit;

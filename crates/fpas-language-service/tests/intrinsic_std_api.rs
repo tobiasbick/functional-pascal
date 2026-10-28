@@ -25,7 +25,7 @@ fn intrinsic_std_fixture(source: &str) -> (TempDirectory, std::path::PathBuf, La
 
 #[test]
 fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
-    let source = "program IntrinsicHover;\n\nuses Std.Fs as Fs;\n\nbegin\n  discard Fs.ReadText('notes.txt');\nend.\n";
+    let source = "program IntrinsicHover;\n\nuses Std.Io.Fs as Fs;\n\nbegin\n  discard Fs.ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -45,7 +45,7 @@ fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
 
 #[test]
 fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
-    let source = "program IntrinsicCompletion;\n\nuses Std.Fs as Fs;\n\nbegin\n  Read;\nend.\n";
+    let source = "program IntrinsicCompletion;\n\nuses Std.Io.Fs as Fs;\n\nbegin\n  Read;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Read;\n").expect("Read prefix") + "Read".len();
 
@@ -54,7 +54,7 @@ fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
         .expect("intrinsic completion")
         .value
         .into_iter()
-        .find(|candidate| candidate.qualified_name == "Std.Fs.ReadText")
+        .find(|candidate| candidate.qualified_name == "Std.Io.Fs.ReadText")
         .expect("ReadText completion");
     let identity = candidate.documentation.expect("documentation identity");
     let documentation = service
@@ -87,16 +87,16 @@ fn intrinsic_std_completion_offers_the_required_unit_import() {
         .expect("intrinsic auto import")
         .value
         .into_iter()
-        .find(|candidate| candidate.qualified_name == "Std.Fs.WriteTextAtomic")
+        .find(|candidate| candidate.qualified_name == "Std.Io.Fs.WriteTextAtomic")
         .expect("WriteTextAtomic auto import");
 
-    assert_eq!(candidate.owner.as_deref(), Some("Std.Fs"));
+    assert_eq!(candidate.owner.as_deref(), Some("Std.Io.Fs"));
     assert_eq!(
         candidate
             .additional_edit
-            .expect("Std.Fs import edit")
+            .expect("Std.Io.Fs import edit")
             .new_text,
-        "\n\nuses Std.Fs as Fs;"
+        "\n\nuses Std.Io.Fs as Fs;"
     );
 }
 
@@ -193,7 +193,7 @@ fn receiver_call_definition_and_signature_use_selected_array_routine() {
 
 #[test]
 fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
-    let source = "program IntrinsicRename;\n\nuses Std.Fs as Fs;\n\nbegin\n  discard Fs.ReadText('notes.txt');\nend.\n";
+    let source = "program IntrinsicRename;\n\nuses Std.Io.Fs as Fs;\n\nbegin\n  discard Fs.ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -212,7 +212,7 @@ fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
 
 #[test]
 fn intrinsic_std_signature_help_uses_declared_parameters() {
-    let source = "program IntrinsicSignature;\n\nuses Std.Fs as Fs;\n\nbegin\n  discard Fs.WriteText('notes.txt', 'hello');\nend.\n";
+    let source = "program IntrinsicSignature;\n\nuses Std.Io.Fs as Fs;\n\nbegin\n  discard Fs.WriteText('notes.txt', 'hello');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find(", 'hello'").expect("second argument") + 2;
 
@@ -241,7 +241,7 @@ fn intrinsic_std_signature_help_uses_declared_parameters() {
 
 #[test]
 fn intrinsic_std_enum_member_has_hover_and_definition() {
-    let source = "program IntrinsicEnum;\n\nuses Std.Json as Json;\n\nbegin\n  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);\nend.\n";
+    let source = "program IntrinsicEnum;\n\nuses Std.Encoding.Json as Json;\n\nbegin\n  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.rfind("Array").expect("Array variant");
 
@@ -265,13 +265,13 @@ fn intrinsic_std_enum_member_has_hover_and_definition() {
     assert!(
         definitions[0]
             .path
-            .ends_with(Path::new("lib/api/Std/Json.fpas"))
+            .ends_with(Path::new("lib/api/Std/Encoding.Json.fpas"))
     );
 }
 
 #[test]
 fn intrinsic_std_enum_constructor_has_signature_help() {
-    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json as Json;\n\nbegin\n  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);\nend.\n";
+    let source = "program IntrinsicEnumSignature;\n\nuses Std.Encoding.Json as Json;\n\nbegin\n  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("[]").expect("Array argument") + 1;
 
@@ -292,7 +292,7 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
 
 #[test]
 fn intrinsic_std_keyword_enum_member_is_completed() {
-    let source = "program IntrinsicEnumCompletion;\n\nuses Std.Json as Json;\n\nbegin\n  Json.JsonValue.Arr;\nend.\n";
+    let source = "program IntrinsicEnumCompletion;\n\nuses Std.Encoding.Json as Json;\n\nbegin\n  Json.JsonValue.Arr;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Arr;\n").expect("Array prefix") + "Arr".len();
 
@@ -304,7 +304,7 @@ fn intrinsic_std_keyword_enum_member_is_completed() {
     assert!(
         candidates
             .iter()
-            .any(|candidate| candidate.qualified_name == "Std.Json.JsonValue.ArrayValue"),
+            .any(|candidate| candidate.qualified_name == "Std.Encoding.Json.JsonValue.ArrayValue"),
         "{candidates:#?}"
     );
 }
@@ -394,7 +394,7 @@ fn intrinsic_std_editor_api_is_valid_syntax_without_runtime_analysis() {
     let source = "program IntrinsicSyntax;\n\nbegin\nend.\n";
     let (_temp, _path, mut service) = intrinsic_std_fixture(source);
     let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let api = repository_root.join("lib/api/Std/Fs.fpas");
+    let api = repository_root.join("lib/api/Std/Io.Fs.fpas");
 
     let analysis = service
         .analyze_document(&api)

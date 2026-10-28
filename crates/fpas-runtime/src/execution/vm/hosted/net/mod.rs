@@ -1,4 +1,4 @@
-//! Hosted `Std.Net` intrinsic dispatch.
+//! Hosted `Std.Net.Sockets` intrinsic dispatch.
 
 mod arguments;
 pub(in crate::execution::vm) mod failure;
@@ -118,7 +118,7 @@ impl Worker {
                 let handle = listener(self, &arguments[0])?;
                 match self.hosted.network_listeners.local_address(handle) {
                     Ok(address) => Value::result_ok(self.record_value(
-                        "Std.Net.NetworkAddress",
+                        "Std.Net.Sockets.NetworkAddress",
                         vec![
                             Value::Str(address.ip().to_string().into()),
                             Value::Integer(i64::from(address.port())),

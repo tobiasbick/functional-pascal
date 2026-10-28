@@ -1,8 +1,8 @@
 program NoteTuiWorkflowTest;
 
 uses
-  Notes.Model as NotesModel, Notes.Update as Update, Notes.View as View, Std.Fs as Fs,
-  Std.Test as Test, Std.Tui as Tui;
+  Notes.Model as NotesModel, Notes.Update as Update, Notes.View as View, Std.Io.Fs as Fs,
+  Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function ScreenContains(Snapshot: Tui.TuiSurfaceSnapshot; Text: string): boolean;
 begin

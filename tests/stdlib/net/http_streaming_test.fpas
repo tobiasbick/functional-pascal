@@ -1,7 +1,7 @@
 // Covers fragmented, final, bounded, and closed SSE decoder behavior.
 program HttpStreamingTest;
 
-uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 begin
   case Http.CreateSseDecoder(1024) of

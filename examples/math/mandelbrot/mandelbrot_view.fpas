@@ -3,7 +3,7 @@
 unit Mandelbrot.View;
 
 uses
-  Std.Conv as Conv, Std.Math as Math, Std.Tui as Tui, Mandelbrot.Color as Color,
+  Std.Text.Format as Conv, Std.Math as Math, Std.Ui.Terminal as Tui, Mandelbrot.Color as Color,
   Mandelbrot.Model as Model;
 
 // Builds the Tui view while keeping the previous image visible during rendering.

@@ -1,6 +1,6 @@
 program AcpClientTest;
 
-uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Test as Test, Std.Time as Time;
+uses Std.Ai.Acp as Acp, Std.Ai.Acp.Types as Types, Std.Test as Test, Std.Time as Time;
 
 function Take(Endpoint: Acp.MessageEndpoint): Types.RawJson;
 begin

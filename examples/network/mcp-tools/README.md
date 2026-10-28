@@ -11,5 +11,5 @@ changing state. The two handlers capture one FPAS state owner and are retained
 by registration. HTTP threads never execute application code.
 
 The [shared tools](../mcp-tool-store/src/toolstore.fpas) also serve the
-[ACP example](../acp-mcp-tools/README.md). See [Std.Mcp](../../../docs/pascal/std/ai/mcp/README.md)
+[ACP example](../acp-mcp-tools/README.md). See [Std.Ai.Mcp](../../../docs/pascal/std/ai/mcp/README.md)
 for serving, cancellation, limits and cleanup.

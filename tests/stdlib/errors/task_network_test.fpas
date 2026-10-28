@@ -1,8 +1,8 @@
 program TaskNetworkErrors;
 
 uses
-  Std.Tasks as Tasks, Std.Net as Net, Std.Server as Server, Std.Net.Uri as Uri,
-  Std.Net.Utf8 as Utf8, Std.Http as Http, Std.Test as Test;
+  Std.Tasks as Tasks, Std.Net.Sockets as Net, Std.Net.Server as Server, Std.Net.Uri as Uri,
+  Std.Text.Utf8 as Utf8, Std.Net.Http as Http, Std.Test as Test;
 
 function CloseForeignGroup(Group: Tasks.TaskGroup): result of (array of Tasks.TaskFailure, Tasks.TaskError);
 begin

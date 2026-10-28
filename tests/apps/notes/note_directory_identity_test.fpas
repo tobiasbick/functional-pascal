@@ -1,8 +1,8 @@
 program NoteDirectoryIdentityTest;
 
 uses
-  Notes.Model as Model, Notes.Repository as Repository, Notes.Update as Update, Std.Fs as Fs,
-  Std.Path as Path, Std.Test as Test, Std.Tui as Tui;
+  Notes.Model as Model, Notes.Repository as Repository, Notes.Update as Update, Std.Io.Fs as Fs,
+  Std.Io.Path as Path, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 procedure CheckDirectory(Name: string; Sibling: string);
 begin

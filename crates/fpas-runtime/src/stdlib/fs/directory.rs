@@ -1,4 +1,4 @@
-//! Stable, bounded immediate directory enumeration for `Std.Fs.ReadDir`.
+//! Stable, bounded immediate directory enumeration for `Std.Io.Fs.ReadDir`.
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md`
 
@@ -17,7 +17,7 @@ fn read_dir_paths_with_limit(path: &Path, limit: usize) -> Result<Vec<String>, F
     for entry in fs::read_dir(path).map_err(|error| Failure::at(path, error))? {
         let entry = entry.map_err(|error| Failure::at(path, error))?;
         if paths.len() >= limit {
-            return Err(Failure::LimitExceeded("Std.Fs.ReadDir", limit as i64));
+            return Err(Failure::LimitExceeded("Std.Io.Fs.ReadDir", limit as i64));
         }
         let entry_path = entry.path();
         let text = entry_path.to_str().ok_or_else(|| {

@@ -1,7 +1,7 @@
-// Independent wire peer: fixed protocol messages, parsed only with Std.Json.
+// Independent wire peer: fixed protocol messages, parsed only with Std.Encoding.Json.
 program ScriptedAcpAgent;
 
-uses Std.Args as Args, Std.Console as Console, Std.Json as Json, Std.Test as Test;
+uses Std.Os.Args as Args, Std.Console as Console, Std.Encoding.Json as Json, Std.Test as Test;
 
 function Member(Value: Json.JsonValue; Name: string): Json.JsonValue;
 begin

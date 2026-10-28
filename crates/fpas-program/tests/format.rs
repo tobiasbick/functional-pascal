@@ -87,7 +87,7 @@ fn canonical_image_has_target_independent_digest() {
     // The canonical identity includes the current bytecode ABI version.
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "a01898715013aaf583541c5c29647990d76e7e6a24351c0264cbed21804ffa2a"
+        "402c39f9120a36c56955a75c84f0690742361b5325a973328274a71beb078aca"
     );
 }
 
@@ -120,17 +120,20 @@ fn decoder_rejects_old_stack_format_with_versions() {
 }
 
 #[test]
-fn decoder_rejects_incompatible_bytecode_version() {
-    let mut bytes = encode(&program_image()).expect("encoded image");
-    bytes[10..14].copy_from_slice(&99_u32.to_le_bytes());
+fn decoder_rejects_incompatible_bytecode_versions() {
+    // ABI 28 retains the former Std namespace identities in native type layouts.
+    for version in [28_u32, 99] {
+        let mut bytes = encode(&program_image()).expect("encoded image");
+        bytes[10..14].copy_from_slice(&version.to_le_bytes());
 
-    assert_eq!(
-        decode_error(&bytes),
-        FormatError::UnsupportedBytecodeVersion {
-            image: 99,
-            runtime: fpas_runtime::BYTECODE_VERSION,
-        }
-    );
+        assert_eq!(
+            decode_error(&bytes),
+            FormatError::UnsupportedBytecodeVersion {
+                image: version,
+                runtime: fpas_runtime::BYTECODE_VERSION,
+            }
+        );
+    }
 }
 
 #[test]

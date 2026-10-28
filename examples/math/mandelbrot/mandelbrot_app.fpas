@@ -3,7 +3,7 @@
 unit Mandelbrot.App;
 
 uses
-  Std.Console as Console, Std.Conv as Conv, Std.Math as Math, Std.Tasks as Tasks, Std.Tui as Tui,
+  Std.Console as Console, Std.Math as Math, Std.Tasks as Tasks, Std.Ui.Terminal as Tui,
   Mandelbrot.Color as Color, Mandelbrot.Model as Model, Mandelbrot.Render as Render;
 
 const RenderSubscriptionId: integer := 1;
@@ -75,14 +75,14 @@ end function;
 function ViewportX(State: Model.ExplorerState; Width: integer; Height: integer; CellX: integer): real;
 begin
   return State.XMin(Width, Height) +
-    Conv.IntToReal(CellX) / Conv.IntToReal(Math.Max(Width - 1, 1)) *
+    Math.IntToReal(CellX) / Math.IntToReal(Math.Max(Width - 1, 1)) *
     (State.XMax(Width, Height) - State.XMin(Width, Height));
 end function;
 
 function ViewportY(State: Model.ExplorerState; Height: integer; CellY: integer): real;
 begin
   return State.YMax() -
-    Conv.IntToReal(CellY) / Conv.IntToReal(Math.Max(Height - 1, 1)) * (State.YMax() - State.YMin());
+    Math.IntToReal(CellY) / Math.IntToReal(Math.Max(Height - 1, 1)) * (State.YMax() - State.YMin());
 end function;
 
 function UpdateKey(State: Model.MandelbrotModel; Key: Tui.TuiKeyEvent; Cmd: Tui.TuiCmdOutput): Model.MandelbrotModel;

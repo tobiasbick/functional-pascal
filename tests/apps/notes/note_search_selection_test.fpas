@@ -2,7 +2,7 @@ program NoteSearchSelectionTest;
 
 uses
   Notes.Actions as Actions, Notes.Model as Model, Notes.Update as Update, Notes.View as View,
-  Std.Test as Test, Std.Tui as Tui;
+  Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function MakeNote(Id: string; Title: string; Tags: array of string; Body: string): Model.Note;
 begin

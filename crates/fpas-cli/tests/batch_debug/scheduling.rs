@@ -82,7 +82,7 @@ fn seed_boundaries_normalization_and_request_errors_are_explicit() {
 #[test]
 fn text_input_and_arguments_work_but_terminal_scripts_reject_before_initialization() {
     let f = Fixture::new(
-        "program Input; uses Std.Console as Console, Std.Args as Args; begin Console.WriteLn(Console.ReadLn().Unwrap()); Console.WriteLn(Args.ParamStr(0)); end.",
+        "program Input; uses Std.Console as Console, Std.Os.Args as Args; begin Console.WriteLn(Console.ReadLn().Unwrap()); Console.WriteLn(Args.ParamStr(0)); end.",
     );
     f.write("input.toml", "[[event]]\ntype = 'readln'\nline = 'fixed'\n");
     let r = f.run(
@@ -132,7 +132,7 @@ fn text_input_and_arguments_work_but_terminal_scripts_reject_before_initializati
 #[test]
 fn forbidden_file_effect_is_never_performed_even_through_a_callback() {
     let f = Fixture::new(
-        "program Effect; uses Std.Fs as Fs; function Bad(N: integer): integer; begin discard Fs.WriteText('forbidden', 'bad').Unwrap(); return N; end function; begin discard [1].Map(Bad); end.",
+        "program Effect; uses Std.Io.Fs as Fs; function Bad(N: integer): integer; begin discard Fs.WriteText('forbidden', 'bad').Unwrap(); return N; end function; begin discard [1].Map(Bad); end.",
     );
     let r = f.run(&["debug", "main.fpas", "--schedule-seed", "42"], 2);
     assert!(!f.0.join("forbidden").exists());

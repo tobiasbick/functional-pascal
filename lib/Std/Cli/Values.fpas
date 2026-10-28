@@ -1,7 +1,7 @@
 // Typed conversions and display for command-line values.
 unit Std.Cli.Values;
 
-uses Std.Cli.Types as Types, Std.Conv as Conv, Std.Parse as Parse;
+uses Std.Cli.Types as Types, Std.Text.Format as Conv, Std.Text.Parse as Parse;
 
 // Tests the variant used by a schema default.
 public function Matches(Item: Types.Value; Expected: Types.Kind): boolean;

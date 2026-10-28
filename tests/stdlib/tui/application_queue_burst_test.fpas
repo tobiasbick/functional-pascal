@@ -1,6 +1,6 @@
 program ApplicationQueueBurstTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function View(Value: integer): Tui.TuiElement;
 begin

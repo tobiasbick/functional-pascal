@@ -1,4 +1,4 @@
-//! Integer bit-function results and runtime shift diagnostics for `Std.Bits`.
+//! Integer bit-function results and runtime shift diagnostics for `Std.Math.Bits`.
 
 use super::super::{assert_succeeds, run_program};
 use fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR;
@@ -13,7 +13,7 @@ fn integer_literal(value: i64) -> String {
 
 #[test]
 fn bits_intrinsics_preserve_results_after_operator_removal() {
-    let mut source = String::from("program BitsCalls; uses Std.Bits as Bits; begin\n");
+    let mut source = String::from("program BitsCalls; uses Std.Math.Bits as Bits; begin\n");
     for value in [0_i64, 1, -1, -8, i64::MIN, i64::MAX] {
         let literal = integer_literal(value);
         for (function, expected) in [
@@ -51,7 +51,7 @@ fn invalid_shift_counts_keep_numeric_domain_diagnostics() {
     for function in ["ShiftLeft", "ShiftRight"] {
         for count in [-1, 64, i64::MAX] {
             let error = run_program(&format!(
-                "program Bad; uses Std.Bits as Bits; begin const A: integer := Bits.{function}(1, {count}); end."
+                "program Bad; uses Std.Math.Bits as Bits; begin const A: integer := Bits.{function}(1, {count}); end."
             ))
             .unwrap_err();
             assert_eq!(error.code, RUNTIME_NUMERIC_DOMAIN_ERROR);

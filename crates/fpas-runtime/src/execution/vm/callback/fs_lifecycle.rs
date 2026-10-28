@@ -26,8 +26,8 @@ begin
 end function;
 function IsClosed(File: Fs.File): boolean;
 begin
-  return (Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell'))) and
-    (Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Fs.Read')));
+  return (Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Io.Fs.Tell'))) and
+    (Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Io.Fs.Read')));
 end function;
 procedure CloseFile(File: Fs.File);
 begin
@@ -62,7 +62,7 @@ impl Drop for InputFile {
 
 fn executable(main: &str) -> VerifiedExecutable {
     let source = format!(
-        "program FileLifecycle; uses Std.Fs as Fs; var Saved: option of Fs.File := None; {HELPERS} begin {main} end."
+        "program FileLifecycle; uses Std.Io.Fs as Fs; var Saved: option of Fs.File := None; {HELPERS} begin {main} end."
     );
     let (program, errors) = fpas_parser::parse(&source);
     assert!(errors.is_empty(), "{errors:?}");

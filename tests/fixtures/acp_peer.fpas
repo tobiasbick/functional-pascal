@@ -1,6 +1,6 @@
 program AcpPeer;
 
-uses Std.Args as Args, Std.Console as Console, Std.Acp.Types as Types, Std.Test as Test;
+uses Std.Os.Args as Args, Std.Console as Console, Std.Ai.Acp.Types as Types, Std.Test as Test;
 
 begin
   Console.WriteText('{"jsonrpc":"2.0","method":"peer/');

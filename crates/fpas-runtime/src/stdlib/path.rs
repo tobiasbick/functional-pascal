@@ -1,4 +1,4 @@
-//! `Std.Path` runtime implementation.
+//! `Std.Io.Path` runtime implementation.
 //!
 //! Pure path manipulation without filesystem access.
 //!
@@ -22,7 +22,7 @@ mod presentation;
 #[path = "path/presentation_tests.rs"]
 mod presentation_tests;
 
-/// Execute a `Std.Path` intrinsic and return `None` when another unit should handle it.
+/// Execute a `Std.Io.Path` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,

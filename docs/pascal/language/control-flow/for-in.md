@@ -94,7 +94,7 @@ end for;
 Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. No import is required.
 
 ```pascal id=example-5 fragment context=header
-uses Std.Conv as Conv, Std.Console as Console;
+uses Std.Text.Format as Conv, Std.Console as Console;
 begin
 const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 

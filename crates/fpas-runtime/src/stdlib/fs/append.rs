@@ -1,4 +1,4 @@
-//! `Std.Fs.AppendText` implementation.
+//! `Std.Io.Fs.AppendText` implementation.
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 

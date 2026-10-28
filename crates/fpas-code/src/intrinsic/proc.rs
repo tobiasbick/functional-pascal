@@ -1,11 +1,11 @@
-//! `Std.Proc` intrinsic discriminants.
+//! `Std.Os.Proc` intrinsic discriminants.
 //!
 //! **Documentation:** `docs/pascal/std/host/proc.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics for `Std.Proc.*`.
+/// Intrinsics for `Std.Os.Proc.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/proc.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
@@ -33,22 +33,22 @@ pub enum ProcIntrinsic {
     TryWaitStatus = 733,
     /// Run a supervised child using the host's explicit interactive terminal.
     RunInteractive = 734,
-    /// `Std.Proc.RunWithOptions` process configuration API.
+    /// `Std.Os.Proc.RunWithOptions` process configuration API.
     RunWithOptions = 721,
-    /// `Std.Proc.RunCaptureWithOptions` process configuration API.
+    /// `Std.Os.Proc.RunCaptureWithOptions` process configuration API.
     RunCaptureWithOptions = 722,
-    /// `Std.Proc.DefaultOptions` process configuration API.
+    /// `Std.Os.Proc.DefaultOptions` process configuration API.
     DefaultOptions = 723,
 
-    /// `Std.Proc.Run(Command, Args)` - run a host process and return its exit code.
+    /// `Std.Os.Proc.Run(Command, Args)` - run a host process and return its exit code.
     ///
     /// **Documentation:** `docs/pascal/std/host/proc.md`
     Run = 330,
-    /// `Std.Proc.CurrentExecutable()` - return the current executable path.
+    /// `Std.Os.Proc.CurrentExecutable()` - return the current executable path.
     ///
     /// **Documentation:** `docs/pascal/std/host/proc.md`
     CurrentExecutable = 344,
-    /// `Std.Proc.RunCapture(Command, Args)` - run a host process and capture its output.
+    /// `Std.Os.Proc.RunCapture(Command, Args)` - run a host process and capture its output.
     ///
     /// **Documentation:** `docs/pascal/std/host/proc.md`
     RunCapture = 345,

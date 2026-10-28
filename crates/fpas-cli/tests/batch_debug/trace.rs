@@ -155,7 +155,7 @@ fn breakpoint_prefix_runtime_failure_and_bad_inspection_keep_trace_coverage() {
 #[test]
 fn request_errors_never_run_initializers_or_the_first_statement() {
     let f = Fixture::new(
-        "program Guard; uses Std.Fs as Fs; const Fixed: integer := 1; type Model = record Item: integer; end record; function Initialize(): integer; begin discard Fs.WriteText('initialized','bad').Unwrap(); return 0; end function; var Total: integer := Initialize(); var State: Model := Model(Item := 1); var Items: array of integer := []; begin discard Fs.WriteText('executed','bad').Unwrap(); end.",
+        "program Guard; uses Std.Io.Fs as Fs; const Fixed: integer := 1; type Model = record Item: integer; end record; function Initialize(): integer; begin discard Fs.WriteText('initialized','bad').Unwrap(); return 0; end function; var Total: integer := Initialize(); var State: Model := Model(Item := 1); var Items: array of integer := []; begin discard Fs.WriteText('executed','bad').Unwrap(); end.",
     );
     let check = f.command().args(["check", "main.fpas"]).output().unwrap();
     assert!(
@@ -268,7 +268,7 @@ fn project_workspace_discovery_and_verified_images_share_trace_binding() {
 #[test]
 fn scripted_input_and_program_arguments_are_visible_as_changes() {
     let f = Fixture::new(
-        "program Input; uses Std.Args as Args, Std.Console as Console; var Text: string := ''; begin Text := Args.ParamStr(0); Text := Console.ReadLn().Unwrap(); Text := Console.ReadKey(); end.",
+        "program Input; uses Std.Os.Args as Args, Std.Console as Console; var Text: string := ''; begin Text := Args.ParamStr(0); Text := Console.ReadLn().Unwrap(); Text := Console.ReadKey(); end.",
     );
     f.write(
         "input.toml",

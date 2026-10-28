@@ -1,4 +1,4 @@
-//! `Std.Path` symbol names and registry group.
+//! `Std.Io.Path` symbol names and registry group.
 
 std_symbol!(STD_PATH_JOIN = std_path!("Join"));
 std_symbol!(STD_PATH_BASE_NAME = std_path!("BaseName"));

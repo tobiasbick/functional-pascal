@@ -1,10 +1,10 @@
-# `Std.Acp.Host`
+# `Std.Ai.Acp.Host`
 
-Explicit filesystem, terminal and interaction adapters. Import `Std.Acp.Host`
+Explicit filesystem, terminal and interaction adapters. Import `Std.Ai.Acp.Host`
 and retain the original typed request and Responder from the connection event.
 Receiving a request grants no host authority. Applications may refuse it,
 return an unsaved editor buffer, or invoke a helper after their own policy check.
-All request/response aliases retain their `Std.Acp.Types` nominal identity.
+All request/response aliases retain their `Std.Ai.Acp.Types` nominal identity.
 
 ## Execution and response rights
 
@@ -28,7 +28,7 @@ For example, an application passes its policy decision explicitly:
 
 ```pascal id=acp-approved-file-dispatch
 program ApprovedFileDispatch;
-uses Std.Acp as Acp, Std.Acp.Host as Host, Std.Acp.Types as Types;
+uses Std.Ai.Acp as Acp, Std.Ai.Acp.Host as Host, Std.Ai.Acp.Types as Types;
 
 function AnswerRead(Responder: Acp.Responder; Request: Types.ReadTextFileRequest; PermitDisk: boolean): Result of (boolean, Types.AcpError);
 begin
@@ -53,13 +53,13 @@ end.
 
 Paths must be absolute and contain no NUL. This adapter serves one explicit
 path; it is not a workspace sandbox. A root policy belongs to the application.
-Reads use the existing bounded Std.Fs UTF-8 reader. Line numbers start at one;
+Reads use the existing bounded Std.Io.Fs UTF-8 reader. Line numbers start at one;
 an omitted line starts at the beginning, an omitted limit reads the remainder,
 zero limit returns empty text, and a range after EOF is empty. CRLF/LF and a
 missing final terminator are preserved. Invalid UTF-8 and I/O failures return
 Host errors. Response construction is bounded by MessageBytes.
 
-Writes use the same implementation as Std.Fs.WriteText. They create a missing
+Writes use the same implementation as Std.Io.Fs.WriteText. They create a missing
 file in an existing parent; they do not create missing parent directories.
 Editor clients may instead construct ReadTextFileResponse from their own buffer
 and call Respond without touching disk.

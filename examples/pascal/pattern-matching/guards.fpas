@@ -1,6 +1,6 @@
 program GuardsExample;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 // The arm matches only when both the label and the guard are true.
 type Shape = enum

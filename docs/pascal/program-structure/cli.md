@@ -5,7 +5,7 @@ projects, type-checks, runs programs, executes test bundles, and exposes the
 installed toolchain to editor clients.
 
 Standalone execution and bundled executables authorize the explicit process-lifecycle operations
-in [`Std.Server`](../std/network/server.md). Programs must still opt into signal observation and
+in [`Std.Net.Server`](../std/network/server.md). Programs must still opt into signal observation and
 forced process termination. Embedded VMs deny these operations unless their host authorizes them;
 the source debugger and in-process test hosts do not grant this authority automatically.
 
@@ -97,7 +97,7 @@ the source debugger and in-process test hosts do not grant this authority automa
   `lib` beside its executable.
 
 Program arguments after `--` require `fpas run` or `fpas debug` and are visible
-through `Std.Args` when running programs.
+through `Std.Os.Args` when running programs.
 
 ## Command help
 
@@ -357,15 +357,15 @@ declarations of the selected project. Nothing is compiled or written, and a proj
 sources do not check is still searched.
 
 ```sh
-fpas doc Std.Fs.ReadText
+fpas doc Std.Io.Fs.ReadText
 fpas doc string.TrimLeft
-fpas doc Std.Path
+fpas doc Std.Io.Path
 fpas doc TPoint.Distance my-app.fpasprj
 fpas doc --report json array.Push
 ```
 
 Names are case-insensitive. A name matches a declaration when it equals the qualified name or
-ends with it at a dot, so `ReadText`, `Fs.ReadText` and `Std.Fs.ReadText` find the same routine;
+ends with it at a dot, so `ReadText`, `Fs.ReadText` and `Std.Io.Fs.ReadText` find the same routine;
 every match is printed, so a short name can list several. Operations on built-in types are
 written on the type: `string`, `array`, `dict`, `Option` or `Result`, for example `dict.Keys`.
 A bare operation name such as `Length` lists it for every type. A unit name prints the unit's
@@ -445,7 +445,7 @@ fpas check --diagnostics json src/main.fpas
 `source` is the resolved path of the source file for parse, compile and project records. Runtime records of a program project or `.fpascp` name the portable source path stored in the compiled image, relative to the project directory, as in text mode. Runtime records have a known start and a `null` end.
 
 In `fpas run` and `fpas test` with `--diagnostics json`, standard error of child processes started with
-`Std.Proc.Run` is not inherited. Each of its lines becomes a program-output record, so program text
+`Std.Os.Proc.Run` is not inherited. Each of its lines becomes a program-output record, so program text
 cannot be mistaken for a diagnostic:
 
 ```text
@@ -460,7 +460,7 @@ program-output event with `text` equal to
 `Program stderr was truncated at the 8 MiB capture limit.` Further program-stderr
 records are omitted. Truncation does not change the test outcome, exit code or
 stdout report, and does not consume the diagnostic output budget.
-`Std.Proc.RunCapture` keeps its normal captured result.
+`Std.Os.Proc.RunCapture` keeps its normal captured result.
 
 A native application built with `fpas build --executable` keeps every command-line argument for the
 program. Set the environment variable `FPAS_DIAGNOSTICS=json` to select the same JSON stderr stream

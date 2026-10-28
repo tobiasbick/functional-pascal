@@ -1,6 +1,6 @@
 program TuiInteractiveDemo;
 
-uses Std.Tui as Tui;
+uses Std.Ui.Terminal as Tui;
 
 type DemoModel = record
   Text: string;

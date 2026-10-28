@@ -36,7 +36,7 @@ fn generic_and_callable_variable_calls_require_consumption() {
 #[test]
 fn intrinsic_calls_require_consumption_and_procedures_remain_valid() {
     unused("program T; uses Std.Math as Math; begin Math.Abs(-1); end.");
-    unused("program T; uses Std.Fs as Fs; begin Fs.DeleteFile('missing'); end.");
+    unused("program T; uses Std.Io.Fs as Fs; begin Fs.DeleteFile('missing'); end.");
     check_ok(
         "program T; uses Std.Console as Console, Std.Tasks as Tasks;\n      function Value(): integer; begin return 1; end function;\n      procedure Work(); begin Console.WriteLn('work'); end procedure;\n      begin scope  Work(); Console.WriteLn('hello'); discard go Work(); discard go Value();\n      const Job: task of integer := go Value(); discard Tasks.Wait(Job);  end scope; end.",
     );

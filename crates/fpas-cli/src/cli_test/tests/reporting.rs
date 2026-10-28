@@ -60,7 +60,7 @@ fn json_program_stderr_is_retained_without_worker_isolation() {
         write_text(
             &cwd.join(name),
             &format!(
-                "program P; uses Std.Proc as Proc, Std.Console as Console; begin case Proc.Run('{command}', {arguments}) of when Ok(const Code): Console.WriteLn(Code); when Error(const Message): Console.WriteLn(Message); end case; end."
+                "program P; uses Std.Os.Proc as Proc, Std.Console as Console; begin case Proc.Run('{command}', {arguments}) of when Ok(const Code): Console.WriteLn(Code); when Error(const Message): Console.WriteLn(Message); end case; end."
             ),
         );
     }

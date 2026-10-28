@@ -17,7 +17,7 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
 fn watches_short_circuit_calls_errors_and_try_while_preserving_eager_operations() {
     let source = r#"
 program DebugBoolean;
-uses Std.Console as Console, Std.Bits as Bits;
+uses Std.Console as Console, Std.Math.Bits as Bits;
 function Identity(Value: boolean): boolean;
 begin return Value; end function;
 function Denied(): boolean;

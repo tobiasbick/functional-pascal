@@ -1,4 +1,4 @@
-# `Std.Fs`
+# `Std.Io.Fs`
 
 Basic blocking filesystem operations for hosted FPAS programs. This page lists the full API;
 [file handles and streaming](fs-streams.md) have a separate detailed guide.
@@ -6,7 +6,7 @@ Basic blocking filesystem operations for hosted FPAS programs. This page lists t
 ```pascal id=example-1
 program Example;
 
-uses Std.Fs as Fs, Std.Tasks as Tasks;
+uses Std.Io.Fs as Fs, Std.Tasks as Tasks;
 
 begin
   scope
@@ -16,7 +16,7 @@ begin
 end.
 ```
 
-`Std.Fs` reads and writes host files. Calls are blocking and may run on worker threads when invoked from `go`, but the runtime uses thread-safe Rust filesystem APIs.
+`Std.Io.Fs` reads and writes host files. Calls are blocking and may run on worker threads when invoked from `go`, but the runtime uses thread-safe Rust filesystem APIs.
 
 **Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, `WriteTextAtomic`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
 
@@ -34,7 +34,7 @@ decoding or newline normalization.
 
 ## Importing and names
 
-Import with `uses Std.Fs as Fs;` and access public symbols as `Fs.Name`. User enum variants require `Fs.Type.Variant`.
+Import with `uses Std.Io.Fs as Fs;` and access public symbols as `Fs.Name`. User enum variants require `Fs.Type.Variant`.
 
 ---
 
@@ -76,7 +76,7 @@ end if;
 
 ## Quick reference
 
-Requires `uses Std.Fs as Fs;`.
+Requires `uses Std.Io.Fs as Fs;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -177,7 +177,7 @@ including NUL, non-UTF-8 sequences, and CR/LF bytes. An empty file returns
 `Ok([])`. No text decoding or newline normalization takes place.
 
 The limit is **1_048_576 bytes (1 MiB)**. Larger files return
-`Error(Fs.FsError.LimitExceeded('Std.Fs.ReadBytes', 1048576))`. Missing files,
+`Error(Fs.FsError.LimitExceeded('Std.Io.Fs.ReadBytes', 1048576))`. Missing files,
 permissions, and other host I/O failures use the existing typed `FsError`
 variants and preserve their native `HostError` causes. `ReadText` retains its
 separate **64 MiB** limit and UTF-8 validation.
@@ -191,7 +191,7 @@ empty file or truncates an existing one to zero bytes.
 Validation occurs before opening, creating, or truncating the destination:
 
 1. More than **1_048_576 elements** returns
-   `Fs.FsError.LimitExceeded('Std.Fs.WriteBytes', 1048576)`.
+   `Fs.FsError.LimitExceeded('Std.Io.Fs.WriteBytes', 1048576)`.
 2. Otherwise, every element must be in `0..255`. The first invalid element
    returns `Fs.FsError.InvalidByte(Offset, Value)`, retaining its zero-based
    array index and supplied integer value.
@@ -205,7 +205,7 @@ partially written destination. It has no atomic-publication guarantee.
 ```pascal id=example-binary run
 program BinaryFiles;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/binary-example.bin';
@@ -408,13 +408,13 @@ Returns `true` when `Path` itself is a symbolic link. Unlike `IsFile` and
 ### `function CurrentDir(): Result of (string, Fs.FsError)`
 
 Returns the absolute current working directory of the process with `/`
-separators. Relative paths in every `Std.Fs` call resolve against it.
+separators. Relative paths in every `Std.Io.Fs` call resolve against it.
 
 ### `function SetCurrentDir(Path: string): Result of (boolean, Fs.FsError)`
 
 Changes the current working directory and returns `Ok(true)`. The working
 directory belongs to the whole process: the change affects all tasks and every
-later relative path. Prefer absolute paths built with `Std.Path` in concurrent
+later relative path. Prefer absolute paths built with `Std.Io.Path` in concurrent
 programs.
 
 ### `function TempDir(): string`
@@ -477,7 +477,7 @@ Validation uses `InvalidArgument(Name, Reason)`, `InvalidPattern(Pattern, Reason
 `InvalidEncoding(Path, Detail)`, `InvalidByte(Offset, Value)`, or
 `LimitExceeded(Operation, Limit)`. `InvalidByte` reports the first invalid
 `WriteBytes` array element; its index starts at zero. Binary size errors name
-`Std.Fs.ReadBytes` or `Std.Fs.WriteBytes` and carry the limit `1048576`.
+`Std.Io.Fs.ReadBytes` or `Std.Io.Fs.WriteBytes` and carry the limit `1048576`.
 Handle operations also use `Closed(Operation)` and `Cancelled(Operation)`;
 their details and bounds are in the [streaming guide](fs-streams.md).
 Limits and success values remain as above. Branch on variants; render

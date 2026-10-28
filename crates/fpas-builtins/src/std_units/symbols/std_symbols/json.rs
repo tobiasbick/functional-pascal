@@ -1,4 +1,4 @@
-//! `Std.Json` symbol names and registry group.
+//! `Std.Encoding.Json` symbol names and registry group.
 
 std_symbol!(STD_JSON_VALUE = std_json!("JsonValue"));
 std_symbol!(STD_JSON_VALUE_NULL_VALUE = std_json!("JsonValue.NullValue"));

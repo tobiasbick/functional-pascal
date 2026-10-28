@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Http as Http;
+uses Std.Net.Http as Http;
 
 begin
 // @example

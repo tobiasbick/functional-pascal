@@ -1,8 +1,8 @@
-# `Std.Acp`
+# `Std.Ai.Acp`
 
-Native ACP connections, typed messages and deferred replies. Import `Std.Acp.Types` for
-stable v1 protocol values and payload codecs, `Std.Acp.Experimental` for the
-pinned v1 extensions, or `Std.Acp.V2` for the separate v2 protocol family.
+Native ACP connections, typed messages and deferred replies. Import `Std.Ai.Acp.Types` for
+stable v1 protocol values and payload codecs, `Std.Ai.Acp.Experimental` for the
+pinned v1 extensions, or `Std.Ai.Acp.V2` for the separate v2 protocol family.
 
 `Connection`, `RequestToken`, `Responder`, `McpEndpoint` and `MessageEndpoint` are opaque,
 VM-owned identities. Copies alias the same state. Connections use the pinned
@@ -16,9 +16,9 @@ updates. [Host adapters](host.md) perform explicitly admitted file/terminal work
 
 ## Application tools
 
-`Std.Mcp` registers reusable application tools. ACP can own a convenience server
+`Std.Ai.Mcp` registers reusable application tools. ACP can own a convenience server
 or attach a caller-owned server. Both use the same schema validation and FPAS
-callback execution described in [Std.Mcp](../mcp/README.md).
+callback execution described in [Std.Ai.Mcp](../mcp/README.md).
 
 | Kind | Signature | Description |
 | --- | --- | --- |
@@ -27,9 +27,9 @@ callback execution described in [Std.Mcp](../mcp/README.md).
 | function | `DetachMcpServer(Connection, Server)` | Retires and joins this connection's publications of a borrowed server. |
 | function | `ServeTools(Connection, Cancellation)` | Dispatches convenience-server calls on the calling FPAS task until close or cancellation. |
 
-These operations return `result of (boolean, Std.Mcp.Types.McpError)`.
+These operations return `result of (boolean, Std.Ai.Mcp.Types.McpError)`.
 `ToolDefinition`, `ToolHandler`, `ToolResult`, `ToolContext`, `ToolJson` and
-`McpError` alias the shared MCP types. Import `Std.Mcp` for JSON/result helpers.
+`McpError` alias the shared MCP types. Import `Std.Ai.Mcp` for JSON/result helpers.
 Registration remains mutable until the first serve or session setup. A borrowed
 server freezes when attached and is served through `Mcp.Serve` or `Mcp.ServeOne`.
 

@@ -1,4 +1,4 @@
-//! Certificate-configured TLS server setup for `Std.Net.ListenTls`.
+//! Certificate-configured TLS server setup for `Std.Net.Sockets.ListenTls`.
 
 use crate::execution::vm::hosted::net::failure::Failure;
 use std::net::TcpStream;

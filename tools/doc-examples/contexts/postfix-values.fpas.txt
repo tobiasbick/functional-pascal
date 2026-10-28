@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Tui as Tui;
+uses Std.Ui.Terminal as Tui;
 type TuiStyleRole = Tui.TuiStyleRole;
 type PaletteColor = record Green: integer; end record;
 type PaletteStyle = record Foreground: PaletteColor; end record;

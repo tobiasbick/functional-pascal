@@ -1,0 +1,105 @@
+unit Std.Ui.Terminal.Elements.Tree;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Cells.Cell as Cell,
+  Std.Ui.Terminal.Chrome.MenuItem as MenuItem, Std.Ui.Terminal.Chrome.MenuNode as MenuNode,
+  Std.Ui.Terminal.Chrome.StatusItem as StatusItem;
+
+type TuiNodePair = enum
+  Nodes(Left: Element.TuiElement; Right: Element.TuiElement);
+end enum;
+
+public function TuiElementChildren(Node: Element.TuiElement): array of Element.TuiElement;
+begin
+  case Node of
+    when Element.TuiElement.Scroll(_, _, _, const Children), Element.TuiElement.Row(const Children, _), Element.TuiElement.Column(const Children, _), Element.TuiElement.Layout(_, const Children), Element.TuiElement.Panel(_, const Children), Element.TuiElement.Overlay(_, const Children), Element.TuiElement.Desktop(_, const Children):
+      return Children;
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
+      return [];
+  end case;
+end function;
+
+public function TuiSameItems<T: Equatable>(Left: array of T; Right: array of T): boolean;
+begin
+  if Left.Length() <> Right.Length() then
+    return false;
+  end if;
+
+  for I: integer := 0 to Left.Length() - 1 do
+    if Left[I] <> Right[I] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Compares node-owned values; children are compared separately in preorder.
+public function TuiElementSameLocal(Left: Element.TuiElement; Right: Element.TuiElement): boolean;
+begin
+  case TuiNodePair.Nodes(Left, Right) of
+    when TuiNodePair.Nodes(Element.TuiElement.Empty, Element.TuiElement.Empty):
+      return true;
+    when TuiNodePair.Nodes(Element.TuiElement.Label(const A), Element.TuiElement.Label(const B)), TuiNodePair.Nodes(Element.TuiElement.Rule(const A), Element.TuiElement.Rule(const B)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Button(const A), Element.TuiElement.Button(const B)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Input(const A), Element.TuiElement.Input(const B)):
+      return (A.Id = B.Id) and (A.Text = B.Text) and (A.Caret = B.Caret)
+        and
+        (A.Hint = B.Hint) and (A.HistoryDraft = B.HistoryDraft)
+        and
+        (A.ChangeAction = B.ChangeAction) and TuiSameItems(A.History, B.History);
+    when TuiNodePair.Nodes(Element.TuiElement.TextArea(const A, const AT, const AC, const AO, const AA), Element.TuiElement.TextArea(const B, const BT, const BC, const BO, const BA)):
+      return (A = B) and (AT = BT) and (AC = BC) and (AO = BO) and (AA = BA);
+    when TuiNodePair.Nodes(Element.TuiElement.CheckBox(const A, const AT, const AC, const AA), Element.TuiElement.CheckBox(const B, const BT, const BC, const BA)):
+      return (A = B) and (AT = BT) and (AC = BC) and (AA = BA);
+    when TuiNodePair.Nodes(Element.TuiElement.List(const A, const AT, const SelectedA, const AA), Element.TuiElement.List(const B, const BT, const BS, const BA)):
+      return (A = B) and (SelectedA = BS) and (AA = BA) and TuiSameItems(AT, BT);
+    when TuiNodePair.Nodes(Element.TuiElement.Scroll(const A, const AO, const AA, _), Element.TuiElement.Scroll(const B, const BO, const BA, _)):
+      return (A = B) and (AO = BO) and (AA = BA);
+    when TuiNodePair.Nodes(Element.TuiElement.MenuBar(const A), Element.TuiElement.MenuBar(const B)):
+      return TuiSameItems(A, B);
+    when TuiNodePair.Nodes(Element.TuiElement.Menu(const A, const AN, const StateA, const AA), Element.TuiElement.Menu(const B, const BN, const BS, const BA)):
+      return (A = B) and (StateA = BS) and (AA = BA) and TuiSameItems(AN, BN);
+    when TuiNodePair.Nodes(Element.TuiElement.StatusLine(const A), Element.TuiElement.StatusLine(const B)):
+      return TuiSameItems(A, B);
+    when TuiNodePair.Nodes(Element.TuiElement.CellGrid(const A), Element.TuiElement.CellGrid(const B)):
+      return (A.Width = B.Width) and (A.Height = B.Height) and TuiSameItems(A.Cells, B.Cells);
+    when TuiNodePair.Nodes(Element.TuiElement.Gauge(const A), Element.TuiElement.Gauge(const B)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Row(_, const A), Element.TuiElement.Row(_, const B)), TuiNodePair.Nodes(Element.TuiElement.Column(_, const A), Element.TuiElement.Column(_, const B)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Layout(const A, _), Element.TuiElement.Layout(const B, _)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Spacer(const A), Element.TuiElement.Spacer(const B)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Panel(const A, _), Element.TuiElement.Panel(const B, _)), TuiNodePair.Nodes(Element.TuiElement.Overlay(const A, _), Element.TuiElement.Overlay(const B, _)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Desktop(const A, _), Element.TuiElement.Desktop(const B, _)):
+      return A = B;
+    when TuiNodePair.Nodes(_, _):
+      return false;
+  end case;
+end function;
+
+public function TuiElementSameTree(Left: Element.TuiElement; Right: Element.TuiElement): boolean;
+begin
+  if not TuiElementSameLocal(Left, Right) then
+    return false;
+  end if;
+  const A := TuiElementChildren(Left);
+  const B := TuiElementChildren(Right);
+  if A.Length() <> B.Length() then
+    return false;
+  end if;
+
+  for I: integer := 0 to A.Length() - 1 do
+    if not TuiElementSameTree(A[I], B[I]) then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+end unit;

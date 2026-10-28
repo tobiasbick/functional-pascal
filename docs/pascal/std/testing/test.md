@@ -166,7 +166,7 @@ The per-test timeout defaults to 300 seconds; `--timeout <secs>` overrides it. I
 immediately before that worker is spawned and covers worker startup, request decoding,
 scripted-input preparation, and VM execution. On expiry, the runner terminates the worker and its
 host-process descendants, waits for cleanup, and reports `TIMEOUT` with exit code `3`. This also
-bounds blocking host calls such as `Std.Time.Sleep` and `Std.Proc.Run`; no cooperative VM shutdown
+bounds blocking host calls such as `Std.Time.Sleep` and `Std.Os.Proc.Run`; no cooperative VM shutdown
 is required.
 
 Worker transport files use a newly created directory below the platform temporary directory.
@@ -183,7 +183,7 @@ the runner creates a unique child below the gitignored repository-local `.temp-d
 removes that child after the test and its hooks finish. Do not create scratch trees beside
 `tests/`, under `crates/`, or with bare `_fpas_*` names in the cwd root.
 
-Rust unit tests that need temporary files should keep using `std::env::temp_dir()` (or the crate `create_temp_dir` helpers); `.temp-data/` is only for FPAS programs that exercise `Std.Fs` against the process cwd.
+Rust unit tests that need temporary files should keep using `std::env::temp_dir()` (or the crate `create_temp_dir` helpers); `.temp-data/` is only for FPAS programs that exercise `Std.Io.Fs` against the process cwd.
 
 ---
 

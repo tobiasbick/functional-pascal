@@ -8,8 +8,8 @@ use crate::stdlib::{
     intrinsic_args::{IntrinsicCall, pop_value},
 };
 
-const RAW: &str = "Std.Acp.Types.RawJson";
-const UNSIGNED: &str = "Std.Acp.Types.UInt64";
+const RAW: &str = "Std.Ai.Acp.Types.RawJson";
+const UNSIGNED: &str = "Std.Ai.Acp.Types.UInt64";
 
 pub(crate) fn run(
     intrinsic: Intrinsic,
@@ -144,5 +144,5 @@ fn error_value(
             )
         }
     };
-    call.enumeration("Std.Acp.Types.AcpError", variant, fields, location)
+    call.enumeration("Std.Ai.Acp.Types.AcpError", variant, fields, location)
 }

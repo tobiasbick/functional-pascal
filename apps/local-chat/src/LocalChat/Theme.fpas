@@ -1,7 +1,7 @@
 // Color palette used by the Local Chat TUI.
 unit LocalChat.Theme;
 
-uses Std.Tui as Tui;
+uses Std.Ui.Terminal as Tui;
 
 // Returns the dark cyan-and-amber truecolor palette shared with the Notes design language.
 public function LocalChatPalette(): Tui.TuiPalette;

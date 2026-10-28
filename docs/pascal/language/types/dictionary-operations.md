@@ -211,7 +211,7 @@ Values.Reduce(Init: U; F: function(Acc: U; Key: K; Value: V): U): U
 Visits entries in insertion order. Each callback receives the current accumulator, key, and value. The accumulator type `U` is inferred from `Init`, and the callback must return `U`.
 
 ```pascal id=example-21 fragment context=header
-uses Std.Conv as Conv;
+uses Std.Text.Format as Conv;
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
   return Acc + Key + ':' + Conv.IntToStr(Value) + ';';

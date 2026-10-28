@@ -24,11 +24,11 @@ pub(super) fn register(checker: &mut Checker) {
     let selected = enumeration(
         checker,
         "SelectedInitializeResponse",
-        vec![("V1", response(checker, "Std.Acp.Types"))],
+        vec![("V1", response(checker, "Std.Ai.Acp.Types"))],
     );
     let mismatch = super::super::type_registration::register_record_type(
         checker,
-        "Std.Acp.V2.InitializationVersionMismatch",
+        "Std.Ai.Acp.V2.InitializationVersionMismatch",
         vec![
             ("Requested".into(), Ty::Integer),
             ("Selected".into(), Ty::Integer),
@@ -39,14 +39,14 @@ pub(super) fn register(checker: &mut Checker) {
         checker,
         "InitializeOutcome",
         vec![
-            ("Initialized", response(checker, "Std.Acp.V2")),
+            ("Initialized", response(checker, "Std.Ai.Acp.V2")),
             ("LowerVersion", mismatch),
         ],
     );
 }
 
 fn enumeration(checker: &mut Checker, name: &str, variants: Vec<(&str, Ty)>) -> Ty {
-    let name = format!("Std.Acp.V2.{name}");
+    let name = format!("Std.Ai.Acp.V2.{name}");
     let variants = variants
         .into_iter()
         .map(|(name, ty)| EnumVariantTy {

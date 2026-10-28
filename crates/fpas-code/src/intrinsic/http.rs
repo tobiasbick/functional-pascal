@@ -1,9 +1,9 @@
-//! Internal `Std.Http` intrinsic discriminants.
+//! Internal `Std.Net.Http` intrinsic discriminants.
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics used by source-defined `Std.Http` implementation units.
+/// Intrinsics used by source-defined `Std.Net.Http` implementation units.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum HttpIntrinsic {

@@ -1,6 +1,6 @@
 program ProcOptionsCaptureTest;
 
-uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Test as Test;
 
 function LibraryPath(): string;
 begin
@@ -22,7 +22,7 @@ begin
   Test.AssertTrue(
     Fs.WriteText(
       Source,
-      'program Child; uses Std.Args as Args, Std.Console as Console;'#10 +
+      'program Child; uses Std.Os.Args as Args, Std.Console as Console;'#10 +
       'begin if Args.ParamStr(0) = ''failure'' then panic(''failure text'');'#10 +
       'else Console.WriteText(Args.ParamStr(0)); end if; end.'
     ).Unwrap()
@@ -41,7 +41,7 @@ begin
       Executable,
       ['run', '--std-lib', Library, Source, '--', 'abcd'],
       Limit
-    ) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'stdout bytes', 3, 'abc', ''))
+    ) is Error(Proc.ProcError.LimitExceeded('Std.Os.Proc.RunCaptureWithOptions', 'stdout bytes', 3, 'abc', ''))
   );
   const Zero := Proc.DefaultOptions() with MaxOutputBytes := 0; end with;
 
@@ -51,14 +51,14 @@ begin
     ).Unwrap().Stdout
   );
   Test.AssertTrue(
-    Proc.RunCaptureWithOptions(Executable, ['run', '--std-lib', Library, Source, '--', 'x'], Zero) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'stdout bytes', 0, '', ''))
+    Proc.RunCaptureWithOptions(Executable, ['run', '--std-lib', Library, Source, '--', 'x'], Zero) is Error(Proc.ProcError.LimitExceeded('Std.Os.Proc.RunCaptureWithOptions', 'stdout bytes', 0, '', ''))
   );
   const StderrLimit := Proc.DefaultOptions() with MaxOutputBytes := 10; end with;
 
   case Proc.RunCaptureWithOptions(
     Executable, ['run', '--std-lib', Library, Source, '--', 'failure'], StderrLimit
   ) of
-    when Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'stderr bytes', 10, const Stdout, const Stderr)):
+    when Error(Proc.ProcError.LimitExceeded('Std.Os.Proc.RunCaptureWithOptions', 'stderr bytes', 10, const Stdout, const Stderr)):
       Test.AssertEquals('', Stdout);
       Test.AssertTrue(Stderr.Length() > 0);
       Test.AssertTrue(Stderr.Length() <= 10);

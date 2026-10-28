@@ -1,4 +1,4 @@
-//! Std.Toml parsing, conversion, and numeric boundaries.
+//! Std.Encoding.Toml parsing, conversion, and numeric boundaries.
 
 use super::*;
 
@@ -24,7 +24,7 @@ fn parsed_nonfinite_values_are_errors_before_they_enter_fpas_aggregates() {
         let Value::Enum(error) = message.as_ref() else {
             panic!("typed TOML failure");
         };
-        assert_eq!(error.body().layout.type_name, "Std.Toml.TomlError");
+        assert_eq!(error.body().layout.type_name, "Std.Encoding.Toml.TomlError");
         assert_eq!(error.body().layout.variant, "InvalidSyntax");
         assert!(matches!(&error.body().values[2], Value::Str(text) if text.contains("not finite")));
     }

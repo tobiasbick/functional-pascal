@@ -1,6 +1,6 @@
 program NumericTextContractsTest;
 
-uses Std.Conv as Conv, Std.Parse as Parse, Std.Test as Test;
+uses Std.Text.Format as Conv, Std.Text.Parse as Parse, Std.Test as Test;
 
 begin
   Test.AssertEquals(255, parse.Int(' $FF ').Unwrap());

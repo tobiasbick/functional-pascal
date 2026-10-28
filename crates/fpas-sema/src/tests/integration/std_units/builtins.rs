@@ -32,7 +32,7 @@ fn std_math_sqrt_wrong_arg_count() {
 #[test]
 fn std_parse_int_requires_text() {
     let errs = check_errors(
-        "program T;\nuses Std.Parse as Parse;\nbegin\n  const N: integer := Parse.Int(42).Unwrap();\nend.",
+        "program T;\nuses Std.Text.Parse as Parse;\nbegin\n  const N: integer := Parse.Int(42).Unwrap();\nend.",
     );
     assert!(
         errs.iter().any(|e| {

@@ -82,7 +82,7 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Format = 242,
-    /// Internal bulk UTF-8 encoder for `Std.Net.Utf8.EncodeBytes`.
+    /// Internal bulk UTF-8 encoder for `Std.Text.Utf8.EncodeBytes`.
     /// See `docs/pascal/std/network/utf8.md`.
     Utf8Encode = 568,
     /// Map each Unicode scalar to exactly one Unicode scalar.

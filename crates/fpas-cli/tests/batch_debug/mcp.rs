@@ -4,7 +4,7 @@ use super::*;
 fn mcp_registration_does_not_grant_foreign_tasks_mutable_capture_access() {
     let fixture = Fixture::new(
         r#"program ForeignMcp;
-uses Std.Mcp as Mcp, Std.Tasks as Tasks;
+uses Std.Ai.Mcp as Mcp, Std.Tasks as Tasks;
 function Foreign(Server: Mcp.Server): boolean;
 begin
   return Mcp.ServeOne(Server, Some(0), None).Unwrap();

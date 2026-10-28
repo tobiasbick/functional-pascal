@@ -28,7 +28,7 @@ fn source_review_sse_failure_releases_retained_input() {
     let cwd = create_temp_dir("sse-retained-state");
     let library = cwd.join("lib");
     copy_sources(&root.join("lib"), &library);
-    let decoder = library.join("Std/Http/Sse.fpas");
+    let decoder = library.join("Std/Net/Http/Sse.fpas");
     let mut source = fs::read_to_string(&decoder).expect("decoder source");
     source.truncate(source.rfind("end unit;").expect("unit terminator"));
     source.push_str(
@@ -44,7 +44,7 @@ end unit;
 "#,
     );
     write_text(&decoder, &source);
-    let api = library.join("Std/Http.fpas");
+    let api = library.join("Std/Net/Http.fpas");
     let mut source = fs::read_to_string(&api).expect("HTTP API source");
     source.truncate(source.rfind("end unit;").expect("unit terminator"));
     source.push_str(
@@ -59,7 +59,7 @@ end unit;
     write_text(
         &program,
         r#"program RetainedSse;
-uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 begin
   const Decoder: Http.SseDecoder := Http.CreateSseDecoder(32).Unwrap();
   discard Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10)).Unwrap();

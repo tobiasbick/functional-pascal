@@ -1,7 +1,7 @@
 // Immutable state and transcript formatting for the Local Chat application.
 unit LocalChat.Model;
 
-uses Std.Console as Console, Std.Tui as Tui;
+uses Std.Console as Console, Std.Ui.Terminal as Tui;
 
 // Origin of one visible local chat entry.
 public type ChatRole = enum

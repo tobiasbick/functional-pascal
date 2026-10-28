@@ -1,11 +1,11 @@
-# `Std.Env`
+# `Std.Os.Env`
 
 Process environment access for hosted FPAS programs. This page is the full API for the unit.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Env as Env;
+uses Std.Console as Console, Std.Os.Env as Env;
 
 begin
   if Env.Exists('PATH') then
@@ -14,25 +14,25 @@ begin
 end.
 ```
 
-`Std.Env` reads the environment visible to the host process. It is UI-independent: console, TUI, and background-task programs can import it when they need environment values.
+`Std.Os.Env` reads the environment visible to the host process. It is UI-independent: console, TUI, and background-task programs can import it when they need environment values.
 
 
 ## Importing and names
 
-Import with `uses Std.Env as Env;` and access public symbols as `Env.Name`. User enum variants require `Env.Type.Variant`.
+Import with `uses Std.Os.Env as Env;` and access public symbols as `Env.Name`. User enum variants require `Env.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Env as Env;`.
+Requires `uses Std.Os.Env as Env;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
 | function | `Get(Name: string): Option of string` | returns `Some(Value)` when the variable exists, otherwise `None` |
 | function | `Exists(Name: string): boolean` | checks whether the variable is present |
 
-Environment lookup is process-wide and effectful because it reads host process state. `Std.Env` does not mutate environment variables.
+Environment lookup is process-wide and effectful because it reads host process state. `Std.Os.Env` does not mutate environment variables.
 
 ---
 

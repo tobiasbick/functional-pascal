@@ -1,7 +1,7 @@
-# `Std.Tui` cells and styles
+# `Std.Ui.Terminal` cells and styles
 
 Examples use explicit local aliases for `Tui.Name` after importing
-`uses Std.Tui as Tui;`; their named documentation contexts supply these aliases.
+`uses Std.Ui.Terminal as Tui;`; their named documentation contexts supply these aliases.
 
 `TuiColor` has distinct constructors for each representation. `FromCrt` accepts
 `0..15`; `FromAnsi256` and every `FromRgb` channel accept `0..255`.
@@ -87,6 +87,6 @@ headless assertions.
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Layout](layout.md)
 - [Application](application.md)

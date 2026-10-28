@@ -1,13 +1,13 @@
-# `Std.Calendar`
+# `Std.Time.Calendar`
 
 Pure Gregorian dates, UTC date-times, strict text conversion and checked arithmetic.
-Import with `uses Std.Calendar as Calendar;`. The unit reads no clock, locale,
+Import with `uses Std.Time.Calendar as Calendar;`. The unit reads no clock, locale,
 environment variable or time-zone database.
 
 ```pascal id=example-calendar run
 program CalendarExample;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 begin
   const Leap := Calendar.CreateDate(2000, 2, 29).Unwrap();
@@ -106,7 +106,7 @@ settings. The original input offset is not retained.
 ```pascal id=example-negative-epoch run
 program NegativeEpoch;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 begin
   const Before := Calendar.FromTimestampMillis(-1).Unwrap();
@@ -145,7 +145,7 @@ Use the existing wall clock explicitly when the current time is needed:
 ```pascal id=example-wall-clock
 program CurrentUtc;
 
-uses Std.Calendar as Calendar, Std.Console as Console, Std.Time as Time;
+uses Std.Time.Calendar as Calendar, Std.Console as Console, Std.Time as Time;
 
 begin
   const Now := Calendar.FromTimestampMillis(Time.TimestampMillis()).Unwrap();
@@ -167,17 +167,17 @@ Pure calendar calls are permitted in seeded debugging and recording capture.
 | `InvalidOffset(Text: string)` | A six-character numeric offset is out of range or is the unknown `-00:00` form. |
 | `OutOfRange(Operation: string)` | Timestamp conversion, arithmetic or UTC normalization leaves years 1..9999. |
 
-Operation names are `Std.Calendar.FromTimestampMillis`, `Std.Calendar.AddDays`,
-`Std.Calendar.AddMillis` or `Std.Calendar.ParseDateTime`. Match the variants or
+Operation names are `Std.Time.Calendar.FromTimestampMillis`, `Std.Time.Calendar.AddDays`,
+`Std.Time.Calendar.AddMillis` or `Std.Time.Calendar.ParseDateTime`. Match the variants or
 use `Message()` at a text boundary. No calendar failure fabricates a host cause.
 
 ## Implementation (contributors)
 
 | Concern | Location |
 |---------|----------|
-| Public source API | [`Calendar.fpas`](../../../../lib/Std/Calendar.fpas) |
-| Checked values and arithmetic | [`Values.fpas`](../../../../lib/Std/Calendar/Values.fpas) |
-| Parsing and formatting | [`Text.fpas`](../../../../lib/Std/Calendar/Text.fpas) |
+| Public source API | [`Calendar.fpas`](../../../../lib/Std/Time/Calendar.fpas) |
+| Checked values and arithmetic | [`Values.fpas`](../../../../lib/Std/Time/Calendar/Values.fpas) |
+| Parsing and formatting | [`Text.fpas`](../../../../lib/Std/Time/Calendar/Text.fpas) |
 | Public source exports | [`stdlib.fpasprj`](../../../../lib/stdlib.fpasprj) |
 
 ## See also

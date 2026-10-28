@@ -49,7 +49,7 @@ DAP clients may host an interactive terminal with `fpas/terminalInput` and the
 resizes, paste, and focus changes while the session is initialized, running,
 or stopped. The VS Code extension connects these events either to an
 integrated pseudoterminal or to an external terminal frontend launched through
-DAP `runInTerminal`, so `ReadKey`, `ReadKeyEvent`, `ReadEvent`, and `Std.Tui`
+DAP `runInTerminal`, so `ReadKey`, `ReadKeyEvent`, `ReadEvent`, and `Std.Ui.Terminal`
 programs remain interactive while debugging. The external frontend connects
 to the extension through an authenticated loopback bridge; the debugger
 process still never reads program input from DAP stdin. TUI event handlers
@@ -84,7 +84,7 @@ may start owned tasks through scopes and explicit groups. Task completion, failu
 cancellation, and forced entry completion close remaining creating-task groups
 before publishing terminal outcomes. Pending cleanup remains inspectable until
 resume completes it. Attach, non-stop task execution, reverse
-execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes are unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `ReadText`/`ReadLn` lines without resuming or enabling reverse playback. Capture stays in session memory, keeps at most 4,096 events, writes no recording files, and retains no recording snapshots. Later events are dropped and `recording.describe` / `fpas/recordingDescribe` report `truncated`. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, the event ceiling, captured events, and `replayable: false`. While capturing, `Std.Random`, wall-clock `Std.Time` other than `Sleep`, `Std.Fs`, `Std.Env`, `Std.Proc`, `Std.Args`, and console host effects other than `ReadText`/`ReadLn`/`WriteText`/`WriteLn` stop with runtime diagnostic `FP5024` before the intrinsic runs. JSONL `reload` / `image.replace` and DAP `fpas/reload` rebuild the exact launch target and atomically install changes limited to inactive function bodies. Unchanged candidates do nothing; active bodies, layouts, globals, captures, task identity, function sets, entry points, anonymous closures, and incompatible debug metadata are rejected before the live image changes. Each successful commit increments a monotonic image version, rebinds breakpoints and source content, invalidates stale inspections, and retains exactly one preceding image. JSONL `image.rollback` and DAP `fpas/reloadRollback` restore that image as another version. Recording capture rejects real commits and is not a live-image snapshot store. JSONL `reload.classify` and DAP `fpas/reloadClassify` rebuild and classify without applying. VS Code exposes **Debug: Reload Compatible Changes** and **Debug: Roll Back Last Reload**. This is FPAS source-level reload inside the owned debug session; it does not debug or hot-swap the native Rust VM implementation. Frame
+execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes are unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `ReadText`/`ReadLn` lines without resuming or enabling reverse playback. Capture stays in session memory, keeps at most 4,096 events, writes no recording files, and retains no recording snapshots. Later events are dropped and `recording.describe` / `fpas/recordingDescribe` report `truncated`. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, the event ceiling, captured events, and `replayable: false`. While capturing, `Std.Math.Random`, wall-clock `Std.Time` other than `Sleep`, `Std.Io.Fs`, `Std.Os.Env`, `Std.Os.Proc`, `Std.Os.Args`, and console host effects other than `ReadText`/`ReadLn`/`WriteText`/`WriteLn` stop with runtime diagnostic `FP5024` before the intrinsic runs. JSONL `reload` / `image.replace` and DAP `fpas/reload` rebuild the exact launch target and atomically install changes limited to inactive function bodies. Unchanged candidates do nothing; active bodies, layouts, globals, captures, task identity, function sets, entry points, anonymous closures, and incompatible debug metadata are rejected before the live image changes. Each successful commit increments a monotonic image version, rebinds breakpoints and source content, invalidates stale inspections, and retains exactly one preceding image. JSONL `image.rollback` and DAP `fpas/reloadRollback` restore that image as another version. Recording capture rejects real commits and is not a live-image snapshot store. JSONL `reload.classify` and DAP `fpas/reloadClassify` rebuild and classify without applying. VS Code exposes **Debug: Reload Compatible Changes** and **Debug: Roll Back Last Reload**. This is FPAS source-level reload inside the owned debug session; it does not debug or hot-swap the native Rust VM implementation. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
 
@@ -465,12 +465,12 @@ Boolean `and` and `or` with left-to-right
 [short-circuit evaluation](../language/basics/operators.md#evaluation-order).
 Skipped operands perform no calls, consume no runtime evaluation operations,
 and raise no runtime errors, including errors from `try`. Boolean `xor` and
-binary `Std.Bits` functions evaluate both arguments. The complete expression
+binary `Std.Math.Bits` functions evaluate both arguments. The complete expression
 still has to pass parsing, validation, and source-size limits. Logical operators
 require Boolean values. Known non-Boolean operands are rejected during
 validation, including a literal in a skipped branch such as `false and 1`;
 resolved values are checked when evaluated. Integer bit operations use
-[Std.Bits](../std/numeric/bits.md) functions imported by the debugged program.
+[Std.Math.Bits](../std/numeric/bits.md) functions imported by the debugged program.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

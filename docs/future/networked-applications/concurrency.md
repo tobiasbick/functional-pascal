@@ -13,7 +13,7 @@ waiting, and explicit ownership of child-task failure.
 
 The concurrency primitives are implemented. The approved two-stage shutdown policy separates
 timed cooperative group close (S1a) from explicit process-level escalation (S1b), now supplied by
-[`Std.Server`](../../pascal/std/network/server.md).
+[`Std.Net.Server`](../../pascal/std/network/server.md).
 Existing cancellation, bounded channels, and task-only completion waits are also implemented.
 
 - [x] C1: Mixed task/channel/timer/cancellation selection with typed value delivery, exactly one
@@ -30,7 +30,7 @@ Existing cancellation, bounded channels, and task-only completion waits are also
   high-contention/lifetime regressions for C1-C3, plus complete workspace verification.
 - [x] S1a: Add a timed cooperative group close that retains ownership after timeout, with retry,
   validation, race, and debugger tests. The two-stage shutdown policy was approved on 2026-09-07.
-- [x] S1b (lifecycle work): `Std.Server` adds explicit process escalation for non-cooperative code
+- [x] S1b (lifecycle work): `Std.Net.Server` adds explicit process escalation for non-cooperative code
   and blocking host calls, with disposable-process exit confirmation tests. The selected policy is in
   [server lifecycle](server-lifecycle.md#selected-shutdown-policy-2026-09-07).
   A timeout alone does not establish termination; no in-place forced task-group kill is planned.
@@ -435,7 +435,7 @@ coverage and the completed full workspace verification after build-artifact clea
 
 ### 2026-09-06 — cancellable TCP/TLS writes
 
-- Added `Std.Net.SendBytesWithCancellation(Connection, Data, Token)` with the existing bounded byte
+- Added `Std.Net.Sockets.SendBytesWithCancellation(Connection, Data, Token)` with the existing bounded byte
   input and integer progress result. A successful partial write wins over concurrent cancellation;
   callers retry only the unaccepted suffix. TLS acceptance does not imply peer delivery.
 - Cancellation and timeout before progress return distinct errors and leave the connection open.
@@ -446,7 +446,7 @@ coverage and the completed full workspace verification after build-artifact clea
 - Added nine write regressions covering TCP backpressure, pending attempts, lock contention,
   monotonic timeouts, size limits, partial-write races, and both TLS connection directions. Existing
   cancellable-read tests still pass. Added semantic and compiler/runtime write coverage.
-- Updated the `Std.Net` reference and regenerated intrinsic editor declarations. Formatting,
+- Updated the `Std.Net.Sockets` reference and regenerated intrinsic editor declarations. Formatting,
   workspace build, full workspace tests (including bundled FPAS regressions), targeted tests,
   and strict Clippy for every affected crate passed. No performance claim is made.
 - Next: cancellation during connection establishment (including DNS and TLS-handshake boundaries),
@@ -454,14 +454,14 @@ coverage and the completed full workspace verification after build-artifact clea
 
 ### 2026-09-06 — cancellable TCP/TLS reads
 
-- Added `Std.Net.ReceiveBytesWithCancellation(Connection, MaxBytes, Token)` without changing the language.
+- Added `Std.Net.Sockets.ReceiveBytesWithCancellation(Connection, MaxBytes, Token)` without changing the language.
   Cancellation leaves the connection open and does not discard buffered TLS state.
 - Cancellation is checked while acquiring the connection lock and between non-blocking I/O
   attempts. The configured read timeout starts after lock acquisition and uses a monotonic deadline.
 - Added tests for pre-cancellation, pending reads, lock contention, timeout preservation, restored
   blocking reads, EOF, and resuming an incomplete TLS record. Added semantic token-type rejection
   and an FPAS compiler/runtime regression using a task-owned read.
-- Updated the `Std.Net` reference and generated intrinsic editor declarations.
+- Updated the `Std.Net.Sockets` reference and generated intrinsic editor declarations.
 - Verified formatting, the workspace build and full workspace test suite (including bundled FPAS
   regressions), targeted semantic/VM/compiler tests, and strict Clippy for every affected crate.
 - Next: cancellation-aware writes with an explicit partial-write contract, followed by remaining
@@ -505,7 +505,7 @@ coverage and the completed full workspace verification after build-artifact clea
 
 - Implemented VM-owned `CancellationSource` and clonable `CancellationToken` handles in `Std.Tasks`.
 - Implemented idempotent `Cancel` and non-blocking `IsCancellationRequested`.
-- Added `Std.Net.AcceptWithCancellation` as the first end-to-end hosted consumer. Cancellation
+- Added `Std.Net.Sockets.AcceptWithCancellation` as the first end-to-end hosted consumer. Cancellation
   returns a distinct documented error and does not close the listener.
 - Added registry, blocked-accept, and FPAS end-to-end regressions.
 - Verified with `cargo build`, the full Rust workspace test suite, strict Clippy for the affected
@@ -549,6 +549,6 @@ rather than reaching into scheduler implementation details.
 - **Selected S1 split:** Timed group close stops waiting without releasing unfinished work.
   Hard termination of non-cooperative work belongs to explicit process-level lifecycle escalation,
   not forced termination of individual groups in a shared VM. The process-level requirement
-  is implemented separately by `Std.Server`; ordinary group close still never terminates its host.
+  is implemented separately by `Std.Net.Server`; ordinary group close still never terminates its host.
 - Child panics and ordinary error results follow separately documented paths.
 - High-contention tests demonstrate bounded memory and absence of lost wakeups.

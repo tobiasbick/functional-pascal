@@ -1,6 +1,6 @@
 program ElementMakeLabelTest;
 
-uses Std.Tui as Tui, Std.Test as Test;
+uses Std.Ui.Terminal as Tui, Std.Test as Test;
 
 begin
   const Node: Tui.TuiElement := Tui.TuiElementBuilders.MakeLabel('hi');

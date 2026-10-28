@@ -2,7 +2,7 @@
 
 program ArgsBasics;
 
-uses Std.Console as Console, Std.Conv as Conv, Std.Args as Args;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Os.Args as Args;
 
 begin
   Console.WriteLn('param count: ', Conv.IntToStr(Args.ParamCount()));

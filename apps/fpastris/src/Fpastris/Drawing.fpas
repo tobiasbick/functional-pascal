@@ -1,6 +1,6 @@
 unit Fpastris.Drawing;
 
-uses Fpastris.Pieces as Pieces, Fpastris.Theme as Theme, Std.Tui as Tui;
+uses Fpastris.Pieces as Pieces, Fpastris.Theme as Theme, Std.Ui.Terminal as Tui;
 
 public function Grid(Width: integer; Height: integer): Tui.TuiCellGrid;
 begin

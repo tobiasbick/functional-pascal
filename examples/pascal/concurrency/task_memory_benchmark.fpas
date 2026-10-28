@@ -6,8 +6,8 @@
 program TaskMemoryBenchmark;
 
 uses
-  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Tasks as StdTasks,
-  Std.Time as Time, Std.Parse as Parse;
+  Std.Os.Args as Args, Std.Console as Console, Std.Text.Format as Conv, Std.Tasks as StdTasks,
+  Std.Time as Time, Std.Text.Parse as Parse;
 
 const SleepMillis: integer := 10000;
 const ProgressEvery: integer := 10000;

@@ -3,11 +3,11 @@ mod args;
 mod bits;
 mod channel_task;
 mod console;
-mod conv;
 mod crypto;
 mod encoding;
 mod env;
 mod errors;
+mod format;
 mod fs;
 mod json;
 mod math;
@@ -26,7 +26,7 @@ mod type_registration;
 
 use crate::check::Checker;
 use fpas_builtins::{
-    STD_UNIT_ARGS, STD_UNIT_BITS, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_ENV,
+    STD_UNIT_ARGS, STD_UNIT_BITS, STD_UNIT_CONSOLE, STD_UNIT_CRYPTO, STD_UNIT_ENV, STD_UNIT_FORMAT,
     STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET, STD_UNIT_PARSE, STD_UNIT_PATH,
     STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML,
     STD_UNIT_TUI, STD_UNITS_KNOWN,
@@ -64,7 +64,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_PATH => path::register_std_path(checker),
         STD_UNIT_FS => fs::register_std_fs(checker),
         STD_UNIT_CONSOLE => console::register_std_console(checker),
-        STD_UNIT_CONV => conv::register_std_conv(checker),
+        STD_UNIT_FORMAT => format::register_std_format(checker),
         STD_UNIT_CRYPTO => crypto::register_std_crypto(checker),
         fpas_builtins::STD_UNIT_ENCODING => encoding::register_std_encoding(checker),
         STD_UNIT_PARSE => parse::register_std_parse(checker),

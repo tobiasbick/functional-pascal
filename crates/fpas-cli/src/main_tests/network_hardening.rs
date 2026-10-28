@@ -77,7 +77,7 @@ fn http_client_skips_informational_response_and_follows_relative_redirect() {
         &format!(
             r#"program HttpRelativeRedirect;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 begin
   case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/start')) of
@@ -151,7 +151,7 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
         &format!(
             r#"program HttpCrossOriginRedirect;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Text.Utf8 as Utf8;
 
 begin
   var RequestValue: Http.Request := Http.Request.Post('http://127.0.0.1:{redirect_port}/submit');
@@ -215,7 +215,7 @@ fn http_client_enforces_header_and_redirect_limits() {
         &format!(
             r#"program HttpClientLimits;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 begin
   var HeaderRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{header_port}/');
@@ -224,7 +224,7 @@ begin
     when Ok(_): panic('oversized response head was accepted');
     when Error(const Message):
     begin
-      if not (Message is Http.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', 48)) then panic(Message.Message()); end if;
+      if not (Message is Http.HttpError.LimitExceeded('Std.Net.Http.Head.ReadFinal', 48)) then panic(Message.Message()); end if;
     end;
   end case;
   var RedirectRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{redirect_port}/');
@@ -294,7 +294,7 @@ fn http_client_rejects_ambiguous_framing_and_excess_interim_responses() {
         &format!(
             r#"program HttpHostileResponses;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 procedure ExpectError(Url: string; Interim: boolean);
 begin
@@ -304,7 +304,7 @@ begin
     begin
       if Interim then
       begin
-        if not (Message is Http.HttpError.LimitExceeded('Std.Http.Head.ReadFinal', 8)) then panic(Message.Message()); end if;
+        if not (Message is Http.HttpError.LimitExceeded('Std.Net.Http.Head.ReadFinal', 8)) then panic(Message.Message()); end if;
       end;
       else begin
         if not (Message is Http.HttpError.InvalidMessage(_)) then panic(Message.Message()); end if;
@@ -352,7 +352,7 @@ fn http_client_rejects_chunk_size_integer_overflow() {
         &format!(
             r#"program HttpChunkSizeOverflow;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 procedure ExpectOverflow(Path: string);
 begin

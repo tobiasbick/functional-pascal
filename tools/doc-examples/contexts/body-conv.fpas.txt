@@ -1,7 +1,0 @@
-program DocumentationExample;
-uses Std.Conv as Conv;
-
-begin
-// @example
-
-end.

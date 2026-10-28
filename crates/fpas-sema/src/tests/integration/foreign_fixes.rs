@@ -16,7 +16,7 @@ fn fixed(source: &str) -> String {
 
 fn program(statements: &str) -> String {
     format!(
-        "program P;\n\nuses Std.Console as Console, Std.Conv as Conv;\n\nbegin\n  var Count: integer := 0;\n  const Text := 'abc';\n  const Items := [1, 2];\n  {statements}\n  Console.WriteLn(Conv.IntToStr(Count + Items.Length() + Text.Length()));\nend."
+        "program P;\n\nuses Std.Console as Console, Std.Text.Format as Conv;\n\nbegin\n  var Count: integer := 0;\n  const Text := 'abc';\n  const Items := [1, 2];\n  {statements}\n  Console.WriteLn(Conv.IntToStr(Count + Items.Length() + Text.Length()));\nend."
     )
 }
 

@@ -23,7 +23,7 @@ impl Worker {
     }
     pub(super) fn mcp_raw(&self, text: &str, location: SourceLocation) -> Result<Value, VmError> {
         self.layouts.record(
-            "Std.Mcp.Types.RawJson",
+            "Std.Ai.Mcp.Types.RawJson",
             vec![Value::Str(text.into())],
             location,
         )
@@ -35,7 +35,7 @@ impl Worker {
     ) -> Result<Value, VmError> {
         let raw = self.mcp_serialized_raw(serde_json::to_string(result), location)?;
         self.layouts
-            .record("Std.Mcp.Types.ToolResult", vec![raw], location)
+            .record("Std.Ai.Mcp.Types.ToolResult", vec![raw], location)
     }
     pub(super) fn mcp_result(
         &self,
@@ -67,7 +67,7 @@ impl Worker {
             }
         };
         Ok(Value::result_error(self.layouts.enumeration(
-            "Std.Mcp.Types.McpError",
+            "Std.Ai.Mcp.Types.McpError",
             name,
             fields,
             location,
@@ -88,7 +88,7 @@ impl Worker {
         let request = self.mcp_serialized_raw(serde_json::to_string(&call.request_id), location)?;
         let meta = self.mcp_serialized_raw(serde_json::to_string(&call.metadata), location)?;
         self.layouts.record(
-            "Std.Mcp.Types.RequestContext",
+            "Std.Ai.Mcp.Types.RequestContext",
             vec![
                 Value::OpaqueHandle(server),
                 Value::Integer(call.responder.endpoint().unwrap_or(0) as i64),

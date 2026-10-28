@@ -1,0 +1,315 @@
+// Redirect URL resolution, header filtering, and method rewriting.
+unit Std.Net.Http.Redirect;
+
+uses Std.Text.Format as Conv, Std.Net.Http.Headers as HttpHeaders, Std.Net.Http.Types as Types, Std.Net.Uri as Uri;
+
+// Formats a URI authority with a non-default port when required.
+//
+// Parameters:
+// - `UriValue`: Parsed absolute URI.
+function Authority(UriValue: Uri.Uri): string;
+begin
+  var Host: string := UriValue.Host;
+  if (':' in Host) then
+    begin
+      Host := '[' + Host + ']';
+    end;
+  end if;
+
+  if ((UriValue.Scheme = 'http') and (UriValue.Port = 80))
+    or
+    ((UriValue.Scheme = 'https') and (UriValue.Port = 443))
+  then
+    begin
+      return Host;
+    end;
+  end if;
+
+  return Host + ':' + Conv.IntToStr(UriValue.Port);
+end function;
+
+// Formats the scheme and authority portion of a URI.
+//
+// Parameters:
+// - `UriValue`: Parsed absolute URI.
+function Origin(UriValue: Uri.Uri): string;
+begin
+  return (UriValue.Scheme + '://' + Authority(UriValue));
+end function;
+
+// Removes a fragment from a URI reference.
+//
+// Parameters:
+// - `Text`: URI reference that may contain a fragment.
+function WithoutFragment(Text: string): string;
+begin
+  return case Text.IndexOf('#') of
+    when Some(const Fragment): Text.Slice(0, Fragment);
+    when None: Text;
+  end case;
+end function;
+
+// Removes the query from a path-and-query value.
+//
+// Parameters:
+// - `Path`: URI path that may contain a query.
+function PathWithoutQuery(Path: string): string;
+begin
+  return case Path.IndexOf('?') of
+    when Some(const Query): Path.Slice(0, Query);
+    when None: Path;
+  end case;
+end function;
+
+// Resolves dot segments in an absolute path while preserving its query.
+//
+// Parameters:
+// - `PathAndQuery`: Absolute path with an optional query.
+function NormalizePath(PathAndQuery: string): string;
+begin
+  var Path: string := PathAndQuery;
+  var Query: string := '';
+  case PathAndQuery.IndexOf('?') of
+    when Some(const QueryStart):
+      Path := PathAndQuery.Slice(0, QueryStart);
+      Query := PathAndQuery.Slice(QueryStart, PathAndQuery.Length() - QueryStart);
+    when None:
+      null;
+  end case;
+  const Parts: array of string := Path.Split('/');
+  var Segments: array of string := [];
+  // The first empty segment belongs to the absolute root. All others are significant.
+  for Index: integer := 1 to Parts.Length() - 1 do
+    begin
+      const Part: string := Parts[Index];
+      if Part = '..' then
+        begin
+          if Segments.Length() > 0 then
+            begin
+              Segments := Segments.Slice(0, Segments.Length() - 1);
+            end;
+          end if;
+        end;
+      elsif Part <> '.' then
+        begin
+          Segments.PushInPlace(Part);
+        end;
+      end if;
+
+      if ((Part = '.') or (Part = '..')) and (Index = Parts.Length() - 1) then
+        begin
+          Segments.PushInPlace('');
+        end;
+      end if;
+    end;
+  end for;
+  const Output: string := '/' + Segments.Join('/');
+  return Output + Query;
+end function;
+
+// Resolves a redirect location against an absolute base URI.
+//
+// Parameters:
+// - `Base`: Parsed URI of the current request.
+// - `Location`: Location field value from the redirect response.
+function Resolve(Base: Uri.Uri; Location: string): result of (string, Types.HttpError);
+begin
+  if HttpHeaders.ContainsUnsafeText(Location) then
+    begin
+      return Error(Types.HttpError.RedirectFailure('HTTP redirect Location contains CR or LF'));
+    end;
+  end if;
+  const Reference: string := WithoutFragment(Location.Trim());
+  var Target: string := '';
+  if Reference = '' then
+    begin
+      Target := Origin(Base) + Base.Path;
+    end;
+  elsif ('://' in Reference) then
+    begin
+      Target := Reference;
+    end;
+  elsif Reference.StartsWith('//') then
+    begin
+      Target := Base.Scheme + ':' + Reference;
+    end;
+  elsif Reference.StartsWith('/') then
+    begin
+      Target := Origin(Base) + NormalizePath(Reference);
+    end;
+  elsif Reference.StartsWith('?') then
+    begin
+      Target := Origin(Base) + PathWithoutQuery(Base.Path) + Reference;
+    end;
+  else
+    begin
+      const BasePath: string := PathWithoutQuery(Base.Path);
+      var Directory: string := '/';
+      case BasePath.LastIndexOf('/') of
+        when Some(const LastSlash):
+          Directory := BasePath.Slice(0, LastSlash + 1);
+        when None:
+          null;
+      end case;
+
+      Target := Origin(Base) + NormalizePath(Directory + Reference);
+    end;
+  end if;
+
+  case Uri.Parse(Target).MapError(Types.HttpError.Address) of
+    when Ok(const Parsed):
+      begin
+        if ('://' in Reference) or Reference.StartsWith('//') then
+          begin
+            return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
+          end;
+        end if;
+
+        return Ok(Target);
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
+
+// Reports whether two URIs have the same scheme, host, and port.
+//
+// Parameters:
+// - `Left`: First parsed URI.
+// - `Right`: Second parsed URI.
+function SameOrigin(Left: Uri.Uri; Right: Uri.Uri): boolean;
+begin
+  return (
+    (Left.Scheme.ToLower() = Right.Scheme.ToLower())
+    and
+    (Left.Host.ToLower() = Right.Host.ToLower())
+  )
+    and
+    (Left.Port = Right.Port);
+end function;
+
+// Removes sensitive or entity fields required by redirect policy.
+//
+// Parameters:
+// - `Headers`: Current request fields.
+// - `CrossOrigin`: Whether the redirect changes origin.
+// - `DropBody`: Whether redirect semantics discard the request body.
+function FilterHeaders(Headers: array of Types.Header; CrossOrigin: boolean; DropBody: boolean): array of Types.Header;
+begin
+  var Output: array of Types.Header := [];
+  for Index: integer := 0 to Headers.Length() - 1 do
+    begin
+      const Name: string := Headers[Index].Name;
+      if CrossOrigin
+        and
+        (
+          (
+            HttpHeaders.IsName(Name, 'Authorization')
+            or
+            HttpHeaders.IsName(Name, 'Proxy-Authorization')
+          ) or HttpHeaders.IsName(Name, 'Cookie')
+        )
+      then
+        begin
+          continue;
+        end;
+      end if;
+
+      if DropBody
+        and
+        (
+          (
+            HttpHeaders.IsName(Name, 'Content-Type')
+            or
+            HttpHeaders.IsName(Name, 'Content-Encoding')
+          )
+          or
+          (
+            HttpHeaders.IsName(Name, 'Content-Language')
+            or
+            HttpHeaders.IsName(Name, 'Content-Location')
+          )
+        )
+      then
+        begin
+          continue;
+        end;
+      end if;
+
+      Output.PushInPlace(Headers[Index]);
+    end;
+  end for;
+
+  return Output;
+end function;
+
+// Reports whether a status code uses the automatic redirect policy.
+//
+// Parameters:
+// - `StatusCode`: HTTP response status code.
+public function IsStatus(StatusCode: integer): boolean;
+begin
+  return (((StatusCode = 301) or (StatusCode = 302)) or (StatusCode = 303))
+    or
+    ((StatusCode = 307) or (StatusCode = 308));
+end function;
+
+// Builds the next request from one redirect response.
+//
+// Parameters:
+// - `Current`: Request that received the redirect response.
+// - `StatusCode`: Redirect response status code.
+// - `Location`: Location field value from the redirect response.
+public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): result of (Types.Request, Types.HttpError);
+begin
+  var Base: Uri.Uri := Uri.Uri(Scheme := '', Host := '', Port := 0, Path := '');
+  case Uri.Parse(Current.Url).MapError(Types.HttpError.Address) of
+    when Ok(const Value):
+      begin
+        Base := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+  var Target: string := '';
+  case Resolve(Base, Location) of
+    when Ok(const Value):
+      begin
+        Target := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+  var TargetUri: Uri.Uri := Base;
+  case Uri.Parse(Target).MapError(Types.HttpError.Address) of
+    when Ok(const Value):
+      begin
+        TargetUri := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+  const DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD'))
+    or
+    (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
+  var Output: Types.Request := Current;
+  Output.Url := Target;
+  Output.Headers := FilterHeaders(Current.Headers, not SameOrigin(Base, TargetUri), DropBody);
+  if DropBody then
+    begin
+      Output.Method := 'GET';
+      Output.Body := [];
+    end;
+  end if;
+
+  return Ok(Output);
+end function;
+end unit;

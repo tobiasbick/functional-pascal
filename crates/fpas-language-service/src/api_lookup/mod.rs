@@ -49,7 +49,7 @@ pub struct ApiMember {
 /// One declaration or built-in operation matching a lookup query.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApiEntry {
-    /// Qualified name, such as `Std.Fs.ReadText` or `string.TrimLeft`.
+    /// Qualified name, such as `Std.Io.Fs.ReadText` or `string.TrimLeft`.
     pub name: String,
     /// Match category.
     pub kind: ApiEntryKind,
@@ -86,7 +86,7 @@ impl ApiCatalog {
     /// Looks up a case-insensitive name the way hover describes it.
     ///
     /// A name matches a declaration when it equals the qualified name or one of its dotted
-    /// suffixes, so `Std.Fs.ReadText`, `Fs.ReadText` and `ReadText` all find the same routine.
+    /// suffixes, so `Std.Io.Fs.ReadText`, `Fs.ReadText` and `ReadText` all find the same routine.
     /// `string.TrimLeft` and `TrimLeft` find built-in operations.
     #[must_use]
     pub fn lookup(&self, query: &str) -> ApiLookup {

@@ -171,6 +171,6 @@ fn bundle_format_matches_golden_bytes() {
     // The embedded program identity includes the current bytecode ABI version.
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bundled)),
-        "a217d13f03f9a5e1f0b7b4f59a9af79afd9167b55676259907449f7766399895"
+        "993c7c3e611465d4b1b061817f5a44e08f3286386e35bb0251fe69d9d9cb8a4f"
     );
 }

@@ -26,7 +26,7 @@ compile-time constants.
 ## Expressions
 
 Assignment is `:=`; equality and inequality are `=` and `<>`. Arithmetic operands
-need the same numeric type; convert with `Std.Conv.IntToReal` before mixing them.
+need the same numeric type; convert with `Std.Math.IntToReal` before mixing them.
 `/` returns real even for integer operands. Integer-only `div` truncates toward
 zero; `mod` follows the dividend's sign. Integer overflow, division by zero and
 nonfinite real results fail at runtime. Boolean conditions require booleans.
@@ -35,7 +35,7 @@ Precedence from high to low is postfix operations, unary minus/`try`,
 `* / div mod`, `+ -`, comparisons/`in`/`is`, `not`, then `and or xor`.
 Comparisons do not chain. Parenthesize mixtures of logical operators:
 `(A and B) or C`. `and` and `or` short-circuit; `xor` evaluates both operands.
-Integer bit operations come from `Std.Bits`.
+Integer bit operations come from `Std.Math.Bits`.
 
 `if` statements can omit `else`. An `if` expression requires both branches:
 `const Sign := if N > 0 then 'positive' else 'other' end if;`.

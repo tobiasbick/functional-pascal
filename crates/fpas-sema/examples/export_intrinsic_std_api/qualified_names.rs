@@ -117,8 +117,8 @@ mod tests {
 
     #[test]
     fn generated_signatures_use_local_types_and_nonconflicting_import_aliases() {
-        let source = "unit Std.Net;\npublic function Read(Tasks: integer; Link: Std.Net.Connection; Token: Std.Tasks.CancellationToken): Std.Net.Connection;\nbegin return Link; end function;\nend unit;";
-        let actual = source_names("Std.Net", source).expect("qualified declarations");
+        let source = "unit Std.Net.Sockets;\npublic function Read(Tasks: integer; Link: Std.Net.Sockets.Connection; Token: Std.Tasks.CancellationToken): Std.Net.Sockets.Connection;\nbegin return Link; end function;\nend unit;";
+        let actual = source_names("Std.Net.Sockets", source).expect("qualified declarations");
         assert!(actual.contains("uses Std.Tasks as StdTasks;"));
         assert!(
             actual.contains("Link: Connection; Token: StdTasks.CancellationToken): Connection;")

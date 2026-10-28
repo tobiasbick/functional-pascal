@@ -23,7 +23,7 @@ Import with `uses Std.Crypto as Crypto;` and access public symbols as `Crypto.Na
 | function | `RandomBytes(Count: integer): result of (array of integer, Crypto.CryptoError)` | `Count` secure bytes, each in `0..255` |
 | function | `RandomInt(Lo: integer; Hi: integer): result of (integer, Crypto.CryptoError)` | Unbiased secure value in inclusive `[Lo, Hi]` |
 
-Both functions request randomness from the operating system. Failure is returned as `Error(Cause)` and never falls back to `Std.Random`.
+Both functions request randomness from the operating system. Failure is returned as `Error(Cause)` and never falls back to `Std.Math.Random`.
 
 ## `RandomBytes`
 
@@ -65,7 +65,7 @@ The unit supplies random material; it does not yet supply hashing, password hash
 
 ## See also
 
-- [`Std.Random`](../numeric/random.md)
+- [`Std.Math.Random`](../numeric/random.md)
 - [Cryptography index](README.md)
 - [Future cryptography work](../../../future/networked-applications/cryptography.md)
 

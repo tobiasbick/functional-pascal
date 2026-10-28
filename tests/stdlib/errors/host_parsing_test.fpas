@@ -1,6 +1,6 @@
 program HostParsing;
 
-uses Std.Fs as Fs, Std.Parse as Parse, Std.Test as Test, Std.Errors as Errors;
+uses Std.Io.Fs as Fs, Std.Text.Parse as Parse, Std.Test as Test, Std.Os.Errors as Errors;
 
 begin
   Test.AssertTrue(
@@ -10,6 +10,6 @@ begin
     Parse.Int('999999999999999999999x') is Error(Parse.ParseError.InvalidSyntax('integer', _))
   );
   Test.AssertTrue(
-    Fs.ReadText('__fpas_ap475_missing__') is Error(Fs.FsError.FileNotFound('__fpas_ap475_missing__', Errors.HostError.Failure('Std.Fs.ReadText', _, Some(_), Some(_), _)))
+    Fs.ReadText('__fpas_ap475_missing__') is Error(Fs.FsError.FileNotFound('__fpas_ap475_missing__', Errors.HostError.Failure('Std.Io.Fs.ReadText', _, Some(_), Some(_), _)))
   );
 end.

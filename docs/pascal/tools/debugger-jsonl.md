@@ -433,7 +433,7 @@ capturing all-stop events and queued `ReadText`/`ReadLn` lines without resuming;
 `recording.describe` names versioned program identity, portable sources,
 whether capture is on, whether later events were dropped, the event ceiling,
 captured events, and `replayable: false`. While capturing, unsupported host
-effects such as `Std.Random` stop with `FP5024` before the intrinsic runs.
+effects such as `Std.Math.Random` stop with `FP5024` before the intrinsic runs.
 Execution without `record` is unchanged. Capture keeps at most 4,096 events, writes no recording
 files, and retains no recording snapshots. Replay and reverse-step stay
 rejected. Initialized or stopped `reload` and `image.replace` rebuild the exact

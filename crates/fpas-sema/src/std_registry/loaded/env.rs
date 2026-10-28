@@ -3,7 +3,7 @@ use crate::check::Checker;
 use crate::types::Ty;
 use fpas_builtins::std_symbols as s;
 
-/// Register the `Std.Env` functions made visible by `uses Std.Env`.
+/// Register the `Std.Os.Env` functions made visible by `uses Std.Os.Env`.
 pub(super) fn register_std_env(checker: &mut Checker) {
     define_func(
         checker,

@@ -74,7 +74,7 @@ Same file **after** fmt. Explicit scoping blocks from the source are retained:
 ```pascal id=example-3
 program ControlFlowDemo;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 begin
   var X: integer := 5;
@@ -137,7 +137,7 @@ Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../.
 ```pascal id=example-4
 program PointExample;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 type Point = record
   X: integer;
@@ -500,7 +500,7 @@ a source written on one line remains on one line regardless of its width:
 program LongUses;
 
 uses
-  Std.Console as Console, Std.Conv as Conv, Std.Crypto as Crypto,
+  Std.Console as Console, Std.Text.Format as Conv, Std.Crypto as Crypto,
   MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two;
 
 begin

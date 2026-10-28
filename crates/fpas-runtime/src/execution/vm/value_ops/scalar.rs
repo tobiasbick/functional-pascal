@@ -27,7 +27,7 @@ pub(super) fn unary(
         (UnaryOperation::Not, actual) => Err(ValueOperationError::type_mismatch(
             format!("Cannot apply `not` to value of type {}", actual.type_name()),
             if matches!(actual, Value::Integer(_)) {
-                "Use `Bits.BitNot(Value)` and import `uses Std.Bits as Bits;` for integer bits."
+                "Use `Bits.BitNot(Value)` and import `uses Std.Math.Bits as Bits;` for integer bits."
             } else {
                 "Apply `not` only to a Boolean value."
             },
@@ -128,7 +128,7 @@ fn boolean(
                     _ => unreachable!("Boolean operation checked by caller"),
                 };
                 format!(
-                    "Use `Bits.{function}(Left, Right)` and import `uses Std.Bits as Bits;` for integer bits."
+                    "Use `Bits.{function}(Left, Right)` and import `uses Std.Math.Bits as Bits;` for integer bits."
                 )
             } else {
                 "Use two Boolean operands; compare numeric values explicitly, such as `Count > 0`."
@@ -164,7 +164,7 @@ fn numeric_type_error(left: &Value, right: &Value) -> ValueOperationError {
             left.type_name(),
             right.type_name()
         ),
-        "Use the same numeric type; import `uses Std.Conv as Conv;` and use `Conv.IntToReal` explicitly to combine an integer with a real.",
+        "Use the same numeric type; import `uses Std.Math as Math;` and use `Math.IntToReal` explicitly to combine an integer with a real.",
     )
 }
 

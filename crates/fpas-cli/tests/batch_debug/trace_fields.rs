@@ -63,7 +63,7 @@ fn source_and_image_records_share_leaf_ids_types_and_deduplication() {
 #[test]
 fn invalid_field_request_is_atomic_before_any_initializer() {
     let f = Fixture::new(
-        "program T; uses Std.Fs as Fs; type Model = record X: integer; end record; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); procedure F(); begin var State := Model(X := 0); end procedure; begin F(); end.",
+        "program T; uses Std.Io.Fs as Fs; type Model = record X: integer; end record; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); procedure F(); begin var State := Model(X := 0); end procedure; begin F(); end.",
     );
     for bad in [
         "F::State",

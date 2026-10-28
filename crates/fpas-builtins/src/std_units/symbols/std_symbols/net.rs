@@ -1,10 +1,10 @@
-//! `Std.Net` symbol names and registry group.
+//! `Std.Net.Sockets` symbol names and registry group.
 
 /// Native operational error family.
 pub const STD_NET_ERROR: &str = std_net!("NetError");
-/// Qualified name of the opaque `Std.Net.Connection` record.
+/// Qualified name of the opaque `Std.Net.Sockets.Connection` record.
 pub const STD_NET_CONNECTION: &str = std_net!("Connection");
-/// Qualified name of the opaque `Std.Net.Listener` record.
+/// Qualified name of the opaque `Std.Net.Sockets.Listener` record.
 pub const STD_NET_LISTENER: &str = std_net!("Listener");
 /// Qualified name of the bound network address record.
 pub const STD_NET_NETWORK_ADDRESS: &str = std_net!("NetworkAddress");

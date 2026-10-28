@@ -30,7 +30,7 @@ Examples:
   fpas run hello.fpas
   fpas debug hello.fpas --print Total
   fpas check my-app.fpasprj
-  fpas doc Std.Fs.ReadText
+  fpas doc Std.Io.Fs.ReadText
   fpas query refs src/main.fpas:12:5
   fpas test --report json tests/
   fpas fmt --check --list
@@ -221,7 +221,7 @@ Usage:
   fpas doc <name> [<path>] [--report json] [--std-lib <dir>]
 
 Names are case-insensitive. A name matches when it equals a qualified name or ends
-with it, so `ReadText`, `Fs.ReadText` and `Std.Fs.ReadText` all find the routine.
+with it, so `ReadText`, `Fs.ReadText` and `Std.Io.Fs.ReadText` all find the routine.
 Built-in operations are written on their type: `string`, `array`, `dict`, `Option`
 or `Result`. A unit name lists the unit's public declarations.
 
@@ -235,9 +235,9 @@ Options:
   -h, --help       Print this help
 
 Examples:
-  fpas doc Std.Fs.ReadText
+  fpas doc Std.Io.Fs.ReadText
   fpas doc string.TrimLeft
-  fpas doc Std.Tui
+  fpas doc Std.Ui.Terminal
   fpas doc TPoint.Distance my-app.fpasprj
   fpas doc --report json array.Push
 

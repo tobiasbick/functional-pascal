@@ -9,8 +9,8 @@ pub use symbols::std_symbols;
 pub use units::{
     STD_ROOT_SEGMENT, STD_UNIT_ACP, STD_UNIT_ACP_EXPERIMENTAL, STD_UNIT_ACP_HOST,
     STD_UNIT_ACP_TYPES, STD_UNIT_ACP_V2, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS,
-    STD_UNIT_CALENDAR, STD_UNIT_CLI, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO,
-    STD_UNIT_DICT, STD_UNIT_ENCODING, STD_UNIT_ENV, STD_UNIT_ERRORS, STD_UNIT_FS, STD_UNIT_JSON,
+    STD_UNIT_CALENDAR, STD_UNIT_CLI, STD_UNIT_CONSOLE, STD_UNIT_CRYPTO, STD_UNIT_DICT,
+    STD_UNIT_ENCODING, STD_UNIT_ENV, STD_UNIT_ERRORS, STD_UNIT_FORMAT, STD_UNIT_FS, STD_UNIT_JSON,
     STD_UNIT_MATH, STD_UNIT_MCP, STD_UNIT_MCP_TYPES, STD_UNIT_NET, STD_UNIT_OPTION, STD_UNIT_PARSE,
     STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_SERVER, STD_UNIT_STR,
     STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNIT_VERSION,
@@ -19,8 +19,8 @@ pub use units::{
 
 use symbols::{
     STD_ACP_HOST_SYMBOLS, STD_ACP_SYMBOLS, STD_ACP_TYPES_SYMBOLS, STD_ACP_V2_SYMBOLS,
-    STD_ARGS_SYMBOLS, STD_ARRAY_SYMBOLS, STD_BITS_SYMBOLS, STD_CONSOLE_SYMBOLS, STD_CONV_SYMBOLS,
-    STD_CRYPTO_SYMBOLS, STD_DICT_SYMBOLS, STD_ENCODING_SYMBOLS, STD_ENV_SYMBOLS, STD_FS_SYMBOLS,
+    STD_ARGS_SYMBOLS, STD_ARRAY_SYMBOLS, STD_BITS_SYMBOLS, STD_CONSOLE_SYMBOLS, STD_CRYPTO_SYMBOLS,
+    STD_DICT_SYMBOLS, STD_ENCODING_SYMBOLS, STD_ENV_SYMBOLS, STD_FORMAT_SYMBOLS, STD_FS_SYMBOLS,
     STD_JSON_SYMBOLS, STD_MATH_SYMBOLS, STD_MCP_SYMBOLS, STD_MCP_TYPES_SYMBOLS, STD_NET_SYMBOLS,
     STD_OPTION_SYMBOLS, STD_PARSE_SYMBOLS, STD_PATH_SYMBOLS, STD_PROC_SYMBOLS, STD_RANDOM_SYMBOLS,
     STD_RESULT_SYMBOLS, STD_SERVER_SYMBOLS, STD_STR_SYMBOLS, STD_TASK_SYMBOLS, STD_TEST_SYMBOLS,
@@ -48,45 +48,14 @@ pub fn is_retired_type_helper_unit(name: &str) -> bool {
 
 /// Resolves a case-insensitive unit tail such as `console` to its canonical name.
 pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
-    const UNITS: &[(&str, &str)] = &[
-        ("mcp", STD_UNIT_MCP),
-        ("mcp.types", STD_UNIT_MCP_TYPES),
-        ("acp", STD_UNIT_ACP),
-        ("acp.host", STD_UNIT_ACP_HOST),
-        ("acp.experimental", STD_UNIT_ACP_EXPERIMENTAL),
-        ("acp.v2", STD_UNIT_ACP_V2),
-        ("acp.types", STD_UNIT_ACP_TYPES),
-        ("errors", STD_UNIT_ERRORS),
-        ("server", STD_UNIT_SERVER),
-        ("args", STD_UNIT_ARGS),
-        ("cli", STD_UNIT_CLI),
-        ("calendar", STD_UNIT_CALENDAR),
-        ("env", STD_UNIT_ENV),
-        ("proc", STD_UNIT_PROC),
-        ("path", STD_UNIT_PATH),
-        ("fs", STD_UNIT_FS),
-        ("time", STD_UNIT_TIME),
-        ("version", STD_UNIT_VERSION),
-        ("console", STD_UNIT_CONSOLE),
-        ("tui", STD_UNIT_TUI),
-        ("conv", STD_UNIT_CONV),
-        ("crypto", STD_UNIT_CRYPTO),
-        ("encoding", STD_UNIT_ENCODING),
-        ("parse", STD_UNIT_PARSE),
-        ("math", STD_UNIT_MATH),
-        ("bits", STD_UNIT_BITS),
-        ("net", STD_UNIT_NET),
-        ("random", STD_UNIT_RANDOM),
-        ("tasks", STD_UNIT_TASK),
-        ("json", STD_UNIT_JSON),
-        ("toml", STD_UNIT_TOML),
-        ("test", STD_UNIT_TEST),
-    ];
-
-    UNITS
+    STD_UNITS_KNOWN
         .iter()
-        .find(|(name, _)| tail.eq_ignore_ascii_case(name))
-        .map(|(_, unit)| *unit)
+        .copied()
+        .chain(std::iter::once(STD_UNIT_VERSION))
+        .find(|unit| {
+            unit.strip_prefix("Std.")
+                .is_some_and(|name| tail.eq_ignore_ascii_case(name))
+        })
 }
 
 /// Resolves separate root and tail segments to a canonical standard-unit name.
@@ -118,7 +87,7 @@ pub fn std_unit_symbols(unit: &str) -> &'static [&'static str] {
         STD_UNIT_VERSION => &[],
         STD_UNIT_CONSOLE => STD_CONSOLE_SYMBOLS,
         STD_UNIT_STR => STD_STR_SYMBOLS,
-        STD_UNIT_CONV => STD_CONV_SYMBOLS,
+        STD_UNIT_FORMAT => STD_FORMAT_SYMBOLS,
         STD_UNIT_CRYPTO => STD_CRYPTO_SYMBOLS,
         STD_UNIT_ENCODING => STD_ENCODING_SYMBOLS,
         STD_UNIT_PARSE => STD_PARSE_SYMBOLS,

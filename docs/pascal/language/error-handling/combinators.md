@@ -3,7 +3,7 @@
 `Result operations` and `Option operations` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Result operations`](../types/result-operations.md) and [`Option operations`](../types/option-operations.md) for full API details.
 
 ```pascal id=example-1 fragment context=header
-uses Std.Conv as Conv;
+uses Std.Text.Format as Conv;
 function DoubleToString(V: integer): string;
 begin
   return Conv.IntToStr(V * 2);
@@ -17,7 +17,7 @@ begin end.
 ```
 
 ```pascal id=example-2 fragment context=header
-uses Std.Conv as Conv;
+uses Std.Text.Format as Conv;
 function PositiveToString(V: integer): option of string;
 begin
   if V > 0 then

@@ -368,7 +368,7 @@ than installing duplicate watchers. Unsaved open buffers remain authoritative
 over disk changes.
 
 The standard-library path reported by `fpas env --json` is supplied to every
-loaded project and loose document. Source-defined units such as `Std.Tui`
+loaded project and loose document. Source-defined units such as `Std.Ui.Terminal`
 therefore work when the opened project is outside the Functional Pascal
 repository while remaining version-aligned with the selected compiler.
 Projects do not declare that implementation-owned library as a dependency, and

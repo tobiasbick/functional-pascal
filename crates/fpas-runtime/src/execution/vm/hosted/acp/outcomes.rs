@@ -110,7 +110,7 @@ impl Worker {
             }
         };
         self.layouts
-            .enumeration("Std.Acp.Types.AcpError", variant, fields, location)
+            .enumeration("Std.Ai.Acp.Types.AcpError", variant, fields, location)
     }
 
     pub(super) fn acp_event(
@@ -149,25 +149,25 @@ impl Worker {
                 let response = typed(version, "InitializeResponse", payload)?;
                 let outcome = if version == Version::V2 {
                     self.layouts.enumeration(
-                        "Std.Acp.V2.InitializeOutcome",
+                        "Std.Ai.Acp.V2.InitializeOutcome",
                         "Initialized",
                         vec![response],
                         location,
                     )?
                 } else {
                     let response = self.layouts.enumeration(
-                        "Std.Acp.V2.SelectedInitializeResponse",
+                        "Std.Ai.Acp.V2.SelectedInitializeResponse",
                         "V1",
                         vec![response],
                         location,
                     )?;
                     let mismatch = self.layouts.record(
-                        "Std.Acp.V2.InitializationVersionMismatch",
+                        "Std.Ai.Acp.V2.InitializationVersionMismatch",
                         vec![Value::Integer(2), Value::Integer(1), response],
                         location,
                     )?;
                     self.layouts.enumeration(
-                        "Std.Acp.V2.InitializeOutcome",
+                        "Std.Ai.Acp.V2.InitializeOutcome",
                         "LowerVersion",
                         vec![mismatch],
                         location,
@@ -224,7 +224,7 @@ impl Worker {
                 vec![
                     Value::Str(method.into()),
                     self.layouts.record(
-                        "Std.Acp.Types.RawJson",
+                        "Std.Ai.Acp.Types.RawJson",
                         vec![Value::Str(raw.text().into())],
                         location,
                     )?,
@@ -234,17 +234,17 @@ impl Worker {
         };
         let payload =
             self.layouts
-                .enumeration("Std.Acp.EventPayload", variant, fields, location)?;
+                .enumeration("Std.Ai.Acp.EventPayload", variant, fields, location)?;
         let raw = match event.raw {
             Some(raw) => Value::option_some(self.layouts.record(
-                "Std.Acp.Types.RawJson",
+                "Std.Ai.Acp.Types.RawJson",
                 vec![Value::Str(raw.text().into())],
                 location,
             )?),
             None => Value::OptionNone,
         };
         self.layouts
-            .record("Std.Acp.Event", vec![payload, raw], location)
+            .record("Std.Ai.Acp.Event", vec![payload, raw], location)
     }
 
     fn acp_closed(&self, closed: Closed, location: SourceLocation) -> Result<Value, VmError> {
@@ -262,7 +262,7 @@ impl Worker {
                     ExitStatus::Unknown => ("Unknown", vec![]),
                 };
                 Value::option_some(self.layouts.enumeration(
-                    "Std.Acp.ProcessExitStatus",
+                    "Std.Ai.Acp.ProcessExitStatus",
                     variant,
                     fields,
                     location,
@@ -271,7 +271,7 @@ impl Worker {
             None => Value::OptionNone,
         };
         self.layouts.record(
-            "Std.Acp.ClosedStatus",
+            "Std.Ai.Acp.ClosedStatus",
             vec![
                 error,
                 status,

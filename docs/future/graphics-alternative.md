@@ -245,7 +245,7 @@ The concern is that a common interface could either constrain graphical
 applications to terminal capabilities or accumulate exceptions that make both
 hosts harder to use. Different measurement and invalidation rules could also
 make the abstraction costly to maintain without enough application reuse.
-The current `Std.Tui` interface should therefore not be treated as an agreed
+The current `Std.Ui.Terminal` interface should therefore not be treated as an agreed
 universal graphics interface.
 
 The common core needs evidence from actual interfaces in both hosts. Applications

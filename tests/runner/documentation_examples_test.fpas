@@ -1,7 +1,7 @@
 // The normal regression suite checks every handbook and root README Pascal example.
 program DocumentationExamplesTest;
 
-uses Std.Fs as Fs, Std.Json.Fields as Fields, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Encoding.Json.Fields as Fields, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Test as Test;
 
 begin
   var Repository := '.';

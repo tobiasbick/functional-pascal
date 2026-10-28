@@ -50,7 +50,7 @@ fn context_clauses_map_ada_library_units_and_keep_user_units() {
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(
         errors[0].expected.as_deref(),
-        Some("uses Std.Random as Random, Geometry as Geometry;")
+        Some("uses Std.Math.Random as Random, Geometry as Geometry;")
     );
 
     let errors =

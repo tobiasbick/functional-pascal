@@ -1,6 +1,6 @@
 program EnvMissingVariableTest;
 
-uses Std.Env as Env, Std.Test as Test;
+uses Std.Os.Env as Env, Std.Test as Test;
 
 begin
   Test.AssertFalse(Env.Exists('__FPAS_ENV_TEST_MISSING_903B5CF4__'));

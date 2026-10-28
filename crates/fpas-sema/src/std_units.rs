@@ -1,8 +1,7 @@
 //! Standard library units (`Std.*`) referenced only via `uses`.
 
 use fpas_builtins::{
-    STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
-    is_std_root_segment, std_unit_symbols,
+    STD_UNITS_KNOWN, canonical_std_unit_from_tail, is_std_root_segment, std_unit_symbols,
 };
 use fpas_parser::QualifiedId;
 use std::collections::HashSet;
@@ -53,29 +52,13 @@ pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String
         ));
     }
 
-    if root_is_std && q.parts.len() > 2 && q.parts[1].eq_ignore_ascii_case("Tui") {
-        return Ok(display);
-    }
-
-    if root_is_std && q.parts.len() != 2 {
-        return Err(format!(
-            "Invalid `uses` entry `{display}`: the reserved namespace `Std` must be followed by exactly one segment (for example `Std.Console`). User code cannot add extra segments after `Std` in a `uses` clause."
-        ));
-    }
-
-    if q.parts.len() != 2 {
-        return Err(format!(
-            "Invalid `uses` entry `{display}`: expected a two-part standard library name such as `Std.Console`."
-        ));
-    }
-
     if !root_is_std {
         return Err(format!(
             "Unknown unit `{display}`. Only standard library units exist for now: {}.",
             std_units_list_for_hint()
         ));
     }
-    let tail = q.parts[1].as_str();
+    let tail = q.parts[1..].join(".");
     if ["Str", "Arrays", "Dictionaries", "Options", "Results"]
         .iter()
         .any(|name| tail.eq_ignore_ascii_case(name))
@@ -84,13 +67,10 @@ pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String
             "`Std.{tail}` has been removed. Built-in type operations use dot calls and need no import."
         ));
     }
-    let Some(canon) = canonical_std_unit_from_segments(&q.parts[0], tail) else {
-        return Err(format!(
-            "Unknown standard library unit `Std.{tail}`. Available: {}.",
-            std_units_list_for_hint()
-        ));
-    };
-    Ok(canon.to_string())
+    Err(format!(
+        "Unknown standard library unit `{display}` in the reserved namespace `Std`. Available: {}.",
+        std_units_list_for_hint()
+    ))
 }
 
 /// If `name` looks like `Std.<Unit>.<member>`, returns canonical unit and full member path (segments after unit).

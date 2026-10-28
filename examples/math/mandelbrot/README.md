@@ -1,6 +1,6 @@
 # Mandelbrot Showcase
 
-Fullscreen terminal Mandelbrot explorer and the canonical interactive `Std.Tui`
+Fullscreen terminal Mandelbrot explorer and the canonical interactive `Std.Ui.Terminal`
 example. The program project depends on a separately testable core library.
 
 Demonstrates: units and project dependencies, record methods and statics,

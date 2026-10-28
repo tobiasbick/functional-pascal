@@ -59,7 +59,7 @@ impl Drop for Fixture {
 #[test]
 fn file_aliases_modes_and_errors_survive_cached_units_and_source_free_images() {
     let source = r#"program FileImages;
-uses FileBridge as Bridge, Std.Fs as Fs, Std.Test as Test, Std.Tasks as Tasks;
+uses FileBridge as Bridge, Std.Io.Fs as Fs, Std.Test as Test, Std.Tasks as Tasks;
 function ReadWorker(File: Bridge.File): result of (array of integer, Bridge.FsError);
 begin return Bridge.Read(File); end function;
 begin
@@ -78,15 +78,15 @@ begin
   case Bridge.Read(File) of
     when Ok(_): Test.Fail('Expected closed file');
     when Error(const Failure):
-      Test.AssertTrue(Failure is Fs.FsError.Closed('Std.Fs.Read'));
-      Test.AssertTrue(Failure.Message().StartsWith('Std.Fs.FsError.Closed: '));
+      Test.AssertTrue(Failure is Fs.FsError.Closed('Std.Io.Fs.Read'));
+      Test.AssertTrue(Failure.Message().StartsWith('Std.Io.Fs.FsError.Closed: '));
   end case;
 end."#;
     let fixture = Fixture::new(source);
     fs::write(fixture.0.join("input.bin"), b"ab\nlast").expect("input bytes");
     fs::write(
         fixture.0.join("FileBridge.fpas"),
-        "unit FileBridge;\nuses Std.Fs as Fs;\npublic type File = Fs.File;\npublic type Mode = Fs.FileMode;\npublic type FsError = Fs.FsError;\npublic function Open(Path: string; Mode: Fs.FileMode): result of (File, FsError);\nbegin return Fs.Open(Path, Mode); end function;\npublic function Read(File: Fs.File): result of (array of integer, FsError);\nbegin return Ok(try Fs.Read(File, 2)); end function;\nend unit;\n",
+        "unit FileBridge;\nuses Std.Io.Fs as Fs;\npublic type File = Fs.File;\npublic type Mode = Fs.FileMode;\npublic type FsError = Fs.FsError;\npublic function Open(Path: string; Mode: Fs.FileMode): result of (File, FsError);\nbegin return Fs.Open(Path, Mode); end function;\npublic function Read(File: Fs.File): result of (array of integer, FsError);\nbegin return Ok(try Fs.Read(File, 2)); end function;\nend unit;\n",
     )
     .expect("bridge source");
 
@@ -130,7 +130,7 @@ end."#;
 #[test]
 fn seeded_debugging_rejects_file_creation_before_host_dispatch() {
     let fixture = Fixture::new(
-        "program FileEffect; uses Std.Fs as Fs; begin const File := Fs.Open('created.bin', Fs.FileMode.Create).Unwrap(); discard Fs.Close(File).Unwrap(); end.",
+        "program FileEffect; uses Std.Io.Fs as Fs; begin const File := Fs.Open('created.bin', Fs.FileMode.Create).Unwrap(); discard Fs.Close(File).Unwrap(); end.",
     );
     let rejected = fixture.invoke(&["debug", "app.fpasprj", "--schedule-seed", "42"]);
     assert!(!rejected.status.success());

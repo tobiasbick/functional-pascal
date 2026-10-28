@@ -1,6 +1,6 @@
 program AcpOnlyToolsTest;
 
-uses Std.Acp as Acp, Std.Test as Test;
+uses Std.Ai.Acp as Acp, Std.Test as Test;
 
 function Handler(Context: Acp.ToolContext; Arguments: Acp.ToolJson): result of (Acp.ToolResult, Acp.McpError);
 begin

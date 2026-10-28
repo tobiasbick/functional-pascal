@@ -1,4 +1,4 @@
-//! `Std.Parse.*` intrinsic implementations.
+//! `Std.Text.Parse.*` intrinsic implementations.
 //!
 //! **Documentation:** `docs/pascal/std/text/parse.md` (from the repository root).
 

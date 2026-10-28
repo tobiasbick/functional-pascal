@@ -1,7 +1,7 @@
-# Std.Mcp.Types
+# Std.Ai.Mcp.Types
 
 Shared tool values, handler context and operational errors. These declarations
-are independent of ACP and are re-exported by Std.Mcp.
+are independent of ACP and are re-exported by Std.Ai.Mcp.
 
 ## Values
 

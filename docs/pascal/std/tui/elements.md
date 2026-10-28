@@ -1,4 +1,4 @@
-# `Std.Tui` elements and identities
+# `Std.Ui.Terminal` elements and identities
 
 `TuiElement` is a data-carrying enum. Its implemented variants are:
 
@@ -74,7 +74,7 @@ not movable and do not paint shadows.
 
 `MakeCellGrid` accepts a flat row-major `TuiCellGrid`. It is the escape hatch
 for truecolor dashboards, plots, and visualizations while keeping layout and
-terminal lifecycle inside `Std.Tui`. `MakeRule` paints a thin separator with
+terminal lifecycle inside `Std.Ui.Terminal`. `MakeRule` paints a thin separator with
 optional text. `MakeGauge` paints a label, bounded bar, and percentage;
 validation requires `Maximum > 0` and `0 <= Value <= Maximum`.
 
@@ -99,7 +99,7 @@ or full tree.
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Text area](text-area.md)
 - [Layout](layout.md)
 - [Application routing](application.md#headless-frame-and-routing-order)

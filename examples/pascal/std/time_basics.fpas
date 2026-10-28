@@ -2,7 +2,7 @@
 
 program TimeBasics;
 
-uses Std.Console as Console, Std.Conv as Conv, Std.Time as Time;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Time as Time;
 
 begin
   const Start: integer := Time.MonotonicMillis();

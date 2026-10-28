@@ -53,7 +53,7 @@ impl Lexer<'_> {
         self.report_foreign_token(
             "Ada attribute is not FPAS syntax",
             &replacement,
-            "FPAS has no attributes; use `Std.Conv` conversions, methods such as `Items.Length()`, and zero-based indexes.",
+            "FPAS has no attributes; use `Std.Text.Format` conversions, methods such as `Items.Length()`, and zero-based indexes.",
             start,
             None,
         );

@@ -64,7 +64,7 @@ fn http_stream_decodes_fragmented_chunked_sse_response() {
         &format!(
             r#"program HttpStreamingRoundtrip;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 procedure PrintEvents(Events: array of Http.SseEvent);
 begin
@@ -160,7 +160,7 @@ fn http_stream_rejects_truncated_content_length() {
         &format!(
             r#"program HttpStreamingTruncated;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 begin
   case Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/truncated')) of
@@ -180,7 +180,7 @@ begin
         when Ok(_): panic('truncated Content-Length was accepted');
         when Error(const Message):
         begin
-          if not (Message is Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadFixed')) then
+          if not (Message is Http.HttpError.UnexpectedEnd('Std.Net.Http.Stream.ReadFixed')) then
           begin
             panic(Message.Message());
           end; end if;
@@ -221,12 +221,12 @@ fn http_stream_distinguishes_truncated_and_malformed_chunk_terminators() {
         (
             "missing",
             b"".as_slice(),
-            "Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')",
+            "Http.HttpError.UnexpectedEnd('Std.Net.Http.Stream.ReadChunked')",
         ),
         (
             "partial",
             b"\r".as_slice(),
-            "Http.HttpError.UnexpectedEnd('Std.Http.Stream.ReadChunked')",
+            "Http.HttpError.UnexpectedEnd('Std.Net.Http.Stream.ReadChunked')",
         ),
         (
             "malformed",
@@ -252,7 +252,7 @@ fn http_stream_distinguishes_truncated_and_malformed_chunk_terminators() {
             &source,
             &format!(
                 r#"program HttpChunkTerminator;
-uses Std.Console as Console, Std.Http as Http, Std.Test as Test;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Test as Test;
 begin
   const ResponseValue := Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/chunk')).Unwrap();
   const Bytes := Http.ReadStream(ResponseValue.Body, 8).Unwrap();

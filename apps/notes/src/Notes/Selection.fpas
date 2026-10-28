@@ -1,7 +1,7 @@
 // Pure note identity, editor selection and filter visibility operations.
 unit Notes.Selection;
 
-uses Notes.Actions as Actions, Notes.Model as Model, Std.Tui as Tui;
+uses Notes.Actions as Actions, Notes.Model as Model, Std.Ui.Terminal as Tui;
 
 // Finds the current array position of a stable note identity.
 public function NoteIndexById(Notes: array of Model.Note; Id: string): integer;

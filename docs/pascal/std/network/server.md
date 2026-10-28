@@ -1,7 +1,7 @@
-# Std.Server
+# Std.Net.Server
 
 Server lifetime ownership for cooperative stop, listener closure, a shared shutdown budget,
-and explicitly authorized process escalation. Import with `uses Std.Server as Server;` and
+and explicitly authorized process escalation. Import with `uses Std.Net.Server as Server;` and
 access its declarations through `Server.Name`.
 There is no new language syntax and no change to ordinary task-group close semantics.
 
@@ -36,7 +36,7 @@ unchanged. Match variants for decisions and call Message() for explicit output.
 | function | `ShutdownErrors(Lifetime: ServerLifetime): array of string` | Snapshot of retained listener-close failures, without consuming them |
 | function | `FinishShutdown(Lifetime: ServerLifetime): result of (boolean, ServerError)` | Confirms caller-managed cleanup and disarms escalation after explicit group close |
 
-Import `Std.Tasks` for the group/token types and `Std.Net` for `Listener`.
+Import `Std.Tasks` for the group/token types and `Std.Net.Sockets` for `Listener`.
 Foreign, fabricated, or wrong-kind handles raise a runtime diagnostic. Fallible configuration,
 ownership transfer, signal installation, and incomplete shutdown return `Error(ServerError)` values.
 
@@ -92,7 +92,7 @@ does not turn a timeout into a successful shutdown.
 must still explicitly choose `ForceExit = true` and/or call `ObserveSignals`.
 An embedded `fpas_runtime::execution::Vm` defaults to neither authority. Its host may explicitly call
 `Vm::allow_process_lifecycle()` before running. Source-debugger instances do not authorize process
-control, and recording capture rejects `Std.Server` host effects.
+control, and recording capture rejects `Std.Net.Server` host effects.
 
 `ObserveSignals` returns `Ok(true)` for the first subscription and `Ok(false)` for a duplicate.
 It reports installation conflicts rather than overwriting an existing Unix signal handler.

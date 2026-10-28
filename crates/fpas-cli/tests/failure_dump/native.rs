@@ -31,7 +31,7 @@ fn blocked_owned_native_work_keeps_its_cleanup_barrier() {
         .to_str()
         .expect("test executable path")
         .replace('\'', "''");
-    fixture.write("main.fpas", &format!("program Native; uses Std.Tasks as Tasks, Std.Proc as Proc, Std.Fs as Fs, Std.Time as Time, Std.Console as Console; begin const Group:=Tasks.CreateTaskGroup(); discard Tasks.StartTaskInGroup(Group, procedure(Token:Tasks.CancellationToken) begin discard Proc.RunCapture('{executable}', ['--ignored', '--exact', 'native::blocked_process_fixture']); end procedure); for I:integer:=1 to 6000 do if Fs.IsFile('native-ready') then Console.WriteLn('ready'); panic('owner failure'); end if; Time.Sleep(1); end for; panic('native helper timeout'); end."));
+    fixture.write("main.fpas", &format!("program Native; uses Std.Tasks as Tasks, Std.Os.Proc as Proc, Std.Io.Fs as Fs, Std.Time as Time, Std.Console as Console; begin const Group:=Tasks.CreateTaskGroup(); discard Tasks.StartTaskInGroup(Group, procedure(Token:Tasks.CancellationToken) begin discard Proc.RunCapture('{executable}', ['--ignored', '--exact', 'native::blocked_process_fixture']); end procedure); for I:integer:=1 to 6000 do if Fs.IsFile('native-ready') then Console.WriteLn('ready'); panic('owner failure'); end if; Time.Sleep(1); end for; panic('native helper timeout'); end."));
     let mut command = fixture.command();
     command
         .args(["run", "main.fpas", "--failure-dump", "report.json"])

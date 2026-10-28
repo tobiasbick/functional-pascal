@@ -5,6 +5,12 @@ use fpas_builtins::std_symbols as s;
 
 pub(super) fn register_std_math(checker: &mut Checker) {
     define_const(checker, s::STD_MATH_PI, Ty::Real);
+    define_func(
+        checker,
+        s::STD_MATH_INT_TO_REAL,
+        vec![p("N", Ty::Integer)],
+        Ty::Real,
+    );
     define_func(checker, s::STD_MATH_SQRT, vec![p("R", Ty::Real)], Ty::Real);
     define_func(
         checker,

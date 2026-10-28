@@ -1,7 +1,7 @@
 // Covers default and mutable HTTP request limits.
 program HttpRequestLimitsTest;
 
-uses Std.Http as Http, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Test as Test;
 
 begin
   var RequestValue: Http.Request := Http.Request.Get('http://localhost/');

@@ -5,27 +5,27 @@ macro_rules! std_console {
 }
 macro_rules! std_args {
     ($suffix:literal) => {
-        concat!("Std.Args.", $suffix)
+        concat!("Std.Os.Args.", $suffix)
     };
 }
 macro_rules! std_env {
     ($suffix:literal) => {
-        concat!("Std.Env.", $suffix)
+        concat!("Std.Os.Env.", $suffix)
     };
 }
 macro_rules! std_proc {
     ($suffix:literal) => {
-        concat!("Std.Proc.", $suffix)
+        concat!("Std.Os.Proc.", $suffix)
     };
 }
 macro_rules! std_path {
     ($suffix:literal) => {
-        concat!("Std.Path.", $suffix)
+        concat!("Std.Io.Path.", $suffix)
     };
 }
 macro_rules! std_fs {
     ($suffix:literal) => {
-        concat!("Std.Fs.", $suffix)
+        concat!("Std.Io.Fs.", $suffix)
     };
 }
 macro_rules! std_time {
@@ -38,9 +38,9 @@ macro_rules! std_str {
         concat!("Std.Str.", $suffix)
     };
 }
-macro_rules! std_conv {
+macro_rules! std_format {
     ($suffix:literal) => {
-        concat!("Std.Conv.", $suffix)
+        concat!("Std.Text.Format.", $suffix)
     };
 }
 macro_rules! std_crypto {
@@ -50,7 +50,7 @@ macro_rules! std_crypto {
 }
 macro_rules! std_parse {
     ($suffix:literal) => {
-        concat!("Std.Parse.", $suffix)
+        concat!("Std.Text.Parse.", $suffix)
     };
 }
 macro_rules! std_math {
@@ -60,12 +60,12 @@ macro_rules! std_math {
 }
 macro_rules! std_net {
     ($suffix:literal) => {
-        concat!("Std.Net.", $suffix)
+        concat!("Std.Net.Sockets.", $suffix)
     };
 }
 macro_rules! std_random {
     ($suffix:literal) => {
-        concat!("Std.Random.", $suffix)
+        concat!("Std.Math.Random.", $suffix)
     };
 }
 macro_rules! std_array {
@@ -95,12 +95,12 @@ macro_rules! std_dict {
 }
 macro_rules! std_json {
     ($suffix:literal) => {
-        concat!("Std.Json.", $suffix)
+        concat!("Std.Encoding.Json.", $suffix)
     };
 }
 macro_rules! std_toml {
     ($suffix:literal) => {
-        concat!("Std.Toml.", $suffix)
+        concat!("Std.Encoding.Toml.", $suffix)
     };
 }
 macro_rules! std_test {
@@ -121,11 +121,11 @@ mod args;
 mod array;
 mod bits;
 mod console;
-mod conv;
 mod crypto;
 mod dict;
 mod encoding;
 mod env;
+mod format;
 mod fs;
 mod json;
 mod math;
@@ -149,11 +149,11 @@ pub use args::*;
 pub use array::*;
 pub use bits::*;
 pub use console::*;
-pub use conv::*;
 pub use crypto::*;
 pub use dict::*;
 pub use encoding::*;
 pub use env::*;
+pub use format::*;
 pub use fs::*;
 pub use json::*;
 pub use math::*;

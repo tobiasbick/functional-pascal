@@ -136,7 +136,9 @@ fn or_booleans() {
 
 #[test]
 fn bit_and_integers() {
-    check_ok("program T; uses Std.Bits as Bits; const X: integer := Bits.BitAnd(5, 3); begin end.");
+    check_ok(
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.BitAnd(5, 3); begin end.",
+    );
 }
 
 #[test]
@@ -294,28 +296,28 @@ fn equality_records_with_comparable_fields_are_valid() {
 #[test]
 fn shift_left_valid() {
     check_ok(
-        "program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftLeft(1, 4); begin end.",
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.ShiftLeft(1, 4); begin end.",
     );
 }
 
 #[test]
 fn shift_right_valid() {
     check_ok(
-        "program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftRight(16, 4); begin end.",
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.ShiftRight(16, 4); begin end.",
     );
 }
 
 #[test]
 fn shift_left_with_real_error() {
     check_errors(
-        "program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftLeft(1, 2.0); begin end.",
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.ShiftLeft(1, 2.0); begin end.",
     );
 }
 
 #[test]
 fn shift_right_with_real_error() {
     check_errors(
-        "program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftRight(16, 1.5); begin end.",
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.ShiftRight(16, 1.5); begin end.",
     );
 }
 
@@ -331,7 +333,9 @@ fn xor_booleans() {
 
 #[test]
 fn bit_xor_integers() {
-    check_ok("program T; uses Std.Bits as Bits; const X: integer := Bits.BitXor(5, 3); begin end.");
+    check_ok(
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.BitXor(5, 3); begin end.",
+    );
 }
 
 #[test]
@@ -356,7 +360,9 @@ fn not_string_error() {
 
 #[test]
 fn bit_not_integer() {
-    check_ok("program T; uses Std.Bits as Bits; const X: integer := Bits.BitNot(0); begin end.");
+    check_ok(
+        "program T; uses Std.Math.Bits as Bits; const X: integer := Bits.BitNot(0); begin end.",
+    );
 }
 
 #[test]

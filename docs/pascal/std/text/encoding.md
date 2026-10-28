@@ -54,13 +54,13 @@ bits must be zero here too, so `'Zg'` is canonical and `'Zh'` is not. Standard
 ## Hexadecimal
 
 `HexEncode` emits uppercase ASCII, matching the case convention of
-[`Std.Conv.IntToHex`](conv.md#function-inttohexn-integer-digits-integer-string).
+[`Std.Text.Format.IntToHex`](format.md#function-inttohexn-integer-digits-integer-string).
 Each byte has exactly two digits, including its leading zero when needed.
 
 `HexDecode` accepts uppercase or lowercase digits `0–9`, `A–F`, and `a–f`.
 Text must contain an even number of digits. There is no `0x` or `$` prefix,
 sign, whitespace, or separator syntax. This decodes binary bytes;
-[`Std.Parse.HexInt`](parse.md) parses a signed integer under different rules.
+[`Std.Text.Parse.HexInt`](parse.md) parses a signed integer under different rules.
 
 ## Errors and offsets
 
@@ -130,7 +130,7 @@ end.
 ```
 
 To encode a string as binary text, convert it to UTF-8 bytes explicitly with
-[`Std.Net.Utf8.Encode`](../network/utf8.md). Decoding Base64 or hex returns
+[`Std.Text.Utf8.Encode`](../network/utf8.md). Decoding Base64 or hex returns
 bytes; it does not require them to be valid UTF-8.
 
 ## Implementation (contributors)
@@ -145,5 +145,5 @@ bytes; it does not require them to be valid UTF-8.
 ## See also
 
 - [Text and parsing](README.md)
-- [Conversions](conv.md)
+- [Conversions](format.md)
 - [UTF-8](../network/utf8.md)

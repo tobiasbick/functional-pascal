@@ -1,6 +1,6 @@
 program NoteSelectionAfterSaveTest;
 
-uses Notes.Model as NotesModel, Notes.Update as Update, Std.Test as Test, Std.Tui as Tui;
+uses Notes.Model as NotesModel, Notes.Update as Update, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 begin
   const Target: NotesModel.Note := NotesModel.NoteCreate('target', 2);

@@ -1,11 +1,11 @@
-# `Std.Tui`
+# `Std.Ui.Terminal`
 
-`Std.Tui` is the source-level Model-Update-View terminal UI facade. Applications
+`Std.Ui.Terminal` is the source-level Model-Update-View terminal UI facade. Applications
 return a fresh immutable `TuiElement` tree from `View`; they do not create,
 attach, or destroy live widgets. The same application contract supports
 deterministic headless tests and an interactive Console terminal.
 
-All public symbols require `uses Std.Tui as Tui;`. Private `Std.Tui.*` units are
+All public symbols require `uses Std.Ui.Terminal as Tui;`. Private `Std.Ui.Terminal.*` units are
 implementation details.
 
 ## Topics
@@ -60,13 +60,13 @@ implementation details.
 
 | Concern | Source |
 | --- | --- |
-| Elements and invariants | [`Elements/`](../../../../lib/Std/Tui/Elements) |
-| Geometry and measurement | [`Geometry/`](../../../../lib/Std/Tui/Geometry), [`Layout/`](../../../../lib/Std/Tui/Layout) |
-| Cell, style, and palette values | [`Cells/`](../../../../lib/Std/Tui/Cells) |
-| Working surface, canvas, and paint | [`Rendering/`](../../../../lib/Std/Tui/Rendering) |
-| Text-area text geometry | [`Text/TextArea.fpas`](../../../../lib/Std/Tui/Text/TextArea.fpas) |
-| Application host and routing | [`Runtime/`](../../../../lib/Std/Tui/Runtime) |
-| Chrome values | [`Chrome/`](../../../../lib/Std/Tui/Chrome) |
+| Elements and invariants | [`Elements/`](../../../../lib/Std/Ui/Terminal/Elements) |
+| Geometry and measurement | [`Geometry/`](../../../../lib/Std/Ui/Terminal/Geometry), [`Layout/`](../../../../lib/Std/Ui/Terminal/Layout) |
+| Cell, style, and palette values | [`Cells/`](../../../../lib/Std/Ui/Terminal/Cells) |
+| Working surface, canvas, and paint | [`Rendering/`](../../../../lib/Std/Ui/Terminal/Rendering) |
+| Text-area text geometry | [`Text/TextArea.fpas`](../../../../lib/Std/Ui/Terminal/Text/TextArea.fpas) |
+| Application host and routing | [`Runtime/`](../../../../lib/Std/Ui/Terminal/Runtime) |
+| Chrome values | [`Chrome/`](../../../../lib/Std/Ui/Terminal/Chrome) |
 | FPAS regressions | [`tests/stdlib/tui/`](../../../../tests/stdlib/tui) |
 
 ## See also

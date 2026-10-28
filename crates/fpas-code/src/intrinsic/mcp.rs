@@ -3,7 +3,7 @@
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Operations for the independent Std.Mcp library.
+/// Operations for the independent Std.Ai.Mcp library.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum McpIntrinsic {
@@ -43,6 +43,6 @@ impl McpIntrinsic {
     }
     /// Canonical source declaration of this operation.
     pub fn source_name(self) -> String {
-        format!("Std.Mcp.{self:?}")
+        format!("Std.Ai.Mcp.{self:?}")
     }
 }

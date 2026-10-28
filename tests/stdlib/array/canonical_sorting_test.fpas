@@ -1,6 +1,6 @@
 program CanonicalSorting;
 
-uses Std.Conv as Conv, Std.Test as Test;
+uses Std.Text.Format as Conv, Std.Test as Test;
 
 type Rank = distinct integer;
 

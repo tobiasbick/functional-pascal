@@ -1,6 +1,6 @@
 program CalendarTimestampsTest;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 begin
   const Epoch := Calendar.CreateDateTime(1970, 1, 1, 0, 0, 0, 0).Unwrap();
@@ -45,7 +45,7 @@ begin
     253402300800000, 9223372036854775807
   ] do
     Test.AssertTrue(
-      Calendar.FromTimestampMillis(Stamp) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.FromTimestampMillis'))
+      Calendar.FromTimestampMillis(Stamp) is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.FromTimestampMillis'))
     );
   end for;
 end.

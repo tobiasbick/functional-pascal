@@ -13,16 +13,22 @@ use fpas_lexer::Token;
 /// Lowercase Ada library unit prefix and the FPAS import replacing it; `None` means the feature
 /// is built in and needs no import. Longer prefixes come first.
 const ADA_LIBRARY_UNITS: &[(&str, Option<&str>)] = &[
-    ("ada.numerics.float_random", Some("Std.Random as Random")),
-    ("ada.numerics.discrete_random", Some("Std.Random as Random")),
+    (
+        "ada.numerics.float_random",
+        Some("Std.Math.Random as Random"),
+    ),
+    (
+        "ada.numerics.discrete_random",
+        Some("Std.Math.Random as Random"),
+    ),
     ("ada.text_io", Some("Std.Console as Console")),
     ("ada.integer_text_io", Some("Std.Console as Console")),
     ("ada.float_text_io", Some("Std.Console as Console")),
     ("ada.numerics", Some("Std.Math as Math")),
     ("ada.calendar", Some("Std.Time as Time")),
-    ("ada.command_line", Some("Std.Args as Args")),
-    ("ada.directories", Some("Std.Fs as Fs")),
-    ("ada.environment_variables", Some("Std.Env as Env")),
+    ("ada.command_line", Some("Std.Os.Args as Args")),
+    ("ada.directories", Some("Std.Io.Fs as Fs")),
+    ("ada.environment_variables", Some("Std.Os.Env as Env")),
     ("ada.strings", None),
     ("ada.characters", None),
     ("ada.containers", None),

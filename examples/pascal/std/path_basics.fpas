@@ -2,7 +2,7 @@
 
 program PathBasics;
 
-uses Std.Console as Console, Std.Path as Path;
+uses Std.Console as Console, Std.Io.Path as Path;
 
 begin
   Console.WriteLn('join: ', Path.Join(['examples', 'pascal', 'std']));

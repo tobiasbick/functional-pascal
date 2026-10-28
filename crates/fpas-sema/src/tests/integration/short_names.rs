@@ -30,10 +30,22 @@ fn short_name_math_pi_const() {
 }
 
 #[test]
-fn short_name_conv_int_to_str() {
+fn formatting_and_numeric_conversion_have_separate_import_owners() {
     check_ok(
-        "program T;\nuses Std.Conv as Conv;\nbegin\n  const S: string := Conv.IntToStr(42);\nend.",
+        "program T; uses sTd.TeXt.FoRmAt as Text, sTd.MaTh as Numbers; begin
+        const S: string := Text.IntToStr(42);
+        const R: real := Numbers.IntToReal(n := 42);
+        const Convert: function(N: integer): real := Numbers.IntToReal;
+        const ViaValue: real := Convert(42);
+        end.",
     );
+    for call in ["Text.IntToReal(42)", "Numbers.IntToStr(42)"] {
+        let errors = check_errors(&format!(
+            "program T; uses Std.Text.Format as Text, Std.Math as Numbers; begin discard {call}; end."
+        ));
+        assert_eq!(errors.len(), 1, "{call}: {errors:#?}");
+        assert_eq!(errors[0].code, fpas_diagnostics::codes::SEMA_UNKNOWN_NAME);
+    }
 }
 
 #[test]
@@ -52,7 +64,7 @@ fn short_name_mixed_with_qualified() {
 
 #[test]
 fn required_qualification_hint_lists_each_import_and_leads_to_a_valid_call() {
-    let source = "program T; uses Std.Console as Console, Std.Fs as Fs; begin const Text: result of (string, Fs.FsError) := ReadText('input.txt'); end.";
+    let source = "program T; uses Std.Console as Console, Std.Io.Fs as Fs; begin const Text: result of (string, Fs.FsError) := ReadText('input.txt'); end.";
     let errors = check_errors(source);
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(
@@ -67,13 +79,13 @@ fn required_qualification_hint_lists_each_import_and_leads_to_a_valid_call() {
     check_ok(&source.replace(":= ReadText(", ":= Fs.ReadText("));
 
     let statement_errors = check_errors(
-        "program T; uses Std.Console as Console, Std.Fs as Fs; begin ReadText('input.txt'); end.",
+        "program T; uses Std.Console as Console, Std.Io.Fs as Fs; begin ReadText('input.txt'); end.",
     );
     assert_eq!(statement_errors.len(), 1, "{statement_errors:#?}");
     assert_eq!(statement_errors[0].code, errors[0].code);
     assert_eq!(statement_errors[0].help, errors[0].help);
     check_ok(
-        "program T; uses Std.Console as Console, Std.Fs as Fs; begin discard Fs.ReadText('input.txt'); end.",
+        "program T; uses Std.Console as Console, Std.Io.Fs as Fs; begin discard Fs.ReadText('input.txt'); end.",
     );
 }
 

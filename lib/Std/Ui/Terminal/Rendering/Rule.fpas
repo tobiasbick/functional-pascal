@@ -1,0 +1,31 @@
+// Separator-rule painting.
+unit Std.Ui.Terminal.Rendering.Rule;
+
+uses
+  Std.Ui.Terminal.Cells.StyleRole as StyleRole, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Rendering.Canvas as RenderingCanvas;
+
+// Paints a thin horizontal separator with optional left-aligned text.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Text`: Text processed or displayed by the operation.
+public procedure TuiPaintRule(Canvas: RenderingCanvas.TuiCanvas; Bounds: Rect.TuiRect; Text: string);
+begin
+  if Bounds.IsEmpty() then
+    begin
+      return;
+    end;
+  end if;
+
+  Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, StyleRole.TuiStyleRole.Rule);
+  if (Text <> '') and (Bounds.Width > 4) then
+    begin
+      Canvas.Child(
+        Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1)
+      ).WriteText(Point.TuiPoint.Create(0, 0), ' ' + Text + ' ', StyleRole.TuiStyleRole.Title);
+    end;
+  end if;
+end procedure;
+end unit;

@@ -1,7 +1,7 @@
 unit Julia.Render;
 
 uses
-  Std.Console as Console, Std.Tasks as Tasks, Std.Conv as Conv, Std.Math as Math,
+  Std.Console as Console, Std.Tasks as Tasks, Std.Math as Math,
   Julia.Color as Color, Julia.Compute as Compute;
 
 public type RenderRow = record
@@ -14,7 +14,7 @@ begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
   const Phase: real := Math.Frac(EscapeValue * 0.08);
-  const Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
+  const Index: integer := Math.Clamp(Math.Trunc(Phase * Math.IntToReal(Count)), 0, Count - 1);
   return Ramp[Index];
 end function;
 

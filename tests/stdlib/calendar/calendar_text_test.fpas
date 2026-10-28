@@ -1,6 +1,6 @@
 program CalendarTextTest;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 procedure AssertDateText(Text: string; Year: integer; Month: integer; Day: integer);
 begin

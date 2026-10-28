@@ -1,6 +1,6 @@
 program TuiBackgroundFailureTest;
 
-uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Tui as Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Ui.Terminal as Tui;
 
 type FailureModel = record
   Ready: channel of boolean;

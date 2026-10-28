@@ -111,7 +111,7 @@ fn real_http_exports_keep_provenance_through_nested_aggregates() {
     let image = image(
         r#"
 program HostHttp;
-uses Std.Http as Http, Std.Http.Handles as Handles;
+uses Std.Net.Http as Http, Std.Net.Http.Handles as Handles;
 function NewDecoder(): Http.SseDecoder;
 begin
   return Http.CreateSseDecoder(1024).Unwrap();

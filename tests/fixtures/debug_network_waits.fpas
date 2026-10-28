@@ -1,7 +1,7 @@
 // Network waits must let other all-stop tasks run and join cancelled nested groups.
 program DebugNetworkWaits;
 
-uses Std.Tasks as Tasks, Std.Net as Net, Std.Console as Console, Std.Test as Test;
+uses Std.Tasks as Tasks, Std.Net.Sockets as Net, Std.Console as Console, Std.Test as Test;
 
 function Echo(Listener: Net.Listener): boolean;
 begin

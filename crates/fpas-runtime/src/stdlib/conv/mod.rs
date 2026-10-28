@@ -1,6 +1,7 @@
-//! `Std.Conv.*` intrinsic implementations.
+//! Scalar formatting, numeric conversion and native-error intrinsic implementations.
 //!
-//! **Documentation:** `docs/pascal/std/text/conv.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/text/format.md` and
+//! `docs/pascal/std/numeric/math.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas_code::Intrinsic`, `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
@@ -75,12 +76,12 @@ pub(crate) fn run(
                 return Err(std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("IntToHex: Digits must be >= 0, got {digits}"),
-                    "Pass a non-negative Digits value to Std.Conv.IntToHex.",
+                    "Pass a non-negative Digits value to Std.Text.Format.IntToHex.",
                     location,
                 ));
             }
 
-            let width = checked_collection_len(digits, location, "Std.Conv.IntToHex")?;
+            let width = checked_collection_len(digits, location, "Std.Text.Format.IntToHex")?;
             let formatted = if n < 0 {
                 let magnitude = n.unsigned_abs();
                 format!("-{:0width$X}", magnitude, width = width)

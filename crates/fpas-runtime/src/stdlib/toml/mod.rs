@@ -1,4 +1,4 @@
-//! Runtime implementations for `Std.Toml.*` intrinsics.
+//! Runtime implementations for `Std.Encoding.Toml.*` intrinsics.
 //!
 //! **Documentation:** `docs/pascal/std/text/toml.md`
 
@@ -101,8 +101,11 @@ fn toml_to_fpas(
 fn expected_toml_value_error(value: &Value, location: SourceLocation) -> StdError {
     std_runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-        format!("expected Std.Toml.TomlValue, got {}", value.type_name()),
-        "Pass a value constructed with Std.Toml.TomlValue.* or returned by Std.Toml.Parse.",
+        format!(
+            "expected Std.Encoding.Toml.TomlValue, got {}",
+            value.type_name()
+        ),
+        "Pass a value constructed with Std.Encoding.Toml.TomlValue.* or returned by Std.Encoding.Toml.Parse.",
         location,
     )
 }
@@ -117,8 +120,8 @@ fn expect_one_field(
     }
     Err(std_runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-        format!("Std.Toml.TomlValue.{variant} expects exactly one runtime field"),
-        "Use the documented Std.Toml.TomlValue constructors without manually altering enum payloads.",
+        format!("Std.Encoding.Toml.TomlValue.{variant} expects exactly one runtime field"),
+        "Use the documented Std.Encoding.Toml.TomlValue constructors without manually altering enum payloads.",
         location,
     ))
 }
@@ -152,8 +155,8 @@ fn fpas_to_toml_at_depth(
     if !type_name.eq_ignore_ascii_case(s::STD_TOML_VALUE) {
         return Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("expected Std.Toml.TomlValue, got enum {type_name}"),
-            "Pass a value constructed with Std.Toml.TomlValue.* or returned by Std.Toml.Parse.",
+            format!("expected Std.Encoding.Toml.TomlValue, got enum {type_name}"),
+            "Pass a value constructed with Std.Encoding.Toml.TomlValue.* or returned by Std.Encoding.Toml.Parse.",
             location,
         ));
     }
@@ -181,7 +184,7 @@ fn fpas_to_toml_at_depth(
             Value::Str(value) => value.parse::<Datetime>().map(TomlValue::Datetime).map_err(|error| {
                 std_runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!("Std.Toml.TomlValue.Datetime is invalid: {error}"),
+                    format!("Std.Encoding.Toml.TomlValue.Datetime is invalid: {error}"),
                     "Pass a TOML date, time, or date-time string such as `1979-05-27T07:32:00Z`.",
                     location,
                 )
@@ -204,7 +207,7 @@ fn fpas_to_toml_at_depth(
                         return Err(std_runtime_error(
                             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                             format!(
-                                "Std.Toml.TomlValue.Table expects string keys, got {}",
+                                "Std.Encoding.Toml.TomlValue.Table expects string keys, got {}",
                                 key.type_name()
                             ),
                             "Use `dict of string to TomlValue` for TOML tables.",
@@ -222,7 +225,7 @@ fn fpas_to_toml_at_depth(
         },
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("unknown Std.Toml.TomlValue variant `{other}`"),
+            format!("unknown Std.Encoding.Toml.TomlValue variant `{other}`"),
             "Use String, Integer, Float, Boolean, Datetime, Array, or Table.",
             location,
         )),
@@ -238,7 +241,7 @@ fn variant_field_error(
     Err(std_runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         format!(
-            "Std.Toml.TomlValue.{variant} expects {expected}, got {}",
+            "Std.Encoding.Toml.TomlValue.{variant} expects {expected}, got {}",
             actual.type_name()
         ),
         format!("Construct {variant} with a {expected} value."),
@@ -250,7 +253,7 @@ fn fpas_to_toml(value: Value, location: SourceLocation) -> Result<TomlValue, Std
     fpas_to_toml_at_depth(value, location, 1)
 }
 
-/// Executes `Std.Toml` intrinsics.
+/// Executes `Std.Encoding.Toml` intrinsics.
 ///
 /// **Documentation:** `docs/pascal/std/text/toml.md`
 pub(crate) fn run(

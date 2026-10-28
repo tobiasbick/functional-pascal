@@ -135,7 +135,7 @@ terminal setting for this configuration.
 ### Terminal and program input
 
 Integrated and external debug terminals support interactive `Std.Console` and
-`Std.Tui` programs, including keyboard, mouse, paste, focus, and resize events.
+`Std.Ui.Terminal` programs, including keyboard, mouse, paste, focus, and resize events.
 `debugConsole` provides output-only operation. Expressions entered in the
 Debug Console inspect stopped state; they are not program input.
 

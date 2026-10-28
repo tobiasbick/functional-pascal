@@ -1,6 +1,6 @@
 # Local variables
 
-The code fragments use `uses Std.Conv as Conv;`.
+The code fragments use `uses Std.Math as Math;`.
 
 Variables can be declared inline inside statement lists. Every binding starts
 with its own `const` or `var` keyword. The same rule
@@ -53,8 +53,8 @@ values infer independently. `[[], [1]]` determines `array of array of integer`,
 and `[None, Some(1)]` determines `array of Option of integer`. An empty collection
 or a collection whose elements still leave a type unknown requires context.
 Mixed numeric literals such as `[1, 2.0]`
-are invalid even with an annotation. Import `uses Std.Conv as Conv;` and convert explicitly,
-for example `[Conv.IntToReal(1), 2.0]`; inference does not choose a numeric promotion.
+are invalid even with an annotation. Import `uses Std.Math as Math;` and convert explicitly,
+for example `[Math.IntToReal(1), 2.0]`; inference does not choose a numeric promotion.
 Expressions inside a collection literal can supply known element types.
 
 Typed construction uses the resolved record type or enum variant, including
@@ -108,8 +108,8 @@ when a local initializer still has an incomplete type.
 
 ```pascal id=example-4 fragment context=inferred-call
 const Empty: array of integer := [];
-const Mixed: array of real := [Conv.IntToReal(1), 2.0];
-const Converted := Conv.IntToReal(42);
+const Mixed: array of real := [Math.IntToReal(1), 2.0];
+const Converted := Math.IntToReal(42);
 const Computed := ReadValue();
 ```
 

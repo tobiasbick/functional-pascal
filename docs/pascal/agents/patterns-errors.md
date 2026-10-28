@@ -61,7 +61,7 @@ Console printing uses the same renderer. Use `.Message()` at a text boundary,
 including `%s` formatting. Preserve typed errors while composing operations.
 Application-authored string errors remain valid Result payloads.
 
-`Std.Parse` parses text to Result values with `Parse.ParseError`. `Std.Conv`
+`Std.Text.Parse` parses text to Result values with `Parse.ParseError`. `Std.Text.Format`
 converts and formats already typed values. Files, processes, JSON, TOML, tasks
 and networking also have their own error families. To propagate into a different
 family, use MapError before try; a one-field cause constructor can be the callback.
@@ -69,7 +69,7 @@ family, use MapError before try; a one-field cause constructor can be the callba
 ```pascal id=typed-failure-and-option run
 program AgentErrors;
 
-uses Std.Parse as Parse, Std.Test as Test;
+uses Std.Text.Parse as Parse, Std.Test as Test;
 
 type InputError = error
   Invalid(Cause: Parse.ParseError) = 'Invalid input';

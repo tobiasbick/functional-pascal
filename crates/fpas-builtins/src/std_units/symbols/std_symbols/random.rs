@@ -1,4 +1,4 @@
-//! `Std.Random` symbol names and registry group.
+//! `Std.Math.Random` symbol names and registry group.
 
 std_symbol!(STD_RANDOM_RANDOM = std_random!("Random"));
 std_symbol!(STD_RANDOM_RANDOM_INT = std_random!("RandomInt"));

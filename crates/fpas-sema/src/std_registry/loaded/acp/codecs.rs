@@ -15,14 +15,14 @@ pub(super) fn register(checker: &mut Checker) {
     let raw = checker
         .scopes
         .imports
-        .lookup_metadata("Std.Acp.Types.RawJson")
+        .lookup_metadata("Std.Ai.Acp.Types.RawJson")
         .expect("RawJson")
         .ty
         .clone();
     let error = checker
         .scopes
         .imports
-        .lookup_metadata("Std.Acp.Types.AcpError")
+        .lookup_metadata("Std.Ai.Acp.Types.AcpError")
         .expect("AcpError")
         .ty
         .clone();
@@ -35,9 +35,9 @@ pub(super) fn register(checker: &mut Checker) {
             };
             let payload = symbol.ty.clone();
             let module = if version == Version::V1 {
-                "Std.Acp.Types"
+                "Std.Ai.Acp.Types"
             } else {
-                "Std.Acp.V2"
+                "Std.Ai.Acp.V2"
             };
             let decoded = super::super::type_registration::register_record_type(
                 checker,

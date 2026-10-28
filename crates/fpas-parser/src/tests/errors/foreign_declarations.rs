@@ -129,7 +129,7 @@ fn delphi_run_time_library_unit_names_the_std_units() {
         PARSE_MISSING_IMPORT_ALIAS,
         "Delphi unit `SysUtils` does not exist",
         "SysUtils",
-        "uses Std.Parse as Parse, Std.Conv as Conv;",
+        "uses Std.Text.Parse as Parse, Std.Text.Format as Conv;",
     );
 }
 

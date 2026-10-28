@@ -1,0 +1,28 @@
+unit Std.Ui.Terminal.Runtime.TerminalSession;
+
+uses Std.Console as Console;
+
+var TuiTerminalSessionOpen: boolean := false;
+
+// Acquires the process terminal for one interactive Tui host.
+//
+// `Std.Console` performs transactional mode acquisition and reverse-order rollback.
+public procedure TuiTerminalSessionAcquire();
+begin
+  Console.AcquireInteractiveTerminal();
+  TuiTerminalSessionOpen := true;
+end procedure;
+
+// Releases the process terminal when this Tui host owns it.
+public procedure TuiTerminalSessionRelease();
+begin
+  if not TuiTerminalSessionOpen then
+    begin
+      return;
+    end;
+  end if;
+
+  TuiTerminalSessionOpen := false;
+  Console.ReleaseInteractiveTerminal();
+end procedure;
+end unit;

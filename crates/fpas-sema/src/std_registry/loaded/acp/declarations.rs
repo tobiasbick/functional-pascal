@@ -38,7 +38,10 @@ pub(super) fn register(checker: &mut Checker) {
         "MessageEndpoint",
         "McpEndpoint",
     ] {
-        super::super::type_registration::register_opaque_type(checker, &format!("Std.Acp.{name}"));
+        super::super::type_registration::register_opaque_type(
+            checker,
+            &format!("Std.Ai.Acp.{name}"),
+        );
     }
     for name in [
         "ReadTextFileRequest",
@@ -59,13 +62,13 @@ pub(super) fn register(checker: &mut Checker) {
         if let Some(symbol) = checker
             .scopes
             .imports
-            .lookup_metadata(&format!("Std.Acp.Types.{name}"))
+            .lookup_metadata(&format!("Std.Ai.Acp.Types.{name}"))
         {
             let symbol = symbol.clone();
             checker
                 .scopes
                 .imports
-                .define_metadata(&format!("Std.Acp.Host.{name}"), symbol);
+                .define_metadata(&format!("Std.Ai.Acp.Host.{name}"), symbol);
         }
     }
 }
@@ -88,7 +91,7 @@ impl Registry<'_> {
             .scopes
             .imports
             .lookup_metadata(&declaration.name)
-            && declaration.name == "Std.Acp.Types.ProtocolError"
+            && declaration.name == "Std.Ai.Acp.Types.ProtocolError"
         {
             return symbol.ty.clone();
         }
@@ -186,7 +189,7 @@ impl Registry<'_> {
         self.checker
             .scopes
             .imports
-            .lookup_metadata(&format!("Std.Acp.Types.{name}"))
+            .lookup_metadata(&format!("Std.Ai.Acp.Types.{name}"))
             .expect("registered ACP foundation")
             .ty
             .clone()

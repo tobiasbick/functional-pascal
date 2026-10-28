@@ -13,7 +13,7 @@ fn complete_configuration_example_preserves_real_and_local_failures_in_images() 
     for output in [source, image] {
         let text = String::from_utf8(output.stdout).expect("error output UTF-8");
         assert!(text.contains("ConfigErrors.ContextError.Failed: Operation failed"));
-        assert!(text.contains("caused by Std.Fs.FsError.FileNotFound"));
+        assert!(text.contains("caused by Std.Io.Fs.FsError.FileNotFound"));
         assert!(text.contains("caused by ConfigErrors.ConfigError.MissingSetting"));
     }
 }

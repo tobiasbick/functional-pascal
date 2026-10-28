@@ -139,7 +139,7 @@ fn pipe_child() {
 
 const SOURCE: &str = r#"// Exercises interactive binary pipes against a live child.
 program Pipes;
-uses Std.Args as Args, Std.Proc as Proc, Std.Test as Test, Std.Time as Time, Std.Errors as Errors;
+uses Std.Os.Args as Args, Std.Os.Proc as Proc, Std.Test as Test, Std.Time as Time, Std.Os.Errors as Errors;
 
 function ReadUntil(Child: Proc.Process; Needle: array of integer; Stderr: boolean): array of integer;
 begin
@@ -170,7 +170,7 @@ begin
   Test.AssertTrue(Options.Environment.IsEmpty());
   case Proc.Start('__fpas_missing_interactive_command__', [], Options) of
     when Error(Proc.ProcError.StartFailed(Errors.HostError.Failure(const Operation, const Resources, _, _, _))):
-      Test.AssertEquals('Std.Proc.Start', Operation);
+      Test.AssertEquals('Std.Os.Proc.Start', Operation);
       Test.AssertEquals(1, Resources.Length());
       Test.AssertEquals('__fpas_missing_interactive_command__', Resources[0]);
     when Ok(_), Error(_):

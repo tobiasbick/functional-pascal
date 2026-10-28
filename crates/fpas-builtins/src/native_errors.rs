@@ -8,29 +8,29 @@ mod proc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]
 pub enum NativeErrorFamily {
-    /// `Std.Errors.HostError`.
+    /// `Std.Os.Errors.HostError`.
     Host,
-    /// `Std.Fs.FsError`.
+    /// `Std.Io.Fs.FsError`.
     Fs,
-    /// `Std.Proc.ProcError`.
+    /// `Std.Os.Proc.ProcError`.
     Proc,
-    /// `Std.Parse.ParseError`.
+    /// `Std.Text.Parse.ParseError`.
     Parse,
-    /// `Std.Json.JsonError`.
+    /// `Std.Encoding.Json.JsonError`.
     Json,
-    /// `Std.Toml.TomlError`.
+    /// `Std.Encoding.Toml.TomlError`.
     Toml,
     /// `Std.Crypto.CryptoError`.
     Crypto,
     /// `Std.Tasks.TaskError`.
     Task,
-    /// `Std.Net.NetError`.
+    /// `Std.Net.Sockets.NetError`.
     Net,
-    /// `Std.Server.ServerError`.
+    /// `Std.Net.Server.ServerError`.
     Server,
     /// `Std.Encoding.EncodingError`.
     Encoding,
-    /// `Std.Acp.Types.AcpError`.
+    /// `Std.Ai.Acp.Types.AcpError`.
     Acp,
     /// Independent MCP registration and serving failures.
     Mcp,
@@ -103,19 +103,19 @@ impl NativeErrorFamily {
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
         match self {
-            Self::Host => "Std.Errors.HostError",
-            Self::Fs => "Std.Fs.FsError",
-            Self::Proc => "Std.Proc.ProcError",
-            Self::Parse => "Std.Parse.ParseError",
-            Self::Json => "Std.Json.JsonError",
-            Self::Toml => "Std.Toml.TomlError",
+            Self::Host => "Std.Os.Errors.HostError",
+            Self::Fs => "Std.Io.Fs.FsError",
+            Self::Proc => "Std.Os.Proc.ProcError",
+            Self::Parse => "Std.Text.Parse.ParseError",
+            Self::Json => "Std.Encoding.Json.JsonError",
+            Self::Toml => "Std.Encoding.Toml.TomlError",
             Self::Crypto => "Std.Crypto.CryptoError",
             Self::Task => crate::std_symbols::STD_TASK_TASK_ERROR,
             Self::Net => crate::std_symbols::STD_NET_ERROR,
             Self::Server => crate::std_symbols::STD_SERVER_ERROR,
             Self::Encoding => crate::std_symbols::STD_ENCODING_ERROR,
-            Self::Acp => "Std.Acp.Types.AcpError",
-            Self::Mcp => "Std.Mcp.Types.McpError",
+            Self::Acp => "Std.Ai.Acp.Types.AcpError",
+            Self::Mcp => "Std.Ai.Mcp.Types.McpError",
         }
     }
     /// Ordered declared variants.

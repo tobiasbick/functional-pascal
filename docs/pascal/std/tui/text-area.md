@@ -1,6 +1,6 @@
-# `Std.Tui` controlled text area
+# `Std.Ui.Terminal` controlled text area
 
-Examples use local aliases for `Tui.Name` after `uses Std.Tui as Tui;`.
+Examples use local aliases for `Tui.Name` after `uses Std.Ui.Terminal as Tui;`.
 Their named documentation contexts supply these aliases and fixture values.
 
 `TextArea` is a multiline controlled element. The application model owns its
@@ -94,7 +94,7 @@ not paint the caret.
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Elements and identities](elements.md)
 - [Layout](layout.md)
 - [Application routing](application.md#headless-frame-and-routing-order)

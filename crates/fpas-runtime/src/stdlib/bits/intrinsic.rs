@@ -1,4 +1,4 @@
-//! Borrowed-argument adapters for the six `Std.Bits` operations.
+//! Borrowed-argument adapters for the six `Std.Math.Bits` operations.
 //!
 //! Documentation: `docs/pascal/std/numeric/bits.md`.
 
@@ -8,7 +8,7 @@ use fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR;
 use crate::stdlib::error::{StdError, std_runtime_error};
 use crate::stdlib::intrinsic_args::{IntrinsicCall, pop_int, pop_value};
 
-/// Executes a `Std.Bits` intrinsic using the same primitives as integer operators.
+/// Executes a `Std.Math.Bits` intrinsic using the same primitives as integer operators.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,

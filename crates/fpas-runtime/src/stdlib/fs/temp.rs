@@ -1,4 +1,4 @@
-//! `Std.Fs` temporary locations: `TempDir`, `CreateTempDir`, and `CreateTempFile`.
+//! `Std.Io.Fs` temporary locations: `TempDir`, `CreateTempDir`, and `CreateTempFile`.
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
@@ -18,12 +18,12 @@ pub(super) fn temp_dir() -> String {
 
 /// Create a new, uniquely named empty directory below the temporary directory.
 pub(super) fn create_temp_dir() -> Result<String, Failure> {
-    create_unique("Std.Fs.CreateTempDir", |path| fs::create_dir(path))
+    create_unique("Std.Io.Fs.CreateTempDir", |path| fs::create_dir(path))
 }
 
 /// Create a new, uniquely named empty file below the temporary directory.
 pub(super) fn create_temp_file() -> Result<String, Failure> {
-    create_unique("Std.Fs.CreateTempFile", |path| {
+    create_unique("Std.Io.Fs.CreateTempFile", |path| {
         OpenOptions::new()
             .write(true)
             .create_new(true)

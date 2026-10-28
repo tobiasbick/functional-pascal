@@ -1,6 +1,6 @@
 program CalendarTextErrorsTest;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 procedure AssertDateSyntax(Text: string; Offset: integer);
 begin
@@ -105,9 +105,9 @@ begin
     Calendar.ParseDateTime('2024-01-01T00:00:00+00:60') is Error(Calendar.CalendarError.InvalidOffset('+00:60'))
   );
   Test.AssertTrue(
-    Calendar.ParseDateTime('0001-01-01T00:00:00+00:01') is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.ParseDateTime'))
+    Calendar.ParseDateTime('0001-01-01T00:00:00+00:01') is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.ParseDateTime'))
   );
   Test.AssertTrue(
-    Calendar.ParseDateTime('9999-12-31T23:59:59.999-00:01') is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.ParseDateTime'))
+    Calendar.ParseDateTime('9999-12-31T23:59:59.999-00:01') is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.ParseDateTime'))
   );
 end.

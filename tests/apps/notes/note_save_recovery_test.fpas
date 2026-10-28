@@ -1,8 +1,8 @@
 program NoteSaveRecoveryTest;
 
 uses
-  Notes.Model as Model, Notes.Repository as Repository, Notes.Update as Update, Std.Fs as Fs,
-  Std.Test as Test, Std.Tui as Tui;
+  Notes.Model as Model, Notes.Repository as Repository, Notes.Update as Update, Std.Io.Fs as Fs,
+  Std.Test as Test, Std.Ui.Terminal as Tui;
 
 begin
   const Blocked: string := Test.ScratchDir() + '/blocked';

@@ -1,6 +1,6 @@
 program FsBinaryValidationTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 procedure AssertOriginal(FileName: string);
 begin
@@ -38,11 +38,11 @@ begin
   const TooMany := Half.Concat(Half);
   Test.AssertEquals(1048578, TooMany.Length());
   Test.AssertTrue(
-    Fs.WriteBytes(FileName, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Fs.WriteBytes', 1048576))
+    Fs.WriteBytes(FileName, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.WriteBytes', 1048576))
   );
   AssertOriginal(FileName);
   Test.AssertTrue(
-    StoreCount(Missing, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Fs.WriteBytes', 1048576))
+    StoreCount(Missing, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.WriteBytes', 1048576))
   );
   Test.AssertFalse(Fs.Exists(Missing));
 end.

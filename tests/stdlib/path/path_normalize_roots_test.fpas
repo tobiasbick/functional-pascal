@@ -1,6 +1,6 @@
 program PathNormalizeRootsTest;
 
-uses Std.Path as Path, Std.Test as Test;
+uses Std.Io.Path as Path, Std.Test as Test;
 
 begin
   if Path.Join(['a', 'b']) = 'a\b' then

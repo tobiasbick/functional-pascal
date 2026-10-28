@@ -23,7 +23,7 @@ use std::{
 #[cfg(test)]
 mod tests;
 
-/// Detached launch data, validated by the same preflight as Std.Proc.
+/// Detached launch data, validated by the same preflight as Std.Os.Proc.
 #[derive(Clone)]
 pub(in crate::execution::vm::hosted) struct AcpLaunch {
     pub command: String,

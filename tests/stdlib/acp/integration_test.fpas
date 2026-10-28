@@ -1,7 +1,7 @@
 // Whole-client composition over an independently implemented stdio peer.
 program AcpIntegrationTest;
 
-uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Args as Args, Std.Proc as Proc, Std.Test as Test;
+uses Std.Ai.Acp as Acp, Std.Ai.Acp.Types as Types, Std.Os.Args as Args, Std.Os.Proc as Proc, Std.Test as Test;
 
 function Send(Connection: Acp.Connection; Method: string; Body: string): Acp.RequestToken;
 begin

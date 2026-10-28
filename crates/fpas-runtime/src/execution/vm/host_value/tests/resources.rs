@@ -20,8 +20,8 @@ fn raw_and_foreign_resource_graphs_are_rejected_even_with_matching_numeric_ids()
     for leaf in [
         Value::OpaqueHandle(1),
         Value::Task(1),
-        record("Std.Http.Handles.BodyStream", Value::Integer(1)),
-        record("std.http.handles.ssedecoder", Value::Integer(1)),
+        record("Std.Net.Http.Handles.BodyStream", Value::Integer(1)),
+        record("std.net.http.handles.ssedecoder", Value::Integer(1)),
     ] {
         for value in [
             leaf.clone(),

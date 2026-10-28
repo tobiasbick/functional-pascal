@@ -1,6 +1,6 @@
 # Exhaustiveness
 
-The code fragments use `uses Std.Test as Test, Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Test as Test, Std.Text.Format as Conv, Std.Console as Console;`.
 
 Every `case` is exhaustive, with the same rules for statements and expressions.
 Use `if` for selective handling. A missing value or variant reports FP3011;

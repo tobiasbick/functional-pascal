@@ -1,0 +1,97 @@
+unit Std.Ui.Terminal.Runtime.TerminalRenderer;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Cells.Cell as CellsCell, Std.Ui.Terminal.Cells.Color as CellsColor,
+  Std.Ui.Terminal.Cells.Palette as CellsPalette, Std.Ui.Terminal.Cells.Style as CellsStyle,
+  Std.Ui.Terminal.Rendering.Surface as RenderingSurface;
+
+function TuiColorToConsole(Color: CellsColor.TuiColor): Console.Color;
+begin
+  case Color.Kind of
+    when CellsColor.TuiColorKind.Crt:
+      begin
+        return Console.CrtColor(Color.Index);
+      end;
+    when CellsColor.TuiColorKind.Ansi256:
+      begin
+        return Console.Ansi256Color(Color.Index);
+      end;
+    when CellsColor.TuiColorKind.Rgb:
+      begin
+        return Console.RgbColor(Color.Red, Color.Green, Color.Blue);
+      end;
+  end case;
+end function;
+
+function TuiCellToConsole(Cell: CellsCell.TuiCell; Palette: CellsPalette.TuiPalette): Console.Cell;
+begin
+  var Style: CellsStyle.TuiStyle := Palette.ForRole(Cell.Role);
+  case Cell.ConcreteStyle of
+    when Some(const Concrete):
+      begin
+        Style := Concrete;
+      end;
+    when None:
+      begin
+      end;
+  end case;
+
+  return Console.Cell(
+    glyph := Cell.Glyph,
+    foreground := TuiColorToConsole(Style.Foreground),
+    background := TuiColorToConsole(Style.Background)
+  );
+end function;
+
+function TuiTerminalDamageRow(
+  Damage: RenderingSurface.TuiSurfaceDamage;
+  Palette: CellsPalette.TuiPalette
+): array of Console.Cell;
+begin
+  var Row: array of Console.Cell := [];
+  for Cell: CellsCell.TuiCell in Damage.Cells do
+    begin
+      Row.PushInPlace(TuiCellToConsole(Cell, Palette));
+    end;
+  end for;
+
+  return Row;
+end function;
+
+// Flushes the current working surface through the Console frame API.
+//
+// The Console cell format carries glyph and colors. Tui style attributes are intentionally
+// resolved here as color-only output because the existing Console frame API has no attributes.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
+// - `Palette`: Palette used to resolve semantic style roles.
+public procedure TuiFlushSurface(
+  Surface: RenderingSurface.TuiWorkingSurface;
+  Palette: CellsPalette.TuiPalette
+);
+begin
+  const Damage: array of RenderingSurface.TuiSurfaceDamage := RenderingSurface.TuiSurfaceTakeTerminalDamage(
+    Surface
+  );
+  if Damage.Length() = 0 then
+    begin
+      return;
+    end;
+  end if;
+
+  Console.BeginFrame();
+  for Item: RenderingSurface.TuiSurfaceDamage in Damage do
+    begin
+      const Row: array of Console.Cell := TuiTerminalDamageRow(Item, Palette);
+      if Row.Length() > 0 then
+        begin
+          Console.WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
+        end;
+      end if;
+    end;
+  end for;
+
+  Console.Present();
+end procedure;
+end unit;

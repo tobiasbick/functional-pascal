@@ -1,7 +1,7 @@
 # File handles and streaming
 
-[`Std.Fs`](fs.md) opens regular files for incremental byte and UTF-8 line I/O.
-Import `uses Std.Fs as Fs;`; cancellation-aware calls additionally take a token
+[`Std.Io.Fs`](fs.md) opens regular files for incremental byte and UTF-8 line I/O.
+Import `uses Std.Io.Fs as Fs;`; cancellation-aware calls additionally take a token
 from [`Std.Tasks`](../concurrency/task.md). Calls block their executing thread
 and can run in `go` tasks with ordinary scope and `Tasks.Wait` ownership.
 
@@ -72,7 +72,7 @@ until the caller recovers with Read or Seek.
 ```pascal id=example-lines run
 program FileLines;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/file-lines-example.txt';
@@ -134,8 +134,8 @@ Read can consume the prefix instead, and Tell, Seek, and Write account for it.
 | UTF-8 line content excluding LF/CRLF | 1_048_576 bytes |
 
 Limits use `FsError.LimitExceeded(Operation, Limit)`. The operation names the
-actual public function, for example `Std.Fs.Open`, `Std.Fs.ReadLine`, or
-`Std.Fs.ReadLineWithCancellation`. Closed and Cancelled use the same operation
+actual public function, for example `Std.Io.Fs.Open`, `Std.Io.Fs.ReadLine`, or
+`Std.Io.Fs.ReadLineWithCancellation`. Closed and Cancelled use the same operation
 labels. Host failures retain the existing typed FsError variants and original
 [`HostError`](errors.md) causes. The whole-file helpers retain their separate
 contracts: ReadText allows 64 MiB, while ReadBytes/WriteBytes allow 1 MiB.

@@ -13,8 +13,9 @@ Structured error handling with `Result` and `Option` for expected failures, and 
 | Compose a fallible/optional operation | `Value.AndThen(F)` |
 | Recover within a wrapper | `Value.OrElse(F)` |
 
-The four [Std.Parse](../../std/text/parse.md) text parsers return Result values.
-Formatting and conversion of typed values belong to [Std.Conv](../../std/text/conv.md).
+The four [Std.Text.Parse](../../std/text/parse.md) text parsers return Result values.
+Text formatting belongs to [Std.Text.Format](../../std/text/format.md);
+integer-to-real conversion belongs to [Std.Math](../../std/numeric/math.md).
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` for `Result` and `Option`, `primary_atom` for `try`, `panic_stmt`, `destructure_pattern`).
 

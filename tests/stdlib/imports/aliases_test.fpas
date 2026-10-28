@@ -1,6 +1,6 @@
 program ImportAliasesTest;
 
-uses Std.Test as Test, Std.Math as Math, Std.Conv as Numbers, Std.Tasks as Jobs, Std.Json as Json;
+uses Std.Test as Test, Std.Math as Math, Std.Text.Format as Numbers, Std.Tasks as Jobs, Std.Encoding.Json as Json;
 
 begin
   scope

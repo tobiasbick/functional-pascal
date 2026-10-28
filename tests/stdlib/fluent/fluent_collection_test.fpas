@@ -1,6 +1,6 @@
 program FluentCollectionTest;
 
-uses Std.Json as Json, Std.Test as Test;
+uses Std.Encoding.Json as Json, Std.Test as Test;
 
 function IsEven(X: integer): boolean;
 begin

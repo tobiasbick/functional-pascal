@@ -1,29 +1,29 @@
-# `Std.Path`
+# `Std.Io.Path`
 
 Pure path manipulation without filesystem access. This page is the full API for the unit.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Path as Path;
+uses Std.Console as Console, Std.Io.Path as Path;
 
 begin
   Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
 end.
 ```
 
-`Std.Path` works on path strings only. It does not read the filesystem, resolve the current working directory, or check whether paths exist.
+`Std.Io.Path` works on path strings only. It does not read the filesystem, resolve the current working directory, or check whether paths exist.
 
 
 ## Importing and names
 
-Import with `uses Std.Path as Path;` and access public symbols as `Path.Name`. User enum variants require `Path.Type.Variant`.
+Import with `uses Std.Io.Path as Path;` and access public symbols as `Path.Name`. User enum variants require `Path.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Path as Path;`.
+Requires `uses Std.Io.Path as Path;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -183,7 +183,7 @@ The following assertions run on either platform:
 ```pascal id=example-9 run
 program PathHelpers;
 
-uses Std.Path as Path, Std.Test as Test;
+uses Std.Io.Path as Path, Std.Test as Test;
 
 begin
   Test.AssertTrue(not Path.IsAbsolute('docs/guide.txt'));

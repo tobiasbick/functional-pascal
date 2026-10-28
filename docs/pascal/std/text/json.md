@@ -1,11 +1,11 @@
-# `Std.Json`
+# `Std.Encoding.Json`
 
 JSON parsing and stringification with an explicit Functional Pascal value representation.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Json as Json;
+uses Std.Console as Console, Std.Encoding.Json as Json;
 
 begin
   const R: result of (Json.JsonValue, Json.JsonError) := Json.Parse('{"ok":true}');
@@ -21,7 +21,7 @@ end.
 
 ## Importing and names
 
-Import with `uses Std.Json as Json;` and access public symbols as `Json.Name`. User enum variants require `Json.Type.Variant`.
+Import with `uses Std.Encoding.Json as Json;` and access public symbols as `Json.Name`. User enum variants require `Json.Type.Variant`.
 
 `JsonValue` is an enum. Use `JsonValue.String('text')`, `JsonValue.ArrayValue([...])`, and similar constructors for new JSON values.
 
@@ -119,7 +119,7 @@ Those parser failures also return `Error(Cause)`.
 
 ## See also
 
-- [`Std.Json.Fields`](json-fields.md) — typed field access for parsed objects
+- [`Std.Encoding.Json.Fields`](json-fields.md) — typed field access for parsed objects
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
 

@@ -1,6 +1,6 @@
 # Result
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 `Result of (T, E)` represents either a success (`Ok`) or a failure (`Error`):
 

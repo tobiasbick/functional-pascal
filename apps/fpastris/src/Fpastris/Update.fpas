@@ -1,6 +1,6 @@
 unit Fpastris.Update;
 
-uses Fpastris.Engine as Engine, Fpastris.Model as Model, Std.Tui as Tui;
+uses Fpastris.Engine as Engine, Fpastris.Model as Model, Std.Ui.Terminal as Tui;
 
 function Restart(State: Model.Game): Model.Game;
 begin

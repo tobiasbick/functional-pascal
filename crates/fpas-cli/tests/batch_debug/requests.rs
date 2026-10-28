@@ -26,7 +26,7 @@ fn invalid_requests_always_get_one_json_object() {
 #[test]
 fn calls_are_rejected_before_any_bytecode_runs() {
     let f = Fixture::new(
-        "program Guard; uses Std.Fs as Fs; function Danger(): integer; begin return 42; end function; begin discard Fs.WriteText('executed', 'bad').Unwrap(); end.",
+        "program Guard; uses Std.Io.Fs as Fs; function Danger(): integer; begin return 42; end function; begin discard Fs.WriteText('executed', 'bad').Unwrap(); end.",
     );
     let r = f.run(&["debug", "main.fpas", "--print", "Danger()"], 1);
     assert_eq!(r["diagnostics"][0]["code"], "expression_syntax");

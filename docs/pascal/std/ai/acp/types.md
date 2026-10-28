@@ -1,10 +1,10 @@
-# `Std.Acp.Types`
+# `Std.Ai.Acp.Types`
 
 Detached ACP value types and checked conversions. Import
-`uses Std.Acp.Types as AcpTypes;`. These values can be copied and sent through
+`uses Std.Ai.Acp.Types as AcpTypes;`. These values can be copied and sent through
 ordinary typed channels. The unit supplies stable v1 protocol DTOs, nominal
 string IDs and method-aware payload codecs. Experimental v1 payloads live in
-`Std.Acp.Experimental`; v2 has its own `Std.Acp.V2` nominal family.
+`Std.Ai.Acp.Experimental`; v2 has its own `Std.Ai.Acp.V2` nominal family.
 
 ## Values
 
@@ -32,7 +32,7 @@ and `case` patterns to construct and inspect these states.
 | function | `UInt64FromInteger(Value: integer): Result of (UInt64, AcpError)` | Reject negative integers. |
 | function | `UInt64ToInteger(Value: UInt64): Result of (integer, AcpError)` | Reject values above `9223372036854775807`. |
 
-No conversion passes through `real` or `Std.Json.JsonValue`. Raw JSON retains
+No conversion passes through `real` or `Std.Encoding.Json.JsonValue`. Raw JSON retains
 object order, nested unknown fields, and numeric spelling, including `-0`,
 integers beyond u64 and values such as `1e400`. Insignificant whitespace outside
 the JSON value is removed. Duplicate decoded member names, unpaired Unicode
@@ -78,7 +78,7 @@ retain the complete underscore-prefixed method in `Method`; their raw body
 is `Params`, or `ResultValue` for a response.
 
 All current constructors and fields are in the generated
-[editor declarations](../../../../../lib/api/Std/Acp.Types.fpas). The declarations
+[editor declarations](../../../../../lib/api/Std/Ai.Acp.Types.fpas). The declarations
 derive from the pinned SDK schema and its method metadata; the SDK's serde
 types validate payloads. No host effect occurs during conversion.
 

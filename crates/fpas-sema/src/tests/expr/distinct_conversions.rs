@@ -101,7 +101,7 @@ fn builtin_type_name_calls_only_unwrap_distinct_values() {
         "const Value: integer := Raw(3);",
         SEMA_TYPE_MISMATCH,
         "`Raw(...)` only unwraps a distinct type value",
-        "`Conv.IntToReal`",
+        "`Math.IntToReal`",
     );
 }
 

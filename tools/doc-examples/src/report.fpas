@@ -1,6 +1,6 @@
 unit DocExamples.Report;
 
-uses DocExamples.Model as Model, Std.Console as Console, Std.Conv as Conv, Std.Fs as Fs, Std.Json as Json, Std.Path as Path;
+uses DocExamples.Model as Model, Std.Console as Console, Std.Math as Math, Std.Io.Fs as Fs, Std.Encoding.Json as Json, Std.Io.Path as Path;
 
 // Write a structured report and print every failing Markdown location.
 public function Write(Outcomes: array of Model.Outcome; Options: Model.Options): integer;
@@ -13,7 +13,7 @@ begin
     end if;
     const Fields: dict of string to Json.JsonValue := [
       'document': Json.JsonValue.String(Item.Document),
-      'line': Json.JsonValue.Number(Conv.IntToReal(Item.Line)),
+      'line': Json.JsonValue.Number(Math.IntToReal(Item.Line)),
       'id': Json.JsonValue.String(Item.Id),
       'passed': Json.JsonValue.Bool(Item.Passed),
       'message': Json.JsonValue.String(Item.Message)
@@ -22,8 +22,8 @@ begin
   end for;
   const Fields: dict of string to Json.JsonValue := [
     'schema': Json.JsonValue.Number(1.0),
-    'total': Json.JsonValue.Number(Conv.IntToReal(Outcomes.Length())),
-    'failed': Json.JsonValue.Number(Conv.IntToReal(Failed)),
+    'total': Json.JsonValue.Number(Math.IntToReal(Outcomes.Length())),
+    'failed': Json.JsonValue.Number(Math.IntToReal(Failed)),
     'results': Json.JsonValue.ArrayValue(Results)
   ];
   const Output := Json.Stringify(Json.JsonValue.Object(Fields));

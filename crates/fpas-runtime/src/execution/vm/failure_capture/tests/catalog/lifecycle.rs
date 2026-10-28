@@ -196,7 +196,7 @@ fn globals_use_actual_local_storage_and_survive_server_finalization_errors() {
         "discard Server.CreateLifetime(0,false).Unwrap();",
     ] {
         let mut vm = vm(&format!(
-            "program Globals; uses Std.Server as Server; var Total:integer:=7; begin Total:=31; {body} end."
+            "program Globals; uses Std.Net.Server as Server; var Total:integer:=7; begin Total:=31; {body} end."
         ));
         vm.pool_size = 0;
         vm.use_local_globals = true;

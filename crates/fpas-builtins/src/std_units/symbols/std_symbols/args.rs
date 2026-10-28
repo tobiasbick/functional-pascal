@@ -1,4 +1,4 @@
-//! `Std.Args` symbol names and registry group.
+//! `Std.Os.Args` symbol names and registry group.
 
 std_symbol!(STD_ARGS_PARAM_COUNT = std_args!("ParamCount"));
 std_symbol!(STD_ARGS_PARAM_STR = std_args!("ParamStr"));

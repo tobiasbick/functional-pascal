@@ -1,6 +1,6 @@
 program SetSeedReplaysSequenceTest;
 
-uses Std.Random as Random, Std.Test as Test;
+uses Std.Math.Random as Random, Std.Test as Test;
 
 begin
   Random.SetSeed(-17);

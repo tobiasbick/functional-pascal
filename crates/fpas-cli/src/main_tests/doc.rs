@@ -21,13 +21,13 @@ fn doc(cwd: &Path, args: &[&str]) -> (i32, String, String) {
 #[test]
 fn doc_prints_signature_documentation_location_and_handbook() {
     let cwd = create_temp_dir("doc-text");
-    let (code, stdout, stderr) = doc(&cwd, &["Std.Fs.ReadText"]);
+    let (code, stdout, stderr) = doc(&cwd, &["Std.Io.Fs.ReadText"]);
 
     assert_eq!(code, 0, "{stderr}");
     assert!(stderr.is_empty(), "{stderr}");
     assert!(
         stdout.starts_with(
-            "Std.Fs.ReadText (function)\n  function ReadText(Path: string): result of (string, FsError)\n\n  Reads UTF-8 text.\n"
+            "Std.Io.Fs.ReadText (function)\n  function ReadText(Path: string): result of (string, FsError)\n\n  Reads UTF-8 text.\n"
         ),
         "{stdout}"
     );
@@ -91,13 +91,13 @@ fn doc_without_a_match_exits_one_with_suggestions() {
     assert_eq!(code, 1);
     assert!(stdout.is_empty(), "{stdout}");
     assert!(stderr.contains("error[FP4143]"), "{stderr}");
-    assert!(stderr.contains("`Std.Fs.ReadText`"), "{stderr}");
+    assert!(stderr.contains("`Std.Io.Fs.ReadText`"), "{stderr}");
 
     let (code, stdout, _) = doc(&cwd, &["--report", "json", "Fs.ReadTxt"]);
     assert_eq!(code, 1);
     let report: serde_json::Value = serde_json::from_str(&stdout).expect("one JSON document");
     assert_eq!(report["matches"], serde_json::json!([]));
-    assert_eq!(report["suggestions"][0], "Std.Fs.ReadText");
+    assert_eq!(report["suggestions"][0], "Std.Io.Fs.ReadText");
 }
 
 #[test]

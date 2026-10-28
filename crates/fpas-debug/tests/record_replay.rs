@@ -188,7 +188,7 @@ fn jsonl_recording_describe_after_stop_does_not_resume() {
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random as Random;
+uses Std.Math.Random as Random;
 begin
   var X: integer := 0;
   X := Random.RandomInt(1, 1);

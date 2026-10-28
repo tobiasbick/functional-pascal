@@ -5,7 +5,7 @@
 program VmArrayPushBenchmark;
 
 uses
-  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Parse as Parse;
+  Std.Os.Args as Args, Std.Console as Console, Std.Text.Format as Conv, Std.Time as Time, Std.Text.Parse as Parse;
 
 const WarmupIterations: integer := 100000;
 

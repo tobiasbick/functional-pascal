@@ -261,7 +261,11 @@ mod vm_only_guard_tests {
             loc(),
         )
         .expect_err("expected internal error");
-        assert!(err.message.contains("Std.Args"), "message={}", err.message);
+        assert!(
+            err.message.contains("Std.Os.Args"),
+            "message={}",
+            err.message
+        );
     }
 
     #[test]

@@ -1,7 +1,7 @@
 // Covers HTTP request constructors, buffered responses, and header lookup.
 program HttpTypesTest;
 
-uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 begin
   const RequestValue: Http.Request := Http.Request.Create('POST', 'http://localhost:8080/v1/chat');

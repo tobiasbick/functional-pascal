@@ -1,4 +1,4 @@
-//! Fixed integer signatures for `Std.Bits`.
+//! Fixed integer signatures for `Std.Math.Bits`.
 //!
 //! Documentation: `docs/pascal/std/numeric/bits.md`.
 

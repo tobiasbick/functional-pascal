@@ -1,7 +1,7 @@
 // Shared terminal lifecycle and input handling for the fractal examples.
 unit Fractal.Explorer;
 
-uses Fractal.Camera as Camera, Std.Console as Console, Std.Conv as Conv, Std.Math as Math;
+uses Fractal.Camera as Camera, Std.Console as Console, Std.Math as Math;
 
 function RenderWidth(): integer;
 begin
@@ -19,14 +19,14 @@ function ViewportCX(State: Camera.ExplorerCamera; W: integer; H: integer; CellX:
 begin
   const Wr: integer := Math.Max(W - 1, 1);
   return State.XMin(W, H) +
-    Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
+    Math.IntToReal(CellX - 1) / Math.IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
 end function;
 
 function ViewportCY(State: Camera.ExplorerCamera; W: integer; H: integer; CellY: integer): real;
 begin
   const Hr: integer := Math.Max(H - 1, 1);
   return State.YMax() -
-    Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr) * (State.YMax() - State.YMin());
+    Math.IntToReal(CellY - 1) / Math.IntToReal(Hr) * (State.YMax() - State.YMin());
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);

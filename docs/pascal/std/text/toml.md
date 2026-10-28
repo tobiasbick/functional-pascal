@@ -1,11 +1,11 @@
-# `Std.Toml`
+# `Std.Encoding.Toml`
 
 Parse and stringify TOML 1.0 documents with an explicit Functional Pascal value representation.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Toml as Toml;
+uses Std.Console as Console, Std.Encoding.Toml as Toml;
 
 begin
   const Parsed: result of (Toml.TomlValue, Toml.TomlError) := Toml.Parse(
@@ -23,7 +23,7 @@ end.
 
 ## Importing and names
 
-Import with `uses Std.Toml as Toml;` and access public symbols as `Toml.Name`. User enum variants require `Toml.Type.Variant`.
+Import with `uses Std.Encoding.Toml as Toml;` and access public symbols as `Toml.Name`. User enum variants require `Toml.Type.Variant`.
 
 `TomlValue` is an enum. Tables use `dict of string to TomlValue`; arrays use `array of TomlValue`.
 
@@ -119,7 +119,7 @@ programmer errors and raise a runtime diagnostic with a construction hint.
 
 ## See also
 
-- [`Std.Toml.Fields`](toml-fields.md) — typed key access for parsed tables
+- [`Std.Encoding.Toml.Fields`](toml-fields.md) — typed key access for parsed tables
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)
 

@@ -228,15 +228,15 @@ name = "test-stdlib"
 kind = "library"
 
 [exports]
-units = ["Std.Tui"]
+units = ["Std.Ui.Terminal"]
 
 [sources]
 include = ["Std/**/*.fpas"]
 "#,
     );
     temp.write(
-        "bundle/Std/Tui.fpas",
-        "unit Std.Tui;\n\npublic type TuiPalette = integer;\nend unit;\n",
+        "bundle/Std/Ui/Terminal.fpas",
+        "unit Std.Ui.Terminal;\n\npublic type TuiPalette = integer;\nend unit;\n",
     );
     temp.write(
         "external/external.fpasprj",
@@ -249,7 +249,7 @@ main = "main.fpas"
 include = ["main.fpas"]
 "#,
     );
-    let source = "program External;\n\nuses Std.Tui as Tui;\n\nbegin\n  const Palette: Tui.TuiPalette := 1;\nend.\n";
+    let source = "program External;\n\nuses Std.Ui.Terminal as Tui;\n\nbegin\n  const Palette: Tui.TuiPalette := 1;\nend.\n";
     temp.write("external/main.fpas", source);
     let root_uri = temp.uri("external");
     let standard_library_uri = temp.uri("bundle");

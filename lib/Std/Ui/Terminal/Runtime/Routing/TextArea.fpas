@@ -1,0 +1,200 @@
+unit Std.Ui.Terminal.Runtime.Routing.TextArea;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Geometry.Point as GeometryPoint, Std.Ui.Terminal.Geometry.Rect as Rect,
+  Std.Ui.Terminal.Geometry.Size as Size, Std.Ui.Terminal.Ids.Action as Action, Std.Ui.Terminal.Ids.ControlId as ControlId,
+  Std.Ui.Terminal.Runtime.Msg as Msg, Std.Ui.Terminal.Text.TextArea as TextArea;
+
+function TuiTextAreaClampLine(Text: string; Line: integer): integer;
+begin
+  if Line < 0 then
+    begin
+      return 0;
+    end;
+  end if;
+  const Last: integer := TextArea.TuiTextAreaLineCount(Text) - 1;
+  if Line > Last then
+    begin
+      return Last;
+    end;
+  end if;
+
+  return Line;
+end function;
+
+// Routes one key into a complete controlled text-area state proposal.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Offset`: Scroll offset or position applied by the operation.
+// - `ChangeAction`: Application action emitted when the value changes.
+// - `Viewport`: Visible input or text-area viewport.
+// - `Key`: Console key event to route or match.
+public function TuiRouteTextAreaKey(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Caret: integer;
+  Offset: GeometryPoint.TuiPoint;
+  ChangeAction: Action.TuiAction;
+  Viewport: Rect.TuiRect;
+  Key: Console.KeyEvent
+): option of Msg.TuiMsg;
+begin
+  var NextText: string := Text;
+  var NextCaret: integer := Caret;
+  var Handled: boolean := true;
+  const Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
+  if (((Key.kind = Console.KeyKind.Character) and not Key.ctrl) and not Key.alt) and not Key.meta then
+    begin
+      NextText := Text.Insert(Caret, Key.ch);
+      NextCaret := Caret + Key.ch.Length();
+    end;
+  elsif Key.kind = Console.KeyKind.Space then
+    begin
+      NextText := Text.Insert(Caret, ' ');
+      NextCaret := Caret + 1;
+    end;
+  elsif Key.kind = Console.KeyKind.Enter then
+    begin
+      NextText := Text.Insert(Caret, string.Chr(10));
+      NextCaret := Caret + 1;
+    end;
+  elsif Key.kind = Console.KeyKind.Tab then
+    begin
+      NextText := Text.Insert(Caret, '  ');
+      NextCaret := Caret + 2;
+    end;
+  elsif (Key.kind = Console.KeyKind.Backspace) and (Caret > 0) then
+    begin
+      NextText := Text.Delete(Caret - 1, 1);
+      NextCaret := Caret - 1;
+    end;
+  elsif (Key.kind = Console.KeyKind.Delete) and (Caret < Text.Length()) then
+    begin
+      NextText := Text.Delete(Caret, 1);
+    end;
+  elsif (Key.kind = Console.KeyKind.Left) and (Caret > 0) then
+    begin
+      NextCaret := Caret - 1;
+    end;
+  elsif (Key.kind = Console.KeyKind.Right) and (Caret < Text.Length()) then
+    begin
+      NextCaret := Caret + 1;
+    end;
+  elsif Key.kind = Console.KeyKind.Up then
+    begin
+      const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line - 1);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
+    end;
+  elsif Key.kind = Console.KeyKind.Down then
+    begin
+      const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line + 1);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
+    end;
+  elsif Key.kind = Console.KeyKind.Home then
+    begin
+      NextCaret := Position.LineStart;
+    end;
+  elsif Key.kind = Console.KeyKind.EndKey then
+    begin
+      NextCaret := Position.LineEnd;
+    end;
+  elsif Key.kind = Console.KeyKind.PageUp then
+    begin
+      var Page: integer := Viewport.Height;
+      if Page < 1 then
+        begin
+          Page := 1;
+        end;
+      end if;
+      const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line - Page);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
+    end;
+  elsif Key.kind = Console.KeyKind.PageDown then
+    begin
+      var Page: integer := Viewport.Height;
+      if Page < 1 then
+        begin
+          Page := 1;
+        end;
+      end if;
+      const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line + Page);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
+    end;
+  else
+    begin
+      Handled := false;
+    end;
+  end if;
+
+  if not Handled then
+    begin
+      return None;
+    end;
+  end if;
+  const NextOffset: GeometryPoint.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(
+    NextText,
+    NextCaret,
+    Offset,
+    Size.TuiSize.Create(Viewport.Width, Viewport.Height)
+  );
+  if (((NextText = Text) and (NextCaret = Caret)) and (NextOffset.X = Offset.X))
+    and
+    (NextOffset.Y = Offset.Y)
+  then
+    begin
+      return None;
+    end;
+  end if;
+
+  return Some(Msg.TuiMsg.TextAreaChanged(Id, ChangeAction, NextText, NextCaret, NextOffset));
+end function;
+
+// Routes a pointer position into a complete controlled text-area state proposal.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Offset`: Scroll offset or position applied by the operation.
+// - `ChangeAction`: Application action emitted when the value changes.
+// - `Viewport`: Visible input or text-area viewport.
+// - `Point`: Point tested by the operation.
+public function TuiRouteTextAreaPointer(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Offset: GeometryPoint.TuiPoint;
+  ChangeAction: Action.TuiAction;
+  Viewport: Rect.TuiRect;
+  Point: GeometryPoint.TuiPoint
+): Msg.TuiMsg;
+begin
+  const Line: integer := TuiTextAreaClampLine(Text, Offset.Y + (Point.Y - Viewport.Y));
+  const Column: integer := Offset.X + (Point.X - Viewport.X);
+  const Caret: integer := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, Line, Column);
+  const NextOffset: GeometryPoint.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(
+    Text,
+    Caret,
+    Offset,
+    Size.TuiSize.Create(Viewport.Width, Viewport.Height)
+  );
+  return Msg.TuiMsg.TextAreaChanged(Id, ChangeAction, Text, Caret, NextOffset);
+end function;
+end unit;

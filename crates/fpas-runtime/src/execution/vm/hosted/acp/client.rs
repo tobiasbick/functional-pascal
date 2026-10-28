@@ -61,7 +61,7 @@ impl Worker {
         }
         self.layouts
             .record(
-                "Std.Acp.ConnectionState",
+                "Std.Ai.Acp.ConnectionState",
                 vec![
                     Value::Integer(match snapshot.lifecycle {
                         Lifecycle::Uninitialized => 0,

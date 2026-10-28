@@ -18,7 +18,7 @@ fn option(ty: Ty) -> Ty {
     Ty::Option(Box::new(ty))
 }
 pub(super) fn register(checker: &mut Checker) {
-    let error = named(checker, "Std.Acp.Types.AcpError");
+    let error = named(checker, "Std.Ai.Acp.Types.AcpError");
     for (name, request, response) in [
         (
             "ReadTextFile",
@@ -58,10 +58,10 @@ pub(super) fn register(checker: &mut Checker) {
         ("ValidateElicitation", "CreateElicitationResponse", ""),
     ] {
         let mut params = vec![
-            p("Responder", named(checker, "Std.Acp.Responder")),
+            p("Responder", named(checker, "Std.Ai.Acp.Responder")),
             p(
                 "Request",
-                named(checker, &format!("Std.Acp.Types.{request}")),
+                named(checker, &format!("Std.Ai.Acp.Types.{request}")),
             ),
         ];
         if name == "WaitForTerminalExit" {
@@ -74,21 +74,21 @@ pub(super) fn register(checker: &mut Checker) {
         let response = if response.is_empty() {
             Ty::Boolean
         } else {
-            named(checker, &format!("Std.Acp.Types.{response}"))
+            named(checker, &format!("Std.Ai.Acp.Types.{response}"))
         };
         define_func(
             checker,
-            &format!("Std.Acp.Host.{name}"),
+            &format!("Std.Ai.Acp.Host.{name}"),
             params,
             Ty::Result(Box::new(response), Box::new(error.clone())),
         );
     }
     define_func(
         checker,
-        "Std.Acp.Host.ElicitationDefaults",
-        vec![p("Responder", named(checker, "Std.Acp.Responder"))],
+        "Std.Ai.Acp.Host.ElicitationDefaults",
+        vec![p("Responder", named(checker, "Std.Ai.Acp.Responder"))],
         Ty::Result(
-            Box::new(named(checker, "Std.Acp.Types.RawJson")),
+            Box::new(named(checker, "Std.Ai.Acp.Types.RawJson")),
             Box::new(error.clone()),
         ),
     );
@@ -98,12 +98,12 @@ pub(super) fn register(checker: &mut Checker) {
     ] {
         define_func(
             checker,
-            &format!("Std.Acp.Host.{name}"),
+            &format!("Std.Ai.Acp.Host.{name}"),
             vec![
-                p("Launch", named(checker, "Std.Acp.Launch")),
+                p("Launch", named(checker, "Std.Ai.Acp.Launch")),
                 p(
                     "Method",
-                    named(checker, &format!("Std.Acp.{family}.AuthMethodTerminal")),
+                    named(checker, &format!("Std.Ai.Acp.{family}.AuthMethodTerminal")),
                 ),
                 p("TimeoutMillis", option(Ty::Integer)),
                 p(

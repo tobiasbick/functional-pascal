@@ -13,9 +13,9 @@ pub(super) fn register(checker: &mut Checker) {
     let connection = checker
         .scopes
         .imports
-        .lookup_metadata("Std.Acp.Connection")
+        .lookup_metadata("Std.Ai.Acp.Connection")
         .map(|symbol| symbol.ty.clone())
-        .unwrap_or_else(|| Ty::Named("Std.Acp.Connection".into()));
+        .unwrap_or_else(|| Ty::Named("Std.Ai.Acp.Connection".into()));
     for (name, ty) in [
         ("ToolDefinition", t.definition.clone()),
         ("ToolHandler", t.handler.clone()),
@@ -25,7 +25,7 @@ pub(super) fn register(checker: &mut Checker) {
         ("McpError", t.error.clone()),
     ] {
         checker.scopes.imports.define_metadata(
-            &format!("Std.Acp.{name}"),
+            &format!("Std.Ai.Acp.{name}"),
             Symbol {
                 constant: None,
                 ty,
@@ -39,7 +39,7 @@ pub(super) fn register(checker: &mut Checker) {
     if let Ty::Result(_, error) = &result {
         for variant in fpas_builtins::native_errors::NativeErrorFamily::Mcp.variants() {
             checker.scopes.imports.define_metadata(
-                &format!("Std.Acp.McpError.{}", variant.name),
+                &format!("Std.Ai.Acp.McpError.{}", variant.name),
                 Symbol {
                     constant: None,
                     ty: (**error).clone(),
@@ -52,7 +52,7 @@ pub(super) fn register(checker: &mut Checker) {
     }
     define_func(
         checker,
-        "Std.Acp.RegisterTool",
+        "Std.Ai.Acp.RegisterTool",
         vec![
             p("Connection", connection.clone()),
             p("Definition", t.definition),
@@ -60,7 +60,7 @@ pub(super) fn register(checker: &mut Checker) {
         ],
         result.clone(),
     );
-    for name in ["Std.Acp.AttachMcpServer", "Std.Acp.DetachMcpServer"] {
+    for name in ["Std.Ai.Acp.AttachMcpServer", "Std.Ai.Acp.DetachMcpServer"] {
         define_func(
             checker,
             name,
@@ -78,7 +78,7 @@ pub(super) fn register(checker: &mut Checker) {
     );
     define_func(
         checker,
-        "Std.Acp.ServeTools",
+        "Std.Ai.Acp.ServeTools",
         vec![
             p("Connection", connection),
             p("Cancellation", Ty::Option(Box::new(token))),

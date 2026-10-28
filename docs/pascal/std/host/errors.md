@@ -1,7 +1,7 @@
-# Std.Errors
+# Std.Os.Errors
 
 Shared native causes preserve the attempted hosted operation and its original
-explanation. Import the unit with `uses Std.Errors as Errors;`.
+explanation. Import the unit with `uses Std.Os.Errors as Errors;`.
 
 `HostError.Failure(Operation: string; Resources: array of string;
 Domain: Option of string; Code: Option of integer; Detail: string)` is a native

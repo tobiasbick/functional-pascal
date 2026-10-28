@@ -15,12 +15,12 @@ A functional-first Pascal language with selected Ada conventions. Compiles `.fpa
 - **Contracts** — Declare routine preconditions with `requires` and postconditions with `ensures`. Checks run by default in every build mode; [`--no-contracts`](docs/pascal/program-structure/cli.md#contract-policy) omits their execution while retaining type checking.
 - **Generic records and enums** — Declare type parameters with `of` and infer type arguments from supplied constructor fields or payloads.
 - **Subranges and distinct types** — Restrict integer values with checked bounds and give scalar domain types their own identity.
-- **Error handling** — Built-in `Result of (T, E)` and `Option of T`: `try` propagates, nonbinding `is` tests variants, and exhaustive `case` handles payloads and defaults. [Std.Parse](docs/pascal/std/text/parse.md) text parsers return `Result`; `Unwrap` deliberately aborts on failure.
+- **Error handling** — Built-in `Result of (T, E)` and `Option of T`: `try` propagates, nonbinding `is` tests variants, and exhaustive `case` handles payloads and defaults. [Std.Text.Parse](docs/pascal/std/text/parse.md) text parsers return `Result`; `Unwrap` deliberately aborts on failure.
 - **Concurrency** — `go` tasks, typed bounded channels, cooperative cancellation, mixed-source `Select`, task groups, and supervised retries. [Std.Tasks](docs/pascal/std/concurrency/task.md) includes timed group close; timeout retains unfinished work rather than forcibly terminating it.
 - **Task scopes** — `scope ... end scope;` joins owned child tasks before exit, supports cooperative cancellation, and propagates runtime failures. [Scope-owned handles](docs/pascal/language/concurrency/task-scopes.md#handle-escapes) stay inside their scope.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, math, tasks, files, networking, and more. Strings, arrays, dictionaries, `Option`, and `Result` have native operations that need no imports.
 - **Visible mutation** — Native collection and string transformations return values; `InPlace` operations update writable receivers.
-- **Server lifetime** — [Std.Server](docs/pascal/std/network/server.md) owns worker groups and listeners, handles stop signals, and supports explicitly authorized process escalation after a common grace period.
+- **Server lifetime** — [Std.Net.Server](docs/pascal/std/network/server.md) owns worker groups and listeners, handles stop signals, and supports explicitly authorized process escalation after a common grace period.
 - **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, integrated tests, and source debugging.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
@@ -147,14 +147,14 @@ the compiler, language server, debugger, and standard library.
 
 ## Applications
 
-[Local Chat](apps/local-chat/README.md) is a small `Std.Tui` client for the
+[Local Chat](apps/local-chat/README.md) is a small `Std.Ui.Terminal` client for the
 fixed local OpenAI-compatible llama.cpp endpoint.
 
 ```sh
 fpas run apps/local-chat/local-chat.fpasprj
 ```
 
-[Notes](apps/notes/README.md) is a complete modern `Std.Tui` note-taking
+[Notes](apps/notes/README.md) is a complete modern `Std.Ui.Terminal` note-taking
 application with local human-readable `.note` files, responsive layouts,
 keyboard and mouse control, a command palette, and headless workflow tests.
 
@@ -278,14 +278,14 @@ end.
 
 ### Parsing and error propagation
 
-Import `Std.Parse` through an alias. Its `Int`, `Real`, `Bool`, and `HexInt`
+Import `Std.Text.Parse` through an alias. Its `Int`, `Real`, `Bool`, and `HexInt`
 operations take `Text: string` and return `Result of (T, Parse.ParseError)`. Use `try`
 inside a compatible function and `case` to handle the result locally:
 
 ```pascal id=example-14
 program ParseExample;
 
-uses Std.Parse as Parse, Std.Console as Console;
+uses Std.Text.Parse as Parse, Std.Console as Console;
 
 function DoubleInput(Text: string): result of (integer, Parse.ParseError);
 begin
@@ -309,7 +309,7 @@ More examples in the [`examples/`](examples) directory.
 
 ### Interactive Mandelbrot TUI
 
-The canonical interactive `Std.Tui` example renders complete Mandelbrot images
+The canonical interactive `Std.Ui.Terminal` example renders complete Mandelbrot images
 from a cancellable subscription using the VM worker pool. Navigation replaces the active
 generation without blocking terminal input, and only the serialized TUI host
 updates the model and paints frames.

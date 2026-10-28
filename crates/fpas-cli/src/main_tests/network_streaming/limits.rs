@@ -48,7 +48,7 @@ fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
         &format!(
             r#"
 program HttpExactLimit;
-uses Std.Http as Http, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Test as Test;
 function Fetch(RequestValue: Http.Request; Streaming: boolean): result of (integer, Http.HttpError);
 begin
   if not Streaming then

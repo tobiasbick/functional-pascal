@@ -11,7 +11,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
 | Agent tools | [Source queries for coding agents](agent-source-queries.md) | Proposed name selection, bounded inspection, direct call relationships, and later checked refactorings |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
-| FPAS 2 | [Language directions](fpas2-language-directions.md) | Recorded decisions and open proposals; namespace migration planned in AP53, implementation not authorized |
+| FPAS 2 | [Language directions](fpas2-language-directions.md) | Recorded decisions and open proposals; AP53 namespace migration delivered |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Namespace migration before buffers, future capabilities and links to their owning plans |
 | UI | [Shared terminal and graphical UI](shared-ui.md) | Planned common UI and application migration during graphics work, after FPAS 2 |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |

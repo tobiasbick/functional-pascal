@@ -43,12 +43,12 @@ pub(super) struct Types {
 }
 
 pub(super) fn types(checker: &mut Checker) -> Types {
-    let server = opaque(checker, "Std.Mcp.Server");
-    let endpoint = opaque(checker, "Std.Mcp.Endpoint");
+    let server = opaque(checker, "Std.Ai.Mcp.Server");
+    let endpoint = opaque(checker, "Std.Ai.Mcp.Endpoint");
     let error = super::errors::register(checker, NativeErrorFamily::Mcp);
     for variant in NativeErrorFamily::Mcp.variants() {
         checker.scopes.imports.define_metadata(
-            &format!("Std.Mcp.McpError.{}", variant.name),
+            &format!("Std.Ai.Mcp.McpError.{}", variant.name),
             Symbol {
                 constant: None,
                 ty: error.clone(),
@@ -60,12 +60,12 @@ pub(super) fn types(checker: &mut Checker) -> Types {
     }
     let raw = record(
         checker,
-        "Std.Mcp.Types.RawJson",
+        "Std.Ai.Mcp.Types.RawJson",
         vec![("Text".into(), Ty::String)],
     );
     let definition = record(
         checker,
-        "Std.Mcp.Types.ToolDefinition",
+        "Std.Ai.Mcp.Types.ToolDefinition",
         vec![
             ("Name".into(), Ty::String),
             ("Description".into(), Ty::String),
@@ -77,12 +77,12 @@ pub(super) fn types(checker: &mut Checker) -> Types {
     );
     let result = record(
         checker,
-        "Std.Mcp.Types.ToolResult",
+        "Std.Ai.Mcp.Types.ToolResult",
         vec![("Payload".into(), raw.clone())],
     );
     let context = record(
         checker,
-        "Std.Mcp.Types.RequestContext",
+        "Std.Ai.Mcp.Types.RequestContext",
         vec![
             ("Server".into(), server.clone()),
             ("AttachmentId".into(), Ty::Integer),
@@ -96,12 +96,12 @@ pub(super) fn types(checker: &mut Checker) -> Types {
     );
     let header = record(
         checker,
-        "Std.Mcp.Types.HttpHeader",
+        "Std.Ai.Mcp.Types.HttpHeader",
         vec![("Name".into(), Ty::String), ("Value".into(), Ty::String)],
     );
     let access = record(
         checker,
-        "Std.Mcp.Types.HttpAccess",
+        "Std.Ai.Mcp.Types.HttpAccess",
         vec![
             ("Url".into(), Ty::String),
             ("Headers".into(), array(header.clone())),
@@ -126,14 +126,14 @@ pub(super) fn types(checker: &mut Checker) -> Types {
         ("ToolHandler", handler.clone()),
         ("McpError", error.clone()),
     ] {
-        alias(checker, &format!("Std.Mcp.{name}"), ty.clone());
+        alias(checker, &format!("Std.Ai.Mcp.{name}"), ty.clone());
         if name == "ToolHandler" {
-            alias(checker, "Std.Mcp.Types.ToolHandler", ty);
+            alias(checker, "Std.Ai.Mcp.Types.ToolHandler", ty);
         }
     }
     let limits = record(
         checker,
-        "Std.Mcp.Limits",
+        "Std.Ai.Mcp.Limits",
         [
             "Tools",
             "CatalogBytes",
@@ -148,7 +148,7 @@ pub(super) fn types(checker: &mut Checker) -> Types {
     );
     let http = record(
         checker,
-        "Std.Mcp.HttpOptions",
+        "Std.Ai.Mcp.HttpOptions",
         vec![
             ("Address".into(), Ty::String),
             ("Connections".into(), Ty::Integer),

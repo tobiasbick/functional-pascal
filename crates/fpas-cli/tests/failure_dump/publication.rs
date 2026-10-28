@@ -43,7 +43,7 @@ fn publication_failure_adds_fp4139_after_the_original_error_in_both_formats() {
 #[test]
 fn a_destination_created_after_validation_is_preserved_and_staging_is_removed() {
     let fixture = Fixture::new();
-    fixture.write("main.fpas", "program Race; uses Std.Console as Console, Std.Fs as Fs, Std.Time as Time; begin Console.WriteLn('ready'); for I:integer:=1 to 6000 do if Fs.IsFile('release') then panic('raced'); end if; Time.Sleep(1); end for; panic('barrier timeout'); end.");
+    fixture.write("main.fpas", "program Race; uses Std.Console as Console, Std.Io.Fs as Fs, Std.Time as Time; begin Console.WriteLn('ready'); for I:integer:=1 to 6000 do if Fs.IsFile('release') then panic('raced'); end if; Time.Sleep(1); end for; panic('barrier timeout'); end.");
     let mut child = Process::spawn(
         &fixture,
         &[
@@ -138,7 +138,7 @@ impl Drop for Monitor {
 #[test]
 fn concurrent_failure_writers_publish_exactly_one_complete_document() {
     let fixture = Fixture::new();
-    fixture.write("main.fpas", "program Writers; uses Std.Console as Console, Std.Fs as Fs, Std.Time as Time, Std.Args as Args; begin Console.WriteLn('ready'); for I:integer:=1 to 6000 do if Fs.IsFile('release') then var Items:array of string:=[]; for J:integer:=1 to 256 do Items.PushInPlace((#0).RepeatStr(4096)); end for; panic(Args.ParamStr(0)); end if; Time.Sleep(1); end for; panic('barrier timeout'); end.");
+    fixture.write("main.fpas", "program Writers; uses Std.Console as Console, Std.Io.Fs as Fs, Std.Time as Time, Std.Os.Args as Args; begin Console.WriteLn('ready'); for I:integer:=1 to 6000 do if Fs.IsFile('release') then var Items:array of string:=[]; for J:integer:=1 to 256 do Items.PushInPlace((#0).RepeatStr(4096)); end for; panic(Args.ParamStr(0)); end if; Time.Sleep(1); end for; panic('barrier timeout'); end.");
     let args = [
         "run",
         "main.fpas",

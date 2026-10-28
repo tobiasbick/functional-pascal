@@ -2,8 +2,8 @@
 program NetworkHttpClient;
 
 uses
-  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Http as Http, Std.Net.Utf8 as Utf8,
-  Std.Parse as Parse;
+  Std.Os.Args as Args, Std.Text.Format as Conv, Std.Console as Console, Std.Net.Http as Http, Std.Text.Utf8 as Utf8,
+  Std.Text.Parse as Parse;
 
 // Prints one buffered response after validating its UTF-8 body.
 //

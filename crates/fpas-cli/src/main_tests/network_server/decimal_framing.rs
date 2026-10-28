@@ -20,7 +20,7 @@ fn source_review_server_checks_decimal_lengths_and_boundaries() {
         "source-review-server-decimal",
         format!(
             r#"program DecimalServer;
-uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 begin
   const ListenerValue: Net.Listener := Net.Listen('127.0.0.1', {port}).Unwrap();
   for I: integer := 1 to {} do
@@ -32,7 +32,7 @@ begin
       when Ok(_): begin end;
       when Error(const Message): begin
         if I = {} then
-        begin if not (Message is Http.HttpError.LimitExceeded('Std.Http.Server.ReadRequest', _)) then panic(Message.Message()); end if; end;
+        begin if not (Message is Http.HttpError.LimitExceeded('Std.Net.Http.Server.ReadRequest', _)) then panic(Message.Message()); end if; end;
         else begin if not (Message is Http.HttpError.InvalidMessage(_)) then panic(Message.Message()); end if; end; end if;
         Text := 'rejected';
       end;

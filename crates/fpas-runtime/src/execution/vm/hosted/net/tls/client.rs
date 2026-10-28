@@ -1,4 +1,4 @@
-//! Verified TLS client setup for `Std.Net.ConnectTls`.
+//! Verified TLS client setup for `Std.Net.Sockets.ConnectTls`.
 
 use crate::execution::vm::hosted::net::failure::Failure;
 use std::net::TcpStream;

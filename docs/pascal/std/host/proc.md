@@ -1,11 +1,11 @@
-# `Std.Proc`
+# `Std.Os.Proc`
 
 Host process execution and interactive binary pipes for FPAS programs.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Proc as Proc;
+uses Std.Console as Console, Std.Os.Proc as Proc;
 
 begin
   case Proc.RunCapture('fpas', ['--version']) of
@@ -20,7 +20,7 @@ begin
 end.
 ```
 
-`Std.Proc` starts a host process and waits for it to finish. A call can either
+`Std.Os.Proc` starts a host process and waits for it to finish. A call can either
 inherit the parent's output streams or capture stdout and stderr. The options
 forms configure child stdin, environment, working directory, timeout,
 cancellation, and capture bounds. `Start` returns an owned process handle for
@@ -34,13 +34,13 @@ before launch.
 
 ## Importing and names
 
-After `uses Std.Proc as Proc;`, access functions and records through that alias.
+After `uses Std.Os.Proc as Proc;`, access functions and records through that alias.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Proc as Proc;`.
+Requires `uses Std.Os.Proc as Proc;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -172,7 +172,7 @@ working directory change the parent process.
 ```pascal id=example-options run
 program ProcessDefaults;
 
-uses Std.Proc as Proc, Std.Test as Test;
+uses Std.Os.Proc as Proc, Std.Test as Test;
 
 begin
   const Defaults := Proc.DefaultOptions();
@@ -313,7 +313,7 @@ and terminates remaining owned descendants according to the process-group rules.
 ```pascal id=interactive-login-check
 program InteractiveLogin;
 
-uses Std.Proc as Proc;
+uses Std.Os.Proc as Proc;
 
 begin
   const Status := Proc.RunInteractive('agent', ['login'], Proc.DefaultStartOptions(), Some(60000), None);
@@ -390,7 +390,7 @@ ExecutionFailed reports failures after launch in the options APIs, including
 wait, signal/termination, and pipe I/O failures.
 
 Operation names identify the actual function, such as
-`Std.Proc.RunCaptureWithOptions`. Capture failures retain the bounded output
+`Std.Os.Proc.RunCaptureWithOptions`. Capture failures retain the bounded output
 collected before termination; directly inherited streams have empty captured
 fields. Prelaunch failures have no captured output. A successfully completed
 child with a nonzero exit code remains an `Ok` outcome.

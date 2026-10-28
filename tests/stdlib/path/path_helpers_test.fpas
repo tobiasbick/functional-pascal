@@ -1,6 +1,6 @@
 program PathHelpersTest;
 
-uses Std.Path as Path, Std.Test as Test;
+uses Std.Io.Path as Path, Std.Test as Test;
 
 begin
   Test.AssertTrue(not Path.IsAbsolute(''));

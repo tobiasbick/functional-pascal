@@ -6,13 +6,13 @@ kind = "library"
 units = [
   "Std.Version",
   "Std.Cli",
-  "Std.Calendar",
-  "Std.Tui",
+  "Std.Time.Calendar",
+  "Std.Ui.Terminal",
   "Std.Net.Uri",
-  "Std.Net.Utf8",
-  "Std.Json.Fields",
-  "Std.Toml.Fields",
-  "Std.Http",
+  "Std.Text.Utf8",
+  "Std.Encoding.Json.Fields",
+  "Std.Encoding.Toml.Fields",
+  "Std.Net.Http",
   "Std.Ai.OpenAi",
 ]
 

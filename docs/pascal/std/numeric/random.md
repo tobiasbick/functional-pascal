@@ -1,11 +1,11 @@
-# `Std.Random`
+# `Std.Math.Random`
 
 Deterministic pseudo-random number helpers for simulations, games, randomized tests, and similar non-security work. This page is the **full API** for the unit.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Random as Random;
+uses Std.Console as Console, Std.Math.Random as Random;
 
 begin
   Random.SetSeed(42);
@@ -17,7 +17,7 @@ Do not use this unit for secrets, tokens, passwords, keys, or nonces. Use [`Std.
 
 ## Importing and names
 
-Import with `uses Std.Random as Random;` and access public symbols as `Random.Name`. User enum variants require `Random.Type.Variant`.
+Import with `uses Std.Math.Random as Random;` and access public symbols as `Random.Name`. User enum variants require `Random.Type.Variant`.
 
 ## Quick reference
 
@@ -69,7 +69,7 @@ const Repeated: integer := Random.RandomInt(1, 100);
 
 ## Implementation (contributors)
 
-`Std.Random` uses a VM-owned ChaCha12 generator. `SetSeed` expands the signed integer with a fixed SplitMix64 mapping; real values use the high 53 bits of the next word, and integer ranges use rejection sampling. These choices make seeded sequences independent of host endianness and operating system.
+`Std.Math.Random` uses a VM-owned ChaCha12 generator. `SetSeed` expands the signed integer with a fixed SplitMix64 mapping; real values use the high 53 bits of the next word, and integer ranges use rejection sampling. These choices make seeded sequences independent of host endianness and operating system.
 
 | Concern | Location |
 |---------|----------|

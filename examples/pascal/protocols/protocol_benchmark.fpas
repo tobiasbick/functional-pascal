@@ -1,8 +1,8 @@
 program ProtocolBenchmark;
 
 uses
-  Std.Acp.Types as Acp, Std.Mcp as Mcp, Std.Args as Args, Std.Parse as Parse,
-  Std.Time as Time, Std.Console as Console, Std.Conv as Conv, Std.Test as Test;
+  Std.Ai.Acp.Types as Acp, Std.Ai.Mcp as Mcp, Std.Os.Args as Args, Std.Text.Parse as Parse,
+  Std.Time as Time, Std.Console as Console, Std.Text.Format as Conv, Std.Test as Test;
 
 function Handler(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError);
 begin

@@ -25,7 +25,7 @@ fn infix_shifts_report_the_matching_std_bits_function() {
             assert_eq!(diagnostic.code, PARSE_EXPECTED_EXPRESSION);
             let hint = diagnostic.help.as_deref().expect("migration hint");
             assert!(hint.contains(&format!("Bits.{function}")), "{hint}");
-            assert!(hint.contains("uses Std.Bits as Bits;"));
+            assert!(hint.contains("uses Std.Math.Bits as Bits;"));
             let span = diagnostic.span.expect("operator span");
             assert_eq!(
                 &source[span.offset()..span.offset() + span.length()],

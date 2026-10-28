@@ -4,7 +4,7 @@ use crate::check::Checker;
 use crate::types::Ty;
 use fpas_builtins::std_symbols as s;
 
-/// Register the `Std.Fs` functions made visible by `uses Std.Fs`.
+/// Register the `Std.Io.Fs` functions made visible by `uses Std.Io.Fs`.
 pub(super) fn register_std_fs(checker: &mut Checker) {
     let error_ty =
         super::errors::register(checker, fpas_builtins::native_errors::NativeErrorFamily::Fs);

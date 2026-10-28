@@ -1,148 +1,148 @@
-//! `Std.Fs` intrinsic discriminants.
+//! `Std.Io.Fs` intrinsic discriminants.
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics for `Std.Fs.*`.
+/// Intrinsics for `Std.Io.Fs.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/fs.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum FsIntrinsic {
-    /// `Std.Fs.Open` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Open` — bounded VM-owned file operation.
     Open = 710,
-    /// `Std.Fs.Close` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Close` — bounded VM-owned file operation.
     Close = 711,
-    /// `Std.Fs.Read` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Read` — bounded VM-owned file operation.
     Read = 712,
-    /// `Std.Fs.Write` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Write` — bounded VM-owned file operation.
     Write = 713,
-    /// `Std.Fs.ReadLine` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.ReadLine` — bounded VM-owned file operation.
     ReadLine = 714,
-    /// `Std.Fs.Seek` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Seek` — bounded VM-owned file operation.
     Seek = 715,
-    /// `Std.Fs.Tell` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Tell` — bounded VM-owned file operation.
     Tell = 716,
-    /// `Std.Fs.Flush` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.Flush` — bounded VM-owned file operation.
     Flush = 717,
-    /// `Std.Fs.ReadWithCancellation` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.ReadWithCancellation` — bounded VM-owned file operation.
     ReadWithCancellation = 718,
-    /// `Std.Fs.WriteWithCancellation` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.WriteWithCancellation` — bounded VM-owned file operation.
     WriteWithCancellation = 719,
-    /// `Std.Fs.ReadLineWithCancellation` — bounded VM-owned file operation.
+    /// `Std.Io.Fs.ReadLineWithCancellation` — bounded VM-owned file operation.
     ReadLineWithCancellation = 720,
 
-    /// `Std.Fs.ReadBytes(Path)` - read a bounded binary file.
+    /// `Std.Io.Fs.ReadBytes(Path)` - read a bounded binary file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     ReadBytes = 708,
-    /// `Std.Fs.WriteBytes(Path, Bytes)` - write a bounded array of byte integers.
+    /// `Std.Io.Fs.WriteBytes(Path, Bytes)` - write a bounded array of byte integers.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     WriteBytes = 709,
-    /// `Std.Fs.ReadText(Path)` - read a UTF-8 text file.
+    /// `Std.Io.Fs.ReadText(Path)` - read a UTF-8 text file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     ReadText = 315,
-    /// `Std.Fs.WriteText(Path, Text)` - write UTF-8 text to a file.
+    /// `Std.Io.Fs.WriteText(Path, Text)` - write UTF-8 text to a file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     WriteText = 316,
-    /// `Std.Fs.Exists(Path)` - check whether a path exists.
+    /// `Std.Io.Fs.Exists(Path)` - check whether a path exists.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     Exists = 317,
-    /// `Std.Fs.IsFile(Path)` - check whether a path is a regular file.
+    /// `Std.Io.Fs.IsFile(Path)` - check whether a path is a regular file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     IsFile = 318,
-    /// `Std.Fs.IsDir(Path)` - check whether a path is a directory.
+    /// `Std.Io.Fs.IsDir(Path)` - check whether a path is a directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     IsDir = 319,
-    /// `Std.Fs.CreateDir(Path)` - create a single directory.
+    /// `Std.Io.Fs.CreateDir(Path)` - create a single directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CreateDir = 320,
-    /// `Std.Fs.CreateDirAll(Path)` - create a directory and missing parents.
+    /// `Std.Io.Fs.CreateDirAll(Path)` - create a directory and missing parents.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CreateDirAll = 613,
-    /// `Std.Fs.Glob(Pattern)` - expand a glob pattern to matching file paths.
+    /// `Std.Io.Fs.Glob(Pattern)` - expand a glob pattern to matching file paths.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     Glob = 343,
-    /// `Std.Fs.ReadDir(Path)` - list immediate files and directories in stable order.
+    /// `Std.Io.Fs.ReadDir(Path)` - list immediate files and directories in stable order.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     ReadDir = 620,
-    /// `Std.Fs.WriteTextAtomic(Path, Text)` - durably replace a UTF-8 text file.
+    /// `Std.Io.Fs.WriteTextAtomic(Path, Text)` - durably replace a UTF-8 text file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     WriteTextAtomic = 517,
-    /// `Std.Fs.DeleteFile(Path)` - remove one file entry.
+    /// `Std.Io.Fs.DeleteFile(Path)` - remove one file entry.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     DeleteFile = 567,
-    /// `Std.Fs.DeleteDir(Path)` - remove one empty directory.
+    /// `Std.Io.Fs.DeleteDir(Path)` - remove one empty directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     DeleteDir = 621,
-    /// `Std.Fs.DeleteDirAll(Path)` - remove a directory and all of its contents.
+    /// `Std.Io.Fs.DeleteDirAll(Path)` - remove a directory and all of its contents.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     DeleteDirAll = 622,
-    /// `Std.Fs.Rename(Source, Target)` - rename or move a file or directory.
+    /// `Std.Io.Fs.Rename(Source, Target)` - rename or move a file or directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     Rename = 623,
-    /// `Std.Fs.CopyFile(Source, Target)` - copy one file, replacing the target.
+    /// `Std.Io.Fs.CopyFile(Source, Target)` - copy one file, replacing the target.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CopyFile = 624,
-    /// `Std.Fs.AppendText(Path, Text)` - append UTF-8 text, creating the file.
+    /// `Std.Io.Fs.AppendText(Path, Text)` - append UTF-8 text, creating the file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     AppendText = 625,
-    /// `Std.Fs.FileSize(Path)` - size in bytes of one regular file.
+    /// `Std.Io.Fs.FileSize(Path)` - size in bytes of one regular file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     FileSize = 626,
-    /// `Std.Fs.ModifiedTime(Path)` - last modification time in Unix milliseconds.
+    /// `Std.Io.Fs.ModifiedTime(Path)` - last modification time in Unix milliseconds.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     ModifiedTime = 627,
-    /// `Std.Fs.IsSymLink(Path)` - check whether a path is a symbolic link.
+    /// `Std.Io.Fs.IsSymLink(Path)` - check whether a path is a symbolic link.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     IsSymLink = 628,
-    /// `Std.Fs.CurrentDir()` - current working directory of the process.
+    /// `Std.Io.Fs.CurrentDir()` - current working directory of the process.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CurrentDir = 629,
-    /// `Std.Fs.SetCurrentDir(Path)` - change the process working directory.
+    /// `Std.Io.Fs.SetCurrentDir(Path)` - change the process working directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     SetCurrentDir = 630,
-    /// `Std.Fs.TempDir()` - host temporary directory.
+    /// `Std.Io.Fs.TempDir()` - host temporary directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     TempDir = 631,
-    /// `Std.Fs.CreateTempDir()` - create a uniquely named temporary directory.
+    /// `Std.Io.Fs.CreateTempDir()` - create a uniquely named temporary directory.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CreateTempDir = 632,
-    /// `Std.Fs.CreateTempFile()` - create a uniquely named empty temporary file.
+    /// `Std.Io.Fs.CreateTempFile()` - create a uniquely named empty temporary file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CreateTempFile = 633,
-    /// `Std.Fs.ReadDirAll(Path)` - list all entries below a directory recursively.
+    /// `Std.Io.Fs.ReadDirAll(Path)` - list all entries below a directory recursively.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     ReadDirAll = 634,
-    /// `Std.Fs.CopyDirAll(Source, Target)` - copy a directory tree.
+    /// `Std.Io.Fs.CopyDirAll(Source, Target)` - copy a directory tree.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CopyDirAll = 635,

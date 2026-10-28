@@ -1,6 +1,6 @@
 program TuiIncrementalLayoutTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin

@@ -1,6 +1,6 @@
 program TuiInputKeyboardTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 type InputKeyboardModel = record
   Text: string;

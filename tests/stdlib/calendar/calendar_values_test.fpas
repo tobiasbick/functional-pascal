@@ -1,6 +1,6 @@
 program CalendarValuesTest;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 procedure AssertDate(Year: integer; Month: integer; Day: integer);
 begin

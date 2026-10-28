@@ -23,7 +23,7 @@ runtime and language gaps that a graphics capability would expose, and the prope
 make such a capability practical. It assumes a split in which native Rust code owns the
 performance-critical layer (windowing, GPU resources, draw submission) and FPAS code owns
 higher-level concerns such as scenes, cameras, animation, and the application loop. This is the
-same split that `Std.Tui` already uses over `Std.Console`.
+same split that `Std.Ui.Terminal` already uses over `Std.Console`.
 
 The graphics unit itself is out of scope here. This note records rendering needs
 for the shared runtime, standard-library, build and language directions, together
@@ -34,7 +34,7 @@ belong in the linked FPAS 2 topics.
 
 These parts of the current runtime already fit a graphics capability:
 
-- **Opaque resource handles.** `Std.Net.Connection`, `Std.Net.Listener`, and the
+- **Opaque resource handles.** `Std.Net.Sockets.Connection`, `Std.Net.Sockets.Listener`, and the
   `Std.Tasks` cancellation types show the pattern of opaque values that only the owning intrinsics
   accept. Explicit release is also established, as are cleanup when the VM ends and interruption of
   blocked operations. Windows, meshes, textures, and pipelines can follow the same model.
@@ -43,7 +43,7 @@ These parts of the current runtime already fit a graphics capability:
   main thread, such as macOS, are therefore reachable from FPAS code.
 - **Concurrency.** Bounded channels, `TryReceive`, `Select`, and task groups let background work
   feed a frame loop without blocking it.
-- **Layered hosts.** `Std.Tui` is written in FPAS over a narrow intrinsic layer and provides an
+- **Layered hosts.** `Std.Ui.Terminal` is written in FPAS over a narrow intrinsic layer and provides an
   update/view host with background messages. A rendering host can reuse this structure.
 - **Scalar math.** `Std.Math` provides trigonometry, square root, clamping, and related functions.
 
@@ -54,7 +54,7 @@ These parts of the current runtime already fit a graphics capability:
 Arrays store one tagged runtime value per element. A vertex buffer of `N` floats therefore costs
 several times the memory of a packed `f32` buffer, and every upload converts each element at the
 native boundary. Bytes are `array of integer` with a range check per element;
-`Std.Fs` already supports binary reads and writes using that representation.
+`Std.Io.Fs` already supports binary reads and writes using that representation.
 Large or frequently changing meshes, image data, and audio samples pay the
 tagged-storage and conversion cost. The [standard library roadmap](std-roadmap.md) lists the canonical byte
 representation as an open decision.
@@ -84,7 +84,7 @@ There is no operator overloading, so vector math is written as nested function c
 
 ### Event loop integration
 
-The `Std.Tui` host reads console input from a blocking call inside a worker task. Native windowing
+The `Std.Ui.Terminal` host reads console input from a blocking call inside a worker task. Native windowing
 systems instead deliver events through a loop that must be pumped on the main thread. FPAS has no
 general way to wait on "window events or channel messages or a frame deadline" in a single
 `Select`. Without one, a frame loop must poll with `TryReceive`.

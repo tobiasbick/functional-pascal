@@ -59,23 +59,23 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
             if crate::intrinsic_debug_effects(intrinsic).is_debug_safe() {
                 None
             } else {
-                Some("Std.Mcp")
+                Some("Std.Ai.Mcp")
             }
         }
-        Intrinsic::Server(_) => Some("Std.Server"),
-        Intrinsic::Random(_) => Some("Std.Random"),
+        Intrinsic::Server(_) => Some("Std.Net.Server"),
+        Intrinsic::Random(_) => Some("Std.Math.Random"),
         Intrinsic::Crypto(_) => Some("Std.Crypto"),
         Intrinsic::Acp(_) | Intrinsic::Encoding(_) => None,
         Intrinsic::Time(TimeIntrinsic::Sleep) => None,
         Intrinsic::Time(_) => Some("wall-clock Std.Time"),
-        Intrinsic::Fs(_) => Some("Std.Fs"),
-        Intrinsic::Env(_) => Some("Std.Env"),
+        Intrinsic::Fs(_) => Some("Std.Io.Fs"),
+        Intrinsic::Env(_) => Some("Std.Os.Env"),
         Intrinsic::Proc(
             crate::ProcIntrinsic::DefaultOptions | crate::ProcIntrinsic::DefaultStartOptions,
         ) => None,
-        Intrinsic::Proc(_) => Some("Std.Proc"),
-        Intrinsic::Net(_) => Some("Std.Net"),
-        Intrinsic::Http(_) => Some("Std.Http"),
+        Intrinsic::Proc(_) => Some("Std.Os.Proc"),
+        Intrinsic::Net(_) => Some("Std.Net.Sockets"),
+        Intrinsic::Http(_) => Some("Std.Net.Http"),
         Intrinsic::Console(
             ConsoleIntrinsic::Read
             | ConsoleIntrinsic::ReadLn

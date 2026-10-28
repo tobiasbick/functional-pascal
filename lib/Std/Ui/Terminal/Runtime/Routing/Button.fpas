@@ -1,0 +1,274 @@
+unit Std.Ui.Terminal.Runtime.Routing.Button;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Chrome.Button as ChromeButton, Std.Ui.Terminal.Elements.Element as Element,
+  Std.Ui.Terminal.Ids.ControlId as ControlId, Std.Ui.Terminal.Runtime.Msg as Msg;
+
+function TuiButtonFind(Node: Element.TuiElement; RequireDefault: boolean; Mnemonic: string): option of ChromeButton.TuiButtonSpec;
+begin
+  case Node of
+    when Element.TuiElement.Button(const Button):
+      begin
+        if Button.Enabled
+          and
+          (
+            (RequireDefault and Button.Default)
+            or
+            ((Mnemonic <> '') and (Button.Mnemonic.ToLower() = Mnemonic.ToLower()))
+          )
+        then
+          begin
+            return Some(Button);
+          end;
+        end if;
+
+        return None;
+      end;
+    when Element.TuiElement.Desktop(const Focused, const Children):
+      begin
+        var ModalIndex: integer := -1;
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case Children[Index] of
+              when Element.TuiElement.Overlay(const Title, const OverlayChildren):
+                begin
+                  ModalIndex := Index;
+                end;
+              when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Desktop(_, _):
+                null;
+            end case;
+          end;
+        end for;
+
+        if ModalIndex >= 0 then
+          begin
+            return TuiButtonFind(Children[ModalIndex], RequireDefault, Mnemonic);
+          end;
+        end if;
+
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
+      begin
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Row(const Children, const Spacing):
+      begin
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Column(const Children, const Spacing):
+      begin
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Layout(const Settings, const Children):
+      begin
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Panel(const Title, const Children):
+      begin
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Overlay(const Title, const Children):
+      begin
+        for Index: integer := 0 to Children.Length() - 1 do
+          begin
+            case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+              when Some(const Button):
+                begin
+                  return Some(Button);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
+      begin
+        return None;
+      end;
+  end case;
+end function;
+
+// Returns the first enabled default button in the active modal or full tree.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+public function TuiFindDefaultButton(Root: Element.TuiElement): option of ChromeButton.TuiButtonSpec;
+begin
+  return TuiButtonFind(Root, true, '');
+end function;
+
+// Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+public function TuiFindMnemonicButton(Root: Element.TuiElement; Mnemonic: string): option of ChromeButton.TuiButtonSpec;
+begin
+  if Mnemonic = '' then
+    begin
+      return None;
+    end;
+  end if;
+
+  return TuiButtonFind(Root, false, Mnemonic);
+end function;
+
+// Routes one Alt mnemonic to an enabled button action.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Key`: Console key event to route or match.
+public function TuiRouteButtonMnemonicKey(Root: Element.TuiElement; Key: Console.KeyEvent): option of array of Msg.TuiMsg;
+begin
+  if (Key.kind <> Console.KeyKind.Character) or not Key.alt then
+    begin
+      return None;
+    end;
+  end if;
+
+  case TuiFindMnemonicButton(Root, Key.ch) of
+    when Some(const Button):
+      begin
+        return Some([Msg.TuiMsg.Action(Button.Id, Button.Action)]);
+      end;
+    when None:
+      begin
+        return None;
+      end;
+  end case;
+end function;
+
+// Routes Enter or Space when an enabled button owns keyboard focus.
+//
+// Parameters:
+// - `Button`: Button specification used by the operation.
+// - `Target`: Target control identifier.
+// - `Key`: Console key event to route or match.
+public function TuiRouteFocusedButtonKey(
+  Button: ChromeButton.TuiButtonSpec;
+  Target: ControlId.TuiControlId;
+  Key: Console.KeyEvent
+): option of Msg.TuiMsg;
+begin
+  if Button.Id.Value <> Target.Value then
+    begin
+      return None;
+    end;
+  end if;
+
+  if Button.Enabled and ((Key.kind = Console.KeyKind.Enter) or (Key.kind = Console.KeyKind.Space)) then
+    begin
+      return Some(Msg.TuiMsg.Action(Button.Id, Button.Action));
+    end;
+  end if;
+
+  return None;
+end function;
+
+// Returns the enabled default button action for Enter.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+public function TuiRouteDefaultButtonEnter(Root: Element.TuiElement): option of Msg.TuiMsg;
+begin
+  case TuiFindDefaultButton(Root) of
+    when Some(const Button):
+      begin
+        return Some(Msg.TuiMsg.Action(Button.Id, Button.Action));
+      end;
+    when None:
+      begin
+        return None;
+      end;
+  end case;
+end function;
+end unit;

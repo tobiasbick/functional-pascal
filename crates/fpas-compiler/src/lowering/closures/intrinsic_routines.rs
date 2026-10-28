@@ -1,4 +1,4 @@
-//! Shared lowering of resolved intrinsic task entries and parser function values.
+//! Shared lowering of resolved intrinsic task entries and conversion function values.
 //!
 //! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 

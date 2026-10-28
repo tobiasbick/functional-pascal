@@ -1,6 +1,6 @@
 program ProcRunSuccessExitCodeTest;
 
-uses Std.Proc as Proc, Std.Test as Test;
+uses Std.Os.Proc as Proc, Std.Test as Test;
 
 begin
   // Host process that exits 0 on Windows and Unix.

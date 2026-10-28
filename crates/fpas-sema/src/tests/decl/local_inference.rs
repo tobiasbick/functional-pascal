@@ -3,7 +3,7 @@
 use super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{SEMA_TYPE_ANNOTATION_REQUIRED, SEMA_TYPE_MISMATCH};
 
-const PREFIX: &str = "program T; uses Std.Conv as Conv; type UserId = distinct integer; type Raw = integer;\ntype Point = record X: integer; end record;\ntype Shape = enum Circle(Radius: real); end enum;\nfunction ReadValue(): integer; begin return 42; end function;";
+const PREFIX: &str = "program T; uses Std.Math as Math; type UserId = distinct integer; type Raw = integer;\ntype Point = record X: integer; end record;\ntype Shape = enum Circle(Radius: real); end enum;\nfunction ReadValue(): integer; begin return 42; end function;";
 
 #[test]
 fn local_literals_and_conversions_have_fixed_types() {
@@ -26,7 +26,7 @@ fn all_fully_determined_initializer_forms_infer() {
     for initializer in [
         "ReadValue()",
         "'x'.ToUpper()",
-        "Conv.IntToReal(1)",
+        "Math.IntToReal(1)",
         "1 + 2",
         "not true",
         "Whole",

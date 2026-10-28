@@ -79,7 +79,7 @@ projects = ["json-lib.fpasprj"]
     support::write_library_project_file(&cwd.join("json-lib.fpasprj"), &["json.fpas"]);
     write_text(
         &cwd.join("json.fpas"),
-        "unit Repro.Json;\nuses Std.Json as Json;\npublic type\n  Message = enum\n    ErrorMessage(Code: string);\n  end enum;\npublic function Encode(Value: Message): string;\nbegin\n  case Value of\n    when Message.ErrorMessage(const Code):\n    begin\n      return Json.Stringify(Json.JsonValue.String(Code));\n    end;\n  end case;\nend function;\nend unit;",
+        "unit Repro.Json;\nuses Std.Encoding.Json as Json;\npublic type\n  Message = enum\n    ErrorMessage(Code: string);\n  end enum;\npublic function Encode(Value: Message): string;\nbegin\n  case Value of\n    when Message.ErrorMessage(const Code):\n    begin\n      return Json.Stringify(Json.JsonValue.String(Code));\n    end;\n  end case;\nend function;\nend unit;",
     );
     write_text(
         &cwd.join("main.fpas"),

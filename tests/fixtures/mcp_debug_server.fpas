@@ -1,6 +1,6 @@
 program McpDebugServer;
 
-uses Std.Mcp as Mcp, Std.Proc as Proc, Std.Time as Time, Std.Test as Test;
+uses Std.Ai.Mcp as Mcp, Std.Os.Proc as Proc, Std.Time as Time, Std.Test as Test;
 
 procedure Register(Server: Mcp.Server);
 begin

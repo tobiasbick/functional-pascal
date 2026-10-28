@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 function TripleToStr(V: integer): string;
 begin

@@ -1,7 +1,7 @@
 // Application state and policy stay with the FPAS task that creates these handlers.
 unit Demo.ToolStore;
 
-uses Std.Mcp as Mcp, Std.Json.Fields as Fields, Std.Conv as Conv;
+uses Std.Ai.Mcp as Mcp, Std.Encoding.Json.Fields as Fields, Std.Text.Format as Conv;
 
 public type Entry = record
   public Definition: Mcp.ToolDefinition;

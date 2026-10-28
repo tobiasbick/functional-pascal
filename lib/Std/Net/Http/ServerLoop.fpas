@@ -1,0 +1,221 @@
+// Bounded concurrent HTTP server-loop orchestration.
+unit Std.Net.Http.ServerLoop;
+
+uses Std.Net.Http.Server as Server, Std.Net.Http.Types as Types, Std.Net.Sockets as Net, Std.Tasks as StdTasks;
+
+// Validates all server-loop limits before accepting a connection.
+//
+// Parameters:
+// - `Options`: Server-loop limits to validate.
+function ValidateOptions(Options: Types.ServerOptions): result of (boolean, Types.HttpError);
+begin
+  if Options.MaxHeaderBytes < 1 then
+    begin
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxHeaderBytes',
+          'HTTP server MaxHeaderBytes must be positive'
+        )
+      );
+    end;
+  end if;
+
+  if Options.MaxBodyBytes < 0 then
+    begin
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxBodyBytes',
+          'HTTP server MaxBodyBytes must not be negative'
+        )
+      );
+    end;
+  end if;
+
+  if Options.ConnectionTimeoutMillis < 1 then
+    begin
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'ConnectionTimeoutMillis',
+          'HTTP server ConnectionTimeoutMillis must be positive'
+        )
+      );
+    end;
+  end if;
+
+  if Options.MaxConcurrentRequests < 1 then
+    begin
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxConcurrentRequests',
+          'HTTP server MaxConcurrentRequests must be positive'
+        )
+      );
+    end;
+  end if;
+
+  if Options.MaxRequests < 0 then
+    begin
+      return Error(
+        Types.HttpError.InvalidArgument(
+          'MaxRequests',
+          'HTTP server MaxRequests must not be negative'
+        )
+      );
+    end;
+  end if;
+
+  return Ok(true);
+end function;
+
+// Closes a connection while deliberately ignoring close errors.
+//
+// Parameters:
+// - `Connection`: Connection to close.
+procedure CloseQuietly(Connection: Net.Connection);
+begin
+  case Net.Close(Connection).MapError(Types.HttpError.Transport) of
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
+end procedure;
+
+// Attempts to write an empty 400 response without propagating failures.
+//
+// Parameters:
+// - `Connection`: Connection that supplied a malformed request.
+procedure WriteBadRequestQuietly(Connection: Net.Connection);
+begin
+  const ResponseValue: Types.ServerResponse := Types.ServerResponse.Create(400, 'Bad Request');
+  case Server.WriteResponse(Connection, ResponseValue) of
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
+end procedure;
+
+// Serves and closes one accepted connection.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `Options`: Request and connection limits.
+// - `Handler`: Callback that maps the parsed request to a response.
+function ServeConnection(
+  Connection: Net.Connection;
+  Options: Types.ServerOptions;
+  Handler: Types.RequestHandler
+): boolean;
+begin
+  case Net.SetTimeout(
+    Connection,
+    Options.ConnectionTimeoutMillis
+  ).MapError(Types.HttpError.Transport) of
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+        CloseQuietly(Connection);
+        return false;
+      end;
+  end case;
+  var RequestValue: Types.ServerRequest := Types.ServerRequest(
+    Method := '',
+    Target := '',
+    Headers := [],
+    Body := []
+  );
+  case Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
+    when Ok(const Value):
+      begin
+        RequestValue := Value;
+      end;
+    when Error(_):
+      begin
+        WriteBadRequestQuietly(Connection);
+        CloseQuietly(Connection);
+        return false;
+      end;
+  end case;
+  const ResponseValue: Types.ServerResponse := Handler(RequestValue);
+  var Succeeded: boolean := false;
+  case Server.WriteResponse(Connection, ResponseValue) of
+    when Ok(_):
+      begin
+        Succeeded := true;
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
+
+  CloseQuietly(Connection);
+  return Succeeded;
+end function;
+
+// Reports whether the current batch may accept another connection.
+//
+// Parameters:
+// - `Options`: Server-loop concurrency and request limits.
+// - `Accepted`: Total accepted connections.
+// - `BatchLength`: Connections already present in the current batch.
+function HasCapacity(Options: Types.ServerOptions; Accepted: integer; BatchLength: integer): boolean;
+begin
+  return (BatchLength < Options.MaxConcurrentRequests)
+    and
+    ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests));
+end function;
+
+// Accepts requests in bounded concurrent batches and dispatches each one to Handler.
+//
+// Parameters:
+// - `Listener`: Open TCP or TLS listener.
+// - `Options`: Request limits and server-loop bounds.
+// - `Handler`: Callback that maps each accepted request to a response.
+public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of (boolean, Types.HttpError);
+begin
+  scope
+    case ValidateOptions(Options) of
+      when Ok(_):
+        begin
+        end;
+      when Error(const Message):
+        begin
+          return Error(Message);
+        end;
+    end case;
+    var Accepted: integer := 0;
+    while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
+      begin
+        var Tasks: array of task of boolean := [];
+        while HasCapacity(Options, Accepted, Tasks.Length()) do
+          begin
+            case Net.Accept(Listener).MapError(Types.HttpError.Transport) of
+              when Ok(const Connection):
+                begin
+                  Tasks.PushInPlace(go ServeConnection(Connection, Options, Handler));
+                  Accepted := Accepted + 1;
+                end;
+              when Error(const Message):
+                begin
+                  StdTasks.WaitAll(Tasks);
+                  return Error(Message);
+                end;
+            end case;
+          end;
+        end while;
+
+        StdTasks.WaitAll(Tasks);
+      end;
+    end while;
+
+    return Ok(true);
+  end scope;
+end function;
+end unit;

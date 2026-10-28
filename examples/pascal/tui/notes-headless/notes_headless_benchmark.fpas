@@ -5,8 +5,8 @@
 program NotesHeadlessBenchmark;
 
 uses
-  Notes.Model as NotesModel, Notes.Update as Update, Notes.View as View, Std.Args as Args,
-  Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Tui as Tui, Std.Parse as Parse;
+  Notes.Model as NotesModel, Notes.Update as Update, Notes.View as View, Std.Os.Args as Args,
+  Std.Console as Console, Std.Text.Format as Conv, Std.Time as Time, Std.Ui.Terminal as Tui, Std.Text.Parse as Parse;
 
 const WarmupIterations: integer := 25;
 const DeltaMillis: integer := 16;

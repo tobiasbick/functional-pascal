@@ -8,8 +8,8 @@ syntax changes require explicit user approval.
 
 The binding [namespace specification](../specs/std-namespaces.md) allocates
 `Std.Ui` for the common interface and `Std.Ui.Terminal` / `Std.Ui.Graphical`
-for the hosts. [AP53](improve-syntax/ap53-std-namespaces/README.md) first moves
-the existing `Std.Tui` interface to `Std.Ui.Terminal` with unchanged behavior.
+for the hosts. [AP53](improve-syntax/ap53-std-namespaces/README.md) moves
+the former `Std.Tui` interface to `Std.Ui.Terminal` with unchanged behavior.
 That naming migration does not implement this shared UI plan.
 
 ## Sequence and relationship to other plans
@@ -97,7 +97,7 @@ are not part of the initial scope.
 
 Inventory terminal UI features, public interfaces and callers, including
 examples, tests, benchmarks, documentation and tools in both repositories.
-Use `Std.Ui.Terminal` after AP53; its pre-migration name is `Std.Tui`.
+Use `Std.Ui.Terminal`; its pre-migration name was `Std.Tui`.
 Cover menus, modal and focus routing, pointer and keyboard input, text editing,
 themes, cells, background work, resize and incremental rendering. Map each to a
 shared contract, a host extension or an intentional replacement. Design example

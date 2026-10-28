@@ -1,8 +1,8 @@
 program AcpMcpTools;
 
 uses
-  Demo.ToolStore as Store, Std.Mcp as Mcp, Std.Tasks as Tasks, Std.Args as Args, Std.Acp as Acp, Std.Acp.Types as Types, Std.Console as Console,
-  Std.Json as Json, Std.Json.Fields as Fields, Std.Test as Test;
+  Demo.ToolStore as Store, Std.Ai.Mcp as Mcp, Std.Tasks as Tasks, Std.Os.Args as Args, Std.Ai.Acp as Acp, Std.Ai.Acp.Types as Types, Std.Console as Console,
+  Std.Encoding.Json as Json, Std.Encoding.Json.Fields as Fields, Std.Test as Test;
 
 type Message = dict of string to Json.JsonValue;
 

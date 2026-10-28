@@ -1,13 +1,15 @@
 # `Std.Math`
 
-Elementary math: constant `Pi`, roots, powers, trig, rounding, log, and polymorphic `Abs` / `Min` / `Max`. This page is the **full API** for the unit.
+Elementary math: integer-to-real conversion, constant `Pi`, roots, powers, trig,
+rounding, log, and polymorphic `Abs` / `Min` / `Max`. This page is the **full API**
+for the unit.
 
 Real operands and results must be finite. Operations that would produce NaN
 or infinity, such as `Pow(-1.0, 0.5)` or `Exp(1000.0)`, report a numeric-domain
 error. Ordinary binary64 rounding, subnormals, and signed zero remain valid.
 Rounding operations also check that their integer result fits the signed 64-bit
 range. Integer arguments are not implicitly converted for a real parameter;
-use `Std.Conv.IntToReal` explicitly.
+use `Std.Math.IntToReal` explicitly.
 
 ```pascal id=example-1
 program Example;
@@ -37,6 +39,7 @@ Requires `uses Std.Math as Math;`.
 | Kind | Name | Notes |
 |------|------|--------|
 | constant | `Pi: real` | compiler-inserted value |
+| function | `IntToReal(N: integer): real` | explicit binary64 rounding; may lose integer precision |
 | function | `Sqrt(R: real): real` | error if `R < 0` |
 | function | `Pow(Base: real; Exp: real): real` | power |
 | function | `Floor(R: real): integer` | toward −∞ |
@@ -66,6 +69,19 @@ Requires `uses Std.Math as Math;`.
 `Floor`, `Ceil`, `Round`, and `Trunc` report a runtime error when the rounded
 result is non-finite or outside the signed 64-bit integer range. In particular,
 `9223372036854775808.0` (2^63) is outside that range; -2^63 is valid.
+
+## `function IntToReal(N: integer): real`
+
+Converts integer to binary64 using rounding to nearest, with ties to even.
+All integer values fit the real value range, but conversion may lose precision.
+Every integer between `-9007199254740992` and `9007199254740992` is exact;
+larger values are exact only when representable at binary64's spacing.
+This is the explicit conversion used before mixing integer and real calculations.
+
+```pascal id=integer-to-real fragment context=body-console-math
+const X: real := Math.IntToReal(3);
+Console.WriteLn(X);
+```
 
 ## Constant `Pi`
 

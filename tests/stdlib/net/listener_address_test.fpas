@@ -1,6 +1,6 @@
 program ListenerAddressTest;
 
-uses Std.Net as Net, Std.Test as Test;
+uses Std.Net.Sockets as Net, Std.Test as Test;
 
 function ExerciseListener(): result of (boolean, Net.NetError);
 begin

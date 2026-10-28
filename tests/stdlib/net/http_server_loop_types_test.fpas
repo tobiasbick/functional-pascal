@@ -1,7 +1,7 @@
 // Covers HTTP server-loop defaults and request-handler typing.
 program HttpServerLoopTypesTest;
 
-uses Std.Http as Http, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Test as Test;
 
 // Returns a response whose reason phrase mirrors the request method.
 //

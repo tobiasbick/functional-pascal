@@ -1,7 +1,7 @@
 // Smoke-check benchmark correctness; these timings are never performance evidence.
 program FailureDumpBenchmarkTest;
 
-uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Test as Test;
 
 begin
   var Repository := '.';

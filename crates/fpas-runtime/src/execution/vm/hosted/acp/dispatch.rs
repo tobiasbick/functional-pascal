@@ -67,7 +67,7 @@ impl Worker {
                     return self
                         .layouts
                         .record(
-                            "Std.Acp.MessageConnection",
+                            "Std.Ai.Acp.MessageConnection",
                             vec![
                                 Value::OpaqueHandle(connection),
                                 Value::OpaqueHandle(endpoint),
@@ -102,7 +102,7 @@ impl Worker {
                         Some(raw) => self
                             .layouts
                             .record(
-                                "Std.Acp.Types.RawJson",
+                                "Std.Ai.Acp.Types.RawJson",
                                 vec![Value::Str(raw.text().into())],
                                 location,
                             )
@@ -198,7 +198,7 @@ impl Worker {
 
     fn acp_options(&self, options: &Value) -> Result<(Settings, Limits), Fault> {
         let (_, limits) = args::options(options)?;
-        let fields = args::record(options, "Std.Acp.Options", 6)?;
+        let fields = args::record(options, "Std.Ai.Acp.Options", 6)?;
         let mut converter = self.acp_converter(Version::V1)?;
         let info = converter.unpack(
             &Type::Option(Box::new(Type::Named("Implementation".into()))),
@@ -225,7 +225,7 @@ impl Worker {
                 }
             })
             .collect();
-        let flags = args::record(&fields[3], "Std.Acp.ExperimentalOptions", 7)?;
+        let flags = args::record(&fields[3], "Std.Ai.Acp.ExperimentalOptions", 7)?;
         let enabled = |index| matches!(flags[index], Value::Boolean(true));
         let mut v2_converter = self.acp_converter(Version::V2)?;
         let v2_caps =
@@ -308,7 +308,7 @@ impl Worker {
     fn acp_default_options(&self, location: SourceLocation) -> Result<Value, VmError> {
         let limits = Limits::default();
         let limits = self.layouts.record(
-            "Std.Acp.Limits",
+            "Std.Ai.Acp.Limits",
             [
                 limits.outgoing_requests,
                 limits.incoming_requests,
@@ -330,7 +330,7 @@ impl Worker {
             location,
         )?;
         let experimental = self.layouts.record(
-            "Std.Acp.ExperimentalOptions",
+            "Std.Ai.Acp.ExperimentalOptions",
             vec![Value::Boolean(false); 7],
             location,
         )?;
@@ -394,7 +394,7 @@ impl Worker {
                 )
             })?;
         self.layouts.record(
-            "Std.Acp.Options",
+            "Std.Ai.Acp.Options",
             vec![
                 Value::OptionNone,
                 capabilities,

@@ -1,6 +1,6 @@
 program McpTypesTest;
 
-uses Std.Mcp as Mcp, Std.Test as Test;
+uses Std.Ai.Mcp as Mcp, Std.Test as Test;
 
 function Echo(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError);
 begin

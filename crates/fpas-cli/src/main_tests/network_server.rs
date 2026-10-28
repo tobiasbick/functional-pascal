@@ -99,7 +99,7 @@ fn fpas_http_server_accepts_get_and_writes_response() {
         format!(
             r#"program HttpServerGet;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
   case Net.Listen('127.0.0.1', {port}) of
@@ -175,7 +175,7 @@ fn fpas_http_server_reads_fragmented_post_body() {
         format!(
             r#"program HttpServerPost;
 
-uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
   case Net.Listen('127.0.0.1', {port}) of
@@ -257,7 +257,7 @@ fn fpas_http_server_rejects_ambiguous_request_framing() {
         format!(
             r#"program HttpServerHostile;
 
-uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
   case Net.Listen('127.0.0.1', {port}) of
@@ -327,7 +327,7 @@ fn fpas_http_server_enforces_request_body_limit() {
         format!(
             r#"program HttpServerBodyLimit;
 
-uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
   case Net.Listen('127.0.0.1', {port}) of
@@ -340,7 +340,7 @@ begin
             when Ok(_): panic('oversized request body was accepted');
             when Error(const Message):
             begin
-              if not (Message is Http.HttpError.LimitExceeded('Std.Http.Server.ReadRequest', _)) then
+              if not (Message is Http.HttpError.LimitExceeded('Std.Net.Http.Server.ReadRequest', _)) then
               begin
                 panic(Message.Message());
               end; end if;

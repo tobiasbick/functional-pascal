@@ -1,0 +1,258 @@
+unit Std.Ui.Terminal.Chrome.MenuGeometry;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Chrome.MenuNode as MenuNode, Std.Ui.Terminal.Chrome.MenuQuery as MenuQuery,
+  Std.Ui.Terminal.Geometry.Rect as Rect;
+
+// Bounds of one open popup and the submenu whose children it displays.
+public type TuiMenuPopup = record
+  // Parent menu-node identifier.
+  public Parent: MenuNode.TuiMenuNodeId;
+  // Rectangle occupied by the value.
+  public Bounds: Rect.TuiRect;
+end record;
+
+function TuiMenuRootItemX(
+  Nodes: array of MenuNode.TuiMenuNode;
+  BarBounds: Rect.TuiRect;
+  Target: MenuNode.TuiMenuNodeId
+): integer;
+begin
+  var X: integer := BarBounds.X;
+  for Index: integer := 0 to Nodes.Length() - 1 do
+    begin
+      case MenuQuery.TuiMenuNodeParent(Nodes[Index]) of
+        when Some(const Parent):
+          begin
+          end;
+        when None:
+          begin
+            if MenuQuery.TuiMenuNodeIdOf(Nodes[Index]).Value = Target.Value then
+              begin
+                return X;
+              end;
+            end if;
+
+            X := X + Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Nodes[Index])) + 2;
+          end;
+      end case;
+    end;
+  end for;
+
+  return BarBounds.X;
+end function;
+
+function TuiMenuChildRow(
+  Nodes: array of MenuNode.TuiMenuNode;
+  Parent: MenuNode.TuiMenuNodeId;
+  Target: MenuNode.TuiMenuNodeId
+): integer;
+begin
+  var Row: integer := 0;
+  for Index: integer := 0 to Nodes.Length() - 1 do
+    begin
+      if MenuQuery.TuiMenuHasParent(Nodes[Index], Some(Parent)) then
+        begin
+          if MenuQuery.TuiMenuNodeIdOf(Nodes[Index]).Value = Target.Value then
+            begin
+              return Row;
+            end;
+          end if;
+
+          Row := Row + 1;
+        end;
+      end if;
+    end;
+  end for;
+
+  return 0;
+end function;
+
+function TuiMenuPopupSize(Nodes: array of MenuNode.TuiMenuNode; Parent: MenuNode.TuiMenuNodeId): Rect.TuiRect;
+begin
+  var Width: integer := 4;
+  var Height: integer := 2;
+  for Index: integer := 0 to Nodes.Length() - 1 do
+    begin
+      if MenuQuery.TuiMenuHasParent(Nodes[Index], Some(Parent)) then
+        begin
+          Height := Height + 1;
+          var ContentWidth: integer := Console.DisplayWidth(
+            MenuQuery.TuiMenuNodeText(Nodes[Index])
+          );
+          case MenuQuery.TuiMenuNodeShortcut(Nodes[Index]) of
+            when Some(const Shortcut):
+              begin
+                ContentWidth := ContentWidth + Console.DisplayWidth(Shortcut.Display) + 2;
+              end;
+            when None:
+              begin
+              end;
+          end case;
+
+          if MenuQuery.TuiMenuNodeIsSubmenu(Nodes[Index]) then
+            begin
+              ContentWidth := ContentWidth + 2;
+            end;
+          end if;
+
+          if ContentWidth + 4 > Width then
+            begin
+              Width := ContentWidth + 4;
+            end;
+          end if;
+        end;
+      end if;
+    end;
+  end for;
+
+  return Rect.TuiRect.Create(0, 0, Width, Height);
+end function;
+
+function TuiMenuOpenParents(Nodes: array of MenuNode.TuiMenuNode; State: MenuNode.TuiMenuState): array of MenuNode.TuiMenuNodeId;
+begin
+  var Reversed: array of MenuNode.TuiMenuNodeId := [];
+  var Opened: array of MenuNode.TuiMenuNodeId := [];
+  if not State.Open then
+    begin
+      return [];
+    end;
+  end if;
+
+  case State.Active of
+    when Some(const Active):
+      begin
+        var Current: MenuNode.TuiMenuNodeId := Active;
+        var CurrentIndex: integer := MenuQuery.TuiMenuFind(Nodes, Current);
+        if not MenuQuery.TuiMenuNodeIsSubmenu(Nodes[CurrentIndex]) then
+          begin
+            case MenuQuery.TuiMenuNodeParent(Nodes[CurrentIndex]) of
+              when Some(const Parent):
+                begin
+                  Current := Parent;
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end if;
+        var Remaining: integer := Nodes.Length() + 1;
+        while Remaining > 0 do
+          begin
+            Remaining := Remaining - 1;
+            Reversed.PushInPlace(Current);
+            CurrentIndex := MenuQuery.TuiMenuFind(Nodes, Current);
+            case MenuQuery.TuiMenuNodeParent(Nodes[CurrentIndex]) of
+              when Some(const Parent):
+                begin
+                  Current := Parent;
+                end;
+              when None:
+                begin
+                  Remaining := 0;
+                end;
+            end case;
+          end;
+        end while;
+      end;
+    when None:
+      begin
+      end;
+  end case;
+  var Index: integer := Reversed.Length() - 1;
+  while Index >= 0 do
+    begin
+      Opened.PushInPlace(Reversed[Index]);
+      Index := Index - 1;
+    end;
+  end while;
+
+  return Opened;
+end function;
+
+// Computes popup rectangles while reserving their right and bottom terminal shadow.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `State`: Controlled state used by the operation.
+// - `BarBounds`: Arranged bounds of the menu bar.
+// - `TerminalBounds`: Bounds of the terminal viewport.
+public function TuiMenuPopupGeometry(
+  Nodes: array of MenuNode.TuiMenuNode;
+  State: MenuNode.TuiMenuState;
+  BarBounds: Rect.TuiRect;
+  TerminalBounds: Rect.TuiRect
+): array of TuiMenuPopup;
+begin
+  var PopupBounds: Rect.TuiRect := TerminalBounds;
+  if PopupBounds.Width > 2 then
+    begin
+      PopupBounds.Width := PopupBounds.Width - 2;
+    end;
+  end if;
+
+  if PopupBounds.Height > 1 then
+    begin
+      PopupBounds.Height := PopupBounds.Height - 1;
+    end;
+  end if;
+  const Parents: array of MenuNode.TuiMenuNodeId := TuiMenuOpenParents(Nodes, State);
+  var Popups: array of TuiMenuPopup := [];
+  for Index: integer := 0 to Parents.Length() - 1 do
+    begin
+      const Size: Rect.TuiRect := TuiMenuPopupSize(Nodes, Parents[Index]);
+      var X: integer := TuiMenuRootItemX(Nodes, BarBounds, Parents[0]);
+      var Y: integer := BarBounds.Y + 1;
+      if Index > 0 then
+        begin
+          const Previous: TuiMenuPopup := Popups[Index - 1];
+          X := Previous.Bounds.X + Previous.Bounds.Width;
+          Y := Previous.Bounds.Y + 1 + TuiMenuChildRow(Nodes, Previous.Parent, Parents[Index]);
+        end;
+      end if;
+
+      if X + Size.Width > PopupBounds.X + PopupBounds.Width then
+        begin
+          if Index > 0 then
+            begin
+              X := Popups[Index - 1].Bounds.X - Size.Width;
+            end;
+          else
+            begin
+              X := PopupBounds.X + PopupBounds.Width - Size.Width;
+            end;
+          end if;
+        end;
+      end if;
+
+      if X < PopupBounds.X then
+        begin
+          X := PopupBounds.X;
+        end;
+      end if;
+
+      if Y + Size.Height > PopupBounds.Y + PopupBounds.Height then
+        begin
+          Y := PopupBounds.Y + PopupBounds.Height - Size.Height;
+        end;
+      end if;
+
+      if Y < PopupBounds.Y then
+        begin
+          Y := PopupBounds.Y;
+        end;
+      end if;
+
+      Popups.PushInPlace(
+        TuiMenuPopup(
+          Parent := Parents[Index],
+          Bounds := Rect.TuiRect.Create(X, Y, Size.Width, Size.Height)
+        )
+      );
+    end;
+  end for;
+
+  return Popups;
+end function;
+end unit;

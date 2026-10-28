@@ -13,13 +13,13 @@ use fpas_lexer::{Span, Token};
 const DELPHI_RTL_UNITS: &[(&str, &str, &str)] = &[
     (
         "sysutils",
-        "uses Std.Parse as Parse, Std.Conv as Conv;",
-        "Delphi `SysUtils` routines live in `Std` units such as `Std.Parse`, `Std.Conv` and `Std.Fs`.",
+        "uses Std.Text.Parse as Parse, Std.Text.Format as Conv;",
+        "Delphi `SysUtils` routines live in `Std` units such as `Std.Text.Parse`, `Std.Text.Format` and `Std.Io.Fs`.",
     ),
     (
         "strutils",
-        "uses Std.Conv as Conv;",
-        "String routines are native methods such as `Text.Trim()`; conversions live in `Std.Conv`.",
+        "uses Std.Text.Format as Conv;",
+        "String routines are native methods such as `Text.Trim()`; conversions live in `Std.Text.Format`.",
     ),
     (
         "math",

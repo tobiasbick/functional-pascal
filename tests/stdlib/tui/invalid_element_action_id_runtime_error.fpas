@@ -1,6 +1,6 @@
 program InvalidElementActionIdRuntimeError;
 
-uses Std.Tui as Tui;
+uses Std.Ui.Terminal as Tui;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin

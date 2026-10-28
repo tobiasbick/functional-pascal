@@ -3,7 +3,7 @@
 ## `Text.IsNumeric(): boolean`
 
 `true` if the string (after trim) parses as an **integer** or **real**, otherwise `false`.
-It uses the same bounded grammar as `Std.Parse.Int` and `Real`, including
+It uses the same bounded grammar as `Std.Text.Parse.Int` and `Real`, including
 signed `$` hex, digit separators, and finite real values. Nonzero real input
 that rounds to zero is not numeric. See [numeric parsing](../../../std/text/parse.md).
 
@@ -173,5 +173,5 @@ formatting its message.
 ## See also
 
 - [Str overview](README.md)
-- [`Std.Conv`](../../../std/text/conv.md)
+- [`Std.Text.Format`](../../../std/text/format.md)
 - [Text index](../../../std/text/README.md)

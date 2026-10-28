@@ -12,7 +12,7 @@ fn parser_values_and_error_types_survive_independent_unit_reuse() {
         &cwd.join("src/parsing.fpas"),
         r#"
 unit App.Parsing;
-uses Std.Parse as Numbers;
+uses Std.Text.Parse as Numbers;
 public function IntReader(): function(Text: string): Result of (integer, Numbers.ParseError);
 begin return Numbers.Int; end function;
 public function ReadInt(Text: string): Result of (integer, Numbers.ParseError);

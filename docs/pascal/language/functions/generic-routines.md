@@ -57,7 +57,7 @@ end.
 
 An already determined argument type cannot be replaced by the expected result.
 `const Value: real := Identity(1);` is rejected because the argument fixes T to
-integer. Use a real literal or an explicit `Std.Conv.IntToReal` conversion.
+integer. Use a real literal or an explicit `Std.Math.IntToReal` conversion.
 Constraints are checked after inference, including parameters supplied by context.
 Every declared type parameter needs evidence: a result-only factory without context
 and a parameter unused by both arguments and result are rejected before lowering.

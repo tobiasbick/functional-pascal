@@ -11,7 +11,7 @@ fn run_cli_binds_method_from_unit_global_record() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Data as Data, Std.Console as Console, Std.Conv as Conv;\nbegin\n  const AddTwelve: function(Value: integer): integer := Data.Global.Add;\n  Console.WriteLn(Conv.IntToStr(AddTwelve(3)));\nend.",
+        "program Main;\nuses App.Data as Data, Std.Console as Console, Std.Text.Format as Conv;\nbegin\n  const AddTwelve: function(Value: integer): integer := Data.Global.Add;\n  Console.WriteLn(Conv.IntToStr(AddTwelve(3)));\nend.",
     );
     write_text(
         &cwd.join("src/data.fpas"),

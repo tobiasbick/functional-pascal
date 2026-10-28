@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn attaches_leading_and_trailing_comments_to_uses_items() -> Result<(), String> {
-        let source = "program T;\nuses Std.Console as Console, // io\n// conversions\nStd.Conv as Conv;\nbegin\nend.";
+        let source = "program T;\nuses Std.Console as Console, // io\n// conversions\nStd.Text.Format as Conv;\nbegin\nend.";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;

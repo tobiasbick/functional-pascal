@@ -1,7 +1,7 @@
-# Std.Mcp
+# Std.Ai.Mcp
 
 Registers FPAS functions as MCP tools and publishes them through authenticated
-loopback HTTP. Import with `uses Std.Mcp as Mcp;`. The library owns protocol
+loopback HTTP. Import with `uses Std.Ai.Mcp as Mcp;`. The library owns protocol
 handling and invokes registered functions on the task executing Serve or ServeOne.
 It requires no ACP connection or agent process.
 
@@ -32,7 +32,7 @@ It requires no ACP connection or agent process.
 | function | `ServeOne(Server: Server; TimeoutMillis: option of integer; Cancellation: option of CancellationToken): result of (boolean, McpError)` | Receives and invokes one handler, retaining exclusive serving ownership |
 | function | `Serve(Server: Server; Cancellation: option of CancellationToken): result of (boolean, McpError)` | Serves until closure or cancellation without an application protocol loop |
 
-The common types are defined in [Std.Mcp.Types](types.md) and re-exported here.
+The common types are defined in [Std.Ai.Mcp.Types](types.md) and re-exported here.
 CancellationToken belongs to Std.Tasks. HttpAccess contains credentials: supply
 it only to the intended consumer and keep it out of logs.
 

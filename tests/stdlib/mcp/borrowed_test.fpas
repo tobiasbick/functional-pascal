@@ -1,8 +1,8 @@
 program BorrowedMcpTest;
 
 uses
-  Std.Acp as Acp, Std.Acp.Types as Types, Std.Mcp as Mcp, Std.Json as Json,
-  Std.Json.Fields as Fields, Std.Http as Http, Std.Net.Utf8 as Utf8,
+  Std.Ai.Acp as Acp, Std.Ai.Acp.Types as Types, Std.Ai.Mcp as Mcp, Std.Encoding.Json as Json,
+  Std.Encoding.Json.Fields as Fields, Std.Net.Http as Http, Std.Text.Utf8 as Utf8,
   Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
 
 type ObjectValue = dict of string to Json.JsonValue;

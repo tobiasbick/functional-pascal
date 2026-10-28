@@ -123,7 +123,7 @@ impl Checker {
         self.fluent_calls.get(&key).is_some_and(|target| {
             matches!(
                 target.name.as_str(),
-                "Std.Errors.Message"
+                "Std.Os.Errors.Message"
                     | "Std.Str.Length"
                     | "Std.Str.IsEmpty"
                     | "Std.Arrays.Length"

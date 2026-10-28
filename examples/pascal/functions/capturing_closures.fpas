@@ -1,6 +1,6 @@
 program CapturingClosures;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 function Counter(): function(): integer;
 begin

@@ -1,0 +1,96 @@
+unit Std.Ui.Terminal.Layout.MeasureAxis;
+
+uses Std.Ui.Terminal.Layout.MeasureConstraint as MeasureConstraint;
+
+// Largest integer used for checked layout-axis calculations.
+public const TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
+
+// Preferred and maximum extents after applying one axis constraint.
+public type TuiMeasureAxisResult = record
+  // Preferred size.
+  public Preferred: integer;
+  // Maximum value or size.
+  public Maximum: integer;
+end record;
+
+// Integer helpers for layout measurement.
+public type TuiMeasureAxis = record
+  // Returns the lesser of two extents.
+  //
+  // Parameters:
+  // - `Left`: Left input value or edge.
+  // - `Right`: Right input value or edge.
+  public static function Min(Left: integer; Right: integer): integer;
+  begin
+    if Left < Right then
+      begin
+        return Left;
+      end;
+    end if;
+
+    return Right;
+  end function;
+
+  // Returns the greater of two extents.
+  //
+  // Parameters:
+  // - `Left`: Left input value or edge.
+  // - `Right`: Right input value or edge.
+  public static function Max(Left: integer; Right: integer): integer;
+  begin
+    if Left > Right then
+      begin
+        return Left;
+      end;
+    end if;
+
+    return Right;
+  end function;
+
+  // Adds two extents and rejects overflow.
+  //
+  // Parameters:
+  // - `Left`: Left input value or edge.
+  // - `Right`: Right input value or edge.
+  public static function Add(Left: integer; Right: integer): integer;
+  begin
+    if Left > TuiMeasureAxisIntegerMax - Right then
+      begin
+        panic('Tui layout measurement overflows integer extents');
+      end;
+    end if;
+
+    return Left + Right;
+  end function;
+
+  // Constrains preferred and maximum extents by an axis constraint.
+  //
+  // Parameters:
+  // - `Minimum`: Minimum accepted value or extent.
+  // - `Preferred`: Preferred size or focus identifier.
+  // - `Maximum`: Maximum accepted value or extent.
+  // - `Constraint`: Measurement constraint applied to the axis.
+  public static function Apply(
+    Minimum: integer;
+    Preferred: integer;
+    Maximum: integer;
+    Constraint: MeasureConstraint.TuiMeasureConstraint
+  ): TuiMeasureAxisResult;
+  begin
+    if not Constraint.IsBounded() then
+      begin
+        return TuiMeasureAxisResult(Preferred := Preferred, Maximum := Maximum);
+      end;
+    end if;
+    const ConstrainedPreferred: integer := TuiMeasureAxis.Max(
+      Minimum,
+      TuiMeasureAxis.Min(Preferred, Constraint.Limit)
+    );
+    const ConstrainedMaximum: integer := TuiMeasureAxis.Max(
+      ConstrainedPreferred,
+      TuiMeasureAxis.Min(Maximum, Constraint.Limit)
+    );
+    return TuiMeasureAxisResult(Preferred := ConstrainedPreferred, Maximum := ConstrainedMaximum);
+  end function;
+end record;
+end unit;

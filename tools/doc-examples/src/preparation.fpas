@@ -1,6 +1,6 @@
 unit DocExamples.Preparation;
 
-uses DocExamples.Model as Model, DocExamples.Markdown as Markdown, Std.Fs as Fs, Std.Path as Path;
+uses DocExamples.Model as Model, DocExamples.Markdown as Markdown, Std.Io.Fs as Fs, Std.Io.Path as Path;
 
 type Wrapped = record
   Source: string;

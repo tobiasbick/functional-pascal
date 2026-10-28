@@ -148,5 +148,5 @@ when an earlier field has a malformed escape.
 ## See also
 
 - [Networking index](README.md)
-- [`Std.Http`](http.md)
+- [`Std.Net.Http`](http.md)
 - [UTF-8](utf8.md)

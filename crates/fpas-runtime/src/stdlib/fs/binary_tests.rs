@@ -56,7 +56,7 @@ fn assert_error(value: &Value, variant: &str, fields: &[Value]) {
     let Value::Enum(error) = error.as_ref() else {
         panic!("expected a typed filesystem error");
     };
-    assert_eq!(error.body().layout.type_name, "Std.Fs.FsError");
+    assert_eq!(error.body().layout.type_name, "Std.Io.Fs.FsError");
     assert_eq!(error.body().layout.variant, variant);
     assert_eq!(error.body().values.as_slice(), fields);
 }
@@ -118,7 +118,7 @@ fn exact_byte_limit_is_accepted_and_oversized_metadata_is_rejected() {
         &invoke(FsIntrinsic::ReadBytes, &path, None),
         "LimitExceeded",
         &[
-            Value::Str("Std.Fs.ReadBytes".into()),
+            Value::Str("Std.Io.Fs.ReadBytes".into()),
             Value::Integer(MAX_BYTES as i64),
         ],
     );
@@ -129,7 +129,7 @@ fn untrusted_size_reads_stop_after_one_over_limit_byte() {
     let mut source = Cursor::new(vec![0_u8; MAX_BYTES + 100]);
     assert!(matches!(
         read_limited(&mut source),
-        Err(Failure::LimitExceeded("Std.Fs.ReadBytes", limit)) if limit == MAX_BYTES as i64
+        Err(Failure::LimitExceeded("Std.Io.Fs.ReadBytes", limit)) if limit == MAX_BYTES as i64
     ));
     assert_eq!(source.position(), (MAX_BYTES + 1) as u64);
 
@@ -191,14 +191,14 @@ fn write_size_preflight_wins_over_invalid_bytes_and_target_errors() {
     for path in [existing.as_str(), absent.as_str(), "bad\0path"] {
         assert!(matches!(
             write_bytes(path, &values, location()).expect("size checked before element access"),
-            Err(Failure::LimitExceeded("Std.Fs.WriteBytes", limit)) if limit == MAX_BYTES as i64
+            Err(Failure::LimitExceeded("Std.Io.Fs.WriteBytes", limit)) if limit == MAX_BYTES as i64
         ));
     }
     assert_eq!(fs::read(&existing).expect("preserved bytes"), b"preserved");
     assert!(!Path::new(&absent).exists());
     let returned = super::results::result(
         &crate::stdlib::intrinsics::TEST_AGGREGATES,
-        "Std.Fs.WriteBytes",
+        "Std.Io.Fs.WriteBytes",
         std::slice::from_ref(&existing),
         write_bytes(&existing, &values, location()).expect("size preflight"),
         |()| Value::Boolean(true),
@@ -209,7 +209,7 @@ fn write_size_preflight_wins_over_invalid_bytes_and_target_errors() {
         &returned,
         "LimitExceeded",
         &[
-            Value::Str("Std.Fs.WriteBytes".into()),
+            Value::Str("Std.Io.Fs.WriteBytes".into()),
             Value::Integer(MAX_BYTES as i64),
         ],
     );
@@ -221,10 +221,15 @@ fn missing_read_and_write_targets_keep_filesystem_categories_and_host_causes() {
     let missing = root.path("missing.bin");
     let below_missing = root.path("absent/child.bin");
     for (operation, name, path, bytes) in [
-        (FsIntrinsic::ReadBytes, "Std.Fs.ReadBytes", &missing, None),
+        (
+            FsIntrinsic::ReadBytes,
+            "Std.Io.Fs.ReadBytes",
+            &missing,
+            None,
+        ),
         (
             FsIntrinsic::WriteBytes,
-            "Std.Fs.WriteBytes",
+            "Std.Io.Fs.WriteBytes",
             &below_missing,
             Some(vec![]),
         ),
@@ -241,7 +246,7 @@ fn missing_read_and_write_targets_keep_filesystem_categories_and_host_causes() {
         let Value::Enum(cause) = &error.body().values[1] else {
             panic!("host cause");
         };
-        assert_eq!(cause.body().layout.type_name, "Std.Errors.HostError");
+        assert_eq!(cause.body().layout.type_name, "Std.Os.Errors.HostError");
         assert_eq!(cause.body().values[0], Value::Str(name.into()));
         assert_eq!(
             cause.body().values[1],

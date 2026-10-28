@@ -53,7 +53,7 @@ fn record_member_visibility() {
 fn long_uses() {
     common::assert_golden(
         "long_uses",
-        "program LongUses; uses\nStd.Console as Console, Std.Conv as Conv, Std.Crypto as Crypto,\nMyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end.",
+        "program LongUses; uses\nStd.Console as Console, Std.Text.Format as Conv, Std.Crypto as Crypto,\nMyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end.",
         include_str!("golden/long_uses.expected.fpas"),
     );
 }

@@ -19,7 +19,7 @@ fn run_with_one_worker(source: &str) {
 fn timed_channel_wait_does_not_run_a_blocking_queued_task_inline() {
     run_with_one_worker(
         r#"program TimedWaitDoesNotHelp;
-uses Std.Net as Net, Std.Tasks as Tasks, Std.Time as Time;
+uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Time as Time;
 function BlockingRead(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
   const Client: Net.Connection := Net.Accept(ListenerValue).Unwrap();
@@ -91,7 +91,7 @@ begin scope
 fn task_wait_does_not_run_a_queued_task_that_waits_for_the_main_task() {
     run_with_workers(
         r#"program TaskWaitDoesNotHelp;
-uses Std.Net as Net, Std.Tasks as Tasks, Std.Time as Time;
+uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Time as Time;
 function Busy(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
   const Client: Net.Connection := Net.Accept(ListenerValue).Unwrap();

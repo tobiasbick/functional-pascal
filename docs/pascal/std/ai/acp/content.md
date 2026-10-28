@@ -1,6 +1,6 @@
 # Content and session updates
 
-Stable values live in `Std.Acp.Types`. See [protocol values](types.md) for the
+Stable values live in `Std.Ai.Acp.Types`. See [protocol values](types.md) for the
 complete SDK-derived types, nominal IDs, raw JSON and patch fields, and
 [sessions](sessions.md) for prompt ownership and cancellation.
 

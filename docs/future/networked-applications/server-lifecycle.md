@@ -1,6 +1,6 @@
 # Future: Server Lifecycle
 
-> Core implemented in [`Std.Server`](../../pascal/std/network/server.md).
+> Core implemented in [`Std.Net.Server`](../../pascal/std/network/server.md).
 > Resource-specific protocol, storage, and observability adapters remain separate work.
 
 ## Implementation progress (2026-09-08)
@@ -33,7 +33,7 @@ The current API requires application code to close its group, inspect failures, 
 cleanup phases, and call `FinishShutdown`. It does not infer application-specific cleanup order.
 Database transactions, WebSocket session notifications, log/metric adapters, automatic worker-process
 isolation, Windows service-control integration, and per-resource adapters are not implemented here.
-Existing `Std.Proc` or an external supervisor can isolate a standalone application and confirm exit;
+Existing `Std.Os.Proc` or an external supervisor can isolate a standalone application and confirm exit;
 the lifecycle does not force-kill an individual group inside a shared VM.
 
 Long-running servers need one coordinated lifetime instead of unrelated loops and stop flags. The
@@ -63,7 +63,7 @@ drain owned work to a deadline, and report the final outcome.
 ## Selected shutdown policy (2026-09-07)
 
 The user selected cooperative group cleanup followed by explicit process-level escalation. This
-policy is now implemented at the process boundary by `Std.Server`; resource-specific adapters
+policy is now implemented at the process boundary by `Std.Net.Server`; resource-specific adapters
 remain outside the current interface.
 
 1. The lifecycle owner stops admission, marks readiness false, and requests cooperative

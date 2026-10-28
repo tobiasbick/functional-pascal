@@ -12,7 +12,7 @@ use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
 
-const SCALAR_CONVERSION_HINT: &str = "Convert between built-in types with explicit routines such as `Conv.IntToReal`, `Math.Trunc`, `Math.Round`, or `Conv.IntToStr` through imported aliases. Parse text with `Parse.Int` and handle its Result.";
+const SCALAR_CONVERSION_HINT: &str = "Convert between built-in types with explicit routines such as `Math.IntToReal`, `Math.Trunc`, `Math.Round`, or `Format.IntToStr` through imported aliases. Parse text with `Parse.Int` and handle its Result.";
 
 impl Checker {
     /// Checks a call whose target is a distinct type or a built-in scalar type name.

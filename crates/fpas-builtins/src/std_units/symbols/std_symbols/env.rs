@@ -1,4 +1,4 @@
-//! `Std.Env` symbol names and registry group.
+//! `Std.Os.Env` symbol names and registry group.
 
 std_symbol!(STD_ENV_GET = std_env!("Get"));
 std_symbol!(STD_ENV_EXISTS = std_env!("Exists"));

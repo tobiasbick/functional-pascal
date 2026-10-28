@@ -1,6 +1,6 @@
 # Connections and transports
 
-Import `Std.Acp as Acp` and `Std.Acp.Types as Types`. A connection starts in
+Import `Std.Ai.Acp as Acp` and `Std.Ai.Acp.Types as Types`. A connection starts in
 `Lifecycle.Uninitialized`. Send an explicit typed initialize request before
 using stable session methods. See [sessions](sessions.md) for negotiation,
 capability checks and prompt ownership. [Host adapters](host.md),
@@ -27,7 +27,7 @@ JSON-RPC batches are rejected as invalid messages.
 `Launch` contains `Command`, `Arguments`, `WorkingDirectory` and `Environment`.
 An environment entry is `Acp.EnvironmentVariable(Name, Value)`; `None` removes
 the inherited variable. Launch uses the validation and process-group ownership
-of [Std.Proc](../../host/proc.md). It starts the executable directly.
+of [Std.Os.Proc](../../host/proc.md). It starts the executable directly.
 Client metadata budgets and connection/driver capacity are validated and reserved
 before starting the process. Failed admission starts no child; abandoned process
 transports terminate and reap their child and return the process-registry slot.
@@ -63,7 +63,7 @@ Changing the offered capabilities after opening a transport is rejected.
 | `State(Connection)` | `Result of (ConnectionState, Types.AcpError)` |
 
 Send/notify return after local admission. SDK-assigned wire IDs remain separate
-from opaque request tokens. `Std.Acp.V2.Send`, `Notify` and `Respond` use the
+from opaque request tokens. `Std.Ai.Acp.V2.Send`, `Notify` and `Respond` use the
 separate V2 payload types; a family mismatch fails before admission.
 
 Each request and responder retains its admission family until it settles.

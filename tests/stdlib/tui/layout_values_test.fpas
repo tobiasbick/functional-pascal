@@ -1,6 +1,6 @@
 program TuiLayoutValuesTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 begin
   const Mixed: Tui.TuiSizePolicy := Tui.TuiSizePolicy.Create(

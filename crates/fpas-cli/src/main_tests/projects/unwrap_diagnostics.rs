@@ -24,7 +24,7 @@ fn native_unwrap_chains_and_retired_namespace_diagnostics() {
             write_text(
                 &cwd.join("src/main.fpas"),
                 &format!(
-                    "program UnwrapRepro;\nuses Std.Tui as Tui, Std.Test as Test;\nbegin\n  const Base: Tui.TuiStyle := Tui.TuiStyle.FromColors(\n    Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));\n  const Style: {container} := {constructor}(Base);\n  const Red: integer := {call}.Background.Red;\n  Test.AssertEquals(4, Red);\nend."
+                    "program UnwrapRepro;\nuses Std.Ui.Terminal as Tui, Std.Test as Test;\nbegin\n  const Base: Tui.TuiStyle := Tui.TuiStyle.FromColors(\n    Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));\n  const Style: {container} := {constructor}(Base);\n  const Red: integer := {call}.Background.Red;\n  Test.AssertEquals(4, Red);\nend."
                 ),
             );
             let command = if namespace.is_none() { "run" } else { "check" };

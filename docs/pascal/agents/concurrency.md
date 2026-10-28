@@ -78,4 +78,4 @@ Further rules: [go](../language/concurrency/go.md),
 [task scopes](../language/concurrency/task-scopes.md),
 [transfer rules](../language/concurrency/README.md), and
 [Std.Tasks](../std/concurrency/task.md). For listener/worker lifetime and explicit
-process escalation, read [Std.Server](../std/network/server.md).
+process escalation, read [Std.Net.Server](../std/network/server.md).

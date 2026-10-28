@@ -1,6 +1,6 @@
 program PathJoinBasenameNormalizeTest;
 
-uses Std.Path as Path, Std.Test as Test;
+uses Std.Io.Path as Path, Std.Test as Test;
 
 begin
   Test.AssertEquals('app.txt', Path.BaseName(Path.Join(['src', 'main', 'app.txt'])));

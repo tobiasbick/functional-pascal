@@ -1,6 +1,6 @@
 program RetiredShiftNamesTest;
 
-uses Std.Bits as Bits, Std.Test as Test;
+uses Std.Math.Bits as Bits, Std.Test as Test;
 
 type Values = record
   shl: integer;

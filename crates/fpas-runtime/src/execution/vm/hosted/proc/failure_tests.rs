@@ -53,8 +53,12 @@ impl crate::stdlib::AggregateFactory for Factory {
 #[test]
 fn signalled_legacy_capture_keeps_wait_failed_and_options_keep_partial_execution_failure() {
     for (legacy, operation, expected) in [
-        (true, "Std.Proc.RunCapture", "WaitFailed"),
-        (false, "Std.Proc.RunCaptureWithOptions", "ExecutionFailed"),
+        (true, "Std.Os.Proc.RunCapture", "WaitFailed"),
+        (
+            false,
+            "Std.Os.Proc.RunCaptureWithOptions",
+            "ExecutionFailed",
+        ),
     ] {
         let request = Request {
             command: "/bin/sh",
@@ -84,12 +88,12 @@ fn signalled_legacy_capture_keeps_wait_failed_and_options_keep_partial_execution
         let Value::Enum(error) = value else {
             panic!("typed process error");
         };
-        assert_eq!(error.body().layout.type_name, "Std.Proc.ProcError");
+        assert_eq!(error.body().layout.type_name, "Std.Os.Proc.ProcError");
         assert_eq!(error.body().layout.variant, expected);
         let Value::Enum(cause) = &error.body().values[0] else {
             panic!("host cause");
         };
-        assert_eq!(cause.body().layout.type_name, "Std.Errors.HostError");
+        assert_eq!(cause.body().layout.type_name, "Std.Os.Errors.HostError");
         assert_eq!(cause.body().values[0], Value::Str(operation.into()));
         if !legacy {
             assert_eq!(error.body().values[1], Value::Str("prefix".into()));

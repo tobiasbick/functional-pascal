@@ -25,7 +25,7 @@ fn file_handle_cannot_be_constructed_or_exposed_as_integer_storage() {
     ] {
         let analysis = crate::analyze_unit(
             &unit(&format!(
-                "unit Client; uses Std.Fs as Fs; {declaration} end unit;"
+                "unit Client; uses Std.Io.Fs as Fs; {declaration} end unit;"
             )),
             &[],
         )
@@ -46,7 +46,7 @@ fn file_handle_cannot_be_constructed_or_exposed_as_integer_storage() {
     ] {
         let analysis = crate::analyze_unit(
             &unit(&format!(
-                "unit Client; uses Std.Fs as Fs; {declaration} end unit;"
+                "unit Client; uses Std.Io.Fs as Fs; {declaration} end unit;"
             )),
             &[],
         )
@@ -61,7 +61,7 @@ fn file_handle_cannot_be_constructed_or_exposed_as_integer_storage() {
 #[test]
 fn cached_file_alias_preserves_nominal_owner_and_constructor_privacy() {
     let facade = crate::analyze_unit(
-        &unit("unit Resource; uses Std.Fs as Fs; public type File = Fs.File; end unit;"),
+        &unit("unit Resource; uses Std.Io.Fs as Fs; public type File = Fs.File; end unit;"),
         &[],
     )
     .expect("facade analysis");

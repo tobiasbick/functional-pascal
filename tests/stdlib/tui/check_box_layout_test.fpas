@@ -1,6 +1,6 @@
 program TuiCheckBoxLayoutTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 type CheckModel = record
   Checked: boolean;

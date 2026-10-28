@@ -13,21 +13,21 @@ pub struct NativeRecord {
 /// Detached records available to native value constructors.
 pub const ALL: &[NativeRecord] = &[
     NativeRecord {
-        name: "Std.Acp.Types.RawJson",
+        name: "Std.Ai.Acp.Types.RawJson",
         fields: &[("Text", ErrorFieldType::String)],
     },
     NativeRecord {
-        name: "Std.Acp.Types.UInt64",
+        name: "Std.Ai.Acp.Types.UInt64",
         fields: &[("Digits", ErrorFieldType::String)],
     },
     NativeRecord {
-        name: "Std.Acp.Types.ProtocolError",
+        name: "Std.Ai.Acp.Types.ProtocolError",
         fields: &[
             ("Code", ErrorFieldType::Integer),
             ("Message", ErrorFieldType::String),
             (
                 "Data",
-                ErrorFieldType::OptionalRecord("Std.Acp.Types.RawJson"),
+                ErrorFieldType::OptionalRecord("Std.Ai.Acp.Types.RawJson"),
             ),
         ],
     },

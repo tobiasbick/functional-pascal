@@ -2,7 +2,7 @@ program FpastrisTuiTest;
 
 uses
   Fpastris.Model as Model, Fpastris.Theme as Theme, Fpastris.Update as Update,
-  Fpastris.View as View, Std.Test as Test, Std.Tui as Tui;
+  Fpastris.View as View, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function Key(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin

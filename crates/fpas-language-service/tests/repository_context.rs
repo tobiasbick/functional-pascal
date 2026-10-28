@@ -16,7 +16,7 @@ use support::TempDirectory;
 #[test]
 fn repository_root_discovers_the_nested_source_standard_library() {
     let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let source = repository_root.join("lib/Std/Tui.fpas");
+    let source = repository_root.join("lib/Std/Ui/Terminal.fpas");
     let mut service = LanguageService::load(&repository_root);
 
     let analysis = service
@@ -187,7 +187,7 @@ fn loose_program_analysis_resolves_the_source_standard_library() {
     let temp = TempDirectory::new("loose-standard-library");
     let source = temp.write(
         "standalone.fpas",
-        "program Standalone;\n\nuses Std.Tui as Tui;\n\nbegin\n  const Palette: Tui.TuiPalette := Tui.TuiPalette.Default();\nend.\n",
+        "program Standalone;\n\nuses Std.Ui.Terminal as Tui;\n\nbegin\n  const Palette: Tui.TuiPalette := Tui.TuiPalette.Default();\nend.\n",
     );
     let mut service =
         LanguageService::load_with_standard_library(temp.path(), &repository_root.join("lib"))

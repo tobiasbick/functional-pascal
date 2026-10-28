@@ -1,11 +1,11 @@
-//! `Std.Bits` intrinsic discriminants.
+//! `Std.Math.Bits` intrinsic discriminants.
 //!
 //! Documentation: `docs/pascal/std/numeric/bits.md`.
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Signed 64-bit bit operations supplied by `Std.Bits`.
+/// Signed 64-bit bit operations supplied by `Std.Math.Bits`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum BitsIntrinsic {

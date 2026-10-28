@@ -77,7 +77,7 @@ fn terminal_observation_arrives_before_a_remaining_native_worker_join() {
         let (observed_tx, observed_rx) = mpsc::channel();
         let (done_tx, done_rx) = mpsc::channel();
         let mut vm = vm(&format!(
-            "program Early; uses Std.Console as Console, Std.Server as Server; procedure Background(); begin Console.WriteText('blocked'); end procedure; begin {body} end."
+            "program Early; uses Std.Console as Console, Std.Net.Server as Server; procedure Background(); begin Console.WriteText('blocked'); end procedure; begin {body} end."
         ));
         vm.pool_size = 1;
         vm.hosted = Arc::new(HostedState::new(

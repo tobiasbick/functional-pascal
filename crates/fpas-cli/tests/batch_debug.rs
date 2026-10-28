@@ -161,7 +161,7 @@ fn large_completed_output_is_fully_acknowledged() {
 #[test]
 fn native_output_preserves_split_utf8_and_stderr_is_inside_json() {
     let f = Fixture::new(
-        "program Native; uses Std.Proc as Proc; begin discard Proc.Run('sh', ['-c', 'printf \"\\303\"; sleep 0.1; printf \"\\251\"; printf problem >&2']).Unwrap(); end.",
+        "program Native; uses Std.Os.Proc as Proc; begin discard Proc.Run('sh', ['-c', 'printf \"\\303\"; sleep 0.1; printf \"\\251\"; printf problem >&2']).Unwrap(); end.",
     );
     let r = f.run(&["debug", "main.fpas"], 0);
     let records = r["output"].as_array().unwrap();
@@ -183,7 +183,7 @@ fn native_output_preserves_split_utf8_and_stderr_is_inside_json() {
 #[test]
 fn native_and_hosted_stdout_share_program_write_order() {
     let f = Fixture::new(
-        "program Ordered; uses Std.Console as Console, Std.Proc as Proc; begin Console.WriteText('A'); discard Proc.Run('sh', ['-c', 'printf B']).Unwrap(); Console.WriteText('C'); end.",
+        "program Ordered; uses Std.Console as Console, Std.Os.Proc as Proc; begin Console.WriteText('A'); discard Proc.Run('sh', ['-c', 'printf B']).Unwrap(); Console.WriteText('C'); end.",
     );
     let r = f.run(&["debug", "main.fpas"], 0);
     assert_eq!(text(&r), "ABC");

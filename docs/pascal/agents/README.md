@@ -41,7 +41,7 @@ Use a `.fpasprj` when the program imports application units or project dependenc
 - Statements end with `;`, including before `else`. Close constructs by name:
   `end function;`, `end if;`, `end for;`, `end record;`, `end unit;`.
   A program's main block ends with `end.`. Functions return with `return`.
-- Import every unit with an alias: `uses Std.Parse as Parse;`. Access its public
+- Import every unit with an alias: `uses Std.Text.Parse as Parse;`. Access its public
   names through that alias. Unit declarations and record members are private by default;
   each export needs its own `public`.
 - Value parameters and loop variables are read-only. A `var` parameter changes

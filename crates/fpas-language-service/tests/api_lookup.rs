@@ -83,7 +83,7 @@ fn intrinsic_routine_matches_hover_documentation_and_unit_handbook() {
     let temp = TempDirectory::new("api-lookup-intrinsic");
     let catalog = catalog_for(temp.path());
 
-    let entry = single(&catalog, "Std.Fs.ReadText");
+    let entry = single(&catalog, "Std.Io.Fs.ReadText");
     assert_eq!(entry.kind, ApiEntryKind::Declaration(SymbolKind::Function));
     assert_eq!(
         entry.documentation.as_deref(),
@@ -97,18 +97,18 @@ fn intrinsic_routine_matches_hover_documentation_and_unit_handbook() {
     );
     let location = entry.location.expect("generated declaration location");
     assert!(
-        location.path.ends_with("lib/api/Std/Fs.fpas"),
+        location.path.ends_with("lib/api/Std/Io.Fs.fpas"),
         "{location:?}"
     );
 
-    assert_eq!(single(&catalog, "fs.readtext").name, "Std.Fs.ReadText");
+    assert_eq!(single(&catalog, "fs.readtext").name, "Std.Io.Fs.ReadText");
     let names = catalog
         .lookup("READTEXT")
         .matches
         .into_iter()
         .map(|entry| entry.name)
         .collect::<Vec<_>>();
-    assert_eq!(names, ["Std.Console.ReadText", "Std.Fs.ReadText"]);
+    assert_eq!(names, ["Std.Console.ReadText", "Std.Io.Fs.ReadText"]);
 }
 
 #[test]
@@ -121,7 +121,7 @@ fn source_calendar_routines_use_their_public_declarations_and_handbook() {
         "AddDays",
         "ToTimestampMillis",
     ] {
-        let entry = single(&catalog, &format!("Std.Calendar.{name}"));
+        let entry = single(&catalog, &format!("Std.Time.Calendar.{name}"));
         assert_eq!(entry.kind, ApiEntryKind::Declaration(SymbolKind::Function));
         assert_eq!(
             entry.handbook.as_deref(),
@@ -132,12 +132,12 @@ fn source_calendar_routines_use_their_public_declarations_and_handbook() {
                 .location
                 .expect("source declaration")
                 .path
-                .ends_with("lib/Std/Calendar.fpas")
+                .ends_with("lib/Std/Time/Calendar.fpas")
         );
     }
     assert!(
         catalog
-            .lookup("Std.Calendar.Date.YearValue")
+            .lookup("Std.Time.Calendar.Date.YearValue")
             .matches
             .is_empty()
     );
@@ -148,7 +148,7 @@ fn unit_lists_public_declarations_with_their_first_comment_line() {
     let temp = TempDirectory::new("api-lookup-unit");
     let catalog = catalog_for(temp.path());
 
-    let unit = single(&catalog, "Std.Fs");
+    let unit = single(&catalog, "Std.Io.Fs");
     assert_eq!(unit.kind, ApiEntryKind::Declaration(SymbolKind::Unit));
     assert!(
         unit.documentation
@@ -190,7 +190,7 @@ fn source_standard_library_units_are_found_without_a_project_and_hide_private_de
     let temp = TempDirectory::new("api-lookup-source-std");
     let catalog = catalog_for(temp.path());
 
-    let http = single(&catalog, "Std.Http");
+    let http = single(&catalog, "Std.Net.Http");
     assert_eq!(
         http.handbook.as_deref(),
         Some("docs/pascal/std/network/http.md")
@@ -315,6 +315,6 @@ fn misspelled_names_suggest_declarations_and_operations() {
     assert!(result.matches.is_empty());
     assert_eq!(
         result.suggestions.first().map(String::as_str),
-        Some("Std.Fs.ReadText")
+        Some("Std.Io.Fs.ReadText")
     );
 }

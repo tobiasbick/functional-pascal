@@ -1,6 +1,6 @@
 program FsCreateDirAllTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const Root: string := Test.ScratchDir() + '/create-dir-all';

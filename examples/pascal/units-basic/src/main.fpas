@@ -2,7 +2,7 @@
 
 program UnitsBasic;
 
-uses App.Math as Math, App.Reporting as Reporting, Std.Console as Console, Std.Conv as Conv;
+uses App.Math as Math, App.Reporting as Reporting, Std.Console as Console, Std.Text.Format as Conv;
 
 begin
   Console.WriteLn('Short name: ', Reporting.DescribeClamp(135));

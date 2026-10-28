@@ -1,7 +1,7 @@
 // MVU update logic for the Local Chat application.
 unit LocalChat.Update;
 
-uses LocalChat.Model as Model, LocalChat.Service as Service, Std.Console as Console, Std.Tui as Tui;
+uses LocalChat.Model as Model, LocalChat.Service as Service, Std.Console as Console, Std.Ui.Terminal as Tui;
 
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;

@@ -54,9 +54,9 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 |------|-----|----------------|
 | Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
 | Host I/O | [host/](host/README.md) | Args, Calendar (Gregorian dates and UTC), Cli (schema parsing/help), Env, Errors, Fs (whole-file and handle I/O), Path, Proc (options and bounded capture), Time |
-| Networking | [network/](network/README.md) | Net, Server lifetime, URI, UTF-8, HTTP |
+| Networking | [network/](network/README.md) | Sockets, Server lifetime, URI, HTTP |
 | AI protocols | [ai/](ai/README.md) | OpenAI-compatible chat completions, native ACP clients, typed events, host adapters and MCP tool servers |
-| Text | [text/](text/README.md) | Conv, Encoding (Base64/Base64url/hex), Parse, Json, Json.Fields, Toml, Toml.Fields |
+| Text and formats | [text/](text/README.md) | Text.Format, Text.Parse, Text.Utf8, Encoding (Base64/Base64url/hex), Encoding.Json, Encoding.Toml and field helpers |
 | Numeric | [numeric/](numeric/README.md) | Math, Bits, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |
 | Concurrency | [concurrency/](concurrency/README.md) | Tasks (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |
@@ -95,9 +95,9 @@ Language rules: [Error handling](../language/error-handling/README.md).
 
 Before adding, moving, splitting or renaming a public standard unit, follow the
 binding [namespace specification](../../specs/std-namespaces.md). It defines
-target allocations and extension rules; this handbook continues to document
-the currently implemented imports. [AP53](../../future/improve-syntax/ap53-std-namespaces/README.md)
-owns the planned migration, and the [roadmap](../../future/std-roadmap.md) owns
+canonical allocations and extension rules; this handbook documents
+the available imports. [AP53](../../future/improve-syntax/ap53-std-namespaces/README.md)
+owns the namespace migration, and the [roadmap](../../future/std-roadmap.md) owns
 future capability priorities. Names in the specification do not make new
 modules available.
 
@@ -114,7 +114,7 @@ When changing a `Std.*` API, update its handbook and every applicable layer:
 | Source standard-library API | [`lib/Std/`](../../../lib/Std), [`lib/stdlib.fpasprj`](../../../lib/stdlib.fpasprj) |
 | Regression coverage | Owning crate tests and [`tests/stdlib/`](../../../tests/stdlib) or the relevant runner, console, concurrency, or app tests |
 
-Source units such as `Std.Tui` expose their API directly in `lib/Std/`. A public source
+Source units such as `Std.Ui.Terminal` expose their API directly in `lib/Std/`. A public source
 unit with its own handbook page names it in the comment before its `unit` header, in the same
 `Handbook:` form as the generated declarations.
 Console, network, and test hosts live under

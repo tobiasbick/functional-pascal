@@ -1,6 +1,6 @@
 program AcpTerminalFixture;
 
-uses Std.Args as Args, Std.Console as Console, Std.Fs as Fs, Std.Time as Time;
+uses Std.Os.Args as Args, Std.Console as Console, Std.Io.Fs as Fs, Std.Time as Time;
 
 begin
   const Marker := Args.ParamStr(0);

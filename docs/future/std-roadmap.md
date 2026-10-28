@@ -1,9 +1,8 @@
 # Standard library roadmap
 
-Status: namespace organization is agreed and its migration is planned in
-[AP53](improve-syntax/ap53-std-namespaces/README.md). Only planning and
-documentation are authorized. Other capabilities retain the status of their
-own plans.
+Status: namespace organization and migration are delivered in
+[AP53](improve-syntax/ap53-std-namespaces/README.md).
+Other capabilities retain the status of their own plans.
 
 This is the central roadmap for standard-library expansion. The binding
 [namespace specification](../specs/std-namespaces.md) owns canonical homes,
@@ -27,9 +26,9 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 
 ## Selected order
 
-1. Deliver [AP53](improve-syntax/ap53-std-namespaces/README.md), including the
-   existing-unit mapping, the `Std.Conv` split, tooling, documentation and
-   both FPAS and dungeon consumers. The current step documents that work only.
+1. Namespace foundation: [AP53](improve-syntax/ap53-std-namespaces/README.md)
+   delivers the existing-unit mapping, the former `Std.Conv` split, tooling,
+   documentation and both FPAS and dungeon consumers.
 2. Settle the first byte-buffer contract under `Std.Bytes`, then authorize its
    implementation separately. Construction, copying/mutation, access, errors,
    limits and I/O integration remain decisions in
@@ -58,8 +57,8 @@ contracts are documented in the handbook. In particular:
 - [Cryptography](../pascal/std/cryptography/crypto.md) supplies operating-system
   random bytes and secure integer sampling.
 
-References to those current APIs remain valid until the AP53 migration.
-The specification's old-to-new mapping owns their target names.
+The specification's canonical-unit catalogue owns their current names and
+records the AP53 migration from former imports.
 
 ## Future capability plans
 

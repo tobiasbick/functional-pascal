@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console as Console, Std.Args as Args;
+uses Std.Console as Console, Std.Os.Args as Args;
 
 begin
   Console.WriteLn(Args.ParamCount());

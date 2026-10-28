@@ -5,7 +5,7 @@ use super::{check_errors, check_ok};
 #[test]
 fn binary_files_have_typed_results_and_named_parameters() {
     check_ok(
-        "program Binary; uses Std.Fs as Fs; begin const Read: result of (array of integer, Fs.FsError) := Fs.ReadBytes(Path := 'input'); const Written: result of (boolean, Fs.FsError) := Fs.WriteBytes(Bytes := [0, 255], Path := 'output'); end.",
+        "program Binary; uses Std.Io.Fs as Fs; begin const Read: result of (array of integer, Fs.FsError) := Fs.ReadBytes(Path := 'input'); const Written: result of (boolean, Fs.FsError) := Fs.WriteBytes(Bytes := [0, 255], Path := 'output'); end.",
     );
 }
 
@@ -21,7 +21,7 @@ fn binary_files_reject_text_or_real_byte_arrays_and_wrong_argument_labels() {
     ] {
         assert!(
             !check_errors(&format!(
-                "program Invalid; uses Std.Fs as Fs; begin discard {call}; end."
+                "program Invalid; uses Std.Io.Fs as Fs; begin discard {call}; end."
             ))
             .is_empty(),
             "accepted {call}"
@@ -33,7 +33,7 @@ fn binary_files_reject_text_or_real_byte_arrays_and_wrong_argument_labels() {
 fn file_handles_expose_nominal_modes_and_typed_cancellable_operations() {
     check_ok(
         r#"program Handles;
-uses Std.Fs as Fs, Std.Tasks as Tasks;
+uses Std.Io.Fs as Fs, Std.Tasks as Tasks;
 function OpenFile(): result of (Fs.File, Fs.FsError);
 begin return Fs.Open(Path := 'data', Mode := Fs.FileMode.Read); end function;
 procedure Probe(File: Fs.File; Token: Tasks.CancellationToken);
@@ -64,7 +64,7 @@ fn file_handles_reject_wrong_modes_origins_payloads_and_tokens() {
         "Fs.ReadLine(File, 2)",
     ] {
         assert!(!check_errors(&format!(
-            "program Invalid; uses Std.Fs as Fs; procedure Probe(File: Fs.File); begin discard {call}; end procedure; begin end."
+            "program Invalid; uses Std.Io.Fs as Fs; procedure Probe(File: Fs.File); begin discard {call}; end procedure; begin end."
         )).is_empty(), "accepted {call}");
     }
 }

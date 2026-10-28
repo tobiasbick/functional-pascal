@@ -13,8 +13,8 @@ pub(super) fn inspect(value: &Value) -> Result<(GraphClassification, bool), Host
             Value::OpaqueHandle(_) | Value::Task(_) => true,
             Value::Record(record) => {
                 let name = &record.body().layout.type_name;
-                name.eq_ignore_ascii_case("Std.Http.Handles.BodyStream")
-                    || name.eq_ignore_ascii_case("Std.Http.Handles.SseDecoder")
+                name.eq_ignore_ascii_case("Std.Net.Http.Handles.BodyStream")
+                    || name.eq_ignore_ascii_case("Std.Net.Http.Handles.SseDecoder")
             }
             _ => false,
         };

@@ -7,8 +7,8 @@ The [MCP tools](mcp-tools/README.md) expose application state independently of
 ACP. The [ACP tool example](acp-mcp-tools/README.md) registers the same handlers
 through `Acp.RegisterTool` or attaches a caller-owned MCP server.
 
-These examples cover the implemented `Std.Net`, `Std.Server`, `Std.Http`, `Std.Net.Uri`, and
-`Std.Net.Utf8` APIs. The OpenAI-compatible chat demo remains in
+These examples cover the implemented `Std.Net.Sockets`, `Std.Net.Server`, `Std.Net.Http`, `Std.Net.Uri`, and
+`Std.Text.Utf8` APIs. The OpenAI-compatible chat demo remains in
 [`examples/openai-chat/`](../openai-chat).
 
 ## Local HTTP pair
@@ -48,7 +48,7 @@ an LF-delimited request, close their connections, and exit after one exchange.
 fpas run examples/network/tcp_parallel_echo_server.fpas -- 18082 10000
 ```
 
-Four group-owned workers serve loopback clients. The listener belongs to a `Std.Server`
+Four group-owned workers serve loopback clients. The listener belongs to a `Std.Net.Server`
 lifetime. Its finite duration, a stop signal, or a fatal accept error starts the same cleanup
 path. New work is rejected and workers are cancelled before joining against one remaining
 grace budget. The example explicitly enables whole-process escalation after one second;
@@ -89,8 +89,8 @@ UTF-8 bytes.
 
 ## Reference
 
-- [`Std.Net`](../../docs/pascal/std/network/net.md)
-- [`Std.Server`](../../docs/pascal/std/network/server.md)
-- [`Std.Http`](../../docs/pascal/std/network/http.md)
+- [`Std.Net.Sockets`](../../docs/pascal/std/network/net.md)
+- [`Std.Net.Server`](../../docs/pascal/std/network/server.md)
+- [`Std.Net.Http`](../../docs/pascal/std/network/http.md)
 - [`Std.Net.Uri`](../../docs/pascal/std/network/uri.md)
-- [`Std.Net.Utf8`](../../docs/pascal/std/network/utf8.md)
+- [`Std.Text.Utf8`](../../docs/pascal/std/network/utf8.md)

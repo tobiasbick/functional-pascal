@@ -40,14 +40,14 @@ fn compile(input: &InputFile, recover_failure: bool) -> VerifiedExecutable {
     };
     let source = format!(
         r#"program DebugFileLifecycle;
-uses Std.Fs as Fs;
+uses Std.Io.Fs as Fs;
 var Saved: option of Fs.File := None;
 procedure Pause();
 begin panic('forced completion must skip this'); end procedure;
 function Closed(File: Fs.File): boolean;
 begin
-  return (Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell'))) and
-    (Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Fs.Read')));
+  return (Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Io.Fs.Tell'))) and
+    (Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Io.Fs.Read')));
 end function;
 begin
   Saved := Some(Fs.Open('{path}', Fs.FileMode.Read).Unwrap());

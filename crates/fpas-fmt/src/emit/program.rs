@@ -225,9 +225,9 @@ mod tests {
     #[test]
     fn long_uses_clause_stays_compact_without_authored_breaks() {
         let formatted = parse_and_format(
-            "program LongUses; uses Std.Console as Console, Std.Conv as Conv, Std.String as StdString, MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin WriteLn('ok'); end.",
+            "program LongUses; uses Std.Console as Console, Std.Text.Format as Conv, Std.String as StdString, MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin WriteLn('ok'); end.",
         );
-        assert!(formatted.contains("uses Std.Console as Console, Std.Conv as Conv,"));
+        assert!(formatted.contains("uses Std.Console as Console, Std.Text.Format as Conv,"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
     }
 

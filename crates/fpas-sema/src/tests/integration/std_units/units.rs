@@ -43,6 +43,6 @@ fn source_cli_import_does_not_register_intrinsic_symbols() {
 
 #[test]
 fn source_calendar_import_does_not_register_intrinsic_symbols() {
-    check_ok("program T;\nuses Std.Calendar as Calendar;\nbegin\nend.");
+    check_ok("program T;\nuses Std.Time.Calendar as Calendar;\nbegin\nend.");
     assert!(crate::intrinsic_std_symbols(fpas_builtins::STD_UNIT_CALENDAR).is_empty());
 }

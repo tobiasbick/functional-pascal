@@ -1,4 +1,4 @@
-//! Recursive directory operations: `Std.Fs.ReadDirAll` and `Std.Fs.CopyDirAll`.
+//! Recursive directory operations: `Std.Io.Fs.ReadDirAll` and `Std.Io.Fs.CopyDirAll`.
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
@@ -22,7 +22,7 @@ fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), Fail
     for entry in fs::read_dir(dir).map_err(|error| Failure::at(dir, error))? {
         let entry = entry.map_err(|error| Failure::at(dir, error))?;
         if paths.len() >= limit {
-            return Err(Failure::LimitExceeded("Std.Fs.ReadDirAll", limit as i64));
+            return Err(Failure::LimitExceeded("Std.Io.Fs.ReadDirAll", limit as i64));
         }
         let entry_path = entry.path();
         let text = entry_path.to_str().ok_or_else(|| {

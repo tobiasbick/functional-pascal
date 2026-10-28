@@ -1,7 +1,7 @@
 // Exercise the real CLI boundary: Markdown policy, context expansion, compiler failures and run opt-in.
 program DocumentationExamplesBehaviorTest;
 
-uses Std.Conv as Conv, Std.Fs as Fs, Std.Json.Fields as Fields, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+uses Std.Text.Format as Conv, Std.Io.Fs as Fs, Std.Encoding.Json.Fields as Fields, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Test as Test;
 
 type Scenario = record
   Name: string;

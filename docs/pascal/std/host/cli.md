@@ -7,7 +7,7 @@ arguments, print text, or exit the program.
 ## Importing and names
 
 Import `uses Std.Cli as Cli;` and access public functions and types through
-`Cli`. [`Std.Args`](args.md) supplies process arguments separately. The parser
+`Cli`. [`Std.Os.Args`](args.md) supplies process arguments separately. The parser
 takes an array of argument strings, excluding the program name.
 
 ## Quick reference
@@ -103,7 +103,7 @@ A named Int option can consume `-$FF` directly as its next-token value.
 ## Typed values
 
 Text values preserve their argument text. Int, Float, and Bool use
-[`Std.Parse.Int`, `Real`, and `Bool`](../text/parse.md), including Pascal
+[`Std.Text.Parse.Int`, `Real`, and `Bool`](../text/parse.md), including Pascal
 numeric syntax, trimmed parsing, checked bounds, and finite reals. For example,
 Int accepts `1_024` and `-$FF`; Float accepts `-2.5` but requires the real
 parser's fractional part; Bool accepts `true` and `false` case-insensitively.
@@ -177,7 +177,7 @@ All failures are returned as `Error(Cause)`:
 Indexes are zero-based positions in the supplied argument array. An invalid
 value identifies the value token, or the same option token for inline values.
 Missing values and duplicates identify the option token. `InvalidValue` retains
-the typed `Std.Parse.ParseError` as its cause; it is not replaced by a message
+the typed `Std.Text.Parse.ParseError` as its cause; it is not replaced by a message
 string. Use `.Message()` explicitly when text is needed.
 
 ## Limits

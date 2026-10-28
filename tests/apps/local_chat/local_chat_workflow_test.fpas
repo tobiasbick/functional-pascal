@@ -3,7 +3,7 @@ program LocalChatWorkflowTest;
 
 uses
   LocalChat.Model as LocalChatModel, LocalChat.Theme as Theme, LocalChat.Update as Update,
-  LocalChat.View as View, Std.Test as Test, Std.Tui as Tui;
+  LocalChat.View as View, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 // Reports whether any rendered row contains text.
 //

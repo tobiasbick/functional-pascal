@@ -45,6 +45,6 @@ fn numeric_mixtures_require_explicit_conversion_in_every_context() {
         );
     }
     check_ok(
-        "program T; uses Std.Conv as Conv; begin const R: real := Conv.IntToReal(1) + 0.5; discard Conv.IntToReal(1) < 1.5; const Half: real := 1 / 2; end.",
+        "program T; uses Std.Math as Math; begin const R: real := Math.IntToReal(1) + 0.5; discard Math.IntToReal(1) < 1.5; const Half: real := 1 / 2; end.",
     );
 }

@@ -1,4 +1,4 @@
-# `Std.Tui` layout
+# `Std.Ui.Terminal` layout
 
 Public layout values are `TuiSizePolicy`, `TuiAlignment`, `TuiMargins`,
 `TuiLayoutSettings`, `TuiMeasureSpec`, `TuiMeasureResult`, `TuiSpacer`, and
@@ -40,7 +40,7 @@ replace a working surface with a notice.
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Geometry](geometry.md)
 - [Elements](elements.md)
 - [Text area](text-area.md)

@@ -28,5 +28,9 @@ pub(super) fn value(
     };
     #[cfg(not(unix))]
     let signal = Value::OptionNone;
-    factory.record("Std.Proc.ProcessExitStatus", vec![code, signal], location)
+    factory.record(
+        "Std.Os.Proc.ProcessExitStatus",
+        vec![code, signal],
+        location,
+    )
 }

@@ -1,6 +1,6 @@
 program NoteNavigationDirtyTest;
 
-uses Notes.Model as Model, Notes.Update as Update, Std.Test as Test, Std.Tui as Tui;
+uses Notes.Model as Model, Notes.Update as Update, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 begin
   var NoteValue: Model.Note := Model.NoteCreate('navigation', 123);

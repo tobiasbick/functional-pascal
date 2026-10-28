@@ -181,7 +181,7 @@ end.
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random as Random;
+uses Std.Math.Random as Random;
 begin
   var X: integer := 0;
   X := Random.RandomInt(1, 1);
@@ -244,7 +244,7 @@ fn dap_capturing_rejects_random_without_claiming_replay() {
         messages.iter().any(|message| {
             message["event"] == "output"
                 && message["body"]["output"].as_str().is_some_and(|output| {
-                    output.contains("Std.Random")
+                    output.contains("Std.Math.Random")
                         && output.contains("recording capture cannot execute")
                 })
         }),

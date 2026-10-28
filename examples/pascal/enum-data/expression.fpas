@@ -1,6 +1,6 @@
 program ExpressionEval;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 // A simple expression tree using enums with associated data
 type Expr = enum

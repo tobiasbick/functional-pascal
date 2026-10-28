@@ -144,7 +144,7 @@ fn runtime_points_use_snapshots_and_images_reject_missing_or_mismatched_sources(
         assert!(text.contains("  help:"), "{text}");
         assert!(!text.contains(" | "), "unverified text: {text}");
     }
-    fixture.write("main.fpas", "program Main;\nuses Std.Fs as Fs;\nbegin\n  discard Fs.WriteText('main.fpas', 'replaced').Unwrap();\n  panic('snapshot');\nend.\n");
+    fixture.write("main.fpas", "program Main;\nuses Std.Io.Fs as Fs;\nbegin\n  discard Fs.WriteText('main.fpas', 'replaced').Unwrap();\n  panic('snapshot');\nend.\n");
     let output = fixture.run(&["run", "main.fpas"]);
     let text = stderr(&output);
     assert_eq!(output.status.code(), Some(2), "{text}");
@@ -161,7 +161,7 @@ fn precompiled_test_sources_are_not_replaced_by_an_earlier_test() {
     let old = "program Main;\nbegin\n  panic('old');\nend.\n";
     let new = "program Main;\nbegin\n  panic('new');\nend.\n";
     let replacement = new.replace('\'', "''").replace('\n', "'#10'");
-    fixture.write("00_mutate_test.fpas", &format!("program Change; uses Std.Fs as Fs; begin discard Fs.WriteText('10_panic_test.fpas', '{replacement}').Unwrap(); end."));
+    fixture.write("00_mutate_test.fpas", &format!("program Change; uses Std.Io.Fs as Fs; begin discard Fs.WriteText('10_panic_test.fpas', '{replacement}').Unwrap(); end."));
     for timeout in [false, true] {
         fixture.write("10_panic_test.fpas", old);
         let mut args = vec!["test", "--jobs", "1"];

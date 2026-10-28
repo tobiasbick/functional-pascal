@@ -42,7 +42,7 @@ fn parser_alias_completion_and_signature_help_use_result_and_text() {
         .ancestors()
         .nth(2)
         .expect("repository");
-    let source = "program T; uses Std.Parse as Numbers; begin discard Numbers.\nend.";
+    let source = "program T; uses Std.Text.Parse as Numbers; begin discard Numbers.\nend.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::load_with_standard_library(temp.path(), &root.join("lib"))
         .expect("Std API");
@@ -67,7 +67,7 @@ fn parser_alias_completion_and_signature_help_use_result_and_text() {
         ("HexInt", "integer"),
     ] {
         let source = format!(
-            "program T; uses Std.Parse as Numbers; begin discard Numbers.{parser}(Text := \nend."
+            "program T; uses Std.Text.Parse as Numbers; begin discard Numbers.{parser}(Text := \nend."
         );
         service.documents_mut().close_document(&path);
         service

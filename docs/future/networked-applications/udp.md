@@ -4,7 +4,7 @@
 
 UDP provides message-oriented delivery without connections, ordering, retry, congestion handling,
 or duplicate suppression. The module must expose those limitations instead of resembling the
-reliable `Std.Net.Connection` interface.
+reliable `Std.Net.Sockets.Connection` interface.
 
 UDP endpoints belong to `Std.Net.Sockets` under the binding
 [namespace specification](../../specs/std-namespaces.md). AP53 moves the

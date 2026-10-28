@@ -1,6 +1,6 @@
 program FsGlobRecursivePatternTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 procedure EnsureDir(Path: string);
 begin

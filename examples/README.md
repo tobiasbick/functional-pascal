@@ -30,7 +30,7 @@ The **FPAS regression suite** lives in [`tests/`](../tests) as `*_test.fpas` fil
 
 | Directory | Contents |
 |-----------|----------|
-| `tests/stdlib/` | `Std.*` runtime checks, including headless `Std.Tui` coverage |
+| `tests/stdlib/` | `Std.*` runtime checks, including headless `Std.Ui.Terminal` coverage |
 | `tests/concurrency/` | Tasks, channels, cancellation, selection, task groups, supervision, and timed close |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
@@ -181,8 +181,8 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
 | `pascal/concurrency/task_spawn_wait_benchmark.fpas` | Spawn plus `WaitAll` task-scheduling throughput |
 | `pascal/concurrency/task_array_callbacks_benchmark.fpas` | Resumable `Map`, `Filter`, and `Reduce` callback throughput inside a spawned task |
-| `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
-| `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Tui` project benchmark |
+| `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Ui.Terminal` render benchmark with an optional elapsed-time limit |
+| `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Ui.Terminal` project benchmark |
 | `pascal/tui/mandelbrot-headless/mandelbrot-benchmark.fpasprj` | Production Mandelbrot tasks and bounded delivery, optionally including headless grid painting; `cargo bench-fpas run --group mandelbrot` |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
 | `pascal/vm/array_push_benchmark.fpas` | Growing `Items.PushInPlace` for VM array locals / SharedArray COW |
@@ -200,17 +200,17 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/pattern-matching/` | Guards and exhaustiveness |
 | `pascal/record-methods/` | Record methods |
 | `pascal/records/defaults_with_update.fpas` | Default fields and `with` updates |
-| `pascal/std/args_basics.fpas` | `Std.Args` — arguments passed after `--` |
+| `pascal/std/args_basics.fpas` | `Std.Os.Args` — arguments passed after `--` |
 | `pascal/std/console_cells_basics.fpas` | `Std.Console` — framed cell fill/write/read-back and saved-region restore |
 | `pascal/std/str_basics.fpas` | String operations — trim, split/join, `Format`, search/replace |
 | `pascal/std/dict_basics.fpas` | Dictionary operations — literals, `Get`, `Merge`, `Map`/`Filter` |
-| `pascal/std/env_basics.fpas` | `Std.Env` — environment lookup and missing values |
-| `pascal/std/fs_basics.fpas` | `Std.Fs` — create directories, write/read UTF-8 text, path checks |
-| `pascal/std/json_basics.fpas` | `Std.Json` — parse, inspect, and stringify JSON trees |
-| `pascal/std/parse_basics.fpas` | `Std.Parse` — `Result`-based integer, real, and boolean parsing |
-| `pascal/std/path_basics.fpas` | `Std.Path` — join, normalize, basename, dirname, extension |
-| `pascal/std/proc_basics.fpas` | `Std.Proc` — process launch failure as `Result` |
-| `pascal/std/random_basics.fpas` | `Std.Random` — random real and inclusive integer ranges |
+| `pascal/std/env_basics.fpas` | `Std.Os.Env` — environment lookup and missing values |
+| `pascal/std/fs_basics.fpas` | `Std.Io.Fs` — create directories, write/read UTF-8 text, path checks |
+| `pascal/std/json_basics.fpas` | `Std.Encoding.Json` — parse, inspect, and stringify JSON trees |
+| `pascal/std/parse_basics.fpas` | `Std.Text.Parse` — `Result`-based integer, real, and boolean parsing |
+| `pascal/std/path_basics.fpas` | `Std.Io.Path` — join, normalize, basename, dirname, extension |
+| `pascal/std/proc_basics.fpas` | `Std.Os.Proc` — process launch failure as `Result` |
+| `pascal/std/random_basics.fpas` | `Std.Math.Random` — random real and inclusive integer ranges |
 | `pascal/std/task_basics.fpas` | `Std.Tasks` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `pascal/std/array_basics.fpas` | Array operations — `Length`, `Sort`, `Any`, `All` |
@@ -230,7 +230,7 @@ All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table b
 | `pascal/units-basic/` | `units-basic.fpasprj`, `unit App.Math`, `App.Reporting`, program `UnitsBasic` |
 | `pascal/library-deps/` | Program `LibDemo` + library `MyLib.Core` via `[dependencies].projects` |
 | `pascal/monorepo/` | Workspace + `Demo.Greet` library + `Hello` via `[dependencies].workspace` |
-| `math/mandelbrot/` | `mandelbrot.fpasprj` depends on `mandelbrot-core.fpasprj`: canonical background-enabled `Std.Tui` app with focused App, Model, Color, Render, and View units |
+| `math/mandelbrot/` | `mandelbrot.fpasprj` depends on `mandelbrot-core.fpasprj`: canonical background-enabled `Std.Ui.Terminal` app with focused App, Model, Color, Render, and View units |
 | `math/julia/` | `julia.fpasprj` depends on `julia-core.fpasprj`: `Julia.Color`, `Julia.Compute`, and `Julia.Render` |
 | `math/burning_ship/` | `burning_ship.fpasprj`, program `BurningShipShowcase`, units `BurningShip.Color` / `BurningShip.Render` |
 | `math/tricorn/` | `tricorn.fpasprj`, program `TricornShowcase`, units `Tricorn.Color` / `Tricorn.Render` |
@@ -245,7 +245,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | Path | Notes |
 |------|--------|
 | `openai-chat/openai-chat.fpasprj` | Line-oriented chat against a configurable OpenAI-compatible HTTP endpoint |
-| `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Tui` MVU example with a bounded typed inbox, cancellable row tasks on the VM pool, atomic image updates, gauges, and overlay |
+| `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Ui.Terminal` MVU example with a bounded typed inbox, cancellable row tasks on the VM pool, atomic image updates, gauges, and overlay |
 | `math/julia/julia.fpasprj` | Fullscreen Julia explorer with four cancellable render workers; `WASD` adjusts the constant |
 | `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |
 | `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |
@@ -266,7 +266,7 @@ four available rows per event-loop iteration; it does not wait for a whole image
 palette changes, and exit cancel and join the old render before releasing its queue. Workers
 check cancellation between pixels and every 32 fractal iterations, and their result sends are
 cancellable. Each replacement owns a fresh queue, so old rows cannot overwrite the new view.
-This uses the existing Console loop, not a new `Std.Tui` background-message API. No rendering
+This uses the existing Console loop, not a new `Std.Ui.Terminal` background-message API. No rendering
 speedup is claimed; the change concerns work bounds and event processing.
 
 Run the additional TCP example with an optional port and lifetime in milliseconds:

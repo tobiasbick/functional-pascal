@@ -45,7 +45,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &root.join("src/main.fpas"),
-        "program Main;\nuses Std.Console as Console, Std.Args as Args;\nbegin\n  Console.WriteLn(Args.ParamStr(0));\nend.\n",
+        "program Main;\nuses Std.Console as Console, Std.Os.Args as Args;\nbegin\n  Console.WriteLn(Args.ParamStr(0));\nend.\n",
     );
 
     let fpas = env!("CARGO_BIN_EXE_fpas");

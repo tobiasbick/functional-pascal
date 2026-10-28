@@ -2,7 +2,7 @@
 
 program TaskBasics;
 
-uses Std.Console as Console, Std.Conv as Conv, Std.Tasks as Tasks;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Tasks as Tasks;
 
 function Square(N: integer): integer;
 begin

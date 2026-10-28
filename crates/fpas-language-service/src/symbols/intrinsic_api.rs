@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn editor_snapshot_adds_missing_enum_member_from_registry_and_markdown() {
         let source = Arc::<str>::from(
-            "unit Std.Json;\n\npublic type\n  JsonValue = enum\n    // `ArrayValue` enum member.\n    // `Object` enum member.\n    Object(Fields: dict of string to JsonValue);\n  end enum;\nend unit;\n",
+            "unit Std.Encoding.Json;\n\npublic type\n  JsonValue = enum\n    // `ArrayValue` enum member.\n    // `Object` enum member.\n    Object(Fields: dict of string to JsonValue);\n  end enum;\nend unit;\n",
         );
         let snapshot = DocumentSnapshot::parse(
             std::path::Path::new("Json.fpas"),
@@ -175,7 +175,7 @@ mod tests {
         let array = json_value
             .children
             .iter()
-            .find(|child| child.qualified_name == "Std.Json.JsonValue.ArrayValue")
+            .find(|child| child.qualified_name == "Std.Encoding.Json.JsonValue.ArrayValue")
             .expect("Array registry declaration");
 
         assert_eq!(
@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn enum_alias_members_keep_their_own_documentation_and_shared_identity() {
         let source = Arc::<str>::from(
-            "unit Std.Mcp;\n// `InvalidArgument` enum member.\n//\n// Parameters:\n// - `Argument`: Rejected input.\n\n// `Busy` enum member.\n\n// Shared MCP error alias.\npublic type McpError = Std.Mcp.Types.McpError;\nend unit;\n",
+            "unit Std.Ai.Mcp;\n// `InvalidArgument` enum member.\n//\n// Parameters:\n// - `Argument`: Rejected input.\n\n// `Busy` enum member.\n\n// Shared MCP error alias.\npublic type McpError = Std.Ai.Mcp.Types.McpError;\nend unit;\n",
         );
         let snapshot = DocumentSnapshot::parse(
             std::path::Path::new("Mcp.fpas"),
@@ -207,7 +207,10 @@ mod tests {
             .iter()
             .find(|v| v.name == "Busy")
             .expect("aliased member");
-        assert_eq!(invalid.qualified_name, "Std.Mcp.McpError.InvalidArgument");
+        assert_eq!(
+            invalid.qualified_name,
+            "Std.Ai.Mcp.McpError.InvalidArgument"
+        );
         assert_eq!(
             invalid.callable.as_ref().expect("constructor").parameters,
             ["Argument: string"]

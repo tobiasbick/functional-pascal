@@ -3,7 +3,7 @@
 unit Newton.Render;
 
 uses
-  Std.Console as Console, Std.Tasks as StdTasks, Std.Conv as Conv, Std.Math as Math,
+  Std.Console as Console, Std.Tasks as StdTasks, Std.Math as Math,
   Newton.Color as Color;
 
 type Complex = record
@@ -99,7 +99,7 @@ begin
       const Next: Complex := Z.Scale(2.0 / 3.0).Add(Z2.Inv().Scale(1.0 / 3.0));
       if Next.Sub(Z).MagSq() < Tolerance then
         begin
-          const Shade: real := 1.0 - (Conv.IntToReal(N) / Conv.IntToReal(Math.Max(MaxIter, 1)));
+          const Shade: real := 1.0 - (Math.IntToReal(N) / Math.IntToReal(Math.Max(MaxIter, 1)));
           return PixelSample(Root := ClosestRoot(Next), Shade := Shade);
         end;
       end if;
@@ -136,13 +136,13 @@ begin
       HeightRange := 1;
     end;
   end if;
-  const Wr: real := Conv.IntToReal(WidthRange);
-  const Hr: real := Conv.IntToReal(HeightRange);
-  const cy: real := YMax - Conv.IntToReal(Py) / Hr * (YMax - YMin);
+  const Wr: real := Math.IntToReal(WidthRange);
+  const Hr: real := Math.IntToReal(HeightRange);
+  const cy: real := YMax - Math.IntToReal(Py) / Hr * (YMax - YMin);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      const cx: real := XMin + Conv.IntToReal(Px) / Wr * (XMax - XMin);
+      const cx: real := XMin + Math.IntToReal(Px) / Wr * (XMax - XMin);
       Row.PushInPlace(Iterate(Complex.Create(cx, cy), MaxIter));
     end;
   end for;
@@ -154,7 +154,7 @@ function ShadeGlyph(Shade: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
-  const Index: integer := Math.Clamp(Math.Trunc(Shade * Conv.IntToReal(Count)), 0, Count - 1);
+  const Index: integer := Math.Clamp(Math.Trunc(Shade * Math.IntToReal(Count)), 0, Count - 1);
   return Ramp[Index];
 end function;
 

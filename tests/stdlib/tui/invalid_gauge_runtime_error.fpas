@@ -1,6 +1,6 @@
 program TuiInvalidGaugeRuntimeError;
 
-uses Std.Tui as Tui;
+uses Std.Ui.Terminal as Tui;
 
 function UpdateGauge(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin

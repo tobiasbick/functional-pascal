@@ -123,7 +123,7 @@ fn branch_mismatch_hint(left: &Ty, right: &Ty) -> String {
         (left, right),
         (Ty::Integer, Ty::Real) | (Ty::Real, Ty::Integer)
     ) {
-        return "Branches are not widened. Write a real literal such as `1.0`, or import `uses Std.Conv as Conv;` and convert the integer branch with `Conv.IntToReal(...)`.".to_string();
+        return "Branches are not widened. Write a real literal such as `1.0`, or import `uses Std.Math as Math;` and convert the integer branch with `Math.IntToReal(...)`.".to_string();
     }
     Checker::distinct_conversion_hint(left, right).unwrap_or_else(|| {
         "Give every branch the same type, or convert a branch explicitly.".to_string()

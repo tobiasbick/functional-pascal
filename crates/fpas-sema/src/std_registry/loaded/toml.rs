@@ -1,4 +1,4 @@
-//! `Std.Toml` semantic registration.
+//! `Std.Encoding.Toml` semantic registration.
 //!
 //! **Documentation:** `docs/pascal/std/text/toml.md` (from the repository root).
 
@@ -9,7 +9,7 @@ use crate::types::{EnumTy, EnumVariantTy, Ty};
 use fpas_builtins::std_symbols as s;
 use std::sync::Arc;
 
-/// Register the user-facing `Std.Toml` API.
+/// Register the user-facing `Std.Encoding.Toml` API.
 ///
 /// **Documentation:** `docs/pascal/std/text/toml.md` (from the repository root).
 pub(super) fn register_std_toml(checker: &mut Checker) {

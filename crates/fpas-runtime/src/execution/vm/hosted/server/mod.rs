@@ -1,4 +1,4 @@
-//! Hosted `Std.Server` lifetimes. See `docs/pascal/std/network/server.md`.
+//! Hosted `Std.Net.Server` lifetimes. See `docs/pascal/std/network/server.md`.
 
 mod failure;
 mod signals;
@@ -79,7 +79,7 @@ impl Worker {
             self.runtime_error(
                 fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 message,
-                "Use a live Std.Server lifetime belonging to this VM.",
+                "Use a live Std.Net.Server lifetime belonging to this VM.",
             )
         };
         let result = |value| result(value, self, op, location);
@@ -123,7 +123,7 @@ impl Worker {
                         .map(|(id, error)| {
                             let value = error.into_value(
                                 self.layouts.as_ref(),
-                                "Std.Net.CloseListener",
+                                "Std.Net.Sockets.CloseListener",
                                 &[id.to_string()],
                                 location,
                             )?;
@@ -147,7 +147,7 @@ impl Worker {
                 )?,
                 Op::OwnListener => {
                     let Value::OpaqueHandle(listener) = args[1] else {
-                        return Err(fail("Expected Std.Net.Listener".into()));
+                        return Err(fail("Expected Std.Net.Sockets.Listener".into()));
                     };
                     let entries = self
                         .hosted

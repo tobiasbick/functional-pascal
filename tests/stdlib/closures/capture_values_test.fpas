@@ -1,6 +1,6 @@
 program ClosureCaptureTest;
 
-uses Std.Console as Console, Std.Conv as Conv, Std.Test as Test;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Test as Test;
 
 function Counter(): function(): integer;
 begin

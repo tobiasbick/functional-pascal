@@ -7,8 +7,8 @@ use fpas_parser::parse;
 fn conversion_math_and_path_examples_parse_with_statement_terminators() {
     for (path, markdown) in [
         (
-            "docs/pascal/std/text/conv.md",
-            include_str!("../../../../docs/pascal/std/text/conv.md"),
+            "docs/pascal/std/text/format.md",
+            include_str!("../../../../docs/pascal/std/text/format.md"),
         ),
         (
             "docs/pascal/std/numeric/math.md",

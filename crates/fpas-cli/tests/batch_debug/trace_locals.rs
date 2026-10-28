@@ -99,7 +99,7 @@ fn parameter_admission_is_visible_at_first_callee_breakpoint() {
 #[test]
 fn local_binding_failure_is_atomic_before_global_initializers() {
     let f = Fixture::new(
-        "program Guard; uses Std.Fs as Fs; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Total: integer := Init(); procedure F(N: integer); begin var X: integer := N; begin var X: integer := 2; end; const Items := [1]; end procedure; begin F(1); end.",
+        "program Guard; uses Std.Io.Fs as Fs; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Total: integer := Init(); procedure F(N: integer); begin var X: integer := N; begin var X: integer := 2; end; const Items := [1]; end procedure; begin F(1); end.",
     );
     for target in [
         "F::X",

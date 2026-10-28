@@ -1,0 +1,534 @@
+// HTTP/1.1 wire parsing and request serialization.
+unit Std.Net.Http.Wire;
+
+uses
+  Std.Text.Format as Conv, Std.Net.Http.BodyFraming as BodyFraming, Std.Net.Http.Fields as Fields,
+  Std.Net.Http.Headers as HttpHeaders, Std.Net.Http.Method as Method, Std.Net.Http.Types as Types,
+  Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8, Std.Text.Parse as Parse;
+
+const MaximumChunkSize: integer := 9223372036854775807;
+
+// Finds the next HTTP head terminator.
+//
+// Parameters:
+// - `Bytes`: Byte sequence to scan.
+// - `Start`: First byte index to inspect.
+public function FindSeparator(Bytes: array of integer; Start: integer): integer;
+begin
+  for Index: integer := Start to Bytes.Length() - 4 do
+    begin
+      if (((Bytes[Index] = 13) and (Bytes[Index + 1] = 10)) and (Bytes[Index + 2] = 13))
+        and
+        (Bytes[Index + 3] = 10)
+      then
+        begin
+          return Index;
+        end;
+      end if;
+    end;
+  end for;
+
+  return -1;
+end function;
+
+// Finds the next CRLF line ending.
+//
+// Parameters:
+// - `Bytes`: Byte sequence to scan.
+// - `Start`: First byte index to inspect.
+public function FindLineEnd(Bytes: array of integer; Start: integer): integer;
+begin
+  for Index: integer := Start to Bytes.Length() - 2 do
+    begin
+      if (Bytes[Index] = 13) and (Bytes[Index + 1] = 10) then
+        begin
+          return Index;
+        end;
+      end if;
+    end;
+  end for;
+
+  return -1;
+end function;
+
+// Parses a supported HTTP response status line.
+//
+// Parameters:
+// - `Line`: Decoded response status line.
+function ParseStatus(Line: string): result of (array of string, Types.HttpError);
+begin
+  if (not Line.StartsWith('HTTP/1.0 ')) and (not Line.StartsWith('HTTP/1.1 ')) then
+    begin
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP response has an unsupported status line: ' + Line)
+      );
+    end;
+  end if;
+
+  case Line.IndexOf(' ') of
+    when None:
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP response status line is missing a status code')
+      );
+    when Some(const FirstSpace):
+      const Remainder := Line.Slice(FirstSpace + 1, Line.Length() - FirstSpace - 1).Trim();
+      case Remainder.IndexOf(' ') of
+        when None:
+          return Ok([Remainder, '']);
+        when Some(const SecondSpace):
+          return Ok([
+            Remainder.Slice(0, SecondSpace),
+            Remainder.Slice(SecondSpace + 1, Remainder.Length() - SecondSpace - 1).Trim()
+          ]);
+      end case;
+  end case;
+end function;
+
+// Reports whether text is exactly three decimal digits.
+//
+// Parameters:
+// - `Text`: Candidate HTTP status code.
+function IsStatusCode(Text: string): boolean;
+begin
+  if Text.Length() <> 3 then
+    begin
+      return false;
+    end;
+  end if;
+
+  for Index: integer := 0 to 2 do
+    begin
+      const Code: integer := Text[Index].Ord();
+      if (Code < 48) or (Code > 57) then
+        begin
+          return false;
+        end;
+      end if;
+    end;
+  end for;
+
+  return true;
+end function;
+
+// Converts one hexadecimal character to its value or minus one.
+//
+// Parameters:
+// - `Character`: Single hexadecimal character.
+function HexDigit(Character: string): integer;
+begin
+  const Code: integer := Character.ToUpper().Ord();
+  if (Code >= 48) and (Code <= 57) then
+    begin
+      return Code - 48;
+    end;
+  end if;
+
+  if (Code >= 65) and (Code <= 70) then
+    begin
+      return Code - 55;
+    end;
+  end if;
+
+  return -1;
+end function;
+
+// Parses one hexadecimal chunk-size line and ignores extensions.
+//
+// Parameters:
+// - `Line`: Decoded chunk-size line.
+public function ParseChunkSize(Line: string): result of (integer, Types.HttpError);
+begin
+  var SizeText: string := Line;
+  case SizeText.IndexOf(';') of
+    when Some(const Extension):
+      SizeText := SizeText.Slice(0, Extension);
+    when None:
+      null;
+  end case;
+
+  SizeText := SizeText.Trim();
+  if SizeText = '' then
+    begin
+      return Error(Types.HttpError.InvalidMessage('HTTP chunk size is empty'));
+    end;
+  end if;
+  var Size: integer := 0;
+  for Index: integer := 0 to SizeText.Length() - 1 do
+    begin
+      const Digit: integer := HexDigit(SizeText[Index]);
+      if Digit < 0 then
+        begin
+          return Error(Types.HttpError.InvalidMessage('Invalid HTTP chunk size: ' + SizeText));
+        end;
+      end if;
+
+      if (Size > MaximumChunkSize div 16)
+        or
+        ((Size = MaximumChunkSize div 16) and (Digit > MaximumChunkSize mod 16))
+      then
+        begin
+          return Error(
+            Types.HttpError.InvalidMessage(
+              'HTTP chunk size exceeds the integer range: ' + SizeText
+            )
+          );
+        end;
+      end if;
+
+      Size := Size * 16 + Digit;
+    end;
+  end for;
+
+  return Ok(Size);
+end function;
+
+// Decodes one complete chunked body.
+//
+// Parameters:
+// - `Bytes`: Complete chunked body bytes.
+function DecodeChunked(Bytes: array of integer): result of (array of integer, Types.HttpError);
+begin
+  var Position: integer := 0;
+  var Body: array of integer := [];
+  while Position < Bytes.Length() do
+    begin
+      const LineEnd: integer := FindLineEnd(Bytes, Position);
+      if LineEnd < 0 then
+        begin
+          return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.DecodeChunked'));
+        end;
+      end if;
+      const LineBytes: array of integer := Bytes.Slice(Position, LineEnd - Position);
+      var Line: string := '';
+      case Utf8.Decode(LineBytes).MapError(Types.HttpError.Encoding) of
+        when Ok(const Value):
+          begin
+            Line := Value;
+          end;
+        when Error(const Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
+      var Size: integer := 0;
+      case ParseChunkSize(Line) of
+        when Ok(const Value):
+          begin
+            Size := Value;
+          end;
+        when Error(const Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
+
+      Position := LineEnd + 2;
+      if Size = 0 then
+        begin
+          return Ok(Body);
+        end;
+      end if;
+
+      if Position + Size + 2 > Bytes.Length() then
+        begin
+          return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.DecodeChunked'));
+        end;
+      end if;
+
+      Body := Body.Concat(Bytes.Slice(Position, Size));
+      Position := Position + Size;
+      if (Bytes[Position] <> 13) or (Bytes[Position + 1] <> 10) then
+        begin
+          return Error(Types.HttpError.InvalidMessage('HTTP chunk is missing its trailing CRLF'));
+        end;
+      end if;
+
+      Position := Position + 2;
+    end;
+  end while;
+
+  return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.DecodeChunked'));
+end function;
+
+// Reports whether response semantics permit a message body.
+//
+// Parameters:
+// - `RequestMethod`: Method used by the matching request.
+// - `StatusCode`: HTTP response status code.
+public function ResponseHasBody(RequestMethod: string; StatusCode: integer): boolean;
+begin
+  if RequestMethod = 'HEAD' then
+    begin
+      return false;
+    end;
+  end if;
+
+  return ((StatusCode < 100) or (StatusCode > 199))
+    and
+    ((StatusCode <> 204) and (StatusCode <> 304));
+end function;
+
+// Applies selected framing to one complete raw response body.
+//
+// Parameters:
+// - `Headers`: Parsed response fields.
+// - `Bytes`: Raw bytes following the response head.
+// - `HasBody`: Whether response semantics permit a body.
+function ResponseBody(Headers: array of Types.Header; Bytes: array of integer; HasBody: boolean): result of (array of integer, Types.HttpError);
+begin
+  if not HasBody then
+    begin
+      return Ok([]);
+    end;
+  end if;
+
+  case BodyFraming.Select(Headers) of
+    when Ok(const Framing):
+      begin
+        if Framing.Mode = 2 then
+          begin
+            return DecodeChunked(Bytes);
+          end;
+        end if;
+
+        if Framing.Mode = 1 then
+          begin
+            if Bytes.Length() < Framing.Remaining then
+              begin
+                return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.ResponseBody'));
+              end;
+            end if;
+
+            return Ok(Bytes.Slice(0, Framing.Remaining));
+          end;
+        end if;
+
+        return Ok(Bytes);
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
+
+// Parses one complete response head and returns its body offset.
+//
+// Parameters:
+// - `Bytes`: Response bytes containing a complete head.
+public function ParseResponseHead(Bytes: array of integer): result of (Types.ResponseHead, Types.HttpError);
+begin
+  const Separator: integer := FindSeparator(Bytes, 0);
+  if Separator < 0 then
+    begin
+      return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.ParseResponseHead'));
+    end;
+  end if;
+  const HeaderBytes: array of integer := Bytes.Slice(0, Separator);
+  var HeaderText: string := '';
+  case Utf8.Decode(HeaderBytes).MapError(Types.HttpError.Encoding) of
+    when Ok(const Value):
+      begin
+        HeaderText := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+  const Lines: array of string := HeaderText.Split(#13 + #10);
+  if Lines.Length() = 0 then
+    begin
+      return Error(Types.HttpError.InvalidMessage('HTTP response status line is missing'));
+    end;
+  end if;
+  var Status: array of string := [];
+  case ParseStatus(Lines[0]) of
+    when Ok(const Value):
+      begin
+        Status := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+  var StatusCode: integer := 0;
+  if not IsStatusCode(Status[0]) then
+    begin
+      return Error(
+        Types.HttpError.InvalidMessage('HTTP status code must contain exactly three digits')
+      );
+    end;
+  end if;
+
+  case parse.Int(Status[0]) of
+    when Ok(const Value):
+      begin
+        StatusCode := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(
+          Types.HttpError.InvalidMessage('Invalid HTTP status code: ' + Message.Message())
+        );
+      end;
+  end case;
+  var Headers: array of Types.Header := [];
+  case Fields.Parse(HeaderText, 'response') of
+    when Ok(const Value):
+      begin
+        Headers := Value;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+
+  return Ok(
+    Types.ResponseHead(
+      StatusCode := StatusCode, ReasonPhrase := Status[1], Headers := Headers,
+      BodyOffset := Separator +
+      4
+    )
+  );
+end function;
+
+// Parses one complete buffered HTTP response.
+//
+// Parameters:
+// - `Bytes`: Complete HTTP response bytes.
+// - `RequestMethod`: Method used by the matching request.
+public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of (Types.Response, Types.HttpError);
+begin
+  case ParseResponseHead(Bytes) of
+    when Ok(const Head):
+      begin
+        const RawBody: array of integer := Bytes.Slice(
+          Head.BodyOffset, Bytes.Length() -
+          Head.BodyOffset
+        );
+        case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
+          when Ok(const Body):
+            begin
+              return Ok(
+                Types.Response(
+                  StatusCode := Head.StatusCode,
+                  ReasonPhrase := Head.ReasonPhrase,
+                  Headers := Head.Headers,
+                  Body := Body
+                )
+              );
+            end;
+          when Error(const Message):
+            begin
+              return Error(Message);
+            end;
+        end case;
+      end;
+    when Error(const Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
+
+// Formats the Host field value for a parsed URI.
+//
+// Parameters:
+// - `UriValue`: Parsed request URI.
+function HostHeader(UriValue: Uri.Uri): string;
+begin
+  var Host: string := UriValue.Host;
+  if (':' in Host) then
+    begin
+      Host := '[' + Host + ']';
+    end;
+  end if;
+
+  if (UriValue.Scheme = 'http') and (UriValue.Port = 80) then
+    begin
+      return Host;
+    end;
+  end if;
+
+  if (UriValue.Scheme = 'https') and (UriValue.Port = 443) then
+    begin
+      return Host;
+    end;
+  end if;
+
+  return Host + ':' + Conv.IntToStr(UriValue.Port);
+end function;
+
+// Validates and serializes one HTTP/1.1 request.
+//
+// Parameters:
+// - `RequestValue`: Complete request to encode.
+// - `UriValue`: Parsed absolute request URI.
+public function EncodeRequest(RequestValue: Types.Request; UriValue: Uri.Uri): result of (array of integer, Types.HttpError);
+begin
+  if not Method.IsValidToken(RequestValue.Method) then
+    begin
+      return Error(
+        Types.HttpError.InvalidArgument('Method', 'HTTP method must be a non-empty RFC 9110 token')
+      );
+    end;
+  end if;
+
+  if HttpHeaders.ContainsUnsafeText(UriValue.Path) then
+    begin
+      return Error(Types.HttpError.InvalidArgument('Url', 'HTTP request target contains CR or LF'));
+    end;
+  end if;
+  var Head: string := RequestValue.Method + ' ' + UriValue.Path + ' HTTP/1.1' + #13 + #10 +
+    'Host: ' + HostHeader(UriValue) + #13 + #10 + 'Connection: close' + #13 + #10 +
+    'Content-Length: ' + Conv.IntToStr(RequestValue.Body.Length()) + #13 +
+    #10;
+  for Index: integer := 0 to RequestValue.Headers.Length() - 1 do
+    begin
+      const HeaderValue: Types.Header := RequestValue.Headers[Index];
+      if (not Method.IsValidToken(HeaderValue.Name))
+        or
+        (
+          HttpHeaders.ContainsUnsafeText(HeaderValue.Value)
+          or
+          (not Fields.IsValidValue(HeaderValue.Value))
+        )
+      then
+        begin
+          return Error(
+            Types.HttpError.InvalidArgument('Headers', 'HTTP request contains an invalid header')
+          );
+        end;
+      end if;
+
+      if (
+        (
+          HttpHeaders.IsName(HeaderValue.Name, 'Host')
+          or
+          HttpHeaders.IsName(HeaderValue.Name, 'Content-Length')
+        ) or HttpHeaders.IsName(HeaderValue.Name, 'Connection')
+      )
+        or
+        HttpHeaders.IsName(HeaderValue.Name, 'Transfer-Encoding')
+      then
+        begin
+          return Error(
+            Types.HttpError.InvalidArgument(
+              'Headers',
+              'Host, Content-Length, Transfer-Encoding, and Connection headers are managed by Std.Net.Http'
+            )
+          );
+        end;
+      end if;
+
+      Head := Head + HeaderValue.Name + ': ' + HeaderValue.Value + #13 + #10;
+    end;
+  end for;
+
+  Head := Head + #13 + #10;
+  return Ok(Utf8.Encode(Head).Concat(RequestValue.Body));
+end function;
+end unit;

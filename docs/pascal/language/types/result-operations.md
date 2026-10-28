@@ -1,6 +1,6 @@
 # Result operations
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 Helper functions for `Result of (T, E)` values. See [Error handling](../error-handling/README.md) for the type itself, constructors (`Ok`, `Error`), the `try` operator, and `case` destructuring.
 

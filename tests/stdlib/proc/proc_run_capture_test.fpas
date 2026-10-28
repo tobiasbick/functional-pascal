@@ -1,6 +1,6 @@
 program ProcRunCaptureTest;
 
-uses Std.Proc as Proc, Std.Test as Test;
+uses Std.Os.Proc as Proc, Std.Test as Test;
 
 begin
   case Proc.CurrentExecutable() of

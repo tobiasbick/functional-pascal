@@ -5,7 +5,7 @@ fn resource_record(slot: i64) -> Value {
     Value::Record(SharedRecord::new(
         Arc::new(RuntimeRecordLayout {
             record: crate::RecordTypeId::new(0),
-            type_name: "Std.Http.Handles.BodyStream".into(),
+            type_name: "Std.Net.Http.Handles.BodyStream".into(),
             fields: vec!["__Slot".into()],
         }),
         vec![Value::Integer(slot)],
@@ -38,7 +38,7 @@ fn neutral_aggregates_do_not_hide_resource_records_from_observation() {
         if let Value::Record(record) = value {
             assert_eq!(
                 record.body().layout.type_name,
-                "Std.Http.Handles.BodyStream"
+                "Std.Net.Http.Handles.BodyStream"
             );
             let Value::Integer(slot) = record.body().values[0] else {
                 unreachable!()

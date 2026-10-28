@@ -1,13 +1,14 @@
-# `Std.Parse`
+# `Std.Text.Parse`
 
 Text parsers returning `Result of (T, Parse.ParseError)`. Use `case` to handle input
 locally, `try` to propagate a returned error, or `.Unwrap()` for deliberate abort.
-Formatting and conversions of typed values belong to [Std.Conv](conv.md).
+Text formatting belongs to [Std.Text.Format](format.md); integer-to-real
+conversion belongs to [Std.Math](../numeric/math.md).
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Parse as Parse;
+uses Std.Console as Console, Std.Text.Parse as Parse;
 
 begin
   const Parsed: result of (integer, Parse.ParseError) := Parse.Int('42');
@@ -22,7 +23,7 @@ end.
 
 ## Importing and names
 
-Import with `uses Std.Parse as Parse;` and access public symbols as `Parse.Name`. User enum variants require `Parse.Type.Variant`.
+Import with `uses Std.Text.Parse as Parse;` and access public symbols as `Parse.Name`. User enum variants require `Parse.Type.Variant`.
 
 ---
 
@@ -68,7 +69,7 @@ preserved. Invalid text returns Error; `Parse.Real(Text).Unwrap()` aborts delibe
 
 For every finite R, `Real(RealToStr(R))` returns the identical binary64 bits,
 including integral reals and either sign of zero. See
-[RealToStr](conv.md#function-realtostrr-real-string).
+[RealToStr](format.md#function-realtostrr-real-string).
 
 ```pascal id=example-3 fragment context=body-console-parse
 const R: result of (real, Parse.ParseError) := Parse.Real('1_024.0e-2');

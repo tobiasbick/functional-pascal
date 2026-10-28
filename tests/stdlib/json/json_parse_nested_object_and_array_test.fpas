@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console as Console, Std.Json as Json, Std.Conv as Conv;
+uses Std.Console as Console, Std.Encoding.Json as Json, Std.Text.Format as Conv;
 
 begin
   const R: result of (Json.JsonValue, Json.JsonError) := Json.Parse(

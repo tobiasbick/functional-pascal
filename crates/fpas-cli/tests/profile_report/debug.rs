@@ -226,7 +226,7 @@ fn debugger_rejects_invalid_profile_destinations_before_executing_target_code() 
     let fixture = Fixture::new();
     fixture.write(
         "main.fpas",
-        "program Main; uses Std.Fs as Fs; begin Fs.WriteText('ran.txt', 'ran').Unwrap(); end.",
+        "program Main; uses Std.Io.Fs as Fs; begin Fs.WriteText('ran.txt', 'ran').Unwrap(); end.",
     );
     fixture.write("existing.json", "keep");
     for protocol in [

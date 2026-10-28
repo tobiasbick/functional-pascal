@@ -1,6 +1,6 @@
 program SseFinalLimitTest;
 
-uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 procedure CheckFinal(Text: string; Maximum: integer; Expected: string);
 begin

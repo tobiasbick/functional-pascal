@@ -43,23 +43,23 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
             if crate::intrinsic_debug_effects(intrinsic).is_debug_safe() {
                 None
             } else {
-                Some("Std.Mcp")
+                Some("Std.Ai.Mcp")
             }
         }
-        Intrinsic::Server(_) => Some("Std.Server"),
-        Intrinsic::Random(_) => Some("Std.Random"),
+        Intrinsic::Server(_) => Some("Std.Net.Server"),
+        Intrinsic::Random(_) => Some("Std.Math.Random"),
         Intrinsic::Crypto(_) => Some("Std.Crypto"),
         Intrinsic::Time(TimeIntrinsic::Sleep) => None,
         Intrinsic::Time(_) => Some("Std.Time"),
-        Intrinsic::Fs(_) => Some("Std.Fs"),
-        Intrinsic::Env(_) => Some("Std.Env"),
+        Intrinsic::Fs(_) => Some("Std.Io.Fs"),
+        Intrinsic::Env(_) => Some("Std.Os.Env"),
         Intrinsic::Proc(
             crate::ProcIntrinsic::DefaultOptions | crate::ProcIntrinsic::DefaultStartOptions,
         ) => None,
-        Intrinsic::Proc(_) => Some("Std.Proc"),
-        Intrinsic::Net(_) => Some("Std.Net"),
-        Intrinsic::Http(_) => Some("Std.Http"),
-        Intrinsic::Args(_) => Some("Std.Args"),
+        Intrinsic::Proc(_) => Some("Std.Os.Proc"),
+        Intrinsic::Net(_) => Some("Std.Net.Sockets"),
+        Intrinsic::Http(_) => Some("Std.Net.Http"),
+        Intrinsic::Args(_) => Some("Std.Os.Args"),
         Intrinsic::Console(
             ConsoleIntrinsic::Read
             | ConsoleIntrinsic::ReadLn
@@ -97,7 +97,7 @@ mod tests {
     fn capture_rejects_host_nondeterminism_and_keeps_safe_intrinsics() {
         assert_eq!(
             unsupported_recording_unit(Intrinsic::Random(RandomIntrinsic::RandomInt)),
-            Some("Std.Random")
+            Some("Std.Math.Random")
         );
         assert_eq!(
             unsupported_recording_unit(Intrinsic::Time(TimeIntrinsic::TimestampMillis)),
@@ -105,11 +105,11 @@ mod tests {
         );
         assert_eq!(
             unsupported_recording_unit(Intrinsic::Fs(FsIntrinsic::ReadText)),
-            Some("Std.Fs")
+            Some("Std.Io.Fs")
         );
         assert_eq!(
             unsupported_recording_unit(Intrinsic::Args(ArgsIntrinsic::ParamCount)),
-            Some("Std.Args")
+            Some("Std.Os.Args")
         );
         assert_eq!(
             unsupported_recording_unit(Intrinsic::Console(ConsoleIntrinsic::ReadKey)),

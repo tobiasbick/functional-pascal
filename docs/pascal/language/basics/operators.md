@@ -1,6 +1,6 @@
 # Operators
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Math as Math, Std.Console as Console;`.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precedence).
 
@@ -21,11 +21,11 @@ Logical operators retain their Boolean-only rules.
 
 Both numeric operands must have the same type. FPAS does not implicitly mix
 `integer` and `real` in arithmetic, equality, ordering, assignment, return
-values, or call arguments. Import `Std.Conv` and convert explicitly:
+values, or call arguments. Import `Std.Math` and convert explicitly:
 
-```pascal id=example-1 fragment context=body-conv
-const Sum: real := Conv.IntToReal(1) + 0.5;
-const Before: boolean := Conv.IntToReal(1) < 1.5;
+```pascal id=example-1 fragment context=body-math
+const Sum: real := Math.IntToReal(1) + 0.5;
+const Before: boolean := Math.IntToReal(1) < 1.5;
 const Half: real := 1 / 2;
 ```
 
@@ -40,7 +40,7 @@ Integers are signed 64-bit values. `+`, `-`, `*`, and unary `-` reject a result
 outside `-9223372036854775808..9223372036854775807` with a numeric-domain
 diagnostic. Ordinary arithmetic does not wrap. Negating the minimum integer
 and dividing it by `-1` overflow. Bit operations retain their separate
-[Std.Bits](../../std/numeric/bits.md) rules.
+[Std.Math.Bits](../../std/numeric/bits.md) rules.
 
 `div` truncates toward zero. `mod` has the dividend's sign, and its absolute
 value is smaller than the divisor's absolute value:
@@ -168,7 +168,7 @@ This also applies to an operand skipped by short-circuit evaluation;
 
 ## Integer bit operations
 
-Import `uses Std.Bits as Bits;` and call the named integer functions:
+Import `uses Std.Math.Bits as Bits;` and call the named integer functions:
 
 | Operation | Function |
 |-----------|----------|
@@ -180,14 +180,14 @@ Import `uses Std.Bits as Bits;` and call the named integer functions:
 | Arithmetic shift right | `ShiftRight(Value, Count)` |
 
 The functions operate on signed 64-bit integers. Shift counts must be `0..63`;
-see [Std.Bits](../../std/numeric/bits.md) for results and runtime errors.
+see [Std.Math.Bits](../../std/numeric/bits.md) for results and runtime errors.
 An integer operand of a logical operator receives a type error with a matching
-`Std.Bits` hint. Both operands of a binary logical operator must be boolean;
+`Std.Math.Bits` hint. Both operands of a binary logical operator must be boolean;
 a mixed boolean/integer expression receives a Boolean operand hint.
 
 `shl` and `shr` are ordinary identifiers, so they may name variables, functions,
 or record members. Infix uses such as `Value shl Count` are syntax errors with
-a `Std.Bits.ShiftLeft(Value, Count)` hint; `shr` points to `ShiftRight`.
+a `Std.Math.Bits.ShiftLeft(Value, Count)` hint; `shr` points to `ShiftRight`.
 
 ## Evaluation order
 
@@ -207,7 +207,7 @@ const NonzeroQuotient: boolean := (Denominator <> 0) and (10 div Denominator > 0
 // NonzeroQuotient is false; division is skipped.
 ```
 
-Boolean `xor` evaluates both operands. Calls to binary `Std.Bits` functions
+Boolean `xor` evaluates both operands. Calls to binary `Std.Math.Bits` functions
 always evaluate both arguments, including `BitAnd(0, Right)` and `BitOr(-1, Right)`.
 Debugger watch expressions follow these same evaluation rules.
 
@@ -242,6 +242,6 @@ const Full: string := 'Hello' + ' ' + 'World'; // 'Hello World'
 
 ## See also
 
-- [Std.Bits — named integer bit operations](../../std/numeric/bits.md)
+- [Std.Math.Bits — named integer bit operations](../../std/numeric/bits.md)
 - [Record update](../types/record-update.md)
 - [Error handling — `try`](../error-handling/try.md)

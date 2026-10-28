@@ -33,7 +33,7 @@ fn needed_boolean_operands_and_eager_bits_arguments_still_fail() {
         ("integer", "Bits.BitOr(-1, 1 div 0)"),
     ] {
         let source = format!(
-            "program Needed; uses Std.Bits as Bits; begin const Flag: {ty} := {expression}; end."
+            "program Needed; uses Std.Math.Bits as Bits; begin const Flag: {ty} := {expression}; end."
         );
         assert!(
             run_program(&source).is_err(),

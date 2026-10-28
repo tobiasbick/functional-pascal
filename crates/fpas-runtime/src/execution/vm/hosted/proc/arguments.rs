@@ -59,7 +59,7 @@ pub(super) fn parse_start(values: &[Value]) -> Result<Request<'_>, Failure> {
         ));
     }
     let mut request = parse(&values[..2], false, true)?;
-    request.options = configuration(record(&values[2], "Std.Proc.ProcessStartOptions", 2)?)?;
+    request.options = configuration(record(&values[2], "Std.Os.Proc.ProcessStartOptions", 2)?)?;
     request.validate()?;
     Ok(request)
 }
@@ -92,7 +92,7 @@ fn configuration(fields: &[Value]) -> Result<Options<'_>, Failure> {
     }
     let mut entries = Vec::with_capacity(environment.len());
     for value in environment {
-        let fields = record(value, "Std.Proc.EnvironmentVariable", 2)?;
+        let fields = record(value, "Std.Os.Proc.EnvironmentVariable", 2)?;
         require_option(&fields[1])?;
         entries.push((
             text(&fields[0], "Environment")?,
@@ -109,7 +109,7 @@ fn configuration(fields: &[Value]) -> Result<Options<'_>, Failure> {
 }
 
 fn parse_options(value: &Value) -> Result<Options<'_>, Failure> {
-    let fields = record(value, "Std.Proc.ProcessOptions", 6)?;
+    let fields = record(value, "Std.Os.Proc.ProcessOptions", 6)?;
     let configuration = configuration(fields)?;
     let input = text(&fields[2], "Input")?;
     let timeout = timeout(&fields[3])?;

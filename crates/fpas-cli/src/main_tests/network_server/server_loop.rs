@@ -10,7 +10,7 @@ fn fpas_http_server_loop_dispatches_multiple_requests() {
         format!(
             r#"program HttpServerLoop;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
@@ -75,7 +75,7 @@ fn fpas_http_server_loop_isolates_malformed_requests() {
         format!(
             r#"program HttpServerLoopInvalidRequest;
 
-uses Std.Http as Http, Std.Net as Net;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net;
 
 function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
@@ -137,7 +137,7 @@ fn fpas_http_server_loop_rejects_invalid_options_before_accepting() {
         format!(
             r#"program HttpServerLoopInvalidOptions;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net as Net;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net;
 
 function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin

@@ -502,6 +502,6 @@ fn random_int_reversed_bounds_error() {
 fn std_math_no_longer_imports_random_helpers() {
     run_file_expect_failure(
         "tests/stdlib/random/std_math_no_longer_imports_random_helpers_compile_error.fpas",
-        Some("Std.Random"),
+        Some("Std.Math.Random"),
     );
 }

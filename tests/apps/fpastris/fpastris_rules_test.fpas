@@ -2,7 +2,7 @@ program FpastrisRulesTest;
 
 uses
   Fpastris.Engine as Engine, Fpastris.Model as Model, Fpastris.Pieces as Pieces,
-  Std.Random as Random, Std.Test as Test;
+  Std.Math.Random as Random, Std.Test as Test;
 
 function Playing(): Model.Game;
 begin

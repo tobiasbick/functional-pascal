@@ -11,7 +11,7 @@ fn run_cli_assigns_and_calls_optional_handler_field() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Widget as Widget, Std.Console as Console, Std.Conv as Conv;\nprocedure Handle(Value: integer);\nbegin\n  Console.WriteLn(Conv.IntToStr(Value));\nend procedure;\nbegin\n  var B: Widget.Button := Widget.Button.Make(14);\n  const Empty: Widget.Button := Widget.Button(Id := 0);\n  if (Empty.OnClick is Some(_)) then panic('imported handler default'); end if;\n  B.OnClick := Some(Handle);\n  if B.OnClick is Some(_) then\n    B.Click(); end if;\n  B.OnClick := None;\n  B.Click();\nend.",
+        "program Main;\nuses App.Widget as Widget, Std.Console as Console, Std.Text.Format as Conv;\nprocedure Handle(Value: integer);\nbegin\n  Console.WriteLn(Conv.IntToStr(Value));\nend procedure;\nbegin\n  var B: Widget.Button := Widget.Button.Make(14);\n  const Empty: Widget.Button := Widget.Button(Id := 0);\n  if (Empty.OnClick is Some(_)) then panic('imported handler default'); end if;\n  B.OnClick := Some(Handle);\n  if B.OnClick is Some(_) then\n    B.Click(); end if;\n  B.OnClick := None;\n  B.Click();\nend.",
     );
     write_text(
         &cwd.join("src/widget.fpas"),

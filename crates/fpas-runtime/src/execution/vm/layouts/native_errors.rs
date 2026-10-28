@@ -17,9 +17,9 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
                     operation,
                     crate::AcpIntrinsic::ParseRawJson | crate::AcpIntrinsic::RawJsonText
                 ) {
-                    "Std.Acp.Types.RawJson"
+                    "Std.Ai.Acp.Types.RawJson"
                 } else {
-                    "Std.Acp.Types.UInt64"
+                    "Std.Ai.Acp.Types.UInt64"
                 };
                 super::native_records::require(image, record, address)?;
                 Some(Family::Acp)

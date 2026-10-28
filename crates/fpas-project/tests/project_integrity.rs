@@ -101,12 +101,12 @@ fn known_intrinsic_std_unit_needs_no_source_node() {
 #[test]
 fn source_defined_std_tui_must_be_present() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.Tui as Tui;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Std.Ui.Terminal as Tui;\nbegin\nend.\n");
 
     let error = resolve_program_units(&graph, &root_uses, None).expect_err("missing source Unit");
 
     assert!(
-        error.to_string().contains("Unknown unit `Std.Tui`"),
+        error.to_string().contains("Unknown unit `Std.Ui.Terminal`"),
         "{error}"
     );
 }
@@ -116,18 +116,21 @@ fn source_defined_std_tui_resolves_from_standard_library() {
     let dir = temp_dir("source-std");
     write(
         &dir.join("stdlib.fpasprj"),
-        "[project]\nname = \"stdlib\"\nkind = \"library\"\n\n[exports]\nunits = [\"Std.Tui\"]\n\n[sources]\ninclude = [\"Std/**/*.fpas\"]\n",
+        "[project]\nname = \"stdlib\"\nkind = \"library\"\n\n[exports]\nunits = [\"Std.Ui.Terminal\"]\n\n[sources]\ninclude = [\"Std/**/*.fpas\"]\n",
     );
-    write(&dir.join("Std/Tui.fpas"), "unit Std.Tui;\nend unit;\n");
+    write(
+        &dir.join("Std/Ui/Terminal.fpas"),
+        "unit Std.Ui.Terminal;\nend unit;\n",
+    );
     let standard_library = load_standard_library(&dir).expect("standard library");
     let graph =
         build_unit_graph_with_standard_library(&[], &ProjectLinkMeta::default(), &standard_library)
             .expect("graph");
-    let root_uses = uses("program App;\nuses Std.Tui as Tui;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Std.Ui.Terminal as Tui;\nbegin\nend.\n");
 
     let resolved = resolve_program_units(&graph, &root_uses, None).expect("source Unit");
 
-    assert_eq!(resolved.order(), &["std.tui".to_string()]);
+    assert_eq!(resolved.order(), &["std.ui.terminal".to_string()]);
     fs::remove_dir_all(dir).ok();
 }
 

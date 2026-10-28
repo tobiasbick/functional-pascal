@@ -20,7 +20,7 @@ safe defaults over a large collection of interchangeable primitives.
 
 - Secure defaults must be selected by the module, while stored password hashes retain their exact
   cost parameters for later upgrades.
-- Future operations must preserve the existing rule that randomness failures are reported and never fall back to `Std.Random`.
+- Future operations must preserve the existing rule that randomness failures are reported and never fall back to `Std.Math.Random`.
 - Verification returns an ordinary false result for a valid but non-matching value and a distinct
   error for malformed encodings or unavailable facilities.
 - Private keys and raw secret material must not implement accidental diagnostic rendering.
@@ -30,7 +30,7 @@ safe defaults over a large collection of interchangeable primitives.
 
 - Whether secret byte storage needs a dedicated non-copyable value before private-key operations
   can be exposed safely.
-- Whether TLS certificate parsing belongs here or remains entirely inside `Std.Net`.
+- Whether TLS certificate parsing belongs here or remains entirely inside `Std.Net.Sockets`.
 - Which reviewed Rust crates supply each operation and how dependency auditing is maintained.
 
 ## Acceptance requirements

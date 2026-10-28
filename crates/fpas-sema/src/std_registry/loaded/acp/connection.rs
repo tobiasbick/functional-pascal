@@ -32,17 +32,17 @@ fn array(ty: Ty) -> Ty {
 }
 
 pub(super) fn register(checker: &mut Checker) {
-    let connection = named(checker, "Std.Acp.Connection");
-    let responder = named(checker, "Std.Acp.Responder");
-    let token = named(checker, "Std.Acp.RequestToken");
-    let endpoint = named(checker, "Std.Acp.MessageEndpoint");
-    let raw = named(checker, "Std.Acp.Types.RawJson");
-    let error = named(checker, "Std.Acp.Types.AcpError");
-    let protocol_error = named(checker, "Std.Acp.Types.ProtocolError");
-    let version = simple_enum(checker, "Std.Acp.ProtocolVersion", &["V1", "V2"]);
+    let connection = named(checker, "Std.Ai.Acp.Connection");
+    let responder = named(checker, "Std.Ai.Acp.Responder");
+    let token = named(checker, "Std.Ai.Acp.RequestToken");
+    let endpoint = named(checker, "Std.Ai.Acp.MessageEndpoint");
+    let raw = named(checker, "Std.Ai.Acp.Types.RawJson");
+    let error = named(checker, "Std.Ai.Acp.Types.AcpError");
+    let protocol_error = named(checker, "Std.Ai.Acp.Types.ProtocolError");
+    let version = simple_enum(checker, "Std.Ai.Acp.ProtocolVersion", &["V1", "V2"]);
     let lifecycle = simple_enum(
         checker,
-        "Std.Acp.Lifecycle",
+        "Std.Ai.Acp.Lifecycle",
         &[
             "Uninitialized",
             "Initializing",
@@ -54,7 +54,7 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let limits = record(
         checker,
-        "Std.Acp.Limits",
+        "Std.Ai.Acp.Limits",
         [
             "OutgoingRequests",
             "IncomingRequests",
@@ -76,7 +76,7 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let experimental = record(
         checker,
-        "Std.Acp.ExperimentalOptions",
+        "Std.Ai.Acp.ExperimentalOptions",
         [
             "TokenUsage",
             "Providers",
@@ -92,28 +92,28 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let options = record(
         checker,
-        "Std.Acp.Options",
+        "Std.Ai.Acp.Options",
         vec![
             (
                 "ClientInfo".into(),
-                option(named(checker, "Std.Acp.Types.ImplementationValue")),
+                option(named(checker, "Std.Ai.Acp.Types.ImplementationValue")),
             ),
             (
                 "ClientCapabilities".into(),
-                named(checker, "Std.Acp.Types.ClientCapabilities"),
+                named(checker, "Std.Ai.Acp.Types.ClientCapabilities"),
             ),
             ("SupportedVersions".into(), array(version)),
             ("ExperimentalOptions".into(), experimental),
             ("Limits".into(), limits),
             (
                 "V2ClientCapabilities".into(),
-                named(checker, "Std.Acp.V2.ClientCapabilities"),
+                named(checker, "Std.Ai.Acp.V2.ClientCapabilities"),
             ),
         ],
     );
     let environment = record(
         checker,
-        "Std.Acp.EnvironmentVariable",
+        "Std.Ai.Acp.EnvironmentVariable",
         vec![
             ("Name".into(), Ty::String),
             ("Value".into(), option(Ty::String)),
@@ -121,7 +121,7 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let launch = record(
         checker,
-        "Std.Acp.Launch",
+        "Std.Ai.Acp.Launch",
         vec![
             ("Command".into(), Ty::String),
             ("Arguments".into(), array(Ty::String)),
@@ -131,7 +131,7 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let messages = record(
         checker,
-        "Std.Acp.MessageConnection",
+        "Std.Ai.Acp.MessageConnection",
         vec![
             ("Connection".into(), connection.clone()),
             ("Endpoint".into(), endpoint.clone()),
@@ -148,7 +148,7 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let closed = record(
         checker,
-        "Std.Acp.ClosedStatus",
+        "Std.Ai.Acp.ClosedStatus",
         vec![
             ("Cause".into(), option(error.clone())),
             ("ProcessExit".into(), option(process_status)),
@@ -158,34 +158,34 @@ pub(super) fn register(checker: &mut Checker) {
     );
     let state = record(
         checker,
-        "Std.Acp.ConnectionState",
+        "Std.Ai.Acp.ConnectionState",
         vec![
             ("Lifecycle".into(), lifecycle),
             ("RequestedVersion".into(), Ty::Integer),
             ("NegotiatedVersion".into(), option(Ty::Integer)),
             (
                 "AgentCapabilities".into(),
-                option(named(checker, "Std.Acp.Types.AgentCapabilities")),
+                option(named(checker, "Std.Ai.Acp.Types.AgentCapabilities")),
             ),
             (
                 "AgentInfo".into(),
-                option(named(checker, "Std.Acp.Types.ImplementationValue")),
+                option(named(checker, "Std.Ai.Acp.Types.ImplementationValue")),
             ),
             (
                 "AuthMethods".into(),
-                array(named(checker, "Std.Acp.Types.AuthMethod")),
+                array(named(checker, "Std.Ai.Acp.Types.AuthMethod")),
             ),
             (
                 "V2AgentCapabilities".into(),
-                option(named(checker, "Std.Acp.V2.AgentCapabilities")),
+                option(named(checker, "Std.Ai.Acp.V2.AgentCapabilities")),
             ),
             (
                 "V2AgentInfo".into(),
-                option(named(checker, "Std.Acp.V2.ImplementationValue")),
+                option(named(checker, "Std.Ai.Acp.V2.ImplementationValue")),
             ),
             (
                 "V2AuthMethods".into(),
-                array(named(checker, "Std.Acp.V2.AuthMethod")),
+                array(named(checker, "Std.Ai.Acp.V2.AuthMethod")),
             ),
         ],
     );
@@ -196,7 +196,7 @@ pub(super) fn register(checker: &mut Checker) {
                 ("Token", token.clone()),
                 (
                     "Payload",
-                    named(checker, "Std.Acp.Experimental.MessageMcpResponse"),
+                    named(checker, "Std.Ai.Acp.Experimental.MessageMcpResponse"),
                 ),
             ],
         ),
@@ -204,7 +204,10 @@ pub(super) fn register(checker: &mut Checker) {
             "V2McpResponse",
             vec![
                 ("Token", token.clone()),
-                ("Payload", named(checker, "Std.Acp.V2.MessageMcpResponse")),
+                (
+                    "Payload",
+                    named(checker, "Std.Ai.Acp.V2.MessageMcpResponse"),
+                ),
             ],
         ),
         (
@@ -218,7 +221,7 @@ pub(super) fn register(checker: &mut Checker) {
         ),
         ("Closed", vec![("Status", closed)]),
     ];
-    for (module, prefix) in [("Std.Acp.Types", ""), ("Std.Acp.V2", "V2")] {
+    for (module, prefix) in [("Std.Ai.Acp.Types", ""), ("Std.Ai.Acp.V2", "V2")] {
         for (variant, root, fields) in [
             ("Response", "AgentResponse", vec![("Token", token.clone())]),
             ("Notification", "AgentNotification", vec![]),
@@ -244,13 +247,13 @@ pub(super) fn register(checker: &mut Checker) {
         "V2Initialized",
         vec![
             ("Token", token.clone()),
-            ("Outcome", named(checker, "Std.Acp.V2.InitializeOutcome")),
+            ("Outcome", named(checker, "Std.Ai.Acp.V2.InitializeOutcome")),
         ],
     ));
     let payload = enumeration(checker, "EventPayload", variants);
     let event = record(
         checker,
-        "Std.Acp.Event",
+        "Std.Ai.Acp.Event",
         vec![
             ("Payload".into(), payload),
             ("RawMessage".into(), option(raw.clone())),
@@ -265,26 +268,31 @@ pub(super) fn register(checker: &mut Checker) {
     } else {
         record(checker, "Std.Tasks.CancellationToken", vec![])
     };
-    define_func(checker, "Std.Acp.DefaultOptions", vec![], options.clone());
     define_func(
         checker,
-        "Std.Acp.RegisterMcpEndpoint",
+        "Std.Ai.Acp.DefaultOptions",
+        vec![],
+        options.clone(),
+    );
+    define_func(
+        checker,
+        "Std.Ai.Acp.RegisterMcpEndpoint",
         vec![
             p("Connection", connection.clone()),
             p("ServerId", Ty::String),
             p("SessionId", option(Ty::String)),
         ],
         Ty::Result(
-            Box::new(named(checker, "Std.Acp.McpEndpoint")),
+            Box::new(named(checker, "Std.Ai.Acp.McpEndpoint")),
             Box::new(error.clone()),
         ),
     );
     define_func(
         checker,
-        "Std.Acp.RemoveMcpEndpoint",
+        "Std.Ai.Acp.RemoveMcpEndpoint",
         vec![
             p("Connection", connection.clone()),
-            p("Endpoint", named(checker, "Std.Acp.McpEndpoint")),
+            p("Endpoint", named(checker, "Std.Ai.Acp.McpEndpoint")),
         ],
         Ty::Result(Box::new(Ty::Boolean), Box::new(error.clone())),
     );
@@ -348,7 +356,7 @@ pub(super) fn register(checker: &mut Checker) {
     ] {
         define_func(
             checker,
-            &format!("Std.Acp.{name}"),
+            &format!("Std.Ai.Acp.{name}"),
             parameters
                 .into_iter()
                 .map(|(name, ty)| p(name, ty))
@@ -356,25 +364,25 @@ pub(super) fn register(checker: &mut Checker) {
             Ty::Result(Box::new(output), Box::new(error.clone())),
         );
     }
-    for module in ["Std.Acp.Types", "Std.Acp.V2"] {
-        let unit = if module == "Std.Acp.Types" {
-            "Std.Acp"
+    for module in ["Std.Ai.Acp.Types", "Std.Ai.Acp.V2"] {
+        let unit = if module == "Std.Ai.Acp.Types" {
+            "Std.Ai.Acp"
         } else {
             module
         };
         let payload = named(
             checker,
-            if module == "Std.Acp.Types" {
-                "Std.Acp.Experimental.MessageMcpRequest"
+            if module == "Std.Ai.Acp.Types" {
+                "Std.Ai.Acp.Experimental.MessageMcpRequest"
             } else {
-                "Std.Acp.V2.MessageMcpRequest"
+                "Std.Ai.Acp.V2.MessageMcpRequest"
             },
         );
         define_func(
             checker,
             &format!("{unit}.SendMcp"),
             vec![
-                p("Endpoint", named(checker, "Std.Acp.McpEndpoint")),
+                p("Endpoint", named(checker, "Std.Ai.Acp.McpEndpoint")),
                 p("Payload", payload),
             ],
             Ty::Result(Box::new(token.clone()), Box::new(error.clone())),
@@ -401,7 +409,7 @@ pub(super) fn register(checker: &mut Checker) {
 }
 
 fn enumeration(checker: &mut Checker, short: &str, variants: Vec<(&str, Vec<(&str, Ty)>)>) -> Ty {
-    let name = format!("Std.Acp.{short}");
+    let name = format!("Std.Ai.Acp.{short}");
     let variants = variants
         .into_iter()
         .map(|(name, fields)| EnumVariantTy {

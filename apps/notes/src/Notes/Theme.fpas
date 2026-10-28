@@ -1,6 +1,6 @@
 unit Notes.Theme;
 
-uses Std.Tui as Tui;
+uses Std.Ui.Terminal as Tui;
 
 // Returns the dark cyan-and-amber truecolor palette used by Notes.
 public function NotesPalette(): Tui.TuiPalette;

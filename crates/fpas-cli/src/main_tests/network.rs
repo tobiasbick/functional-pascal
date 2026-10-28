@@ -61,7 +61,7 @@ fn http_client_sends_request_and_decodes_chunked_response() {
         &format!(
             r#"program HttpClientRoundtrip;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Text.Utf8 as Utf8;
 
 begin
   var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
@@ -151,7 +151,7 @@ fn http_client_supports_standard_extension_and_head_methods() {
         &format!(
             r#"program HttpClientMethods;
 
-uses Std.Console as Console, Std.Http as Http;
+uses Std.Console as Console, Std.Net.Http as Http;
 
 procedure Expect(RequestValue: Http.Request; ExpectedBodyLength: integer);
 begin

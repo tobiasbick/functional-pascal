@@ -2,13 +2,13 @@
 
 mod bound_methods;
 mod constructor_values;
+mod conversion_values;
 mod discover;
 mod intrinsic_routines;
 mod intrinsic_tasks;
 mod mutating_receivers;
 mod named_routines;
 mod names;
-mod parser_values;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 

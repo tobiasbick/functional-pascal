@@ -1,0 +1,28 @@
+unit Std.Ui.Terminal.Ids.ControlId;
+
+function TuiControlIdRequirePositive(Value: integer): integer;
+begin
+  if Value <= 0 then
+    begin
+      panic('Tui control id must be positive');
+    end;
+  end if;
+
+  return Value;
+end function;
+
+// Unique positive interactive-node identity within one rendered tree.
+public type TuiControlId = record
+  // Validated scalar value represented by the record.
+  public Value: integer;
+
+  // Creates a validated positive identity.
+  //
+  // Parameters:
+  // - `Value`: Value used to create or update the result.
+  public static function Create(Value: integer): TuiControlId;
+  begin
+    return TuiControlId(Value := TuiControlIdRequirePositive(Value));
+  end function;
+end record;
+end unit;

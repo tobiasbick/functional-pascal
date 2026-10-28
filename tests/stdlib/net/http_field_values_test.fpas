@@ -2,7 +2,7 @@
 program HttpFieldValuesTest;
 
 uses
-  Std.Conv as Conv, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8, Std.Tasks as Tasks,
+  Std.Text.Format as Conv, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8, Std.Tasks as Tasks,
   Std.Test as Test;
 
 type FieldCase = record

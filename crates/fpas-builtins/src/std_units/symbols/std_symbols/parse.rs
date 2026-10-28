@@ -1,4 +1,4 @@
-//! `Std.Parse` symbol names and registry group.
+//! `Std.Text.Parse` symbol names and registry group.
 
 std_symbol!(STD_PARSE_INT = std_parse!("Int"));
 std_symbol!(STD_PARSE_REAL = std_parse!("Real"));

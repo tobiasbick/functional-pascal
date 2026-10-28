@@ -5,23 +5,23 @@ Package: [AP53](README.md). Status: complete, documentation only.
 ## Deliverable
 
 Decisions Q68-Q71 in the package README record the accepted organization,
-migration scope, document ownership and planning-only authorization.
+migration scope, document ownership and implementation authorization.
 The binding [specification](../../../specs/std-namespaces.md) owns the public
-mapping and future allocations. It does not describe those moves as delivered.
+mapping and future allocations, with availability documented in the handbook.
 
 ## Evidence and boundaries
 
 The intrinsic catalogue and source export manifest establish the current
 public units. Existing nested imports show that the migration needs consistent
-catalogues and consumers, not new namespace syntax. `Std.Conv` currently
-mixes four text-formatting routines with `IntToReal`; these have separate
+catalogues and consumers, not new namespace syntax. The former `Std.Conv`
+mixed four text-formatting routines with `IntToReal`; these have separate
 destinations with unchanged behavior.
 
 The future directory already contains a Std roadmap and feature plans. Keep
 those owners and link to the specification instead of creating a second
 future-library plan. Bind contributors through `AGENTS.md` and the standard
-library's contributor documentation. Current API examples retain working
-imports until AP53.2 implements the migration.
+library's contributor documentation. AP53.2 owns the migration of current
+API examples alongside the compiler and library.
 
 ## Affected documents
 
@@ -46,7 +46,8 @@ Every currently exported standard unit has a mapping, including units whose
 name stays the same. The specification separates binding placement from
 availability and implementation permission. Roadmap, AP and feature plans
 refer to that one policy. The package has a concrete migration scope and
-verification criteria, with future implementation work left unchecked.
+verification criteria. Reserved future capabilities require their own design
+and implementation authorization.
 
 Review relative links, catalogue coverage, decision/status consistency and
 `git diff --check`. This work package requires no builds or tests.

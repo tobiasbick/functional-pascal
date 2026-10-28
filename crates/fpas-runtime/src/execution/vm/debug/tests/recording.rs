@@ -25,7 +25,7 @@ fn local_value(session: &mut DebugSession, name: &str) -> String {
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random as Random;
+uses Std.Math.Random as Random;
 begin
   var X: integer := 0;
   X := Random.RandomInt(1, 1);
@@ -232,7 +232,7 @@ fn capturing_rejects_random_before_the_intrinsic_runs() {
         fpas_diagnostics::codes::RUNTIME_RECORDING_UNSUPPORTED_EFFECT
     );
     assert!(
-        diagnostic.message.contains("Std.Random"),
+        diagnostic.message.contains("Std.Math.Random"),
         "{}",
         diagnostic.message
     );

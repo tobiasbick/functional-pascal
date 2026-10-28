@@ -1,6 +1,6 @@
 program TuiBackgroundSubscriptionTest;
 
-uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 type SubscriptionModel = record
   Gate: channel of boolean;

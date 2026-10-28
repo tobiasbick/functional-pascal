@@ -85,7 +85,7 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty 
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{name}` requires both arguments to be the same numeric kind (both integer or both real)"),
-                "Use explicit conversion to match types, for example `uses Std.Conv as Conv;` and `Conv.IntToReal(N)`.",
+                "Use explicit conversion to match types, for example `uses Std.Math as Math;` and `Math.IntToReal(N)`.",
                 span,
             );
             Ty::Error
@@ -157,7 +157,7 @@ fn check_clamp(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
                     "`{}` requires all three arguments to be the same numeric kind (all integer or all real)",
                     s::STD_MATH_CLAMP
                 ),
-                "Use explicit conversion to match types, for example `uses Std.Conv as Conv;` and `Conv.IntToReal(N)`.",
+                "Use explicit conversion to match types, for example `uses Std.Math as Math;` and `Math.IntToReal(N)`.",
                 span,
             );
             Ty::Error

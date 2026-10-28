@@ -66,7 +66,7 @@ impl Fixture {
     fn source(&self, body: &str, environment: &str) -> String {
         format!(
             r#"program Terminal;
-uses Std.Proc as Proc, Std.Args as Args, Std.Test as Test, Std.Tasks as Tasks, Std.Fs as Fs, Std.Time as Time;
+uses Std.Os.Proc as Proc, Std.Os.Args as Args, Std.Test as Test, Std.Tasks as Tasks, Std.Io.Fs as Fs, Std.Time as Time;
 procedure ActWhenReady(Source: Tasks.CancellationSource; Marker: string; Fail: boolean);
 begin
   const Deadline := Time.MonotonicMillis() + 15000;

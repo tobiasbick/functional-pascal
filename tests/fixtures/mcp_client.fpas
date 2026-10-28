@@ -1,6 +1,6 @@
 program McpClient;
 
-uses Std.Args as Args, Std.Mcp as Mcp, Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Os.Args as Args, Std.Ai.Mcp as Mcp, Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 function Post(Access: Mcp.HttpAccess; Body: string): Http.Response;
 begin

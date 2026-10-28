@@ -1,8 +1,8 @@
 unit Notes.Repository;
 
 uses
-  Notes.Ordering as Ordering, Notes.Format as Format, Notes.Model as Model, Std.Conv as Conv,
-  Std.Fs as Fs, Std.Path as StdPath, Std.Random as Random, Std.Time as Time;
+  Notes.Ordering as Ordering, Notes.Format as Format, Notes.Model as Model, Std.Text.Format as Conv,
+  Std.Io.Fs as Fs, Std.Io.Path as StdPath, Std.Math.Random as Random, Std.Time as Time;
 
 // Creates the notes directory or validates that it already exists.
 public function NotesEnsureDirectory(Directory: string): result of (boolean, string);

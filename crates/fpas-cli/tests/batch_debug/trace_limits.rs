@@ -58,7 +58,7 @@ fn string_comparison_is_exact_past_the_display_prefix() {
 #[test]
 fn oversized_comparison_values_end_execution_before_later_statements() {
     let f = Fixture::new(
-        "program Huge; uses Std.Fs as Fs; var Text: string := ''; begin Text := 'x'.RepeatStr(65537); discard Fs.WriteText('executed','bad').Unwrap(); end.",
+        "program Huge; uses Std.Io.Fs as Fs; var Text: string := ''; begin Text := 'x'.RepeatStr(65537); discard Fs.WriteText('executed','bad').Unwrap(); end.",
     );
     let r = f.run(&["debug", "main.fpas", "--trace", "Text"], 3);
     assert_eq!(r["outcome"], "limit");
@@ -149,7 +149,7 @@ fn instruction_limit_retains_published_history() {
 #[test]
 fn forced_worker_death_cannot_claim_complete_empty_history() {
     let f = Fixture::new(
-        "program Die; uses Std.Proc as Proc; var Total: integer := 1; begin Total := 2; discard Proc.Run('sh', ['-c', 'kill -KILL $PPID']).Unwrap(); end.",
+        "program Die; uses Std.Os.Proc as Proc; var Total: integer := 1; begin Total := 2; discard Proc.Run('sh', ['-c', 'kill -KILL $PPID']).Unwrap(); end.",
     );
     let r = f.run(
         &[

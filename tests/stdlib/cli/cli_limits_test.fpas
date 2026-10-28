@@ -1,6 +1,6 @@
 program CliLimitsTest;
 
-uses Std.Cli as Cli, Std.Conv as Conv, Std.Test as Test;
+uses Std.Cli as Cli, Std.Text.Format as Conv, Std.Test as Test;
 
 begin
   const Empty := Cli.Schema(ProgramName := 'limits', Options := [], Positionals := []);

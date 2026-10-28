@@ -70,7 +70,7 @@ fn source_review_redirects_preserve_exact_request_paths() {
         "source-review-redirect",
         &format!(
             r#"program RedirectPaths;
-uses Std.Http as Http;
+uses Std.Net.Http as Http;
 begin
   for Base: string in [{paths}] do
   begin
@@ -124,7 +124,7 @@ fn source_review_client_rejects_non_decimal_lengths() {
         "source-review-lengths",
         &format!(
             r#"program DecimalLengths;
-uses Std.Http as Http;
+uses Std.Net.Http as Http;
 begin
   for I: integer := 1 to {} do
   begin

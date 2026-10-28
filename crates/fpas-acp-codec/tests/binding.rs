@@ -103,7 +103,7 @@ fn stable_and_v2_wire_methods_choose_their_own_nominal_payloads() {
         assert_eq!(
             name,
             &format!(
-                "Std.Acp.{}.{root}",
+                "Std.Ai.Acp.{}.{root}",
                 if version == Version::V1 {
                     "Types"
                 } else {

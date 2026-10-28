@@ -36,11 +36,11 @@ const Maximum: integer := 9223372036854775807;
 Hexadecimal literals denote mathematical magnitudes, not unsigned bit patterns
 reinterpreted as signed integers. `$FFFFFFFFFFFFFFFF` is out of range.
 
-`Std.Parse.Int` accepts the same decimal and `$` hex
+`Std.Text.Parse.Int` accepts the same decimal and `$` hex
 bodies with an optional sign and surrounding whitespace. Their real counterparts
 accept the same fractional/exponent forms and reject nonfinite values and nonzero
 underflow to zero. Representable subnormal reals remain valid. See
-[parsing](../../std/text/parse.md) and [conversion](../../std/text/conv.md).
+[parsing](../../std/text/parse.md) and [conversion](../../std/text/format.md).
 
 Identifiers use ASCII letters, digits, and `_` only (see the grammar `identifier` rule). A UTF-8 BOM
 (`U+FEFF`) is ignored only when it is the first scalar in a source file. A later `U+FEFF` is an

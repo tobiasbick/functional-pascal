@@ -183,7 +183,7 @@ impl<'a> ClosureRegistry<'a> {
         metadata: &AnalysisMetadata,
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
-        self.register_parser_value(expression, owner, metadata, types)?;
+        self.register_conversion_value(expression, owner, metadata, types)?;
         self.register_constructor_value(expression, owner, metadata, types)?;
         match expression {
             Expr::Closure(closure) => {

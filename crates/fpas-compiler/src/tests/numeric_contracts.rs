@@ -51,7 +51,36 @@ fn integer_overflows_and_nonfinite_real_results_fail_on_the_executed_path() {
 #[test]
 fn rounding_and_numeric_text_use_the_selected_contract() {
     assert_succeeds(
-        "program T; uses Std.Math as Math, Std.Conv as Conv, Std.Parse as Parse; begin\n        if Math.Round(2.5) <> 2 or Math.Round(3.5) <> 4 or Math.Round(-2.5) <> -2 or Math.Trunc(-2.9) <> -2 then panic('rounding'); end if;\n        if Conv.RealToStr(1.0) <> '1.0' or Conv.RealToStr(-0.0) <> '-0.0' then panic('real text'); end if;\n        if not (parse.Real(Conv.RealToStr(1.0)) is Ok(_)) then panic('roundtrip'); end if;\n        if parse.Int('$FF').Unwrap() <> 255 or parse.Int('-$8000000000000000').Unwrap() <> (-9223372036854775807 - 1) then panic('hex'); end if;\n        if not (parse.Real('1.0e-9999') is Error(_)) or not '$FF'.IsNumeric() then panic('numeric range'); end if;\n        const Tiny: real := 5.0e-324;\n        if Conv.RealToStr(Tiny * 0.5) <> '0.0' or Conv.RealToStr(-Tiny * 0.5) <> '-0.0' then panic('arithmetic underflow'); end if;\n    end.",
+        "program T; uses Std.Math as Math, Std.Text.Format as Conv, Std.Text.Parse as Parse; begin\n        if Math.Round(2.5) <> 2 or Math.Round(3.5) <> 4 or Math.Round(-2.5) <> -2 or Math.Trunc(-2.9) <> -2 then panic('rounding'); end if;\n        if Conv.RealToStr(1.0) <> '1.0' or Conv.RealToStr(-0.0) <> '-0.0' then panic('real text'); end if;\n        if not (parse.Real(Conv.RealToStr(1.0)) is Ok(_)) then panic('roundtrip'); end if;\n        if parse.Int('$FF').Unwrap() <> 255 or parse.Int('-$8000000000000000').Unwrap() <> (-9223372036854775807 - 1) then panic('hex'); end if;\n        if not (parse.Real('1.0e-9999') is Error(_)) or not '$FF'.IsNumeric() then panic('numeric range'); end if;\n        const Tiny: real := 5.0e-324;\n        if Conv.RealToStr(Tiny * 0.5) <> '0.0' or Conv.RealToStr(-Tiny * 0.5) <> '-0.0' then panic('arithmetic underflow'); end if;\n    end.",
+    );
+}
+
+#[test]
+fn formatting_and_numeric_conversion_values_keep_their_imported_owners() {
+    assert_succeeds(
+        r#"
+program ConversionValues;
+uses sTd.TeXt.FoRmAt as Text, sTd.MaTh as Numbers;
+function Apply(Convert: function(Value: integer): real; Value: integer): real;
+begin
+  return Convert(Value);
+end function;
+begin
+  const ToReal: function(Value: integer): real := Numbers.iNtToReAl;
+  const ToIntText: function(Value: integer): string := Text.IntToStr;
+  const ToRealText: function(Value: real): string := Text.RealToStr;
+  const ToBoolText: function(Value: boolean): string := Text.BoolToStr;
+  const ToHexText: function(Value: integer; Digits: integer): string := Text.IntToHex;
+  if Numbers.IntToReal(N := 42) <> 42.0 or ToReal(Value := 42) <> 42.0 or
+      Apply(Numbers.IntToReal, 42) <> 42.0 then
+    panic('numeric conversion value');
+  end if;
+  if ToIntText(Value := 42) <> '42' or ToRealText(42.0) <> '42.0' or
+      ToBoolText(true) <> 'true' or ToHexText(Digits := 4, Value := 42) <> '002A' then
+    panic('formatting conversion value');
+  end if;
+end.
+"#,
     );
 }
 

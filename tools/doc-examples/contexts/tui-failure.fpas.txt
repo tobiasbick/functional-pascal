@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Tui as Tui, Std.Tasks as Tasks;
+uses Std.Ui.Terminal as Tui, Std.Tasks as Tasks;
 type TuiMsg = Tui.TuiMsg;
 begin
 const Id := 1;

@@ -26,7 +26,7 @@ fn vm(source: &str) -> Vm {
 #[test]
 fn embedding_does_not_implicitly_authorize_process_control() {
     vm(
-        "program Test; uses Std.Server as Server, Std.Tasks as Tasks, Std.Test as StdTest; begin\n      StdTest.AssertTrue((Server.CreateLifetime(10, true) is Error(_)));\n      const Life: Server.ServerLifetime := Server.CreateLifetime(10, false).Unwrap();\n      StdTest.AssertTrue((Server.ObserveSignals(Life) is Error(_)));\n      discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n      StdTest.AssertTrue((Server.FinishShutdown(Life) is Ok(_))); end.",
+        "program Test; uses Std.Net.Server as Server, Std.Tasks as Tasks, Std.Test as StdTest; begin\n      StdTest.AssertTrue((Server.CreateLifetime(10, true) is Error(_)));\n      const Life: Server.ServerLifetime := Server.CreateLifetime(10, false).Unwrap();\n      StdTest.AssertTrue((Server.ObserveSignals(Life) is Error(_)));\n      discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n      StdTest.AssertTrue((Server.FinishShutdown(Life) is Ok(_))); end.",
     )
     .run()
     .unwrap();
@@ -34,7 +34,7 @@ fn embedding_does_not_implicitly_authorize_process_control() {
 
 #[test]
 fn stop_rejects_new_group_work() {
-    let error = vm("program Test; uses Std.Server as Server, Std.Tasks as Tasks; begin\n      const Life: Server.ServerLifetime := Server.CreateLifetime(10, false).Unwrap();\n      discard Server.RequestStop(Life);\n      const WorkerTask: task of boolean := Tasks.StartTaskInGroup(Server.GetWorkGroup(Life), function(Token: Tasks.CancellationToken): boolean begin return true; end function);\n      end.").run().unwrap_err();
+    let error = vm("program Test; uses Std.Net.Server as Server, Std.Tasks as Tasks; begin\n      const Life: Server.ServerLifetime := Server.CreateLifetime(10, false).Unwrap();\n      discard Server.RequestStop(Life);\n      const WorkerTask: task of boolean := Tasks.StartTaskInGroup(Server.GetWorkGroup(Life), function(Token: Tasks.CancellationToken): boolean begin return true; end function);\n      end.").run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),
         "{}",
@@ -44,7 +44,7 @@ fn stop_rejects_new_group_work() {
 
 #[test]
 fn returning_without_explicit_cleanup_reports_incomplete_shutdown() {
-    let error = vm("program Test; uses Std.Server as Server; begin\n      discard Server.CreateLifetime(0, false).Unwrap(); end.")
+    let error = vm("program Test; uses Std.Net.Server as Server; begin\n      discard Server.CreateLifetime(0, false).Unwrap(); end.")
     .run()
     .unwrap_err();
     assert!(
@@ -151,7 +151,7 @@ fn server_lifecycle_child() {
         ctrlc::try_set_handler(|| {}).expect("existing host signal owner");
     }
     let body = if mode == "signal-conflict" {
-        "Test.AssertTrue(Server.ObserveSignals(Life) is Error(Server.ServerError.SignalFailure(Errors.HostError.Failure('Std.Server.ObserveSignals', _, None, None, _))));
+        "Test.AssertTrue(Server.ObserveSignals(Life) is Error(Server.ServerError.SignalFailure(Errors.HostError.Failure('Std.Net.Server.ObserveSignals', _, None, None, _))));
          discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_));"
     } else if mode == "signals" {
         "Test.AssertTrue(Server.ObserveSignals(Life).Unwrap()); Test.AssertTrue(not Server.ObserveSignals(Life).Unwrap());\n         discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_));"
@@ -164,7 +164,7 @@ fn server_lifecycle_child() {
     };
     let force = mode != "signal-conflict";
     let source = format!(
-        "program Child; uses Std.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console, Std.Test as Test, Std.Errors as Errors;\n        begin const Life: Server.ServerLifetime := Server.CreateLifetime(50, {force}).Unwrap(); {body} end."
+        "program Child; uses Std.Net.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console, Std.Test as Test, Std.Os.Errors as Errors;\n        begin const Life: Server.ServerLifetime := Server.CreateLifetime(50, {force}).Unwrap(); {body} end."
     );
     let (program, errors) = fpas_parser::parse(&source);
     assert!(errors.is_empty(), "{errors:?}");

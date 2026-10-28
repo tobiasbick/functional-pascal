@@ -1,9 +1,9 @@
-# `Std.Net`
+# `Std.Net.Sockets`
 
 Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byte arrays.
 
 ```pascal id=example-1 fragment context=header
-uses Std.Net as Net;
+uses Std.Net.Sockets as Net;
 begin
 case Net.Connect('127.0.0.1', 8080, 5000) of
   when Ok(const Connection):
@@ -24,7 +24,7 @@ Every fallible operation returns `NetError`: `Closed(Operation)`,
 `Timeout(Cause: HostError)`, `Cancelled(Operation)`, `InvalidArgument(Name, Reason)`,
 `ResolveFailed(Cause)`, `ConnectionRefused(Cause)`, `ConnectionLost(Cause)`,
 `AddressInUse(Cause)`, `AccessDenied(Cause)`, `TlsFailure(Detail)` or `IoFailure(Cause)`.
-The Cause variants retain [Std.Errors.HostError](../host/errors.md) with the
+The Cause variants retain [Std.Os.Errors.HostError](../host/errors.md) with the
 qualified attempted operation, supplied resource identifiers, available native
 code/domain and original explanation. DNS classification occurs at resolution;
 I/O classification uses backend categories rather than diagnostic text. TLS
@@ -105,7 +105,7 @@ task workers. The cancellation-aware connect variants also interrupt pending TCP
 resolution and synchronous TLS verification have the limits described below.
 Closed handles cannot be reused.
 
-FPAS code runs with the host process's network permissions. `Std.Net` does not sandbox destinations.
+FPAS code runs with the host process's network permissions. `Std.Net.Sockets` does not sandbox destinations.
 
 ## `NetworkAddress` and `ListenerLocalAddress`
 
@@ -221,6 +221,6 @@ its VM worker.
 ## See also
 
 - [Networking index](README.md)
-- [`Std.Http`](http.md)
+- [`Std.Net.Http`](http.md)
 - [`Std.Tasks`](../concurrency/task.md)
 - [Standard library index](../README.md)

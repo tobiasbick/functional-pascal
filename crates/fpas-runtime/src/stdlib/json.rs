@@ -1,4 +1,4 @@
-//! Runtime implementations for `Std.Json.*` intrinsics.
+//! Runtime implementations for `Std.Encoding.Json.*` intrinsics.
 //!
 //! **Documentation:** `docs/pascal/std/text/json.md`
 
@@ -92,8 +92,11 @@ fn json_to_fpas(
 fn expected_json_value_error(value: &Value, location: SourceLocation) -> StdError {
     std_runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-        format!("expected Std.Json.JsonValue, got {}", value.type_name()),
-        "Pass a value constructed with Std.Json.JsonValue.* or returned by Std.Json.Parse.",
+        format!(
+            "expected Std.Encoding.Json.JsonValue, got {}",
+            value.type_name()
+        ),
+        "Pass a value constructed with Std.Encoding.Json.JsonValue.* or returned by Std.Encoding.Json.Parse.",
         location,
     )
 }
@@ -108,8 +111,8 @@ fn expect_one_field(
     }
     Err(std_runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-        format!("Std.Json.JsonValue.{variant} expects exactly one runtime field"),
-        "Use the documented Std.Json.JsonValue constructors without manually altering enum payloads.",
+        format!("Std.Encoding.Json.JsonValue.{variant} expects exactly one runtime field"),
+        "Use the documented Std.Encoding.Json.JsonValue constructors without manually altering enum payloads.",
         location,
     ))
 }
@@ -143,8 +146,8 @@ fn fpas_to_json_at_depth(
     if !type_name.eq_ignore_ascii_case(s::STD_JSON_VALUE) {
         return Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("expected Std.Json.JsonValue, got enum {type_name}"),
-            "Pass a value constructed with Std.Json.JsonValue.* or returned by Std.Json.Parse.",
+            format!("expected Std.Encoding.Json.JsonValue, got enum {type_name}"),
+            "Pass a value constructed with Std.Encoding.Json.JsonValue.* or returned by Std.Encoding.Json.Parse.",
             location,
         ));
     }
@@ -156,8 +159,8 @@ fn fpas_to_json_at_depth(
             } else {
                 Err(std_runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    "Std.Json.JsonValue.NullValue must not carry runtime fields",
-                    "Use Std.Json.JsonValue.NullValue without arguments.",
+                    "Std.Encoding.Json.JsonValue.NullValue must not carry runtime fields",
+                    "Use Std.Encoding.Json.JsonValue.NullValue without arguments.",
                     location,
                 ))
             }
@@ -167,10 +170,10 @@ fn fpas_to_json_at_depth(
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Std.Json.JsonValue.Bool expects boolean, got {}",
+                    "Std.Encoding.Json.JsonValue.Bool expects boolean, got {}",
                     other.type_name()
                 ),
-                "Construct booleans with Std.Json.JsonValue.Bool(true) or Bool(false).",
+                "Construct booleans with Std.Encoding.Json.JsonValue.Bool(true) or Bool(false).",
                 location,
             )),
         },
@@ -182,7 +185,7 @@ fn fpas_to_json_at_depth(
                 Some(number) => Ok(JsonValue::Number(number)),
                 None => Err(std_runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    "Std.Json.JsonValue.Number cannot stringify NaN or infinity",
+                    "Std.Encoding.Json.JsonValue.Number cannot stringify NaN or infinity",
                     "Pass a finite real value.",
                     location,
                 )),
@@ -191,10 +194,10 @@ fn fpas_to_json_at_depth(
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Std.Json.JsonValue.Number expects real, got {}",
+                    "Std.Encoding.Json.JsonValue.Number expects real, got {}",
                     other.type_name()
                 ),
-                "Construct numbers with Std.Json.JsonValue.Number(1.5).",
+                "Construct numbers with Std.Encoding.Json.JsonValue.Number(1.5).",
                 location,
             )),
         },
@@ -203,10 +206,10 @@ fn fpas_to_json_at_depth(
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Std.Json.JsonValue.String expects string, got {}",
+                    "Std.Encoding.Json.JsonValue.String expects string, got {}",
                     other.type_name()
                 ),
-                "Construct strings with Std.Json.JsonValue.String('text').",
+                "Construct strings with Std.Encoding.Json.JsonValue.String('text').",
                 location,
             )),
         },
@@ -219,10 +222,10 @@ fn fpas_to_json_at_depth(
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Std.Json.JsonValue.ArrayValue expects array, got {}",
+                    "Std.Encoding.Json.JsonValue.ArrayValue expects array, got {}",
                     other.type_name()
                 ),
-                "Construct arrays with Std.Json.JsonValue.ArrayValue([Item1, Item2]).",
+                "Construct arrays with Std.Encoding.Json.JsonValue.ArrayValue([Item1, Item2]).",
                 location,
             )),
         },
@@ -236,10 +239,10 @@ fn fpas_to_json_at_depth(
                             return Err(std_runtime_error(
                                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                                 format!(
-                                    "Std.Json.JsonValue.Object expects string keys, got {}",
+                                    "Std.Encoding.Json.JsonValue.Object expects string keys, got {}",
                                     other.type_name()
                                 ),
-                                "Use `dict of string to Std.Json.JsonValue` for JSON objects.",
+                                "Use `dict of string to Std.Encoding.Json.JsonValue` for JSON objects.",
                                 location,
                             ));
                         }
@@ -254,16 +257,16 @@ fn fpas_to_json_at_depth(
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Std.Json.JsonValue.Object expects dict, got {}",
+                    "Std.Encoding.Json.JsonValue.Object expects dict, got {}",
                     other.type_name()
                 ),
-                "Construct objects with Std.Json.JsonValue.Object(['key': Value]).",
+                "Construct objects with Std.Encoding.Json.JsonValue.Object(['key': Value]).",
                 location,
             )),
         },
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("unknown Std.Json.JsonValue variant `{other}`"),
+            format!("unknown Std.Encoding.Json.JsonValue variant `{other}`"),
             "Use one of NullValue, Bool, Number, String, ArrayValue, or Object.",
             location,
         )),

@@ -2,8 +2,8 @@
 program HttpBodyAccumulationBenchmark;
 
 uses
-  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Http as Http, Std.Time as Time,
-  Std.Parse as Parse;
+  Std.Os.Args as Args, Std.Console as Console, Std.Text.Format as Conv, Std.Net.Http as Http, Std.Time as Time,
+  Std.Text.Parse as Parse;
 
 begin
   if Args.ParamCount() <> 3 then

@@ -3,8 +3,8 @@ unit Notes.Update;
 uses
   Notes.Actions as Actions, Notes.Model as Model, Notes.Editing as Editing,
   Notes.Selection as Selection,
-  Notes.Repository as Repository, Std.Console as Console, Std.Conv as Conv, Std.Time as Time,
-  Std.Tui as Tui;
+  Notes.Repository as Repository, Std.Console as Console, Std.Text.Format as Conv, Std.Time as Time,
+  Std.Ui.Terminal as Tui;
 
 function ResortSelected(State: Model.NotesModel; SelectedId: string): Model.NotesModel;
 begin

@@ -1,6 +1,6 @@
 # Result and Option types
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 `Some`, `Ok` and `Error` accept one positional payload or the case-insensitive
 label `Value`, for example `Some(Value := 3)` and `Error(Value := 'missing')`.

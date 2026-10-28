@@ -102,7 +102,7 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 23 and register-bytecode version 28.
+The sectioned envelope uses program format version 23 and register-bytecode version 29.
 Relocatable unit objects use schema version 18 and compiled-unit envelopes use
 version 24. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
@@ -130,7 +130,13 @@ Generated linkage names are separate from their defining display names. Hidden
 callable captures are immutable, type-checked functions and remain absent from
 normal debugger scopes. Existing Std Result signatures retain their current types.
 
-Bytecode version 28 permits auxiliary flag 1 on Result/Option construction
+Bytecode version 29 binds native record and error layouts to the canonical
+standard-library namespaces. Earlier images retain incompatible nominal type
+identities and are rejected before execution. Source-backed program images and
+unit sidecars rebuild through their bytecode identity checks. Instruction numbers,
+envelope layouts and unit-object schemas are unchanged by this namespace migration.
+
+Since bytecode version 28, Result/Option construction permits auxiliary flag 1
 to consume a source register proven dead by the compiler.
 Validation succeeds before the source is removed; failed operations preserve it
 for diagnostics and inspection. Live sources use the ordinary copying form.

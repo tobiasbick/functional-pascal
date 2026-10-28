@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Console as Console, Std.Json as Json;
+uses Std.Console as Console, Std.Encoding.Json as Json;
 
 begin
 // @example

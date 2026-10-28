@@ -1,6 +1,6 @@
 # Enumerations
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 Enums define a set of named constants, optionally with explicit integer backing values.
 

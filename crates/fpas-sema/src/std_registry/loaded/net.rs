@@ -1,4 +1,4 @@
-//! Semantic registration for the hosted `Std.Net` network interface.
+//! Semantic registration for the hosted `Std.Net.Sockets` network interface.
 
 use super::super::{define_func, p};
 use crate::check::Checker;
@@ -6,7 +6,7 @@ use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_builtins::std_symbols as s;
 
-/// Register the `Std.Net` functions made visible by `uses Std.Net`.
+/// Register the `Std.Net.Sockets` functions made visible by `uses Std.Net.Sockets`.
 /// See `docs/pascal/std/network/net.md`.
 pub(super) fn register_std_net(checker: &mut Checker) {
     let connection =

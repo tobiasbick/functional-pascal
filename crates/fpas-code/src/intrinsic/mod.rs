@@ -165,33 +165,34 @@ impl Intrinsic {
         match self {
             Self::Mcp(operation) => operation.source_name(),
             Self::Acp(operation) => operation.source_name(),
-            Self::Conv(ConvIntrinsic::ErrorMessage) => "Std.Errors.Message".to_string(),
+            Self::Conv(ConvIntrinsic::ErrorMessage) => "Std.Os.Errors.Message".to_string(),
             Self::Conv(ConvIntrinsic::ErrorMatchesVariant) => "$error.MatchesVariant".to_string(),
-            Self::Str(StrIntrinsic::Utf8Encode) => "Std.Net.Utf8.EncodeBytes".to_string(),
+            Self::Conv(ConvIntrinsic::IntToReal) => "Std.Math.IntToReal".to_string(),
+            Self::Str(StrIntrinsic::Utf8Encode) => "Std.Text.Utf8.EncodeBytes".to_string(),
             Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
             Self::Http(HttpIntrinsic::ReserveBodyStreamState) => {
-                "Std.Http.Stream.ReserveState".to_string()
+                "Std.Net.Http.Stream.ReserveState".to_string()
             }
             Self::Http(HttpIntrinsic::HasBodyStreamState) => {
-                "Std.Http.Stream.HasState".to_string()
+                "Std.Net.Http.Stream.HasState".to_string()
             }
             Self::Http(HttpIntrinsic::LoadBodyStreamState) => {
-                "Std.Http.Stream.LoadState".to_string()
+                "Std.Net.Http.Stream.LoadState".to_string()
             }
             Self::Http(HttpIntrinsic::StoreBodyStreamState) => {
-                "Std.Http.Stream.StoreState".to_string()
+                "Std.Net.Http.Stream.StoreState".to_string()
             }
             Self::Http(HttpIntrinsic::ReserveSseDecoderState) => {
-                "Std.Http.Sse.ReserveState".to_string()
+                "Std.Net.Http.Sse.ReserveState".to_string()
             }
             Self::Http(HttpIntrinsic::HasSseDecoderState) => {
-                "Std.Http.Sse.HasState".to_string()
+                "Std.Net.Http.Sse.HasState".to_string()
             }
             Self::Http(HttpIntrinsic::LoadSseDecoderState) => {
-                "Std.Http.Sse.LoadState".to_string()
+                "Std.Net.Http.Sse.LoadState".to_string()
             }
             Self::Http(HttpIntrinsic::StoreSseDecoderState) => {
-                "Std.Http.Sse.StoreState".to_string()
+                "Std.Net.Http.Sse.StoreState".to_string()
             }
             Self::Test(
                 TestIntrinsic::AssertEqualsInteger
@@ -201,13 +202,13 @@ impl Intrinsic {
             ) => "Std.Test.AssertEquals".to_string(),
             Self::Console(ConsoleIntrinsic::Read) => "Std.Console.ReadText".to_string(),
             Self::Console(ConsoleIntrinsic::Write) => "Std.Console.WriteText".to_string(),
-            Self::Net(NetIntrinsic::Read) => "Std.Net.ReceiveBytes".to_string(),
+            Self::Net(NetIntrinsic::Read) => "Std.Net.Sockets.ReceiveBytes".to_string(),
             Self::Net(NetIntrinsic::ReadWithCancellation) => {
-                "Std.Net.ReceiveBytesWithCancellation".to_string()
+                "Std.Net.Sockets.ReceiveBytesWithCancellation".to_string()
             }
-            Self::Net(NetIntrinsic::Write) => "Std.Net.SendBytes".to_string(),
+            Self::Net(NetIntrinsic::Write) => "Std.Net.Sockets.SendBytes".to_string(),
             Self::Net(NetIntrinsic::WriteWithCancellation) => {
-                "Std.Net.SendBytesWithCancellation".to_string()
+                "Std.Net.Sockets.SendBytesWithCancellation".to_string()
             }
             intrinsic => {
                 let debug = format!("{intrinsic:?}");
@@ -215,7 +216,19 @@ impl Intrinsic {
                     .split_once('(')
                     .expect("intrinsic debug representation has family and member");
                 let family = match family {
-                    "Acp" => "Acp.Types",
+                    "Args" => "Os.Args",
+                    "Bits" => "Math.Bits",
+                    "Conv" => "Text.Format",
+                    "Env" => "Os.Env",
+                    "Fs" => "Io.Fs",
+                    "Json" => "Encoding.Json",
+                    "Net" => "Net.Sockets",
+                    "Parse" => "Text.Parse",
+                    "Path" => "Io.Path",
+                    "Proc" => "Os.Proc",
+                    "Random" => "Math.Random",
+                    "Server" => "Net.Server",
+                    "Toml" => "Encoding.Toml",
                     "Array" => "Arrays",
                     "Dict" => "Dictionaries",
                     "Option" => "Options",

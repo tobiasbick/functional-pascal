@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Console as Console, Std.Args as Args;
+uses Std.Console as Console, Std.Os.Args as Args;
 
 begin
 // @example

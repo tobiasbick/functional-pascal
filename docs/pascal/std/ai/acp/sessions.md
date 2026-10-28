@@ -1,7 +1,7 @@
 # Stable v1 sessions
 
-Use `Std.Acp.Send(Connection, Types.ClientRequest...)` for requests and
-`Std.Acp.Notify(Connection, Types.ClientNotification...)` for notifications.
+Use `Std.Ai.Acp.Send(Connection, Types.ClientRequest...)` for requests and
+`Std.Ai.Acp.Notify(Connection, Types.ClientNotification...)` for notifications.
 Both admit work locally; completion arrives through the matching RequestToken
 in a response or request-failure event. See [connections](connections.md) for
 transport setup, exclusive reception and bounded cleanup.

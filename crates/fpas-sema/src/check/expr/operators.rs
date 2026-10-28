@@ -253,7 +253,7 @@ impl Checker {
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
             "Numeric operands must have the same type",
-            "Import Std.Conv and convert integer explicitly, for example IntToReal(1) + 0.5; generic operands must use the same Numeric type parameter.",
+            "Import Std.Math as Math and convert integer explicitly, for example Math.IntToReal(1) + 0.5; generic operands must use the same Numeric type parameter.",
             span,
         );
         false

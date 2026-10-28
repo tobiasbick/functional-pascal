@@ -65,8 +65,12 @@ impl Checker {
 
     /// Uses the written bit-unit alias, or proposes a fresh explicit import.
     fn integer_bits_hint(&self, member: &str, arguments: &str) -> String {
-        let canonical = format!("Std.Bits.{member}");
-        if let Some(name) = self.scopes.imports.source_name_for("Std.Bits", &canonical) {
+        let canonical = format!("Std.Math.Bits.{member}");
+        if let Some(name) = self
+            .scopes
+            .imports
+            .source_name_for("Std.Math.Bits", &canonical)
+        {
             return format!("For integer bits, use `{name}({arguments})`.");
         }
         let alias = if self.scopes.lookup("Bits").is_some() {
@@ -75,7 +79,7 @@ impl Checker {
             "Bits"
         };
         format!(
-            "For integer bits, import `uses Std.Bits as {alias};` and use `{alias}.{member}({arguments})`."
+            "For integer bits, import `uses Std.Math.Bits as {alias};` and use `{alias}.{member}({arguments})`."
         )
     }
 }

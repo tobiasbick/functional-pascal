@@ -1,4 +1,4 @@
-//! Stable, bounded glob expansion for `Std.Fs.Glob`.
+//! Stable, bounded glob expansion for `Std.Io.Fs.Glob`.
 
 use super::failure::Failure;
 use std::path::Path;
@@ -34,7 +34,7 @@ pub(super) fn glob_paths(pattern: &str) -> Result<Vec<String>, Failure> {
         if entry.is_file() {
             if matches.len() >= MAX_GLOB_MATCHES {
                 return Err(Failure::LimitExceeded(
-                    "Std.Fs.Glob",
+                    "Std.Io.Fs.Glob",
                     MAX_GLOB_MATCHES as i64,
                 ));
             }

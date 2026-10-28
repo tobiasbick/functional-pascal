@@ -7,15 +7,15 @@ fn binary_files_keep_their_compiler_catalog_and_argument_shapes() {
     use fpas_runtime::{FsIntrinsic, Intrinsic, Opcode};
 
     assert_eq!(
-        crate::intrinsic_catalog::resolve("Std.Fs.ReadBytes", None),
+        crate::intrinsic_catalog::resolve("Std.Io.Fs.ReadBytes", None),
         Some(Intrinsic::Fs(FsIntrinsic::ReadBytes))
     );
     assert_eq!(
-        crate::intrinsic_catalog::resolve("Std.Fs.WriteBytes", None),
+        crate::intrinsic_catalog::resolve("Std.Io.Fs.WriteBytes", None),
         Some(Intrinsic::Fs(FsIntrinsic::WriteBytes))
     );
     let program = parse_ok(
-        "program Binary; uses Std.Fs as Fs; begin discard Fs.ReadBytes(Path := 'input'); discard Fs.WriteBytes(Bytes := [0, 255], Path := 'output'); end.",
+        "program Binary; uses Std.Io.Fs as Fs; begin discard Fs.ReadBytes(Path := 'input'); discard Fs.WriteBytes(Bytes := [0, 255], Path := 'output'); end.",
     );
     let executable = crate::compile(&program).expect("binary file intrinsic compilation");
     let calls = executable
@@ -43,7 +43,7 @@ fn binary_files_keep_their_compiler_catalog_and_argument_shapes() {
 fn binary_write_named_arguments_keep_written_evaluation_order() {
     assert_succeeds(
         r#"program BinaryOrder;
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 var Order: string := '';
 function Data(): array of integer;
 begin
@@ -99,7 +99,7 @@ end."#,
 #[test]
 fn lexical_path_helpers_lower_through_the_standard_intrinsic_catalog() {
     assert_succeeds(
-        "program PathHelpers; uses Std.Path as Path, Std.Test as Test; begin const Absolute: boolean := Path.IsAbsolute('file'); Test.AssertFalse(Absolute); const Relative: option of string := Path.RelativeTo(Target := 'a/file', Base := 'a'); Test.AssertTrue(Relative is Some('file')); const Changed: option of string := Path.ChangeExtension(Path := 'file.txt', Extension := 'log'); Test.AssertTrue(Changed is Some('file.log')); end.",
+        "program PathHelpers; uses Std.Io.Path as Path, Std.Test as Test; begin const Absolute: boolean := Path.IsAbsolute('file'); Test.AssertFalse(Absolute); const Relative: option of string := Path.RelativeTo(Target := 'a/file', Base := 'a'); Test.AssertTrue(Relative is Some('file')); const Changed: option of string := Path.ChangeExtension(Path := 'file.txt', Extension := 'log'); Test.AssertTrue(Changed is Some('file.log')); end.",
     );
 }
 
@@ -127,17 +127,16 @@ fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
 #[test]
 fn object_retains_layouts_constructed_by_runtime_intrinsics() {
     let program = parse_ok(
-        "program RuntimeLayouts;\nuses Std.Json as Json;\nbegin\n  const Parsed: result of (Json.JsonValue, Json.JsonError) := Json.Parse('null');\nend.",
+        "program RuntimeLayouts;\nuses Std.Encoding.Json as Json;\nbegin\n  const Parsed: result of (Json.JsonValue, Json.JsonError) := Json.Parse('null');\nend.",
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
         .expect("runtime aggregate layouts must compile");
 
-    assert!(
-        object
-            .enums
-            .iter()
-            .any(|layout| layout.name.eq_ignore_ascii_case("Std.Json.JsonValue"))
-    );
+    assert!(object.enums.iter().any(|layout| {
+        layout
+            .name
+            .eq_ignore_ascii_case("Std.Encoding.Json.JsonValue")
+    }));
 }
 
 #[test]
@@ -177,7 +176,7 @@ end.
 #[test]
 fn borrowed_standard_intrinsics_execute() {
     let execution = assert_succeeds(
-        "program RegisterIntrinsics;\nuses Std.Math as Math, Std.Conv as Conv, Std.Test as Test;\nbegin\n  const Text: string := 'fpas'.ToUpper();\n  const Root: real := Math.Sqrt(81.0);\n  const Number: string := Conv.IntToStr(42);\n  const Formatted: string := 'n=%d %s'.Format(42, 'ok');\n  Test.AssertEquals('FPAS', Text);\n  Test.AssertEquals(9.0, Root);\n  Test.AssertEquals('42', Number);\n  Test.AssertEquals('n=42 ok', Formatted);\nend.",
+        "program RegisterIntrinsics;\nuses Std.Math as Math, Std.Text.Format as Conv, Std.Test as Test;\nbegin\n  const Text: string := 'fpas'.ToUpper();\n  const Root: real := Math.Sqrt(81.0);\n  const Number: string := Conv.IntToStr(42);\n  const Formatted: string := 'n=%d %s'.Format(42, 'ok');\n  Test.AssertEquals('FPAS', Text);\n  Test.AssertEquals(9.0, Root);\n  Test.AssertEquals('42', Number);\n  Test.AssertEquals('n=42 ok', Formatted);\nend.",
     );
     assert_eq!(
         execution.value.try_to_data().expect("pure return value"),
@@ -272,13 +271,13 @@ fn hosted_file_calls_compile_all_public_argument_shapes() {
     ];
     for (name, operation) in operations {
         assert_eq!(
-            crate::intrinsic_catalog::resolve(&format!("Std.Fs.{name}"), None),
+            crate::intrinsic_catalog::resolve(&format!("Std.Io.Fs.{name}"), None),
             Some(Intrinsic::Fs(operation))
         );
     }
     let program = parse_ok(
         r#"program Handles;
-uses Std.Fs as Fs, Std.Tasks as Tasks;
+uses Std.Io.Fs as Fs, Std.Tasks as Tasks;
 function OpenFile(): result of (Fs.File, Fs.FsError);
 begin return Fs.Open('data', Fs.FileMode.Read); end function;
 procedure Probe(File: Fs.File; Token: Tasks.CancellationToken);
@@ -303,7 +302,7 @@ begin end."#,
 fn default_process_options_use_the_pure_runtime_record_factory() {
     assert_succeeds(
         r#"program Defaults;
-uses Std.Proc as Proc, Std.Test as Test;
+uses Std.Os.Proc as Proc, Std.Test as Test;
 begin
   const Defaults: Proc.ProcessOptions := Proc.DefaultOptions();
   Test.AssertTrue(Defaults.WorkingDirectory is None);
@@ -332,7 +331,7 @@ end."#,
         ),
     ] {
         assert_eq!(
-            crate::intrinsic_catalog::resolve(&format!("Std.Proc.{name}"), None),
+            crate::intrinsic_catalog::resolve(&format!("Std.Os.Proc.{name}"), None),
             Some(fpas_runtime::Intrinsic::Proc(operation))
         );
     }

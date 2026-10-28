@@ -1,6 +1,6 @@
 program McpRegistrationFailureTest;
 
-uses Std.Acp as Acp, Std.Mcp as Mcp, Std.Test as Test;
+uses Std.Ai.Acp as Acp, Std.Ai.Mcp as Mcp, Std.Test as Test;
 
 function Handler(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError);
 begin

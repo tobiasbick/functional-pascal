@@ -12,7 +12,7 @@ fn debugger_names_use_the_public_reserved_keyword_safe_api() {
     );
     assert_eq!(
         Intrinsic::Net(NetIntrinsic::WriteWithCancellation).debugger_name(),
-        "Std.Net.SendBytesWithCancellation"
+        "Std.Net.Sockets.SendBytesWithCancellation"
     );
     assert_eq!(
         Intrinsic::Result(ResultIntrinsic::Unwrap).debugger_name(),
@@ -28,12 +28,12 @@ fn binary_files_keep_stable_ids_after_encoding() {
         (
             Intrinsic::Fs(FsIntrinsic::ReadBytes),
             708,
-            "Std.Fs.ReadBytes",
+            "Std.Io.Fs.ReadBytes",
         ),
         (
             Intrinsic::Fs(FsIntrinsic::WriteBytes),
             709,
-            "Std.Fs.WriteBytes",
+            "Std.Io.Fs.WriteBytes",
         ),
     ] {
         assert_eq!(u16::from(intrinsic), wire);

@@ -1,6 +1,6 @@
 program AcpProcessTest;
 
-uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Proc as Proc, Std.Test as Test;
+uses Std.Ai.Acp as Acp, Std.Ai.Acp.Types as Types, Std.Os.Proc as Proc, Std.Test as Test;
 
 procedure Exercise(Mode: string);
 begin

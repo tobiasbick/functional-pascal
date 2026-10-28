@@ -1,6 +1,6 @@
 program CanonicalErrorHandling;
 
-uses Std.Test as Test, Std.Parse as Parse;
+uses Std.Test as Test, Std.Text.Parse as Parse;
 
 var Trace: string := '';
 

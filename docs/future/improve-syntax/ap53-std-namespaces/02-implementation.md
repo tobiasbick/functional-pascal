@@ -1,25 +1,25 @@
 # AP53.2: Migrate FPAS and its repository consumers
 
-Package: [AP53](README.md). Status: not started; implementation not authorized.
+Package: [AP53](README.md). Status: complete.
 
 ## Prerequisites
 
 - [AP53.1](01-decision.md) is complete and Q68-Q71 are recorded.
 - The user explicitly authorizes implementation beyond planning/documentation.
-- Refresh the public-unit and consumer inventory against the implementation
-  checkout. Record any additional affected paths before editing them.
+- The public-unit and consumer inventory is recorded in the implementation
+  owners and migration sections below.
 
 ## Contract and scope
 
-Implement the [existing-unit mapping](../../../specs/std-namespaces.md#existing-public-units-and-migration-targets)
-as one consistent compiler/library and in-repository consumer migration.
-Do not ship an intermediate compiler whose bundled library imports old names.
+The compiler, library and repository consumers follow the
+[existing-unit mapping](../../../specs/std-namespaces.md#existing-public-units-and-migration-targets)
+together. The bundled library imports the canonical names.
 
-For example, the target import `Std.Ai.Acp as Acp` exposes the current ACP
-interface through `Acp`. `Std.Acp` becomes an unknown standard-unit import.
-`Std.Text.Format` owns the four current text-formatting functions, while
-`Std.Math.IntToReal` preserves the current numeric conversion. Mixed callers
-must use both imports. These are target examples until this work is delivered.
+For example, the import `Std.Ai.Acp as Acp` exposes the ACP interface through
+`Acp`. The former `Std.Acp` is an unknown standard-unit import.
+`Std.Text.Format` owns the four text-formatting functions, while
+`Std.Math.IntToReal` preserves numeric conversion. Mixed callers
+use both imports.
 
 Keep alias rules, case-insensitive matching, access checks, signatures, runtime
 behavior and failure categories. Update nominal public identities and displayed
@@ -52,6 +52,37 @@ not permission to modify unrelated behavior or mechanically rename all internal
 Rust symbols. Confirm exact files and file-size boundaries before implementation.
 
 ## Migration and artifacts
+
+The refreshed inventory includes these concrete owners in addition to the table:
+`fpas-builtins/src/{aggregates.rs,native_records.rs,native_errors.rs,std_units/}`,
+`fpas-sema/src/{std_registry/,check/,interface/,tests/}` and
+`fpas-sema/examples/export_intrinsic_std_api/`; compiler intrinsic lookup and
+runtime labels; `crates/fpas-build/build/compiler_identity.rs`; CLI import, docs,
+visibility and artifact tests; `fpas-language-service`, `fpas-project`, and the
+VS Code README. The generated editor API is rebuilt from the migrated registry.
+
+`crates/fpas-compiler/src/lowering/closures/conversion_values.rs` supplies
+callable wrappers for formatting and numeric conversion routines, alongside
+the existing parsing wrappers. Imported routine values retain their owning
+unit, signature and argument order.
+
+`crates/fpas-code/src/lib.rs` advances the intrinsic ABI to bytecode version 29
+because native nominal type identities changed. The existing program decoder
+rejects earlier images before execution, and sidecar identity checks rebuild
+old artifacts. Program/unit envelope layouts and object schemas are unchanged.
+`crates/fpas-program/tests/format.rs` covers rejection of the preceding ABI;
+its golden image and `crates/fpas-bundle/tests/format.rs` reflect the changed
+embedded program identity. The compiled-program handbook describes the rebuild
+contract.
+
+Source families move from `lib/Std/Calendar` to `lib/Std/Time/Calendar`,
+`Http` to `Net/Http`, `Tui` to `Ui/Terminal`, `Net/Utf8.fpas` to
+`Text/Utf8.fpas`, and `Json/Fields.fpas` and `Toml/Fields.fpas` beneath
+`Encoding/`. This includes each family's `.fpas` entry point and private source
+children. Ignored old sidecars are not moved into the new source tree.
+The text conversion handbook becomes `docs/pascal/std/text/format.md`;
+numeric conversion belongs in the Math handbook. All affected Markdown and
+grammar examples, top-level README and distribution paths are reconciled.
 
 - Migrate code and public signatures together, including aliases used for
   types, enum variants, routine values and calls inside embedded fixtures.
@@ -87,15 +118,17 @@ Existing coverage owners include `crates/fpas-cli/src/main_tests/visibility/`,
 `tests/stdlib/imports/aliases_test.fpas` and
 `tests/stdlib/conv/numeric_text_contracts_test.fpas`.
 
-When implementation is authorized, use the repository's
+Use the repository's
 [required checks](../development-process.md#required-checks): Rust formatting,
 development build with `--profile dev-fast`, workspace tests, FPAS formatting,
 the FPAS suite and affected application/example checks. Use Fat-LTO for any
 release, benchmark or dist build. Run editor checks when those files change.
 Document-only validation in AP53.1 is not evidence that these checks passed.
 
-Acceptance requires an inventory with no unhandled old API uses, passing
-applicable checks and a Spec/Standards review. Allow old spellings only in
+The inventory has no unhandled old API uses. Old spellings remain only in
 intentional negative fixtures or explicitly identified migration descriptions.
-Then mark AP53.2 complete in the package README and hand the delivered compiler
-and library to [AP53.3](03-dungeon-migration.md).
+Applicable checks and the Spec/Standards reviews are complete; commands,
+results and coverage limits are in the
+[verification report](../../../reports/ap53-namespace-migration.md).
+The delivered compiler/library pair is the dependency of
+[AP53.3](03-dungeon-migration.md).

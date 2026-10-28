@@ -1,6 +1,6 @@
 program TuiCellPaletteValuesTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 begin
   const RgbValue: Tui.TuiColor := Tui.TuiColor.FromRgb(10, 20, 30);

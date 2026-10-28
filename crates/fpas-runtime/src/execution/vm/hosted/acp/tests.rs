@@ -19,7 +19,7 @@ fn vm_completion_and_failure_close_unreleased_native_connections() {
         schema::Version,
     };
     for (body, succeeds) in [("", true), ("panic('expected shutdown fixture');", false)] {
-        let source = format!("program Cleanup; uses Std.Acp as Acp; begin {body} end.");
+        let source = format!("program Cleanup; uses Std.Ai.Acp as Acp; begin {body} end.");
         let (program, errors) = fpas_parser::parse(&source);
         assert!(errors.is_empty(), "{errors:?}");
         let executable = fpas_compiler::compile(&program).unwrap();
@@ -51,7 +51,7 @@ fn closing_process_cleanup_leaves_the_single_worker_available_to_its_peer() {
     let marker = std::env::temp_dir().join(format!("fpas-acp-close-{}.ready", std::process::id()));
     assert!(!marker.exists());
     let source = r#"program CloseProgress;
-uses Std.Acp as Acp, Std.Args as Args, Std.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Ai.Acp as Acp, Std.Os.Args as Args, Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
 function Close(Connection: Acp.Connection; Started: channel of boolean): boolean;
 begin
   discard Tasks.Send(Started, true).Unwrap();

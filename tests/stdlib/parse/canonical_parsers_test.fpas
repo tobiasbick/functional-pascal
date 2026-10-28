@@ -1,6 +1,6 @@
 program CanonicalParsers;
 
-uses Std.Parse as Parse, Std.Conv as Conv, Std.Test as Test;
+uses Std.Text.Parse as Parse, Std.Text.Format as Conv, Std.Test as Test;
 
 procedure Invalid(Value: result of (integer, Parse.ParseError); Range: boolean);
 begin

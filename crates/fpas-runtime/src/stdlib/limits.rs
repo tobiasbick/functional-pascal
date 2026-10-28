@@ -9,16 +9,16 @@ use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
 /// Maximum number of elements allowed in one `Std.Arrays.Fill` or `Std.Str.RepeatStr` result.
 pub(crate) const MAX_COLLECTION_LEN: i64 = 1_000_000;
 
-/// Maximum UTF-8 byte length accepted by `Std.Fs.ReadText`.
+/// Maximum UTF-8 byte length accepted by `Std.Io.Fs.ReadText`.
 pub(crate) const MAX_READ_TEXT_BYTES: u64 = 64 * 1024 * 1024;
 
-/// Maximum number of matching files returned by one `Std.Fs.Glob` call.
+/// Maximum number of matching files returned by one `Std.Io.Fs.Glob` call.
 pub(crate) const MAX_GLOB_MATCHES: usize = 1_000_000;
 
-/// Maximum nesting depth accepted by `Std.Json.Parse` and `Std.Json.Stringify`.
+/// Maximum nesting depth accepted by `Std.Encoding.Json.Parse` and `Std.Encoding.Json.Stringify`.
 pub(crate) const MAX_JSON_DEPTH: usize = 256;
 
-/// Maximum nesting depth accepted by `Std.Toml.Parse` and `Std.Toml.Stringify`.
+/// Maximum nesting depth accepted by `Std.Encoding.Toml.Parse` and `Std.Encoding.Toml.Stringify`.
 pub(crate) const MAX_TOML_DEPTH: usize = 256;
 
 /// Validates a non-negative collection length against [`MAX_COLLECTION_LEN`].

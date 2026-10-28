@@ -78,4 +78,4 @@ end.
 - [Basics](../language/basics/README.md)
 
 `shl` and `shr` are ordinary identifiers. Integer bit operations use
-[Std.Bits](../std/numeric/bits.md); logical operators require boolean operands.
+[Std.Math.Bits](../std/numeric/bits.md); logical operators require boolean operands.

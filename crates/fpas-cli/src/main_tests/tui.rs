@@ -22,7 +22,7 @@ name = "tui-terminal-renderer-test"
 kind = "library"
 
 [exports]
-units = ["Std.Tui", "Std.Version", "Std.Tui.Runtime.TerminalRenderer"]
+units = ["Std.Ui.Terminal", "Std.Version", "Std.Ui.Terminal.Runtime.TerminalRenderer"]
 
 [sources]
 include = ["{source_glob}"]
@@ -35,7 +35,7 @@ include = ["{source_glob}"]
         &once,
         r#"program FlushOnce;
 
-uses Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
+uses Std.Ui.Terminal as Tui, Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
   const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
@@ -48,7 +48,7 @@ end.
         &unchanged,
         r#"program FlushUnchanged;
 
-uses Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
+uses Std.Ui.Terminal as Tui, Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
   const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
@@ -62,7 +62,7 @@ end.
         &changed,
         r#"program FlushChanged;
 
-uses Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
+uses Std.Ui.Terminal as Tui, Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
   const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
@@ -77,7 +77,7 @@ end.
         &wide,
         r#"program FlushWideTransition;
 
-uses Std.Console as Console, Std.Test as Test, Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
+uses Std.Console as Console, Std.Test as Test, Std.Ui.Terminal as Tui, Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
   const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 1));
@@ -134,7 +134,7 @@ fn theme_switch_repaints_unchanged_terminal_cells() {
         &program,
         r#"program ThemeSwitch;
 
-uses Std.Console as Console, Std.Test as Test, Std.Tui as Tui;
+uses Std.Console as Console, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function UpdateTheme(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
@@ -207,7 +207,7 @@ fn interactive_host_debounces_resize_burst_after_quiet_period() {
         &program,
         r#"program ResizeDebounce;
 
-uses Std.Console as Console, Std.Tui as Tui;
+uses Std.Console as Console, Std.Ui.Terminal as Tui;
 
 type Model = record
   ResizeCount: integer;
@@ -269,7 +269,7 @@ fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
         &program,
         r#"program EventDrivenIdle;
 
-uses Std.Console as Console, Std.Tui as Tui;
+uses Std.Console as Console, Std.Ui.Terminal as Tui;
 
 type Model = record
   Ticks: integer;
@@ -340,7 +340,7 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
         &program,
         r#"program BackgroundWakeup;
 
-uses Std.Console as Console, Std.Tasks as Tasks, Std.Tui as Tui;
+uses Std.Console as Console, Std.Tasks as Tasks, Std.Ui.Terminal as Tui;
 
 type Model = record
   Inbox: channel of integer;

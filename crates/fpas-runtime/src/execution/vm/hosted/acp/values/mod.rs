@@ -149,7 +149,8 @@ impl Converter<'_> {
             .ok_or_else(invalid)?;
         if !self.image.strings.get(owner.name).is_some_and(|actual| {
             actual.eq_ignore_ascii_case(name)
-                || (name == "Std.Acp.Types.Field" && actual.starts_with("Std.Acp.Types.Field"))
+                || (name == "Std.Ai.Acp.Types.Field"
+                    && actual.starts_with("Std.Ai.Acp.Types.Field"))
         }) {
             return Err(invalid());
         }

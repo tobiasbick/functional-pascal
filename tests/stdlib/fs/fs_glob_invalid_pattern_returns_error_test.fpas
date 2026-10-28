@@ -1,6 +1,6 @@
 program FsGlobInvalidPatternReturnsErrorTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   case Fs.Glob('[unclosed') of

@@ -42,7 +42,7 @@ pub(super) fn record<'a>(value: &'a Value, name: &str, count: usize) -> Result<&
     Err(Fault::InvalidArgument("Record"))
 }
 pub(super) fn raw(value: &Value) -> Result<&str, Fault> {
-    let fields = record(value, "Std.Mcp.Types.RawJson", 1)?;
+    let fields = record(value, "Std.Ai.Mcp.Types.RawJson", 1)?;
     let text = text(&fields[0])?;
     if text.len() > 64 * 1024 * 1024 {
         return Err(Fault::LimitExceeded("RawBytes", 64 * 1024 * 1024));
@@ -53,7 +53,7 @@ pub(super) fn json(value: &Value) -> Result<serde_json::Value, Fault> {
     serde_json::from_str(raw(value)?).map_err(|_| Fault::InvalidArgument("Json"))
 }
 pub(super) fn limits(value: &Value) -> Result<Limits, Fault> {
-    let f = record(value, "Std.Mcp.Limits", 6)?;
+    let f = record(value, "Std.Ai.Mcp.Limits", 6)?;
     let limits = Limits {
         tools: integer(&f[0])?,
         catalog_bytes: integer(&f[1])?,
@@ -66,7 +66,7 @@ pub(super) fn limits(value: &Value) -> Result<Limits, Fault> {
     Ok(limits)
 }
 pub(super) fn http(value: &Value) -> Result<HttpOptions, Fault> {
-    let f = record(value, "Std.Mcp.HttpOptions", 4)?;
+    let f = record(value, "Std.Ai.Mcp.HttpOptions", 4)?;
     Ok(HttpOptions {
         address: text(&f[0])?
             .parse()
@@ -83,7 +83,7 @@ fn object(value: &Value) -> Result<fpas_mcp::model::JsonObject, Fault> {
         .ok_or(Fault::InvalidSchema("Object"))
 }
 pub(super) fn definition(value: &Value) -> Result<Tool, Fault> {
-    let f = record(value, "Std.Mcp.Types.ToolDefinition", 6)?;
+    let f = record(value, "Std.Ai.Mcp.Types.ToolDefinition", 6)?;
     let mut tool = Tool::new(
         text(&f[0])?.to_owned(),
         text(&f[1])?.to_owned(),

@@ -182,7 +182,7 @@ impl Worker {
                             self.runtime_error(
                                 RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                                 format!("HTTP state slot {slot} is invalid"),
-                                "Use a handle returned by the matching Std.Http creation function.",
+                                "Use a handle returned by the matching Std.Net.Http creation function.",
                             )
                         })?,
                 )
@@ -200,7 +200,7 @@ impl Worker {
                     return Err(self.runtime_error(
                         RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                         format!("HTTP state slot {slot} is invalid"),
-                        "Use a handle returned by the matching Std.Http creation function.",
+                        "Use a handle returned by the matching Std.Net.Http creation function.",
                     ));
                 }
                 None
@@ -217,7 +217,7 @@ fn require_count(worker: &Worker, arguments: &[Value], expected: usize) -> Resul
     Err(worker.runtime_error(
         RUNTIME_INTRINSIC_STACK_STATE_ERROR,
         format!(
-            "Std.Http state intrinsic expected {expected} arguments, got {}",
+            "Std.Net.Http state intrinsic expected {expected} arguments, got {}",
             arguments.len()
         ),
         "Check the compiler intrinsic signature and register argument count.",
@@ -242,10 +242,10 @@ fn type_error(worker: &Worker, expected: &str, actual: &Value) -> VmError {
     worker.runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         format!(
-            "Std.Http state intrinsic expected {expected}, got {}",
+            "Std.Net.Http state intrinsic expected {expected}, got {}",
             actual.type_name()
         ),
-        "Pass values matching the compiler-provided internal Std.Http signature.",
+        "Pass values matching the compiler-provided internal Std.Net.Http signature.",
     )
 }
 

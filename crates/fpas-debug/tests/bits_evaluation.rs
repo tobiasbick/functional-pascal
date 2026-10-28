@@ -1,4 +1,4 @@
-//! `Std.Bits` watch calls share runtime bounds and deterministic-call classification.
+//! `Std.Math.Bits` watch calls share runtime bounds and deterministic-call classification.
 
 #![allow(
     clippy::expect_used,
@@ -16,7 +16,7 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
 #[test]
 fn bits_watch_calls_preserve_signed_patterns_and_reject_invalid_shift_counts() {
     let (program, errors) =
-        fpas_parser::parse("program BitsWatch; uses Std.Bits as Bits; begin end.");
+        fpas_parser::parse("program BitsWatch; uses Std.Math.Bits as Bits; begin end.");
     assert!(errors.is_empty(), "{errors:?}");
     let executable = fpas_compiler::compile(&program).expect("compile bit watch fixture");
     let mut server =
@@ -26,7 +26,7 @@ fn bits_watch_calls_preserve_signed_patterns_and_reject_invalid_shift_counts() {
 
     for (index, (expression, expected)) in [
         ("BitAnd(12, 10)", "8"),
-        ("Std.Bits.BitOr(12, 10)", "14"),
+        ("Std.Math.Bits.BitOr(12, 10)", "14"),
         ("BitXor(12, 10)", "6"),
         ("BitNot(0)", "-1"),
         ("ShiftLeft(1, 63)", "-9223372036854775808"),

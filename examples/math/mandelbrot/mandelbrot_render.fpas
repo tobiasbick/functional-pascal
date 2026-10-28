@@ -3,7 +3,7 @@
 unit Mandelbrot.Render;
 
 uses
-  Std.Conv as Conv, Std.Math as Math, Std.Tasks as StdTasks, Std.Time as Time, Std.Tui as Tui,
+  Std.Math as Math, Std.Tasks as StdTasks, Std.Time as Time, Std.Ui.Terminal as Tui,
   Mandelbrot.Color as Color;
 
 public type Complex = record
@@ -68,7 +68,7 @@ begin
   end if;
   const MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
   return PixelSample(
-    IsInside := false, EscapeValue := Conv.IntToReal(Iterations) + 1.0 -
+    IsInside := false, EscapeValue := Math.IntToReal(Iterations) + 1.0 -
     (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0))
   );
 end function;
@@ -133,11 +133,11 @@ public function ComputeRow(
 begin
   const WidthRange: integer := Math.Max(Width - 1, 1);
   const HeightRange: integer := Math.Max(Height - 1, 1);
-  const Cy: real := YMax - Conv.IntToReal(Py) / Conv.IntToReal(HeightRange) * (YMax - YMin);
+  const Cy: real := YMax - Math.IntToReal(Py) / Math.IntToReal(HeightRange) * (YMax - YMin);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      const Cx: real := XMin + Conv.IntToReal(Px) / Conv.IntToReal(WidthRange) * (XMax - XMin);
+      const Cx: real := XMin + Math.IntToReal(Px) / Math.IntToReal(WidthRange) * (XMax - XMin);
       Row.PushInPlace(Iterate(Complex.Create(Cx, Cy), MaxIter));
     end;
   end for;
@@ -160,7 +160,7 @@ function ComputeRowCancellable(
 begin
   const WidthRange: integer := Math.Max(Width - 1, 1);
   const HeightRange: integer := Math.Max(Height - 1, 1);
-  const Cy: real := YMax - Conv.IntToReal(Py) / Conv.IntToReal(HeightRange) * (YMax - YMin);
+  const Cy: real := YMax - Math.IntToReal(Py) / Math.IntToReal(HeightRange) * (YMax - YMin);
   var Row: array of PixelSample := [];
   var NextYield: integer := Time.MonotonicMillis() + 8;
   for Px: integer := 0 to Width - 1 do
@@ -181,7 +181,7 @@ begin
           return [];
         end;
       end if;
-      const Cx: real := XMin + Conv.IntToReal(Px) / Conv.IntToReal(WidthRange) * (XMax - XMin);
+      const Cx: real := XMin + Math.IntToReal(Px) / Math.IntToReal(WidthRange) * (XMax - XMin);
       Row.PushInPlace(IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
     end;
   end for;
@@ -202,7 +202,7 @@ begin
   const Index: integer := Math.Clamp(
     Math.Trunc(
       Math.Frac(EscapeValue * 0.08) *
-      Conv.IntToReal(Count)
+      Math.IntToReal(Count)
     ), 0, Count - 1
   );
   return Ramp[Index];

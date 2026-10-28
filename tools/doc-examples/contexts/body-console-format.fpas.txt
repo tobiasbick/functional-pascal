@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Console as Console, Std.Text.Format as Format;
+
+begin
+// @example
+
+end.

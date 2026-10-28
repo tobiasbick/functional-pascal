@@ -7,7 +7,7 @@ fn stable_intrinsics_have_only_their_canonical_source_route() {
     for intrinsic in Intrinsic::all() {
         // Generic error patterns lower directly to this private IR operation.
         if intrinsic == Intrinsic::Conv(ConvIntrinsic::ErrorMatchesVariant) {
-            assert_eq!(resolve("Std.Errors.MatchesVariant", None), None);
+            assert_eq!(resolve("Std.Os.Errors.MatchesVariant", None), None);
             continue;
         }
         let (name, argument_type) = canonical_test_call(intrinsic);
@@ -25,7 +25,7 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
             let (version, decode, root) = operation.codec().expect("payload codec");
             (
                 format!(
-                    "Std.Acp.{}.{}{root}",
+                    "Std.Ai.Acp.{}.{}{root}",
                     if version == 2 { "V2" } else { "Types" },
                     if decode { "Decode" } else { "Encode" }
                 ),
@@ -35,16 +35,17 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
         Intrinsic::Acp(operation) if operation.connection() => {
             let member = format!("{operation:?}");
             let name = if let Some(member) = member.strip_prefix("Host") {
-                format!("Std.Acp.Host.{member}")
+                format!("Std.Ai.Acp.Host.{member}")
             } else if let Some(member) = member.strip_prefix("V2") {
-                format!("Std.Acp.V2.{member}")
+                format!("Std.Ai.Acp.V2.{member}")
             } else {
-                format!("Std.Acp.{member}")
+                format!("Std.Ai.Acp.{member}")
             };
             (name, None)
         }
-        Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => ("Std.Errors.Message".into(), None),
-        Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Net.Utf8.EncodeBytes".into(), None),
+        Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => ("Std.Os.Errors.Message".into(), None),
+        Intrinsic::Conv(ConvIntrinsic::IntToReal) => ("Std.Math.IntToReal".into(), None),
+        Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Text.Utf8.EncodeBytes".into(), None),
         Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
         Intrinsic::Test(TestIntrinsic::AssertEqualsInteger) => {
             ("Std.Test.AssertEquals".into(), Some(Ty::Integer))
@@ -59,28 +60,28 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
             ("Std.Test.AssertEquals".into(), Some(Ty::Real))
         }
         Intrinsic::Http(HttpIntrinsic::ReserveBodyStreamState) => {
-            ("Std.Http.Stream.ReserveState".into(), None)
+            ("Std.Net.Http.Stream.ReserveState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::HasBodyStreamState) => {
-            ("Std.Http.Stream.HasState".into(), None)
+            ("Std.Net.Http.Stream.HasState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::LoadBodyStreamState) => {
-            ("Std.Http.Stream.LoadState".into(), None)
+            ("Std.Net.Http.Stream.LoadState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::StoreBodyStreamState) => {
-            ("Std.Http.Stream.StoreState".into(), None)
+            ("Std.Net.Http.Stream.StoreState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::ReserveSseDecoderState) => {
-            ("Std.Http.Sse.ReserveState".into(), None)
+            ("Std.Net.Http.Sse.ReserveState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::HasSseDecoderState) => {
-            ("Std.Http.Sse.HasState".into(), None)
+            ("Std.Net.Http.Sse.HasState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::LoadSseDecoderState) => {
-            ("Std.Http.Sse.LoadState".into(), None)
+            ("Std.Net.Http.Sse.LoadState".into(), None)
         }
         Intrinsic::Http(HttpIntrinsic::StoreSseDecoderState) => {
-            ("Std.Http.Sse.StoreState".into(), None)
+            ("Std.Net.Http.Sse.StoreState".into(), None)
         }
         intrinsic => {
             let debug = format!("{intrinsic:?}");
@@ -88,7 +89,21 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
                 .split_once('(')
                 .expect("intrinsic debug form contains family and member");
             let family = match family {
-                "Acp" => "Acp.Types",
+                "Acp" => "Ai.Acp.Types",
+                "Mcp" => "Ai.Mcp",
+                "Args" => "Os.Args",
+                "Bits" => "Math.Bits",
+                "Conv" => "Text.Format",
+                "Env" => "Os.Env",
+                "Fs" => "Io.Fs",
+                "Json" => "Encoding.Json",
+                "Net" => "Net.Sockets",
+                "Parse" => "Text.Parse",
+                "Path" => "Io.Path",
+                "Proc" => "Os.Proc",
+                "Random" => "Math.Random",
+                "Server" => "Net.Server",
+                "Toml" => "Encoding.Toml",
                 "Array" => "Arrays",
                 "Dict" => "Dictionaries",
                 "Result" => "Results",
@@ -100,10 +115,10 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
             let member = match (family, member) {
                 ("Console", "Read") => "ReadText",
                 ("Console", "Write") => "WriteText",
-                ("Net", "Read") => "ReceiveBytes",
-                ("Net", "ReadWithCancellation") => "ReceiveBytesWithCancellation",
-                ("Net", "Write") => "SendBytes",
-                ("Net", "WriteWithCancellation") => "SendBytesWithCancellation",
+                ("Net.Sockets", "Read") => "ReceiveBytes",
+                ("Net.Sockets", "ReadWithCancellation") => "ReceiveBytesWithCancellation",
+                ("Net.Sockets", "Write") => "SendBytes",
+                ("Net.Sockets", "WriteWithCancellation") => "SendBytesWithCancellation",
                 (_, other) => other,
             };
             (format!("Std.{family}.{member}"), None)

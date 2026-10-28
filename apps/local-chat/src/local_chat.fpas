@@ -3,7 +3,7 @@ program LocalChat;
 
 uses
   LocalChat.Model as Model, LocalChat.Theme as Theme, LocalChat.Update as Update,
-  LocalChat.View as View, Std.Console as Console, Std.Tui as Tui;
+  LocalChat.View as View, Std.Console as Console, Std.Ui.Terminal as Tui;
 
 begin
   const Initial: Model.LocalChatModel := Model.LocalChatModelCreate(

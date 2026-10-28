@@ -1,7 +1,7 @@
 // Bounded percent encoding and one-pass decoding over bulk UTF-8 bytes.
 unit Std.Net.Uri.Percent;
 
-uses Std.Net.Uri.Components as Components, Std.Net.Utf8 as Utf8;
+uses Std.Net.Uri.Components as Components, Std.Text.Utf8 as Utf8;
 
 // Decoding retains the byte count for aggregate query budgets.
 public type DecodedPart = record

@@ -1,6 +1,6 @@
 program TomlParseInvalidTomlReturnsErrorTest;
 
-uses Std.Test as Test, Std.Toml as Toml;
+uses Std.Test as Test, Std.Encoding.Toml as Toml;
 
 begin
   const Parsed: result of (Toml.TomlValue, Toml.TomlError) := Toml.Parse('answer = [1,');

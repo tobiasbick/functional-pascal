@@ -2,7 +2,7 @@
 
 program RandomBasics;
 
-uses Std.Console as Console, Std.Conv as Conv, Std.Random as Random;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Math.Random as Random;
 
 begin
   Random.SetSeed(42);

@@ -1,7 +1,7 @@
 // Covers HTTP server response construction and mutable fields.
 program HttpServerTypesTest;
 
-uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');

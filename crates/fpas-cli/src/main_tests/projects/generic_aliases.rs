@@ -19,11 +19,11 @@ public type
     );
     write_text(
         &cwd.join("src/facade.fpas"),
-        "unit Repro.Facade;\nuses Repro.Model as ReproModel, Std.Tui as Tui;\npublic type\n  Model = ReproModel.Model;\npublic function NewModel(): Model;\nbegin\n  return Model( Value := 0 );\nend function;\npublic function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;\nbegin\n  return State;\nend function;\npublic function View(State: Model): Tui.TuiElement;\nbegin\n  return Tui.TuiElementBuilders.MakeLabel('value');\nend function;\nend unit;",
+        "unit Repro.Facade;\nuses Repro.Model as ReproModel, Std.Ui.Terminal as Tui;\npublic type\n  Model = ReproModel.Model;\npublic function NewModel(): Model;\nbegin\n  return Model( Value := 0 );\nend function;\npublic function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;\nbegin\n  return State;\nend function;\npublic function View(State: Model): Tui.TuiElement;\nbegin\n  return Tui.TuiElementBuilders.MakeLabel('value');\nend function;\nend unit;",
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program GenericAliasRepro;\nuses Repro.Facade as Facade, Std.Tui as Tui, Std.Test as Test;\nbegin\n  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));\n  var State: Facade.Model := Facade.NewModel();\n  State := App.RunIterations(State, Facade.Update, Facade.View, 0, 0);\n  Test.AssertEquals(0, State.Value);\n  App.Close();\nend.",
+        "program GenericAliasRepro;\nuses Repro.Facade as Facade, Std.Ui.Terminal as Tui, Std.Test as Test;\nbegin\n  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));\n  var State: Facade.Model := Facade.NewModel();\n  State := App.RunIterations(State, Facade.Update, Facade.View, 0, 0);\n  Test.AssertEquals(0, State.Value);\n  App.Close();\nend.",
     );
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()

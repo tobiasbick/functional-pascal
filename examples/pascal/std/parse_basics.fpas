@@ -2,7 +2,7 @@
 
 program ParseBasics;
 
-uses Std.Console as Console, Std.Parse as Parse, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Parse as Parse, Std.Text.Format as Conv;
 
 begin
   case parse.Int(' +1_024 ') of

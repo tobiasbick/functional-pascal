@@ -1,6 +1,6 @@
 program CellGridRowEquivalenceTest;
 
-uses Std.Test as Test, Std.Tui as Tui, Std.Tui.Rendering.Canvas as Canvas;
+uses Std.Test as Test, Std.Ui.Terminal as Tui, Std.Ui.Terminal.Rendering.Canvas as Canvas;
 
 procedure CompareRow(
   Expected: Tui.TuiWorkingSurface;

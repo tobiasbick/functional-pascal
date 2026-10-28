@@ -1,4 +1,4 @@
-// Elementary math: constant `Pi`, roots, powers, trig, rounding, log, and polymorphic `Abs` / `Min` / `Max`.
+// Elementary math: integer-to-real conversion, constant `Pi`, roots, powers, trig, rounding, log, and polymorphic `Abs` / `Min` / `Max`.
 //
 // Handbook: `docs/pascal/std/numeric/math.md`.
 unit Std.Math;
@@ -108,6 +108,15 @@ end function;
 // Parameters:
 // - `R`: `real` input value used by `Frac`.
 public function Frac(R: real): real;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Explicit binary64 rounding; may lose integer precision.
+//
+// Parameters:
+// - `N`: `integer` input value used by `IntToReal`.
+public function IntToReal(N: integer): real;
 begin
   panic('Intrinsic API declaration');
 end function;

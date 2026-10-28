@@ -58,7 +58,7 @@ impl Drop for Fixture {
 }
 
 const BRIDGE: &str = r#"unit Bridge;
-uses Std.Acp.Types as Acp, Std.Acp.V2 as V2;
+uses Std.Ai.Acp.Types as Acp, Std.Ai.Acp.V2 as V2;
 public type Failure = Acp.AcpError;
 public type Patch = Acp.Field of array of string;
 public function Peer(): Failure;
@@ -78,7 +78,7 @@ end function;
 end unit;"#;
 
 const PROGRAM: &str = r#"program CachedAcp;
-uses Bridge as B, Std.Acp.Types as Acp, Std.Acp.V2 as V2;
+uses Bridge as B, Std.Ai.Acp.Types as Acp, Std.Ai.Acp.V2 as V2;
 begin
   if Acp.EncodeClientRequest('session/prompt', B.Request()).Unwrap().Text <> '{"sessionId":"cached","prompt":[]}' then panic('request identity'); end if;
   const Updated := V2.EncodeAgentNotification('session/update', B.Update()).Unwrap().Text;
@@ -133,7 +133,7 @@ fn peer_record_payloads_and_generic_patches_survive_cached_units_and_source_free
 fn structured_acp_payloads_keep_nominal_type_checking() {
     let fixture = Fixture::new();
     fixture.run(&["run", "app.fpasprj"]);
-    fs::write(fixture.0.join("main.fpas"), "program Wrong; uses Bridge as B, Std.Acp.Types as Acp; begin const Patch: Acp.Field of integer := B.Empty(); end.").expect("wrong family caller");
+    fs::write(fixture.0.join("main.fpas"), "program Wrong; uses Bridge as B, Std.Ai.Acp.Types as Acp; begin const Patch: Acp.Field of integer := B.Empty(); end.").expect("wrong family caller");
     let output = fixture.invoke(&["check", "app.fpasprj"]);
     assert!(
         !output.status.success(),
@@ -154,7 +154,7 @@ fn protocol_families_and_distinct_ids_are_not_interchangeable() {
         "const Wrong: V2.ClientRequest := B.Request();",
         "const Wrong: Acp.ToolCallId := Acp.SessionId('s');",
     ] {
-        fs::write(fixture.0.join("main.fpas"), format!("program Wrong; uses Bridge as B, Std.Acp.Types as Acp, Std.Acp.V2 as V2; begin {body} end.")).expect("write invalid ACP type fixture");
+        fs::write(fixture.0.join("main.fpas"), format!("program Wrong; uses Bridge as B, Std.Ai.Acp.Types as Acp, Std.Ai.Acp.V2 as V2; begin {body} end.")).expect("write invalid ACP type fixture");
         let output = fixture.invoke(&["check", "app.fpasprj"]);
         assert!(!output.status.success(), "{body}");
         assert!(

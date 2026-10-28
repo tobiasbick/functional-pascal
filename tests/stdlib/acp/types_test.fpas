@@ -1,6 +1,6 @@
 program AcpTypesTest;
 
-uses Std.Acp.Types as Acp, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Ai.Acp.Types as Acp, Std.Tasks as Tasks, Std.Test as Test;
 
 function PatchSize(Patch: Acp.Field of array of string): integer;
 begin

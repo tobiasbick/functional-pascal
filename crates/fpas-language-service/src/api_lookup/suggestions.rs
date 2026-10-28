@@ -5,7 +5,7 @@ const SUGGESTION_LIMIT: usize = 5;
 /// Returns up to five known names closest to the query, compared case-insensitively.
 ///
 /// A query with `n` dotted segments is compared with the last `n` segments of each name, so
-/// `Fs.ReadTxt` suggests `Std.Fs.ReadText`.
+/// `Fs.ReadTxt` suggests `Std.Io.Fs.ReadText`.
 pub(super) fn closest(query: &str, names: impl Iterator<Item = String>) -> Vec<String> {
     let query = query.to_ascii_lowercase();
     if query.is_empty() {
@@ -73,15 +73,19 @@ mod tests {
 
     #[test]
     fn suggestions_compare_the_same_number_of_trailing_segments() {
-        let names = ["Std.Fs.ReadText", "Std.Fs.WriteText", "Std.Path.Join"]
-            .into_iter()
-            .map(String::from);
-        assert_eq!(closest("Fs.ReadTxt", names), ["Std.Fs.ReadText"]);
+        let names = [
+            "Std.Io.Fs.ReadText",
+            "Std.Io.Fs.WriteText",
+            "Std.Io.Path.Join",
+        ]
+        .into_iter()
+        .map(String::from);
+        assert_eq!(closest("Fs.ReadTxt", names), ["Std.Io.Fs.ReadText"]);
     }
 
     #[test]
     fn distant_names_are_not_suggested() {
-        let names = ["Std.Fs.ReadText"].into_iter().map(String::from);
+        let names = ["Std.Io.Fs.ReadText"].into_iter().map(String::from);
         assert!(closest("Console", names).is_empty());
     }
 }

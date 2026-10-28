@@ -1,6 +1,6 @@
 program TuiIncrementalCellGridTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function Update(State: Tui.TuiCellGrid; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiCellGrid;
 begin

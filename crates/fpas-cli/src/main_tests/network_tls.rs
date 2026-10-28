@@ -42,7 +42,7 @@ fn https_client_rejects_untrusted_server_certificate() {
         &format!(
             r#"program HttpsUntrustedCertificate;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net as Net;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net;
 
 begin
   case Http.Send(Http.Request.Get('https://localhost:{port}/')) of

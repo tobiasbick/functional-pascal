@@ -1,11 +1,11 @@
-# `Std.Args`
+# `Std.Os.Args`
 
 Process argument access for hosted FPAS programs. This page is the full API for the unit.
 
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Args as Args;
+uses Std.Console as Console, Std.Os.Args as Args;
 
 begin
   Console.WriteLn(Args.ParamCount());
@@ -24,13 +24,13 @@ fpas run app.fpas -- input.txt verbose
 
 ## Importing and names
 
-Import with `uses Std.Args as Args;` and access public symbols as `Args.Name`. User enum variants require `Args.Type.Variant`.
+Import with `uses Std.Os.Args as Args;` and access public symbols as `Args.Name`. User enum variants require `Args.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Args as Args;`.
+Requires `uses Std.Os.Args as Args;`.
 
 | Kind | Name | Notes |
 |------|------|--------|

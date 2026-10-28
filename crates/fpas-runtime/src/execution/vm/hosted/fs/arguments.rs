@@ -16,7 +16,7 @@ pub(super) fn count(worker: &Worker, values: &[Value], expected: usize) -> Resul
     Err(worker.runtime_error(
         RUNTIME_INTRINSIC_STACK_STATE_ERROR,
         format!(
-            "Std.Fs intrinsic expected {expected} arguments, got {}",
+            "Std.Io.Fs intrinsic expected {expected} arguments, got {}",
             values.len()
         ),
         "Check the intrinsic signature and register argument count.",
@@ -84,9 +84,9 @@ fn mismatch(worker: &Worker, name: &str, expected: &str, actual: &Value) -> VmEr
     worker.runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         format!(
-            "Std.Fs {name} expected {expected}, got {}",
+            "Std.Io.Fs {name} expected {expected}, got {}",
             actual.type_name()
         ),
-        "Pass values matching the documented Std.Fs function signature.",
+        "Pass values matching the documented Std.Io.Fs function signature.",
     )
 }

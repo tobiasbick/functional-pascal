@@ -1,6 +1,6 @@
 program CalendarMillisTest;
 
-uses Std.Calendar as Calendar, Std.Test as Test;
+uses Std.Time.Calendar as Calendar, Std.Test as Test;
 
 function Shift(Value: Calendar.DateTime; Delta: integer): result of (Calendar.DateTime, Calendar.CalendarError);
 begin
@@ -39,15 +39,15 @@ begin
   Test.AssertTrue(Shift(First, 315537897599999).Unwrap() = Last);
   Test.AssertTrue(Shift(Last, -315537897599999).Unwrap() = First);
   Test.AssertTrue(
-    Shift(First, -1) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+    Shift(First, -1) is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.AddMillis'))
   );
   Test.AssertTrue(
-    Shift(Last, 1) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+    Shift(Last, 1) is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.AddMillis'))
   );
   Test.AssertTrue(
-    Shift(First, -9223372036854775808) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+    Shift(First, -9223372036854775808) is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.AddMillis'))
   );
   Test.AssertTrue(
-    Shift(Last, 9223372036854775807) is Error(Calendar.CalendarError.OutOfRange('Std.Calendar.AddMillis'))
+    Shift(Last, 9223372036854775807) is Error(Calendar.CalendarError.OutOfRange('Std.Time.Calendar.AddMillis'))
   );
 end.

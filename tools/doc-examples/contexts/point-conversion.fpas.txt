@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Conv as Conv;
+uses Std.Text.Format as Conv;
 // @include docs/pascal/language/types/records.md#example-1
 // @example
 begin end.

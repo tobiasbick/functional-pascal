@@ -1,4 +1,4 @@
-//! `Std.Env` runtime implementation.
+//! `Std.Os.Env` runtime implementation.
 //!
 //! **Documentation:** `docs/pascal/std/host/env.md` (from the repository root).
 
@@ -6,7 +6,7 @@ use crate::stdlib::error::StdError;
 use crate::stdlib::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
 use crate::{EnvIntrinsic, Intrinsic, SourceLocation, Value};
 
-/// Execute a `Std.Env` intrinsic and return `None` when another unit should handle it.
+/// Execute a `Std.Os.Env` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,

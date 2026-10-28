@@ -26,40 +26,43 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     {
         return resolve(&name.replace("IsEmpty", "Length"), first_argument);
     }
-    if name == "Std.Net.Utf8.EncodeBytes" {
+    if name == "Std.Text.Utf8.EncodeBytes" {
         return Some(Intrinsic::Str(StrIntrinsic::Utf8Encode));
     }
-    if name.starts_with("Std.Acp.") {
+    if name.starts_with("Std.Ai.Acp.") {
         return Intrinsic::all().find(|intrinsic| matches!(intrinsic, Intrinsic::Acp(operation) if operation.source_name() == name));
     }
-    if name.starts_with("Std.Mcp.") {
+    if name.starts_with("Std.Ai.Mcp.") {
         return Intrinsic::all().find(|intrinsic| matches!(intrinsic, Intrinsic::Mcp(operation) if operation.source_name() == name));
     }
+    if let Some(member) = name.strip_prefix("Std.Net.Http.") {
+        return resolve_http(member);
+    }
     let remainder = name.strip_prefix("Std.")?;
-    let (unit, member) = remainder.split_once('.')?;
+    let (unit, member) = remainder.rsplit_once('.')?;
     match unit {
-        "Errors" if member == "Message" => Some(Intrinsic::Conv(ConvIntrinsic::ErrorMessage)),
-        "Args" => family!(member, Args, ArgsIntrinsic, [ParamCount, ParamStr]),
+        "Os.Errors" if member == "Message" => Some(Intrinsic::Conv(ConvIntrinsic::ErrorMessage)),
+        "Os.Args" => family!(member, Args, ArgsIntrinsic, [ParamCount, ParamStr]),
         "Console" => resolve_console(member),
         "Str" => resolve_str(member),
-        "Conv" => family!(
+        "Text.Format" => family!(
             member,
             Conv,
             ConvIntrinsic,
-            [IntToStr, RealToStr, IntToReal, BoolToStr, IntToHex,]
+            [IntToStr, RealToStr, BoolToStr, IntToHex,]
         ),
         "Crypto" => family!(member, Crypto, CryptoIntrinsic, [RandomBytes, RandomInt]),
-        "Parse" => family!(member, Parse, ParseIntrinsic, [Int, Real, Bool, HexInt]),
+        "Text.Parse" => family!(member, Parse, ParseIntrinsic, [Int, Real, Bool, HexInt]),
+        "Math" if member == "IntToReal" => Some(Intrinsic::Conv(ConvIntrinsic::IntToReal)),
         "Math" => resolve_math(member),
-        "Bits" => family!(
+        "Math.Bits" => family!(
             member,
             Bits,
             BitsIntrinsic,
             [BitAnd, BitOr, BitXor, BitNot, ShiftLeft, ShiftRight]
         ),
-        "Net" => resolve_net(member),
-        "Http" => resolve_http(member),
-        "Random" => family!(
+        "Net.Sockets" => resolve_net(member),
+        "Math.Random" => family!(
             member,
             Random,
             RandomIntrinsic,
@@ -87,8 +90,8 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 HexDecode
             ]
         ),
-        "Env" => family!(member, Env, EnvIntrinsic, [Get, Exists]),
-        "Path" => family!(
+        "Os.Env" => family!(member, Env, EnvIntrinsic, [Get, Exists]),
+        "Io.Path" => family!(
             member,
             Path,
             PathIntrinsic,
@@ -103,7 +106,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 ChangeExtension
             ]
         ),
-        "Server" => family!(
+        "Net.Server" => family!(
             member,
             Server,
             ServerIntrinsic,
@@ -120,7 +123,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 ShutdownErrors
             ]
         ),
-        "Proc" => family!(
+        "Os.Proc" => family!(
             member,
             Proc,
             ProcIntrinsic,
@@ -144,7 +147,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Close
             ]
         ),
-        "Fs" => family!(
+        "Io.Fs" => family!(
             member,
             Fs,
             FsIntrinsic,
@@ -190,7 +193,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 ReadDir,
             ]
         ),
-        "Json" => family!(member, Json, JsonIntrinsic, [Parse, Stringify]),
+        "Encoding.Json" => family!(member, Json, JsonIntrinsic, [Parse, Stringify]),
         "Results" => family!(
             member,
             Result,
@@ -250,7 +253,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             TimeIntrinsic,
             [TimestampMillis, MonotonicMillis, ElapsedMillis, Sleep]
         ),
-        "Toml" => family!(member, Toml, TomlIntrinsic, [Parse, Stringify]),
+        "Encoding.Toml" => family!(member, Toml, TomlIntrinsic, [Parse, Stringify]),
         "Test" => resolve_test(member, first_argument),
         _ => None,
     }

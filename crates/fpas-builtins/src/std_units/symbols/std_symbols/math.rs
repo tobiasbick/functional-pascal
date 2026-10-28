@@ -1,6 +1,7 @@
 //! `Std.Math` symbol names and registry group.
 
 std_symbol!(STD_MATH_PI = std_math!("Pi"));
+std_symbol!(STD_MATH_INT_TO_REAL = std_math!("IntToReal"));
 std_symbol!(STD_MATH_SQRT = std_math!("Sqrt"));
 std_symbol!(STD_MATH_POW = std_math!("Pow"));
 std_symbol!(STD_MATH_FLOOR = std_math!("Floor"));
@@ -27,6 +28,7 @@ std_symbol!(STD_MATH_CLAMP = std_math!("Clamp"));
 
 pub(in crate::std_units) const STD_MATH_SYMBOLS: &[&str] = &[
     STD_MATH_PI,
+    STD_MATH_INT_TO_REAL,
     STD_MATH_SQRT,
     STD_MATH_POW,
     STD_MATH_FLOOR,

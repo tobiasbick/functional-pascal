@@ -1,6 +1,6 @@
 program FsWriteTextAtomicRoundtripTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const Path: string := Test.ScratchDir() + '/atomic-roundtrip.txt';

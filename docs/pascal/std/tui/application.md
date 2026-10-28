@@ -1,6 +1,6 @@
-# `Std.Tui` application host
+# `Std.Ui.Terminal` application host
 
-The code fragments use `uses Std.Tasks as Tasks, Std.Tui as Tui;` and local
+The code fragments use `uses Std.Tasks as Tasks, Std.Ui.Terminal as Tui;` and local
 aliases such as `type TuiMsg = Tui.TuiMsg;`. Their named
 [contexts](../../../../tools/doc-examples/contexts) supply these aliases and
 application fixture types.
@@ -261,7 +261,7 @@ glyph clears both columns.
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Mandelbrot typed-inbox and replaceable-subscription example](../../../../examples/math/mandelbrot/README.md)
 - [Elements](elements.md)
 - [Text area](text-area.md)

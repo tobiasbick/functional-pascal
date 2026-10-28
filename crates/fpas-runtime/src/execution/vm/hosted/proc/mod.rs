@@ -99,7 +99,7 @@ impl Worker {
         });
         let value = match result {
             Ok(output) if capture => Value::result_ok(self.record_value(
-                "Std.Proc.ProcessOutput",
+                "Std.Os.Proc.ProcessOutput",
                 vec![
                     Value::Integer(output.code),
                     Value::Str(output.stdout.into()),
@@ -121,7 +121,7 @@ impl Worker {
 }
 
 impl Vm {
-    /// Route stderr lines of legacy `Std.Proc.Run` children to the installed receiver.
+    /// Route stderr lines of legacy `Std.Os.Proc.Run` children to the installed receiver.
     pub fn set_program_stderr(&mut self, receiver: crate::stdlib::ProgramStderr) {
         *self
             .hosted

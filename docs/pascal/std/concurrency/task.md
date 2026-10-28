@@ -133,7 +133,7 @@ that may be copied and passed to worker tasks. `Cancel` atomically changes the s
 returns `true`; later calls return `false`. `IsCancellationRequested` is non-blocking.
 
 Cancellation is a request, not forced task termination. A task or hosted blocking operation stops
-only when it checks the token. The cancellation-aware `Std.Net` connect, accept, read, and write
+only when it checks the token. The cancellation-aware `Std.Net.Sockets` connect, accept, read, and write
 operations observe tokens while their interruptible network phases are pending.
 
 ```pascal id=example-2 fragment context=body-console-tasks
@@ -269,7 +269,7 @@ after timeout; returning from the main task does not turn the timeout into compl
 See the [timeout regression](../../../../tests/concurrency/task_group_close_timeout_test.fpas)
 for cancellation, retained ownership, and retrying close after releasing a blocked worker.
 
-[`Std.Server`](../network/server.md) supplies server ownership, one common shutdown budget,
+[`Std.Net.Server`](../network/server.md) supplies server ownership, one common shutdown budget,
 and separately host-authorized process escalation. Timed task-group close itself never kills
 the process.
 

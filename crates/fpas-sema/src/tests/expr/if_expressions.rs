@@ -49,8 +49,8 @@ fn branches_are_not_widened_or_converted() {
         error
             .help
             .as_deref()
-            .is_some_and(|help| help.contains("`Conv.IntToReal(...)`")
-                && help.contains("uses Std.Conv as Conv;")),
+            .is_some_and(|help| help.contains("`Math.IntToReal(...)`")
+                && help.contains("uses Std.Math as Math;")),
         "{error:#?}"
     );
     let error = single_error("const Id: UserId := if N = 1 then UserId(1) else 2 end if;");

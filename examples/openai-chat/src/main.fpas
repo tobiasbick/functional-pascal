@@ -1,7 +1,7 @@
 // Runs an interactive chat against a configured OpenAI-compatible endpoint.
 program OpenAiChat;
 
-uses Std.Ai.OpenAi as OpenAi, Std.Args as Args, Std.Console as Console, Std.Env as Env;
+uses Std.Ai.OpenAi as OpenAi, Std.Os.Args as Args, Std.Console as Console, Std.Os.Env as Env;
 
 begin
   if Args.ParamCount() <> 2 then

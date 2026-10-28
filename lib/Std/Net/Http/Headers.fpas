@@ -1,0 +1,44 @@
+// Case-insensitive HTTP field lookup and unsafe-text checks.
+unit Std.Net.Http.Headers;
+
+uses Std.Net.Http.Types as Types;
+
+// Compares two HTTP field names without case sensitivity.
+//
+// Parameters:
+// - `Name`: Field name to compare.
+// - `Expected`: Expected field name.
+public function IsName(Name: string; Expected: string): boolean;
+begin
+  return Name.ToLower() = Expected.ToLower();
+end function;
+
+// Returns the first value for a case-insensitive field name.
+//
+// Parameters:
+// - `Headers`: Fields to search in wire order.
+// - `Name`: Case-insensitive field name.
+public function Find(Headers: array of Types.Header; Name: string): option of string;
+begin
+  for Index: integer := 0 to Headers.Length() - 1 do
+    begin
+      if IsName(Headers[Index].Name, Name) then
+        begin
+          return Some(Headers[Index].Value);
+        end;
+      end if;
+    end;
+  end for;
+
+  return None;
+end function;
+
+// Reports whether text contains carriage-return or line-feed characters.
+//
+// Parameters:
+// - `Text`: Text to inspect before writing it into an HTTP head.
+public function ContainsUnsafeText(Text: string): boolean;
+begin
+  return (#13 in Text) or (#10 in Text);
+end function;
+end unit;

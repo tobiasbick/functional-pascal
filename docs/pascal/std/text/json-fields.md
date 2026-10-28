@@ -1,4 +1,4 @@
-# `Std.Json.Fields`
+# `Std.Encoding.Json.Fields`
 
 Strict typed access to the fields of parsed JSON objects. Every accessor returns
 `Error(Cause)` for a missing field or a value of the wrong JSON kind instead of
@@ -7,7 +7,7 @@ requiring a nested `case` per field.
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Json as Json, Std.Json.Fields as JsonFields;
+uses Std.Console as Console, Std.Encoding.Json as Json, Std.Encoding.Json.Fields as JsonFields;
 
 function ReadPort(Text: string): result of (integer, JsonFields.FieldError);
 begin
@@ -28,8 +28,8 @@ end.
 
 ## Importing and names
 
-`uses Std.Json.Fields as Fields;` provides the accessors through `Fields.Name`. Values and objects keep the
-`Std.Json` types, so programs usually import both units.
+`uses Std.Encoding.Json.Fields as Fields;` provides the accessors through `Fields.Name`. Values and objects keep the
+`Std.Encoding.Json` types, so programs usually import both units.
 
 ## Quick reference
 
@@ -83,11 +83,11 @@ fields are present; use the typed accessors for required fields.
 
 | Concern | Location |
 |---------|----------|
-| FPAS implementation | [`Fields.fpas`](../../../../lib/Std/Json/Fields.fpas) |
+| FPAS implementation | [`Fields.fpas`](../../../../lib/Std/Encoding/Json/Fields.fpas) |
 | Regression tests | [`json_fields_typed_access_test.fpas`](../../../../tests/stdlib/json/json_fields_typed_access_test.fpas) |
 
 ## See also
 
-- [`Std.Json`](json.md)
+- [`Std.Encoding.Json`](json.md)
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)

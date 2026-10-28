@@ -1,7 +1,7 @@
 program McpHandlerTest;
 
 uses
-  Std.Mcp as Mcp, Std.Http as Http, Std.Net.Utf8 as Utf8,
+  Std.Ai.Mcp as Mcp, Std.Net.Http as Http, Std.Text.Utf8 as Utf8,
   Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
 
 function Post(Access: Mcp.HttpAccess; Body: string): Http.Response;

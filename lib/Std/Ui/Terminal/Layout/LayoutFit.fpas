@@ -1,0 +1,51 @@
+unit Std.Ui.Terminal.Layout.LayoutFit;
+
+uses Std.Ui.Terminal.Geometry.Size as Size;
+
+function TuiLayoutFitOverflow(Minimum: integer; Available: integer): integer;
+begin
+  if Minimum > Available then
+    begin
+      return Minimum - Available;
+    end;
+  end if;
+
+  return 0;
+end function;
+
+// Reports whether allocated bounds satisfy a measured minimum.
+public type TuiLayoutFit = record
+  // Minimum value or size.
+  public Minimum: Size.TuiSize;
+  // Available terminal size.
+  public Available: Size.TuiSize;
+  // Amount by which the minimum size exceeds the available size.
+  public Overflow: Size.TuiSize;
+
+  // Creates a fit report from minimum and available sizes.
+  //
+  // Parameters:
+  // - `Minimum`: Minimum accepted value or extent.
+  // - `Available`: Available terminal size.
+  public static function Create(Minimum: Size.TuiSize; Available: Size.TuiSize): TuiLayoutFit;
+  begin
+    return TuiLayoutFit(
+      Minimum := Minimum,
+      Available := Available,
+      Overflow := Size.TuiSize.Create(
+        TuiLayoutFitOverflow(Minimum.Width, Available.Width),
+        TuiLayoutFitOverflow(Minimum.Height, Available.Height)
+      )
+    );
+  end function;
+
+  // Returns whether neither axis overflows.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  public function Fits(Self: TuiLayoutFit): boolean;
+  begin
+    return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0);
+  end function;
+end record;
+end unit;

@@ -1,7 +1,7 @@
 # TUI Background Events
 
 > Implemented. The current contract is documented in
-> [`Std.Tui` application host](../../pascal/std/tui/application.md).
+> [`Std.Ui.Terminal` application host](../../pascal/std/tui/application.md).
 
 Interactive applications can receive network, database, timer, and worker completions without
 blocking terminal input or rebuilding the TUI host. Updates and view construction remain serialized

@@ -2,7 +2,7 @@
 
 program EnvBasics;
 
-uses Std.Console as Console, Std.Env as Env;
+uses Std.Console as Console, Std.Os.Env as Env;
 
 begin
   Console.WriteLn('PATH set: ', Env.Exists('PATH'));

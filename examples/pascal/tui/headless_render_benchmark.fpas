@@ -5,8 +5,8 @@
 program TuiHeadlessRenderBenchmark;
 
 uses
-  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Tui as Tui,
-  Std.Parse as Parse;
+  Std.Os.Args as Args, Std.Console as Console, Std.Text.Format as Conv, Std.Time as Time, Std.Ui.Terminal as Tui,
+  Std.Text.Parse as Parse;
 
 const WarmupIterations: integer := 100;
 const DeltaMillis: integer := 16;

@@ -1,6 +1,6 @@
 program FsHandleLimitsTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/handle-limits.bin';
@@ -9,15 +9,19 @@ begin
   Test.AssertTrue(Fs.Read(File, 0) is Error(Fs.FsError.InvalidArgument('MaxBytes', _)));
   Test.AssertTrue(Fs.Read(File, -1) is Error(Fs.FsError.InvalidArgument('MaxBytes', _)));
   Test.AssertTrue(
-    Fs.Read(File, 1048577) is Error(Fs.FsError.LimitExceeded('Std.Fs.Read', 1048576))
+    Fs.Read(File, 1048577) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.Read', 1048576))
   );
   Test.AssertTrue(
     Fs.Seek(File, -1, Fs.SeekOrigin.Start) is Error(Fs.FsError.InvalidArgument('Offset', _))
   );
   Test.AssertEquals(0, Fs.Tell(File).Unwrap());
-  Test.AssertTrue(Fs.ReadLine(File) is Error(Fs.FsError.LimitExceeded('Std.Fs.ReadLine', 1048576)));
+  Test.AssertTrue(
+    Fs.ReadLine(File) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.ReadLine', 1048576))
+  );
   Test.AssertEquals(0, Fs.Tell(File).Unwrap());
-  Test.AssertTrue(Fs.ReadLine(File) is Error(Fs.FsError.LimitExceeded('Std.Fs.ReadLine', 1048576)));
+  Test.AssertTrue(
+    Fs.ReadLine(File) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.ReadLine', 1048576))
+  );
   Test.AssertEquals(0, Fs.Tell(File).Unwrap());
   const First := Fs.Read(File, 1).Unwrap();
   Test.AssertEquals(1, First.Length());
@@ -27,13 +31,15 @@ begin
   Test.AssertEquals(1048578, Fs.Tell(File).Unwrap());
   Test.AssertTrue(Fs.ReadLine(File).Unwrap() is None);
   Test.AssertEquals(0, Fs.Seek(File, 0, Fs.SeekOrigin.Start).Unwrap());
-  Test.AssertTrue(Fs.ReadLine(File) is Error(Fs.FsError.LimitExceeded('Std.Fs.ReadLine', 1048576)));
+  Test.AssertTrue(
+    Fs.ReadLine(File) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.ReadLine', 1048576))
+  );
   Test.AssertEquals(1048578, Fs.Seek(File, 0, Fs.SeekOrigin.FileEnd).Unwrap());
   Test.AssertTrue(Fs.ReadLine(File).Unwrap() is None);
   const Half: array of integer := array.Fill(256, 524289);
   const TooMany := Half.Concat(Half);
   Test.AssertTrue(
-    Fs.Write(File, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Fs.Write', 1048576))
+    Fs.Write(File, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.Write', 1048576))
   );
   Test.AssertEquals(1048578, Fs.Tell(File).Unwrap());
   Test.AssertEquals(1048578, Fs.FileSize(FileName).Unwrap());

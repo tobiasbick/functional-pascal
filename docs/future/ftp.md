@@ -2,7 +2,7 @@
 
 > Deferred. No implementation is scheduled.
 
-FTP and FTPS may later build on `Std.Net`. Neither protocol is currently implemented, and this plan
+FTP and FTPS may later build on `Std.Net.Sockets`. Neither protocol is currently implemented, and this plan
 does not commit the project to adding them.
 
 The binding [namespace specification](../specs/std-namespaces.md) assigns FTP

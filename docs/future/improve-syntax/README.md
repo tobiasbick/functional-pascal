@@ -58,7 +58,7 @@ Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP53: Standard-library namespaces](ap53-std-namespaces/README.md) | Medium | Recorded naming decisions; before byte buffers | Planned; documentation only, implementation not authorized |
+| [x] | [AP53: Standard-library namespaces](ap53-std-namespaces/README.md) | Medium | Recorded naming decisions; before byte buffers | Canonical namespaces, conversion split and both consumer migrations delivered |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

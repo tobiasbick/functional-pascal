@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Random as Random;
+uses Std.Math.Random as Random;
 
 begin
 // @example

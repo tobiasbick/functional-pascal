@@ -50,7 +50,7 @@ pub(super) fn array(value: &Value) -> Result<&[Value], Fault> {
     }
 }
 pub(super) fn raw(value: &Value) -> Result<RawJson, Fault> {
-    RawJson::parse(text(&record(value, "Std.Acp.Types.RawJson", 1)?[0])?).map_err(Fault::from)
+    RawJson::parse(text(&record(value, "Std.Ai.Acp.Types.RawJson", 1)?[0])?).map_err(Fault::from)
 }
 pub(super) fn unsigned(value: &Value) -> Result<usize, Fault> {
     if let Value::Integer(value) = value {
@@ -69,7 +69,7 @@ pub(super) fn timeout(value: &Value) -> Result<Option<u64>, Fault> {
 }
 
 pub(super) fn options(value: &Value) -> Result<(Version, Limits), Fault> {
-    let fields = record(value, "Std.Acp.Options", 6)?;
+    let fields = record(value, "Std.Ai.Acp.Options", 6)?;
     let versions = array(&fields[2])?;
     if versions.is_empty() || versions.len() > 2 {
         return Err(Fault::InvalidArgument("SupportedVersions"));
@@ -90,14 +90,14 @@ pub(super) fn options(value: &Value) -> Result<(Version, Limits), Fault> {
         }
         seen[index] = true;
     }
-    let experimental = record(&fields[3], "Std.Acp.ExperimentalOptions", 7)?;
+    let experimental = record(&fields[3], "Std.Ai.Acp.ExperimentalOptions", 7)?;
     if experimental
         .iter()
         .any(|value| !matches!(value, Value::Boolean(_)))
     {
         return Err(Fault::InvalidArgument("ExperimentalOptions"));
     }
-    let fields = record(&fields[4], "Std.Acp.Limits", 13)?
+    let fields = record(&fields[4], "Std.Ai.Acp.Limits", 13)?
         .iter()
         .map(unsigned)
         .collect::<Result<Vec<_>, _>>()?;
@@ -121,7 +121,7 @@ pub(super) fn options(value: &Value) -> Result<(Version, Limits), Fault> {
 }
 
 pub(super) fn launch(value: &Value) -> Result<AcpLaunch, Fault> {
-    let fields = record(value, "Std.Acp.Launch", 4)?;
+    let fields = record(value, "Std.Ai.Acp.Launch", 4)?;
     let arguments = array(&fields[1])?;
     let environment = array(&fields[3])?;
     if arguments.len() > 4096 {
@@ -143,7 +143,7 @@ pub(super) fn launch(value: &Value) -> Result<AcpLaunch, Fault> {
         environment: environment
             .iter()
             .map(|value| {
-                let fields = record(value, "Std.Acp.EnvironmentVariable", 2)?;
+                let fields = record(value, "Std.Ai.Acp.EnvironmentVariable", 2)?;
                 Ok((
                     text(&fields[0])?.into(),
                     optional(&fields[1])?

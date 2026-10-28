@@ -1,4 +1,4 @@
-//! `Std.Proc` symbol names and registry group.
+//! `Std.Os.Proc` symbol names and registry group.
 
 std_symbol!(STD_PROC_ENVIRONMENT_VARIABLE = std_proc!("EnvironmentVariable"));
 std_symbol!(STD_PROC_PROCESS_OPTIONS = std_proc!("ProcessOptions"));
@@ -20,13 +20,13 @@ std_symbol!(STD_PROC_RUN_INTERACTIVE = std_proc!("RunInteractive"));
 std_symbol!(STD_PROC_TERMINATE = std_proc!("Terminate"));
 std_symbol!(STD_PROC_CLOSE = std_proc!("Close"));
 
-/// Qualified name of the `Std.Proc.ProcessOutput` record.
+/// Qualified name of the `Std.Os.Proc.ProcessOutput` record.
 pub const STD_PROC_PROCESS_OUTPUT: &str = std_proc!("ProcessOutput");
-/// Qualified name of `Std.Proc.CurrentExecutable`.
+/// Qualified name of `Std.Os.Proc.CurrentExecutable`.
 pub const STD_PROC_CURRENT_EXECUTABLE: &str = std_proc!("CurrentExecutable");
-/// Qualified name of `Std.Proc.Run`.
+/// Qualified name of `Std.Os.Proc.Run`.
 pub const STD_PROC_RUN: &str = std_proc!("Run");
-/// Qualified name of `Std.Proc.RunCapture`.
+/// Qualified name of `Std.Os.Proc.RunCapture`.
 pub const STD_PROC_RUN_CAPTURE: &str = std_proc!("RunCapture");
 
 pub(in crate::std_units) const STD_PROC_SYMBOLS: &[&str] = &[

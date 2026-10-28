@@ -45,7 +45,7 @@ fn definition_returns_source_names_for_aliases_members_self_and_callable_values(
 #[test]
 fn builtin_without_source_is_distinct_from_missing_and_queries_never_execute() {
     let f = Fixture::new(
-        "program T;\nuses Std.Fs as Fs;\nvar X: integer := 1;\nbegin\n  discard Fs.WriteText('executed','bad');\n  discard 'text'.Length();\nend.\n",
+        "program T;\nuses Std.Io.Fs as Fs;\nvar X: integer := 1;\nbegin\n  discard Fs.WriteText('executed','bad');\n  discard 'text'.Length();\nend.\n",
     );
     let refs = f.run(&["refs", "main.fpas:3:8"], 3);
     assert_eq!(refs["target"]["origin"], "builtin");

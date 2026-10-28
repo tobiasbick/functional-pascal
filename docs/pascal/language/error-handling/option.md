@@ -1,6 +1,6 @@
 # Option
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 `Option of T` represents a value that may be absent:
 

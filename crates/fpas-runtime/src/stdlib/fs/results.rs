@@ -107,7 +107,7 @@ mod tests {
             let resources = ["source".into(), "target".into()];
             let returned = result(
                 &crate::stdlib::intrinsics::TEST_AGGREGATES,
-                "Std.Fs.CopyFile",
+                "Std.Io.Fs.CopyFile",
                 &resources,
                 Err::<(), _>(Failure::Io(Error::new(kind, "unrelated explanation"))),
                 |()| Value::Boolean(true),
@@ -124,8 +124,11 @@ mod tests {
             let Value::Enum(cause) = error.body().values.last().expect("cause") else {
                 panic!("host cause");
             };
-            assert_eq!(cause.body().layout.type_name, "Std.Errors.HostError");
-            assert_eq!(cause.body().values[0], Value::Str("Std.Fs.CopyFile".into()));
+            assert_eq!(cause.body().layout.type_name, "Std.Os.Errors.HostError");
+            assert_eq!(
+                cause.body().values[0],
+                Value::Str("Std.Io.Fs.CopyFile".into())
+            );
             assert_eq!(
                 cause.body().values[1],
                 Value::Array(vec![Value::Str("source".into()), Value::Str("target".into())].into())

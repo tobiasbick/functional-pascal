@@ -14,7 +14,7 @@ pub(super) const MAX_BYTES: usize = 1_048_576;
 pub(super) fn read_bytes(path: &str) -> Result<Vec<u8>, Failure> {
     let file = File::open(path)?;
     if file.metadata()?.len() > MAX_BYTES as u64 {
-        return Err(limit("Std.Fs.ReadBytes"));
+        return Err(limit("Std.Io.Fs.ReadBytes"));
     }
     read_limited(file)
 }
@@ -25,7 +25,7 @@ pub(super) fn read_limited(reader: impl Read) -> Result<Vec<u8>, Failure> {
     let mut bytes = Vec::new();
     limited.read_to_end(&mut bytes)?;
     if bytes.len() > MAX_BYTES {
-        return Err(limit("Std.Fs.ReadBytes"));
+        return Err(limit("Std.Io.Fs.ReadBytes"));
     }
     Ok(bytes)
 }
@@ -36,7 +36,7 @@ pub(super) fn write_bytes(
     location: SourceLocation,
 ) -> Result<Result<(), Failure>, StdError> {
     if values.len() > MAX_BYTES {
-        return Ok(Err(limit("Std.Fs.WriteBytes")));
+        return Ok(Err(limit("Std.Io.Fs.WriteBytes")));
     }
     for (offset, value) in values.iter().enumerate() {
         let value = pop_int(value, location)?;

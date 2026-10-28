@@ -52,7 +52,7 @@ impl Drop for Fixture {
 #[cfg(unix)]
 fn options_and_partial_errors_survive_cached_units_and_source_free_images() {
     let source = r#"program ProcessImages;
-uses ProcessBridge as Bridge, Std.Proc as Proc, Std.Test as Test;
+uses ProcessBridge as Bridge, Std.Os.Proc as Proc, Std.Test as Test;
 begin
   const Defaults: Bridge.Options := Bridge.Defaults();
   Test.AssertTrue(Defaults.WorkingDirectory is None);
@@ -72,7 +72,7 @@ begin
   case Bridge.Capture('sh', ['-c', 'printf abcdefgh'], Limited) of
     when Ok(_): Test.Fail('Expected typed output limit');
     when Error(Proc.ProcError.LimitExceeded(const Operation, const Resource, const Limit, const Stdout, const Stderr)):
-      Test.AssertEquals('Std.Proc.RunCaptureWithOptions', Operation);
+      Test.AssertEquals('Std.Os.Proc.RunCaptureWithOptions', Operation);
       Test.AssertEquals('stdout bytes', Resource);
       Test.AssertEquals(4, Limit);
       Test.AssertEquals('abcd', Stdout);
@@ -82,7 +82,7 @@ begin
 end."#;
     let fixture = Fixture::new(source);
     fs::write(fixture.0.join("ProcessBridge.fpas"), r#"unit ProcessBridge;
-uses Std.Proc as Proc;
+uses Std.Os.Proc as Proc;
 public type Options = Proc.ProcessOptions;
 public type Failure = Proc.ProcError;
 public function Defaults(): Options;
@@ -129,7 +129,7 @@ end unit;"#).expect("bridge");
 #[test]
 fn seeded_scheduling_allows_pure_defaults() {
     let fixture = Fixture::new(
-        "program Defaults; uses Std.Proc as Proc, Std.Test as Test; begin const Options := Proc.DefaultOptions(); Test.AssertEquals(1048576, Options.MaxOutputBytes); const StartOptions := Proc.DefaultStartOptions(); Test.AssertTrue(StartOptions.WorkingDirectory is None); Test.AssertTrue(StartOptions.Environment.IsEmpty()); end.",
+        "program Defaults; uses Std.Os.Proc as Proc, Std.Test as Test; begin const Options := Proc.DefaultOptions(); Test.AssertEquals(1048576, Options.MaxOutputBytes); const StartOptions := Proc.DefaultStartOptions(); Test.AssertTrue(StartOptions.WorkingDirectory is None); Test.AssertTrue(StartOptions.Environment.IsEmpty()); end.",
     );
     let output = fixture.run(&["debug", "app.fpasprj", "--schedule-seed", "42"]);
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("debug JSON");
@@ -141,7 +141,7 @@ fn seeded_scheduling_allows_pure_defaults() {
 #[cfg(unix)]
 fn seeded_scheduling_rejects_processes_before_spawn() {
     let fixture = Fixture::new(
-        "program Effect; uses Std.Proc as Proc; begin discard Proc.RunWithOptions('sh', ['-c', 'touch spawned'], Proc.DefaultOptions()).Unwrap(); end.",
+        "program Effect; uses Std.Os.Proc as Proc; begin discard Proc.RunWithOptions('sh', ['-c', 'touch spawned'], Proc.DefaultOptions()).Unwrap(); end.",
     );
     let output = fixture.invoke(&["debug", "app.fpasprj", "--schedule-seed", "42"]);
     assert!(!output.status.success());
@@ -158,7 +158,7 @@ fn options_and_legacy_runs_forward_child_stderr_as_json() {
         "Proc.RunWithOptions('sh', ['-c', 'echo child-error >&2'], Proc.DefaultOptions())",
     ] {
         let fixture = Fixture::new(&format!(
-            "program Forward; uses Std.Proc as Proc, Std.Test as Test; begin Test.AssertEquals(0, {expression}.Unwrap()); end."
+            "program Forward; uses Std.Os.Proc as Proc, Std.Test as Test; begin Test.AssertEquals(0, {expression}.Unwrap()); end."
         ));
         let output = fixture.run(&["run", "--diagnostics", "json", "app.fpasprj"]);
         let text = String::from_utf8_lossy(&output.stderr);
@@ -177,7 +177,7 @@ fn options_and_legacy_runs_forward_child_stderr_as_json() {
 #[cfg(unix)]
 fn killed_debug_worker_cleans_reparented_native_descendants() {
     let fixture = Fixture::new(
-        "program WorkerDeath; uses Std.Proc as Proc; begin discard Proc.Run('sh', ['-c', '(printf ready > started; sleep 2; printf leaked > escaped) & while [ ! -f started ]; do sleep 0.01; done; kill -KILL $PPID; wait']).Unwrap(); end.",
+        "program WorkerDeath; uses Std.Os.Proc as Proc; begin discard Proc.Run('sh', ['-c', '(printf ready > started; sleep 2; printf leaked > escaped) & while [ ! -f started ]; do sleep 0.01; done; kill -KILL $PPID; wait']).Unwrap(); end.",
     );
     let output = fixture.invoke(&["debug", "app.fpasprj"]);
     assert_eq!(output.status.code(), Some(3), "{output:?}");

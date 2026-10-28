@@ -1,11 +1,11 @@
-# `Std.Bits`
+# `Std.Math.Bits`
 
 Bit operations on the signed 64-bit representation of `integer` values.
 Use these functions for integer bits; the logical operators accept `boolean`.
 
 ## Importing and names
 
-Import `uses Std.Bits as Bits;` before calling these functions. Use
+Import `uses Std.Math.Bits as Bits;` before calling these functions. Use
 `Bits.BitAnd` and the other alias-qualified names under the ordinary
 [unit import rules](../../program-structure/units.md). Every parameter and
 return value is an `integer`. Arguments are evaluated from left to right,
@@ -14,7 +14,7 @@ exactly once; both arguments of a binary function are always evaluated.
 ```pascal id=example-1
 program BitExample;
 
-uses Std.Bits as Bits, Std.Console as Console;
+uses Std.Math.Bits as Bits, Std.Console as Console;
 
 begin
   Console.WriteLn(Bits.BitAnd(12, 10));
@@ -24,7 +24,7 @@ end.
 
 ## Quick reference
 
-Requires `uses Std.Bits as Bits;`.
+Requires `uses Std.Math.Bits as Bits;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -104,7 +104,7 @@ debug and release builds and in debugger watches.
 | Semantic signatures | [`fpas-sema/src/std_registry/loaded/bits.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/bits.rs) |
 | Intrinsic identifiers | [`fpas-code/src/intrinsic/bits.rs`](../../../../crates/fpas-code/src/intrinsic/bits.rs) |
 | Compiler call mapping | [`fpas-compiler/src/intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
-| Generated editor declarations | [`lib/api/Std/Bits.fpas`](../../../../lib/api/Std/Bits.fpas) |
+| Generated editor declarations | [`lib/api/Std/Math.Bits.fpas`](../../../../lib/api/Std/Math.Bits.fpas) |
 | FPAS regressions | [`tests/stdlib/bits/`](../../../../tests/stdlib/bits) |
 
 ## See also

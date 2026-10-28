@@ -13,14 +13,14 @@ fn canonical_parsers_have_result_signatures_and_text_parameter_labels() {
         ("HexInt", "integer", "FF"),
     ] {
         check_ok(&format!(
-            "program T; uses Std.Parse as Numbers; begin
+            "program T; uses Std.Text.Parse as Numbers; begin
             const Direct: Result of ({payload}, Numbers.ParseError) := Numbers.{parser}('{text}');
             const Named: Result of ({payload}, Numbers.ParseError) := Numbers.{parser}(tExT := '{text}');
             const Reader: function(Text: string): Result of ({payload}, Numbers.ParseError) := Numbers.{parser};
             const ViaValue := Reader(Text := '{text}'); end."
         ));
         let errors = check_errors(&format!(
-            "program T; uses Std.Parse as Numbers; begin const Plain: {payload} := Numbers.{parser}('{text}'); end."
+            "program T; uses Std.Text.Parse as Numbers; begin const Plain: {payload} := Numbers.{parser}('{text}'); end."
         ));
         assert_eq!(errors.len(), 1, "{errors:?}");
         assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH, "{errors:?}");
@@ -55,7 +55,7 @@ fn retired_parsers_and_native_helpers_explain_the_selected_replacement() {
         ("Ok(1).UnwrapOr(Default := 0)", "case Value"),
     ] {
         let errors = check_errors(&format!(
-            "program T; uses Std.Parse as Numbers, Std.Conv as Conversions; begin discard {call}; end."
+            "program T; uses Std.Text.Parse as Numbers, Std.Text.Format as Conversions; begin discard {call}; end."
         ));
         assert_eq!(errors.len(), 1, "{call}: {errors:?}");
         assert_eq!(errors[0].code, SEMA_UNKNOWN_NAME, "{errors:?}");
@@ -68,14 +68,14 @@ fn retired_parsers_and_native_helpers_explain_the_selected_replacement() {
         );
     }
     let errors = check_errors(
-        "program T; uses Std.Conv as Convert; begin const Parse: integer := 0; discard Convert.StrToInt('1'); end.",
+        "program T; uses Std.Text.Format as Convert; begin const Parse: integer := 0; discard Convert.StrToInt('1'); end.",
     );
     assert_eq!(errors.len(), 1, "{errors:?}");
     assert!(
         errors[0]
             .help
             .as_deref()
-            .is_some_and(|help| help.contains("uses Std.Parse as Parse2")),
+            .is_some_and(|help| help.contains("uses Std.Text.Parse as Parse2")),
         "{errors:?}"
     );
     check_ok(

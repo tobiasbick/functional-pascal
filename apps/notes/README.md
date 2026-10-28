@@ -1,7 +1,7 @@
 # Notes
 
 Notes is a modern local-first terminal note-taking application built entirely
-with Functional Pascal and [`Std.Tui`](../../docs/pascal/std/tui/README.md).
+with Functional Pascal and [`Std.Ui.Terminal`](../../docs/pascal/std/tui/README.md).
 It demonstrates a complete multi-unit application rather than a focused syntax
 example.
 
@@ -90,7 +90,7 @@ outside the current filter, clears the query to keep that note visible.
 | `Esc` | Close an overlay; otherwise do nothing |
 
 Mouse selection, input placement, buttons, terminal resize, and text-area
-scrolling use the normal `Std.Tui` routing behavior.
+scrolling use the normal `Std.Ui.Terminal` routing behavior.
 
 ## `.note` format
 
@@ -117,7 +117,7 @@ Unknown or malformed files are not silently discarded. Notes keeps them as
 load issues and reports their count in the status text. Unsupported format
 versions return an explicit parse error.
 
-Notes uses `Std.Fs.WriteTextAtomic` when creating or replacing files. The
+Notes uses `Std.Io.Fs.WriteTextAtomic` when creating or replacing files. The
 current note is saved with `Ctrl+S`, before switching notes, when pinning or
 archiving, and through the save-and-quit action. Editing remains in memory and
 does not create periodic TUI ticks or write once per keystroke.

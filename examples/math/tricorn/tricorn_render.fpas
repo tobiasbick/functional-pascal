@@ -3,7 +3,7 @@
 unit Tricorn.Render;
 
 uses
-  Std.Console as Console, Std.Tasks as StdTasks, Std.Conv as Conv, Std.Math as Math,
+  Std.Console as Console, Std.Tasks as StdTasks, Std.Math as Math,
   Tricorn.Color as Color;
 
 type Complex = record
@@ -64,7 +64,7 @@ begin
     end;
   end if;
   const MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
-  const Smooth: real := Conv.IntToReal(N) + 1.0 -
+  const Smooth: real := Math.IntToReal(N) + 1.0 -
     (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
@@ -93,13 +93,13 @@ begin
       HeightRange := 1;
     end;
   end if;
-  const Wr: real := Conv.IntToReal(WidthRange);
-  const Hr: real := Conv.IntToReal(HeightRange);
-  const cy: real := YMax - Conv.IntToReal(Py) / Hr * (YMax - YMin);
+  const Wr: real := Math.IntToReal(WidthRange);
+  const Hr: real := Math.IntToReal(HeightRange);
+  const cy: real := YMax - Math.IntToReal(Py) / Hr * (YMax - YMin);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      const cx: real := XMin + Conv.IntToReal(Px) / Wr * (XMax - XMin);
+      const cx: real := XMin + Math.IntToReal(Px) / Wr * (XMax - XMin);
       Row.PushInPlace(Iterate(Complex.Create(cx, cy), MaxIter));
     end;
   end for;
@@ -112,7 +112,7 @@ begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
   const Phase: real := Math.Frac(EscapeValue * 0.08);
-  const Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
+  const Index: integer := Math.Clamp(Math.Trunc(Phase * Math.IntToReal(Count)), 0, Count - 1);
   return Ramp[Index];
 end function;
 

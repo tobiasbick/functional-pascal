@@ -1,6 +1,6 @@
 # Option operations
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 Helper functions for `Option of T` values. See [Error handling](../error-handling/README.md) for the type itself, constructors (`Some`, `None`), the `try` operator, and `case` destructuring.
 

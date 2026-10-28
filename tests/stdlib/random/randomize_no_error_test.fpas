@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console as Console, Std.Random as Random;
+uses Std.Console as Console, Std.Math.Random as Random;
 
 begin
   Random.Randomize();

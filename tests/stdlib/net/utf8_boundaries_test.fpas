@@ -1,6 +1,6 @@
 program Utf8BoundariesTest;
 
-uses Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 procedure Invalid(Bytes: array of integer);
 begin

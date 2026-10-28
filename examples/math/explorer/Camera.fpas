@@ -1,7 +1,7 @@
 // Viewport geometry shared by the interactive fractal examples.
 unit Fractal.Camera;
 
-uses Std.Conv as Conv, Std.Math as Math;
+uses Std.Math as Math;
 
 // Complex-plane viewport and renderer settings.
 public type ExplorerCamera = record
@@ -21,7 +21,7 @@ public type ExplorerCamera = record
   begin
     const SafeWidth: integer := Math.Max(Width, 1);
     const SafeHeight: integer := Math.Max(Height, 1);
-    return Self.SpanY * (Conv.IntToReal(SafeWidth) / Conv.IntToReal(SafeHeight)) * 0.5;
+    return Self.SpanY * (Math.IntToReal(SafeWidth) / Math.IntToReal(SafeHeight)) * 0.5;
   end function;
 
   // Left viewport boundary.

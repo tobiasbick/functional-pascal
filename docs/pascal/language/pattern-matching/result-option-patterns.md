@@ -1,6 +1,6 @@
 # Result and Option patterns
 
-The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Console as Console;`.
 
 `Some`, `Ok`, and `Error` match one explicit payload, either by position or
 with the case-insensitive label `Value`: `Some(Value := const N)`,

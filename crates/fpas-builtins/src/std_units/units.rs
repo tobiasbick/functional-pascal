@@ -12,32 +12,32 @@ macro_rules! standard_unit_names {
 }
 
 standard_unit_names! {
-    STD_UNIT_MCP = "Std.Mcp";
-    STD_UNIT_MCP_TYPES = "Std.Mcp.Types";
-    STD_UNIT_ACP = "Std.Acp";
-    STD_UNIT_ACP_HOST = "Std.Acp.Host";
-    STD_UNIT_ACP_EXPERIMENTAL = "Std.Acp.Experimental";
-    STD_UNIT_ACP_V2 = "Std.Acp.V2";
-    STD_UNIT_ACP_TYPES = "Std.Acp.Types";
-    STD_UNIT_ERRORS = "Std.Errors";
-    STD_UNIT_SERVER = "Std.Server";
-    STD_UNIT_ARGS = "Std.Args";
+    STD_UNIT_MCP = "Std.Ai.Mcp";
+    STD_UNIT_MCP_TYPES = "Std.Ai.Mcp.Types";
+    STD_UNIT_ACP = "Std.Ai.Acp";
+    STD_UNIT_ACP_HOST = "Std.Ai.Acp.Host";
+    STD_UNIT_ACP_EXPERIMENTAL = "Std.Ai.Acp.Experimental";
+    STD_UNIT_ACP_V2 = "Std.Ai.Acp.V2";
+    STD_UNIT_ACP_TYPES = "Std.Ai.Acp.Types";
+    STD_UNIT_ERRORS = "Std.Os.Errors";
+    STD_UNIT_SERVER = "Std.Net.Server";
+    STD_UNIT_ARGS = "Std.Os.Args";
     STD_UNIT_CLI = "Std.Cli";
-    STD_UNIT_CALENDAR = "Std.Calendar";
-    STD_UNIT_ENV = "Std.Env";
-    STD_UNIT_PROC = "Std.Proc";
-    STD_UNIT_PATH = "Std.Path";
-    STD_UNIT_FS = "Std.Fs";
+    STD_UNIT_CALENDAR = "Std.Time.Calendar";
+    STD_UNIT_ENV = "Std.Os.Env";
+    STD_UNIT_PROC = "Std.Os.Proc";
+    STD_UNIT_PATH = "Std.Io.Path";
+    STD_UNIT_FS = "Std.Io.Fs";
     STD_UNIT_TIME = "Std.Time";
     STD_UNIT_VERSION = "Std.Version";
     STD_UNIT_CONSOLE = "Std.Console";
     STD_UNIT_STR = "Std.Str";
-    STD_UNIT_CONV = "Std.Conv";
-    STD_UNIT_PARSE = "Std.Parse";
+    STD_UNIT_FORMAT = "Std.Text.Format";
+    STD_UNIT_PARSE = "Std.Text.Parse";
     STD_UNIT_MATH = "Std.Math";
-    STD_UNIT_BITS = "Std.Bits";
-    STD_UNIT_NET = "Std.Net";
-    STD_UNIT_RANDOM = "Std.Random";
+    STD_UNIT_BITS = "Std.Math.Bits";
+    STD_UNIT_NET = "Std.Net.Sockets";
+    STD_UNIT_RANDOM = "Std.Math.Random";
     STD_UNIT_CRYPTO = "Std.Crypto";
     STD_UNIT_ENCODING = "Std.Encoding";
     STD_UNIT_ARRAY = "Std.Arrays";
@@ -45,9 +45,9 @@ standard_unit_names! {
     STD_UNIT_OPTION = "Std.Options";
     STD_UNIT_TASK = "Std.Tasks";
     STD_UNIT_DICT = "Std.Dictionaries";
-    STD_UNIT_JSON = "Std.Json";
-    STD_UNIT_TOML = "Std.Toml";
-    STD_UNIT_TUI = "Std.Tui";
+    STD_UNIT_JSON = "Std.Encoding.Json";
+    STD_UNIT_TOML = "Std.Encoding.Toml";
+    STD_UNIT_TUI = "Std.Ui.Terminal";
     STD_UNIT_TEST = "Std.Test";
 }
 
@@ -69,7 +69,7 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
     STD_UNIT_FS,
     STD_UNIT_TIME,
     STD_UNIT_CONSOLE,
-    STD_UNIT_CONV,
+    STD_UNIT_FORMAT,
     STD_UNIT_PARSE,
     STD_UNIT_MATH,
     STD_UNIT_BITS,
@@ -103,7 +103,7 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_FS,
     STD_UNIT_TIME,
     STD_UNIT_CONSOLE,
-    STD_UNIT_CONV,
+    STD_UNIT_FORMAT,
     STD_UNIT_PARSE,
     STD_UNIT_MATH,
     STD_UNIT_BITS,

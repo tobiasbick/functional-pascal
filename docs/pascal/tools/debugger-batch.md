@@ -42,7 +42,7 @@ covering the program and resolved dependencies, including sibling projects.
 | `--gc-cell-threshold N` | Positive minimum cell-allocation threshold; default 4096. |
 | `--gc-mutation-threshold N` | Positive minimum successful-mutation threshold; default 8192. |
 | `--gc-poll-interval N` | Positive minimum completed-batch interval; default 256. |
-| `-- arguments...` | Program arguments, available through `Std.Args`. |
+| `-- arguments...` | Program arguments, available through `Std.Os.Args`. |
 
 The collection overrides also apply to JSONL/DAP; see [scheduling](../program-structure/cli.md#collection-scheduling).
 Batch-specific inspection/input options cannot be combined with an explicit
@@ -193,7 +193,7 @@ starts before target/script preparation and includes execution and capture.
 On timeout or output overflow, the parent requests a cooperative stop, allows at
 most 250 ms grace, then terminates the worker's process tree and reaps it. The
 same Unix session / Windows process-tree owner serves the test runner. Unix
-cleanup includes nested process groups created by `Std.Proc`, including children
+cleanup includes nested process groups created by `Std.Os.Proc`, including children
 reparented after the worker dies. Descendants must remain in the worker's session.
 Private request/result/cancellation files are removed after the invocation.
 

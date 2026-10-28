@@ -1,0 +1,161 @@
+// Public buffered, streaming, server, and SSE HTTP API.
+//
+// Handbook: `docs/pascal/std/network/http.md`.
+unit Std.Net.Http;
+
+uses
+  Std.Net.Http.Client as Client, Std.Net.Http.Headers as Headers, Std.Net.Http.Server as Server,
+  Std.Net.Http.ServerLoop as ServerLoop, Std.Net.Http.Sse as Sse, Std.Net.Http.Stream as Stream,
+  Std.Net.Http.Types as Types, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
+
+// One HTTP field name and value.
+public type HttpError = Types.HttpError;
+
+public type Header = Types.Header;
+
+// One complete non-streaming HTTP request.
+public type Request = Types.Request;
+
+// One complete non-streaming HTTP response.
+public type Response = Types.Response;
+
+// Status, headers, and a pull-based response body.
+public type StreamResponse = Types.StreamResponse;
+
+// One request accepted by the HTTP server helpers.
+public type ServerRequest = Types.ServerRequest;
+
+// One complete response written by the HTTP server helpers.
+public type ServerResponse = Types.ServerResponse;
+
+// Limits and concurrency used by the HTTP server loop.
+public type ServerOptions = Types.ServerOptions;
+
+// Maps one accepted request to its complete response.
+public type RequestHandler = Types.RequestHandler;
+
+// Opaque pull-based HTTP response body.
+public type BodyStream = Types.BodyStream;
+
+// One decoded Server-Sent Events message.
+public type SseEvent = Types.SseEvent;
+
+// Opaque incremental Server-Sent Events decoder.
+public type SseDecoder = Types.SseDecoder;
+
+// Sends one HTTP/1.1 request and follows bounded redirects.
+//
+// Parameters:
+// - `RequestValue`: Complete request and its transport limits.
+public function Send(RequestValue: Types.Request): result of (Types.Response, Types.HttpError);
+begin
+  return Client.Send(RequestValue);
+end function;
+
+// Sends one HTTP/1.1 request, follows bounded redirects, and returns the final response stream.
+//
+// Parameters:
+// - `RequestValue`: Complete request and its transport limits.
+public function OpenStream(RequestValue: Types.Request): result of (Types.StreamResponse, Types.HttpError);
+begin
+  return Client.OpenStream(RequestValue);
+end function;
+
+// Reads at most MaxBytes decoded body bytes. An empty array means end of stream.
+//
+// Parameters:
+// - `StreamValue`: Open response-body handle.
+// - `MaxBytes`: Maximum number of decoded bytes to return.
+public function ReadStream(StreamValue: Types.BodyStream; MaxBytes: integer): result of (array of integer, Types.HttpError);
+begin
+  return Stream.ReadBody(StreamValue, MaxBytes);
+end function;
+
+// Closes a streaming response body before end of stream.
+//
+// Parameters:
+// - `StreamValue`: Open response-body handle to close.
+public function CloseStream(StreamValue: Types.BodyStream): result of (boolean, Types.HttpError);
+begin
+  return Stream.CloseBody(StreamValue);
+end function;
+
+// Reads one bounded HTTP/1.x request from a connected client.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `MaxHeaderBytes`: Maximum request-head size in bytes.
+// - `MaxBodyBytes`: Maximum request-body size in bytes.
+public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of (Types.ServerRequest, Types.HttpError);
+begin
+  return Server.ReadRequest(Connection, MaxHeaderBytes, MaxBodyBytes);
+end function;
+
+// Writes one complete HTTP/1.1 response without closing the connection.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `ResponseValue`: Complete response to serialize and write.
+public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): result of (boolean, Types.HttpError);
+begin
+  return Server.WriteResponse(Connection, ResponseValue);
+end function;
+
+// Accepts requests in bounded concurrent batches and dispatches each one to Handler.
+//
+// Parameters:
+// - `Listener`: Open TCP or TLS listener.
+// - `Options`: Request limits and server-loop bounds.
+// - `Handler`: Callback that maps each accepted request to a response.
+public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of (boolean, Types.HttpError);
+begin
+  return ServerLoop.Serve(Listener, Options, Handler);
+end function;
+
+// Creates an incremental Server-Sent Events decoder with one bounded event buffer.
+//
+// Parameters:
+// - `MaxEventBytes`: Maximum buffered bytes for one incomplete event.
+public function CreateSseDecoder(MaxEventBytes: integer): result of (Types.SseDecoder, Types.HttpError);
+begin
+  return Sse.Create(MaxEventBytes);
+end function;
+
+// Feeds one byte fragment and returns every complete event decoded from it.
+//
+// Parameters:
+// - `Decoder`: Open incremental SSE decoder.
+// - `Bytes`: Next response-body byte fragment.
+public function FeedSse(Decoder: Types.SseDecoder; Bytes: array of integer): result of (array of Types.SseEvent, Types.HttpError);
+begin
+  return Sse.Feed(Decoder, Bytes);
+end function;
+
+// Flushes the final SSE line and prevents further input.
+//
+// Parameters:
+// - `Decoder`: Open incremental SSE decoder to finish.
+public function FinishSse(Decoder: Types.SseDecoder): result of (array of Types.SseEvent, Types.HttpError);
+begin
+  return Sse.Finish(Decoder);
+end function;
+
+// Finds the first response header with a case-insensitive name.
+//
+// Parameters:
+// - `ResponseValue`: Response whose headers are searched.
+// - `Name`: Case-insensitive header name.
+public function HeaderValue(ResponseValue: Types.Response; Name: string): option of string;
+begin
+  return Headers.Find(ResponseValue.Headers, Name);
+end function;
+
+// Decodes a response body as validated UTF-8 text.
+//
+// Parameters:
+// - `ResponseValue`: Buffered response whose body is decoded.
+public function BodyText(ResponseValue: Types.Response): result of (string, Types.HttpError);
+begin
+  return Utf8.Decode(ResponseValue.Body).MapError(Types.HttpError.Encoding);
+end function;
+end unit;

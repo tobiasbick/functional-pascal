@@ -1,6 +1,6 @@
 program McpTools;
 
-uses Demo.ToolStore as Store, Std.Mcp as Mcp, Std.Args as Args, Std.Console as Console;
+uses Demo.ToolStore as Store, Std.Ai.Mcp as Mcp, Std.Os.Args as Args, Std.Console as Console;
 
 begin
   const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();

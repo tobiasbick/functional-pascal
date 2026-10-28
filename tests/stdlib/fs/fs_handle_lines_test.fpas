@@ -1,6 +1,6 @@
 program FsHandleLinesTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/handle-lines.bin';

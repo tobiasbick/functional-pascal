@@ -90,7 +90,7 @@ fn not_found(lookup: &ApiLookup) -> CliFailure {
         ),
     )
     .with_help(format!(
-        "{closest}Qualify a routine with its unit (`fpas doc Std.Fs.ReadText`) and an operation with its type (`fpas doc string.TrimLeft`); `fpas doc Std.Fs` lists a unit."
+        "{closest}Qualify a routine with its unit (`fpas doc Std.Io.Fs.ReadText`) and an operation with its type (`fpas doc string.TrimLeft`); `fpas doc Std.Io.Fs` lists a unit."
     ))
 }
 

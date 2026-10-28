@@ -30,7 +30,7 @@ fn wall_clock_timeout_contains_a_blocked_native_call() {
 #[test]
 fn native_descendants_are_killed_with_the_worker() {
     let f = Fixture::new(
-        "program Tree; uses Std.Proc as Proc; begin discard Proc.Run('sh', ['-c', '(sleep 2; printf leaked > escaped) & wait']).Unwrap(); end.",
+        "program Tree; uses Std.Os.Proc as Proc; begin discard Proc.Run('sh', ['-c', '(sleep 2; printf leaked > escaped) & wait']).Unwrap(); end.",
     );
     f.run(&["debug", "main.fpas", "--timeout", "1"], 3);
     std::thread::sleep(Duration::from_millis(1200));
@@ -40,7 +40,7 @@ fn native_descendants_are_killed_with_the_worker() {
 #[test]
 fn worker_death_still_yields_a_complete_error() {
     let f = Fixture::new(
-        "program Die; uses Std.Proc as Proc; begin discard Proc.Run('sh', ['-c', 'kill -KILL $PPID']).Unwrap(); end.",
+        "program Die; uses Std.Os.Proc as Proc; begin discard Proc.Run('sh', ['-c', 'kill -KILL $PPID']).Unwrap(); end.",
     );
     let r = f.run(&["debug", "main.fpas"], 3);
     assert_eq!(r["outcome"], "error");

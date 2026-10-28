@@ -51,7 +51,7 @@ fn functional_and_mutating_array_operations_keep_position_history_in_images() {
 #[test]
 fn invalid_index_requests_do_not_execute_any_initializer() {
     let f = Fixture::new(
-        "program T; uses Std.Fs as Fs; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); procedure F(); begin var Items: array of integer := []; const Text: string := 'x'; end procedure; begin F(); end.",
+        "program T; uses Std.Io.Fs as Fs; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); procedure F(); begin var Items: array of integer := []; const Text: string := 'x'; end procedure; begin F(); end.",
     );
     for bad in [
         "F::Items[-1]",

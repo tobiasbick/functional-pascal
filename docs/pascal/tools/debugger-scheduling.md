@@ -80,7 +80,7 @@ cannot lose all their turns to a randomly preferred peer.
 
 Only shuffles consume the private SplitMix64 stream. Descending Fisher–Yates
 uses unsigned 64-bit arithmetic and rejection sampling for each index. Neither
-host entropy nor program `Std.Random` supplies scheduler randomness. A turn
+host entropy nor program `Std.Math.Random` supplies scheduler randomness. A turn
 uses the existing dispatch boundary; native work or synchronous callbacks inside
 it are not newly preempted. No complete turn history is retained.
 
@@ -109,7 +109,7 @@ advance task time.
 ## Controlled inputs and effects
 
 Allowed operations are pure computation, task/channel/group/cancellation
-operations, virtual `Sleep`, supplied `Std.Args`, prequeued
+operations, virtual `Sleep`, supplied `Std.Os.Args`, prequeued
 `Console.ReadText`/`ReadLn`, and captured `WriteText`/`WriteLn`. Use the existing
 runner TOML script for text lines. Input is sealed before execution; host stdin
 is never read. An exhausted queue that is still open reports `FP5011`;

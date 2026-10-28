@@ -31,7 +31,7 @@ fn distributed_client_runs_independent_stdio_peer_from_source_and_native_image()
     ] {
         fs::copy(repository.join(source), root.join(target)).expect("public fixture");
     }
-    fs::write(root.join("consumer.fpas"), "program Consumer; uses Std.Acp as Acp, Std.Acp.Types as Types, Std.Acp.Host as Host, Std.Acp.Experimental as Exp, Std.Acp.V2 as V2; begin const O := Acp.DefaultOptions(); const R: Types.RawJson := Types.RawJson(Text := '{}'); const P: Exp.ProviderId := Exp.ProviderId('local'); const S: V2.SessionId := V2.SessionId('s'); end.").expect("all public units");
+    fs::write(root.join("consumer.fpas"), "program Consumer; uses Std.Ai.Acp as Acp, Std.Ai.Acp.Types as Types, Std.Ai.Acp.Host as Host, Std.Ai.Acp.Experimental as Exp, Std.Ai.Acp.V2 as V2; begin const O := Acp.DefaultOptions(); const R: Types.RawJson := Types.RawJson(Text := '{}'); const P: Exp.ProviderId := Exp.ProviderId('local'); const S: V2.SessionId := V2.SessionId('s'); end.").expect("all public units");
     fs::write(root.join("client.fpasprj"), "[project]\nname='client'\nkind='program'\nmain='main.fpas'\n[sources]\ninclude=['main.fpas']\n").expect("native consumer manifest");
     let fpas = env!("CARGO_BIN_EXE_fpas");
     let command = || {
@@ -49,7 +49,7 @@ fn distributed_client_runs_independent_stdio_peer_from_source_and_native_image()
         command()
             .args([
                 "doc",
-                "Std.Acp.Host.ReadTextFile",
+                "Std.Ai.Acp.Host.ReadTextFile",
                 "consumer.fpas",
                 "--report",
                 "json",
@@ -61,7 +61,7 @@ fn distributed_client_runs_independent_stdio_peer_from_source_and_native_image()
         serde_json::from_slice(&documentation.stdout).expect("doc JSON");
     assert_eq!(
         documentation["matches"][0]["name"],
-        "Std.Acp.Host.ReadTextFile"
+        "Std.Ai.Acp.Host.ReadTextFile"
     );
     assert_eq!(
         documentation["matches"][0]["handbook"],

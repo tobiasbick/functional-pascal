@@ -60,6 +60,6 @@ pub(super) const VARIANTS: &[ErrorVariant] = &[
     ErrorVariant {
         name: "Peer",
         message: "ACP peer returned an error",
-        fields: &[("Protocol", Record("Std.Acp.Types.ProtocolError"))],
+        fields: &[("Protocol", Record("Std.Ai.Acp.Types.ProtocolError"))],
     },
 ];

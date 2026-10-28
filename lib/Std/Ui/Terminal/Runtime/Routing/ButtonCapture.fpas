@@ -1,0 +1,88 @@
+unit Std.Ui.Terminal.Runtime.Routing.ButtonCapture;
+
+uses Std.Ui.Terminal.Chrome.Button as ChromeButton, Std.Ui.Terminal.Ids.ControlId as ControlId;
+
+// Host-owned pointer capture for one button press.
+public type TuiButtonPressState = enum
+  // Represents the `Idle` variant of `TuiButtonPressState`.
+  Idle;
+  // Represents the `Captured` variant of `TuiButtonPressState`.
+  //
+  // Parameters:
+  // - `Button`: Button specification carried by the variant.
+  // - `Inside`: Whether the pointer remains inside the captured control.
+  Captured(Button: ChromeButton.TuiButtonSpec; Inside: boolean);
+end enum;
+
+var TuiButtonPressStates: array of TuiButtonPressState := [];
+
+// Allocates idle button-capture state for one application.
+public procedure TuiButtonCaptureOpen();
+begin
+  TuiButtonPressStates := TuiButtonPressStates.Concat([TuiButtonPressState.Idle]);
+end procedure;
+
+// Clears button-capture state for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+public procedure TuiButtonCaptureClose(ApplicationId: integer);
+begin
+  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle;
+end procedure;
+
+// Returns the current button-capture state for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+public function TuiButtonCaptureGet(ApplicationId: integer): TuiButtonPressState;
+begin
+  return TuiButtonPressStates[ApplicationId - 1];
+end function;
+
+// Releases button capture for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+public procedure TuiButtonCaptureRelease(ApplicationId: integer);
+begin
+  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle;
+end procedure;
+
+// Captures one button and records whether the pointer remains inside it.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+// - `Button`: Button specification used by the operation.
+// - `Inside`: Whether the pointer remains inside the captured control.
+public procedure TuiButtonCaptureSet(
+  ApplicationId: integer;
+  Button: ChromeButton.TuiButtonSpec;
+  Inside: boolean
+);
+begin
+  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Captured(Button, Inside);
+end procedure;
+
+// Returns the button painted pressed while capture remains inside it.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+public function TuiButtonCapturePressed(ApplicationId: integer): option of ControlId.TuiControlId;
+begin
+  case TuiButtonPressStates[ApplicationId - 1] of
+    when TuiButtonPressState.Captured(const Button, const Inside) if Inside:
+      begin
+        return Some(Button.Id);
+      end;
+    when TuiButtonPressState.Idle:
+      begin
+        return None;
+      end;
+    when TuiButtonPressState.Captured(const Button, const Inside):
+      begin
+        return None;
+      end;
+  end case;
+end function;
+end unit;

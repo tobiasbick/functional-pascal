@@ -1,6 +1,6 @@
 unit Fpastris.Model;
 
-uses Fpastris.Pieces as Pieces, Std.Random as Random;
+uses Fpastris.Pieces as Pieces, Std.Math.Random as Random;
 
 public const BoardWidth: integer := 10;
 public const BoardHeight: integer := 22;

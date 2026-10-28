@@ -1,4 +1,4 @@
-//! Borrowed `Std.Args` register intrinsics.
+//! Borrowed `Std.Os.Args` register intrinsics.
 
 use crate::{ArgsIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -36,7 +36,7 @@ impl Worker {
                         return Err(self.runtime_error(
                             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                             format!(
-                                "Std.Args.ParamStr expected integer, got {}",
+                                "Std.Os.Args.ParamStr expected integer, got {}",
                                 actual.type_name()
                             ),
                             "Pass a non-negative integer argument index.",
@@ -47,7 +47,7 @@ impl Worker {
                     self.runtime_error(
                         RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                         "Program argument index is outside the host index range",
-                        "With `uses Std.Args as Args;`, use a non-negative index smaller than `Args.ParamCount()`.",
+                        "With `uses Std.Os.Args as Args;`, use a non-negative index smaller than `Args.ParamCount()`.",
                     )
                 })?;
                 let value = self.hosted.program_args.get(index).ok_or_else(|| {
@@ -57,7 +57,7 @@ impl Worker {
                             "Program argument index {index} out of bounds (count {})",
                             self.hosted.program_args.len()
                         ),
-                        "Import `uses Std.Args as Args;` and call `Args.ParamCount()` before indexing program arguments.",
+                        "Import `uses Std.Os.Args as Args;` and call `Args.ParamCount()` before indexing program arguments.",
                     )
                 })?;
                 Ok(Some(Some(Value::Str(value.as_str().into()))))

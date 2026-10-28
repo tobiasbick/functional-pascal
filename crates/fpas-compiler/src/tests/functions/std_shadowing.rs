@@ -5,7 +5,7 @@ fn local_send_function_shadows_imported_channel_intrinsic() {
     assert_succeeds(
         r#"
 program SendShadowRepro;
-uses Std.Console as Console, Std.Conv as Conv, Std.Tasks as Tasks;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Tasks as Tasks;
 function Send(First: integer; Second: integer; Third: integer): integer;
 begin
   return First + Second + Third;
@@ -52,7 +52,7 @@ fn callable_parameter_and_local_variable_shadow_standard_names() {
     assert_succeeds(
         r#"
 program CallableShadowing;
-uses Std.Conv as Conv, Std.Tasks as Tasks;
+uses Std.Text.Format as Conv, Std.Tasks as Tasks;
 function Apply(IntToStr: function(Value: integer): string): string;
 begin
   return IntToStr(42);

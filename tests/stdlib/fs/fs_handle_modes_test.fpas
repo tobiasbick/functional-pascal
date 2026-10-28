@@ -1,6 +1,6 @@
 program FsHandleModesTest;
 
-uses Std.Fs as Fs, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Test as Test;
 
 procedure AssertBytes(Expected: array of integer; Actual: array of integer);
 begin
@@ -52,15 +52,15 @@ begin
   Test.AssertEquals(2, ReadByte(File));
   Test.AssertTrue(Fs.Write(File, [9]) is Error(_));
   Test.AssertTrue(Fs.Close(Alias).Unwrap());
-  Test.AssertTrue(Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Fs.Read')));
-  Test.AssertTrue(Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell')));
-  Test.AssertTrue(Fs.Close(File) is Error(Fs.FsError.Closed('Std.Fs.Close')));
+  Test.AssertTrue(Fs.Read(File, 1) is Error(Fs.FsError.Closed('Std.Io.Fs.Read')));
+  Test.AssertTrue(Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Io.Fs.Tell')));
+  Test.AssertTrue(Fs.Close(File) is Error(Fs.FsError.Closed('Std.Io.Fs.Close')));
   const Created := Fs.Open(FileName, Fs.FileMode.Create).Unwrap();
   Test.AssertEquals(0, Fs.FileSize(FileName).Unwrap());
   Test.AssertEquals(0, Fs.Write(Created, []).Unwrap());
   WriteAll(Created, [9, 8]);
   Test.AssertTrue(Fs.Flush(Created).Unwrap());
-  Test.AssertTrue(Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Fs.Tell')));
+  Test.AssertTrue(Fs.Tell(File) is Error(Fs.FsError.Closed('Std.Io.Fs.Tell')));
   Test.AssertTrue(Fs.Close(Created).Unwrap());
   AssertBytes([9, 8], Fs.ReadBytes(FileName).Unwrap());
   const Append := Fs.Open(FileName, Fs.FileMode.Append).Unwrap();

@@ -1,6 +1,6 @@
 program TuiBackgroundPendingTest;
 
-uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Tui as Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Ui.Terminal as Tui;
 
 type PendingModel = record
   Gate: channel of boolean;

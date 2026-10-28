@@ -37,6 +37,6 @@ caller explicitly switches families without resending initialization.
 
 No automated example check contacts an external service. Independent stdio
 acceptance uses [scripted_agent.fpas](../../../tests/support/acp/scripted_agent.fpas),
-which parses fixed wire messages with `Std.Json` independently of the ACP binding.
+which parses fixed wire messages with `Std.Encoding.Json` independently of the ACP binding.
 See the [client handbook](../../../docs/pascal/std/ai/acp/README.md) for bounded
 queues, deferred replies, authentication, MCP endpoints and session policy.

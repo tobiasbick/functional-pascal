@@ -3,21 +3,21 @@ use super::{check_errors, check_ok};
 #[test]
 fn proc_run_accepts_string_command_and_string_array_args() {
     check_ok(
-        "program T;\nuses Std.Proc as Proc;\nbegin\n  const Status: Result of (integer, Proc.ProcError) := Proc.Run('tool', ['--help']);\n  const Qualified: Result of (integer, Proc.ProcError) := Proc.Run('tool', ['--version']);\nend.",
+        "program T;\nuses Std.Os.Proc as Proc;\nbegin\n  const Status: Result of (integer, Proc.ProcError) := Proc.Run('tool', ['--help']);\n  const Qualified: Result of (integer, Proc.ProcError) := Proc.Run('tool', ['--version']);\nend.",
     );
 }
 
 #[test]
 fn proc_capture_api_exposes_current_executable_and_process_output() {
     check_ok(
-        "program T;\nuses Std.Proc as Proc;\nbegin\n  const Executable: Result of (string, Proc.ProcError) := Proc.CurrentExecutable();\n  const Captured: Result of (Proc.ProcessOutput, Proc.ProcError) :=\n    Proc.RunCapture('tool', ['--version']);\nend.",
+        "program T;\nuses Std.Os.Proc as Proc;\nbegin\n  const Executable: Result of (string, Proc.ProcError) := Proc.CurrentExecutable();\n  const Captured: Result of (Proc.ProcessOutput, Proc.ProcError) :=\n    Proc.RunCapture('tool', ['--version']);\nend.",
     );
 }
 
 #[test]
 fn proc_run_rejects_non_string_args_array() {
     let errs = check_errors(
-        "program T;\nuses Std.Proc as Proc;\nbegin\n    const Status: Result of (integer, Proc.ProcError) := Proc.Run('tool', [1, 2, 3]);\nend.",
+        "program T;\nuses Std.Os.Proc as Proc;\nbegin\n    const Status: Result of (integer, Proc.ProcError) := Proc.Run('tool', [1, 2, 3]);\nend.",
     );
 
     assert!(
@@ -35,7 +35,7 @@ fn interactive_processes_reject_forged_and_foreign_handles() {
     ] {
         assert!(
             !check_errors(&format!(
-                "program T; uses Std.Proc as Proc, Std.Fs as Fs; begin {body}; end."
+                "program T; uses Std.Os.Proc as Proc, Std.Io.Fs as Fs; begin {body}; end."
             ))
             .is_empty(),
             "accepted {body}"
@@ -46,7 +46,7 @@ fn interactive_processes_reject_forged_and_foreign_handles() {
 #[test]
 fn proc_run_capture_rejects_non_string_args_array() {
     let errs = check_errors(
-        "program T;\nuses Std.Proc as Proc;\nbegin\n    const Captured: Result of (Proc.ProcessOutput, Proc.ProcError) := Proc.RunCapture('tool', [1, 2, 3]);\nend.",
+        "program T;\nuses Std.Os.Proc as Proc;\nbegin\n    const Captured: Result of (Proc.ProcessOutput, Proc.ProcError) := Proc.RunCapture('tool', [1, 2, 3]);\nend.",
     );
 
     assert!(
@@ -59,7 +59,7 @@ fn proc_run_capture_rejects_non_string_args_array() {
 fn process_options_have_explicit_records_and_cancellable_result_signatures() {
     check_ok(
         r#"program ProcessOptions;
-uses Std.Proc as Proc, Std.Tasks as Tasks;
+uses Std.Os.Proc as Proc, Std.Tasks as Tasks;
 procedure Probe(Token: Tasks.CancellationToken);
 begin
   const Environment: Proc.EnvironmentVariable := Proc.EnvironmentVariable(Name := 'KEY', Value := None);
@@ -90,7 +90,7 @@ fn process_options_require_explicit_defaults_and_typed_option_fields() {
     ] {
         assert!(
             !check_errors(&format!(
-                "program Invalid; uses Std.Proc as Proc; begin discard {expression}; end."
+                "program Invalid; uses Std.Os.Proc as Proc; begin discard {expression}; end."
             ))
             .is_empty(),
             "accepted {expression}"

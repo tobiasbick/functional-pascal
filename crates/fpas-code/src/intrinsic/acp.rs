@@ -3,7 +3,7 @@
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics for `Std.Acp.Types`.
+/// Intrinsics for `Std.Ai.Acp.Types`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum AcpIntrinsic {
@@ -132,14 +132,14 @@ impl AcpIntrinsic {
     pub fn source_name(self) -> String {
         let name = format!("{self:?}");
         if let Some(name) = name.strip_prefix("Host") {
-            return format!("Std.Acp.Host.{name}");
+            return format!("Std.Ai.Acp.Host.{name}");
         }
         if let Some(name) = name.strip_prefix("V2") {
-            format!("Std.Acp.V2.{name}")
+            format!("Std.Ai.Acp.V2.{name}")
         } else if self.connection() {
-            format!("Std.Acp.{name}")
+            format!("Std.Ai.Acp.{name}")
         } else {
-            format!("Std.Acp.Types.{name}")
+            format!("Std.Ai.Acp.Types.{name}")
         }
     }
 }

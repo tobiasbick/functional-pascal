@@ -2,7 +2,7 @@ program DocExamples;
 
 uses
   DocExamples.Model as Model, DocExamples.Markdown as Markdown, DocExamples.Validation as Validation, DocExamples.Report as Report,
-  Std.Args as Args, Std.Conv as Conv, Std.Crypto as Crypto, Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Tasks as Tasks;
+  Std.Os.Args as Args, Std.Text.Format as Conv, Std.Crypto as Crypto, Std.Io.Fs as Fs, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Tasks as Tasks;
 
 function Arguments(): Model.Options;
 begin

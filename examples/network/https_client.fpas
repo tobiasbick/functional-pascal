@@ -1,7 +1,7 @@
 // Fetches one HTTPS URL with operating-system certificate verification.
 program NetworkHttpsClient;
 
-uses Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Http as Http;
+uses Std.Os.Args as Args, Std.Text.Format as Conv, Std.Console as Console, Std.Net.Http as Http;
 
 begin
   if Args.ParamCount() <> 1 then

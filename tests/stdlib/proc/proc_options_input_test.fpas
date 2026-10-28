@@ -1,6 +1,6 @@
 program ProcOptionsInputTest;
 
-uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Test as Test;
 
 function LibraryPath(): string;
 begin
@@ -24,7 +24,7 @@ begin
     Fs.WriteText(
       Source,
       'program Child;'#10 +
-      'uses Std.Args as Args, Std.Console as Console, Std.Fs as Fs;'#10 +
+      'uses Std.Os.Args as Args, Std.Console as Console, Std.Io.Fs as Fs;'#10 +
       'begin'#10 +
       'if Args.ParamStr(0) = ''duplex'' then'#10 +
       'Console.WriteText(''o''.RepeatStr(131072));'#10 +

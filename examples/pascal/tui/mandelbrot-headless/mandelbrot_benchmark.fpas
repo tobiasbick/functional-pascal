@@ -2,8 +2,8 @@
 program MandelbrotBenchmark;
 
 uses
-  Mandelbrot.Color as Color, Mandelbrot.Render as Render, Std.Args as Args, Std.Console as Console,
-  Std.Conv as Conv, Std.Tasks as Tasks, Std.Time as Time, Std.Tui as Tui, Std.Parse as Parse;
+  Mandelbrot.Color as Color, Mandelbrot.Render as Render, Std.Os.Args as Args, Std.Console as Console,
+  Std.Text.Format as Conv, Std.Tasks as Tasks, Std.Time as Time, Std.Ui.Terminal as Tui, Std.Text.Parse as Parse;
 
 function Update(Grid: Tui.TuiCellGrid; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiCellGrid;
 begin

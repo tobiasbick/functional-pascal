@@ -6,7 +6,7 @@ use super::*;
 fn structured_script_quits_the_interactive_tui_through_its_console_pump() {
     let f = Fixture::new(
         r#"program ScriptedTui;
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin

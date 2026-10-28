@@ -1,6 +1,6 @@
 # Record methods
 
-The code fragments use `uses Std.Conv as Conv, Std.Math as Math, Std.Console as Console;`.
+The code fragments use `uses Std.Text.Format as Conv, Std.Math as Math, Std.Console as Console;`.
 
 Records can declare functions and procedures that operate on their data, and
 **static functions and procedures** that belong to the type itself.

@@ -2,7 +2,7 @@
 
 unit App.Reporting;
 
-uses App.Math as Math, Std.Conv as Conv;
+uses App.Math as Math, Std.Text.Format as Conv;
 
 public function DescribeClamp(Value: integer): string;
 begin

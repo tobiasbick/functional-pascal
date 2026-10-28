@@ -1,8 +1,14 @@
 program T;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Math as Math, Std.Test as Test;
 
 begin
-  const X: real := Conv.IntToReal(3);
+  Test.AssertEquals(0.0, Math.IntToReal(0));
+  Test.AssertEquals(-1.0, Math.IntToReal(-1));
+  Test.AssertEquals(9007199254740991.0, Math.IntToReal(9007199254740991));
+  Test.AssertEquals(9007199254740992.0, Math.IntToReal(9007199254740993));
+  Test.AssertEquals(-9223372036854776000.0, Math.IntToReal(-9223372036854775808));
+  Test.AssertEquals(9223372036854776000.0, Math.IntToReal(9223372036854775807));
+  const X: real := Math.IntToReal(3);
   Console.WriteLn(X);
 end.

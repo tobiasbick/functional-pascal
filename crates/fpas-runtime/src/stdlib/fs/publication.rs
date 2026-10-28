@@ -1,4 +1,4 @@
-//! Same-directory atomic publication for `Std.Fs.WriteTextAtomic`.
+//! Same-directory atomic publication for `Std.Io.Fs.WriteTextAtomic`.
 
 use std::io::{self, Write};
 use std::path::Path;

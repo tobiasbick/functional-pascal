@@ -1,7 +1,7 @@
 # FPAS MCP native core
 
 This crate supplies the official MCP SDK adapter and bounded application-call
-ownership for the [Std.Mcp](../../docs/pascal/std/ai/mcp/README.md) library.
+ownership for the [Std.Ai.Mcp](../../docs/pascal/std/ai/mcp/README.md) library.
 It has no ACP or VM dependency. The VM retains callbacks and owns its HTTP
 executor; ACP consumes the native server and publication interface for session
 attachments. No FPAS value enters the native SDK executor.

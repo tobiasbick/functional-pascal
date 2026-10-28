@@ -72,7 +72,7 @@ end function;
   evaluated.
 - All branches have one type, checked like an assignment. There is no numeric
   widening: `if Ready then 1 else 2.5 end if` is an error; write `1.0` or
-  `Conv.IntToReal(1)` with `uses Std.Conv as Conv;`. Values that take their type from context, such as `None` or
+  `Math.IntToReal(1)` with `uses Std.Math as Math;`. Values that take their type from context, such as `None` or
   `[]`, take the type of the other branches, for example
   `if Found then Some(Value) else None end if`. The result must then match the
   expected type of its position. Branches also complete result-only generic

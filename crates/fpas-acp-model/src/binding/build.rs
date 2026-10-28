@@ -55,11 +55,11 @@ pub(super) fn catalog(version: Version) -> Result<Catalog, CodecError> {
             (
                 name.clone(),
                 if version == Version::V2 {
-                    "Std.Acp.V2"
+                    "Std.Ai.Acp.V2"
                 } else if stable.contains(name) {
-                    "Std.Acp.Types"
+                    "Std.Ai.Acp.Types"
                 } else {
-                    "Std.Acp.Experimental"
+                    "Std.Ai.Acp.Experimental"
                 },
             )
         })
@@ -123,9 +123,9 @@ impl Builder {
             .max_by_key(|(name, _)| name.len())
             .map(|(_, module)| *module)
             .unwrap_or(if self.version == Version::V1 {
-                "Std.Acp.Types"
+                "Std.Ai.Acp.Types"
             } else {
-                "Std.Acp.V2"
+                "Std.Ai.Acp.V2"
             })
     }
     pub fn declare(&mut self, key: &str, schema: &Value) -> Result<(), CodecError> {
@@ -134,7 +134,7 @@ impl Builder {
         }
         let module = self.module(key);
         let name = if key == "Error" {
-            "Std.Acp.Types.ProtocolError".into()
+            "Std.Ai.Acp.Types.ProtocolError".into()
         } else {
             format!("{module}.{}", identifier(key))
         };

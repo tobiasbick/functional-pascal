@@ -1,4 +1,4 @@
 program DocumentationExample;
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 // @include docs/pascal/language/types/record-methods.md#example-6
 // @example

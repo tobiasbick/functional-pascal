@@ -2,7 +2,7 @@ program MandelbrotTuiLifecycleTest;
 
 uses
   Mandelbrot.App as MandelbrotApp, Mandelbrot.Model as MandelbrotModel, Mandelbrot.Render as Render,
-  Mandelbrot.View as View, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Tui as Tui;
+  Mandelbrot.View as View, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Ui.Terminal as Tui;
 
 function MakeLeftKey(): Tui.TuiKeyEvent;
 begin

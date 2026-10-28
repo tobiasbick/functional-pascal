@@ -12,8 +12,8 @@ for connection ownership, typed requests, host decisions and explicit v2 selecti
 
 | Question | Command or reference |
 | --- | --- |
-| What is this declaration or built-in operation? | `fpas doc --report json Std.Fs.ReadText` or `fpas doc string.Slice` |
-| Which declarations does a unit expose? | `fpas doc Std.Fs`; the editor's **Show Public Signatures** also includes unsaved unit edits |
+| What is this declaration or built-in operation? | `fpas doc --report json Std.Io.Fs.ReadText` or `fpas doc string.Slice` |
+| Which declarations does a unit expose? | `fpas doc Std.Io.Fs`; the editor's **Show Public Signatures** also includes unsaved unit edits |
 | Which binding/type does this source expression have? | `fpas query definition file.fpas:12:5` or `fpas query type file.fpas:12:5` |
 | Where is the declaration used? | `fpas query refs file.fpas:12:5` |
 | Does the program check? | `fpas check --diagnostics json app.fpasprj` |
@@ -36,7 +36,7 @@ machine-applicable compiler fixes in place; format and inspect the result.
 Run the owning test project for runtime behavior. Interactive programs can be
 checked without launching their UI; use scripted/headless tests for execution.
 
-For interactive child login, `Std.Proc.RunInteractive` needs an explicit host
+For interactive child login, `Std.Os.Proc.RunInteractive` needs an explicit host
 terminal provider. Debugger protocol stdin is unavailable to children. Use
 `TryWaitStatus` for precise native process completion; see
 [processes](../std/host/proc.md#processexitstatus-and-trywaitstatus).

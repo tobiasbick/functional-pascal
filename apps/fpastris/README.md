@@ -1,6 +1,6 @@
 # fpastris
 
-A falling-block puzzle game written in Functional Pascal with `Std.Tui`.
+A falling-block puzzle game written in Functional Pascal with `Std.Ui.Terminal`.
 The dark blue-gray palette, cyan accents, rounded frames and keyboard hints
 follow the other [FPAS apps](../README.md) and the terminal interfaces collected
 at [Terminal Apps](https://terminal-apps.dev/).
@@ -48,7 +48,7 @@ below the minimum pauses play; resize and press Enter to resume.
 
 `Pieces`, `Model` and `Engine` implement the game rules. `Update` handles input
 and one-shot TUI ticks; `View`, `Drawing` and `Theme` build the colored cell grid.
-The terminal lifecycle and damage rendering belong to `Std.Tui`.
+The terminal lifecycle and damage rendering belong to `Std.Ui.Terminal`.
 
 ```sh
 fpas check apps/fpastris/fpastris.fpasprj

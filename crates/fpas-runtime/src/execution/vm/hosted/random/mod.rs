@@ -1,4 +1,4 @@
-//! VM-local `Std.Random` intrinsic execution.
+//! VM-local `Std.Math.Random` intrinsic execution.
 //!
 //! **Documentation:** `docs/pascal/std/numeric/random.md` (from the repository root).
 
@@ -44,7 +44,7 @@ impl Worker {
                     return Err(self.runtime_error(
                         RUNTIME_NUMERIC_DOMAIN_ERROR,
                         format!("RandomInt lower bound {lo} must be <= upper bound {hi}"),
-                        "Pass bounds where `Lo <= Hi` to Std.Random.RandomInt.",
+                        "Pass bounds where `Lo <= Hi` to Std.Math.Random.RandomInt.",
                     ));
                 }
                 Some(Value::Integer(
@@ -85,7 +85,7 @@ fn argument_count(arguments: &[Value], expected: usize, worker: &Worker) -> Resu
         Err(worker.runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!(
-                "Std.Random intrinsic expected {expected} arguments, got {}",
+                "Std.Math.Random intrinsic expected {expected} arguments, got {}",
                 arguments.len()
             ),
             "Check the compiler intrinsic signature and register argument count.",
@@ -98,12 +98,15 @@ fn integer(arguments: &[Value], index: usize, worker: &Worker) -> Result<i64, Vm
         Some(Value::Integer(value)) => Ok(*value),
         Some(actual) => Err(worker.runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Std.Random expected integer, got {}", actual.type_name()),
-            "Pass integer arguments to Std.Random.RandomInt and Std.Random.SetSeed.",
+            format!(
+                "Std.Math.Random expected integer, got {}",
+                actual.type_name()
+            ),
+            "Pass integer arguments to Std.Math.Random.RandomInt and Std.Math.Random.SetSeed.",
         )),
         None => Err(worker.runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-            "Std.Random intrinsic argument is missing",
+            "Std.Math.Random intrinsic argument is missing",
             "Check the compiler intrinsic signature and register argument count.",
         )),
     }

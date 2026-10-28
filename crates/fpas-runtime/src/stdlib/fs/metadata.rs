@@ -1,4 +1,4 @@
-//! `Std.Fs` metadata queries: `FileSize`, `ModifiedTime`, and `IsSymLink`.
+//! `Std.Io.Fs` metadata queries: `FileSize`, `ModifiedTime`, and `IsSymLink`.
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
@@ -16,7 +16,8 @@ pub(super) fn file_size(path: &Path) -> Result<i64, Failure> {
             "path is not a regular file".into(),
         ));
     }
-    i64::try_from(metadata.len()).map_err(|_| Failure::LimitExceeded("Std.Fs.FileSize", i64::MAX))
+    i64::try_from(metadata.len())
+        .map_err(|_| Failure::LimitExceeded("Std.Io.Fs.FileSize", i64::MAX))
 }
 
 /// Last modification time of `path` in milliseconds since the Unix epoch.
@@ -26,7 +27,7 @@ pub(super) fn modified_time_millis(path: &Path) -> Result<i64, Failure> {
         Ok(after) => i64::try_from(after.as_millis()),
         Err(before) => i64::try_from(before.duration().as_millis()).map(|value| -value),
     };
-    millis.map_err(|_| Failure::LimitExceeded("Std.Fs.ModifiedTime", i64::MAX))
+    millis.map_err(|_| Failure::LimitExceeded("Std.Io.Fs.ModifiedTime", i64::MAX))
 }
 
 /// `true` when `path` itself is a symbolic link, without following it.

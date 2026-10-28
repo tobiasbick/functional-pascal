@@ -1,6 +1,6 @@
 program ShapesExample;
 
-uses Std.Console as Console, Std.Conv as Conv, Std.Math as Math;
+uses Std.Console as Console, Std.Text.Format as Conv, Std.Math as Math;
 
 type Shape = enum
   Circle(Radius: real);

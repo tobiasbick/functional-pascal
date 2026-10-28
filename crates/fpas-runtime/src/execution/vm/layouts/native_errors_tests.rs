@@ -12,7 +12,8 @@ fn image(source: &str) -> Executable {
 
 #[test]
 fn required_native_error_metadata_is_checked_before_successful_calls() {
-    let original = image("program T; uses Std.Parse as Parse; begin discard Parse.Int('1'); end.");
+    let original =
+        image("program T; uses Std.Text.Parse as Parse; begin discard Parse.Int('1'); end.");
     let address = InstructionAddress::new(0);
     RuntimeLayouts::build(&original, address).expect("native contract");
     for mutation in 0..5 {
@@ -72,8 +73,8 @@ fn required_native_error_metadata_is_checked_before_successful_calls() {
 fn unused_native_families_are_not_required() {
     for source in [
         "program T; begin end.",
-        "program T; uses Std.Fs as Fs; begin discard Fs.Exists('missing'); end.",
-        "program T; uses Std.Parse as Parse; begin discard Parse.Bool('true'); end.",
+        "program T; uses Std.Io.Fs as Fs; begin discard Fs.Exists('missing'); end.",
+        "program T; uses Std.Text.Parse as Parse; begin discard Parse.Bool('true'); end.",
     ] {
         let mut image = image(source);
         if source.contains("Fs.Exists") {
@@ -86,7 +87,7 @@ fn unused_native_families_are_not_required() {
             !image
                 .enums
                 .iter()
-                .any(|e| image.strings.get(e.name) == Some("Std.Fs.FsError")),
+                .any(|e| image.strings.get(e.name) == Some("Std.Io.Fs.FsError")),
             "infallible Fs operations do not require FsError"
         );
     }
@@ -95,10 +96,10 @@ fn unused_native_families_are_not_required() {
 #[test]
 fn acp_error_records_require_their_registered_nested_layouts() {
     let original =
-        image("program T; uses Std.Acp.Types as Acp; begin discard Acp.ParseUInt64('1'); end.");
+        image("program T; uses Std.Ai.Acp.Types as Acp; begin discard Acp.ParseUInt64('1'); end.");
     let address = InstructionAddress::new(0);
     RuntimeLayouts::build(&original, address).expect("structured error contract");
-    for name in ["Std.Acp.Types.RawJson", "Std.Acp.Types.ProtocolError"] {
+    for name in ["Std.Ai.Acp.Types.RawJson", "Std.Ai.Acp.Types.ProtocolError"] {
         let mut changed = original.clone();
         let index = changed
             .records
@@ -121,7 +122,7 @@ fn acp_error_records_require_their_registered_nested_layouts() {
 #[test]
 fn hosted_families_require_the_exact_host_cause_contract() {
     for source in [
-        "program T; uses Std.Fs as Fs; begin discard Fs.ReadText('file'); end.",
+        "program T; uses Std.Io.Fs as Fs; begin discard Fs.ReadText('file'); end.",
         "program T; uses Std.Crypto as Crypto; begin discard Crypto.RandomBytes(0); end.",
     ] {
         let original = image(source);
@@ -131,7 +132,9 @@ fn hosted_families_require_the_exact_host_cause_contract() {
             let host = changed
                 .enums
                 .iter()
-                .position(|family| changed.strings.get(family.name) == Some("Std.Errors.HostError"))
+                .position(|family| {
+                    changed.strings.get(family.name) == Some("Std.Os.Errors.HostError")
+                })
                 .expect("host family");
             if mutation == 0 {
                 changed.enums[host].error = None;
@@ -165,12 +168,12 @@ fn selected_operations_require_their_native_contracts() {
             "Std.Tasks.TaskError",
         ),
         (
-            "program T; uses Std.Net as Net; begin discard Net.Connect('localhost', 0, 1); end.",
-            "Std.Net.NetError",
+            "program T; uses Std.Net.Sockets as Net; begin discard Net.Connect('localhost', 0, 1); end.",
+            "Std.Net.Sockets.NetError",
         ),
         (
-            "program T; uses Std.Server as Server; begin discard Server.CreateLifetime(-1, false); end.",
-            "Std.Server.ServerError",
+            "program T; uses Std.Net.Server as Server; begin discard Server.CreateLifetime(-1, false); end.",
+            "Std.Net.Server.ServerError",
         ),
     ] {
         let original = image(source);
@@ -192,9 +195,9 @@ fn selected_operations_require_their_native_contracts() {
 #[test]
 fn server_listener_causes_admit_the_net_and_host_dependency_closure() {
     let original = image(
-        "program T; uses Std.Server as Server; begin discard Server.CreateLifetime(-1, false); end.",
+        "program T; uses Std.Net.Server as Server; begin discard Server.CreateLifetime(-1, false); end.",
     );
-    for family in ["Std.Net.NetError", "Std.Errors.HostError"] {
+    for family in ["Std.Net.Sockets.NetError", "Std.Os.Errors.HostError"] {
         let mut changed = original.clone();
         let owner = changed
             .enums
@@ -226,7 +229,7 @@ fn encoding_requires_its_exact_payload_without_host_dependencies() {
         !original
             .enums
             .iter()
-            .any(|owner| original.strings.get(owner.name) == Some("Std.Errors.HostError"))
+            .any(|owner| original.strings.get(owner.name) == Some("Std.Os.Errors.HostError"))
     );
     let variant = original
         .enum_variants
@@ -244,8 +247,8 @@ fn encoding_requires_its_exact_payload_without_host_dependencies() {
 #[test]
 fn binary_file_operations_require_the_complete_filesystem_error_abi() {
     for source in [
-        "program T; uses Std.Fs as Fs; begin discard Fs.ReadBytes('file'); end.",
-        "program T; uses Std.Fs as Fs; begin discard Fs.WriteBytes('file', [0, 255]); end.",
+        "program T; uses Std.Io.Fs as Fs; begin discard Fs.ReadBytes('file'); end.",
+        "program T; uses Std.Io.Fs as Fs; begin discard Fs.WriteBytes('file', [0, 255]); end.",
     ] {
         let original = image(source);
         RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("binary Fs ABI");
@@ -275,12 +278,12 @@ fn filesystem_lifecycle_errors_append_and_keep_operation_payloads() {
     assert_eq!(catalog[13].name, "Closed");
     assert_eq!(catalog[14].name, "Cancelled");
     let original =
-        image("program T; uses Std.Fs as Fs; begin discard Fs.ReadText('missing'); end.");
+        image("program T; uses Std.Io.Fs as Fs; begin discard Fs.ReadText('missing'); end.");
     RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("filesystem lifecycle ABI");
     let owner = original
         .enums
         .iter()
-        .position(|owner| original.strings.get(owner.name) == Some("Std.Fs.FsError"))
+        .position(|owner| original.strings.get(owner.name) == Some("Std.Io.Fs.FsError"))
         .expect("filesystem family");
     for name in ["Closed", "Cancelled"] {
         let mut changed = original.clone();
@@ -315,13 +318,13 @@ fn process_control_errors_retain_partial_output_and_original_host_causes() {
     assert_eq!(catalog[6].name, "LimitExceeded");
     assert_eq!(catalog[7].name, "ExecutionFailed");
     let original = image(
-        "program T; uses Std.Proc as Proc; begin discard Proc.RunCaptureWithOptions('tool', [], Proc.DefaultOptions()); end.",
+        "program T; uses Std.Os.Proc as Proc; begin discard Proc.RunCaptureWithOptions('tool', [], Proc.DefaultOptions()); end.",
     );
     RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("process control ABI");
     let owner = original
         .enums
         .iter()
-        .position(|owner| original.strings.get(owner.name) == Some("Std.Proc.ProcError"))
+        .position(|owner| original.strings.get(owner.name) == Some("Std.Os.Proc.ProcError"))
         .expect("process error owner");
     for name in ["Timeout", "Cancelled", "LimitExceeded", "ExecutionFailed"] {
         let mut changed = original.clone();
@@ -349,7 +352,7 @@ fn process_control_errors_retain_partial_output_and_original_host_causes() {
 #[test]
 fn pure_process_defaults_do_not_require_process_or_host_error_metadata() {
     let mut defaults =
-        image("program T; uses Std.Proc as Proc; begin discard Proc.DefaultOptions(); end.");
+        image("program T; uses Std.Os.Proc as Proc; begin discard Proc.DefaultOptions(); end.");
     for owner in &mut defaults.enums {
         owner.error = None;
     }

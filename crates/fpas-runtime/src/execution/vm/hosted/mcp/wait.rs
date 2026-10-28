@@ -348,7 +348,7 @@ impl Worker {
         let Invocation { wait, claim } = invocation;
         let result = match value {
             Value::ResultOk(value) => (|| {
-                let f = args::record(&value, "Std.Mcp.Types.ToolResult", 1)?;
+                let f = args::record(&value, "Std.Ai.Mcp.Types.ToolResult", 1)?;
                 let result =
                     serde_json::from_value(args::json(&f[0])?).map_err(|_| Fault::InvalidResult)?;
                 claim.responder.respond(Ok(result))

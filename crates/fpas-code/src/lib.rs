@@ -56,4 +56,4 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 /// Persistent instruction-set and intrinsic ABI version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 28;
+pub const BYTECODE_VERSION: u32 = 29;

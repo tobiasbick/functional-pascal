@@ -1,7 +1,7 @@
 // Shared URL component types and resource bounds.
 unit Std.Net.Uri.Components;
 
-uses Std.Net.Utf8 as Utf8;
+uses Std.Text.Utf8 as Utf8;
 
 public const MaximumDecodedBytes: integer := 65536;
 public const MaximumEncodedBytes: integer := 196608;

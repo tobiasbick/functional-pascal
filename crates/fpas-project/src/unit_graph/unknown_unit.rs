@@ -99,7 +99,7 @@ mod tests {
     fn same_namespace_units_are_preferred() {
         let hint = candidate_hint(
             "Demo.Missing",
-            names(&["Std.Http", "Demo.Feature", "Other.Unit"]),
+            names(&["Std.Net.Http", "Demo.Feature", "Other.Unit"]),
         );
         assert_eq!(
             hint.as_deref(),
@@ -109,24 +109,24 @@ mod tests {
 
     #[test]
     fn root_segment_is_used_when_the_namespace_has_no_units() {
-        let hint = candidate_hint("Demo.Ui.Missing", names(&["Demo.Core", "Std.Http"]));
+        let hint = candidate_hint("Demo.Ui.Missing", names(&["Demo.Core", "Std.Net.Http"]));
         assert_eq!(hint.as_deref(), Some("Known units in `Demo`: Demo.Core."));
     }
 
     #[test]
     fn standard_units_are_omitted_from_the_project_fallback() {
-        let hint = candidate_hint("Missing", names(&["Std.Http", "App.Main"]));
+        let hint = candidate_hint("Missing", names(&["Std.Net.Http", "App.Main"]));
         assert_eq!(hint.as_deref(), Some("Known project units: App.Main."));
     }
 
     #[test]
     fn long_lists_are_truncated() {
         let known = (0..14)
-            .map(|index| format!("Std.Tui.U{index:02}"))
+            .map(|index| format!("Std.Ui.Terminal.U{index:02}"))
             .collect();
-        let hint = candidate_hint("Std.Tui.Missing", known).expect("hint");
-        assert!(hint.starts_with("Known units in `Std.Tui`: Std.Tui.U00, "));
-        assert!(hint.ends_with("Std.Tui.U09, and 4 more."));
+        let hint = candidate_hint("Std.Ui.Terminal.Missing", known).expect("hint");
+        assert!(hint.starts_with("Known units in `Std.Ui.Terminal`: Std.Ui.Terminal.U00, "));
+        assert!(hint.ends_with("Std.Ui.Terminal.U09, and 4 more."));
     }
 
     #[test]

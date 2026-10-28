@@ -1,6 +1,6 @@
 program ProcOptionsContextTest;
 
-uses Std.Env as Env, Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+uses Std.Os.Env as Env, Std.Io.Fs as Fs, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Test as Test;
 
 function LibraryPath(): string;
 begin
@@ -34,7 +34,7 @@ begin
     Fs.WriteText(
       Source,
       'program Child;'#10 +
-      'uses Std.Args as Args, Std.Console as Console, Std.Env as Env, Std.Fs as Fs;'#10 +
+      'uses Std.Os.Args as Args, Std.Console as Console, Std.Os.Env as Env, Std.Io.Fs as Fs;'#10 +
       'begin'#10 +
       'if Args.ParamStr(0) = ''cwd'' then Console.WriteText(Fs.CurrentDir().Unwrap());'#10 +
       'else case Env.Get(Args.ParamStr(0)) of'#10 +

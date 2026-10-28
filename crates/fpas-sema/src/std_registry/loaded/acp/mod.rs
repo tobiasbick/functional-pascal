@@ -18,8 +18,8 @@ use crate::{
 use fpas_builtins::{native_errors::NativeErrorFamily, std_symbols as s};
 
 pub(super) fn register(checker: &mut Checker) {
-    let raw = super::native_records::register(checker, "Std.Acp.Types.RawJson");
-    let unsigned = super::native_records::register(checker, "Std.Acp.Types.UInt64");
+    let raw = super::native_records::register(checker, "Std.Ai.Acp.Types.RawJson");
+    let unsigned = super::native_records::register(checker, "Std.Ai.Acp.Types.UInt64");
     let error = super::errors::register(checker, NativeErrorFamily::Acp);
     field(checker);
     declarations::register(checker);
@@ -70,7 +70,7 @@ pub(super) fn register(checker: &mut Checker) {
 }
 
 fn field(checker: &mut Checker) {
-    const NAME: &str = "Std.Acp.Types.Field";
+    const NAME: &str = "Std.Ai.Acp.Types.Field";
     let variants = vec![
         EnumVariantTy {
             name: "Missing".into(),

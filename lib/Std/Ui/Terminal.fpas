@@ -1,0 +1,325 @@
+// Model-Update-View terminal UI facade.
+//
+// Handbook: `docs/pascal/std/tui/README.md`.
+unit Std.Ui.Terminal;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Cells.ButtonPalette as ButtonPalette, Std.Ui.Terminal.Cells.Cell as Cell,
+  Std.Ui.Terminal.Cells.Color as Color, Std.Ui.Terminal.Cells.InputPalette as InputPalette,
+  Std.Ui.Terminal.Cells.Palette as Palette, Std.Ui.Terminal.Cells.Style as Style,
+  Std.Ui.Terminal.Cells.StyleRole as StyleRole, Std.Ui.Terminal.Chrome.Button as Button,
+  Std.Ui.Terminal.Chrome.CellGrid as CellGrid, Std.Ui.Terminal.Chrome.Gauge as Gauge, Std.Ui.Terminal.Chrome.Input as Input,
+  Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Geometry.Size as Size,
+  Std.Ui.Terminal.Chrome.KeyGesture as KeyGesture, Std.Ui.Terminal.Chrome.MenuItem as MenuItem,
+  Std.Ui.Terminal.Chrome.MenuNode as MenuNode, Std.Ui.Terminal.Chrome.StatusItem as StatusItem,
+  Std.Ui.Terminal.Ids.Action as IdsAction, Std.Ui.Terminal.Ids.ControlId as ControlId,
+  Std.Ui.Terminal.Layout.Alignment as Alignment, Std.Ui.Terminal.Layout.LayoutFit as LayoutFit,
+  Std.Ui.Terminal.Layout.LayoutSettings as LayoutSettings, Std.Ui.Terminal.Layout.Margins as Margins,
+  Std.Ui.Terminal.Layout.Measure as Measure, Std.Ui.Terminal.Layout.MeasureConstraint as MeasureConstraint,
+  Std.Ui.Terminal.Layout.MeasureResult as MeasureResult, Std.Ui.Terminal.Layout.MeasureSpec as MeasureSpec,
+  Std.Ui.Terminal.Layout.SizePolicy as SizePolicy, Std.Ui.Terminal.Layout.Spacer as Spacer,
+  Std.Ui.Terminal.Rendering.Canvas as Canvas, Std.Ui.Terminal.Rendering.Paint as Paint,
+  Std.Ui.Terminal.Rendering.Surface as RenderingSurface, Std.Ui.Terminal.Runtime.Application as Application,
+  Std.Ui.Terminal.Runtime.Application.Background as Background, Std.Ui.Terminal.Runtime.Cmd as Cmd,
+  Std.Ui.Terminal.Runtime.Helpers as Helpers, Std.Ui.Terminal.Runtime.Msg as Msg,
+  Std.Ui.Terminal.Runtime.PointerEvent as PointerEvent;
+
+// Zero-based terminal-cell coordinate.
+public type TuiPoint = Point.TuiPoint;
+
+// Fixed terminal extent used by headless Tui hosts.
+public type TuiSize = Size.TuiSize;
+
+// Zero-based half-open terminal-cell rectangle.
+public type TuiRect = Rect.TuiRect;
+
+// Color representation kind for terminal painting.
+public type TuiColorKind = Color.TuiColorKind;
+
+// Validated CRT, ANSI-256, or RGB color value.
+public type TuiColor = Color.TuiColor;
+
+// Semantic style role resolved through `TuiPalette`.
+public type TuiStyleRole = StyleRole.TuiStyleRole;
+
+// Concrete foreground/background colors and text attributes.
+public type TuiStyle = Style.TuiStyle;
+
+// One validated renderable grapheme with a semantic style role.
+public type TuiCell = Cell.TuiCell;
+
+// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
+public type TuiPalette = Palette.TuiPalette;
+
+// Concrete styles for every visual button state.
+public type TuiButtonPalette = ButtonPalette.TuiButtonPalette;
+
+// Concrete styles for every visual one-line input state.
+public type TuiInputPalette = InputPalette.TuiInputPalette;
+
+// Per-axis growth and shrink policy kind.
+public type TuiSizePolicyKind = SizePolicy.TuiSizePolicyKind;
+
+// Independent horizontal and vertical size policies.
+public type TuiSizePolicy = SizePolicy.TuiSizePolicy;
+
+// Alignment of content inside an allocated layout slot.
+public type TuiAlignmentKind = Alignment.TuiAlignmentKind;
+
+// Independent horizontal and vertical alignment.
+public type TuiAlignment = Alignment.TuiAlignment;
+
+// Non-negative outer margins around a laid-out child.
+public type TuiMargins = Margins.TuiMargins;
+
+// Immutable layout inputs for a single-child layout wrapper.
+public type TuiLayoutSettings = LayoutSettings.TuiLayoutSettings;
+
+// Whether a measure axis is unbounded or capped.
+public type TuiMeasureConstraintKind = MeasureConstraint.TuiMeasureConstraintKind;
+
+// One-axis measurement constraint.
+public type TuiMeasureConstraint = MeasureConstraint.TuiMeasureConstraint;
+
+// Width and height measurement constraints.
+public type TuiMeasureSpec = MeasureSpec.TuiMeasureSpec;
+
+// Minimum, preferred, and maximum extents.
+public type TuiMeasureResult = MeasureResult.TuiMeasureResult;
+
+// Whether a spacer is fixed or expanding.
+public type TuiSpacerKind = Spacer.TuiSpacerKind;
+
+// Empty layout extent used between siblings.
+public type TuiSpacer = Spacer.TuiSpacer;
+
+// Fit report for terminal-too-small layout.
+public type TuiLayoutFit = LayoutFit.TuiLayoutFit;
+
+// Positive identity unique among interactive nodes in one rendered tree.
+public type TuiControlId = ControlId.TuiControlId;
+
+// Positive application intent; repetitions across controls are allowed.
+public type TuiAction = IdsAction.TuiAction;
+
+// Immutable button identity, label, mnemonic, action, and state.
+public type TuiButtonSpec = Button.TuiButtonSpec;
+
+// Immutable one-line input state, hint, and optional history.
+public type TuiInputSpec = Input.TuiInputSpec;
+
+// Immutable rectangular grid of concrete or theme-resolved terminal cells.
+public type TuiCellGrid = CellGrid.TuiCellGrid;
+
+// Immutable bounded value displayed as a compact dashboard gauge.
+public type TuiGauge = Gauge.TuiGauge;
+
+// Immutable description of one flat menu-bar action.
+public type TuiMenuItem = MenuItem.TuiMenuItem;
+
+// Structural keyboard gesture used by menu commands.
+public type TuiKeyGesture = KeyGesture.TuiKeyGesture;
+
+// Positive identity of one node in a flat menu definition.
+public type TuiMenuNodeId = MenuNode.TuiMenuNodeId;
+
+// One flat parent-linked menu node.
+public type TuiMenuNode = MenuNode.TuiMenuNode;
+
+// Model-owned open and active menu state.
+public type TuiMenuState = MenuNode.TuiMenuState;
+
+// Named constructors for flat menu nodes.
+public type TuiMenuNodeBuilders = MenuNode.TuiMenuNodeBuilders;
+
+// Immutable display or action item in a status line.
+public type TuiStatusItem = StatusItem.TuiStatusItem;
+
+// Constructors for immutable status-line items.
+public type TuiStatusItemBuilders = StatusItem.TuiStatusItemBuilders;
+
+// Runtime command returned through Update's shared command output handle.
+public type TuiCmd = Cmd.TuiCmd;
+
+// Observable command output passed to Update.
+public type TuiCmdOutput = Cmd.TuiCmdOutput;
+
+// Cooperative callback executed as application-owned background work.
+public type TuiBackgroundWork = Background.TuiBackgroundWork;
+
+// Framework message delivered to Update.
+public type TuiMsg = Msg.TuiMsg;
+
+// Pointer button carried by a normalized pointer event.
+public type TuiPointerButton = PointerEvent.TuiPointerButton;
+
+// Normalized pointer action in zero-based application coordinates.
+public type TuiPointerEvent = PointerEvent.TuiPointerEvent;
+
+// Console mouse action used by pointer events.
+public type TuiPointerAction = Console.MouseAction;
+
+// Immutable element-tree node.
+public type TuiElement = Element.TuiElement;
+
+// Named element constructors.
+public type TuiElementBuilders = Element.TuiElementBuilders;
+
+// Explicit copy of the last painted headless surface.
+public type TuiSurfaceSnapshot = RenderingSurface.TuiSurfaceSnapshot;
+
+// Host-owned mutable working surface handle.
+public type TuiWorkingSurface = RenderingSurface.TuiWorkingSurface;
+
+// Private frame-scoped drawing capability over one working surface.
+public type TuiCanvas = Canvas.TuiCanvas;
+
+// Headless application host.
+public type TuiApplication = Application.TuiApplication;
+
+// Console key event used by headless key injection.
+public type TuiKeyEvent = Console.KeyEvent;
+
+// Console key kind used by headless key injection.
+public type TuiKeyKind = Console.KeyKind;
+
+// Creates a source-aware action message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiMsgAction(Source: ControlId.TuiControlId; Action: IdsAction.TuiAction): Msg.TuiMsg;
+begin
+  return Msg.TuiMsgAction(Source, Action);
+end function;
+
+// Measures one element under the given constraints.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
+// - `Spec`: Measurement constraints for width and height.
+public function TuiMeasure(Node: Element.TuiElement; Spec: MeasureSpec.TuiMeasureSpec): MeasureResult.TuiMeasureResult;
+begin
+  return Measure.TuiMeasure(Node, Spec);
+end function;
+
+// Creates a source-aware controlled-input change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+public function TuiMsgTextChanged(
+  Source: ControlId.TuiControlId;
+  Action: IdsAction.TuiAction;
+  Text: string;
+  Caret: integer
+): Msg.TuiMsg;
+begin
+  return Msg.TuiMsgTextChanged(Source, Action, Text, Caret);
+end function;
+
+// Creates a source-aware controlled multiline text-area change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Offset`: Scroll offset or position applied by the operation.
+public function TuiMsgTextAreaChanged(
+  Source: ControlId.TuiControlId;
+  Action: IdsAction.TuiAction;
+  Text: string;
+  Caret: integer;
+  Offset: Point.TuiPoint
+): Msg.TuiMsg;
+begin
+  return Msg.TuiMsgTextAreaChanged(Source, Action, Text, Caret, Offset);
+end function;
+
+// Creates a source-aware controlled check-box change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Checked`: Proposed checked state.
+public function TuiMsgCheckChanged(
+  Source: ControlId.TuiControlId;
+  Action: IdsAction.TuiAction;
+  Checked: boolean
+): Msg.TuiMsg;
+begin
+  return Msg.TuiMsgCheckChanged(Source, Action, Checked);
+end function;
+
+// Creates a source-aware controlled list selection-change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Selected`: Selected item index.
+public function TuiMsgSelectionChanged(
+  Source: ControlId.TuiControlId;
+  Action: IdsAction.TuiAction;
+  Selected: integer
+): Msg.TuiMsg;
+begin
+  return Msg.TuiMsgSelectionChanged(Source, Action, Selected);
+end function;
+
+// Creates a source-aware controlled scroll-offset change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Offset`: Scroll offset or position applied by the operation.
+public function TuiMsgScrollChanged(
+  Source: ControlId.TuiControlId;
+  Action: IdsAction.TuiAction;
+  Offset: Point.TuiPoint
+): Msg.TuiMsg;
+begin
+  return Msg.TuiMsgScrollChanged(Source, Action, Offset);
+end function;
+
+// Returns the first focusable control in the active modal or full tree.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+public function TuiFocusFirst(Root: Element.TuiElement): option of ControlId.TuiControlId;
+begin
+  return Helpers.TuiFocusFirst(Root);
+end function;
+
+// Keeps a preferred focus id when still valid; otherwise selects the first focusable id.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Preferred`: Preferred size or focus identifier.
+public function TuiFocusResolve(Root: Element.TuiElement; Preferred: option of ControlId.TuiControlId): option of ControlId.TuiControlId;
+begin
+  return Helpers.TuiFocusResolve(Root, Preferred);
+end function;
+
+// Reports whether a root's unconstrained minimum fits an available terminal size.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Available`: Available terminal size.
+public function TuiLayoutFitFor(Root: Element.TuiElement; Available: Size.TuiSize): LayoutFit.TuiLayoutFit;
+begin
+  return Helpers.TuiLayoutFitFor(Root, Available);
+end function;
+
+// Clears a working surface and paints the terminal-too-small notice.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
+public procedure TuiPaintTooSmallOverlay(Surface: RenderingSurface.TuiWorkingSurface);
+begin
+  Paint.TuiPaintTooSmallOverlay(Surface);
+end procedure;
+end unit;

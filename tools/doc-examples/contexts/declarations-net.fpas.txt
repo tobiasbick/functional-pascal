@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Net as Net;
+uses Std.Net.Sockets as Net;
 
 // @example
 

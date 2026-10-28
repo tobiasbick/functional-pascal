@@ -1,0 +1,32 @@
+// Flat panel and overlay chrome painting.
+unit Std.Ui.Terminal.Rendering.Chrome;
+
+uses
+  Std.Ui.Terminal.Cells.Cell as Cell, Std.Ui.Terminal.Cells.StyleRole as StyleRole, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Rendering.Canvas as RenderingCanvas;
+
+// Paints an opaque panel with a thin rounded frame and left-aligned title.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Title`: Title displayed by the panel.
+public procedure TuiPaintPanel(Canvas: RenderingCanvas.TuiCanvas; Bounds: Rect.TuiRect; Title: string);
+begin
+  if Bounds.IsEmpty() then
+    begin
+      return;
+    end;
+  end if;
+
+  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
+  Canvas.DrawFrame(Bounds, StyleRole.TuiStyleRole.Frame);
+  if (Title <> '') and (Bounds.Width > 6) then
+    begin
+      Canvas.Child(
+        Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1)
+      ).WriteText(Point.TuiPoint.Create(0, 0), ' ' + Title + ' ', StyleRole.TuiStyleRole.Title);
+    end;
+  end if;
+end procedure;
+end unit;

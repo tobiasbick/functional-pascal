@@ -349,7 +349,7 @@ fn mutable_generic_captures_keep_active_histories_and_trace_limits() {
 #[test]
 fn unsupported_generic_paths_reject_atomically_before_initializer_effects() {
     let f = Fixture::new(
-        "program T; uses Std.Fs as Fs; type Box of T = record Item: T; end record; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); procedure Unknown<T>(Value: T); begin var State := Box(Item := Value); end procedure; function Identity(): integer; begin return 1; end function; procedure Work(); begin const Good := Box(Item := 1); const Optional: Box of Option of integer := Box(Item := Some(1)); const Callback: Box of function(): integer := Box(Item := Identity); const Aggregate := Box(Item := [1]); end procedure; begin Work(); end.",
+        "program T; uses Std.Io.Fs as Fs; type Box of T = record Item: T; end record; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); procedure Unknown<T>(Value: T); begin var State := Box(Item := Value); end procedure; function Identity(): integer; begin return 1; end function; procedure Work(); begin const Good := Box(Item := 1); const Optional: Box of Option of integer := Box(Item := Some(1)); const Callback: Box of function(): integer := Box(Item := Identity); const Aggregate := Box(Item := [1]); end procedure; begin Work(); end.",
     );
     for unsupported in [
         "Unknown::State.Item",

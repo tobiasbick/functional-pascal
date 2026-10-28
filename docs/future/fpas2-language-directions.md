@@ -16,12 +16,12 @@ FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 requires an explicit decision before implementation.
 
 The [standard-library namespace policy](../specs/std-namespaces.md) is binding
-for contributor naming decisions. Its existing-unit migration is planned in
-[AP53](improve-syntax/ap53-std-namespaces/README.md); only planning and
-documentation are currently authorized. The policy does not change which
-imports the compiler accepts before that migration is implemented.
+for contributor naming decisions. Its existing-unit migration is delivered in
+[AP53](improve-syntax/ap53-std-namespaces/README.md).
+The current handbook documents the canonical imports. Future allocations do
+not authorize implementation of those capabilities.
 
-The next selected work is namespace migration, followed by the byte-buffer
+Namespace migration is complete. The next selected work is the byte-buffer
 contract under `Std.Bytes`. Continue the remaining selected FPAS 2 work before
 graphics and the
 [shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
@@ -194,7 +194,7 @@ management. This is a proposal, not implemented syntax or an approval to impleme
 The existing `try` expression continues to propagate Result/Option failures.
 
 ```pascal
-uses Std.Fs as Fs;
+uses Std.Io.Fs as Fs;
 
 function ReadFirstLine(Path: string): result of (option of string, Fs.FsError);
 begin
@@ -467,7 +467,7 @@ application consistent; existing task ownership and cleanup rules must still hol
 Status: core process management and interactive pipes are implemented. Selectable
 waits, scope-bound cleanup and native-buffer payloads remain separate proposals.
 
-[Std.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
+[Std.Os.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
 environment overrides, supplied stdin, bounded stdout/stderr capture, timeouts
 and cancellation through its options APIs. Those calls supervise the owned
 process tree, reap the child and finish pipe cleanup before returning. Unix
@@ -547,7 +547,7 @@ latency on the affected workloads before claiming a performance improvement.
 ## 15. Shared deadlines and linked cancellation
 
 [Std.Tasks](../pascal/std/concurrency/task.md) provides cancellation tokens and
-individual timeouts. [Std.Server](../pascal/std/network/server.md#one-shutdown-budget)
+individual timeouts. [Std.Net.Server](../pascal/std/network/server.md#one-shutdown-budget)
 already shares one remaining budget across shutdown phases. There is no general
 operation context carrying a shared deadline and linked cancellation across
 task, network and process operations.
@@ -621,7 +621,7 @@ controlled readiness rather than timing-dependent expectations.
 
 ## 18. Validation and typed decoders
 
-[Std.Json.Fields](../pascal/std/text/json-fields.md) already provides strict typed
+[Std.Encoding.Json.Fields](../pascal/std/text/json-fields.md) already provides strict typed
 field access and rejects unknown fields using typed `FieldError` variants with
 the original parser cause for parse failures.
 There is no general library of composable validation rules and typed decoders
@@ -647,7 +647,7 @@ a TUI form that retains its draft and associates errors with the correct fields.
 
 Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
 
-[Std.Tui](../pascal/std/tui/application.md#update-and-view) already owns an
+[Std.Ui.Terminal](../pascal/std/tui/application.md#update-and-view) already owns an
 application model processed through Update and View. Generics and closures can
 express typed state operations, but there is no reusable application-store and
 selector-subscription library.
@@ -753,7 +753,7 @@ arguments, and return values.
 | Conversion | Form | Behavior |
 | --- | --- | --- |
 | Integer to another integer type | `unsigned8(X)`, `integer16(X)` | Checked; an out-of-range value panics. A known constant out of range is a compile-time error. |
-| Integer to floating point | `real32(X)`, `real64(X)` | Replaces `Conv.IntToReal`. Large magnitudes may lose precision. |
+| Integer to floating point | `real32(X)`, `real64(X)` | Replaces `Math.IntToReal`. Large magnitudes may lose precision. |
 | `real64` to `real32` | `real32(X)` | Rounds to the nearest representable value; overflow panics. |
 | Floating point to integer | `Math.Round`, `Math.Trunc`, `Math.Floor`, `Math.Ceil` | The rounding mode stays visible. The result is `integer64`; narrow it explicitly afterwards. |
 | Value into a subrange | `Percent(X)` | Unchanged. |
@@ -1027,7 +1027,7 @@ Status: partially implemented. Regular-file handles, incremental binary and
 UTF-8 line I/O, seek/tell, flush and close are available. Remaining extensions
 are listed below rather than treating the delivered file API as missing.
 
-[Std.Fs file streaming](../pascal/std/host/fs-streams.md) provides the opaque
+[Std.Io.Fs file streaming](../pascal/std/host/fs-streams.md) provides the opaque
 `File` handle and `Open` modes `Read`, `Create`, `Append` and `ReadWrite`.
 `Create` truncates on opening. `Read`, `Write`, `ReadLine`, `Seek`, `Tell`,
 `Flush` and `Close` operate on the handle; read, write and line-read operations
@@ -1067,25 +1067,23 @@ those contracts, including length changes and early-exit resource cleanup.
 
 ## 27. Standard-library namespaces
 
-Status: naming direction agreed; migration planned, implementation not
-authorized. [AP53](improve-syntax/ap53-std-namespaces/README.md) records the
-decisions and owns the work-package checklist. It precedes byte-buffer work.
+Status: implemented and verified.
+[AP53](improve-syntax/ap53-std-namespaces/README.md) records the decisions and owns
+the completed work-package checklist. Byte-buffer work follows separately.
 
 The permanent [namespace specification](../specs/std-namespaces.md) defines the
 existing-unit mapping, future domain allocations and how to place new
 capabilities. The [Std roadmap](std-roadmap.md) retains feature priorities and
 links to their plans. Future plans must follow the same naming policy.
 
-Migrate existing public units, split `Std.Conv` between text formatting and
-numeric conversion, and update compiler/runtime identities, tooling,
-documentation and consumers in FPAS and `fpas-into-the-dungeon`. Preserve
-behavior except for the agreed canonical-name changes. Use one public home
-per capability without legacy import aliases.
+Existing public units use their canonical homes. The former `Std.Conv` is split
+between text formatting and numeric conversion. Compiler/runtime identities,
+tooling, documentation and consumers in FPAS and `fpas-into-the-dungeon` follow
+the same map. Each capability has one public home without legacy import aliases.
 
 Qualified unit syntax and import aliases already exist. This work does not
 add a namespace language construct, implement reserved modules or start the
-shared UI rewrite. Current handbook examples keep their implemented names
-until the migration delivers their replacements.
+shared UI rewrite. Current handbook examples use the implemented canonical names.
 
 ## Other deferred scope
 

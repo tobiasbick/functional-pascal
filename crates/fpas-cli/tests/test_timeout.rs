@@ -87,7 +87,7 @@ fn timeout_terminates_processes_started_by_the_test() {
     write(
         &test_file,
         &format!(
-            "program ProcessTest;\nuses Std.Proc as Proc;\nvar Status: Result of (integer, Proc.ProcError) := Ok(0);\nbegin Status := Proc.Run('{command}', [{arguments}]); end."
+            "program ProcessTest;\nuses Std.Os.Proc as Proc;\nvar Status: Result of (integer, Proc.ProcError) := Ok(0);\nbegin Status := Proc.Run('{command}', [{arguments}]); end."
         ),
     );
 

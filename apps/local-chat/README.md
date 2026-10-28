@@ -1,6 +1,6 @@
 # Local Chat
 
-Local Chat is a small `Std.Tui` application written in Functional Pascal. It
+Local Chat is a small `Std.Ui.Terminal` application written in Functional Pascal. It
 connects directly to the local OpenAI-compatible llama.cpp server and uses the
 same dark cyan-and-amber visual language as the Notes application.
 

@@ -17,7 +17,7 @@ use std::{
 };
 
 const HOT: &str = "program Main;
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 function Hot(Limit: integer): integer;
 begin

@@ -1,7 +1,7 @@
-# `Std.Tui` geometry
+# `Std.Ui.Terminal` geometry
 
 Examples use local aliases such as `type TuiRect = Tui.TuiRect;` after
-`uses Std.Tui as Tui;`, supplied by their named documentation context.
+`uses Std.Ui.Terminal as Tui;`, supplied by their named documentation context.
 
 `TuiPoint`, `TuiSize`, and `TuiRect` are immutable value records. Coordinates
 are zero-based. Sizes and rectangle extents must be non-negative. Rectangles
@@ -35,5 +35,5 @@ For a rectangle at `(2, 3)` with size `(8, 5)`, points `(2, 3)` through
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Layout](layout.md)

@@ -4,7 +4,7 @@ use crate::std_registry::loaded::type_registration;
 use crate::types::Ty;
 use fpas_builtins::std_symbols as s;
 
-/// Register the `Std.Proc` functions made visible by `uses Std.Proc`.
+/// Register the `Std.Os.Proc` functions made visible by `uses Std.Os.Proc`.
 pub(super) fn register_std_proc(checker: &mut Checker) {
     let error_ty = super::errors::register(
         checker,

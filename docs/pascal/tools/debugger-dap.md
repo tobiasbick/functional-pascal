@@ -109,7 +109,7 @@ memory, keeps at most 4,096 events, writes no recording files, and retains no
 recording snapshots. `fpas/recordingDescribe` names versioned program identity,
 portable sources, whether capture is on, whether later events were dropped,
 the event ceiling, captured events, and `replayable: false`. While capturing,
-unsupported host effects such as `Std.Random` stop with `FP5024` before the
+unsupported host effects such as `Std.Math.Random` stop with `FP5024` before the
 intrinsic runs. Execution without `fpas/record` is unchanged. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach

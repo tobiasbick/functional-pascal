@@ -111,7 +111,7 @@ fn delphi_expression_habits_are_reported_once() {
         PARSE_MISSING_IMPORT_ALIAS,
         "Delphi unit `System.SysUtils`",
         "System.SysUtils",
-        "uses Std.Parse as Parse, Std.Conv as Conv;",
+        "uses Std.Text.Parse as Parse, Std.Text.Format as Conv;",
     );
 }
 

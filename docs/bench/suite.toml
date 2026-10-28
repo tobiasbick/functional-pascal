@@ -1,7 +1,7 @@
 # Curated FPAS end-to-end benchmarks for `cargo bench-fpas`.
 # Paths are relative to the repository root.
 # Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling), and
-# `tui` (headless Std.Tui), and `tooling` (native editor and compiler workloads).
+# `tui` (headless Std.Ui.Terminal), and `tooling` (native editor and compiler workloads).
 # `failure-dump` compares paired capture modes for local release validation.
 # `errors` adds matched construction, mapping, rendering and image controls.
 # FPAS rows run through the production `fpas run` path.

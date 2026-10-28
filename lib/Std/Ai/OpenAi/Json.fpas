@@ -1,7 +1,7 @@
 // JSON encoding and decoding for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Json;
 
-uses Std.Ai.OpenAi.Types as Types, Std.Conv as Conv, Std.Json as Json;
+uses Std.Ai.OpenAi.Types as Types, Std.Math as Math, Std.Encoding.Json as Json;
 
 // Encodes one non-streaming chat-completion request body.
 //
@@ -44,7 +44,7 @@ begin
   case Options.MaxTokens of
     when Some(const Value):
       begin
-        Fields['max_tokens'] := Json.JsonValue.Number(Conv.IntToReal(Value));
+        Fields['max_tokens'] := Json.JsonValue.Number(Math.IntToReal(Value));
       end;
     when None:
       begin

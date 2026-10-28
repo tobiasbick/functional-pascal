@@ -2,8 +2,8 @@ program Notes;
 
 uses
   Notes.Model as Model, Notes.Repository as Repository, Notes.Theme as Theme, Notes.Update as Update,
-  Notes.View as View, Std.Args as Args, Std.Console as Console, Std.Random as Random,
-  Std.Tui as Tui;
+  Notes.View as View, Std.Os.Args as Args, Std.Console as Console, Std.Math.Random as Random,
+  Std.Ui.Terminal as Tui;
 
 function NotesDirectory(): string;
 begin

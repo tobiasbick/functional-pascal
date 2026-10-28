@@ -1,6 +1,6 @@
 program ShortCircuitTest;
 
-uses Std.Bits as Bits, Std.Test as Test;
+uses Std.Math.Bits as Bits, Std.Test as Test;
 
 var Trace: integer := 0;
 

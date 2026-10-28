@@ -1,6 +1,6 @@
 program CliArgumentsTest;
 
-uses Std.Cli as Cli, Std.Parse as Parse, Std.Test as Test;
+uses Std.Cli as Cli, Std.Text.Parse as Parse, Std.Test as Test;
 
 begin
   const Definition := Cli.Schema(

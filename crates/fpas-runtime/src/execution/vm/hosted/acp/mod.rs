@@ -68,7 +68,7 @@ impl Worker {
             if decode {
                 let raw = RawJson::parse(converter.record_text(
                     payload,
-                    "Std.Acp.Types.RawJson",
+                    "Std.Ai.Acp.Types.RawJson",
                     "Text",
                     None,
                 )?)?;
@@ -79,9 +79,9 @@ impl Worker {
                         format!(
                             "{}.Decoded{root}",
                             if version == Version::V1 {
-                                "Std.Acp.Types"
+                                "Std.Ai.Acp.Types"
                             } else {
-                                "Std.Acp.V2"
+                                "Std.Ai.Acp.V2"
                             }
                         ),
                         decoded.raw,
@@ -97,14 +97,14 @@ impl Worker {
         let result = match result {
             Ok((Some((name, raw)), payload)) => {
                 let raw = self.layouts.record(
-                    "Std.Acp.Types.RawJson",
+                    "Std.Ai.Acp.Types.RawJson",
                     vec![Value::Str(raw.text().into())],
                     location,
                 )?;
                 Value::result_ok(self.layouts.record(&name, vec![payload, raw], location)?)
             }
             Ok((None, text)) => Value::result_ok(self.layouts.record(
-                "Std.Acp.Types.RawJson",
+                "Std.Ai.Acp.Types.RawJson",
                 vec![text],
                 location,
             )?),
@@ -135,7 +135,7 @@ impl Worker {
                     )
                 };
                 Value::result_error(self.layouts.enumeration(
-                    "Std.Acp.Types.AcpError",
+                    "Std.Ai.Acp.Types.AcpError",
                     variant,
                     fields,
                     location,

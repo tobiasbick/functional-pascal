@@ -27,7 +27,10 @@ fn pascal_builtins_name_their_fpas_form_with_the_written_arguments() {
         ("Console.WriteLn(Length(Text));", "Text.Length()"),
         ("Console.WriteLn(High(Items));", "Items.Length() - 1"),
         ("Console.WriteLn(Low(Items));", "0"),
-        ("Console.WriteLn(IntToStr(Count));", "Conv.IntToStr(Count)"),
+        (
+            "Console.WriteLn(IntToStr(Count));",
+            "Format.IntToStr(Count)",
+        ),
         ("Write(Text);", "Console.WriteText(Text)"),
         ("Console.Write(Text);", "Console.WriteText(Text)"),
         ("discard TryStrToInt(Text, Count);", "Parse.Int(Text)"),

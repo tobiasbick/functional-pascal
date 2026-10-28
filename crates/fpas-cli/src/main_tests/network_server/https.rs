@@ -24,7 +24,7 @@ fn fpas_https_server_serves_one_verified_request() {
         format!(
             r#"program HttpsServer;
 
-uses Std.Console as Console, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin

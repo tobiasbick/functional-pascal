@@ -96,13 +96,13 @@ mod tests {
         let symbols = intrinsic_std_symbols(fpas_builtins::STD_UNIT_FS);
         let read_text = symbols
             .iter()
-            .find(|symbol| symbol.qualified_name == "Std.Fs.ReadText")
-            .expect("Std.Fs.ReadText declaration");
+            .find(|symbol| symbol.qualified_name == "Std.Io.Fs.ReadText")
+            .expect("Std.Io.Fs.ReadText declaration");
 
         assert_eq!(read_text.kind, IntrinsicStdSymbolKind::Function);
         assert_eq!(
             read_text.ty.to_string(),
-            "function(Path: string): Result of (string, Std.Fs.FsError)"
+            "function(Path: string): Result of (string, Std.Io.Fs.FsError)"
         );
     }
 

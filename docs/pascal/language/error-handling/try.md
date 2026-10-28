@@ -1,6 +1,6 @@
 # Try operator
 
-The code fragments use `uses Std.Conv as Conv;`.
+The code fragments use `uses Std.Text.Format as Conv;`.
 
 `try` propagates errors automatically. If the expression is `Error` (for `Result`) or `None` (for `Option`), the enclosing function returns that value immediately. Otherwise, the inner value is unwrapped:
 

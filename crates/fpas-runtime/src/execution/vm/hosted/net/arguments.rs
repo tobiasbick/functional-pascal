@@ -17,7 +17,7 @@ pub(super) fn require_count(
     Err(worker.runtime_error(
         RUNTIME_INTRINSIC_STACK_STATE_ERROR,
         format!(
-            "Std.Net intrinsic expected {expected} arguments, got {}",
+            "Std.Net.Sockets intrinsic expected {expected} arguments, got {}",
             arguments.len()
         ),
         "Check the compiler intrinsic signature and register argument count.",
@@ -51,7 +51,7 @@ pub(super) fn connection(worker: &Worker, value: &Value) -> Result<u64, VmError>
         actual => Err(type_error(
             worker,
             "Connection",
-            "Std.Net.Connection",
+            "Std.Net.Sockets.Connection",
             actual,
         )),
     }
@@ -61,7 +61,12 @@ pub(super) fn connection(worker: &Worker, value: &Value) -> Result<u64, VmError>
 pub(super) fn listener(worker: &Worker, value: &Value) -> Result<u64, VmError> {
     match value {
         Value::OpaqueHandle(handle) => Ok(*handle),
-        actual => Err(type_error(worker, "Listener", "Std.Net.Listener", actual)),
+        actual => Err(type_error(
+            worker,
+            "Listener",
+            "Std.Net.Sockets.Listener",
+            actual,
+        )),
     }
 }
 
@@ -106,9 +111,9 @@ fn type_error(worker: &Worker, name: &str, expected: &str, actual: &Value) -> Vm
     worker.runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         format!(
-            "Std.Net {name} expected {expected}, got {}",
+            "Std.Net.Sockets {name} expected {expected}, got {}",
             actual.type_name()
         ),
-        "Pass values matching the documented Std.Net function signature.",
+        "Pass values matching the documented Std.Net.Sockets function signature.",
     )
 }

@@ -5,7 +5,7 @@ use fpas_runtime::VerifiedExecutable;
 use fpas_runtime::execution::{DebugErrorKind, DebugExpression, DebugSession};
 
 const SOURCE: &str = r#"program FileMetadata;
-uses Std.Fs as Fs;
+uses Std.Io.Fs as Fs;
 type FileAlias = Fs.File;
 var Marker: integer := 0;
 function Keep(Value: FileAlias): FileAlias;
@@ -56,7 +56,7 @@ fn file_constructor_privacy_survives_portable_debug_metadata() {
         let record = image
             .records
             .iter()
-            .find(|record| image.strings.get(record.name) == Some("Std.Fs.File"))
+            .find(|record| image.strings.get(record.name) == Some("Std.Io.Fs.File"))
             .expect("file layout");
         let construction = record.construction.as_ref().expect("construction metadata");
         assert!(
@@ -65,7 +65,7 @@ fn file_constructor_privacy_survives_portable_debug_metadata() {
         );
         assert_eq!(
             construction.owner_unit.and_then(|id| image.strings.get(id)),
-            Some("Std.Fs")
+            Some("Std.Io.Fs")
         );
         let mut session = DebugSession::new(executable).expect("debug session");
         // Construction metadata is available at the initial entry stop.

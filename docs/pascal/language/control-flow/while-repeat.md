@@ -1,6 +1,6 @@
 # While and repeat
 
-The code fragments use `uses Std.Proc as Proc, Std.Console as Console;`.
+The code fragments use `uses Std.Os.Proc as Proc, Std.Console as Console;`.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`while_stmt`, `repeat_stmt`).
 

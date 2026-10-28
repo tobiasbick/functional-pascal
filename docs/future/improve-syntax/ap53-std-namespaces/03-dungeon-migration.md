@@ -1,6 +1,8 @@
 # AP53.3: Migrate dungeon consumers
 
-Package: [AP53](README.md). Status: not started; implementation not authorized.
+Package: [AP53](README.md). Status: complete.
+The consumer branch is `codex/16-llm-integration`; commits and pushes are
+authorized without merge.
 
 ## Prerequisites
 
@@ -12,15 +14,15 @@ Package: [AP53](README.md). Status: not started; implementation not authorized.
 
 ## Contract and scope
 
-Migrate all standard-unit imports and affected qualifications in
-`fpas-into-the-dungeon` to the binding namespace specification. Use the matching
-compiler/library from AP53.2. Preserve game rules, generation, network messages,
-ACP/MCP behavior and terminal presentation.
+All standard-unit imports and affected qualifications in
+`fpas-into-the-dungeon` follow the binding namespace specification. The consumer
+uses the matching compiler/library from AP53.2. Game rules, generation, network
+messages, ACP/MCP behavior and terminal presentation are preserved.
 
 This is a namespace migration. It does not introduce shared UI elements, a
 graphical client, byte buffers or other future standard-library features.
-The two repositories retain their own Git work; this package does not authorize
-committing, pushing or changing unrelated work.
+The two repositories retain separate commits and pushes on the branches named
+in Q71. Unrelated work and merges are outside this migration.
 
 ## Affected paths and owners
 
@@ -32,21 +34,27 @@ committing, pushing or changing unrelated work.
 | Modify | Its documentation and agent guidance | Keep examples and development commands consistent with the selected FPAS build |
 | Reconcile | This AP and the shared UI plan | Record completion of names only, leaving the separate UI rewrite pending |
 
-Before implementation, replace broad consumer scopes with the actual affected
-paths found in that checkout. Keep both repositories' uncommitted user changes
-outside this migration.
+The inspected consumer paths are `apps/{client,server}/src`,
+`libs/{game,world,protocol,persistence}/src`,
+`tests/{client,client-session,fixtures,game,levels,protocol,runtime,server,world}`,
+and `tools/{world-preview,persistence-bench,pi-launcher,dap-acceptance}/src`.
+Current names also occur in `README.md`, `AGENTS.md`, `docs/agent-reference.md`,
+`docs/architecture/overview.md`, `docs/plans/16a-gamemaster-connection.md`, and
+`DUNGEON_RPG_IDEAS.md`. Project manifests contain no old standard-unit names.
+Keep both repositories' unrelated user changes outside this migration.
 
 ## Acceptance and verification
 
 Search all tracked consumer content for old public paths and inspect each
 remaining match. Check project resolution and affected sources with the
 AP53.2 compiler/library pair. Run the consumer's prescribed formatter and
-relevant suites when implementation is authorized. Include generation
+relevant suites. Include generation
 fingerprint coverage, terminal client/server behavior and affected AI/network
 integration coverage; do not infer external-service success from compilation.
 
-Compare observable results with the unchanged game contracts. Report any
-environment-dependent verification limits without marking unmet acceptance
-criteria complete. Review Spec and Standards, then mark AP53.3 complete in the
-package README. Mark AP53 complete in the central index only after every work
-package is delivered and verified. Git integration remains separately authorized.
+The unchanged generation fingerprints, terminal client/server behavior,
+AI/network integration and persistence contracts pass the consumer suite.
+Spec and Standards review is complete. The
+[verification report](../../../reports/ap53-namespace-migration.md) records the
+commands, final results and an earlier non-reproduced readiness timeout.
+Git integration follows Q71; completion does not authorize a merge.

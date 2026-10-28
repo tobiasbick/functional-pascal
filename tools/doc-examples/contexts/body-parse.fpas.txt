@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Parse as Parse;
+uses Std.Text.Parse as Parse;
 
 begin
 // @example

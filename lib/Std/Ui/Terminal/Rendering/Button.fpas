@@ -1,0 +1,127 @@
+// Flat modern button painting.
+unit Std.Ui.Terminal.Rendering.Button;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Cells.Cell as Cell, Std.Ui.Terminal.Cells.StyleRole as StyleRole,
+  Std.Ui.Terminal.Chrome.Button as ChromeButton, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Rendering.Canvas as RenderingCanvas;
+
+procedure TuiPaintButtonText(
+  Canvas: RenderingCanvas.TuiCanvas;
+  Position: Point.TuiPoint;
+  Button: ChromeButton.TuiButtonSpec;
+  Role: StyleRole.TuiStyleRole;
+  ShortcutRole: StyleRole.TuiStyleRole
+);
+begin
+  var X: integer := Position.X;
+  for Index: integer := 0 to Button.Text.Length() - 1 do
+    begin
+      const Glyph: string := Button.Text[Index];
+      var GlyphRole: StyleRole.TuiStyleRole := Role;
+      if (Button.Mnemonic <> '') and (Glyph.ToLower() = Button.Mnemonic.ToLower()) then
+        begin
+          GlyphRole := ShortcutRole;
+        end;
+      end if;
+
+      Canvas.WriteText(Point.TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
+      X := X + Console.DisplayWidth(Glyph);
+    end;
+  end for;
+end procedure;
+
+function TuiButtonRole(Button: ChromeButton.TuiButtonSpec; Focused: boolean): StyleRole.TuiStyleRole;
+begin
+  if not Button.Enabled then
+    begin
+      return StyleRole.TuiStyleRole.ButtonDisabled;
+    end;
+  end if;
+
+  if Focused then
+    begin
+      return StyleRole.TuiStyleRole.ButtonSelected;
+    end;
+  end if;
+
+  if Button.Default then
+    begin
+      return StyleRole.TuiStyleRole.ButtonDefault;
+    end;
+  end if;
+
+  return StyleRole.TuiStyleRole.ButtonNormal;
+end function;
+
+function TuiButtonShortcutRole(Button: ChromeButton.TuiButtonSpec; Focused: boolean): StyleRole.TuiStyleRole;
+begin
+  if not Button.Enabled then
+    begin
+      return StyleRole.TuiStyleRole.ButtonDisabled;
+    end;
+  end if;
+
+  if Focused then
+    begin
+      return StyleRole.TuiStyleRole.ButtonSelectedShortcut;
+    end;
+  end if;
+
+  if Button.Default then
+    begin
+      return StyleRole.TuiStyleRole.ButtonDefaultShortcut;
+    end;
+  end if;
+
+  return StyleRole.TuiStyleRole.ButtonShortcut;
+end function;
+
+// Paints a compact one-row button.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Button`: Button specification used by the operation.
+// - `Focused`: Whether the control currently owns focus.
+// - `Pressed`: Whether the control is displayed as pressed.
+public procedure TuiPaintButton(
+  Canvas: RenderingCanvas.TuiCanvas;
+  Bounds: Rect.TuiRect;
+  Button: ChromeButton.TuiButtonSpec;
+  Focused: boolean;
+  Pressed: boolean
+);
+begin
+  if Bounds.IsEmpty() then
+    begin
+      return;
+    end;
+  end if;
+  var Role: StyleRole.TuiStyleRole := TuiButtonRole(Button, Focused);
+  var ShortcutRole: StyleRole.TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
+  const ContentWidth: integer := Bounds.Width;
+  const TextWidth: integer := Console.DisplayWidth(Button.Text);
+  var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
+  if TextX < Bounds.X + 1 then
+    begin
+      TextX := Bounds.X + 1;
+    end;
+  end if;
+
+  if Pressed and Button.Enabled then
+    begin
+      Role := StyleRole.TuiStyleRole.ButtonSelected;
+      ShortcutRole := StyleRole.TuiStyleRole.ButtonSelectedShortcut;
+    end;
+  end if;
+
+  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', Role));
+  TuiPaintButtonText(Canvas, Point.TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
+  if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then
+    begin
+      Canvas.WriteText(Point.TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role);
+    end;
+  end if;
+end procedure;
+end unit;

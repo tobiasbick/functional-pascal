@@ -18,7 +18,7 @@ implementation; v1 and v2 method values are nominally distinct.
 The operation requires an explicitly installed interactive process terminal.
 Without one it returns UnsupportedCapability before launching anything. Local
 cancellation and timeout return their typed errors; process-group cleanup uses
-the existing Std.Proc foreground implementation. Normal exit zero returns true;
+the existing Std.Os.Proc foreground implementation. Normal exit zero returns true;
 nonzero exit or a signal returns false. ACP protocol pipes are never reused.
 
 After true, close the old ACP connection, reconnect with the original base

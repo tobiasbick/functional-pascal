@@ -2,8 +2,8 @@
 program McpWorkerServer;
 
 uses
-  Std.Mcp as Mcp, Std.Proc as Proc, Std.Tasks as Tasks, Std.Time as Time,
-  Std.Args as Args, Std.Test as Test, Std.Console as Console;
+  Std.Ai.Mcp as Mcp, Std.Os.Proc as Proc, Std.Tasks as Tasks, Std.Time as Time,
+  Std.Os.Args as Args, Std.Test as Test, Std.Console as Console;
 
 function Serve(Server: Mcp.Server): result of (boolean, Mcp.McpError);
 begin

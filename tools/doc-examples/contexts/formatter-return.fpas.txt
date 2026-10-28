@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Tui as Builders, Std.Conv as Conv;
+uses Std.Ui.Terminal as Builders, Std.Text.Format as Conv;
 type AppModel = record Notes: array of string; end record;
 function Filtered(Notes: array of string; Query: string): array of string; begin return Notes; end function;
 function Header(State: AppModel; Issues: string; Dirty: string): Builders.TuiElement;

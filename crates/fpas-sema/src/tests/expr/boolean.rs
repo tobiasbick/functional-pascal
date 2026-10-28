@@ -19,14 +19,14 @@ fn integer_logical_operators_suggest_the_matching_bits_function() {
         assert!(errors[0].message.contains("boolean"));
         let hint = errors[0].help.as_deref().expect("migration hint");
         assert!(hint.contains(&format!("Bits.{function}")), "{hint}");
-        assert!(hint.contains("uses Std.Bits as Bits;"));
+        assert!(hint.contains("uses Std.Math.Bits as Bits;"));
         let imported = check_errors(&format!(
-            "program T; uses Std.Bits as Flags; begin const Value: integer := {expression}; end."
+            "program T; uses Std.Math.Bits as Flags; begin const Value: integer := {expression}; end."
         ));
         let hint = imported[0].help.as_deref().expect("written alias repair");
         assert!(hint.contains(&format!("Flags.{function}")), "{hint}");
         assert!(
-            !hint.contains("uses Std.Bits"),
+            !hint.contains("uses Std.Math.Bits"),
             "existing imports are reused"
         );
     }
@@ -50,7 +50,7 @@ fn mixed_and_other_non_boolean_operands_are_rejected_without_integer_hints() {
             assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH);
             let hint = errors[0].help.as_deref().expect("Boolean hint");
             assert!(hint.contains("Both operands must be boolean"), "{hint}");
-            assert!(!hint.contains("Std.Bits"), "{hint}");
+            assert!(!hint.contains("Std.Math.Bits"), "{hint}");
         }
     }
 }

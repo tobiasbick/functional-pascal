@@ -1,6 +1,6 @@
 program UriComponentErrorsTest;
 
-uses Std.Net.Uri as Uri, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 begin
   Test.AssertTrue(Uri.DecodePathSegment('%') is Error(Uri.ComponentError.InvalidEscape(0)));

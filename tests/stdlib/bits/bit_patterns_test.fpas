@@ -1,6 +1,6 @@
 program BitPatternsTest;
 
-uses Std.Bits as Bits, Std.Test as Test;
+uses Std.Math.Bits as Bits, Std.Test as Test;
 
 begin
   Test.AssertEquals(8, Bits.BitAnd(12, 10));

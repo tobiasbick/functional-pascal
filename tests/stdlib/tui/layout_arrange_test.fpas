@@ -1,6 +1,6 @@
 program TuiLayoutArrangeTest;
 
-uses Std.Test as Test, Std.Tui as Tui;
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function Paint(Tree: Tui.TuiElement; Size: Tui.TuiSize): Tui.TuiSurfaceSnapshot;
 begin

@@ -1,8 +1,8 @@
 program AcpHostRequestsTest;
 
 uses
-  Std.Acp as Acp, Std.Acp.Host as Host, Std.Acp.Types as Types, Std.Fs as Fs,
-  Std.Json as Json, Std.Proc as Proc, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
+  Std.Ai.Acp as Acp, Std.Ai.Acp.Host as Host, Std.Ai.Acp.Types as Types, Std.Io.Fs as Fs,
+  Std.Encoding.Json as Json, Std.Os.Proc as Proc, Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
 
 var TerminalId: string := '';
 var ExpectedText: string := '';

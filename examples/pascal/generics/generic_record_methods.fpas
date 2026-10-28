@@ -2,7 +2,7 @@
 
 program GenericRecordMethods;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Text.Format as Conv;
 
 type Box = record
   Value: integer;

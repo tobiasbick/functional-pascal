@@ -1,6 +1,6 @@
 program FsBinaryRoundtripTest;
 
-uses Std.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
 
 procedure AssertBytes(Expected: array of integer; Actual: array of integer);
 begin

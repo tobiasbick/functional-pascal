@@ -1,4 +1,4 @@
-//! Boolean text shared by Std.Conv and Std.Parse.
+//! Boolean text shared by Std.Text.Format and Std.Text.Parse.
 //!
 //! **Documentation:** `docs/pascal/std/text/parse.md`.
 

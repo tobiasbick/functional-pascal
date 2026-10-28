@@ -93,7 +93,7 @@ pub(super) struct HostedState {
     pub(in crate::execution::vm) channels: ChannelRegistry,
     pub(in crate::execution::vm) cases: Arc<super::tasks::selection::CaseRegistry>,
     pub(super) test_scratch_dir: Mutex<PathBuf>,
-    /// Receiver for stderr lines of `Std.Proc.Run` children; inherited when `None`.
+    /// Receiver for stderr lines of `Std.Os.Proc.Run` children; inherited when `None`.
     pub(super) program_stderr: Mutex<Option<crate::stdlib::ProgramStderr>>,
     /// Routine and line samples, installed only for `fpas run/debug --profile`.
     pub(in crate::execution::vm) profile: std::sync::OnceLock<Arc<super::profile::ProfileSink>>,

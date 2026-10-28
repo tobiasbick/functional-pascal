@@ -51,7 +51,7 @@ impl Converter<'_> {
             (Type::UInt64, _) => Detached::Unsigned(
                 UInt64::canonical(self.record_text(
                     value,
-                    "Std.Acp.Types.UInt64",
+                    "Std.Ai.Acp.Types.UInt64",
                     "Digits",
                     expected,
                 )?)?
@@ -59,7 +59,7 @@ impl Converter<'_> {
             ),
             (Type::Raw { .. }, _) => Detached::Raw(RawJson::parse(self.record_text(
                 value,
-                "Std.Acp.Types.RawJson",
+                "Std.Ai.Acp.Types.RawJson",
                 "Text",
                 expected,
             )?)?),
@@ -72,7 +72,7 @@ impl Converter<'_> {
                 Detached::Some(Box::new(self.unpack(inner, value, id)?))
             }
             (Type::Field(inner), Value::Enum(value)) => {
-                let owner = self.enumeration("Std.Acp.Types.Field", expected)?;
+                let owner = self.enumeration("Std.Ai.Acp.Types.Field", expected)?;
                 let body = value.body();
                 if body.layout.enumeration != owner {
                     return Err(invalid());

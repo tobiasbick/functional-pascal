@@ -1,6 +1,6 @@
-# `Std.Tui` menus
+# `Std.Ui.Terminal` menus
 
-Examples use local aliases for `Tui.Name` after `uses Std.Tui as Tui;`.
+Examples use local aliases for `Tui.Name` after `uses Std.Ui.Terminal as Tui;`.
 Their named documentation contexts supply these aliases and model values.
 
 `TuiElementBuilders.MakeMenu` creates one controlled hierarchical menu. The
@@ -69,7 +69,7 @@ mnemonics.
 
 ## See also
 
-- [`Std.Tui`](README.md)
+- [`Std.Ui.Terminal`](README.md)
 - [Elements](elements.md)
 - [Application](application.md)
 - [Cells and themes](cells.md)

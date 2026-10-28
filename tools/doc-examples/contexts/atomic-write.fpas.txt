@@ -1,5 +1,5 @@
 program DocumentationExample;
-uses Std.Fs as Fs, Std.Console as Console;
+uses Std.Io.Fs as Fs, Std.Console as Console;
 begin
 const EncodedNote := 'Example note';
 // @example

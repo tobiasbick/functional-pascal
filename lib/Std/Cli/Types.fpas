@@ -1,7 +1,7 @@
 // Schema, typed values and outcomes shared by the command-line parser.
 unit Std.Cli.Types;
 
-uses Std.Parse as Parse;
+uses Std.Text.Parse as Parse;
 
 // Type requested for one command-line value.
 public type Kind = enum

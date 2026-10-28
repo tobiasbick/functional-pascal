@@ -1,4 +1,4 @@
-# `Std.Toml.Fields`
+# `Std.Encoding.Toml.Fields`
 
 Strict typed access to the keys of parsed TOML tables. Every accessor returns
 `Error(Cause)` for a missing key or a value of the wrong TOML kind instead of
@@ -7,7 +7,7 @@ requiring a nested `case` per key.
 ```pascal id=example-1
 program Example;
 
-uses Std.Console as Console, Std.Toml as Toml, Std.Toml.Fields as TomlFields;
+uses Std.Console as Console, Std.Encoding.Toml as Toml, Std.Encoding.Toml.Fields as TomlFields;
 
 function ReadPort(Text: string): result of (integer, TomlFields.FieldError);
 begin
@@ -28,8 +28,8 @@ end.
 
 ## Importing and names
 
-`uses Std.Toml.Fields as Fields;` provides the accessors through `Fields.Name`. Values and tables keep the
-`Std.Toml` types, so programs usually import both units.
+`uses Std.Encoding.Toml.Fields as Fields;` provides the accessors through `Fields.Name`. Values and tables keep the
+`Std.Encoding.Toml` types, so programs usually import both units.
 
 ## Quick reference
 
@@ -78,11 +78,11 @@ files written for an older schema.
 
 | Concern | Location |
 |---------|----------|
-| FPAS implementation | [`Fields.fpas`](../../../../lib/Std/Toml/Fields.fpas) |
+| FPAS implementation | [`Fields.fpas`](../../../../lib/Std/Encoding/Toml/Fields.fpas) |
 | Regression tests | [`toml_fields_typed_access_test.fpas`](../../../../tests/stdlib/toml/toml_fields_typed_access_test.fpas) |
 
 ## See also
 
-- [`Std.Toml`](toml.md)
+- [`Std.Encoding.Toml`](toml.md)
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)

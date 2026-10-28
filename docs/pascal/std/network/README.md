@@ -5,11 +5,10 @@ implemented in FPAS.
 
 | Unit | Description |
 |------|-------------|
-| [`Std.Net`](net.md) | Hosted TCP/TLS connections and listeners with byte I/O |
-| [`Std.Server`](server.md) | Server task/listener ownership, signals, common shutdown budget, and explicit process escalation |
+| [`Std.Net.Sockets`](net.md) | Hosted TCP/TLS connections and listeners with byte I/O |
+| [`Std.Net.Server`](server.md) | Server task/listener ownership, signals, common shutdown budget, and explicit process escalation |
 | [`Std.Net.Uri`](uri.md) | Absolute URI parsing, percent-encoded components, and ordered query parameters |
-| [`Std.Net.Utf8`](utf8.md) | UTF-8 encoding and validated decoding |
-| [`Std.Http`](http.md) | HTTP/HTTPS client and server helpers plus SSE decoding |
+| [`Std.Net.Http`](http.md) | HTTP/HTTPS client and server helpers plus SSE decoding |
 
 ## Runnable examples
 
@@ -20,5 +19,6 @@ The examples use bounded request counts and explicit timeouts where applicable.
 
 ## See also
 
+- [UTF-8 text encoding](utf8.md)
 - [OpenAI-compatible chat](../ai/openai.md)
 - [Standard library index](../README.md)

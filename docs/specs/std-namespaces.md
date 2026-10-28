@@ -1,10 +1,10 @@
 # Standard-library namespaces
 
-Status: binding naming and placement policy for contributors. The existing-unit
-mapping is the target of [AP53](../future/improve-syntax/ap53-std-namespaces/README.md),
-whose implementation is not yet authorized. The
-[current handbook](../pascal/std/README.md) remains authoritative for available
-imports and behavior until that migration is delivered.
+Status: binding naming and placement policy for contributors. The canonical
+units below are implemented by
+[AP53](../future/improve-syntax/ap53-std-namespaces/README.md).
+The [current handbook](../pascal/std/README.md) documents available imports and
+behavior; the future allocation table reserves names without providing APIs.
 
 Read this document before adding, moving, splitting or renaming a public
 `Std.*` unit, or assigning a unit name in a future plan. Update this document in
@@ -39,13 +39,14 @@ This specification survives completion of individual APs.
 
 ## Existing public units and migration targets
 
-The baseline is the intrinsic unit list in
+The current catalogue consists of the intrinsic unit list in
 [`std_units/units.rs`](../../crates/fpas-builtins/src/std_units/units.rs) plus the
 public source exports in [`stdlib.fpasprj`](../../lib/stdlib.fpasprj).
 Private source units and retired type-helper names are not public exports.
-This table records migration targets, not imports available before AP53.
+The canonical column names the available units. The former-name column records
+the AP53 migration; relocated former names are rejected as imports.
 
-| Existing unit | Target unit | Responsibility |
+| Former unit | Canonical unit | Responsibility |
 | --- | --- | --- |
 | `Std.Acp` | `Std.Ai.Acp` | ACP connections, events and replies |
 | `Std.Acp.Types` | `Std.Ai.Acp.Types` | ACP values and codecs |
@@ -86,9 +87,10 @@ This table records migration targets, not imports available before AP53.
 | `Std.Test` | `Std.Test` | Test assertions and test facilities |
 | `Std.Version` | `Std.Version` | Compiler and library version information |
 
-`Std.Conv.IntToStr`, `RealToStr`, `BoolToStr` and `IntToHex` move to
-`Std.Text.Format` with the same routine names. `Std.Conv.IntToReal` moves to
-`Std.Math.IntToReal`. Preserve signatures, rounding and error behavior. A caller
+The former `Std.Conv.IntToStr`, `RealToStr`, `BoolToStr` and `IntToHex` belong to
+`Std.Text.Format` with the same routine names. The former `Std.Conv.IntToReal`
+belongs to `Std.Math.IntToReal`. Signatures, rounding and error behavior are
+preserved. A caller
 using both parts imports both destination units.
 
 All other entries preserve their public members and behavior while changing

@@ -1,6 +1,6 @@
 program JsonFieldsTypedAccessTest;
 
-uses Std.Json as Json, Std.Json.Fields as JsonFields, Std.Test as Test;
+uses Std.Encoding.Json as Json, Std.Encoding.Json.Fields as JsonFields, Std.Test as Test;
 
 function ErrorValue<T>(Value: result of (T, JsonFields.FieldError)): JsonFields.FieldError;
 begin

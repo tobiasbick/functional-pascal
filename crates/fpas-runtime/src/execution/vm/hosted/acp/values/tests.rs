@@ -18,7 +18,7 @@ use fpas_acp::{
 
 fn image() -> Executable {
     let (program, errors) = fpas_parser::parse(
-        "program NativeAcp; uses Std.Acp.Types as Acp, Std.Acp.V2 as V2; begin discard Acp.DecodeClientRequest('initialize', Acp.RawJson(Text := '{}')); discard V2.DecodeClientRequest('initialize', Acp.RawJson(Text := '{}')); end.",
+        "program NativeAcp; uses Std.Ai.Acp.Types as Acp, Std.Ai.Acp.V2 as V2; begin discard Acp.DecodeClientRequest('initialize', Acp.RawJson(Text := '{}')); discard V2.DecodeClientRequest('initialize', Acp.RawJson(Text := '{}')); end.",
     );
     assert!(errors.is_empty(), "{errors:?}");
     fpas_compiler::compile(&program)
@@ -87,7 +87,9 @@ fn malformed_native_values_and_dto_metadata_fail_without_publication() {
         let index = image
             .records
             .iter()
-            .position(|record| image.strings.get(record.name) == Some("Std.Acp.V2.ToolCallUpdate"))
+            .position(|record| {
+                image.strings.get(record.name) == Some("Std.Ai.Acp.V2.ToolCallUpdate")
+            })
             .unwrap();
         let field = image.records[index]
             .fields

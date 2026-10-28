@@ -1,6 +1,6 @@
 program TuiIncrementalRenderTest;
 
-uses Std.Console as Console, Std.Test as Test, Std.Tui as Tui;
+uses Std.Console as Console, Std.Test as Test, Std.Ui.Terminal as Tui;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin

@@ -1,6 +1,6 @@
 program ServerListenerTest;
 
-uses Std.Server as Server, Std.Net as Net, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Net.Server as Server, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Test as Test;
 
 function BindListener(): result of (Net.Listener, Net.NetError);
 begin

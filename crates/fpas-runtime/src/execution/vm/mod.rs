@@ -151,7 +151,7 @@ impl Vm {
         Self::from_shared_with_host(executable, crate::stdlib::Console::new(), Vec::new())
     }
 
-    /// Construct an isolated VM with process arguments visible through `Std.Args`.
+    /// Construct an isolated VM with process arguments visible through `Std.Os.Args`.
     #[must_use]
     pub fn with_args(executable: VerifiedExecutable, arguments: Vec<String>) -> Self {
         Self::from_shared_with_host(
@@ -339,7 +339,7 @@ impl Vm {
         }
     }
 
-    /// Authorize explicit `Std.Server` signal observation and process-wide escalation.
+    /// Authorize explicit `Std.Net.Server` signal observation and process-wide escalation.
     ///
     /// Default VMs never acquire this authority. Standalone hosts may opt in before run;
     /// a program must still request signal observation or forced exit separately.

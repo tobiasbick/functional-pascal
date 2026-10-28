@@ -62,7 +62,7 @@ fn source_project_and_image_preserve_nominal_capture_types_and_source_ids() {
 #[test]
 fn unsupported_capture_requests_are_atomic_before_initializer_effects() {
     let f = Fixture::new(
-        "program T; uses Std.Fs as Fs; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); function Make(Items: array of integer; Callback: function(): integer): function(): integer; function Read(): integer; begin return Items[0] + Callback(); end function; begin return Read; end function; begin null; end.",
+        "program T; uses Std.Io.Fs as Fs; function Init(): integer; begin discard Fs.WriteText('executed', 'bad').Unwrap(); return 0; end function; var Seed: integer := Init(); function Make(Items: array of integer; Callback: function(): integer): function(): integer; function Read(): integer; begin return Items[0] + Callback(); end function; begin return Read; end function; begin null; end.",
     );
     for bad in [
         "Make.Read::Items",

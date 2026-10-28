@@ -1,6 +1,6 @@
 program ServerLifetimeTest;
 
-uses Std.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
+uses Std.Net.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
 
 begin
   Test.AssertTrue((Server.CreateLifetime(-1, false) is Error(_)));

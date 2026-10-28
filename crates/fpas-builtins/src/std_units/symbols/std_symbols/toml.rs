@@ -1,4 +1,4 @@
-//! `Std.Toml` symbol names and registry group.
+//! `Std.Encoding.Toml` symbol names and registry group.
 
 std_symbol!(STD_TOML_VALUE = std_toml!("TomlValue"));
 std_symbol!(STD_TOML_VALUE_STRING = std_toml!("TomlValue.String"));

@@ -2,8 +2,8 @@
 program FailureDumpBenchmark;
 
 uses
-  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Fs as Fs,
-  Std.Json.Fields as Fields, Std.Parse as Parse, Std.Path as Path, Std.Proc as Proc,
+  Std.Os.Args as Args, Std.Console as Console, Std.Text.Format as Conv, Std.Math as Math, Std.Io.Fs as Fs,
+  Std.Encoding.Json.Fields as Fields, Std.Text.Parse as Parse, Std.Io.Path as Path, Std.Os.Proc as Proc,
   Std.Time as Time;
 
 begin
@@ -151,7 +151,7 @@ begin
   if Before > 0 then
     Console.WriteLn(
       'throughput: enabled/disabled median change ',
-      100.0 * Conv.IntToReal(After) / Conv.IntToReal(Before) - 100.0,
+      100.0 * Math.IntToReal(After) / Math.IntToReal(Before) - 100.0,
       '%'
     );
   else

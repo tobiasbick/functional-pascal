@@ -13,7 +13,7 @@ fn every_result_parser_returns_errors_and_explicit_unwrap_aborts() {
         ("HexInt", "bad-hex"),
     ] {
         let error = run_program(&format!(
-            "program T; uses Std.Parse as Parse; begin discard Parse.{parser}('{text}').Unwrap(); end."
+            "program T; uses Std.Text.Parse as Parse; begin discard Parse.{parser}('{text}').Unwrap(); end."
         )).expect_err("explicit parser Unwrap aborts");
         assert_eq!(error.code, RUNTIME_UNWRAP_FAILURE, "{error:?}");
         assert!(error.message.contains(text), "{error:?}");
@@ -55,7 +55,7 @@ fn try_does_not_catch_panic_or_unwrap_runtime_failures() {
             "Result of (integer, string)"
         };
         let error = run_program(&format!(
-            "program T; uses Std.Parse as Parse; {declaration} function Forward(): {result}; begin discard try {operation}; panic('unexpected continuation'); end function; begin discard Forward(); end."
+            "program T; uses Std.Text.Parse as Parse; {declaration} function Forward(): {result}; begin discard try {operation}; panic('unexpected continuation'); end function; begin discard Forward(); end."
         )).expect_err("runtime failures bypass try propagation");
         assert_eq!(error.code, code, "{error:?}");
         assert!(error.message.contains(message), "{error:?}");

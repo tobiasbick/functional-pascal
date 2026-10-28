@@ -42,7 +42,7 @@ impl Worker {
             (Op::DefaultLimits, []) => {
                 let v = fpas_mcp::Limits::default();
                 self.layouts.record(
-                    "Std.Mcp.Limits",
+                    "Std.Ai.Mcp.Limits",
                     [
                         v.tools,
                         v.catalog_bytes,
@@ -60,7 +60,7 @@ impl Worker {
             (Op::DefaultHttpOptions, []) => {
                 let v = fpas_mcp::HttpOptions::default();
                 self.layouts.record(
-                    "Std.Mcp.HttpOptions",
+                    "Std.Ai.Mcp.HttpOptions",
                     vec![
                         Value::Str(v.address.to_string().into()),
                         Value::Integer(v.connections as i64),
@@ -82,7 +82,7 @@ impl Worker {
             (Op::IsCancelled, [context]) => {
                 let cancelled =
                     (|| {
-                        let f = arguments::record(context, "Std.Mcp.Types.RequestContext", 8)?;
+                        let f = arguments::record(context, "Std.Ai.Mcp.Types.RequestContext", 8)?;
                         Ok::<_, Fault>(self.hosted.mcp.is_cancelled(
                             arguments::handle(&f[0])?,
                             arguments::integer(&f[2])? as u64,
@@ -117,7 +117,7 @@ impl Worker {
                             let header = self
                                 .layouts
                                 .record(
-                                    "Std.Mcp.Types.HttpHeader",
+                                    "Std.Ai.Mcp.Types.HttpHeader",
                                     vec![
                                         Value::Str("Authorization".into()),
                                         Value::Str(access.authorization().into()),
@@ -127,7 +127,7 @@ impl Worker {
                                 .map_err(|_| Fault::InvalidResult)?;
                             self.layouts
                                 .record(
-                                    "Std.Mcp.Types.HttpAccess",
+                                    "Std.Ai.Mcp.Types.HttpAccess",
                                     vec![
                                         Value::Str(access.url().into()),
                                         Value::Array(vec![header].into()),

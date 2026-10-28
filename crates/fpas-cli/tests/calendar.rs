@@ -58,7 +58,7 @@ impl Drop for Fixture {
 }
 
 const BRIDGE: &str = r#"unit CalendarBridge;
-uses Std.Calendar as Cal;
+uses Std.Time.Calendar as Cal;
 public type Date = Cal.Date;
 public type DateTime = Cal.DateTime;
 public type CalendarError = Cal.CalendarError;
@@ -73,7 +73,7 @@ begin return Cal.CalendarError.InvalidSyntax(4, 'expected delimiter'); end funct
 end unit;"#;
 
 const PROGRAM: &str = r#"program CalendarImages;
-uses CalendarBridge as Bridge, Std.Calendar as Cal, Std.Test as Test;
+uses CalendarBridge as Bridge, Std.Time.Calendar as Cal, Std.Test as Test;
 procedure CheckUtc(Text: string; Expected: string; Timestamp: integer);
 begin
   const Parsed: Bridge.DateTime := Bridge.Parse(Text).Unwrap();
@@ -143,7 +143,7 @@ begin
     when Ok(_): Test.Fail('Date exceeds supported range');
     when Error(const Failure):
       Test.AssertEquals(4, ErrorKind(Failure));
-      Test.AssertTrue(Failure is Cal.CalendarError.OutOfRange('Std.Calendar.AddDays'));
+      Test.AssertTrue(Failure is Cal.CalendarError.OutOfRange('Std.Time.Calendar.AddDays'));
   end case;
   CheckUtc('0001-01-01T00:00:00.000Z', '0001-01-01T00:00:00.000Z', -62135596800000);
   CheckUtc('9999-12-31T23:59:59.999Z', '9999-12-31T23:59:59.999Z', 253402300799999);
@@ -237,7 +237,7 @@ fn private_calendar_representation_is_rejected_through_source_and_cached_aliases
         .modified()
         .expect("mtime");
     for (imports, qualifier) in [
-        ("uses Std.Calendar as Cal;", "Cal"),
+        ("uses Std.Time.Calendar as Cal;", "Cal"),
         ("uses CalendarBridge as Bridge;", "Bridge"),
     ] {
         for statement in [

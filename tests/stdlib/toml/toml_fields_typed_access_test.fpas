@@ -1,6 +1,6 @@
 program TomlFieldsTypedAccessTest;
 
-uses Std.Toml as Toml, Std.Toml.Fields as TomlFields, Std.Test as Test;
+uses Std.Encoding.Toml as Toml, Std.Encoding.Toml.Fields as TomlFields, Std.Test as Test;
 
 function ErrorValue<T>(Value: result of (T, TomlFields.FieldError)): TomlFields.FieldError;
 begin

@@ -2,7 +2,7 @@ unit DocExamples.Validation;
 
 uses
   DocExamples.Model as Model, DocExamples.Preparation as Preparation,
-  Std.Fs as Fs, Std.Json.Fields as Fields, Std.Path as Path, Std.Proc as Proc;
+  Std.Io.Fs as Fs, Std.Encoding.Json.Fields as Fields, Std.Io.Path as Path, Std.Os.Proc as Proc;
 
 type Diagnostics = record
   Codes: array of string;

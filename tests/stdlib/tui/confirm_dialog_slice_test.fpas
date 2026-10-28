@@ -1,6 +1,6 @@
 program ConfirmDialogSliceTest;
 
-uses Std.Console as Console, Std.Tui as Tui, Std.Test as Test;
+uses Std.Console as Console, Std.Ui.Terminal as Tui, Std.Test as Test;
 
 const NameControlValue: integer := 1;
 const SaveControlValue: integer := 2;

@@ -2,7 +2,7 @@ unit Fpastris.View;
 
 uses
   Fpastris.Drawing as Drawing, Fpastris.Model as Model, Fpastris.Pieces as Pieces,
-  Fpastris.Theme as Theme, Std.Conv as Conv, Std.Tui as Tui;
+  Fpastris.Theme as Theme, Std.Text.Format as Conv, Std.Ui.Terminal as Tui;
 
 function PhaseText(State: Model.Game): string;
 begin

@@ -1,6 +1,6 @@
 program ProcOptionsValidationTest;
 
-uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Io.Fs as Fs, Std.Io.Path as Path, Std.Os.Proc as Proc, Std.Tasks as Tasks, Std.Test as Test;
 
 function LibraryPath(): string;
 begin
@@ -81,7 +81,7 @@ begin
   end if;
 
   Test.AssertTrue(
-    Proc.RunCaptureWithOptions(Executable, array.Fill('', 4097), Defaults) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'arguments', 4096, '', ''))
+    Proc.RunCaptureWithOptions(Executable, array.Fill('', 4097), Defaults) is Error(Proc.ProcError.LimitExceeded('Std.Os.Proc.RunCaptureWithOptions', 'arguments', 4096, '', ''))
   );
   const TooManyEnvironment := Defaults with Environment := array.Fill(
     Proc.EnvironmentVariable(Name := 'FPAS_ENTRY', Value := None),
@@ -89,10 +89,10 @@ begin
   ); end with;
 
   Test.AssertTrue(
-    Proc.RunCaptureWithOptions(Executable, [], TooManyEnvironment) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'environment', 1024, '', ''))
+    Proc.RunCaptureWithOptions(Executable, [], TooManyEnvironment) is Error(Proc.ProcError.LimitExceeded('Std.Os.Proc.RunCaptureWithOptions', 'environment', 1024, '', ''))
   );
   Test.AssertTrue(
-    Proc.RunCaptureWithOptions(Executable, ['xx'.RepeatStr(524289)], Defaults) is Error(Proc.ProcError.LimitExceeded('Std.Proc.RunCaptureWithOptions', 'configuration bytes', 1048576, '', ''))
+    Proc.RunCaptureWithOptions(Executable, ['xx'.RepeatStr(524289)], Defaults) is Error(Proc.ProcError.LimitExceeded('Std.Os.Proc.RunCaptureWithOptions', 'configuration bytes', 1048576, '', ''))
   );
   const Root := Path.Join([Fs.CurrentDir().Unwrap(), Test.ScratchDir()]);
   const Source := Path.Join([Root, 'marker-child.fpas']);
@@ -100,7 +100,7 @@ begin
   Test.AssertTrue(
     Fs.WriteText(
       Source,
-      'program Child; uses Std.Args as Args, Std.Fs as Fs;'#10 +
+      'program Child; uses Std.Os.Args as Args, Std.Io.Fs as Fs;'#10 +
       'begin discard Fs.WriteText(Args.ParamStr(0), ''started'').Unwrap(); end.'
     ).Unwrap()
   );
@@ -111,19 +111,19 @@ begin
   const Cancelled := Defaults with CancellationToken := Some(Token); end with;
 
   Test.AssertTrue(
-    Proc.RunCaptureWithOptions(Executable, Arguments, Cancelled) is Error(Proc.ProcError.Cancelled('Std.Proc.RunCaptureWithOptions', '', ''))
+    Proc.RunCaptureWithOptions(Executable, Arguments, Cancelled) is Error(Proc.ProcError.Cancelled('Std.Os.Proc.RunCaptureWithOptions', '', ''))
   );
   Test.AssertTrue(
-    Proc.RunWithOptions(Executable, Arguments, Cancelled) is Error(Proc.ProcError.Cancelled('Std.Proc.RunWithOptions', '', ''))
+    Proc.RunWithOptions(Executable, Arguments, Cancelled) is Error(Proc.ProcError.Cancelled('Std.Os.Proc.RunWithOptions', '', ''))
   );
   Test.AssertFalse(Fs.Exists(Marker));
   const Immediate := Defaults with TimeoutMillis := Some(0); end with;
 
   Test.AssertTrue(
-    Proc.RunCaptureWithOptions(Executable, Arguments, Immediate) is Error(Proc.ProcError.Timeout('Std.Proc.RunCaptureWithOptions', '', ''))
+    Proc.RunCaptureWithOptions(Executable, Arguments, Immediate) is Error(Proc.ProcError.Timeout('Std.Os.Proc.RunCaptureWithOptions', '', ''))
   );
   Test.AssertTrue(
-    Proc.RunWithOptions(Executable, Arguments, Immediate) is Error(Proc.ProcError.Timeout('Std.Proc.RunWithOptions', '', ''))
+    Proc.RunWithOptions(Executable, Arguments, Immediate) is Error(Proc.ProcError.Timeout('Std.Os.Proc.RunWithOptions', '', ''))
   );
   Test.AssertFalse(Fs.Exists(Marker));
 end.

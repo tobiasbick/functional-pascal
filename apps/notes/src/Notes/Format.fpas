@@ -1,6 +1,6 @@
 unit Notes.Format;
 
-uses Notes.Model as Model, Std.Conv as Conv, Std.Toml as Toml;
+uses Notes.Model as Model, Std.Text.Format as Conv, Std.Encoding.Toml as Toml;
 
 const NoteFormatVersion: integer := 1;
 

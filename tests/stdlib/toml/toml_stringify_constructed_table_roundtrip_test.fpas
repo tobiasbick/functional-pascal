@@ -1,6 +1,6 @@
 program TomlStringifyConstructedTableRoundtripTest;
 
-uses Std.Test as Test, Std.Toml as Toml;
+uses Std.Test as Test, Std.Encoding.Toml as Toml;
 
 begin
   const Source: Toml.TomlValue := Toml.TomlValue.Table([

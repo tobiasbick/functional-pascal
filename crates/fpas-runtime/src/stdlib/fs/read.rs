@@ -1,4 +1,4 @@
-//! Bounded UTF-8 file reads for `Std.Fs.ReadText`.
+//! Bounded UTF-8 file reads for `Std.Io.Fs.ReadText`.
 
 use super::failure::Failure;
 use std::fs::File;
@@ -12,7 +12,7 @@ pub(super) fn read_text_limited(path: &str) -> Result<String, Failure> {
         && metadata.len() > MAX_READ_TEXT_BYTES
     {
         return Err(Failure::LimitExceeded(
-            "Std.Fs.ReadText",
+            "Std.Io.Fs.ReadText",
             MAX_READ_TEXT_BYTES as i64,
         ));
     }
@@ -24,7 +24,7 @@ pub(super) fn read_text_limited(path: &str) -> Result<String, Failure> {
         String::from_utf8(bytes).map_err(|error| Failure::InvalidEncoding(error.to_string()))?;
     if text.len() as u64 > MAX_READ_TEXT_BYTES {
         return Err(Failure::LimitExceeded(
-            "Std.Fs.ReadText",
+            "Std.Io.Fs.ReadText",
             MAX_READ_TEXT_BYTES as i64,
         ));
     }

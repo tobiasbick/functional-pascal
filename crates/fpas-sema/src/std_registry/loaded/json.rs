@@ -1,4 +1,4 @@
-//! `Std.Json` semantic registration.
+//! `Std.Encoding.Json` semantic registration.
 //!
 //! **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 
@@ -9,7 +9,7 @@ use crate::types::{EnumTy, EnumVariantTy, Ty};
 use fpas_builtins::std_symbols as s;
 use std::sync::Arc;
 
-/// Register the user-facing `Std.Json` API.
+/// Register the user-facing `Std.Encoding.Json` API.
 ///
 /// **Documentation:** `docs/pascal/std/text/json.md` (from the repository root).
 pub(super) fn register_std_json(checker: &mut Checker) {

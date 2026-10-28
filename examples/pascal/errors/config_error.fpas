@@ -2,7 +2,7 @@
 program ConfigErrors;
 
 uses
-  Std.Console as Console, Std.Fs as Fs, Std.Parse as Parse, Std.Path as Path,
+  Std.Console as Console, Std.Io.Fs as Fs, Std.Text.Parse as Parse, Std.Io.Path as Path,
   Std.Test as Test;
 
 type ConfigError = error

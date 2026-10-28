@@ -151,7 +151,7 @@ type qualifier. Each diagnostic shows the required source spelling. For example:
 ```pascal id=example-4 error=FP3043
 program ReadFile;
 
-uses Std.Console as Console, Std.Fs as Files;
+uses Std.Console as Console, Std.Io.Fs as Files;
 
 begin
   const Text: result of (string, Files.FsError) := ReadText('input.txt');
@@ -217,7 +217,7 @@ help text only.
 | `type TFoo = class … end;` | Delphi | `type TFoo = record … end record;` with methods taking `Self` | FP2023 | — |
 | `interface` / `implementation` sections, unit `end.` | Delphi | One declaration list, exports marked `public`, `end unit;` | FP2023 | — |
 | `TList<integer>`, `Name<T>` | Delphi | `array of integer`, `Name of T` | FP2001 | review for Delphi collections, else exact |
-| `uses SysUtils;`, `uses System.SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 | — |
+| `uses SysUtils;`, `uses System.SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Text.Parse as Parse;` | FP2022 | — |
 | `Inc(X)`, `Dec(X, N)` | Pascal | `X := X + 1;`, `X := X - N;` | FP3003 | exact for plain arguments |
 | `Length(S)`, `Low(A)`, `High(A)` | Pascal | `S.Length()`, `0`, `A.Length() - 1` | FP3003 | exact for plain arguments |
 | `IntToStr(N)`, `TryStrToInt(Text, V)` | Delphi | `Conv.IntToStr(N)`, `Parse.Int(Text)` returning a Result | FP3003 | — |
@@ -734,7 +734,7 @@ can describe a structural restriction and leave those fields null.
 | FP4140 | Golden stdout mismatch | Test prints `actual` but sidecar expects `expected` | Fix the output or update the sidecar to the approved output. |
 | FP4141 | Test timeout | Test exceeds `fpas test --timeout 1 slow_test.fpas` (one second) | Fix the hang or set a suitable timeout in seconds. |
 | FP4142 | Runner failure | Test worker cannot be started | Restore the runner executable and its required access. |
-| FP4143 | No `fpas doc` match | `fpas doc Fs.ReadTxt` | `fpas doc Std.Fs.ReadText`; the help lists the closest names. |
+| FP4143 | No `fpas doc` match | `fpas doc Fs.ReadTxt` | `fpas doc Std.Io.Fs.ReadText`; the help lists the closest names. |
 
 ### Runtime
 

@@ -2,7 +2,7 @@
 
 unit Mandelbrot.Color;
 
-uses Std.Math as Math, Std.Tui as Tui;
+uses Std.Math as Math, Std.Ui.Terminal as Tui;
 
 public type PaletteKind = enum
   DeepOcean;

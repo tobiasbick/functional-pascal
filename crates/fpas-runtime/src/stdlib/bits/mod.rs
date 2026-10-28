@@ -1,4 +1,4 @@
-//! Signed 64-bit bit operations for `Std.Bits`.
+//! Signed 64-bit bit operations for `Std.Math.Bits`.
 //!
 //! Documentation: `docs/pascal/std/numeric/bits.md`.
 

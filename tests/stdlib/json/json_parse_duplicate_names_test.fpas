@@ -1,6 +1,6 @@
 program JsonParseDuplicateNamesTest;
 
-uses Std.Json as Json, Std.Test as Test;
+uses Std.Encoding.Json as Json, Std.Test as Test;
 
 begin
   Test.AssertTrue((Json.Parse('{"version":1,"version":2}') is Error(_)));

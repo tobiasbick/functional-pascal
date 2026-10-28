@@ -1,4 +1,4 @@
-//! `Std.Fs` symbol names and registry group.
+//! `Std.Io.Fs` symbol names and registry group.
 
 std_symbol!(STD_FS_FILE = std_fs!("File"));
 std_symbol!(STD_FS_FILE_MODE = std_fs!("FileMode"));

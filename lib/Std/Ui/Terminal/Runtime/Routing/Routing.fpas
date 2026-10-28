@@ -1,0 +1,48 @@
+unit Std.Ui.Terminal.Runtime.Routing;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Ids.ControlId as ControlId,
+  Std.Ui.Terminal.Layout.Frame as LayoutFrame, Std.Ui.Terminal.Runtime.Msg as Msg,
+  Std.Ui.Terminal.Runtime.PointerEvent as PointerEvent, Std.Ui.Terminal.Runtime.Routing.Key as RoutingKey,
+  Std.Ui.Terminal.Runtime.Routing.Pointer as Pointer;
+
+// Routes one key against the previous rendered tree into ordered framework messages.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Frame`: Arranged frame containing element geometry.
+// - `Key`: Console key event to route or match.
+public function TuiRouteKey(
+  Root: Element.TuiElement;
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Key: Console.KeyEvent
+): array of Msg.TuiMsg;
+begin
+  return RoutingKey.TuiRouteKey(Root, Frame, Key);
+end function;
+
+// Routes one pointer event against arranged geometry into ordered framework messages.
+// Allocates idle pointer-button state for one application.
+public procedure TuiPointerRoutingOpen();
+begin
+  Pointer.TuiPointerRoutingOpen();
+end procedure;
+
+// Clears pointer-button state for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+public procedure TuiPointerRoutingClose(ApplicationId: integer);
+begin
+  Pointer.TuiPointerRoutingClose(ApplicationId);
+end procedure;
+
+// Returns the button painted pressed for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
+public function TuiPointerRoutingPressed(ApplicationId: integer): option of ControlId.TuiControlId;
+begin
+  return Pointer.TuiPointerRoutingPressed(ApplicationId);
+end function;
+end unit;

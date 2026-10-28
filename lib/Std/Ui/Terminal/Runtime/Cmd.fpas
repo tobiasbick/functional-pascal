@@ -1,0 +1,181 @@
+unit Std.Ui.Terminal.Runtime.Cmd;
+
+uses Std.Ui.Terminal.Cells.Palette as CellsPalette, Std.Ui.Terminal.Runtime.Application.Background as Background;
+
+// Runtime command returned by an application's Update function.
+public type TuiCmd = enum
+  // Represents the `NoCommand` variant of `TuiCmd`.
+  NoCommand;
+  // Represents the `Quit` variant of `TuiCmd`.
+  Quit;
+  // Represents the `SetPalette` variant of `TuiCmd`.
+  SetPalette;
+end enum;
+
+var TuiCommandValues: array of TuiCmd := [];
+var TuiCommandPalettes: array of option of CellsPalette.TuiPalette := [];
+var TuiCommandBackground: array of array of Background.TuiBackgroundCommand := [];
+// Requested tick delay in milliseconds per output; negative means no request.
+var TuiCommandTickDelays: array of integer := [];
+
+function TuiCmdOutputRequire(Slot: integer): integer;
+begin
+  if (Slot < 1) or (Slot > TuiCommandValues.Length()) then
+    begin
+      panic('Tui command output handle is invalid');
+    end;
+  end if;
+
+  return Slot;
+end function;
+
+// Host-owned command output capability passed to Update.
+public type TuiCmdOutput = record
+  // Opaque backing-storage slot.
+  public Slot: integer;
+
+  // Allocates one reusable command output.
+  public static function Create(): TuiCmdOutput;
+  begin
+    TuiCommandValues := TuiCommandValues.Concat([TuiCmd.NoCommand]);
+    TuiCommandPalettes := TuiCommandPalettes.Concat([None]);
+    TuiCommandBackground := TuiCommandBackground.Concat([[]]);
+    TuiCommandTickDelays := TuiCommandTickDelays.Concat([-1]);
+    return TuiCmdOutput(Slot := TuiCommandValues.Length());
+  end function;
+
+  // Resets the output before one Update call.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  public procedure Reset(Self: TuiCmdOutput);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    TuiCommandValues[Slot - 1] := TuiCmd.NoCommand;
+    TuiCommandPalettes[Slot - 1] := None;
+    TuiCommandBackground[Slot - 1] := [];
+    TuiCommandTickDelays[Slot - 1] := -1;
+  end procedure;
+
+  // Asks the interactive host for one `TuiMsg.Tick` after DelayMilliseconds.
+  // The latest request of an application replaces an earlier pending one.
+  public procedure RequestTick(Self: TuiCmdOutput; DelayMilliseconds: integer);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    if DelayMilliseconds < 0 then
+      begin
+        panic('Tui tick delay must not be negative');
+      end;
+    end if;
+
+    TuiCommandTickDelays[Slot - 1] := DelayMilliseconds;
+  end procedure;
+
+  // Returns the tick delay requested by the current Update call, if any.
+  public function ReadTickRequest(Self: TuiCmdOutput): option of integer;
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Delay: integer := TuiCommandTickDelays[Slot - 1];
+    if Delay < 0 then
+      begin
+        return None;
+      end;
+    end if;
+
+    return Some(Delay);
+  end function;
+
+  // Starts one operation after Update returns. The host owns it until completion or shutdown.
+  public procedure StartBackground(Self: TuiCmdOutput; Id: integer; Work: Background.TuiBackgroundWork);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    if Id < 1 then
+      begin
+        panic('Tui background id must be positive');
+      end;
+    end if;
+    var Commands: array of Background.TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
+    Commands.PushInPlace(Background.TuiBackgroundCommand.Start(Id, Work));
+    TuiCommandBackground[Slot - 1] := Commands;
+  end procedure;
+
+  // Requests cancellation and starts the latest replacement after the previous operation ends.
+  public procedure ReplaceSubscription(Self: TuiCmdOutput; Id: integer; Work: Background.TuiBackgroundWork);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    if Id < 1 then
+      begin
+        panic('Tui subscription id must be positive');
+      end;
+    end if;
+    var Commands: array of Background.TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
+    Commands.PushInPlace(Background.TuiBackgroundCommand.ReplaceSubscription(Id, Work));
+    TuiCommandBackground[Slot - 1] := Commands;
+  end procedure;
+
+  // Requests cancellation after Update returns; the host joins it when complete or at shutdown.
+  public procedure CancelSubscription(Self: TuiCmdOutput; Id: integer);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    if Id < 1 then
+      begin
+        panic('Tui subscription id must be positive');
+      end;
+    end if;
+    var Commands: array of Background.TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
+    Commands.PushInPlace(Background.TuiBackgroundCommand.CancelSubscription(Id));
+    TuiCommandBackground[Slot - 1] := Commands;
+  end procedure;
+
+  // Sets the command returned by the current Update call.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Value`: Value used to create or update the result.
+  public procedure Set(Self: TuiCmdOutput; Value: TuiCmd);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    TuiCommandValues[Slot - 1] := Value;
+    TuiCommandPalettes[Slot - 1] := None;
+  end procedure;
+
+  // Requests an immediate palette change after Update returns.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Palette`: Palette used to resolve semantic style roles.
+  public procedure SetPalette(Self: TuiCmdOutput; Palette: CellsPalette.TuiPalette);
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    TuiCommandValues[Slot - 1] := TuiCmd.SetPalette;
+    TuiCommandPalettes[Slot - 1] := Some(Palette);
+  end procedure;
+
+  // Reads the command after Update returns.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  public function Command(Self: TuiCmdOutput): TuiCmd;
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    return TuiCommandValues[Slot - 1];
+  end function;
+
+  // Returns the palette attached to a SetPalette command.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  public function ReadPalette(Self: TuiCmdOutput): option of CellsPalette.TuiPalette;
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    return TuiCommandPalettes[Slot - 1];
+  end function;
+
+  // Returns background commands emitted by the current Update call.
+  public function ReadBackground(Self: TuiCmdOutput): array of Background.TuiBackgroundCommand;
+  begin
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    return TuiCommandBackground[Slot - 1];
+  end function;
+end record;
+end unit;

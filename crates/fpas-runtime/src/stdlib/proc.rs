@@ -1,4 +1,4 @@
-//! Pure `Std.Proc` defaults and executable-path lookup.
+//! Pure `Std.Os.Proc` defaults and executable-path lookup.
 //!
 //! **Documentation:** `docs/pascal/std/host/proc.md` (from the repository root).
 
@@ -19,7 +19,7 @@ use std::sync::Arc;
 /// child cleanup, outside its managed process deadline.
 pub type ProgramStderr = Arc<dyn Fn(&str) + Send + Sync>;
 
-/// Execute a `Std.Proc` intrinsic and return `None` when another unit should handle it.
+/// Execute a `Std.Os.Proc` intrinsic and return `None` when another unit should handle it.
 ///
 /// Process starts use the VM's owned process engine. This owner constructs
 /// defaults and reads the executable path.
@@ -31,7 +31,7 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Proc(ProcIntrinsic::DefaultStartOptions) => {
             call.push(call.factory().record(
-                "Std.Proc.ProcessStartOptions",
+                "Std.Os.Proc.ProcessStartOptions",
                 vec![Value::OptionNone, Value::Array(Vec::new().into())],
                 location,
             )?);
@@ -58,7 +58,7 @@ fn current_executable(
         Err(error) => {
             let cause = crate::stdlib::native_errors::host(
                 factory,
-                "Std.Proc.CurrentExecutable",
+                "Std.Os.Proc.CurrentExecutable",
                 &[],
                 error.raw_os_error(),
                 error.to_string(),

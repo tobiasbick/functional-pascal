@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn all_run_inputs_share_the_report_path_and_preserve_arguments_and_diagnostics() {
     let fixture = Fixture::new();
-    fixture.project("program Main; uses Std.Args as Args, Std.Console as Console; begin Console.WriteLn(Args.ParamStr(0)); const Total:=9223372036854775807; panic('boom'); end.");
+    fixture.project("program Main; uses Std.Os.Args as Args, Std.Console as Console; begin Console.WriteLn(Args.ParamStr(0)); const Total:=9223372036854775807; panic('boom'); end.");
     fixture.write(
         "suite.fpasworkspace",
         "[workspace]\nname = 'suite'\nmembers = ['app.fpasprj']\n",

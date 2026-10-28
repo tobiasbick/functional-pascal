@@ -118,7 +118,8 @@ fn eol_comment_stays_on_its_code_line() {
 
 #[test]
 fn uses_item_comments_survive_formatting() {
-    let source = "program T;\nuses Std.Console as Console, // io\n  Std.Conv as Conv;\nbegin\nend.";
+    let source =
+        "program T;\nuses Std.Console as Console, // io\n  Std.Text.Format as Conv;\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     assert!(
@@ -129,11 +130,11 @@ fn uses_item_comments_survive_formatting() {
 
 #[test]
 fn standalone_comment_between_uses_items_survives_formatting() {
-    let source = "program T;\nuses Std.Console as Console,\n  // conversions\n  Std.Conv as Conv;\nbegin\nend.";
+    let source = "program T;\nuses Std.Console as Console,\n  // conversions\n  Std.Text.Format as Conv;\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     assert!(
-        formatted.contains("Std.Console as Console,\n  // conversions\n  Std.Conv as Conv;"),
+        formatted.contains("Std.Console as Console,\n  // conversions\n  Std.Text.Format as Conv;"),
         "{formatted}"
     );
 }

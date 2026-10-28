@@ -1,6 +1,6 @@
 program DictionaryReduceTest;
 
-uses Std.Conv as Conv, Std.Test as Test;
+uses Std.Text.Format as Conv, Std.Test as Test;
 
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin

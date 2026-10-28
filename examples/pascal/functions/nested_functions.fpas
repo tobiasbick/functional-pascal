@@ -1,6 +1,6 @@
 program NestedFunctions;
 
-uses Std.Console as Console, Std.Math as Math, Std.Conv as Conv;
+uses Std.Console as Console, Std.Math as Math, Std.Text.Format as Conv;
 
 function Hypotenuse(A: real; B: real): real;
 function Square(X: real): real;

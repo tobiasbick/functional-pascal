@@ -1,12 +1,12 @@
-# `Std.Http`
+# `Std.Net.Http`
 
 An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented in FPAS over
-`Std.Net`.
+`Std.Net.Sockets`.
 
 ## Operational errors
 
-All fallible HTTP helpers share `HttpError`, declared in `Std.Http.Types` and
-re-exported by Std.Http. Its variants are `Transport(Cause: NetError)`,
+All fallible HTTP helpers share `HttpError`, declared in `Std.Net.Http.Types` and
+re-exported by Std.Net.Http. Its variants are `Transport(Cause: NetError)`,
 `Address(Cause: UriError)`, `Encoding(Cause: Utf8Error)`, `InvalidMessage(Detail)`,
 `InvalidArgument(Name, Reason)`, `LimitExceeded(Operation, Limit)`,
 `UnexpectedEnd(Operation)` and `RedirectFailure(Detail)`. Transport/address/encoding
@@ -21,7 +21,7 @@ end-state changes and final-line processing remain at their original owners.
 
 ```pascal id=typed-http-cause run
 program TypedHttpCause;
-uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
+uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 begin
   const Decoder := Http.CreateSseDecoder(100).Unwrap();
   discard Http.FeedSse(Decoder, [226]).Unwrap();
@@ -82,7 +82,7 @@ Call `Send` with the request, then chain on the explicit `Result` without
 unwrapping implicitly:
 
 ```pascal id=example-3 fragment context=header
-uses Std.Http as Http;
+uses Std.Net.Http as Http;
 begin
 const TextResult: result of (string, Http.HttpError) := Http.Send(
   Http.Request.Get('https://example.test/items')
@@ -104,7 +104,7 @@ characters in header values are rejected.
 
 Plain TCP is selected for `http://` URLs and verified TLS for `https://` URLs. HTTPS certificate and
 hostname validation follows the operating system trust policy and cannot be disabled through
-`Std.Http`.
+`Std.Net.Http`.
 
 Responses to `HEAD` have an empty body, even when `Content-Length` describes the body that an
 equivalent `GET` would have returned. The client skips at most eight informational responses before
@@ -188,7 +188,7 @@ Independent SSE decoders may be created and consumed by different tasks. Calls t
 
 ## HTTP server helpers
 
-Create a TCP listener with `Std.Net.Listen` or a TLS listener with `Std.Net.ListenTls`, accept a
+Create a TCP listener with `Std.Net.Sockets.Listen` or a TLS listener with `Std.Net.Sockets.ListenTls`, accept a
 connection, and pass that connection to `ReadRequest`. The helper accepts HTTP/1.0 and HTTP/1.1
 origin-form requests, requires exactly one `Host` field for HTTP/1.1, validates field names and
 values, and reads a `Content-Length` body.
@@ -199,7 +199,7 @@ permitted characters other than SP/HTAB are preserved at the boundaries.
 ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
 
 ```pascal id=example-5 fragment context=header
-uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 begin
 case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):
@@ -258,7 +258,7 @@ accept another request.
 For a reusable loop, pass the listener and a handler to `Serve`:
 
 ```pascal id=example-6 fragment context=header
-uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
+uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
@@ -321,7 +321,7 @@ end case;
 ```
 
 The certificate chain and private key must be PEM files. The handshake timeout bounds clients that
-connect without completing TLS. See [`Std.Net`](net.md) for listener limitations.
+connect without completing TLS. See [`Std.Net.Sockets`](net.md) for listener limitations.
 
 Client requests use only origin-form targets. `OPTIONS` addresses a normal URL path;
 `OPTIONS *` and `CONNECT` authority-form targets are not implemented. Compression, proxies, and
@@ -331,19 +331,19 @@ persistent connections are not handled.
 
 | Concern | Location |
 |---------|----------|
-| Public facade | [`Http.fpas`](../../../../lib/Std/Http.fpas) |
-| Client connection orchestration | [`Client.fpas`](../../../../lib/Std/Http/Client.fpas) |
-| Server request/response handling | [`Server.fpas`](../../../../lib/Std/Http/Server.fpas) |
-| Server loop and concurrent dispatch | [`ServerLoop.fpas`](../../../../lib/Std/Http/ServerLoop.fpas) |
-| Shared field validation | [`Fields.fpas`](../../../../lib/Std/Http/Fields.fpas) |
-| Complete connection writes | [`Io.fpas`](../../../../lib/Std/Http/Io.fpas) |
-| Bounded response-head processing | [`Head.fpas`](../../../../lib/Std/Http/Head.fpas) |
-| Redirect policy and URL resolution | [`Redirect.fpas`](../../../../lib/Std/Http/Redirect.fpas) |
-| Response body-framing selection | [`BodyFraming.fpas`](../../../../lib/Std/Http/BodyFraming.fpas) |
-| Streaming body framing | [`Stream.fpas`](../../../../lib/Std/Http/Stream.fpas) |
-| Server-Sent Events decoder | [`Sse.fpas`](../../../../lib/Std/Http/Sse.fpas) |
+| Public facade | [`Http.fpas`](../../../../lib/Std/Net/Http.fpas) |
+| Client connection orchestration | [`Client.fpas`](../../../../lib/Std/Net/Http/Client.fpas) |
+| Server request/response handling | [`Server.fpas`](../../../../lib/Std/Net/Http/Server.fpas) |
+| Server loop and concurrent dispatch | [`ServerLoop.fpas`](../../../../lib/Std/Net/Http/ServerLoop.fpas) |
+| Shared field validation | [`Fields.fpas`](../../../../lib/Std/Net/Http/Fields.fpas) |
+| Complete connection writes | [`Io.fpas`](../../../../lib/Std/Net/Http/Io.fpas) |
+| Bounded response-head processing | [`Head.fpas`](../../../../lib/Std/Net/Http/Head.fpas) |
+| Redirect policy and URL resolution | [`Redirect.fpas`](../../../../lib/Std/Net/Http/Redirect.fpas) |
+| Response body-framing selection | [`BodyFraming.fpas`](../../../../lib/Std/Net/Http/BodyFraming.fpas) |
+| Streaming body framing | [`Stream.fpas`](../../../../lib/Std/Net/Http/Stream.fpas) |
+| Server-Sent Events decoder | [`Sse.fpas`](../../../../lib/Std/Net/Http/Sse.fpas) |
 | Synchronized stream and decoder state | [`http_handles.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/http_handles.rs) |
-| HTTP wire format | [`Wire.fpas`](../../../../lib/Std/Http/Wire.fpas) |
+| HTTP wire format | [`Wire.fpas`](../../../../lib/Std/Net/Http/Wire.fpas) |
 | Buffered end-to-end fixture | [`network.rs`](../../../../crates/fpas-cli/src/main_tests/network.rs) |
 | Streaming fixtures | [`network_streaming.rs`](../../../../crates/fpas-cli/src/main_tests/network_streaming.rs) |
 | Redirect and hostile-response fixtures | [`network_hardening.rs`](../../../../crates/fpas-cli/src/main_tests/network_hardening.rs) |

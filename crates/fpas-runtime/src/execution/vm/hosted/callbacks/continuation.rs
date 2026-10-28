@@ -36,14 +36,14 @@ pub(super) fn start(
 
 /// Resume the top hosted callback operation if its callback has returned.
 pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
-    let (action, callback) = {
+    let action = {
         let Some(continuation) = worker.callback_continuations.last_mut() else {
             return Ok(false);
         };
         if continuation.awaiting_depth.is_some() {
             return Ok(false);
         }
-        (continuation.advance(), continuation.callback.clone())
+        continuation.advance()
     };
     let action = action.map_err(|error| match error {
         AdvanceError::UnexpectedResult(value) => {
@@ -59,7 +59,7 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
             worker.finish_mcp_callback(*invocation, value)?;
         }
         Advance::Call(arguments) => {
-            worker.enter_callback_inline(&callback, arguments.into_values())?;
+            let prepared = worker.enter_callback_inline(arguments.into_values())?;
             let awaiting_depth = worker.call_stack.len();
             let Some(continuation) = worker.callback_continuations.last_mut() else {
                 return Err(worker.callback_state_error(
@@ -67,6 +67,7 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
                 ));
             };
             continuation.awaiting_depth = Some(awaiting_depth);
+            continuation.prepared = Some(prepared);
         }
         Advance::Complete(value) => {
             let Some(continuation) = worker.callback_continuations.pop() else {

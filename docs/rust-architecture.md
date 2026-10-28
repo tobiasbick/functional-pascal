@@ -104,6 +104,15 @@ from verified metadata. This preparation belongs to runtime layouts, not to the
 portable executable. Worker layouts share the constant table. The interpreter
 loads prepared strings without reconstructing them for each constant load.
 
+Resumable hosted callbacks execute on their owning worker's ordinary call frames.
+Each continuation retains its function and prepares fixed call metadata on its
+first actual invocation. Every invocation checks current stack and register limits,
+then borrows the retained function while filling the callee's input register window.
+Arguments move into that window; receivers and captures retain their required
+shared ownership. Remaining local registers start uninitialized, and returning
+releases the callee's values. Continuations and partial results remain execution
+roots across suspension, nested callbacks and task migration.
+
 ACP model, codec, and connection crates retain their protocol boundaries. MCP
 serving remains in `fpas-mcp`. Runtime adapters convert between protocol data and
 FPAS values and apply the executing program's ownership and lifetime rules.

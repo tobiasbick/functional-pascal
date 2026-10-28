@@ -15,6 +15,11 @@ Read the [agent reference](docs/pascal/agents/README.md) for the language rules.
 - Less is more: keep solutions small and simple. Remove unnecessary code.
 - This is a hobby project for fun. Backward compatibility and historical
   implementation notes are not required.
+- Make architecture and implementation decisions autonomously throughout
+  the project. Internal APIs, data structures, and existing designs may be
+  rewritten, reorganized, or replaced.
+- Changes to FPAS syntax require the user's explicit approval before
+  implementation.
 - Fix errors when you encounter them. Do not dismiss errors as pre-existing.
 
 ## Dogfooding

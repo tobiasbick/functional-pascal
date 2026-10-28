@@ -2,6 +2,7 @@
 
 mod roots;
 
+use crate::execution::vm::calls::PreparedCall;
 use crate::{FunctionId, InstructionAddress, SharedArray, SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
@@ -12,7 +13,9 @@ use super::string::{StringReduction, StringSequence};
 pub(in crate::execution::vm) struct CallbackContinuation {
     /// Original intrinsic site, retained while callbacks temporarily replace the active frame.
     pub(super) origin: (FunctionId, InstructionAddress),
-    pub(super) callback: SharedFunction,
+    pub(in crate::execution::vm) callback: SharedFunction,
+    /// Initialized on the first actual call, preserving inactive-operation diagnostics.
+    pub(in crate::execution::vm) prepared: Option<PreparedCall>,
     pub(super) destination: Option<usize>,
     pub(super) operation: CallbackOperation,
     pending: Option<Value>,
@@ -117,6 +120,7 @@ impl CallbackContinuation {
         Self {
             origin,
             callback,
+            prepared: None,
             destination,
             operation,
             pending: None,

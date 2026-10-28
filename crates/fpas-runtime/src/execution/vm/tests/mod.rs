@@ -2,6 +2,7 @@
 
 mod aggregate_reads;
 mod aggregates;
+mod callback_frames;
 mod callbacks;
 mod calls;
 mod closure_calls;

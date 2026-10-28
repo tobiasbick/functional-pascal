@@ -1,5 +1,6 @@
 //! Numeric calls and frame transitions.
 
+mod callback;
 mod closures;
 mod tail_call;
 
@@ -13,7 +14,8 @@ use super::frame::{CallFrame, MAX_CALL_DEPTH, MAX_REGISTER_SLOTS};
 use super::worker::Worker;
 use super::{VmError, diagnostics};
 
-struct PreparedCall {
+#[derive(Clone, Copy)]
+pub(super) struct PreparedCall {
     target: FunctionId,
     frame_size: usize,
     return_destination: Option<usize>,
@@ -164,38 +166,6 @@ impl Worker {
         Ok(self.base + prepared.argument_count)
     }
 
-    /// Enter a hosted callback on this worker so its task can suspend and resume normally.
-    pub(super) fn enter_callback_inline(
-        &mut self,
-        function: &SharedFunction,
-        arguments: impl ExactSizeIterator<Item = Value>,
-    ) -> Result<(), VmError> {
-        let argument_count = arguments
-            .len()
-            .saturating_add(usize::from(function.bound_receiver.is_some()));
-        let prepared = self.prepare_call::<false>(
-            function.function,
-            crate::NO_REGISTER,
-            argument_count,
-            function.captures.len(),
-        )?;
-        self.activate_call(&prepared, self.active_register_count())?;
-        let mut next = 0;
-        if let Some(receiver) = &function.bound_receiver {
-            self.store_register(self.base, receiver.clone())?;
-            next = 1;
-        }
-        for (index, value) in arguments.enumerate() {
-            self.store_register(self.base + next + index, value)?;
-        }
-        for (index, value) in function.captures.iter().enumerate() {
-            self.store_register(self.base + prepared.argument_count + index, value.clone())?;
-        }
-        self.function = prepared.target;
-        self.ip = prepared.instruction_pointer;
-        Ok(())
-    }
-
     /// Direct bytecodes have verified signatures; callable values require a runtime check.
     fn prepare_call<const DIRECT: bool>(
         &self,
@@ -235,15 +205,7 @@ impl Worker {
                 ),
             ));
         }
-        if self.call_stack.len() >= MAX_CALL_DEPTH {
-            return Err(diagnostics::at_address(
-                image,
-                self.current_address,
-                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                "Call stack overflow",
-                "Reduce recursion depth or replace recursion with iteration.",
-            ));
-        }
+        self.require_call_depth()?;
         let frame_size = usize::from(info.register_count);
         let return_destination = if destination == crate::NO_REGISTER {
             None
@@ -293,6 +255,19 @@ impl Worker {
         });
         self.base = callee_base;
         self.activate_registers(frame_end);
+        Ok(())
+    }
+
+    fn require_call_depth(&self) -> Result<(), VmError> {
+        if self.call_stack.len() >= MAX_CALL_DEPTH {
+            return Err(diagnostics::at_address(
+                self.executable.executable(),
+                self.current_address,
+                RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                "Call stack overflow",
+                "Reduce recursion depth or replace recursion with iteration.",
+            ));
+        }
         Ok(())
     }
 

@@ -4,6 +4,7 @@
 
 mod apply;
 mod parse;
+mod terminal;
 
 pub use parse::{ScriptEvent, ScriptFile, load_script, parse_script_text, sidecar_path_for_test};
 

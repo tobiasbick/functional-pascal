@@ -22,6 +22,7 @@ pub(in crate::execution::vm) mod net;
 mod proc;
 mod random;
 pub(in crate::execution::vm) mod server;
+pub(in crate::execution::vm) mod terminal_input;
 mod test_host;
 
 use http_handles::HttpStateRegistry;

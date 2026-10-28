@@ -128,44 +128,21 @@ fn terminal_event(value: &Value) -> Result<fpas_runtime::execution::DebugTermina
 
 fn terminal_key(value: &Value) -> Result<fpas_runtime::execution::DebugTerminalKeyKind, String> {
     let key = required_string(value, "key")?;
-    let kind = match key {
-        "Escape" => fpas_runtime::execution::DebugTerminalKeyKind::Escape,
-        "Tab" => fpas_runtime::execution::DebugTerminalKeyKind::Tab,
-        "Enter" => fpas_runtime::execution::DebugTerminalKeyKind::Enter,
-        "Backspace" => fpas_runtime::execution::DebugTerminalKeyKind::Backspace,
-        "Space" => fpas_runtime::execution::DebugTerminalKeyKind::Space,
-        "Up" => fpas_runtime::execution::DebugTerminalKeyKind::Up,
-        "Down" => fpas_runtime::execution::DebugTerminalKeyKind::Down,
-        "Left" => fpas_runtime::execution::DebugTerminalKeyKind::Left,
-        "Right" => fpas_runtime::execution::DebugTerminalKeyKind::Right,
-        "Home" => fpas_runtime::execution::DebugTerminalKeyKind::Home,
-        "End" => fpas_runtime::execution::DebugTerminalKeyKind::End,
-        "PageUp" => fpas_runtime::execution::DebugTerminalKeyKind::PageUp,
-        "PageDown" => fpas_runtime::execution::DebugTerminalKeyKind::PageDown,
-        "Insert" => fpas_runtime::execution::DebugTerminalKeyKind::Insert,
-        "Delete" => fpas_runtime::execution::DebugTerminalKeyKind::Delete,
-        key if key.starts_with('F') => {
-            let number = key[1..]
-                .parse::<u8>()
-                .ok()
-                .filter(|number| (1..=12).contains(number))
-                .ok_or_else(|| format!("Unsupported terminal key `{key}`."))?;
-            fpas_runtime::execution::DebugTerminalKeyKind::Function(number)
-        }
-        "Character" => {
-            let text = required_string(value, "text")?;
-            let mut characters = text.chars();
-            let character = characters
-                .next()
-                .filter(|_| characters.next().is_none())
-                .ok_or_else(|| {
-                    "Terminal Character events require one Unicode scalar in `text`.".to_string()
-                })?;
-            fpas_runtime::execution::DebugTerminalKeyKind::Character(character)
-        }
-        other => return Err(format!("Unsupported terminal key `{other}`.")),
-    };
-    Ok(kind)
+    if key == "Character" {
+        let text = required_string(value, "text")?;
+        let mut characters = text.chars();
+        let character = characters
+            .next()
+            .filter(|_| characters.next().is_none())
+            .ok_or_else(|| {
+                "Terminal Character events require one Unicode scalar in `text`.".to_string()
+            })?;
+        return Ok(fpas_runtime::execution::DebugTerminalKeyKind::Character(
+            character,
+        ));
+    }
+    fpas_runtime::execution::DebugTerminalKeyKind::named(key)
+        .ok_or_else(|| format!("Unsupported terminal key `{key}`."))
 }
 
 fn required_string<'a>(value: &'a Value, field: &str) -> Result<&'a str, String> {

@@ -6,6 +6,8 @@
     reason = "Integration fixtures and JSON shape assertions must fail immediately on setup or protocol errors."
 )]
 
+#[path = "batch_debug/console_input.rs"]
+mod console_input;
 #[path = "batch_debug/inspection.rs"]
 mod inspection;
 #[path = "batch_debug/limits.rs"]

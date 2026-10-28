@@ -98,12 +98,15 @@ fn prepare(
         let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
         let script = crate::test_script::parse_script_text(text, path)?;
         for event in script.events {
+            if options.schedule_seed.is_some()
+                && !matches!(&event, crate::test_script::ScriptEvent::Readln { .. })
+            {
+                return Err("Seeded scheduling accepts text-line script input only; remove terminal events or --schedule-seed.".to_string().into());
+            }
             options.input.push(match event {
                 crate::test_script::ScriptEvent::Readln { line } => Input::Line(line),
-                crate::test_script::ScriptEvent::ReadkeyChars { chars } => {
-                    if options.schedule_seed.is_some() { return Err("Seeded scheduling accepts text-line script input only; remove key events or --schedule-seed.".to_string().into()); }
-                    Input::Keys(chars)
-                },
+                crate::test_script::ScriptEvent::ReadkeyChars { chars } => Input::Keys(chars),
+                crate::test_script::ScriptEvent::Terminal(event) => Input::Terminal(event),
             });
         }
     }

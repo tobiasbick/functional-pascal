@@ -19,5 +19,6 @@ fn apply_one_event(vm: &mut fpas_runtime::execution::Vm, event: &ScriptEvent) {
         ScriptEvent::ReadkeyChars { chars } => {
             vm.push_readkey_input(chars);
         }
+        ScriptEvent::Terminal(event) => vm.push_terminal_event(event),
     }
 }

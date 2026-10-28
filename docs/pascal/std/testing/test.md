@@ -197,7 +197,46 @@ with `--script`, or through `[test.overrides]`. Test input and screen assertions
 | `ReadLn` input | `Std.Test.PushReadLn` |
 | Screen output | `AssertScreenLine`, `AssertScreenCell` |
 
-`*.script.toml` can queue `readln` and `readkey_chars` events before the VM starts.
+### Scripted console input
+
+`*.script.toml` sidecars and [`fpas debug --script`](../../tools/debugger-batch.md)
+share this input format. Each `[[event]]` has a `type` and the fields below:
+
+| Type | Fields | Input consumed by |
+| ---- | ------ | ----------------- |
+| `readln` | `line`: string | `ReadLn` or line-buffered `ReadText` |
+| `readkey_chars` | `chars`: string | Legacy `ReadKey` character reads |
+| `console_key` | `kind`: string; `ch` for `Character`; optional `shift`, `ctrl`, `alt`, `meta` booleans | `ReadKey`, `ReadKeyEvent`, or unified Console event reads |
+| `console_resize` | `width`, `height`: integers in `1..65535` | Unified Console event reads and hosted terminal dimensions |
+
+Key kinds are `Escape`, `Tab`, `Enter`, `Backspace`, `Space`, `Up`, `Down`,
+`Left`, `Right`, `Home`, `End`, `PageUp`, `PageDown`, `Insert`, `Delete`,
+`F1` through `F12`, and `Character`. `Character` requires exactly one Unicode
+scalar in `ch`; omit `ch` for named keys. Modifiers default to `false`.
+Structured events reject unknown fields and incorrectly typed values.
+
+For example, queue a terminal size followed by the `q` key:
+
+```toml
+[[event]]
+type = "console_resize"
+width = 100
+height = 32
+
+[[event]]
+type = "console_key"
+kind = "Character"
+ch = "q"
+```
+
+All input is queued before execution. Structured events follow script order;
+adjacent resize events may coalesce to the latest size. Resizes update terminal
+dimensions when queued. Consuming a structured key through one Console API
+removes it from the others, so it is delivered once. `readkey_chars` does not
+feed `ReadKeyEvent`, `ReadEvent`, or `ReadEventTimeout`; use `console_key` for
+TUI input. Line input, legacy characters, and structured events have separate
+queues, with no timed ordering between them. Scripts provide no mouse input
+or timed replay.
 
 ---
 

@@ -15,6 +15,12 @@ FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 [AP workflow and templates](improve-syntax/README.md); selecting a topic still
 requires an explicit decision before implementation.
 
+The intended sequence is to continue FPAS 2 first, then graphics and the
+[shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
+runtime and application topics, consult its coordination note so those decisions
+do not accidentally preclude the later UI. This does not authorize early UI work
+or change the status of any FPAS 2 proposal.
+
 ## Boundary
 
 Keep functional Pascal with selected Ada conventions, predictable authoring and
@@ -631,6 +637,8 @@ a TUI form that retains its draft and associates errors with the correct fields.
 
 ## 19. Application stores and selectors
 
+Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
+
 [Std.Tui](../pascal/std/tui/application.md#update-and-view) already owns an
 application model processed through Update and View. Generics and closures can
 express typed state operations, but there is no reusable application-store and
@@ -656,6 +664,7 @@ application instances.
 
 Status: tree comparison, layout reuse and damaged-row painting are implemented.
 Explicit dependencies, selectors and cached subview construction remain open.
+Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
 
 The [TUI host](../pascal/std/tui/application.md#headless-frame-and-routing-order)
 calls View for each render request, compares the resulting immutable tree with
@@ -969,6 +978,7 @@ explicit design decision after this evaluation.
 ## 25. Native event loops and selectable host events
 
 Status: open proposal; no host-event API or new Select case is agreed.
+Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
 
 Windowing systems can require event pumping on the main thread. The
 [main task's thread](../pascal/language/concurrency/scheduling.md) provides a

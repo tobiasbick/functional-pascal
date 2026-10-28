@@ -153,7 +153,17 @@ fn run_with_files(
     match readiness::wait_until_ready(&mut child, &files.ready(), deadline) {
         Ok(readiness::WaitOutcome::Ready) => {}
         Ok(readiness::WaitOutcome::Exited(status)) => {
-            let _ = terminate_process_tree(&mut child);
+            if let Err(error) = terminate_process_tree(&mut child) {
+                return worker_failure(
+                    reporter,
+                    &prepared,
+                    &format!("Error cleaning isolated test process: {error}"),
+                );
+            }
+            // Script preparation can publish a failure before the execution gate opens.
+            if status.success() && files.response().is_file() {
+                return read_worker_result(files, true, reporter, &prepared);
+            }
             return worker_failure(
                 reporter,
                 &prepared,

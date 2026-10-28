@@ -90,6 +90,7 @@ fn native_keys() -> fpas_unit::interface::UnitInterface {
             "unit NativeKeys; uses Std.Console as Console;
           public type Kind = Console.KeyKind;
           public type Key = Console.KeyEvent;
+          public type Input = enum Press(Key: Console.KeyEvent); end enum;
           end unit;",
         ),
         &[],
@@ -108,12 +109,13 @@ fn native_keys() -> fpas_unit::interface::UnitInterface {
 }
 
 #[test]
-fn native_enum_aliases_resolve_record_fields_without_importing_the_native_unit() {
+fn native_aliases_resolve_record_fields_and_payloads_without_owner_imports() {
     let first = native_keys();
     let middle = analyze_unit(
         &parse_unit(
             "unit Middle; uses NativeKeys as Keys;
-          public type Kind = Keys.Kind; public type Key = Keys.Key; end unit;",
+          public type Kind = Keys.Kind; public type Key = Keys.Key;
+          public type Input = Keys.Input; end unit;",
         ),
         std::slice::from_ref(&first),
     )
@@ -131,6 +133,13 @@ fn native_enum_aliases_resolve_record_fields_without_importing_the_native_unit()
           begin return Key.kind = Keys.Kind.Enter; end function;
           public function IsEscape(Kind: Keys.Kind): boolean;
           begin return Kind = Keys.Kind.Escape; end function;
+          public function IsEnterInput(Input: Keys.Input): boolean;
+          begin
+            case Input of
+              when Keys.Input.Press(const Key):
+                return (Key.kind = Keys.Kind.Enter) and (Key.ch = '');
+            end case;
+          end function;
           end unit;",
             interface.unit_name
         ));
@@ -150,6 +159,8 @@ fn native_enum_alias_metadata_does_not_expose_native_names_or_merge_other_enums(
         "public function Check(Key: Keys.Key): boolean; begin return Key.kind = Other.Enter; end function;",
         "public type Leak = Std.Console.KeyKind;",
         "public type Leak = Console.KeyKind;",
+        "public type Leak = Std.Console.KeyEvent;",
+        "public type Leak = Console.KeyEvent;",
     ] {
         let consumer = parse_unit(&format!(
             "unit Consumer; uses NativeKeys as Keys;

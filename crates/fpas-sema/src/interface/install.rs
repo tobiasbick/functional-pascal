@@ -103,7 +103,7 @@ impl check::Checker {
         Ok(())
     }
 
-    // Field references retain the original enum identity even when only its alias is imported.
+    // Nominal references retain the original identity even when only an alias is imported.
     fn install_interface_type_metadata(
         &mut self,
         exported: &artifact::InterfaceSymbol,
@@ -112,13 +112,18 @@ impl check::Checker {
         self.scopes
             .imports
             .define_metadata(&exported.qualified_name, symbol.clone());
-        if let artifact::InterfaceType::Enum(enumeration) = &exported.ty
-            && enumeration.type_arguments.is_empty()
-        {
-            // A concrete generic alias is not a definition of its uninstantiated base enum.
-            self.scopes
-                .imports
-                .define_metadata(&enumeration.name, symbol);
+        // A concrete generic alias is not a definition of its uninstantiated base type.
+        let original_name = match &exported.ty {
+            artifact::InterfaceType::Enum(enumeration) if enumeration.type_arguments.is_empty() => {
+                Some(&enumeration.name)
+            }
+            artifact::InterfaceType::Record(record) if record.type_arguments.is_empty() => {
+                Some(&record.name)
+            }
+            _ => None,
+        };
+        if let Some(name) = original_name {
+            self.scopes.imports.define_metadata(name, symbol);
         }
     }
 

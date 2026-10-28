@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 pub enum ScriptEvent {
     Readln { line: String },
     ReadkeyChars { chars: String },
+    Terminal(fpas_runtime::execution::DebugTerminalEvent),
 }
 
 /// Parsed sidecar script contents.
@@ -91,8 +92,21 @@ fn parse_event_table(
         "readkey_chars" => Ok(ScriptEvent::ReadkeyChars {
             chars: required_string(table, "chars", index, path)?,
         }),
+        "console_key" | "console_resize" => {
+            let event = if event_type == "console_key" {
+                super::terminal::key(table)
+            } else {
+                super::terminal::resize(table)
+            };
+            event.map(ScriptEvent::Terminal).map_err(|error| {
+                format!(
+                    "Invalid `{event_type}` event in `[[event]]` #{index} of `{}`: {error}.",
+                    path.display()
+                )
+            })
+        }
         other => Err(format!(
-            "Unknown event type `{other}` in `[[event]]` #{index} of `{}`.\n  help: Supported types are `readln` and `readkey_chars`.",
+            "Unknown event type `{other}` in `[[event]]` #{index} of `{}`.\n  help: Supported types are `readln`, `readkey_chars`, `console_key` and `console_resize`.",
             path.display()
         )),
     }

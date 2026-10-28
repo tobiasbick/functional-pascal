@@ -27,6 +27,8 @@ pub enum Input {
     Line(String),
     /// Characters for the headless terminal key queue.
     Keys(String),
+    /// One structured terminal event, shared by legacy and unified Console reads.
+    Terminal(fpas_runtime::execution::DebugTerminalEvent),
 }
 
 /// Complete batch inspection request, independent of argv and transport.
@@ -111,7 +113,7 @@ fn run_inner(
         && options
             .input
             .iter()
-            .any(|input| matches!(input, Input::Keys(_)))
+            .any(|input| !matches!(input, Input::Line(_)))
     {
         report["diagnostics"] = json!([diagnostic(
             "input_invalid",
@@ -281,6 +283,10 @@ fn run_inner(
             let outcome = match input {
                 Input::Line(line) => session.push_debuggee_input(&line).map(|_| ()),
                 Input::Keys(chars) => session.push_debuggee_keys(&chars).map(|_| ()),
+                Input::Terminal(event) => session
+                    .terminal_handle()
+                    .push_events(std::slice::from_ref(&event))
+                    .map(|_| ()),
             };
             if let Err(error) = outcome {
                 report["diagnostics"] =

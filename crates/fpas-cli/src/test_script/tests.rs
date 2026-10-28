@@ -42,17 +42,42 @@ type = "teleport"
 }
 
 #[test]
-fn parse_console_event_types_are_rejected() {
-    let err = parse_script_text(
-        r#"
-[[event]]
-type = "console_key"
-kind = "Escape"
-"#,
-        Path::new("bad.script.toml"),
-    )
-    .expect_err("removed console event script types must be rejected");
-    assert!(err.contains("Unknown event type `console_key`"));
+fn malformed_structured_console_events_identify_the_invalid_field() {
+    for (event, field) in [
+        ("type = 'console_key'", "kind"),
+        ("type = 'console_key'\nkind = 'Teleport'", "kind"),
+        ("type = 'console_key'\nkind = 'Character'", "ch"),
+        ("type = 'console_key'\nkind = 'Character'\nch = ''", "ch"),
+        ("type = 'console_key'\nkind = 'Character'\nch = 'ab'", "ch"),
+        ("type = 'console_key'\nkind = 'Character'\nch = 1", "ch"),
+        ("type = 'console_key'\nkind = 'Escape'\nch = 'q'", "ch"),
+        (
+            "type = 'console_key'\nkind = 'Escape'\nctrl = 'yes'",
+            "ctrl",
+        ),
+        (
+            "type = 'console_key'\nkind = 'Escape'\ncontrol = true",
+            "control",
+        ),
+        ("type = 'console_resize'\nheight = 24", "width"),
+        ("type = 'console_resize'\nwidth = 0\nheight = 24", "width"),
+        ("type = 'console_resize'\nwidth = -1\nheight = 24", "width"),
+        (
+            "type = 'console_resize'\nwidth = 65536\nheight = 24",
+            "width",
+        ),
+        (
+            "type = 'console_resize'\nwidth = '80'\nheight = 24",
+            "width",
+        ),
+        ("type = 'console_resize'\nwidth = 80\nheight = 0", "height"),
+    ] {
+        let script = format!("[[event]]\n{event}\n");
+        let error = parse_script_text(&script, Path::new("invalid.script.toml"))
+            .expect_err("malformed terminal input must fail before execution");
+        assert!(error.contains(field), "{event}: {error}");
+        assert!(error.contains("invalid.script.toml"), "{error}");
+    }
 }
 
 #[test]

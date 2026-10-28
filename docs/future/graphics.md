@@ -7,6 +7,10 @@
 > buffers with existing FPAS scalar types are the preferred graphics-data
 > alternative; no buffer API or implementation is agreed.
 
+The [shared terminal and graphical UI plan](shared-ui.md) is intended to proceed
+during graphics work after the intended FPAS 2 work. It depends on the graphics
+foundations described here but does not select their backend or graphics API.
+
 Functional Pascal has no way to open a window, draw pixels, or use a GPU. This note records the
 runtime and language gaps that a graphics capability would expose, and the properties that would
 make such a capability practical. It assumes a split in which native Rust code owns the

@@ -294,6 +294,21 @@ impl Vm {
             .push_console_event(event);
     }
 
+    /// Queue terminal-host input and update console dimensions for resize events.
+    pub fn push_terminal_event(&mut self, event: &DebugTerminalEvent) {
+        let mut console = self
+            .hosted
+            .console
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut input = self
+            .hosted
+            .key_input
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        hosted::terminal_input::queue_event(&mut console, &mut input, event);
+    }
+
     /// Return the currently captured console output.
     #[must_use]
     pub fn output(&self) -> VmOutput {

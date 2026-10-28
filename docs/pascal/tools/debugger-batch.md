@@ -73,25 +73,38 @@ For a failure from an ordinary concurrent run use
 
 ## Input and output
 
-Scripts use the [test runner's input format](../std/testing/test.md):
+Scripts use the [test runner's input format](../std/testing/test.md#scripted-console-input).
+Use `console_key` and `console_resize` to feed the Console event API used by
+the TUI input pump. For example, save this as `quit.script.toml`:
 
 ```toml
 [[event]]
-type = "readln"
-line = "answer"
+type = "console_resize"
+width = 100
+height = 32
 
 [[event]]
-type = "readkey_chars"
-chars = "ab"
+type = "console_key"
+kind = "Character"
+ch = "q"
 ```
 
-All events are queued before the one resume. Line and key queues each preserve
-their order; there is no timed ordering between the two queues. The script file
-and total queued input each have a 1 MiB bound. No implicit sidecar is loaded.
-No host stdin or host terminal is read. The batch runner signals EOF after queuing
-the script. Once pending line input is consumed, `ReadLn` and `ReadText` return
-`None`; key polling retains the headless console's existing behavior.
-There is no new mouse, resize or timed-replay format.
+```sh
+fpas debug apps/fpastris/fpastris.fpasprj --script quit.script.toml --timeout 15
+```
+
+The format also accepts `readln` for line input and `readkey_chars` for legacy
+`ReadKey` character reads. `readkey_chars` does not feed unified Console events.
+`--schedule-seed` accepts `readln` events only.
+
+All events are queued before the one resume and before the batch runner signals
+EOF. Structured keys are consumed once across Console APIs; resizes update
+hosted terminal dimensions, and adjacent resize events may coalesce. Line,
+legacy-character, and structured-event queues have no timed ordering between
+them. The script file and total queued input each have a 1 MiB bound. No implicit
+sidecar is loaded. No host stdin or host terminal is read. Once pending line
+input is consumed, `ReadLn` and `ReadText` return `None`; queued terminal events
+remain available after EOF. Scripts provide no mouse input or timed replay.
 
 Program console text and terminal rendering bytes appear in `output` with
 `stream: "stdout"`; ANSI/control bytes are JSON-escaped, not interpreted by the

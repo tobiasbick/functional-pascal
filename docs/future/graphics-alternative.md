@@ -4,7 +4,8 @@
 > a screen. FPAS is making really nice progress, even if, as the human overlord
 > puts it, it is "so fucking expensive". Apparently the reward for that progress
 > is thinking of more things to build.
-> These are considerations only: no implementation plan, no schedule, no promise.
+> These native graphics and multimedia alternatives are considerations only:
+> no backend implementation plan, no schedule, no promise.
 > The human currently prefers the pure Rust route. That is a preference, not a
 > backend decision or authorization to implement anything.
 
@@ -206,12 +207,13 @@ a bounded snapshot at its display rate instead of sending every sample through
 the application model. A custom 2D canvas or 3D viewport could use a similar
 separation between application state and continuous rendering.
 
-## Considered shared UI core for TUI and 2D
+## Shared UI core for TUI and 2D
 
-**The human currently thinks we probably should not pursue a shared TUI/2D UI
-interface.** The idea is recorded for comparison, not selected as a direction.
-That reservation concerns a common element and layout interface; it does not
-rule out using Model-Update-View independently in both hosts.
+The shared UI direction has since been reconsidered. The intended scope and
+sequence are now recorded in the [shared UI plan](shared-ui.md): continue FPAS 2
+first, then pursue graphics and the shared UI together. That plan includes a
+rewrite of existing TUI applications and an initial graphical host; detailed
+design and implementation remain open. The tradeoffs below still need validation.
 
 A possible shared core could describe semantic elements such as text, buttons,
 lists, input fields, rows, and columns. One adapter would render terminal cells;
@@ -240,10 +242,9 @@ make the abstraction costly to maintain without enough application reuse.
 The current `Std.Tui` interface should therefore not be treated as an agreed
 universal graphics interface.
 
-If reconsidered, any common core would need evidence from actual interfaces in
-both hosts. Sharing only the application model while keeping separate element,
-layout, and rendering modules is a valid outcome. No common UI framework,
-extraction, prototype, or implementation is authorized by this discussion.
+The common core needs evidence from actual interfaces in both hosts. Applications
+may use separate Views over shared state when that is a better fit. The linked
+plan requires a real two-host validation before migrating every application.
 
 ## Optional runners and single-executable delivery
 

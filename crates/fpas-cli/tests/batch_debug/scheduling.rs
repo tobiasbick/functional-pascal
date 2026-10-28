@@ -80,7 +80,7 @@ fn seed_boundaries_normalization_and_request_errors_are_explicit() {
 }
 
 #[test]
-fn text_input_and_arguments_work_but_key_scripts_reject_before_initialization() {
+fn text_input_and_arguments_work_but_terminal_scripts_reject_before_initialization() {
     let f = Fixture::new(
         "program Input; uses Std.Console as Console, Std.Args as Args; begin Console.WriteLn(Console.ReadLn().Unwrap()); Console.WriteLn(Args.ParamStr(0)); end.",
     );
@@ -99,24 +99,34 @@ fn text_input_and_arguments_work_but_key_scripts_reject_before_initialization() 
         0,
     );
     assert_eq!(text(&r), "fixed\n--schedule-seed\n");
-    f.write(
-        "keys.toml",
+    for script in [
         "[[event]]\ntype = 'readkey_chars'\nchars = 'a'\n",
-    );
-    let r = f.run(
-        &[
-            "debug",
-            "main.fpas",
-            "--schedule-seed",
-            "42",
-            "--script",
-            "keys.toml",
-        ],
-        1,
-    );
-    assert_eq!(r["schedule"]["status"], "not_started");
-    assert_eq!(r["schedule"]["dispatches"], Value::Null);
-    assert!(text(&r).is_empty());
+        "[[event]]\ntype = 'console_key'\nkind = 'Escape'\n",
+        "[[event]]\ntype = 'console_resize'\nwidth = 80\nheight = 24\n",
+    ] {
+        f.write("terminal.toml", script);
+        let r = f.run(
+            &[
+                "debug",
+                "main.fpas",
+                "--schedule-seed",
+                "42",
+                "--script",
+                "terminal.toml",
+            ],
+            1,
+        );
+        assert_eq!(r["schedule"]["status"], "not_started");
+        assert_eq!(r["schedule"]["dispatches"], Value::Null);
+        assert!(
+            r["diagnostics"][0]["message"]
+                .as_str()
+                .unwrap()
+                .contains("Seeded scheduling accepts"),
+            "{r}"
+        );
+        assert!(text(&r).is_empty());
+    }
 }
 
 #[test]

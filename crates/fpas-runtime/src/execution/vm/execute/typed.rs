@@ -26,8 +26,12 @@ impl Worker {
                     BinaryOperation::RealDivide => left / right,
                     _ => unreachable!("real arithmetic opcode"),
                 };
-                // Division by zero and overflow yield non-finite values and take the checked path.
-                if left.is_finite() && right.is_finite() && direct.is_finite() {
+                // Addition, subtraction and multiplication propagate non-finite inputs.
+                // Division also needs a finite divisor: finite / infinity yields finite zero.
+                // Non-finite results retain checked diagnostics, including division by zero.
+                if direct.is_finite()
+                    && (!matches!(operation, BinaryOperation::RealDivide) || right.is_finite())
+                {
                     return self.write_real_operand(operands.a, direct);
                 }
                 value_ops::real_binary(operation, left, right)

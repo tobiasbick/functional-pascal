@@ -12,6 +12,7 @@ mod inline_callbacks;
 mod intrinsic_length;
 mod intrinsic_unwrap;
 mod intrinsics;
+mod real_arithmetic;
 mod register_initialization;
 mod register_stack;
 mod runtime;

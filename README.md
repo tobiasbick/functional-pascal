@@ -44,6 +44,8 @@ The compiler is at `target/release/fpas` (or `fpas.exe` on Windows). Keep the
 adjacent `target/release/lib/` source standard library and
 `target/release/fpas-runner` (or `fpas-runner.exe`) with it. The runner is used
 by `fpas build --executable`; generated applications themselves are standalone.
+Editor integration starts the adjacent `fpas-lsp` (`fpas-lsp.exe` on Windows).
+CLI, language server, and runner are separate Cargo packages in this workspace.
 Run the compiler directly or add the whole `target/release` directory to your
 `PATH`.
 
@@ -51,7 +53,7 @@ To prepare the distributable layout under `bin/`, run `./dist.sh` on Linux or
 `./dist.ps1` on Windows. Both scripts copy `fpas`, `fpas-runner`, `fpas-lsp`,
 and `lib/` together. They build the Rust binaries in one Cargo invocation, then
 use the built compiler's `stdlib stage` command to precompile and stage `lib/`.
-Release builds disable LTO and use Cargo's default parallel code generation. The
+Release builds use Thin-LTO and Cargo's default parallel code generation. The
 [build guide](docs/bench/build-times.md) describes dependency boundaries and how
 to measure rebuilds.
 Both scripts resolve paths from their own directory and stop on build,
@@ -409,10 +411,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-linker` | Deterministic linker from unit objects to verified executables |
 | `fpas-program` | Persistent executable `.fpascp` program images |
 | `fpas-bundle` | Host-native runner bundle format and publication |
+| `fpas-runner` | Standalone runtime executable for bundled programs |
 | `fpas-fmt` | Canonical FPAS source formatter |
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
 | `fpas-language-service` | Compiler-backed editor analysis and language features |
-| `fpas-lsp` | Language Server Protocol transport |
+| `fpas-lsp` | Standalone Language Server Protocol executable and transport |
 | `fpas-debug` | Source debug engine with batch, JSONL and DAP adapters |
 | `fpas-bench` | Bounded performance harness, baselines, and comparisons |
 | `fpas-acp-model` | ACP schemas, declaration catalog, and protocol data |

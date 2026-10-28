@@ -121,9 +121,7 @@ fn activation_is_run_only_and_rejects_invalid_or_existing_destinations_before_ex
         assert!(output.stdout.is_empty());
         assert_eq!(records(&output)[0]["code"], "FP4137");
     }
-    for command in [
-        "check", "build", "debug", "test", "fmt", "init", "env", "lsp",
-    ] {
+    for command in ["check", "build", "debug", "test", "fmt", "init", "env"] {
         let output = fixture.run(&[command, "--failure-dump", "failure.json"]);
         exit(&output, 1);
         if command == "debug" {

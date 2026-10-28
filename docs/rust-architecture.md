@@ -8,6 +8,7 @@ runtime values, memory ownership, and VM execution belong to one crate.
 flowchart TD
     CLI[CLI and debug adapters] --> Compiler[Compiler and build engine]
     CLI --> Runtime[Runtime]
+    Runner[Standalone runner] --> Runtime
     LSP[LSP transport] --> Analysis[Language service]
     Compiler --> Sema[Semantic analysis]
     Analysis --> Sema
@@ -22,6 +23,29 @@ The diagram shows the main dependency boundaries, not every workspace dependency
 Parsing, diagnostics, numeric rules, project loading, and binary codecs retain
 their focused crates. Cargo manages common dependency versions, the lockfile,
 lint policy, and build profiles at the workspace root.
+
+## Application entry points
+
+Three independent Cargo packages supply the installed executables:
+
+- [`fpas-cli`](../crates/fpas-cli/) builds `fpas`: project commands, compilation,
+  execution, and debug adapters. It does not depend on `fpas-lsp`.
+- [`fpas-lsp`](../crates/fpas-lsp/) builds the stdio language server on top of
+  `fpas-language-service`. It needs neither the compiler backend nor the runtime.
+- [`fpas-runner`](../crates/fpas-runner/) builds the runtime entry point for
+  bundled programs. Its production dependencies are the bundle codec,
+  diagnostics, and runtime; it has no compiler or editor dependency.
+
+The VS Code extension resolves `fpas` once and queries `fpas env --json` for
+the adjacent `languageServer` executable and `standardLibrary` directory. It
+starts that server directly and passes the library through LSP initialization.
+Other editors can start `fpas-lsp` directly with the same initialization option.
+
+`cargo build --workspace` builds all three programs. Distribution scripts ship
+them together with `lib/`. `fpas build --executable` finds the adjacent runner
+and appends the verified program image; generated applications need no compiler
+or source library installation. For targeted CLI tests that create native
+executables, build `fpas-runner` first with `cargo build -p fpas-runner`.
 
 ## Portable contracts
 
@@ -101,10 +125,14 @@ Inspect production dependencies with:
 ```sh
 cargo tree -p fpas-compiler -e normal
 cargo tree -p fpas-lsp -e normal
+cargo tree -p fpas-runner -e normal
 ```
 
-Neither graph should include `fpas-runtime`, `fpas-acp`, `fpas-acp-codec`, or
-`fpas-mcp`. Compiler/editor code may depend on `fpas-acp-model` for declarations.
+The compiler and LSP graphs should not include `fpas-runtime`, `fpas-acp`,
+`fpas-acp-codec`, or `fpas-mcp`. Compiler/editor code may depend on `fpas-acp-model`
+for declarations.
+The runner graph must not include the compiler, build engine, or language service.
+Dependency-boundary tests enforce the three executable packages' separation.
 Use normal dependencies for this check: runtime's development dependency on the
 compiler supplies execution fixtures and is intentionally outside that graph.
 

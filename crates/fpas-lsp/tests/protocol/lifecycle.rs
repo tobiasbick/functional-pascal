@@ -12,6 +12,43 @@ use tokio::process::{ChildStdout, Command};
 use super::support::{TempDirectory, exit, frame, initialize_with_root, initialized, shutdown};
 
 #[tokio::test]
+async fn executable_options_exit_without_starting_protocol_transport() {
+    for (args, expected, code) in [
+        (vec!["--help"], "Usage: fpas-lsp", 0),
+        (
+            vec!["--version"],
+            concat!("fpas-lsp ", env!("CARGO_PKG_VERSION")),
+            0,
+        ),
+        (vec!["--unknown"], "Usage: fpas-lsp", 1),
+        (vec!["--help", "extra"], "Usage: fpas-lsp", 1),
+    ] {
+        let mut child = Command::new(env!("CARGO_BIN_EXE_fpas-lsp"))
+            .args(args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()
+            .expect("start language server");
+        // Leave stdin open: options must exit without waiting for a client.
+        let _input = child.stdin.take().expect("stdin");
+        let output = tokio::time::timeout(Duration::from_secs(5), child.wait_with_output())
+            .await
+            .expect("options must finish promptly")
+            .expect("process output");
+        assert_eq!(output.status.code(), Some(code));
+        let (message, empty) = if code == 0 {
+            (&output.stdout, &output.stderr)
+        } else {
+            (&output.stderr, &output.stdout)
+        };
+        assert!(String::from_utf8_lossy(message).contains(expected));
+        assert!(empty.is_empty());
+    }
+}
+
+#[tokio::test]
 async fn shutdown_exits_with_an_unanswered_capability_registration() {
     let temp = TempDirectory::new("shutdown-pending-registration");
     let mut child = Command::new(env!("CARGO_BIN_EXE_fpas-lsp"))

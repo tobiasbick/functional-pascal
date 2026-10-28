@@ -1,7 +1,7 @@
 # Rust builds and distribution
 
-`dist.ps1` and `dist.sh` run one locked release build for `fpas-cli` and
-`fpas-lsp`. This includes `fpas-runner`. The resulting compiler then runs:
+`dist.ps1` and `dist.sh` run one locked release build for `fpas-cli`,
+`fpas-lsp`, and `fpas-runner`. The resulting compiler then runs:
 
 ```sh
 target/release/fpas stdlib stage --source target/release/lib --output bin/lib
@@ -47,7 +47,7 @@ rebuild and a fresh target-directory build. They answer different questions.
 Avoid running Cargo commands concurrently: lock waits are not compilation time.
 
 For per-crate build timings, run
-`cargo build --locked --release -p fpas-cli -p fpas-lsp --timings` and inspect
+`cargo build --locked --release -p fpas-cli -p fpas-lsp -p fpas-runner --timings` and inspect
 `target/cargo-timings/`. A few busy cores near the end can be expected: dependency
 ordering and final optimization/linking limit parallelism.
 

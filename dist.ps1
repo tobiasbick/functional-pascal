@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 Push-Location $PSScriptRoot
 try {
-    cargo build --locked --release -p fpas-cli -p fpas-lsp
+    cargo build --locked --release -p fpas-cli -p fpas-lsp -p fpas-runner
     if ($LASTEXITCODE -ne 0) {
         throw "Release build failed (exit code $LASTEXITCODE)."
     }

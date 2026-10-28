@@ -173,12 +173,14 @@ export async function verifyWorkflowUnits(): Promise<void> {
         schemaVersion: 1,
         version: "0.0.1",
         executable: configuredExecutable,
+        languageServer: path.join(nativeRoot, "FPAS", "fpas-lsp.exe"),
         standardLibrary: path.join(nativeRoot, "FPAS", "lib")
       }),
       () => true
     ),
     {
       executable: configuredExecutable,
+      languageServer: path.join(nativeRoot, "FPAS", "fpas-lsp.exe"),
       standardLibrary: path.join(nativeRoot, "FPAS", "lib"),
       version: "0.0.1"
     }
@@ -191,6 +193,7 @@ export async function verifyWorkflowUnits(): Promise<void> {
           schemaVersion: 1,
           version: "9.9.9",
           executable: configuredExecutable,
+          languageServer: path.join(nativeRoot, "FPAS", "fpas-lsp.exe"),
           standardLibrary: path.join(nativeRoot, "FPAS", "lib")
         }),
         () => true
@@ -200,6 +203,26 @@ export async function verifyWorkflowUnits(): Promise<void> {
   assert.throws(
     () => parseToolchainEnvironment(configuredExecutable, "not JSON", () => true),
     /invalid JSON/u
+  );
+  const environment = {
+    schemaVersion: 1, version: "0.0.1", executable: configuredExecutable,
+    languageServer: path.join(nativeRoot, "FPAS", "fpas-lsp.exe"),
+    standardLibrary: path.join(nativeRoot, "FPAS", "lib")
+  };
+  assert.throws(
+    () => parseToolchainEnvironment(configuredExecutable, JSON.stringify(environment),
+      candidate => candidate.endsWith("stdlib.fpasprj")),
+    /language server is missing/u
+  );
+  assert.throws(
+    () => parseToolchainEnvironment(configuredExecutable,
+      JSON.stringify({ ...environment, languageServer: "relative/fpas-lsp" }), () => true),
+    /language server is missing/u
+  );
+  assert.throws(
+    () => parseToolchainEnvironment(configuredExecutable, JSON.stringify(environment),
+      candidate => candidate === environment.languageServer),
+    /standard library is incomplete/u
   );
 
   const output = { append: () => undefined } as unknown as vscode.LogOutputChannel;

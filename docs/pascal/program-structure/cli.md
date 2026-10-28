@@ -72,11 +72,8 @@ the source debugger and in-process test hosts do not grant this authority automa
   schema, bounds and exit codes. Explicit `--protocol jsonl|dap` selects the
   existing long-lived source-debugger sessions; see [Source debugger](../tools/debugger.md).
 - `fpas env --json` — print the installed toolchain contract. Schema version 1
-  reports the FPAS version, absolute executable path, and adjacent source
-  standard-library directory as JSON.
-- `fpas lsp` — serve the Functional Pascal Language Server Protocol over
-  standard input and output. Editor clients use this entry point so language
-  features come from the same toolchain as builds, runs, and debugging.
+  reports the FPAS version, absolute `executable` path, expected adjacent
+  `languageServer` executable, and source `standardLibrary` directory as JSON.
 - `fpas fmt [<path> ...]` — format source files, directories, projects, or
   workspaces. A program project includes its `project.main` source as well as
   unit sources. `--check` changes no files; when formatting would change any,
@@ -88,7 +85,7 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas init --help`, `fpas init <kind> --help`, `fpas build --help`,
   `fpas run --help`, `fpas check --help`, `fpas doc --help`, `fpas query --help`,
   `fpas test --help`, `fpas debug --help`, `fpas fmt --help`,
-  `fpas env --help`, and `fpas lsp --help` — print focused command help with
+  and `fpas env --help` — print focused command help with
   valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
@@ -117,7 +114,6 @@ fpas check --help
 fpas test --help
 fpas fmt --help
 fpas env --help
-fpas lsp --help
 ```
 
 ## Installed toolchain discovery
@@ -129,10 +125,17 @@ fpas env --json
 ```
 
 The command is non-interactive and writes only the versioned JSON report to
-stdout. The reported standard-library directory belongs to that executable;
+stdout. The reported `standardLibrary` directory belongs to that executable;
 clients should not independently combine a compiler, language server, and
-library from different installations. Start the matching language server with
-`fpas lsp`.
+library from different installations. `languageServer` is the absolute path to
+the expected adjacent `fpas-lsp` executable (`fpas-lsp.exe` on Windows).
+The CLI does not require the language server: the environment query succeeds
+when that executable is absent. Editor clients check it before launching it directly, with no
+arguments, and pass `initializationOptions.standardLibraryUri` as a file URI.
+
+`fpas-lsp` is a standalone stdio language server. Protocol messages use stdin
+and stdout; logs use stderr. `fpas-lsp --help` describes startup, and
+`fpas-lsp --version` prints its version. See [editor integration](../tools/editor-integration.md).
 
 ## Initializing a scaffold
 

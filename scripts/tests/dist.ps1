@@ -53,7 +53,7 @@ include = ["Std/**/*.fpas"]
         }
         if ($failed -ne ($failure -ne 'success')) { throw "Wrong failure outcome for $failure" }
         if ($global:fpasDistTestCargoArguments.Count -ne 1) { throw 'Expected one Cargo invocation' }
-        if ($global:fpasDistTestCargoArguments[0] -ne 'build --locked --release -p fpas-cli -p fpas-lsp') {
+        if ($global:fpasDistTestCargoArguments[0] -ne 'build --locked --release -p fpas-cli -p fpas-lsp -p fpas-runner') {
             throw 'Incorrect release build arguments'
         }
         $reportedSuccess = [bool]($output -match '^Built:')

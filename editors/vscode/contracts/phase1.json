@@ -203,7 +203,8 @@
     "configuration": "functionalPascal.executablePath",
     "fallback": "PATH",
     "environmentCommand": ["env", "--json"],
-    "languageServerCommand": ["lsp"],
+    "languageServerField": "languageServer",
+    "languageServerArguments": [],
     "remoteHost": "unsupported",
     "remoteHostMessage": "Functional Pascal tooling is unavailable in remote extension hosts. Install FPAS and the extension in the same local desktop environment."
   }

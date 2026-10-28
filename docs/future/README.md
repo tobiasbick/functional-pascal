@@ -9,6 +9,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
+| Agent tools | [Source queries for coding agents](agent-source-queries.md) | Proposed name selection, bounded inspection, direct call relationships, and later checked refactorings |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |

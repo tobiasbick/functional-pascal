@@ -247,9 +247,9 @@ desktop editor. Install an FPAS distribution separately and put `fpas` on
 `PATH`, or select its absolute path through the extension. The VSIX itself is
 platform-independent.
 
-For development, `npm test --prefix editors/vscode` builds the debug `fpas`
-toolchain, exposes it through the test Extension Host's `PATH`, and runs the
-real VS Code Extension Host checks. More detail is in the
+For development, `npm test --prefix editors/vscode` builds debug `fpas`,
+`fpas-lsp`, and `fpas-runner`, exposes the toolchain through the test Extension
+Host's `PATH`, and runs the real VS Code Extension Host checks. More detail is in the
 [extension README](../../../editors/vscode/README.md).
 
 The extension targets the stable VS Code 1.91.0 API and tests against the pinned
@@ -266,10 +266,12 @@ sets the explicit path. A missing or invalid toolchain offers both executable
 selection and the matching Settings page.
 
 Before starting editor features, the extension runs `fpas env --json` and
-validates the reported version and source standard-library manifest. It starts
-the language server with `fpas lsp`, project workflows with the same executable,
-and debugging with `fpas debug`. Compiler, language server, debugger, and
-standard library therefore cannot silently come from different installations.
+validates the reported version, source standard-library manifest, and
+`languageServer` executable. It starts that adjacent `fpas-lsp` directly,
+passes `standardLibrary` as `initializationOptions.standardLibraryUri`, and
+uses the selected `fpas` for project workflows and `fpas debug` sessions.
+These paths select one installation for compiler, language server, debugger,
+and standard library. Install matching versions of the three executables together.
 
 Use **Functional Pascal: Select Project or Workspace** to choose a
 `.fpasprj` or `.fpasworkspace`. A folder with one manifest selects it

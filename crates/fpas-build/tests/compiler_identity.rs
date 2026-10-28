@@ -119,3 +119,32 @@ fn portable_code_has_only_data_dependencies() {
             .collect()
     );
 }
+
+#[test]
+fn application_entry_points_keep_their_dependency_boundaries() {
+    let runner = normal_workspace_graph("fpas-runner");
+    for forbidden in [
+        "fpas-cli",
+        "fpas-compiler",
+        "fpas-build",
+        "fpas-language-service",
+        "fpas-lsp",
+        "fpas-debug",
+    ] {
+        assert!(!runner.contains(forbidden), "runner reaches {forbidden}");
+    }
+    let lsp = normal_workspace_graph("fpas-lsp");
+    for forbidden in [
+        "fpas-cli",
+        "fpas-compiler",
+        "fpas-build",
+        "fpas-runtime",
+        "fpas-debug",
+    ] {
+        assert!(
+            !lsp.contains(forbidden),
+            "language server reaches {forbidden}"
+        );
+    }
+    assert!(!normal_workspace_graph("fpas-cli").contains("fpas-lsp"));
+}

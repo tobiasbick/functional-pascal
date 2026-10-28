@@ -149,8 +149,8 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                         unreachable!("init and doc have their own option parsers")
                     }
                     CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
-                    CliMode::Env | CliMode::Lsp => {
-                        unreachable!("toolchain commands bypass shared option parsing")
+                    CliMode::Env => {
+                        unreachable!("environment command bypasses shared option parsing")
                     }
                 };
                 let path = take_option_value(

@@ -9,7 +9,6 @@ pub(super) enum CliMode {
     Run,
     Debug,
     Env,
-    Lsp,
     Check,
     Doc,
     Fmt,
@@ -24,7 +23,6 @@ impl CliMode {
             Self::Run => HelpTopic::Run,
             Self::Debug => HelpTopic::Debug,
             Self::Env => HelpTopic::Env,
-            Self::Lsp => HelpTopic::Lsp,
             Self::Check => HelpTopic::Check,
             Self::Doc => HelpTopic::Doc,
             Self::Fmt => HelpTopic::Fmt,
@@ -39,7 +37,6 @@ impl CliMode {
             Self::Run => "run",
             Self::Debug => "debug",
             Self::Env => "env",
-            Self::Lsp => "lsp",
             Self::Check => "check",
             Self::Doc => "doc",
             Self::Fmt => "fmt",
@@ -48,7 +45,8 @@ impl CliMode {
     }
 }
 
-const SUBCOMMANDS: &str = "`init`, `build`, `run`, `debug`, `check`, `doc`, `query`, `stdlib`, `test`, `fmt`, `env`, or `lsp`";
+const SUBCOMMANDS: &str =
+    "`init`, `build`, `run`, `debug`, `check`, `doc`, `query`, `stdlib`, `test`, `fmt`, or `env`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {
@@ -65,7 +63,6 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
         "run" => Ok((CliMode::Run, &cli_args[1..])),
         "debug" => Ok((CliMode::Debug, &cli_args[1..])),
         "env" => Ok((CliMode::Env, &cli_args[1..])),
-        "lsp" => Ok((CliMode::Lsp, &cli_args[1..])),
         _ => Err(unexpected_cli_token_error(first)),
     }
 }
@@ -90,10 +87,6 @@ pub(super) fn usage_error(mode: CliMode) -> String {
         }
         CliMode::Env => {
             "Usage: fpas env --json\n  help: `fpas env --help` shows the machine-readable toolchain contract."
-                .to_string()
-        }
-        CliMode::Lsp => {
-            "Usage: fpas lsp\n  help: `fpas lsp --help` describes the standard-I/O server."
                 .to_string()
         }
         CliMode::Check => {

@@ -89,7 +89,6 @@ pub(crate) fn run_cli(
         ResolvedCli::Environment => {
             crate::cli_environment::write_environment(stdout.as_mut(), stderr)
         }
-        ResolvedCli::Lsp => crate::cli_lsp::run_language_server(cwd, stderr),
         ResolvedCli::Build(config) => {
             let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             let library = match crate::standard_library::resolve_standard_library(

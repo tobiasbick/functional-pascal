@@ -58,7 +58,7 @@ exec /bin/chmod "$@"
             assert (result.returncode == 0) == success, (failure, result.stdout, result.stderr)
             assert ("Built:" in result.stdout) == success, (failure, result.stdout)
             calls = log.read_text(encoding="utf-8").splitlines()
-            expected_calls = ["build --locked --release -p fpas-cli -p fpas-lsp"]
+            expected_calls = ["build --locked --release -p fpas-cli -p fpas-lsp -p fpas-runner"]
             if failure != "build":
                 expected_calls.append(
                     "stdlib stage --source target/release/lib --output bin/lib"

@@ -14,10 +14,16 @@ export async function verifyLanguageClientLifecycle(): Promise<void> {
   let release!: () => void;
   const startGate = new Promise<void>(resolve => { release = resolve; });
   const toolchain = { resolve: async () => ({
-    executable: "fpas", standardLibrary: "stdlib", version: "0.0.1"
+    executable: "fpas", languageServer: "fpas-lsp", standardLibrary: "stdlib", version: "0.0.1"
   }) } as Pick<ToolchainResolver, "resolve">;
   const output = { appendLine: () => undefined } as unknown as vscode.LogOutputChannel;
-  const controller = new LanguageClientController(toolchain, output, () => {
+  const controller = new LanguageClientController(toolchain, output, (server, options) => {
+    assert.deepEqual(server, {
+      command: "fpas-lsp", args: [], options: {
+        cwd: vscode.workspace.workspaceFolders?.find(folder => folder.uri.scheme === "file")?.uri.fsPath ?? "."
+      }
+    });
+    assert.equal(options.initializationOptions.standardLibraryUri, vscode.Uri.file("stdlib").toString());
     created += 1;
     return {
       start: async () => { if (created === 1) await startGate; },
@@ -30,7 +36,7 @@ export async function verifyLanguageClientLifecycle(): Promise<void> {
   const second = controller.start();
   const stop = controller.stop();
   release();
-  assert.deepEqual(await Promise.all([first, second]), ["fpas", "fpas"]);
+  assert.deepEqual(await Promise.all([first, second]), ["fpas-lsp", "fpas-lsp"]);
   await stop;
   assert.equal(created, 1);
   assert.equal(stopped, 1);
@@ -49,7 +55,7 @@ export async function verifyLanguageClientLifecycle(): Promise<void> {
     sendRequest: async () => { throw new Error("unexpected request in lifecycle test"); }
   }) as Pick<LanguageClient, "start" | "stop" | "dispose" | "sendRequest">);
   await assert.rejects(recovery.start(), /startup failed/u);
-  assert.equal(await recovery.start(), "fpas");
+  assert.equal(await recovery.start(), "fpas-lsp");
   await recovery.stop();
   assert.equal(attempts, 2);
 }

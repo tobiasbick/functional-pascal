@@ -166,5 +166,5 @@ Choose and agree on the FPAS API/syntax before implementation or changes to `doc
 - **Migration path.** Big-bang rewrite, or component by component behind the existing file formats
   (bytecode, `.fpascu` units, program images) so the C and Rust parts can be checked against each
   other.
-- **Editor tooling.** The VS Code extension talks to `fpas lsp` and the DAP adapter, so it would keep
+- **Editor tooling.** The VS Code extension talks to `fpas-lsp` and the DAP adapter, so it would keep
   working as long as the C implementation speaks the same protocols.

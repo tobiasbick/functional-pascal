@@ -1,0 +1,19 @@
+[package]
+name = "fpas-runner"
+description = "Standalone runtime for bundled Functional Pascal programs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-bundle = { path = "../fpas-bundle" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-runtime = { path = "../fpas-runtime" }
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

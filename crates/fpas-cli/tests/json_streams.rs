@@ -296,20 +296,6 @@ fn real_process_records_keep_imported_paths_multiple_errors_and_absent_positions
 }
 
 #[test]
-fn runner_startup_failure_is_a_positionless_json_record() {
-    let output = Command::new(env!("CARGO_BIN_EXE_fpas-runner"))
-        .env("FPAS_DIAGNOSTICS", "json")
-        .output()
-        .expect("runner starts");
-    assert_eq!(output.status.code(), Some(1));
-    assert!(output.stdout.is_empty());
-    let records = stderr_records(&output);
-    assert_eq!(records.len(), 1);
-    assert_eq!(records[0]["code"], "FP4125");
-    assert_eq!(records[0]["location"], Value::Null);
-}
-
-#[test]
 fn malformed_record_initializer_finishes_with_bounded_diagnostics() {
     use std::process::Stdio;
     use std::time::{Duration, Instant};

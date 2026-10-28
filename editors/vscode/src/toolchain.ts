@@ -15,6 +15,7 @@ export const SUPPORTED_CLI_VERSION = "0.0.1";
 /** Installed paths reported by `fpas env --json`. */
 export interface ToolchainInfo {
   readonly executable: string;
+  readonly languageServer: string;
   readonly standardLibrary: string;
   readonly version: string;
 }
@@ -77,7 +78,7 @@ export class ToolchainResolver {
 export function parseToolchainEnvironment(
   executable: string,
   stdout: string,
-  isManifest: (candidate: string) => boolean = isFile
+  fileExists: (candidate: string) => boolean = isFile
 ): ToolchainInfo {
   let value: unknown;
   try {
@@ -94,12 +95,18 @@ export function parseToolchainEnvironment(
     );
   }
   const standardLibrary = path.normalize(value.standardLibrary);
-  if (!path.isAbsolute(standardLibrary) || !isManifest(path.join(standardLibrary, "stdlib.fpasprj"))) {
+  if (!path.isAbsolute(standardLibrary) || !fileExists(path.join(standardLibrary, "stdlib.fpasprj"))) {
     throw new ToolchainError(
       `Functional Pascal standard library is incomplete: ${standardLibrary}. Expected \`stdlib.fpasprj\` in that directory.`
     );
   }
-  return { executable, standardLibrary, version: value.version };
+  const languageServer = path.normalize(value.languageServer);
+  if (!path.isAbsolute(languageServer) || !fileExists(languageServer)) {
+    throw new ToolchainError(
+      `Functional Pascal language server is missing: ${languageServer}. Install fpas-lsp beside the selected fpas executable.`
+    );
+  }
+  return { executable, languageServer, standardLibrary, version: value.version };
 }
 
 async function queryToolchain(executable: string): Promise<ToolchainInfo> {
@@ -125,6 +132,7 @@ function isEnvironment(value: unknown): value is {
   schemaVersion: 1;
   version: string;
   executable: string;
+  languageServer: string;
   standardLibrary: string;
 } {
   if (typeof value !== "object" || value === null) return false;
@@ -134,6 +142,7 @@ function isEnvironment(value: unknown): value is {
     typeof record.version === "string" &&
     typeof record.executable === "string" &&
     path.isAbsolute(record.executable) &&
+    typeof record.languageServer === "string" &&
     typeof record.standardLibrary === "string"
   );
 }

@@ -42,8 +42,9 @@ For example, use a separate terminal window and format FPAS sources on save:
 }
 ```
 
-Selecting another executable restarts the language server automatically. Its
-standard-library location comes from `fpas env --json`.
+Selecting another executable restarts the language server automatically.
+`fpas env --json` supplies the adjacent `fpas-lsp` executable and standard-library
+location. The extension validates both paths and starts `fpas-lsp` directly.
 
 ## Editing
 

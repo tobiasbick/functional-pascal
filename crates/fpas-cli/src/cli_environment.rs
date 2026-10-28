@@ -10,6 +10,7 @@ struct ToolchainEnvironment {
     schema_version: u32,
     version: &'static str,
     executable: std::path::PathBuf,
+    language_server: std::path::PathBuf,
     standard_library: std::path::PathBuf,
 }
 
@@ -42,6 +43,8 @@ pub(crate) fn write_environment(stdout: &mut dyn Write, stderr: &mut dyn Write) 
     let environment = ToolchainEnvironment {
         schema_version: 1,
         version: env!("CARGO_PKG_VERSION"),
+        language_server: executable
+            .with_file_name(format!("fpas-lsp{}", std::env::consts::EXE_SUFFIX)),
         executable,
         standard_library,
     };

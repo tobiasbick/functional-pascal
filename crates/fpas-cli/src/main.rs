@@ -20,7 +20,6 @@ mod cli_failure_dump;
 mod cli_fmt;
 mod cli_init;
 mod cli_input;
-mod cli_lsp;
 mod cli_output;
 mod cli_paths;
 mod cli_profile;

@@ -127,7 +127,8 @@ export async function verifyContracts() {
 
   assert(
     contract.toolchainPolicy.fallback === "PATH" &&
-      contract.toolchainPolicy.languageServerCommand[0] === "lsp",
+      contract.toolchainPolicy.languageServerField === "languageServer" &&
+      contract.toolchainPolicy.languageServerArguments.length === 0,
     "The extension must use one installed toolchain for CLI and LSP"
   );
   assert(

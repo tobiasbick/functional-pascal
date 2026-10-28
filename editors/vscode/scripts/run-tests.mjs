@@ -61,7 +61,7 @@ function runCommand(command, args) {
 /** Runs compilation, manifest checks, and extension-host tests. */
 export async function runTests() {
   const restricted = process.argv.includes("--restricted");
-  runCommand("cargo", ["build", "-p", "fpas-cli"]);
+  runCommand("cargo", ["build", "-p", "fpas-cli", "-p", "fpas-lsp", "-p", "fpas-runner"]);
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   cleanupTransientFixtures();
   const userDataDirectory = mkdtempSync(path.join(os.tmpdir(), "fpas-vscode-test-"));

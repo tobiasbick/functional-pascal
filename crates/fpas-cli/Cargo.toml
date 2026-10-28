@@ -12,10 +12,6 @@ repository.workspace = true
 name = "fpas"
 path = "src/main.rs"
 
-[[bin]]
-name = "fpas-runner"
-path = "src/bin/fpas-runner.rs"
-
 [dependencies]
 atomic-write-file = "0.3.1"
 ring = "0.17.14"
@@ -31,7 +27,6 @@ fpas-bundle = { path = "../fpas-bundle" }
 fpas-program = { path = "../fpas-program" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-debug = { path = "../fpas-debug" }
-fpas-lsp = { path = "../fpas-lsp" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 toml = { workspace = true }

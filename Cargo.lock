@@ -778,7 +778,6 @@ dependencies = [
  "fpas-fmt",
  "fpas-language-service",
  "fpas-lexer",
- "fpas-lsp",
  "fpas-parser",
  "fpas-program",
  "fpas-project",
@@ -970,6 +969,16 @@ dependencies = [
  "glob",
  "serde",
  "toml",
+]
+
+[[package]]
+name = "fpas-runner"
+version = "0.0.1"
+dependencies = [
+ "fpas-bundle",
+ "fpas-diagnostics",
+ "fpas-runtime",
+ "serde_json",
 ]
 
 [[package]]

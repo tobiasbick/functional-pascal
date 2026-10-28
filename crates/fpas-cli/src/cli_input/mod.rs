@@ -58,7 +58,6 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
         | ResolvedCli::Query(_)
         | ResolvedCli::StageStdlib(_)
         | ResolvedCli::Environment
-        | ResolvedCli::Lsp
         | ResolvedCli::Help(_)
         | ResolvedCli::Version => {
             Err("resolve_cli_input: use resolve_cli_config for --help or --version".to_string())
@@ -119,7 +118,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         return doc::resolve_doc_cli(cli_args, cwd);
     }
 
-    if matches!(mode, CliMode::Env | CliMode::Lsp) {
+    if mode == CliMode::Env {
         if !program_args.is_empty() {
             return Err(format!(
                 "`fpas {}` does not accept arguments after `--`.\n  help: `fpas {} --help` shows valid usage.",
@@ -127,7 +126,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 mode.name()
             ));
         }
-        return resolve_toolchain_command(mode, cli_args);
+        return resolve_environment_command(cli_args);
     }
 
     if !matches!(mode, CliMode::Run | CliMode::Debug) && !program_args.is_empty() {
@@ -141,7 +140,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             CliMode::Test => "fpas test",
             CliMode::Run => unreachable!(),
             CliMode::Debug => unreachable!(),
-            CliMode::Env | CliMode::Lsp => unreachable!("toolchain commands handled above"),
+            CliMode::Env => unreachable!("environment command handled above"),
         };
         return Err(format!(
             "`{cmd}` does not accept program arguments after `--`.\n  help: Omit `--` and trailing program arguments."
@@ -243,8 +242,8 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 CliMode::Debug => {
                     "Pass a debug target after `fpas debug`, or use `fpas debug --help`."
                 }
-                CliMode::Env | CliMode::Lsp => {
-                    unreachable!("toolchain commands handled before shared option parsing")
+                CliMode::Env => {
+                    unreachable!("environment command handled before shared option parsing")
                 }
                 CliMode::Check => {
                     "Pass a source or project path after `fpas check`, or `fpas --help`."
@@ -368,22 +367,19 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             diagnostics,
             standard_library: options.standard_library,
         }),
-        CliMode::Env | CliMode::Lsp => {
-            unreachable!("toolchain commands handled before input discovery")
+        CliMode::Env => {
+            unreachable!("environment command handled before input discovery")
         }
     })
 }
 
-fn resolve_toolchain_command(mode: CliMode, args: &[String]) -> Result<ResolvedCli, String> {
+fn resolve_environment_command(args: &[String]) -> Result<ResolvedCli, String> {
     if matches!(args, [argument] if argument == "-h" || argument == "--help") {
-        return Ok(ResolvedCli::Help(mode.help_topic()));
+        return Ok(ResolvedCli::Help(HelpTopic::Env));
     }
-    match mode {
-        CliMode::Env if matches!(args, [argument] if argument == "--json") => {
-            Ok(ResolvedCli::Environment)
-        }
-        CliMode::Lsp if args.is_empty() => Ok(ResolvedCli::Lsp),
-        CliMode::Env | CliMode::Lsp => Err(usage_error(mode)),
-        _ => unreachable!("only toolchain commands use this resolver"),
+    if matches!(args, [argument] if argument == "--json") {
+        Ok(ResolvedCli::Environment)
+    } else {
+        Err(usage_error(CliMode::Env))
     }
 }

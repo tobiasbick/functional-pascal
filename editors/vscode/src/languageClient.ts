@@ -39,8 +39,8 @@ export class LanguageClientController {
       (folder) => folder.uri.scheme === "file"
     )?.uri.fsPath;
     const serverOptions: ServerOptions = {
-      command: toolchain.executable,
-      args: ["lsp"],
+      command: toolchain.languageServer,
+      args: [],
       options: {
         cwd: workspaceDirectory ?? path.dirname(toolchain.executable)
       }
@@ -62,11 +62,11 @@ export class LanguageClientController {
       throw error;
     }
     this.client = client;
-    this.executable = toolchain.executable;
+    this.executable = toolchain.languageServer;
     this.outputChannel.appendLine(
-      `Functional Pascal language server started: ${toolchain.executable} lsp`
+      `Functional Pascal language server started: ${toolchain.languageServer}`
     );
-    return toolchain.executable;
+    return toolchain.languageServer;
   }
 
   /** Stops the current language client and waits for its child process to exit. */

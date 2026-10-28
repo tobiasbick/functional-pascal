@@ -16,7 +16,6 @@ Usage:
     fpas test [<path>]                   Run `*_test.fpas` programs
     fpas fmt [<path>...]                 Format sources in place
     fpas env --json                      Print installed toolchain paths
-    fpas lsp                             Serve LSP over standard I/O
     fpas stdlib stage [options]          Prepare a distributable standard library
 
 Options:
@@ -367,8 +366,9 @@ Print the installed Functional Pascal toolchain as JSON.
 Usage:
   fpas env --json
 
-The stable schema reports `schemaVersion`, `version`, the absolute `fpas`
-executable path, and the adjacent source standard-library directory.
+The schema reports `schemaVersion`, `version`, the absolute `executable` path,
+the expected adjacent `languageServer` executable, and the `standardLibrary`
+directory. Editor clients validate that the language-server executable exists.
 
 Options:
   --json       Write the machine-readable report to stdout
@@ -376,23 +376,6 @@ Options:
 
 Examples:
   fpas env --json
-
-";
-
-const LSP_HELP: &str = "\
-Serve the Functional Pascal Language Server Protocol over standard I/O.
-
-Usage:
-  fpas lsp
-
-The command is intended for editor clients. It reads protocol messages from
-stdin, writes protocol messages to stdout, and writes logs to stderr.
-
-Options:
-  -h, --help   Print this help
-
-Examples:
-  fpas lsp
 
 ";
 
@@ -409,7 +392,6 @@ pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
         HelpTopic::Run => RUN_HELP,
         HelpTopic::Debug => DEBUG_HELP,
         HelpTopic::Env => ENV_HELP,
-        HelpTopic::Lsp => LSP_HELP,
         HelpTopic::Check => CHECK_HELP,
         HelpTopic::Doc => DOC_HELP,
         HelpTopic::Query

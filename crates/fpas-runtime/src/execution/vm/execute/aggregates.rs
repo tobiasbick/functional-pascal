@@ -126,9 +126,9 @@ impl Worker {
     }
 
     pub fn index_get(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let collection = self.read(register(o.b)?)?.clone();
-        let index = self.read(register(o.c)?)?.clone();
-        let value = value_ops::index(&collection, &index)
+        let collection = self.read(register(o.b)?)?;
+        let index = self.read(register(o.c)?)?;
+        let value = value_ops::index(collection, index)
             .map_err(|error| self.aggregate_error_code(error.code, error.message, error.hint))?;
         self.write(register(o.a)?, value)
     }
@@ -194,9 +194,9 @@ impl Worker {
     }
 
     pub fn contains(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let needle = self.read(register(o.b)?)?.clone();
-        let aggregate = self.read(register(o.c)?)?.clone();
-        let found = value_ops::binary(BinaryOperation::In, &needle, &aggregate)
+        let needle = self.read(register(o.b)?)?;
+        let aggregate = self.read(register(o.c)?)?;
+        let found = value_ops::binary(BinaryOperation::In, needle, aggregate)
             .map_err(|error| self.aggregate_error_code(error.code, error.message, error.hint))?;
         self.write(register(o.a)?, found)
     }

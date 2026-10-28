@@ -1,5 +1,6 @@
 //! Direct register-interpreter regression tests.
 
+mod aggregate_reads;
 mod aggregates;
 mod callbacks;
 mod calls;

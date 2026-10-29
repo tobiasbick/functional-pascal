@@ -1,6 +1,6 @@
 # `Std.Net.Sockets`
 
-Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byte arrays.
+Hosted TCP/TLS listeners and connections with explicit timeouts and byte arrays.
 
 ```pascal id=example-1 fragment context=header
 uses Std.Net.Sockets as Net;
@@ -49,12 +49,12 @@ decisions; use Message() at deliberate text boundaries.
 | type | `NetworkAddress` | record with `Host: string` and `Port: integer` |
 | function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, NetError)` | resolves and connects |
 | function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, NetError)` | resolves, connects, and completes a verified TLS handshake |
-| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | cancellable TCP attempts; OS DNS checked on return |
+| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | cancellation-aware DNS wait and TCP attempts |
 | function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | also observes cancellation during TLS handshake I/O |
 | function | `Listen(Host: string; Port: integer): Result of (Listener, NetError)` | binds one TCP listener |
 | function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of (Listener, NetError)` | loads PEM credentials and binds one TLS listener |
-| function | `Accept(Listener): Result of (Connection, NetError)` | blocks until one client connects |
-| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | blocks until one client connects or cancellation is requested |
+| function | `Accept(Listener): Result of (Connection, NetError)` | waits until one client connects |
+| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of (Connection, NetError)` | waits until one client connects or cancellation is requested |
 | function | `CloseListener(Listener): Result of (boolean, NetError)` | invalidates the listener handle |
 | function | `ListenerLocalAddress(Listener): Result of (NetworkAddress, NetError)` | returns the bound numeric IP address and port |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of (boolean, NetError)` | sets read/write timeout; zero disables it |
@@ -68,8 +68,10 @@ decisions; use Message() at deliberate text boundaries.
 trust policy. It does not expose an insecure certificate bypass. The returned `Connection` uses the
 same `ReceiveBytes`, `SendBytes`, `SetTimeout`, and `Close` functions as a plain TCP connection.
 
-The connect timeout bounds TCP establishment and, for `ConnectTls`, the TLS handshake. Call
-`SetTimeout` to configure subsequent byte reads and writes.
+All connect variants use one monotonic timeout budget starting before native worker admission.
+It includes the DNS wait, all TCP addresses, TLS configuration and the handshake. Call `SetTimeout`
+to configure subsequent byte reads and writes. Synchronous OS TLS operations have the cancellation
+limits described below.
 
 `Listen` binds the requested local host and port. `ListenTls` first loads a PEM certificate chain and
 PEM private key, then binds the requested address. Its positive handshake timeout is limited to five
@@ -78,14 +80,35 @@ minutes. Client certificates and multiple certificates selected through SNI are 
 `Accept` and `AcceptWithCancellation` return the same `Connection` type for TCP and TLS listeners,
 so `SetTimeout`, `ReceiveBytes`, `SendBytes`, and `Close` apply to both. A TLS listener completes the handshake
 before returning and discards failed or timed-out handshakes while waiting for a valid client.
-Listener handles are closed separately with `CloseListener`. Both accept functions and connection
-I/O block the ordinary VM worker that executes them. In the default all-stop
-debugger, accepts and connection byte reads/writes suspend only the calling
-FPAS task while an owned native worker performs the socket operation. Other
-FPAS tasks and debugger requests remain runnable. Cancelling or abandoning the
-wait joins its native worker; an accepted connection not delivered to FPAS is
-closed. Synchronous native callbacks retain synchronous host-call behavior.
-Seeded scheduling continues to reject network effects rather than replaying them.
+Listener handles are closed separately with `CloseListener`.
+
+## Task execution and resource ownership
+
+In pool tasks and the default all-stop debugger, connects, accepts and connection byte
+reads/writes suspend the calling FPAS task while an owned native worker performs
+the socket operation. Their cancellation-aware forms use the same route.
+Other FPAS tasks and debugger requests remain runnable, including with one VM
+pool worker. Inline callbacks, such as array `Map` callbacks, suspend with their
+owning task and retain their frames and mutable captures.
+
+Each VM admits at most 64 pending native socket jobs. Completed results awaiting
+their owner still occupy a slot. Saturation returns `NetError.IoFailure` with a
+native cause describing the limit and no OS error code; admission does not wait
+for a slot or create another thread. Retiring the job releases its slot.
+Each byte transfer remains limited to 1 MiB. Pending operations use bounded native
+offloading and the shared task timer's readiness probes.
+
+Cancellation or abandonment joins the native worker before releasing its saved
+task state. An accepted or outgoing connection not delivered to FPAS is closed; abandoning a
+read/write leaves its established connection open. Already consumed or accepted
+bytes are not rolled back when a task is abandoned. VM teardown cancels saved
+waits and joins native work before returning.
+
+The main program and synchronous native callback boundaries retain synchronous
+host calls. Listener creation, server TLS configuration and connection timeout
+configuration are not worker-releasing operations. Configuring a busy
+connection may wait for its serialized I/O lock. Seeded scheduling rejects
+network effects rather than replaying them.
 
 `AcceptWithCancellation` observes a `Std.Tasks.CancellationToken`. If cancellation wins before a
 connection is returned, the function returns `Error(NetError.Cancelled(Operation))`. It leaves the
@@ -97,15 +120,27 @@ to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout.
 ports differ: client ports must be in `1..65535`; listener ports accept `0..65535`.
 Port `0` asks the operating system to assign an available port while binding the listener.
 
-Calls block their VM worker thread. Connections and listeners belong to one VM, are shared safely
+Connections and listeners belong to one VM, are shared safely
 with its tasks, and are released when that VM ends. `Close` interrupts a blocked `ReceiveBytes` or `SendBytes`
 on the connection, and `CloseListener` interrupts an active `Accept`, including a pending TLS
 handshake. VM cancellation interrupts established connection I/O and listener waits before joining
-task workers. The cancellation-aware connect variants also interrupt pending TCP attempts; OS
-resolution and synchronous TLS verification have the limits described below.
+task workers. All connect variants observe VM cancellation during resolution waits and pending
+TCP/TLS I/O; synchronous TLS verification has the limits described below.
 Closed handles cannot be reused.
 
 FPAS code runs with the host process's network permissions. `Std.Net.Sockets` does not sandbox destinations.
+
+### Name resolution
+
+Numeric IPv4 and IPv6 hosts bypass DNS. Other hosts use the operating system resolver
+on a native thread with at most 64 active lookups across the process. This separate
+budget spans VM lifetimes; saturation returns `NetError.IoFailure` without an OS error code.
+
+The DNS wait observes cancellation and the shared connect deadline. If that wait ends,
+the OS call may still be running: it retains only its native hostname, port and result
+channel, with no VM state or FPAS values. Its slot remains occupied until the OS call
+returns. Late addresses and errors are discarded and never start TCP or TLS work.
+Normally completed lookups are joined before returning their result.
 
 ## `NetworkAddress` and `ListenerLocalAddress`
 
@@ -138,21 +173,22 @@ These variants take a `Std.Tasks.CancellationToken` and use the same host, port,
 policy; cancellation does not bypass certificate or hostname verification.
 
 - A token already cancelled prevents DNS resolution and socket creation for valid arguments.
-- Cancellation is checked before and after DNS resolution, while each TCP attempt is pending,
+- Cancellation is checked before and during the DNS wait, while each TCP attempt is pending,
   during TLS handshake I/O, and before publishing a handle. Observed cancellation returns
   `Error(NetError.Cancelled(Operation))`. Pending sockets are dropped without publishing a handle.
-- The new variants use one monotonic budget starting before resolution, shared by all resolved
+- All connect variants use one monotonic budget starting before worker admission, shared by DNS, all resolved
   addresses and the TLS handshake. Exhaustion observed at a checkpoint returns
   `Error(NetError.Timeout(Cause))`. A successful final checkpoint wins over cancellation arriving
-  immediately afterward. Existing `Connect` and `ConnectTls` retain their timeout behavior.
+  immediately afterward.
 - Each address uses one non-blocking TCP attempt. Pending attempts check cancellation and the
   shared deadline between socket readiness checks, parking for at most 10 ms between checks.
   Cancellation or expiry closes that attempt's socket; polling does not restart the connection.
-- **Cancellation is not a hard wall-clock bound:** the operating-system DNS call cannot be
-  interrupted. TLS platform configuration and certificate verification also run synchronously.
-  Time spent there counts against the budget, but cancellation and expiry
-  may only be reported after the OS call returns. TLS socket waits check cancellation between
-  handshake I/O steps. VM shutdown has the same OS-call limitation.
+- **Cancellation is not a hard wall-clock bound:** the DNS wait can end while the isolated
+  OS lookup continues under its process-wide limit. TLS platform configuration and certificate
+  verification run synchronously inside the owned connect worker. Time spent there counts
+  against the budget, but that worker can only observe cancellation or expiry after those calls
+  return. TLS socket waits check cancellation between handshake I/O steps. Joining native work
+  during abandonment or VM shutdown may therefore wait for synchronous TLS operations.
 - Resolution, connection, and TLS failures remain errors rather than successful handles. If
   cancellation is observed at the same checkpoint as an OS error or expired budget, cancellation
   takes precedence. Successful connections initially have no read/write timeout; use `SetTimeout`.
@@ -171,7 +207,8 @@ EOF representation as `ReceiveBytes` apply. Import `Std.Tasks` to create the can
   another operation to release the connection, but the read timeout starts after that wait.
 - Cancellation and timeout preserve TLS state and the configured socket timeouts. Later reads may
   continue with a fresh token. Cancellation is polled at intervals of up to 10 ms between I/O
-  attempts; OS scheduling can add latency. The call still occupies its VM worker.
+  attempts; OS scheduling can add latency. Pool tasks remain suspended during the
+  native wait, as described above.
 
 ## `SendBytesWithCancellation`
 
@@ -196,15 +233,16 @@ are the same as for `SendBytes`. Import `Std.Tasks` to create the cancellation s
 Both cancellable I/O functions preserve socket timeout settings and normally restore blocking mode
 before returning. If restoring that mode fails, the connection is invalidated; a successful byte
 count or read result is still returned rather than losing progress information. Cancellation is
-polled between I/O attempts with the same 10 ms interval as `ReceiveBytesWithCancellation`; the call occupies
-its VM worker.
+polled between I/O attempts with the same 10 ms interval as `ReceiveBytesWithCancellation`.
 
 ## Implementation (contributors)
 
 | Concern | Location |
 |---------|----------|
+| Cooperative task waits and bounded native jobs | [`wait.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/wait.rs) |
 | VM connection registry | [`connections.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections.rs) |
 | Cancellable connection establishment | [`establishment.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/establishment.rs) |
+| Bounded OS lookup lifetime | [`resolver.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/establishment/resolver.rs) |
 | Cancellable TCP attempts | [`establishment/tcp.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/establishment/tcp.rs) |
 | Cancellable reads | [`cancellable_read.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/cancellable_read.rs) |
 | Cancellable writes | [`cancellable_write.rs`](../../../../crates/fpas-runtime/src/execution/vm/hosted/net/connections/cancellable_write.rs) |

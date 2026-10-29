@@ -5,6 +5,8 @@ pub(in crate::execution::vm) mod failure;
 use failure::Failure;
 mod connections;
 mod listeners;
+#[cfg(test)]
+mod pool_tests;
 mod tls;
 mod transport;
 pub(in crate::execution::vm) mod wait;

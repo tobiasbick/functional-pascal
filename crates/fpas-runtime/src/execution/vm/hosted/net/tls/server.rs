@@ -4,7 +4,7 @@ use crate::execution::vm::hosted::net::failure::Failure;
 use std::net::TcpStream;
 use std::path::Path;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
@@ -82,7 +82,7 @@ impl TlsServer {
         })?;
         super::handshake::complete(
             &mut socket,
-            self.handshake_timeout,
+            Instant::now() + self.handshake_timeout,
             is_cancelled,
             |socket| {
                 connection.complete_io(socket)?;

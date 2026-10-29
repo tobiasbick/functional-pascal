@@ -85,7 +85,7 @@ pub(in crate::execution::vm) enum TaskSuspension {
         destination: Option<Register>,
         location: SourceLocation,
     },
-    /// Debugger-owned socket I/O retains native data only and joins on abandonment.
+    /// Pool/debugger socket I/O retains native data only and joins on abandonment.
     Net(Box<crate::execution::vm::hosted::net::wait::Wait>),
     /// Native ACP wait state containing no FPAS values or callback-owned roots.
     Acp(Box<crate::execution::vm::hosted::acp::wait::Wait>),

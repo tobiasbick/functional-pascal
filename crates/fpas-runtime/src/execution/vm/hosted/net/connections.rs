@@ -3,7 +3,7 @@
 use crate::execution::vm::hosted::net::failure::Failure;
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::net::{Shutdown, TcpStream, ToSocketAddrs};
+use std::net::{Shutdown, TcpStream};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, TryLockError};
 use std::time::Duration;
@@ -14,9 +14,8 @@ mod establishment;
 mod polling;
 #[cfg(test)]
 mod test_connections;
-mod tls;
 use super::transport::Transport;
-pub(super) use establishment::ConnectMode;
+pub(super) use establishment::{ConnectMode, ConnectRequest};
 
 const HANDLE_TAG: u64 = 0x4E45_0000_0000_0000;
 const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
@@ -87,8 +86,7 @@ impl NetworkConnections {
         port: i64,
         timeout_millis: i64,
     ) -> Result<u64, Failure> {
-        let (stream, _) = connect_socket(host, port, timeout_millis)?;
-        self.insert(Transport::tcp(stream))
+        self.connect_with_cancellation(host, port, timeout_millis, ConnectMode::Tcp, || false)
     }
 
     /// Store an accepted TCP or TLS connection and return its opaque runtime handle.
@@ -202,48 +200,7 @@ impl NetworkConnections {
     }
 }
 
-fn connect_socket(
-    host: &str,
-    port: i64,
-    timeout_millis: i64,
-) -> Result<(TcpStream, Duration), Failure> {
-    let port = connect_port(port)?;
-    let timeout = timeout(timeout_millis, false)?;
-    let addresses = (host, port).to_socket_addrs().map_err(|error| {
-        Failure::resolve(
-            &error,
-            format!("Could not resolve TCP host '{host}': {error}"),
-        )
-    })?;
-
-    let mut last_error = None;
-    for address in addresses {
-        match TcpStream::connect_timeout(&address, timeout) {
-            Ok(stream) => {
-                stream.set_nodelay(true).map_err(|error| {
-                    Failure::io(
-                        &error,
-                        format!("Could not configure TCP connection: {error}"),
-                    )
-                })?;
-                return Ok((stream, timeout));
-            }
-            Err(error) => last_error = Some(error),
-        }
-    }
-
-    Err(last_error.map_or_else(
-        || Failure::no_addresses(format!("TCP host '{host}' resolved to no addresses")),
-        |error| {
-            Failure::io(
-                &error,
-                format!("Could not connect to {host}:{port}: {error}"),
-            )
-        },
-    ))
-}
-
-fn read_size(max_bytes: i64) -> Result<usize, Failure> {
+pub(super) fn read_size(max_bytes: i64) -> Result<usize, Failure> {
     usize::try_from(max_bytes)
         .ok()
         .filter(|size| (1..=MAX_IO_BYTES).contains(size))

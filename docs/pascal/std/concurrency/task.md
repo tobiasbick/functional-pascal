@@ -25,6 +25,11 @@ requests another readiness probe after one millisecond; platform timer granulari
 load can delay the actual probe. This permits producer/consumer work and nested joins with one
 pool worker. Suspended values, destinations, and monotonic deadlines survive each probe.
 
+[Socket connects, accepts and byte I/O](../network/net.md#task-execution-and-resource-ownership)
+also release a pool worker, using bounded native jobs. Inline callbacks retain
+their surrounding operation while that task waits. Main-program and synchronous
+native callback calls keep their synchronous behavior.
+
 The main task never executes queued tasks while it waits; pool workers run them. A queued child
 may wait for the main task itself, for example for a request it sends on a channel or socket, so
 running that child on the main task's thread could deadlock until the child's I/O times out, and a

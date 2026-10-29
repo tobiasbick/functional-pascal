@@ -14,6 +14,8 @@ mod graphs;
 mod measurement;
 #[path = "gc_memory/mixed.rs"]
 mod mixed;
+#[path = "gc_memory/network.rs"]
+mod network;
 #[path = "gc_memory/random_graph/mod.rs"]
 mod random_graph;
 #[path = "gc_memory/sessions.rs"]
@@ -151,5 +153,21 @@ fn seeded_graph_roots_and_mutations_match_the_reference_model() {
     measurement::isolated(
         "seeded_graph_roots_and_mutations_match_the_reference_model",
         random_graph::generated_graphs,
+    );
+}
+
+#[test]
+fn native_socket_waits_release_frames_cycles_and_jobs() {
+    measurement::isolated(
+        "native_socket_waits_release_frames_cycles_and_jobs",
+        network::socket_wait_teardown,
+    );
+}
+
+#[test]
+fn native_connects_and_dns_release_frames_and_jobs() {
+    measurement::isolated(
+        "native_connects_and_dns_release_frames_and_jobs",
+        network::socket_connect_completion,
     );
 }

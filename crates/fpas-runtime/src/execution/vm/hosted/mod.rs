@@ -82,6 +82,8 @@ pub(super) struct HostedState {
     pub key_input: Arc<Mutex<KeyInput>>,
     pub(in crate::execution::vm::hosted) network_connections: NetworkConnections,
     pub(in crate::execution::vm::hosted) network_listeners: NetworkListeners,
+    /// Native socket waits, including completed results not yet consumed by their task.
+    pub(in crate::execution::vm) network_jobs: std::sync::atomic::AtomicUsize,
     pub(in crate::execution::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::execution::vm::hosted) files: fs::Files,
     pub(in crate::execution::vm::hosted) processes: proc::Processes,
@@ -135,6 +137,7 @@ impl HostedState {
             key_input,
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
+            network_jobs: Default::default(),
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),

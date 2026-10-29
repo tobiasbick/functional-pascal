@@ -60,7 +60,7 @@ impl Drop for Stop {
     }
 }
 
-fn wait_for_park() {
+pub(super) fn wait_for_park() {
     let deadline = Instant::now() + DEADLINE;
     loop {
         // The surrounding profiling run keeps counting enabled. These overlapping

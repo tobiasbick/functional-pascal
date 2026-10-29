@@ -18,7 +18,8 @@ for contributor naming decisions. The current handbook documents the implemented
 canonical imports. Future allocations do not authorize implementation of those
 capabilities.
 
-The next selected work is the byte-buffer contract under `Std.Bytes`.
+Selected foundation work includes [worker-releasing host I/O](#14-host-io-that-releases-vm-workers)
+and the byte-buffer contract under `Std.Bytes`.
 Continue the remaining selected FPAS 2 work before
 graphics and the
 [shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
@@ -414,34 +415,49 @@ those lifecycle contracts.
 
 ## 14. Host I/O that releases VM workers
 
-Status: partially implemented for selected hosted operations. General
-worker-releasing network, process and filesystem I/O remains open.
+Status: partially implemented. Socket connects, accepts and byte reads/writes release
+ordinary pool workers; listener/timeout configuration, process and filesystem I/O remain open.
 
 [Task waits and channels](../pascal/std/concurrency/task.md#waiting-and-execution)
 already suspend a task and release its pool thread. Selected ACP/MCP receive,
 serve, publication and cleanup waits also retain suspension state rather than
-occupying a pool worker. Synchronous hosted callbacks can suspend with their
+occupying a pool worker. Inline hosted callbacks can suspend with their
 owner task and resume their partially completed operation.
 
-The all-stop debugger suspends socket accept/read/write operations, including
-their cancellable forms, while native jobs perform the I/O. This keeps the
-debugger scheduler available; it does not make ordinary pool socket calls
-worker-releasing. [Network I/O](../pascal/std/network/net.md), blocking
+Pool tasks and the all-stop debugger share socket connect/accept/read/write suspension,
+including cancellable forms and inline callbacks. Each VM permits at most 64
+native socket jobs, including undelivered results; saturation is a typed I/O
+failure. Task abandonment joins native work and closes unpublished outgoing or accepted
+connections. One-worker TCP exchanges, larger transfers, cancellation, close,
+timeout, scope exit and shutdown have functional and allocation regressions.
+See [network execution and ownership](../pascal/std/network/net.md#task-execution-and-resource-ownership).
+
+All connect variants share a deadline spanning admission, DNS, TCP addresses and TLS.
+OS resolution uses a separate process-wide limit of 64 lookups. An abandoned resolver
+retains only native input and discards late addresses, without opening sockets or retaining
+VM state. Numeric hosts bypass DNS; ordinary resolution completion joins its native thread.
+Synchronous platform TLS configuration and certificate checks remain uninterruptible
+within their current native call, so joining cancellation can still wait for those calls.
+Controlled resolver regressions cover late results, deadlines, cancellation and limits;
+single-worker TLS peers and nested callbacks cover cancellation and scope/VM teardown.
+
+Listener/server TLS configuration, connection timeout configuration, synchronous
+native callback boundaries, blocking
 [process calls](../pascal/std/host/proc.md#blocking-and-concurrency) and
 [regular-file operations](../pascal/std/host/fs-streams.md) can still occupy their
 executing thread. Interactive process pipe probes return pending status instead
 of waiting, but provide no selectable readiness source. Enough pending blocking
 host calls can still occupy the available pool.
 
-Consider integrating pending network, pipe and process operations with task
+Continue integrating pipe and process operations with task
 suspension so waiting does not retain a VM worker. Assess filesystem and native
 FFI calls separately where the host operation cannot suspend directly. Compare
 event-driven backends and bounded blocking execution using concrete workloads;
 do not assume that cancellation polling or nonblocking sockets alone release a
 VM worker.
 
-Open questions: operation ownership, wake registration, completion races,
-backpressure, pending-operation limits, shutdown and debugger integration.
+The remaining backends need operation ownership, wake registration, completion
+race, backpressure, resource-limit, shutdown and debugger contracts.
 Distinguish stopping the caller's wait from ending underlying host work, including
 DNS, certificate verification and arbitrary native calls. Define late completion
 and resource cleanup before choosing a backend.

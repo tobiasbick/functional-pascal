@@ -1,0 +1,122 @@
+program NetworkPoolProgress;
+
+uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Os.Args as Args;
+
+function ReadByte(Connection: Net.Connection; Token: Tasks.CancellationToken; Cancellable: boolean): integer;
+begin
+  if Cancellable then
+    const Bytes := Net.ReceiveBytesWithCancellation(Connection, 1, Token).Unwrap();
+    if Bytes.Length() <> 1 then
+      panic('unexpected EOF');
+    end if;
+
+    return Bytes[0];
+  end if;
+  const Bytes := Net.ReceiveBytes(Connection, 1).Unwrap();
+  if Bytes.Length() <> 1 then
+    panic('unexpected EOF');
+  end if;
+
+  return Bytes[0];
+end function;
+
+function WriteByte(Connection: Net.Connection; Byte: integer; Token: Tasks.CancellationToken; Cancellable: boolean): integer;
+begin
+  if Cancellable then
+    return Net.SendBytesWithCancellation(Connection, [Byte], Token).Unwrap();
+  end if;
+
+  return Net.SendBytes(Connection, [Byte]).Unwrap();
+end function;
+
+function Serve(Listener: Net.Listener; Token: Tasks.CancellationToken; Cancellable: boolean): integer;
+begin
+  var Accepted: result of (Net.Connection, Net.NetError) := Error(Net.NetError.Cancelled('unused'));
+  if Cancellable then
+    Accepted := Net.AcceptWithCancellation(Listener, Token);
+  else
+    Accepted := Net.Accept(Listener);
+  end if;
+  const Connection := Accepted.Unwrap();
+  discard Net.SetTimeout(Connection, 5000).Unwrap();
+  var Seen := 0;
+  const Received := [0, 1, 2, 3].Map(
+    function(Index: integer): integer begin
+      const Byte := ReadByte(Connection, Token, Cancellable);
+      Seen := Seen + Byte;
+      return Byte;
+    end function
+  );
+  if (Received.Length() <> 4) or (Seen <> 10) then
+    panic('server callback state');
+  end if;
+  const Sent := Received.Map(
+    function(Byte: integer): integer begin
+      return WriteByte(Connection, Byte + 10, Token, Cancellable);
+    end function
+  );
+  if (Sent[0] <> 1) or (Sent[3] <> 1) then
+    panic('server partial write');
+  end if;
+
+  discard Net.Close(Connection).Unwrap();
+  return Seen;
+end function;
+
+function Exchange(Port: integer; Token: Tasks.CancellationToken; Cancellable: boolean): integer;
+begin
+  const Held := 'abcdefgh'.RepeatStr(8192);
+  var Connected: result of (Net.Connection, Net.NetError) := Error(
+    Net.NetError.Cancelled('unused')
+  );
+  if Cancellable then
+    Connected := Net.ConnectWithCancellation('localhost', Port, 5000, Token);
+  else
+    Connected := Net.Connect('localhost', Port, 5000);
+  end if;
+  const Connection := Connected.Unwrap();
+  discard Net.SetTimeout(Connection, 5000).Unwrap();
+  const Sent := [1, 2, 3, 4].Map(
+    function(Byte: integer): integer begin
+      return WriteByte(Connection, Byte, Token, Cancellable);
+    end function
+  );
+  if (Sent[0] <> 1) or (Sent[3] <> 1) then
+    panic('client partial write');
+  end if;
+  var Seen := 0;
+  const Received := Sent.Map(
+    function(Count: integer): integer begin
+      const Byte := ReadByte(Connection, Token, Cancellable);
+      Seen := Seen + Byte;
+      return Byte;
+    end function
+  );
+  if (Received.Length() <> 4) or (Seen <> 50) then
+    panic('client callback state');
+  end if;
+
+  if Held.Length() <> 65536 then
+    panic('connect frame payload');
+  end if;
+
+  discard Net.Close(Connection).Unwrap();
+  return Seen;
+end function;
+
+begin
+  const Cancellable := Args.ParamCount() > 0;
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  scope
+    const Server := go Serve(Listener, Token, Cancellable);
+    const Client := go Exchange(Address.Port, Token, Cancellable);
+    if (Tasks.Wait(Server) <> 10) or (Tasks.Wait(Client) <> 50) then
+      panic('task results');
+    end if;
+  end scope;
+
+  discard Net.CloseListener(Listener).Unwrap();
+end.

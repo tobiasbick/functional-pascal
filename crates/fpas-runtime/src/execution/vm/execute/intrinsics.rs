@@ -56,13 +56,18 @@ impl Worker {
             }
             return Ok(());
         }
-        if self.debug_tasks
-            && INLINE_CALLBACKS
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
             && let Intrinsic::Net(operation) = intrinsic
             && matches!(
                 operation,
                 NetIntrinsic::Accept
                     | NetIntrinsic::AcceptWithCancellation
+                    | NetIntrinsic::Connect
+                    | NetIntrinsic::ConnectTls
+                    | NetIntrinsic::ConnectWithCancellation
+                    | NetIntrinsic::ConnectTlsWithCancellation
                     | NetIntrinsic::Read
                     | NetIntrinsic::ReadWithCancellation
                     | NetIntrinsic::Write
@@ -70,10 +75,13 @@ impl Worker {
             )
         {
             let arguments = self.registers[start..end].to_vec();
-            if let Some(value) = self.debug_net_wait(operation, &arguments, destination)?
+            if let Some(value) = self.start_net_wait(operation, &arguments, destination)?
                 && let Some(destination) = destination
             {
                 self.write(destination, value)?;
+            }
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
             }
             return Ok(());
         }

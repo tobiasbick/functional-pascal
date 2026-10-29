@@ -6,7 +6,31 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, mpsc};
 use std::time::{Duration, Instant};
 
-use super::{ConnectMode, NetworkConnections, remaining};
+use super::{ConnectMode, ConnectRequest, NetworkConnections, remaining};
+
+#[test]
+fn prepared_connect_deadline_does_not_restart_when_its_worker_starts() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let mut request = ConnectRequest::new(
+        "127.0.0.1",
+        i64::from(listener.local_addr().unwrap().port()),
+        1000,
+        ConnectMode::Tcp,
+    )
+    .unwrap();
+    request.deadline = Instant::now();
+    let connections = NetworkConnections::new();
+    assert_eq!(
+        connections.connect_prepared(&request, || false),
+        Err(Failure::deadline("Network connect timed out"))
+    );
+    assert!(connections.connections.lock().unwrap().is_empty());
+    assert_eq!(
+        listener.accept().unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}
 
 #[test]
 fn pre_cancellation_prevents_dns_and_handle_creation() {

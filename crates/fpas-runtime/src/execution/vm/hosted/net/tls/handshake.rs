@@ -10,11 +10,18 @@ const POLL_INTERVAL: Duration = Duration::from_millis(10);
 /// Complete handshake steps while observing the caller's cancellation state.
 pub(super) fn complete(
     socket: &mut TcpStream,
-    timeout: Duration,
+    deadline: Instant,
     is_cancelled: impl Fn() -> bool,
     mut advance: impl FnMut(&mut TcpStream) -> io::Result<bool>,
 ) -> Result<(), Failure> {
-    let interval = timeout.min(POLL_INTERVAL);
+    if is_cancelled() {
+        return Err(Failure::Cancelled);
+    }
+    let interval = deadline
+        .checked_duration_since(Instant::now())
+        .filter(|duration| !duration.is_zero())
+        .ok_or_else(|| Failure::deadline("TLS handshake timed out"))?
+        .min(POLL_INTERVAL);
     socket
         .set_read_timeout(Some(interval))
         .and_then(|()| socket.set_write_timeout(Some(interval)))
@@ -24,12 +31,21 @@ pub(super) fn complete(
                 format!("Could not configure TLS handshake timeout: {error}"),
             )
         })?;
-    let deadline = Instant::now() + timeout;
     loop {
         if is_cancelled() {
             return Err(Failure::Cancelled);
         }
-        match advance(socket) {
+        if Instant::now() >= deadline {
+            return Err(Failure::deadline("TLS handshake timed out"));
+        }
+        let result = advance(socket);
+        if is_cancelled() {
+            return Err(Failure::Cancelled);
+        }
+        if Instant::now() >= deadline {
+            return Err(Failure::deadline("TLS handshake timed out"));
+        }
+        match result {
             Ok(true) => break,
             Ok(false) => {}
             Err(error)
@@ -43,9 +59,6 @@ pub(super) fn complete(
                     format!("TLS handshake failed: {error}"),
                 ));
             }
-        }
-        if Instant::now() >= deadline {
-            return Err(Failure::deadline("TLS handshake timed out"));
         }
     }
     socket

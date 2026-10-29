@@ -1,7 +1,8 @@
-//! Debugger socket waits release the all-stop driver while native I/O waits for a peer.
+//! Bounded native socket waits release pool workers and the all-stop debugger driver.
 //!
 //! Documentation: `docs/pascal/std/network/net.md`.
 
+use super::connections::{ConnectMode, ConnectRequest};
 use super::{Failure, arguments as args};
 use crate::execution::vm::{VmError, hosted::HostedState, tasks::TaskSuspension, worker::Worker};
 
@@ -20,6 +21,7 @@ use std::{
 };
 
 enum Operation {
+    Connect(ConnectRequest),
     Accept(u64),
     Read(u64, i64),
     Write(u64, Vec<u8>),
@@ -31,17 +33,47 @@ enum Output {
     Count(usize),
 }
 
-/// Native-only socket result and its owned worker; contains no FPAS roots or callbacks.
+pub(super) const MAX_PENDING_JOBS: usize = 64;
+
+/// Keeps the native thread and any undelivered result within one per-VM budget.
+struct Permit(Arc<HostedState>);
+
+impl Permit {
+    fn acquire(hosted: Arc<HostedState>) -> Result<Self, Failure> {
+        hosted
+            .network_jobs
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |count| {
+                (count < MAX_PENDING_JOBS).then_some(count + 1)
+            })
+            .map_err(|_| {
+                Failure::io(
+                    &io::Error::other("Pending network operation limit reached"),
+                    format!(
+                        "At most {MAX_PENDING_JOBS} native socket operations may be pending per VM"
+                    ),
+                )
+            })?;
+        Ok(Self(hosted))
+    }
+}
+
+impl Drop for Permit {
+    fn drop(&mut self) {
+        self.0.network_jobs.fetch_sub(1, Ordering::AcqRel);
+    }
+}
+
+/// Saved socket operation; FPAS frames and callbacks remain in the owning task state.
 pub(in crate::execution::vm) struct Wait {
     operation: Op,
-    resource: String,
+    resources: Vec<String>,
     destination: Option<Register>,
     location: SourceLocation,
     job: Job,
 }
 
 struct Job {
-    hosted: Arc<HostedState>,
+    permit: Permit,
     stop: Arc<AtomicBool>,
     receiver: Mutex<mpsc::Receiver<Result<Output, Failure>>>,
     thread: Option<JoinHandle<()>>,
@@ -53,12 +85,13 @@ impl Job {
         operation: Operation,
         token: Option<u64>,
     ) -> Result<Self, Failure> {
+        let permit = Permit::acquire(hosted)?;
         let stop = Arc::new(AtomicBool::new(false));
         let (sender, receiver) = mpsc::channel();
-        let state = Arc::clone(&hosted);
+        let state = Arc::clone(&permit.0);
         let stopped = Arc::clone(&stop);
         let thread = std::thread::Builder::new()
-            .name("fpas-debug-network".into())
+            .name("fpas-network".into())
             .spawn(move || {
                 let cancelled = || {
                     stopped.load(Ordering::Acquire)
@@ -66,6 +99,10 @@ impl Job {
                             .is_some_and(|id| state.cancellations.is_cancelled(id).unwrap_or(true))
                 };
                 let result = match operation {
+                    Operation::Connect(request) => state
+                        .network_connections
+                        .connect_prepared(&request, cancelled)
+                        .map(Output::Connection),
                     Operation::Accept(handle) => state
                         .network_listeners
                         .accept_with_cancellation(handle, cancelled)
@@ -88,14 +125,12 @@ impl Job {
                         .write_with_cancellation(handle, &bytes, cancelled)
                         .map(Output::Count),
                 };
-                // Receiver ownership lasts through join, including a debugger stop or disconnect.
+                // Receiver ownership lasts through cancellation and native-thread join.
                 let _ = sender.send(result);
             })
-            .map_err(|error| {
-                Failure::io(&error, "Could not start debugger network worker".into())
-            })?;
+            .map_err(|error| Failure::io(&error, "Could not start native network worker".into()))?;
         Ok(Self {
-            hosted,
+            permit,
             stop,
             receiver: Mutex::new(receiver),
             thread: Some(thread),
@@ -113,7 +148,7 @@ impl Job {
             Err(mpsc::TryRecvError::Empty) => None,
             Err(mpsc::TryRecvError::Disconnected) => Some(Err(Failure::io(
                 &io::Error::other("Network worker exited"),
-                "Debugger network worker exited without a result".into(),
+                "Native network worker exited without a result".into(),
             ))),
         }
     }
@@ -125,21 +160,21 @@ impl Drop for Job {
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
         }
-        // An accepted connection not delivered to FPAS still belongs to this abandoned wait.
+        // An accepted or outgoing connection not delivered to FPAS belongs to this wait.
         if let Ok(Ok(Output::Connection(handle))) = self
             .receiver
             .get_mut()
             .unwrap_or_else(|p| p.into_inner())
             .try_recv()
         {
-            let _ = self.hosted.network_connections.close(handle);
+            let _ = self.permit.0.network_connections.close(handle);
         }
     }
 }
 
 impl Worker {
-    /// Start socket I/O without blocking the all-stop scheduler; ordinary pool calls stay synchronous.
-    pub(in crate::execution::vm) fn debug_net_wait(
+    /// Start socket I/O without blocking its pool worker or the all-stop scheduler.
+    pub(in crate::execution::vm) fn start_net_wait(
         &mut self,
         operation: Op,
         arguments: &[Value],
@@ -147,32 +182,64 @@ impl Worker {
     ) -> Result<Option<Value>, VmError> {
         let cancellable = matches!(
             operation,
-            Op::AcceptWithCancellation | Op::ReadWithCancellation | Op::WriteWithCancellation
+            Op::AcceptWithCancellation
+                | Op::ReadWithCancellation
+                | Op::WriteWithCancellation
+                | Op::ConnectWithCancellation
+                | Op::ConnectTlsWithCancellation
+        );
+        let connect = matches!(
+            operation,
+            Op::Connect
+                | Op::ConnectTls
+                | Op::ConnectWithCancellation
+                | Op::ConnectTlsWithCancellation
         );
         let accept = matches!(operation, Op::Accept | Op::AcceptWithCancellation);
-        let count = if accept { 1 } else { 2 };
-        args::require_count(self, arguments, count + usize::from(cancellable))?;
-        let handle = if accept {
-            args::listener(self, &arguments[0])?
+        let count = if connect {
+            3
+        } else if accept {
+            1
         } else {
-            args::connection(self, &arguments[0])?
+            2
         };
+        args::require_count(self, arguments, count + usize::from(cancellable))?;
         let token = if cancellable {
             Some(args::cancellation_token(self, &arguments[count])?)
         } else {
             None
         };
         let location = self.intrinsic_location();
-        let resource = handle.to_string();
-        let prepared = if accept {
-            Ok(Operation::Accept(handle))
-        } else if matches!(operation, Op::Read | Op::ReadWithCancellation) {
-            Ok(Operation::Read(
-                handle,
-                args::integer(self, &arguments[1], "MaxBytes")?,
-            ))
+        let (prepared, resources) = if connect {
+            let host = args::string(self, &arguments[0], "Host")?;
+            let port = args::integer(self, &arguments[1], "Port")?;
+            let timeout = args::integer(self, &arguments[2], "TimeoutMillis")?;
+            let mode = if matches!(operation, Op::ConnectTls | Op::ConnectTlsWithCancellation) {
+                ConnectMode::Tls
+            } else {
+                ConnectMode::Tcp
+            };
+            (
+                ConnectRequest::new(host, port, timeout, mode).map(Operation::Connect),
+                vec![host.to_owned(), port.to_string()],
+            )
         } else {
-            args::bytes(self, &arguments[1])?.map(|data| Operation::Write(handle, data))
+            let handle = if accept {
+                args::listener(self, &arguments[0])?
+            } else {
+                args::connection(self, &arguments[0])?
+            };
+            let prepared = if accept {
+                Ok(Operation::Accept(handle))
+            } else if matches!(operation, Op::Read | Op::ReadWithCancellation) {
+                Ok(Operation::Read(
+                    handle,
+                    args::integer(self, &arguments[1], "MaxBytes")?,
+                ))
+            } else {
+                args::bytes(self, &arguments[1])?.map(|data| Operation::Write(handle, data))
+            };
+            (prepared, vec![handle.to_string()])
         };
         let job = prepared.and_then(|operation| {
             if let Some(token) = token {
@@ -181,9 +248,12 @@ impl Worker {
                     .cancellations
                     .is_cancelled(token)
                     .map_err(|error| Failure::argument("Token", error))?;
-                if accept && cancelled {
+                if (accept || connect) && cancelled {
                     return Err(Failure::Cancelled);
                 }
+            }
+            if let Operation::Read(_, count) = &operation {
+                super::connections::read_size(*count)?;
             }
             Job::start(Arc::clone(&self.hosted), operation, token)
         });
@@ -193,14 +263,14 @@ impl Worker {
                 return Ok(Some(Value::result_error(error.into_value(
                     self.layouts.as_ref(),
                     &Intrinsic::Net(operation).debugger_name(),
-                    &[resource],
+                    &resources,
                     location,
                 )?)));
             }
         };
         self.task_suspension = Some(TaskSuspension::Net(Box::new(Wait {
             operation,
-            resource,
+            resources,
             destination,
             location,
             job,
@@ -228,7 +298,7 @@ impl Worker {
             Err(error) => Value::result_error(error.into_value(
                 self.layouts.as_ref(),
                 &Intrinsic::Net(wait.operation).debugger_name(),
-                std::slice::from_ref(&wait.resource),
+                &wait.resources,
                 wait.location,
             )?),
         };

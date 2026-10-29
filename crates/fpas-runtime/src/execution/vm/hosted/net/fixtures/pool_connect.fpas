@@ -1,0 +1,116 @@
+program NetworkPoolConnect;
+
+uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Console as Console, Std.Os.Args as Args;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Connect(Port: integer; Token: Tasks.CancellationToken; Mode: string): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+      panic('unused connect callback ran');
+    end procedure
+  );
+  var Seen := 0;
+  const Outcomes := [Port].Map(
+    function(Current: integer): integer begin
+      var Outcome: result of (Net.Connection, Net.NetError) := Error(
+        Net.NetError.Cancelled('unused')
+      );
+      if Mode = 'tls_timeout' then
+        Outcome := Net.ConnectTls('127.0.0.1', Current, 1000);
+      elsif Mode = 'scope_exit' then
+        Outcome := Net.ConnectTls('127.0.0.1', Current, 5000);
+      else
+        Outcome := Net.ConnectTlsWithCancellation('127.0.0.1', Current, 5000, Token);
+      end if;
+
+      if Mode = 'tls_timeout' then
+        if not (Outcome is Error(Net.NetError.Timeout(_))) then
+          panic('TLS connect timeout');
+        end if;
+      else
+        if not (Outcome is Error(Net.NetError.Cancelled(_))) then
+          panic('TLS connect cancellation');
+        end if;
+      end if;
+
+      if Keep() <> 65536 then
+        panic('connect capture after wait');
+      end if;
+
+      Seen := Seen + 1;
+      return 1;
+    end function
+  );
+  if (Outcomes.Length() <> 1) or (Seen <> 1) then
+    panic('connect callback state');
+  end if;
+
+  return Seen;
+end function;
+
+function Peer(Listener: Net.Listener; Source: Tasks.CancellationSource; Mode: string): integer;
+begin
+  const Connection := Net.Accept(Listener).Unwrap();
+  discard Net.SetTimeout(Connection, 5000).Unwrap();
+  const Hello := Net.ReceiveBytes(Connection, 1).Unwrap();
+  if Hello.Length() <> 1 then
+    panic('missing TLS client hello');
+  end if;
+
+  Console.WriteText('pending');
+  if Mode = 'tls_cancel' then
+    discard Tasks.Cancel(Source);
+  end if;
+
+  // Keep the transport open until VM teardown; the client must stop its own wait.
+  return 2;
+end function;
+
+begin
+  const Mode := Args.ParamStr(0);
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Client := go Connect(Address.Port, Token, Mode);
+      if Mode <> 'tls_timeout' then
+        const Server := go Peer(Listener, Source, Mode);
+        if Tasks.Wait(Server) <> 2 then
+          panic('peer result');
+        end if;
+      end if;
+
+      if Mode = 'scope_exit' then
+        break;
+      end if;
+
+      if Tasks.Wait(Client) <> 1 then
+        panic('connect result');
+      end if;
+    end scope;
+  end for;
+
+  discard Net.CloseListener(Listener).Unwrap();
+end.

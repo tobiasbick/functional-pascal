@@ -201,9 +201,14 @@ fn omitted_released_cause_identities_are_included_in_catalog_totals() {
 
 #[test]
 fn converted_pool_panic_keeps_completed_root_globals_and_marks_the_dead_peer_failed() {
-    struct Panics;
+    struct Panics {
+        entered: mpsc::Sender<()>,
+        release: mpsc::Receiver<()>,
+    }
     impl Write for Panics {
         fn write(&mut self, _: &[u8]) -> io::Result<usize> {
+            self.entered.send(()).unwrap();
+            self.release.recv_timeout(Duration::from_secs(10)).unwrap();
             panic!("host writer failed");
         }
         fn flush(&mut self) -> io::Result<()> {
@@ -211,16 +216,57 @@ fn converted_pool_panic_keeps_completed_root_globals_and_marks_the_dead_peer_fai
         }
     }
     let mut vm = vm(
-        "program HostPanic; uses Std.Console as Console; var Total:integer:=7; procedure Background(); begin Console.WriteText('host'); end procedure; begin Total:=31; end.",
+        "program HostPanic; uses Std.Console as Console, Std.Tasks as Tasks; var Total:integer:=7; var Proceed:channel of integer:=Tasks.CreateChannel(1); procedure Background(); begin Console.WriteText('host'); end procedure; begin discard Tasks.Receive(Proceed); Total:=31; end.",
     );
+    // This manually inserted worker needs shared globals for the host handshake.
     vm.pool_size = 1;
+    vm.use_local_globals = false;
     let output = observe(&mut vm);
+    let (entered, receipt) = mpsc::channel();
+    let (release, released) = mpsc::channel();
     vm.hosted = Arc::new(HostedState::new(
-        crate::stdlib::Console::with_writer(Box::new(Panics)),
+        crate::stdlib::Console::with_writer(Box::new(Panics {
+            entered,
+            release: released,
+        })),
         vec![],
     ));
     let id = enqueue(&vm, "Background", vec![]);
-    assert!(vm.run().unwrap_err().message.contains("worker panicked"));
+    let scheduler = Arc::clone(&vm.scheduler);
+    let globals = Arc::clone(&vm.globals);
+    let hosted = Arc::clone(&vm.hosted);
+    let running = std::thread::spawn(move || vm.run());
+    receipt.recv_timeout(Duration::from_secs(10)).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let proceed = loop {
+        if let Some(Value::OpaqueHandle(handle)) = globals.read().unwrap()[1].clone() {
+            break handle;
+        }
+        assert!(
+            Instant::now() < deadline,
+            "root did not initialize its channel"
+        );
+        std::thread::yield_now();
+    };
+    hosted
+        .channels
+        .send(proceed, Value::Integer(1), false, None)
+        .unwrap();
+    // The worker must already be running, and the root must complete normally
+    // before its panic is selected by the pool join.
+    while !scheduler.is_shutdown() {
+        assert!(Instant::now() < deadline, "root did not finish");
+        std::thread::yield_now();
+    }
+    release.send(()).unwrap();
+    assert!(
+        running
+            .join()
+            .unwrap()
+            .unwrap_err()
+            .message
+            .contains("worker panicked")
+    );
     let output = output.lock().unwrap();
     let catalog = output[0].task_catalog.as_ref().unwrap();
     assert_eq!(catalog.globals_status, "available");

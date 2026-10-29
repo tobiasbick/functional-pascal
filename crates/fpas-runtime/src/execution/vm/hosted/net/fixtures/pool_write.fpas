@@ -1,0 +1,65 @@
+program NetworkPoolWrite;
+
+uses Std.Net.Sockets as Net, Std.Tasks as Tasks;
+
+function SendAll(Connection: Net.Connection): integer;
+begin
+  const Packet := array.Fill(67, 1000000);
+  var Total := 0;
+  for Round: integer := 1 to 8 do
+    var Offset := 0;
+    while Offset < Packet.Length() do
+      const Sent := Net.SendBytes(
+        Connection,
+        Packet.Slice(Offset, Packet.Length() - Offset)
+      ).Unwrap();
+      if Sent <= 0 then
+        panic('no write progress');
+      end if;
+
+      Offset := Offset + Sent;
+      Total := Total + Sent;
+    end while;
+  end for;
+
+  discard Net.Close(Connection).Unwrap();
+  return Total;
+end function;
+
+function Drain(Connection: Net.Connection): integer;
+begin
+  var Total := 0;
+  while true do
+    const Data := Net.ReceiveBytes(Connection, 1000000).Unwrap();
+    if Data.Length() = 0 then
+      break;
+    end if;
+
+    if (Data[0] <> 67) or (Data[Data.Length() - 1] <> 67) then
+      panic('corrupted packet');
+    end if;
+
+    Total := Total + Data.Length();
+  end while;
+
+  discard Net.Close(Connection).Unwrap();
+  return Total;
+end function;
+
+begin
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  const Sender := Net.Connect('127.0.0.1', Address.Port, 5000).Unwrap();
+  const Receiver := Net.Accept(Listener).Unwrap();
+  discard Net.SetTimeout(Sender, 5000).Unwrap();
+  discard Net.SetTimeout(Receiver, 5000).Unwrap();
+  scope
+    const Writer := go SendAll(Sender);
+    const Reader := go Drain(Receiver);
+    if (Tasks.Wait(Writer) <> 8000000) or (Tasks.Wait(Reader) <> 8000000) then
+      panic('incomplete transfer');
+    end if;
+  end scope;
+
+  discard Net.CloseListener(Listener).Unwrap();
+end.

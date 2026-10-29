@@ -143,10 +143,21 @@ impl TaskScheduler {
 
     fn enqueue_owned(&self, task: ScheduledTask) {
         let _maintenance = crate::defer_maintenance();
-        {
+        let rejected = {
             let mut queue = self.lock_queue();
-            queue.push_back(task);
-            self.queued.store(queue.len(), Ordering::Release);
+            if self.is_shutdown() {
+                Some(task)
+            } else {
+                queue.push_back(task);
+                self.queued.store(queue.len(), Ordering::Release);
+                None
+            }
+        };
+        if let Some(task) = rejected {
+            // Late publishers cannot leave saved execution or native waits
+            // in a queue that no pool worker will drain.
+            self.cancel(task.take());
+            return;
         }
         self.available.notify_one();
         // Synchronize queued-work notification with wait-any's predicate-to-sleep transition.
@@ -396,6 +407,14 @@ impl TaskScheduler {
             self.cancel(task.take());
         }
         self.shutdown.store(true, Ordering::Release);
+        let queued = {
+            let mut queue = self.lock_queue();
+            self.queued.store(0, Ordering::Release);
+            std::mem::take(&mut *queue)
+        };
+        for task in queued {
+            self.cancel(task.take());
+        }
         self.close_all_cases();
         self.complete_pending_results();
         self.timers.notify_shutdown();

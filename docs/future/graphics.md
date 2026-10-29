@@ -16,7 +16,7 @@ Public homes follow the binding [namespace specification](../specs/std-namespace
 `Std.Graphics.Gpu`, with independent `Std.Window`, `Std.Input` and `Std.Audio`
 domains. Their interfaces and implementations remain open. General byte storage
 belongs to `Std.Bytes`; graphics-specific buffers belong to `Std.Graphics`.
-References to existing APIs below keep current names until AP53 migrates them.
+References to existing APIs below use their canonical names.
 
 Functional Pascal has no way to open a window, draw pixels, or use a GPU. This note records the
 runtime and language gaps that a graphics capability would expose, and the properties that would

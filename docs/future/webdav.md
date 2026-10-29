@@ -7,8 +7,8 @@ including `PROPFIND`, can already be expressed through `Request.Create`; WebDAV-
 response, and XML handling are not implemented.
 
 The binding [namespace specification](../specs/std-namespaces.md) assigns this
-protocol to `Std.Net.WebDav`, using `Std.Net.Http` after AP53 migrates the
-current `Std.Net.Http`. A filesystem adapter over WebDAV would belong to `Std.Io`
+protocol to `Std.Net.WebDav`, using the existing `Std.Net.Http` interface.
+A filesystem adapter over WebDAV would belong to `Std.Io`
 and needs a separate contract. These allocations do not schedule either API.
 
 ## Possible scope

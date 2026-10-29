@@ -8,9 +8,8 @@ syntax changes require explicit user approval.
 
 The binding [namespace specification](../specs/std-namespaces.md) allocates
 `Std.Ui` for the common interface and `Std.Ui.Terminal` / `Std.Ui.Graphical`
-for the hosts. [AP53](improve-syntax/ap53-std-namespaces/README.md) moves
-the former `Std.Tui` interface to `Std.Ui.Terminal` with unchanged behavior.
-That naming migration does not implement this shared UI plan.
+for the hosts. The existing terminal interface is `Std.Ui.Terminal`.
+The common interface and graphical host remain future work under this plan.
 
 ## Sequence and relationship to other plans
 

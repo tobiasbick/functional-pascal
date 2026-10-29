@@ -95,11 +95,9 @@ Language rules: [Error handling](../language/error-handling/README.md).
 
 Before adding, moving, splitting or renaming a public standard unit, follow the
 binding [namespace specification](../../specs/std-namespaces.md). It defines
-canonical allocations and extension rules; this handbook documents
-the available imports. [AP53](../../future/improve-syntax/ap53-std-namespaces/README.md)
-owns the namespace migration, and the [roadmap](../../future/std-roadmap.md) owns
-future capability priorities. Names in the specification do not make new
-modules available.
+canonical allocations and extension rules; this handbook documents the available
+imports. The [roadmap](../../future/std-roadmap.md) owns future capability
+priorities. Names in the specification do not make new modules available.
 
 When changing a `Std.*` API, update its handbook and every applicable layer:
 

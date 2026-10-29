@@ -1,7 +1,6 @@
 # Standard library roadmap
 
-Status: namespace organization and migration are delivered in
-[AP53](improve-syntax/ap53-std-namespaces/README.md).
+Status: namespace organization and migration are implemented and verified.
 Other capabilities retain the status of their own plans.
 
 This is the central roadmap for standard-library expansion. The binding
@@ -26,9 +25,9 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 
 ## Selected order
 
-1. Namespace foundation: [AP53](improve-syntax/ap53-std-namespaces/README.md)
-   delivers the existing-unit mapping, the former `Std.Conv` split, tooling,
-   documentation and both FPAS and dungeon consumers.
+1. Namespace foundation is complete: the
+   [canonical-unit catalogue](../specs/std-namespaces.md#existing-public-units-and-migration-targets),
+   conversion split, tooling, documentation and FPAS/dungeon consumers agree.
 2. Settle the first byte-buffer contract under `Std.Bytes`, then authorize its
    implementation separately. Construction, copying/mutation, access, errors,
    limits and I/O integration remain decisions in
@@ -37,7 +36,8 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
    [shared terminal/graphical UI](shared-ui.md) in their recorded order.
    Other capability plans keep their actual prerequisites.
 
-AP53 does not add streams, UDP, protocols, graphics, audio or shared UI.
+Streams, UDP, additional protocols, graphics, audio and shared UI retain their
+separate feature plans.
 The AP index is the completion tracker; this roadmap does not duplicate its
 work-package checklists.
 
@@ -58,7 +58,7 @@ contracts are documented in the handbook. In particular:
   random bytes and secure integer sampling.
 
 The specification's canonical-unit catalogue owns their current names and
-records the AP53 migration from former imports.
+records the migration from former imports.
 
 ## Future capability plans
 

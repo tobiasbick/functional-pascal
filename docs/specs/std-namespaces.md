@@ -1,8 +1,7 @@
 # Standard-library namespaces
 
 Status: binding naming and placement policy for contributors. The canonical
-units below are implemented by
-[AP53](../future/improve-syntax/ap53-std-namespaces/README.md).
+units below are implemented.
 The [current handbook](../pascal/std/README.md) documents available imports and
 behavior; the future allocation table reserves names without providing APIs.
 
@@ -44,7 +43,7 @@ The current catalogue consists of the intrinsic unit list in
 public source exports in [`stdlib.fpasprj`](../../lib/stdlib.fpasprj).
 Private source units and retired type-helper names are not public exports.
 The canonical column names the available units. The former-name column records
-the AP53 migration; relocated former names are rejected as imports.
+their previous names; relocated former names are rejected as imports.
 
 | Former unit | Canonical unit | Responsibility |
 | --- | --- | --- |
@@ -107,8 +106,8 @@ does not add UDP, split TCP from TLS or change connection ownership.
 ## Allocations for future capabilities
 
 The following homes are reserved if their capabilities are introduced. These
-are naming decisions, not available APIs, delivery promises, dependencies of
-AP53 or permission to implement features. Use a concrete requirement to select
+are naming decisions, not available APIs, delivery promises or permission to
+implement features. Use a concrete requirement to select
 a capability and design its types, operations, limits and lifecycle separately.
 Create only the units that a delivered interface needs.
 
@@ -122,7 +121,7 @@ Create only the units that a delivered interface needs.
 | Terminal primitives | `Std.Console`, optional `Std.Console.Screen` and `Std.Console.Input` | Text streams, cell rendering and terminal events without a widget framework |
 | Text | `Std.Text.Parse`, `Std.Text.Format`, `Std.Text.Utf8`, `Std.Text.Unicode`, `Std.Text.Regex` | Text representation, scalar parsing/formatting and Unicode-aware processing |
 | Data formats | `Std.Encoding`, `Std.Encoding.Json`, `Std.Encoding.Toml`, `Std.Encoding.Xml`, `Std.Encoding.Yaml`, `Std.Encoding.Csv`, `Std.Encoding.Cbor`, `Std.Encoding.MessagePack` | Generic structured formats and binary/text codecs; field helpers belong beneath their format |
-| Codec subdivisions | `Std.Encoding.Base64`, `Std.Encoding.Hex` | Use only if a separate API change extracts the existing codecs; AP53 keeps them in `Std.Encoding` |
+| Codec subdivisions | `Std.Encoding.Base64`, `Std.Encoding.Hex` | Use only if a separate API change extracts the existing codecs; the current codecs remain in `Std.Encoding` |
 | Numbers and geometry | `Std.Math`, `Std.Math.Bits`, `Std.Math.Random`, `Std.Math.Statistics`, `Std.Math.LinearAlgebra`, `Std.Math.Geometry` | Computation independent of a renderer, audio device or network protocol |
 | Time | `Std.Time`, `Std.Time.Calendar`, `Std.Time.Zones` | Clock/duration operations, civil calendars and time-zone rules |
 | Localization | `Std.Globalization`, `Std.Globalization.Locale`, `Std.Globalization.Collation`, `Std.Globalization.Messages` | Locale-sensitive presentation, collation and message localization |

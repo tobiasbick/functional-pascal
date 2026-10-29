@@ -7,9 +7,9 @@ or duplicate suppression. The module must expose those limitations instead of re
 reliable `Std.Net.Sockets.Connection` interface.
 
 UDP endpoints belong to `Std.Net.Sockets` under the binding
-[namespace specification](../../specs/std-namespaces.md). AP53 moves the
-existing TCP/TLS interface there first. Datagram operations and their distinct
-types remain future work under this plan; the namespace move does not add them.
+[namespace specification](../../specs/std-namespaces.md). This unit already owns
+the TCP/TLS interface. Datagram operations and their distinct types remain
+future work under this plan.
 
 ## Proposed scope
 

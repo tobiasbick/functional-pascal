@@ -6,8 +6,8 @@ FTP and FTPS may later build on `Std.Net.Sockets`. Neither protocol is currently
 does not commit the project to adding them.
 
 The binding [namespace specification](../specs/std-namespaces.md) assigns FTP
-and FTPS to `Std.Net.Ftp`, using the socket interface that AP53 moves to
-`Std.Net.Sockets`. SSH-based SFTP has its own home, `Std.Net.Sftp`; it is not
+and FTPS to `Std.Net.Ftp`, using the existing `Std.Net.Sockets` interface.
+SSH-based SFTP has its own home, `Std.Net.Sftp`; it is not
 part of this FTP/FTPS plan. Naming does not authorize implementation.
 
 ## Possible scope

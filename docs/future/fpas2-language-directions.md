@@ -16,10 +16,9 @@ FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 requires an explicit decision before implementation.
 
 The [standard-library namespace policy](../specs/std-namespaces.md) is binding
-for contributor naming decisions. Its existing-unit migration is delivered in
-[AP53](improve-syntax/ap53-std-namespaces/README.md).
-The current handbook documents the canonical imports. Future allocations do
-not authorize implementation of those capabilities.
+for contributor naming decisions. The current handbook documents the implemented
+canonical imports. Future allocations do not authorize implementation of those
+capabilities.
 
 Namespace migration is complete. The next selected work is the byte-buffer
 contract under `Std.Bytes`. Continue the remaining selected FPAS 2 work before
@@ -863,8 +862,7 @@ Status: open proposal. Native library buffers without new scalar numeric types
 are the current preference. No language form, library API or storage layout is
 agreed, and implementation is not authorized by this preference.
 
-The first selected scope is a byte buffer under `Std.Bytes`, after
-[AP53 namespace migration](improve-syntax/ap53-std-namespaces/README.md).
+The first selected scope is a byte buffer under `Std.Bytes`.
 The binding [namespace specification](../specs/std-namespaces.md) allocates its
 home and puts specialized media buffers in their respective domains. This
 naming decision leaves the buffer API, value/mutation semantics, limits,
@@ -1067,9 +1065,7 @@ those contracts, including length changes and early-exit resource cleanup.
 
 ## 27. Standard-library namespaces
 
-Status: implemented and verified.
-[AP53](improve-syntax/ap53-std-namespaces/README.md) records the decisions and owns
-the completed work-package checklist. Byte-buffer work follows separately.
+Status: implemented and verified. Byte-buffer work follows separately.
 
 The permanent [namespace specification](../specs/std-namespaces.md) defines the
 existing-unit mapping, future domain allocations and how to place new

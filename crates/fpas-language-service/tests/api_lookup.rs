@@ -153,7 +153,7 @@ fn unit_lists_public_declarations_with_their_first_comment_line() {
     assert!(
         unit.documentation
             .as_deref()
-            .is_some_and(|text| text.starts_with("Basic blocking filesystem operations")),
+            .is_some_and(|text| text.starts_with("Filesystem operations for hosted FPAS programs.")),
         "{unit:?}"
     );
     let read = unit

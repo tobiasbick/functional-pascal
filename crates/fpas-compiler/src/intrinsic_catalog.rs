@@ -142,6 +142,11 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 CloseStdin,
                 TryWait,
                 TryWaitStatus,
+                ReadStdoutCase,
+                ReadStderrCase,
+                WriteStdinCase,
+                CloseStdinCase,
+                WaitStatusCase,
                 RunInteractive,
                 Terminate,
                 Close

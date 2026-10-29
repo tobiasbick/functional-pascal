@@ -1,0 +1,196 @@
+program ProcessPool;
+
+uses
+  Std.Os.Proc as Proc, Std.Os.Args as Args, Std.Tasks as Tasks,
+  Std.Net.Sockets as Net, Std.Text.Format as Format, Std.Console as Console;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Call(Command: string; Arguments: array of string; Options: Proc.ProcessOptions; Mode: string): integer;
+begin
+  if (Mode = 'run') or (Mode = 'receiver_shutdown') then
+    return Proc.Run(Command, Arguments).Unwrap();
+  elsif (Mode = 'capture') or (Mode = 'descendants') then
+    const Output := Proc.RunCapture(Command, Arguments).Unwrap();
+    if Output.Stderr.Length() = 0 then
+      panic('missing captured stderr');
+    end if;
+
+    return Output.ExitCode;
+  elsif Mode = 'options' then
+    return Proc.RunWithOptions(Command, Arguments, Options).Unwrap();
+  end if;
+  const Outcome := Proc.RunCaptureWithOptions(Command, Arguments, Options);
+  if Mode = 'cancel' then
+    case Outcome of
+      when Error(Proc.ProcError.Cancelled(_, _, const Stderr)):
+        if Stderr.Length() = 0 then
+          panic('missing cancellation prefix');
+        end if;
+      when Error(const Failure):
+        panic(Failure.Message());
+      when Ok(_):
+        panic('missing process cancellation');
+    end case;
+
+    return 7;
+  elsif Mode = 'timeout' then
+    case Outcome of
+      when Error(Proc.ProcError.Timeout(_, _, const Stderr)):
+        if Stderr.Length() = 0 then
+          panic('missing timeout prefix');
+        end if;
+      when Error(const Failure):
+        panic(Failure.Message());
+      when Ok(_):
+        panic('missing process timeout');
+    end case;
+
+    return 7;
+  elsif Mode = 'limit' then
+    if not (Outcome is Error(Proc.ProcError.LimitExceeded(_, _, _, _, _))) then
+      panic('missing output limit');
+    end if;
+
+    return 7;
+  end if;
+  const Output := Outcome.Unwrap();
+  if Mode = 'capture_options' then
+    if (Output.Stdout.Length() < 393216) or (Output.Stderr.Length() < 131072) then
+      panic('incomplete duplex output');
+    end if;
+  end if;
+
+  return Output.ExitCode;
+end function;
+
+function Run(Command: string; Arguments: array of string; Options: Proc.ProcessOptions; Mode: string): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+      panic('unused process callback ran');
+    end procedure
+  );
+  var Seen := 0;
+  const Codes := [0].Map(
+    function(Index: integer): integer begin
+      const Code := Call(Command, Arguments, Options, Mode);
+      if Keep() <> 65536 then
+        panic('process capture after wait');
+      end if;
+
+      Seen := Seen + Code + Index;
+      return Code;
+    end function
+  );
+  if (Codes.Length() <> 1) or (Codes[0] <> 7) or (Seen <> 7) then
+    panic('process callback result');
+  end if;
+
+  return Seen;
+end function;
+
+function Peer(Listener: Net.Listener; Source: Tasks.CancellationSource; Mode: string): integer;
+begin
+  var Parent: option of Net.Connection := None;
+  var Descendant: option of Net.Connection := None;
+  var Count := 1;
+  if (Mode = 'descendants') or (Mode = 'cancel') or (Mode = 'scope_exit') or (Mode = 'vm_shutdown') then
+    Count := 2;
+  end if;
+
+  for Index: integer := 1 to Count do
+    const Connection := Net.Accept(Listener).Unwrap();
+    discard Net.SetTimeout(Connection, 10000).Unwrap();
+    const Label := Net.ReceiveBytes(Connection, 1).Unwrap();
+    if Label.Length() <> 1 then
+      panic('missing child gate');
+    end if;
+
+    if Label[0] = 1 then
+      Parent := Some(Connection);
+    else
+      Descendant := Some(Connection);
+    end if;
+  end for;
+
+  Console.WriteText('pending');
+  if Mode = 'cancel' then
+    discard Tasks.Cancel(Source);
+  elsif (Mode <> 'timeout') and (Mode <> 'scope_exit') and (Mode <> 'vm_shutdown') then
+    if Net.SendBytes(Parent.Unwrap(), [1]).Unwrap() <> 1 then
+      panic('gate release');
+    end if;
+  end if;
+
+  if Mode = 'descendants' then
+    if Net.ReceiveBytes(Descendant.Unwrap(), 1).Unwrap().Length() <> 0 then
+      panic('descendant remained alive');
+    end if;
+  end if;
+
+  return 2;
+end function;
+
+begin
+  const Mode := Args.ParamStr(2);
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  const Arguments := [
+    '--ignored', '--exact', Args.ParamStr(1), '--nocapture',
+    '--skip', 'fpas-gate=' + Format.IntToStr(Address.Port),
+    '--skip', 'fpas-mode=' + Mode, '--skip', 'fpas-observe=' + Args.ParamStr(3),
+    '--skip', 'fpas-child=' + Args.ParamStr(1)
+  ];
+  var Options := Proc.DefaultOptions() with CancellationToken := Some(Token); end with;
+
+  if Mode = 'capture_options' then
+    Options := Options with Input := 'i'.RepeatStr(262144); end with;
+  elsif Mode = 'timeout' then
+    Options := Options with TimeoutMillis := Some(2000); end with;
+  elsif Mode = 'limit' then
+    Options := Options with MaxOutputBytes := 4096; end with;
+  end if;
+
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Child := go Run(Args.ParamStr(0), Arguments, Options, Mode);
+      if Mode <> 'receiver_shutdown' then
+        const Release := go Peer(Listener, Source, Mode);
+        if Tasks.Wait(Release) <> 2 then
+          panic('peer result');
+        end if;
+      end if;
+
+      if Mode = 'scope_exit' then
+        break;
+      end if;
+
+      if Tasks.Wait(Child) <> 7 then
+        panic('process result');
+      end if;
+    end scope;
+  end for;
+
+  discard Net.CloseListener(Listener).Unwrap();
+end.

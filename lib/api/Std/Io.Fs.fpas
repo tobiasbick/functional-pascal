@@ -1,4 +1,4 @@
-// Basic blocking filesystem operations for hosted FPAS programs.
+// Filesystem operations for hosted FPAS programs.
 //
 // Handbook: `docs/pascal/std/host/fs.md`.
 unit Std.Io.Fs;

@@ -87,6 +87,10 @@ pub(in crate::execution::vm) enum TaskSuspension {
     },
     /// Pool/debugger socket I/O retains native data only and joins on abandonment.
     Net(Box<crate::execution::vm::hosted::net::wait::Wait>),
+    /// Owned native file call; abandonment joins started OS work and retires its result.
+    Fs(Box<crate::execution::vm::hosted::fs::wait::Wait>),
+    /// Native process and pipe ownership; abandonment terminates and reaps the child.
+    Proc(Box<crate::execution::vm::hosted::proc::wait::Wait>),
     /// Native ACP wait state containing no FPAS values or callback-owned roots.
     Acp(Box<crate::execution::vm::hosted::acp::wait::Wait>),
     /// Native MCP serving/publication state; callbacks retain their own VM roots.
@@ -177,6 +181,8 @@ impl TaskSuspension {
     pub(in crate::execution::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
             Self::Net(_) => TaskSuspensionState::Waiting,
+            Self::Fs(_) => TaskSuspensionState::Waiting,
+            Self::Proc(_) => TaskSuspensionState::Waiting,
             Self::Acp(wait) => wait.debug_state(clock),
             Self::Mcp(wait) => wait.debug_state(clock),
             Self::OwnerCleanup { .. } => TaskSuspensionState::Waiting,

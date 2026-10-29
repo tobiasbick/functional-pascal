@@ -3,8 +3,8 @@
 mod unary;
 
 use crate::{
-    AbcOperands, ConsoleIntrinsic, Intrinsic, IntrinsicOwner, NO_REGISTER, NetIntrinsic, Register,
-    SourceLocation, Value,
+    AbcOperands, ConsoleIntrinsic, Intrinsic, IntrinsicOwner, NO_REGISTER, NetIntrinsic,
+    ProcIntrinsic, Register, SourceLocation, Value,
 };
 
 use super::scalar::register;
@@ -76,6 +76,46 @@ impl Worker {
         {
             let arguments = self.registers[start..end].to_vec();
             if let Some(value) = self.start_net_wait(operation, &arguments, destination)?
+                && let Some(destination) = destination
+            {
+                self.write(destination, value)?;
+            }
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
+            }
+            return Ok(());
+        }
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
+            && let Intrinsic::Proc(operation) = intrinsic
+            && matches!(
+                operation,
+                ProcIntrinsic::Run
+                    | ProcIntrinsic::RunCapture
+                    | ProcIntrinsic::RunWithOptions
+                    | ProcIntrinsic::RunCaptureWithOptions
+            )
+        {
+            let arguments = self.registers[start..end].to_vec();
+            if let Some(value) = self.start_proc_wait(operation, &arguments, destination)?
+                && let Some(destination) = destination
+            {
+                self.write(destination, value)?;
+            }
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
+            }
+            return Ok(());
+        }
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
+            && owner == IntrinsicOwner::Hosted
+            && let Intrinsic::Fs(operation) = intrinsic
+        {
+            let arguments = self.registers[start..end].to_vec();
+            if let Some(value) = self.start_fs_wait(operation, &arguments, destination)?
                 && let Some(destination) = destination
             {
                 self.write(destination, value)?;

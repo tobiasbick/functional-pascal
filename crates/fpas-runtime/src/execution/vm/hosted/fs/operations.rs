@@ -1,7 +1,7 @@
 //! Serialized file operations validate before observing cooperative cancellation.
 
 use super::failure::Failure;
-use super::registry::Files;
+use super::registry::{Files, lock};
 use super::state::{FileState, MAX_BYTES};
 
 impl Files {
@@ -13,11 +13,8 @@ impl Files {
         mut cancelled: impl FnMut() -> bool,
         action: impl FnOnce(&mut FileState, &str, &mut dyn FnMut() -> bool) -> Result<T, Failure>,
     ) -> Result<T, Failure> {
-        let entry = self.entry(handle)?;
-        let mut state = entry
-            .state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let entry = self.entry(handle, &mut cancelled)?;
+        let mut state = lock(&entry.state, &mut cancelled)?;
         let state = state.as_mut().ok_or(Failure::Closed)?;
         if read && !entry.readable {
             return Err(Failure::argument("File", "File was not opened for reading"));
@@ -72,30 +69,31 @@ impl Files {
         })
     }
 
-    pub(super) fn size(&self, handle: u64) -> Result<i64, Failure> {
-        self.with(
-            handle,
-            false,
-            false,
-            || false,
-            |state, path, _| state.size(path),
-        )
+    pub(super) fn size(
+        &self,
+        handle: u64,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<i64, Failure> {
+        self.with(handle, false, false, cancelled, |state, path, _| {
+            state.size(path)
+        })
     }
 
-    pub(super) fn set_length(&self, handle: u64, length: i64) -> Result<(), Failure> {
+    pub(super) fn set_length(
+        &self,
+        handle: u64,
+        length: i64,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<(), Failure> {
         if length < 0 {
             return Err(Failure::argument(
                 "Length",
                 "File length must not be negative",
             ));
         }
-        self.with(
-            handle,
-            false,
-            true,
-            || false,
-            |state, path, _| state.set_length(length as u64, path),
-        )
+        self.with(handle, false, true, cancelled, |state, path, _| {
+            state.set_length(length as u64, path)
+        })
     }
 
     pub(super) fn write_text(
@@ -113,7 +111,13 @@ impl Files {
         })
     }
 
-    pub(super) fn seek(&self, handle: u64, offset: i64, origin: i64) -> Result<i64, Failure> {
+    pub(super) fn seek(
+        &self,
+        handle: u64,
+        offset: i64,
+        origin: i64,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<i64, Failure> {
         if !(0..=2).contains(&origin) {
             return Err(Failure::argument("Origin", "Unknown seek origin"));
         }
@@ -123,32 +127,28 @@ impl Files {
                 "Start offset must not be negative",
             ));
         }
-        self.with(
-            handle,
-            false,
-            false,
-            || false,
-            |state, path, _| state.seek(offset, origin, path),
-        )
+        self.with(handle, false, false, cancelled, |state, path, _| {
+            state.seek(offset, origin, path)
+        })
     }
 
-    pub(super) fn tell(&self, handle: u64) -> Result<i64, Failure> {
-        self.with(
-            handle,
-            false,
-            false,
-            || false,
-            |state, path, _| state.tell(path),
-        )
+    pub(super) fn tell(
+        &self,
+        handle: u64,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<i64, Failure> {
+        self.with(handle, false, false, cancelled, |state, path, _| {
+            state.tell(path)
+        })
     }
 
-    pub(super) fn flush(&self, handle: u64) -> Result<(), Failure> {
-        self.with(
-            handle,
-            false,
-            false,
-            || false,
-            |state, path, _| state.flush(path),
-        )
+    pub(super) fn flush(
+        &self,
+        handle: u64,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<(), Failure> {
+        self.with(handle, false, false, cancelled, |state, path, _| {
+            state.flush(path)
+        })
     }
 }

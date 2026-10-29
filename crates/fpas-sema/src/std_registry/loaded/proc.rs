@@ -1,7 +1,7 @@
 use super::super::{define_func, p};
 use crate::check::Checker;
 use crate::std_registry::loaded::type_registration;
-use crate::types::Ty;
+use crate::types::{ProcedureTy, Ty};
 use fpas_builtins::std_symbols as s;
 
 /// Register the `Std.Os.Proc` functions made visible by `uses Std.Os.Proc`.
@@ -68,6 +68,39 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
         ],
     );
     let result = |ty| Ty::Result(Box::new(ty), Box::new(error_ty.clone()));
+    let wait_case =
+        type_registration::register_record_type(checker, s::STD_TASK_WAIT_CASE, Vec::new());
+    for (name, extra, output) in [
+        (
+            s::STD_PROC_READ_STDOUT_CASE,
+            Some(p("MaxBytes", Ty::Integer)),
+            Ty::Array(Box::new(Ty::Integer)),
+        ),
+        (
+            s::STD_PROC_READ_STDERR_CASE,
+            Some(p("MaxBytes", Ty::Integer)),
+            Ty::Array(Box::new(Ty::Integer)),
+        ),
+        (
+            s::STD_PROC_WRITE_STDIN_CASE,
+            Some(p("Bytes", Ty::Array(Box::new(Ty::Integer)))),
+            Ty::Integer,
+        ),
+        (s::STD_PROC_CLOSE_STDIN_CASE, None, Ty::Boolean),
+        (s::STD_PROC_WAIT_STATUS_CASE, None, exit_status.clone()),
+    ] {
+        let mut params = vec![p("Process", process.clone())];
+        params.extend(extra);
+        params.push(p(
+            "Callback",
+            Ty::Procedure(ProcedureTy {
+                type_params: Vec::new(),
+                params: vec![p("Outcome", result(output))],
+                variadic: false,
+            }),
+        ));
+        define_func(checker, name, params, wait_case.clone());
+    }
     define_func(
         checker,
         s::STD_PROC_DEFAULT_START_OPTIONS,

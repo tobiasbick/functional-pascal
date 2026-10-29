@@ -145,6 +145,24 @@ fn environment_duplicates_follow_native_keys_without_full_case_expansion() {
     assert_eq!(request.validate().is_err(), cfg!(windows));
 }
 
+#[test]
+fn registry_drop_cancels_a_saved_reservation_without_waiting_for_its_owner() {
+    let processes = super::registry::Processes::new();
+    let reservation = processes.reserve().unwrap();
+    let (send, receive) = std::sync::mpsc::channel();
+    let owner = std::thread::spawn(move || {
+        drop(processes);
+        send.send(()).unwrap();
+    });
+    let result = receive.recv_timeout(std::time::Duration::from_secs(5));
+    // Always release the saved owner, so a regression fails instead of hanging.
+    let stopped = reservation.process.stopped();
+    drop(reservation);
+    owner.join().unwrap();
+    result.expect("registry destruction must not wait for a saved execution owned elsewhere");
+    assert!(stopped);
+}
+
 #[cfg(unix)]
 #[test]
 fn simultaneous_large_input_stdout_and_stderr_do_not_deadlock() {

@@ -1,6 +1,6 @@
 # `Std.Io.Fs`
 
-Basic blocking filesystem operations for hosted FPAS programs. This page lists the full API;
+Filesystem operations for hosted FPAS programs. This page lists the full API;
 [file handles and streaming](fs-streams.md) have a separate detailed guide.
 
 ```pascal id=example-1
@@ -16,7 +16,10 @@ begin
 end.
 ```
 
-`Std.Io.Fs` reads and writes host files. Calls are blocking and may run on worker threads when invoked from `go`, but the runtime uses thread-safe Rust filesystem APIs.
+`Std.Io.Fs` reads and writes host files using thread-safe Rust filesystem APIs.
+Handle operations suspend pool tasks and the all-stop debugger while bounded native
+jobs execute; see [execution and ownership](fs-streams.md#execution-and-native-ownership).
+Whole-file and path-based operations remain synchronous, including in `go` tasks.
 
 **Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, `WriteTextAtomic`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
 

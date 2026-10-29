@@ -376,8 +376,8 @@ application consistent; existing task ownership and cleanup rules must still hol
 
 ## 13. Managed host processes and interactive pipes
 
-Status: core process management and interactive pipes are implemented. Selectable
-waits, scope-bound cleanup and native-buffer payloads remain separate proposals.
+Status: core process management, interactive pipes and selectable pipe waits are
+implemented. Scope-bound cleanup and native-buffer payloads remain separate proposals.
 
 [Std.Os.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
 environment overrides, supplied stdin, bounded stdout/stderr capture, timeouts
@@ -396,9 +396,12 @@ with timeout, cancellation and process cleanup.
 
 Handles are VM-owned and aliases share the same child and close state. Callers
 close completed handles explicitly; VM teardown releases remaining children and
-pipes. A lexical task scope is not a general process-handle close scope. Blocking
-Run calls still occupy their executing thread. Interactive callers currently
-compose polling, deadlines and cancellation around the probe API.
+pipes. A lexical task scope is not a general process-handle close scope.
+Run/RunCapture and their options variants suspend pool tasks and all-stop debugger
+tasks while waiting. Native launch, synchronous callbacks and RunInteractive can
+still occupy their calling thread. Interactive handles offer typed read, write,
+stdin-close and status cases for `Tasks.Select`, combined with its timer and
+cancellation cases. Selecting or abandoning a case does not close the handle.
 
 Remaining work belongs to [worker-releasing host I/O](#14-host-io-that-releases-vm-workers),
 [scope-bound cleanup](#5-scope-bound-cleanup-actions), and any selected readiness
@@ -409,14 +412,16 @@ Further stop/grace-period policies require their own scope decision.
 
 Existing regression coverage includes configuration validation, interactive and
 captured I/O, partial progress, EOF, repeated status observation, timeout,
-cancellation, output limits and owned process cleanup. Future wait integration
-must additionally demonstrate progress without retaining a VM worker and preserve
-those lifecycle contracts.
+cancellation, output limits and owned process cleanup. Selectable pipe regressions
+also cover single-worker progress, binary duplex traffic, discarded cases, inline
+callbacks and debugger execution, plus exact allocation balance after abandonment.
 
 ## 14. Host I/O that releases VM workers
 
-Status: partially implemented. Socket connects, accepts and byte reads/writes release
-ordinary pool workers; listener/timeout configuration, process and filesystem I/O remain open.
+Status: partially implemented. Socket connects, accepts, byte reads/writes and
+non-interactive process Run waits, selectable interactive process pipe operations
+and regular-file handle calls release ordinary pool workers. Listener/timeout
+configuration and whole-file/path-based filesystem I/O remain open.
 
 [Task waits and channels](../pascal/std/concurrency/task.md#waiting-and-execution)
 already suspend a task and release its pool thread. Selected ACP/MCP receive,
@@ -441,17 +446,46 @@ within their current native call, so joining cancellation can still wait for tho
 Controlled resolver regressions cover late results, deadlines, cancellation and limits;
 single-worker TLS peers and nested callbacks cover cancellation and scope/VM teardown.
 
-Listener/server TLS configuration, connection timeout configuration, synchronous
-native callback boundaries, blocking
-[process calls](../pascal/std/host/proc.md#blocking-and-concurrency) and
-[regular-file operations](../pascal/std/host/fs-streams.md) can still occupy their
-executing thread. Interactive process pipe probes return pending status instead
-of waiting, but provide no selectable readiness source. Enough pending blocking
-host calls can still occupy the available pool.
+`Std.Os.Proc.Run`, `RunCapture` and their options variants use owned, resumable
+process/pipe state in pool tasks and the all-stop debugger. The shared engine performs
+bounded probes, preserves one monotonic deadline and retains the 64-process per-VM
+admission limit. Productive pool calls yield immediately; idle calls use the shared
+timer. Abandonment terminates the owned group, reaps the direct child and releases
+its input and pipes. Native launch, reaping and synchronous stderr receivers retain
+their host-call limits. One-worker child/peer gates, duplex transfers, descendant
+cleanup and callback-triggered shutdown have functional regressions and exact
+allocation checks with default and 1/1/1 collection schedules.
 
-Continue integrating pipe and process operations with task
-suspension so waiting does not retain a VM worker. Assess filesystem and native
-FFI calls separately where the host operation cannot suspend directly. Compare
+Interactive handles support `ReadStdoutCase`, `ReadStderrCase`, `WriteStdinCase`,
+`CloseStdinCase` and `WaitStatusCase` through `Tasks.Select`. Ordered probing commits
+only the winner; construction and discarded cases leave pipes untouched. Native
+readiness uses periodic selection probes rather than OS event registration. Pending
+selection releases pool workers and debugger tasks, including inline callbacks.
+Timers and cancellation use existing task cases. Case abandonment releases native
+write payloads and callback roots, leaving independent handles open until explicit
+close or VM teardown. See [selectable pipes](../pascal/std/host/proc.md#selectable-interactive-pipes).
+
+`Std.Io.Fs` handle operations, including open/close, size/resize, positioning,
+byte/line I/O and text output, share native requests between synchronous calls
+and suspended pool/debugger execution. Up to 64 native jobs per VM include
+undelivered results and reject saturation before starting OS work. Transfers
+retain native payloads rather than FPAS values. Waiting on registry/alias locks
+observes cancellation; shutdown signals precede joins and final descriptor cleanup.
+Abandonment joins work and closes unpublished opens without rolling back file
+effects. Native filesystem calls already in progress remain uninterruptible.
+Single-worker lock gates, inline callbacks, debugger execution, queued cancellation,
+admission and undelivered-open cleanup have functional tests. Thirty-two VM
+teardowns with cyclic captures and oversized payloads require exact allocation
+balances under default and 1/1/1 schedules. See [file execution and ownership](../pascal/std/host/fs-streams.md#execution-and-native-ownership).
+
+Listener/server TLS configuration, connection timeout configuration, synchronous
+native callback boundaries, process startup, terminal-aware
+[process calls](../pascal/std/host/proc.md#blocking-and-concurrency) and
+[whole-file and path operations](../pascal/std/host/fs.md) can still occupy their
+executing thread. Enough pending blocking host calls can still occupy the available pool.
+
+Assess remaining filesystem and native FFI calls separately where the host operation cannot
+suspend directly. Compare
 event-driven backends and bounded blocking execution using concrete workloads;
 do not assume that cancellation polling or nonblocking sockets alone release a
 VM worker.

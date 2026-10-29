@@ -11,6 +11,16 @@ documented_intrinsic_enum! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum ProcIntrinsic {
+    /// Select a bounded stdout read.
+    ReadStdoutCase = 832,
+    /// Select a bounded stderr read.
+    ReadStderrCase = 833,
+    /// Select one partial stdin write.
+    WriteStdinCase = 834,
+    /// Select flushing and closing stdin.
+    CloseStdinCase = 835,
+    /// Select exact native process completion.
+    WaitStatusCase = 836,
     /// Construct interactive process launch options.
     DefaultStartOptions = 724,
     /// Start an owned process with separate nonblocking binary pipes.

@@ -122,6 +122,16 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Selects flushing and closing stdin.
+//
+// Parameters:
+// - `Process`: `Std.Os.Proc.Process` input value used by `CloseStdinCase`.
+// - `Callback`: `procedure(Outcome: Result of (boolean, Std.Os.Proc.ProcError))` input value used by `CloseStdinCase`.
+public function CloseStdinCase(Process: Process; Callback: procedure(Outcome: result of (boolean, ProcError))): Tasks.WaitCase;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Returns the absolute path of the running FPAS host executable.
 public function CurrentExecutable(): result of (string, ProcError);
 begin
@@ -150,12 +160,34 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Selects one bounded stderr read or EOF.
+//
+// Parameters:
+// - `Process`: `Std.Os.Proc.Process` input value used by `ReadStderrCase`.
+// - `MaxBytes`: `integer` input value used by `ReadStderrCase`.
+// - `Callback`: `procedure(Outcome: Result of (array of integer, Std.Os.Proc.ProcError))` input value used by `ReadStderrCase`.
+public function ReadStderrCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (array of integer, ProcError))): Tasks.WaitCase;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Runs the intrinsic `ReadStdout` function.
 //
 // Parameters:
 // - `Process`: `Std.Os.Proc.Process` input value used by `ReadStdout`.
 // - `MaxBytes`: `integer` input value used by `ReadStdout`.
 public function ReadStdout(Process: Process; MaxBytes: integer): result of (option of array of integer, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Selects one bounded stdout read or EOF.
+//
+// Parameters:
+// - `Process`: `Std.Os.Proc.Process` input value used by `ReadStdoutCase`.
+// - `MaxBytes`: `integer` input value used by `ReadStdoutCase`.
+// - `Callback`: `procedure(Outcome: Result of (array of integer, Std.Os.Proc.ProcError))` input value used by `ReadStdoutCase`.
+public function ReadStdoutCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (array of integer, ProcError))): Tasks.WaitCase;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -253,12 +285,33 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Selects exact native completion without closing the handle.
+//
+// Parameters:
+// - `Process`: `Std.Os.Proc.Process` input value used by `WaitStatusCase`.
+// - `Callback`: `procedure(Outcome: Result of (Std.Os.Proc.ProcessExitStatus, Std.Os.Proc.ProcError))` input value used by `WaitStatusCase`.
+public function WaitStatusCase(Process: Process; Callback: procedure(Outcome: result of (ProcessExitStatus, ProcError))): Tasks.WaitCase;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Runs the intrinsic `WriteStdin` function.
 //
 // Parameters:
 // - `Process`: `Std.Os.Proc.Process` input value used by `WriteStdin`.
 // - `Bytes`: `array of integer` input value used by `WriteStdin`.
 public function WriteStdin(Process: Process; Bytes: array of integer): result of (integer, ProcError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Selects one partial stdin write.
+//
+// Parameters:
+// - `Process`: `Std.Os.Proc.Process` input value used by `WriteStdinCase`.
+// - `Bytes`: `array of integer` input value used by `WriteStdinCase`.
+// - `Callback`: `procedure(Outcome: Result of (integer, Std.Os.Proc.ProcError))` input value used by `WriteStdinCase`.
+public function WriteStdinCase(Process: Process; Bytes: array of integer; Callback: procedure(Outcome: result of (integer, ProcError))): Tasks.WaitCase;
 begin
   panic('Intrinsic API declaration');
 end function;

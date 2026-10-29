@@ -1,0 +1,336 @@
+program SelectablePipes;
+
+uses
+  Std.Os.Proc as Proc, Std.Os.Args as Args, Std.Tasks as Tasks,
+  Std.Net.Sockets as Net, Std.Text.Format as Format, Std.Console as Console, Std.Encoding as Encoding;
+
+procedure AssertBytes(Actual: array of integer; Expected: array of integer);
+begin
+  if Encoding.HexEncode(Actual).Unwrap() <> Encoding.HexEncode(Expected).Unwrap() then
+    panic('byte mismatch');
+  end if;
+end procedure;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Exchange(
+  Process: Proc.Process; Ready: channel of boolean; Release: channel of boolean;
+  Token: Tasks.CancellationToken; Mode: string
+): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Proc.WriteStdinCase(
+    Process, array.Fill(0, 65536),
+    procedure(Outcome: result of (integer, Proc.ProcError)) begin
+      discard Keep();
+      panic('unused case');
+    end procedure
+  );
+  discard Tasks.Receive(Ready).Unwrap();
+  // Ready means the child has written stderr. Constructors and losing cases must leave it intact.
+  const LostRead := Proc.ReadStderrCase(
+    Process, 4096,
+    procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+      panic('losing read');
+    end procedure
+  );
+  const LostWrite := Proc.WriteStdinCase(
+    Process, [99],
+    procedure(Outcome: result of (integer, Proc.ProcError)) begin
+      panic('losing write');
+    end procedure
+  );
+  const LostClose := Proc.CloseStdinCase(
+    Process,
+    procedure(Outcome: result of (boolean, Proc.ProcError)) begin
+      panic('losing close');
+    end procedure
+  );
+  const LostStatus := Proc.WaitStatusCase(
+    Process,
+    procedure(Outcome: result of (Proc.ProcessExitStatus, Proc.ProcError)) begin
+      panic('losing status');
+    end procedure
+  );
+  const Immediate := Tasks.TimerCase(
+    0, procedure() begin
+      null;
+    end procedure
+  );
+  if Tasks.Select([Immediate, LostRead, LostWrite, LostClose, LostStatus]) <> 0 then
+    panic('timer order');
+  end if;
+
+  discard Tasks.Select([
+    Proc.WriteStdinCase(
+      Process, [],
+      procedure(Outcome: result of (integer, Proc.ProcError)) begin
+        if Outcome.Unwrap() <> 0 then
+          panic('empty input');
+        end if;
+      end procedure
+    )
+  ]);
+  discard Tasks.Send(Release, true);
+
+  if Mode <> 'select' then
+    const Completion := Proc.WaitStatusCase(
+      Process,
+      procedure(Outcome: result of (Proc.ProcessExitStatus, Proc.ProcError)) begin
+        panic('unexpected exit');
+      end procedure
+    );
+    var Cancelled := Tasks.CancellationCase(
+      Token, procedure() begin
+        discard Keep();
+      end procedure
+    );
+    if Mode = 'select_timeout' then
+      discard Tasks.CloseWaitCase(Cancelled);
+      Cancelled := Tasks.TimerCase(
+        20, procedure() begin
+          discard Keep();
+        end procedure
+      );
+    end if;
+
+    if Tasks.Select([Completion, Cancelled]) <> 1 then
+      panic('cancellation case');
+    end if;
+
+    if Proc.TryWaitStatus(Process).Unwrap() is Some(_) then
+      panic('case closed process');
+    end if;
+
+    return Keep();
+  end if;
+  var Output: array of integer := [];
+  var Errors: array of integer := [];
+  var Written := 0;
+  var InputClosed := false;
+  var OutputClosed := false;
+  var ErrorsClosed := false;
+  var Exited := false;
+  const Input: array of integer := array.Fill(105, 131072);
+  while not (InputClosed and OutputClosed and ErrorsClosed and Exited) do
+    var Cases: array of Tasks.WaitCase := [];
+    if not OutputClosed then
+      Cases := Cases.Concat([
+        Proc.ReadStdoutCase(
+          Process, 8192,
+          procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+            const Bytes := Outcome.Unwrap();
+            OutputClosed := Bytes.Length() = 0;
+            Output := Output.Concat(Bytes);
+          end procedure
+        )
+      ]);
+    end if;
+
+    if not ErrorsClosed then
+      Cases := Cases.Concat([
+        Proc.ReadStderrCase(
+          Process, 8192,
+          procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+            const Bytes := Outcome.Unwrap();
+            ErrorsClosed := Bytes.Length() = 0;
+            Errors := Errors.Concat(Bytes);
+          end procedure
+        )
+      ]);
+    end if;
+
+    if Written < Input.Length() then
+      Cases := Cases.Concat([
+        Proc.WriteStdinCase(
+          Process, Input.Slice(Written, Input.Length() - Written),
+          procedure(Outcome: result of (integer, Proc.ProcError)) begin
+            const Count := Outcome.Unwrap();
+            if Count <= 0 then
+              panic('empty write winner');
+            end if;
+
+            Written := Written + Count;
+          end procedure
+        )
+      ]);
+    elsif not InputClosed then
+      Cases := Cases.Concat([
+        Proc.CloseStdinCase(
+          Process,
+          procedure(Outcome: result of (boolean, Proc.ProcError)) begin
+            InputClosed := Outcome.Unwrap();
+          end procedure
+        )
+      ]);
+    end if;
+
+    if not Exited then
+      Cases := Cases.Concat([
+        Proc.WaitStatusCase(
+          Process,
+          procedure(Outcome: result of (Proc.ProcessExitStatus, Proc.ProcError)) begin
+            const Status := Outcome.Unwrap();
+            if (Status.ExitCode <> Some(7)) or (Status.Signal is Some(_)) then
+              panic('native status');
+            end if;
+
+            Exited := true;
+          end procedure
+        )
+      ]);
+    end if;
+
+    Cases := Cases.Concat([
+      Tasks.TimerCase(
+        10000, procedure() begin
+          panic('pipe timeout');
+        end procedure
+      )
+    ]);
+    discard Tasks.Select(Cases);
+  end while;
+
+  if Output.Length() < 196608 then
+    panic('incomplete stdout');
+  end if;
+
+  AssertBytes(Output.Slice(Output.Length() - 196608, 65536), array.Fill(0, 65536));
+  AssertBytes(Output.Slice(Output.Length() - Input.Length(), Input.Length()), Input);
+  AssertBytes(Errors, [112, 114, 101, 102, 105, 120, 10].Concat(array.Fill(255, 65536)));
+  // EOF and native status remain observable after a selected observation.
+  discard Tasks.Select([
+    Proc.ReadStdoutCase(
+      Process, 1,
+      procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+        if Outcome.Unwrap().Length() <> 0 then
+          panic('repeat EOF');
+        end if;
+      end procedure
+    )
+  ]);
+  discard Tasks.Select([
+    Proc.WaitStatusCase(
+      Process,
+      procedure(Outcome: result of (Proc.ProcessExitStatus, Proc.ProcError)) begin
+        if Outcome.Unwrap().ExitCode <> Some(7) then
+          panic('repeat status');
+        end if;
+      end procedure
+    )
+  ]);
+  discard Tasks.Select([
+    Proc.CloseStdinCase(
+      Process,
+      procedure(Outcome: result of (boolean, Proc.ProcError)) begin
+        if not Outcome.Unwrap() then
+          panic('repeat stdin close');
+        end if;
+      end procedure
+    )
+  ]);
+  return Keep();
+end function;
+
+function Peer(
+  Listener: Net.Listener; Ready: channel of boolean; Release: channel of boolean;
+  Source: Tasks.CancellationSource; Mode: string
+): integer;
+begin
+  const Connection := Net.Accept(Listener).Unwrap();
+  AssertBytes(Net.ReceiveBytes(Connection, 1).Unwrap(), [1]);
+  discard Tasks.Send(Ready, true);
+  discard Tasks.Receive(Release).Unwrap();
+  if Mode = 'select' then
+    discard Net.SendBytes(Connection, [1]).Unwrap();
+  elsif Mode = 'select_cancel' then
+    discard Tasks.Cancel(Source);
+  elsif Mode = 'select_vm_shutdown' then
+    Console.WriteText('pending');
+  end if;
+
+  return 2;
+end function;
+
+function Run(
+  Process: Proc.Process; Ready: channel of boolean; Release: channel of boolean;
+  Token: Tasks.CancellationToken; Mode: string
+): integer;
+begin
+  const Values := [0].Map(
+    function(Index: integer): integer begin
+      return Exchange(Process, Ready, Release, Token, Mode) + Index;
+    end function
+  );
+  return Values[0];
+end function;
+
+begin
+  const Mode := Args.ParamStr(2);
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  const Arguments := [
+    '--ignored', '--exact', Args.ParamStr(1), '--nocapture',
+    '--skip', 'fpas-gate=' + Format.IntToStr(Address.Port),
+    '--skip', 'fpas-mode=' + Mode, '--skip', 'fpas-observe=' + Args.ParamStr(3),
+    '--skip', 'fpas-child=' + Args.ParamStr(1)
+  ];
+  const Process := Proc.Start(Args.ParamStr(0), Arguments, Proc.DefaultStartOptions()).Unwrap();
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  const Release: channel of boolean := Tasks.CreateChannel(1);
+  const Source := Tasks.CreateCancellationSource();
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Child := go Run(Process, Ready, Release, Tasks.GetCancellationToken(Source), Mode);
+      const Other := go Peer(Listener, Ready, Release, Source, Mode);
+      if Tasks.Wait(Other) <> 2 then
+        panic('peer');
+      end if;
+
+      if Mode = 'select_scope_exit' then
+        break;
+      end if;
+
+      if Tasks.Wait(Child) <> 65536 then
+        panic('callback after suspension');
+      end if;
+    end scope;
+  end for;
+
+  if (Mode <> 'select') and (Proc.TryWaitStatus(Process).Unwrap() is Some(_)) then
+    panic('abandon closed process');
+  end if;
+
+  if not Proc.Close(Process).Unwrap() then
+    panic('close process');
+  end if;
+
+  // A closed handle wins with a typed error, preserving the other Select contracts.
+  discard Tasks.Select([
+    Proc.ReadStdoutCase(
+      Process, 1,
+      procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+        if not (Outcome is Error(Proc.ProcError.InvalidArgument('Process', _))) then
+          panic('closed process error');
+        end if;
+      end procedure
+    )
+  ]);
+  discard Net.CloseListener(Listener);
+end.

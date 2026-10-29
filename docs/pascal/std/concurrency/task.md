@@ -30,6 +30,16 @@ also release a pool worker, using bounded native jobs. Inline callbacks retain
 their surrounding operation while that task waits. Main-program and synchronous
 native callback calls keep their synchronous behavior.
 
+[Process Run calls](../host/proc.md#blocking-and-concurrency) also save process and
+pipe state in pool tasks and the all-stop debugger. Productive pipe work yields through
+the ready queue; idle work uses the shared timer. Abandonment terminates the owned
+process group and reaps the direct child before releasing the saved state.
+
+[Regular-file handle calls](../host/fs-streams.md#execution-and-native-ownership)
+use bounded native jobs in pool tasks and the all-stop debugger. Abandonment joins
+started file work and closes undelivered opens; it cannot roll back I/O or forcibly
+interrupt an OS filesystem call. Whole-file and path helpers remain synchronous.
+
 The main task never executes queued tasks while it waits; pool workers run them. A queued child
 may wait for the main task itself, for example for a request it sends on a channel or socket, so
 running that child on the main task's thread could deadlock until the child's I/O times out, and a
@@ -476,6 +486,11 @@ Timeout returns `Error(TaskError.Timeout(Operation))`; cancellation returns
   suspended wait's task list without changing ownership of the tasks themselves.
 
 ## Mixed-source selection
+
+Interactive process reads, partial writes, stdin close and native exit status can also
+participate through [`Std.Os.Proc` case constructors](../host/proc.md#selectable-interactive-pipes).
+They share the single-use and owner-task rules below. Discarding such a case leaves
+its independent process handle open.
 
 Construct cases for the events an operation can handle, then pass them to `Select`. Case construction
 does not send, receive, start tasks, or start timers. Channel constructors check the callback against

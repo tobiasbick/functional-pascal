@@ -1,6 +1,6 @@
 program TuiBackgroundSubscriptionTest;
 
-uses Std.Tasks as Tasks, Std.Test as Test, Std.Ui.Terminal as Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Ui.Terminal as Tui, Std.Time as Time;
 
 type SubscriptionModel = record
   Gate: channel of boolean;
@@ -97,16 +97,34 @@ begin
   );
   Test.AssertEquals(1, Model.Generation);
   Test.AssertEquals(0, Tasks.ReceiveWithTimeout(Stopped, 10000).Unwrap());
-  Model := App.RunBackgroundIterations(
-    Model,
-    Inbox,
-    UpdateFramework,
-    UpdateApplication,
-    View,
-    1,
-    0
-  );
-  Test.AssertEquals(1, Tasks.ReceiveWithTimeout(Started, 10000).Unwrap());
+  // The stop message precedes worker completion. Keep driving the UI until reap
+  // can admit the replacement instead of assuming one iteration sees completion.
+  const WaitingSince := Time.MonotonicMillis();
+  var ReplacementStarted := false;
+  while not ReplacementStarted do
+    Model := App.RunBackgroundIterations(
+      Model,
+      Inbox,
+      UpdateFramework,
+      UpdateApplication,
+      View,
+      1,
+      0
+    );
+    case Tasks.TryReceive(Started).Unwrap() of
+      when Some(const Generation):
+        begin
+          Test.AssertEquals(1, Generation);
+          ReplacementStarted := true;
+        end;
+      when None:
+        begin
+          Test.AssertTrue(Time.ElapsedMillis(WaitingSince) < 10000);
+          Time.Sleep(1);
+        end;
+    end case;
+  end while;
+
   App.CloseWithBackground(Inbox);
   Test.AssertEquals(1, Tasks.ReceiveWithTimeout(Stopped, 10000).Unwrap());
   Test.AssertTrue((Tasks.TrySend(Inbox, 1) is Error(_)));

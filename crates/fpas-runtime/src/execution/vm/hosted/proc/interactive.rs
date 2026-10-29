@@ -1,10 +1,13 @@
 //! VM-owned interactive processes with serialized, nonblocking binary pipe probes.
 
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashMap;
 use std::io::{self, Read, Write};
 use std::process::{ExitStatus, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, TryLockError};
 
 use super::failure::{Failure, Kind};
 use super::options::Request;
@@ -177,27 +180,45 @@ impl PipedProcesses {
         handle: u64,
         operation: impl FnOnce(&mut Process) -> Result<T, Failure>,
     ) -> Result<T, Failure> {
-        let entry = self
-            .registry
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .entries
-            .get(&handle)
-            .cloned()
-            .ok_or_else(closed)?;
+        let entry = self.entry(handle)?;
         let mut state = entry.lock().unwrap_or_else(|e| e.into_inner());
         operation(state.as_mut().ok_or_else(closed)?)
     }
 
-    pub(super) fn close(&self, handle: u64) -> Result<(), Failure> {
-        let entry = self
-            .registry
+    /// A busy alias must not hold up the selecting VM worker.
+    pub(super) fn try_with<T>(
+        &self,
+        handle: u64,
+        operation: impl FnOnce(&mut Process) -> Result<Option<T>, Failure>,
+    ) -> Result<Option<T>, Failure> {
+        let entry = {
+            let registry = match self.registry.try_lock() {
+                Ok(registry) => registry,
+                Err(TryLockError::WouldBlock) => return Ok(None),
+                Err(TryLockError::Poisoned(error)) => error.into_inner(),
+            };
+            registry.entries.get(&handle).cloned().ok_or_else(closed)?
+        };
+        let mut state = match entry.try_lock() {
+            Ok(state) => state,
+            Err(TryLockError::WouldBlock) => return Ok(None),
+            Err(TryLockError::Poisoned(error)) => error.into_inner(),
+        };
+        operation(state.as_mut().ok_or_else(closed)?)
+    }
+
+    fn entry(&self, handle: u64) -> Result<Entry, Failure> {
+        self.registry
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .entries
             .get(&handle)
             .cloned()
-            .ok_or_else(closed)?;
+            .ok_or_else(closed)
+    }
+
+    pub(super) fn close(&self, handle: u64) -> Result<(), Failure> {
+        let entry = self.entry(handle)?;
         let mut state = entry.lock().unwrap_or_else(|e| e.into_inner());
         state.as_mut().ok_or_else(closed)?.close()?;
         let process = state.take();

@@ -47,10 +47,10 @@ fn fieldless_mode_and_origin_enums_use_checked_integer_ordinals() {
     ));
 }
 
-struct Fixture(PathBuf);
+pub(super) struct Fixture(PathBuf);
 
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         static NEXT: AtomicU64 = AtomicU64::new(1);
         loop {
             let path = std::env::temp_dir().join(format!(
@@ -66,7 +66,7 @@ impl Fixture {
         }
     }
 
-    fn path(&self, name: &str) -> String {
+    pub(super) fn path(&self, name: &str) -> String {
         self.0.join(name).to_string_lossy().into_owned()
     }
 }
@@ -85,42 +85,53 @@ fn modes_and_resource_admission_precede_destructive_open() {
     fs::write(&path, b"kept").expect("fixture");
     let files = Files::with_limit(1);
     for mode in [0, 3] {
-        assert!(matches!(files.open(&missing, mode), Err(Failure::Io(_, _))));
+        assert!(matches!(
+            files.open(&missing, mode, || false),
+            Err(Failure::Io(_, _))
+        ));
         assert!(!std::path::Path::new(&missing).exists());
     }
     assert!(matches!(
-        files.open(&path, 4),
+        files.open(&path, 4, || false),
         Err(Failure::Argument("Mode", _))
     ));
     assert_eq!(fs::read(&path).expect("preserved"), b"kept");
-    let handle = files.open(&path, 0).expect("read mode");
+    let handle = files.open(&path, 0, || false).expect("read mode");
     assert!(matches!(
         files.write(handle, b"x", || false),
         Err(Failure::Argument("File", _))
     ));
-    assert!(matches!(files.open(&path, 1), Err(Failure::Limit(1))));
-    assert!(matches!(files.open(&missing, 1), Err(Failure::Limit(1))));
+    assert!(matches!(
+        files.open(&path, 1, || false),
+        Err(Failure::Limit(1))
+    ));
+    assert!(matches!(
+        files.open(&missing, 1, || false),
+        Err(Failure::Limit(1))
+    ));
     assert!(!std::path::Path::new(&missing).exists());
     assert_eq!(fs::read(&path).expect("preserved at cap"), b"kept");
-    files.close(handle).expect("close read mode");
-    let handle = files.open(&path, 1).expect("explicit truncate");
+    files.close(handle, || false).expect("close read mode");
+    let handle = files.open(&path, 1, || false).expect("explicit truncate");
     assert!(fs::read(&path).expect("truncated").is_empty());
     assert!(matches!(
         files.read(handle, 1, || false),
         Err(Failure::Argument("File", _))
     ));
-    files.close(handle).expect("close create");
-    let append = files.open(&path, 2).expect("append");
+    files.close(handle, || false).expect("close create");
+    let append = files.open(&path, 2, || false).expect("append");
     assert_eq!(
         files.write(append, b"a", || false).expect("first append"),
         1
     );
-    files.seek(append, 0, 0).expect("seek append handle");
+    files
+        .seek(append, 0, 0, || false)
+        .expect("seek append handle");
     assert_eq!(
         files.write(append, b"b", || false).expect("second append"),
         1
     );
-    files.flush(append).expect("flush");
+    files.flush(append, || false).expect("flush");
     assert_eq!(fs::read(&path).expect("append ignores seek"), b"ab");
 }
 
@@ -130,36 +141,49 @@ fn buffered_reads_writes_and_seek_use_the_logical_byte_position() {
     let path = fixture.path("mixed");
     fs::write(&path, b"one\nABCDE").expect("fixture");
     let files = Files::new();
-    let handle = files.open(&path, 3).expect("read-write");
+    let handle = files.open(&path, 3, || false).expect("read-write");
     assert_eq!(
         files.read_line(handle, || false).expect("first line"),
         Some("one".into())
     );
-    assert_eq!(files.tell(handle).expect("after line"), 4);
+    assert_eq!(files.tell(handle, || false).expect("after line"), 4);
     assert_eq!(
         files.read(handle, 2, || false).expect("buffered bytes"),
         b"AB"
     );
-    assert_eq!(files.tell(handle).expect("after bytes"), 6);
+    assert_eq!(files.tell(handle, || false).expect("after bytes"), 6);
     assert_eq!(files.write(handle, b"zz", || false).expect("overwrite"), 2);
-    assert_eq!(files.tell(handle).expect("after overwrite"), 8);
+    assert_eq!(files.tell(handle, || false).expect("after overwrite"), 8);
     assert_eq!(
         fs::read(&path).expect("correct overwrite offset"),
         b"one\nABzzE"
     );
-    assert_eq!(files.seek(handle, -1, 1).expect("relative seek"), 7);
+    assert_eq!(
+        files.seek(handle, -1, 1, || false).expect("relative seek"),
+        7
+    );
     assert_eq!(files.read(handle, 10, || false).expect("remaining"), b"zE");
-    assert_eq!(files.seek(handle, -1, 2).expect("end seek"), 8);
+    assert_eq!(files.seek(handle, -1, 2, || false).expect("end seek"), 8);
     assert!(matches!(
-        files.seek(handle, -1, 0),
+        files.seek(handle, -1, 0, || false),
         Err(Failure::Argument("Offset", _))
     ));
-    assert_eq!(files.tell(handle).expect("unchanged negative seek"), 8);
+    assert_eq!(
+        files
+            .tell(handle, || false)
+            .expect("unchanged negative seek"),
+        8
+    );
     assert!(matches!(
-        files.seek(handle, i64::MAX, 1),
+        files.seek(handle, i64::MAX, 1, || false),
         Err(Failure::Limit(i64::MAX))
     ));
-    assert_eq!(files.tell(handle).expect("unchanged overflow seek"), 8);
+    assert_eq!(
+        files
+            .tell(handle, || false)
+            .expect("unchanged overflow seek"),
+        8
+    );
     assert!(matches!(
         files.read(handle, 0, || true),
         Err(Failure::Argument("MaxBytes", _))
@@ -180,7 +204,7 @@ fn line_endings_empty_lines_final_fragments_and_invalid_utf8_are_distinct() {
     let path = fixture.path("lines");
     fs::write(&path, b"\n\r\nx\ry\r\nlast\r").expect("fixture");
     let files = Files::new();
-    let handle = files.open(&path, 0).expect("open");
+    let handle = files.open(&path, 0, || false).expect("open");
     for expected in ["", "", "x\ry", "last\r"] {
         assert_eq!(
             files.read_line(handle, || false).expect("line"),
@@ -194,14 +218,14 @@ fn line_endings_empty_lines_final_fragments_and_invalid_utf8_are_distinct() {
             .expect("byte EOF")
             .is_empty()
     );
-    files.close(handle).expect("close");
+    files.close(handle, || false).expect("close");
     fs::write(&path, b"\xff\nok\n").expect("invalid UTF-8 fixture");
-    let handle = files.open(&path, 0).expect("reopen");
+    let handle = files.open(&path, 0, || false).expect("reopen");
     assert!(matches!(
         files.read_line(handle, || false),
         Err(Failure::Encoding(_, _))
     ));
-    assert_eq!(files.tell(handle).expect("bad line consumed"), 2);
+    assert_eq!(files.tell(handle, || false).expect("bad line consumed"), 2);
     assert_eq!(
         files.read_line(handle, || false).expect("next line"),
         Some("ok".into())
@@ -217,7 +241,7 @@ fn line_limit_excludes_terminators_and_overlong_prefixes_can_be_recovered() {
         let mut bytes = vec![b'x'; MAX_BYTES];
         bytes.extend(ending);
         fs::write(&path, bytes).expect("exact content boundary");
-        let handle = files.open(&path, 0).expect("open boundary");
+        let handle = files.open(&path, 0, || false).expect("open boundary");
         assert_eq!(
             files
                 .read_line(handle, || false)
@@ -227,21 +251,21 @@ fn line_limit_excludes_terminators_and_overlong_prefixes_can_be_recovered() {
             MAX_BYTES
         );
         assert_eq!(files.read_line(handle, || false).expect("EOF"), None);
-        files.close(handle).expect("close boundary");
+        files.close(handle, || false).expect("close boundary");
     }
     let mut bytes = vec![b'x'; MAX_BYTES + 1];
     bytes.push(b'\n');
     fs::write(&path, bytes).expect("overlong fixture");
-    let handle = files.open(&path, 0).expect("open overlong");
+    let handle = files.open(&path, 0, || false).expect("open overlong");
     for _ in 0..2 {
         assert!(matches!(
             files.read_line(handle, || false),
             Err(Failure::Limit(_))
         ));
-        assert_eq!(files.tell(handle).expect("unconsumed prefix"), 0);
+        assert_eq!(files.tell(handle, || false).expect("unconsumed prefix"), 0);
     }
     assert_eq!(files.read(handle, 1, || false).expect("recover byte"), b"x");
-    assert_eq!(files.tell(handle).expect("delivered byte"), 1);
+    assert_eq!(files.tell(handle, || false).expect("delivered byte"), 1);
     assert_eq!(
         files
             .read_line(handle, || false)
@@ -250,12 +274,14 @@ fn line_limit_excludes_terminators_and_overlong_prefixes_can_be_recovered() {
             .len(),
         MAX_BYTES
     );
-    files.seek(handle, 0, 0).expect("reset");
+    files.seek(handle, 0, 0, || false).expect("reset");
     assert!(matches!(
         files.read_line(handle, || false),
         Err(Failure::Limit(_))
     ));
-    files.seek(handle, 0, 2).expect("discard prefix with seek");
+    files
+        .seek(handle, 0, 2, || false)
+        .expect("discard prefix with seek");
     assert_eq!(files.read_line(handle, || false).expect("EOF"), None);
 }
 
@@ -267,7 +293,7 @@ fn cancellation_retains_line_prefixes_and_never_replaces_successful_progress() {
     bytes.push(b'\n');
     fs::write(&path, bytes).expect("fixture");
     let files = Files::new();
-    let handle = files.open(&path, 3).expect("read-write");
+    let handle = files.open(&path, 3, || false).expect("read-write");
     let checks = Cell::new(0);
     assert!(matches!(
         files.read_line(handle, || {
@@ -276,7 +302,12 @@ fn cancellation_retains_line_prefixes_and_never_replaces_successful_progress() {
         }),
         Err(Failure::Cancelled)
     ));
-    assert_eq!(files.tell(handle).expect("cancelled prefix retained"), 0);
+    assert_eq!(
+        files
+            .tell(handle, || false)
+            .expect("cancelled prefix retained"),
+        0
+    );
     assert_eq!(
         files
             .read_line(handle, || false)
@@ -301,8 +332,11 @@ fn cancellation_retains_line_prefixes_and_never_replaces_successful_progress() {
         2
     );
     assert!(requested.get());
-    assert_eq!(files.tell(handle).expect("progress reported"), 20_003);
-    files.close(handle).expect("close");
+    assert_eq!(
+        files.tell(handle, || false).expect("progress reported"),
+        20_003
+    );
+    files.close(handle, || false).expect("close");
     assert!(matches!(
         files.read(handle, 1, || true),
         Err(Failure::Closed)
@@ -316,29 +350,38 @@ fn aliases_close_synchronously_shutdown_cleans_up_and_registries_do_not_share_ha
     fs::write(&path, b"kept").expect("fixture");
     let first = Files::new();
     let second = Files::new();
-    let handle = first.open(&path, 0).expect("first registry");
-    let other = second.open(&path, 0).expect("second registry");
+    let handle = first.open(&path, 0, || false).expect("first registry");
+    let other = second.open(&path, 0, || false).expect("second registry");
     assert_ne!(handle, other);
-    assert!(matches!(second.tell(handle), Err(Failure::Closed)));
-    let captured = first.entry(handle).expect("in-flight alias");
-    first.close(handle).expect("close");
+    assert!(matches!(
+        second.tell(handle, || false),
+        Err(Failure::Closed)
+    ));
+    let captured = first.entry(handle, &mut || false).expect("in-flight alias");
+    first.close(handle, || false).expect("close");
     assert!(captured.state.lock().expect("state lock").is_none());
-    assert!(matches!(first.tell(handle), Err(Failure::Closed)));
-    assert!(matches!(first.close(handle), Err(Failure::Closed)));
+    assert!(matches!(first.tell(handle, || false), Err(Failure::Closed)));
+    assert!(matches!(
+        first.close(handle, || false),
+        Err(Failure::Closed)
+    ));
     second.shutdown();
-    assert!(matches!(second.tell(other), Err(Failure::Closed)));
-    assert!(matches!(second.open(&path, 1), Err(Failure::Closed)));
+    assert!(matches!(second.tell(other, || false), Err(Failure::Closed)));
+    assert!(matches!(
+        second.open(&path, 1, || false),
+        Err(Failure::Closed)
+    ));
     assert_eq!(
         fs::read(&path).expect("shutdown prevents truncate"),
         b"kept"
     );
     assert!(matches!(
-        first.open(&fixture.path("."), 0),
+        first.open(&fixture.path("."), 0, || false),
         Err(Failure::Argument("Path", _))
     ));
     #[cfg(unix)]
     assert!(matches!(
-        first.open("/dev/null", 1),
+        first.open("/dev/null", 1, || false),
         Err(Failure::Argument("Path", _))
     ));
 }
@@ -348,7 +391,7 @@ fn concurrent_writes_to_one_handle_are_serialized_without_losing_bytes() {
     let fixture = Fixture::new();
     let path = fixture.path("concurrent");
     let files = Arc::new(Files::new());
-    let handle = files.open(&path, 1).expect("create");
+    let handle = files.open(&path, 1, || false).expect("create");
     let mut workers = Vec::new();
     for byte in 0_u8..4 {
         let files = Arc::clone(&files);
@@ -369,7 +412,7 @@ fn concurrent_writes_to_one_handle_are_serialized_without_losing_bytes() {
     for worker in workers {
         worker.join().expect("writer thread");
     }
-    files.close(handle).expect("close");
+    files.close(handle, || false).expect("close");
     let bytes = fs::read(&path).expect("written file");
     assert_eq!(bytes.len(), 1024);
     for byte in 0_u8..4 {

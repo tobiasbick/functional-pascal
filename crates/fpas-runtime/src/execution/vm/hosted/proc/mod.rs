@@ -18,8 +18,12 @@ mod pipes;
 pub(super) mod platform;
 mod registry;
 mod run_interactive;
+pub(in crate::execution::vm) mod selection;
 mod status;
+pub(in crate::execution::vm) mod wait;
 
+#[cfg(test)]
+mod pool_tests;
 #[cfg(test)]
 mod tests;
 
@@ -44,6 +48,9 @@ impl Worker {
         let Intrinsic::Proc(operation) = intrinsic else {
             return Ok(None);
         };
+        if let Some(value) = self.execute_process_case(operation, arguments)? {
+            return Ok(Some(Some(value)));
+        }
         if operation == ProcIntrinsic::RunInteractive {
             return self
                 .execute_run_interactive(arguments, location)
@@ -69,7 +76,6 @@ impl Worker {
         ) {
             return Ok(None);
         }
-        let name = intrinsic.debugger_name();
         let request = arguments::parse(arguments, options, capture);
         let command = arguments::command_context(arguments);
         let result = request.and_then(|request| {
@@ -97,6 +103,26 @@ impl Worker {
                 })
             })
         });
+        self.proc_result(operation, command, result, location)
+            .map(|value| Some(Some(value)))
+    }
+
+    fn proc_result(
+        &self,
+        operation: ProcIntrinsic,
+        command: &str,
+        result: Result<engine::Output, failure::Failure>,
+        location: SourceLocation,
+    ) -> Result<Value, VmError> {
+        let capture = matches!(
+            operation,
+            ProcIntrinsic::RunCapture | ProcIntrinsic::RunCaptureWithOptions
+        );
+        let options = matches!(
+            operation,
+            ProcIntrinsic::RunWithOptions | ProcIntrinsic::RunCaptureWithOptions
+        );
+        let name = Intrinsic::Proc(operation).debugger_name();
         let value = match result {
             Ok(output) if capture => Value::result_ok(self.record_value(
                 "Std.Os.Proc.ProcessOutput",
@@ -116,7 +142,7 @@ impl Worker {
                 location,
             )?),
         };
-        Ok(Some(Some(value)))
+        Ok(value)
     }
 }
 

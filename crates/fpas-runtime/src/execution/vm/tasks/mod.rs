@@ -311,6 +311,8 @@ impl Worker {
                 location,
             } => self.poll_console_wait(deadline_millis, destination, location, input_revision),
             TaskSuspension::Net(wait) => self.poll_net_wait(*wait),
+            TaskSuspension::Fs(wait) => self.poll_fs_wait(*wait),
+            TaskSuspension::Proc(wait) => self.poll_proc_wait(*wait),
             TaskSuspension::Acp(wait) => self.poll_acp_wait(*wait),
             TaskSuspension::Mcp(wait) => self.poll_mcp_wait(*wait),
             TaskSuspension::OwnerCleanup { groups, outcome } => {

@@ -36,7 +36,7 @@ impl Worker {
                         .map_err(|e| self.selection_error(e))?;
                 }
                 CaseSource::Task(id) => tasks.push(id),
-                CaseSource::Timer(_) => {}
+                CaseSource::Timer(_) | CaseSource::Process(_, _) => {}
             }
         }
         self.validate_selection_tasks(&tasks)
@@ -77,6 +77,12 @@ impl Worker {
         };
         for (index, case) in wait.cases.iter().enumerate() {
             let argument = match &case.source {
+                CaseSource::Process(handle, operation) => {
+                    match self.poll_process_case(*handle, operation)? {
+                        Some(outcome) => Some(outcome),
+                        None => continue,
+                    }
+                }
                 CaseSource::Receive(id) => match self
                     .hosted
                     .channels

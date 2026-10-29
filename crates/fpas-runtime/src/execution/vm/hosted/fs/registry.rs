@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufReader, Seek, SeekFrom};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard, TryLockError};
 
 use super::failure::Failure;
 use super::state::FileState;
@@ -29,6 +29,7 @@ struct Registry {
 
 pub(in crate::execution::vm::hosted) struct Files {
     entries: Mutex<Registry>,
+    stopping: AtomicBool,
 }
 
 impl Files {
@@ -39,6 +40,7 @@ impl Files {
                 shutdown: false,
                 limit: MAX_FILES,
             }),
+            stopping: AtomicBool::new(false),
         }
     }
 
@@ -50,18 +52,21 @@ impl Files {
                 shutdown: false,
                 limit,
             }),
+            stopping: AtomicBool::new(false),
         }
     }
 
-    pub(super) fn open(&self, path: &str, mode: i64) -> Result<u64, Failure> {
+    pub(super) fn open(
+        &self,
+        path: &str,
+        mode: i64,
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<u64, Failure> {
         if !(0..=3).contains(&mode) {
             return Err(Failure::argument("Mode", "Unknown file mode"));
         }
-        let mut entries = self
-            .entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        if entries.shutdown {
+        let mut entries = lock(&self.entries, &mut cancelled)?;
+        if entries.shutdown || self.is_stopping() {
             return Err(Failure::Closed);
         }
         if entries.files.len() >= entries.limit {
@@ -69,6 +74,9 @@ impl Files {
         }
         if path.contains('\0') {
             return Err(Failure::argument("Path", "Path must not contain NUL"));
+        }
+        if cancelled() {
+            return Err(Failure::Cancelled);
         }
         // Holding admission across open also prevents cap races with Create truncation.
         let handle = NEXT_HANDLE
@@ -78,6 +86,9 @@ impl Files {
             })
             .map_err(|_| Failure::Limit(MAX_FILES as i64))?;
         let file = open_regular(path, mode)?;
+        if self.is_stopping() || cancelled() {
+            return Err(Failure::Cancelled);
+        }
         entries.files.insert(
             handle,
             Arc::new(Entry {
@@ -90,42 +101,73 @@ impl Files {
         Ok(handle)
     }
 
-    pub(super) fn entry(&self, handle: u64) -> Result<Arc<Entry>, Failure> {
+    pub(super) fn entry(
+        &self,
+        handle: u64,
+        cancelled: &mut dyn FnMut() -> bool,
+    ) -> Result<Arc<Entry>, Failure> {
         validate_handle(handle)?;
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        lock(&self.entries, cancelled)?
             .files
             .get(&handle)
             .cloned()
             .ok_or(Failure::Closed)
     }
 
-    pub(super) fn close(&self, handle: u64) -> Result<(), Failure> {
-        validate_handle(handle)?;
-        let mut entries = self
-            .entries
+    pub(super) fn close(
+        &self,
+        handle: u64,
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<(), Failure> {
+        let entry = self.entry(handle, &mut cancelled)?;
+        let mut state = lock(&entry.state, &mut cancelled)?;
+        if state.is_none() {
+            return Err(Failure::Closed);
+        }
+        if cancelled() {
+            return Err(Failure::Cancelled);
+        }
+        // Keep the slot admitted until its OS descriptor is actually released.
+        drop(state.take());
+        drop(state);
+        self.entries
             .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        let entry = entries.files.remove(&handle).ok_or(Failure::Closed)?;
-        // Keep admission locked until the actual OS descriptor has been released.
-        drop(
-            entry
-                .state
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .take(),
-        );
+            .unwrap_or_else(|error| error.into_inner())
+            .files
+            .remove(&handle);
         Ok(())
     }
 
+    pub(super) fn is_stopping(&self) -> bool {
+        self.stopping.load(Ordering::Acquire)
+    }
+
+    #[cfg(test)]
+    pub(super) fn handles(&self) -> Vec<u64> {
+        self.entries
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .files
+            .keys()
+            .copied()
+            .collect()
+    }
+
+    /// Signal active jobs without waiting for a filesystem syscall or alias lock.
+    pub(in crate::execution::vm::hosted) fn request_shutdown(&self) {
+        self.stopping.store(true, Ordering::Release);
+    }
+
     pub(in crate::execution::vm::hosted) fn shutdown(&self) {
+        self.request_shutdown();
         let mut entries = self
             .entries
             .lock()
             .unwrap_or_else(|error| error.into_inner());
         entries.shutdown = true;
-        for (_, entry) in entries.files.drain() {
+        let files = std::mem::take(&mut entries.files);
+        drop(entries);
+        for entry in files.into_values() {
             drop(
                 entry
                     .state
@@ -133,6 +175,25 @@ impl Files {
                     .unwrap_or_else(|error| error.into_inner())
                     .take(),
             );
+        }
+    }
+}
+
+/// Observe cancellation while waiting behind another operation, never while owning its lock.
+pub(super) fn lock<'a, T>(
+    mutex: &'a Mutex<T>,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<MutexGuard<'a, T>, Failure> {
+    loop {
+        match mutex.try_lock() {
+            Ok(guard) => return Ok(guard),
+            Err(TryLockError::Poisoned(error)) => return Ok(error.into_inner()),
+            Err(TryLockError::WouldBlock) => {
+                if cancelled() {
+                    return Err(Failure::Cancelled);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
         }
     }
 }

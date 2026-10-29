@@ -58,6 +58,11 @@ impl Intrinsic {
                 | ProcIntrinsic::ReadStderr
                 | ProcIntrinsic::WriteStdin
                 | ProcIntrinsic::CloseStdin
+                | ProcIntrinsic::ReadStdoutCase
+                | ProcIntrinsic::ReadStderrCase
+                | ProcIntrinsic::WriteStdinCase
+                | ProcIntrinsic::CloseStdinCase
+                | ProcIntrinsic::WaitStatusCase
                 | ProcIntrinsic::TryWait
                 | ProcIntrinsic::TryWaitStatus
                 | ProcIntrinsic::RunInteractive

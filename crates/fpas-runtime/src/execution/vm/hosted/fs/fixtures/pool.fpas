@@ -1,0 +1,191 @@
+program FilePool;
+
+uses Std.Io.Fs as Fs, Std.Os.Args as Args, Std.Tasks as Tasks, Std.Console as Console, Std.Time as Time;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Work(Path: string; Token: Tasks.CancellationToken; Ready: channel of boolean; Mode: string): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+      panic('unused file callback');
+    end procedure
+  );
+  const File := Fs.Open(Path, Fs.FileMode.ReadWrite).Unwrap();
+  const Alias := File;
+  if Mode = 'gate' then
+    Console.WriteText('ready');
+  end if;
+
+  discard Tasks.Send(Ready, true);
+  if (Mode = 'scope_exit') or (Mode = 'vm_shutdown') then
+    discard Fs.WriteString(File, 'x'.RepeatStr(131072)).Unwrap();
+    Time.Sleep(3600000);
+    panic('abandoned file task resumed');
+  end if;
+
+  if Mode = 'cancel' then
+    if not (Fs.ReadLineWithCancellation(File, Token) is Error(Fs.FsError.Cancelled(_))) then
+      panic('file cancellation');
+    end if;
+
+    if Fs.Tell(Alias).Unwrap() <> 0 then
+      panic('cancelled file position');
+    end if;
+
+    discard Fs.Close(File).Unwrap();
+    return Keep();
+  end if;
+
+  if Fs.ReadLineWithCancellation(File, Token).Unwrap() <> Some('seed') then
+    panic('first line');
+  end if;
+
+  if Fs.Tell(Alias).Unwrap() <> 5 then
+    panic('logical position');
+  end if;
+
+  if Fs.Size(File).Unwrap() <> 131077 then
+    panic('open file size');
+  end if;
+
+  discard Fs.WriteStringWithCancellation(Alias, 'é'#0, Token).Unwrap();
+  discard Fs.WriteLineWithCancellation(File, '🙂', Token).Unwrap();
+  if Fs.WriteWithCancellation(File, [0, 255], Token).Unwrap() <> 2 then
+    panic('byte write');
+  end if;
+
+  discard Fs.SetLength(File, Fs.Tell(File).Unwrap()).Unwrap();
+  discard Fs.Flush(Alias).Unwrap();
+  if Fs.Size(File).Unwrap() <> 15 then
+    panic('resize');
+  end if;
+
+  discard Fs.Seek(Alias, 0, Fs.SeekOrigin.Start).Unwrap();
+  if Fs.ReadLine(File).Unwrap() <> Some('seed') then
+    panic('seek line');
+  end if;
+
+  if Fs.ReadLine(File).Unwrap() <> Some('é'#0'🙂') then
+    panic('UTF-8 line');
+  end if;
+  const Bytes := Fs.ReadWithCancellation(Alias, 2, Token).Unwrap();
+  if (Bytes.Length() <> 2) or (Bytes[0] <> 0) or (Bytes[1] <> 255) then
+    panic('binary bytes');
+  end if;
+
+  if Fs.Read(File, 1).Unwrap().Length() <> 0 then
+    panic('byte EOF');
+  end if;
+
+  if Fs.ReadLine(File).Unwrap() is Some(_) then
+    panic('line EOF');
+  end if;
+
+  discard Fs.Close(File).Unwrap();
+  if not (Fs.Tell(Alias) is Error(Fs.FsError.Closed(_))) then
+    panic('closed alias');
+  end if;
+  const Append := Fs.Open(Path, Fs.FileMode.Append).Unwrap();
+  discard Fs.Seek(Append, 0, Fs.SeekOrigin.Start).Unwrap();
+  discard Fs.WriteString(Append, 'tail').Unwrap();
+  discard Fs.WriteLine(Append, '').Unwrap();
+  if Fs.Size(Append).Unwrap() <> 20 then
+    panic('append');
+  end if;
+
+  discard Fs.Close(Append).Unwrap();
+  const Output := Fs.Open(Path, Fs.FileMode.Create).Unwrap();
+  const Payload: array of integer := array.Fill(105, 131072);
+  var Written := 0;
+  while Written < Payload.Length() do
+    const Count := Fs.Write(Output, Payload.Slice(Written, Payload.Length() - Written)).Unwrap();
+    if Count <= 0 then
+      panic('write progress');
+    end if;
+
+    Written := Written + Count;
+  end while;
+
+  discard Fs.Close(Output).Unwrap();
+  const Input := Fs.Open(Path, Fs.FileMode.Read).Unwrap();
+  if Fs.Size(Input).Unwrap() <> Payload.Length() then
+    panic('native payload length');
+  end if;
+
+  discard Fs.Close(Input).Unwrap();
+  return Keep();
+end function;
+
+function Run(Path: string; Token: Tasks.CancellationToken; Ready: channel of boolean; Done: channel of boolean; Mode: string): integer;
+begin
+  var Seen := 0;
+  const Results := [0].Map(
+    function(Index: integer): integer begin
+      Seen := Seen + Work(Path, Token, Ready, Mode) + Index;
+      return Seen;
+    end function
+  );
+  discard Tasks.Send(Done, true);
+  return Results[0];
+end function;
+
+procedure Peer(Done: channel of boolean);
+begin
+  while Tasks.TryReceive(Done).Unwrap() is None do
+    Console.WriteText('peer');
+    Time.Sleep(1);
+  end while;
+end procedure;
+
+begin
+  const Path := Args.ParamStr(0);
+  const Mode := Args.ParamStr(1);
+  discard Fs.WriteText(Path, 'seed'#10 + 'x'.RepeatStr(131072)).Unwrap();
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  const Done: channel of boolean := Tasks.CreateChannel(1);
+  const Source := Tasks.CreateCancellationSource();
+  if Mode = 'cancel' then
+    discard Tasks.Cancel(Source);
+  end if;
+
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Child := go Run(Path, Tasks.GetCancellationToken(Source), Ready, Done, Mode);
+      if Mode = 'gate' then
+        const Other := go Peer(Done);
+      end if;
+
+      if (Mode = 'scope_exit') or (Mode = 'vm_shutdown') then
+        discard Tasks.Receive(Ready).Unwrap();
+        if Mode = 'vm_shutdown' then
+          Console.WriteText('pending');
+        end if;
+
+        break;
+      end if;
+
+      if Tasks.Wait(Child) <> 65536 then
+        panic('file callback result');
+      end if;
+    end scope;
+  end for;
+end.

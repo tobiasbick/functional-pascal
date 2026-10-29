@@ -73,7 +73,7 @@ struct State {
 }
 
 pub(in crate::execution::vm::hosted) struct Processes {
-    state: Mutex<State>,
+    state: Arc<Mutex<State>>,
     next: AtomicU64,
 }
 
@@ -84,16 +84,16 @@ impl Processes {
 
     pub(super) fn with_limit(limit: usize) -> Self {
         Self {
-            state: Mutex::new(State {
+            state: Arc::new(Mutex::new(State {
                 entries: HashMap::new(),
                 shutdown: false,
                 limit,
-            }),
+            })),
             next: AtomicU64::new(1),
         }
     }
 
-    pub(super) fn reserve(&self) -> Result<Reservation<'_>, Failure> {
+    pub(super) fn reserve(&self) -> Result<Reservation, Failure> {
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if state.shutdown {
             return Err(Failure::new(Kind::Cancelled));
@@ -110,7 +110,7 @@ impl Processes {
         });
         state.entries.insert(id, Arc::clone(&process));
         Ok(Reservation {
-            registry: self,
+            registry: Arc::clone(&self.state),
             id,
             process,
         })
@@ -157,23 +157,24 @@ impl Processes {
 impl Drop for Processes {
     fn drop(&mut self) {
         self.shutdown();
-        self.wait_idle();
+        // Saved executions own their reservations and reap on drop. Waiting here
+        // could block destruction of a worker that still owns such an execution.
+        // The VM's explicit wait_idle barrier runs after its workers return.
     }
 }
 
-pub(super) struct Reservation<'a> {
-    registry: &'a Processes,
+pub(super) struct Reservation {
+    registry: Arc<Mutex<State>>,
     id: u64,
     pub process: Arc<Process>,
 }
 
-impl Drop for Reservation<'_> {
+impl Drop for Reservation {
     fn drop(&mut self) {
         // Also runs on panic, including a panicking host stderr receiver.
         let _ = self.process.terminate();
         let _ = self.process.reap();
         self.registry
-            .state
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .entries

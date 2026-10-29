@@ -15,11 +15,11 @@ mod console;
 mod console_args;
 mod console_wait;
 mod crypto;
-mod fs;
+pub(in crate::execution::vm) mod fs;
 mod http_handles;
 pub(in crate::execution::vm) mod mcp;
 pub(in crate::execution::vm) mod net;
-mod proc;
+pub(in crate::execution::vm) mod proc;
 mod random;
 pub(in crate::execution::vm) mod server;
 pub(in crate::execution::vm) mod terminal_input;
@@ -84,6 +84,8 @@ pub(super) struct HostedState {
     pub(in crate::execution::vm::hosted) network_listeners: NetworkListeners,
     /// Native socket waits, including completed results not yet consumed by their task.
     pub(in crate::execution::vm) network_jobs: std::sync::atomic::AtomicUsize,
+    /// Native file operations, including completed results not yet consumed.
+    pub(in crate::execution::vm) file_jobs: std::sync::atomic::AtomicUsize,
     pub(in crate::execution::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::execution::vm::hosted) files: fs::Files,
     pub(in crate::execution::vm::hosted) processes: proc::Processes,
@@ -138,6 +140,7 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             network_jobs: Default::default(),
+            file_jobs: Default::default(),
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),
@@ -159,7 +162,7 @@ impl HostedState {
         self.acp.shutdown();
         self.piped_processes.shutdown();
         self.processes.shutdown();
-        self.files.shutdown();
+        self.files.request_shutdown();
         self.channels.shutdown();
         self.network_listeners.shutdown();
         self.network_connections.shutdown();

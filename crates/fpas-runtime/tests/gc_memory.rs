@@ -8,6 +8,8 @@
 
 #[path = "gc_memory/debug_edits.rs"]
 mod debug_edits;
+#[path = "gc_memory/files.rs"]
+mod files;
 #[path = "gc_memory/graphs.rs"]
 mod graphs;
 #[path = "gc_memory/measurement.rs"]
@@ -16,6 +18,8 @@ mod measurement;
 mod mixed;
 #[path = "gc_memory/network.rs"]
 mod network;
+#[path = "gc_memory/processes.rs"]
+mod processes;
 #[path = "gc_memory/random_graph/mod.rs"]
 mod random_graph;
 #[path = "gc_memory/sessions.rs"]
@@ -169,5 +173,35 @@ fn native_connects_and_dns_release_frames_and_jobs() {
     measurement::isolated(
         "native_connects_and_dns_release_frames_and_jobs",
         network::socket_connect_completion,
+    );
+}
+
+#[test]
+fn owned_process_waits_release_frames_cycles_pipes_and_children() {
+    measurement::isolated(
+        "owned_process_waits_release_frames_cycles_pipes_and_children",
+        processes::owned_process_teardown,
+    );
+}
+
+#[test]
+#[ignore = "owned subprocess fixture, launched by process allocation regressions"]
+fn process_child() {
+    processes::child::run();
+}
+
+#[test]
+fn selectable_process_pipes_release_callbacks_and_native_payloads() {
+    measurement::isolated(
+        "selectable_process_pipes_release_callbacks_and_native_payloads",
+        processes::selectable_pipe_teardown,
+    );
+}
+
+#[test]
+fn native_file_jobs_release_frames_cycles_and_payloads() {
+    measurement::isolated(
+        "native_file_jobs_release_frames_cycles_and_payloads",
+        files::file_job_teardown,
     );
 }

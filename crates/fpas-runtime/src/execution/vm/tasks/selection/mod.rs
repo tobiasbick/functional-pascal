@@ -10,8 +10,8 @@ mod registry;
 use super::{TaskClock, TaskSuspensionState};
 use crate::execution::vm::{VmError, worker::Worker};
 use crate::{Intrinsic, Register, TaskIntrinsic, Value};
-pub(in crate::execution::vm) use registry::CaseRegistry;
-use registry::{CaseSource, MAX_CASES, WaitCase};
+pub(in crate::execution::vm) use registry::{CaseRegistry, CaseSource};
+use registry::{MAX_CASES, WaitCase};
 use std::time::{Duration, Instant};
 
 /// Claimed cases retained while normal or debugger execution waits for a winner.
@@ -161,23 +161,33 @@ impl Worker {
                 id
             }
         };
+        let source = match operation {
+            TaskIntrinsic::SendCase => CaseSource::Send(identity, args[1].clone()),
+            TaskIntrinsic::ReceiveCase => CaseSource::Receive(identity),
+            TaskIntrinsic::TaskCase => CaseSource::Task(identity),
+            TaskIntrinsic::TimerCase => CaseSource::Timer(identity),
+            TaskIntrinsic::CancellationCase => CaseSource::Cancellation(identity),
+            _ => unreachable!("case constructor dispatch"),
+        };
+        self.register_wait_case(source, callback.clone())
+            .map(|value| Some(Some(value)))
+    }
+
+    pub(in crate::execution::vm) fn register_wait_case(
+        &self,
+        source: CaseSource,
+        callback: crate::SharedFunction,
+    ) -> Result<Value, VmError> {
         let id = self
             .hosted
             .cases
             .create_in_domain(self.task_id, &self.domain, || WaitCase {
                 roots: None,
-                callback: callback.clone(),
-                source: match operation {
-                    TaskIntrinsic::SendCase => CaseSource::Send(identity, args[1].clone()),
-                    TaskIntrinsic::ReceiveCase => CaseSource::Receive(identity),
-                    TaskIntrinsic::TaskCase => CaseSource::Task(identity),
-                    TaskIntrinsic::TimerCase => CaseSource::Timer(identity),
-                    TaskIntrinsic::CancellationCase => CaseSource::Cancellation(identity),
-                    _ => unreachable!("case constructor dispatch"),
-                },
+                callback,
+                source,
             })
             .map_err(|e| self.selection_error(e))?;
-        Ok(Some(Some(Value::OpaqueHandle(id))))
+        Ok(Value::OpaqueHandle(id))
     }
 
     fn selection_handle(&self, value: &Value) -> Result<u64, VmError> {
@@ -187,7 +197,7 @@ impl Worker {
         }
     }
 
-    fn selection_error(&self, message: impl Into<String>) -> VmError {
+    pub(in crate::execution::vm) fn selection_error(&self, message: impl Into<String>) -> VmError {
         self.runtime_error(fpas_diagnostics::codes::RUNTIME_INVALID_TASK, message.into(), "Use live WaitCase handles on their creating task and match each callback to its source.")
     }
 }

@@ -13,12 +13,16 @@ pub(super) const MAX_CASES: usize = 1024;
 static NEXT: AtomicU64 = AtomicU64::new(TAG | 1);
 
 /// The source operation committed only when this case wins.
-pub(super) enum CaseSource {
+pub(in crate::execution::vm) enum CaseSource {
     Receive(u64),
     Send(u64, Value),
     Task(u64),
     Timer(u64),
     Cancellation(u64),
+    Process(
+        u64,
+        crate::execution::vm::hosted::proc::selection::ProcessCase,
+    ),
 }
 
 /// A source and its statically checked delivery callback.

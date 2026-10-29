@@ -1,5 +1,20 @@
 # GC memory regressions
 
+Native file-job teardown covers normal handle I/O inside nested callbacks,
+pre-cancelled operations, scope exit and callback-triggered VM shutdown. Large
+native byte/text payloads, cyclic captures and unused WaitCase callbacks return
+to the exact allocation and byte baseline in 32 first/repeated VM sessions under
+default and 1/1/1 collection schedules. Separate gated runtime tests force a busy
+file alias and prove that a second FPAS task runs on the only VM worker; native
+unit tests check cancellation while locks remain held and close undelivered opens.
+
+Selectable process-pipe regressions retain cyclic callbacks and oversized native write
+payloads through normal completion, a cancellation case, a timer, scope exit and VM
+shutdown. Binary duplex traffic exercises selected partial reads/writes and EOF;
+discarded cases must have no pipe effects. Four runs with each collection schedule
+require the exact pre-session allocation and byte baseline after every VM teardown,
+including the first session. Independent host observers verify child termination.
+
 Run the allocation tests and pool bounds with:
 
 ```sh
@@ -33,6 +48,7 @@ and then checks that releasing it on a third thread restores the baseline.
 | Pending task teardown | Explicit idempotent VM shutdown, root failure and early scope exit release parked task frames, pending operations, unused/claimed selection callbacks, channel buffers and timers. Eleven wait modes run with default and 1/1/1 schedules; every first and repeated run returns exactly to its byte/allocation baseline. |
 | Native socket waits | Pending accepts and reads retain cyclic captures and unused selection cases across cancellation, listener close, timeout, scope exit and VM shutdown. Native jobs join and every first/repeated run returns exactly to its allocation baseline, with default and 1/1/1 schedules. Cancelled or abandoned established connections remain usable. |
 | Native connects and DNS | Plain and cancellation-aware connects resolve a loopback hostname, exchange bytes through nested callbacks and release frame payloads. Joined VM, socket and completed resolver workers return every first/repeated run exactly to its byte/allocation baseline, with default and 1/1/1 schedules. |
+| Owned process waits | All four Run variants retain cyclic captures and unused cases while child/peer gates require concurrent progress. Duplex stdin/stdout/stderr, owned descendants, cancellation, scope exit and VM or stderr-receiver shutdown return exactly to the first and repeated allocation baselines under default and 1/1/1 schedules. Independent host sockets prove children and descendants have exited. |
 | Callbacks | A persistent session repeatedly exports aliases, invokes them and handles failed callbacks without memory growth. An independent closure remains alive; its last host root is released after session destruction. |
 | Debugger | Repeated breakpoint stops, variable expansion and detached evaluation of a cyclic captured value have stable memory use. Disconnecting a stopped session releases its current payload and inspection/helper roots. |
 | Debugger frame restart | Repeatedly restarting an older frame releases its discarded locals, younger frames and inspection roots. Caller and parameter aliases remain usable. Invalid and stale frame/variable handles are rejected; both continued execution and disconnect release all allocations. |

@@ -56,6 +56,11 @@ Requires `uses Std.Os.Proc as Proc;`.
 | function | `RunCaptureWithOptions(Command: string; Args: array of string; Options: ProcessOptions): Result of (ProcessOutput, Proc.ProcError)` | configures the child and captures bounded output |
 | function | `RunInteractive(Command: string; Args: array of string; Options: ProcessStartOptions; TimeoutMillis: Option of integer; CancellationToken: Option of Tasks.CancellationToken): Result of (ProcessExitStatus, Proc.ProcError)` | uses an explicit host terminal with owned timeout/cancellation cleanup |
 | function | `TryWaitStatus(Process: Process): Result of (Option of ProcessExitStatus, Proc.ProcError)` | probes exact native completion without consuming the cached status or closing pipes |
+| function | `ReadStdoutCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (array of integer, Proc.ProcError))): Tasks.WaitCase` | selects one bounded stdout read or EOF |
+| function | `ReadStderrCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (array of integer, Proc.ProcError))): Tasks.WaitCase` | selects one bounded stderr read or EOF |
+| function | `WriteStdinCase(Process: Process; Bytes: array of integer; Callback: procedure(Outcome: result of (integer, Proc.ProcError))): Tasks.WaitCase` | selects one partial stdin write |
+| function | `CloseStdinCase(Process: Process; Callback: procedure(Outcome: result of (boolean, Proc.ProcError))): Tasks.WaitCase` | selects flushing and closing stdin |
+| function | `WaitStatusCase(Process: Process; Callback: procedure(Outcome: result of (ProcessExitStatus, Proc.ProcError))): Tasks.WaitCase` | selects exact native completion without closing the handle |
 
 Fallible operations return `Error(Cause)` with a typed `Proc.ProcError`. Host-backed
 variants retain the original native `HostError` cause; operational failures do not
@@ -88,9 +93,95 @@ Returns `Error(Cause)` if the host cannot determine its executable path.
 
 ## Blocking and concurrency
 
-The Run functions, including RunInteractive, block the thread that executes them until the child
-process exits. When a call runs inside `go`, it blocks that worker thread only.
-Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
+In pool tasks and the default all-stop debugger, `Run`, `RunCapture`, `RunWithOptions`
+and `RunCaptureWithOptions` save their process and pipe state while waiting. The VM worker
+remains available to other tasks, including when the call occurs inside an inline callback.
+The same process engine serves synchronous main-program and native callback calls.
+
+The OS launch itself, terminal-aware `RunInteractive` and synchronous program-stderr receivers
+still execute on their calling thread. Startup, cleanup and host callbacks are not preemptible
+wall-clock operations.
+
+Saved calls own their process reservation, native input copy and pipe buffers. Each turn
+performs at most eight nonblocking pipe probes, with up to 8 KiB per stream per probe.
+Productive pool calls yield through the ready queue; idle calls request another probe through
+the shared timer after one millisecond. Debugger readiness polling uses the same native state.
+The per-VM limit of 64 owned process calls includes suspended calls.
+Status changes and timeout expiry are observed at these probes. Pausing all-stop debugger
+execution pauses supervision; the external OS child continues running.
+
+Abandoning a call through task cancellation, scope exit, a root failure or VM shutdown closes
+its owned group and reaps the direct child before releasing the saved state. Its pipe state
+and input buffer are released as well. Child descendants must remain in their inherited
+process group or job. Independently returned `Process` handles require explicit `Close`
+or VM teardown; abandoning a selection does not close those handles.
+Unconsumed captures and unfinished forwarded stderr lines are discarded on task abandonment.
+
+`Run` delivers stderr lines live on the VM thread when a receiver is installed.
+`RunWithOptions` delivers bounded stderr after process and pipe cleanup. Receivers can request
+VM shutdown; they do not run under the process-registry lock. Calls that capture output do
+not use this receiver. Existing exit-code, partial-output and typed-error contracts apply.
+
+---
+
+## Selectable interactive pipes
+
+The five process case constructors return `Tasks.WaitCase` for
+[`Tasks.Select`](../concurrency/task.md#mixed-source-selection). Construction does no
+pipe I/O and does not observe child completion. Ordered selection probes commit the
+first ready operation; later cases do not read, write, close stdin or observe status.
+An earlier ready timer or cancellation case therefore leaves the process untouched.
+
+Each case belongs to its creating task and is single-use. Selection consumes all supplied
+cases and invokes only the winner's callback. Closing, losing or abandoning a case releases
+its callback and any copied write bytes. It leaves the independently owned process and
+its pipes open. Use `Proc.Close` to release the process explicitly. Scope cancellation
+releases suspended cases; VM teardown also closes all remaining process handles.
+
+Pool tasks and the all-stop debugger release their worker while no case is ready,
+including inside inline callbacks. Native readiness is polled through the existing
+selection scheduler: one millisecond for pool/debugger probes, at most ten milliseconds
+between synchronous root probes. No native I/O thread is created for a selection.
+All-stop pause suspends probing while external children continue running.
+
+Combine process cases with `Tasks.TimerCase` or `Tasks.CancellationCase` for timeout or
+cancellation policy. Rebuilding a timer starts a new interval at each `Select` call;
+preserve an overall deadline in the calling program when needed. Drain stdout and
+stderr while writing large inputs to avoid pipe backpressure deadlocks.
+
+Invalid read bounds, byte values or callback shapes are runtime selection errors
+(`RUNTIME_INVALID_TASK` for invalid bounds/bytes). Native failures and handles that are
+closed or belong to another VM produce the winning callback's `Error(ProcError)`.
+Pipe failures have empty capture fields; the callback receives only that operation's
+outcome. A case retains a handle identity rather than extending a closed process's life.
+
+### `ReadStdoutCase` and `ReadStderrCase`
+
+`Process` identifies a process returned by `Start`. `MaxBytes` is in `1..1048576`.
+The callback receives `Ok(Bytes)` with at most that many bytes, each in `0..255`.
+No currently available bytes leave the case pending; an empty array means EOF and
+remains observable by later cases. The two functions differ only in the selected stream.
+
+### `WriteStdinCase`
+
+`Bytes` contains at most 1048576 integers in `0..255`, copied at construction.
+The callback receives `Ok(Count)` after a positive partial write. Retry the unwritten
+suffix with a new case. A full pipe leaves the case pending. Empty input wins with
+`Ok(0)` when stdin is open; closed stdin yields a typed error.
+
+### `CloseStdinCase`
+
+The callback receives `Ok(true)` after flushing and closing stdin. Pending flush leaves
+the case pending. Repeated close also returns `Ok(true)`. This sends EOF to the child
+without closing its output pipes or terminating the process.
+
+### `WaitStatusCase`
+
+The callback receives `Ok(ProcessExitStatus)` after direct-child completion. Native
+exit codes and terminating signals follow `TryWaitStatus`. The cached status remains
+observable, and stdout/stderr remain available for draining. Observing completion also
+terminates remaining descendants in the owned group, following the process ownership
+contract. This case neither closes nor consumes the process handle.
 
 ---
 
@@ -213,8 +304,8 @@ receiver; directly inherited streams have no capture bound.
 
 `Some(0)` is an immediate timeout. An already cancelled token or an immediate
 timeout prevents launch. During execution, timeout, cancellation, and VM
-shutdown terminate the owned process tree, reap the child, and join I/O
-workers before returning. Unix uses an owned process group; Windows uses a
+shutdown terminate the owned process tree, reap the child, and finish owned I/O
+before returning. Unix uses an owned process group; Windows uses a
 Job Object for the child and its descendants. Remaining owned descendants are
 also terminated when the direct child finishes. Unix descendants must remain
 in the inherited process group; deliberately detached processes and passing

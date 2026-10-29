@@ -122,7 +122,7 @@ impl Worker {
     }
 }
 
-fn bytes(value: &Value) -> Result<Vec<u8>, Failure> {
+pub(super) fn bytes(value: &Value) -> Result<Vec<u8>, Failure> {
     let Value::Array(values) = value else {
         return Err(Failure::argument("Bytes", "Expected an array of integers"));
     };

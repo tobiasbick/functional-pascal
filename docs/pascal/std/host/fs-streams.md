@@ -2,8 +2,40 @@
 
 [`Std.Io.Fs`](fs.md) opens regular files for incremental byte and UTF-8 line I/O.
 Import `uses Std.Io.Fs as Fs;`; cancellation-aware calls additionally take a token
-from [`Std.Tasks`](../concurrency/task.md). Calls block their executing thread
-and can run in `go` tasks with ordinary scope and `Tasks.Wait` ownership.
+from [`Std.Tasks`](../concurrency/task.md). Pool tasks and the all-stop debugger
+suspend while handle operations run, including calls inside inline callbacks.
+
+## Execution and native ownership
+
+`Open`, `Close`, byte and line reads/writes, `Seek`, `Tell`, `Flush`, `Size`,
+`SetLength` and the text-output functions save their task state while a native
+file worker executes. No FPAS values or callback frames move to that native
+thread. Results are converted to FPAS values on the owning VM task. Synchronous
+main-program calls and native callback boundaries use the same file operations
+on their calling thread.
+
+Each VM admits at most 64 native file jobs, including completed results not yet
+delivered to their task. Saturation returns `FsError.LimitExceeded(Operation, 64)`
+before starting native work; it cannot truncate a file in Create mode. This job
+budget is separate from the 1024 open-file limit. Pending pool/debugger calls use
+the shared one-millisecond readiness polling schedule.
+
+Aliases serialize through the same handle state. Waiting for registry or handle
+locks observes cancellation. A VM shutdown first signals jobs without waiting
+for those locks; final descriptor cleanup follows task and native-worker joins.
+Closing a handle retains its admission slot until its OS descriptor is released.
+
+Abandoning a task signals and joins its native job, drops undelivered byte/text
+results and closes a newly opened file that was not delivered to FPAS. Existing
+handles remain independently VM-owned until explicit Close or VM teardown.
+Already executed reads, writes, seeks, truncations and closes are not rolled back.
+Portable filesystem calls cannot be forcibly interrupted: cancellation and cleanup
+can wait for an OS call already in progress. Already dispatched native work may
+also finish while all-stop debugging is paused.
+
+Whole-file and path-based helpers such as `ReadText`, `WriteText`, directory
+traversal and copying execute synchronously on their calling thread. They do not
+use the handle-job budget.
 
 ## Handles, aliases, and cleanup
 
@@ -203,6 +235,7 @@ Read can consume the prefix instead, and Tell, Seek, and Write account for it.
 | Limit | Value |
 |-------|-------|
 | Simultaneously open files per VM | 1024 |
+| Pending or undelivered native handle jobs per VM | 64 |
 | Read request / Write input | 1_048_576 bytes |
 | UTF-8 line content excluding LF/CRLF | 1_048_576 bytes |
 | UTF-8 write content excluding added LF | 1_048_576 bytes |

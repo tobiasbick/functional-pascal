@@ -13,6 +13,11 @@ std_symbol!(STD_PROC_READ_STDOUT = std_proc!("ReadStdout"));
 std_symbol!(STD_PROC_READ_STDERR = std_proc!("ReadStderr"));
 std_symbol!(STD_PROC_WRITE_STDIN = std_proc!("WriteStdin"));
 std_symbol!(STD_PROC_CLOSE_STDIN = std_proc!("CloseStdin"));
+std_symbol!(STD_PROC_READ_STDOUT_CASE = std_proc!("ReadStdoutCase"));
+std_symbol!(STD_PROC_READ_STDERR_CASE = std_proc!("ReadStderrCase"));
+std_symbol!(STD_PROC_WRITE_STDIN_CASE = std_proc!("WriteStdinCase"));
+std_symbol!(STD_PROC_CLOSE_STDIN_CASE = std_proc!("CloseStdinCase"));
+std_symbol!(STD_PROC_WAIT_STATUS_CASE = std_proc!("WaitStatusCase"));
 std_symbol!(STD_PROC_TRY_WAIT = std_proc!("TryWait"));
 std_symbol!(STD_PROC_TRY_WAIT_STATUS = std_proc!("TryWaitStatus"));
 std_symbol!(STD_PROC_EXIT_STATUS = std_proc!("ProcessExitStatus"));
@@ -38,6 +43,11 @@ pub(in crate::std_units) const STD_PROC_SYMBOLS: &[&str] = &[
     STD_PROC_READ_STDERR,
     STD_PROC_WRITE_STDIN,
     STD_PROC_CLOSE_STDIN,
+    STD_PROC_READ_STDOUT_CASE,
+    STD_PROC_READ_STDERR_CASE,
+    STD_PROC_WRITE_STDIN_CASE,
+    STD_PROC_CLOSE_STDIN_CASE,
+    STD_PROC_WAIT_STATUS_CASE,
     STD_PROC_TRY_WAIT,
     STD_PROC_TRY_WAIT_STATUS,
     STD_PROC_EXIT_STATUS,

@@ -1,0 +1,315 @@
+program MixedGcMemory;
+
+uses Std.Tasks as Tasks, Std.Console as Console, Std.Os.Args as Args;
+
+type Queues = record
+  Full: channel of array of integer;
+  Empty: channel of array of integer;
+  Data: channel of array of integer;
+  Ready: channel of integer;
+  Active: Tasks.CancellationToken;
+  Cancelled: Tasks.CancellationToken;
+end record;
+
+function Cycle(Seed: integer): function(): integer;
+begin
+  // Oversized buffers cannot hide delayed release in the small-buffer pools.
+  var Payload := array.Fill(Seed, 4097 + (Seed mod 4) * 257);
+  var Count := 0;
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    Count := Count + 1;
+    if Count < 0 then
+      return Current();
+    end if;
+
+    return Payload[Payload.Length() - 1] + Count;
+  end function;
+
+  return Current;
+end function;
+
+function Initialize(): Queues;
+begin
+  const Active := Tasks.CreateCancellationSource();
+  const Cancelled := Tasks.CreateCancellationSource();
+  discard Tasks.Cancel(Cancelled);
+  const Full: channel of array of integer := Tasks.CreateChannel(1);
+  discard Tasks.Send(Full, [42]).Unwrap();
+  return Queues(
+    Full := Full,
+    Empty := Tasks.CreateChannel(1),
+    Data := Tasks.CreateChannel(1),
+    Ready := Tasks.CreateChannel(1),
+    Active := Tasks.GetCancellationToken(Active),
+    Cancelled := Tasks.GetCancellationToken(Cancelled)
+  );
+end function;
+
+function Produce(Config: Queues; Seed: integer): array of integer;
+begin
+  const Keep := Cycle(Seed);
+  if Keep() <> Seed + 1 then
+    panic('producer capture');
+  end if;
+
+  if not (Tasks.ReceiveWithTimeout(Config.Empty, 1) is Error(Tasks.TaskError.Timeout(_))) then
+    panic('producer timeout');
+  end if;
+
+  if Keep() <> Seed + 2 then
+    panic('capture lost while suspended');
+  end if;
+  const Data := array.Fill(Seed, 4097 + (Seed mod 4) * 129);
+  discard Tasks.SendWithCancellation(Config.Data, Data, Config.Active).Unwrap();
+  return Data;
+end function;
+
+function CancelWorker(Config: Queues; Seed: integer; Token: Tasks.CancellationToken): integer;
+begin
+  const Keep := Cycle(Seed);
+  const Alias := Keep;
+  if Keep() <> Seed + 1 then
+    panic('cancel worker capture');
+  end if;
+
+  discard Tasks.Send(Config.Ready, Seed).Unwrap();
+  if not (
+    Tasks.ReceiveWithCancellation(Config.Empty, Token) is Error(Tasks.TaskError.Cancelled(_))
+  )
+  then
+    panic('cancel worker result');
+  end if;
+
+  if Alias() <> Seed + 2 then
+    panic('capture lost on cancellation');
+  end if;
+
+  return Seed;
+end function;
+
+procedure RunRound(Config: Queues; Seed: integer);
+begin
+  const Keep := Cycle(Seed);
+  const Losing := Cycle(Seed + 1);
+  const Data := array.Fill(Seed, 4097);
+  var Seen := 0;
+  scope
+    const Producer := go Produce(Config, Seed);
+    const Sent := Tasks.SendCase(
+      Config.Full, Data,
+      procedure(Outcome: result of (boolean, Tasks.TaskError)) begin
+        discard Losing();
+        panic('losing send ran');
+      end procedure
+    );
+    const Received := Tasks.ReceiveCase(
+      Config.Data,
+      procedure(Outcome: result of (array of integer, Tasks.TaskError)) begin
+        const Value := Outcome.Unwrap();
+        if (Value.Length() <> 4097 + (Seed mod 4) * 129) or (Value[0] <> Seed) then
+          panic('selected packet');
+        end if;
+
+        Seen := Keep();
+      end procedure
+    );
+    if Tasks.Select([Sent, Received]) <> 1 then
+      panic('selected receive');
+    end if;
+
+    if Tasks.CloseWaitCase(Sent) or Tasks.CloseWaitCase(Received) then
+      panic('claimed case');
+    end if;
+    const Completed := Tasks.TaskCase(
+      Producer, procedure() begin
+        Seen := Keep();
+      end procedure
+    );
+    if Tasks.Select([Completed]) <> 0 then
+      panic('task case');
+    end if;
+    const Returned := Tasks.Wait(Producer);
+    if Returned[Returned.Length() - 1] <> Seed then
+      panic('task result');
+    end if;
+  end scope;
+
+  if Seen <> Seed + 2 then
+    panic('selected callbacks');
+  end if;
+  const Timed := Tasks.TimerCase(
+    1, procedure() begin
+      Seen := Keep();
+    end procedure
+  );
+  const Empty := Tasks.ReceiveCase(
+    Config.Empty,
+    procedure(Outcome: result of (array of integer, Tasks.TaskError)) begin
+      discard Losing();
+      panic('empty receive ran');
+    end procedure
+  );
+  if Tasks.Select([Empty, Timed]) <> 1 then
+    panic('timer selection');
+  end if;
+
+  if Seen <> Seed + 3 then
+    panic('timer capture');
+  end if;
+  const Cancelled := Tasks.CancellationCase(
+    Config.Cancelled, procedure() begin
+      Seen := Keep();
+    end procedure
+  );
+  const Blocked := Tasks.SendCase(
+    Config.Full, Data,
+    procedure(Outcome: result of (boolean, Tasks.TaskError)) begin
+      discard Losing();
+      panic('cancelled selection sent');
+    end procedure
+  );
+  if Tasks.Select([Blocked, Cancelled]) <> 1 then
+    panic('cancellation selection');
+  end if;
+
+  if Seen <> Seed + 4 then
+    panic('cancellation capture');
+  end if;
+
+  if not (Tasks.SendWithTimeout(Config.Full, Data, 0) is Error(Tasks.TaskError.Timeout(_))) then
+    panic('full send timeout');
+  end if;
+
+  if not (
+    Tasks.SendWithCancellation(Config.Full, Data, Config.Cancelled) is Error(Tasks.TaskError.Cancelled(_))
+  )
+  then
+    panic('cancelled send');
+  end if;
+
+  if not (
+    Tasks.ReceiveWithCancellation(Config.Empty, Config.Cancelled) is Error(Tasks.TaskError.Cancelled(_))
+  )
+  then
+    panic('cancelled receive');
+  end if;
+  const Unused := Tasks.TimerCase(
+    0, procedure() begin
+      discard Losing();
+      panic('unused callback ran');
+    end procedure
+  );
+  if not Tasks.CloseWaitCase(Unused) then
+    panic('explicit case close');
+  end if;
+
+  if Tasks.CloseWaitCase(Unused) then
+    panic('repeated case close');
+  end if;
+  const Group := Tasks.CreateTaskGroup();
+  const Job := Tasks.StartTaskInGroup(
+    Group,
+    function(Token: Tasks.CancellationToken): integer begin
+      return CancelWorker(Config, Seed, Token);
+    end function
+  );
+  if Tasks.Receive(Config.Ready).Unwrap() <> Seed then
+    panic('worker readiness');
+  end if;
+
+  discard Tasks.CancelTaskGroup(Group);
+  if Tasks.Wait(Job) <> Seed then
+    panic('cancelled worker result');
+  end if;
+
+  if not Tasks.CloseTaskGroup(Group).IsEmpty() then
+    panic('group failure');
+  end if;
+
+  if not Tasks.CloseTaskGroup(Group).IsEmpty() then
+    panic('repeated group close');
+  end if;
+
+  if Keep() <> Seed + 5 then
+    panic('surviving alias');
+  end if;
+end procedure;
+
+procedure FailSelection(Config: Queues);
+begin
+  const Keep := Cycle(100);
+  const Unused := Tasks.TimerCase(
+    0, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  const Blocked := Tasks.SendCase(
+    Config.Full, array.Fill(7, 4097),
+    procedure(Outcome: result of (boolean, Tasks.TaskError)) begin
+      discard Keep();
+    end procedure
+  );
+  const Failure := Tasks.TimerCase(
+    0, procedure() begin
+      if Keep() <> 101 then
+        panic('failed callback capture');
+      end if;
+
+      panic('expected mixed selection failure');
+    end procedure
+  );
+  discard Tasks.Select([Blocked, Failure]);
+end procedure;
+
+begin
+  const Config := Initialize();
+  const Keep := Cycle(1000);
+  var Retained: array of string := [];
+  var Mode := 'collect';
+  if Args.ParamCount() > 0 then
+    Mode := Args.ParamStr(0);
+  end if;
+  var Rounds := 512;
+  if Args.ParamCount() > 1 then
+    Rounds := 32;
+  end if;
+
+  for Round: integer := 1 to Rounds do
+    RunRound(Config, Round);
+    if Keep() <> 1000 + Round then
+      panic('long-lived alias');
+    end if;
+
+    if Mode = 'retain' then
+      // A varying length prevents constant folding or shared constant storage.
+      Retained.PushInPlace('x'.RepeatStr(65536 + Round));
+    end if;
+
+    if (Mode = 'fail') and (Round = 16) then
+      FailSelection(Config);
+    end if;
+
+    Console.WriteText('.');
+  end for;
+
+  if (Mode = 'retain') and (Retained.Length() <> Rounds) then
+    panic('retention control');
+  end if;
+  const Last := Tasks.Receive(Config.Full).Unwrap();
+  if (Last.Length() <> 1) or (Last[0] <> 42) then
+    panic('losing send changed the full queue');
+  end if;
+
+  if not (Tasks.TryReceive(Config.Data).Unwrap() is None) then
+    panic('undrained data');
+  end if;
+
+  discard Tasks.CloseChannel(Config.Full);
+  discard Tasks.CloseChannel(Config.Empty);
+  discard Tasks.CloseChannel(Config.Data);
+  discard Tasks.CloseChannel(Config.Ready);
+end.

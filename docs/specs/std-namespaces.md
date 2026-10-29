@@ -9,7 +9,6 @@ Read this document before adding, moving, splitting or renaming a public
 `Std.*` unit, or assigning a unit name in a future plan. Update this document in
 the same change when a deliberate design decision changes an allocation.
 Keep the [roadmap](../future/std-roadmap.md) for priorities and capability plans.
-This specification survives completion of individual APs.
 
 ## Naming rules
 
@@ -23,7 +22,7 @@ This specification survives completion of individual APs.
   or `Std.Tasks`. A domain prefix does not require an importable parent unit.
 - Use the canonical PascalCase spelling from the catalogue, including `Ai`,
   `Io`, `Os`, `Ui`, `Http`, `Utf8`, `OpenAi`, `WebDav`, `Sqlite`, `Draw2D` and
-  `Render3D`. Resolution remains case-insensitive. Keep the approved existing
+  `Render3D`. Resolution remains case-insensitive. Use the approved
   abbreviations `Fs`, `Proc` and `Cli`.
 - Names describe the caller's task. They do not encode the implementation
   language, native dependency, source directory or current maintainer.
@@ -33,75 +32,67 @@ This specification survives completion of individual APs.
   does not import its children, and sibling units do not inherit visibility.
   Namespace allocation adds no syntax, wildcard imports or implicit exports.
 - Keep protocol versions only when they select distinct supported contracts.
-  The existing ACP `.V2` and `.Experimental` divisions remain explicit. A
+  The ACP `.V2` and `.Experimental` divisions are explicit. A
   library release number alone does not justify a versioned namespace.
 
-## Existing public units and migration targets
+## Current public units
 
 The current catalogue consists of the intrinsic unit list in
 [`std_units/units.rs`](../../crates/fpas-builtins/src/std_units/units.rs) plus the
 public source exports in [`stdlib.fpasprj`](../../lib/stdlib.fpasprj).
-Private source units and retired type-helper names are not public exports.
-The canonical column names the available units. The former-name column records
-their previous names; relocated former names are rejected as imports.
+Private source units are not public exports. Each available unit has one
+canonical import path.
 
-| Former unit | Canonical unit | Responsibility |
-| --- | --- | --- |
-| `Std.Acp` | `Std.Ai.Acp` | ACP connections, events and replies |
-| `Std.Acp.Types` | `Std.Ai.Acp.Types` | ACP values and codecs |
-| `Std.Acp.Host` | `Std.Ai.Acp.Host` | ACP host adapters |
-| `Std.Acp.Experimental` | `Std.Ai.Acp.Experimental` | Explicit ACP feature opt-ins |
-| `Std.Acp.V2` | `Std.Ai.Acp.V2` | Distinct ACP v2 contract |
-| `Std.Mcp` | `Std.Ai.Mcp` | MCP tool servers |
-| `Std.Mcp.Types` | `Std.Ai.Mcp.Types` | MCP definitions, context and results |
-| `Std.Ai.OpenAi` | `Std.Ai.OpenAi` | OpenAI-compatible model client |
-| `Std.Net` | `Std.Net.Sockets` | Existing TCP/TLS connections and listeners |
-| `Std.Http` | `Std.Net.Http` | HTTP client/server and SSE helpers |
-| `Std.Net.Uri` | `Std.Net.Uri` | URI parsing and encoding |
-| `Std.Server` | `Std.Net.Server` | Server task/listener lifetime and shutdown |
-| `Std.Fs` | `Std.Io.Fs` | Files, directories and file-handle I/O |
-| `Std.Path` | `Std.Io.Path` | Pure filesystem-path manipulation |
-| `Std.Args` | `Std.Os.Args` | Process arguments |
-| `Std.Env` | `Std.Os.Env` | Process environment |
-| `Std.Proc` | `Std.Os.Proc` | Child processes and their pipe operations |
-| `Std.Errors` | `Std.Os.Errors` | Shared native host error causes |
-| `Std.Cli` | `Std.Cli` | Command-line schemas, parsing and help |
-| `Std.Console` | `Std.Console` | Terminal text, cells, screen and input |
-| `Std.Tui` | `Std.Ui.Terminal` | Existing terminal MVU interface |
-| `Std.Conv` | `Std.Text.Format` and `Std.Math` | Split text formatting from numeric conversion |
-| `Std.Parse` | `Std.Text.Parse` | Scalar text parsing |
-| `Std.Net.Utf8` | `Std.Text.Utf8` | UTF-8 encoding and decoding |
-| `Std.Encoding` | `Std.Encoding` | Existing Base64, Base64url and hex codecs |
-| `Std.Json` | `Std.Encoding.Json` | JSON values, parsing and serialization |
-| `Std.Json.Fields` | `Std.Encoding.Json.Fields` | Typed JSON field access |
-| `Std.Toml` | `Std.Encoding.Toml` | TOML values, parsing and serialization |
-| `Std.Toml.Fields` | `Std.Encoding.Toml.Fields` | Typed TOML field access |
-| `Std.Math` | `Std.Math` | Scalar mathematics and numeric conversion |
-| `Std.Bits` | `Std.Math.Bits` | Integer bit operations |
-| `Std.Random` | `Std.Math.Random` | Pseudorandom sequences |
-| `Std.Time` | `Std.Time` | Clocks, timestamps and waiting |
-| `Std.Calendar` | `Std.Time.Calendar` | Gregorian dates and UTC calendar arithmetic |
-| `Std.Crypto` | `Std.Crypto` | Cryptographic operations and secure randomness |
-| `Std.Tasks` | `Std.Tasks` | Tasks, channels, cancellation and selection |
-| `Std.Test` | `Std.Test` | Test assertions and test facilities |
-| `Std.Version` | `Std.Version` | Compiler and library version information |
+| Canonical unit | Responsibility |
+| --- | --- |
+| `Std.Ai.Acp` | ACP connections, events and replies |
+| `Std.Ai.Acp.Types` | ACP values and codecs |
+| `Std.Ai.Acp.Host` | ACP host adapters |
+| `Std.Ai.Acp.Experimental` | Explicit ACP feature opt-ins |
+| `Std.Ai.Acp.V2` | Distinct ACP v2 contract |
+| `Std.Ai.Mcp` | MCP tool servers |
+| `Std.Ai.Mcp.Types` | MCP definitions, context and results |
+| `Std.Ai.OpenAi` | OpenAI-compatible model client |
+| `Std.Net.Sockets` | TCP/TLS connections and listeners |
+| `Std.Net.Http` | HTTP client/server and SSE helpers |
+| `Std.Net.Uri` | URI parsing and encoding |
+| `Std.Net.Server` | Server task/listener lifetime and shutdown |
+| `Std.Io.Fs` | Files, directories and file-handle I/O |
+| `Std.Io.Path` | Pure filesystem-path manipulation |
+| `Std.Os.Args` | Process arguments |
+| `Std.Os.Env` | Process environment |
+| `Std.Os.Proc` | Child processes and their pipe operations |
+| `Std.Os.Errors` | Shared native host error causes |
+| `Std.Cli` | Command-line schemas, parsing and help |
+| `Std.Console` | Terminal text, cells, screen and input |
+| `Std.Ui.Terminal` | Terminal MVU interface |
+| `Std.Text.Format` | Scalar text formatting |
+| `Std.Text.Parse` | Scalar text parsing |
+| `Std.Text.Utf8` | UTF-8 encoding and decoding |
+| `Std.Encoding` | Base64, Base64url and hex codecs |
+| `Std.Encoding.Json` | JSON values, parsing and serialization |
+| `Std.Encoding.Json.Fields` | Typed JSON field access |
+| `Std.Encoding.Toml` | TOML values, parsing and serialization |
+| `Std.Encoding.Toml.Fields` | Typed TOML field access |
+| `Std.Math` | Scalar mathematics and numeric conversion |
+| `Std.Math.Bits` | Integer bit operations |
+| `Std.Math.Random` | Pseudorandom sequences |
+| `Std.Time` | Clocks, timestamps and waiting |
+| `Std.Time.Calendar` | Gregorian dates and UTC calendar arithmetic |
+| `Std.Crypto` | Cryptographic operations and secure randomness |
+| `Std.Tasks` | Tasks, channels, cancellation and selection |
+| `Std.Test` | Test assertions and test facilities |
+| `Std.Version` | Compiler and library version information |
 
-The former `Std.Conv.IntToStr`, `RealToStr`, `BoolToStr` and `IntToHex` belong to
-`Std.Text.Format` with the same routine names. The former `Std.Conv.IntToReal`
-belongs to `Std.Math.IntToReal`. Signatures, rounding and error behavior are
-preserved. A caller
-using both parts imports both destination units.
+`Std.Text.Format` provides `IntToStr`, `RealToStr`, `BoolToStr` and `IntToHex`.
+`Std.Math.IntToReal` performs integer-to-real conversion. A caller using both
+capabilities imports both units.
 
-All other entries preserve their public members and behavior while changing
-the owning unit where listed. Public nominal identities, generated declarations,
-diagnostic operation labels and cached interfaces must use the new canonical
-path together. Rebuild affected artifacts; do not publish forwarding units or
-legacy aliases. Internal identifiers need changes only where public identity or
-clear ownership requires them.
+Public nominal identities, generated declarations, diagnostic operation labels
+and cached interfaces must use each unit's canonical path consistently.
 
-The `Std.Tui` move changes names only. A common UI tree and a graphical host
-remain work for the [shared UI plan](../future/shared-ui.md). Moving `Std.Net`
-does not add UDP, split TCP from TLS or change connection ownership.
+A common UI tree and a graphical host are covered by the
+[shared UI plan](../future/shared-ui.md).
 
 ## Allocations for future capabilities
 

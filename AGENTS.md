@@ -26,6 +26,16 @@ Read the [agent reference](docs/pascal/agents/README.md) for the language rules.
 - Fix errors when you encounter them. Do not dismiss errors as pre-existing.
 - Use Fat-LTO for release, benchmarks, and dist; use `--profile dev-fast` with Thin-LTO for development builds.
 
+## Before every commit
+
+- Inspect the exact staged changes, file names and full contents of every file
+  being committed for secrets, credentials, personal data and machine-specific
+  information. Include API/private keys, tokens, passwords, personal contact
+  details, host/user names, private addresses and machine-specific paths or IDs.
+- If any such data is found, do not commit. Remove or anonymize it and repeat
+  the complete review before committing. Never print sensitive values in reports
+  or logs.
+
 ## Dogfooding
 
 - Write helper scripts in FPAS instead of Python, JavaScript or shell logic.

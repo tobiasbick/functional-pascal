@@ -33,6 +33,18 @@ pub enum FsIntrinsic {
     WriteWithCancellation = 719,
     /// `Std.Io.Fs.ReadLineWithCancellation` — bounded VM-owned file operation.
     ReadLineWithCancellation = 720,
+    /// `Std.Io.Fs.Size` — query the open file's byte length.
+    Size = 826,
+    /// `Std.Io.Fs.SetLength` — resize a writable file without moving its position.
+    SetLength = 827,
+    /// `Std.Io.Fs.WriteString` — write complete UTF-8 text to an open file.
+    WriteString = 828,
+    /// `Std.Io.Fs.WriteLine` — write complete UTF-8 text followed by LF.
+    WriteLine = 829,
+    /// `Std.Io.Fs.WriteStringWithCancellation` — cooperatively cancellable text output.
+    WriteStringWithCancellation = 830,
+    /// `Std.Io.Fs.WriteLineWithCancellation` — cooperatively cancellable line output.
+    WriteLineWithCancellation = 831,
 
     /// `Std.Io.Fs.ReadBytes(Path)` - read a bounded binary file.
     ///

@@ -11,13 +11,15 @@ pub(super) const MAX_BYTES: usize = 1_048_576;
 pub(super) struct FileState {
     reader: BufReader<File>,
     pending: VecDeque<u8>,
+    append: bool,
 }
 
 impl FileState {
-    pub(super) fn new(reader: BufReader<File>) -> Self {
+    pub(super) fn new(reader: BufReader<File>, append: bool) -> Self {
         Self {
             reader,
             pending: VecDeque::new(),
+            append,
         }
     }
 
@@ -136,15 +138,66 @@ impl FileState {
     }
 
     pub(super) fn write(&mut self, bytes: &[u8], path: &str) -> Result<usize, Failure> {
+        self.prepare_write(path)?;
+        write_some(self.reader.get_mut(), self.append, bytes)
+            .map_err(|error| Failure::io(path, error))
+    }
+
+    fn prepare_write(&mut self, path: &str) -> Result<(), Failure> {
         let position = self.tell(path)? as u64;
         self.reader
             .seek(SeekFrom::Start(position))
             .map_err(|error| Failure::io(path, error))?;
         self.pending.clear();
+        Ok(())
+    }
+
+    pub(super) fn size(&self, path: &str) -> Result<i64, Failure> {
+        let length = self
+            .reader
+            .get_ref()
+            .metadata()
+            .map_err(|error| Failure::io(path, error))?
+            .len();
+        i64::try_from(length).map_err(|_| Failure::Limit(i64::MAX))
+    }
+
+    pub(super) fn set_length(&mut self, length: u64, path: &str) -> Result<(), Failure> {
+        // Reconcile both lookahead buffers before resizing. File::set_len preserves
+        // the OS position, including when truncation leaves it beyond the new EOF.
+        self.prepare_write(path)?;
         self.reader
             .get_mut()
-            .write(bytes)
+            .set_len(length)
             .map_err(|error| Failure::io(path, error))
+    }
+
+    pub(super) fn write_text(
+        &mut self,
+        text: &str,
+        newline: bool,
+        path: &str,
+        mut cancelled: impl FnMut() -> bool,
+    ) -> Result<(), Failure> {
+        self.prepare_write(path)?;
+        for mut chunk in text
+            .as_bytes()
+            .chunks(8192)
+            .chain(newline.then_some(b"\n".as_slice()))
+        {
+            while !chunk.is_empty() {
+                if cancelled() {
+                    return Err(Failure::Cancelled);
+                }
+                match write_some(self.reader.get_mut(), self.append, chunk) {
+                    Ok(0) => return Err(Failure::io(path, io::ErrorKind::WriteZero.into())),
+                    Ok(count) => chunk = &chunk[count..],
+                    Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                    Err(error) => return Err(Failure::io(path, error)),
+                }
+            }
+        }
+        Ok(())
     }
 
     pub(super) fn flush(&mut self, path: &str) -> Result<(), Failure> {
@@ -153,4 +206,17 @@ impl FileState {
             .flush()
             .map_err(|error| Failure::io(path, error))
     }
+}
+
+fn write_some(file: &mut File, append: bool, bytes: &[u8]) -> io::Result<usize> {
+    #[cfg(windows)]
+    if append {
+        use std::os::windows::fs::FileExt;
+        // Windows' special EOF offset keeps each write append-only even though
+        // the handle also has the FILE_WRITE_DATA right required by set_len.
+        return file.seek_write(bytes, u64::MAX);
+    }
+    #[cfg(not(windows))]
+    let _ = append; // Other platforms use the descriptor's native append flag.
+    file.write(bytes)
 }

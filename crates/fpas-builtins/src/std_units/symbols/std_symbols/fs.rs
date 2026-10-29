@@ -11,6 +11,12 @@ std_symbol!(STD_FS_READ_LINE = std_fs!("ReadLine"));
 std_symbol!(STD_FS_SEEK = std_fs!("Seek"));
 std_symbol!(STD_FS_TELL = std_fs!("Tell"));
 std_symbol!(STD_FS_FLUSH = std_fs!("Flush"));
+std_symbol!(STD_FS_SIZE = std_fs!("Size"));
+std_symbol!(STD_FS_SET_LENGTH = std_fs!("SetLength"));
+std_symbol!(STD_FS_WRITE_STRING = std_fs!("WriteString"));
+std_symbol!(STD_FS_WRITE_LINE = std_fs!("WriteLine"));
+std_symbol!(STD_FS_WRITE_STRING_WITH_CANCELLATION = std_fs!("WriteStringWithCancellation"));
+std_symbol!(STD_FS_WRITE_LINE_WITH_CANCELLATION = std_fs!("WriteLineWithCancellation"));
 std_symbol!(STD_FS_READ_WITH_CANCELLATION = std_fs!("ReadWithCancellation"));
 std_symbol!(STD_FS_WRITE_WITH_CANCELLATION = std_fs!("WriteWithCancellation"));
 std_symbol!(STD_FS_READ_LINE_WITH_CANCELLATION = std_fs!("ReadLineWithCancellation"));
@@ -57,6 +63,12 @@ pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
     STD_FS_SEEK,
     STD_FS_TELL,
     STD_FS_FLUSH,
+    STD_FS_SIZE,
+    STD_FS_SET_LENGTH,
+    STD_FS_WRITE_STRING,
+    STD_FS_WRITE_LINE,
+    STD_FS_WRITE_STRING_WITH_CANCELLATION,
+    STD_FS_WRITE_LINE_WITH_CANCELLATION,
     STD_FS_READ_WITH_CANCELLATION,
     STD_FS_WRITE_WITH_CANCELLATION,
     STD_FS_READ_LINE_WITH_CANCELLATION,

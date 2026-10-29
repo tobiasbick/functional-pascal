@@ -417,6 +417,25 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Truncates or zero-extends a writable file, preserving its position.
+//
+// Parameters:
+// - `File`: `Std.Io.Fs.File` input value used by `SetLength`.
+// - `Length`: `integer` input value used by `SetLength`.
+public function SetLength(File: File; Length: integer): result of (boolean, FsError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Byte length of the open file without moving its position.
+//
+// Parameters:
+// - `File`: `Std.Io.Fs.File` input value used by `Size`.
+public function Size(File: File): result of (integer, FsError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Returns the logical byte position.
 //
 // Parameters:
@@ -448,6 +467,48 @@ end function;
 // - `Path`: File or directory path processed by the operation.
 // - `Bytes`: `array of integer` input value used by `WriteBytes`.
 public function WriteBytes(Path: string; Bytes: array of integer): result of (boolean, FsError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Writes complete UTF-8 content followed by LF.
+//
+// Parameters:
+// - `File`: `Std.Io.Fs.File` input value used by `WriteLine`.
+// - `Text`: UTF-8 text processed by the operation.
+public function WriteLine(File: File; Text: string): result of (boolean, FsError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Complete line output with cooperative cancellation.
+//
+// Parameters:
+// - `File`: `Std.Io.Fs.File` input value used by `WriteLineWithCancellation`.
+// - `Text`: UTF-8 text processed by the operation.
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `WriteLineWithCancellation`.
+public function WriteLineWithCancellation(File: File; Text: string; Token: Tasks.CancellationToken): result of (boolean, FsError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Writes complete UTF-8 content, at most 1 MiB.
+//
+// Parameters:
+// - `File`: `Std.Io.Fs.File` input value used by `WriteString`.
+// - `Text`: UTF-8 text processed by the operation.
+public function WriteString(File: File; Text: string): result of (boolean, FsError);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Complete text output with cooperative cancellation.
+//
+// Parameters:
+// - `File`: `Std.Io.Fs.File` input value used by `WriteStringWithCancellation`.
+// - `Text`: UTF-8 text processed by the operation.
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `WriteStringWithCancellation`.
+public function WriteStringWithCancellation(File: File; Text: string; Token: Tasks.CancellationToken): result of (boolean, FsError);
 begin
   panic('Intrinsic API declaration');
 end function;

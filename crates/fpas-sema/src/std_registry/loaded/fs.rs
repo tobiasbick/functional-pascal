@@ -28,6 +28,30 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
     let result = |ty| Ty::Result(Box::new(ty), Box::new(error_ty.clone()));
     define_func(
         checker,
+        s::STD_FS_SIZE,
+        vec![p("File", file.clone())],
+        result(Ty::Integer),
+    );
+    define_func(
+        checker,
+        s::STD_FS_SET_LENGTH,
+        vec![p("File", file.clone()), p("Length", Ty::Integer)],
+        result(Ty::Boolean),
+    );
+    for (name, cancellable) in [
+        (s::STD_FS_WRITE_STRING, false),
+        (s::STD_FS_WRITE_LINE, false),
+        (s::STD_FS_WRITE_STRING_WITH_CANCELLATION, true),
+        (s::STD_FS_WRITE_LINE_WITH_CANCELLATION, true),
+    ] {
+        let mut parameters = vec![p("File", file.clone()), p("Text", Ty::String)];
+        if cancellable {
+            parameters.push(p("Token", token.clone()));
+        }
+        define_func(checker, name, parameters, result(Ty::Boolean));
+    }
+    define_func(
+        checker,
         s::STD_FS_OPEN,
         vec![p("Path", Ty::String), p("Mode", mode)],
         result(file.clone()),

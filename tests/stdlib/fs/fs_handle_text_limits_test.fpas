@@ -1,0 +1,25 @@
+program FsHandleTextLimitsTest;
+
+uses Std.Io.Fs as Fs, Std.Test as Test;
+
+begin
+  const FileName := Test.ScratchDir() + '/handle-text-limits.txt';
+  const Exact := 'é'.RepeatStr(524288);
+  const TooLong := Exact + 'x';
+  const File := Fs.Open(FileName, Fs.FileMode.Create).Unwrap();
+  Test.AssertTrue(Fs.WriteLine(File, Exact).Unwrap());
+  Test.AssertEquals(1048577, Fs.Size(File).Unwrap());
+  Test.AssertTrue(
+    Fs.WriteString(File, TooLong) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.WriteString', 1048576))
+  );
+  Test.AssertTrue(
+    Fs.WriteLine(File, TooLong) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.WriteLine', 1048576))
+  );
+  Test.AssertEquals(1048577, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.Close(File).Unwrap());
+  const ReadOnly := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+  Test.AssertTrue(Fs.ReadLine(ReadOnly).Unwrap() = Some(Exact));
+  Test.AssertTrue(Fs.ReadLine(ReadOnly).Unwrap() is None);
+  Test.AssertTrue(Fs.Close(ReadOnly).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
+end.

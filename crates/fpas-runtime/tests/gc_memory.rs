@@ -6,12 +6,20 @@
     reason = "memory regression fixtures fail with direct, local assertions"
 )]
 
+#[path = "gc_memory/debug_edits.rs"]
+mod debug_edits;
 #[path = "gc_memory/graphs.rs"]
 mod graphs;
 #[path = "gc_memory/measurement.rs"]
 mod measurement;
+#[path = "gc_memory/mixed.rs"]
+mod mixed;
+#[path = "gc_memory/random_graph/mod.rs"]
+mod random_graph;
 #[path = "gc_memory/sessions.rs"]
 mod sessions;
+#[path = "gc_memory/shutdown.rs"]
+mod shutdown;
 #[path = "gc_memory/workloads.rs"]
 mod workloads;
 
@@ -71,5 +79,77 @@ fn debugger_inspection_and_evaluation_release_payloads() {
     measurement::isolated(
         "debugger_inspection_and_evaluation_release_payloads",
         sessions::debugger,
+    );
+}
+
+#[test]
+fn mixed_task_waits_keep_live_memory_bounded() {
+    measurement::isolated(
+        "mixed_task_waits_keep_live_memory_bounded",
+        mixed::live_mixed_waits,
+    );
+}
+
+#[test]
+fn mixed_task_waits_release_memory_after_completion_and_failure() {
+    measurement::isolated(
+        "mixed_task_waits_release_memory_after_completion_and_failure",
+        mixed::mixed_wait_teardown,
+    );
+}
+
+#[test]
+fn debugger_frame_restarts_release_discarded_payloads() {
+    measurement::isolated(
+        "debugger_frame_restarts_release_discarded_payloads",
+        debug_edits::restarts,
+    );
+}
+
+#[test]
+fn debugger_forced_returns_release_payloads_and_failed_preparation() {
+    measurement::isolated(
+        "debugger_forced_returns_release_payloads_and_failed_preparation",
+        debug_edits::forced_returns,
+    );
+}
+
+#[test]
+fn debugger_mutations_release_payloads_and_failed_preparation() {
+    measurement::isolated(
+        "debugger_mutations_release_payloads_and_failed_preparation",
+        debug_edits::mutations,
+    );
+}
+
+#[test]
+fn pending_tasks_release_memory_after_explicit_vm_shutdown() {
+    measurement::isolated(
+        "pending_tasks_release_memory_after_explicit_vm_shutdown",
+        shutdown::explicit_shutdown,
+    );
+}
+
+#[test]
+fn pending_tasks_release_memory_after_root_failure() {
+    measurement::isolated(
+        "pending_tasks_release_memory_after_root_failure",
+        shutdown::runtime_failure,
+    );
+}
+
+#[test]
+fn pending_tasks_release_memory_after_scope_exit() {
+    measurement::isolated(
+        "pending_tasks_release_memory_after_scope_exit",
+        shutdown::scope_exit,
+    );
+}
+
+#[test]
+fn seeded_graph_roots_and_mutations_match_the_reference_model() {
+    measurement::isolated(
+        "seeded_graph_roots_and_mutations_match_the_reference_model",
+        random_graph::generated_graphs,
     );
 }

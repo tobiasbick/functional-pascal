@@ -40,21 +40,32 @@ impl Worker {
         let value = match operation {
             FsIntrinsic::Open => {
                 arguments::count(self, values, 2)?;
-                let path = arguments::text(self, &values[0])?;
+                let path = arguments::text(self, &values[0], "Path")?;
                 result(
                     arguments::ordinal(&values[1], true)
                         .and_then(|mode| files.open(path, mode))
                         .map(Value::OpaqueHandle),
                 )?
             }
-            FsIntrinsic::Close | FsIntrinsic::Tell | FsIntrinsic::Flush => {
+            FsIntrinsic::Close | FsIntrinsic::Tell | FsIntrinsic::Flush | FsIntrinsic::Size => {
                 arguments::count(self, values, 1)?;
                 let handle = arguments::handle(self, &values[0], "File")?;
                 result(match operation {
                     FsIntrinsic::Close => files.close(handle).map(|()| Value::Boolean(true)),
                     FsIntrinsic::Tell => files.tell(handle).map(Value::Integer),
+                    FsIntrinsic::Size => files.size(handle).map(Value::Integer),
                     _ => files.flush(handle).map(|()| Value::Boolean(true)),
                 })?
+            }
+            FsIntrinsic::SetLength => {
+                arguments::count(self, values, 2)?;
+                let handle = arguments::handle(self, &values[0], "File")?;
+                let length = arguments::integer(self, &values[1], "Length")?;
+                result(
+                    files
+                        .set_length(handle, length)
+                        .map(|()| Value::Boolean(true)),
+                )?
             }
             FsIntrinsic::Seek => {
                 arguments::count(self, values, 3)?;
@@ -71,12 +82,18 @@ impl Worker {
             | FsIntrinsic::Write
             | FsIntrinsic::WriteWithCancellation
             | FsIntrinsic::ReadLine
-            | FsIntrinsic::ReadLineWithCancellation => {
+            | FsIntrinsic::ReadLineWithCancellation
+            | FsIntrinsic::WriteString
+            | FsIntrinsic::WriteLine
+            | FsIntrinsic::WriteStringWithCancellation
+            | FsIntrinsic::WriteLineWithCancellation => {
                 let cancellable = matches!(
                     operation,
                     FsIntrinsic::ReadWithCancellation
                         | FsIntrinsic::WriteWithCancellation
                         | FsIntrinsic::ReadLineWithCancellation
+                        | FsIntrinsic::WriteStringWithCancellation
+                        | FsIntrinsic::WriteLineWithCancellation
                 );
                 let line = matches!(
                     operation,
@@ -128,6 +145,19 @@ impl Worker {
                                 valid_token.and_then(|_| files.write(handle, &bytes, cancelled))
                             })
                             .map(|count| Value::Integer(count as i64))
+                    }
+                    FsIntrinsic::WriteString
+                    | FsIntrinsic::WriteLine
+                    | FsIntrinsic::WriteStringWithCancellation
+                    | FsIntrinsic::WriteLineWithCancellation => {
+                        let text = arguments::text(self, &values[1], "Text")?;
+                        let newline = matches!(
+                            operation,
+                            FsIntrinsic::WriteLine | FsIntrinsic::WriteLineWithCancellation
+                        );
+                        valid_token
+                            .and_then(|_| files.write_text(handle, text, newline, cancelled))
+                            .map(|()| Value::Boolean(true))
                     }
                     _ => valid_token
                         .and_then(|_| files.read_line(handle, cancelled))

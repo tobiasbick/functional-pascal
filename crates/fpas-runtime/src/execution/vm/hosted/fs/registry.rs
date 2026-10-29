@@ -84,7 +84,7 @@ impl Files {
                 path: path.to_owned(),
                 readable: mode == 0 || mode == 3,
                 writable: mode != 0,
-                state: Mutex::new(Some(FileState::new(BufReader::new(file)))),
+                state: Mutex::new(Some(FileState::new(BufReader::new(file), mode == 2))),
             }),
         );
         Ok(handle)
@@ -168,6 +168,13 @@ fn open_regular(path: &str, mode: i64) -> Result<File, Failure> {
         .create(mode == 1 || mode == 2)
         .truncate(false)
         .append(mode == 2);
+    #[cfg(windows)]
+    if mode == 2 {
+        use std::os::windows::fs::OpenOptionsExt;
+        // GENERIC_WRITE permits resizing. Append writes use the explicit EOF
+        // offset instead of relying on an append-only access mask.
+        options.access_mode(0x4000_0000);
+    }
     #[cfg(unix)]
     {
         use std::os::unix::fs::OpenOptionsExt;

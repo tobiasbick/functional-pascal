@@ -23,10 +23,10 @@ pub(super) fn count(worker: &Worker, values: &[Value], expected: usize) -> Resul
     ))
 }
 
-pub(super) fn text<'a>(worker: &Worker, value: &'a Value) -> Result<&'a str, VmError> {
+pub(super) fn text<'a>(worker: &Worker, value: &'a Value, name: &str) -> Result<&'a str, VmError> {
     match value {
         Value::Str(text) => Ok(text),
-        other => Err(mismatch(worker, "Path", "string", other)),
+        other => Err(mismatch(worker, name, "string", other)),
     }
 }
 

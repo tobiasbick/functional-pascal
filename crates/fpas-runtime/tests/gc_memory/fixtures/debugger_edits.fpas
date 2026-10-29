@@ -1,0 +1,135 @@
+program DebuggerEditMemory;
+
+uses Std.Os.Args as Args;
+
+function Make(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(4096);
+  var Count := 0;
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    Count := Count + 1;
+    if Count < 0 then
+      return Current();
+    end if;
+
+    return Text.Length() + Count;
+  end function;
+
+  return Current;
+end function;
+
+function NewData(): array of integer;
+begin
+  const Garbage := Make();
+  return array.Fill(23, 8192);
+end function;
+
+function WrongReturn(): string;
+begin
+  const Garbage := Make();
+  const Data := NewData();
+  return 'wrong'.RepeatStr(8192);
+end function;
+
+procedure Leaf(Kept: function(): integer);
+begin
+  const Inner := Make();
+  const Check := Kept();
+  if Check <> 32769 then
+    panic('leaf alias');
+  end if;
+
+  if Inner() <> 32769 then
+    panic('leaf payload');
+  end if;
+end procedure;
+
+procedure Restartable(Kept: function(): integer);
+begin
+  const Current := Make();
+  Leaf(Current);
+  if Current() <> 32770 then
+    panic('restart local alias');
+  end if;
+
+  if Kept() <> 32769 then
+    panic('restart parameter alias');
+  end if;
+end procedure;
+
+function Returnable(): array of integer;
+begin
+  const Current := Make();
+  var Data := array.Fill(11, 8192);
+  Leaf(Current);
+  return Data;
+end function;
+
+procedure ReturnRound();
+begin
+  const Returned := Returnable();
+  if (Returned.Length() <> 8192) or (Returned[0] <> 23) then
+    panic('forced return value');
+  end if;
+end procedure;
+
+procedure MutationRound();
+begin
+  var Current := Make();
+  const Other := Make();
+  var Items := array.Fill(11, 8192);
+  var Number := 17;
+  const Marker := Number;
+  if Current() <> 32769 then
+    panic('mutated closure');
+  end if;
+
+  if Other() <> 32770 then
+    panic('mutated closure alias');
+  end if;
+
+  if (Items.Length() <> 8192) or (Items[0] <> 23) then
+    panic('mutated array');
+  end if;
+
+  if Number <> 17 then
+    panic('failed edit changed storage');
+  end if;
+end procedure;
+
+begin
+  const Survivor := Make();
+  const InspectionRoots := array.Fill(Survivor, 128);
+  var Done := false;
+  var Mode := 'restart';
+  if Args.ParamCount() > 0 then
+    Mode := Args.ParamStr(0);
+  end if;
+
+  if Mode = 'restart' then
+    Restartable(Survivor);
+    if Survivor() <> 32770 then
+      panic('restart caller alias');
+    end if;
+  else
+    for Round: integer := 1 to 512 do
+      if Mode = 'return' then
+        ReturnRound();
+      else
+        MutationRound();
+      end if;
+
+      if Done then
+        break;
+      end if;
+    end for;
+
+    if Survivor() <> 32769 then
+      panic('surviving caller');
+    end if;
+  end if;
+end.

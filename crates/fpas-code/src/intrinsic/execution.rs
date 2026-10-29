@@ -75,7 +75,13 @@ impl Intrinsic {
                 | FsIntrinsic::Flush
                 | FsIntrinsic::ReadWithCancellation
                 | FsIntrinsic::WriteWithCancellation
-                | FsIntrinsic::ReadLineWithCancellation,
+                | FsIntrinsic::ReadLineWithCancellation
+                | FsIntrinsic::Size
+                | FsIntrinsic::SetLength
+                | FsIntrinsic::WriteString
+                | FsIntrinsic::WriteLine
+                | FsIntrinsic::WriteStringWithCancellation
+                | FsIntrinsic::WriteLineWithCancellation,
             ) => IntrinsicOwner::Hosted,
             Self::Test(
                 TestIntrinsic::AssertScreenLine

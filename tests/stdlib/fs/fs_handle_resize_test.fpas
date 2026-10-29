@@ -1,0 +1,47 @@
+program FsHandleResizeTest;
+
+uses Std.Io.Fs as Fs, Std.Test as Test;
+
+begin
+  const FileName := Test.ScratchDir() + '/handle-resize.bin';
+  Test.AssertTrue(Fs.WriteText(FileName, 'one'#10'ABCDE').Unwrap());
+  const File := Fs.Open(FileName, Fs.FileMode.ReadWrite).Unwrap();
+  const Alias := File;
+  Test.AssertTrue(Fs.ReadLine(File).Unwrap() = Some('one'));
+  Test.AssertEquals(9, Fs.Size(Alias).Unwrap());
+  Test.AssertEquals(4, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.SetLength(File, -1) is Error(Fs.FsError.InvalidArgument('Length', _)));
+  Test.AssertTrue(Fs.SetLength(Length := 6, File := Alias).Unwrap());
+  Test.AssertEquals(4, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.ReadLine(File).Unwrap() = Some('AB'));
+  Test.AssertTrue(Fs.SetLength(File, 10).Unwrap());
+  Test.AssertEquals(6, Fs.Tell(Alias).Unwrap());
+  const Zeros := Fs.Read(Alias, 4).Unwrap();
+  Test.AssertEquals(4, Zeros.Length());
+  for Byte: integer in Zeros do
+    Test.AssertEquals(0, Byte);
+  end for;
+
+  Test.AssertTrue(Fs.SetLength(Alias, 2).Unwrap());
+  Test.AssertEquals(10, Fs.Tell(File).Unwrap());
+  Test.AssertEquals(0, Fs.Read(File, 1).Unwrap().Length());
+  Test.AssertTrue(Fs.WriteString(File, 'Z').Unwrap());
+  Test.AssertEquals(11, Fs.Size(Alias).Unwrap());
+  Test.AssertEquals(11, Fs.FileSize(FileName).Unwrap());
+  Test.AssertTrue(Fs.Close(File).Unwrap());
+  Test.AssertTrue(Fs.Size(Alias) is Error(Fs.FsError.Closed('Std.Io.Fs.Size')));
+  Test.AssertTrue(Fs.SetLength(Alias, 0) is Error(Fs.FsError.Closed('Std.Io.Fs.SetLength')));
+  const ReadOnly := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+  Test.AssertEquals(11, Fs.Size(ReadOnly).Unwrap());
+  Test.AssertTrue(Fs.SetLength(ReadOnly, 0) is Error(Fs.FsError.InvalidArgument('File', _)));
+  Test.AssertTrue(Fs.Close(ReadOnly).Unwrap());
+  const Append := Fs.Open(FileName, Fs.FileMode.Append).Unwrap();
+  Test.AssertTrue(Fs.SetLength(Append, 1).Unwrap());
+  Test.AssertEquals(11, Fs.Tell(Append).Unwrap());
+  Test.AssertTrue(Fs.WriteString(Append, 'X').Unwrap());
+  Test.AssertEquals(2, Fs.Size(Append).Unwrap());
+  Test.AssertEquals(2, Fs.Tell(Append).Unwrap());
+  Test.AssertTrue(Fs.Close(Append).Unwrap());
+  Test.AssertEquals('oX', Fs.ReadText(FileName).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
+end.

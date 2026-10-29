@@ -53,6 +53,114 @@ fn mutable_global_updates_atomically_and_type_failure_preserves_snapshot() {
 }
 
 #[test]
+fn mutation_output_limit_preserves_live_values_and_existing_handles() {
+    let mut session = DebugSession::new(inspection_executable()).expect("debug session");
+    stopped(session.step_into().expect("initialize values"));
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let globals = scope_reference(&mut session, "Globals");
+    let limits = DebugEvaluationLimits {
+        max_output_bytes: 0,
+        ..DebugEvaluationLimits::default()
+    };
+    let target = DebugAssignmentTarget {
+        root: "G".into(),
+        selectors: Vec::new(),
+    };
+    for by_reference in [true, false] {
+        let result = if by_reference {
+            session.set_variable_with_limits(globals, "G", &DebugExpression::Integer(99), limits)
+        } else {
+            session.set_expression_with_limits(
+                &target,
+                &DebugExpression::Integer(99),
+                Some(frame),
+                limits,
+            )
+        };
+        assert_eq!(
+            result.expect_err("output limit").kind,
+            DebugErrorKind::EvaluationLimit
+        );
+        assert_eq!(session.stack(0, 1).expect("same frame").items[0].id, frame);
+        assert_eq!(
+            session.variables(globals, 0, 1).expect("old handle").items[0].value,
+            "42"
+        );
+        assert_eq!(
+            session
+                .evaluate(&DebugExpression::Name("G".into()), Some(frame))
+                .expect("live global")
+                .value,
+            "42"
+        );
+    }
+}
+
+#[test]
+fn aggregate_mutation_checks_and_reserves_its_result_handle_before_commit() {
+    let target = DebugAssignmentTarget {
+        root: "Items".into(),
+        selectors: Vec::new(),
+    };
+    let replacement = DebugExpression::Array(vec![DebugExpression::Integer(9)]);
+    for max_handles in [0, 1] {
+        let mut session = DebugSession::with_args_and_limits(
+            inspection_executable(),
+            Vec::new(),
+            DebugInspectionLimits {
+                max_handles,
+                ..DebugInspectionLimits::default()
+            },
+        )
+        .expect("debug session");
+        stopped(session.step_into().expect("initialize values"));
+        let frame = session.stack(0, 1).expect("stack").items[0].id;
+        let result = session.set_expression(&target, &replacement, Some(frame));
+        if max_handles == 0 {
+            assert_eq!(
+                result.expect_err("handle limit").kind,
+                DebugErrorKind::InspectionLimit
+            );
+            assert_eq!(session.stack(0, 1).expect("same frame").items[0].id, frame);
+            let first = DebugExpression::Index {
+                base: Box::new(DebugExpression::Name("Items".into())),
+                index: Box::new(DebugExpression::Integer(0)),
+            };
+            assert_eq!(
+                session
+                    .evaluate(&first, Some(frame))
+                    .expect("unchanged live array")
+                    .value,
+                "1"
+            );
+        } else {
+            let result = result.expect("reserved handle");
+            assert_eq!(result.indexed_variables, 1);
+            assert_eq!(
+                session
+                    .variables(result.variables_reference, 0, 1)
+                    .expect("result children")
+                    .items[0]
+                    .value,
+                "9"
+            );
+            let frame = session.stack(0, 1).expect("fresh stack").items[0].id;
+            let first = DebugExpression::Index {
+                base: Box::new(DebugExpression::Name("Items".into())),
+                index: Box::new(DebugExpression::Integer(0)),
+            };
+            assert_eq!(
+                session
+                    .evaluate(&first, Some(frame))
+                    .expect("changed live array")
+                    .value,
+                "9"
+            );
+        }
+    }
+}
+
+#[test]
 fn local_and_array_descendant_updates_are_observed_after_resume() {
     let mut session = DebugSession::new(inspection_executable()).expect("debug session");
     stopped(session.step_into().expect("initialize values"));

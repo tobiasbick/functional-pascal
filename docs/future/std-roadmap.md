@@ -1,7 +1,6 @@
 # Standard library roadmap
 
-Status: namespace organization and migration are implemented and verified.
-Other capabilities retain the status of their own plans.
+Status: capability priorities; each capability retains the status of its own plan.
 
 This is the central roadmap for standard-library expansion. The binding
 [namespace specification](../specs/std-namespaces.md) owns canonical homes,
@@ -25,14 +24,11 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 
 ## Selected order
 
-1. Namespace foundation is complete: the
-   [canonical-unit catalogue](../specs/std-namespaces.md#existing-public-units-and-migration-targets),
-   conversion split, tooling, documentation and FPAS/dungeon consumers agree.
-2. Settle the first byte-buffer contract under `Std.Bytes`, then authorize its
+1. Settle the first byte-buffer contract under `Std.Bytes`, then authorize its
    implementation separately. Construction, copying/mutation, access, errors,
    limits and I/O integration remain decisions in
    [FPAS 2 section 22](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers).
-3. Continue selected FPAS 2 work, then graphics/multimedia and the
+2. Continue selected FPAS 2 work, then graphics/multimedia and the
    [shared terminal/graphical UI](shared-ui.md) in their recorded order.
    Other capability plans keep their actual prerequisites.
 
@@ -57,14 +53,14 @@ contracts are documented in the handbook. In particular:
 - [Cryptography](../pascal/std/cryptography/crypto.md) supplies operating-system
   random bytes and secure integer sampling.
 
-The specification's canonical-unit catalogue owns their current names and
-records the migration from former imports.
+The specification's [canonical-unit catalogue](../specs/std-namespaces.md#current-public-units)
+owns their current names and responsibilities.
 
 ## Future capability plans
 
 | Concern | Owning plan | Scope and prerequisites |
 | --- | --- | --- |
-| Byte buffers | [FPAS 2 packed data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers) | First buffer contract after namespace migration; typed media storage follows separately |
+| Byte buffers | [FPAS 2 packed data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers) | Define the first buffer contract; typed media storage follows separately |
 | SQLite | [SQLite storage](networked-applications/sqlite.md) | Concrete database access, transactions and backup |
 | Cryptography | [Cryptography](networked-applications/cryptography.md) | Password hashing, authentication primitives and signatures |
 | WebSocket | [WebSocket transport](networked-applications/websocket.md) | Bounded messages over TCP/TLS and HTTP |

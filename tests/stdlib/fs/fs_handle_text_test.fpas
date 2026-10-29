@@ -1,0 +1,44 @@
+program FsHandleTextTest;
+
+uses Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+
+begin
+  const FileName := Test.ScratchDir() + '/handle-text.txt';
+  const File := Fs.Open(FileName, Fs.FileMode.Create).Unwrap();
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  Test.AssertTrue(Fs.WriteString(Text := 'é'#0, File := File).Unwrap());
+  Test.AssertEquals(3, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.WriteLineWithCancellation(File, '🙂', Token).Unwrap());
+  Test.AssertEquals(8, Fs.Size(File).Unwrap());
+  Test.AssertTrue(Fs.WriteStringWithCancellation(File, '', Token).Unwrap());
+  Test.AssertTrue(Fs.WriteLine(File, '').Unwrap());
+  Test.AssertEquals(9, Fs.Tell(File).Unwrap());
+  discard Tasks.Cancel(Source);
+  Test.AssertTrue(
+    Fs.WriteStringWithCancellation(File, 'lost', Token) is Error(Fs.FsError.Cancelled('Std.Io.Fs.WriteStringWithCancellation'))
+  );
+  Test.AssertTrue(
+    Fs.WriteLineWithCancellation(File, '', Token) is Error(Fs.FsError.Cancelled('Std.Io.Fs.WriteLineWithCancellation'))
+  );
+  Test.AssertEquals(9, Fs.Size(File).Unwrap());
+  Test.AssertEquals(9, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.Close(File).Unwrap());
+  Test.AssertTrue(Fs.WriteString(File, '') is Error(Fs.FsError.Closed('Std.Io.Fs.WriteString')));
+  Test.AssertTrue(Fs.WriteLine(File, '') is Error(Fs.FsError.Closed('Std.Io.Fs.WriteLine')));
+  Test.AssertTrue(
+    Fs.WriteStringWithCancellation(File, '', Token) is Error(Fs.FsError.Closed('Std.Io.Fs.WriteStringWithCancellation'))
+  );
+  Test.AssertTrue(
+    Fs.WriteLineWithCancellation(File, '', Token) is Error(Fs.FsError.Closed('Std.Io.Fs.WriteLineWithCancellation'))
+  );
+  Test.AssertEquals('é'#0'🙂'#10#10, Fs.ReadText(FileName).Unwrap());
+  const ReadOnly := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+  Test.AssertTrue(Fs.WriteString(ReadOnly, 'x') is Error(Fs.FsError.InvalidArgument('File', _)));
+  Test.AssertTrue(Fs.WriteLine(ReadOnly, 'x') is Error(Fs.FsError.InvalidArgument('File', _)));
+  Test.AssertTrue(Fs.ReadLine(ReadOnly).Unwrap() = Some('é'#0'🙂'));
+  Test.AssertTrue(Fs.ReadLine(ReadOnly).Unwrap() = Some(''));
+  Test.AssertTrue(Fs.ReadLine(ReadOnly).Unwrap() is None);
+  Test.AssertTrue(Fs.Close(ReadOnly).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
+end.

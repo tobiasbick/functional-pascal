@@ -72,6 +72,47 @@ impl Files {
         })
     }
 
+    pub(super) fn size(&self, handle: u64) -> Result<i64, Failure> {
+        self.with(
+            handle,
+            false,
+            false,
+            || false,
+            |state, path, _| state.size(path),
+        )
+    }
+
+    pub(super) fn set_length(&self, handle: u64, length: i64) -> Result<(), Failure> {
+        if length < 0 {
+            return Err(Failure::argument(
+                "Length",
+                "File length must not be negative",
+            ));
+        }
+        self.with(
+            handle,
+            false,
+            true,
+            || false,
+            |state, path, _| state.set_length(length as u64, path),
+        )
+    }
+
+    pub(super) fn write_text(
+        &self,
+        handle: u64,
+        text: &str,
+        newline: bool,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<(), Failure> {
+        if text.len() > MAX_BYTES {
+            return Err(Failure::Limit(MAX_BYTES as i64));
+        }
+        self.with(handle, false, true, cancelled, |state, path, cancelled| {
+            state.write_text(text, newline, path, cancelled)
+        })
+    }
+
     pub(super) fn seek(&self, handle: u64, offset: i64, origin: i64) -> Result<i64, Failure> {
         if !(0..=2).contains(&origin) {
             return Err(Failure::argument("Origin", "Unknown seek origin"));

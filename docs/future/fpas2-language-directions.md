@@ -1,12 +1,10 @@
 # FPAS 2 language directions
 
-Status: proposal collection; delivered topics are recorded in their sections.
-Topics are open proposals unless their section explicitly records an agreement. The
-[typed operational error direction](#1-typed-operational-errors),
-[numeric design](#21-explicit-width-numeric-types-money-and-decimal), and
-[equality/ordering contract](#3-separate-equality-from-ordering-constraints) are agreed at the
-scope stated in those sections, with their listed open points. Design agreement
-does not change the current specification or authorize implementation.
+Status: proposal collection; implemented topics retain a short status and reference.
+Topics are open proposals unless their section records implementation or an
+agreement. The [numeric design](#21-explicit-width-numeric-types-money-and-decimal)
+is agreed at the stated scope, with its listed open points. Design agreement does
+not change the current specification or authorize implementation.
 For graphics and packed multimedia data, native library buffers without new
 scalar numeric types are the current preference; see
 [packed numeric data](#22-packed-numeric-data-and-binary-buffers). This is a
@@ -20,8 +18,8 @@ for contributor naming decisions. The current handbook documents the implemented
 canonical imports. Future allocations do not authorize implementation of those
 capabilities.
 
-Namespace migration is complete. The next selected work is the byte-buffer
-contract under `Std.Bytes`. Continue the remaining selected FPAS 2 work before
+The next selected work is the byte-buffer contract under `Std.Bytes`.
+Continue the remaining selected FPAS 2 work before
 graphics and the
 [shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
 runtime and application topics, consult its coordination note so those decisions
@@ -51,82 +49,9 @@ keeps graphics-specific API, platform and deployment questions separate.
 
 ## 1. Typed operational errors
 
-Status: Implemented. Native error declarations, typed causes, automatic output,
-constructor values and explicit MapError are described in the current
-[language handbook](../pascal/language/types/errors.md) and
-[Std reference](../pascal/std/README.md). Functional acceptance includes source,
-portable-image, editor and executable documentation checks. Elapsed-time
-performance acceptance requires a controlled local host.
-
-Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
-see [task APIs](../pascal/std/concurrency/task.md).
-The [Std reference](../pascal/std/README.md) documents the delivered native and
-source error families. Selected Std interfaces support typed decisions independent
-of diagnostic wording.
-
-### Selected language direction
-
-Native nominal error declarations and the Std FsError family are implemented:
-
-```pascal
-type ConfigError = error
-  FileFailure(Cause: Fs.FsError) = 'Cannot load configuration';
-  MissingSetting(Name: string) = 'Required setting is missing';
-  InvalidSetting(Name: string; Reason: string) = 'Invalid setting';
-end error;
-```
-
-Ordinary variant qualification, construction, inference and exhaustive matching
-apply. The compiler supplies automatic output from variant labels and payload
-metadata. A typed Cause retains the original error and is printed as the next
-cause frame. There is no required ErrorContext/Describe/ErrorReport layer,
-custom derivation framework or class inheritance. Optional literal messages add
-readable labels without another interpolation language or formatter callback.
-
-Error is also a built-in generic constraint implying Printable, not a storable
-erased root type. Concrete native or application error types remain in Result.
-One Message() operation and direct Printable output share the same renderer;
-strict string formatting still requires a string. Full syntax, type, Cause and
-output rules are owned by the [current handbook](../pascal/language/types/errors.md).
-
-### Agreed MapError and try contract
-
-```text
-Value.MapError(F: function(Cause: E): E2): Result of (T, E2)
-```
-
-The receiver and callable expression evaluate once in normal order. Ok preserves
-its success payload without invoking the mapper; Error invokes it once and wraps
-the returned error payload. Callable capture construction has ordinary evaluation
-semantics even on Ok. T is unchanged; general Result payloads remain supported.
-Map transforms success, MapError transforms error, and OrElse supports recovery.
-
-Payload variant constructors are ordinary routine values, consistently for enums
-and errors. The selected use is:
-
-```pascal
-const Text := try Fs.ReadText(Path).MapError(ConfigError.FileFailure);
-```
-
-Extra context uses an ordinary captured callable, not partial application. Try
-retains its [existing semantics](../pascal/language/error-handling/try.md): extract
-Ok or propagate Error through a compatible enclosing error type. Incompatible
-error families remain a static error; no automatic wrapper/subtype conversion is
-added. Option propagation, panic, contracts, cleanup and task ownership remain
-unchanged. Neither native errors nor MapError catch runtime failures.
-
-### Delivery and scope
-
-The [Std reference](../pascal/std/README.md) documents domain families and their
-[shared native cause](../pascal/std/host/errors.md), normalization and explicit
-mappings. Selected signatures and their consumers use those concrete families;
-there is no parallel typed/string wrapper API. Source-authored application Result
-errors remain general and require no runtime registration.
-
-The [compiled-program handbook](../pascal/program-structure/compiled-programs.md)
-documents artifact compatibility. Error metadata adds no polling to ordinary VM
-instruction dispatch. Further language or library capabilities require their
-own design and implementation decision.
+Status: implemented. See [native error families](../pascal/language/types/errors.md),
+[MapError](../pascal/language/types/result-operations.md) and the
+[Std reference](../pascal/std/README.md).
 
 ## 2. Uniform first-class operations
 
@@ -145,21 +70,8 @@ generic specialization and the cost of consistent compiler/editor support.
 
 ## 3. Separate equality from ordering constraints
 
-Status: Implemented.
-
-Concrete and generic dictionary keys use the same equality eligibility. See
-[dictionaries](../pascal/language/types/dictionaries.md) and
+Status: implemented. See [dictionary keys](../pascal/language/types/dictionaries.md) and
 [constraints](../pascal/language/types/generics.md#built-in-constraints).
-
-`Equatable` permits `=` and `<>`; `Comparable` permits ordering and sorting.
-The implication hierarchy is `Numeric` → `Comparable` → `Equatable`. Existing
-concrete equality eligibility propagates through record fields and variant,
-Option and Result payloads, including cycle-safe recursive type checks.
-Generic dictionary keys require Equatable. Printable and Error guarantees remain
-independent; equality does not imply printing.
-
-Whole-array/dictionary equality and user-defined operators remain outside this
-feature. The TUI uses one shared generic array-element comparison helper.
 
 ## 4. Task completion and result retrieval
 
@@ -1021,65 +933,22 @@ chosen platforms before claiming a performance or latency improvement.
 
 ## 26. File handles and random-access file I/O
 
-Status: partially implemented. Regular-file handles, incremental binary and
-UTF-8 line I/O, seek/tell, flush and close are available. Remaining extensions
-are listed below rather than treating the delivered file API as missing.
+Status: implemented within the agreed scope. See
+[file streaming](../pascal/std/host/fs-streams.md) for handles, random access,
+`Size`, `SetLength`, complete UTF-8 text output and cooperative cancellation.
+EOF uses existing read results; no `AtEnd` operation is added.
 
-[Std.Io.Fs file streaming](../pascal/std/host/fs-streams.md) provides the opaque
-`File` handle and `Open` modes `Read`, `Create`, `Append` and `ReadWrite`.
-`Create` truncates on opening. `Read`, `Write`, `ReadLine`, `Seek`, `Tell`,
-`Flush` and `Close` operate on the handle; read, write and line-read operations
-also have cancellation-aware forms. Opening returns a handle directly, without
-an `Assign` step. Whole-file `ReadBytes` and `WriteBytes` are also implemented.
-
-Byte I/O uses bounded `array of integer` values in `0..255`; nonempty short reads
-and partial writes are valid. EOF is represented by an empty byte read or `None`
-from `ReadLine`. Line reads distinguish blank lines, LF/CRLF, a final unterminated
-line and invalid UTF-8. Positions and seeks are byte-based and account for
-buffered lookahead when mixing line and binary operations. Files larger than the
-whole-file read limits can be processed incrementally within per-call limits.
-
-Aliases share the logical position and close state, and operations on one handle
-are serialized. Explicit `Close` invalidates every alias; later operations return
-typed `FsError.Closed` failures. VM teardown releases remaining files. Task scopes
-do not close file handles, and cooperative cancellation cannot interrupt every
-blocking OS call. These are established contracts, not open design questions.
-
-Remaining proposals: querying size through an open handle, changing its length
-with truncation/extension, handle-based text-write conveniences and explicit
-platform sharing/locking options. `FileSize(Path)` already queries a regular
-file's size by path. Decide whether a separate `AtEnd` convenience adds value
-over existing EOF results; no such handle operation is implemented.
-
-Coordinate native-buffer payloads with
-[packed data](#22-packed-numeric-data-and-binary-buffers), automatic lexical
-release with [scope-bound cleanup](#5-scope-bound-cleanup-actions), and releasing
-workers during file I/O with [host I/O](#14-host-io-that-releases-vm-workers).
-Typed record files (`file of T`) remain outside the delivered API and need a
-separate fixed-layout decision.
-
-Existing regression coverage includes modes, resource limits, byte/line mixing,
-seek/tell, partial reads, line limits, invalid UTF-8, cancellation, alias close,
-concurrent handle access and VM cleanup. Evaluate remaining extensions against
-those contracts, including length changes and early-exit resource cleanup.
+Sharing/locking controls and typed record files remain deferred, requiring
+separate contracts. Native buffers, lexical resource release and worker-releasing
+I/O belong to [packed data](#22-packed-numeric-data-and-binary-buffers),
+[scope-bound cleanup](#5-scope-bound-cleanup-actions) and
+[host I/O](#14-host-io-that-releases-vm-workers).
 
 ## 27. Standard-library namespaces
 
-Status: implemented and verified. Byte-buffer work follows separately.
-
-The permanent [namespace specification](../specs/std-namespaces.md) defines the
-existing-unit mapping, future domain allocations and how to place new
-capabilities. The [Std roadmap](std-roadmap.md) retains feature priorities and
-links to their plans. Future plans must follow the same naming policy.
-
-Existing public units use their canonical homes. The former `Std.Conv` is split
-between text formatting and numeric conversion. Compiler/runtime identities,
-tooling, documentation and consumers in FPAS and `fpas-into-the-dungeon` follow
-the same map. Each capability has one public home without legacy import aliases.
-
-Qualified unit syntax and import aliases already exist. This work does not
-add a namespace language construct, implement reserved modules or start the
-shared UI rewrite. Current handbook examples use the implemented canonical names.
+Status: implemented. See the binding [namespace specification](../specs/std-namespaces.md)
+and [Std reference](../pascal/std/README.md). Future priorities belong to the
+[Std roadmap](std-roadmap.md).
 
 ## Other deferred scope
 

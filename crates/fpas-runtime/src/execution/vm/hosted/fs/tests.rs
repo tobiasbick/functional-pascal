@@ -6,6 +6,8 @@
     reason = "isolated file fixtures and assertions"
 )]
 
+mod extensions;
+
 use std::cell::Cell;
 use std::fs;
 use std::path::PathBuf;

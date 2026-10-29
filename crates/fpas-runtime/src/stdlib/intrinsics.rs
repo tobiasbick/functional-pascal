@@ -81,7 +81,13 @@ fn dispatch_intrinsic(
             | FsIntrinsic::Flush
             | FsIntrinsic::ReadWithCancellation
             | FsIntrinsic::WriteWithCancellation
-            | FsIntrinsic::ReadLineWithCancellation,
+            | FsIntrinsic::ReadLineWithCancellation
+            | FsIntrinsic::Size
+            | FsIntrinsic::SetLength
+            | FsIntrinsic::WriteString
+            | FsIntrinsic::WriteLine
+            | FsIntrinsic::WriteStringWithCancellation
+            | FsIntrinsic::WriteLineWithCancellation,
         ) => {
             return Err(std_internal_error(
                 format!(

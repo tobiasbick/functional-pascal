@@ -218,16 +218,18 @@ impl DebugSession {
             &replacement,
             limits.max_depth,
         )?;
-        let generation = self
+        let inspection = self
             .inspections
             .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?
-            .generation();
+            .ok_or_else(|| unknown_task(task_id))?;
+        let prepared_result = inspection.prepare_evaluation_result(&replacement, limits)?;
+        let reserved_handles = prepared_result.reserved_handles();
+        let generation = inspection.generation();
         let worker = self
             .runtime
             .worker_mut(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
-        let committed = super::super::mutation::commit(worker, generation, target, replacement)?;
+        super::super::mutation::commit(worker, generation, target, replacement)?;
         if target.path.is_empty()
             && !target.initialized
             && let Some(initializer) = target.initializer
@@ -235,12 +237,12 @@ impl DebugSession {
             worker.suppress_source_initializer(initializer);
         }
         self.invalidate_inspection();
-        self.refresh_inspection();
+        self.refresh_inspection_with_reserved_handles(Some((task_id, reserved_handles)));
         self.inspection_task_id = task_id;
-        self.inspections
-            .get_mut(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?
-            .retain_evaluation_result(committed, limits)
+        let Some(inspection) = self.inspections.get_mut(&task_id) else {
+            unreachable!("mutation refresh retains its selected task snapshot")
+        };
+        Ok(inspection.retain_prepared_evaluation_result(prepared_result))
     }
 
     /// Inject invalid storage only in tests of downstream ownership rejection.

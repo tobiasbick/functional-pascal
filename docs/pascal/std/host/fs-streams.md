@@ -24,6 +24,12 @@ existing entry as regular before truncating it in Create mode.
 | `Append` | creates a writable file if needed; writes append to its end |
 | `ReadWrite` | opens an existing file for reading and writing |
 
+Independent handles and other processes are not synchronized by the VM's
+per-handle serialization. Opens acquire no advisory file lock or exclusive
+ownership. Windows uses Rust's default read/write/delete sharing; POSIX uses
+ordinary open-file semantics. Host permissions and sharing rules still apply,
+and other actors may change the file while a handle is open.
+
 `Fs.Close(File)` returns `Ok(true)` and invalidates **every alias**. Further
 operations, including another Close, return `Fs.FsError.Closed(Operation)`.
 Explicitly close handles when finished; VM cleanup releases files still open
@@ -106,6 +112,67 @@ silently skip prefetched content. All aliases observe the resulting position.
 and returns `Ok(true)` on success. It does not promise an operating-system
 `fsync` or durable storage after a crash.
 
+## Open-file size and length
+
+`Fs.Size(File)` returns `Result of (integer, Fs.FsError)` with the open file's
+current byte length. It works with every open mode, preserves the logical
+position and buffered input, and queries the handle rather than reopening its
+path. A separate `Fs.FileSize(Path)` queries a regular file by path. A size
+observation does not prevent another handle or process from changing the file.
+
+`Fs.SetLength(File, Length)` returns `Ok(true)` after resizing a writable file.
+`Length` is a nonnegative byte count; negative values return
+`FsError.InvalidArgument('Length', Detail)`. Read-only handles return
+`FsError.InvalidArgument('File', Detail)`. Shrinking removes bytes; extending
+adds bytes that read as zero. The 1 MiB transfer limit does not cap file length;
+host filesystem and storage limits still apply.
+
+The logical position is preserved, even beyond the new EOF. Buffered lookahead
+and any retained line prefix are invalidated before resizing, so later reads
+through aliases cannot return the old contents. A subsequent ordinary write
+uses the preserved position; Append-mode writes use the current file end.
+Resizing is serialized with operations through aliases. Host errors are returned
+as typed failures without a rollback guarantee.
+
+## Complete UTF-8 text output
+
+`Fs.WriteString(File, Text)` and `Fs.WriteLine(File, Text)` return
+`Result of (boolean, Fs.FsError)`. Success is `Ok(true)` after writing all the
+UTF-8 bytes; WriteLine also appends exactly one LF byte on every platform.
+No BOM is added and existing CR/LF characters in Text are not transformed.
+NUL is ordinary content. An empty WriteString writes no bytes; an empty
+WriteLine writes LF.
+
+Each call accepts at most **1_048_576 UTF-8 content bytes**, excluding the LF
+added by WriteLine. Validate the complete content size before I/O or discarding
+buffered input. Text writes require a writable handle, use its logical byte
+position, and retain Append-mode behavior. The entire operation, including LF,
+is serialized against operations through aliases; independent handles and
+external writers do not gain an atomic-line guarantee.
+
+Host errors or cancellation may leave a prefix written, including incomplete
+UTF-8 or a missing final LF. The error does not return a retry offset or roll
+back output. Use byte writes when the application must manage partial progress.
+Text writes do not flush or promise durable storage.
+
+```pascal id=example-resize-text run
+program ResizedText;
+
+uses Std.Io.Fs as Fs, Std.Test as Test;
+
+begin
+  const Path := Test.ScratchDir() + '/resized-text.txt';
+  const File := Fs.Open(Path, Fs.FileMode.Create).Unwrap();
+  Test.AssertTrue(Fs.WriteLine(File, 'hello').Unwrap());
+  Test.AssertEquals(6, Fs.Size(File).Unwrap());
+  Test.AssertTrue(Fs.SetLength(File, 2).Unwrap());
+  Test.AssertEquals(6, Fs.Tell(File).Unwrap());
+  Test.AssertTrue(Fs.Close(File).Unwrap());
+  Test.AssertEquals('he', Fs.ReadText(Path).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(Path).Unwrap());
+end.
+```
+
 ## Cancellation
 
 The cancellation-aware forms have the same results as their ordinary forms:
@@ -115,11 +182,17 @@ The cancellation-aware forms have the same results as their ordinary forms:
 | `ReadWithCancellation(File, MaxBytes, Token)` | `array of integer` |
 | `WriteWithCancellation(File, Bytes, Token)` | `integer` |
 | `ReadLineWithCancellation(File, Token)` | `Option of string` |
+| `WriteStringWithCancellation(File, Text, Token)` | `boolean` |
+| `WriteLineWithCancellation(File, Text, Token)` | `boolean` |
 
 An already cancelled token returns `FsError.Cancelled(Operation)` before
 transferring file data. Active operations check cancellation between chunks;
 an in-progress blocking host call is not guaranteed to be interrupted.
 Cancellation does not undo completed I/O.
+
+Text output checks cancellation between bounded write chunks and before the
+added LF. On failure the logical position reflects the bytes actually written.
+Completing the final write is success even if cancellation is requested later.
 
 If ReadLine is cancelled after reading part of a line, that prefix remains
 buffered and logically unconsumed. A later ReadLine resumes the same line;
@@ -132,6 +205,7 @@ Read can consume the prefix instead, and Tell, Seek, and Write account for it.
 | Simultaneously open files per VM | 1024 |
 | Read request / Write input | 1_048_576 bytes |
 | UTF-8 line content excluding LF/CRLF | 1_048_576 bytes |
+| UTF-8 write content excluding added LF | 1_048_576 bytes |
 
 Limits use `FsError.LimitExceeded(Operation, Limit)`. The operation names the
 actual public function, for example `Std.Io.Fs.Open`, `Std.Io.Fs.ReadLine`, or

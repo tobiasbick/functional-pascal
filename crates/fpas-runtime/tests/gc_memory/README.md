@@ -24,16 +24,86 @@ and then checks that releasing it on a third thread restores the baseline.
 | Case | Required behavior |
 | --- | --- |
 | Aggregate cycles | Two-cell cycles through arrays, dictionary keys/values, records, enums, Option, both Result variants, captures and bound receivers release their backing storage. Payloads include a 64 KiB string and an 8192-element array. Weak observations and allocated/released cell counts verify actual collection before thread exit. |
+| Seeded graph/root model | An independent integer-adjacency oracle checks generated graph mutations, seven root kinds, root clones/replacement/push/removal and session retirement. Every collection preserves exactly the reachable cells, aliases and payloads. Failed candidate/marking budgets and rejected foreign/reference assignments preserve existing values. |
 | VM | Large captured closure cycles and live aliases behave correctly with default and 1/1/1 collection thresholds. Both successful execution and runtime failure release memory. |
 | Tasks | Concurrent child tasks release cycles on completion and on failure with scope cancellation. The balance includes pool/timer threads and their teardown. |
 | Callback cycles | 32,000 self-referential closures created by `Map` callbacks, each with a private 2 KiB payload, keep sampled peak growth below 16 MiB. A control run with collection thresholds disabled must exceed that bound, so the check detects reclamation deferred to VM teardown. |
+| Mixed live waits | A single running VM records 512 allocation checkpoints while combining task results, channel payloads, winning/losing Select callbacks, timers, timeouts, explicit case close and group cancellation. Long-lived aliases remain usable. Default and 1/1/1 collection schedules keep growth below fixed byte and allocation-count envelopes. |
+| Mixed wait teardown | Completion, intentional live retention and selected-callback panic each return exactly to the same byte/allocation baseline after joined threads exit. Cases run with both collection schedules and include unused cases at failure. |
+| Pending task teardown | Explicit idempotent VM shutdown, root failure and early scope exit release parked task frames, pending operations, unused/claimed selection callbacks, channel buffers and timers. Eleven wait modes run with default and 1/1/1 schedules; every first and repeated run returns exactly to its byte/allocation baseline. |
 | Callbacks | A persistent session repeatedly exports aliases, invokes them and handles failed callbacks without memory growth. An independent closure remains alive; its last host root is released after session destruction. |
 | Debugger | Repeated breakpoint stops, variable expansion and detached evaluation of a cyclic captured value have stable memory use. Disconnecting a stopped session releases its current payload and inspection/helper roots. |
+| Debugger frame restart | Repeatedly restarting an older frame releases its discarded locals, younger frames and inspection roots. Caller and parameter aliases remain usable. Invalid and stale frame/variable handles are rejected; both continued execution and disconnect release all allocations. |
+| Debugger forced return | Replacing an older frame's result releases unwound frames and their cyclic captures. Large replacement arrays remain expandable and usable by the caller. Repeated type and output-limit failures preserve the live frames without retaining detached preparation values. |
+| Debugger mutation | Repeated variable and expression assignments release replaced cyclic closures and large arrays while preserving capture aliases. Failed type and output-limit checks leave values and handles unchanged; stale handles cannot mutate a later stop. |
 
 Live-session measurements warm up for at least 64 rounds and require four
 consecutive identical footprints within 256 rounds. They then check 32 more rounds
 against the unchanged baseline while the session remains alive. This allows bounded
 thread-local pools and registry capacities to fill before checking stability.
+Debugger restart, forced-return and mutation cases run with both default and
+1/1/1 collection thresholds. The return and mutation cases first fill the
+weak-root registry with live-variable inspection handles, then invalidate them.
+This prevents bounded HashMap growth from tombstone churn at a persistent stop
+from being mistaken for retained payloads. Rejected return and mutation
+preparations have their own fixed-baseline loops while the same frames remain
+stopped: a successful resume or edit cannot hide storage retained by a failed
+operation. Large arrays contain 8192 elements, above the pool's recycling limit.
+Teardown measurements include the first session and require exact release after
+its thread exits.
+
+The mixed live workload records checkpoints after each complete round, before
+the VM or its worker pool shuts down. Recording uses preallocated storage.
+After 64 warm-up rounds, one fixed baseline bounds every remaining checkpoint:
+growth must stay below 1 MiB and 2048 outstanding allocations. Small bounded
+pools and asynchronous worker bookkeeping can still vary within this envelope.
+The payload arrays exceed the pool's 4096-element recycling limit, so pooled
+large buffers cannot hide delayed release. A control retains a distinct string
+larger than 64 KiB per round and must exceed the byte envelope during execution.
+The separate teardown test also accepts that control's final zero balance:
+end-only measurements would miss its live retention.
+
+The pending-task cases use the real worker pool and timer thread. A host writer
+holds the root and any nested leaf at a barrier while the existing task-park
+counter confirms the intended worker reached its pending operation. Nested
+leaves cannot park before that barrier is released, so their activity cannot
+satisfy this check. No fixed sleep is used to guess whether a task is waiting.
+The matrix covers send/receive with and without cancellation, Sleep, a Select
+with four unready sources, Wait, WaitAny, WaitAll, scope join and group close.
+Four runs per configuration include the first session, for 264 VM executions.
+Each waiting worker retains an oversized array and a cyclic closure with a
+64 KiB string; root aliases remain valid after early scope exit. Inactive tokens
+and one-hour deadlines keep operations pending until the test triggers cleanup.
+Completion waits have a 30-second deadlock guard, not a speed assertion.
+
+The seeded state machine runs 32 fixed ChaCha8 seeds with both collection
+schedules and two repeats: 128 traces with 12,288 transitions, plus initial and
+final root-release checks. Inputs include shared subgraphs, duplicate edges,
+self-cycles, separate cyclic islands and up to four nested edge wrappers.
+The model uses only node IDs and adjacency lists; it never calls the production
+graph walker to calculate reachability. Weak observations, per-domain cell
+counters, root-kind counts, root aliases and payload/edge contents are checked
+after each transition. The driver retains no administrative strong cell handles
+between transitions. Large strings and oversized arrays test actual backing
+storage release; exact post-thread allocation balances include every trace,
+including the first. Halfway through each trace the session retires while roots
+remain alive, and subsequent graph access must preserve their values.
+
+Candidate-limit and partial-marking failures alternate and each retain a fresh
+unrooted cycle until a successful collection. Foreign-domain and escaping-reference
+assignments must fail without changing the target. Failures print the seed and
+transition index; replay one decimal seed with:
+
+```sh
+FPAS_GC_GRAPH_SEED=0 cargo test -p fpas-runtime --test gc_memory seeded_graph_roots_and_mutations_match_the_reference_model -- --nocapture
+```
+
+This is a bounded deterministic corpus, not exhaustive coverage of all graphs.
+
+These tests assert typed outcomes, callback counts, payload contents and alias
+behavior as well as memory. They use actual timer expiry and cancellation
+without assertions about wall-clock speed. The envelope is a regression bound
+for this workload, not a guarantee for arbitrary programs or all thread schedules.
 
 Completed-thread measurements initialize Rust's thread machinery with a no-op
 thread, then check every FPAS round, including the first, after all spawned threads

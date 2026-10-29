@@ -34,7 +34,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Document | Scope |
 |------|----------|-------|
 | Planning | [AP workflow and templates](improve-syntax/README.md) | Package index, reusable decision/implementation work packages, dependencies and completion checks |
-| Standard-library architecture | [Binding namespace specification](../specs/std-namespaces.md) | Permanent naming policy, migration targets and future allocations; availability remains documented in the handbook |
+| Standard-library architecture | [Binding namespace specification](../specs/std-namespaces.md) | Permanent naming policy, current units and future allocations; availability remains documented in the handbook |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
 

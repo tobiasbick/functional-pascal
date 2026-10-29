@@ -1,0 +1,160 @@
+program ShutdownGcMemory;
+
+uses Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console, Std.Os.Args as Args;
+
+function Cycle(Seed: integer): function(): integer;
+begin
+  var Data := array.Fill(Seed, 8192);
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Count := 0;
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    Count := Count + 1;
+    if Count < 0 then
+      return Current();
+    end if;
+
+    return Data[0] + Text.Length() + Count;
+  end function;
+
+  return Current;
+end function;
+
+function Leaf(Token: Tasks.CancellationToken): integer;
+begin
+  const Keep := Cycle(23);
+  if Keep() <> 65560 then
+    panic('leaf capture');
+  end if;
+
+  // Whichever task reaches the host writer first holds the console lock.
+  // Until the host releases it, this leaf cannot reach a cooperative wait.
+  Console.WriteText('leaf');
+  const Empty: channel of integer := Tasks.CreateChannel(1);
+  discard Tasks.ReceiveWithCancellation(Empty, Token);
+  return Keep();
+end function;
+
+function GroupLeaf(Token: Tasks.CancellationToken): integer;
+begin
+  return Leaf(Token);
+end function;
+
+procedure Block(
+  Mode: string;
+  Empty: channel of array of integer;
+  Full: channel of array of integer;
+  Token: Tasks.CancellationToken
+);
+begin
+  const Keep := Cycle(17);
+  const Data := array.Fill(31, 8192);
+  if Keep() <> 65554 then
+    panic('waiting capture');
+  end if;
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+      panic('unused callback ran');
+    end procedure
+  );
+
+  if Mode = 'receive' then
+    discard Tasks.Receive(Empty);
+  elsif Mode = 'send' then
+    discard Tasks.Send(Full, Data);
+  elsif Mode = 'receive_cancel' then
+    discard Tasks.ReceiveWithCancellation(Empty, Token);
+  elsif Mode = 'send_cancel' then
+    discard Tasks.SendWithCancellation(Full, Data, Token);
+  elsif Mode = 'sleep' then
+    Time.Sleep(3600000);
+  elsif Mode = 'select' then
+    const ReceiveCase := Tasks.ReceiveCase(
+      Empty, procedure(Outcome: result of (array of integer, Tasks.TaskError)) begin
+        discard Keep();
+        panic('receive callback ran');
+      end procedure
+    );
+    const SendCase := Tasks.SendCase(
+      Full, Data, procedure(Outcome: result of (boolean, Tasks.TaskError)) begin
+        discard Keep();
+        panic('send callback ran');
+      end procedure
+    );
+    const TimerCase := Tasks.TimerCase(
+      3600000, procedure() begin
+        discard Keep();
+        panic('timer callback ran');
+      end procedure
+    );
+    const CancelCase := Tasks.CancellationCase(
+      Token, procedure() begin
+        discard Keep();
+        panic('cancellation callback ran');
+      end procedure
+    );
+    discard Tasks.Select([ReceiveCase, SendCase, TimerCase, CancelCase]);
+  elsif Mode = 'group_join' then
+    const Group := Tasks.CreateTaskGroup();
+    discard Tasks.StartTaskInGroup(Group, GroupLeaf);
+    discard Tasks.CloseTaskGroup(Group);
+  else
+    scope
+      const Child := go Leaf(Token);
+      if Mode = 'wait' then
+        discard Tasks.Wait(Child);
+      elsif Mode = 'wait_any' then
+        discard Tasks.WaitAny([Child]);
+      elsif Mode = 'wait_all' then
+        Tasks.WaitAll([Child]);
+      elsif Mode <> 'scope_join' then
+        panic('unknown wait mode');
+      end if;
+    end scope;
+  end if;
+
+  // Closing channels during shutdown can return a typed error before the next
+  // cancellation check. Any still-running cleanup must retain its live aliases.
+  if (Keep() <> 65555) or (Data[0] <> 31) then
+    panic('capture lost on wait cancellation');
+  end if;
+end procedure;
+
+begin
+  const Mode := Args.ParamStr(0);
+  const Action := Args.ParamStr(1);
+  const Keep := Cycle(11);
+  if Keep() <> 65548 then
+    panic('root capture');
+  end if;
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+      panic('root unused callback ran');
+    end procedure
+  );
+  const Empty: channel of array of integer := Tasks.CreateChannel(1);
+  const Full: channel of array of integer := Tasks.CreateChannel(1);
+  discard Tasks.Send(Full, array.Fill(41, 8192)).Unwrap();
+  const Source := Tasks.CreateCancellationSource();
+  const Token := Tasks.GetCancellationToken(Source);
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Child := go Block(Mode, Empty, Full, Token);
+      Console.WriteText('root');
+      if Action = 'panic' then
+        panic('expected pending-task failure');
+      end if;
+
+      break;
+    end scope;
+  end for;
+
+  if Keep() <> 65549 then
+    panic('root alias after scope cancellation');
+  end if;
+end.

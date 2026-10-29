@@ -45,6 +45,12 @@ begin
   const Offset: result of (integer, Fs.FsError) := Fs.Seek(Origin := Fs.SeekOrigin.Start, Offset := 0, File := File);
   const Position: result of (integer, Fs.FsError) := Fs.Tell(File);
   const Flushed: result of (boolean, Fs.FsError) := Fs.Flush(File);
+  const Size: result of (integer, Fs.FsError) := Fs.Size(File := File);
+  const Resized: result of (boolean, Fs.FsError) := Fs.SetLength(Length := 8, File := File);
+  const TextWritten: result of (boolean, Fs.FsError) := Fs.WriteString(Text := 'text', File := File);
+  const LineWritten: result of (boolean, Fs.FsError) := Fs.WriteLine(File, 'line');
+  const CancelText: result of (boolean, Fs.FsError) := Fs.WriteStringWithCancellation(Token := Token, Text := 'text', File := File);
+  const CancelLine: result of (boolean, Fs.FsError) := Fs.WriteLineWithCancellation(File, 'line', Token);
   const Read: result of (array of integer, Fs.FsError) := Fs.ReadWithCancellation(Token := Token, MaxBytes := 2, File := File);
   const Written: result of (integer, Fs.FsError) := Fs.WriteWithCancellation(Token := Token, Bytes := [0], File := File);
   const ReadLine: result of (option of string, Fs.FsError) := Fs.ReadLineWithCancellation(Token := Token, File := File);
@@ -62,6 +68,13 @@ fn file_handles_reject_wrong_modes_origins_payloads_and_tokens() {
         "Fs.Write(File, 'text')",
         "Fs.ReadWithCancellation(File, 2, File)",
         "Fs.ReadLine(File, 2)",
+        "Fs.Size('path')",
+        "Fs.SetLength(File, 1.5)",
+        "Fs.SetLength(File := File, Size := 2)",
+        "Fs.WriteString(File, [65])",
+        "Fs.WriteLine(File, 42)",
+        "Fs.WriteLineWithCancellation(File, 'text', File)",
+        "Fs.WriteStringWithCancellation(File, 'text')",
     ] {
         assert!(!check_errors(&format!(
             "program Invalid; uses Std.Io.Fs as Fs; procedure Probe(File: Fs.File); begin discard {call}; end procedure; begin end."

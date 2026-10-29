@@ -101,8 +101,8 @@ fn jsonl_frame_return_completes_the_root_entry_and_terminates() {
 fn jsonl_frame_return_recovers_a_runtime_error_and_resumes() {
     let mut server = server_for(RECOVERY_SOURCE);
     let mut id = initialize(&mut server);
-    let _ = send(&mut server, &mut id, "continue", json!({}));
-    let failed = server.wait();
+    let mut failed = send(&mut server, &mut id, "continue", json!({}));
+    failed.extend(server.wait());
     assert!(
         failed
             .iter()
@@ -121,8 +121,8 @@ fn jsonl_frame_return_recovers_a_runtime_error_and_resumes() {
     assert_eq!(returned[0]["body"]["result"], "9");
     assert_eq!(returned[0]["body"]["terminated"], false);
 
-    let _ = send(&mut server, &mut id, "continue", json!({}));
-    let resumed = server.wait();
+    let mut resumed = send(&mut server, &mut id, "continue", json!({}));
+    resumed.extend(server.wait());
     let output = resumed
         .iter()
         .filter(|record| record["event"] == "output")

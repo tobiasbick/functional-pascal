@@ -197,6 +197,24 @@ fn hosted_files_append_stable_wire_ids_without_reclassifying_whole_file_helpers(
         Intrinsic::Fs(FsIntrinsic::WriteBytes).owner(),
         IntrinsicOwner::Standard
     );
+    for (offset, operation) in [
+        FsIntrinsic::Size,
+        FsIntrinsic::SetLength,
+        FsIntrinsic::WriteString,
+        FsIntrinsic::WriteLine,
+        FsIntrinsic::WriteStringWithCancellation,
+        FsIntrinsic::WriteLineWithCancellation,
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let intrinsic = Intrinsic::Fs(operation);
+        let wire = 826 + offset as u16;
+        assert_eq!(u16::from(intrinsic), wire);
+        assert_eq!(Intrinsic::from_u16(wire), Some(intrinsic));
+        assert_eq!(intrinsic.owner(), IntrinsicOwner::Hosted);
+        assert!(crate::intrinsic_debug_effects(intrinsic).contains(crate::DebugEffectSet::HOST_IO));
+    }
 }
 
 #[test]

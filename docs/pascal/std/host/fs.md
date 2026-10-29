@@ -91,6 +91,12 @@ Requires `uses Std.Io.Fs as Fs;`.
 | function | `Seek(File: File; Offset: integer; Origin: SeekOrigin): Result of (integer, Fs.FsError)` | changes the logical byte position and returns it |
 | function | `Tell(File: File): Result of (integer, Fs.FsError)` | returns the logical byte position |
 | function | `Flush(File: File): Result of (boolean, Fs.FsError)` | flushes output without an fsync guarantee |
+| function | `Size(File: File): Result of (integer, Fs.FsError)` | byte length of the open file without moving its position |
+| function | `SetLength(File: File; Length: integer): Result of (boolean, Fs.FsError)` | truncates or zero-extends a writable file, preserving its position |
+| function | `WriteString(File: File; Text: string): Result of (boolean, Fs.FsError)` | writes complete UTF-8 content, at most 1 MiB |
+| function | `WriteLine(File: File; Text: string): Result of (boolean, Fs.FsError)` | writes complete UTF-8 content followed by LF |
+| function | `WriteStringWithCancellation(File: File; Text: string; Token: Tasks.CancellationToken): Result of (boolean, Fs.FsError)` | complete text output with cooperative cancellation |
+| function | `WriteLineWithCancellation(File: File; Text: string; Token: Tasks.CancellationToken): Result of (boolean, Fs.FsError)` | complete line output with cooperative cancellation |
 | function | `ReadWithCancellation(File: File; MaxBytes: integer; Token: Tasks.CancellationToken): Result of (array of integer, Fs.FsError)` | bounded byte read with cooperative cancellation |
 | function | `WriteWithCancellation(File: File; Bytes: array of integer; Token: Tasks.CancellationToken): Result of (integer, Fs.FsError)` | validated byte write with cooperative cancellation |
 | function | `ReadLineWithCancellation(File: File; Token: Tasks.CancellationToken): Result of (Option of string, Fs.FsError)` | UTF-8 line read with cooperative cancellation |

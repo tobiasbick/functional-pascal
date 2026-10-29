@@ -319,8 +319,8 @@ begin scope
     let expired_main = server.handle_line(&request(7, "scopes", json!({"frame_id":main_frame})));
     assert_eq!(expired_main[0]["error"]["code"], "unknown_frame");
 
-    let _ = server.handle_line(&request(8, "continue", json!({})));
-    let terminated = server.wait();
+    let mut terminated = server.handle_line(&request(8, "continue", json!({})));
+    terminated.extend(server.wait());
     assert!(
         terminated
             .iter()

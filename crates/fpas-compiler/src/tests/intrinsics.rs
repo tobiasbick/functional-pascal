@@ -262,6 +262,18 @@ fn hosted_file_calls_compile_all_public_argument_shapes() {
         ("Seek", FsIntrinsic::Seek),
         ("Tell", FsIntrinsic::Tell),
         ("Flush", FsIntrinsic::Flush),
+        ("Size", FsIntrinsic::Size),
+        ("SetLength", FsIntrinsic::SetLength),
+        ("WriteString", FsIntrinsic::WriteString),
+        ("WriteLine", FsIntrinsic::WriteLine),
+        (
+            "WriteStringWithCancellation",
+            FsIntrinsic::WriteStringWithCancellation,
+        ),
+        (
+            "WriteLineWithCancellation",
+            FsIntrinsic::WriteLineWithCancellation,
+        ),
         ("ReadWithCancellation", FsIntrinsic::ReadWithCancellation),
         ("WriteWithCancellation", FsIntrinsic::WriteWithCancellation),
         (
@@ -289,6 +301,12 @@ begin
   discard Fs.Seek(Origin := Fs.SeekOrigin.Start, Offset := 0, File := File);
   discard Fs.Tell(File);
   discard Fs.Flush(File);
+  discard Fs.Size(File);
+  discard Fs.SetLength(Length := 8, File := File);
+  discard Fs.WriteString(Text := 'text', File := File);
+  discard Fs.WriteLine(File, 'line');
+  discard Fs.WriteStringWithCancellation(Token := Token, Text := 'text', File := File);
+  discard Fs.WriteLineWithCancellation(File, 'line', Token);
   discard Fs.ReadWithCancellation(Token := Token, MaxBytes := 2, File := File);
   discard Fs.WriteWithCancellation(Token := Token, Bytes := [0], File := File);
   discard Fs.ReadLineWithCancellation(Token := Token, File := File);

@@ -6,8 +6,8 @@ use std::time::Duration;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Footprint {
-    bytes: i128,
-    allocations: i128,
+    pub bytes: i128,
+    pub allocations: i128,
 }
 
 impl Footprint {

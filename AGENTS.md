@@ -3,6 +3,20 @@
 FPAS is a functional-first Pascal language with selected Ada conventions.
 Read the [agent reference](docs/pascal/agents/README.md) for the language rules.
 
+## Development build
+
+Build the workspace programs with the `dev-fast` profile and Thin-LTO:
+
+```sh
+cargo build --workspace --profile dev-fast
+```
+
+Use Cargo's default build parallelism unless the user requests a limit.
+Development binaries are in `target/dev-fast/`. Rust test compilation and test
+execution are separate from this program build.
+Use Fat-LTO for release, benchmarks, and dist. See the
+[build guide](docs/bench/build-times.md) for profile details and build measurements.
+
 ## Code
 
 - Keep files focused on one concern and usually below 500 lines.
@@ -24,7 +38,6 @@ Read the [agent reference](docs/pascal/agents/README.md) for the language rules.
 - Changes to FPAS syntax require the user's explicit approval before
   implementation.
 - Fix errors when you encounter them. Do not dismiss errors as pre-existing.
-- Use Fat-LTO for release, benchmarks, and dist; use `--profile dev-fast` with Thin-LTO for development builds.
 
 ## Before every commit
 

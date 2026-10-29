@@ -61,7 +61,7 @@ Release builds, `cargo bench-fpas`, and both dist scripts use Fat-LTO. For
 development, use the optimized `dev-fast` profile with Thin-LTO:
 
 ```sh
-cargo build --profile dev-fast
+cargo build --workspace --profile dev-fast
 ```
 
 Development binaries and their adjacent `lib/` are in `target/dev-fast/`.
@@ -396,7 +396,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 - Agents: [`AGENTS.md`](AGENTS.md)
 - Examples: [`examples/README.md`](examples/README.md)
 - FPAS tests: [`tests/`](tests) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
-- Verify locally: `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant
+- Verify locally: `cargo fmt`, `cargo build --workspace --profile dev-fast`,
+  `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant
 
 ## Project Structure
 

@@ -10,6 +10,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 |------|------|-------|
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
 | Agent tools | [Source queries for coding agents](agent-source-queries.md) | Proposed name selection, bounded inspection, direct call relationships, and later checked refactorings |
+| Rust development | [Test and build structure](test-build-structure.md) | Planned fixture repair, test grouping, profile selection, resource measurements and Windows/Linux acceptance; implementation not started |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | FPAS 2 | [Language directions](fpas2-language-directions.md) | Recorded decisions, implemented topics and open proposals |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Byte-buffer design, future capabilities and links to their owning plans |

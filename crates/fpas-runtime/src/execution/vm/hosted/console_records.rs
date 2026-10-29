@@ -115,14 +115,6 @@ fn key_event_char_value(ch: char) -> Value {
     }
 }
 
-pub(crate) fn key_event_record(
-    worker: &Worker,
-    event: ConsoleKeyEvent,
-    location: SourceLocation,
-) -> Result<Value, VmError> {
-    worker.key_event_record(event, location)
-}
-
 pub(crate) fn console_event_record(
     worker: &Worker,
     event: crate::stdlib::ConsoleEvent,

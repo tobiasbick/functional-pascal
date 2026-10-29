@@ -1,9 +1,10 @@
 use super::KeyInput;
+use super::control::{check_cancelled, input_error};
 use super::event_source::{CrosstermEventSource, TerminalEventSource};
 use super::mapping::{map_console_event, map_crossterm_key, map_key_for_read};
 use crate::SourceLocation;
 use crate::stdlib::error::{StdError, std_runtime_error};
-use crossterm::event::{self, Event, KeyEvent as CrosstermKeyEvent, KeyEventKind};
+use crossterm::event::{Event, KeyEvent as CrosstermKeyEvent, KeyEventKind};
 use crossterm::terminal::enable_raw_mode;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_INPUT_FAILURE;
 use std::time::{Duration, Instant};
@@ -24,8 +25,9 @@ impl KeyInput {
             return Ok(false);
         }
         self.ensure_raw_mode(location)?;
-        loop {
-            if !event::poll(Duration::ZERO).map_err(|e| {
+        let mut source = CrosstermEventSource::default();
+        for _ in 0..MAX_READY_EVENTS_PER_READ {
+            if !source.poll(Duration::ZERO).map_err(|e| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
                     format!("KeyPressed failed (poll): {e}"),
@@ -35,7 +37,7 @@ impl KeyInput {
             })? {
                 return Ok(false);
             }
-            let ev = event::read().map_err(|e| {
+            let ev = source.read().map_err(|e| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
                     format!("KeyPressed failed (read): {e}"),
@@ -43,14 +45,25 @@ impl KeyInput {
                     location,
                 )
             })?;
-            if self.queue_live_event(ev) {
+            self.queue_live_event(ev);
+            if !self.live_queue.is_empty() {
                 return Ok(true);
             }
         }
+        Ok(false)
     }
 
     /// Reads the next CRT-style key character, waiting when necessary.
     pub fn read_key(&mut self, location: SourceLocation) -> Result<char, StdError> {
+        self.read_key_controlled(location, || false)
+    }
+
+    pub(crate) fn read_key_controlled(
+        &mut self,
+        location: SourceLocation,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<char, StdError> {
+        check_cancelled(&cancelled, location)?;
         if let Some(c) = self.pending.pop_front() {
             return Ok(c);
         }
@@ -65,7 +78,7 @@ impl KeyInput {
         }
 
         self.ensure_raw_mode(location)?;
-        let key = self.read_live_key(location, "ReadKey failed")?;
+        let key = self.read_live_key(location, "ReadKey failed", cancelled)?;
         Ok(map_key_for_read(key.code, &mut self.pending))
     }
 
@@ -74,6 +87,15 @@ impl KeyInput {
         &mut self,
         location: SourceLocation,
     ) -> Result<crate::stdlib::key_event::ConsoleKeyEvent, StdError> {
+        self.read_key_event_controlled(location, || false)
+    }
+
+    pub(crate) fn read_key_event_controlled(
+        &mut self,
+        location: SourceLocation,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<crate::stdlib::key_event::ConsoleKeyEvent, StdError> {
+        check_cancelled(&cancelled, location)?;
         if let Some(ev) = self.event_queue.pop_front() {
             return Ok(ev);
         }
@@ -85,7 +107,7 @@ impl KeyInput {
         }
 
         self.ensure_raw_mode(location)?;
-        let key = self.read_live_key(location, "ReadKeyEvent failed")?;
+        let key = self.read_live_key(location, "ReadKeyEvent failed", cancelled)?;
         Ok(map_crossterm_key(&key))
     }
 
@@ -97,8 +119,9 @@ impl KeyInput {
         if self.test_mode || !self.allows_os_events() || !self.raw_mode {
             return Ok(false);
         }
-        loop {
-            if !event::poll(Duration::ZERO).map_err(|e| {
+        let mut source = CrosstermEventSource::default();
+        for _ in 0..MAX_READY_EVENTS_PER_READ {
+            if !source.poll(Duration::ZERO).map_err(|e| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
                     format!("EventPending failed (poll): {e}"),
@@ -108,7 +131,7 @@ impl KeyInput {
             })? {
                 return Ok(false);
             }
-            let ev = event::read().map_err(|e| {
+            let ev = source.read().map_err(|e| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
                     format!("EventPending failed (read): {e}"),
@@ -121,6 +144,7 @@ impl KeyInput {
                 return Ok(true);
             }
         }
+        Ok(false)
     }
 
     /// Reads the next unified console event, waiting when necessary.
@@ -128,6 +152,15 @@ impl KeyInput {
         &mut self,
         location: SourceLocation,
     ) -> Result<crate::stdlib::console_event::ConsoleEvent, StdError> {
+        self.read_event_controlled(location, || false)
+    }
+
+    pub(crate) fn read_event_controlled(
+        &mut self,
+        location: SourceLocation,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<crate::stdlib::console_event::ConsoleEvent, StdError> {
+        check_cancelled(&cancelled, location)?;
         if let Some(event) = self.console_event_queue.pop_front() {
             return Ok(event);
         }
@@ -139,8 +172,16 @@ impl KeyInput {
         }
 
         self.ensure_raw_mode(location)?;
+        let mut source = CrosstermEventSource::default();
         loop {
-            let ev = event::read().map_err(|e| {
+            check_cancelled(&cancelled, location)?;
+            if !source
+                .poll(Duration::from_millis(10))
+                .map_err(|e| input_error("ReadEvent poll", e, location))?
+            {
+                continue;
+            }
+            let ev = source.read().map_err(|e| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
                     format!("ReadEvent failed: {e}"),
@@ -164,10 +205,10 @@ impl KeyInput {
         timeout_ms: i64,
         location: SourceLocation,
     ) -> Result<Option<crate::stdlib::console_event::ConsoleEvent>, StdError> {
-        self.read_event_timeout_from(timeout_ms, location, &mut CrosstermEventSource)
+        self.read_event_timeout_from(timeout_ms, location, &mut CrosstermEventSource::default())
     }
 
-    fn read_event_timeout_from(
+    pub(super) fn read_event_timeout_from(
         &mut self,
         timeout_ms: i64,
         location: SourceLocation,
@@ -261,7 +302,7 @@ impl KeyInput {
         &mut self,
         location: SourceLocation,
     ) -> Result<Option<crate::stdlib::console_event::ConsoleEvent>, StdError> {
-        self.poll_event_from(location, &mut CrosstermEventSource)
+        self.poll_event_from(location, &mut CrosstermEventSource::default())
     }
 
     fn poll_event_from(
@@ -334,9 +375,18 @@ impl KeyInput {
         &mut self,
         location: SourceLocation,
         context: &str,
+        cancelled: impl Fn() -> bool,
     ) -> Result<CrosstermKeyEvent, StdError> {
+        let mut source = CrosstermEventSource::default();
         loop {
-            match event::read().map_err(|e| {
+            check_cancelled(&cancelled, location)?;
+            if !source
+                .poll(Duration::from_millis(10))
+                .map_err(|e| input_error(context, e, location))?
+            {
+                continue;
+            }
+            match source.read().map_err(|e| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
                     format!("{context}: {e}"),

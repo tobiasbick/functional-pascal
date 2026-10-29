@@ -77,6 +77,8 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::execution::vm) enum TaskSuspension {
+    /// Owned console I/O; bytecode frames and result construction stay on their task.
+    ConsoleIo(Box<crate::execution::vm::hosted::console_io::wait::Wait>),
     /// Debugger terminal input waits without running a polling loop in FPAS.
     ConsoleRead {
         deadline_millis: u64,
@@ -180,6 +182,7 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::execution::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::ConsoleIo(_) => TaskSuspensionState::Waiting,
             Self::Net(_) => TaskSuspensionState::Waiting,
             Self::Fs(_) => TaskSuspensionState::Waiting,
             Self::Proc(_) => TaskSuspensionState::Waiting,

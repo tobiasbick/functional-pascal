@@ -1,7 +1,7 @@
 use fpas_acp::{RawJson, connection::Fault, protocol::v1 as sdk};
 use std::path::Path;
 
-pub(super) fn validate(method: &str, raw: &RawJson) -> Result<(), Fault> {
+pub(in super::super) fn validate(method: &str, raw: &RawJson) -> Result<(), Fault> {
     let path = raw.member("path")?.ok_or(Fault::InvalidArgument("Path"))?;
     let path: String =
         serde_json::from_str(path.text()).map_err(|_| Fault::InvalidArgument("Path"))?;
@@ -16,21 +16,48 @@ pub(super) fn validate(method: &str, raw: &RawJson) -> Result<(), Fault> {
     }
     Ok(())
 }
-pub(super) fn execute(method: &str, raw: &RawJson, maximum: usize) -> Result<RawJson, Fault> {
+pub(in super::super) fn execute_controlled(
+    method: &str,
+    raw: &RawJson,
+    maximum: usize,
+    cancelled: impl Fn() -> bool,
+) -> Result<RawJson, Fault> {
     if method == "fs/write_text_file" {
         let request = fpas_acp::codec::decode::<sdk::WriteTextFileRequest>(raw.clone())?.value;
-        crate::stdlib::write_text_for_host(&request.path.to_string_lossy(), &request.content)
-            .map_err(|_| Fault::Host)?;
+        crate::stdlib::fs::write_text_for_host_controlled(
+            &request.path.to_string_lossy(),
+            &request.content,
+            &mut || cancelled(),
+        )
+        .map_err(|_| {
+            if cancelled() {
+                Fault::Cancelled
+            } else {
+                Fault::Host
+            }
+        })?;
         return RawJson::parse("{}").map_err(Into::into);
     }
     let request = fpas_acp::codec::decode::<sdk::ReadTextFileRequest>(raw.clone())?.value;
-    let text = crate::stdlib::read_text_for_host(&request.path.to_string_lossy())
-        .map_err(|_| Fault::Host)?;
+    let text = crate::stdlib::fs::read_text_for_host_controlled(
+        &request.path.to_string_lossy(),
+        &mut || cancelled(),
+    )
+    .map_err(|_| {
+        if cancelled() {
+            Fault::Cancelled
+        } else {
+            Fault::Host
+        }
+    })?;
     let start = request.line.unwrap_or(1).saturating_sub(1) as usize;
     let count = request.limit.map_or(usize::MAX, |value| value as usize);
     let mut content = String::new();
     // Preserve CRLF/LF and a missing final terminator; an empty range stays empty.
     for line in text.split_inclusive('\n').skip(start).take(count) {
+        if cancelled() {
+            return Err(Fault::Cancelled);
+        }
         if content.len().saturating_add(line.len()) > maximum {
             return Err(Fault::LimitExceeded("MessageBytes", maximum));
         }

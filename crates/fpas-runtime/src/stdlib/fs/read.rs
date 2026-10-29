@@ -2,11 +2,19 @@
 
 use super::failure::Failure;
 use std::fs::File;
-use std::io::Read;
 
 use crate::stdlib::limits::MAX_READ_TEXT_BYTES;
 
+#[cfg(test)]
 pub(super) fn read_text_limited(path: &str) -> Result<String, Failure> {
+    read_text_controlled(path, &mut || false)
+}
+
+pub(super) fn read_text_controlled(
+    path: &str,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<String, Failure> {
+    super::io::check(cancelled)?;
     let file = File::open(path)?;
     if let Ok(metadata) = file.metadata()
         && metadata.len() > MAX_READ_TEXT_BYTES
@@ -17,9 +25,7 @@ pub(super) fn read_text_limited(path: &str) -> Result<String, Failure> {
         ));
     }
 
-    let mut limited = file.take(MAX_READ_TEXT_BYTES.saturating_add(1));
-    let mut bytes = Vec::new();
-    limited.read_to_end(&mut bytes)?;
+    let bytes = super::io::read_prefix(file, MAX_READ_TEXT_BYTES.saturating_add(1), cancelled)?;
     let text =
         String::from_utf8(bytes).map_err(|error| Failure::InvalidEncoding(error.to_string()))?;
     if text.len() as u64 > MAX_READ_TEXT_BYTES {

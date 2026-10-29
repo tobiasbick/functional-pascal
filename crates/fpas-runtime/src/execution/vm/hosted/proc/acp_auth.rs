@@ -79,13 +79,33 @@ fn request(launch: &AcpLaunch, timeout: Option<Duration>) -> Request<'_> {
     }
 }
 
+#[cfg(test)]
 pub(in crate::execution::vm::hosted) fn authenticate(
     base: &AcpLaunch,
     method: &Authentication,
     timeout: Option<Duration>,
     terminal: Option<&InteractiveProcessTerminal>,
     processes: &Processes,
+    cancelled: impl FnMut() -> bool,
+) -> Result<bool, Fault> {
+    authenticate_at(
+        base,
+        method,
+        timeout,
+        terminal,
+        processes,
+        cancelled,
+        std::time::Instant::now(),
+    )
+}
+pub(in crate::execution::vm::hosted) fn authenticate_at(
+    base: &AcpLaunch,
+    method: &Authentication,
+    timeout: Option<Duration>,
+    terminal: Option<&InteractiveProcessTerminal>,
+    processes: &Processes,
     mut cancelled: impl FnMut() -> bool,
+    started: std::time::Instant,
 ) -> Result<bool, Fault> {
     request(base, timeout).validate().map_err(fault)?;
     Request {
@@ -110,14 +130,14 @@ pub(in crate::execution::vm::hosted) fn authenticate(
     if cancelled() {
         return Err(Fault::Cancelled);
     }
-    if timeout.is_some_and(|timeout| timeout.is_zero()) {
+    if timeout.is_some_and(|timeout| started.elapsed() >= timeout) {
         return Err(Fault::Timeout);
     }
     if terminal.is_none() {
         return Err(Fault::UnsupportedCapability("InteractiveTerminal"));
     }
     processes
-        .run_interactive(&request, terminal, cancelled)
+        .run_interactive_at(&request, terminal, cancelled, started)
         .map(|status| status.code() == Some(0))
         .map_err(fault)
 }
@@ -154,6 +174,20 @@ mod tests {
                 .contains(&("ACP_OVERRIDE".into(), Some("changed".into())))
         );
         let processes = Processes::new();
+        assert_eq!(
+            authenticate_at(
+                &base,
+                &method,
+                Some(Duration::from_millis(1)),
+                Some(&InteractiveProcessTerminal::new(|| panic!(
+                    "expired admission must precede provider access"
+                ))),
+                &processes,
+                || false,
+                std::time::Instant::now() - Duration::from_secs(1)
+            ),
+            Err(Fault::Timeout)
+        );
         let duplicate = Authentication::from(
             fpas_acp::protocol::v2::AuthMethodTerminal::new("login", "Login").env(vec![
                 fpas_acp::protocol::v2::EnvVariable::new("ACP_DUP", "first"),

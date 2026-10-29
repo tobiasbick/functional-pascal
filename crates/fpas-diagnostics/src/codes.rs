@@ -314,6 +314,9 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// Seeded debug scheduling rejected an uncontrolled host or callback effect.
     RUNTIME_SCHEDULE_UNSUPPORTED_EFFECT = 5026;
+
+    /// Native I/O execution failed for an operation without a Result return type.
+    RUNTIME_HOST_IO_FAILURE = 5027;
 });
 
 define_codes!(PROJECT_ALLOCATED_CODES => {

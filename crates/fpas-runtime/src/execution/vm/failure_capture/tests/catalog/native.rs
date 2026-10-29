@@ -19,6 +19,12 @@ impl Drop for ChildGuard {
 
 #[test]
 fn native_peer_has_a_deadline_without_delaying_report_availability() {
+    for synchronous in [false, true] {
+        observe_blocked_native(synchronous);
+    }
+}
+
+fn observe_blocked_native(synchronous: bool) {
     let mut child = ChildGuard(
         Command::new(std::env::current_exe().unwrap())
             .args([
@@ -27,6 +33,10 @@ fn native_peer_has_a_deadline_without_delaying_report_availability() {
                 "--ignored",
                 "--nocapture",
             ])
+            .env(
+                "FPAS_CAPTURE_SYNC_NATIVE",
+                if synchronous { "1" } else { "0" },
+            )
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
@@ -65,6 +75,7 @@ fn native_peer_has_a_deadline_without_delaying_report_availability() {
 #[test]
 #[ignore = "isolated child fixture, launched by native_peer_has_a_deadline_without_delaying_report_availability"]
 fn blocked_native_child() {
+    let synchronous = std::env::var("FPAS_CAPTURE_SYNC_NATIVE").as_deref() == Ok("1");
     struct Blocked {
         entered: mpsc::Sender<()>,
         release: mpsc::Receiver<()>,
@@ -105,10 +116,16 @@ fn blocked_native_child() {
             .iter()
             .find(|task| task.id == task_id)
             .unwrap();
-        assert_eq!(peer.state, "running");
-        assert_eq!(peer.inspection, "unavailable");
-        assert_eq!(peer.reason, Some("collection_deadline"));
-        assert!(peer.snapshot.is_none());
+        if synchronous {
+            assert_eq!(peer.state, "running");
+            assert_eq!(peer.inspection, "unavailable");
+            assert_eq!(peer.reason, Some("collection_deadline"));
+            assert!(peer.snapshot.is_none());
+        } else {
+            assert!(matches!(peer.state, "waiting" | "running" | "runnable"));
+            assert_eq!(peer.inspection, "available");
+            assert!(peer.snapshot.is_some());
+        }
         receipt.store(true, std::sync::atomic::Ordering::Release);
         println!("CAPTURE_READY_BEFORE_RELEASE");
         io::stdout().flush().unwrap();
@@ -121,7 +138,24 @@ fn blocked_native_child() {
     background.retain_result = true;
     vm.scheduler.register_result(task_id);
     vm.scheduler.enqueue(background.take_task_state());
-    let guard = start_pool(&vm);
+    let guard = if synchronous {
+        let template = worker(&vm, "Barrier", vec![]).pool_template();
+        let scheduler = vm.scheduler.clone();
+        PoolGuard {
+            shutdown: vm.shutdown_handle(),
+            thread: Some(std::thread::spawn(move || {
+                let task = scheduler.dequeue().unwrap();
+                let mut worker = template.worker_for_task(task);
+                // Explicit synchronous native evaluation is outside owned Console jobs.
+                worker.capture_callback = true;
+                let _capture = worker.capture_pool_guard();
+                worker.run_task().unwrap();
+                worker.retire_execution();
+            })),
+        }
+    } else {
+        start_pool(&vm)
+    };
     entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
     let start = Instant::now();
     vm.run().unwrap_err();

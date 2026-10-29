@@ -40,6 +40,8 @@ impl InteractiveProcessStdio {
 ///
 /// No provider is installed by default. Debugger protocol input and queued
 /// `Std.Console` input are never used as child-process input.
+/// Pool/debugger process calls invoke this provider on an owned native job;
+/// synchronous main-program calls invoke it on their calling thread.
 #[derive(Clone)]
 pub struct InteractiveProcessTerminal {
     open: Arc<dyn Fn() -> io::Result<InteractiveProcessStdio> + Send + Sync>,

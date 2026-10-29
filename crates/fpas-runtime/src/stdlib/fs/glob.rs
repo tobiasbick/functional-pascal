@@ -7,7 +7,16 @@ use glob::glob;
 
 use crate::stdlib::limits::MAX_GLOB_MATCHES;
 
+#[cfg(test)]
 pub(super) fn glob_paths(pattern: &str) -> Result<Vec<String>, Failure> {
+    glob_paths_controlled(pattern, &mut || false)
+}
+
+pub(super) fn glob_paths_controlled(
+    pattern: &str,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<Vec<String>, Failure> {
+    super::io::check(cancelled)?;
     let pattern = pattern.trim();
     if pattern.is_empty() {
         return Err(Failure::InvalidPattern(
@@ -27,6 +36,7 @@ pub(super) fn glob_paths(pattern: &str) -> Result<Vec<String>, Failure> {
     let pattern_text = path.to_string_lossy().replace('\\', "/");
     let mut matches = Vec::<String>::new();
     for entry in glob(&pattern_text).map_err(|error| Failure::InvalidPattern(error.to_string()))? {
+        super::io::check(cancelled)?;
         let entry = entry.map_err(|error| {
             let path = error.path().to_string_lossy().into_owned();
             Failure::AtPath(path, error.into())

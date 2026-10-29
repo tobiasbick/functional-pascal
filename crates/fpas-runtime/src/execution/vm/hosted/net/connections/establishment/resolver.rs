@@ -64,11 +64,11 @@ impl Lookup {
 
     fn wait(
         mut self,
-        deadline: Instant,
+        deadline: Option<Instant>,
         is_cancelled: impl Fn() -> bool,
     ) -> Result<Vec<SocketAddr>, Failure> {
         loop {
-            let left = remaining(deadline, &is_cancelled)?;
+            let left = budget(deadline, &is_cancelled)?;
             match self.receiver.recv_timeout(POLL_INTERVAL.min(left)) {
                 Ok(outcome) => {
                     // Receiving a result proves the OS call has returned. Join its
@@ -76,14 +76,14 @@ impl Lookup {
                     if let Some(thread) = self.thread.take() {
                         let _ = thread.join();
                     }
-                    remaining(deadline, &is_cancelled)?;
+                    budget(deadline, &is_cancelled)?;
                     return outcome.map_err(|error| {
                         Failure::resolve(&error, format!("Could not resolve TCP host: {error}"))
                     });
                 }
                 Err(RecvTimeoutError::Timeout) => {}
                 Err(RecvTimeoutError::Disconnected) => {
-                    remaining(deadline, &is_cancelled)?;
+                    budget(deadline, &is_cancelled)?;
                     return Err(Failure::io(
                         &io::Error::other("DNS worker exited"),
                         "OS DNS lookup exited without a result".into(),
@@ -112,7 +112,33 @@ pub(super) fn resolve(
     deadline: Instant,
     is_cancelled: impl Fn() -> bool,
 ) -> Result<Vec<SocketAddr>, Failure> {
-    remaining(deadline, &is_cancelled)?;
+    resolve_until(host, port, Some(deadline), is_cancelled)
+}
+
+/// Listener creation has no caller timeout, but shares bounded, abandonable OS lookups.
+pub(in crate::execution::vm::hosted::net) fn resolve_listener(
+    host: &str,
+    port: u16,
+    is_cancelled: impl Fn() -> bool,
+) -> Result<Vec<SocketAddr>, Failure> {
+    resolve_until(host, port, None, is_cancelled)
+}
+
+fn budget(deadline: Option<Instant>, cancelled: impl Fn() -> bool) -> Result<Duration, Failure> {
+    match deadline {
+        Some(deadline) => remaining(deadline, cancelled),
+        None if cancelled() => Err(Failure::Cancelled),
+        None => Ok(POLL_INTERVAL),
+    }
+}
+
+fn resolve_until(
+    host: &str,
+    port: u16,
+    deadline: Option<Instant>,
+    is_cancelled: impl Fn() -> bool,
+) -> Result<Vec<SocketAddr>, Failure> {
+    budget(deadline, &is_cancelled)?;
     if let Ok(address) = host.parse::<IpAddr>() {
         return Ok(vec![SocketAddr::new(address, port)]);
     }

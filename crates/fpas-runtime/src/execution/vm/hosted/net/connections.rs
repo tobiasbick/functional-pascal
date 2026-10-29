@@ -5,16 +5,18 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::net::{Shutdown, TcpStream};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, TryLockError};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 mod cancellable_read;
 mod cancellable_write;
+pub(super) mod closing;
 mod establishment;
 mod polling;
 #[cfg(test)]
 mod test_connections;
 use super::transport::Transport;
+pub(super) use establishment::resolver::resolve_listener;
 pub(super) use establishment::{ConnectMode, ConnectRequest};
 
 const HANDLE_TAG: u64 = 0x4E45_0000_0000_0000;
@@ -52,14 +54,6 @@ impl Connection {
             }
         })
     }
-
-    fn close(&self) -> std::io::Result<()> {
-        match self.transport.try_lock() {
-            Ok(mut transport) => transport.shutdown(),
-            Err(TryLockError::WouldBlock) => self.interrupt(),
-            Err(TryLockError::Poisoned(poisoned)) => poisoned.into_inner().shutdown(),
-        }
-    }
 }
 
 /// Thread-safe TCP and TLS resources owned by one VM.
@@ -70,6 +64,20 @@ pub(in crate::execution::vm::hosted) struct NetworkConnections {
 }
 
 impl NetworkConnections {
+    #[cfg(test)]
+    pub(super) fn has_busy_connection(&self) -> bool {
+        self.connections
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .values()
+            .any(|connection| {
+                matches!(
+                    connection.transport.try_lock(),
+                    Err(std::sync::TryLockError::WouldBlock)
+                )
+            })
+    }
+
     /// Create an empty per-VM connection registry.
     pub(in crate::execution::vm::hosted) fn new() -> Self {
         Self {
@@ -96,12 +104,19 @@ impl NetworkConnections {
 
     /// Set both read and write timeouts; zero disables them.
     pub(super) fn set_timeout(&self, handle: u64, timeout_millis: i64) -> Result<(), Failure> {
+        self.set_timeout_with_cancellation(handle, timeout_millis, || false)
+    }
+
+    /// Wait for the connection lock without retaining a VM worker or ignoring abandonment.
+    pub(super) fn set_timeout_with_cancellation(
+        &self,
+        handle: u64,
+        timeout_millis: i64,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<(), Failure> {
         let duration = timeout(timeout_millis, true)?;
         let connection = self.connection(handle)?;
-        let transport = connection
-            .transport
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let transport = polling::lock_transport(&connection.transport, cancelled)?;
         transport
             .set_timeout((!duration.is_zero()).then_some(duration))
             .map_err(|error| {
@@ -146,16 +161,7 @@ impl NetworkConnections {
 
     /// Close and invalidate one connection handle.
     pub(super) fn close(&self, handle: u64) -> Result<(), Failure> {
-        validate_handle(handle)?;
-        let connection = self
-            .connections
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .remove(&handle)
-            .ok_or(Failure::Closed)?;
-        connection.close().map_err(|error| {
-            Failure::io(&error, format!("Network connection close failed: {error}"))
-        })
+        self.begin_close(handle)?.finish()
     }
 
     /// Interrupt and invalidate every connection owned by the VM.

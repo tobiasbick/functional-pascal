@@ -19,6 +19,8 @@ use std::{
 };
 
 static NEXT: AtomicU64 = AtomicU64::new(1);
+#[cfg(test)]
+mod tests;
 struct Entry {
     session: String,
     handle: Option<u64>,
@@ -55,6 +57,23 @@ impl Drop for TerminalReservation {
     }
 }
 
+fn lock<'a, T>(
+    mutex: &'a Mutex<T>,
+    cancelled: impl Fn() -> bool,
+) -> Result<std::sync::MutexGuard<'a, T>, Fault> {
+    loop {
+        if cancelled() {
+            return Err(Fault::Cancelled);
+        }
+        match mutex.try_lock() {
+            Ok(guard) => return Ok(guard),
+            Err(std::sync::TryLockError::Poisoned(error)) => return Ok(error.into_inner()),
+            Err(std::sync::TryLockError::WouldBlock) => {
+                std::thread::park_timeout(std::time::Duration::from_millis(1))
+            }
+        }
+    }
+}
 fn request<'a>(launch: &'a AcpLaunch) -> Request<'a> {
     Request {
         command: &launch.command,
@@ -141,38 +160,64 @@ impl Terminals {
             published: false,
         })
     }
-    pub fn start(
+    pub fn start_controlled(
         &self,
         reservation: &mut TerminalReservation,
         launch: &AcpLaunch,
+        cancelled: impl Fn() -> bool,
     ) -> Result<(), Fault> {
-        let mut entry = reservation.entry.lock().unwrap_or_else(|e| e.into_inner());
-        if entry.closed {
+        if reservation
+            .entry
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .closed
+        {
             return Err(Fault::Closed);
         }
-        let handle = self.processes.start(&request(launch)).map_err(fault)?;
+        let handle = self
+            .processes
+            .start_with_cancellation(&request(launch), &cancelled)
+            .map_err(fault)?;
+        let mut entry = reservation.entry.lock().unwrap_or_else(|e| e.into_inner());
+        if entry.closed || cancelled() {
+            let closed = entry.closed;
+            drop(entry);
+            let _ = self.processes.close(handle);
+            return Err(if closed {
+                Fault::Closed
+            } else {
+                Fault::Cancelled
+            });
+        }
         entry.handle = Some(handle);
         reservation.published = true;
         Ok(())
     }
-    fn entry(&self, id: &str, session: Option<&str>) -> Result<Arc<Mutex<Entry>>, Fault> {
-        let entry = self
-            .state
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
+    fn entry(
+        &self,
+        id: &str,
+        session: Option<&str>,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<Arc<Mutex<Entry>>, Fault> {
+        let entry = lock(&self.state, &cancelled)?
             .entries
             .get(id)
             .cloned()
             .ok_or(Fault::Closed)?;
-        if session.is_some_and(|session| {
-            entry.lock().unwrap_or_else(|e| e.into_inner()).session != session
-        }) {
+        if let Some(session) = session
+            && lock(&entry, &cancelled)?.session != session
+        {
             return Err(Fault::InvalidArgument("TerminalSession"));
         }
         Ok(entry)
     }
-    pub fn validate_id(&self, id: &str, session: &str) -> Result<(), Fault> {
-        self.entry(id, Some(session)).map(|_| ())
+    pub fn validate_id(
+        &self,
+        id: &str,
+        session: &str,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<(), Fault> {
+        self.entry(id, Some(session), cancelled).map(|_| ())
     }
     fn drain(&self, entry: &mut Entry) -> Result<(), Fault> {
         if entry.closed {
@@ -213,16 +258,25 @@ impl Terminals {
             .cloned()
             .collect();
         for entry in entries {
-            let mut entry = entry.lock().unwrap_or_else(|e| e.into_inner());
+            let mut entry = match entry.try_lock() {
+                Ok(entry) => entry,
+                Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner(),
+                Err(std::sync::TryLockError::WouldBlock) => continue,
+            };
             if !entry.closed {
                 self.drain(&mut entry)?;
             }
         }
         Ok(())
     }
-    pub fn output(&self, id: &str, session: &str) -> Result<sdk::TerminalOutputResponse, Fault> {
-        let entry = self.entry(id, Some(session))?;
-        let mut entry = entry.lock().unwrap_or_else(|e| e.into_inner());
+    pub fn output(
+        &self,
+        id: &str,
+        session: &str,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<sdk::TerminalOutputResponse, Fault> {
+        let entry = self.entry(id, Some(session), &cancelled)?;
+        let mut entry = lock(&entry, &cancelled)?;
         self.drain(&mut entry)?;
         Ok(
             sdk::TerminalOutputResponse::new(entry.output.text.clone(), entry.output.truncated)
@@ -233,9 +287,10 @@ impl Terminals {
         &self,
         id: &str,
         session: &str,
+        cancelled: impl Fn() -> bool,
     ) -> Result<Option<sdk::TerminalExitStatus>, Fault> {
-        let entry = self.entry(id, Some(session))?;
-        let mut entry = entry.lock().unwrap_or_else(|e| e.into_inner());
+        let entry = self.entry(id, Some(session), &cancelled)?;
+        let mut entry = lock(&entry, &cancelled)?;
         self.drain(&mut entry)?;
         Ok(if entry.eof.iter().all(|eof| *eof) {
             entry.status.clone()
@@ -243,9 +298,9 @@ impl Terminals {
             None
         })
     }
-    pub fn kill(&self, id: &str, session: &str) -> Result<(), Fault> {
-        let entry = self.entry(id, Some(session))?;
-        let mut entry = entry.lock().unwrap_or_else(|e| e.into_inner());
+    pub fn kill(&self, id: &str, session: &str, cancelled: impl Fn() -> bool) -> Result<(), Fault> {
+        let entry = self.entry(id, Some(session), &cancelled)?;
+        let mut entry = lock(&entry, &cancelled)?;
         self.drain(&mut entry)?;
         if let Some(handle) = entry.handle {
             self.processes
@@ -255,8 +310,16 @@ impl Terminals {
         Ok(())
     }
     pub fn release(&self, id: &str, session: Option<&str>) -> Result<(), Fault> {
-        let entry = self.entry(id, session)?;
-        let mut owned = entry.lock().unwrap_or_else(|e| e.into_inner());
+        self.release_controlled(id, session, || false)
+    }
+    pub fn release_controlled(
+        &self,
+        id: &str,
+        session: Option<&str>,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<(), Fault> {
+        let entry = self.entry(id, session, &cancelled)?;
+        let mut owned = lock(&entry, &cancelled)?;
         if owned.closed {
             return Err(Fault::Closed);
         }
@@ -281,16 +344,16 @@ impl Terminals {
             state
                 .entries
                 .iter()
-                .filter(|(_, entry)| {
-                    session.is_none_or(|session| {
-                        entry.lock().unwrap_or_else(|e| e.into_inner()).session == session
-                    })
-                })
-                .map(|(id, _)| id.clone())
+                .map(|(id, entry)| (id.clone(), entry.clone()))
                 .collect::<Vec<_>>()
         };
         let mut failed = false;
-        for id in entries {
+        for (id, entry) in entries {
+            if session.is_some_and(|session| {
+                entry.lock().unwrap_or_else(|e| e.into_inner()).session != session
+            }) {
+                continue;
+            }
             if self.release(&id, None).is_err() {
                 failed = true;
             }

@@ -303,6 +303,7 @@ impl Worker {
             self.check_task_cancellation()?;
         }
         let ready = match suspension {
+            TaskSuspension::ConsoleIo(wait) => self.poll_console_io(*wait),
             TaskSuspension::ConsoleRead {
                 deadline_millis,
                 input_revision,

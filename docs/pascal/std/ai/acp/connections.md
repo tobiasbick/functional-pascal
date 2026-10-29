@@ -32,6 +32,19 @@ Client metadata budgets and connection/driver capacity are validated and reserve
 before starting the process. Failed admission starts no child; abandoned process
 transports terminate and reap their child and return the process-registry slot.
 
+In pool tasks and ordinary all-stop debugging, both connection constructors use
+owned native jobs and release the VM worker, including inside inline callbacks.
+Driver initialization and process startup run outside the registry/admission
+locks. The 16-connection limit includes unfinished constructors; shutdown can
+signal those constructors before they finish. A result not yet delivered to FPAS
+retains connection ownership and closes its transport on abandonment.
+
+Connection creation and host adapters share a per-VM budget of 64 native ACP jobs,
+including undelivered results. Saturation returns
+`Types.AcpError.LimitExceeded('NativeJobs', 64)` before starting native effects.
+Main-program and explicit synchronous native evaluation remain synchronous.
+Abandonment joins started work; an OS call already in progress must return first.
+
 The process transport exchanges newline-delimited JSON. It handles fragmented
 UTF-8 and partial writes, drains stderr separately, and rejects an unfinished
 nonempty final frame. Complete preceding frames remain deliverable. A chunk

@@ -1,42 +1,24 @@
 //! Running pool peers answer the cooperative cut; the timing isolates collection from cleanup.
 
 use super::*;
-use crate::execution::vm::{FailureScalar, hosted::HostedState};
-use std::{
-    io::{self, Write},
-    sync::mpsc,
-    time::{Duration, Instant},
-};
+use crate::execution::vm::FailureScalar;
+use std::time::{Duration, Instant};
 
-const SOURCE: &str = "program LivePeers; uses Std.Console as Console;\nprocedure Barrier(); begin end procedure;\nprocedure Running(); begin const Live:=29; Console.WriteText('running'); while true do null; end while; end procedure;\nbegin panic('root'); end.";
-
-struct Ready(mpsc::Sender<()>);
-impl Write for Ready {
-    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        self.0.send(()).unwrap();
-        Ok(bytes.len())
-    }
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
+const SOURCE: &str = "program LivePeers; uses Std.Tasks as Tasks;\nprocedure Barrier(); begin end procedure;\nprocedure Running(Ready:channel of integer); begin const Live:=29; discard Tasks.Send(Ready,1); while true do null; end while; end procedure;\nbegin panic('root'); end.";
 
 /// Run `peers` executing pool tasks, then time the root failure until its observation exists.
 fn observe_live_peers(image: &Arc<crate::VerifiedExecutable>, peers: usize) -> Duration {
     let mut vm = Vm::from_shared(Arc::clone(image));
     vm.pool_size = 0;
     let output = observe(&mut vm);
-    let (ready_tx, ready_rx) = mpsc::channel();
-    vm.hosted = Arc::new(HostedState::new(
-        crate::stdlib::Console::with_writer(Box::new(Ready(ready_tx))),
-        vec![],
-    ));
+    let ready = vm.hosted.channels.create(peers.max(1) as i64).unwrap();
     let ids: Vec<_> = (0..peers)
-        .map(|_| enqueue(&vm, "Running", vec![]))
+        .map(|_| enqueue(&vm, "Running", vec![Value::OpaqueHandle(ready)]))
         .collect();
+    let _timer = start_timer(&vm);
     let pools: Vec<_> = (0..peers).map(|_| start_pool(&vm)).collect();
     for _ in 0..peers {
-        ready_rx.recv_timeout(Duration::from_secs(4)).unwrap();
+        await_ready(&vm, ready);
     }
     let started = Instant::now();
     assert_eq!(vm.run().unwrap_err().message, "panic: root");

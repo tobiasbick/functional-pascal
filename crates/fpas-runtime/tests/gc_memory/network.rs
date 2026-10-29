@@ -16,11 +16,12 @@ struct PendingWriter {
 
 impl Write for PendingWriter {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        assert_eq!(bytes, b"pending");
-        // The trigger is blocked in this native writer. The other worker is the
-        // only task that can park, so cancellation cannot race ahead of its wait.
+        assert!(bytes == b"pending" || bytes == b"locked");
+        // Keep this task at its native output boundary until a peer has parked.
+        // Configuration handshakes prevent its trigger from overtaking the
+        // callback's initial output and blocking that callback on the console.
         crate::shutdown::wait_for_park();
-        if self.shutdown {
+        if self.shutdown && bytes == b"pending" {
             self.stop.get().unwrap().upgrade().unwrap().shutdown();
         }
         Ok(bytes.len())
@@ -64,6 +65,19 @@ pub fn socket_connect_completion() {
                         Vec::new()
                     },
                 );
+            });
+        }
+    }
+}
+
+pub fn socket_configuration_teardown() {
+    let executable = image(include_str!(
+        "../../src/execution/vm/hosted/net/fixtures/pool_config.fpas"
+    ));
+    for config in [CollectionSchedule::default(), schedule()] {
+        for mode in ["normal", "scope_exit", "vm_shutdown"] {
+            completed_threads(&format!("native socket configuration {mode}"), 4, || {
+                exercise(&executable, config, vec![mode.into()]);
             });
         }
     }

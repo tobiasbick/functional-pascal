@@ -4,6 +4,7 @@ mod arguments;
 mod client;
 mod dispatch;
 mod host;
+pub(in crate::execution::vm) mod native;
 mod outcomes;
 mod registry;
 #[cfg(test)]

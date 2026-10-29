@@ -2,7 +2,8 @@
 use std::io;
 
 #[derive(Debug)]
-pub(super) enum Failure {
+pub(crate) enum Failure {
+    Cancelled,
     Io(io::Error),
     AtPath(String, io::Error),
     EncodingAtPath(String, String),
@@ -25,6 +26,7 @@ impl From<io::Error> for Failure {
 impl std::fmt::Display for Failure {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Cancelled => f.write_str("Filesystem operation cancelled"),
             Self::Io(e) | Self::AtPath(_, e) => e.fmt(f),
             Self::EncodingAtPath(_, detail) => detail.fmt(f),
             Self::InvalidArgument(_, reason)

@@ -7,6 +7,7 @@ use crate::{SourceLocation, Value};
 
 #[derive(Debug)]
 pub(super) enum Failure {
+    Path(crate::stdlib::fs::failure::Failure),
     Closed,
     Cancelled,
     Argument(&'static str, String),
@@ -31,8 +32,18 @@ impl Failure {
         operation: &str,
         location: SourceLocation,
     ) -> Result<Value, crate::stdlib::StdError> {
+        if let Self::Path(error) = self {
+            return crate::stdlib::fs::results::error_value(
+                factory,
+                operation,
+                &[],
+                error,
+                location,
+            );
+        }
         let text = |value: &str| Value::Str(value.into());
         let (variant, fields) = match self {
+            Self::Path(_) => unreachable!("path errors are converted above"),
             Self::Closed => (13, vec![text(operation)]),
             Self::Cancelled => (14, vec![text(operation)]),
             Self::Argument(name, reason) => (8, vec![text(name), text(&reason)]),

@@ -171,3 +171,97 @@ fn token_cancellation_finishes_behind_a_busy_alias_without_advancing_it() {
         assert_eq!(std::fs::read(&path).unwrap(), b"kept\n");
     }
 }
+
+#[test]
+fn plain_queries_queue_at_capacity_without_changing_their_return_type() {
+    let mut worker = worker();
+    let fixture = Fixture::new();
+    let path = fixture.path("exists");
+    std::fs::write(&path, b"kept").unwrap();
+    let arguments = [Value::Str(path.into())];
+    let mut permits = (0..MAX_JOBS)
+        .map(|_| Permit::acquire(worker.hosted.clone()).unwrap())
+        .collect::<Vec<_>>();
+    assert!(
+        worker
+            .start_fs_wait(FsIntrinsic::Exists, &arguments, None)
+            .unwrap()
+            .is_none()
+    );
+    let Some(TaskSuspension::Fs(wait)) = worker.task_suspension.take() else {
+        panic!("saved filesystem query")
+    };
+    assert!(matches!(&wait.state, State::Queued(_)));
+    drop(permits.pop());
+    if !worker.poll_fs_wait(*wait).unwrap() {
+        let Some(TaskSuspension::Fs(mut wait)) = worker.task_suspension.take() else {
+            panic!("running query")
+        };
+        let State::Running(job) = &mut wait.state else {
+            panic!("admitted query")
+        };
+        if let Some(thread) = job.thread.take() {
+            thread.join().unwrap();
+        }
+        assert!(worker.poll_fs_wait(*wait).unwrap());
+    }
+    let outcome = call(&worker, FsIntrinsic::Exists, &arguments).run(&worker.hosted, || false);
+    let value = worker
+        .fs_result(FsIntrinsic::Exists, outcome, SourceLocation::new(1, 1))
+        .unwrap();
+    assert_eq!(value, Value::Boolean(true));
+    drop(permits);
+    assert_eq!(worker.hosted.file_jobs.load(Ordering::Acquire), 0);
+}
+
+#[test]
+fn path_queries_do_not_depend_on_the_file_handle_registry() {
+    let worker = worker();
+    let fixture = Fixture::new();
+    let path = fixture.path("independent");
+    std::fs::write(&path, b"kept").unwrap();
+    worker.hosted.close_file_handles();
+    let mut job = Job::start(
+        worker.hosted.clone(),
+        call(&worker, FsIntrinsic::IsFile, &[Value::Str(path.into())]),
+    )
+    .unwrap();
+    job.thread.take().unwrap().join().unwrap();
+    let value = worker
+        .fs_result(
+            FsIntrinsic::IsFile,
+            job.poll().unwrap(),
+            SourceLocation::new(1, 1),
+        )
+        .unwrap();
+    assert_eq!(value, Value::Boolean(true));
+}
+
+#[test]
+fn native_callback_can_return_before_file_join_and_late_open_is_closed() {
+    let worker = worker();
+    let fixture = Fixture::new();
+    let handle = worker
+        .hosted
+        .files
+        .open(&fixture.path("retired"), 1, || false)
+        .unwrap();
+    let (release, wait) = mpsc::channel();
+    let (sender, receiver) = mpsc::channel();
+    let job = Job {
+        permit: Some(Permit::acquire(worker.hosted.clone()).unwrap()),
+        stop: Arc::new(AtomicBool::new(false)),
+        receiver: Mutex::new(receiver),
+        thread: Some(std::thread::spawn(move || {
+            wait.recv_timeout(Duration::from_secs(10))
+                .expect("host callback must return before joining file I/O");
+            sender.send(Ok(Output::Handle(handle))).unwrap();
+        })),
+    };
+    super::super::super::native::defer_joins(|| drop(job));
+    assert_eq!(worker.hosted.file_jobs.load(Ordering::Acquire), 1);
+    release.send(()).unwrap();
+    super::super::super::native::join_retired(&worker.hosted);
+    assert_eq!(worker.hosted.file_jobs.load(Ordering::Acquire), 0);
+    assert!(worker.hosted.files.handles().is_empty());
+}

@@ -24,6 +24,82 @@ struct Blocked {
     finished: AtomicBool,
     resume: tokio::sync::Notify,
 }
+
+#[test]
+fn startup_reservations_bound_concurrent_constructors_and_shutdown_does_not_wait_for_them() {
+    use fpas_acp::connection::Settings;
+    use std::{sync::mpsc, time::Duration};
+    let runtime = Arc::new(Runtime::new().unwrap());
+    let (entered, entries) = mpsc::channel();
+    let mut releases = Vec::new();
+    let mut threads = Vec::new();
+    let transports = (0..16)
+        .map(|_| Arc::new(Blocked::default()))
+        .collect::<Vec<_>>();
+    for transport in &transports {
+        let runtime = runtime.clone();
+        let entered = entered.clone();
+        let transport = transport.clone();
+        let (release, released) = mpsc::channel();
+        releases.push(release);
+        threads.push(std::thread::spawn(move || {
+            runtime.connect_configured_with(
+                Settings::for_version(Version::V1),
+                Limits::default(),
+                || {
+                    entered.send(()).unwrap();
+                    released.recv_timeout(Duration::from_secs(10)).unwrap();
+                    Ok(transport)
+                },
+            )
+        }));
+    }
+    let all_entered = (0..16).all(|_| entries.recv_timeout(Duration::from_secs(3)).is_ok());
+    let rejected = if all_entered {
+        Some(runtime.connect_configured_with(
+            Settings::for_version(Version::V1),
+            Limits::default(),
+            || panic!("full admission must precede construction"),
+        ))
+    } else {
+        None
+    };
+    let (stopped, receipt) = mpsc::channel();
+    let stopping = runtime.clone();
+    let stopper = std::thread::spawn(move || {
+        stopping.request_shutdown();
+        stopped.send(()).unwrap();
+    });
+    let signalled = receipt.recv_timeout(Duration::from_secs(3));
+    for release in releases {
+        let _ = release.send(());
+    }
+    let results = threads
+        .into_iter()
+        .map(|thread| thread.join().unwrap())
+        .collect::<Vec<_>>();
+    stopper.join().unwrap();
+    runtime.shutdown();
+    assert!(
+        all_entered,
+        "constructors serialized behind the admission lock"
+    );
+    assert!(matches!(
+        rejected,
+        Some(Err(Fault::LimitExceeded("Connections", 16)))
+    ));
+    signalled.expect("shutdown must return while constructors are still gated");
+    assert!(
+        results
+            .iter()
+            .all(|result| matches!(result, Err(Fault::Closed)))
+    );
+    assert!(
+        transports
+            .iter()
+            .all(|transport| transport.finished.load(Ordering::Acquire))
+    );
+}
 impl Transport for Blocked {
     fn receive(&self) -> BoxFuture<'_, Result<Option<Frame>, Fault>> {
         Box::pin(std::future::pending())

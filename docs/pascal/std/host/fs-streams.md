@@ -17,8 +17,9 @@ on their calling thread.
 Each VM admits at most 64 native file jobs, including completed results not yet
 delivered to their task. Saturation returns `FsError.LimitExceeded(Operation, 64)`
 before starting native work; it cannot truncate a file in Create mode. This job
-budget is separate from the 1024 open-file limit. Pending pool/debugger calls use
-the shared one-millisecond readiness polling schedule.
+budget is shared with whole-file/path operations and separate from the 1024 open-file
+limit. Pending pool/debugger calls use the shared one-millisecond readiness polling
+schedule.
 
 Aliases serialize through the same handle state. Waiting for registry or handle
 locks observes cancellation. A VM shutdown first signals jobs without waiting
@@ -33,9 +34,9 @@ Portable filesystem calls cannot be forcibly interrupted: cancellation and clean
 can wait for an OS call already in progress. Already dispatched native work may
 also finish while all-stop debugging is paused.
 
-Whole-file and path-based helpers such as `ReadText`, `WriteText`, directory
-traversal and copying execute synchronously on their calling thread. They do not
-use the handle-job budget.
+Whole-file and path-based helpers also suspend pool/debugger tasks and use the same
+native-job budget. Their plain queries wait for admission rather than changing their
+return type. See [filesystem execution and cancellation](fs.md#execution-and-cancellation).
 
 ## Handles, aliases, and cleanup
 

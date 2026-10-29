@@ -6,6 +6,45 @@ use std::time::{Duration, Instant};
 use super::NetworkConnections;
 
 #[test]
+fn cancelling_timeout_configuration_leaves_a_busy_connection_unchanged_and_open() {
+    use super::test_connections::tcp_pair;
+    use std::sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    };
+    let (connections, handle, mut peer) = tcp_pair();
+    let connections = Arc::new(connections);
+    let connection = connections.connection(handle).unwrap();
+    let guard = connection.transport.lock().unwrap();
+    let previous = guard.read_timeout().unwrap();
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let stop = cancelled.clone();
+    let state = connections.clone();
+    let (entered, entry) = mpsc::channel();
+    let (send, receive) = mpsc::channel();
+    let configuring = std::thread::spawn(move || {
+        let first = AtomicBool::new(true);
+        let result = state.set_timeout_with_cancellation(handle, 1000, || {
+            if first.swap(false, Ordering::AcqRel) {
+                entered.send(()).unwrap();
+            }
+            stop.load(Ordering::Acquire)
+        });
+        send.send(result).unwrap();
+    });
+    entry.recv_timeout(Duration::from_secs(5)).unwrap();
+    cancelled.store(true, Ordering::Release);
+    let result = receive.recv_timeout(Duration::from_secs(5));
+    assert_eq!(guard.read_timeout().unwrap(), previous);
+    drop(guard);
+    configuring.join().unwrap();
+    assert_eq!(result.unwrap(), Err(super::Failure::Cancelled));
+    connections.set_timeout(handle, 5000).unwrap();
+    peer.write_all(b"x").unwrap();
+    assert_eq!(connections.read(handle, 1).unwrap(), b"x");
+}
+
+#[test]
 fn shutdown_interrupts_outgoing_tls_handshake() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind silent peer");
     let address = listener.local_addr().expect("peer address");

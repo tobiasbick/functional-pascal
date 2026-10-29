@@ -16,6 +16,12 @@ mod graphs;
 mod measurement;
 #[path = "gc_memory/mixed.rs"]
 mod mixed;
+#[path = "gc_memory/native_acp.rs"]
+mod native_acp;
+#[path = "gc_memory/native_console.rs"]
+mod native_console;
+#[path = "gc_memory/native_process.rs"]
+mod native_process;
 #[path = "gc_memory/network.rs"]
 mod network;
 #[path = "gc_memory/processes.rs"]
@@ -177,10 +183,51 @@ fn native_connects_and_dns_release_frames_and_jobs() {
 }
 
 #[test]
+fn native_socket_configuration_releases_callbacks_and_jobs() {
+    measurement::isolated(
+        "native_socket_configuration_releases_callbacks_and_jobs",
+        network::socket_configuration_teardown,
+    );
+}
+
+#[test]
 fn owned_process_waits_release_frames_cycles_pipes_and_children() {
     measurement::isolated(
         "owned_process_waits_release_frames_cycles_pipes_and_children",
         processes::owned_process_teardown,
+    );
+}
+
+#[test]
+fn native_process_boundaries_release_frames_and_jobs() {
+    measurement::isolated(
+        "native_process_boundaries_release_frames_and_jobs",
+        native_process::teardown,
+    );
+}
+
+#[test]
+fn native_console_boundaries_release_frames_and_jobs() {
+    measurement::isolated(
+        "native_console_boundaries_release_frames_and_jobs",
+        native_console::teardown,
+    );
+}
+
+#[test]
+fn native_acp_boundaries_release_frames_and_jobs() {
+    measurement::isolated(
+        "native_acp_boundaries_release_frames_and_jobs",
+        native_acp::teardown,
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn native_acp_file_jobs_release_frames_and_payloads() {
+    measurement::isolated(
+        "native_acp_file_jobs_release_frames_and_payloads",
+        native_acp::file_jobs,
     );
 }
 
@@ -203,5 +250,13 @@ fn native_file_jobs_release_frames_cycles_and_payloads() {
     measurement::isolated(
         "native_file_jobs_release_frames_cycles_and_payloads",
         files::file_job_teardown,
+    );
+}
+
+#[test]
+fn native_path_jobs_release_frames_cycles_and_results() {
+    measurement::isolated(
+        "native_path_jobs_release_frames_cycles_and_results",
+        files::path_job_teardown,
     );
 }

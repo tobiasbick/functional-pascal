@@ -9,6 +9,8 @@ mod state;
 pub(in crate::execution::vm) mod wait;
 
 #[cfg(test)]
+mod path_tests;
+#[cfg(test)]
 mod pool_tests;
 #[cfg(test)]
 mod tests;
@@ -42,26 +44,37 @@ impl Worker {
         outcome: Result<Output, Failure>,
         location: SourceLocation,
     ) -> Result<Value, VmError> {
-        Ok(match outcome {
-            Ok(output) => Value::result_ok(match output {
-                Output::Handle(handle) => Value::OpaqueHandle(handle),
-                Output::Number(number) => Value::Integer(number),
-                Output::Done => Value::Boolean(true),
-                Output::Bytes(bytes) => Value::Array(
-                    bytes
-                        .into_iter()
-                        .map(|b| Value::Integer(i64::from(b)))
-                        .collect(),
-                ),
-                Output::Line(line) => line.map_or(Value::OptionNone, |text| {
-                    Value::option_some(Value::Str(text.into()))
-                }),
+        let value = match outcome {
+            Ok(Output::Path(outcome)) => {
+                return outcome.into_value(self.layouts.as_ref(), location);
+            }
+            Ok(Output::Handle(handle)) => Value::OpaqueHandle(handle),
+            Ok(Output::Number(number)) => Value::Integer(number),
+            Ok(Output::Done) => Value::Boolean(true),
+            Ok(Output::Bytes(bytes)) => Value::Array(
+                bytes
+                    .into_iter()
+                    .map(|b| Value::Integer(i64::from(b)))
+                    .collect(),
+            ),
+            Ok(Output::Line(line)) => line.map_or(Value::OptionNone, |text| {
+                Value::option_some(Value::Str(text.into()))
             }),
-            Err(error) => Value::result_error(error.into_value(
-                self.layouts.as_ref(),
-                &Intrinsic::Fs(operation).debugger_name(),
-                location,
-            )?),
-        })
+            Err(error) => {
+                if crate::stdlib::fs::native::infallible(operation) {
+                    return Err(self.runtime_error(
+                        fpas_diagnostics::codes::RUNTIME_HOST_IO_FAILURE,
+                        format!("{}: {error:?}", Intrinsic::Fs(operation).debugger_name()),
+                        "Retry after earlier native filesystem work has finished.",
+                    ));
+                }
+                return Ok(Value::result_error(error.into_value(
+                    self.layouts.as_ref(),
+                    &Intrinsic::Fs(operation).debugger_name(),
+                    location,
+                )?));
+            }
+        };
+        Ok(Value::result_ok(value))
     }
 }

@@ -124,7 +124,16 @@ type Entry = Arc<Mutex<Option<Process>>>;
 #[derive(Default)]
 struct Registry {
     entries: HashMap<u64, Entry>,
+    pending: usize,
     shutdown: bool,
+}
+
+struct Pending<'a>(&'a Mutex<Registry>);
+
+impl Drop for Pending<'_> {
+    fn drop(&mut self) {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).pending -= 1;
+    }
 }
 
 #[derive(Default)]
@@ -134,14 +143,26 @@ pub(in crate::execution::vm::hosted) struct PipedProcesses {
 
 impl PipedProcesses {
     pub(super) fn start(&self, request: &Request<'_>) -> Result<u64, Failure> {
+        self.start_with_cancellation(request, || false)
+    }
+
+    pub(super) fn start_with_cancellation(
+        &self,
+        request: &Request<'_>,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<u64, Failure> {
         request.validate()?;
-        let mut registry = self.registry.lock().unwrap_or_else(|e| e.into_inner());
-        if registry.shutdown {
-            return Err(Failure::new(Kind::Cancelled));
+        {
+            let mut registry = self.registry.lock().unwrap_or_else(|e| e.into_inner());
+            if registry.shutdown || cancelled() {
+                return Err(Failure::new(Kind::Cancelled));
+            }
+            if registry.entries.len() + registry.pending >= LIMIT {
+                return Err(Failure::limit("interactive processes", LIMIT));
+            }
+            registry.pending += 1;
         }
-        if registry.entries.len() >= LIMIT {
-            return Err(Failure::limit("interactive processes", LIMIT));
-        }
+        let _pending = Pending(&self.registry);
         let handle = NEXT
             .try_update(Ordering::Relaxed, Ordering::Relaxed, |next| {
                 next.checked_add(1).filter(|next| next & MASK == TAG)
@@ -152,8 +173,14 @@ impl PipedProcesses {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        if cancelled() {
+            return Err(Failure::new(Kind::Cancelled));
+        }
         let mut child =
             GroupChild::spawn(command).map_err(|error| Failure::new(Kind::Start(error)))?;
+        if cancelled() {
+            return Err(Failure::new(Kind::Cancelled));
+        }
         let stdin = child
             .take_stdin()
             .map_err(|error| Failure::new(Kind::Execution(error)))?;
@@ -163,6 +190,10 @@ impl PipedProcesses {
         let stderr = child
             .take_stderr()
             .map_err(|error| Failure::new(Kind::Execution(error)))?;
+        let mut registry = self.registry.lock().unwrap_or_else(|e| e.into_inner());
+        if registry.shutdown || cancelled() {
+            return Err(Failure::new(Kind::Cancelled));
+        }
         registry.entries.insert(
             handle,
             Arc::new(Mutex::new(Some(Process {
@@ -233,10 +264,19 @@ impl PipedProcesses {
     }
 
     pub(in crate::execution::vm::hosted) fn shutdown(&self) {
-        let mut registry = self.registry.lock().unwrap_or_else(|e| e.into_inner());
-        registry.shutdown = true;
-        for entry in registry.entries.values() {
-            if let Some(process) = entry.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
+        let entries = {
+            let mut registry = self.registry.lock().unwrap_or_else(|e| e.into_inner());
+            registry.shutdown = true;
+            registry.entries.values().cloned().collect::<Vec<_>>()
+        };
+        for entry in entries {
+            let mut state = match entry.try_lock() {
+                Ok(state) => state,
+                Err(TryLockError::Poisoned(error)) => error.into_inner(),
+                // Pipe probes are bounded; a closer holding this lock already killed its group.
+                Err(TryLockError::WouldBlock) => continue,
+            };
+            if let Some(process) = state.as_mut() {
                 let _ = process.terminate();
             }
         }

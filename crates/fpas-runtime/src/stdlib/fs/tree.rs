@@ -10,16 +10,31 @@ use std::path::{Component, Path, PathBuf};
 use crate::stdlib::limits::MAX_COLLECTION_LEN;
 
 /// All entries below `path` in stable lexical order, without following directory links.
+#[cfg(test)]
 pub(super) fn read_dir_all_paths(path: &str) -> Result<Vec<String>, Failure> {
+    read_dir_all_controlled(path, &mut || false)
+}
+
+pub(super) fn read_dir_all_controlled(
+    path: &str,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<Vec<String>, Failure> {
     let root = Path::new(path);
     let mut paths = Vec::new();
-    collect(root, MAX_COLLECTION_LEN as usize, &mut paths)?;
+    collect(root, MAX_COLLECTION_LEN as usize, &mut paths, cancelled)?;
     paths.sort();
     Ok(paths)
 }
 
-fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), Failure> {
+fn collect(
+    dir: &Path,
+    limit: usize,
+    paths: &mut Vec<String>,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<(), Failure> {
+    super::io::check(cancelled)?;
     for entry in fs::read_dir(dir).map_err(|error| Failure::at(dir, error))? {
+        super::io::check(cancelled)?;
         let entry = entry.map_err(|error| Failure::at(dir, error))?;
         if paths.len() >= limit {
             return Err(Failure::LimitExceeded("Std.Io.Fs.ReadDirAll", limit as i64));
@@ -36,7 +51,7 @@ fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), Fail
             .file_type()
             .map_err(|error| Failure::at(&entry.path(), error))?;
         if file_type.is_dir() {
-            collect(&entry_path, limit, paths)?;
+            collect(&entry_path, limit, paths, cancelled)?;
         }
     }
     Ok(())
@@ -44,7 +59,17 @@ fn collect(dir: &Path, limit: usize, paths: &mut Vec<String>) -> Result<(), Fail
 
 /// Copy the directory tree `source` into `target`, creating directories and replacing files.
 /// Reject targets resolving to the source or one of its descendants before copying.
+#[cfg(test)]
 pub(super) fn copy_dir_all(source: &Path, target: &Path) -> Result<(), Failure> {
+    copy_dir_controlled(source, target, &mut || false)
+}
+
+pub(super) fn copy_dir_controlled(
+    source: &Path,
+    target: &Path,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<(), Failure> {
+    super::io::check(cancelled)?;
     if !fs::metadata(source)?.is_dir() {
         return Err(Failure::InvalidArgument(
             "Source",
@@ -52,7 +77,7 @@ pub(super) fn copy_dir_all(source: &Path, target: &Path) -> Result<(), Failure> 
         ));
     }
     let source_path = fs::canonicalize(source)?;
-    copy_tree(source, target, &source_path)
+    copy_tree(source, target, &source_path, cancelled)
 }
 
 fn resolve_target_path(target: &Path) -> io::Result<PathBuf> {
@@ -126,10 +151,17 @@ fn resolve_copy_target(source_root: &Path, target: &Path) -> Result<PathBuf, Fai
     Ok(target_path)
 }
 
-fn copy_tree(source: &Path, target: &Path, source_root: &Path) -> Result<(), Failure> {
+fn copy_tree(
+    source: &Path,
+    target: &Path,
+    source_root: &Path,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<(), Failure> {
+    super::io::check(cancelled)?;
     let resolved_target = resolve_copy_target(source_root, target)?;
     fs::create_dir_all(&resolved_target).map_err(|error| Failure::at(target, error))?;
     for entry in fs::read_dir(source).map_err(|error| Failure::at(source, error))? {
+        super::io::check(cancelled)?;
         let entry = entry.map_err(|error| Failure::at(source, error))?;
         let file_type = entry
             .file_type()
@@ -144,7 +176,7 @@ fn copy_tree(source: &Path, target: &Path, source_root: &Path) -> Result<(), Fai
                 ),
             ));
         } else if file_type.is_dir() {
-            copy_tree(&entry.path(), &destination, source_root)?;
+            copy_tree(&entry.path(), &destination, source_root, cancelled)?;
         } else {
             let destination = resolve_copy_target(source_root, &destination)?;
             fs::copy(entry.path(), destination)

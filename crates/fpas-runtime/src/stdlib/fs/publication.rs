@@ -1,22 +1,31 @@
 //! Same-directory atomic publication for `Std.Io.Fs.WriteTextAtomic`.
 
-use std::io::{self, Write};
+use std::io;
 use std::path::Path;
 
+use super::failure::Failure;
 use atomic_write_file::AtomicWriteFile;
 
-pub(super) fn write_text_atomic(path: &Path, text: &str) -> io::Result<()> {
-    write_text_atomic_with(path, text, AtomicWriteFile::commit)
+pub(super) fn write_text_atomic(
+    path: &Path,
+    text: &str,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<(), Failure> {
+    write_text_atomic_with(path, text, cancelled, AtomicWriteFile::commit)
 }
 
 fn write_text_atomic_with(
     path: &Path,
     text: &str,
+    cancelled: &mut dyn FnMut() -> bool,
     commit: impl FnOnce(AtomicWriteFile) -> io::Result<()>,
-) -> io::Result<()> {
+) -> Result<(), Failure> {
+    super::io::check(cancelled)?;
     let mut replacement = AtomicWriteFile::open(path)?;
-    replacement.write_all(text.as_bytes())?;
-    commit(replacement)
+    super::io::write_all(&mut replacement, text.as_bytes(), cancelled)?;
+    super::io::check(cancelled)?;
+    commit(replacement)?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -53,7 +62,7 @@ mod tests {
         let root = temp_dir();
         let destination = root.join("note.txt");
 
-        write_text_atomic(&destination, "complete text").expect("publication");
+        write_text_atomic(&destination, "complete text", &mut || false).expect("publication");
 
         assert_eq!(
             fs::read_to_string(&destination).expect("published file"),
@@ -68,7 +77,7 @@ mod tests {
         let destination = root.join("note.txt");
         fs::write(&destination, "previous text").expect("previous file");
 
-        write_text_atomic(&destination, "replacement text").expect("replacement");
+        write_text_atomic(&destination, "replacement text", &mut || false).expect("replacement");
 
         assert_eq!(
             fs::read_to_string(&destination).expect("published file"),
@@ -87,9 +96,12 @@ mod tests {
         let destination = root.join("note.txt");
         fs::write(&destination, "previous text").expect("previous file");
 
-        let error = write_text_atomic_with(&destination, "replacement text", |_replacement| {
-            Err(std::io::Error::other("injected commit failure"))
-        })
+        let error = write_text_atomic_with(
+            &destination,
+            "replacement text",
+            &mut || false,
+            |_replacement| Err(std::io::Error::other("injected commit failure")),
+        )
         .expect_err("publication must fail");
 
         assert_eq!(error.to_string(), "injected commit failure");
@@ -113,7 +125,7 @@ mod tests {
         fs::write(&stale_temporary, "stale temporary").expect("stale temporary");
         fs::write(&stale_backup, "stale backup").expect("stale backup");
 
-        write_text_atomic(&destination, "new text").expect("publication");
+        write_text_atomic(&destination, "new text", &mut || false).expect("publication");
 
         assert_eq!(
             fs::read_to_string(&destination).expect("published file"),
@@ -137,7 +149,7 @@ mod tests {
         let legacy_backup = append_suffix(&destination, ".bak");
         fs::create_dir(&legacy_backup).expect("unremovable legacy backup directory");
 
-        write_text_atomic(&destination, "new text").expect("committed publication");
+        write_text_atomic(&destination, "new text", &mut || false).expect("committed publication");
 
         assert_eq!(
             fs::read_to_string(&destination).expect("published file"),

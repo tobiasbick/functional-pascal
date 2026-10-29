@@ -11,6 +11,7 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
+mod control;
 mod event_source;
 mod mapping;
 mod read;

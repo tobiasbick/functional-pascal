@@ -1,0 +1,83 @@
+program NativeProcessBoundary;
+
+uses Std.Os.Proc as Proc, Std.Tasks as Tasks, Std.Console as Console, Std.Os.Args as Args;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Work(): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  var Sum := 0;
+  const Results := [0].Map(
+    function(Index: integer): integer begin
+      const Status := Proc.RunInteractive(
+        Args.ParamStr(0),
+        ['--help'],
+        Proc.DefaultStartOptions(),
+        Some(10000),
+        None
+      ).Unwrap();
+      if Status.ExitCode.Unwrap() <> 0 then
+        panic('interactive process status');
+      end if;
+
+      Sum := Sum + Index + Keep();
+      return Sum;
+    end function
+  );
+  const Child := Proc.Start(Args.ParamStr(0), ['--help'], Proc.DefaultStartOptions()).Unwrap();
+  discard Proc.Close(Child).Unwrap();
+  return Results[0];
+end function;
+
+function Peer(): integer;
+begin
+  Console.WriteText('release');
+  return 2;
+end function;
+
+begin
+  var Mode := 'normal';
+  if Args.ParamCount() > 1 then
+    Mode := Args.ParamStr(1);
+  end if;
+
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Native := go Work();
+      const Other := go Peer();
+      if Tasks.Wait(Other) <> 2 then
+        panic('native process peer');
+      end if;
+
+      if Mode <> 'normal' then
+        break;
+      end if;
+
+      if Tasks.Wait(Native) <> 65536 then
+        panic('native process callback');
+      end if;
+    end scope;
+  end for;
+end.

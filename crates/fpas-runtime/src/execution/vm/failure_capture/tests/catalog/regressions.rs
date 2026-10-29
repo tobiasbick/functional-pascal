@@ -67,8 +67,9 @@ fn disposed_aborted_worker_is_cancelled_without_waiting_for_a_dead_peer() {
     let capture = Arc::clone(vm.scheduler.failure_capture.get().unwrap());
     capture.start_root(&mut root);
     let error = root.run_task().unwrap_err();
-    vm.scheduler.fail(error.clone());
+    // In-flight host writers must return before cancellation can join their job.
     release.send(()).unwrap();
+    vm.scheduler.fail(error.clone());
     pool.thread.take().unwrap().join().unwrap();
     vm.notify_failure(&error);
     let output = output.lock().unwrap();
@@ -200,7 +201,7 @@ fn omitted_released_cause_identities_are_included_in_catalog_totals() {
 }
 
 #[test]
-fn converted_pool_panic_keeps_completed_root_globals_and_marks_the_dead_peer_failed() {
+fn native_console_panic_keeps_root_globals_and_retained_peer_frames() {
     struct Panics {
         entered: mpsc::Sender<()>,
         release: mpsc::Receiver<()>,
@@ -216,9 +217,8 @@ fn converted_pool_panic_keeps_completed_root_globals_and_marks_the_dead_peer_fai
         }
     }
     let mut vm = vm(
-        "program HostPanic; uses Std.Console as Console, Std.Tasks as Tasks; var Total:integer:=7; var Proceed:channel of integer:=Tasks.CreateChannel(1); procedure Background(); begin Console.WriteText('host'); end procedure; begin discard Tasks.Receive(Proceed); Total:=31; end.",
+        "program HostPanic; uses Std.Console as Console, Std.Tasks as Tasks; var Total:integer:=7; procedure Background(); begin Console.WriteText('host'); end procedure; begin scope const Job:=go Background(); Total:=31; Tasks.Wait(Job); end scope; end.",
     );
-    // This manually inserted worker needs shared globals for the host handshake.
     vm.pool_size = 1;
     vm.use_local_globals = false;
     let output = observe(&mut vm);
@@ -231,42 +231,21 @@ fn converted_pool_panic_keeps_completed_root_globals_and_marks_the_dead_peer_fai
         })),
         vec![],
     ));
-    let id = enqueue(&vm, "Background", vec![]);
-    let scheduler = Arc::clone(&vm.scheduler);
-    let globals = Arc::clone(&vm.globals);
-    let hosted = Arc::clone(&vm.hosted);
+    let globals = vm.globals.clone();
     let running = std::thread::spawn(move || vm.run());
     receipt.recv_timeout(Duration::from_secs(10)).unwrap();
     let deadline = Instant::now() + Duration::from_secs(10);
-    let proceed = loop {
-        if let Some(Value::OpaqueHandle(handle)) = globals.read().unwrap()[1].clone() {
-            break handle;
-        }
+    while !matches!(&globals.read().unwrap()[0], Some(Value::Integer(31))) {
         assert!(
             Instant::now() < deadline,
-            "root did not initialize its channel"
+            "root did not publish its assignment"
         );
-        std::thread::yield_now();
-    };
-    hosted
-        .channels
-        .send(proceed, Value::Integer(1), false, None)
-        .unwrap();
-    // The worker must already be running, and the root must complete normally
-    // before its panic is selected by the pool join.
-    while !scheduler.is_shutdown() {
-        assert!(Instant::now() < deadline, "root did not finish");
         std::thread::yield_now();
     }
     release.send(()).unwrap();
-    assert!(
-        running
-            .join()
-            .unwrap()
-            .unwrap_err()
-            .message
-            .contains("worker panicked")
-    );
+    let error = running.join().unwrap().unwrap_err();
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_HOST_IO_FAILURE);
+    assert!(error.message.contains("worker exited without a result"));
     let output = output.lock().unwrap();
     let catalog = output[0].task_catalog.as_ref().unwrap();
     assert_eq!(catalog.globals_status, "available");
@@ -275,9 +254,9 @@ fn converted_pool_panic_keeps_completed_root_globals_and_marks_the_dead_peer_fai
         Some(crate::execution::vm::FailureScalar::Integer("31".into()))
     );
     let root = catalog.tasks.iter().find(|task| task.id == 0).unwrap();
-    assert_eq!(root.state, "completed");
-    assert_eq!(root.inspection, "not_applicable");
-    let peer = catalog.tasks.iter().find(|task| task.id == id).unwrap();
+    assert_eq!(root.state, "failed");
+    let peer = catalog.tasks.iter().find(|task| task.id != 0).unwrap();
     assert_eq!(peer.state, "failed");
-    assert_eq!(peer.reason, Some("no_live_frame"));
+    assert_eq!(peer.inspection, "available");
+    assert!(peer.snapshot.is_some());
 }

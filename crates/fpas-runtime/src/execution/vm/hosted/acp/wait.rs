@@ -11,10 +11,7 @@ use fpas_acp::connection::{Connection, Fault, Reader};
 use std::time::Duration;
 
 pub(in crate::execution::vm) enum Wait {
-    Terminal {
-        wait: super::host::wait::TerminalWait,
-        destination: Option<Register>,
-    },
+    Native(super::native::wait::Wait),
     Receive {
         reader: Reader,
         token: Option<u64>,
@@ -59,15 +56,15 @@ impl Worker {
         if operation == Op::DetachMcpServer {
             return self.acp_detach_tools(arguments, destination);
         }
+        if operation == Op::HostWaitForTerminalExit {
+            self.start_acp_native(operation, arguments, destination)?;
+            return Ok(Some(None));
+        }
         if !operation.waits() {
             return Ok(None);
         }
         let location = self.intrinsic_location();
         let wait = (|| match (operation, arguments) {
-            (Op::HostWaitForTerminalExit, _) => Ok(Wait::Terminal {
-                wait: self.acp_terminal_wait(arguments)?,
-                destination,
-            }),
             (Op::Receive, [owner, timeout, cancellation]) => {
                 let connection = self.hosted.acp.connection(args::handle(owner)?)?;
                 let timeout = args::optional(timeout)?
@@ -119,11 +116,16 @@ impl Worker {
                 )?)));
             }
         };
+        self.suspend_acp_wait(wait)?;
+        Ok(Some(None))
+    }
+
+    pub(in super::super) fn suspend_acp_wait(&mut self, wait: Wait) -> Result<(), VmError> {
         // The main lane uses the same saved suspension path as tasks and the debugger.
         self.task_suspension = Some(TaskSuspension::Acp(Box::new(wait)));
         self.suspend_requested = true;
         if self.poll_task_suspension()? {
-            return Ok(Some(None));
+            return Ok(());
         }
         if !self.debug_tasks && self.task_id == 0 {
             loop {
@@ -133,17 +135,16 @@ impl Worker {
                 }
             }
         }
-        Ok(Some(None))
+        Ok(())
     }
 
     pub(in crate::execution::vm) fn poll_acp_wait(&mut self, wait: Wait) -> Result<bool, VmError> {
+        if let Wait::Native(wait) = wait {
+            return self.poll_acp_native(wait);
+        }
         let location = self.intrinsic_location();
         let (operation, destination, result) = match &wait {
-            Wait::Terminal { wait, destination } => (
-                "WaitForTerminalExit",
-                *destination,
-                self.poll_acp_terminal(wait, location),
-            ),
+            Wait::Native(_) => unreachable!("native ACP polling was handled above"),
             Wait::Receive {
                 reader,
                 token,

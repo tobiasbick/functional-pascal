@@ -12,7 +12,7 @@ use std::{
 
 #[test]
 fn catalog_captures_saved_running_and_retained_tasks_without_executing_or_consuming_them() {
-    let source = "program Catalog; uses Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console;\nprocedure Sleeping(); begin const SleepLocal:=11; Time.Sleep(60000); end procedure;\nprocedure Waiting(Inbox:channel of integer); begin const WaitLocal:=13; discard Tasks.Receive(Inbox); end procedure;\nfunction Completed():integer; begin return 42; end function;\nprocedure Failed(); begin const FailedLocal:=17; panic('retained'); end procedure;\nprocedure Barrier(); begin Console.WriteText('barrier'); end procedure;\nprocedure Running(); begin const Live:=29; Console.WriteText('running'); while true do null; end while; end procedure;\nprocedure Queued(Inbox:channel of integer); begin panic('queued code must not execute'); end procedure;\nbegin panic('root'); end.";
+    let source = "program Catalog; uses Std.Tasks as Tasks, Std.Time as Time, Std.Console as Console;\nprocedure Sleeping(); begin const SleepLocal:=11; Time.Sleep(60000); end procedure;\nprocedure Waiting(Inbox:channel of integer); begin const WaitLocal:=13; discard Tasks.Receive(Inbox); end procedure;\nfunction Completed():integer; begin return 42; end function;\nprocedure Failed(); begin const FailedLocal:=17; panic('retained'); end procedure;\nprocedure Barrier(); begin Console.WriteText('barrier'); end procedure;\nprocedure Running(Ready:channel of integer); begin const Live:=29; Console.WriteText('running'); discard Tasks.Send(Ready,1); while true do null; end while; end procedure;\nprocedure Queued(Inbox:channel of integer); begin panic('queued code must not execute'); end procedure;\nbegin panic('root'); end.";
     let mut vm = vm(source);
     vm.pool_size = 0;
     let output = observe(&mut vm);
@@ -55,7 +55,9 @@ fn catalog_captures_saved_running_and_retained_tasks_without_executing_or_consum
     vm.scheduler.register_result(cancelled);
     vm.scheduler.enqueue(cancelled_worker.take_task_state());
     enqueue(&vm, "Barrier", vec![]);
-    let running = enqueue(&vm, "Running", vec![]);
+    let running_ready = vm.hosted.channels.create(1).unwrap();
+    let running = enqueue(&vm, "Running", vec![Value::OpaqueHandle(running_ready)]);
+    let _timer = start_timer(&vm);
     let guard = start_pool(&vm);
     assert_eq!(
         ready_rx.recv_timeout(Duration::from_secs(2)).unwrap(),
@@ -65,6 +67,7 @@ fn catalog_captures_saved_running_and_retained_tasks_without_executing_or_consum
         ready_rx.recv_timeout(Duration::from_secs(2)).unwrap(),
         "running"
     );
+    await_ready(&vm, running_ready);
     assert!(matches!(
         vm.scheduler.poll_result(released),
         TaskResultPoll::Available(Value::Integer(42))

@@ -1,0 +1,119 @@
+program ConsolePool;
+
+uses Std.Console as Console, Std.Tasks as Tasks, Std.Os.Args as Args;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Paint(): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  var Count := 0;
+  const Results := [0].Map(
+    function(Index: integer): integer begin
+      Console.WriteText('hold');
+      Console.WriteLn(Keep());
+      Console.AssignCrt();
+      Console.BeginFrame();
+      Console.ClrScr();
+      Console.GotoXY(1, 1);
+      Console.WriteText('abc');
+      if Console.WhereX() <> 4 then
+        panic('cursor state');
+      end if;
+      const Cell := Console.Cell(
+        Glyph := 'X',
+        Foreground := Console.CrtColor(15),
+        Background := Console.RgbColor(1, 2, 3)
+      );
+      Console.PutCell(1, 2, Cell);
+      Console.WriteCells(2, 2, [Cell, Cell]);
+      const Bounds := Console.Rect(X := 1, Y := 2, Width := 3, Height := 1);
+      const Saved := Console.SaveRegion(Bounds);
+      Console.FillRect(
+        Bounds,
+        Console.Cell(
+          Glyph := 'Y',
+          Foreground := Console.CrtColor(0),
+          Background := Console.Ansi256Color(1)
+        )
+      );
+      Console.RestoreRegion(Saved);
+      if Console.GetCell(3, 2).Unwrap().Glyph <> 'X' then
+        panic('native cell result');
+      end if;
+      const Discarded := Console.SaveRegion(Bounds);
+      Console.DiscardRegion(Discarded);
+      Console.Present();
+      if Console.ScreenWidth() <= 0 or Console.ScreenHeight() <= 0 then
+        panic('screen dimensions');
+      end if;
+
+      Count := Count + Keep() + Index;
+      return Count;
+    end function
+  );
+  return Results[0];
+end function;
+
+function Input(): integer;
+begin
+  if Console.ReadText().Unwrap() <> 'l' then
+    panic('native character input');
+  end if;
+
+  if Console.ReadLn().Unwrap() <> 'ine🙂' then
+    panic('native line input');
+  end if;
+
+  if Console.ReadLn().Unwrap() <> 'last' then
+    panic('unterminated native input');
+  end if;
+
+  if Console.ReadLn() <> None then
+    panic('native input EOF');
+  end if;
+
+  return 2;
+end function;
+
+begin
+  const Mode := Args.ParamStr(0);
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Writer := go Paint();
+      const Reader := go Input();
+      if Tasks.Wait(Reader) <> 2 then
+        panic('console reader');
+      end if;
+
+      if Mode <> 'normal' then
+        break;
+      end if;
+
+      if Tasks.Wait(Writer) <> 65536 then
+        panic('console callback');
+      end if;
+    end scope;
+  end for;
+end.

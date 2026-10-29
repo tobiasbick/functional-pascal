@@ -12,7 +12,7 @@ use std::time::Duration;
 const SOURCE: &str = include_str!("fixtures/pool.fpas");
 
 #[derive(Default)]
-struct Gate {
+pub(super) struct Gate {
     release: Mutex<Option<mpsc::Sender<()>>>,
     thread: Mutex<Option<std::thread::JoinHandle<()>>>,
     observed_peer: std::sync::atomic::AtomicBool,
@@ -50,10 +50,10 @@ impl Gate {
     }
 }
 
-struct Output {
-    hosted: Arc<OnceLock<Weak<HostedState>>>,
-    stop: Arc<OnceLock<Weak<ShutdownHandle>>>,
-    gate: Arc<Gate>,
+pub(super) struct Output {
+    pub(super) hosted: Arc<OnceLock<Weak<HostedState>>>,
+    pub(super) stop: Arc<OnceLock<Weak<ShutdownHandle>>>,
+    pub(super) gate: Arc<Gate>,
 }
 
 impl Write for Output {

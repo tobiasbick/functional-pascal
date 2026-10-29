@@ -13,11 +13,13 @@ mod args;
 pub(super) mod callbacks;
 mod console;
 mod console_args;
+pub(in crate::execution::vm) mod console_io;
 mod console_wait;
 mod crypto;
 pub(in crate::execution::vm) mod fs;
 mod http_handles;
 pub(in crate::execution::vm) mod mcp;
+pub(in crate::execution::vm) mod native;
 pub(in crate::execution::vm) mod net;
 pub(in crate::execution::vm) mod proc;
 mod random;
@@ -86,6 +88,13 @@ pub(super) struct HostedState {
     pub(in crate::execution::vm) network_jobs: std::sync::atomic::AtomicUsize,
     /// Native file operations, including completed results not yet consumed.
     pub(in crate::execution::vm) file_jobs: std::sync::atomic::AtomicUsize,
+    /// Native process jobs, including launch, terminal providers and undelivered outputs.
+    pub(in crate::execution::vm) process_jobs: std::sync::atomic::AtomicUsize,
+    pub(in crate::execution::vm::hosted) retired_native_jobs: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
+    pub(in crate::execution::vm) console_jobs: std::sync::atomic::AtomicUsize,
+    pub(in crate::execution::vm) acp_jobs: std::sync::atomic::AtomicUsize,
+    console_regions: std::sync::Arc<Mutex<Vec<crate::stdlib::SavedRegionId>>>,
+    console_order: Arc<console_io::Order>,
     pub(in crate::execution::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::execution::vm::hosted) files: fs::Files,
     pub(in crate::execution::vm::hosted) processes: proc::Processes,
@@ -141,6 +150,12 @@ impl HostedState {
             network_listeners: NetworkListeners::new(),
             network_jobs: Default::default(),
             file_jobs: Default::default(),
+            process_jobs: Default::default(),
+            retired_native_jobs: Default::default(),
+            console_jobs: Default::default(),
+            acp_jobs: Default::default(),
+            console_regions: Default::default(),
+            console_order: Default::default(),
             http_states: HttpStateRegistry::new(),
             files: fs::Files::new(),
             processes: proc::Processes::new(),
@@ -181,11 +196,13 @@ impl HostedState {
         self.processes.shutdown();
     }
 
-    /// Wait for process calls after workers and host callbacks have returned.
+    /// Join native operations after workers and host callbacks have returned.
     pub(super) fn wait_process_handles(&self) {
         self.mcp.wait_idle();
         self.acp.wait_idle();
         self.piped_processes.wait_idle();
         self.processes.wait_idle();
+        native::join_retired(self);
+        console_io::retire_regions(self);
     }
 }

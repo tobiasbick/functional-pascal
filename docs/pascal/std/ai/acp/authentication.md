@@ -21,6 +21,13 @@ cancellation and timeout return their typed errors; process-group cleanup uses
 the existing Std.Os.Proc foreground implementation. Normal exit zero returns true;
 nonzero exit or a signal returns false. ACP protocol pipes are never reused.
 
+Both authentication variants use the owned ACP job path in pool tasks and ordinary
+all-stop debugging. Their timeout starts before detached argument conversion and
+includes native admission, the terminal provider, startup and execution. Cancellation
+and timeout still join process-group cleanup. Host providers already in progress
+must return; providers may request VM shutdown without joining jobs under their
+own locks.
+
 After true, close the old ACP connection, reconnect with the original base
 launch and initialize again. No prompt or session is replayed automatically.
 The application controls consent and any retry. Logout is a separate protocol

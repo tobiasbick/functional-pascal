@@ -93,22 +93,34 @@ Returns `Error(Cause)` if the host cannot determine its executable path.
 
 ## Blocking and concurrency
 
-In pool tasks and the default all-stop debugger, `Run`, `RunCapture`, `RunWithOptions`
-and `RunCaptureWithOptions` save their process and pipe state while waiting. The VM worker
-remains available to other tasks, including when the call occurs inside an inline callback.
-The same process engine serves synchronous main-program and native callback calls.
+In pool tasks and the default all-stop debugger, all Run variants, `RunInteractive`,
+`Start` and process `Close` suspend their task while an owned native job executes.
+Launch, pipe supervision, terminal-provider calls, foreground restoration, stderr
+receivers and child reaping therefore leave the VM worker available, including
+inside inline FPAS callbacks. Main-program calls and explicit synchronous native
+evaluation helpers retain their calling-thread behavior.
 
-The OS launch itself, terminal-aware `RunInteractive` and synchronous program-stderr receivers
-still execute on their calling thread. Startup, cleanup and host callbacks are not preemptible
-wall-clock operations.
+Each VM admits at most 64 native process jobs, including results not yet delivered.
+Saturation returns `ProcError.LimitExceeded('native process jobs', 64)` before
+starting another native thread. `Close` waits for admission instead, so saturation
+does not prevent eventual handle cleanup. The existing 64 owned-process and 64
+interactive-handle limits remain separate. Inputs own native strings and options;
+FPAS values, frames and result construction stay on the VM task.
 
-Saved calls own their process reservation, native input copy and pipe buffers. Each turn
-performs at most eight nonblocking pipe probes, with up to 8 KiB per stream per probe.
-Productive pool calls yield through the ready queue; idle calls request another probe through
-the shared timer after one millisecond. Debugger readiness polling uses the same native state.
-The per-VM limit of 64 owned process calls includes suspended calls.
-Status changes and timeout expiry are observed at these probes. Pausing all-stop debugger
-execution pauses supervision; the external OS child continues running.
+Timeout budgets begin before copying native inputs and worker admission. The
+shared process engine probes each stream in bounded 8 KiB chunks and retries idle
+work after one millisecond. The VM polls job completion through its shared timer.
+Native supervision and host stderr delivery continue while all-stop FPAS execution
+is paused; the saved task consumes the result only after it resumes.
+
+Cancellation signals and joins native work. An OS launch, terminal provider, host
+receiver or reaping call already in progress cannot be forcibly interrupted, so
+cleanup can wait for that call. Callbacks may request VM shutdown: jobs retired
+inside a native process callback or host shutdown request are joined after callbacks
+return, avoiding self-joins and callback/provider lock cycles. Requesting shutdown
+does not itself wait for process joins; the VM's run/teardown barrier does.
+An unpublished `Start` result is closed
+on abandonment; published process handles remain the caller's responsibility.
 
 Abandoning a call through task cancellation, scope exit, a root failure or VM shutdown closes
 its owned group and reaps the direct child before releasing the saved state. Its pipe state
@@ -427,6 +439,9 @@ not grant access to OS streams. Providers can supply independent scripted
 streams or a host terminal. A Unix controlling-terminal provider transfers
 foreground ownership to the child's process group and restores the previous
 foreground group on completion or failure. This does not create a PTY.
+
+Pool/debugger calls invoke the thread-safe provider on their native process job.
+An in-flight provider call must return before abandonment can finish joining it.
 
 `None` timeout or cancellation token leaves that bound absent. Negative timeout
 and invalid configuration are rejected first; an already-cancelled token

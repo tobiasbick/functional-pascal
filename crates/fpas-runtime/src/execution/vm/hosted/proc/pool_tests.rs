@@ -72,10 +72,13 @@ fn run_source(source: &str, mode: &str, config: CollectionSchedule) {
     let sink = lines.clone();
     let receiver_stop = stop_slot.clone();
     let receiver_shutdown = mode == "receiver_shutdown";
+    let receiver_returned = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let returned = receiver_returned.clone();
     vm.set_program_stderr(Arc::new(move |line| {
         sink.lock().unwrap().push(line.to_owned());
         if receiver_shutdown {
             receiver_stop.get().unwrap().upgrade().unwrap().shutdown();
+            returned.store(true, std::sync::atomic::Ordering::Release);
         }
     }));
     let (send, receive) = mpsc::channel();
@@ -105,6 +108,12 @@ fn run_source(source: &str, mode: &str, config: CollectionSchedule) {
     }
     if matches!(mode, "run" | "options" | "receiver_shutdown") {
         assert_eq!(*lines.lock().unwrap(), ["prefix"]);
+    }
+    if receiver_shutdown {
+        assert!(
+            receiver_returned.load(std::sync::atomic::Ordering::Acquire),
+            "native stderr shutdown callback must return without a self-join panic"
+        );
     }
     observer.assert_closed(if child::descendants(mode) { 2 } else { 1 });
     drop(stop);

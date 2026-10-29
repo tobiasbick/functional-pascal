@@ -21,35 +21,61 @@ pub(in crate::execution::vm::hosted::net) struct TlsServer {
 
 impl TlsServer {
     /// Load one PEM certificate chain and private key.
+    #[cfg(test)]
     pub(in crate::execution::vm::hosted::net) fn from_pem_files(
         certificate_path: &str,
         private_key_path: &str,
         handshake_timeout_millis: i64,
     ) -> Result<Self, Failure> {
+        Self::from_pem_files_controlled(
+            certificate_path,
+            private_key_path,
+            handshake_timeout_millis,
+            || false,
+        )
+    }
+
+    pub(in crate::execution::vm::hosted::net) fn from_pem_files_controlled(
+        certificate_path: &str,
+        private_key_path: &str,
+        handshake_timeout_millis: i64,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<Self, Failure> {
         let handshake_timeout = handshake_timeout(handshake_timeout_millis)?;
-        let certificates = CertificateDer::pem_file_iter(Path::new(certificate_path))
-            .map_err(|error| {
+        check(&cancelled)?;
+        let mut pem =
+            CertificateDer::pem_file_iter(Path::new(certificate_path)).map_err(|error| {
                 Failure::pem(
                     &error,
                     format!("Could not open TLS certificate chain: {error}"),
                 )
-            })?
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|error| {
+            })?;
+        let mut certificates = Vec::new();
+        loop {
+            check(&cancelled)?;
+            let certificate = pem.next();
+            check(&cancelled)?;
+            let Some(certificate) = certificate else {
+                break;
+            };
+            certificates.push(certificate.map_err(|error| {
                 Failure::pem(
                     &error,
                     format!("Could not parse TLS certificate chain: {error}"),
                 )
-            })?;
+            })?);
+        }
         if certificates.is_empty() {
             return Err(Failure::Tls(
                 "TLS certificate chain contains no certificates".to_string(),
             ));
         }
+        check(&cancelled)?;
         let private_key =
             PrivateKeyDer::from_pem_file(Path::new(private_key_path)).map_err(|error| {
                 Failure::pem(&error, format!("Could not load TLS private key: {error}"))
             })?;
+        check(&cancelled)?;
         let provider = Arc::new(rustls::crypto::ring::default_provider());
         let config = ServerConfig::builder_with_provider(provider)
             .with_safe_default_protocol_versions()
@@ -65,6 +91,7 @@ impl TlsServer {
                     "Could not configure TLS certificate and private key: {error}"
                 ))
             })?;
+        check(cancelled)?;
         Ok(Self {
             config: Arc::new(config),
             handshake_timeout,
@@ -90,6 +117,14 @@ impl TlsServer {
             },
         )?;
         Ok(StreamOwned::new(connection, socket))
+    }
+}
+
+fn check(cancelled: impl Fn() -> bool) -> Result<(), Failure> {
+    if cancelled() {
+        Err(Failure::Cancelled)
+    } else {
+        Ok(())
     }
 }
 

@@ -101,7 +101,30 @@ fn cancelled_children_stop_before_the_next_instruction_in_a_batch() {
     worker.task_id = 1;
     worker.owner_scope = scheduler.scopes.enroll(scope, worker.task_id);
     let output = install_writer(&mut worker, Trigger::Cancel(scope));
-    assert_stopped(worker.run_task().expect_err("cancelled child"), &output);
+    let template = worker.pool_template();
+    scheduler.register_result(worker.task_id);
+    let timer_scheduler = scheduler.clone();
+    let timer = std::thread::spawn(move || timer_scheduler.timer_loop());
+    let result = worker.run_task();
+    let error = match result {
+        Err(error) => error,
+        Ok(None) => loop {
+            let task = scheduler.dequeue().expect("resume cancelled output task");
+            let mut resumed = template.worker_for_task(task);
+            let result = resumed
+                .resume_pool_suspension()
+                .and_then(|ready| if ready { resumed.run_task() } else { Ok(None) });
+            match result {
+                Err(error) => break error,
+                Ok(None) => {}
+                Ok(Some(_)) => panic!("cancelled child completed"),
+            }
+        },
+        Ok(Some(_)) => panic!("cancelled child completed"),
+    };
+    scheduler.finish_main();
+    timer.join().unwrap();
+    assert_stopped(error, &output);
 }
 
 #[test]

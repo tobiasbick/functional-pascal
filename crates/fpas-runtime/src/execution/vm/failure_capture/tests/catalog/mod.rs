@@ -86,3 +86,24 @@ fn start_timer(vm: &Vm) -> PoolGuard {
         thread: Some(thread),
     }
 }
+
+fn await_ready(vm: &Vm, channel: u64) {
+    use crate::execution::vm::channels::ReceiveState;
+    use std::time::{Duration, Instant};
+    let deadline = Instant::now() + Duration::from_secs(4);
+    loop {
+        match vm
+            .hosted
+            .channels
+            .receive(channel, false, Some(Duration::from_millis(10)))
+            .unwrap()
+        {
+            ReceiveState::Received(Value::Integer(1)) => return,
+            ReceiveState::Pending => assert!(
+                Instant::now() < deadline,
+                "FPAS peer did not reach its barrier"
+            ),
+            _ => panic!("unexpected peer barrier"),
+        }
+    }
+}

@@ -32,9 +32,12 @@ impl Console {
 
     /// `Std.Console.WriteText(value)` - print without newline.
     pub fn write(&mut self, value: &Value, location: SourceLocation) -> Result<(), StdError> {
+        self.write_text(&format!("{value}"), location)
+    }
+
+    pub(crate) fn write_text(&mut self, s: &str, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
-        let s = format!("{value}");
-        self.state.write_text(&s, false);
+        self.state.write_text(s, false);
         if self.state.crt_mode {
             self.render_if_ready(location)?;
         } else if let Some(writer) = &mut self.writer {
@@ -56,21 +59,28 @@ impl Console {
             })?;
         }
         if self.capture_mode == CaptureMode::Full {
-            self.capture_line_buf.push_str(&s);
+            self.capture_line_buf.push_str(s);
         }
         Ok(())
     }
 
     /// `Std.Console.WriteLn(value)` - print with newline.
     pub fn write_ln(&mut self, value: &Value, location: SourceLocation) -> Result<(), StdError> {
+        self.write_line_text(&format!("{value}"), location)
+    }
+
+    pub(crate) fn write_line_text(
+        &mut self,
+        s: &str,
+        location: SourceLocation,
+    ) -> Result<(), StdError> {
         self.sync_terminal_size();
-        let s = format!("{value}");
         if self.capture_mode == CaptureMode::Full {
-            self.capture_line_buf.push_str(&s);
+            self.capture_line_buf.push_str(s);
             let line = std::mem::take(&mut self.capture_line_buf);
             self.captured.lines.push(line);
         }
-        self.state.write_text(&s, true);
+        self.state.write_text(s, true);
         if self.state.crt_mode {
             self.render_if_ready(location)?;
         } else if let Some(writer) = &mut self.writer {

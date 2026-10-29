@@ -23,6 +23,33 @@ Built-in type operations are always available and use their static receiver type
 Types use the same alias: `Console.KeyEvent`. Enum members include their type,
 for example `Console.KeyKind.Space`.
 
+## Task execution and ownership
+
+Stateful Console calls in pool tasks and the ordinary all-stop debugger use owned
+native jobs. This includes text reads and writes, terminal input, screen/frame
+operations and state queries. Nested callbacks suspend with their task; formatting
+and FPAS result allocation stay on that task. Pure color and grapheme helpers run
+directly, while `Delay` uses the task timer.
+
+Each VM permits up to 64 native Console jobs, including undelivered results.
+Further calls queue without changing their return types. Calls on the same
+resource execute in issue order: output/screen, text input and terminal events
+have separate queues. Terminal acquisition/release reserves output and keyboard
+together. Frames retain their existing shared Console semantics; they do not
+give one task exclusive drawing ownership. Hosted screen assertions and queued
+text-input helpers share these resources.
+
+Abandonment cancels queued work and joins started jobs. Waiting for Console locks
+and terminal readiness observes cancellation. A host reader/writer or OS call
+already in progress must return before its job can be joined; scope exit and VM
+shutdown therefore have no hard time bound. Completed output and consumed input
+are not rolled back. An unpublished saved region is discarded; published region
+handles keep their one-shot restore/discard contract.
+
+Main-program and explicit synchronous native calls retain synchronous execution.
+Seeded debugger scheduling retains its deterministic queued/captured I/O instead
+of starting live native Console jobs.
+
 ## Quick reference
 
 Everything below requires `uses Std.Console as Console;`.

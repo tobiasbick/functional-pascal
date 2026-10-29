@@ -81,7 +81,17 @@ impl Processes {
         &self,
         request: &Request<'_>,
         terminal: Option<&InteractiveProcessTerminal>,
+        cancelled: impl FnMut() -> bool,
+    ) -> Result<ExitStatus, Failure> {
+        self.run_interactive_at(request, terminal, cancelled, Instant::now())
+    }
+
+    pub(super) fn run_interactive_at(
+        &self,
+        request: &Request<'_>,
+        terminal: Option<&InteractiveProcessTerminal>,
         mut cancelled: impl FnMut() -> bool,
+        started: Instant,
     ) -> Result<ExitStatus, Failure> {
         request.validate()?;
         let reservation = self.reserve()?;
@@ -90,7 +100,7 @@ impl Processes {
             .options
             .timeout
             .map(|timeout| {
-                Instant::now().checked_add(timeout).ok_or_else(|| {
+                started.checked_add(timeout).ok_or_else(|| {
                     Failure::argument("TimeoutMillis", "Timeout exceeds the monotonic clock range")
                 })
             })

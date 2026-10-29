@@ -1,0 +1,173 @@
+program AcpNativeFiles;
+
+uses
+  Std.Ai.Acp as Acp, Std.Ai.Acp.Host as Host, Std.Ai.Acp.Types as Types,
+  Std.Encoding.Json as Json, Std.Io.Fs as Fs, Std.Os.Args as Args,
+  Std.Tasks as Tasks, Std.Time as Time;
+
+function Quote(Text: string): string;
+begin
+  return Json.Stringify(Json.JsonValue.String(Text));
+end function;
+
+function Take(Endpoint: Acp.MessageEndpoint): Types.RawJson;
+begin
+  while true do
+    case Acp.TryTakeMessage(Endpoint).Unwrap() of
+      when Some(const Message):
+        return Message;
+      when None:
+        Time.Sleep(1);
+    end case;
+  end while;
+
+  panic('peer output');
+end function;
+
+function Exchange(Connection: Acp.Connection; Endpoint: Acp.MessageEndpoint; Method: string; Params: string; Reply: string): boolean;
+begin
+  discard Acp.Send(
+    Connection,
+    Types.DecodeClientRequest(Method, Types.RawJson(Text := Params)).Unwrap().Payload
+  ).Unwrap();
+  const Request := Take(Endpoint);
+  const Id := Types.RawJsonMember(Request, 'id').Unwrap().Unwrap();
+  discard Acp.FeedMessage(
+    Endpoint,
+    Types.RawJson(Text := '{"jsonrpc":"2.0","id":' + Id.Text + ',"result":' + Reply + '}')
+  ).Unwrap();
+  if not (
+    Acp.Receive(Connection, Some(5000), None).Unwrap().Payload is Acp.EventPayload.Response(_, _)
+  )
+  then
+    panic('initialization reply');
+  end if;
+
+  return true;
+end function;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Serve(Connection: Acp.Connection): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  const Values := [0].Map(
+    function(Index: integer): integer begin
+      case Acp.Receive(Connection, Some(5000), None).Unwrap().Payload of
+        when Acp.EventPayload.Request(const Payload, const Responder):
+          case Payload of
+            when Types.AgentRequest.ReadTextFileRequest(const Request):
+              const Reply := Host.ReadTextFile(Responder, Request).Unwrap();
+              if Reply.Content <> 'tail' then
+                panic('read line slice');
+              end if;
+
+              discard Acp.Respond(
+                Responder,
+                Types.ClientResponse.ReadTextFileResponse(Reply)
+              ).Unwrap();
+            when Types.AgentRequest.WriteTextFileRequest(const Request):
+              const Reply := Host.WriteTextFile(Responder, Request).Unwrap();
+              discard Acp.Respond(
+                Responder,
+                Types.ClientResponse.WriteTextFileResponse(Reply)
+              ).Unwrap();
+            when Types.AgentRequest.RequestPermissionRequest(_), Types.AgentRequest.CreateTerminalRequest(_), Types.AgentRequest.TerminalOutputRequest(_), Types.AgentRequest.ReleaseTerminalRequest(_), Types.AgentRequest.WaitForTerminalExitRequest(_), Types.AgentRequest.KillTerminalRequest(_), Types.AgentRequest.CreateElicitationRequest(_), Types.AgentRequest.MessageMcpRequest(_), Types.AgentRequest.ExtRequest(_):
+              panic('host request');
+          end case;
+        when Acp.EventPayload.McpResponse(_, _), Acp.EventPayload.V2McpResponse(_, _), Acp.EventPayload.RequestFailed(_, _), Acp.EventPayload.RequestCancelled(_), Acp.EventPayload.UnknownNotification(_, _), Acp.EventPayload.Closed(_), Acp.EventPayload.Response(_, _), Acp.EventPayload.Notification(_), Acp.EventPayload.V2Response(_, _), Acp.EventPayload.V2Notification(_), Acp.EventPayload.V2Request(_, _), Acp.EventPayload.V2Initialized(_, _):
+          panic('incoming request');
+      end case;
+
+      return Keep() + Index;
+    end function
+  );
+  return Values[0];
+end function;
+
+function Peer(Path: string; Mode: string): boolean;
+begin
+  const Text := 'x'.RepeatStr(131072) + '🙂'#13#10'tail';
+  if Mode = 'read' then
+    discard Fs.WriteText(Path, Text).Unwrap();
+  else
+    if Fs.ReadText(Path).Unwrap() <> Text then
+      panic('host write payload');
+    end if;
+  end if;
+
+  return true;
+end function;
+
+begin
+  const Path := Args.ParamStr(0);
+  const Mode := Args.ParamStr(1);
+  var Options := Acp.DefaultOptions();
+  Options.ClientCapabilities.Fs.ReadTextFile := true;
+  Options.ClientCapabilities.Fs.WriteTextFile := true;
+  const Messages := Acp.ConnectMessages(Options).Unwrap();
+  discard Exchange(
+    Messages.Connection,
+    Messages.Endpoint,
+    'initialize',
+    '{"protocolVersion":1,"clientCapabilities":{"fs":{"readTextFile":true,"writeTextFile":true}}}',
+    '{"protocolVersion":1,"agentCapabilities":{}}'
+  );
+  discard Exchange(
+    Messages.Connection,
+    Messages.Endpoint,
+    'session/new',
+    '{"cwd":"/","mcpServers":[]}',
+    '{"sessionId":"s"}'
+  );
+  const Method := if Mode = 'read' then 'fs/read_text_file' else 'fs/write_text_file' end if;
+  const Extra := if Mode = 'read' then ',"line":2,"limit":1'
+    else ',"content":' + Quote('x'.RepeatStr(131072) + '🙂'#13#10'tail')
+    end if;
+  discard Acp.FeedMessage(
+    Messages.Endpoint,
+    Types.RawJson(
+      Text := '{"jsonrpc":"2.0","id":"host","method":' + Quote(Method) +
+      ',"params":{"sessionId":"s","path":' + Quote(Path) + Extra + '}}'
+    )
+  ).Unwrap();
+  scope
+    const Serving := go Serve(Messages.Connection);
+    const Other := go Peer(Path, Mode);
+    if Tasks.Wait(Serving) <> 65536 then
+      panic('host callback capture');
+    end if;
+
+    if not Tasks.Wait(Other) then
+      panic('native file peer');
+    end if;
+  end scope;
+  const Reply := Take(Messages.Endpoint);
+  if not (Types.RawJsonMember(Reply, 'result').Unwrap() is Some(_)) then
+    panic('host response');
+  end if;
+
+  discard Acp.Close(Messages.Connection).Unwrap();
+  discard Acp.Release(Messages.Connection).Unwrap();
+end.

@@ -59,10 +59,40 @@ impl Worker {
         if INLINE_CALLBACKS
             && !self.capture_callback
             && (self.debug_tasks || self.task_id != 0)
+            && let Intrinsic::Acp(operation) = intrinsic
+            && crate::execution::vm::hosted::acp::native::supported(operation)
+        {
+            let arguments = self.registers[start..end].to_vec();
+            self.start_acp_native(operation, &arguments, destination)?;
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
+            }
+            return Ok(());
+        }
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
+            && self.debug_schedule.is_none()
+            && crate::execution::vm::hosted::console_io::supported_intrinsic(intrinsic)
+        {
+            let arguments = self.registers[start..end].to_vec();
+            self.start_console_io(intrinsic, &arguments, destination)?;
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
+            }
+            return Ok(());
+        }
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
             && let Intrinsic::Net(operation) = intrinsic
             && matches!(
                 operation,
                 NetIntrinsic::Accept
+                    | NetIntrinsic::Close
+                    | NetIntrinsic::Listen
+                    | NetIntrinsic::ListenTls
+                    | NetIntrinsic::SetTimeout
                     | NetIntrinsic::AcceptWithCancellation
                     | NetIntrinsic::Connect
                     | NetIntrinsic::ConnectTls
@@ -92,6 +122,9 @@ impl Worker {
             && matches!(
                 operation,
                 ProcIntrinsic::Run
+                    | ProcIntrinsic::Start
+                    | ProcIntrinsic::Close
+                    | ProcIntrinsic::RunInteractive
                     | ProcIntrinsic::RunCapture
                     | ProcIntrinsic::RunWithOptions
                     | ProcIntrinsic::RunCaptureWithOptions
@@ -111,7 +144,6 @@ impl Worker {
         if INLINE_CALLBACKS
             && !self.capture_callback
             && (self.debug_tasks || self.task_id != 0)
-            && owner == IntrinsicOwner::Hosted
             && let Intrinsic::Fs(operation) = intrinsic
         {
             let arguments = self.registers[start..end].to_vec();
@@ -153,8 +185,11 @@ impl Worker {
                     CallbackOutcome::Deferred => Ok(()),
                 };
             }
-            let result = self.execute_borrowed_intrinsic(intrinsic, owner, &arguments, location)?;
-            return self.store_intrinsic_result(intrinsic, destination, result);
+            return Err(diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                format!("Callback intrinsic {intrinsic:?} has no resumable implementation"),
+            ));
         }
         let result = self.execute_borrowed_intrinsic(
             intrinsic,
@@ -251,7 +286,7 @@ impl Worker {
         }
     }
 
-    fn store_intrinsic_result(
+    pub(in crate::execution::vm) fn store_intrinsic_result(
         &mut self,
         intrinsic: Intrinsic,
         destination: Option<Register>,

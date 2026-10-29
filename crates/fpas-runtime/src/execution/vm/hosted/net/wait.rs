@@ -2,9 +2,11 @@
 //!
 //! Documentation: `docs/pascal/std/network/net.md`.
 
-use super::connections::{ConnectMode, ConnectRequest};
-use super::{Failure, arguments as args};
+use super::Failure;
+use super::connections::closing::Closing;
+use super::request::{self, Operation, Output};
 use crate::execution::vm::{VmError, hosted::HostedState, tasks::TaskSuspension, worker::Worker};
+use std::task::Poll;
 
 #[cfg(test)]
 #[path = "wait_tests.rs"]
@@ -19,19 +21,6 @@ use std::{
     },
     thread::JoinHandle,
 };
-
-enum Operation {
-    Connect(ConnectRequest),
-    Accept(u64),
-    Read(u64, i64),
-    Write(u64, Vec<u8>),
-}
-
-enum Output {
-    Connection(u64),
-    Bytes(Vec<u8>),
-    Count(usize),
-}
 
 pub(super) const MAX_PENDING_JOBS: usize = 64;
 
@@ -69,11 +58,16 @@ pub(in crate::execution::vm) struct Wait {
     resources: Vec<String>,
     destination: Option<Register>,
     location: SourceLocation,
-    job: Job,
+    work: Work,
+}
+
+enum Work {
+    Native(Job),
+    Closing(Closing),
 }
 
 struct Job {
-    permit: Permit,
+    permit: Option<Permit>,
     stop: Arc<AtomicBool>,
     receiver: Mutex<mpsc::Receiver<Result<Output, Failure>>>,
     thread: Option<JoinHandle<()>>,
@@ -98,39 +92,13 @@ impl Job {
                         || token
                             .is_some_and(|id| state.cancellations.is_cancelled(id).unwrap_or(true))
                 };
-                let result = match operation {
-                    Operation::Connect(request) => state
-                        .network_connections
-                        .connect_prepared(&request, cancelled)
-                        .map(Output::Connection),
-                    Operation::Accept(handle) => state
-                        .network_listeners
-                        .accept_with_cancellation(handle, cancelled)
-                        .and_then(|transport| {
-                            if cancelled() {
-                                Err(Failure::Cancelled)
-                            } else {
-                                state
-                                    .network_connections
-                                    .insert_accepted(transport)
-                                    .map(Output::Connection)
-                            }
-                        }),
-                    Operation::Read(handle, count) => state
-                        .network_connections
-                        .read_with_cancellation(handle, count, cancelled)
-                        .map(Output::Bytes),
-                    Operation::Write(handle, bytes) => state
-                        .network_connections
-                        .write_with_cancellation(handle, &bytes, cancelled)
-                        .map(Output::Count),
-                };
+                let result = operation.run(&state, cancelled);
                 // Receiver ownership lasts through cancellation and native-thread join.
                 let _ = sender.send(result);
             })
             .map_err(|error| Failure::io(&error, "Could not start native network worker".into()))?;
         Ok(Self {
-            permit,
+            permit: Some(permit),
             stop,
             receiver: Mutex::new(receiver),
             thread: Some(thread),
@@ -157,18 +125,33 @@ impl Job {
 impl Drop for Job {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Release);
-        if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
-        }
-        // An accepted or outgoing connection not delivered to FPAS belongs to this wait.
-        if let Ok(Ok(Output::Connection(handle))) = self
-            .receiver
-            .get_mut()
-            .unwrap_or_else(|p| p.into_inner())
-            .try_recv()
-        {
-            let _ = self.permit.0.network_connections.close(handle);
-        }
+        let Some(permit) = self.permit.take() else {
+            return;
+        };
+        let state = permit.0.clone();
+        let thread = self.thread.take();
+        let (_, empty) = mpsc::channel();
+        let receiver = std::mem::replace(
+            self.receiver.get_mut().unwrap_or_else(|p| p.into_inner()),
+            empty,
+        );
+        super::super::native::retire(&state, move || {
+            if let Some(thread) = thread {
+                let _ = thread.join();
+            }
+            // Resources not delivered to FPAS still belong to this wait.
+            match receiver.try_recv() {
+                Ok(Ok(Output::Connection(handle))) => {
+                    let _ = permit.0.network_connections.abort(handle);
+                }
+                Ok(Ok(Output::Listener(handle))) => {
+                    let _ = permit.0.network_listeners.close(handle);
+                }
+                _ => {}
+            }
+            drop(receiver);
+            drop(permit);
+        });
     }
 }
 
@@ -180,67 +163,29 @@ impl Worker {
         arguments: &[Value],
         destination: Option<Register>,
     ) -> Result<Option<Value>, VmError> {
-        let cancellable = matches!(
-            operation,
-            Op::AcceptWithCancellation
-                | Op::ReadWithCancellation
-                | Op::WriteWithCancellation
-                | Op::ConnectWithCancellation
-                | Op::ConnectTlsWithCancellation
-        );
-        let connect = matches!(
-            operation,
-            Op::Connect
-                | Op::ConnectTls
-                | Op::ConnectWithCancellation
-                | Op::ConnectTlsWithCancellation
-        );
-        let accept = matches!(operation, Op::Accept | Op::AcceptWithCancellation);
-        let count = if connect {
-            3
-        } else if accept {
-            1
-        } else {
-            2
-        };
-        args::require_count(self, arguments, count + usize::from(cancellable))?;
-        let token = if cancellable {
-            Some(args::cancellation_token(self, &arguments[count])?)
-        } else {
-            None
-        };
+        if operation == Op::Close {
+            super::arguments::require_count(self, arguments, 1)?;
+            let handle = super::arguments::connection(self, &arguments[0])?;
+            let resources = vec![handle.to_string()];
+            let location = self.intrinsic_location();
+            return match self.hosted.network_connections.begin_close(handle) {
+                Ok(closing) => {
+                    self.suspend_net_work(operation, resources, destination, Work::Closing(closing))
+                }
+                Err(error) => Ok(Some(Value::result_error(error.into_value(
+                    self.layouts.as_ref(),
+                    &Intrinsic::Net(operation).debugger_name(),
+                    &resources,
+                    location,
+                )?))),
+            };
+        }
+        let request::Prepared {
+            operation: prepared,
+            resources,
+            token,
+        } = request::prepare(self, operation, arguments)?;
         let location = self.intrinsic_location();
-        let (prepared, resources) = if connect {
-            let host = args::string(self, &arguments[0], "Host")?;
-            let port = args::integer(self, &arguments[1], "Port")?;
-            let timeout = args::integer(self, &arguments[2], "TimeoutMillis")?;
-            let mode = if matches!(operation, Op::ConnectTls | Op::ConnectTlsWithCancellation) {
-                ConnectMode::Tls
-            } else {
-                ConnectMode::Tcp
-            };
-            (
-                ConnectRequest::new(host, port, timeout, mode).map(Operation::Connect),
-                vec![host.to_owned(), port.to_string()],
-            )
-        } else {
-            let handle = if accept {
-                args::listener(self, &arguments[0])?
-            } else {
-                args::connection(self, &arguments[0])?
-            };
-            let prepared = if accept {
-                Ok(Operation::Accept(handle))
-            } else if matches!(operation, Op::Read | Op::ReadWithCancellation) {
-                Ok(Operation::Read(
-                    handle,
-                    args::integer(self, &arguments[1], "MaxBytes")?,
-                ))
-            } else {
-                args::bytes(self, &arguments[1])?.map(|data| Operation::Write(handle, data))
-            };
-            (prepared, vec![handle.to_string()])
-        };
         let job = prepared.and_then(|operation| {
             if let Some(token) = token {
                 let cancelled = self
@@ -248,7 +193,7 @@ impl Worker {
                     .cancellations
                     .is_cancelled(token)
                     .map_err(|error| Failure::argument("Token", error))?;
-                if (accept || connect) && cancelled {
+                if matches!(operation, Operation::Accept(_) | Operation::Connect(_)) && cancelled {
                     return Err(Failure::Cancelled);
                 }
             }
@@ -268,12 +213,22 @@ impl Worker {
                 )?)));
             }
         };
+        self.suspend_net_work(operation, resources, destination, Work::Native(job))
+    }
+
+    fn suspend_net_work(
+        &mut self,
+        operation: Op,
+        resources: Vec<String>,
+        destination: Option<Register>,
+        work: Work,
+    ) -> Result<Option<Value>, VmError> {
         self.task_suspension = Some(TaskSuspension::Net(Box::new(Wait {
             operation,
             resources,
             destination,
-            location,
-            job,
+            location: self.intrinsic_location(),
+            work,
         })));
         self.suspend_requested = true;
         let _ = self.poll_task_suspension()?;
@@ -281,13 +236,25 @@ impl Worker {
     }
 
     /// Resume a socket operation at its original instruction and release native ownership on finish.
-    pub(in crate::execution::vm) fn poll_net_wait(&mut self, wait: Wait) -> Result<bool, VmError> {
-        let Some(outcome) = wait.job.poll() else {
+    pub(in crate::execution::vm) fn poll_net_wait(
+        &mut self,
+        mut wait: Wait,
+    ) -> Result<bool, VmError> {
+        let outcome = match &mut wait.work {
+            Work::Native(job) => job.poll(),
+            Work::Closing(closing) => match closing.poll() {
+                Poll::Ready(result) => Some(result.map(|()| Output::Done)),
+                Poll::Pending => None,
+            },
+        };
+        let Some(outcome) = outcome else {
             self.task_suspension = Some(TaskSuspension::Net(Box::new(wait)));
             return Ok(false);
         };
         let value = match outcome {
-            Ok(Output::Connection(id)) => Value::result_ok(Value::OpaqueHandle(id)),
+            Ok(Output::Connection(id) | Output::Listener(id)) => {
+                Value::result_ok(Value::OpaqueHandle(id))
+            }
             Ok(Output::Bytes(bytes)) => Value::result_ok(Value::Array(
                 bytes
                     .into_iter()
@@ -295,6 +262,7 @@ impl Worker {
                     .collect(),
             )),
             Ok(Output::Count(count)) => Value::result_ok(Value::Integer(count as i64)),
+            Ok(Output::Done) => Value::result_ok(Value::Boolean(true)),
             Err(error) => Value::result_error(error.into_value(
                 self.layouts.as_ref(),
                 &Intrinsic::Net(wait.operation).debugger_name(),

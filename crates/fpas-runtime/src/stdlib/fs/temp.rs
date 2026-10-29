@@ -5,7 +5,7 @@
 use super::failure::Failure;
 use std::fs::{self, OpenOptions};
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -17,13 +17,29 @@ pub(super) fn temp_dir() -> String {
 }
 
 /// Create a new, uniquely named empty directory below the temporary directory.
+#[cfg(test)]
 pub(super) fn create_temp_dir() -> Result<String, Failure> {
-    create_unique("Std.Io.Fs.CreateTempDir", |path| fs::create_dir(path))
+    create_temp_dir_path(&mut || false).map(|path| slash_path(&path))
+}
+
+pub(super) fn create_temp_dir_path(
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<PathBuf, Failure> {
+    create_unique("Std.Io.Fs.CreateTempDir", cancelled, |path| {
+        fs::create_dir(path)
+    })
 }
 
 /// Create a new, uniquely named empty file below the temporary directory.
+#[cfg(test)]
 pub(super) fn create_temp_file() -> Result<String, Failure> {
-    create_unique("Std.Io.Fs.CreateTempFile", |path| {
+    create_temp_file_path(&mut || false).map(|path| slash_path(&path))
+}
+
+pub(super) fn create_temp_file_path(
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<PathBuf, Failure> {
+    create_unique("Std.Io.Fs.CreateTempFile", cancelled, |path| {
         OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -34,11 +50,13 @@ pub(super) fn create_temp_file() -> Result<String, Failure> {
 
 fn create_unique(
     operation: &'static str,
+    cancelled: &mut dyn FnMut() -> bool,
     create: impl Fn(&Path) -> io::Result<()>,
-) -> Result<String, Failure> {
+) -> Result<PathBuf, Failure> {
     static NEXT: AtomicU64 = AtomicU64::new(1);
-    let root = std::env::temp_dir();
+    let root = std::path::absolute(std::env::temp_dir())?;
     for _ in 0..MAX_ATTEMPTS {
+        super::io::check(cancelled)?;
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_or(0, |elapsed| elapsed.subsec_nanos());
@@ -48,7 +66,7 @@ fn create_unique(
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         match create(&candidate) {
-            Ok(()) => return Ok(slash_path(&candidate)),
+            Ok(()) => return Ok(candidate),
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
             Err(error) => return Err(Failure::at(&candidate, error)),
         }

@@ -26,6 +26,7 @@ struct State {
 #[derive(Default)]
 pub(in crate::execution::vm) struct Registry {
     state: Mutex<State>,
+    initialization: Mutex<()>,
 }
 
 struct Reservation<'a>(&'a Registry);
@@ -42,19 +43,43 @@ impl Drop for Reservation<'_> {
 impl Registry {
     fn reserve(&self, limits: &Limits) -> Result<(Reservation<'_>, Arc<Runtime>), Fault> {
         limits.validate()?;
-        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
-        if state.stopping {
-            return Err(Fault::Closed);
+        {
+            let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            if state.stopping {
+                return Err(Fault::Closed);
+            }
+            if state.connections.len() + state.opening >= 16 {
+                return Err(Fault::LimitExceeded("Connections", 16));
+            }
+            state.opening += 1;
         }
-        if state.connections.len() + state.opening >= 16 {
-            return Err(Fault::LimitExceeded("Connections", 16));
-        }
-        if state.runtime.is_none() {
-            state.runtime = Some(Arc::new(Runtime::new()?));
-        }
-        let runtime = state.runtime.as_ref().ok_or(Fault::Host)?.clone();
-        state.opening += 1;
-        Ok((Reservation(self), runtime))
+        let reservation = Reservation(self);
+        let _initialization = self
+            .initialization
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let current = {
+            let state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+            if state.stopping {
+                return Err(Fault::Closed);
+            }
+            state.runtime.clone()
+        };
+        let runtime = match current {
+            Some(runtime) => runtime,
+            None => {
+                let runtime = Arc::new(Runtime::new()?);
+                let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+                if state.stopping {
+                    drop(state);
+                    runtime.shutdown();
+                    return Err(Fault::Closed);
+                }
+                state.runtime = Some(runtime.clone());
+                runtime
+            }
+        };
+        Ok((reservation, runtime))
     }
 
     pub(super) fn connect_messages(
@@ -88,6 +113,7 @@ impl Registry {
         Ok((id, endpoint_id))
     }
 
+    #[cfg(test)]
     pub(super) fn connect_process(
         &self,
         settings: Settings,
@@ -95,10 +121,21 @@ impl Registry {
         launch: AcpLaunch,
         processes: Arc<PipedProcesses>,
     ) -> Result<u64, Fault> {
+        self.connect_process_controlled(settings, limits, launch, processes, || false)
+    }
+    pub(super) fn connect_process_controlled(
+        &self,
+        settings: Settings,
+        limits: Limits,
+        launch: AcpLaunch,
+        processes: Arc<PipedProcesses>,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<u64, Fault> {
         let (_reservation, runtime) = self.reserve(&limits)?;
         let terminals = AcpTerminals::new(processes.clone(), limits.clone());
         let connection = runtime.connect_configured_with(settings, limits.clone(), || {
-            let transport = AcpProcess::start(processes, &launch, limits)?;
+            let transport =
+                AcpProcess::start_with_cancellation(processes, &launch, limits, &cancelled)?;
             Ok(Arc::new(super::host::resources::OwnedTransport {
                 inner: transport,
                 terminals: terminals.clone(),
@@ -124,6 +161,22 @@ impl Registry {
             .get(&id)
             .cloned()
             .ok_or(Fault::Closed)
+    }
+
+    pub(super) fn abandon(&self, id: u64) {
+        let connection = {
+            let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
+            state.endpoints.retain(|_, (owner, _)| *owner != id);
+            state.terminals.remove(&id);
+            state.connections.remove(&id)
+        };
+        if let Some(connection) = connection {
+            let _ = connection.close();
+            while !connection.is_closed() {
+                std::thread::park_timeout(std::time::Duration::from_millis(1));
+            }
+            let _ = connection.release();
+        }
     }
 
     pub(super) fn endpoint(&self, id: u64) -> Result<MessageEndpoint, Fault> {

@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::*;
+use crate::{FsIntrinsic, Value};
 
 fn test_location() -> SourceLocation {
     SourceLocation::new(1, 1)

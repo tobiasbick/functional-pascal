@@ -3,7 +3,7 @@
 mod acp;
 mod acp_auth;
 pub(in crate::execution::vm::hosted) use acp_auth::Authentication as AcpAuthentication;
-pub(in crate::execution::vm::hosted) use acp_auth::authenticate as acp_authenticate;
+pub(in crate::execution::vm::hosted) use acp_auth::authenticate_at as acp_authenticate_at;
 mod acp_output;
 mod acp_terminals;
 pub(in crate::execution::vm::hosted) use acp_terminals::Terminals as AcpTerminals;
@@ -13,7 +13,9 @@ mod engine;
 mod failure;
 mod interactive;
 mod interactive_dispatch;
+mod job;
 mod options;
+mod owned;
 mod pipes;
 pub(super) mod platform;
 mod registry;
@@ -22,6 +24,8 @@ pub(in crate::execution::vm) mod selection;
 mod status;
 pub(in crate::execution::vm) mod wait;
 
+#[cfg(test)]
+mod native_tests;
 #[cfg(test)]
 mod pool_tests;
 #[cfg(test)]

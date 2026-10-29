@@ -5,6 +5,7 @@ use crate::execution::vm::{VmError, hosted::HostedState, worker::Worker};
 use crate::{FsIntrinsic as Op, Value};
 
 enum Request {
+    Path(crate::stdlib::fs::native::Call),
     Open(String, i64),
     Close(u64),
     Read(u64, i64),
@@ -19,6 +20,7 @@ enum Request {
 }
 
 pub(super) enum Output {
+    Path(crate::stdlib::fs::native::Outcome),
     Handle(u64),
     Bytes(Vec<u8>),
     Number(i64),
@@ -37,6 +39,20 @@ impl Call {
         op: Op,
         values: &[Value],
     ) -> Result<Result<Self, Failure>, VmError> {
+        if crate::stdlib::fs::native::supported(op) {
+            let prepared = crate::stdlib::fs::native::Call::prepare_values(
+                op,
+                values,
+                worker.layouts.as_ref(),
+                worker.intrinsic_location(),
+            )?;
+            return Ok(prepared
+                .map(|request| Self {
+                    request: Request::Path(request),
+                    token: None,
+                })
+                .map_err(Failure::Path));
+        }
         let cancellable = matches!(
             op,
             Op::ReadWithCancellation
@@ -146,14 +162,16 @@ impl Call {
         mut stopped: impl FnMut() -> bool,
     ) -> Result<Output, Failure> {
         let files = &hosted.files;
+        let path = matches!(&self.request, Request::Path(_));
         let cancelled = || {
             stopped()
-                || files.is_stopping()
+                || (!path && files.is_stopping())
                 || self
                     .token
                     .is_some_and(|id| hosted.cancellations.is_cancelled(id).unwrap_or(true))
         };
         Ok(match &self.request {
+            Request::Path(request) => Output::Path(request.run(cancelled)),
             Request::Open(path, mode) => Output::Handle(files.open(path, *mode, cancelled)?),
             Request::Close(handle) => {
                 files.close(*handle, cancelled)?;

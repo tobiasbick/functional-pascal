@@ -1,7 +1,6 @@
 //! Hosted screen and input assertions for the VM.
 
-use crate::stdlib::{assert_screen_cell, assert_screen_line};
-use crate::{Intrinsic, SourceLocation, TestIntrinsic, Value};
+use crate::{Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 use super::super::VmError;
@@ -17,68 +16,14 @@ impl Worker {
         let Intrinsic::Test(operation) = intrinsic else {
             return Ok(None);
         };
-        match operation {
-            TestIntrinsic::ScratchDir => {
-                argument_count(arguments, 0, self)?;
-                let path = self
-                    .hosted
-                    .test_scratch_dir
-                    .lock()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .clone();
-                std::fs::create_dir_all(&path).map_err(|error| {
-                    self.test_host_error(&format!(
-                        "Cannot create test scratch directory `{}`: {error}",
-                        path.display()
-                    ))
-                })?;
-                let path = path.to_string_lossy().replace('\\', "/");
-                return Ok(Some(Some(Value::Str(path.into()))));
-            }
-            TestIntrinsic::AssertScreenLine => {
-                let expected = string(arguments, 0, 2, self)?;
-                let row = coordinate(integer(arguments, 1, 2, self)?, "row", self)?;
-                let actual = self.with_console(|console| console.query_screen_line(row));
-                assert_screen_line(expected.to_owned(), actual, location)?;
-            }
-            TestIntrinsic::AssertScreenCell => {
-                let column = coordinate(integer(arguments, 0, 5, self)?, "column", self)?;
-                let row = coordinate(integer(arguments, 1, 5, self)?, "row", self)?;
-                let expected = string(arguments, 2, 5, self)?;
-                let mut chars = expected.chars();
-                let expected = match (chars.next(), chars.next()) {
-                    (Some(character), None) => character,
-                    _ => {
-                        return Err(self.test_host_error("AssertScreenCell expected one character"));
-                    }
-                };
-                let foreground = integer(arguments, 3, 5, self)?;
-                let background = integer(arguments, 4, 5, self)?;
-                let (actual, actual_foreground, actual_background) = self
-                    .with_console(|console| console.query_screen_cell(column, row))
-                    .ok_or_else(|| {
-                        self.test_host_error("AssertScreenCell coordinate is outside the screen")
-                    })?;
-                assert_screen_cell(
-                    expected,
-                    foreground,
-                    background,
-                    actual,
-                    actual_foreground,
-                    actual_background,
-                    location,
-                )?;
-            }
-            TestIntrinsic::PushReadLn => {
-                let text = string(arguments, 0, 1, self)?;
-                self.with_text_input(|input| input.push_line(text));
-            }
-            _ => return Ok(None),
+        if !super::console_io::supported_test(operation) {
+            return Ok(None);
         }
-        Ok(Some(None))
+        self.execute_test_console_owned(operation, arguments, location)
+            .map(Some)
     }
 
-    fn test_host_error(&self, message: &str) -> VmError {
+    pub(super) fn test_host_error(&self, message: &str) -> VmError {
         self.runtime_error(
             RUNTIME_CONSOLE_STATE_ERROR,
             message,
@@ -87,7 +32,7 @@ impl Worker {
     }
 }
 
-fn integer(
+pub(super) fn integer(
     arguments: &[Value],
     index: usize,
     count: usize,
@@ -101,7 +46,7 @@ fn integer(
     }
 }
 
-fn string<'a>(
+pub(super) fn string<'a>(
     arguments: &'a [Value],
     index: usize,
     count: usize,
@@ -129,7 +74,11 @@ fn argument<'a>(
         .ok_or_else(|| worker.test_host_error("Hosted test intrinsic argument is missing"))
 }
 
-fn argument_count(arguments: &[Value], count: usize, worker: &Worker) -> Result<(), VmError> {
+pub(super) fn argument_count(
+    arguments: &[Value],
+    count: usize,
+    worker: &Worker,
+) -> Result<(), VmError> {
     if arguments.len() == count {
         Ok(())
     } else {
@@ -137,7 +86,7 @@ fn argument_count(arguments: &[Value], count: usize, worker: &Worker) -> Result<
     }
 }
 
-fn coordinate(value: i64, label: &str, worker: &Worker) -> Result<u16, VmError> {
+pub(super) fn coordinate(value: i64, label: &str, worker: &Worker) -> Result<u16, VmError> {
     u16::try_from(value)
         .ok()
         .filter(|value| *value > 0)

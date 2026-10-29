@@ -1,5 +1,46 @@
 # GC memory regressions
 
+ACP host jobs add 24 exact-balance authentication sessions with gated native
+providers, cyclic callback captures, scope exit and writer-triggered VM shutdown.
+Eight Unix FIFO sessions additionally cover host file reads/writes, mixed native
+filesystem peers, oversized payloads and SDK connection cleanup. Both use default
+and 1/1/1 collection schedules. Separate tests bound unfinished SDK constructors,
+signal shutdown during construction, cancel busy terminal lock waits and close
+undelivered connection/terminal results.
+
+Native Console boundaries add 24 exact-balance VM sessions for gated output and
+text input, suspended nested callbacks with cyclic captures, and retained frames
+and regions. Normal completion, scope exit and writer-triggered VM shutdown run
+with default and 1/1/1 schedules. The gates require progress from separate input
+and output jobs; all jobs and their native payloads must be joined and released.
+Separate unit tests require one-worker progress, preserve resource issue order,
+queue calls at native-job capacity and discard unpublished saved regions.
+File and network regressions also retain undelivered handles while a native
+callback returns before joining; final retirement closes those handles and
+releases their job permits.
+
+Native process boundaries add 24 exact-balance VM sessions covering a gated terminal
+provider, `RunInteractive`, process `Start`/`Close`, cyclic captures and unused cases.
+Normal completion, scope exit and VM shutdown run with default and 1/1/1 schedules.
+The existing 72 owned-process teardown sessions also cover native startup, reaping,
+stderr receivers and callback-triggered shutdown; the shutdown callback must return
+without a native-thread self-join panic. Native retirement is joined before VM teardown
+completes. TLS close unit tests separately force socket backpressure, preserve all
+accepted plaintext through close_notify, and abort an abandoned detached transport.
+
+Native socket configuration adds 24 exact-balance VM sessions for timeout changes
+and listener creation inside cyclic callbacks. Normal completion, scope exit and
+VM shutdown run with default and 1/1/1 schedules. Separate native/unit fixtures
+force a busy connection lock, load TLS certificates over a Unix FIFO on one worker
+and in the debugger, close unpublished TCP/TLS listeners and join abandoned PEM I/O.
+
+Native path-job teardown adds 24 exact-balance VM sessions for whole-file I/O,
+directory/tree operations, queries and temporary resources in nested callbacks.
+Normal completion, scope exit and VM shutdown run with both collection schedules.
+Separate unit tests prove cleanup of unpublished temporary paths, queue plain
+queries at native-job capacity, retain atomic-write targets on cancellation and
+use a Unix FIFO to require progress from two FPAS tasks on one VM worker.
+
 Native file-job teardown covers normal handle I/O inside nested callbacks,
 pre-cancelled operations, scope exit and callback-triggered VM shutdown. Large
 native byte/text payloads, cyclic captures and unused WaitCase callbacks return

@@ -20,10 +20,31 @@ use std::{
 const CONNECTIONS: usize = 16;
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
+#[derive(Default)]
+struct Connections {
+    entries: BTreeMap<u64, Connection>,
+    opening: usize,
+}
 struct State {
-    connections: Mutex<BTreeMap<u64, Connection>>,
+    connections: Mutex<Connections>,
     stopping: AtomicBool,
     changed: tokio::sync::Notify,
+}
+
+struct Reservation<'a> {
+    state: &'a State,
+    active: bool,
+}
+impl Drop for Reservation<'_> {
+    fn drop(&mut self) {
+        if self.active {
+            self.state
+                .connections
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .opening -= 1;
+        }
+    }
 }
 
 /// Native SDK executor. Shut it down only after host workers have stopped polling.
@@ -43,7 +64,7 @@ impl Runtime {
         let (opens, mut incoming) =
             tokio::sync::mpsc::channel::<(Arc<Shared>, Arc<dyn Transport>)>(CONNECTIONS);
         let state = Arc::new(State {
-            connections: Mutex::new(BTreeMap::new()),
+            connections: Mutex::new(Connections::default()),
             stopping: AtomicBool::new(false),
             changed: tokio::sync::Notify::new(),
         });
@@ -125,7 +146,7 @@ impl Runtime {
     }
 
     /// Validate and reserve admission before constructing a physical transport.
-    /// The constructor runs under the admission lock and must not re-enter this runtime.
+    /// Construction runs outside the admission lock; its reservation counts until handoff.
     pub fn connect_configured_with(
         &self,
         settings: super::Settings,
@@ -145,8 +166,10 @@ impl Runtime {
         if self.state.stopping.load(Ordering::Acquire) {
             return Err(Fault::Closed);
         }
-        connections.retain(|_, connection| !connection.shared.lock().released);
-        if connections.len() == CONNECTIONS {
+        connections
+            .entries
+            .retain(|_, connection| !connection.shared.lock().released);
+        if connections.entries.len() + connections.opening >= CONNECTIONS {
             return Err(Fault::LimitExceeded("Connections", CONNECTIONS));
         }
         let serial = NEXT
@@ -162,10 +185,34 @@ impl Runtime {
             .opens
             .try_reserve()
             .map_err(|_| Fault::Busy("Connect"))?;
+        connections.opening += 1;
+        let mut reservation = Reservation {
+            state: &self.state,
+            active: true,
+        };
+        drop(connections);
         let transport = create()?;
+        let mut connections = self
+            .state
+            .connections
+            .lock()
+            .unwrap_or_else(|p| p.into_inner());
+        let stopped = self.state.stopping.load(Ordering::Acquire);
+        if stopped {
+            let _ = connection.close();
+        }
+        connections
+            .entries
+            .insert(connection.id(), connection.clone());
+        connections.opening -= 1;
+        reservation.active = false;
+        drop(connections);
         opening.send((shared, transport));
-        connections.insert(connection.id(), connection.clone());
-        Ok(connection)
+        if stopped {
+            Err(Fault::Closed)
+        } else {
+            Ok(connection)
+        }
     }
 
     /// Reject new connections and wake every SDK task without joining a VM worker.
@@ -176,6 +223,7 @@ impl Runtime {
             .connections
             .lock()
             .unwrap_or_else(|e| e.into_inner())
+            .entries
             .values()
             .cloned()
             .collect();
@@ -195,6 +243,7 @@ impl Runtime {
             .connections
             .lock()
             .unwrap_or_else(|e| e.into_inner())
+            .entries
             .clear();
     }
 }

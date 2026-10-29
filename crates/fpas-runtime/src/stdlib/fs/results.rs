@@ -4,7 +4,7 @@ use crate::stdlib::native_errors::{self, NativeErrorFamily};
 use crate::stdlib::{AggregateFactory, StdError};
 use crate::{SourceLocation, Value};
 
-pub(super) fn result<T>(
+pub(crate) fn result<T>(
     factory: &dyn AggregateFactory,
     operation: &str,
     resources: &[String],
@@ -16,6 +16,16 @@ pub(super) fn result<T>(
         Ok(value) => return Ok(Value::result_ok(convert(value))),
         Err(error) => error,
     };
+    error_value(factory, operation, resources, error, location).map(Value::result_error)
+}
+
+pub(crate) fn error_value(
+    factory: &dyn AggregateFactory,
+    operation: &str,
+    resources: &[String],
+    error: Failure,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
     let text = |s: &str| Value::Str(s.into());
     let primary = resources.first().map_or("", String::as_str);
     let (error, primary) = match error {
@@ -24,6 +34,7 @@ pub(super) fn result<T>(
         other => (other, primary.to_owned()),
     };
     let (variant, fields) = match error {
+        Failure::Cancelled => (14, vec![text(operation)]),
         Failure::Io(error)
             if error.kind() == std::io::ErrorKind::InvalidInput
                 && error.raw_os_error().is_none()
@@ -84,7 +95,6 @@ pub(super) fn result<T>(
         ),
     };
     native_errors::value(factory, NativeErrorFamily::Fs, variant, fields, location)
-        .map(Value::result_error)
 }
 
 #[cfg(test)]

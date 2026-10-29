@@ -3,10 +3,13 @@
 mod arguments;
 pub(in crate::execution::vm) mod failure;
 use failure::Failure;
+#[cfg(test)]
+mod config_tests;
 mod connections;
 mod listeners;
 #[cfg(test)]
 mod pool_tests;
+mod request;
 mod tls;
 mod transport;
 pub(in crate::execution::vm) mod wait;

@@ -2,12 +2,28 @@
 
 use crate::execution::vm::hosted::net::failure::Failure;
 use std::io;
-use std::sync::TryLockError;
+use std::sync::{Mutex, MutexGuard, TryLockError};
 use std::time::{Duration, Instant};
 
 use super::{NetworkConnections, Transport};
 
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
+
+pub(super) fn lock_transport(
+    transport: &Mutex<Transport>,
+    cancelled: impl Fn() -> bool,
+) -> Result<MutexGuard<'_, Transport>, Failure> {
+    loop {
+        if cancelled() {
+            return Err(Failure::Cancelled);
+        }
+        match transport.try_lock() {
+            Ok(transport) => return Ok(transport),
+            Err(TryLockError::Poisoned(error)) => return Ok(error.into_inner()),
+            Err(TryLockError::WouldBlock) => std::thread::park_timeout(POLL_INTERVAL),
+        }
+    }
+}
 
 /// Socket timeout and diagnostic direction for one polling operation.
 #[derive(Clone, Copy)]
@@ -32,16 +48,7 @@ impl NetworkConnections {
             Direction::Write => "write",
         };
         let connection = self.connection(handle)?;
-        let mut transport = loop {
-            if is_cancelled() {
-                return Err(Failure::Cancelled);
-            }
-            match connection.transport.try_lock() {
-                Ok(transport) => break transport,
-                Err(TryLockError::Poisoned(error)) => break error.into_inner(),
-                Err(TryLockError::WouldBlock) => std::thread::park_timeout(POLL_INTERVAL),
-            }
-        };
+        let mut transport = lock_transport(&connection.transport, &is_cancelled)?;
         let timeout = match direction {
             Direction::Read => transport.read_timeout(),
             Direction::Write => transport.write_timeout(),

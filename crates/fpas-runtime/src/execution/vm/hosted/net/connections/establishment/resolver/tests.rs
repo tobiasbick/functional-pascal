@@ -78,7 +78,7 @@ fn cancelled_and_expired_lookups_discard_late_addresses_without_opening_a_socket
         } else {
             Duration::from_millis(1)
         };
-        let outcome = lookup.wait(Instant::now() + duration, || {
+        let outcome = lookup.wait(Some(Instant::now() + duration), || {
             cancel && checks.fetch_add(1, Ordering::AcqRel) != 0
         });
         assert_eq!(
@@ -117,7 +117,7 @@ fn cancellation_after_dns_completion_wins_over_addresses_and_errors() {
         lookup.thread.take().unwrap().join().unwrap();
         let checks = AtomicUsize::new(0);
         assert_eq!(
-            lookup.wait(Instant::now() + Duration::from_secs(5), || checks
+            lookup.wait(Some(Instant::now() + Duration::from_secs(5)), || checks
                 .fetch_add(1, Ordering::AcqRel)
                 != 0),
             Err(Failure::Cancelled)
@@ -136,7 +136,7 @@ fn successful_lookup_releases_native_input_before_returning() {
     .unwrap();
     assert_eq!(
         lookup
-            .wait(Instant::now() + Duration::from_secs(5), || false)
+            .wait(Some(Instant::now() + Duration::from_secs(5)), || false)
             .unwrap()
             .len(),
         1
@@ -148,10 +148,34 @@ fn successful_lookup_releases_native_input_before_returning() {
 fn resolver_panic_becomes_a_native_failure() {
     let lookup = Lookup::start(|| panic!("OS resolver fixture failed")).unwrap();
     assert!(matches!(
-        lookup.wait(Instant::now() + Duration::from_secs(5), || false),
+        lookup.wait(Some(Instant::now() + Duration::from_secs(5)), || false),
         Err(Failure::Native {
             kind: crate::execution::vm::hosted::net::failure::NativeKind::IoFailure,
             ..
         })
     ));
+}
+
+#[test]
+fn listener_lookups_preserve_ephemeral_ports_and_cancel_without_a_deadline() {
+    for host in ["127.0.0.1", "::1", "localhost"] {
+        let addresses = resolve_listener(host, 0, || false).unwrap();
+        assert!(!addresses.is_empty());
+        assert!(
+            addresses
+                .iter()
+                .all(|address| address.ip().is_loopback() && address.port() == 0)
+        );
+    }
+    let (release, released) = mpsc::channel();
+    let mut lookup = Lookup::start(move || {
+        released.recv().unwrap();
+        Ok(vec!["127.0.0.1:0".parse().unwrap()])
+    })
+    .unwrap();
+    let thread = lookup.thread.take().unwrap();
+    let result = lookup.wait(None, || true);
+    release.send(()).unwrap();
+    thread.join().unwrap();
+    assert_eq!(result, Err(Failure::Cancelled));
 }

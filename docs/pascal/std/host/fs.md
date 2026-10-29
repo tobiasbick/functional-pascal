@@ -17,15 +17,42 @@ end.
 ```
 
 `Std.Io.Fs` reads and writes host files using thread-safe Rust filesystem APIs.
-Handle operations suspend pool tasks and the all-stop debugger while bounded native
-jobs execute; see [execution and ownership](fs-streams.md#execution-and-native-ownership).
-Whole-file and path-based operations remain synchronous, including in `go` tasks.
+Handle, whole-file and path operations suspend pool tasks and the all-stop debugger
+while bounded native jobs execute. Inline callbacks suspend with their owning task.
+Main-program calls and synchronous native callback boundaries execute on their calling
+thread. See [handle ownership](fs-streams.md#execution-and-native-ownership).
 
 **Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, `WriteTextAtomic`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
 
 Text reads and writes use UTF-8.
 `ReadBytes` and `WriteBytes` transfer raw integer byte arrays without text
 decoding or newline normalization.
+
+## Execution and cancellation
+
+Suspended filesystem operations share a per-VM budget of 64 native jobs, including results
+not yet delivered to FPAS. Functions returning `Result` report saturation as
+`FsError.LimitExceeded(Operation, 64)` before starting filesystem work. Plain queries
+(`Exists`, `IsFile`, `IsDir`, `IsSymLink`, `TempDir`) wait for admission and retain their
+Boolean or string return type. Failure to launch a native worker, or loss of that
+worker, is a runtime `FP5027` diagnostic for those plain-return functions.
+
+Native requests and outcomes contain no FPAS values. Conversion to strings, arrays
+and typed errors happens on the owning VM task. Pool tasks and the debugger poll
+readiness through their existing shared timer. Already dispatched native work may
+complete while all-stop execution is paused.
+
+Task abandonment signals and joins its native work. Cancellation is checked between
+read/write blocks, directory entries, glob results and recursive-copy entries. An OS
+or library call already in progress, including copying one file, recursive deletion
+or atomic publication, cannot be forcibly interrupted. Cleanup may wait for it.
+Completed filesystem effects are not rolled back.
+
+An unpublished `CreateTempFile` or `CreateTempDir` outcome owns its new path and
+removes it on abandonment. After its string result is delivered, the caller owns
+cleanup through `DeleteFile` or `DeleteDir`/`DeleteDirAll`. Caller-supplied target
+paths are never removed as abandoned-result cleanup. Atomic writes discard an
+uncommitted replacement on cancellation and retain the previous target.
 
 **Resource limits:**
 
@@ -357,7 +384,8 @@ entry paths. The operation does not recurse or follow child directory links.
 An empty directory returns `Ok([])`. Missing directories, file paths, read errors,
 and non-UTF-8 entry paths return `Error(Cause)` rather than an empty result.
 A call is limited to 1,000,000 entries. `Glob` retains its file-only behavior.
-The call blocks its executing thread and may be run in a `go` task.
+The call follows the [filesystem execution contract](#execution-and-cancellation),
+releasing a pool worker while its owned native request is pending.
 
 ---
 

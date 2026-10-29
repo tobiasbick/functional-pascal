@@ -8,13 +8,27 @@ use std::path::Path;
 
 use crate::stdlib::limits::MAX_COLLECTION_LEN;
 
-pub(super) fn read_dir_paths(path: &str) -> Result<Vec<String>, Failure> {
-    read_dir_paths_with_limit(Path::new(path), MAX_COLLECTION_LEN as usize)
+pub(super) fn read_dir_paths(
+    path: &str,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<Vec<String>, Failure> {
+    read_dir_paths_controlled(Path::new(path), MAX_COLLECTION_LEN as usize, cancelled)
 }
 
+#[cfg(test)]
 fn read_dir_paths_with_limit(path: &Path, limit: usize) -> Result<Vec<String>, Failure> {
+    read_dir_paths_controlled(path, limit, &mut || false)
+}
+
+fn read_dir_paths_controlled(
+    path: &Path,
+    limit: usize,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<Vec<String>, Failure> {
+    super::io::check(cancelled)?;
     let mut paths = Vec::new();
     for entry in fs::read_dir(path).map_err(|error| Failure::at(path, error))? {
+        super::io::check(cancelled)?;
         let entry = entry.map_err(|error| Failure::at(path, error))?;
         if paths.len() >= limit {
             return Err(Failure::LimitExceeded("Std.Io.Fs.ReadDir", limit as i64));
@@ -92,7 +106,7 @@ mod tests {
         assert!(read_dir_paths_with_limit(&root.0.join("missing"), 10).is_err());
         fs::write(root.0.join("file"), "file").expect("file");
         assert!(read_dir_paths_with_limit(&root.0.join("file"), 10).is_err());
-        assert!(read_dir_paths("").is_err());
+        assert!(read_dir_paths("", &mut || false).is_err());
     }
 
     #[cfg(unix)]

@@ -25,20 +25,36 @@ requests another readiness probe after one millisecond; platform timer granulari
 load can delay the actual probe. This permits producer/consumer work and nested joins with one
 pool worker. Suspended values, destinations, and monotonic deadlines survive each probe.
 
-[Socket connects, accepts and byte I/O](../network/net.md#task-execution-and-resource-ownership)
+[Socket setup, timeout configuration, accepts and byte I/O](../network/net.md#task-execution-and-resource-ownership)
 also release a pool worker, using bounded native jobs. Inline callbacks retain
 their surrounding operation while that task waits. Main-program and synchronous
 native callback calls keep their synchronous behavior.
 
-[Process Run calls](../host/proc.md#blocking-and-concurrency) also save process and
-pipe state in pool tasks and the all-stop debugger. Productive pipe work yields through
-the ready queue; idle work uses the shared timer. Abandonment terminates the owned
-process group and reaps the direct child before releasing the saved state.
+[Process calls](../host/proc.md#blocking-and-concurrency), including startup, all Run
+variants, terminal-aware execution and handle close, use bounded native jobs in pool
+tasks and the all-stop debugger. Host terminal providers and stderr receivers run on
+the native job. Abandonment terminates the owned group and joins cleanup; unpublished
+handles are closed. Host calls already in progress must return before joining finishes.
 
-[Regular-file handle calls](../host/fs-streams.md#execution-and-native-ownership)
-use bounded native jobs in pool tasks and the all-stop debugger. Abandonment joins
+[Filesystem calls](../host/fs.md#execution-and-cancellation), including handle,
+whole-file and path operations, use bounded native jobs in pool tasks and the
+all-stop debugger. Abandonment joins
 started file work and closes undelivered opens; it cannot roll back I/O or forcibly
-interrupt an OS filesystem call. Whole-file and path helpers remain synchronous.
+interrupt an OS or library call already in progress. Unpublished temporary paths
+are removed; published temporary-path strings transfer cleanup to the caller.
+
+[Console I/O and screen state](../console/README.md#task-execution-and-ownership)
+also release pool workers and ordinary all-stop debugger tasks. Owned native jobs
+preserve order per output, text-input or keyboard resource; at capacity, calls
+queue before native admission. Unpublished saved regions are discarded. Terminal
+readiness and lock waits observe cancellation, but host reader/writer calls
+already in progress must return before joining finishes.
+
+[ACP startup](../ai/acp/connections.md#setup) and
+[host adapters](../ai/acp/host.md#execution-and-response-rights) use bounded native
+jobs too, including terminal authentication and nested callbacks. Undelivered
+connections and terminals remain owned by their job and are closed on abandonment.
+Native resource admission precedes host request claims and OS effects.
 
 The main task never executes queued tasks while it waits; pool workers run them. A queued child
 may wait for the main task itself, for example for a request it sends on a channel or socket, so

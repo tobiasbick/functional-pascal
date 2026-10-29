@@ -31,6 +31,13 @@ end.
         started.elapsed() < Duration::from_secs(1),
         "ReadLn must not hang waiting for later io.input"
     );
+    // A pause may win while the owned input job is still completing. Resuming
+    // must report missing queued input rather than waiting for a later io.input.
+    let stop = if stop.reason == DebugStopReason::Pause {
+        stopped(session.continue_execution().expect("resume missing ReadLn"))
+    } else {
+        stop
+    };
     assert_eq!(stop.reason, DebugStopReason::RuntimeError);
     let diagnostic = stop.diagnostic.expect("missing-input diagnostic");
     assert!(diagnostic.message.contains("no input available"));

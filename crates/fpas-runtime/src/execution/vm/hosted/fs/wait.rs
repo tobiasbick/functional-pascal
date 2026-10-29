@@ -41,15 +41,20 @@ impl Drop for Permit {
 }
 
 struct Job {
-    permit: Permit,
+    permit: Option<Permit>,
     stop: Arc<AtomicBool>,
     receiver: Mutex<mpsc::Receiver<Result<Output, Failure>>>,
     thread: Option<JoinHandle<()>>,
 }
 
 impl Job {
+    #[cfg(test)]
     fn start(hosted: Arc<HostedState>, call: Call) -> Result<Self, Failure> {
         let permit = Permit::acquire(hosted)?;
+        Self::start_reserved(permit, call)
+    }
+
+    fn start_reserved(permit: Permit, call: Call) -> Result<Self, Failure> {
         let state = Arc::clone(&permit.0);
         let stop = Arc::new(AtomicBool::new(false));
         let stopped = Arc::clone(&stop);
@@ -61,7 +66,7 @@ impl Job {
             })
             .map_err(|error| Failure::io("", error))?;
         Ok(Self {
-            permit,
+            permit: Some(permit),
             stop,
             receiver: Mutex::new(receiver),
             thread: Some(thread),
@@ -88,26 +93,40 @@ impl Job {
 impl Drop for Job {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Release);
-        if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
-        }
-        // An opened file becomes the program's responsibility only after delivery.
-        if let Ok(Ok(Output::Handle(handle))) = self
-            .receiver
-            .get_mut()
-            .unwrap_or_else(|p| p.into_inner())
-            .try_recv()
-        {
-            let _ = self.permit.0.files.close(handle, || false);
-        }
+        let Some(permit) = self.permit.take() else {
+            return;
+        };
+        let state = permit.0.clone();
+        let thread = self.thread.take();
+        let (_, empty) = mpsc::channel();
+        let receiver = std::mem::replace(
+            self.receiver.get_mut().unwrap_or_else(|p| p.into_inner()),
+            empty,
+        );
+        super::super::native::retire(&state, move || {
+            if let Some(thread) = thread {
+                let _ = thread.join();
+            }
+            // An opened file becomes the program's responsibility only after delivery.
+            if let Ok(Ok(Output::Handle(handle))) = receiver.try_recv() {
+                let _ = permit.0.files.close(handle, || false);
+            }
+            drop(receiver);
+            drop(permit);
+        });
     }
 }
 
 pub(in crate::execution::vm) struct Wait {
-    job: Job,
+    state: State,
     operation: FsIntrinsic,
     location: SourceLocation,
     destination: Option<Register>,
+}
+
+enum State {
+    Queued(Call),
+    Running(Job),
 }
 
 impl Worker {
@@ -118,14 +137,22 @@ impl Worker {
         destination: Option<Register>,
     ) -> Result<Option<Value>, VmError> {
         let location = self.intrinsic_location();
-        let job = Call::prepare(self, operation, values)?
-            .and_then(|call| Job::start(Arc::clone(&self.hosted), call));
-        let job = match job {
-            Ok(job) => job,
+        let state =
+            Call::prepare(self, operation, values)?.and_then(|call| {
+                match Permit::acquire(Arc::clone(&self.hosted)) {
+                    Ok(permit) => Job::start_reserved(permit, call).map(State::Running),
+                    Err(Failure::Limit(_)) if crate::stdlib::fs::native::infallible(operation) => {
+                        Ok(State::Queued(call))
+                    }
+                    Err(error) => Err(error),
+                }
+            });
+        let state = match state {
+            Ok(state) => state,
             Err(error) => return self.fs_result(operation, Err(error), location).map(Some),
         };
         self.task_suspension = Some(TaskSuspension::Fs(Box::new(Wait {
-            job,
+            state,
             operation,
             location,
             destination,
@@ -135,13 +162,58 @@ impl Worker {
         Ok(None)
     }
 
-    pub(in crate::execution::vm) fn poll_fs_wait(&mut self, wait: Wait) -> Result<bool, VmError> {
-        let Some(outcome) = wait.job.poll() else {
+    pub(in crate::execution::vm) fn poll_fs_wait(
+        &mut self,
+        mut wait: Wait,
+    ) -> Result<bool, VmError> {
+        if let State::Queued(call) = wait.state {
+            let result = match Permit::acquire(Arc::clone(&self.hosted)) {
+                Ok(permit) => Job::start_reserved(permit, call),
+                Err(Failure::Limit(_)) => {
+                    wait.state = State::Queued(call);
+                    self.task_suspension = Some(TaskSuspension::Fs(Box::new(wait)));
+                    return Ok(false);
+                }
+                Err(error) => {
+                    return self.finish_fs_wait(
+                        wait.operation,
+                        wait.destination,
+                        wait.location,
+                        Err(error),
+                    );
+                }
+            };
+            match result {
+                Ok(job) => wait.state = State::Running(job),
+                Err(error) => {
+                    return self.finish_fs_wait(
+                        wait.operation,
+                        wait.destination,
+                        wait.location,
+                        Err(error),
+                    );
+                }
+            }
+        }
+        let State::Running(job) = &wait.state else {
+            unreachable!("queued admission was handled above")
+        };
+        let Some(outcome) = job.poll() else {
             self.task_suspension = Some(TaskSuspension::Fs(Box::new(wait)));
             return Ok(false);
         };
-        let value = self.fs_result(wait.operation, outcome, wait.location)?;
-        if let Some(destination) = wait.destination {
+        self.finish_fs_wait(wait.operation, wait.destination, wait.location, outcome)
+    }
+
+    fn finish_fs_wait(
+        &mut self,
+        operation: FsIntrinsic,
+        destination: Option<Register>,
+        location: SourceLocation,
+        outcome: Result<Output, Failure>,
+    ) -> Result<bool, VmError> {
+        let value = self.fs_result(operation, outcome, location)?;
+        if let Some(destination) = destination {
             self.write(destination, value)?;
         }
         Ok(true)

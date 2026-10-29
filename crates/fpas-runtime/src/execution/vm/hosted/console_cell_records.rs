@@ -298,14 +298,6 @@ pub(crate) fn console_rgb_color(
     Worker::console_rgb_color(red, green, blue, line)
 }
 
-pub(crate) fn console_cell_record(
-    worker: &Worker,
-    cell: ConsoleCell,
-    location: SourceLocation,
-) -> Result<Value, VmError> {
-    worker.console_cell_record(cell, location)
-}
-
 pub(crate) fn saved_region_from_value(
     value: &Value,
     line: SourceLocation,

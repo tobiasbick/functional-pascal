@@ -19,6 +19,9 @@ impl Worker {
         arguments: &[Value],
         location: SourceLocation,
     ) -> Result<Value, VmError> {
+        if super::native::supported(operation) {
+            return self.execute_acp_native(operation, arguments, location);
+        }
         if (789..=798).contains(&(operation as u16))
             || operation == Op::HostV2RunTerminalAuthentication
         {
@@ -56,35 +59,6 @@ impl Worker {
                 (Op::RemoveMcpEndpoint, [owner, endpoint]) => {
                     let connection = self.hosted.acp.connection(args::handle(owner)?)?;
                     Value::Boolean(connection.remove_mcp_endpoint(args::handle(endpoint)?)?)
-                }
-                (Op::ConnectMessages, [options]) => {
-                    let (version, limits) = self.acp_options(options)?;
-                    let (connection, endpoint) = self.hosted.acp.connect_messages(
-                        version,
-                        limits,
-                        self.hosted.piped_processes.clone(),
-                    )?;
-                    return self
-                        .layouts
-                        .record(
-                            "Std.Ai.Acp.MessageConnection",
-                            vec![
-                                Value::OpaqueHandle(connection),
-                                Value::OpaqueHandle(endpoint),
-                            ],
-                            location,
-                        )
-                        .map_err(|_| Fault::Host);
-                }
-                (Op::ConnectProcess, [launch, options]) => {
-                    let (version, limits) = self.acp_options(options)?;
-                    let launch = args::launch(launch)?;
-                    Value::OpaqueHandle(self.hosted.acp.connect_process(
-                        version,
-                        limits,
-                        launch,
-                        self.hosted.piped_processes.clone(),
-                    )?)
                 }
                 (Op::FeedMessage, [endpoint, message]) => Value::Boolean(
                     self.hosted
@@ -196,7 +170,7 @@ impl Worker {
         self.acp_result(&operation.source_name(), result, location)
     }
 
-    fn acp_options(&self, options: &Value) -> Result<(Settings, Limits), Fault> {
+    pub(super) fn acp_options(&self, options: &Value) -> Result<(Settings, Limits), Fault> {
         let (_, limits) = args::options(options)?;
         let fields = args::record(options, "Std.Ai.Acp.Options", 6)?;
         let mut converter = self.acp_converter(Version::V1)?;

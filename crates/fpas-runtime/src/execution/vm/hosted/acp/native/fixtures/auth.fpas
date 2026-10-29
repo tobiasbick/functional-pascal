@@ -1,0 +1,83 @@
+program AcpNativeAuthentication;
+
+uses
+  Std.Ai.Acp as Acp, Std.Ai.Acp.Host as Host, Std.Ai.Acp.Types as Types,
+  Std.Os.Args as Args, Std.Console as Console, Std.Tasks as Tasks;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Authenticate(): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  const Values := [0].Map(
+    function(Index: integer): integer begin
+      const Launch := Acp.Launch(
+        Command := Args.ParamStr(1),
+        Arguments := ['--list'],
+        WorkingDirectory := None,
+        Environment := []
+      );
+      const Method := Types.AuthMethodTerminal(
+        Id := Types.AuthMethodId('test'),
+        Name := 'Test',
+        Description := None,
+        Args := None,
+        Env := None,
+        Meta := None
+      );
+      if not Host.RunTerminalAuthentication(Launch, Method, Some(10000), None).Unwrap() then
+        panic('authentication exit');
+      end if;
+
+      return Keep() + Index;
+    end function
+  );
+  return Values[0];
+end function;
+
+function ReleaseProvider(): boolean;
+begin
+  Console.WriteText('release');
+  return true;
+end function;
+
+begin
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Auth := go Authenticate();
+      const Release := go ReleaseProvider();
+      if not Tasks.Wait(Release) then
+        panic('provider release');
+      end if;
+
+      if Args.ParamStr(0) <> 'normal' then
+        break;
+      end if;
+
+      if Tasks.Wait(Auth) <> 65536 then
+        panic('authentication capture');
+      end if;
+    end scope;
+  end for;
+end.

@@ -1,0 +1,191 @@
+program PathPool;
+
+uses
+  Std.Io.Fs as Fs, Std.Os.Args as Args, Std.Tasks as Tasks, Std.Console as Console,
+  Std.Time as Time, Std.Encoding as Encoding;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function ReadPipe(Path: string): integer;
+begin
+  const Keep := Cycle();
+  const Results := [0].Map(
+    function(Index: integer): integer begin
+      if Fs.ReadText(Path).Unwrap() <> 'pipe' then
+        panic('FIFO text');
+      end if;
+
+      return Keep() + Index;
+    end function
+  );
+  return Results[0];
+end function;
+
+function WritePipe(Path: string): integer;
+begin
+  discard Fs.WriteText(Path, 'pipe').Unwrap();
+  return 1;
+end function;
+
+function Work(Root: string; Ready: channel of boolean; Mode: string): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+      panic('unused path callback');
+    end procedure
+  );
+  if Mode <> 'normal' then
+    discard Tasks.Send(Ready, true);
+    discard Fs.WriteText(Root + '/pending', 'x'.RepeatStr(131072)).Unwrap();
+    Time.Sleep(3600000);
+    panic('abandoned path task resumed');
+  end if;
+  const Source := Root + '/source';
+  discard Fs.CreateDir(Source).Unwrap();
+  if not Fs.Exists(Source) or not Fs.IsDir(Source) or Fs.IsFile(Source) then
+    panic('directory queries');
+  end if;
+  const Bytes: array of integer := array.Fill(0, 65536).Concat(array.Fill(255, 65536));
+  const Binary := Source + '/raw.bin';
+  discard Fs.WriteBytes(Binary, Bytes).Unwrap();
+  if Encoding.HexEncode(Fs.ReadBytes(Binary).Unwrap()).Unwrap() <>
+    Encoding.HexEncode(Bytes).Unwrap()
+  then
+    panic('binary file');
+  end if;
+
+  if not Fs.IsFile(Binary) or Fs.IsSymLink(Binary) then
+    panic('file queries');
+  end if;
+
+  if not (Fs.ReadText(Binary) is Error(Fs.FsError.InvalidEncoding(_, _))) then
+    panic('typed encoding error');
+  end if;
+  const TextFile := Source + '/text';
+  const Text := 'x'.RepeatStr(131072) + #0'🙂';
+  discard Fs.WriteTextAtomic(TextFile, Text).Unwrap();
+  discard Fs.AppendText(TextFile, 'tail').Unwrap();
+  if Fs.ReadText(TextFile).Unwrap() <> Text + 'tail' then
+    panic('text file');
+  end if;
+
+  if Fs.FileSize(TextFile).Unwrap() <> 131081 then
+    panic('byte length');
+  end if;
+
+  if Fs.ModifiedTime(TextFile).Unwrap() <= 0 then
+    panic('modified time');
+  end if;
+  const Copy := Root + '/copy';
+  const Moved := Root + '/moved';
+  discard Fs.CopyFile(Binary, Copy).Unwrap();
+  discard Fs.Rename(Copy, Moved).Unwrap();
+  if Fs.Exists(Copy) or not Fs.Exists(Moved) then
+    panic('rename');
+  end if;
+
+  discard Fs.DeleteFile(Moved).Unwrap();
+  if Fs.ReadDir(Source).Unwrap().Length() <> 2 then
+    panic('read directory');
+  end if;
+
+  if Fs.ReadDirAll(Source).Unwrap().Length() <> 2 then
+    panic('recursive listing');
+  end if;
+
+  if Fs.Glob(Source + '/*.bin').Unwrap().Length() <> 1 then
+    panic('glob');
+  end if;
+
+  discard Fs.CopyDirAll(Source, Copy).Unwrap();
+  if Fs.ReadDirAll(Copy).Unwrap().Length() <> 2 then
+    panic('copy tree');
+  end if;
+
+  discard Fs.DeleteDirAll(Copy).Unwrap();
+  discard Fs.CreateDirAll(Root + '/empty/nested').Unwrap();
+  discard Fs.DeleteDir(Root + '/empty/nested').Unwrap();
+  discard Fs.DeleteDir(Root + '/empty').Unwrap();
+  const Cwd := Fs.CurrentDir().Unwrap();
+  discard Fs.SetCurrentDir(Cwd).Unwrap();
+  if Fs.TempDir().Length() = 0 then
+    panic('temporary directory');
+  end if;
+  const TempFile := Fs.CreateTempFile().Unwrap();
+  const TempDirectory := Fs.CreateTempDir().Unwrap();
+  if not Fs.IsFile(TempFile) or not Fs.IsDir(TempDirectory) then
+    panic('temporary resources');
+  end if;
+
+  discard Fs.DeleteFile(TempFile).Unwrap();
+  discard Fs.DeleteDir(TempDirectory).Unwrap();
+  discard Fs.DeleteDirAll(Source).Unwrap();
+  return Keep();
+end function;
+
+function Run(Root: string; Ready: channel of boolean; Mode: string): integer;
+begin
+  var Count := 0;
+  const Results := [0].Map(
+    function(Index: integer): integer begin
+      Count := Count + Work(Root, Ready, Mode) + Index;
+      return Count;
+    end function
+  );
+  return Results[0];
+end function;
+
+begin
+  const Root := Args.ParamStr(0);
+  const Mode := Args.ParamStr(1);
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  if Mode = 'fifo' then
+    scope
+      const Reader := go ReadPipe(Root + '/fifo');
+      const Writer := go WritePipe(Root + '/fifo');
+      if Tasks.Wait(Writer) <> 1 then
+        panic('FIFO writer');
+      end if;
+
+      if Tasks.Wait(Reader) <> 65536 then
+        panic('FIFO callback');
+      end if;
+    end scope;
+  else
+    for Attempt: integer := 1 to 1 do
+      scope
+        const Child := go Run(Root, Ready, Mode);
+        if Mode <> 'normal' then
+          discard Tasks.Receive(Ready).Unwrap();
+          if Mode = 'vm_shutdown' then
+            Console.WriteText('pending');
+          end if;
+
+          break;
+        end if;
+
+        if Tasks.Wait(Child) <> 65536 then
+          panic('path callback result');
+        end if;
+      end scope;
+    end for;
+  end if;
+end.

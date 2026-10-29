@@ -44,7 +44,7 @@ pub fn read_line_from_stdin(location: SourceLocation) -> Result<Option<String>, 
 }
 
 pub(super) fn read_line_from_reader(
-    reader: &mut impl BufRead,
+    reader: &mut (impl BufRead + ?Sized),
     location: SourceLocation,
 ) -> Result<Option<String>, StdError> {
     let mut line = String::new();
@@ -71,7 +71,16 @@ pub struct TextInput {
     line_queue: ReadLnQueue,
     pending: VecDeque<char>,
     os_stdin: bool,
+    reader: Option<NativeReader>,
     eof: bool,
+}
+
+struct NativeReader(Box<dyn BufRead + Send>);
+
+impl std::fmt::Debug for NativeReader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("NativeTextReader")
+    }
 }
 
 impl Default for TextInput {
@@ -87,6 +96,7 @@ impl TextInput {
             line_queue: ReadLnQueue::new(),
             pending: VecDeque::new(),
             os_stdin: true,
+            reader: None,
             eof: false,
         }
     }
@@ -97,6 +107,21 @@ impl TextInput {
             os_stdin: false,
             ..Self::new()
         }
+    }
+
+    /// Use an owned host reader instead of process stdin; queued lines retain precedence.
+    pub fn with_reader(reader: impl BufRead + Send + 'static) -> Self {
+        Self {
+            reader: Some(NativeReader(Box::new(reader))),
+            os_stdin: false,
+            ..Self::new()
+        }
+    }
+
+    pub(crate) fn set_reader(&mut self, reader: impl BufRead + Send + 'static) {
+        self.reader = Some(NativeReader(Box::new(reader)));
+        self.os_stdin = false;
+        self.eof = false;
     }
 
     /// Appends one line for a future `Read` or `ReadLn` operation.
@@ -126,6 +151,8 @@ impl TextInput {
         }
         let line = if self.eof {
             None
+        } else if let Some(reader) = &mut self.reader {
+            read_line_from_reader(reader.0.as_mut(), location)?
         } else if self.os_stdin {
             read_line_from_stdin(location)?
         } else {

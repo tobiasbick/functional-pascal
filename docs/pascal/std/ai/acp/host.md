@@ -24,6 +24,24 @@ InvalidArgument. A reply while the helper is running gets Busy. The application
 still owns the separate response right and must call Respond or RespondError.
 Cancellation before admission prevents the effect; completed I/O is not undone.
 
+Pool tasks and ordinary all-stop debugger tasks release their VM worker while
+filesystem, terminal and authentication helpers execute owned native jobs.
+Inline callbacks retain their FPAS frames; argument conversion and response
+construction stay on the owning task. Native jobs share the connection budget of
+64 per VM, including undelivered results. A full budget returns
+`LimitExceeded('NativeJobs', 64)` before claiming a request or starting effects.
+
+Scope exit and VM shutdown cancel and join started work. Native file loops and
+terminal lock waits observe cancellation; an in-flight OS or host-provider call
+must return before its job can be joined. Unpublished terminal results close their
+process and release capacity. Once a result reaches FPAS, the connection/session
+retains its terminal ownership. Cleanup does not publish a protocol response.
+
+Terminal startup releases entry locks before launching the process. SDK draining
+skips busy terminal entries, so one native operation cannot hold the protocol pump
+on that entry's lock. Main-program and explicit synchronous native calls retain
+their synchronous execution contract.
+
 For example, an application passes its policy decision explicitly:
 
 ```pascal id=acp-approved-file-dispatch

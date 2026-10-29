@@ -84,9 +84,10 @@ Listener handles are closed separately with `CloseListener`.
 
 ## Task execution and resource ownership
 
-In pool tasks and the default all-stop debugger, connects, accepts and connection byte
-reads/writes suspend the calling FPAS task while an owned native worker performs
-the socket operation. Their cancellation-aware forms use the same route.
+In pool tasks and the default all-stop debugger, connects, TCP/TLS listener creation,
+accepts, connection timeout configuration and byte reads/writes suspend the calling
+FPAS task while an owned native worker performs the operation. Their
+cancellation-aware forms use the same route.
 Other FPAS tasks and debugger requests remain runnable, including with one VM
 pool worker. Inline callbacks, such as array `Map` callbacks, suspend with their
 owning task and retain their frames and mutable captures.
@@ -99,16 +100,31 @@ Each byte transfer remains limited to 1 MiB. Pending operations use bounded nati
 offloading and the shared task timer's readiness probes.
 
 Cancellation or abandonment joins the native worker before releasing its saved
-task state. An accepted or outgoing connection not delivered to FPAS is closed; abandoning a
-read/write leaves its established connection open. Already consumed or accepted
+task state. A new listener or accepted/outgoing connection not delivered to FPAS
+is closed; abandoning a read/write or timeout configuration leaves its established
+connection open. Already consumed or accepted
 bytes are not rolled back when a task is abandoned. VM teardown cancels saved
 waits and joins native work before returning.
 
 The main program and synchronous native callback boundaries retain synchronous
-host calls. Listener creation, server TLS configuration and connection timeout
-configuration are not worker-releasing operations. Configuring a busy
-connection may wait for its serialized I/O lock. Seeded scheduling rejects
-network effects rather than replaying them.
+host calls. Configuring a busy connection waits for its serialized I/O lock and
+observes task abandonment while waiting. Cancellation does not undo a timeout
+change that has already completed. Address queries and listener close retain their
+direct execution path. Seeded scheduling rejects network effects rather than replaying them.
+
+Connection `Close` invalidates the handle immediately. A busy transport is interrupted
+out of band; an idle transport is detached from its aliases and queues TLS close_notify
+when applicable. Pool/debugger tasks flush the detached transport through nonblocking
+probes, preserving previously accepted bytes before closing the socket. This path needs
+no native-job slot and remains available when all 64 socket jobs are occupied. The
+configured write timeout bounds pending close probes; a successful flush takes
+precedence over simultaneous expiry. Abandoning a pending close aborts its socket.
+
+TLS listener configuration checks abandonment before loading PEM files, between
+certificate entries, before loading the private key and before binding/publishing
+the listener. An OS file read or cryptographic library call already in progress
+cannot be forcibly interrupted; retiring the task joins that work. The handshake
+timeout bounds accepted handshakes, not credential loading or listener DNS.
 
 `AcceptWithCancellation` observes a `Std.Tasks.CancellationToken`. If cancellation wins before a
 connection is returned, the function returns `Error(NetError.Cancelled(Operation))`. It leaves the
@@ -136,10 +152,11 @@ Numeric IPv4 and IPv6 hosts bypass DNS. Other hosts use the operating system res
 on a native thread with at most 64 active lookups across the process. This separate
 budget spans VM lifetimes; saturation returns `NetError.IoFailure` without an OS error code.
 
-The DNS wait observes cancellation and the shared connect deadline. If that wait ends,
+The DNS wait observes cancellation and, for connects, the shared connect deadline.
+Listener creation has no DNS timeout parameter. If the wait ends,
 the OS call may still be running: it retains only its native hostname, port and result
 channel, with no VM state or FPAS values. Its slot remains occupied until the OS call
-returns. Late addresses and errors are discarded and never start TCP or TLS work.
+returns. Late addresses and errors are discarded and never connect or bind sockets.
 Normally completed lookups are joined before returning their result.
 
 ## `NetworkAddress` and `ListenerLocalAddress`

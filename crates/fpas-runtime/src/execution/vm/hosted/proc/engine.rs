@@ -33,9 +33,19 @@ impl Processes {
         &self,
         request: &Request<'_>,
         receiver: Option<crate::stdlib::ProgramStderr>,
-        mut cancelled: impl FnMut() -> bool,
+        cancelled: impl FnMut() -> bool,
     ) -> Result<Output, Failure> {
-        let mut execution = self.start(request, receiver, &mut cancelled)?;
+        self.run_at(request, receiver, cancelled, Instant::now())
+    }
+
+    pub(super) fn run_at(
+        &self,
+        request: &Request<'_>,
+        receiver: Option<crate::stdlib::ProgramStderr>,
+        mut cancelled: impl FnMut() -> bool,
+        started: Instant,
+    ) -> Result<Output, Failure> {
+        let mut execution = self.start(request, receiver, &mut cancelled, started)?;
         loop {
             match execution.poll(request.options.input.as_bytes(), &mut cancelled) {
                 Poll::Ready(outcome) => return outcome,
@@ -52,11 +62,11 @@ impl Processes {
         request: &Request<'_>,
         receiver: Option<crate::stdlib::ProgramStderr>,
         mut cancelled: impl FnMut() -> bool,
+        start: Instant,
     ) -> Result<Execution, Failure> {
         request.validate()?;
         let reservation = self.reserve()?;
         let process = &reservation.process;
-        let start = Instant::now();
         let deadline = request
             .options
             .timeout

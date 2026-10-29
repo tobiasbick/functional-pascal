@@ -417,9 +417,12 @@ pub struct ShutdownHandle {
 
 impl ShutdownHandle {
     /// Request cancellation and interrupt blocking hosted operations.
+    /// Native joins finish at the run/teardown barrier, after host callbacks return.
     pub fn shutdown(&self) {
-        self.scheduler.request_cancel();
-        self.hosted.shutdown_blocking_operations();
+        hosted::native::defer_joins(|| {
+            self.scheduler.request_cancel();
+            self.hosted.shutdown_blocking_operations();
+        });
     }
 }
 

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use super::super::tls::client;
 use super::{NetworkConnections, Transport, connect_port, timeout};
 
-mod resolver;
+pub(super) mod resolver;
 mod tcp;
 
 /// Protocol to establish before publishing a connection handle.

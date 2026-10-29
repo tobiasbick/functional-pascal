@@ -49,10 +49,19 @@ pub(in crate::execution::vm::hosted) struct AcpProcess {
 }
 
 impl AcpProcess {
+    #[cfg(test)]
     pub(in crate::execution::vm::hosted) fn start(
         processes: Arc<PipedProcesses>,
         launch: &AcpLaunch,
         limits: Limits,
+    ) -> Result<Arc<Self>, Fault> {
+        Self::start_with_cancellation(processes, launch, limits, || false)
+    }
+    pub(in crate::execution::vm::hosted) fn start_with_cancellation(
+        processes: Arc<PipedProcesses>,
+        launch: &AcpLaunch,
+        limits: Limits,
+        cancelled: impl Fn() -> bool,
     ) -> Result<Arc<Self>, Fault> {
         limits.validate()?;
         let request = Request {
@@ -70,7 +79,9 @@ impl AcpProcess {
             capture: true,
             inherit_input: false,
         };
-        let handle = processes.start(&request).map_err(fault)?;
+        let handle = processes
+            .start_with_cancellation(&request, cancelled)
+            .map_err(fault)?;
         Ok(Arc::new(Self {
             processes,
             handle,

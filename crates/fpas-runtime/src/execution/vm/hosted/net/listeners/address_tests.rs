@@ -50,3 +50,70 @@ fn wildcard_listener_reports_the_bound_address() {
     assert!(address.ip().is_unspecified());
     assert_ne!(address.port(), 0);
 }
+
+#[test]
+fn cancelled_listener_configuration_does_not_resolve_or_load_credentials() {
+    let listeners = NetworkListeners::new();
+    assert_eq!(
+        listeners.listen_with_cancellation("unused.invalid", 0, || true),
+        Err(Failure::Cancelled)
+    );
+    assert_eq!(
+        listeners.listen_tls_with_cancellation(
+            "unused.invalid",
+            0,
+            "missing-cert.pem",
+            "missing-key.pem",
+            5000,
+            || true
+        ),
+        Err(Failure::Cancelled)
+    );
+    assert!(listeners.listeners.lock().unwrap().is_empty());
+}
+
+#[test]
+fn cancellation_before_listener_publication_releases_the_socket() {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    };
+    use std::time::{Duration, Instant};
+    let probe = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = probe.local_addr().unwrap();
+    drop(probe);
+    let listeners = Arc::new(NetworkListeners::new());
+    let registry = listeners.listeners.lock().unwrap();
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let stop = cancelled.clone();
+    let state = listeners.clone();
+    let (send, receive) = mpsc::channel();
+    let thread = std::thread::spawn(move || {
+        let result = state.listen_with_cancellation("127.0.0.1", i64::from(address.port()), || {
+            stop.load(Ordering::Acquire)
+        });
+        let _ = send.send(result);
+    });
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let bound = loop {
+        if let Ok(peer) = TcpStream::connect(address) {
+            drop(peer);
+            break true;
+        }
+        if Instant::now() >= deadline {
+            break false;
+        }
+        std::thread::park_timeout(Duration::from_millis(1));
+    };
+    cancelled.store(true, Ordering::Release);
+    drop(registry);
+    thread.join().unwrap();
+    assert!(bound, "native bind did not reach publication");
+    assert_eq!(
+        receive.recv_timeout(Duration::from_secs(5)).unwrap(),
+        Err(Failure::Cancelled)
+    );
+    assert!(listeners.listeners.lock().unwrap().is_empty());
+    let _rebound = std::net::TcpListener::bind(address).unwrap();
+}

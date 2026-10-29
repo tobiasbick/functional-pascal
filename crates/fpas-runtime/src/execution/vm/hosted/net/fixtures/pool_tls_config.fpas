@@ -1,0 +1,43 @@
+program NetworkPoolTlsConfiguration;
+
+uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Os.Args as Args, Std.Io.Fs as Fs;
+
+function Configure(): integer;
+begin
+  var Total := 0;
+  const Results := [0].Map(
+    function(Index: integer): integer begin
+      const Listener := Net.ListenTls(
+        '127.0.0.1',
+        0,
+        Args.ParamStr(0),
+        Args.ParamStr(1),
+        5000
+      ).Unwrap();
+      Total := Total + Net.ListenerLocalAddress(Listener).Unwrap().Port + Index;
+      discard Net.CloseListener(Listener).Unwrap();
+      return Total;
+    end function
+  );
+  return Results[0];
+end function;
+
+function Publish(): integer;
+begin
+  discard Fs.WriteText(Args.ParamStr(0), Args.ParamStr(2)).Unwrap();
+  return 1;
+end function;
+
+begin
+  scope
+    const Configured := go Configure();
+    const Published := go Publish();
+    if Tasks.Wait(Published) <> 1 then
+      panic('TLS certificate publication');
+    end if;
+
+    if Tasks.Wait(Configured) <= 0 then
+      panic('TLS listener configuration');
+    end if;
+  end scope;
+end.

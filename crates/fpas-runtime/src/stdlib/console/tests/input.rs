@@ -1,6 +1,23 @@
 use super::*;
 
 #[test]
+fn replacing_the_host_reader_preserves_queued_input_and_reads_unicode_until_eof() {
+    let mut input = TextInput::without_os_stdin();
+    input.push_line("queued");
+    input.close_input();
+    input.set_reader(std::io::Cursor::new("🙂host\r\nlast".as_bytes()));
+    let location = SourceLocation::new(1, 1);
+    assert_eq!(
+        input.read_line(location).unwrap().as_deref(),
+        Some("queued")
+    );
+    assert_eq!(input.read_char(location).unwrap(), Some('🙂'));
+    assert_eq!(input.read_line(location).unwrap().as_deref(), Some("host"));
+    assert_eq!(input.read_line(location).unwrap().as_deref(), Some("last"));
+    assert_eq!(input.read_line(location).unwrap(), None);
+}
+
+#[test]
 fn text_input_read_then_readln_shares_buffer() {
     let mut t = TextInput::new();
     t.push_line("ab");

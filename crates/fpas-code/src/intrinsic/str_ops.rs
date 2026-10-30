@@ -82,9 +82,13 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Format = 242,
-    /// Internal bulk UTF-8 encoder for `Std.Text.Utf8.EncodeBytes`.
+    /// Fallible bulk UTF-8 encoder for `Std.Text.Utf8.Encode`.
     /// See `docs/pascal/std/network/utf8.md`.
     Utf8Encode = 568,
+    /// Strict native UTF-8 decoding into a string with sequence-start error offsets.
+    Utf8Decode = 854,
+    /// Private bulk text append used by `Std.Text.Utf8.AppendInPlace`.
+    Utf8Append = 855,
     /// Map each Unicode scalar to exactly one Unicode scalar.
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`

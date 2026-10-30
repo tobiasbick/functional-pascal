@@ -15,7 +15,7 @@ fn binary_files_keep_their_compiler_catalog_and_argument_shapes() {
         Some(Intrinsic::Fs(FsIntrinsic::WriteBytes))
     );
     let program = parse_ok(
-        "program Binary; uses Std.Io.Fs as Fs; begin discard Fs.ReadBytes(Path := 'input'); discard Fs.WriteBytes(Bytes := [0, 255], Path := 'output'); end.",
+        "program Binary; uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs; begin discard Fs.ReadBytes(Path := 'input'); discard Fs.WriteBytes(Bytes := ByteStorage.FromArray([0, 255]).Unwrap(), Path := 'output'); end.",
     );
     let executable = crate::compile(&program).expect("binary file intrinsic compilation");
     let calls = executable
@@ -43,20 +43,20 @@ fn binary_files_keep_their_compiler_catalog_and_argument_shapes() {
 fn binary_write_named_arguments_keep_written_evaluation_order() {
     assert_succeeds(
         r#"program BinaryOrder;
-uses Std.Io.Fs as Fs, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Test as Test;
 var Order: string := '';
-function Data(): array of integer;
+function Data(): ByteStorage.ByteBuffer;
 begin
   Order := Order + 'B';
-  return [256];
+  return ByteStorage.Create(1048577).Unwrap();
 end function;
 function Target(): string;
 begin
   Order := Order + 'P';
-  return 'invalid-bytes-must-not-open-this-file';
+  return 'oversized-bytes-must-not-open-this-file';
 end function;
 begin
-  Test.AssertTrue(Fs.WriteBytes(Bytes := Data(), Path := Target()) is Error(Fs.FsError.InvalidByte(0, 256)));
+  Test.AssertTrue(Fs.WriteBytes(Bytes := Data(), Path := Target()) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.WriteBytes', 1048576)));
   Test.AssertEquals('BP', Order);
 end."#,
     );
@@ -66,7 +66,7 @@ end."#,
 fn binary_text_codecs_lower_to_standard_intrinsics_with_nominal_errors() {
     assert_succeeds(
         r#"program Codecs;
-uses Std.Encoding as Codec, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Encoding as Codec, Std.Test as Test;
 
 function DecodeAndHex(Text: string): result of (string, Codec.EncodingError);
 begin
@@ -75,23 +75,23 @@ begin
 end function;
 
 begin
-  Test.AssertTrue(Codec.Base64Encode([102]) is Ok('Zg=='));
+  Test.AssertTrue(Codec.Base64Encode( ByteStorage.FromArray([102]).Unwrap()) is Ok('Zg=='));
   const Standard := Codec.Base64Decode('Zg==').Unwrap();
   Test.AssertEquals(1, Standard.Length());
   Test.AssertEquals(102, Standard[0]);
-  Test.AssertTrue(Codec.Base64UrlEncode([255]) is Ok('_w'));
+  Test.AssertTrue(Codec.Base64UrlEncode( ByteStorage.FromArray([255]).Unwrap()) is Ok('_w'));
   const Url := Codec.Base64UrlDecode('_w').Unwrap();
   Test.AssertEquals(1, Url.Length());
   Test.AssertEquals(255, Url[0]);
-  Test.AssertTrue(Codec.HexEncode([255]) is Ok('FF'));
+  Test.AssertTrue(Codec.HexEncode( ByteStorage.FromArray([255]).Unwrap()) is Ok('FF'));
   const Hex := Codec.HexDecode('Ff').Unwrap();
   Test.AssertEquals(1, Hex.Length());
   Test.AssertEquals(255, Hex[0]);
-  Test.AssertTrue(Codec.HexEncode([256]) is Error(Codec.EncodingError.InvalidByte(0, 256)));
+  Test.AssertTrue(ByteStorage.FromArray([256]) is Error(ByteStorage.BufferError.InvalidByte(0, 256)));
   Test.AssertTrue(DecodeAndHex('Zg==') is Ok('66'));
   Test.AssertTrue(DecodeAndHex('Zh==') is Error(Codec.EncodingError.NonCanonical(1)));
-  const ExplicitError := Codec.EncodingError.InvalidByte(7, 256);
-  Test.AssertTrue(ExplicitError.Message().StartsWith('Std.Encoding.EncodingError.InvalidByte: '));
+  const ExplicitError := Codec.EncodingError.NonCanonical(7);
+  Test.AssertTrue(ExplicitError.Message().StartsWith('Std.Encoding.EncodingError.NonCanonical: '));
 end."#,
     );
 }
@@ -289,14 +289,14 @@ fn hosted_file_calls_compile_all_public_argument_shapes() {
     }
     let program = parse_ok(
         r#"program Handles;
-uses Std.Io.Fs as Fs, Std.Tasks as Tasks;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Tasks as Tasks;
 function OpenFile(): result of (Fs.File, Fs.FsError);
 begin return Fs.Open('data', Fs.FileMode.Read); end function;
 procedure Probe(File: Fs.File; Token: Tasks.CancellationToken);
 begin
   discard Fs.Close(File);
   discard Fs.Read(MaxBytes := 2, File := File);
-  discard Fs.Write(Bytes := [0, 255], File := File);
+  discard Fs.Write(Bytes := ByteStorage.FromArray([0, 255]).Unwrap(), File := File);
   discard Fs.ReadLine(File);
   discard Fs.Seek(Origin := Fs.SeekOrigin.Start, Offset := 0, File := File);
   discard Fs.Tell(File);
@@ -308,7 +308,7 @@ begin
   discard Fs.WriteStringWithCancellation(Token := Token, Text := 'text', File := File);
   discard Fs.WriteLineWithCancellation(File, 'line', Token);
   discard Fs.ReadWithCancellation(Token := Token, MaxBytes := 2, File := File);
-  discard Fs.WriteWithCancellation(Token := Token, Bytes := [0], File := File);
+  discard Fs.WriteWithCancellation(Token := Token, Bytes := ByteStorage.FromArray([0]).Unwrap(), File := File);
   discard Fs.ReadLineWithCancellation(Token := Token, File := File);
 end procedure;
 begin end."#,

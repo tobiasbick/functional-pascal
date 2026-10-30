@@ -36,7 +36,15 @@ fn bare_operation_name_lists_every_receiver() {
         .into_iter()
         .map(|entry| entry.name)
         .collect::<Vec<_>>();
-    assert_eq!(names, ["string.Length", "array.Length", "dict.Length"]);
+    assert_eq!(
+        names,
+        [
+            "Std.Bytes.ByteBuffer.Length",
+            "string.Length",
+            "array.Length",
+            "dict.Length"
+        ]
+    );
 }
 
 #[test]

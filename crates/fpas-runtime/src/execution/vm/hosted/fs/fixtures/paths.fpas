@@ -1,6 +1,7 @@
 program PathPool;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Io.Fs as Fs, Std.Os.Args as Args, Std.Tasks as Tasks, Std.Console as Console,
   Std.Time as Time, Std.Encoding as Encoding;
 
@@ -63,7 +64,7 @@ begin
   if not Fs.Exists(Source) or not Fs.IsDir(Source) or Fs.IsFile(Source) then
     panic('directory queries');
   end if;
-  const Bytes: array of integer := array.Fill(0, 65536).Concat(array.Fill(255, 65536));
+  const Bytes := ByteStorage.Create(131072).Unwrap().Fill(255, 65536, 65536).Unwrap();
   const Binary := Source + '/raw.bin';
   discard Fs.WriteBytes(Binary, Bytes).Unwrap();
   if Encoding.HexEncode(Fs.ReadBytes(Binary).Unwrap()).Unwrap() <>

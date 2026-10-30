@@ -164,7 +164,7 @@ begin
     Http.Header.Create('content-language', 'en'),
     Http.Header.Create('Content-Location', '/submit')
   ];
-  RequestValue.Body := Utf8.Encode('payload');
+  RequestValue.Body := Utf8.Encode('payload').Unwrap();
   case Http.Send(RequestValue) of
     when Ok(const ResponseValue): Console.WriteLn(ResponseValue.StatusCode);
     when Error(const Message): panic(Message.Message());

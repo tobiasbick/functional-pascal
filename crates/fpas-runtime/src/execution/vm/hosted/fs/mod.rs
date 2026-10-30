@@ -51,12 +51,7 @@ impl Worker {
             Ok(Output::Handle(handle)) => Value::OpaqueHandle(handle),
             Ok(Output::Number(number)) => Value::Integer(number),
             Ok(Output::Done) => Value::Boolean(true),
-            Ok(Output::Bytes(bytes)) => Value::Array(
-                bytes
-                    .into_iter()
-                    .map(|b| Value::Integer(i64::from(b)))
-                    .collect(),
-            ),
+            Ok(Output::Bytes(bytes)) => Value::native_bytes(bytes),
             Ok(Output::Line(line)) => line.map_or(Value::OptionNone, |text| {
                 Value::option_some(Value::Str(text.into()))
             }),

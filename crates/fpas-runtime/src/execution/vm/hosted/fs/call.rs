@@ -9,7 +9,7 @@ enum Request {
     Open(String, i64),
     Close(u64),
     Read(u64, i64),
-    Write(u64, Vec<u8>),
+    Write(u64, crate::SharedBytes),
     ReadLine(u64),
     Seek(u64, i64, i64),
     Tell(u64),

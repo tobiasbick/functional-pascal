@@ -38,6 +38,21 @@ pub(super) fn field(value: &Value, name: &str) -> Result<Value, ValueOperationEr
 
 pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationError> {
     match value {
+        Value::Bytes(bytes) => {
+            let index = checked_index(key, "byte buffer")?;
+            bytes
+                .get(index)
+                .map(|byte| Value::Integer(i64::from(*byte)))
+                .ok_or_else(|| {
+                    ValueOperationError::array_bounds(
+                        format!(
+                            "Byte buffer index {index} out of bounds (len {})",
+                            bytes.len()
+                        ),
+                        "Use an index between zero and Buffer.Length() - 1.",
+                    )
+                })
+        }
         Value::Array(values) => {
             let index = checked_index(key, "array")?;
             values.get(index).cloned().ok_or_else(|| {

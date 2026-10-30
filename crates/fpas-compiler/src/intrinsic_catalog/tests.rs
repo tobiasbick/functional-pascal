@@ -46,6 +46,14 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
         Intrinsic::Conv(ConvIntrinsic::ErrorMessage) => ("Std.Os.Errors.Message".into(), None),
         Intrinsic::Conv(ConvIntrinsic::IntToReal) => ("Std.Math.IntToReal".into(), None),
         Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Text.Utf8.EncodeBytes".into(), None),
+        Intrinsic::Str(StrIntrinsic::Utf8Decode) => ("Std.Text.Utf8.DecodeBytes".into(), None),
+        Intrinsic::Str(StrIntrinsic::Utf8Append) => ("Std.Text.Utf8.AppendText".into(), None),
+        Intrinsic::Bytes(BytesIntrinsic::JoinChunks) => {
+            ("Std.Net.Http.Io.JoinBuffers".into(), None)
+        }
+        Intrinsic::Bytes(BytesIntrinsic::DecodePercent) => {
+            ("Std.Net.Uri.Percent.DecodeBytes".into(), None)
+        }
         Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
         Intrinsic::Test(TestIntrinsic::AssertEqualsInteger) => {
             ("Std.Test.AssertEquals".into(), Some(Ty::Integer))

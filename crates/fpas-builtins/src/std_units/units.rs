@@ -40,6 +40,7 @@ standard_unit_names! {
     STD_UNIT_NET = "Std.Net.Sockets";
     STD_UNIT_RANDOM = "Std.Math.Random";
     STD_UNIT_CRYPTO = "Std.Crypto";
+    STD_UNIT_BYTES = "Std.Bytes";
     STD_UNIT_ENCODING = "Std.Encoding";
     STD_UNIT_ARRAY = "Std.Arrays";
     STD_UNIT_RESULT = "Std.Results";
@@ -79,6 +80,7 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
     STD_UNIT_RANDOM,
     STD_UNIT_CRYPTO,
     STD_UNIT_ENCODING,
+    STD_UNIT_BYTES,
     STD_UNIT_TASK,
     STD_UNIT_JSON,
     STD_UNIT_TOML,
@@ -114,6 +116,7 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_RANDOM,
     STD_UNIT_CRYPTO,
     STD_UNIT_ENCODING,
+    STD_UNIT_BYTES,
     STD_UNIT_TASK,
     STD_UNIT_JSON,
     STD_UNIT_TOML,

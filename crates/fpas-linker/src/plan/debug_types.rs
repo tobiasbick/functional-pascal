@@ -110,6 +110,7 @@ fn structurally_equivalent_inner(
         | (ObjectDebugType::Integer, ObjectDebugType::Integer)
         | (ObjectDebugType::Real, ObjectDebugType::Real)
         | (ObjectDebugType::String, ObjectDebugType::String)
+        | (ObjectDebugType::ByteBuffer, ObjectDebugType::ByteBuffer)
         | (ObjectDebugType::Dynamic, ObjectDebugType::Dynamic) => true,
         (ObjectDebugType::Array(left), ObjectDebugType::Array(right))
         | (ObjectDebugType::Option(left), ObjectDebugType::Option(right))
@@ -259,6 +260,7 @@ fn reachable_types(object: &RelocatableObject) -> Vec<bool> {
             | ObjectDebugType::Integer
             | ObjectDebugType::Real
             | ObjectDebugType::String
+            | ObjectDebugType::ByteBuffer
             | ObjectDebugType::Dynamic
             | ObjectDebugType::Record(_)
             | ObjectDebugType::Enum(_) => {}
@@ -282,6 +284,7 @@ fn relocate_type(
         ObjectDebugType::Integer => DebugType::Integer,
         ObjectDebugType::Real => DebugType::Real,
         ObjectDebugType::String => DebugType::String,
+        ObjectDebugType::ByteBuffer => DebugType::ByteBuffer,
         ObjectDebugType::Dynamic => DebugType::Dynamic,
         ObjectDebugType::Array(inner) => DebugType::Array(child(*inner)?),
         ObjectDebugType::Dictionary { key, value } => DebugType::Dictionary {

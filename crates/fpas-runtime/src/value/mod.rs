@@ -1,5 +1,6 @@
 mod aggregate;
 mod array;
+mod bytes;
 mod cell;
 mod collector;
 mod display;
@@ -21,6 +22,7 @@ pub use aggregate::{
     RuntimeRecordLayout, SharedDict, SharedEnum, SharedRecord,
 };
 pub use array::SharedArray;
+pub use bytes::{ByteStorageError, MAX_BYTE_BUFFER_LENGTH, SharedBytes};
 pub use cell::{CellSnapshot, CellUpdateError, OwnedCell, OwnershipError, WeakOwnedCell};
 pub use collector::{CollectionLimits, CollectionStats};
 pub use domain::{DomainId, MemoryDomain};
@@ -52,6 +54,8 @@ pub enum Value {
     Boolean(bool),
     /// Shared UTF-8 string value.
     Str(SharedStr),
+    /// Contiguous managed byte-buffer value with copy-on-write mutation.
+    Bytes(SharedBytes),
     /// Enum variant with optional associated data.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
@@ -125,6 +129,7 @@ impl Value {
     fn clone_shared(&self) -> Self {
         match self {
             Self::Str(value) => Self::Str(value.clone()),
+            Self::Bytes(value) => Self::Bytes(value.clone()),
             Self::Enum(value) => Self::Enum(value.clone()),
             Self::Array(value) => Self::Array(value.clone()),
             Self::Dict(value) => Self::Dict(value.clone()),
@@ -147,6 +152,14 @@ impl Value {
 }
 
 impl Value {
+    /// Adopt an owned result from a native producer with a validated smaller transfer bound.
+    pub(crate) fn native_bytes(bytes: Vec<u8>) -> Self {
+        match SharedBytes::from_vec(bytes) {
+            Ok(bytes) => Self::Bytes(bytes),
+            Err(_) => unreachable!("native byte output obeys its validated transfer bound"),
+        }
+    }
+
     /// Create a successful result with a managed payload box.
     #[must_use]
     pub fn result_ok(value: Value) -> Self {
@@ -210,6 +223,7 @@ impl Value {
             Value::Reference(_) => "reference",
             Value::Task(_) => "task",
             Value::OpaqueHandle(_) => "opaque handle",
+            Value::Bytes(_) => "Std.Bytes.ByteBuffer",
         }
     }
 }

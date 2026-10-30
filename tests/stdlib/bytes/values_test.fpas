@@ -1,0 +1,44 @@
+program ByteBufferValues;
+
+uses Std.Bytes as Bytes, Std.Test as Test;
+
+type Packet = record
+  Data: Bytes.ByteBuffer;
+end record;
+
+type Payload = enum
+  Raw(Data: Bytes.ByteBuffer);
+  Empty;
+end enum;
+
+function Same<T: Equatable>(Left: T; Right: T): boolean;
+begin
+  return Left = Right;
+end function;
+
+begin
+  const Create: function(Length: integer): result of (Bytes.ByteBuffer, Bytes.BufferError) := Bytes.Create;
+  var Data := Bytes.FromArray([0, 128, 255]).Unwrap();
+  const Captured: function(Start: integer; Len: integer): result of (Bytes.ByteBuffer, Bytes.BufferError) := Data.Slice;
+  discard Data.SetAtInPlace(0, 9).Unwrap();
+  Test.AssertEquals(0, Captured(0, 1).Unwrap()[0]);
+  Test.AssertEquals(3, Create(3).Unwrap().Length());
+  const Original := Packet(Data := Data);
+  Test.AssertTrue(Same(Original, Packet(Data := Data)));
+  Test.AssertTrue(Same(Payload.Raw(Data), Payload.Raw(Data)));
+  Test.AssertTrue(Same(Some(Data), Some(Data)));
+  var Copy := Original;
+  discard Copy.Data.SetAtInPlace(1, 7).Unwrap();
+  Test.AssertEquals(128, Original.Data[1]);
+  Test.AssertEquals(7, Copy.Data[1]);
+  const Key := Data;
+  var Index: dict of Bytes.ByteBuffer to integer := [Key: 42];
+  discard Data.SetAtInPlace(0, 3).Unwrap();
+  Test.AssertEquals(42, Index[Key]);
+  Test.AssertTrue(Index.Get(Data) is None);
+  const SameBytes := Bytes.FromArray([9, 128, 255]).Unwrap();
+  Test.AssertTrue(Same(Key, SameBytes));
+  Index[SameBytes] := 99;
+  Test.AssertEquals(1, Index.Length());
+  Test.AssertEquals(99, Index[Key]);
+end.

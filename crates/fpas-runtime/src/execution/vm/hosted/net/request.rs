@@ -17,7 +17,7 @@ pub(super) enum Operation {
     },
     Accept(u64),
     Read(u64, i64),
-    Write(u64, Vec<u8>),
+    Write(u64, crate::SharedBytes),
     SetTimeout(u64, i64),
 }
 
@@ -110,7 +110,7 @@ pub(super) fn prepare(worker: &Worker, op: Op, values: &[Value]) -> Result<Prepa
                     args::integer(worker, &values[1], "MaxBytes")?,
                 )),
                 Op::Write | Op::WriteWithCancellation => {
-                    args::bytes(worker, &values[1])?.map(|bytes| Operation::Write(handle, bytes))
+                    Ok(Operation::Write(handle, args::bytes(worker, &values[1])?))
                 }
                 Op::SetTimeout => Ok(Operation::SetTimeout(
                     handle,

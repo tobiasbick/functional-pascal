@@ -1,10 +1,11 @@
 // HTTP request, response, server, streaming, and SSE data types.
 unit Std.Net.Http.Types;
 
-uses Std.Net.Http.Handles as Handles, Std.Net.Sockets as Net, Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8;
+uses Std.Bytes as ByteStorage, Std.Net.Http.Handles as Handles, Std.Net.Sockets as Net, Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8;
 
 // HTTP owns protocol decisions and retains typed transport, address and decoding causes.
 public type HttpError = error
+  Buffer(Cause: ByteStorage.BufferError) = 'HTTP byte storage failed';
   Transport(Cause: Net.NetError) = 'HTTP operation failed';
   Address(Cause: Uri.UriError) = 'HTTP operation failed';
   Encoding(Cause: Utf8.Utf8Error) = 'HTTP operation failed';
@@ -42,7 +43,7 @@ public type Request = record
   // Request fields in wire order.
   public Headers: array of Header;
   // Complete request-body bytes.
-  public Body: array of integer;
+  public Body: ByteStorage.ByteBuffer;
   // Network timeout in milliseconds.
   public TimeoutMillis: integer;
   // Maximum response-head size in bytes.
@@ -63,7 +64,7 @@ public type Request = record
       Method := Method,
       Url := Url,
       Headers := [],
-      Body := [],
+      Body := ByteStorage.Create(0).Unwrap(),
       TimeoutMillis := 30000,
       MaxHeaderBytes := 65536,
       MaxResponseBytes := 16777216,
@@ -144,7 +145,7 @@ public type Response = record
   // Response fields in wire order.
   public Headers: array of Header;
   // Complete decoded response-body bytes.
-  public Body: array of integer;
+  public Body: ByteStorage.ByteBuffer;
 end record;
 
 // Opaque pull-based HTTP response body.
@@ -183,7 +184,7 @@ public type ServerRequest = record
   // Request fields in wire order.
   public Headers: array of Header;
   // Complete request-body bytes.
-  public Body: array of integer;
+  public Body: ByteStorage.ByteBuffer;
 end record;
 
 // One complete response written by the HTTP server helpers.
@@ -195,7 +196,7 @@ public type ServerResponse = record
   // Caller-supplied response fields.
   public Headers: array of Header;
   // Complete response-body bytes.
-  public Body: array of integer;
+  public Body: ByteStorage.ByteBuffer;
 
   // Creates an empty response with an explicit status.
   //
@@ -208,7 +209,7 @@ public type ServerResponse = record
       StatusCode := StatusCode,
       ReasonPhrase := ReasonPhrase,
       Headers := [],
-      Body := []
+      Body := ByteStorage.Create(0).Unwrap()
     );
   end function;
 end record;

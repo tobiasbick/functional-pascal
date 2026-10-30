@@ -19,13 +19,13 @@ begin
     Uri.DecodePathSegment('%E2%82') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.IncompleteSequence(0)))
   );
   Test.AssertTrue(
-    Uri.DecodePathSegment('x%E2%28%A1') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(2, _)))
+    Uri.DecodePathSegment('x%E2%28%A1') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(1, _)))
   );
   Test.AssertTrue(
     Uri.DecodeQueryComponent('%F4%90%80%80') is Error(Uri.ComponentError.InvalidEncoding(0, Utf8.Utf8Error.InvalidByte(0, _)))
   );
   Test.AssertTrue(
-    Uri.ParseQuery('first=ok&bad=x%E2%28%A1') is Error(Uri.ComponentError.InvalidEncoding(13, Utf8.Utf8Error.InvalidByte(2, _)))
+    Uri.ParseQuery('first=ok&bad=x%E2%28%A1') is Error(Uri.ComponentError.InvalidEncoding(13, Utf8.Utf8Error.InvalidByte(1, _)))
   );
   Test.AssertTrue(
     Uri.ParseQuery('ok=1&%C0%AF=x') is Error(Uri.ComponentError.InvalidEncoding(5, Utf8.Utf8Error.InvalidByte(0, _)))

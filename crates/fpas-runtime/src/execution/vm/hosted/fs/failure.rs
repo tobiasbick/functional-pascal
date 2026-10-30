@@ -11,7 +11,6 @@ pub(super) enum Failure {
     Closed,
     Cancelled,
     Argument(&'static str, String),
-    InvalidByte(usize, i64),
     Limit(i64),
     Encoding(String, String),
     Io(String, io::Error),
@@ -44,13 +43,9 @@ impl Failure {
         let text = |value: &str| Value::Str(value.into());
         let (variant, fields) = match self {
             Self::Path(_) => unreachable!("path errors are converted above"),
-            Self::Closed => (13, vec![text(operation)]),
-            Self::Cancelled => (14, vec![text(operation)]),
+            Self::Closed => (12, vec![text(operation)]),
+            Self::Cancelled => (13, vec![text(operation)]),
             Self::Argument(name, reason) => (8, vec![text(name), text(&reason)]),
-            Self::InvalidByte(offset, value) => (
-                12,
-                vec![Value::Integer(offset as i64), Value::Integer(value)],
-            ),
             Self::Limit(limit) => (11, vec![text(operation), Value::Integer(limit)]),
             Self::Encoding(path, detail) => (10, vec![text(&path), text(&detail)]),
             Self::Io(path, error)

@@ -1,20 +1,22 @@
 // Bounded byte transfers for HTTP transports.
 unit Std.Net.Http.Io;
 
-uses Std.Net.Sockets as Net, Std.Net.Http.Types as Types;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Net.Http.Types as Types;
 
-// Materializes ordered response or request fragments as one byte array.
-public function JoinChunks(Chunks: array of array of integer): array of integer;
+// The native implementation allocates the combined storage only once.
+function JoinBuffers(Chunks: array of ByteStorage.ByteBuffer): result of (ByteStorage.ByteBuffer, ByteStorage.BufferError);
 begin
-  return Chunks.FlatMap(
-    function(Chunk: array of integer): array of integer begin
-      return Chunk;
-    end function
-  );
+  panic('HTTP buffer materialization intrinsic was not lowered');
+end function;
+
+// Materializes ordered response or request fragments as one managed byte value.
+public function JoinChunks(Chunks: array of ByteStorage.ByteBuffer): result of (ByteStorage.ByteBuffer, Types.HttpError);
+begin
+  return JoinBuffers(Chunks).MapError(Types.HttpError.Buffer);
 end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.
-public function ReadResponseBytes(Connection: Net.Connection; Available: integer): result of (array of integer, Types.HttpError);
+public function ReadResponseBytes(Connection: Net.Connection; Available: integer): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   if Available < 0 then
     begin
@@ -64,7 +66,7 @@ end function;
 // Parameters:
 // - `Connection`: Open TCP or TLS connection.
 // - `Bytes`: Complete byte sequence to write.
-public function WriteAll(Connection: Net.Connection; Bytes: array of integer): result of (boolean, Types.HttpError);
+public function WriteAll(Connection: Net.Connection; Bytes: ByteStorage.ByteBuffer): result of (boolean, Types.HttpError);
 begin
   var Offset: integer := 0;
   while Offset < Bytes.Length() do
@@ -75,7 +77,10 @@ begin
           Count := 1048576;
         end;
       end if;
-      const Remaining: array of integer := Bytes.Slice(Offset, Count);
+      const Remaining: ByteStorage.ByteBuffer := try Bytes.Slice(
+        Offset,
+        Count
+      ).MapError(Types.HttpError.Buffer);
       case Net.SendBytes(Connection, Remaining).MapError(Types.HttpError.Transport) of
         when Ok(const Count):
           begin

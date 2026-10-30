@@ -1,149 +1,60 @@
-// Validated conversion between FPAS strings and UTF-8 byte arrays.
+// Strict native conversion between FPAS strings and managed UTF-8 bytes.
 //
 // Handbook: `docs/pascal/std/network/utf8.md`.
 unit Std.Text.Utf8;
 
-// Byte offsets use the decoder's existing zero-based input convention.
+uses Std.Bytes as ByteStorage;
+
+// Offsets identify the zero-based start of the first invalid or incomplete sequence.
 public type Utf8Error = error
   InvalidByte(Offset: integer; Detail: string) = 'Invalid UTF-8';
   IncompleteSequence(Offset: integer) = 'Invalid UTF-8';
+  AllocationFailed(RequestedBytes: integer) = 'UTF-8 string allocation failed';
 end error;
 
-// Internal bulk codec implemented by the string runtime.
-function EncodeBytes(Text: string): array of integer;
+function EncodeBytes(Text: string): result of (ByteStorage.ByteBuffer, ByteStorage.BufferError);
 begin
-  panic('internal UTF-8 encode intrinsic was not lowered');
+  panic('UTF-8 encode intrinsic was not lowered');
 end function;
 
-// Encodes one FPAS string as UTF-8 bytes in one pass.
-// See docs/pascal/std/network/utf8.md.
-public function Encode(Text: string): array of integer;
+function DecodeBytes(Bytes: ByteStorage.ByteBuffer): result of (string, Utf8Error);
+begin
+  panic('UTF-8 decode intrinsic was not lowered');
+end function;
+
+// Internal bulk append; encoding does not create an intermediate buffer.
+function AppendText(Buffer: ByteStorage.ByteBuffer; Text: string): result of (ByteStorage.ByteBuffer, ByteStorage.BufferError);
+begin
+  panic('UTF-8 append intrinsic was not lowered');
+end function;
+
+// Encodes text into an exact-capacity byte value in one native pass.
+//
+// Parameters:
+// - `Text`: Text whose UTF-8 bytes are preserved, including NUL and BOM.
+public function Encode(Text: string): result of (ByteStorage.ByteBuffer, ByteStorage.BufferError);
 begin
   return EncodeBytes(Text);
 end function;
 
-// Builds a byte-indexed UTF-8 validation error.
+// Strictly decodes bytes without replacement, normalization or BOM removal.
 //
 // Parameters:
-// - `Index`: Byte offset where validation failed.
-// - `Message`: Reason the byte sequence is invalid.
-function Invalid(Index: integer; Message: string): result of (string, Utf8Error);
+// - `Bytes`: Arbitrary bytes to validate as UTF-8.
+public function Decode(Bytes: ByteStorage.ByteBuffer): result of (string, Utf8Error);
 begin
-  return Error(Utf8Error.InvalidByte(Index, Message));
+  return DecodeBytes(Bytes);
 end function;
 
-// Reports whether an integer is a UTF-8 continuation byte.
+// Appends encoded text, committing the caller's buffer only on success.
 //
 // Parameters:
-// - `ByteValue`: Integer byte value to inspect.
-function IsContinuation(ByteValue: integer): boolean;
+// - `Buffer`: Writable byte storage; errors preserve its value and capacity.
+// - `Text`: Text appended in its original UTF-8 representation.
+public function AppendInPlace(var Buffer: ByteStorage.ByteBuffer; Text: string): result of (boolean, ByteStorage.BufferError);
 begin
-  return (ByteValue >= 128) and (ByteValue <= 191);
-end function;
-
-// Decodes validated UTF-8 bytes into one FPAS string.
-//
-// Parameters:
-// - `Bytes`: Integer byte values in `0..255`.
-public function Decode(Bytes: array of integer): result of (string, Utf8Error);
-begin
-  var Parts: array of string := [];
-  var Index: integer := 0;
-  while Index < Bytes.Length() do
-    begin
-      const First: integer := Bytes[Index];
-      if (First < 0) or (First > 255) then
-        begin
-          return Invalid(Index, 'byte must be in 0..255');
-        end;
-      end if;
-      var CodePoint: integer := 0;
-      var Width: integer := 0;
-      if First <= 127 then
-        begin
-          CodePoint := First;
-          Width := 1;
-        end;
-      elsif (First >= 194) and (First <= 223) then
-        begin
-          Width := 2;
-        end;
-      elsif (First >= 224) and (First <= 239) then
-        begin
-          Width := 3;
-        end;
-      elsif (First >= 240) and (First <= 244) then
-        begin
-          Width := 4;
-        end;
-      else
-        begin
-          return Invalid(Index, 'invalid leading byte');
-        end;
-      end if;
-
-      if Index + Width > Bytes.Length() then
-        begin
-          return Error(Utf8Error.IncompleteSequence(Index));
-        end;
-      end if;
-
-      if Width >= 2 then
-        begin
-          const Second: integer := Bytes[Index + 1];
-          if not IsContinuation(Second) then
-            begin
-              return Invalid(Index + 1, 'expected continuation byte');
-            end;
-          end if;
-
-          CodePoint := (First - 192) * 64 + Second - 128;
-        end;
-      end if;
-
-      if Width >= 3 then
-        begin
-          const Third: integer := Bytes[Index + 2];
-          if not IsContinuation(Third) then
-            begin
-              return Invalid(Index + 2, 'expected continuation byte');
-            end;
-          end if;
-
-          CodePoint := (First - 224) * 4096 + (Bytes[Index + 1] - 128) * 64 + Third - 128;
-          if (CodePoint < 2048) or ((CodePoint >= 55296) and (CodePoint <= 57343)) then
-            begin
-              return Invalid(Index, 'overlong or surrogate sequence');
-            end;
-          end if;
-        end;
-      end if;
-
-      if Width = 4 then
-        begin
-          const Fourth: integer := Bytes[Index + 3];
-          if not IsContinuation(Fourth) then
-            begin
-              return Invalid(Index + 3, 'expected continuation byte');
-            end;
-          end if;
-
-          CodePoint := (First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096 +
-            (Bytes[Index + 2] - 128) * 64 + Fourth -
-            128;
-          if (CodePoint < 65536) or (CodePoint > 1114111) then
-            begin
-              return Invalid(Index, 'overlong or out-of-range sequence');
-            end;
-          end if;
-        end;
-      end if;
-
-      Parts.PushInPlace(string.Chr(CodePoint));
-      Index := Index + Width;
-    end;
-  end while;
-
-  return Ok(Parts.Join(''));
+  const Updated := try AppendText(Buffer, Text);
+  Buffer := Updated;
+  return Ok(true);
 end function;
 end unit;

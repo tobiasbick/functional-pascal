@@ -1,7 +1,7 @@
 // Bounded concurrent HTTP server-loop orchestration.
 unit Std.Net.Http.ServerLoop;
 
-uses Std.Net.Http.Server as Server, Std.Net.Http.Types as Types, Std.Net.Sockets as Net, Std.Tasks as StdTasks;
+uses Std.Bytes as ByteStorage, Std.Net.Http.Server as Server, Std.Net.Http.Types as Types, Std.Net.Sockets as Net, Std.Tasks as StdTasks;
 
 // Validates all server-loop limits before accepting a connection.
 //
@@ -129,7 +129,7 @@ begin
     Method := '',
     Target := '',
     Headers := [],
-    Body := []
+    Body := ByteStorage.Create(0).Unwrap()
   );
   case Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
     when Ok(const Value):

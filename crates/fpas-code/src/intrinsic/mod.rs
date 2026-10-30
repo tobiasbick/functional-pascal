@@ -29,6 +29,8 @@ pub mod args;
 pub mod array;
 /// Signed 64-bit bit-operation identifiers; see `docs/pascal/std/numeric/bits.md`.
 pub mod bits;
+/// Managed native byte-buffer operations.
+pub mod bytes;
 pub mod console;
 pub mod conv;
 pub mod crypto;
@@ -60,6 +62,7 @@ pub use acp::AcpIntrinsic;
 pub use args::ArgsIntrinsic;
 pub use array::ArrayIntrinsic;
 pub use bits::BitsIntrinsic;
+pub use bytes::BytesIntrinsic;
 pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
 pub use crypto::CryptoIntrinsic;
@@ -92,6 +95,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Native contiguous byte-buffer operation.
+    Bytes(BytesIntrinsic),
     /// Model-tokenization and exact token counts.
     Tokenizer(TokenizerIntrinsic),
     /// Registered MCP tool and publication operation.
@@ -167,12 +172,16 @@ impl Intrinsic {
     #[must_use]
     pub fn debugger_name(self) -> String {
         match self {
+            Self::Bytes(BytesIntrinsic::JoinChunks) => "Std.Net.Http.Io.JoinBuffers".to_string(),
+            Self::Bytes(BytesIntrinsic::DecodePercent) => "Std.Net.Uri.Percent.DecodeBytes".to_string(),
             Self::Mcp(operation) => operation.source_name(),
             Self::Acp(operation) => operation.source_name(),
             Self::Conv(ConvIntrinsic::ErrorMessage) => "Std.Os.Errors.Message".to_string(),
             Self::Conv(ConvIntrinsic::ErrorMatchesVariant) => "$error.MatchesVariant".to_string(),
             Self::Conv(ConvIntrinsic::IntToReal) => "Std.Math.IntToReal".to_string(),
             Self::Str(StrIntrinsic::Utf8Encode) => "Std.Text.Utf8.EncodeBytes".to_string(),
+            Self::Str(StrIntrinsic::Utf8Decode) => "Std.Text.Utf8.DecodeBytes".to_string(),
+            Self::Str(StrIntrinsic::Utf8Append) => "Std.Text.Utf8.AppendText".to_string(),
             Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
             Self::Http(HttpIntrinsic::ReserveBodyStreamState) => {
                 "Std.Net.Http.Stream.ReserveState".to_string()
@@ -270,6 +279,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    Bytes(BytesIntrinsic),
     Tokenizer(TokenizerIntrinsic),
     Mcp(McpIntrinsic),
     Acp(AcpIntrinsic),

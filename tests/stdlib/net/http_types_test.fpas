@@ -18,7 +18,7 @@ begin
   const ResponseValue: Http.Response := Http.Response(
     StatusCode := 200, ReasonPhrase := 'OK', Headers := [
       Http.Header.Create('Content-Type', 'application/json')
-    ], Body := Utf8.Encode('{"ok":true}')
+    ], Body := Utf8.Encode('{"ok":true}').Unwrap()
   );
   case Http.BodyText(ResponseValue) of
     when Ok(const Text):

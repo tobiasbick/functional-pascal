@@ -105,6 +105,7 @@ All six component/query functions return `ComponentError`. The public alias
 | `InvalidEncoding` | `ComponentOffset: integer; Cause: Utf8.Utf8Error`; decoded bytes are not valid UTF-8 |
 | `InvalidQueryParameter` | `Index: integer; Reason: string`; an invalid builder record, indexed from zero |
 | `LimitExceeded` | `Resource: string; Limit: integer`; a bound in the table below was exceeded |
+| `Buffer` | `Cause: Std.Bytes.BufferError`; private byte storage could not be allocated |
 
 `InvalidEscape.Offset` is a zero-based **UTF-8 byte offset in the original
 input**. Query offsets cover the full query body, including separators and
@@ -116,7 +117,7 @@ the failing name or value begins. It is zero for standalone component
 decoding. The retained [`Utf8.Utf8Error`](utf8.md) has its own offset inside
 the **decoded component bytes**, not inside the percent-encoded input.
 For `first=ok&bad=x%E2%28%A1`, the value begins at input byte 13 and its
-invalid continuation is decoded-component byte 2.
+invalid UTF-8 sequence starts at decoded-component byte 1.
 
 Handle these errors as Result data with `case` or compatible `try`
 propagation. Use `.Message()` at an output boundary; UTF-8 causes retain their

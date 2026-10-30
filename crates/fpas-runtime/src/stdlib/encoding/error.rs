@@ -7,7 +7,6 @@ use super::MAX_BYTES;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum CodecFailure {
-    InvalidByte { offset: usize, value: i64 },
     InvalidCharacter { offset: usize },
     InvalidLength { length: usize },
     InvalidPadding { offset: usize },
@@ -23,14 +22,11 @@ impl CodecFailure {
     ) -> Result<Value, StdError> {
         use crate::stdlib::native_errors::{NativeErrorFamily, value};
         let (variant, fields) = match self {
-            Self::InvalidByte { offset, value } => {
-                (0, vec![integer(offset), Value::Integer(value)])
-            }
-            Self::InvalidCharacter { offset } => (1, vec![integer(offset)]),
-            Self::InvalidLength { length } => (2, vec![integer(length)]),
-            Self::InvalidPadding { offset } => (3, vec![integer(offset)]),
-            Self::NonCanonical { offset } => (4, vec![integer(offset)]),
-            Self::LimitExceeded => (5, vec![integer(MAX_BYTES)]),
+            Self::InvalidCharacter { offset } => (0, vec![integer(offset)]),
+            Self::InvalidLength { length } => (1, vec![integer(length)]),
+            Self::InvalidPadding { offset } => (2, vec![integer(offset)]),
+            Self::NonCanonical { offset } => (3, vec![integer(offset)]),
+            Self::LimitExceeded => (4, vec![integer(MAX_BYTES)]),
         };
         value(
             factory,

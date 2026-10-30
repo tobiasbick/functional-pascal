@@ -2,6 +2,7 @@
 unit Std.Net.Http.Client;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Net.Http.Head as Head, Std.Net.Http.Headers as Headers, Std.Net.Http.Io as Io,
   Std.Net.Http.Redirect as Redirect, Std.Net.Http.Stream as Stream, Std.Net.Http.Types as Types,
   Std.Net.Http.Wire as Wire, Std.Net.Sockets as Net, Std.Net.Uri as Uri;
@@ -59,7 +60,7 @@ end procedure;
 function OpenOnce(RequestValue: Types.Request): result of (Types.StreamResponse, Types.HttpError);
 begin
   const UriValue: Uri.Uri := try Uri.Parse(RequestValue.Url).MapError(Types.HttpError.Address);
-  const Encoded: array of integer := try Wire.EncodeRequest(RequestValue, UriValue);
+  const Encoded: ByteStorage.ByteBuffer := try Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     when Ok(const Connection):
       begin
@@ -265,7 +266,7 @@ begin
   case OpenStream(RequestValue) of
     when Ok(const StreamResponseValue):
       begin
-        var Chunks: array of array of integer := [];
+        var Chunks: array of ByteStorage.ByteBuffer := [];
         while true do
           begin
             case Stream.ReadBody(StreamResponseValue.Body, 65536) of
@@ -278,7 +279,7 @@ begin
                           StatusCode := StreamResponseValue.StatusCode,
                           ReasonPhrase := StreamResponseValue.ReasonPhrase,
                           Headers := StreamResponseValue.Headers,
-                          Body := Io.JoinChunks(Chunks)
+                          Body := try Io.JoinChunks(Chunks)
                         )
                       );
                     end;

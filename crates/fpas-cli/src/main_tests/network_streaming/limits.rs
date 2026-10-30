@@ -60,7 +60,7 @@ begin
   var Reading: boolean := true;
   while Reading do
   begin
-    const Bytes: array of integer := try Http.ReadStream(ResponseValue.Body, 2);
+    const Bytes := try Http.ReadStream(ResponseValue.Body, 2);
     Count := Count + Bytes.Length();
     Reading := Bytes.Length() > 0;
   end; end while;

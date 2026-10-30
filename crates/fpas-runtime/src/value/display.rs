@@ -32,6 +32,7 @@ impl fmt::Display for Value {
                 Value::Boolean(boolean) => write!(formatter, "{boolean}")?,
                 Value::Str(string) if field => quoted(formatter, string)?,
                 Value::Str(string) => write!(formatter, "{string}")?,
+                Value::Bytes(bytes) => write!(formatter, "{bytes}")?,
                 Value::Enum(value) => {
                     let body = value.body();
                     if body.layout.error.is_some() && !field {

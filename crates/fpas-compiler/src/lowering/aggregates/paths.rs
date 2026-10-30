@@ -326,6 +326,7 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<(ValueId, TypeId), CompileError> {
         let result_ty = match self.type_kind(ty) {
+            Some(IrType::ByteBuffer) => super::super::types::INTEGER,
             Some(IrType::Array(element)) => element,
             Some(IrType::Dictionary { value, .. }) => value,
             Some(IrType::String) => super::super::types::STRING,

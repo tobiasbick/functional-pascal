@@ -19,12 +19,12 @@ fn run_with_one_worker(source: &str) {
 fn timed_channel_wait_does_not_run_a_blocking_queued_task_inline() {
     run_with_one_worker(
         r#"program TimedWaitDoesNotHelp;
-uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Time as Time;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Time as Time;
 function BlockingRead(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
   const Client: Net.Connection := Net.Accept(ListenerValue).Unwrap();
   const Configured: boolean := Net.SetTimeout(Client, 1500).Unwrap();
-  const Ignored: result of (array of integer, Net.NetError) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  const Ignored: result of (ByteStorage.ByteBuffer, Net.NetError) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   const Closed: boolean := Net.Close(Client).Unwrap();
   return true;
 end function;
@@ -91,12 +91,12 @@ begin scope
 fn task_wait_does_not_run_a_queued_task_that_waits_for_the_main_task() {
     run_with_workers(
         r#"program TaskWaitDoesNotHelp;
-uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Time as Time;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Time as Time;
 function Busy(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
   const Client: Net.Connection := Net.Accept(ListenerValue).Unwrap();
   const Configured: boolean := Net.SetTimeout(Client, 1000).Unwrap();
-  const Ignored: result of (array of integer, Net.NetError) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  const Ignored: result of (ByteStorage.ByteBuffer, Net.NetError) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   return true;
 end function;
 function Reader(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
@@ -141,7 +141,7 @@ begin scope
   const QuickTask: task of integer := go Quick();
   const Started: integer := Time.TimestampMillis();
   if Tasks.Wait(QuickTask) <> 7 then panic('quick'); end if;
-  const Sent: integer := Net.SendBytes(ReaderClient, [42]).Unwrap();
+  const Sent: integer := Net.SendBytes(ReaderClient, ByteStorage.FromArray([42]).Unwrap()).Unwrap();
   if not Tasks.Wait(ReaderTask) then panic('the reader did not receive the byte sent after the wait'); end if;
   if Time.TimestampMillis() - Started > 4000 then panic('the wait ran the reader inline'); end if;
   if not Tasks.Wait(First) then panic('first'); end if;

@@ -1,0 +1,22 @@
+program ByteBufferArgumentEffects;
+
+uses Std.Bytes as Bytes, Std.Test as Test;
+
+var Trace: string := '';
+
+function Observe(Label: string; Value: integer): integer;
+begin
+  Trace := Trace + Label;
+  return Value;
+end function;
+
+begin
+  var Data := Bytes.FromArray([1, 2]).Unwrap();
+  const Before := Data;
+  const Capacity := Data.Capacity();
+  const Outcome := Data.SetAtInPlace(Value := Observe('V', 300), Index := Observe('I', 1));
+  Test.AssertEquals('VI', Trace);
+  Test.AssertTrue(Outcome is Error(Bytes.BufferError.InvalidByte(1, 300)));
+  Test.AssertTrue(Data = Before);
+  Test.AssertEquals(Capacity, Data.Capacity());
+end.

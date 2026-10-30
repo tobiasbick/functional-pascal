@@ -186,6 +186,7 @@ impl LoweringContext {
         self.begin_scope();
         let iterable_ty = self.expression_ir_type(iterable)?;
         let (element_ty, collection_ty, keys) = match self.type_kind(iterable_ty) {
+            Some(IrType::ByteBuffer) => (types::INTEGER, iterable_ty, false),
             Some(IrType::Array(element)) => (element, iterable_ty, false),
             Some(IrType::Dictionary { key, .. }) => (key, self.array_type(key, span)?, true),
             _ => return Err(unsupported(span, "for-in collection type")),
@@ -214,9 +215,13 @@ impl LoweringContext {
         self.record_call_arguments(1, span)?;
         let length = self.emit_value(
             Operation::Intrinsic {
-                intrinsic: intrinsic_id(fpas_code::Intrinsic::Array(
-                    fpas_code::ArrayIntrinsic::Length,
-                )),
+                intrinsic: intrinsic_id(
+                    if matches!(self.type_kind(collection_ty), Some(IrType::ByteBuffer)) {
+                        fpas_code::Intrinsic::Bytes(fpas_code::BytesIntrinsic::Length)
+                    } else {
+                        fpas_code::Intrinsic::Array(fpas_code::ArrayIntrinsic::Length)
+                    },
+                ),
                 arguments: vec![collection],
             },
             types::INTEGER,

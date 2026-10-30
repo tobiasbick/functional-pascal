@@ -1,7 +1,7 @@
 // Covers HTTP server-loop defaults and request-handler typing.
 program HttpServerLoopTypesTest;
 
-uses Std.Net.Http as Http, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Http as Http, Std.Test as Test;
 
 // Returns a response whose reason phrase mirrors the request method.
 //
@@ -24,7 +24,7 @@ begin
     Method := 'OK',
     Target := '/',
     Headers := [],
-    Body := []
+    Body := ByteStorage.Create(0).Unwrap()
   );
   const ResponseValue: Http.ServerResponse := HandlerValue(RequestValue);
   Test.AssertEquals(200, ResponseValue.StatusCode);

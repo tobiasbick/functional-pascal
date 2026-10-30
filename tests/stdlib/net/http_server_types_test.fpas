@@ -6,7 +6,7 @@ uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');
   ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain')];
-  ResponseValue.Body := Utf8.Encode('ok');
+  ResponseValue.Body := Utf8.Encode('ok').Unwrap();
   Test.AssertEquals(201, ResponseValue.StatusCode);
   Test.AssertEquals('Created', ResponseValue.ReasonPhrase);
   Test.AssertEquals(1, ResponseValue.Headers.Length());

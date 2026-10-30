@@ -77,12 +77,7 @@ impl Worker {
                         )
                         .map(|bytes| {
                             bytes.map_or(Value::OptionNone, |bytes| {
-                                Value::option_some(Value::Array(
-                                    bytes
-                                        .into_iter()
-                                        .map(|b| Value::Integer(i64::from(b)))
-                                        .collect(),
-                                ))
+                                Value::option_some(Value::native_bytes(bytes))
                             })
                         }),
                     WriteStdin => process
@@ -122,18 +117,12 @@ impl Worker {
     }
 }
 
-pub(super) fn bytes(value: &Value) -> Result<Vec<u8>, Failure> {
-    let Value::Array(values) = value else {
-        return Err(Failure::argument("Bytes", "Expected an array of integers"));
+pub(super) fn bytes(value: &Value) -> Result<crate::SharedBytes, Failure> {
+    let Value::Bytes(bytes) = value else {
+        return Err(Failure::argument("Bytes", "Expected Std.Bytes.ByteBuffer"));
     };
-    if values.len() > MAX_BYTES {
+    if bytes.len() > MAX_BYTES {
         return Err(Failure::limit("write bytes", MAX_BYTES));
     }
-    values
-        .iter()
-        .map(|value| {
-            u8::try_from(arguments::integer(value, "Bytes")?)
-                .map_err(|_| Failure::argument("Bytes", "Expected byte values in 0..255"))
-        })
-        .collect()
+    Ok(bytes.clone())
 }

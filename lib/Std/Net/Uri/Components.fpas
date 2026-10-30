@@ -1,7 +1,7 @@
 // Shared URL component types and resource bounds.
 unit Std.Net.Uri.Components;
 
-uses Std.Text.Utf8 as Utf8;
+uses Std.Bytes as ByteStorage, Std.Text.Utf8 as Utf8;
 
 public const MaximumDecodedBytes: integer := 65536;
 public const MaximumEncodedBytes: integer := 196608;
@@ -15,6 +15,7 @@ end record;
 
 // Percent offsets refer to UTF-8 bytes in the original supplied text.
 public type ComponentError = error
+  Buffer(Cause: ByteStorage.BufferError) = 'URL component byte storage failed';
   InvalidEscape(Offset: integer) = 'Invalid percent escape';
   InvalidEncoding(ComponentOffset: integer; Cause: Utf8.Utf8Error) = 'Invalid UTF-8 in URL component';
   InvalidQueryParameter(Index: integer; Reason: string) = 'Invalid query parameter';

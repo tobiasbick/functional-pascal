@@ -1,7 +1,7 @@
 // Parses one network URI and round-trips Unicode text through UTF-8 bytes.
 program NetworkUriUtf8;
 
-uses Std.Console as Console, Std.Text.Format as Conv, Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8;
+uses Std.Bytes as ByteStorage, Std.Console as Console, Std.Text.Format as Conv, Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8;
 
 begin
   case Uri.Parse('https://example.com:8443/api/items?limit=2') of
@@ -17,7 +17,7 @@ begin
         panic(Message.Message());
       end;
   end case;
-  const Bytes: array of integer := Utf8.Encode('Grüße aus FPAS');
+  const Bytes: ByteStorage.ByteBuffer := Utf8.Encode('Grüße aus FPAS').Unwrap();
   case Utf8.Decode(Bytes) of
     when Ok(const Text):
       begin

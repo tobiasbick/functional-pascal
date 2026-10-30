@@ -22,6 +22,7 @@ pub fn ty_to_interface_type(ty: &Ty) -> Result<artifact::InterfaceType, Interfac
         Ty::Real => Output::Real,
         Ty::Boolean => Output::Boolean,
         Ty::String => Output::String,
+        Ty::ByteBuffer => Output::ByteBuffer,
         Ty::Unit => Output::Unit,
         Ty::Array(inner) => Output::Array(Box::new(ty_to_interface_type(inner)?)),
         Ty::Channel(inner) => Output::Channel(Box::new(ty_to_interface_type(inner)?)),

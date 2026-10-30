@@ -1,6 +1,6 @@
 # `Std.Net.Sockets`
 
-Hosted TCP/TLS listeners and connections with explicit timeouts and byte arrays.
+Hosted TCP/TLS listeners and connections with explicit timeouts and byte buffers.
 
 ```pascal id=example-1 fragment context=header
 uses Std.Net.Sockets as Net;
@@ -35,10 +35,15 @@ Host deadline expiry also uses Timeout with a HostError, with absent native
 code/domain when the backend supplied none. Input validation has no fabricated
 host cause. Resources retain host then port for connect/listen, followed by PEM
 paths for ListenTls; operations on a handle retain that handle's identifier.
-Byte-domain, size, port and timeout validation use InvalidArgument.
-EOF remains `Ok([])`, partial writes remain successful counts, and cancellation
+Size, port and timeout validation use InvalidArgument. Byte-domain checks belong
+to `Std.Bytes.FromArray`; socket input uses a trusted `Std.Bytes.ByteBuffer`.
+EOF returns an empty buffer in `Ok`, partial writes return successful counts, and cancellation
 before progress keeps its existing precedence and ownership. Match variants for
 decisions; use Message() at deliberate text boundaries.
+
+Import `Std.Bytes as ByteStorage` for buffer annotations or construction. Native
+write jobs retain a stable copy-on-write value without copying individual bytes;
+read jobs publish owned native storage directly.
 
 ## Quick reference
 
@@ -58,10 +63,10 @@ decisions; use Message() at deliberate text boundaries.
 | function | `CloseListener(Listener): Result of (boolean, NetError)` | invalidates the listener handle |
 | function | `ListenerLocalAddress(Listener): Result of (NetworkAddress, NetError)` | returns the bound numeric IP address and port |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of (boolean, NetError)` | sets read/write timeout; zero disables it |
-| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of (array of integer, NetError)` | empty array means EOF |
-| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of (array of integer, NetError)` | reads a chunk or reports cancellation; leaves the connection open |
-| function | `SendBytes(Connection; Data: array of integer): Result of (integer, NetError)` | returns bytes written; partial writes are possible |
-| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Tasks.CancellationToken): Result of (integer, NetError)` | returns accepted bytes or reports cancellation before progress |
+| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of (ByteStorage.ByteBuffer, NetError)` | empty buffer means EOF |
+| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of (ByteStorage.ByteBuffer, NetError)` | reads a chunk or reports cancellation; leaves the connection open |
+| function | `SendBytes(Connection; Data: ByteStorage.ByteBuffer): Result of (integer, NetError)` | returns bytes written; partial writes are possible |
+| function | `SendBytesWithCancellation(Connection; Data: ByteStorage.ByteBuffer; Token: Std.Tasks.CancellationToken): Result of (integer, NetError)` | returns accepted bytes or reports cancellation before progress |
 | function | `Close(Connection): Result of (boolean, NetError)` | invalidates the handle |
 
 `ConnectTls` verifies the server certificate and requested hostname through the operating system's

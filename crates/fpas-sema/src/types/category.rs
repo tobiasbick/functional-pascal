@@ -12,6 +12,7 @@ impl Ty {
             Self::Real => "real",
             Self::Boolean => "boolean",
             Self::String => "string",
+            Self::ByteBuffer => "byte_buffer",
             Self::Unit => "unit",
             Self::Array(_) => "array",
             Self::Channel(_) => "channel",

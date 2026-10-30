@@ -41,7 +41,7 @@ begin
     begin
       if Mode = 'utf8' then
         begin
-          case Utf8.Decode(Utf8.Encode(Text)) of
+          case Utf8.Decode(Utf8.Encode(Text).Unwrap()) of
             when Ok(const Decoded):
               begin
                 if Decoded <> Text then

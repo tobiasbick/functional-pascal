@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 
 mod array;
+mod bytes;
 mod dictionary;
 mod error;
 mod factory;
@@ -17,6 +18,8 @@ use crate::types::{FunctionTy, ParamMode, ParamTy, Ty};
 /// Static receiver shape selecting a built-in operation without lexical lookup.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NativeReceiver {
+    /// Managed native byte storage.
+    ByteBuffer,
     /// A concrete native error family or an Error-constrained parameter.
     Error,
     /// Unicode scalar sequence.
@@ -75,7 +78,8 @@ impl NativeReceiver {
     pub fn accepts(self, ty: &Ty) -> bool {
         match (self, ty) {
             (Self::Error, ty) => crate::types::TypeConstraint::Error.satisfied_by(ty),
-            (Self::String, Ty::String)
+            (Self::ByteBuffer, Ty::ByteBuffer)
+            | (Self::String, Ty::String)
             | (Self::Array, Ty::Array(_))
             | (Self::Dictionary, Ty::Dict(_, _))
             | (Self::Option, Ty::Option(_))
@@ -89,6 +93,7 @@ impl NativeReceiver {
     #[must_use]
     pub fn label(self) -> &'static str {
         match self {
+            Self::ByteBuffer => "Std.Bytes.ByteBuffer",
             Self::Error => "Error",
             Self::String | Self::StringFactory => "string",
             Self::Array | Self::ArrayFactory => "array",
@@ -103,6 +108,7 @@ impl NativeReceiver {
     #[must_use]
     pub fn handbook(self) -> &'static str {
         match self {
+            Self::ByteBuffer => "docs/pascal/std/bytes.md",
             Self::Error => "docs/pascal/language/types/errors.md",
             Self::String | Self::StringFactory => "docs/pascal/language/types/string/README.md",
             Self::Array | Self::StringArray | Self::ArrayFactory => {
@@ -161,7 +167,10 @@ impl NativeOperation {
 
     /// Whether operation-specific checking supplies generic callback constraints.
     pub(crate) fn polymorphic(self) -> bool {
-        if self.receiver == NativeReceiver::Error {
+        if matches!(
+            self.receiver,
+            NativeReceiver::Error | NativeReceiver::ByteBuffer
+        ) {
             return false;
         }
         !self.implementation.starts_with("Std.Str.")
@@ -175,6 +184,7 @@ impl NativeOperation {
 /// Every native entry, including specialized receivers and the two factories.
 pub fn native_operations() -> impl Iterator<Item = &'static NativeOperation> {
     [
+        bytes::OPERATIONS,
         string::OPERATIONS,
         array::OPERATIONS,
         dictionary::OPERATIONS,

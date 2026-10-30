@@ -1,11 +1,11 @@
 //! Canonical `Std.*` call names to stable intrinsic wire identifiers.
 
 use fpas_code::{
-    ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic,
-    DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic,
-    JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic,
-    ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic,
-    TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic, TomlIntrinsic,
+    ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, BytesIntrinsic, ConsoleIntrinsic, ConvIntrinsic,
+    CryptoIntrinsic, DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic,
+    Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic,
+    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic,
+    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -26,8 +26,19 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     {
         return resolve(&name.replace("IsEmpty", "Length"), first_argument);
     }
-    if name == "Std.Text.Utf8.EncodeBytes" {
-        return Some(Intrinsic::Str(StrIntrinsic::Utf8Encode));
+    if let Some(operation) = name.strip_prefix("Std.Text.Utf8.") {
+        return match operation {
+            "EncodeBytes" => Some(Intrinsic::Str(StrIntrinsic::Utf8Encode)),
+            "DecodeBytes" => Some(Intrinsic::Str(StrIntrinsic::Utf8Decode)),
+            "AppendText" => Some(Intrinsic::Str(StrIntrinsic::Utf8Append)),
+            _ => None,
+        };
+    }
+    if name == "Std.Net.Http.Io.JoinBuffers" {
+        return Some(Intrinsic::Bytes(BytesIntrinsic::JoinChunks));
+    }
+    if name == "Std.Net.Uri.Percent.DecodeBytes" {
+        return Some(Intrinsic::Bytes(BytesIntrinsic::DecodePercent));
     }
     if name.starts_with("Std.Ai.Acp.") {
         return Intrinsic::all().find(|intrinsic| matches!(intrinsic, Intrinsic::Acp(operation) if operation.source_name() == name));
@@ -41,6 +52,26 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.rsplit_once('.')?;
     match unit {
+        "Bytes" => family!(
+            member,
+            Bytes,
+            BytesIntrinsic,
+            [
+                Create,
+                FromArray,
+                Length,
+                Capacity,
+                ToArray,
+                Slice,
+                Concat,
+                SetAt,
+                Fill,
+                CopyFrom,
+                Resize,
+                Reserve,
+                TrimCapacity
+            ]
+        ),
         "Ai.Tokenizer" => family!(
             member,
             Tokenizer,

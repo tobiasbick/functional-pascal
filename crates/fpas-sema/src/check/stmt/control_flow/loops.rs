@@ -65,6 +65,7 @@ impl Checker {
         let iter_ty = self.check_expr(iterable);
 
         match &iter_ty {
+            Ty::ByteBuffer => self.check_type_compat(&var_ty, &Ty::Integer, "for-in byte", span),
             Ty::Array(elem_ty) => {
                 self.check_type_compat(&var_ty, elem_ty, "for-in element", span);
             }

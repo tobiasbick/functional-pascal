@@ -1,6 +1,7 @@
 # AP54.4: Verify lifecycle, integration and representation costs
 
-Package: [AP54](README.md). Status: not started; blocked on AP54.2 and AP54.3.
+Package: [AP54](README.md). Status: not started; AP54.2 and AP54.3 are complete.
+Combined lifecycle/integration and representation-cost evidence remain in this part.
 
 ## Prerequisites
 
@@ -28,7 +29,7 @@ This part does not authorize additional buffer APIs or unrelated optimizations.
 | Tasks and channels | Copies, queued messages, task results, channel closure, failure and cancellation retain/release precisely the legitimate owners |
 | Native jobs and selection | Queued/running/completed-but-undelivered jobs, dropped cases, callbacks and shutdown neither publish stale bytes nor retain abandoned storage |
 | VM and host boundaries | Session/domain transfers, repeated VM teardown and post-failure cleanup preserve the approved ownership rules |
-| Tools and artifacts | Separately compiled consumers, intrinsic declarations, first-class values, debug inspection and full recording/restoration preserve bytes and observable length/capacity; only the display preview is truncated |
+| Tools and artifacts | Separately compiled consumers, intrinsic declarations, first-class values, live debug inspection, retained values, detached calls and bounded event capture support buffers; only the preview is truncated, and general snapshots/replay remain separate |
 
 Use the existing GC/allocation infrastructure, extended to see native backing
 bytes and capacity. Warm up unrelated bounded runtime pools, compare against a

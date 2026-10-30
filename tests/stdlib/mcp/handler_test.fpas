@@ -13,7 +13,7 @@ begin
     Http.Header.Create('MCP-Protocol-Version', '2025-06-18'),
     Http.Header.Create(Access.Headers[0].Name, Access.Headers[0].Value)
   ];
-  Request.Body := Utf8.Encode(Body);
+  Request.Body := Utf8.Encode(Body).Unwrap();
   Request.TimeoutMillis := 10000;
   return Http.Send(Request).Unwrap();
 end function;

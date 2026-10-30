@@ -120,6 +120,10 @@ fn validate_p5(
                 return require_result_type(function, block, instruction, Some(result), element);
             }
             match program.ty(collection_ty).map(|definition| &definition.kind) {
+                Some(IrType::ByteBuffer) => {
+                    require_category(program, function, block, instruction, "byte buffer index", index_ty, TypeCategory::Integer)?;
+                    require_result_category(program, function, block, instruction, Some(result), TypeCategory::Integer)
+                }
                 Some(IrType::String) => {
                     require_category(
                         program,

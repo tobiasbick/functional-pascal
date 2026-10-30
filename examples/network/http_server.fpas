@@ -15,7 +15,7 @@ function TextResponse(StatusCode: integer; ReasonPhrase: string; Text: string): 
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(StatusCode, ReasonPhrase);
   ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
-  ResponseValue.Body := Utf8.Encode(Text);
+  ResponseValue.Body := Utf8.Encode(Text).Unwrap();
   return ResponseValue;
 end function;
 

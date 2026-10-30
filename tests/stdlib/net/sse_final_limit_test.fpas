@@ -1,16 +1,19 @@
 program SseFinalLimitTest;
 
-uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 procedure CheckFinal(Text: string; Maximum: integer; Expected: string);
 begin
   const Decoder: Http.SseDecoder := Http.CreateSseDecoder(Maximum).Unwrap();
-  const Before: array of Http.SseEvent := Http.FeedSse(Decoder, Utf8.Encode(Text)).Unwrap();
+  const Before: array of Http.SseEvent := Http.FeedSse(
+    Decoder,
+    Utf8.Encode(Text).Unwrap()
+  ).Unwrap();
   Test.AssertEquals(0, Before.Length());
   const Events: array of Http.SseEvent := Http.FinishSse(Decoder).Unwrap();
   Test.AssertEquals(1, Events.Length());
   Test.AssertEquals(Expected, Events[0].Data);
-  case Http.FeedSse(Decoder, []) of
+  case Http.FeedSse(Decoder, ByteStorage.FromArray([]).Unwrap()) of
     when Ok(_):
       begin
         panic('finished decoder accepted input');
@@ -31,7 +34,7 @@ begin
   CheckFinal('data: x' + #13, 8, 'x');
   CheckFinal('data: x' + #10, 8, 'x');
   const Small: Http.SseDecoder := Http.CreateSseDecoder(6).Unwrap();
-  case Http.FeedSse(Small, Utf8.Encode('data: x')) of
+  case Http.FeedSse(Small, Utf8.Encode('data: x').Unwrap()) of
     when Ok(_):
       begin
         panic('oversized event accepted');

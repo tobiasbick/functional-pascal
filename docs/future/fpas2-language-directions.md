@@ -746,13 +746,16 @@ for the removed type names.
 
 ## 22. Packed numeric data and binary buffers
 
-Status: planned in [AP54](improve-syntax/ap54-byte-buffers/README.md), with a
+Status: partially implemented in [AP54](improve-syntax/ap54-byte-buffers/README.md), with a
 complete [byte-buffer contract](improve-syntax/ap54-byte-buffers/01-contract.md):
 copy-on-write values, explicit mutation, byte-content equality, a 256 MiB maximum,
 strict UTF-8, proper-subrange copying and automatic memory release. Signatures,
-errors, capacity and artifact/debugger behavior are settled; implementation has
-not started. Specialized media buffers and language-level packed arrays remain
-separate proposals.
+errors, capacity and artifact/debugger behavior are settled. Native byte storage
+and core operations, UTF-8 and canonical binary API migration are implemented in
+AP54.2/AP54.3 on the integration branch; AP54.4's combined verification remains
+open. Existing debugger capabilities are included; general snapshots
+and replay stay separate. Specialized media buffers and language-level packed
+arrays remain separate proposals.
 
 The first selected scope is `Std.Bytes.ByteBuffer`, strict
 string/UTF-8 transitions in the existing `Std.Text.Utf8`, bulk byte/text append,

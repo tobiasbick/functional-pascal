@@ -1,6 +1,7 @@
 mod acp;
 mod args;
 mod bits;
+mod bytes;
 mod channel_task;
 mod console;
 mod crypto;
@@ -46,6 +47,7 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
+        fpas_builtins::STD_UNIT_BYTES => bytes::register(checker),
         fpas_builtins::STD_UNIT_TOKENIZER => tokenizer::register(checker),
         fpas_builtins::STD_UNIT_MCP | fpas_builtins::STD_UNIT_MCP_TYPES => mcp::register(checker),
         fpas_builtins::STD_UNIT_ACP

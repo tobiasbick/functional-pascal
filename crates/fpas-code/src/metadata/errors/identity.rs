@@ -51,6 +51,8 @@ pub enum TypeIdentity {
     Real,
     /// Unicode string scalar.
     String,
+    /// Native managed byte-buffer value.
+    ByteBuffer,
     /// Structural inclusive integer bounds.
     Subrange {
         /// Inclusive minimum.

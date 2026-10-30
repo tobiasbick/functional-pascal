@@ -2,7 +2,9 @@
 
 Strict binary-to-text codecs for standard Base64, URL-safe Base64, and hexadecimal.
 All six functions return a `Result` with the nominal `Encoding.EncodingError` family.
-Bytes use the FPAS convention `array of integer`, with each element in `0..255`.
+Binary inputs and outputs use `Std.Bytes.ByteBuffer`. Import `Std.Bytes as
+ByteStorage` for buffer construction and type annotations. Reading a byte returns
+an ordinary integer in `0..255`.
 
 ## Importing and names
 
@@ -15,15 +17,15 @@ character encoding is involved.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `Base64Encode(Bytes: array of integer): Result of (string, Encoding.EncodingError)` | encodes with the standard RFC 4648 alphabet and required `=` padding |
-| function | `Base64Decode(Text: string): Result of (array of integer, Encoding.EncodingError)` | decodes canonical padded standard Base64 without whitespace |
-| function | `Base64UrlEncode(Bytes: array of integer): Result of (string, Encoding.EncodingError)` | encodes with the URL-safe `-`/`_` alphabet and no padding |
-| function | `Base64UrlDecode(Text: string): Result of (array of integer, Encoding.EncodingError)` | decodes canonical unpadded URL-safe Base64; rejects every `=` |
-| function | `HexEncode(Bytes: array of integer): Result of (string, Encoding.EncodingError)` | emits two uppercase hexadecimal digits per byte |
-| function | `HexDecode(Text: string): Result of (array of integer, Encoding.EncodingError)` | accepts either hex case, even length, and no prefix or separators |
+| function | `Base64Encode(Bytes: ByteStorage.ByteBuffer): Result of (string, Encoding.EncodingError)` | encodes with the standard RFC 4648 alphabet and required `=` padding |
+| function | `Base64Decode(Text: string): Result of (ByteStorage.ByteBuffer, Encoding.EncodingError)` | decodes canonical padded standard Base64 without whitespace |
+| function | `Base64UrlEncode(Bytes: ByteStorage.ByteBuffer): Result of (string, Encoding.EncodingError)` | encodes with the URL-safe `-`/`_` alphabet and no padding |
+| function | `Base64UrlDecode(Text: string): Result of (ByteStorage.ByteBuffer, Encoding.EncodingError)` | decodes canonical unpadded URL-safe Base64; rejects every `=` |
+| function | `HexEncode(Bytes: ByteStorage.ByteBuffer): Result of (string, Encoding.EncodingError)` | emits two uppercase hexadecimal digits per byte |
+| function | `HexDecode(Text: string): Result of (ByteStorage.ByteBuffer, Encoding.EncodingError)` | accepts either hex case, even length, and no prefix or separators |
 
-Empty arrays encode as `Ok('')`; empty text decodes as an empty array in `Ok`.
-Every encoder rejects an integer outside `0..255` rather than truncating it.
+Empty buffers encode as `Ok('')`; empty text decodes as an empty buffer in `Ok`.
+Encoders borrow trusted byte storage without rescanning or converting integer elements.
 Every decoder rejects whitespace and non-ASCII characters.
 
 ## Standard Base64
@@ -72,14 +74,13 @@ Every payload field below is an `integer`:
 
 | Variant | Meaning |
 |---------|---------|
-| `InvalidByte(Offset, Value)` | An encoder array element is outside `0..255`; `Value` preserves the supplied integer. |
 | `InvalidCharacter(Offset)` | A decoder encountered a byte outside its accepted alphabet. |
 | `InvalidLength(Length)` | Input text has an invalid encoded length; `Length` is its UTF-8 byte length. |
 | `InvalidPadding(Offset)` | Base64 padding is misplaced or invalid, or URL-safe input contains `=`. |
 | `NonCanonical(Offset)` | The final Base64 alphabet character has nonzero unused bits. |
 | `LimitExceeded(Limit)` | The binary input or decoded result would exceed the limit; `Limit` is always `1048576`. |
 
-Encoder offsets are zero-based array element indexes. Decoder offsets are
+Integer-to-byte validation belongs to `ByteStorage.FromArray`. Decoder offsets are
 zero-based **UTF-8 byte positions** in the original text, including for
 invalid non-ASCII input; they are not string scalar indexes. For example,
 `HexDecode('AAé')` returns `InvalidCharacter(2)`.
@@ -105,26 +106,26 @@ error ordering for input with multiple defects is unspecified.
 ```pascal id=example-1 run
 program EncodingExamples;
 
-uses Std.Encoding as Encoding, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Encoding as Encoding, Std.Test as Test;
 
 begin
-  Test.AssertEquals('Zm9v', Encoding.Base64Encode([102, 111, 111]).Unwrap());
+  Test.AssertEquals('Zm9v', Encoding.Base64Encode( ByteStorage.FromArray([102, 111, 111]).Unwrap()).Unwrap());
   const StandardBytes := Encoding.Base64Decode('Zg==').Unwrap();
   Test.AssertEquals(1, StandardBytes.Length());
   Test.AssertEquals(102, StandardBytes[0]);
-  Test.AssertEquals('-_8', Encoding.Base64UrlEncode([251, 255]).Unwrap());
+  Test.AssertEquals('-_8', Encoding.Base64UrlEncode( ByteStorage.FromArray([251, 255]).Unwrap()).Unwrap());
   const UrlBytes := Encoding.Base64UrlDecode('-_8').Unwrap();
   Test.AssertEquals(2, UrlBytes.Length());
   Test.AssertEquals(251, UrlBytes[0]);
   Test.AssertEquals(255, UrlBytes[1]);
-  Test.AssertEquals('00ABFF', Encoding.HexEncode([0, 171, 255]).Unwrap());
+  Test.AssertEquals('00ABFF', Encoding.HexEncode( ByteStorage.FromArray([0, 171, 255]).Unwrap()).Unwrap());
   const HexBytes := Encoding.HexDecode('00abFF').Unwrap();
   Test.AssertEquals(3, HexBytes.Length());
   Test.AssertEquals(0, HexBytes[0]);
   Test.AssertEquals(171, HexBytes[1]);
   Test.AssertEquals(255, HexBytes[2]);
   Test.AssertTrue(Encoding.Base64Decode('Zh==') is Error(Encoding.EncodingError.NonCanonical(1)));
-  Test.AssertTrue(Encoding.HexEncode([0, 256]) is Error(Encoding.EncodingError.InvalidByte(1, 256)));
+  Test.AssertTrue(ByteStorage.FromArray([0, 256]) is Error(ByteStorage.BufferError.InvalidByte(1, 256)));
   Test.AssertTrue(Encoding.Base64UrlDecode('Zg==') is Error(Encoding.EncodingError.InvalidPadding(2)));
 end.
 ```

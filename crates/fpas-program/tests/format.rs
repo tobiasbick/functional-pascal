@@ -87,7 +87,7 @@ fn canonical_image_has_target_independent_digest() {
     // The canonical identity includes the current bytecode ABI version.
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "402c39f9120a36c56955a75c84f0690742361b5325a973328274a71beb078aca"
+        "8f0b89a36168a7403408d0a2484074f3423f4d645d1973e4406aca320482e3dc"
     );
 }
 

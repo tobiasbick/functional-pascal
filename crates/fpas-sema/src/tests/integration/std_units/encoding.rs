@@ -10,7 +10,7 @@ fn codecs_use_explicit_bytes_text_and_encoding_error_signatures() {
         ("HexEncode", "HexDecode"),
     ] {
         check_ok(&format!(
-            "program T; uses Std.Encoding as Codec; begin const Encoded: result of (string, Codec.EncodingError) := Codec.{encode}(Bytes := [0, 255]); const Decoded: result of (array of integer, Codec.EncodingError) := Codec.{decode}(Text := ''); end."
+            "program T; uses Std.Bytes as Bytes, Std.Encoding as Codec; begin const Encoded: result of (string, Codec.EncodingError) := Codec.{encode}(Bytes := Bytes.FromArray([0, 255]).Unwrap()); const Decoded: result of (Bytes.ByteBuffer, Codec.EncodingError) := Codec.{decode}(Text := ''); end."
         ));
         assert!(
             !check_errors(&format!(

@@ -189,6 +189,7 @@ fn walk(value: &Value, depth: usize, state: &mut WalkState) -> Result<(), DebugS
         | Value::Real(_)
         | Value::Boolean(_)
         | Value::Str(_)
+        | Value::Bytes(_)
         | Value::Unit
         | Value::OptionNone => Ok(()),
     }

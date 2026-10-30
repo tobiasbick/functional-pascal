@@ -163,6 +163,7 @@ fn value_type_name(value: &Value) -> &'static str {
         Value::Real(_) => "real",
         Value::Boolean(_) => "boolean",
         Value::Str(_) => "string",
+        Value::Bytes(_) => "Std.Bytes.ByteBuffer",
         Value::Array(_) => "array",
         Value::Dict(_) => "dict",
         Value::Record(_) => "record",

@@ -2,7 +2,7 @@
 use super::check_ok;
 
 /// Reuses resolved value fixtures without duplicating the public parameter inventory.
-pub(super) fn check_counterparts(cases: &[(&str, &str)]) {
+pub(super) fn check_counterparts(cases: &[(String, String)]) {
     let resolved = cases
         .iter()
         .map(|(source, _)| {
@@ -19,13 +19,38 @@ pub(super) fn check_counterparts(cases: &[(&str, &str)]) {
         let crate::NativeLowering::InPlace(base) = entry.lowering else {
             continue;
         };
+        let Some(operation) = crate::native_operation_by_implementation(base) else {
+            // Capacity-only mutations have no public value counterpart; byte-buffer
+            // contract tests exercise their explicit mutation API independently.
+            assert!(matches!(
+                entry.name,
+                "ReserveInPlace" | "TrimCapacityInPlace"
+            ));
+            continue;
+        };
         let index = resolved
             .iter()
             .position(|targets| targets.iter().any(|name| name == base))
             .expect("value fixture");
-        let operation = crate::native_operation_by_implementation(base).expect("value operation");
-        for source in [cases[index].0, cases[index].1] {
-            let updated = if entry.name == "PopInPlace" {
+        for source in [cases[index].0.as_str(), cases[index].1.as_str()] {
+            let updated = if matches!(
+                (entry.signature)().return_type.as_ref(),
+                crate::Ty::Result(..)
+            ) {
+                let original = operation
+                    .signature_for(None)
+                    .return_type
+                    .to_string()
+                    .replace("Std.Bytes.", "Bytes.");
+                let result = (entry.signature)()
+                    .return_type
+                    .to_string()
+                    .replace("Std.Bytes.", "Bytes.");
+                source.replace(
+                    &format!("const Output: {original}"),
+                    &format!("const Output: {result}"),
+                )
+            } else if entry.name == "PopInPlace" {
                 source.replace("ArrayPopResult of integer", "integer")
             } else {
                 let (before, result) = source.split_once("const Output:").expect("result binding");

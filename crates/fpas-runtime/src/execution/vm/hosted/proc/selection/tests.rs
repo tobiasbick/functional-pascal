@@ -51,7 +51,7 @@ fn invalid_bounds_and_bytes_never_register_a_case() {
         Value::Array(vec![Value::Integer(-1)].into()),
         Value::Array(vec![Value::Integer(256)].into()),
         Value::Array(vec![Value::Boolean(true)].into()),
-        Value::Array(vec![Value::Integer(0); 1_048_577].into()),
+        Value::native_bytes(vec![0; 1_048_577]),
     ] {
         let error = worker
             .execute_process_case(

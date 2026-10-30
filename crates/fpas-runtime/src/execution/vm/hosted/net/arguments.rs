@@ -83,28 +83,12 @@ pub(super) fn cancellation_token(worker: &Worker, value: &Value) -> Result<u64, 
     }
 }
 
-/// Validate and convert a byte-array argument.
-pub(super) fn bytes(
-    worker: &Worker,
-    value: &Value,
-) -> Result<Result<Vec<u8>, super::failure::Failure>, VmError> {
-    let Value::Array(values) = value else {
-        return Err(type_error(worker, "Data", "array of integer", value));
+/// Retain a trusted byte value as the native request's immutable snapshot.
+pub(super) fn bytes(worker: &Worker, value: &Value) -> Result<crate::SharedBytes, VmError> {
+    let Value::Bytes(bytes) = value else {
+        return Err(type_error(worker, "Data", "Std.Bytes.ByteBuffer", value));
     };
-    let mut bytes = Vec::with_capacity(values.len());
-    for (index, value) in values.iter().enumerate() {
-        let Value::Integer(value) = value else {
-            return Err(type_error(worker, "Data element", "integer", value));
-        };
-        let Ok(byte) = u8::try_from(*value) else {
-            return Ok(Err(super::failure::Failure::argument(
-                "Data",
-                format!("Data[{index}] must be in 0..=255, got {value}"),
-            )));
-        };
-        bytes.push(byte);
-    }
-    Ok(Ok(bytes))
+    Ok(bytes.clone())
 }
 
 fn type_error(worker: &Worker, name: &str, expected: &str, actual: &Value) -> VmError {

@@ -67,10 +67,7 @@ fn abandoning_jobs_behind_a_busy_alias_never_executes_queued_io() {
     for (op, extra) in [
         (FsIntrinsic::Read, vec![Value::Integer(1)]),
         (FsIntrinsic::ReadLine, vec![]),
-        (
-            FsIntrinsic::Write,
-            vec![Value::Array(vec![Value::Integer(0)].into())],
-        ),
+        (FsIntrinsic::Write, vec![Value::native_bytes(vec![0])]),
         (FsIntrinsic::WriteString, vec![Value::Str("lost".into())]),
         (FsIntrinsic::WriteLine, vec![Value::Str("lost".into())]),
         (
@@ -136,7 +133,7 @@ fn token_cancellation_finishes_behind_a_busy_alias_without_advancing_it() {
         (FsIntrinsic::ReadLineWithCancellation, vec![]),
         (
             FsIntrinsic::WriteWithCancellation,
-            vec![Value::Array(vec![Value::Integer(0)].into())],
+            vec![Value::native_bytes(vec![0])],
         ),
         (
             FsIntrinsic::WriteStringWithCancellation,

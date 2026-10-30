@@ -255,12 +255,7 @@ impl Worker {
             Ok(Output::Connection(id) | Output::Listener(id)) => {
                 Value::result_ok(Value::OpaqueHandle(id))
             }
-            Ok(Output::Bytes(bytes)) => Value::result_ok(Value::Array(
-                bytes
-                    .into_iter()
-                    .map(|b| Value::Integer(i64::from(b)))
-                    .collect(),
-            )),
+            Ok(Output::Bytes(bytes)) => Value::result_ok(Value::native_bytes(bytes)),
             Ok(Output::Count(count)) => Value::result_ok(Value::Integer(count as i64)),
             Ok(Output::Done) => Value::result_ok(Value::Boolean(true)),
             Err(error) => Value::result_error(error.into_value(

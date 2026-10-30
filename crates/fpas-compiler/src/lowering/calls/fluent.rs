@@ -53,15 +53,44 @@ impl LoweringContext {
                 self.read_collection_reference(reference, receiver_ty, span)?;
             values.insert(0, current);
             let reference = self.save_value(reference);
+            let fallible = match *operation
+                .signature_for(Some(&target.receiver_ty))
+                .return_type
+            {
+                Ty::Result(_, error) => Some(*error),
+                _ => None,
+            };
+            let updated_type = if let Some(error) = &fallible {
+                self.type_table.intern(
+                    &Ty::Result(
+                        Box::new(target.receiver_ty.clone()),
+                        Box::new(error.clone()),
+                    ),
+                    span.line,
+                    span.column,
+                )?
+            } else {
+                receiver_ty
+            };
             let updated = self.lower_native_values(
                 base,
                 &target.receiver_ty,
                 values,
-                receiver_ty,
+                updated_type,
                 args.len(),
                 span,
             )?;
             let reference = self.restore_value(reference, span)?;
+            if fallible.is_some() {
+                return self.commit_fallible_in_place(
+                    reference,
+                    updated,
+                    updated_type,
+                    storage_ty,
+                    result,
+                    span,
+                );
+            }
             let updated = self.value_as(updated, storage_ty, span)?;
             self.emit_effect(
                 Operation::ReferenceWrite {
@@ -78,6 +107,65 @@ impl LoweringContext {
         }
         let (receiver, _) = self.lower_member_receiver(designator, part_count)?;
         self.lower_fluent_value(receiver, args, target, result, span)
+    }
+
+    /// Commits a typed value transformation only on Ok, returning the mutation result.
+    fn commit_fallible_in_place(
+        &mut self,
+        reference: ValueId,
+        outcome: ValueId,
+        outcome_type: TypeId,
+        storage_type: TypeId,
+        result_type: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        let Some(IrType::Result { ok, error }) = self.type_kind(outcome_type) else {
+            return Err(unsupported(span, "fallible InPlace value type"));
+        };
+        let reference_type = self
+            .lowered_value_type(reference)
+            .ok_or_else(|| unsupported(span, "InPlace reference type"))?;
+        let saved_reference = self.declare_hidden_local(reference_type, span)?;
+        self.write_local(saved_reference, reference, span)?;
+        let saved_outcome = self.declare_hidden_local(outcome_type, span)?;
+        self.write_local(saved_outcome, outcome, span)?;
+        let output = self.declare_hidden_local(result_type, span)?;
+        let success = self.new_block(span)?;
+        let failure = self.new_block(span)?;
+        let merge = self.new_block(span)?;
+        let condition = self.emit_value(
+            Operation::IsResultOk(outcome),
+            super::super::types::BOOLEAN,
+            span,
+        )?;
+        self.terminate(fpas_ir::Terminator::Branch {
+            condition,
+            then_target: super::super::context::target(success),
+            else_target: super::super::context::target(failure),
+        })?;
+        self.switch_to(success);
+        let outcome = self.emit_value(Operation::ReadLocal(saved_outcome), outcome_type, span)?;
+        let value = self.emit_value(Operation::UnwrapOk(outcome), ok, span)?;
+        let value = self.value_as(value, storage_type, span)?;
+        let reference =
+            self.emit_value(Operation::ReadLocal(saved_reference), reference_type, span)?;
+        self.emit_effect(Operation::ReferenceWrite { reference, value }, span)?;
+        let yes = self.emit_value(
+            Operation::Const(Constant::Boolean(true)),
+            super::super::types::BOOLEAN,
+            span,
+        )?;
+        let value = self.emit_value(Operation::MakeOk(yes), result_type, span)?;
+        self.write_local(output, value, span)?;
+        self.jump(merge)?;
+        self.switch_to(failure);
+        let outcome = self.emit_value(Operation::ReadLocal(saved_outcome), outcome_type, span)?;
+        let error_value = self.emit_value(Operation::UnwrapError(outcome), error, span)?;
+        let value = self.emit_value(Operation::MakeError(error_value), result_type, span)?;
+        self.write_local(output, value, span)?;
+        self.jump(merge)?;
+        self.switch_to(merge);
+        self.emit_value(Operation::ReadLocal(output), result_type, span)
     }
 
     /// Lowers a value call after evaluating its receiver exactly once.

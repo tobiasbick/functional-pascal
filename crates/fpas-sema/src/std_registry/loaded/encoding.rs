@@ -9,7 +9,7 @@ pub(super) fn register_std_encoding(checker: &mut Checker) {
         checker,
         fpas_builtins::native_errors::NativeErrorFamily::Encoding,
     );
-    let bytes = Ty::Array(Box::new(Ty::Integer));
+    let bytes = Ty::ByteBuffer;
     for name in [
         s::STD_ENCODING_BASE64_ENCODE,
         s::STD_ENCODING_BASE64_URL_ENCODE,

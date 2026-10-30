@@ -24,7 +24,7 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
         s::STD_TASK_CANCELLATION_TOKEN,
         Vec::new(),
     );
-    let bytes = Ty::Array(Box::new(Ty::Integer));
+    let bytes = Ty::ByteBuffer;
     let result = |ty| Ty::Result(Box::new(ty), Box::new(error_ty.clone()));
     define_func(
         checker,
@@ -129,18 +129,12 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
         checker,
         s::STD_FS_READ_BYTES,
         vec![p("Path", Ty::String)],
-        Ty::Result(
-            Box::new(Ty::Array(Box::new(Ty::Integer))),
-            Box::new(error_ty.clone()),
-        ),
+        Ty::Result(Box::new(Ty::ByteBuffer), Box::new(error_ty.clone())),
     );
     define_func(
         checker,
         s::STD_FS_WRITE_BYTES,
-        vec![
-            p("Path", Ty::String),
-            p("Bytes", Ty::Array(Box::new(Ty::Integer))),
-        ],
+        vec![p("Path", Ty::String), p("Bytes", Ty::ByteBuffer)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(error_ty.clone())),
     );
     define_func(

@@ -1,17 +1,17 @@
 program NetworkPoolWrite;
 
-uses Std.Net.Sockets as Net, Std.Tasks as Tasks;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks;
 
 function SendAll(Connection: Net.Connection): integer;
 begin
-  const Packet := array.Fill(67, 1000000);
+  const Packet := ByteStorage.Create(1000000).Unwrap().Fill(67, 0, 1000000).Unwrap();
   var Total := 0;
   for Round: integer := 1 to 8 do
     var Offset := 0;
     while Offset < Packet.Length() do
       const Sent := Net.SendBytes(
         Connection,
-        Packet.Slice(Offset, Packet.Length() - Offset)
+        Packet.Slice(Offset, Packet.Length() - Offset).Unwrap()
       ).Unwrap();
       if Sent <= 0 then
         panic('no write progress');

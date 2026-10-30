@@ -6,7 +6,7 @@ use std::collections::HashSet;
 mod handbook;
 
 #[test]
-fn catalog_accounts_for_all_existing_distinct_operations_and_three_empty_checks() {
+fn catalog_accounts_for_all_distinct_operations_and_four_empty_checks() {
     let entries = native_operations().copied().collect::<Vec<_>>();
     validate_native_catalog(&entries).expect("valid catalog");
     let old_names = [
@@ -31,7 +31,7 @@ fn catalog_accounts_for_all_existing_distinct_operations_and_three_empty_checks(
             .iter()
             .filter(|entry| entry.lowering == NativeLowering::IsEmpty)
             .count(),
-        3
+        4
     );
     assert!(entries.iter().all(|entry| entry.documentation.len() > 10));
 }

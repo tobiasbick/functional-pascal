@@ -130,6 +130,33 @@ fn assert_output(program: fpas_build::BuiltProgram, expected: &str) {
 }
 
 #[test]
+fn native_byte_values_survive_compiled_unit_and_program_image_reuse() {
+    let fixture = Fixture::create();
+    write(
+        &fixture.base,
+        "unit Demo.Base; uses Std.Bytes as Bytes; public type Packet = record public Data: Bytes.ByteBuffer; end record; public function Make(): Packet; begin return Packet(Data := Bytes.FromArray([1, 2, 3]).Unwrap()); end function; end unit;",
+    );
+    write(
+        &fixture.root.join("src/consumer.fpas"),
+        "unit Demo.Consumer; uses Demo.Base as Base; public function Run(): integer; begin const Packet := Base.Make(); if Packet <> Base.Make() then return 0; end if; return Packet.Data.SetAt(0, 42).Unwrap()[0]; end function; end unit;",
+    );
+    let cold = fixture.build().expect("cold byte-buffer program build");
+    assert_eq!(cold.counters().compiled, 2);
+    assert_output(cold, "42");
+    let warm = fixture.build().expect("cached byte-buffer program image");
+    assert_eq!(warm.counters().compiled, 0);
+    assert_eq!(warm.counters().program_image_reused, 1);
+    assert_output(warm, "42");
+    fs::remove_file(&fixture.artifact).expect("remove program image to exercise object relocation");
+    let relinked = fixture.build().expect("byte-buffer sidecar relocation");
+    assert_eq!(relinked.counters().compiled, 0);
+    assert_eq!(relinked.counters().sidecar_reused, 2);
+    assert_eq!(relinked.counters().relinked, 1);
+    assert_output(relinked, "42");
+    fs::remove_dir_all(&fixture.root).ok();
+}
+
+#[test]
 fn unchanged_program_artifact_is_reused_without_relinking() {
     let fixture = Fixture::create();
 

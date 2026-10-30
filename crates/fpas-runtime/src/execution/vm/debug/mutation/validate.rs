@@ -49,6 +49,7 @@ fn validate(
         | (DebugType::Real, Value::Real(_))
         | (DebugType::String, Value::Str(_)) => Ok(()),
         (DebugType::Dynamic, value) => validate_dynamic(value, max_depth, depth),
+        (DebugType::ByteBuffer, Value::Bytes(_)) => Ok(()),
         (DebugType::Array(inner), Value::Array(values)) => values
             .iter()
             .try_for_each(|value| validate(executable, *inner, value, max_depth, depth + 1, call)),
@@ -229,6 +230,7 @@ fn validate_dynamic(
         | Value::Real(_)
         | Value::Boolean(_)
         | Value::Str(_)
+        | Value::Bytes(_)
         | Value::Unit
         | Value::OptionNone => Ok(()),
     }

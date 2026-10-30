@@ -270,6 +270,7 @@ impl Checker {
             | Ty::Real
             | Ty::Boolean
             | Ty::String
+            | Ty::ByteBuffer
             | Ty::Distinct(_)
             | Ty::Subrange(_)
             | Ty::Unit

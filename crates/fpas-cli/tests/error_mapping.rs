@@ -281,7 +281,7 @@ end."#,
 fn task_network_and_http_causes_survive_portable_images() {
     let f = Fixture::new(
         r#"program NetworkErrors;
-uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Net.Server as Server, Std.Os.Errors as Errors,
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Net.Server as Server, Std.Os.Errors as Errors,
   Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Text.Format as Conv, Std.Test as Test;
 begin
   const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
@@ -298,7 +298,7 @@ begin
   const Peer := Net.Accept(Listener).Unwrap();
   discard Net.SetTimeout(Peer, 100).Unwrap();
   Test.AssertTrue(Net.ReceiveBytes(Peer, 1) is Error(Net.NetError.Timeout(Errors.HostError.Failure('Std.Net.Sockets.ReceiveBytes', _, Some(_), Some(_), _))));
-  Test.AssertTrue(Net.SendBytes(Client, [-1]) is Error(Net.NetError.InvalidArgument('Data', _)));
+  Test.AssertTrue(Net.SendBytes(Client, ByteStorage.Create(1048577).Unwrap()) is Error(Net.NetError.InvalidArgument('Data', _)));
   const Source := Tasks.CreateCancellationSource();
   const Token := Tasks.GetCancellationToken(Source);
   discard Tasks.Cancel(Source);
@@ -313,7 +313,7 @@ begin
   Test.AssertTrue(Net.Connect(Address.Host, Address.Port, 5000) is Error(Net.NetError.ConnectionRefused(Errors.HostError.Failure('Std.Net.Sockets.Connect', _, Some(_), Some(_), _))));
   Test.AssertTrue(Http.Send(Http.Request.Get('ftp://example.test/')) is Error(Http.HttpError.Address(_)));
   const Decoder := Http.CreateSseDecoder(100).Unwrap();
-  discard Http.FeedSse(Decoder, [100, 97, 116, 97, 58, 32, 226]).Unwrap();
+  discard Http.FeedSse(Decoder, ByteStorage.FromArray([100, 97, 116, 97, 58, 32, 226]).Unwrap()).Unwrap();
   Test.AssertTrue(Http.FinishSse(Decoder) is Error(Http.HttpError.Encoding(Utf8.Utf8Error.IncompleteSequence(6))));
   const Life := Server.CreateLifetime(0, false).Unwrap();
   Test.AssertTrue(Server.OwnListener(Life, Listener) is Error(Server.ServerError.ListenerFailure(Net.NetError.Closed('Std.Net.Server.OwnListener'))));
@@ -364,9 +364,9 @@ uses Std.Net.Http.Wire as Wire, Std.Net.Http.Types as Types, Std.Text.Utf8 as Ut
 begin
   const CrLf := string.Chr(13) + string.Chr(10);
   const Head := 'HTTP/1.1 200 OK' + CrLf + 'Transfer-Encoding: chunked' + CrLf + CrLf;
-  Test.AssertTrue(Wire.ParseResponse(Utf8.Encode(Head), 'GET') is
+  Test.AssertTrue(Wire.ParseResponse(Utf8.Encode(Head).Unwrap(), 'GET') is
     Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.DecodeChunked')));
-  Test.AssertTrue(Wire.ParseResponse(Utf8.Encode(Head + '1' + CrLf + 'a' + CrLf), 'GET') is
+  Test.AssertTrue(Wire.ParseResponse(Utf8.Encode(Head + '1' + CrLf + 'a' + CrLf).Unwrap(), 'GET') is
     Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.DecodeChunked')));
 end."#,
     );

@@ -1,6 +1,7 @@
 program TaskNetworkErrors;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Tasks as Tasks, Std.Net.Sockets as Net, Std.Net.Server as Server, Std.Net.Uri as Uri,
   Std.Text.Utf8 as Utf8, Std.Net.Http as Http, Std.Test as Test;
 
@@ -50,16 +51,27 @@ begin
   Test.AssertTrue(Uri.Parse('relative') is Error(Uri.UriError.InvalidSyntax(_)));
   Test.AssertTrue(Uri.Parse('ftp://example.test/') is Error(Uri.UriError.UnsupportedScheme('ftp')));
   Test.AssertTrue(Uri.Parse('http://example.test:65536/') is Error(Uri.UriError.InvalidPort(_)));
-  Test.AssertTrue(Utf8.Decode([226]) is Error(Utf8.Utf8Error.IncompleteSequence(0)));
-  Test.AssertTrue(Utf8.Decode([240, 40, 140, 188]) is Error(Utf8.Utf8Error.InvalidByte(1, _)));
+  Test.AssertTrue(
+    Utf8.Decode(ByteStorage.FromArray([226]).Unwrap()) is Error(Utf8.Utf8Error.IncompleteSequence(0))
+  );
+  Test.AssertTrue(
+    Utf8.Decode(ByteStorage.FromArray([240, 40, 140, 188]).Unwrap()) is Error(Utf8.Utf8Error.InvalidByte(0, _))
+  );
   const Decoder := Http.CreateSseDecoder(100).Unwrap();
-  Test.AssertTrue(Http.FeedSse(Decoder, [100, 97, 116, 97, 58, 32, 226]) is Ok(_));
+  Test.AssertTrue(
+    Http.FeedSse(Decoder, ByteStorage.FromArray([100, 97, 116, 97, 58, 32, 226]).Unwrap()) is Ok(_)
+  );
   Test.AssertTrue(
     Http.FinishSse(Decoder) is Error(Http.HttpError.Encoding(Utf8.Utf8Error.IncompleteSequence(6)))
   );
   const Complete := Http.CreateSseDecoder(100).Unwrap();
-  Test.AssertTrue(Http.FeedSse(Complete, [100, 97, 116, 97, 58, 32, 226]) is Ok(_));
-  const Events := Http.FeedSse(Complete, [130, 172, 10, 10]).Unwrap();
+  Test.AssertTrue(
+    Http.FeedSse(Complete, ByteStorage.FromArray([100, 97, 116, 97, 58, 32, 226]).Unwrap()) is Ok(_)
+  );
+  const Events := Http.FeedSse(
+    Complete,
+    ByteStorage.FromArray([130, 172, 10, 10]).Unwrap()
+  ).Unwrap();
   Test.AssertEquals(1, Events.Length());
   Test.AssertEquals(string.Chr(8364), Events[0].Data);
   Test.AssertEquals(0, Http.FinishSse(Complete).Unwrap().Length());

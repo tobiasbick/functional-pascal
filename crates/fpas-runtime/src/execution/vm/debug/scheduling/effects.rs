@@ -55,6 +55,7 @@ impl Worker {
 
 fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
     match intrinsic {
+        Intrinsic::Bytes(_) => None,
         Intrinsic::Mcp(_) => {
             if crate::intrinsic_debug_effects(intrinsic).is_debug_safe() {
                 None
@@ -114,6 +115,8 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
             | crate::StrIntrinsic::LastIndexOf
             | crate::StrIntrinsic::Format
             | crate::StrIntrinsic::Utf8Encode
+            | crate::StrIntrinsic::Utf8Decode
+            | crate::StrIntrinsic::Utf8Append
             | crate::StrIntrinsic::Map
             | crate::StrIntrinsic::Filter
             | crate::StrIntrinsic::Reduce,

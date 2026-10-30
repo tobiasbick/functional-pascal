@@ -1,11 +1,11 @@
 // Covers UTF-8 round trips and rejection of invalid continuation bytes.
 program Utf8RoundtripTest;
 
-uses Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 begin
   const Text: string := 'Hello, Grüße 🌍';
-  const Bytes: array of integer := Utf8.Encode(Text);
+  const Bytes: ByteStorage.ByteBuffer := Utf8.Encode(Text).Unwrap();
   Test.AssertEquals(19, Bytes.Length());
   case Utf8.Decode(Bytes) of
     when Ok(const Decoded):
@@ -18,14 +18,14 @@ begin
       end;
   end case;
 
-  case Utf8.Decode([240, 40, 140, 188]) of
+  case Utf8.Decode(ByteStorage.FromArray([240, 40, 140, 188]).Unwrap()) of
     when Ok(const Decoded):
       begin
         Test.Fail('invalid UTF-8 decoded as ' + Decoded);
       end;
     when Error(const Message):
       begin
-        Test.AssertTrue(Message is Utf8.Utf8Error.InvalidByte(1, _));
+        Test.AssertTrue(Message is Utf8.Utf8Error.InvalidByte(0, _));
       end;
   end case;
 end.

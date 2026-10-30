@@ -118,6 +118,7 @@ pub(super) fn project(
         | (DebugType::Real, Value::Real(_))
         | (DebugType::Boolean, Value::Boolean(_))
         | (DebugType::String, Value::Str(_)) => true,
+        (DebugType::ByteBuffer, Value::Bytes(_)) => true,
         _ => false,
     };
     valid.then(|| TraceLeaf::Value(value.clone()))

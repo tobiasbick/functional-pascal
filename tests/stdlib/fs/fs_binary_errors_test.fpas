@@ -1,6 +1,6 @@
 program FsBinaryErrorsTest;
 
-uses Std.Os.Errors as Errors, Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Os.Errors as Errors, Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
 
 function ReadCount(FileName: string): result of (integer, Fs.FsError);
 begin
@@ -30,14 +30,14 @@ begin
     ReadCount(Missing) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Io.Fs.ReadBytes', _, _, _, _)))
   );
   scope
-    const Job: task of result of (array of integer, Fs.FsError) := go Fs.ReadBytes(Missing);
+    const Job: task of result of (ByteStorage.ByteBuffer, Fs.FsError) := go Fs.ReadBytes(Missing);
     Test.AssertTrue(
       Tasks.Wait(Job) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Io.Fs.ReadBytes', _, _, _, _)))
     );
   end scope;
   const MissingParent := Test.ScratchDir() + '/binary-no-parent/data.bin';
   Test.AssertTrue(
-    Fs.WriteBytes(MissingParent, [0, 255]) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Io.Fs.WriteBytes', _, _, _, _)))
+    Fs.WriteBytes(MissingParent, ByteStorage.FromArray([0, 255]).Unwrap()) is Error(Fs.FsError.FileNotFound(_, Errors.HostError.Failure('Std.Io.Fs.WriteBytes', _, _, _, _)))
   );
   Test.AssertFalse(Fs.Exists(Test.ScratchDir() + '/binary-no-parent'));
   const LargeFile := Test.ScratchDir() + '/binary-over-read-limit.bin';

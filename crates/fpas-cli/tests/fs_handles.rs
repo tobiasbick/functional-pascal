@@ -59,8 +59,8 @@ impl Drop for Fixture {
 #[test]
 fn file_aliases_modes_and_errors_survive_cached_units_and_source_free_images() {
     let source = r#"program FileImages;
-uses FileBridge as Bridge, Std.Io.Fs as Fs, Std.Test as Test, Std.Tasks as Tasks;
-function ReadWorker(File: Bridge.File): result of (array of integer, Bridge.FsError);
+uses Std.Bytes as ByteStorage, FileBridge as Bridge, Std.Io.Fs as Fs, Std.Test as Test, Std.Tasks as Tasks;
+function ReadWorker(File: Bridge.File): result of (ByteStorage.ByteBuffer, Bridge.FsError);
 begin return Bridge.Read(File); end function;
 begin
   const File := Bridge.Open('input.bin', Bridge.Mode.Read).Unwrap();
@@ -86,7 +86,7 @@ end."#;
     fs::write(fixture.0.join("input.bin"), b"ab\nlast").expect("input bytes");
     fs::write(
         fixture.0.join("FileBridge.fpas"),
-        "unit FileBridge;\nuses Std.Io.Fs as Fs;\npublic type File = Fs.File;\npublic type Mode = Fs.FileMode;\npublic type FsError = Fs.FsError;\npublic function Open(Path: string; Mode: Fs.FileMode): result of (File, FsError);\nbegin return Fs.Open(Path, Mode); end function;\npublic function Read(File: Fs.File): result of (array of integer, FsError);\nbegin return Ok(try Fs.Read(File, 2)); end function;\nend unit;\n",
+        "unit FileBridge;\nuses Std.Bytes as ByteStorage, Std.Io.Fs as Fs;\npublic type File = Fs.File;\npublic type Mode = Fs.FileMode;\npublic type FsError = Fs.FsError;\npublic function Open(Path: string; Mode: Fs.FileMode): result of (File, FsError);\nbegin return Fs.Open(Path, Mode); end function;\npublic function Read(File: Fs.File): result of (ByteStorage.ByteBuffer, FsError);\nbegin return Ok(try Fs.Read(File, 2)); end function;\nend unit;\n",
     )
     .expect("bridge source");
 

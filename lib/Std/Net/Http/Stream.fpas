@@ -2,6 +2,7 @@
 unit Std.Net.Http.Stream;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Net.Http.Stream.Types as Types, Std.Net.Http.Io as Io, Std.Net.Http.BodyFraming as BodyFraming,
   Std.Net.Http.Handles as Handles, Std.Net.Http.Types as HttpTypes, Std.Net.Http.Wire as Wire, Std.Net.Sockets as Net,
   Std.Text.Utf8 as Utf8;
@@ -96,7 +97,7 @@ begin
         end if;
 
         State.BytesReceived := State.BytesReceived + Bytes.Length();
-        State.Buffer := State.Buffer.Concat(Bytes);
+        State.Buffer := (try State.Buffer.Concat(Bytes).MapError(HttpTypes.HttpError.Buffer));
         StoreState(Index, State);
         return Ok(true);
       end;
@@ -142,7 +143,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum bytes to remove.
-function TakeBuffer(Index: integer; Maximum: integer): array of integer;
+function TakeBuffer(Index: integer; Maximum: integer): result of (ByteStorage.ByteBuffer, HttpTypes.HttpError);
 begin
   var State: Types.StreamState := LoadState(Index);
   var Count: integer := State.Buffer.Length();
@@ -151,10 +152,17 @@ begin
       Count := Maximum;
     end;
   end if;
-  const Bytes: array of integer := State.Buffer.Slice(0, Count);
-  State.Buffer := State.Buffer.Slice(Count, State.Buffer.Length() - Count);
+  const Bytes: ByteStorage.ByteBuffer := (
+    try State.Buffer.Slice(0, Count).MapError(HttpTypes.HttpError.Buffer)
+  );
+  State.Buffer := (
+    try State.Buffer.Slice(
+      Count,
+      State.Buffer.Length() - Count
+    ).MapError(HttpTypes.HttpError.Buffer)
+  );
   StoreState(Index, State);
-  return Bytes;
+  return Ok(Bytes);
 end function;
 
 // Reads one fragment from a fixed-length body.
@@ -162,12 +170,12 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadFixed(Index: integer; Maximum: integer): result of (array of integer, HttpTypes.HttpError);
+function ReadFixed(Index: integer; Maximum: integer): result of (ByteStorage.ByteBuffer, HttpTypes.HttpError);
 begin
   if LoadState(Index).Remaining = 0 then
     begin
       CloseAt(Index);
-      return Ok([]);
+      return ByteStorage.Create(0).MapError(HttpTypes.HttpError.Buffer);
     end;
   end if;
 
@@ -196,7 +204,7 @@ begin
       Count := LoadState(Index).Remaining;
     end;
   end if;
-  const Bytes: array of integer := TakeBuffer(Index, Count);
+  const Bytes: ByteStorage.ByteBuffer := try TakeBuffer(Index, Count);
   var State: Types.StreamState := LoadState(Index);
   State.Remaining := State.Remaining - Bytes.Length();
   StoreState(Index, State);
@@ -214,7 +222,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadUntilClose(Index: integer; Maximum: integer): result of (array of integer, HttpTypes.HttpError);
+function ReadUntilClose(Index: integer; Maximum: integer): result of (ByteStorage.ByteBuffer, HttpTypes.HttpError);
 begin
   if LoadState(Index).Buffer.Length() = 0 then
     begin
@@ -224,7 +232,7 @@ begin
             if not ReadMore then
               begin
                 CloseAt(Index);
-                return Ok([]);
+                return ByteStorage.Create(0).MapError(HttpTypes.HttpError.Buffer);
               end;
             end if;
           end;
@@ -236,7 +244,7 @@ begin
     end;
   end if;
 
-  return Ok(TakeBuffer(Index, Maximum));
+  return TakeBuffer(Index, Maximum);
 end function;
 
 // Reads and consumes the next chunk-size line.
@@ -270,8 +278,15 @@ begin
     end;
   end while;
   var State: Types.StreamState := LoadState(Index);
-  const LineBytes: array of integer := State.Buffer.Slice(0, LineEnd);
-  State.Buffer := State.Buffer.Slice(LineEnd + 2, State.Buffer.Length() - LineEnd - 2);
+  const LineBytes: ByteStorage.ByteBuffer := (
+    try State.Buffer.Slice(0, LineEnd).MapError(HttpTypes.HttpError.Buffer)
+  );
+  State.Buffer := (
+    try State.Buffer.Slice(
+      LineEnd + 2,
+      State.Buffer.Length() - LineEnd - 2
+    ).MapError(HttpTypes.HttpError.Buffer)
+  );
   StoreState(Index, State);
   case Utf8.Decode(LineBytes).MapError(HttpTypes.HttpError.Encoding) of
     when Ok(const Line):
@@ -290,7 +305,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadChunked(Index: integer; Maximum: integer): result of (array of integer, HttpTypes.HttpError);
+function ReadChunked(Index: integer; Maximum: integer): result of (ByteStorage.ByteBuffer, HttpTypes.HttpError);
 begin
   while true do
     begin
@@ -323,7 +338,7 @@ begin
               Count := LoadState(Index).ChunkRemaining;
             end;
           end if;
-          const Bytes: array of integer := TakeBuffer(Index, Count);
+          const Bytes: ByteStorage.ByteBuffer := try TakeBuffer(Index, Count);
           var DataState: Types.StreamState := LoadState(Index);
           DataState.ChunkRemaining := DataState.ChunkRemaining - Bytes.Length();
           if DataState.ChunkRemaining = 0 then
@@ -366,9 +381,11 @@ begin
             end;
           end if;
 
-          TerminatorState.Buffer := TerminatorState.Buffer.Slice(
-            2, TerminatorState.Buffer.Length() -
-            2
+          TerminatorState.Buffer := (
+            try TerminatorState.Buffer.Slice(
+              2, TerminatorState.Buffer.Length() -
+              2
+            ).MapError(HttpTypes.HttpError.Buffer)
           );
           TerminatorState.NeedChunkTerminator := false;
           StoreState(Index, TerminatorState);
@@ -381,7 +398,7 @@ begin
             if Size = 0 then
               begin
                 CloseAt(Index);
-                return Ok([]);
+                return ByteStorage.Create(0).MapError(HttpTypes.HttpError.Buffer);
               end;
             end if;
 
@@ -409,7 +426,7 @@ begin
     end;
   end while;
 
-  return Ok([]);
+  return ByteStorage.Create(0).MapError(HttpTypes.HttpError.Buffer);
 end function;
 
 // Creates one body stream after the response head has been parsed.
@@ -423,7 +440,7 @@ end function;
 // - `Maximum`: Maximum total response bytes.
 public function CreateBody(
   Connection: Net.Connection;
-  InitialBody: array of integer;
+  InitialBody: ByteStorage.ByteBuffer;
   Headers: array of HttpTypes.Header;
   HasBody: boolean;
   BytesReceived: integer;
@@ -483,7 +500,7 @@ end function;
 // Parameters:
 // - `StreamValue`: Open response-body handle.
 // - `MaxBytes`: Maximum decoded bytes to return.
-public function ReadBody(StreamValue: HttpTypes.BodyStream; MaxBytes: integer): result of (array of integer, HttpTypes.HttpError);
+public function ReadBody(StreamValue: HttpTypes.BodyStream; MaxBytes: integer): result of (ByteStorage.ByteBuffer, HttpTypes.HttpError);
 begin
   if MaxBytes < 1 then
     begin
@@ -498,23 +515,21 @@ begin
       begin
         if LoadState(Index).Finished then
           begin
-            return Ok([]);
+            return ByteStorage.Create(0).MapError(HttpTypes.HttpError.Buffer);
           end;
         end if;
-
-        if LoadState(Index).Mode = 1 then
-          begin
-            return ReadFixed(Index, MaxBytes);
-          end;
-        end if;
-
-        if LoadState(Index).Mode = 2 then
-          begin
-            return ReadChunked(Index, MaxBytes);
-          end;
-        end if;
-
-        return ReadUntilClose(Index, MaxBytes);
+        const Mode := LoadState(Index).Mode;
+        const Outcome := if Mode = 1 then ReadFixed(Index, MaxBytes)
+          elsif Mode = 2 then ReadChunked(Index, MaxBytes)
+          else ReadUntilClose(Index, MaxBytes)
+          end if;
+        case Outcome of
+          when Ok(const Bytes):
+            return Ok(Bytes);
+          when Error(const Cause):
+            CloseAt(Index);
+            return Error(Cause);
+        end case;
       end;
     when Error(const Message):
       begin

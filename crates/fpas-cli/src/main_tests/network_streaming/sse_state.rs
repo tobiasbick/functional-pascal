@@ -60,17 +60,17 @@ end unit;
     write_text(
         &program,
         r#"program RetainedSse;
-uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 begin
   const Decoder: Http.SseDecoder := Http.CreateSseDecoder(32).Unwrap();
-  discard Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10)).Unwrap();
+  discard Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10).Unwrap()).Unwrap();
   Test.AssertTrue(Http.ReviewRetained(Decoder) > 0);
-  case Http.FeedSse(Decoder, Utf8.Encode('x'.RepeatStr(100000))) of
+  case Http.FeedSse(Decoder, Utf8.Encode('x'.RepeatStr(100000)).Unwrap()) of
     when Ok(_): Test.Fail('expected size failure'); when Error(_): begin end;
   end case;
   Test.AssertEquals(0, Http.ReviewRetained(Decoder));
   const FinalDecoder: Http.SseDecoder := Http.CreateSseDecoder(32).Unwrap();
-  discard Http.FeedSse(FinalDecoder, [255]).Unwrap();
+  discard Http.FeedSse(FinalDecoder, ByteStorage.FromArray([255]).Unwrap()).Unwrap();
   case Http.FinishSse(FinalDecoder) of
     when Ok(_): Test.Fail('expected UTF-8 failure'); when Error(_): begin end;
   end case;

@@ -125,6 +125,7 @@ impl TypeTable {
         };
         let mut type_name = self.declared_semantic_scalar_name(semantic);
         let kind = match semantic {
+            Ty::ByteBuffer => Kind::Operational,
             Ty::Integer
             | Ty::Real
             | Ty::Boolean

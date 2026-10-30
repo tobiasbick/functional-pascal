@@ -2,6 +2,7 @@
 unit Std.Net.Http.Wire;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Text.Format as Conv, Std.Net.Http.BodyFraming as BodyFraming, Std.Net.Http.Fields as Fields,
   Std.Net.Http.Headers as HttpHeaders, Std.Net.Http.Method as Method, Std.Net.Http.Types as Types,
   Std.Net.Uri as Uri, Std.Text.Utf8 as Utf8, Std.Text.Parse as Parse;
@@ -13,7 +14,7 @@ const MaximumChunkSize: integer := 9223372036854775807;
 // Parameters:
 // - `Bytes`: Byte sequence to scan.
 // - `Start`: First byte index to inspect.
-public function FindSeparator(Bytes: array of integer; Start: integer): integer;
+public function FindSeparator(Bytes: ByteStorage.ByteBuffer; Start: integer): integer;
 begin
   for Index: integer := Start to Bytes.Length() - 4 do
     begin
@@ -36,7 +37,7 @@ end function;
 // Parameters:
 // - `Bytes`: Byte sequence to scan.
 // - `Start`: First byte index to inspect.
-public function FindLineEnd(Bytes: array of integer; Start: integer): integer;
+public function FindLineEnd(Bytes: ByteStorage.ByteBuffer; Start: integer): integer;
 begin
   for Index: integer := Start to Bytes.Length() - 2 do
     begin
@@ -186,10 +187,10 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Complete chunked body bytes.
-function DecodeChunked(Bytes: array of integer): result of (array of integer, Types.HttpError);
+function DecodeChunked(Bytes: ByteStorage.ByteBuffer): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   var Position: integer := 0;
-  var Body: array of integer := [];
+  var Body: ByteStorage.ByteBuffer := ByteStorage.Create(0).Unwrap();
   while Position < Bytes.Length() do
     begin
       const LineEnd: integer := FindLineEnd(Bytes, Position);
@@ -198,7 +199,9 @@ begin
           return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.DecodeChunked'));
         end;
       end if;
-      const LineBytes: array of integer := Bytes.Slice(Position, LineEnd - Position);
+      const LineBytes: ByteStorage.ByteBuffer := (
+        try Bytes.Slice(Position, LineEnd - Position).MapError(Types.HttpError.Buffer)
+      );
       var Line: string := '';
       case Utf8.Decode(LineBytes).MapError(Types.HttpError.Encoding) of
         when Ok(const Value):
@@ -235,7 +238,11 @@ begin
         end;
       end if;
 
-      Body := Body.Concat(Bytes.Slice(Position, Size));
+      Body := (
+        try Body.Concat(
+          (try Bytes.Slice(Position, Size).MapError(Types.HttpError.Buffer))
+        ).MapError(Types.HttpError.Buffer)
+      );
       Position := Position + Size;
       if (Bytes[Position] <> 13) or (Bytes[Position + 1] <> 10) then
         begin
@@ -274,11 +281,11 @@ end function;
 // - `Headers`: Parsed response fields.
 // - `Bytes`: Raw bytes following the response head.
 // - `HasBody`: Whether response semantics permit a body.
-function ResponseBody(Headers: array of Types.Header; Bytes: array of integer; HasBody: boolean): result of (array of integer, Types.HttpError);
+function ResponseBody(Headers: array of Types.Header; Bytes: ByteStorage.ByteBuffer; HasBody: boolean): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   if not HasBody then
     begin
-      return Ok([]);
+      return ByteStorage.Create(0).MapError(Types.HttpError.Buffer);
     end;
   end if;
 
@@ -299,7 +306,7 @@ begin
               end;
             end if;
 
-            return Ok(Bytes.Slice(0, Framing.Remaining));
+            return Ok((try Bytes.Slice(0, Framing.Remaining).MapError(Types.HttpError.Buffer)));
           end;
         end if;
 
@@ -316,7 +323,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Response bytes containing a complete head.
-public function ParseResponseHead(Bytes: array of integer): result of (Types.ResponseHead, Types.HttpError);
+public function ParseResponseHead(Bytes: ByteStorage.ByteBuffer): result of (Types.ResponseHead, Types.HttpError);
 begin
   const Separator: integer := FindSeparator(Bytes, 0);
   if Separator < 0 then
@@ -324,7 +331,9 @@ begin
       return Error(Types.HttpError.UnexpectedEnd('Std.Net.Http.Wire.ParseResponseHead'));
     end;
   end if;
-  const HeaderBytes: array of integer := Bytes.Slice(0, Separator);
+  const HeaderBytes: ByteStorage.ByteBuffer := (
+    try Bytes.Slice(0, Separator).MapError(Types.HttpError.Buffer)
+  );
   var HeaderText: string := '';
   case Utf8.Decode(HeaderBytes).MapError(Types.HttpError.Encoding) of
     when Ok(const Value):
@@ -400,14 +409,16 @@ end function;
 // Parameters:
 // - `Bytes`: Complete HTTP response bytes.
 // - `RequestMethod`: Method used by the matching request.
-public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of (Types.Response, Types.HttpError);
+public function ParseResponse(Bytes: ByteStorage.ByteBuffer; RequestMethod: string): result of (Types.Response, Types.HttpError);
 begin
   case ParseResponseHead(Bytes) of
     when Ok(const Head):
       begin
-        const RawBody: array of integer := Bytes.Slice(
-          Head.BodyOffset, Bytes.Length() -
-          Head.BodyOffset
+        const RawBody: ByteStorage.ByteBuffer := (
+          try Bytes.Slice(
+            Head.BodyOffset, Bytes.Length() -
+            Head.BodyOffset
+          ).MapError(Types.HttpError.Buffer)
         );
         case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
           when Ok(const Body):
@@ -467,7 +478,7 @@ end function;
 // Parameters:
 // - `RequestValue`: Complete request to encode.
 // - `UriValue`: Parsed absolute request URI.
-public function EncodeRequest(RequestValue: Types.Request; UriValue: Uri.Uri): result of (array of integer, Types.HttpError);
+public function EncodeRequest(RequestValue: Types.Request; UriValue: Uri.Uri): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   if not Method.IsValidToken(RequestValue.Method) then
     begin
@@ -529,6 +540,7 @@ begin
   end for;
 
   Head := Head + #13 + #10;
-  return Ok(Utf8.Encode(Head).Concat(RequestValue.Body));
+  const Encoded := try Utf8.Encode(Head).MapError(Types.HttpError.Buffer);
+  return Encoded.Concat(RequestValue.Body).MapError(Types.HttpError.Buffer);
 end function;
 end unit;

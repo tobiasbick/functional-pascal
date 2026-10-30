@@ -143,6 +143,7 @@ fn native_callable_values_validate_every_readonly_catalog_entry() {
             continue;
         }
         let (receiver, expression) = match operation.receiver {
+            NativeReceiver::ByteBuffer => (Ty::ByteBuffer, "Bytes.Create(2).Unwrap()"),
             NativeReceiver::Error => (Ty::Named("Failure".into()), "Failure.Failed"),
             NativeReceiver::String => (Ty::String, "'ab'"),
             NativeReceiver::Array => (Ty::Array(Box::new(int.clone())), "[1, 2]"),
@@ -176,11 +177,11 @@ fn native_callable_values_validate_every_readonly_catalog_entry() {
         };
         let ty = substitute_type_parameters(&ty, &substitutions);
         let source = format!(
-            "program T; type Failure = error Failed; end error;
+            "program T; uses Std.Bytes as Bytes; type Failure = error Failed; end error;
              begin const Receiver: {receiver} := {expression};
              const F: {ty} := Receiver.{}; end.",
             operation.name
         );
-        check_ok(&source);
+        check_ok(&source.replace("Std.Bytes.", "Bytes."));
     }
 }

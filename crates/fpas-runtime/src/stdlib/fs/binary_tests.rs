@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use crate::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 
-use super::binary::{MAX_BYTES, read_bytes, read_limited, write_bytes};
+use super::binary::{MAX_BYTES, read_bytes, read_limited};
 use super::failure::Failure;
 
 struct Directory(PathBuf);
@@ -39,10 +39,10 @@ fn location() -> SourceLocation {
     SourceLocation::new(1, 1)
 }
 
-fn invoke(operation: FsIntrinsic, path: &str, bytes: Option<Vec<Value>>) -> Value {
+fn invoke(operation: FsIntrinsic, path: &str, bytes: Option<Vec<u8>>) -> Value {
     let mut arguments = vec![Value::Str(path.into())];
     if let Some(bytes) = bytes {
-        arguments.push(Value::Array(bytes.into()));
+        arguments.push(Value::native_bytes(bytes));
     }
     crate::stdlib::execute_test_intrinsic(Intrinsic::Fs(operation), &mut arguments, location())
         .expect("valid intrinsic arguments");
@@ -66,10 +66,7 @@ fn every_byte_round_trips_without_utf8_conversion_and_empty_writes_truncate() {
     let root = Directory::new();
     let path = root.path("all-bytes.bin");
     let bytes: Vec<u8> = (0..=255).collect();
-    let values: Vec<Value> = bytes
-        .iter()
-        .map(|byte| Value::Integer(i64::from(*byte)))
-        .collect();
+    let values = bytes.clone();
     assert_eq!(
         invoke(FsIntrinsic::WriteBytes, &path, Some(values.clone())),
         Value::result_ok(Value::Boolean(true))
@@ -77,13 +74,10 @@ fn every_byte_round_trips_without_utf8_conversion_and_empty_writes_truncate() {
     assert_eq!(fs::read(&path).expect("written binary file"), bytes);
     assert_eq!(
         invoke(FsIntrinsic::ReadBytes, &path, None),
-        Value::result_ok(Value::Array(values.into()))
+        Value::result_ok(Value::native_bytes(values))
     );
     for replacement in [vec![0_u8, 255, 128], vec![]] {
-        let values: Vec<Value> = replacement
-            .iter()
-            .map(|byte| Value::Integer(i64::from(*byte)))
-            .collect();
+        let values = replacement.clone();
         assert_eq!(
             invoke(FsIntrinsic::WriteBytes, &path, Some(values.clone())),
             Value::result_ok(Value::Boolean(true))
@@ -91,7 +85,7 @@ fn every_byte_round_trips_without_utf8_conversion_and_empty_writes_truncate() {
         assert_eq!(fs::read(&path).expect("truncated binary file"), replacement);
         assert_eq!(
             invoke(FsIntrinsic::ReadBytes, &path, None),
-            Value::result_ok(Value::Array(values.into()))
+            Value::result_ok(Value::native_bytes(values))
         );
     }
 }
@@ -100,10 +94,10 @@ fn every_byte_round_trips_without_utf8_conversion_and_empty_writes_truncate() {
 fn exact_byte_limit_is_accepted_and_oversized_metadata_is_rejected() {
     let root = Directory::new();
     let path = root.path("boundary.bin");
-    let values = vec![Value::Integer(255); MAX_BYTES];
-    write_bytes(&path, &values, location())
-        .expect("integer array")
-        .expect("exact boundary write");
+    assert_eq!(
+        invoke(FsIntrinsic::WriteBytes, &path, Some(vec![255; MAX_BYTES])),
+        Value::result_ok(Value::Boolean(true))
+    );
     let bytes = read_bytes(&path).expect("exact boundary read");
     assert_eq!(bytes.len(), MAX_BYTES);
     assert!(bytes.iter().all(|byte| *byte == 255));
@@ -149,70 +143,59 @@ fn untrusted_size_reads_stop_after_one_over_limit_byte() {
 }
 
 #[test]
-fn invalid_bytes_never_create_or_truncate_a_target_and_report_original_offset() {
+fn untyped_arrays_cannot_reach_the_file_write_boundary() {
     let root = Directory::new();
     let existing = root.path("existing.bin");
     let absent = root.path("absent.bin");
     fs::write(&existing, b"preserved").expect("existing file");
     for value in [-1, 256] {
         for path in [&existing, &absent] {
-            let returned = invoke(
-                FsIntrinsic::WriteBytes,
-                path,
-                Some(vec![
-                    Value::Integer(0),
-                    Value::Integer(255),
-                    Value::Integer(value),
-                ]),
-            );
-            assert_error(
-                &returned,
-                "InvalidByte",
-                &[Value::Integer(2), Value::Integer(value)],
+            let mut arguments = vec![
+                Value::Str(path.as_str().into()),
+                Value::Array(
+                    vec![
+                        Value::Integer(0),
+                        Value::Integer(255),
+                        Value::Integer(value),
+                    ]
+                    .into(),
+                ),
+            ];
+            let error = crate::stdlib::execute_test_intrinsic(
+                Intrinsic::Fs(FsIntrinsic::WriteBytes),
+                &mut arguments,
+                location(),
+            )
+            .expect_err("raw arrays are not byte inputs");
+            assert_eq!(
+                error.code,
+                fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH
             );
         }
         assert_eq!(fs::read(&existing).expect("preserved bytes"), b"preserved");
         assert!(!Path::new(&absent).exists());
-        assert!(matches!(
-            write_bytes("bad\0path", &[Value::Integer(value)], location()).expect("integer array"),
-            Err(Failure::InvalidByte { offset: 0, value: found }) if found == value
-        ));
     }
 }
 
 #[test]
-fn write_size_preflight_wins_over_invalid_bytes_and_target_errors() {
+fn write_size_preflight_precedes_target_errors() {
     let root = Directory::new();
     let existing = root.path("existing.bin");
     let absent = root.path("absent.bin");
     fs::write(&existing, b"preserved").expect("existing file");
-    let mut values = vec![Value::Integer(0); MAX_BYTES + 1];
-    values[0] = Value::Integer(-1);
+    let values = vec![0; MAX_BYTES + 1];
     for path in [existing.as_str(), absent.as_str(), "bad\0path"] {
-        assert!(matches!(
-            write_bytes(path, &values, location()).expect("size checked before element access"),
-            Err(Failure::LimitExceeded("Std.Io.Fs.WriteBytes", limit)) if limit == MAX_BYTES as i64
-        ));
+        assert_error(
+            &invoke(FsIntrinsic::WriteBytes, path, Some(values.clone())),
+            "LimitExceeded",
+            &[
+                Value::Str("Std.Io.Fs.WriteBytes".into()),
+                Value::Integer(MAX_BYTES as i64),
+            ],
+        );
     }
     assert_eq!(fs::read(&existing).expect("preserved bytes"), b"preserved");
     assert!(!Path::new(&absent).exists());
-    let returned = super::results::result(
-        &crate::stdlib::intrinsics::TEST_AGGREGATES,
-        "Std.Io.Fs.WriteBytes",
-        std::slice::from_ref(&existing),
-        write_bytes(&existing, &values, location()).expect("size preflight"),
-        |()| Value::Boolean(true),
-        location(),
-    )
-    .expect("filesystem error layout");
-    assert_error(
-        &returned,
-        "LimitExceeded",
-        &[
-            Value::Str("Std.Io.Fs.WriteBytes".into()),
-            Value::Integer(MAX_BYTES as i64),
-        ],
-    );
 }
 
 #[test]

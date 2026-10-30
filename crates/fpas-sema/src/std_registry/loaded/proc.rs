@@ -74,16 +74,16 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
         (
             s::STD_PROC_READ_STDOUT_CASE,
             Some(p("MaxBytes", Ty::Integer)),
-            Ty::Array(Box::new(Ty::Integer)),
+            Ty::ByteBuffer,
         ),
         (
             s::STD_PROC_READ_STDERR_CASE,
             Some(p("MaxBytes", Ty::Integer)),
-            Ty::Array(Box::new(Ty::Integer)),
+            Ty::ByteBuffer,
         ),
         (
             s::STD_PROC_WRITE_STDIN_CASE,
-            Some(p("Bytes", Ty::Array(Box::new(Ty::Integer)))),
+            Some(p("Bytes", Ty::ByteBuffer)),
             Ty::Integer,
         ),
         (s::STD_PROC_CLOSE_STDIN_CASE, None, Ty::Boolean),
@@ -122,16 +122,13 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
             checker,
             name,
             vec![p("Process", process.clone()), p("MaxBytes", Ty::Integer)],
-            result(Ty::Option(Box::new(Ty::Array(Box::new(Ty::Integer))))),
+            result(Ty::Option(Box::new(Ty::ByteBuffer))),
         );
     }
     define_func(
         checker,
         s::STD_PROC_WRITE_STDIN,
-        vec![
-            p("Process", process.clone()),
-            p("Bytes", Ty::Array(Box::new(Ty::Integer))),
-        ],
+        vec![p("Process", process.clone()), p("Bytes", Ty::ByteBuffer)],
         result(Ty::Integer),
     );
     for name in [

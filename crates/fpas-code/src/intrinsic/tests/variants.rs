@@ -4,6 +4,23 @@ use super::*;
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::Bytes(BytesIntrinsic::Create),
+    Intrinsic::Bytes(BytesIntrinsic::FromArray),
+    Intrinsic::Bytes(BytesIntrinsic::Length),
+    Intrinsic::Bytes(BytesIntrinsic::Capacity),
+    Intrinsic::Bytes(BytesIntrinsic::ToArray),
+    Intrinsic::Bytes(BytesIntrinsic::Slice),
+    Intrinsic::Bytes(BytesIntrinsic::Concat),
+    Intrinsic::Bytes(BytesIntrinsic::SetAt),
+    Intrinsic::Bytes(BytesIntrinsic::Fill),
+    Intrinsic::Bytes(BytesIntrinsic::CopyFrom),
+    Intrinsic::Bytes(BytesIntrinsic::Resize),
+    Intrinsic::Bytes(BytesIntrinsic::Reserve),
+    Intrinsic::Bytes(BytesIntrinsic::TrimCapacity),
+    Intrinsic::Bytes(BytesIntrinsic::JoinChunks),
+    Intrinsic::Bytes(BytesIntrinsic::DecodePercent),
+    Intrinsic::Str(StrIntrinsic::Utf8Decode),
+    Intrinsic::Str(StrIntrinsic::Utf8Append),
     Intrinsic::Tokenizer(TokenizerIntrinsic::Count),
     Intrinsic::Tokenizer(TokenizerIntrinsic::Encode),
     Intrinsic::Tokenizer(TokenizerIntrinsic::Decode),

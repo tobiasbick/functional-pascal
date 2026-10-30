@@ -67,7 +67,7 @@ uses Std.Console as Console, Std.Net.Http as Http, Std.Text.Utf8 as Utf8;
 begin
   var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
   RequestValue.Headers := [Http.Header.Create('X-Test', 'yes')];
-  RequestValue.Body := Utf8.Encode('ping');
+  RequestValue.Body := Utf8.Encode('ping').Unwrap();
   case Http.Send(RequestValue) of
     when Ok(const ResponseValue):
     begin

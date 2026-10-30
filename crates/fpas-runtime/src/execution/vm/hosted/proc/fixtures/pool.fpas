@@ -1,6 +1,7 @@
 program ProcessPool;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Os.Proc as Proc, Std.Os.Args as Args, Std.Tasks as Tasks,
   Std.Net.Sockets as Net, Std.Text.Format as Format, Std.Console as Console;
 
@@ -136,7 +137,7 @@ begin
   if Mode = 'cancel' then
     discard Tasks.Cancel(Source);
   elsif (Mode <> 'timeout') and (Mode <> 'scope_exit') and (Mode <> 'vm_shutdown') then
-    if Net.SendBytes(Parent.Unwrap(), [1]).Unwrap() <> 1 then
+    if Net.SendBytes(Parent.Unwrap(), ByteStorage.FromArray([1]).Unwrap()).Unwrap() <> 1 then
       panic('gate release');
     end if;
   end if;

@@ -12,13 +12,8 @@ fn location() -> SourceLocation {
     SourceLocation::new(1, 1)
 }
 
-fn array(bytes: &[u8]) -> Value {
-    Value::Array(
-        bytes
-            .iter()
-            .map(|&byte| Value::Integer(i64::from(byte)))
-            .collect(),
-    )
+fn buffer(bytes: &[u8]) -> Value {
+    Value::native_bytes(bytes.to_vec())
 }
 
 fn invoke(operation: EncodingIntrinsic, argument: Value) -> Value {
@@ -86,7 +81,7 @@ fn hex_requires_complete_ascii_byte_pairs_and_reports_input_byte_offsets() {
 
 #[test]
 fn codec_dispatch_preserves_inputs_and_returns_typed_successes() {
-    let arguments = [array(&[0, 15, 255])];
+    let arguments = [buffer(&[0, 15, 255])];
     let before = arguments.clone();
     let result = crate::stdlib::run_intrinsic_borrowed(
         Intrinsic::Encoding(EncodingIntrinsic::HexEncode),
@@ -103,7 +98,7 @@ fn codec_dispatch_preserves_inputs_and_returns_typed_successes() {
         EncodingIntrinsic::HexEncode,
     ] {
         assert_eq!(
-            invoke(operation, array(&[])),
+            invoke(operation, buffer(&[])),
             Value::result_ok(Value::Str("".into()))
         );
     }
@@ -114,24 +109,24 @@ fn codec_dispatch_preserves_inputs_and_returns_typed_successes() {
     ] {
         assert_eq!(
             invoke(operation, Value::Str("".into())),
-            Value::result_ok(array(&[]))
+            Value::result_ok(buffer(&[]))
         );
     }
     assert_eq!(
         invoke(EncodingIntrinsic::Base64Decode, Value::Str("AA//".into())),
-        Value::result_ok(array(&[0, 15, 255]))
+        Value::result_ok(buffer(&[0, 15, 255]))
     );
     assert_eq!(
         invoke(
             EncodingIntrinsic::Base64UrlDecode,
             Value::Str("AA__".into())
         ),
-        Value::result_ok(array(&[0, 15, 255]))
+        Value::result_ok(buffer(&[0, 15, 255]))
     );
 }
 
 #[test]
-fn all_encoders_reject_integer_values_outside_the_byte_domain() {
+fn encoders_require_native_buffers_without_implicit_array_conversion() {
     for operation in [
         EncodingIntrinsic::Base64Encode,
         EncodingIntrinsic::Base64UrlEncode,
@@ -139,10 +134,16 @@ fn all_encoders_reject_integer_values_outside_the_byte_domain() {
     ] {
         for invalid in [-1, 256, i64::MIN, i64::MAX] {
             let argument = Value::Array(vec![Value::Integer(0), Value::Integer(invalid)].into());
-            assert_failure(
-                invoke(operation, argument),
-                "InvalidByte",
-                &[Value::Integer(1), Value::Integer(invalid)],
+            let error = crate::stdlib::run_intrinsic_borrowed(
+                Intrinsic::Encoding(operation),
+                &[argument],
+                location(),
+                &crate::stdlib::intrinsics::TEST_AGGREGATES,
+            )
+            .unwrap_err();
+            assert_eq!(
+                error.code,
+                fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH
             );
         }
     }
@@ -186,19 +187,9 @@ fn binary_limit_round_trips_through_each_text_expansion() {
 
 #[test]
 fn binary_and_text_limits_reject_before_byte_or_text_content_validation() {
-    let mut values = vec![Value::Integer(0); MAX_BYTES];
-    assert_eq!(
-        read_bytes(&values, location()).unwrap().unwrap().len(),
-        MAX_BYTES
-    );
-    values.push(Value::Integer(0));
-    values[0] = Value::Integer(-1);
-    assert_eq!(
-        read_bytes(&values, location()).unwrap().unwrap_err(),
-        CodecFailure::LimitExceeded
-    );
+    let values = vec![0; MAX_BYTES + 1];
     assert_failure(
-        invoke(EncodingIntrinsic::HexEncode, Value::Array(values.into())),
+        invoke(EncodingIntrinsic::HexEncode, Value::native_bytes(values)),
         "LimitExceeded",
         &[Value::Integer(MAX_BYTES as i64)],
     );

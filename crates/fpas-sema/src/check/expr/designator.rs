@@ -6,6 +6,7 @@ use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
+use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
 impl Checker {
@@ -314,6 +315,17 @@ impl Checker {
         let index_ty = self.check_expr(index_expr);
 
         match ty {
+            Ty::ByteBuffer => {
+                if !Ty::Integer.assignment_compatible_with(&index_ty) {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        "Byte buffer index must be an integer",
+                        "Use a zero-based integer byte index.",
+                        index_expr.span(),
+                    );
+                }
+                Ty::Integer
+            }
             Ty::Array(inner) => {
                 if !Ty::Integer.assignment_compatible_with(&index_ty) {
                     self.error_with_code(
@@ -364,5 +376,41 @@ impl Checker {
             .is_some_and(|(symbol, _)| {
                 symbol.mutable && matches!(symbol.kind, SymbolKind::Var | SymbolKind::Param)
             })
+            && self.designator_read_only_index(designator).is_none()
+    }
+
+    /// Indexed string and byte reads never expose writable scalar storage.
+    pub(crate) fn designator_read_only_index(
+        &self,
+        target: &Designator,
+    ) -> Option<(Span, &'static str)> {
+        let (symbol, root_parts) = self.designator_root_symbol(&target.parts)?;
+        let mut current = symbol.ty.clone();
+        for part in &target.parts[root_parts..] {
+            current = self.resolve_visible_type(&current);
+            current = match (part, &current) {
+                (DesignatorPart::Index(_, span), Ty::String | Ty::ByteBuffer) => {
+                    return Some((
+                        *span,
+                        if current == Ty::ByteBuffer {
+                            "SetAtInPlace"
+                        } else {
+                            "SetCharAtInPlace"
+                        },
+                    ));
+                }
+                (DesignatorPart::Index(..), Ty::Array(inner) | Ty::Dict(_, inner)) => {
+                    (**inner).clone()
+                }
+                (DesignatorPart::Ident(name, _), Ty::Record(record)) => record
+                    .fields
+                    .iter()
+                    .find(|(field, _)| field.eq_ignore_ascii_case(name))?
+                    .1
+                    .clone(),
+                _ => return None,
+            };
+        }
+        None
     }
 }

@@ -12,6 +12,7 @@ enum Token {
     Integer,
     Real,
     String,
+    ByteBuffer,
     Subrange(i64, i64),
     Nominal(NominalKind, String, usize),
     Array,
@@ -67,6 +68,7 @@ impl Serialize for TypeIdentity {
                 Self::Integer => Token::Integer,
                 Self::Real => Token::Real,
                 Self::String => Token::String,
+                Self::ByteBuffer => Token::ByteBuffer,
                 Self::Subrange { lower, upper } => Token::Subrange(*lower, *upper),
                 Self::Nominal {
                     kind,
@@ -187,6 +189,7 @@ fn decode(tokens: Vec<Token>) -> Result<TypeIdentity, &'static str> {
             Token::Integer => TypeIdentity::Integer,
             Token::Real => TypeIdentity::Real,
             Token::String => TypeIdentity::String,
+            Token::ByteBuffer => TypeIdentity::ByteBuffer,
             Token::Subrange(lower, upper) => TypeIdentity::Subrange { lower, upper },
             Token::Nominal(kind, declaration, _) => TypeIdentity::Nominal {
                 kind,

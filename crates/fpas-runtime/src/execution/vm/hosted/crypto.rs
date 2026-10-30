@@ -38,13 +38,7 @@ impl Worker {
     ) -> Result<Value, VmError> {
         Ok(match result {
             Ok(Output::Integer(value)) => Value::result_ok(Value::Integer(value)),
-            Ok(Output::Bytes(bytes)) => Value::result_ok(Value::Array(
-                bytes
-                    .into_iter()
-                    .map(|v| Value::Integer(i64::from(v)))
-                    .collect::<Vec<_>>()
-                    .into(),
-            )),
+            Ok(Output::Bytes(bytes)) => Value::result_ok(Value::native_bytes(bytes)),
             Err(error) => {
                 use crate::stdlib::native_errors::{self, NativeErrorFamily};
                 let (variant, fields) = match error {

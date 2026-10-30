@@ -14,12 +14,12 @@ begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
   if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/fluent') then
     begin
-      ResponseValue.Body := Utf8.Encode('unexpected request');
+      ResponseValue.Body := Utf8.Encode('unexpected request').Unwrap();
       return ResponseValue;
     end;
   end if;
 
-  ResponseValue.Body := Utf8.Encode('hello fluent');
+  ResponseValue.Body := Utf8.Encode('hello fluent').Unwrap();
   return ResponseValue;
 end function;
 

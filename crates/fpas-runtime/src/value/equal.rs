@@ -12,6 +12,7 @@ pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
                 if (!x.is_nan() && !y.is_nan() && x == y) || x.to_bits() == y.to_bits() => {}
             (Value::Boolean(x), Value::Boolean(y)) if x == y => {}
             (Value::Str(x), Value::Str(y)) if x == y => {}
+            (Value::Bytes(x), Value::Bytes(y)) if x == y => {}
             (Value::Enum(a), Value::Enum(b)) => {
                 let a = a.body();
                 let b = b.body();

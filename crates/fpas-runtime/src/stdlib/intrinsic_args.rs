@@ -87,6 +87,17 @@ pub(crate) fn expect_str(v: &Value, location: SourceLocation) -> Result<&SharedS
     }
 }
 
+/// Borrow trusted native bytes without expanding or revalidating individual bytes.
+pub(crate) fn expect_bytes(
+    value: &Value,
+    location: SourceLocation,
+) -> Result<&crate::SharedBytes, StdError> {
+    match value {
+        Value::Bytes(bytes) => Ok(bytes),
+        other => Err(type_error("Std.Bytes.ByteBuffer", other, location)),
+    }
+}
+
 pub(crate) fn pop_int(v: &Value, location: SourceLocation) -> Result<i64, StdError> {
     match v {
         Value::Integer(n) => Ok(*n),

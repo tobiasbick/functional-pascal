@@ -25,10 +25,12 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 ## Selected order
 
 1. Implement [AP54's byte-buffer plan](improve-syntax/ap54-byte-buffers/README.md)
-   under `Std.Bytes` when authorized, including UTF-8 integration and migration
-   of existing binary APIs. Its contract is complete: copy-on-write values,
+   under `Std.Bytes`. AP54.2/AP54.3 implement native storage, core operations,
+   UTF-8 and canonical binary APIs on the integration branch. AP54.4's combined
+   verification remains open. The contract includes copy-on-write values,
    explicit mutation, content equality, strict UTF-8, a 256 MiB maximum, bounded
-   slice retention, automatic release and full artifact/debugger support. The
+   slice retention, automatic release and support for artifacts and existing
+   debugger capabilities. General snapshots and replay are separate. The
    broader alternatives stay in
    [FPAS 2 section 22](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers).
 2. Continue selected FPAS 2 work, then graphics/multimedia and the
@@ -63,7 +65,7 @@ owns their current names and responsibilities.
 
 | Concern | Owning plan | Scope and prerequisites |
 | --- | --- | --- |
-| Byte buffers | [AP54: Native byte buffers and UTF-8 integration](improve-syntax/ap54-byte-buffers/README.md) | Contract complete; implement one shared representation and migrate existing binary APIs when authorized; typed media storage follows separately |
+| Byte buffers | [AP54: Native byte buffers and UTF-8 integration](improve-syntax/ap54-byte-buffers/README.md) | Native storage, UTF-8 and binary API migration implemented; combined verification open; typed media storage follows separately |
 | SQLite | [SQLite storage](networked-applications/sqlite.md) | Concrete database access, transactions and backup |
 | Cryptography | [Cryptography](networked-applications/cryptography.md) | Password hashing, authentication primitives and signatures |
 | WebSocket | [WebSocket transport](networked-applications/websocket.md) | Bounded messages over TCP/TLS and HTTP |

@@ -52,6 +52,7 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 
 | Area | Hub | Units / topics |
 |------|-----|----------------|
+| Bytes | [bytes.md](bytes.md) | Native byte-buffer values, checked bulk operations and explicit capacity management |
 | Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
 | Host I/O | [host/](host/README.md) | Args, Calendar (Gregorian dates and UTC), Cli (schema parsing/help), Env, Errors, Fs (whole-file and handle I/O), Path, Proc (options and bounded capture), Time |
 | Networking | [network/](network/README.md) | Sockets, Server lifetime, URI, HTTP |

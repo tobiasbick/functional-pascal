@@ -1,10 +1,10 @@
 program Utf8BoundariesTest;
 
-uses Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 procedure Invalid(Bytes: array of integer);
 begin
-  case Utf8.Decode(Bytes) of
+  case Utf8.Decode(ByteStorage.FromArray(Bytes).Unwrap()) of
     when Ok(_):
       begin
         Test.Fail('invalid encoding accepted');
@@ -32,12 +32,14 @@ begin
     ('x' + string.Chr(769)).RepeatStr(2048)
   ] do
     begin
-      Test.AssertEquals(Text, Utf8.Decode(Utf8.Encode(Text)).Unwrap());
+      Test.AssertEquals(Text, Utf8.Decode(Utf8.Encode(Text).Unwrap()).Unwrap());
     end;
   end for;
 
-  Invalid([-1]);
-  Invalid([256]);
+  Test.AssertTrue(ByteStorage.FromArray([-1]) is Error(ByteStorage.BufferError.InvalidByte(0, -1)));
+  Test.AssertTrue(
+    ByteStorage.FromArray([256]) is Error(ByteStorage.BufferError.InvalidByte(0, 256))
+  );
   Invalid([128]);
   Invalid([192, 128]);
   Invalid([193, 191]);
@@ -46,7 +48,9 @@ begin
   Invalid([224, 128, 128]);
   Invalid([237, 160, 128]);
   Invalid([239, 191]);
-  Invalid([239, 191, 256]);
+  Test.AssertTrue(
+    ByteStorage.FromArray([239, 191, 256]) is Error(ByteStorage.BufferError.InvalidByte(2, 256))
+  );
   Invalid([240, 128, 128, 128]);
   Invalid([240, 144, 128]);
   Invalid([244, 144, 128, 128]);

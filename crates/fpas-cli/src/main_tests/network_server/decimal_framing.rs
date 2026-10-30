@@ -38,7 +38,7 @@ begin
       end;
     end case;
     var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
-    ResponseValue.Body := Utf8.Encode(Text);
+    ResponseValue.Body := Utf8.Encode(Text).Unwrap();
     discard Http.WriteResponse(ConnectionValue, ResponseValue).Unwrap();
     discard Net.Close(ConnectionValue).Unwrap();
   end; end for;

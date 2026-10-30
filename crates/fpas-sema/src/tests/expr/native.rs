@@ -1,5 +1,6 @@
 //! Import-free checking of every catalog signature and native argument diagnostics.
 use super::{check_errors, check_ok};
+mod bytes_cases;
 mod capabilities;
 mod collections;
 mod in_place_calls;
@@ -289,6 +290,11 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
         ),
     ];
+    let mut cases = cases
+        .into_iter()
+        .map(|(positional, named)| (positional.to_string(), named.to_string()))
+        .collect::<Vec<_>>();
+    cases.extend(bytes_cases::cases());
     assert_eq!(
         cases.len(),
         crate::native_operations()
@@ -297,8 +303,8 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
     );
     in_place_calls::check_counterparts(&cases);
     for (positional, named) in cases {
-        check_ok(positional);
-        check_ok(named);
+        check_ok(&positional);
+        check_ok(&named);
     }
 }
 #[test]

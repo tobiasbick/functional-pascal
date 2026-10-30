@@ -17,6 +17,8 @@ pub(in crate::lowering) const REAL: TypeId = TypeId::new(3);
 pub(in crate::lowering) const STRING: TypeId = TypeId::new(4);
 /// Erased generic or unresolved value type.
 pub(in crate::lowering) const DYNAMIC: TypeId = TypeId::new(5);
+/// Native byte-buffer value type.
+pub(in crate::lowering) const BYTE_BUFFER: TypeId = TypeId::new(6);
 
 /// Initial type table shared by every lowered program and unit.
 pub(super) fn scalar_type_table() -> Vec<TypeDefinition> {
@@ -27,6 +29,7 @@ pub(super) fn scalar_type_table() -> Vec<TypeDefinition> {
         definition(REAL, IrType::Real),
         definition(STRING, IrType::String),
         definition(DYNAMIC, IrType::Dynamic),
+        definition(BYTE_BUFFER, IrType::ByteBuffer),
     ]
 }
 
@@ -38,6 +41,7 @@ pub(super) fn lower(ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileEr
         Ty::Integer | Ty::Subrange(_) => Ok(INTEGER),
         Ty::Real => Ok(REAL),
         Ty::String => Ok(STRING),
+        Ty::ByteBuffer => Ok(BYTE_BUFFER),
         Ty::GenericParam(..) => Ok(DYNAMIC),
         Ty::Enum(enumeration) if !enumeration.has_data() => Ok(INTEGER),
         Ty::Distinct(distinct) => lower(&distinct.underlying, line, column),

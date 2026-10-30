@@ -4,6 +4,8 @@
 mod bits_evaluation;
 #[path = "../boolean_evaluation.rs"]
 mod boolean_evaluation;
+#[path = "../byte_buffers.rs"]
+mod byte_buffers;
 #[path = "../call_evaluation.rs"]
 mod call_evaluation;
 #[path = "../logical_precedence.rs"]

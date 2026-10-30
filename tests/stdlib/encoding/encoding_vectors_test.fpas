@@ -1,8 +1,8 @@
 program EncodingVectorsTest;
 
-uses Std.Encoding as Encoding, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Encoding as Encoding, Std.Test as Test;
 
-procedure AssertBytes(Expected: array of integer; Actual: array of integer);
+procedure AssertBytes(Expected: ByteStorage.ByteBuffer; Actual: ByteStorage.ByteBuffer);
 begin
   Test.AssertEquals(Expected.Length(), Actual.Length());
   for Index: integer := 0 to Expected.Length() - 1 do
@@ -10,7 +10,7 @@ begin
   end for;
 end procedure;
 
-procedure Check(Bytes: array of integer; Standard: string; Url: string; Hex: string);
+procedure Check(Bytes: ByteStorage.ByteBuffer; Standard: string; Url: string; Hex: string);
 begin
   Test.AssertEquals(Standard, Encoding.Base64Encode(Bytes).Unwrap());
   AssertBytes(Bytes, Encoding.Base64Decode(Standard).Unwrap());
@@ -22,20 +22,30 @@ begin
 end procedure;
 
 begin
-  Check([], '', '', '');
-  Check([102], 'Zg==', 'Zg', '66');
-  Check([102, 111], 'Zm8=', 'Zm8', '666F');
-  Check([102, 111, 111], 'Zm9v', 'Zm9v', '666F6F');
-  Check([102, 111, 111, 98], 'Zm9vYg==', 'Zm9vYg', '666F6F62');
-  Check([102, 111, 111, 98, 97], 'Zm9vYmE=', 'Zm9vYmE', '666F6F6261');
-  Check([102, 111, 111, 98, 97, 114], 'Zm9vYmFy', 'Zm9vYmFy', '666F6F626172');
-  Check([0], 'AA==', 'AA', '00');
-  Check([255], '/w==', '_w', 'FF');
-  Check([251, 255], '+/8=', '-_8', 'FBFF');
-  Check([251, 255, 239], '+//v', '-__v', 'FBFFEF');
-  var Bytes: array of integer := [];
+  Check(ByteStorage.FromArray([]).Unwrap(), '', '', '');
+  Check(ByteStorage.FromArray([102]).Unwrap(), 'Zg==', 'Zg', '66');
+  Check(ByteStorage.FromArray([102, 111]).Unwrap(), 'Zm8=', 'Zm8', '666F');
+  Check(ByteStorage.FromArray([102, 111, 111]).Unwrap(), 'Zm9v', 'Zm9v', '666F6F');
+  Check(ByteStorage.FromArray([102, 111, 111, 98]).Unwrap(), 'Zm9vYg==', 'Zm9vYg', '666F6F62');
+  Check(
+    ByteStorage.FromArray([102, 111, 111, 98, 97]).Unwrap(),
+    'Zm9vYmE=',
+    'Zm9vYmE',
+    '666F6F6261'
+  );
+  Check(
+    ByteStorage.FromArray([102, 111, 111, 98, 97, 114]).Unwrap(),
+    'Zm9vYmFy',
+    'Zm9vYmFy',
+    '666F6F626172'
+  );
+  Check(ByteStorage.FromArray([0]).Unwrap(), 'AA==', 'AA', '00');
+  Check(ByteStorage.FromArray([255]).Unwrap(), '/w==', '_w', 'FF');
+  Check(ByteStorage.FromArray([251, 255]).Unwrap(), '+/8=', '-_8', 'FBFF');
+  Check(ByteStorage.FromArray([251, 255, 239]).Unwrap(), '+//v', '-__v', 'FBFFEF');
+  var Bytes: ByteStorage.ByteBuffer := ByteStorage.Create(256).Unwrap();
   for Value: integer := 0 to 255 do
-    Bytes.PushInPlace(Value);
+    discard Bytes.SetAtInPlace(Value, Value).Unwrap();
   end for;
   const Standard := Encoding.Base64Encode(Bytes).Unwrap();
   const Url := Encoding.Base64UrlEncode(Bytes).Unwrap();

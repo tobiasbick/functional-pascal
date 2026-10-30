@@ -1,6 +1,6 @@
 program NetworkPoolProgress;
 
-uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Os.Args as Args;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Os.Args as Args;
 
 function ReadByte(Connection: Net.Connection; Token: Tasks.CancellationToken; Cancellable: boolean): integer;
 begin
@@ -23,10 +23,14 @@ end function;
 function WriteByte(Connection: Net.Connection; Byte: integer; Token: Tasks.CancellationToken; Cancellable: boolean): integer;
 begin
   if Cancellable then
-    return Net.SendBytesWithCancellation(Connection, [Byte], Token).Unwrap();
+    return Net.SendBytesWithCancellation(
+      Connection,
+      ByteStorage.FromArray([Byte]).Unwrap(),
+      Token
+    ).Unwrap();
   end if;
 
-  return Net.SendBytes(Connection, [Byte]).Unwrap();
+  return Net.SendBytes(Connection, ByteStorage.FromArray([Byte]).Unwrap()).Unwrap();
 end function;
 
 function Serve(Listener: Net.Listener; Token: Tasks.CancellationToken; Cancellable: boolean): integer;

@@ -26,6 +26,10 @@ forms configure child stdin, environment, working directory, timeout,
 cancellation, and capture bounds. `Start` returns an owned process handle for
 incremental binary I/O.
 
+Binary pipe input, output and selectable read callbacks use
+`Std.Bytes.ByteBuffer`. Import `Std.Bytes as ByteStorage` for annotations or
+construction; text-capture results remain strings.
+
 **Trust boundary:** `Run` and `RunCapture` execute arbitrary host commands with
 the same privileges as the FPAS process. The runtime does not sandbox or
 restrict the programs that may be launched. Configuration validation runs
@@ -56,9 +60,9 @@ Requires `uses Std.Os.Proc as Proc;`.
 | function | `RunCaptureWithOptions(Command: string; Args: array of string; Options: ProcessOptions): Result of (ProcessOutput, Proc.ProcError)` | configures the child and captures bounded output |
 | function | `RunInteractive(Command: string; Args: array of string; Options: ProcessStartOptions; TimeoutMillis: Option of integer; CancellationToken: Option of Tasks.CancellationToken): Result of (ProcessExitStatus, Proc.ProcError)` | uses an explicit host terminal with owned timeout/cancellation cleanup |
 | function | `TryWaitStatus(Process: Process): Result of (Option of ProcessExitStatus, Proc.ProcError)` | probes exact native completion without consuming the cached status or closing pipes |
-| function | `ReadStdoutCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (array of integer, Proc.ProcError))): Tasks.WaitCase` | selects one bounded stdout read or EOF |
-| function | `ReadStderrCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (array of integer, Proc.ProcError))): Tasks.WaitCase` | selects one bounded stderr read or EOF |
-| function | `WriteStdinCase(Process: Process; Bytes: array of integer; Callback: procedure(Outcome: result of (integer, Proc.ProcError))): Tasks.WaitCase` | selects one partial stdin write |
+| function | `ReadStdoutCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError))): Tasks.WaitCase` | selects one bounded stdout read or EOF |
+| function | `ReadStderrCase(Process: Process; MaxBytes: integer; Callback: procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError))): Tasks.WaitCase` | selects one bounded stderr read or EOF |
+| function | `WriteStdinCase(Process: Process; Bytes: ByteStorage.ByteBuffer; Callback: procedure(Outcome: result of (integer, Proc.ProcError))): Tasks.WaitCase` | selects one partial stdin write |
 | function | `CloseStdinCase(Process: Process; Callback: procedure(Outcome: result of (boolean, Proc.ProcError))): Tasks.WaitCase` | selects flushing and closing stdin |
 | function | `WaitStatusCase(Process: Process; Callback: procedure(Outcome: result of (ProcessExitStatus, Proc.ProcError))): Tasks.WaitCase` | selects exact native completion without closing the handle |
 
@@ -171,12 +175,13 @@ outcome. A case retains a handle identity rather than extending a closed process
 
 `Process` identifies a process returned by `Start`. `MaxBytes` is in `1..1048576`.
 The callback receives `Ok(Bytes)` with at most that many bytes, each in `0..255`.
-No currently available bytes leave the case pending; an empty array means EOF and
+No currently available bytes leave the case pending; an empty buffer means EOF and
 remains observable by later cases. The two functions differ only in the selected stream.
 
 ### `WriteStdinCase`
 
-`Bytes` contains at most 1048576 integers in `0..255`, copied at construction.
+`Bytes` is a `Std.Bytes.ByteBuffer` of at most 1048576 bytes. Construction retains
+its immutable snapshot; later caller mutations cannot change the selected write.
 The callback receives `Ok(Count)` after a positive partial write. Retry the unwritten
 suffix with a new case. A full pipe leaves the case pending. Empty input wins with
 `Ok(0)` when stdin is open; closed stdin yields a typed error.
@@ -361,9 +366,9 @@ them to `None` and `[]`. Launch validation follows the configuration rules above
 |----------|--------|---------|
 | `DefaultStartOptions()` | `ProcessStartOptions` | Construct default launch options without host effects. |
 | `Start(Command: string; Args: array of string; Options: ProcessStartOptions)` | `Result of (Process, ProcError)` | Start a child with separate raw stdin, stdout and stderr pipes. |
-| `ReadStdout(Process: Process; MaxBytes: integer)` | `Result of (Option of array of integer, ProcError)` | Probe stdout: `None` pending, `Some(Bytes)` data, `Some([])` EOF. |
-| `ReadStderr(Process: Process; MaxBytes: integer)` | `Result of (Option of array of integer, ProcError)` | Probe stderr with the same pending/data/EOF distinction. |
-| `WriteStdin(Process: Process; Bytes: array of integer)` | `Result of (integer, ProcError)` | Write a possibly partial prefix; zero means retry when a nonempty write is pending. |
+| `ReadStdout(Process: Process; MaxBytes: integer)` | `Result of (Option of ByteStorage.ByteBuffer, ProcError)` | Probe stdout: `None` pending, `Some(Bytes)` data; an empty buffer in `Some` means EOF. |
+| `ReadStderr(Process: Process; MaxBytes: integer)` | `Result of (Option of ByteStorage.ByteBuffer, ProcError)` | Probe stderr with the same pending/data/EOF distinction. |
+| `WriteStdin(Process: Process; Bytes: ByteStorage.ByteBuffer)` | `Result of (integer, ProcError)` | Write a possibly partial prefix; zero means retry when a nonempty write is pending. |
 | `CloseStdin(Process: Process)` | `Result of (boolean, ProcError)` | Flush accepted writes and send EOF; false means pending, true means closed. |
 | `TryWait(Process: Process)` | `Result of (Option of integer, ProcError)` | Return `None` while running or `Some(ExitCode)` after exit. |
 | `TryWaitStatus(Process: Process)` | `Result of (Option of ProcessExitStatus, ProcError)` | Return `None` while running or the exact cached native completion status. |

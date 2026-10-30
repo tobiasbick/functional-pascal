@@ -8,6 +8,7 @@ pub(super) fn validate_entry(entry: &NativeOperation) -> Result<(), String> {
     let collection = matches!(
         entry.receiver,
         NativeReceiver::String
+            | NativeReceiver::ByteBuffer
             | NativeReceiver::Array
             | NativeReceiver::StringArray
             | NativeReceiver::Dictionary
@@ -49,7 +50,9 @@ pub(super) fn validate_shared_roles(
     entry: &NativeOperation,
     other: &NativeOperation,
 ) -> Result<(), String> {
-    if !entry.name.eq_ignore_ascii_case(other.name) {
+    if entry.receiver.is_factory() != other.receiver.is_factory()
+        || !entry.name.eq_ignore_ascii_case(other.name)
+    {
         return Ok(());
     }
     let first = (entry.signature)();

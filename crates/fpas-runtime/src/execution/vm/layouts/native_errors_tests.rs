@@ -70,6 +70,31 @@ fn required_native_error_metadata_is_checked_before_successful_calls() {
 }
 
 #[test]
+fn successful_byte_calls_still_require_the_exact_error_contract() {
+    let original = image("program T; uses Std.Bytes as Bytes; begin discard Bytes.Create(0); end.");
+    RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("byte ABI");
+    let mut missing = original.clone();
+    missing
+        .enums
+        .iter_mut()
+        .find(|owner| original.strings.get(owner.name) == Some("Std.Bytes.BufferError"))
+        .expect("buffer error family")
+        .error = None;
+    assert!(RuntimeLayouts::build(&missing, InstructionAddress::new(0)).is_err());
+    let mut wrong_payload = original;
+    wrong_payload
+        .enum_variants
+        .iter_mut()
+        .find(|variant| variant.fields.len() == 2)
+        .expect("invalid byte variant")
+        .error
+        .as_mut()
+        .expect("essential error metadata")
+        .field_types[1] = crate::TypeIdentity::String;
+    assert!(RuntimeLayouts::build(&wrong_payload, InstructionAddress::new(0)).is_err());
+}
+
+#[test]
 fn unused_native_families_are_not_required() {
     for source in [
         "program T; begin end.",
@@ -234,13 +259,13 @@ fn encoding_requires_its_exact_payload_without_host_dependencies() {
     let variant = original
         .enum_variants
         .iter_mut()
-        .find(|variant| original.strings.get(variant.name) == Some("InvalidByte"))
-        .expect("byte variant");
+        .find(|variant| original.strings.get(variant.name) == Some("NonCanonical"))
+        .expect("canonical encoding variant");
     variant
         .error
         .as_mut()
         .expect("essential metadata")
-        .field_types[1] = crate::TypeIdentity::String;
+        .field_types[0] = crate::TypeIdentity::String;
     assert!(RuntimeLayouts::build(&original, InstructionAddress::new(0)).is_err());
 }
 
@@ -248,15 +273,21 @@ fn encoding_requires_its_exact_payload_without_host_dependencies() {
 fn binary_file_operations_require_the_complete_filesystem_error_abi() {
     for source in [
         "program T; uses Std.Io.Fs as Fs; begin discard Fs.ReadBytes('file'); end.",
-        "program T; uses Std.Io.Fs as Fs; begin discard Fs.WriteBytes('file', [0, 255]); end.",
+        "program T; uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs; begin discard Fs.WriteBytes('file', ByteStorage.FromArray([0, 255]).Unwrap()); end.",
     ] {
         let original = image(source);
         RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("binary Fs ABI");
         let variant = original
             .enum_variants
             .iter()
-            .position(|variant| original.strings.get(variant.name) == Some("InvalidByte"))
-            .expect("byte validation error is retained without a source constructor");
+            .position(|variant| {
+                original.strings.get(variant.name) == Some("LimitExceeded")
+                    && original
+                        .strings
+                        .get(original.enums[usize::from(variant.owner.get())].name)
+                        == Some("Std.Io.Fs.FsError")
+            })
+            .expect("filesystem byte limit error is retained without a source constructor");
         let mut wrong_payload = original.clone();
         wrong_payload.enum_variants[variant]
             .error
@@ -271,12 +302,11 @@ fn binary_file_operations_require_the_complete_filesystem_error_abi() {
 }
 
 #[test]
-fn filesystem_lifecycle_errors_append_and_keep_operation_payloads() {
+fn filesystem_lifecycle_errors_keep_operation_payloads_without_array_validation() {
     let catalog = crate::stdlib::native_errors::NativeErrorFamily::Fs.variants();
-    assert_eq!(catalog.len(), 15);
-    assert_eq!(catalog[12].name, "InvalidByte");
-    assert_eq!(catalog[13].name, "Closed");
-    assert_eq!(catalog[14].name, "Cancelled");
+    assert_eq!(catalog.len(), 14);
+    assert_eq!(catalog[12].name, "Closed");
+    assert_eq!(catalog[13].name, "Cancelled");
     let original =
         image("program T; uses Std.Io.Fs as Fs; begin discard Fs.ReadText('missing'); end.");
     RuntimeLayouts::build(&original, InstructionAddress::new(0)).expect("filesystem lifecycle ABI");

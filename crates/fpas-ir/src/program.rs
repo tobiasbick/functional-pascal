@@ -80,6 +80,8 @@ pub enum IrType {
     Real,
     /// A UTF-8 string value.
     String,
+    /// Native managed contiguous byte buffer.
+    ByteBuffer,
     /// A generic-erased value whose operation remains dynamically checked.
     Dynamic,
     /// Ordered value-semantic array.

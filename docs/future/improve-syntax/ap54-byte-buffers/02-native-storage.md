@@ -1,7 +1,8 @@
 # AP54.2: Implement managed byte storage and core operations
 
-Package: [AP54](README.md). Status: not started; awaiting implementation
-authorization. AP54.1 is complete.
+Package: [AP54](README.md). Status: Complete on the selected integration branch,
+including implementation, documentation, review and verification. AP54.3 remains
+separate and has not started.
 
 ## Prerequisites
 
@@ -36,19 +37,41 @@ a cycle. Do not retain a registry entry until VM teardown as a substitute for
 normal value lifetime. Reuse established Rust storage facilities; evaluate a
 dependency only where it simplifies the approved contract.
 
-Support the artifact/debugger representations fixed in AP54.1, including full
-recording/restoration of bytes and observable length/capacity. Ordinary type
-metadata, compiled-unit identity and declaration lookup must work; a valid buffer
-must not become an unsupported value at a tool boundary. Validate serialized
-sizes before allocation. Preview limits do not limit persisted bytes.
+Support compiled-unit/program-image type metadata and all existing debugger
+functions, including retained byte values, detached calls and bounded event
+capture. Ordinary type identity and declaration lookup must work; a valid buffer
+must not become an unsupported value in those existing functions. A retained
+value preserves all bytes and observable length/capacity. Preview limits affect
+only presentation. General snapshots and state recording/restoration/replay
+remain separate and are not prerequisites or acceptance targets for AP54.2.
 
 Existing binary APIs stay usable until AP54.3 replaces their signatures together
 with all callers. Do not introduce temporary buffer-suffixed I/O operations.
 
+## Implementation decisions
+
+The runtime uses `SharedBytes(Arc<Vec<u8>>)`, with no pool or retention registry.
+The backing contains initialized native bytes rather than tagged FPAS integers.
+Fallible vector allocation happens before replacing shared storage; unique backing
+can grow in place. Proper slices allocate independent storage and full nonempty
+slices may share. No extra Rust dependency is needed for this representation.
+
+The buffer has its own semantic, interface, IR and portable debug type. Artifact
+bytecode version 31 admits that type and the byte intrinsics. The canonical native
+operation catalogue owns receiver signatures, documentation and first-class values;
+the compiler commits a fallible InPlace result only on success. Capacity-only
+mutations have no public value-operation aliases.
+
+Ordinary graph traversal treats bytes as an ownership-neutral leaf; surrounding
+records, closures and cells retain the existing collector and task-transfer rules.
+Arc ownership releases native backing when its last owner ends. Host exports and
+debugger retained values keep complete immutable storage, with copy-on-write on
+mutation; only their presentation is bounded.
+
 ## Affected files and implementation owners
 
-These are inspected owners and proposed new paths, not permission for unrelated
-rewrites. Before coding, refine the exact list against AP54.1 and module sizes.
+These are the delivered storage, type, operation and integration owners. Existing
+integer-array byte-I/O owners are deliberately reserved for AP54.3.
 
 | Action | Path | Purpose |
 | --- | --- | --- |
@@ -56,6 +79,9 @@ rewrites. Before coding, refine the exact list against AP54.1 and module sizes.
 | Create/modify | `crates/fpas-runtime/src/stdlib/bytes.rs`, `stdlib/intrinsics.rs`, `execution/vm/` | Core operations, dispatch and task/host admission |
 | Create/modify | `crates/fpas-builtins/src/std_units/`, `crates/fpas-sema/src/std_registry/loaded/bytes.rs`, `loaded/mod.rs` | Canonical unit/type/error and signature registration |
 | Create/modify | `crates/fpas-code/src/intrinsic/bytes.rs`, intrinsic/type/validation metadata | Instruction metadata, verified operand/result shapes and approved artifact behavior |
+| Modify | `crates/fpas-sema/src/types/`, `crates/fpas-ir/src/program.rs`, `crates/fpas-unit/src/` | Preserve the native byte type through checking, lowered IR, identities and separately compiled interfaces |
+| Create/modify | `crates/fpas-sema/src/std_registry/native/bytes.rs`, `crates/fpas-compiler/src/lowering/calls/fluent.rs` | Canonical receiver operations and successful-result-only mutation commits |
+| Create/modify | `crates/fpas-build/tests/byte_buffer_memory.rs` | Measure actual native allocation balance across VM/task/cycle teardown |
 | Modify as required | `crates/fpas-compiler/src/intrinsic_catalog.rs`, `src/lowering/`, `src/bytecode/` | Existing call and first-class-operation lowering without grammar exceptions |
 | Modify as required | `crates/fpas-runtime/src/execution/vm/debug/`, `crates/fpas-code/src/debug/` | Buffer inspection and approved debug/recording metadata |
 | Create/modify | `tests/stdlib/bytes/`, owning Rust value/runtime tests | Observable operation, ownership and allocation regressions |
@@ -64,6 +90,28 @@ rewrites. Before coding, refine the exact list against AP54.1 and module sizes.
 | Modify | `docs/specs/std-namespaces.md` | Move only the delivered `Std.Bytes` capability into the current catalogue; keep unimplemented binary helpers reserved |
 
 Repository paths above are relative to the repository root.
+
+## Review boundaries
+
+Spec review uses AP54.1, including the user's decision that general snapshots and
+record/replay remain separate. Standards review uses AGENTS.md and the shared
+development process. Baseline is `295726a77`; the review target is the uncommitted
+AP54.2 working tree on `codex/std-namespaces`.
+
+Confirmed gaps were fixed at their owners: portable type equality now recognizes
+buffers across compiled units and debugger reference parameters; indexed byte
+reads cannot escape as writable integer references; byte calls validate the
+BufferError ABI before execution. Bundle/program-image goldens and the intrinsic
+and API inventories match the new bytecode version and delivered operation set.
+Regression tests exercise these boundaries rather than only
+repeating catalog definitions.
+
+Native allocation tests require exact baseline restoration after cycles, task
+handoff, VM failure and normal teardown, with normal and most frequent GC
+schedules. Storage tests separately check immediate last-owner release, slice
+retention and injected allocation failures. No representation benchmarks are
+claimed by AP54.2; combined I/O/native-request ownership and representation-cost
+evidence remain in AP54.3/AP54.4.
 
 ## Acceptance and verification
 

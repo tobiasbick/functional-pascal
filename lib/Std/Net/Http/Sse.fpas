@@ -1,12 +1,12 @@
 // Incremental bounded Server-Sent Events decoding.
 unit Std.Net.Http.Sse;
 
-uses Std.Net.Http.Handles as Handles, Std.Net.Http.Types as Types, Std.Text.Utf8 as Utf8;
+uses Std.Bytes as ByteStorage, Std.Net.Http.Handles as Handles, Std.Net.Http.Types as Types, Std.Text.Utf8 as Utf8;
 
 // Mutable parsing state retained for one decoder handle.
 type DecoderState = record
   // Incomplete input bytes not yet terminated by a line ending.
-  Buffer: array of integer;
+  Buffer: ByteStorage.ByteBuffer;
   // Joined data fields for the current event.
   Data: string;
   // Optional event field for the current event.
@@ -72,7 +72,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Buffered bytes to scan from the beginning.
-function LineEnd(Bytes: array of integer; Final: boolean): array of integer;
+function LineEnd(Bytes: ByteStorage.ByteBuffer; Final: boolean): array of integer;
 begin
   for Index: integer := 0 to Bytes.Length() - 1 do
     begin
@@ -155,7 +155,9 @@ begin
   var EndValue: array of integer := LineEnd(LocalState.Buffer, Final);
   while EndValue[0] >= 0 do
     begin
-      const LineBytes: array of integer := LocalState.Buffer.Slice(0, EndValue[0]);
+      const LineBytes: ByteStorage.ByteBuffer := (
+        try LocalState.Buffer.Slice(0, EndValue[0]).MapError(Types.HttpError.Buffer)
+      );
       LocalState.EventBytes := LocalState.EventBytes + EndValue[0] + EndValue[1];
       if LocalState.EventBytes > LocalState.Maximum then
         begin
@@ -165,9 +167,11 @@ begin
         end;
       end if;
 
-      LocalState.Buffer := LocalState.Buffer.Slice(
-        EndValue[0] + EndValue[1], LocalState.Buffer.Length() - EndValue[0] -
-        EndValue[1]
+      LocalState.Buffer := (
+        try LocalState.Buffer.Slice(
+          EndValue[0] + EndValue[1], LocalState.Buffer.Length() - EndValue[0] -
+          EndValue[1]
+        ).MapError(Types.HttpError.Buffer)
       );
       case Utf8.Decode(LineBytes).MapError(Types.HttpError.Encoding) of
         when Ok(const Line):
@@ -245,7 +249,7 @@ end function;
 function FailedState(State: DecoderState): DecoderState;
 begin
   var LocalState_: DecoderState := State;
-  LocalState_.Buffer := [];
+  LocalState_.Buffer := ByteStorage.Create(0).Unwrap();
   LocalState_.Data := '';
   LocalState_.EventType := '';
   LocalState_.LastEventId := '';
@@ -268,7 +272,7 @@ begin
     end;
   end if;
   const State: DecoderState := DecoderState(
-    Buffer := [],
+    Buffer := ByteStorage.Create(0).Unwrap(),
     Data := '',
     EventType := '',
     LastEventId := '',
@@ -285,7 +289,7 @@ end function;
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder.
 // - `Bytes`: Next response-body byte fragment.
-public function Feed(Decoder: Types.SseDecoder; Bytes: array of integer): result of (array of Types.SseEvent, Types.HttpError);
+public function Feed(Decoder: Types.SseDecoder; Bytes: ByteStorage.ByteBuffer): result of (array of Types.SseEvent, Types.HttpError);
 begin
   case DecoderIndex(Decoder) of
     when Ok(const Index):
@@ -317,7 +321,11 @@ begin
               end;
             end if;
 
-            State.Buffer := State.Buffer.Concat(Bytes.Slice(Offset, Count));
+            State.Buffer := (
+              try State.Buffer.Concat(
+                (try Bytes.Slice(Offset, Count).MapError(Types.HttpError.Buffer))
+              ).MapError(Types.HttpError.Buffer)
+            );
             case Process(State, false) of
               when Ok(const Output):
                 begin

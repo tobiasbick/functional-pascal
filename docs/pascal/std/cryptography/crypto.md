@@ -5,10 +5,10 @@ Cryptographically secure randomness supplied directly by the operating system. T
 ```pascal id=example-1
 program Example;
 
-uses Std.Crypto as Crypto;
+uses Std.Bytes as ByteStorage, Std.Crypto as Crypto;
 
 begin
-  const Token: array of integer := Crypto.RandomBytes(32).Unwrap();
+  const Token: ByteStorage.ByteBuffer := Crypto.RandomBytes(32).Unwrap();
 end.
 ```
 
@@ -20,14 +20,17 @@ Import with `uses Std.Crypto as Crypto;` and access public symbols as `Crypto.Na
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `RandomBytes(Count: integer): result of (array of integer, Crypto.CryptoError)` | `Count` secure bytes, each in `0..255` |
+| function | `RandomBytes(Count: integer): result of (ByteStorage.ByteBuffer, Crypto.CryptoError)` | `Count` secure bytes, each in `0..255` |
 | function | `RandomInt(Lo: integer; Hi: integer): result of (integer, Crypto.CryptoError)` | Unbiased secure value in inclusive `[Lo, Hi]` |
 
 Both functions request randomness from the operating system. Failure is returned as `Error(Cause)` and never falls back to `Std.Math.Random`.
 
 ## `RandomBytes`
 
-Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..255`, matching the existing FPAS byte-array convention. `Count` must be in `0..1048576`; invalid counts return `Error` without contacting the operating-system source.
+Returns exactly `Count` bytes in `Std.Bytes.ByteBuffer`, adopting the owned native
+allocation directly. Reading a byte produces an integer in `0..255`.
+`Count` must be in `0..1048576`; invalid counts return `Error` without contacting
+the operating-system source. Import `Std.Bytes as ByteStorage` for annotations.
 
 ```pascal id=example-2 fragment context=body-console-crypto
 case Crypto.RandomBytes(32) of

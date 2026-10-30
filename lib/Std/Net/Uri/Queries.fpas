@@ -1,14 +1,14 @@
 // Ordered query fields with strict component decoding and aggregate byte budgets.
 unit Std.Net.Uri.Queries;
 
-uses Std.Net.Uri.Components as Components, Std.Net.Uri.Percent as Percent;
+uses Std.Bytes as ByteStorage, Std.Net.Uri.Components as Components, Std.Net.Uri.Percent as Percent;
 
 type PreparedParam = record
-  public Name: array of integer;
-  public Value: option of array of integer;
+  public Name: ByteStorage.ByteBuffer;
+  public Value: option of ByteStorage.ByteBuffer;
 end record;
 
-function CountFields(Bytes: array of integer): result of (integer, Components.ComponentError);
+function CountFields(Bytes: ByteStorage.ByteBuffer): result of (integer, Components.ComponentError);
 begin
   var Count := 0;
   var NonEmpty := false;
@@ -151,7 +151,7 @@ begin
     if Index > 0 then
       EncodedRemaining := try TakeEncoded(1, EncodedRemaining);
     end if;
-    var Value: option of array of integer := None;
+    var Value: option of ByteStorage.ByteBuffer := None;
     case Parameter.Value of
       when None:
         begin

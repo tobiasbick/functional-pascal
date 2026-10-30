@@ -154,6 +154,7 @@ fn debug_type_children(ty: &ObjectDebugType) -> Vec<u32> {
         | ObjectDebugType::Integer
         | ObjectDebugType::Real
         | ObjectDebugType::String
+        | ObjectDebugType::ByteBuffer
         | ObjectDebugType::Dynamic
         | ObjectDebugType::Record(_)
         | ObjectDebugType::Enum(_) => Vec::new(),

@@ -163,18 +163,18 @@ fn pipe_child() {
 
 const SOURCE: &str = r#"// Exercises interactive binary pipes against a live child.
 program Pipes;
-uses Std.Os.Args as Args, Std.Os.Proc as Proc, Std.Test as Test, Std.Time as Time, Std.Os.Errors as Errors;
+uses Std.Bytes as ByteStorage, Std.Os.Args as Args, Std.Os.Proc as Proc, Std.Test as Test, Std.Time as Time, Std.Os.Errors as Errors;
 
-function ReadUntil(Child: Proc.Process; Needle: array of integer; Stderr: boolean): array of integer;
+function ReadUntil(Child: Proc.Process; Needle: array of integer; Stderr: boolean): ByteStorage.ByteBuffer;
 begin
-  var Bytes: array of integer := [];
+  var Bytes := ByteStorage.Create(0).Unwrap();
   const Deadline := Time.MonotonicMillis() + 15000;
   while Time.MonotonicMillis() < Deadline do
     const Chunk := if Stderr then Proc.ReadStderr(Child, 3).Unwrap() else Proc.ReadStdout(Child, 3).Unwrap() end if;
     case Chunk of
       when Some(const More):
         Test.AssertTrue(not More.IsEmpty());
-        Bytes := Bytes.Concat(More);
+        discard Bytes.ConcatInPlace(More).Unwrap();
         for I: integer := 0 to Bytes.Length() - Needle.Length() do
           var Matches := true;
           for J: integer := 0 to Needle.Length() - 1 do
@@ -207,21 +207,22 @@ begin
   Test.AssertTrue(Proc.TryWait(Child).Unwrap() is None);
   Test.AssertTrue(Proc.TryWaitStatus(Child).Unwrap() is None);
   Test.AssertTrue(Proc.ReadStdout(Child, 2).Unwrap() is None);
-  Test.AssertTrue(Proc.WriteStdin(Child, [256]) is Error(_));
-  Test.AssertTrue(Proc.WriteStdin(Child, [-1]) is Error(_));
+  Test.AssertTrue(ByteStorage.FromArray([256]) is Error(ByteStorage.BufferError.InvalidByte(0, 256)));
+  Test.AssertTrue(ByteStorage.FromArray([-1]) is Error(ByteStorage.BufferError.InvalidByte(0, -1)));
+  Test.AssertTrue(Proc.WriteStdin(Child, ByteStorage.Create(1048577).Unwrap()) is Error(_));
   Test.AssertTrue(Proc.ReadStdout(Child, 0) is Error(_));
   Test.AssertTrue(Proc.ReadStderr(Child, 1048577) is Error(_));
   var Sent := 0;
-  const Input := [0, 255, 195, 164];
+  const Input := ByteStorage.FromArray([0, 255, 195, 164]).Unwrap();
   while Sent < Input.Length() do
-    Sent := Sent + Proc.WriteStdin(Child, Input.Slice(Sent, Input.Length() - Sent)).Unwrap();
+    Sent := Sent + Proc.WriteStdin(Child, Input.Slice(Sent, Input.Length() - Sent).Unwrap()).Unwrap();
     Time.Sleep(1);
   end while;
   discard ReadUntil(Child, [0, 114, 101, 112, 108, 121], false);
   Test.AssertTrue(Proc.TryWait(Child).Unwrap() is None);
   while not Proc.CloseStdin(Child).Unwrap() do Time.Sleep(1); end while;
   Test.AssertTrue(Proc.CloseStdin(Child).Unwrap());
-  Test.AssertTrue(Proc.WriteStdin(Child, [1]) is Error(_));
+  Test.AssertTrue(Proc.WriteStdin(Child, ByteStorage.FromArray([1]).Unwrap()) is Error(_));
   const Deadline := Time.MonotonicMillis() + 15000;
   var Done := false;
   while not Done and (Time.MonotonicMillis() < Deadline) do

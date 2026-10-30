@@ -28,7 +28,7 @@ uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.T
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Utf8.Encode('secure ' + RequestValue.Target);
+  ResponseValue.Body := Utf8.Encode('secure ' + RequestValue.Target).Unwrap();
   return ResponseValue;
 end function;
 

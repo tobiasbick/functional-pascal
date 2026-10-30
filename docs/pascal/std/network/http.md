@@ -8,11 +8,17 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 All fallible HTTP helpers share `HttpError`, declared in `Std.Net.Http.Types` and
 re-exported by Std.Net.Http. Its variants are `Transport(Cause: NetError)`,
 `Address(Cause: UriError)`, `Encoding(Cause: Utf8Error)`, `InvalidMessage(Detail)`,
+`Buffer(Cause: Std.Bytes.BufferError)`,
 `InvalidArgument(Name, Reason)`, `LimitExceeded(Operation, Limit)`,
 `UnexpectedEnd(Operation)` and `RedirectFailure(Detail)`. Transport/address/encoding
 boundaries preserve their original typed causes through explicit MapError calls;
 protocol integer/chunk grammar failures remain local InvalidMessage decisions.
 Non-2xx statuses are successful response data, and stream EOF remains successful.
+
+Request and response `Body` fields, stream chunks and SSE input use
+`Std.Bytes.ByteBuffer`. Import `Std.Bytes as ByteStorage` for explicit annotations
+and construction. Byte-storage allocation failures retain their typed cause in
+`HttpError.Buffer`.
 
 SSE Feed buffers partial lines, including split multibyte UTF-8 sequences. Feed
 and Finish use this same HttpError; an actual Decode failure maps to Encoding,
@@ -21,10 +27,10 @@ end-state changes and final-line processing remain at their original owners.
 
 ```pascal id=typed-http-cause run
 program TypedHttpCause;
-uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 begin
   const Decoder := Http.CreateSseDecoder(100).Unwrap();
-  discard Http.FeedSse(Decoder, [226]).Unwrap();
+  discard Http.FeedSse(Decoder, ByteStorage.FromArray([226]).Unwrap()).Unwrap();
   Test.AssertTrue(Http.FinishSse(Decoder) is Error(Http.HttpError.Encoding(Utf8.Utf8Error.IncompleteSequence(0))));
 end.
 ```
@@ -40,7 +46,7 @@ end.
 | function | `Send(Request): Result of (Response, HttpError)` | sends and buffers one response |
 | type | `StreamResponse` | status, reason, headers, and a `BodyStream` handle |
 | function | `OpenStream(Request): Result of (StreamResponse, HttpError)` | returns after the response headers are available |
-| function | `ReadStream(BodyStream; MaxBytes): Result of (array of integer, HttpError)` | pulls decoded body bytes; an empty array means EOF |
+| function | `ReadStream(BodyStream; MaxBytes): Result of (ByteStorage.ByteBuffer, HttpError)` | pulls decoded body bytes; an empty buffer means EOF |
 | function | `CloseStream(BodyStream): Result of (boolean, HttpError)` | closes a response before EOF |
 | type | `SseDecoder`, `SseEvent` | bounded incremental Server-Sent Events decoding |
 | function | `CreateSseDecoder(MaxEventBytes)` | creates a decoder with a per-event byte limit |
@@ -61,7 +67,7 @@ Create a request with defaults, then replace the fields needed by the caller:
 ```pascal id=example-1 fragment context=http-body
 var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
 RequestValue.Headers := [Http.Header.Create('Content-Type', 'application/json')];
-RequestValue.Body := Utf8.Encode('{"name":"example"}');
+RequestValue.Body := Utf8.Encode('{"name":"example"}').Unwrap();
 case Http.Send(RequestValue) of
   when Ok(const ResponseValue):
     Console.WriteLn(ResponseValue.StatusCode);
@@ -75,7 +81,7 @@ Standard methods have short constructors:
 ```pascal id=example-2 fragment context=http-body
 const GetRequest: Http.Request := Http.Request.Get('http://127.0.0.1:8080/items');
 var PutRequest: Http.Request := Http.Request.Put('http://127.0.0.1:8080/items/42');
-PutRequest.Body := Utf8.Encode('{"name":"updated"}');
+PutRequest.Body := Utf8.Encode('{"name":"updated"}').Unwrap();
 ```
 
 Call `Send` with the request, then chain on the explicit `Result` without
@@ -125,7 +131,7 @@ to `GET`, it clears the body and drops `Content-Type`, `Content-Encoding`,
 `OpenStream` performs the same request validation and TCP/TLS setup as `Send`, but returns after the
 response head has been parsed. `ReadStream` decodes `Content-Length`, chunked, and
 connection-delimited bodies incrementally and returns at most the requested number of bytes. Thread
-the same `BodyStream` handle through each call until an empty array reports EOF. Call `CloseStream`
+the same `BodyStream` handle through each call until an empty buffer reports EOF. Call `CloseStream`
 when abandoning a response early.
 
 Independent streams may be opened and consumed by different tasks. Calls that mutate the same
@@ -181,7 +187,7 @@ not part of this client.
 A decoding error from either `FeedSse` or `FinishSse` clears retained input, event fields, and
 the last event ID, and makes the decoder terminal. Later feed/finalize calls return a finished
 error. A large fragment containing many valid small events is accepted: processing uses bounded
-slices rather than retaining the entire fragment as pending input. Returned events and the caller's input array are outside the decoder's retained-input limit.
+slices rather than retaining the entire fragment as pending input. Returned events and the caller's input buffer are outside the decoder's retained-input limit.
 
 Independent SSE decoders may be created and consumed by different tasks. Calls that mutate the same
 `SseDecoder` handle must remain serialized.
@@ -219,7 +225,7 @@ case Net.Listen('127.0.0.1', 8080) of
               when Ok(const RequestValue):
                 begin
                   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
-                  ResponseValue.Body := Utf8.Encode('Hello');
+                  ResponseValue.Body := Utf8.Encode('Hello').Unwrap();
                   case Http.WriteResponse(Connection, ResponseValue) of
                     when Ok(_):
                       begin
@@ -262,7 +268,7 @@ uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target);
+  ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target).Unwrap();
   return ResponseValue;
 end function;
 begin

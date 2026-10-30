@@ -3,6 +3,7 @@ use crate::analyze_with_types;
 
 mod boolean;
 mod bound_methods;
+mod byte_buffers;
 mod case_expressions;
 mod closures;
 mod conversion_arguments;

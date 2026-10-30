@@ -24,6 +24,7 @@ pub(super) fn usable(ty: &Ty) -> bool {
         | Ty::Real
         | Ty::Boolean
         | Ty::String
+        | Ty::ByteBuffer
         | Ty::Unit
         | Ty::GenericParam(..) => true,
     }

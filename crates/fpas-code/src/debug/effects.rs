@@ -158,6 +158,7 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
 #[must_use]
 pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
     match intrinsic {
+        Intrinsic::Bytes(_) => DebugEffectSet::EMPTY,
         Intrinsic::Mcp(operation) => match operation {
             crate::McpIntrinsic::DefaultLimits
             | crate::McpIntrinsic::DefaultHttpOptions

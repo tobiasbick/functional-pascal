@@ -1,8 +1,9 @@
 # AP54: Native byte buffers and UTF-8 integration
 
-Status: Planned; the contract is complete. Effort: L.
+Status: In progress; AP54.1 through AP54.3 are complete. Effort: L.
 Completion is tracked only in the [central plan](../README.md#package-status).
-This package records planning work; implementation is not yet authorized.
+The contract, native storage, UTF-8 integration and binary API migration are
+implemented. AP54.4's combined verification remains open.
 
 ## Goal
 
@@ -90,7 +91,7 @@ This AP does not implement GPU upload, media codecs or the general FFI.
 | Q73 | What are buffer assignment, mutation, slicing, equality and task-transfer semantics? | Agreed: copy-on-write values, explicit `InPlace` mutation, byte-content equality and stable transferred values. Proper subranges copy, nonempty full-range slices may share. Equatable/dictionary keys and Printable are supported; Comparable, Numeric, public Hash and views are excluded. | AP54.1–AP54.4 |
 | Q74 | What is the exact public operation set, error contract and allocation policy? | Agreed: the [single API table](01-contract.md#exact-byte-api), explicit array conversion, array-style range failures, typed BufferError results, atomic buffer mutation, a fixed 256 MiB maximum, geometric growth, zero-initialized new bytes and explicit capacity trimming. No alias/legacy API family. | AP54.1–AP54.4 |
 | Q75 | What are the exact UTF-8 conversion and append contracts? | Agreed: the [UTF-8 signatures and errors](01-contract.md#utf-8-api-and-errors), strict Decode, typed Encode/AppendInPlace results, byte offsets at the first invalid/incomplete sequence start, preserved NUL/BOM contents, and no repair or extra text-buffer type. | AP54.1, AP54.3, AP54.4 |
-| Q76 | How do native ownership, canonical API migration and artifacts expose the buffer? | Agreed: last-owner automatic release without Close, stable native/task inputs, canonical byte-leaf replacement preserving host-I/O rules, full compiled/debug value support, complete recording/restoration and length plus a bounded hex preview. The [migration/artifact contract](01-contract.md#migration-and-artifacts) fixes the details. | AP54.1–AP54.4 |
+| Q76 | How do native ownership, canonical API migration and artifacts expose the buffer? | Agreed: last-owner release without Close, stable native/task inputs, canonical byte-leaf replacement, compiled-unit/program-image support and complete support in existing debugger functions. General snapshots, reverse execution and state recording/restoration/replay remain separate, as explicitly decided by the user. The [artifact/debugger contract](01-contract.md#migration-artifacts-and-existing-debugger-capabilities) fixes the boundary. | AP54.1–AP54.4 |
 
 Keep the answers here as the single decision record and reflect them in dependent
 work packages. The user accepted the recommendations recorded in Q73–Q76; the
@@ -107,7 +108,7 @@ limits, slice/ownership rules, UTF-8 behavior and artifact expectations.
 Backing container, module splits, accounting hooks and fast paths remain ordinary
 delegated implementation choices. They must honor the contract rather than add
 public alternatives. Any required scope or FPAS syntax change needs user input;
-none is currently required by this design. Implementation has not started.
+none is currently required by this design.
 
 ## Dependencies and work packages
 
@@ -119,8 +120,8 @@ Choose the implementation branch under the [development process](../development-
 when implementation is authorized; creating this plan does not switch branches.
 
 - [x] [AP54.1: Byte-buffer contract](01-contract.md)
-- [ ] [AP54.2: Implement managed byte storage and core operations](02-native-storage.md)
-- [ ] [AP54.3: Integrate UTF-8 and migrate canonical binary APIs](03-utf8-and-migration.md)
+- [x] [AP54.2: Implement managed byte storage and core operations](02-native-storage.md)
+- [x] [AP54.3: Integrate UTF-8 and migrate canonical binary APIs](03-utf8-and-migration.md)
 - [ ] [AP54.4: Verify lifecycle, integration and representation costs](04-verification.md)
 
 Execution order is AP54.1 → AP54.2 → AP54.3 → AP54.4. Each implementation part
@@ -149,8 +150,9 @@ Buffer storage is reclaimed when the last legitimate owner disappears, including
 through cycles, failed calls, abandoned selections and undelivered native results.
 Allocation evidence includes backing bytes and capacity, not just VM wrapper
 counts or process RSS. There is no buffer-specific retention pool. Compiled
-interfaces, debugger values and complete recording/restoration support the type;
-a preview never replaces or truncates stored value data.
+interfaces, program images and existing debugger functions support the type;
+a preview never replaces or truncates a retained live value. General snapshot
+and replay machinery remains outside AP54.
 
 Use measurements to report storage/copy and runtime costs, not to promise a speed
 gain or impose timing-based tests. Store raw evidence under `.temp-data/`, never

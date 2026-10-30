@@ -1,6 +1,34 @@
 use super::*;
 
 #[test]
+fn byte_exports_survive_shutdown_and_cross_sessions_as_independent_values() {
+    let image = image(
+        "program P; uses Std.Bytes as Bytes;
+        function Copy(Data: Bytes.ByteBuffer): Bytes.ByteBuffer;
+        begin return Data.SetAt(0, 9).Unwrap(); end function; begin end.",
+    );
+    let original = crate::SharedBytes::from_slice(&[1, 2, 3]).expect("bytes");
+    let mut first = CallbackSession::from_shared(Arc::clone(&image));
+    let exported = invoke(
+        &mut first,
+        &image,
+        "Copy",
+        vec![Value::Bytes(original.clone()).into()],
+    );
+    first.shutdown();
+    drop(first);
+    assert_eq!(original.as_ref(), &[1, 2, 3]);
+    let mut second = CallbackSession::from_shared(Arc::clone(&image));
+    let copied = invoke(&mut second, &image, "Copy", vec![exported.clone().into()]);
+    drop(second);
+    assert_eq!(
+        exported.try_to_data().expect("retired byte export"),
+        copied.try_to_data().expect("cross-session bytes")
+    );
+    assert_eq!(copied.type_name(), "Std.Bytes.ByteBuffer");
+}
+
+#[test]
 fn retained_exports_survive_shutdown_without_retaining_the_session() {
     let image = image("program P;
         function Make(): function(): integer;

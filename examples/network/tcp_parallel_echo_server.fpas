@@ -2,11 +2,13 @@
 program ParallelTcpEchoServer;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Os.Args as Args, Std.Text.Format as Conv, Std.Console as Console, Std.Net.Sockets as Net, Std.Tasks as Tasks,
   Std.Time as Time, Std.Net.Server as Server, Std.Text.Parse as Parse;
 
 type EchoError = error
   Transport(Cause: Net.NetError);
+  Buffer(Cause: ByteStorage.BufferError);
   WriteStopped = 'TCP write made no progress';
 end error;
 
@@ -15,7 +17,7 @@ begin
   const Configured: boolean := try Net.SetTimeout(Client, 5000).MapError(EchoError.Transport);
   while not Tasks.IsCancellationRequested(Token) do
     begin
-      const Bytes: array of integer := try Net.ReceiveBytesWithCancellation(
+      const Bytes: ByteStorage.ByteBuffer := try Net.ReceiveBytesWithCancellation(
         Client,
         4096,
         Token
@@ -29,9 +31,11 @@ begin
       while Offset < Bytes.Length() do
         begin
           const Count: integer := try Net.SendBytesWithCancellation(
-            Client, Bytes.Slice(
-              Offset, Bytes.Length() -
-              Offset
+            Client, (
+              try Bytes.Slice(
+                Offset, Bytes.Length() -
+                Offset
+              ).MapError(EchoError.Buffer)
             ), Token
           ).MapError(EchoError.Transport);
           if Count <= 0 then

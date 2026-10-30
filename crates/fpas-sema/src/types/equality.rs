@@ -12,6 +12,7 @@ impl Ty {
                 | Ty::Real
                 | Ty::Boolean
                 | Ty::String
+                | Ty::ByteBuffer
                 | Ty::Distinct(_)
                 | Ty::Error => true,
                 Ty::GenericParam(_, bound) => bound.is_some_and(|bound| {

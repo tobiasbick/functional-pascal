@@ -25,7 +25,7 @@ thread. See [handle ownership](fs-streams.md#execution-and-native-ownership).
 **Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, `WriteTextAtomic`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
 
 Text reads and writes use UTF-8.
-`ReadBytes` and `WriteBytes` transfer raw integer byte arrays without text
+`ReadBytes` and `WriteBytes` transfer raw integer byte buffers without text
 decoding or newline normalization.
 
 ## Execution and cancellation
@@ -115,8 +115,8 @@ Requires `uses Std.Io.Fs as Fs;`.
 | type | `SeekOrigin` | `Start`, `Current`, `FileEnd` |
 | function | `Open(Path: string; Mode: FileMode): Result of (File, Fs.FsError)` | opens a regular file; at most 1024 open handles |
 | function | `Close(File: File): Result of (boolean, Fs.FsError)` | closes the file for every alias |
-| function | `Read(File: File; MaxBytes: integer): Result of (array of integer, Fs.FsError)` | reads up to `MaxBytes`; an empty array is EOF |
-| function | `Write(File: File; Bytes: array of integer): Result of (integer, Fs.FsError)` | writes validated bytes and returns the count written, which may be partial |
+| function | `Read(File: File; MaxBytes: integer): Result of (ByteStorage.ByteBuffer, Fs.FsError)` | reads up to `MaxBytes`; an empty buffer is EOF |
+| function | `Write(File: File; Bytes: ByteStorage.ByteBuffer): Result of (integer, Fs.FsError)` | writes validated bytes and returns the count written, which may be partial |
 | function | `ReadLine(File: File): Result of (Option of string, Fs.FsError)` | strict UTF-8 line input; `None` is EOF |
 | function | `Seek(File: File; Offset: integer; Origin: SeekOrigin): Result of (integer, Fs.FsError)` | changes the logical byte position and returns it |
 | function | `Tell(File: File): Result of (integer, Fs.FsError)` | returns the logical byte position |
@@ -127,13 +127,13 @@ Requires `uses Std.Io.Fs as Fs;`.
 | function | `WriteLine(File: File; Text: string): Result of (boolean, Fs.FsError)` | writes complete UTF-8 content followed by LF |
 | function | `WriteStringWithCancellation(File: File; Text: string; Token: Tasks.CancellationToken): Result of (boolean, Fs.FsError)` | complete text output with cooperative cancellation |
 | function | `WriteLineWithCancellation(File: File; Text: string; Token: Tasks.CancellationToken): Result of (boolean, Fs.FsError)` | complete line output with cooperative cancellation |
-| function | `ReadWithCancellation(File: File; MaxBytes: integer; Token: Tasks.CancellationToken): Result of (array of integer, Fs.FsError)` | bounded byte read with cooperative cancellation |
-| function | `WriteWithCancellation(File: File; Bytes: array of integer; Token: Tasks.CancellationToken): Result of (integer, Fs.FsError)` | validated byte write with cooperative cancellation |
+| function | `ReadWithCancellation(File: File; MaxBytes: integer; Token: Tasks.CancellationToken): Result of (ByteStorage.ByteBuffer, Fs.FsError)` | bounded byte read with cooperative cancellation |
+| function | `WriteWithCancellation(File: File; Bytes: ByteStorage.ByteBuffer; Token: Tasks.CancellationToken): Result of (integer, Fs.FsError)` | validated byte write with cooperative cancellation |
 | function | `ReadLineWithCancellation(File: File; Token: Tasks.CancellationToken): Result of (Option of string, Fs.FsError)` | UTF-8 line read with cooperative cancellation |
 | function | `ReadText(Path: string): Result of (string, Fs.FsError)` | reads UTF-8 text |
-| function | `ReadBytes(Path: string): Result of (array of integer, Fs.FsError)` | reads raw bytes unchanged; at most 1 MiB |
+| function | `ReadBytes(Path: string): Result of (ByteStorage.ByteBuffer, Fs.FsError)` | reads raw bytes unchanged; at most 1 MiB |
 | function | `WriteText(Path: string; Text: string): Result of (boolean, Fs.FsError)` | writes UTF-8 text, returns `Ok(true)` |
-| function | `WriteBytes(Path: string; Bytes: array of integer): Result of (boolean, Fs.FsError)` | validates bytes, then creates or replaces a file; at most 1 MiB |
+| function | `WriteBytes(Path: string; Bytes: ByteStorage.ByteBuffer): Result of (boolean, Fs.FsError)` | validates bytes, then creates or replaces a file; at most 1 MiB |
 | function | `WriteTextAtomic(Path: string; Text: string): Result of (boolean, Fs.FsError)` | publishes complete UTF-8 text through a same-directory temporary file |
 | function | `AppendText(Path: string; Text: string): Result of (boolean, Fs.FsError)` | appends UTF-8 text, creating a missing file |
 | function | `DeleteFile(Path: string): Result of (boolean, Fs.FsError)` | removes one file entry, returns `Ok(true)` |
@@ -206,7 +206,7 @@ end if;
 
 ---
 
-## `function ReadBytes(Path: string): Result of (array of integer, Fs.FsError)`
+## `function ReadBytes(Path: string): Result of (ByteStorage.ByteBuffer, Fs.FsError)`
 
 Reads the entire file as integer bytes in `0..255`, preserving every byte,
 including NUL, non-UTF-8 sequences, and CR/LF bytes. An empty file returns
@@ -218,20 +218,19 @@ permissions, and other host I/O failures use the existing typed `FsError`
 variants and preserve their native `HostError` causes. `ReadText` retains its
 separate **64 MiB** limit and UTF-8 validation.
 
-## `function WriteBytes(Path: string; Bytes: array of integer): Result of (boolean, Fs.FsError)`
+## `function WriteBytes(Path: string; Bytes: ByteStorage.ByteBuffer): Result of (boolean, Fs.FsError)`
 
-Writes integer bytes unchanged, creating or replacing the file, and returns
-`Ok(true)`. Parent directories must already exist. An empty array creates an
+Writes the buffer unchanged, creating or replacing the file, and returns
+`Ok(true)`. Parent directories must already exist. An empty buffer creates an
 empty file or truncates an existing one to zero bytes.
 
 Validation occurs before opening, creating, or truncating the destination:
 
-1. More than **1_048_576 elements** returns
+1. More than **1_048_576 bytes** returns
    `Fs.FsError.LimitExceeded('Std.Io.Fs.WriteBytes', 1048576)`.
-2. Otherwise, every element must be in `0..255`. The first invalid element
-   returns `Fs.FsError.InvalidByte(Offset, Value)`, retaining its zero-based
-   array index and supplied integer value.
-3. Only after validation are the values converted to bytes and the file written.
+2. Native byte storage already guarantees the byte domain. No per-element scan
+   or integer-array conversion is performed; the native job retains an immutable
+   snapshot of the supplied value before writing.
 
 These validation failures leave an existing destination unchanged and do not
 create an absent destination. The write uses ordinary filesystem write
@@ -241,11 +240,11 @@ partially written destination. It has no atomic-publication guarantee.
 ```pascal id=example-binary run
 program BinaryFiles;
 
-uses Std.Io.Fs as Fs, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/binary-example.bin';
-  Test.AssertTrue(Fs.WriteBytes(FileName, [0, 255, 128, 13, 10]).Unwrap());
+  Test.AssertTrue(Fs.WriteBytes(FileName, ByteStorage.FromArray([0, 255, 128, 13, 10]).Unwrap()).Unwrap());
   const Bytes := Fs.ReadBytes(FileName).Unwrap();
   Test.AssertEquals(5, Bytes.Length());
   Test.AssertEquals(0, Bytes[0]);
@@ -253,7 +252,7 @@ begin
   Test.AssertEquals(128, Bytes[2]);
   Test.AssertEquals(13, Bytes[3]);
   Test.AssertEquals(10, Bytes[4]);
-  Test.AssertTrue(Fs.WriteBytes(FileName, []).Unwrap());
+  Test.AssertTrue(Fs.WriteBytes(FileName, ByteStorage.FromArray([]).Unwrap()).Unwrap());
   Test.AssertEquals(0, Fs.ReadBytes(FileName).Unwrap().Length());
   Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
 end.
@@ -511,9 +510,8 @@ end case;
 Every Result-returning operation uses `FsError`. Native classifications select `FileNotFound(Path, Cause)`, `AccessDenied(Path, Cause)`, `AlreadyExists(Path, Cause)`, `NotDirectory(Path, Cause)`, `IsDirectory(Path, Cause)`, `NotEmpty(Path, Cause)` or `ReadOnly(Path, Cause)`. Other I/O failures use `IoFailure(Cause)`. Each Cause is the original [HostError](errors.md), including the attempted operation, supplied resources and optional native code. Multi-resource operations retain source then target; when the backend does not identify the failed path, the outer variant uses the attempted primary path. No preflight access check replaces the operation.
 
 Validation uses `InvalidArgument(Name, Reason)`, `InvalidPattern(Pattern, Reason)`,
-`InvalidEncoding(Path, Detail)`, `InvalidByte(Offset, Value)`, or
-`LimitExceeded(Operation, Limit)`. `InvalidByte` reports the first invalid
-`WriteBytes` array element; its index starts at zero. Binary size errors name
+`InvalidEncoding(Path, Detail)` or `LimitExceeded(Operation, Limit)`.
+Integer-to-byte validation belongs to `Std.Bytes.FromArray`. Binary size errors name
 `Std.Io.Fs.ReadBytes` or `Std.Io.Fs.WriteBytes` and carry the limit `1048576`.
 Handle operations also use `Closed(Operation)` and `Cancelled(Operation)`;
 their details and bounds are in the [streaming guide](fs-streams.md).

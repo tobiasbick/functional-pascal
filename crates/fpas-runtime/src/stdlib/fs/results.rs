@@ -34,7 +34,7 @@ pub(crate) fn error_value(
         other => (other, primary.to_owned()),
     };
     let (variant, fields) = match error {
-        Failure::Cancelled => (14, vec![text(operation)]),
+        Failure::Cancelled => (13, vec![text(operation)]),
         Failure::Io(error)
             if error.kind() == std::io::ErrorKind::InvalidInput
                 && error.raw_os_error().is_none()
@@ -89,10 +89,6 @@ pub(crate) fn error_value(
         Failure::LimitExceeded(operation, limit) => {
             (11, vec![text(operation), Value::Integer(limit)])
         }
-        Failure::InvalidByte { offset, value } => (
-            12,
-            vec![Value::Integer(offset as i64), Value::Integer(value)],
-        ),
     };
     native_errors::value(factory, NativeErrorFamily::Fs, variant, fields, location)
 }

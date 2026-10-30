@@ -176,6 +176,8 @@ pub enum InterfaceType {
     Boolean,
     /// UTF-8 string.
     String,
+    /// Native managed byte-buffer value.
+    ByteBuffer,
     /// Procedure result.
     Unit,
     /// Homogeneous array.

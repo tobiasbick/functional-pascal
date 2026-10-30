@@ -1,6 +1,6 @@
 program FilePool;
 
-uses Std.Io.Fs as Fs, Std.Os.Args as Args, Std.Tasks as Tasks, Std.Console as Console, Std.Time as Time;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Os.Args as Args, Std.Tasks as Tasks, Std.Console as Console, Std.Time as Time;
 
 function Cycle(): function(): integer;
 begin
@@ -69,7 +69,7 @@ begin
 
   discard Fs.WriteStringWithCancellation(Alias, 'é'#0, Token).Unwrap();
   discard Fs.WriteLineWithCancellation(File, '🙂', Token).Unwrap();
-  if Fs.WriteWithCancellation(File, [0, 255], Token).Unwrap() <> 2 then
+  if Fs.WriteWithCancellation(File, ByteStorage.FromArray([0, 255]).Unwrap(), Token).Unwrap() <> 2 then
     panic('byte write');
   end if;
 
@@ -114,10 +114,13 @@ begin
 
   discard Fs.Close(Append).Unwrap();
   const Output := Fs.Open(Path, Fs.FileMode.Create).Unwrap();
-  const Payload: array of integer := array.Fill(105, 131072);
+  const Payload := ByteStorage.Create(131072).Unwrap().Fill(105, 0, 131072).Unwrap();
   var Written := 0;
   while Written < Payload.Length() do
-    const Count := Fs.Write(Output, Payload.Slice(Written, Payload.Length() - Written)).Unwrap();
+    const Count := Fs.Write(
+      Output,
+      Payload.Slice(Written, Payload.Length() - Written).Unwrap()
+    ).Unwrap();
     if Count <= 0 then
       panic('write progress');
     end if;

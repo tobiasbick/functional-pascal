@@ -164,6 +164,7 @@ fn lower_type(ty: &IrType) -> Result<DebugType, CompileError> {
         IrType::Integer => DebugType::Integer,
         IrType::Real => DebugType::Real,
         IrType::String => DebugType::String,
+        IrType::ByteBuffer => DebugType::ByteBuffer,
         IrType::Dynamic => DebugType::Dynamic,
         IrType::Array(element) => DebugType::Array(id(*element)),
         IrType::Dictionary { key, value } => DebugType::Dictionary {
@@ -227,6 +228,7 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
         IrType::Integer => "integer".to_string(),
         IrType::Real => "real".to_string(),
         IrType::String => "string".to_string(),
+        IrType::ByteBuffer => "Std.Bytes.ByteBuffer".to_string(),
         IrType::Dynamic => "dynamic".to_string(),
         IrType::Array(element) => {
             format!("array of {}", type_name(program, *element, depth + 1))

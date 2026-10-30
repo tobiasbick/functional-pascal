@@ -129,7 +129,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
             p("Connection", connection.clone()),
             p("MaxBytes", Ty::Integer),
         ],
-        Ty::Result(Box::new(Ty::Array(Box::new(Ty::Integer))), error.clone()),
+        Ty::Result(Box::new(Ty::ByteBuffer), error.clone()),
     );
     define_func(
         checker,
@@ -139,14 +139,14 @@ pub(super) fn register_std_net(checker: &mut Checker) {
             p("MaxBytes", Ty::Integer),
             p("Token", cancellation_token.clone()),
         ],
-        Ty::Result(Box::new(Ty::Array(Box::new(Ty::Integer))), error.clone()),
+        Ty::Result(Box::new(Ty::ByteBuffer), error.clone()),
     );
     define_func(
         checker,
         s::STD_NET_SEND,
         vec![
             p("Connection", connection.clone()),
-            p("Data", Ty::Array(Box::new(Ty::Integer))),
+            p("Data", Ty::ByteBuffer),
         ],
         Ty::Result(Box::new(Ty::Integer), error.clone()),
     );
@@ -155,7 +155,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
         s::STD_NET_SEND_WITH_CANCELLATION,
         vec![
             p("Connection", connection.clone()),
-            p("Data", Ty::Array(Box::new(Ty::Integer))),
+            p("Data", Ty::ByteBuffer),
             p("Token", cancellation_token),
         ],
         Ty::Result(Box::new(Ty::Integer), error.clone()),

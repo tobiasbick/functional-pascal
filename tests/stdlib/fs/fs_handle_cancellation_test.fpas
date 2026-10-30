@@ -1,10 +1,12 @@
 program FsHandleCancellationTest;
 
-uses Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/handle-cancellation.bin';
-  Test.AssertTrue(Fs.WriteBytes(FileName, [97, 98, 99, 10]).Unwrap());
+  Test.AssertTrue(
+    Fs.WriteBytes(FileName, ByteStorage.FromArray([97, 98, 99, 10]).Unwrap()).Unwrap()
+  );
   const File := Fs.Open(FileName, Fs.FileMode.ReadWrite).Unwrap();
   const Source := Tasks.CreateCancellationSource();
   const Token := Tasks.GetCancellationToken(Source);
@@ -20,7 +22,7 @@ begin
   );
   Test.AssertEquals(0, Fs.Tell(File).Unwrap());
   Test.AssertTrue(
-    Fs.WriteWithCancellation(File, [90], Token) is Error(Fs.FsError.Cancelled('Std.Io.Fs.WriteWithCancellation'))
+    Fs.WriteWithCancellation(File, ByteStorage.FromArray([90]).Unwrap(), Token) is Error(Fs.FsError.Cancelled('Std.Io.Fs.WriteWithCancellation'))
   );
   Test.AssertEquals(0, Fs.Tell(File).Unwrap());
   Test.AssertTrue(
@@ -31,7 +33,10 @@ begin
   const ActiveSource := Tasks.CreateCancellationSource();
   const ActiveToken := Tasks.GetCancellationToken(ActiveSource);
   Test.AssertEquals(0, Fs.Seek(File, 0, Fs.SeekOrigin.Start).Unwrap());
-  Test.AssertEquals(1, Fs.WriteWithCancellation(File, [65], ActiveToken).Unwrap());
+  Test.AssertEquals(
+    1,
+    Fs.WriteWithCancellation(File, ByteStorage.FromArray([65]).Unwrap(), ActiveToken).Unwrap()
+  );
   Test.AssertTrue(Fs.Flush(File).Unwrap());
   scope
     const Job: task of result of (option of string, Fs.FsError) := go Fs.ReadLineWithCancellation(
@@ -43,7 +48,9 @@ begin
   const Alias := File;
   Test.AssertTrue(Fs.Close(File).Unwrap());
   Test.AssertTrue(Fs.Read(Alias, 1) is Error(Fs.FsError.Closed('Std.Io.Fs.Read')));
-  Test.AssertTrue(Fs.Write(Alias, []) is Error(Fs.FsError.Closed('Std.Io.Fs.Write')));
+  Test.AssertTrue(
+    Fs.Write(Alias, ByteStorage.FromArray([]).Unwrap()) is Error(Fs.FsError.Closed('Std.Io.Fs.Write'))
+  );
   Test.AssertTrue(Fs.ReadLine(Alias) is Error(Fs.FsError.Closed('Std.Io.Fs.ReadLine')));
   Test.AssertTrue(
     Fs.Seek(Alias, 0, Fs.SeekOrigin.Start) is Error(Fs.FsError.Closed('Std.Io.Fs.Seek'))
@@ -54,7 +61,7 @@ begin
     Fs.ReadWithCancellation(Alias, 1, ActiveToken) is Error(Fs.FsError.Closed('Std.Io.Fs.ReadWithCancellation'))
   );
   Test.AssertTrue(
-    Fs.WriteWithCancellation(Alias, [], ActiveToken) is Error(Fs.FsError.Closed('Std.Io.Fs.WriteWithCancellation'))
+    Fs.WriteWithCancellation(Alias, ByteStorage.FromArray([]).Unwrap(), ActiveToken) is Error(Fs.FsError.Closed('Std.Io.Fs.WriteWithCancellation'))
   );
   Test.AssertTrue(
     Fs.ReadLineWithCancellation(Alias, ActiveToken) is Error(Fs.FsError.Closed('Std.Io.Fs.ReadLineWithCancellation'))

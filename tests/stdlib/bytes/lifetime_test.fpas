@@ -1,0 +1,61 @@
+program ByteBufferLifetime;
+
+uses Std.Bytes as Bytes, Std.Tasks as Tasks, Std.Test as Test;
+
+type Cycle = record
+  Payload: Bytes.ByteBuffer;
+  Read: function(): integer;
+end record;
+
+procedure BuildCycle(Data: Bytes.ByteBuffer);
+begin
+  var Link: option of Cycle := None;
+  const Read := function(): integer begin
+    case Link of
+      when Some(const Node):
+        return Node.Payload.Length();
+      when None:
+        return 0;
+    end case;
+  end function;
+
+  Link := Some(Cycle(Payload := Data, Read := Read));
+  Test.AssertEquals(Data.Length(), Read());
+end procedure;
+
+function Worker(Data: Bytes.ByteBuffer; Gate: channel of integer): Bytes.ByteBuffer;
+begin
+  const Value := Tasks.Receive(Gate).Unwrap();
+  return Data.SetAt(0, Value).Unwrap();
+end function;
+
+procedure Exercise(Fail: boolean);
+begin
+  const Original := Bytes.Create(262144).Unwrap();
+  for Round: integer := 0 to 7 do
+    var Local := Original;
+    discard Local.ResizeInPlace(32768).Unwrap();
+    discard Local.TrimCapacityInPlace().Unwrap();
+    BuildCycle(Local);
+    const Tiny := Original.Slice(1, 1).Unwrap();
+    Test.AssertEquals(1, Tiny.Capacity());
+  end for;
+  const Gate: channel of integer := Tasks.CreateChannel(1);
+  scope
+    const Job := go Worker(Original, Gate);
+    if Fail then
+      panic('expected buffer cleanup failure');
+    end if;
+
+    discard Tasks.Send(Gate, 7).Unwrap();
+    const Reply := Tasks.Wait(Job);
+    Test.AssertEquals(7, Reply[0]);
+    Test.AssertEquals(0, Original[0]);
+  end scope;
+
+  discard Tasks.CloseChannel(Gate);
+end procedure;
+
+begin
+  Exercise(false);
+end.

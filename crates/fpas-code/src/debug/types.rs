@@ -15,6 +15,8 @@ pub enum DebugType {
     Real,
     /// UTF-8 string value.
     String,
+    /// Managed `Std.Bytes.ByteBuffer` value.
+    ByteBuffer,
     /// Dynamically checked value.
     Dynamic,
     /// Ordered array with one element type.

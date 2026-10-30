@@ -49,6 +49,25 @@ pub(in crate::execution::vm) fn render_with_executable<O: ValueOrigin>(
         );
     }
     match runtime {
+        Value::Bytes(bytes) => aggregate(
+            bytes.to_string(),
+            "Std.Bytes.ByteBuffer".to_string(),
+            [("Length", bytes.len()), ("Capacity", bytes.capacity())]
+                .into_iter()
+                .map(|(name, number)| {
+                    child_value(
+                        name.to_string(),
+                        &Value::Integer(number as i64),
+                        value,
+                        None,
+                    )
+                })
+                .collect(),
+            2,
+            0,
+            value.presentation_hint.clone(),
+            limits,
+        ),
         Value::Integer(_)
         | Value::Real(_)
         | Value::Boolean(_)

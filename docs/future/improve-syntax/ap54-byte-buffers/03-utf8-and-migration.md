@@ -1,7 +1,7 @@
 # AP54.3: Integrate UTF-8 and migrate canonical binary APIs
 
-Package: [AP54](README.md). Status: not started; depends on AP54.2 and
-implementation authorization. AP54.1 is complete.
+Package: [AP54](README.md). Status: Complete, including implementation, migration,
+review, documentation and verification. AP54.4 remains separate.
 
 ## Prerequisites
 
@@ -92,6 +92,14 @@ beyond `array of integer`: aliases, records, nested arrays and callbacks can
 carry byte payloads. Do not rewrite tokenizer token IDs, search result indexes
 or other integer arrays just because their spelling matches.
 
+The socket request/result owners are
+`crates/fpas-runtime/src/execution/vm/hosted/net/{arguments,request,mod,wait}.rs`.
+Process byte preparation and selected publication are in
+`hosted/proc/{interactive_dispatch,selection}.rs`; file-handle ownership is in
+`hosted/fs/{arguments,call,mod,failure}.rs`. Path I/O uses
+`crates/fpas-runtime/src/stdlib/fs/native.rs`. Shared native-vector adoption
+belongs to `value/mod.rs` and `value/bytes.rs`.
+
 ## Acceptance and verification
 
 Each family above accepts/produces the same type and all affected consumers
@@ -112,3 +120,64 @@ binary integer-array use and explain intentional general-array conversions.
 No final public compatibility family or source-level workaround may remain.
 Document delivered behavior and fix confirmed review findings before checking
 off AP54.3.
+
+## Implementation decisions
+
+- `crates/fpas-runtime/src/stdlib/str/utf8.rs` uses Rust UTF-8 validation and
+  fallible string allocation. Its nominal `Utf8Error` descriptor matches the
+  public source declaration. Encode and append use the buffer's fallible storage
+  policy; append commits the writable FPAS argument only after success.
+  Public UTF-8 functions are ordinary FPAS wrappers around private native
+  operations, so direct calls and function values use the same implementation.
+- Native file, socket and process requests retain `SharedBytes` snapshots.
+  Their read results, codec results and cryptographic bytes adopt native vectors
+  directly. An empty native result releases unused read capacity. Byte-domain
+  validation remains at `Std.Bytes` constructors and mutations; operational size
+  checks remain with each I/O or codec owner.
+- HTTP records, body streams, request/response encoding and SSE use buffers.
+  `Std.Net.Http.Io.JoinBuffers` and `Std.Net.Uri.Percent.DecodeBytes` are private
+  native materializers for source helpers. They allocate one output buffer,
+  without repeated source-level mutation or a second public byte API.
+- HTTP and URI preserve allocation failures as `HttpError.Buffer` and
+  `ComponentError.Buffer`. Stream reads close their retained connection on an
+  error after progress. Protocol limits, malformed input, EOF, cancellation and
+  partial-transfer counts retain their owning error contracts.
+- Obsolete integer-array `InvalidByte` variants are removed from filesystem and
+  codec errors. UTF-8 sequence-start diagnostics and `BufferError.InvalidByte`
+  remain distinct. Bytecode version 31 covers the revised operation/error ABI;
+  generated native declarations come from the existing exporter.
+- Consumers, executable handbook examples and Rust-embedded fixtures use the
+  canonical signatures. Remaining network integer arrays hold line-boundary
+  indexes; tokenizer IDs and general numeric collections retain their types.
+  Explicit `FromArray`/`ToArray` calls construct vectors or independently compare
+  fixture data, rather than preserving an array-based I/O interface.
+
+## Review boundaries
+
+Spec review covers AP54.1 and this work package. Standards review covers
+`AGENTS.md` and the shared development process. The baseline is `295726a77`;
+the target is the uncommitted AP54.2/AP54.3 working tree on
+`codex/std-namespaces`. General snapshots and record/replay remain separate.
+
+Ownership regressions include dense native payloads, discarded and losing
+process cases, caller mutation after write-case construction, cyclic callbacks,
+failure, cancellation and shutdown. The existing process-isolated allocator
+checks require exact restoration of both bytes and allocation counts under
+default and 1/1/1 collection schedules. Additional regressions cover every socket
+byte value, repeated EOF, UTF-8 function values and append/value independence,
+a rejected limit increase and injected native allocation failures.
+
+## Verification
+
+The workspace `dev-fast` build, separately guarded Rust test compilation, full
+Rust suite and focused rechecks after the UTF-8 function-value repair are complete.
+The final FPAS suite passes 615 tests with one deliberate skip and no errors,
+including executable handbook examples. All 37 selected app/example targets
+check successfully. All-target/all-feature Clippy passes with warnings denied;
+Rust and FPAS formatting and local documentation links pass. All 30 generated
+native declaration files reproduce exactly; the agent reference uses 8287
+`o200k_base` tokens, within its budget.
+
+Verification ran in the Linux cloud environment. Platform-specific host behavior
+on other operating systems was not executed. No representation benchmark or
+completion of AP54.4 is claimed by this part.

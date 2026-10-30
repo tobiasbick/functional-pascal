@@ -98,6 +98,7 @@ impl EqualityDeclarations {
                 | TypeIdentity::Real
                 | TypeIdentity::Boolean
                 | TypeIdentity::String
+                | TypeIdentity::ByteBuffer
                 | TypeIdentity::Subrange { .. } => {}
                 TypeIdentity::Option(inner) => pending.push(inner.as_ref().clone()),
                 TypeIdentity::Result(ok, error) => {

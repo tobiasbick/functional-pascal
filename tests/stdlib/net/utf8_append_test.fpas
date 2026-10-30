@@ -1,0 +1,30 @@
+program Utf8AppendTest;
+
+uses Std.Bytes as ByteStorage, Std.Text.Utf8 as Utf8, Std.Test as Test;
+
+begin
+  const Text := 'é'#0 + string.Chr(65279) + '🌍';
+  const Encode: function(Text: string): result of (ByteStorage.ByteBuffer, ByteStorage.BufferError) := Utf8.Encode;
+  const Decode: function(Bytes: ByteStorage.ByteBuffer): result of (string, Utf8.Utf8Error) := Utf8.Decode;
+  const Encoded := Encode(Text).Unwrap();
+  Test.AssertEquals(Encoded.Length(), Encoded.Capacity());
+  Test.AssertEquals(Text, Decode(Encoded).Unwrap());
+  var Data := ByteStorage.FromArray([0, 255]).Unwrap();
+  const Snapshot := Data;
+  const Append: function(var Buffer: ByteStorage.ByteBuffer; Text: string): result of (boolean, ByteStorage.BufferError) := Utf8.AppendInPlace;
+  Test.AssertTrue(Append(var Data, Text).Unwrap());
+  Test.AssertTrue(Data = Snapshot.Concat(Encoded).Unwrap());
+  Test.AssertTrue(Snapshot = ByteStorage.FromArray([0, 255]).Unwrap());
+  const Capacity := Data.Capacity();
+  Test.AssertTrue(Utf8.AppendInPlace(var Data, '').Unwrap());
+  Test.AssertEquals(Capacity, Data.Capacity());
+  Test.AssertTrue(Utf8.Decode(Data) is Error(Utf8.Utf8Error.InvalidByte(1, _)));
+  var Full := ByteStorage.Create(268435456).Unwrap();
+  Test.AssertTrue(
+    Utf8.AppendInPlace(var Full, 'é') is Error(ByteStorage.BufferError.LimitExceeded(268435456))
+  );
+  Test.AssertEquals(268435456, Full.Length());
+  Test.AssertEquals(268435456, Full.Capacity());
+  Test.AssertEquals(0, Full[0]);
+  Test.AssertEquals(0, Full[Full.Length() - 1]);
+end.

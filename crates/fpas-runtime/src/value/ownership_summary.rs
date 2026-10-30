@@ -18,6 +18,7 @@ impl Value {
                 | Self::Real(_)
                 | Self::Boolean(_)
                 | Self::Str(_)
+                | Self::Bytes(_)
                 | Self::Unit
                 | Self::Task(_)
                 | Self::OptionNone => return true,

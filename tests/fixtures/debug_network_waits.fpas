@@ -1,7 +1,7 @@
 // Network waits must let other all-stop tasks run and join cancelled nested groups.
 program DebugNetworkWaits;
 
-uses Std.Tasks as Tasks, Std.Net.Sockets as Net, Std.Console as Console, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Tasks as Tasks, Std.Net.Sockets as Net, Std.Console as Console, Std.Test as Test;
 
 function Echo(Listener: Net.Listener): boolean;
 begin
@@ -9,7 +9,10 @@ begin
   const Bytes := Net.ReceiveBytes(Client, 3).Unwrap();
   Test.AssertEquals(3, Bytes.Length());
   Test.AssertEquals(41, Bytes[0]);
-  Test.AssertEquals(3, Net.SendBytes(Client, [42, 43, 44]).Unwrap());
+  Test.AssertEquals(
+    3,
+    Net.SendBytes(Client, ByteStorage.FromArray([42, 43, 44]).Unwrap()).Unwrap()
+  );
   discard Net.Close(Client).Unwrap();
   return true;
 end function;
@@ -56,7 +59,10 @@ begin
       Net.ListenerLocalAddress(Listener).Unwrap().Port,
       1000
     ).Unwrap();
-    Test.AssertEquals(3, Net.SendBytes(Client, [41, 42, 43]).Unwrap());
+    Test.AssertEquals(
+      3,
+      Net.SendBytes(Client, ByteStorage.FromArray([41, 42, 43]).Unwrap()).Unwrap()
+    );
     const Reply := Net.ReceiveBytes(Client, 3).Unwrap();
     Test.AssertEquals(3, Reply.Length());
     Test.AssertEquals(42, Reply[0]);

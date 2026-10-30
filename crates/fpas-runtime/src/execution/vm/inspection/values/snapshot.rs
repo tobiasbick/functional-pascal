@@ -272,6 +272,7 @@ pub(super) fn kind(value: &Value) -> &'static str {
         Value::Real(_) => "real",
         Value::Boolean(_) => "boolean",
         Value::Str(_) => "string",
+        Value::Bytes(_) => "byte_buffer",
         Value::Unit => "unit",
         Value::Record(_) => "record",
         Value::Enum(_) => "enum",

@@ -57,6 +57,7 @@ pub fn semantic_type_identity(
             Ty::Real => TypeIdentity::Real,
             Ty::Boolean => TypeIdentity::Boolean,
             Ty::String => TypeIdentity::String,
+            Ty::ByteBuffer => TypeIdentity::ByteBuffer,
             Ty::Array(inner) => TypeIdentity::Array(Box::new(child(inner)?)),
             Ty::Channel(inner) => TypeIdentity::Channel(Box::new(child(inner)?)),
             Ty::Task(inner) => TypeIdentity::Task(Box::new(child(inner)?)),

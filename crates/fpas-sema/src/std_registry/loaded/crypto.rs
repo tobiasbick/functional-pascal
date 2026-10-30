@@ -13,7 +13,7 @@ pub(super) fn register_std_crypto(checker: &mut Checker) {
         checker,
         s::STD_CRYPTO_RANDOM_BYTES,
         vec![p("Count", Ty::Integer)],
-        Ty::Result(Box::new(Ty::Array(Box::new(Ty::Integer))), error.clone()),
+        Ty::Result(Box::new(Ty::ByteBuffer), error.clone()),
     );
     define_func(
         checker,

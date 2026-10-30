@@ -135,6 +135,7 @@ fn validate_node(executable: &crate::Executable, ty: &DebugType) -> Result<(), V
         | DebugType::Real
         | DebugType::String
         | DebugType::Dynamic => Ok(()),
+        DebugType::ByteBuffer => Ok(()),
     }
 }
 
@@ -210,6 +211,7 @@ fn direct_children(ty: &DebugType) -> Vec<DebugTypeId> {
         | DebugType::Real
         | DebugType::String
         | DebugType::Dynamic
+        | DebugType::ByteBuffer
         | DebugType::Record(_)
         | DebugType::Enum(_) => Vec::new(),
     }

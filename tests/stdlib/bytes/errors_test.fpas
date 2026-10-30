@@ -1,0 +1,29 @@
+program ByteBufferErrors;
+
+uses Std.Bytes as Bytes, Std.Test as Test;
+
+begin
+  Test.AssertTrue(Bytes.FromArray([0, 256, -1]) is Error(Bytes.BufferError.InvalidByte(1, 256)));
+  Test.AssertTrue(Bytes.Create(268435457) is Error(Bytes.BufferError.LimitExceeded(268435456)));
+  Test.AssertTrue(
+    Bytes.Create(9223372036854775807) is Error(Bytes.BufferError.LimitExceeded(268435456))
+  );
+  var Data := Bytes.FromArray([1, 2, 3]).Unwrap();
+  const Before := Data;
+  const Capacity := Data.Capacity();
+  Test.AssertTrue(Data.SetAtInPlace(0, -1) is Error(Bytes.BufferError.InvalidByte(0, -1)));
+  Test.AssertTrue(Data.FillInPlace(256, 3, 0) is Error(Bytes.BufferError.InvalidByte(3, 256)));
+  Test.AssertTrue(
+    Data.ReserveInPlace(268435457) is Error(Bytes.BufferError.LimitExceeded(268435456))
+  );
+  Test.AssertTrue(
+    Data.ResizeInPlace(268435457) is Error(Bytes.BufferError.LimitExceeded(268435456))
+  );
+  Test.AssertTrue(Data = Before);
+  Test.AssertEquals(Capacity, Data.Capacity());
+  Test.AssertTrue(Data.FillInPlace(0, 3, 0).Unwrap());
+  Test.AssertTrue(Data.CopyFromInPlace(Data, 3, 3, 0).Unwrap());
+  Test.AssertTrue(Data = Before);
+  Test.AssertFalse(Data = Bytes.FromArray([1, 2]).Unwrap());
+  Test.AssertTrue(Bytes.Create(0).Unwrap() = Bytes.FromArray([]).Unwrap());
+end.

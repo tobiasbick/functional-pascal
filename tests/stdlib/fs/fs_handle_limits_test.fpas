@@ -1,6 +1,6 @@
 program FsHandleLimitsTest;
 
-uses Std.Io.Fs as Fs, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/handle-limits.bin';
@@ -36,8 +36,7 @@ begin
   );
   Test.AssertEquals(1048578, Fs.Seek(File, 0, Fs.SeekOrigin.FileEnd).Unwrap());
   Test.AssertTrue(Fs.ReadLine(File).Unwrap() is None);
-  const Half: array of integer := array.Fill(256, 524289);
-  const TooMany := Half.Concat(Half);
+  const TooMany := ByteStorage.Create(1048578).Unwrap();
   Test.AssertTrue(
     Fs.Write(File, TooMany) is Error(Fs.FsError.LimitExceeded('Std.Io.Fs.Write', 1048576))
   );

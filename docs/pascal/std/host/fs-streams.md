@@ -4,6 +4,8 @@
 Import `uses Std.Io.Fs as Fs;`; cancellation-aware calls additionally take a token
 from [`Std.Tasks`](../concurrency/task.md). Pool tasks and the all-stop debugger
 suspend while handle operations run, including calls inside inline callbacks.
+Byte reads and writes use `Std.Bytes.ByteBuffer`; import `Std.Bytes as ByteStorage`
+for buffer annotations or construction.
 
 ## Execution and native ownership
 
@@ -71,21 +73,21 @@ scope.
 
 ## Byte reads and writes
 
-`Fs.Read(File, MaxBytes)` returns `Result of (array of integer, Fs.FsError)`.
+`Fs.Read(File, MaxBytes)` returns `Result of (ByteStorage.ByteBuffer, Fs.FsError)`.
 `MaxBytes` must be in `1..1048576`. The result has up to that many byte values
-in `0..255`. An empty array means EOF. A nonempty short read is valid; callers
+in `0..255`. An empty buffer means EOF. A nonempty short read is valid; callers
 can continue reading until the empty result.
 
 `Fs.Write(File, Bytes)` returns `Result of (integer, Fs.FsError)`. At most
-1_048_576 bytes are accepted. The entire size and byte-domain validation runs
-before any file I/O: elements outside `0..255` return
-`InvalidByte(Offset, Value)` with the first invalid zero-based element index.
+1_048_576 bytes are accepted. The size check runs before any file I/O. The native
+job retains an immutable byte-buffer value, with no repeated byte-domain scan.
+Ordinary integer arrays enter through `Std.Bytes.FromArray`, which validates them.
 Invalid input does not advance the handle's logical position or discard its
 unread line buffer.
 
 The success value is the number of bytes actually written. It may be smaller
 than the input length; write the remaining slice if the application needs a
-complete write. An empty array returns a zero count. These are ordinary file
+complete write. An empty buffer returns a zero count. These are ordinary file
 writes, without atomic publication or rollback after host errors.
 
 ## UTF-8 lines
@@ -111,11 +113,11 @@ until the caller recovers with Read or Seek.
 ```pascal id=example-lines run
 program FileLines;
 
-uses Std.Io.Fs as Fs, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Io.Fs as Fs, Std.Test as Test;
 
 begin
   const FileName := Test.ScratchDir() + '/file-lines-example.txt';
-  Test.AssertTrue(Fs.WriteBytes(FileName, [104, 105, 13, 10, 10]).Unwrap());
+  Test.AssertTrue(Fs.WriteBytes(FileName, ByteStorage.FromArray([104, 105, 13, 10, 10]).Unwrap()).Unwrap());
   const File := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
   Test.AssertTrue(Fs.ReadLine(File).Unwrap() = Some('hi'));
   Test.AssertEquals(4, Fs.Tell(File).Unwrap());
@@ -212,7 +214,7 @@ The cancellation-aware forms have the same results as their ordinary forms:
 
 | Call | Result success type |
 |------|---------------------|
-| `ReadWithCancellation(File, MaxBytes, Token)` | `array of integer` |
+| `ReadWithCancellation(File, MaxBytes, Token)` | `ByteStorage.ByteBuffer` |
 | `WriteWithCancellation(File, Bytes, Token)` | `integer` |
 | `ReadLineWithCancellation(File, Token)` | `Option of string` |
 | `WriteStringWithCancellation(File, Text, Token)` | `boolean` |

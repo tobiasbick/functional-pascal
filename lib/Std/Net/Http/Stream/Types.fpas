@@ -1,14 +1,14 @@
 // State stored by the hosted HTTP body registry.
 unit Std.Net.Http.Stream.Types;
 
-uses Std.Net.Sockets as Net;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net;
 
 // Mutable network and framing state retained for one body handle.
 public type StreamState = record
   // Underlying TCP or TLS connection.
   public Connection: Net.Connection;
   // Decoded or framing bytes already read from the connection.
-  public Buffer: array of integer;
+  public Buffer: ByteStorage.ByteBuffer;
   // Internal body-framing mode identifier.
   public Mode: integer;
   // Bytes remaining for fixed-length framing.

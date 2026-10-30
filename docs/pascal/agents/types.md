@@ -27,6 +27,14 @@ Equality is structural for records, enums, Option and Result when all contained
 values support equality. Whole arrays, dictionaries, callables, tasks and channels
 do not. Equality-capable aggregate types do not necessarily support ordering.
 
+`Std.Bytes.ByteBuffer` stores arbitrary bytes with copy-on-write value semantics.
+Import `Std.Bytes as Bytes`; construct with `Bytes.Create` or `Bytes.FromArray`.
+Indexing and iteration return integers; mutate writable buffers through checked
+`*InPlace` operations. Buffers support Equatable and Printable, without ordering
+or implicit array/text conversion. Binary I/O and codecs use the same buffer;
+`Std.Text.Utf8.Encode`, Decode and AppendInPlace return checked Results.
+See [bytes](../std/bytes.md).
+
 ## Generics and scalar domain types
 
 Type declarations and applications use `of`: `type Box of T = record ...`,

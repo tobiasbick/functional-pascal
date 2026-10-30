@@ -130,6 +130,7 @@ pub(super) fn object_debug_type(
         DebugType::Integer => ObjectDebugType::Integer,
         DebugType::Real => ObjectDebugType::Real,
         DebugType::String => ObjectDebugType::String,
+        DebugType::ByteBuffer => ObjectDebugType::ByteBuffer,
         DebugType::Dynamic => ObjectDebugType::Dynamic,
         DebugType::Array(inner) => ObjectDebugType::Array(id(*inner)),
         DebugType::Dictionary { key, value } => ObjectDebugType::Dictionary {

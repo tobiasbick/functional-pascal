@@ -10,7 +10,7 @@ use crate::{Intrinsic, ProcIntrinsic, Value};
 pub(in crate::execution::vm) enum ProcessCase {
     ReadStdout(i64),
     ReadStderr(i64),
-    WriteStdin(Vec<u8>),
+    WriteStdin(crate::SharedBytes),
     CloseStdin,
     WaitStatus,
 }
@@ -87,7 +87,9 @@ impl Worker {
             }
             WriteStdinCase => ProcessCase::WriteStdin(
                 super::interactive_dispatch::bytes(&arguments[1]).map_err(|_| {
-                    self.selection_error("Bytes must contain at most 1048576 integers in 0..255")
+                    self.selection_error(
+                        "Bytes must be a Std.Bytes.ByteBuffer of at most 1048576 bytes",
+                    )
                 })?,
             ),
             CloseStdinCase => ProcessCase::CloseStdin,
@@ -112,12 +114,7 @@ impl Worker {
         let outcome = match output {
             Ok(None) => return Ok(None),
             Ok(Some(output)) => Value::result_ok(match output {
-                Output::Bytes(bytes) => Value::Array(
-                    bytes
-                        .into_iter()
-                        .map(|b| Value::Integer(i64::from(b)))
-                        .collect(),
-                ),
+                Output::Bytes(bytes) => Value::native_bytes(bytes),
                 Output::Count(count) => Value::Integer(count as i64),
                 Output::Closed => Value::Boolean(true),
                 Output::Status(status) => {

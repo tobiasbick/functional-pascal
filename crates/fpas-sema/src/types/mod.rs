@@ -48,6 +48,8 @@ pub enum Ty {
     Boolean,
     /// UTF-8 string value.
     String,
+    /// Native managed `Std.Bytes.ByteBuffer` value.
+    ByteBuffer,
     /// Procedure / void result (e.g. array PushInPlace).
     Unit,
     /// An array whose elements have the enclosed type.
@@ -186,6 +188,7 @@ impl std::fmt::Display for Ty {
             Ty::Real => write!(f, "real"),
             Ty::Boolean => write!(f, "boolean"),
             Ty::String => write!(f, "string"),
+            Ty::ByteBuffer => write!(f, "Std.Bytes.ByteBuffer"),
             Ty::Unit => write!(f, "unit"),
             Ty::Array(inner) => write!(f, "array of {inner}"),
             Ty::Channel(inner) => write!(f, "channel of {inner}"),

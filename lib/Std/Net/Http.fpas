@@ -4,6 +4,7 @@
 unit Std.Net.Http;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Net.Http.Client as Client, Std.Net.Http.Headers as Headers, Std.Net.Http.Server as Server,
   Std.Net.Http.ServerLoop as ServerLoop, Std.Net.Http.Sse as Sse, Std.Net.Http.Stream as Stream,
   Std.Net.Http.Types as Types, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
@@ -66,7 +67,7 @@ end function;
 // Parameters:
 // - `StreamValue`: Open response-body handle.
 // - `MaxBytes`: Maximum number of decoded bytes to return.
-public function ReadStream(StreamValue: Types.BodyStream; MaxBytes: integer): result of (array of integer, Types.HttpError);
+public function ReadStream(StreamValue: Types.BodyStream; MaxBytes: integer): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   return Stream.ReadBody(StreamValue, MaxBytes);
 end function;
@@ -126,7 +127,7 @@ end function;
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder.
 // - `Bytes`: Next response-body byte fragment.
-public function FeedSse(Decoder: Types.SseDecoder; Bytes: array of integer): result of (array of Types.SseEvent, Types.HttpError);
+public function FeedSse(Decoder: Types.SseDecoder; Bytes: ByteStorage.ByteBuffer): result of (array of Types.SseEvent, Types.HttpError);
 begin
   return Sse.Feed(Decoder, Bytes);
 end function;

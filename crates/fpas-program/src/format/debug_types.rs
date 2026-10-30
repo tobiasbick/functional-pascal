@@ -24,6 +24,7 @@ const CELL: u8 = 13;
 const TASK: u8 = 14;
 const CHANNEL: u8 = 15;
 const REFERENCE: u8 = 16;
+const BYTE_BUFFER: u8 = 17;
 
 pub(super) fn encode(types: &[DebugType], tag: u16) -> Result<EncodedSection, FormatError> {
     check_limit(
@@ -39,6 +40,7 @@ pub(super) fn encode(types: &[DebugType], tag: u16) -> Result<EncodedSection, Fo
             DebugType::Integer => write_u8(&mut bytes, INTEGER),
             DebugType::Real => write_u8(&mut bytes, REAL),
             DebugType::String => write_u8(&mut bytes, STRING),
+            DebugType::ByteBuffer => write_u8(&mut bytes, BYTE_BUFFER),
             DebugType::Dynamic => write_u8(&mut bytes, DYNAMIC),
             DebugType::Array(inner) => {
                 write_u8(&mut bytes, ARRAY);
@@ -118,6 +120,7 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DebugType>, Form
             INTEGER => DebugType::Integer,
             REAL => DebugType::Real,
             STRING => DebugType::String,
+            BYTE_BUFFER => DebugType::ByteBuffer,
             DYNAMIC => DebugType::Dynamic,
             ARRAY => DebugType::Array(read_id(&mut reader, "array_element_type")?),
             DICTIONARY => DebugType::Dictionary {

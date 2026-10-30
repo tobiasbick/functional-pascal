@@ -1,7 +1,7 @@
 // Bounded percent encoding and one-pass decoding over bulk UTF-8 bytes.
 unit Std.Net.Uri.Percent;
 
-uses Std.Net.Uri.Components as Components, Std.Text.Utf8 as Utf8;
+uses Std.Bytes as ByteStorage, Std.Net.Uri.Components as Components, Std.Text.Utf8 as Utf8;
 
 // Decoding retains the byte count for aggregate query budgets.
 public type DecodedPart = record
@@ -12,12 +12,12 @@ end record;
 // Reject scalar counts before allocating the bulk UTF-8 representation.
 public function ReadUtf8Bytes(
   Text: string; Maximum: integer; Resource: string
-): result of (array of integer, Components.ComponentError);
+): result of (ByteStorage.ByteBuffer, Components.ComponentError);
 begin
   if Text.Length() > Maximum then
     return Error(Components.ComponentError.LimitExceeded(Resource, Maximum));
   end if;
-  const Bytes := Utf8.Encode(Text);
+  const Bytes := try Utf8.Encode(Text).MapError(Components.ComponentError.Buffer);
   if Bytes.Length() > Maximum then
     return Error(Components.ComponentError.LimitExceeded(Resource, Maximum));
   end if;
@@ -62,8 +62,8 @@ begin
   return -1;
 end function;
 
-// Called with byte arrays already admitted under the decoded byte budget.
-public function EncodedLength(Bytes: array of integer): integer;
+// Called with byte buffers already admitted under the decoded byte budget.
+public function EncodedLength(Bytes: ByteStorage.ByteBuffer): integer;
 begin
   var Length := 0;
   for Byte: integer in Bytes do
@@ -78,7 +78,7 @@ begin
 end function;
 
 // Build fixed fragments only after the caller has checked output budgets.
-public function EncodeBytes(Bytes: array of integer): string;
+public function EncodeBytes(Bytes: ByteStorage.ByteBuffer): string;
 begin
   var Parts: array of string := [];
   for Byte: integer in Bytes do
@@ -112,7 +112,7 @@ end function;
 // Ranges are supplied by the bounded query scanner or the complete decoder.
 // Escape offsets remain absolute; the nested UTF-8 cause keeps its local offset.
 public function DecodeRange(
-  Bytes: array of integer; Start: integer; Count: integer; RemainingDecoded: integer
+  Bytes: ByteStorage.ByteBuffer; Start: integer; Count: integer; RemainingDecoded: integer
 ): result of (DecodedPart, Components.ComponentError);
 begin
   const EndIndex := Start + Count;
@@ -144,17 +144,12 @@ begin
       )
     );
   end if;
-  var DecodedBytes: array of integer := [];
-  Index := Start;
-  while Index < EndIndex do
-    if Bytes[Index] = 37 then
-      DecodedBytes.PushInPlace(HexValue(Bytes[Index + 1]) * 16 + HexValue(Bytes[Index + 2]));
-      Index := Index + 3;
-    else
-      DecodedBytes.PushInPlace(Bytes[Index]);
-      Index := Index + 1;
-    end if;
-  end while;
+  const DecodedBytes := try DecodeBytes(
+    Bytes,
+    Start,
+    Count,
+    Size
+  ).MapError(Components.ComponentError.Buffer);
 
   case Utf8.Decode(DecodedBytes) of
     when Ok(const Text):
@@ -170,5 +165,11 @@ begin
   const Bytes := try ReadUtf8Bytes(Text, Components.MaximumEncodedBytes, 'encoded bytes');
   const Part := try DecodeRange(Bytes, 0, Bytes.Length(), Components.MaximumDecodedBytes);
   return Ok(Part.Text);
+end function;
+
+// Escape and budget validation precedes one native output allocation.
+function DecodeBytes(Data: ByteStorage.ByteBuffer; Start: integer; Count: integer; Size: integer): result of (ByteStorage.ByteBuffer, ByteStorage.BufferError);
+begin
+  panic('URI byte materialization intrinsic was not lowered');
 end function;
 end unit;

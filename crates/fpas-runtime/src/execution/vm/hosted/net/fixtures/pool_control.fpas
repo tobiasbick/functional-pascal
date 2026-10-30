@@ -1,6 +1,6 @@
 program NetworkPoolControl;
 
-uses Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Console as Console, Std.Os.Args as Args;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Console as Console, Std.Os.Args as Args;
 
 function Cycle(): function(): integer;
 begin
@@ -120,7 +120,7 @@ begin
 
   if (Mode = 'read_cancel') or (Mode = 'timeout') or (Mode = 'scope_exit') then
     discard Net.SetTimeout(Connection.Unwrap(), 5000).Unwrap();
-    if Net.SendBytes(Peer.Unwrap(), [9]).Unwrap() <> 1 then
+    if Net.SendBytes(Peer.Unwrap(), ByteStorage.FromArray([9]).Unwrap()).Unwrap() <> 1 then
       panic('fresh send');
     end if;
     const Bytes := Net.ReceiveBytes(Connection.Unwrap(), 1).Unwrap();

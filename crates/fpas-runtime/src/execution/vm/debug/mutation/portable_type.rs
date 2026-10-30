@@ -144,6 +144,7 @@ pub(in crate::execution::vm::debug) fn structurally_equal(
             | (DebugType::Integer, DebugType::Integer)
             | (DebugType::Real, DebugType::Real)
             | (DebugType::String, DebugType::String)
+            | (DebugType::ByteBuffer, DebugType::ByteBuffer)
             | (DebugType::Dynamic, DebugType::Dynamic) => true,
             (DebugType::Array(left), DebugType::Array(right))
             | (DebugType::Option(left), DebugType::Option(right))

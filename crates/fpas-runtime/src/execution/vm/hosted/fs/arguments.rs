@@ -60,24 +60,17 @@ pub(super) fn ordinal(value: &Value, mode: bool) -> Result<i64, Failure> {
     Ok(*value)
 }
 
-pub(super) fn bytes(worker: &Worker, value: &Value) -> Result<Result<Vec<u8>, Failure>, VmError> {
-    let Value::Array(values) = value else {
-        return Err(mismatch(worker, "Bytes", "array of integer", value));
+pub(super) fn bytes(
+    worker: &Worker,
+    value: &Value,
+) -> Result<Result<crate::SharedBytes, Failure>, VmError> {
+    let Value::Bytes(bytes) = value else {
+        return Err(mismatch(worker, "Bytes", "Std.Bytes.ByteBuffer", value));
     };
-    if values.len() > MAX_BYTES {
+    if bytes.len() > MAX_BYTES {
         return Ok(Err(Failure::Limit(MAX_BYTES as i64)));
     }
-    for (offset, value) in values.iter().enumerate() {
-        let number = integer(worker, value, "Bytes element")?;
-        if !(0..=255).contains(&number) {
-            return Ok(Err(Failure::InvalidByte(offset, number)));
-        }
-    }
-    let mut bytes = Vec::with_capacity(values.len());
-    for value in values {
-        bytes.push(integer(worker, value, "Bytes element")? as u8);
-    }
-    Ok(Ok(bytes))
+    Ok(Ok(bytes.clone()))
 }
 
 fn mismatch(worker: &Worker, name: &str, expected: &str, actual: &Value) -> VmError {

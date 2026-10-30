@@ -37,7 +37,7 @@ begin
     for Index: integer := 0 to Decoders.Length() - 1 do
       begin
         const Expected: string := Conv.IntToStr(Index);
-        case Http.FeedSse(Decoders[Index], Utf8.Encode('data: ' + Expected + #10 + #10)) of
+        case Http.FeedSse(Decoders[Index], Utf8.Encode('data: ' + Expected + #10 + #10).Unwrap()) of
           when Ok(const Events):
             begin
               Test.AssertEquals(1, Events.Length());

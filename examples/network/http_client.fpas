@@ -2,6 +2,7 @@
 program NetworkHttpClient;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Os.Args as Args, Std.Text.Format as Conv, Std.Console as Console, Std.Net.Http as Http, Std.Text.Utf8 as Utf8,
   Std.Text.Parse as Parse;
 
@@ -49,7 +50,7 @@ end procedure;
 // - `StreamValue`: Open HTTP response-body stream.
 function ReadAll(StreamValue: Http.BodyStream): string;
 begin
-  var Bytes: array of integer := [];
+  var Bytes: ByteStorage.ByteBuffer := ByteStorage.Create(0).Unwrap();
   var Reading: boolean := true;
   while Reading do
     begin
@@ -62,7 +63,7 @@ begin
               end;
             else
               begin
-                Bytes := Bytes.Concat(Part);
+                discard Bytes.ConcatInPlace(Part).Unwrap();
               end;
             end if;
           end;
@@ -101,7 +102,7 @@ begin
   RunBuffered('GET', Http.Request.Get(BaseUrl + '/hello'));
   var PostRequest: Http.Request := Http.Request.Post(BaseUrl + '/echo');
   PostRequest.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
-  PostRequest.Body := Utf8.Encode('hello from client');
+  PostRequest.Body := Utf8.Encode('hello from client').Unwrap();
   RunBuffered('POST', PostRequest);
   case Http.OpenStream(Http.Request.Get(BaseUrl + '/stream')) of
     when Ok(const ResponseValue):

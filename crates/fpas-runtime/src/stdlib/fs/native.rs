@@ -7,7 +7,7 @@ use super::{
     append, binary, directory, failure::Failure, glob, metadata, publication, read, results, temp,
     tree,
 };
-use crate::stdlib::intrinsic_args::{IntrinsicCall, expect_array, pop_string, pop_value};
+use crate::stdlib::intrinsic_args::{IntrinsicCall, expect_bytes, pop_string, pop_value};
 use crate::stdlib::{AggregateFactory, StdError};
 use crate::{FsIntrinsic as Op, Intrinsic, IntrinsicOwner, SourceLocation, Value};
 use std::{
@@ -20,7 +20,7 @@ enum Input {
     Path(String),
     Pair(String, String),
     Text(String, String),
-    Bytes(String, Vec<u8>),
+    Bytes(String, crate::SharedBytes),
 }
 
 pub(crate) struct Call {
@@ -122,13 +122,15 @@ impl Call {
                 Input::Text(path, text)
             }
             Op::WriteBytes => {
-                let values = expect_array(pop_value(call, location)?, location)?;
+                let bytes = expect_bytes(pop_value(call, location)?, location)?;
                 let path = pop_string(pop_value(call, location)?, location)?;
-                let bytes = match binary::validate_bytes(values, location)? {
-                    Ok(bytes) => bytes,
-                    Err(error) => return Ok(Err(error)),
-                };
-                Input::Bytes(path, bytes)
+                if bytes.len() > binary::MAX_BYTES {
+                    return Ok(Err(Failure::LimitExceeded(
+                        "Std.Io.Fs.WriteBytes",
+                        binary::MAX_BYTES as i64,
+                    )));
+                }
+                Input::Bytes(path, bytes.clone())
             }
             _ => Input::Path(pop_string(pop_value(call, location)?, location)?),
         };
@@ -280,12 +282,7 @@ impl Outcome {
             Data::Number(value) => Value::Integer(value),
             Data::Text(text) => Value::Str(text.into()),
             Data::Temporary(temp) => Value::Str(temp.publish().into()),
-            Data::Bytes(bytes) => Value::Array(
-                bytes
-                    .into_iter()
-                    .map(|b| Value::Integer(i64::from(b)))
-                    .collect(),
-            ),
+            Data::Bytes(bytes) => Value::native_bytes(bytes),
             Data::Paths(paths) => {
                 Value::Array(paths.into_iter().map(|p| Value::Str(p.into())).collect())
             }

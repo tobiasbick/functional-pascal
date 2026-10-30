@@ -230,23 +230,13 @@ impl Worker {
                 } else {
                     self.hosted.network_connections.read(handle, max_bytes)
                 };
-                result(read.map(|bytes| {
-                    Value::Array(
-                        bytes
-                            .into_iter()
-                            .map(|byte| Value::Integer(i64::from(byte)))
-                            .collect(),
-                    )
-                }))?
+                result(read.map(Value::native_bytes))?
             }
             NetIntrinsic::Write | NetIntrinsic::WriteWithCancellation => {
                 let cancellable = operation == NetIntrinsic::WriteWithCancellation;
                 require_count(self, arguments, if cancellable { 3 } else { 2 })?;
                 let handle = connection(self, &arguments[0])?;
-                let bytes = match bytes(self, &arguments[1])? {
-                    Ok(bytes) => bytes,
-                    Err(error) => return Ok(Some(Some(result(Err(error))?))),
-                };
+                let bytes = bytes(self, &arguments[1])?;
                 let write = if cancellable {
                     let token = cancellation_token(self, &arguments[2])?;
                     self.hosted

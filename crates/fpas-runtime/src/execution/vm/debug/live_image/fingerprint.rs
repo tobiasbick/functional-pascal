@@ -393,6 +393,7 @@ fn type_key_inner(image: &Executable, id: DebugTypeId, depth: u8) -> String {
         Some(DebugType::Integer) => "integer".to_owned(),
         Some(DebugType::Real) => "real".to_owned(),
         Some(DebugType::String) => "string".to_owned(),
+        Some(DebugType::ByteBuffer) => "Std.Bytes.ByteBuffer".to_owned(),
         Some(DebugType::Dynamic) => "dynamic".to_owned(),
         Some(DebugType::Array(element)) => {
             format!("array<{}>", type_key_inner(image, *element, depth + 1))

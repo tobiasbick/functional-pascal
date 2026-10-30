@@ -10,6 +10,7 @@ fn handbook_tables_match_every_native_signature_and_factory() {
         let source = std::fs::read_to_string(repository.join(page))
             .unwrap_or_else(|error| panic!("read handbook {page}: {error}"));
         let owner = match entry.receiver {
+            NativeReceiver::ByteBuffer => "Buffer",
             NativeReceiver::String => "Text",
             NativeReceiver::Array | NativeReceiver::StringArray => "Items",
             NativeReceiver::Dictionary => "Values",
@@ -33,7 +34,8 @@ fn handbook_tables_match_every_native_signature_and_factory() {
         } else {
             format!(": {}", signature.return_type)
         };
-        let row = format!("| `{owner}.{}({parameters}){result}` |", entry.name);
+        let row = format!("| `{owner}.{}({parameters}){result}` |", entry.name)
+            .replace("Std.Bytes.", "Bytes.");
         assert_eq!(
             source.matches(&row).count(),
             1,

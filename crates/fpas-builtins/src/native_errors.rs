@@ -1,13 +1,19 @@
 //! Shared nominal error catalog for hosted operations and parsers.
 
 mod acp;
+mod bytes;
 mod mcp;
 mod proc;
+mod utf8;
 
 /// Public native error family, indexed once in an admitted executable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]
 pub enum NativeErrorFamily {
+    /// `Std.Bytes.BufferError`.
+    Buffer,
+    /// `Std.Text.Utf8.Utf8Error`, declared by its source unit.
+    Utf8,
     /// `Std.Os.Errors.HostError`.
     Host,
     /// `Std.Io.Fs.FsError`.
@@ -88,6 +94,8 @@ impl NativeErrorFamily {
 
     /// Every native family in stable catalog order.
     pub const ALL: &'static [Self] = &[
+        Self::Buffer,
+        Self::Utf8,
         Self::Host,
         Self::Fs,
         Self::Proc,
@@ -106,6 +114,8 @@ impl NativeErrorFamily {
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
         match self {
+            Self::Buffer => "Std.Bytes.BufferError",
+            Self::Utf8 => "Std.Text.Utf8.Utf8Error",
             Self::Host => "Std.Os.Errors.HostError",
             Self::Fs => "Std.Io.Fs.FsError",
             Self::Proc => "Std.Os.Proc.ProcError",
@@ -126,6 +136,8 @@ impl NativeErrorFamily {
     pub const fn variants(self) -> &'static [ErrorVariant] {
         use ErrorFieldType::*;
         match self {
+            Self::Buffer => bytes::VARIANTS,
+            Self::Utf8 => utf8::VARIANTS,
             Self::Acp => acp::VARIANTS,
             Self::Mcp => mcp::VARIANTS,
             Self::Tokenizer => &[
@@ -156,11 +168,6 @@ impl NativeErrorFamily {
                 },
             ],
             Self::Encoding => &[
-                ErrorVariant {
-                    name: "InvalidByte",
-                    message: "Byte value is outside 0..255",
-                    fields: &[("Offset", Integer), ("Value", Integer)],
-                },
                 ErrorVariant {
                     name: "InvalidCharacter",
                     message: "Invalid encoding character",
@@ -374,11 +381,6 @@ impl NativeErrorFamily {
                     name: "LimitExceeded",
                     message: "Filesystem operation failed",
                     fields: &[("Operation", String), ("Limit", Integer)],
-                },
-                ErrorVariant {
-                    name: "InvalidByte",
-                    message: "Byte value is outside 0..255",
-                    fields: &[("Offset", Integer), ("Value", Integer)],
                 },
                 ErrorVariant {
                     name: "Closed",

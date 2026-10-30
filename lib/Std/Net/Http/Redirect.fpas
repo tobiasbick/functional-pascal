@@ -1,7 +1,7 @@
 // Redirect URL resolution, header filtering, and method rewriting.
 unit Std.Net.Http.Redirect;
 
-uses Std.Text.Format as Conv, Std.Net.Http.Headers as HttpHeaders, Std.Net.Http.Types as Types, Std.Net.Uri as Uri;
+uses Std.Bytes as ByteStorage, Std.Text.Format as Conv, Std.Net.Http.Headers as HttpHeaders, Std.Net.Http.Types as Types, Std.Net.Uri as Uri;
 
 // Formats a URI authority with a non-default port when required.
 //
@@ -306,7 +306,7 @@ begin
   if DropBody then
     begin
       Output.Method := 'GET';
-      Output.Body := [];
+      Output.Body := ByteStorage.Create(0).Unwrap();
     end;
   end if;
 

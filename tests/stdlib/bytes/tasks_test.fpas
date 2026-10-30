@@ -1,0 +1,29 @@
+program ByteBufferTasks;
+
+uses Std.Bytes as Bytes, Std.Tasks as Tasks, Std.Test as Test;
+
+function Receive(Queue: channel of Bytes.ByteBuffer): Bytes.ByteBuffer;
+begin
+  var Data := Tasks.Receive(Queue).Unwrap();
+  discard Data.SetAtInPlace(0, 9).Unwrap();
+  return Data;
+end function;
+
+begin
+  var Data := Bytes.FromArray([1, 2, 3]).Unwrap();
+  const Before := Data;
+  const Queue: channel of Bytes.ByteBuffer := Tasks.CreateChannel(1);
+  scope
+    const Job := go Receive(Queue);
+    discard Tasks.Send(Queue, Data).Unwrap();
+    discard Data.SetAtInPlace(1, 7).Unwrap();
+    const Reply := Tasks.Wait(Job);
+    Test.AssertTrue(Reply = Bytes.FromArray([9, 2, 3]).Unwrap());
+    Test.AssertTrue(Before = Bytes.FromArray([1, 2, 3]).Unwrap());
+    Test.AssertTrue(Data = Bytes.FromArray([1, 7, 3]).Unwrap());
+    const Work := go Data.Slice(1, 2);
+    Test.AssertTrue(Tasks.Wait(Work).Unwrap() = Bytes.FromArray([7, 3]).Unwrap());
+  end scope;
+
+  discard Tasks.CloseChannel(Queue);
+end.

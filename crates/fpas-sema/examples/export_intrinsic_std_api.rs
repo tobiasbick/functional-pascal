@@ -222,6 +222,12 @@ fn render_types(
         }
         render_documentation(output, unit, &name, symbol, documentation, "");
         match &symbol.ty {
+            Ty::ByteBuffer => {
+                let _ = writeln!(
+                    output,
+                    "public type {name} = record\n  _IntrinsicBytes: integer;\nend record;"
+                );
+            }
             Ty::Distinct(value) => {
                 let _ = writeln!(
                     output,
@@ -451,6 +457,7 @@ fn contains_error(ty: &Ty) -> bool {
         | Ty::Real
         | Ty::Boolean
         | Ty::String
+        | Ty::ByteBuffer
         | Ty::Unit
         | Ty::Named(_)
         | Ty::GenericParam(_, _) => false,

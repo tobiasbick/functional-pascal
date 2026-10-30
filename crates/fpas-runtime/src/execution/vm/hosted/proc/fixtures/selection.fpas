@@ -1,14 +1,21 @@
 program SelectablePipes;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Os.Proc as Proc, Std.Os.Args as Args, Std.Tasks as Tasks,
-  Std.Net.Sockets as Net, Std.Text.Format as Format, Std.Console as Console, Std.Encoding as Encoding;
+  Std.Net.Sockets as Net, Std.Text.Format as Format, Std.Console as Console;
 
-procedure AssertBytes(Actual: array of integer; Expected: array of integer);
+procedure AssertBytes(Actual: ByteStorage.ByteBuffer; Expected: array of integer);
 begin
-  if Encoding.HexEncode(Actual).Unwrap() <> Encoding.HexEncode(Expected).Unwrap() then
-    panic('byte mismatch');
+  if Actual.Length() <> Expected.Length() then
+    panic('byte count mismatch');
   end if;
+
+  for Index: integer := 0 to Expected.Length() - 1 do
+    if Actual[Index] <> Expected[Index] then
+      panic('byte mismatch');
+    end if;
+  end for;
 end procedure;
 
 function Cycle(): function(): integer;
@@ -36,7 +43,7 @@ function Exchange(
 begin
   const Keep := Cycle();
   const Unused := Proc.WriteStdinCase(
-    Process, array.Fill(0, 65536),
+    Process, ByteStorage.Create(65536).Unwrap(),
     procedure(Outcome: result of (integer, Proc.ProcError)) begin
       discard Keep();
       panic('unused case');
@@ -46,12 +53,12 @@ begin
   // Ready means the child has written stderr. Constructors and losing cases must leave it intact.
   const LostRead := Proc.ReadStderrCase(
     Process, 4096,
-    procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+    procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError)) begin
       panic('losing read');
     end procedure
   );
   const LostWrite := Proc.WriteStdinCase(
-    Process, [99],
+    Process, ByteStorage.FromArray([99]).Unwrap(),
     procedure(Outcome: result of (integer, Proc.ProcError)) begin
       panic('losing write');
     end procedure
@@ -79,7 +86,7 @@ begin
 
   discard Tasks.Select([
     Proc.WriteStdinCase(
-      Process, [],
+      Process, ByteStorage.FromArray([]).Unwrap(),
       procedure(Outcome: result of (integer, Proc.ProcError)) begin
         if Outcome.Unwrap() <> 0 then
           panic('empty input');
@@ -120,24 +127,24 @@ begin
 
     return Keep();
   end if;
-  var Output: array of integer := [];
-  var Errors: array of integer := [];
+  var Output := ByteStorage.Create(0).Unwrap();
+  var Errors := ByteStorage.Create(0).Unwrap();
   var Written := 0;
   var InputClosed := false;
   var OutputClosed := false;
   var ErrorsClosed := false;
   var Exited := false;
-  const Input: array of integer := array.Fill(105, 131072);
+  const Input := ByteStorage.Create(131072).Unwrap().Fill(105, 0, 131072).Unwrap();
   while not (InputClosed and OutputClosed and ErrorsClosed and Exited) do
     var Cases: array of Tasks.WaitCase := [];
     if not OutputClosed then
       Cases := Cases.Concat([
         Proc.ReadStdoutCase(
           Process, 8192,
-          procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+          procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError)) begin
             const Bytes := Outcome.Unwrap();
             OutputClosed := Bytes.Length() = 0;
-            Output := Output.Concat(Bytes);
+            discard Output.ConcatInPlace(Bytes).Unwrap();
           end procedure
         )
       ]);
@@ -147,28 +154,32 @@ begin
       Cases := Cases.Concat([
         Proc.ReadStderrCase(
           Process, 8192,
-          procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+          procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError)) begin
             const Bytes := Outcome.Unwrap();
             ErrorsClosed := Bytes.Length() = 0;
-            Errors := Errors.Concat(Bytes);
+            discard Errors.ConcatInPlace(Bytes).Unwrap();
           end procedure
         )
       ]);
     end if;
 
     if Written < Input.Length() then
-      Cases := Cases.Concat([
-        Proc.WriteStdinCase(
-          Process, Input.Slice(Written, Input.Length() - Written),
-          procedure(Outcome: result of (integer, Proc.ProcError)) begin
-            const Count := Outcome.Unwrap();
-            if Count <= 0 then
-              panic('empty write winner');
-            end if;
+      var Fragment := Input.Slice(Written, Input.Length() - Written).Unwrap();
+      const WriteCase := Proc.WriteStdinCase(
+        Process, Fragment,
+        procedure(Outcome: result of (integer, Proc.ProcError)) begin
+          const Count := Outcome.Unwrap();
+          if Count <= 0 then
+            panic('empty write winner');
+          end if;
 
-            Written := Written + Count;
-          end procedure
-        )
+          Written := Written + Count;
+        end procedure
+      );
+      // Construction retains the original bytes even after the caller mutates its value.
+      discard Fragment.FillInPlace(120, 0, Fragment.Length()).Unwrap();
+      Cases := Cases.Concat([
+        WriteCase
       ]);
     elsif not InputClosed then
       Cases := Cases.Concat([
@@ -211,14 +222,17 @@ begin
     panic('incomplete stdout');
   end if;
 
-  AssertBytes(Output.Slice(Output.Length() - 196608, 65536), array.Fill(0, 65536));
-  AssertBytes(Output.Slice(Output.Length() - Input.Length(), Input.Length()), Input);
+  AssertBytes(Output.Slice(Output.Length() - 196608, 65536).Unwrap(), array.Fill(0, 65536));
+  AssertBytes(
+    Output.Slice(Output.Length() - Input.Length(), Input.Length()).Unwrap(),
+    Input.ToArray().Unwrap()
+  );
   AssertBytes(Errors, [112, 114, 101, 102, 105, 120, 10].Concat(array.Fill(255, 65536)));
   // EOF and native status remain observable after a selected observation.
   discard Tasks.Select([
     Proc.ReadStdoutCase(
       Process, 1,
-      procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+      procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError)) begin
         if Outcome.Unwrap().Length() <> 0 then
           panic('repeat EOF');
         end if;
@@ -258,7 +272,7 @@ begin
   discard Tasks.Send(Ready, true);
   discard Tasks.Receive(Release).Unwrap();
   if Mode = 'select' then
-    discard Net.SendBytes(Connection, [1]).Unwrap();
+    discard Net.SendBytes(Connection, ByteStorage.FromArray([1]).Unwrap()).Unwrap();
   elsif Mode = 'select_cancel' then
     discard Tasks.Cancel(Source);
   elsif Mode = 'select_vm_shutdown' then
@@ -325,7 +339,7 @@ begin
   discard Tasks.Select([
     Proc.ReadStdoutCase(
       Process, 1,
-      procedure(Outcome: result of (array of integer, Proc.ProcError)) begin
+      procedure(Outcome: result of (ByteStorage.ByteBuffer, Proc.ProcError)) begin
         if not (Outcome is Error(Proc.ProcError.InvalidArgument('Process', _))) then
           panic('closed process error');
         end if;

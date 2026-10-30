@@ -195,6 +195,7 @@ pub(super) fn format_debug_type(
         Some(DebugType::Integer) => Ok("Integer".to_string()),
         Some(DebugType::Real) => Ok("Real".to_string()),
         Some(DebugType::String) => Ok("String".to_string()),
+        Some(DebugType::ByteBuffer) => Ok("Std.Bytes.ByteBuffer".to_string()),
         Some(DebugType::Dynamic) => Ok("Dynamic".to_string()),
         Some(DebugType::Array(inner)) => Ok(format!(
             "array of {}",

@@ -2,6 +2,7 @@
 unit Std.Net.Http.Server;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Text.Format as Conv, Std.Net.Http.BodyFraming as BodyFraming, Std.Net.Http.Fields as Fields,
   Std.Net.Http.Headers as HttpHeaders, Std.Net.Http.Io as Io, Std.Net.Http.Method as Method,
   Std.Net.Http.Types as Types, Std.Net.Http.Wire as Wire, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
@@ -11,9 +12,9 @@ uses
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Maximum`: Maximum request-head size in bytes.
-function ReadHead(Connection: Net.Connection; Maximum: integer): result of (array of integer, Types.HttpError);
+function ReadHead(Connection: Net.Connection; Maximum: integer): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
-  var Bytes: array of integer := [];
+  var Bytes: ByteStorage.ByteBuffer := ByteStorage.Create(0).Unwrap();
   while Wire.FindSeparator(Bytes, 0) < 0 do
     begin
       if Bytes.Length() >= Maximum then
@@ -37,7 +38,7 @@ begin
               end;
             end if;
 
-            Bytes := Bytes.Concat(Chunk);
+            Bytes := (try Bytes.Concat(Chunk).MapError(Types.HttpError.Buffer));
           end;
         when Error(const Message):
           begin
@@ -132,7 +133,7 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Initial`: Body bytes already read with the request head.
 // - `Length`: Declared complete body length.
-function ReadBody(Connection: Net.Connection; Initial: array of integer; Length: integer): result of (array of integer, Types.HttpError);
+function ReadBody(Connection: Net.Connection; Initial: ByteStorage.ByteBuffer; Length: integer): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   var InitialLength: integer := Initial.Length();
   if Length < InitialLength then
@@ -140,7 +141,9 @@ begin
       InitialLength := Length;
     end;
   end if;
-  var Chunks: array of array of integer := [Initial.Slice(0, InitialLength)];
+  var Chunks: array of ByteStorage.ByteBuffer := [
+    (try Initial.Slice(0, InitialLength).MapError(Types.HttpError.Buffer))
+  ];
   var Received: integer := InitialLength;
   while Received < Length do
     begin
@@ -171,7 +174,7 @@ begin
     end;
   end while;
 
-  return Ok(Io.JoinChunks(Chunks));
+  return Io.JoinChunks(Chunks);
 end function;
 
 // Reads and validates one bounded HTTP/1.x request from a connected client.
@@ -203,7 +206,7 @@ begin
       );
     end;
   end if;
-  var Bytes: array of integer := [];
+  var Bytes: ByteStorage.ByteBuffer := ByteStorage.Create(0).Unwrap();
   case ReadHead(Connection, MaxHeaderBytes) of
     when Ok(const Value):
       begin
@@ -215,7 +218,9 @@ begin
       end;
   end case;
   const Separator: integer := Wire.FindSeparator(Bytes, 0);
-  const HeadBytes: array of integer := Bytes.Slice(0, Separator);
+  const HeadBytes: ByteStorage.ByteBuffer := (
+    try Bytes.Slice(0, Separator).MapError(Types.HttpError.Buffer)
+  );
   var HeadText: string := '';
   case Utf8.Decode(HeadBytes).MapError(Types.HttpError.Encoding) of
     when Ok(const Value):
@@ -312,8 +317,10 @@ begin
       return Error(Types.HttpError.LimitExceeded('Std.Net.Http.Server.ReadRequest', MaxBodyBytes));
     end;
   end if;
-  const InitialBody: array of integer := Bytes.Slice(Separator + 4, Bytes.Length() - Separator - 4);
-  var Body: array of integer := [];
+  const InitialBody: ByteStorage.ByteBuffer := (
+    try Bytes.Slice(Separator + 4, Bytes.Length() - Separator - 4).MapError(Types.HttpError.Buffer)
+  );
+  var Body: ByteStorage.ByteBuffer := ByteStorage.Create(0).Unwrap();
   case ReadBody(Connection, InitialBody, BodyLength) of
     when Ok(const Value):
       begin
@@ -337,7 +344,7 @@ end function;
 //
 // Parameters:
 // - `ResponseValue`: Complete response to encode.
-function EncodeResponse(ResponseValue: Types.ServerResponse): result of (array of integer, Types.HttpError);
+function EncodeResponse(ResponseValue: Types.ServerResponse): result of (ByteStorage.ByteBuffer, Types.HttpError);
 begin
   if (ResponseValue.StatusCode < 100) or (ResponseValue.StatusCode > 599) then
     begin
@@ -393,7 +400,8 @@ begin
   end for;
 
   Head := Head + #13 + #10;
-  return Ok(Utf8.Encode(Head).Concat(ResponseValue.Body));
+  const Encoded := try Utf8.Encode(Head).MapError(Types.HttpError.Buffer);
+  return Encoded.Concat(ResponseValue.Body).MapError(Types.HttpError.Buffer);
 end function;
 
 // Writes one complete HTTP/1.1 response without closing the connection.

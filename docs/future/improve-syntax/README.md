@@ -58,7 +58,7 @@ Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP54: Native byte buffers and UTF-8 integration](ap54-byte-buffers/README.md) | L | AP54.1 contract complete; existing managed values, native calls, host I/O and namespace allocation | Planned |
+| [ ] | [AP54: Native byte buffers and UTF-8 integration](ap54-byte-buffers/README.md) | L | AP54.1–AP54.3 complete; combined verification remains in AP54.4 | In progress |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

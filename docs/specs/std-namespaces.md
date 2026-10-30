@@ -54,6 +54,7 @@ canonical import path.
 | `Std.Ai.Mcp.Types` | MCP definitions, context and results |
 | `Std.Ai.OpenAi` | OpenAI-compatible model client |
 | `Std.Ai.Tokenizer` | Exact model-token counts and text/token-ID conversion |
+| `Std.Bytes` | Managed native byte-buffer values and bulk operations |
 | `Std.Net.Sockets` | TCP/TLS connections and listeners |
 | `Std.Net.Http` | HTTP client/server and SSE helpers |
 | `Std.Net.Uri` | URI parsing and encoding |
@@ -69,7 +70,7 @@ canonical import path.
 | `Std.Ui.Terminal` | Terminal MVU interface |
 | `Std.Text.Format` | Scalar text formatting |
 | `Std.Text.Parse` | Scalar text parsing |
-| `Std.Text.Utf8` | UTF-8 encoding and decoding |
+| `Std.Text.Utf8` | Checked string/byte-buffer conversion and UTF-8 text append |
 | `Std.Encoding` | Base64, Base64url and hex codecs |
 | `Std.Encoding.Json` | JSON values, parsing and serialization |
 | `Std.Encoding.Json.Fields` | Typed JSON field access |
@@ -105,7 +106,7 @@ Create only the units that a delivered interface needs.
 
 | Domain | Canonical homes | Placement rule |
 | --- | --- | --- |
-| Bytes and binary values | `Std.Bytes`, `Std.Bytes.Binary` | General byte storage; multi-byte number encoding and explicit byte order |
+| Binary number layouts | `Std.Bytes.Binary` | Multi-byte number encoding and explicit byte order; general byte storage is already owned by `Std.Bytes` |
 | I/O | `Std.Io.Fs`, `Std.Io.Path`, `Std.Io.Streams`, `Std.Io.Pipes` | Filesystem operations, paths, general stream contracts and standalone pipes |
 | Host services | `Std.Os.Args`, `Std.Os.Env`, `Std.Os.Proc`, `Std.Os.Errors`, `Std.Os.Signals`, `Std.Os.Hardware` | Portable process and host facilities, native causes and hardware information |
 | Platform-specific access | `Std.Platform.Windows`, `Std.Platform.Unix` and focused children | Explicitly platform-specific facilities that cannot keep a portable contract |

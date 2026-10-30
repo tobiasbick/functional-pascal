@@ -62,6 +62,7 @@ pub(in crate::execution::vm::debug) fn reject_declared_category(
         | DebugType::Integer
         | DebugType::Real
         | DebugType::String
+        | DebugType::ByteBuffer
         | DebugType::Array(_)
         | DebugType::Dictionary { .. }
         | DebugType::Result { .. }

@@ -1,6 +1,6 @@
 program ListenerAddressTest;
 
-uses Std.Net.Sockets as Net, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Test as Test;
 
 function ExerciseListener(): result of (boolean, Net.NetError);
 begin
@@ -15,8 +15,8 @@ begin
   const Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
   const Peer: Net.Connection := try Net.Accept(First);
   const Timed: boolean := try Net.SetTimeout(Peer, 2000);
-  const Sent: integer := try Net.SendBytes(Client, [42]);
-  const Received: array of integer := try Net.ReceiveBytes(Peer, 1);
+  const Sent: integer := try Net.SendBytes(Client, ByteStorage.FromArray([42]).Unwrap());
+  const Received: ByteStorage.ByteBuffer := try Net.ReceiveBytes(Peer, 1);
   Test.AssertEquals(1, Sent);
   Test.AssertEquals(42, Received[0]);
   const ClientClosed: boolean := try Net.Close(Client);

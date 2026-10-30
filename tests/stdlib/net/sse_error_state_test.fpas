@@ -1,12 +1,12 @@
 program SseErrorStateTest;
 
-uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 procedure Terminal(Decoder: Http.SseDecoder);
 begin
   for Pass: integer := 1 to 3 do
     begin
-      case Http.FeedSse(Decoder, Utf8.Encode('data: more' + #10 + #10)) of
+      case Http.FeedSse(Decoder, Utf8.Encode('data: more' + #10 + #10).Unwrap()) of
         when Ok(_):
           begin
             Test.Fail('feed after error');
@@ -33,7 +33,7 @@ end procedure;
 
 begin
   const Limited: Http.SseDecoder := Http.CreateSseDecoder(8).Unwrap();
-  case Http.FeedSse(Limited, Utf8.Encode('x'.RepeatStr(100000))) of
+  case Http.FeedSse(Limited, Utf8.Encode('x'.RepeatStr(100000)).Unwrap()) of
     when Ok(_):
       begin
         Test.Fail('oversized fragment');
@@ -45,7 +45,10 @@ begin
 
   Terminal(Limited);
   const Invalid: Http.SseDecoder := Http.CreateSseDecoder(16).Unwrap();
-  Test.AssertEquals(0, Http.FeedSse(Invalid, [255]).Unwrap().Length());
+  Test.AssertEquals(
+    0,
+    Http.FeedSse(Invalid, ByteStorage.FromArray([255]).Unwrap()).Unwrap().Length()
+  );
   case Http.FinishSse(Invalid) of
     when Ok(_):
       begin
@@ -60,12 +63,15 @@ begin
   const Many: Http.SseDecoder := Http.CreateSseDecoder(9).Unwrap();
   const Events: array of Http.SseEvent := Http.FeedSse(
     Many,
-    Utf8.Encode(('data:x' + #13 + #10 + #10).RepeatStr(500))
+    Utf8.Encode(('data:x' + #13 + #10 + #10).RepeatStr(500)).Unwrap()
   ).Unwrap();
   Test.AssertEquals(500, Events.Length());
   Test.AssertEquals('x', Events[499].Data);
   const Split: Http.SseDecoder := Http.CreateSseDecoder(9).Unwrap();
-  Test.AssertEquals(0, Http.FeedSse(Split, Utf8.Encode('data:x' + #13)).Unwrap().Length());
-  Test.AssertEquals(1, Http.FeedSse(Split, [10, 10]).Unwrap().Length());
+  Test.AssertEquals(0, Http.FeedSse(Split, Utf8.Encode('data:x' + #13).Unwrap()).Unwrap().Length());
+  Test.AssertEquals(
+    1,
+    Http.FeedSse(Split, ByteStorage.FromArray([10, 10]).Unwrap()).Unwrap().Length()
+  );
   Test.AssertEquals(0, Http.FinishSse(Split).Unwrap().Length());
 end.

@@ -1,14 +1,14 @@
 program EncodingErrorsTest;
 
-uses Std.Encoding as Encoding, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Encoding as Encoding, Std.Test as Test;
 
 begin
-  Test.AssertTrue(Encoding.Base64Encode([-1]) is Error(Encoding.EncodingError.InvalidByte(0, -1)));
+  Test.AssertTrue(ByteStorage.FromArray([-1]) is Error(ByteStorage.BufferError.InvalidByte(0, -1)));
   Test.AssertTrue(
-    Encoding.Base64UrlEncode([0, 256]) is Error(Encoding.EncodingError.InvalidByte(1, 256))
+    ByteStorage.FromArray([0, 256]) is Error(ByteStorage.BufferError.InvalidByte(1, 256))
   );
   Test.AssertTrue(
-    Encoding.HexEncode([1, 2, -300]) is Error(Encoding.EncodingError.InvalidByte(2, -300))
+    ByteStorage.FromArray([1, 2, -300]) is Error(ByteStorage.BufferError.InvalidByte(2, -300))
   );
 
   Test.AssertTrue(Encoding.Base64Decode('Zg') is Error(Encoding.EncodingError.InvalidLength(2)));
@@ -51,11 +51,11 @@ begin
     Encoding.Base64UrlDecode('AAé') is Error(Encoding.EncodingError.InvalidCharacter(2))
   );
 
-  case Encoding.HexEncode([256]) of
+  case ByteStorage.FromArray([256]) of
     when Error(const Failure):
       Test.AssertTrue(
         Failure.Message().StartsWith(
-          'Std.Encoding.EncodingError.InvalidByte: Byte value is outside 0..255'
+          'Std.Bytes.BufferError.InvalidByte: Byte value is outside 0..255'
         )
       );
     when Ok(_):

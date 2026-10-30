@@ -165,7 +165,7 @@ inserted key. There is no ordering, Sort support, or public Hash operation. Any
 internal hash must agree with byte-content equality.
 
 Automatic release follows the last legitimate owner, including ownership through
-cycles, task/channel payloads, native requests/results and debugger snapshots.
+cycles, task/channel payloads, native requests/results and retained debugger values.
 Native input snapshots are fixed at handoff; selectable writes retain the bytes
 provided at case construction. Native jobs use owned Rust storage, never borrowed
 FPAS registers or a VM/domain lock held across I/O. ByteBuffer alone is
@@ -210,7 +210,7 @@ until its existing finalization boundary; it does not call one-shot Decode on
 arbitrary incomplete fragments. Additional encodings and a public incremental
 decoder remain excluded.
 
-## Migration and artifacts
+## Migration, artifacts and existing debugger capabilities
 
 Use one mechanical type rule for the existing binary families listed in the
 package README: replace each **byte-valued** `array of integer` leaf with
@@ -229,19 +229,23 @@ compatibility wrappers or unconditional Unwrap calls to library code. Decode's
 argument remains named Bytes; existing public byte-I/O parameter labels remain
 unchanged when only their payload type changes.
 
-The nominal type must work in separately compiled interfaces, ordinary values,
-first-class operations, debugger inspection, complete recordings and restoration.
-Store exact bytes and type identity; keep Length/Capacity in snapshots because
-both queries are observable. Preserve shared backing references in graph-based
-snapshots rather than multiplying each alias's full payload. Reconstructed values
-must validate `Length <= Capacity <= Limit` before allocation. Uninitialized
-capacity bytes and process-local pointers are never serialized. Invalid/corrupt
-artifacts fail with a diagnostic, not an unsupported-value fallback for valid
-buffers. Current format versions may change; compatibility shims are unnecessary.
+The nominal type must work in separately compiled interfaces, program images,
+ordinary values, first-class operations and the existing debugger's inspection,
+retained values, detached calls and bounded event capture. Retaining a live
+buffer value preserves its complete bytes, length, capacity and shared backing;
+presentation clipping never changes that value. Invalid/corrupt type artifacts
+must fail with a diagnostic. Current format versions may change; compatibility
+shims are unnecessary.
+
+The user explicitly keeps general VM snapshots, reverse execution, recording
+to disk and state restoration/replay separate from AP54. Those capabilities are
+not implemented by the current debugger. ByteBuffer must work in its existing
+capabilities without a buffer-specific rejection, and must not advertise or
+implement a general snapshot/replay engine as part of this work.
 
 Debugger/Printable presentation shows ByteBuffer, logical length and at most
 32 bytes in uppercase hex, with an explicit truncation indication. Inspection
-also exposes capacity. Preview truncation never truncates stored/restored data;
+also exposes capacity. Preview truncation never truncates a retained live value;
 raw bytes are not implicitly decoded as text.
 
 ## Planned API examples
@@ -297,7 +301,7 @@ The examples specify value/copy independence, empty ranges, self-concatenation,
 capacity release, Unicode/NUL contents, invalid/truncated UTF-8 and limit/byte
 errors. Future regression coverage must also include failed allocations,
 overlapping copies, dictionary keys, protected iteration, task/native snapshots,
-partial I/O and full debugger/artifact restoration.
+partial I/O, compiled-artifact reuse and the existing debugger capabilities.
 
 AP54.2 owns native storage/type/catalog/error/metadata and its tests; AP54.3 owns
 the atomic byte-API/caller migration and UTF-8 implementation. Their affected-file

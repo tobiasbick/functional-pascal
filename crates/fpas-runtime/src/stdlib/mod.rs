@@ -20,6 +20,7 @@ mod array;
 /// Shared `Std.Math.Bits` primitives; see `docs/pascal/std/numeric/bits.md`.
 pub mod bits;
 mod boolean_text;
+mod bytes;
 mod console;
 mod console_event;
 mod conv;

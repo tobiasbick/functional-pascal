@@ -171,6 +171,8 @@ pub enum ObjectDebugType {
     Real,
     /// UTF-8 string value.
     String,
+    /// Native managed byte-buffer value.
+    ByteBuffer,
     /// Dynamically checked value.
     Dynamic,
     /// Ordered array element type.

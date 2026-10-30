@@ -41,7 +41,7 @@ begin
               end; end if;
               var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
               ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain')];
-              ResponseValue.Body := Utf8.Encode('hello from fpas');
+              ResponseValue.Body := Utf8.Encode('hello from fpas').Unwrap();
               case Http.WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
                 begin
@@ -115,7 +115,7 @@ begin
                 when Ok(const Text):
                 begin
                   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');
-                  ResponseValue.Body := Utf8.Encode(RequestValue.Target + ':' + Text);
+                  ResponseValue.Body := Utf8.Encode(RequestValue.Target + ':' + Text).Unwrap();
                   case Http.WriteResponse(Connection, ResponseValue) of
                     when Ok(_):
                     begin
@@ -193,7 +193,7 @@ begin
                 panic(Message.Message());
               end; end if;
               var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(400, 'Bad Request');
-              ResponseValue.Body := Utf8.Encode('rejected');
+              ResponseValue.Body := Utf8.Encode('rejected').Unwrap();
               case Http.WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
                 begin
@@ -263,7 +263,7 @@ begin
                 panic(Message.Message());
               end; end if;
               var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(413, 'Content Too Large');
-              ResponseValue.Body := Utf8.Encode('too large');
+              ResponseValue.Body := Utf8.Encode('too large').Unwrap();
               case Http.WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
                 begin

@@ -49,10 +49,11 @@ default and 1/1/1 collection schedules. Separate gated runtime tests force a bus
 file alias and prove that a second FPAS task runs on the only VM worker; native
 unit tests check cancellation while locks remain held and close undelivered opens.
 
-Selectable process-pipe regressions retain cyclic callbacks and oversized native write
+Selectable process-pipe regressions retain cyclic callbacks and dense ByteBuffer write
 payloads through normal completion, a cancellation case, a timer, scope exit and VM
 shutdown. Binary duplex traffic exercises selected partial reads/writes and EOF;
-discarded cases must have no pipe effects. Four runs with each collection schedule
+discarded cases must have no pipe effects. Writes preserve the constructor snapshot
+after the caller mutates its buffer. Four runs with each collection schedule
 require the exact pre-session allocation and byte baseline after every VM teardown,
 including the first session. Independent host observers verify child termination.
 

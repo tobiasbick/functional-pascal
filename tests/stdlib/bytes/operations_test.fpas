@@ -1,0 +1,61 @@
+program ByteBufferOperations;
+
+uses Std.Bytes as Bytes, Std.Test as Test;
+
+begin
+  var Data := Bytes.Create(4).Unwrap();
+  Test.AssertEquals(4, Data.Length());
+  Test.AssertEquals(4, Data.Capacity());
+  Test.AssertFalse(Data.IsEmpty());
+  Test.AssertEquals(0, Data[3]);
+  discard Data.FillInPlace(Value := 7, Start := 1, Len := 2).Unwrap();
+  const Snapshot := Data;
+  discard Data.SetAtInPlace(Value := 255, Index := 0).Unwrap();
+  Test.AssertEquals(0, Snapshot[0]);
+  Test.AssertEquals(255, Data[0]);
+  const Changed := Data.SetAt(0, 9).Unwrap();
+  Test.AssertEquals(9, Changed[0]);
+  Test.AssertEquals(255, Data[0]);
+  const Filled := Data.Fill(3, 0, 4).Unwrap();
+  Test.AssertTrue(Filled = Bytes.FromArray([3, 3, 3, 3]).Unwrap());
+  discard Data.CopyFromInPlace(
+    Source := Data,
+    SourceStart := 0,
+    TargetStart := 1,
+    Len := 3
+  ).Unwrap();
+  Test.AssertTrue(Data = Bytes.FromArray([255, 255, 7, 7]).Unwrap());
+  const Copied := Data.CopyFrom(Bytes.FromArray([1, 2]).Unwrap(), 0, 1, 2).Unwrap();
+  Test.AssertTrue(Copied = Bytes.FromArray([255, 1, 2, 7]).Unwrap());
+  const Joined := Data.Concat(Data).Unwrap();
+  Test.AssertEquals(8, Joined.Length());
+  Test.AssertEquals(4, Data.Length());
+  discard Data.ConcatInPlace(Data).Unwrap();
+  Test.AssertTrue(Data = Joined);
+  discard Data.SliceInPlace(Start := 2, Len := 2).Unwrap();
+  Test.AssertTrue(Data = Bytes.FromArray([7, 7]).Unwrap());
+  Test.AssertEquals(2, Data.Capacity());
+
+  discard Data.ReserveInPlace(Capacity := 65).Unwrap();
+  Test.AssertEquals(128, Data.Capacity());
+  discard Data.ResizeInPlace(1).Unwrap();
+  Test.AssertEquals(128, Data.Capacity());
+  const Grown := Data.Resize(3).Unwrap();
+  Test.AssertTrue(Grown = Bytes.FromArray([7, 0, 0]).Unwrap());
+  Test.AssertEquals(1, Data.Length());
+  Test.AssertTrue(Grown.Slice(3, 0).Unwrap().IsEmpty());
+  discard Data.ResizeInPlace(0).Unwrap();
+  Test.AssertEquals(128, Data.Capacity());
+  discard Data.TrimCapacityInPlace().Unwrap();
+  Test.AssertEquals(0, Data.Capacity());
+  const Values := Grown.ToArray().Unwrap();
+  Test.AssertEquals(3, Values.Length());
+  Test.AssertEquals(7, Values[0]);
+  Test.AssertEquals(0, Values[2]);
+  var Sum := 0;
+  for Value: integer in Grown do
+    Sum := Sum + Value;
+  end for;
+
+  Test.AssertEquals(7, Sum);
+end.

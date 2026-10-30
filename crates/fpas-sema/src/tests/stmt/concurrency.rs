@@ -83,7 +83,7 @@ fn wait_any_rejects_non_task_arrays_and_reports_its_own_arity() {
 #[test]
 fn network_io_cancellation_requires_a_token_not_a_source() {
     let errors = check_errors(
-        "program T;\nuses Std.Net.Sockets as Net, Std.Tasks as Tasks;\nprocedure Invalid(ConnectionValue: Net.Connection);\nbegin\n  Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Tasks.CreateCancellationSource());\n  Net.SendBytesWithCancellation(ConnectionValue, [1], Tasks.CreateCancellationSource());\n  Net.ConnectWithCancellation('unused.invalid', 1, 1000, Tasks.CreateCancellationSource());\n  Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Tasks.CreateCancellationSource());\nend procedure;\nbegin\nend.",
+        "program T;\nuses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks;\nprocedure Invalid(ConnectionValue: Net.Connection);\nbegin\n  Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Tasks.CreateCancellationSource());\n  Net.SendBytesWithCancellation(ConnectionValue, ByteStorage.FromArray([1]).Unwrap(), Tasks.CreateCancellationSource());\n  Net.ConnectWithCancellation('unused.invalid', 1, 1000, Tasks.CreateCancellationSource());\n  Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Tasks.CreateCancellationSource());\nend procedure;\nbegin\nend.",
     );
     assert_eq!(
         errors

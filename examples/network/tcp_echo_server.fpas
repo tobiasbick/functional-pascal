@@ -2,6 +2,7 @@
 program NetworkTcpEchoServer;
 
 uses
+  Std.Bytes as ByteStorage,
   Std.Os.Args as Args, Std.Text.Format as Conv, Std.Console as Console, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8,
   Std.Text.Parse as Parse;
 
@@ -9,7 +10,7 @@ uses
 //
 // Parameters:
 // - `Bytes`: Network bytes to inspect.
-function LineFeedIndex(Bytes: array of integer): integer;
+function LineFeedIndex(Bytes: ByteStorage.ByteBuffer): integer;
 begin
   for Index: integer := 0 to Bytes.Length() - 1 do
     begin
@@ -30,7 +31,7 @@ end function;
 // - `ConnectionValue`: Open TCP connection.
 function ReadLine(ConnectionValue: Net.Connection): string;
 begin
-  var Bytes: array of integer := [];
+  var Bytes: ByteStorage.ByteBuffer := ByteStorage.Create(0).Unwrap();
   var LineEnd: integer := -1;
   while LineEnd < 0 do
     begin
@@ -43,7 +44,7 @@ begin
               end;
             end if;
 
-            Bytes := Bytes.Concat(Part);
+            discard Bytes.ConcatInPlace(Part).Unwrap();
             LineEnd := LineFeedIndex(Bytes);
           end;
         when Error(const Message):
@@ -59,7 +60,7 @@ begin
       panic('TCP echo server accepts exactly one LF-delimited request per connection');
     end;
   end if;
-  const TextBytes: array of integer := Bytes.Slice(0, LineEnd);
+  const TextBytes := Bytes.Slice(0, LineEnd).Unwrap();
   case Utf8.Decode(TextBytes) of
     when Ok(const Text):
       begin
@@ -77,12 +78,12 @@ end function;
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
 // - `Bytes`: Complete byte sequence to write.
-procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of integer);
+procedure WriteAll(ConnectionValue: Net.Connection; Bytes: ByteStorage.ByteBuffer);
 begin
   var Offset: integer := 0;
   while Offset < Bytes.Length() do
     begin
-      const Remaining: array of integer := Bytes.Slice(Offset, Bytes.Length() - Offset);
+      const Remaining := Bytes.Slice(Offset, Bytes.Length() - Offset).Unwrap();
       case Net.SendBytes(ConnectionValue, Remaining) of
         when Ok(const Count):
           begin
@@ -132,7 +133,7 @@ begin
                   end;
               end case;
               const Text: string := ReadLine(ConnectionValue);
-              WriteAll(ConnectionValue, Utf8.Encode('Echo: ' + Text));
+              WriteAll(ConnectionValue, Utf8.Encode('Echo: ' + Text).Unwrap());
               case Net.Close(ConnectionValue) of
                 when Ok(_):
                   begin

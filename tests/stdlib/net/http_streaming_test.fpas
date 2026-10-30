@@ -1,7 +1,7 @@
 // Covers fragmented, final, bounded, and closed SSE decoder behavior.
 program HttpStreamingTest;
 
-uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
+uses Std.Bytes as ByteStorage, Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Test as Test;
 
 begin
   case Http.CreateSseDecoder(1024) of
@@ -11,7 +11,7 @@ begin
           Decoder, Utf8.Encode(
             'id: 7' + #13 + #10 + 'event: token' + #13 + #10 +
             'data: hel'
-          )
+          ).Unwrap()
         ) of
           when Ok(const Events):
             begin
@@ -27,7 +27,7 @@ begin
           Decoder, Utf8.Encode(
             'lo' + #13 + #10 + 'data: world' + #13 + #10 + #13 +
             #10
-          )
+          ).Unwrap()
         ) of
           when Ok(const Events):
             begin
@@ -42,7 +42,7 @@ begin
             end;
         end case;
 
-        case Http.FeedSse(Decoder, Utf8.Encode(': keepalive' + #10 + 'data: final')) of
+        case Http.FeedSse(Decoder, Utf8.Encode(': keepalive' + #10 + 'data: final').Unwrap()) of
           when Ok(const Events):
             begin
               Test.AssertEquals(0, Events.Length());
@@ -67,7 +67,7 @@ begin
             end;
         end case;
 
-        case Http.FeedSse(Decoder, []) of
+        case Http.FeedSse(Decoder, ByteStorage.FromArray([]).Unwrap()) of
           when Ok(_):
             begin
               panic('finished SSE decoder accepted more input');
@@ -87,7 +87,7 @@ begin
   case Http.CreateSseDecoder(8) of
     when Ok(const Decoder):
       begin
-        case Http.FeedSse(Decoder, Utf8.Encode('data: too long' + #10)) of
+        case Http.FeedSse(Decoder, Utf8.Encode('data: too long' + #10).Unwrap()) of
           when Ok(_):
             begin
               panic('oversized SSE event was accepted');

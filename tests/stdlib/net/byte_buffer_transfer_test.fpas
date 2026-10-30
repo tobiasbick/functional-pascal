@@ -1,0 +1,61 @@
+// Native sockets preserve every byte, task input snapshots, partial counts and EOF.
+program ByteBufferTransferTest;
+
+uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Test as Test;
+
+procedure WriteAll(Connection: Net.Connection; Data: ByteStorage.ByteBuffer);
+begin
+  var Offset := 0;
+  while Offset < Data.Length() do
+    const Part := Data.Slice(Offset, Data.Length() - Offset).Unwrap();
+    const Count := Net.SendBytes(Connection, Part).Unwrap();
+    Test.AssertTrue(Count > 0);
+    Offset := Offset + Count;
+  end while;
+
+  discard Net.Close(Connection).Unwrap();
+end procedure;
+
+function ReadAll(Connection: Net.Connection): ByteStorage.ByteBuffer;
+begin
+  var Data := ByteStorage.Create(0).Unwrap();
+  while true do
+    const Part := Net.ReceiveBytes(Connection, 17).Unwrap();
+    if Part.IsEmpty() then
+      Test.AssertEquals(0, Part.Capacity());
+      break;
+    end if;
+
+    discard Data.ConcatInPlace(Part).Unwrap();
+  end while;
+
+  Test.AssertTrue(Net.ReceiveBytes(Connection, 1).Unwrap().IsEmpty());
+  discard Net.Close(Connection).Unwrap();
+  return Data;
+end function;
+
+begin
+  var Data := ByteStorage.Create(256).Unwrap();
+  for Index: integer := 0 to 255 do
+    discard Data.SetAtInPlace(Index, Index).Unwrap();
+  end for;
+  const Expected := Data;
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  const Sender := Net.Connect(Address.Host, Address.Port, 5000).Unwrap();
+  const Receiver := Net.Accept(Listener).Unwrap();
+  discard Net.SetTimeout(Sender, 5000).Unwrap();
+  discard Net.SetTimeout(Receiver, 5000).Unwrap();
+  scope
+    const Writer := go WriteAll(Sender, Data);
+    discard Data.FillInPlace(42, 0, Data.Length()).Unwrap();
+    const Reader := go ReadAll(Receiver);
+    Tasks.Wait(Writer);
+    Test.AssertTrue(Tasks.Wait(Reader) = Expected);
+  end scope;
+
+  Test.AssertEquals(42, Data[0]);
+  Test.AssertEquals(0, Expected[0]);
+  Test.AssertEquals(255, Expected[255]);
+  discard Net.CloseListener(Listener).Unwrap();
+end.

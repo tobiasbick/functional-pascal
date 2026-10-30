@@ -75,6 +75,7 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
         Input::Real => Ty::Real,
         Input::Boolean => Ty::Boolean,
         Input::String => Ty::String,
+        Input::ByteBuffer => Ty::ByteBuffer,
         Input::Unit => Ty::Unit,
         Input::Array(inner) => Ty::Array(Box::new(interface_type_to_ty(inner)?)),
         Input::Channel(inner) => Ty::Channel(Box::new(interface_type_to_ty(inner)?)),

@@ -37,13 +37,17 @@ Three independent Cargo packages supply the installed executables:
   diagnostics, and runtime; it has no compiler or editor dependency.
 
 The VS Code extension resolves `fpas` once and queries `fpas env --json` for
-the adjacent `languageServer` executable and `standardLibrary` directory. It
+the adjacent `languageServer` executable and matching `standardLibrary` directory. It
 starts that server directly and passes the library through LSP initialization.
 Other editors can start `fpas-lsp` directly with the same initialization option.
 
 `cargo build --workspace --profile dev-fast` builds all three programs for
 development. Distribution scripts use the release profile and ship them together
 with `lib/`. See the [build profiles](bench/build-times.md#build-profiles).
+The CLI's build dependency [`fpas-stdlib`](../lib/Cargo.toml) tracks the bundled
+FPAS library sources without treating generated sidecars as Cargo inputs. Cargo
+intermediate artifacts and development library copies remain checkout-local;
+see [checkout isolation](bench/build-times.md#checkout-isolation-and-library-inputs).
 `fpas build --executable` finds the adjacent runner
 and appends the verified program image; generated applications need no compiler
 or source library installation. For targeted CLI tests that create native

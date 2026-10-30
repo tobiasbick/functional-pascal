@@ -23,19 +23,18 @@ fn copy_tree(source: &Path, destination: &Path) -> io::Result<()> {
         let destination_path = destination.join(entry.file_name());
         if source_path.is_dir() {
             copy_tree(&source_path, &destination_path)?;
-        } else if !is_compiled_unit_artifact(&source_path) {
+        } else if is_source(&source_path) {
             fs::copy(&source_path, &destination_path)?;
         }
     }
     Ok(())
 }
 
-fn is_compiled_unit_artifact(path: &Path) -> bool {
-    let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else {
+fn is_source(path: &Path) -> bool {
+    let Some(extension) = path.extension().and_then(|name| name.to_str()) else {
         return false;
     };
-    let file_name = file_name.to_ascii_lowercase();
-    file_name.ends_with(".fpascu") || file_name.contains(".fpascu.")
+    extension.eq_ignore_ascii_case("fpas") || extension.eq_ignore_ascii_case("fpasprj")
 }
 
 #[cfg(test)]
@@ -76,6 +75,9 @@ mod tests {
         write_text(&source.join("Std/Current.fpascu"), "stale sidecar");
         write_text(&source.join("Std/Current.fpascu.lock"), "stale lock");
         write_text(&source.join("Std/Current.fpascu.tmp-1"), "stale temporary");
+        write_text(&source.join("Cargo.toml"), "build metadata");
+        write_text(&source.join("build.rs"), "build script");
+        write_text(&source.join("cargo.rs"), "build dependency");
 
         replace_tree(&source, &destination).expect("standard library tree must synchronize");
 
@@ -83,6 +85,9 @@ mod tests {
         assert!(!destination.join("Std/Current.fpascu").exists());
         assert!(!destination.join("Std/Current.fpascu.lock").exists());
         assert!(!destination.join("Std/Current.fpascu.tmp-1").exists());
+        assert!(!destination.join("Cargo.toml").exists());
+        assert!(!destination.join("build.rs").exists());
+        assert!(!destination.join("cargo.rs").exists());
         fs::remove_dir_all(&root).expect("temp directory must be removed");
     }
 }

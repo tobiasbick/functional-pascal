@@ -1,3 +1,7 @@
+[build]
+# Keep intermediate objects checkout-local even with a shared CARGO_TARGET_DIR.
+build-dir = "{workspace-root}/target/cargo-build"
+
 [alias]
 # Curated FPAS end-to-end benchmarks (see docs/bench/README.md).
 # Usage: cargo bench-fpas run | save <label> | compare <label> | record <title…>

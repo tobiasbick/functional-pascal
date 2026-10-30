@@ -44,6 +44,10 @@ rcgen.workspace = true
 rustls.workspace = true
 process-wrap = { version = "10.0.1", default-features = false, features = ["std", "process-group", "job-object"] }
 
+[build-dependencies]
+fpas-stdlib = { path = "../../lib" }
+serde_json.workspace = true
+
 [[test]]
 name = "language"
 path = "tests/language/main.rs"

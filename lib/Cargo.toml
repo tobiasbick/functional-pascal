@@ -1,0 +1,15 @@
+[package]
+name = "fpas-stdlib"
+description = "Cargo input tracking for the bundled FPAS source library"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+include = ["Cargo.toml", "build.rs", "cargo.rs", "stdlib.fpasprj", "Std/**/*.fpas", "api/**/*.fpas"]
+
+[lib]
+path = "cargo.rs"
+
+[lints]
+workspace = true

@@ -84,28 +84,3 @@ pub fn emit(path: &std::path::Path) -> std::io::Result<()> {
         )],
     )
 }
-
-#[test]
-fn cli_entry_stages_from_the_executing_cargo_directory() -> TestResult {
-    check_entry_point(
-        "cli",
-        include_str!("../../fpas-cli/build.rs"),
-        &[
-            (
-                "stdlib_sync.rs",
-                r#"
-pub fn replace_tree(source: &std::path::Path, _: &std::path::Path) -> std::io::Result<()> {
-    println!("{}", source.display());
-    Ok(())
-}
-"#,
-            ),
-            (
-                "version_sync.rs",
-                r#"
-pub fn validate_std_version(_: &std::path::Path, _: &str) -> std::io::Result<()> { Ok(()) }
-"#,
-            ),
-        ],
-    )
-}

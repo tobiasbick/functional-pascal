@@ -59,8 +59,8 @@ spread. Each toolchain is checked against its intended API before timing;
 workspace-local release artifacts are invalidated when switching checkouts.
 The comparison reports workload-specific costs, including unchanged VM controls
 and unresolved timings near the timer's resolution, rather than a package-wide
-speed claim. Build-watch and cross-checkout artifact friction are recorded in
-`docs/future/dogfooding-gaps.md`.
+speed claim. Checkout isolation and source-only build inputs follow the
+[build guide](../../../bench/build-times.md#checkout-isolation-and-library-inputs).
 
 Backing/capacity accounting accompanies runtime measurements. Elapsed time
 does not prove physical zero-copy or allocator release to the operating system.

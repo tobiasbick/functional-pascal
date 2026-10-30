@@ -22,14 +22,47 @@ Cargo's default development settings. Rust tests use their own settings:
 
 | Use | Cargo option | Debug information | Output directory |
 | --- | --- | --- | --- |
-| Rust tests | default `cargo test` | Workspace line tables; no external dependency symbols | `target/debug/` |
-| Native Rust debugging | `--profile test-debug` | Full symbols, types and locals | `target/test-debug/` |
+| Rust tests | default `cargo test` | Workspace line tables; no external dependency symbols | `target/cargo-build/debug/` |
+| Native Rust debugging | `--profile test-debug` | Full symbols, types and locals | `target/cargo-build/test-debug/` |
 
 Both test modes retain development assertions and overflow checks. The default
 test profile reduces repeated symbol generation and linking across integration
 executables. `test-debug` inherits `dev` and is an explicit rebuild when native
 Rust breakpoints and local-variable inspection are needed. FPAS source debugging
 uses FPAS executable metadata and does not require full native Rust symbols.
+
+### Checkout isolation and library inputs
+
+The workspace sets Cargo's `build.build-dir` to
+`{workspace-root}/target/cargo-build`. Intermediate objects, fingerprints, test
+executables and build-script outputs stay inside their checkout even when
+`CARGO_TARGET_DIR` selects a shared final output directory. The paths in the
+program profile table above still locate delivered programs. The first build
+after changing this setting creates a fresh intermediate cache. Do not override
+`CARGO_BUILD_BUILD_DIR` with a directory shared by different checkouts.
+See [Cargo's build-directory configuration](https://doc.rust-lang.org/cargo/reference/config.html#buildbuild-dir).
+
+`fpas-stdlib`, the build dependency rooted at `lib/`, tracks the library manifest
+and `.fpas` sources through Cargo's package include list. Source additions,
+changes and removals update the delivered library; `.fpascu` sidecars, locks and
+temporary artifacts do not invalidate the CLI. Its build script deliberately
+uses Cargo's default package change detection instead of a recursive directory
+watch. Only FPAS source and project files are copied into delivered libraries.
+
+Cargo-built CLIs and test executables select the library copy in their own
+intermediate profile directory. This keeps compiler and library paired when
+Cargo restores a cached executable into a shared final directory without
+rerunning its build script. Installed or copied CLIs use their adjacent `lib/`;
+`--std-lib` remains an explicit override. When retaining multiple toolchains
+for comparison, separate final target directories also preserve each executable
+and its adjacent library. Builds using one final output directory must run
+sequentially, and each executable must be used before another checkout replaces it.
+Worker processes launched by Rust tests use the delivered Cargo profile directory,
+rather than inferring a CLI location from the intermediate test directory.
+
+`crates/fpas-build/tests/cargo_build_cache.rs` verifies checkout round trips with
+old source timestamps, installed library lookup, sidecar freshness and real
+source addition/change/removal using small Cargo workspaces.
 
 ## Rust test workflow
 

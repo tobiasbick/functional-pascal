@@ -56,16 +56,16 @@ pub(crate) fn terminate(child: &mut Child) -> io::Result<()> {
     }
 }
 
-/// Locates the installed CLI, including an ordinary Cargo test executable's sibling.
+/// Locates the installed CLI or the delivered CLI for a Cargo test executable.
 pub(crate) fn executable() -> std::io::Result<std::path::PathBuf> {
     let current = std::env::current_exe()?;
     if current
         .parent()
         .and_then(std::path::Path::file_name)
         .is_some_and(|name| name == "deps")
-        && let Some(profile) = current.parent().and_then(std::path::Path::parent)
     {
-        let candidate = profile.join(if cfg!(windows) { "fpas.exe" } else { "fpas" });
+        let candidate = std::path::Path::new(env!("FPAS_BUILD_PROFILE_DIR"))
+            .join(if cfg!(windows) { "fpas.exe" } else { "fpas" });
         if candidate.is_file() {
             return Ok(candidate);
         }

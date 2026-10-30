@@ -25,45 +25,6 @@ Remove an entry once the gap is fixed and covered by tests and current documenta
 
 ## Open entries
 
-### Cross-checkout Cargo reuse can mix compiler artifacts
-
-- **Date:** 2026-10-30
-- **Kind:** awkward (comparison helpers written in FPAS)
-- **Area:** build artifact ownership
-- **Task:** Compare a pre-byte-buffer checkout with the current compiler under
-  the same release settings.
-- **Missing or wrong:** Reusing one Cargo target directory across the two
-  checkouts retained old workspace objects. A subsequent successful CLI build
-  still lacked `Std.Bytes` while loading the current source library. The native
-  workload's type check detected the mismatch before any timing was accepted.
-- **Minimal example:** After switching checkout contents with a shared
-  `CARGO_TARGET_DIR`, a program importing `Std.Bytes` fails with an unknown-unit
-  error although the current intrinsic catalog contains that unit.
-- **Fallback:** None. Preserve the valid baseline and measurement harness,
-  invalidate all local workspace release packages before rebuilding the other
-  version, and verify its actual API before measuring. Keep version-specific
-  artifacts isolated when retaining both toolchains.
-
-### Standard-library sidecars invalidate CLI builds
-
-- **Date:** 2026-10-30
-- **Kind:** awkward (measurement helpers written in FPAS)
-- **Area:** build performance
-- **Task:** Check equivalent source workloads before comparing array and native
-  byte-buffer implementations with the release benchmark harness.
-- **Missing or wrong:** Checking against a source standard library publishes
-  adjacent `.fpascu` artifacts. The CLI build script watches the entire `lib`
-  directory, so these generated files trigger another CLI compilation even
-  though its tracked sources are unchanged. Fat-LTO makes that preparation
-  expensive. The owner is `crates/fpas-cli/build.rs` and its library sync.
-- **Minimal example:** Check a program importing `Std.Net.Http` with
-  `fpas check --std-lib lib example.fpas`, then run
-  `cargo build --release -p fpas-cli`. Creating the source-library sidecars
-  invalidates the preceding CLI build.
-- **Fallback:** None. Finish source-library checks before the release build,
-  and use the copied profile library during measurements. Precise source
-  watching or separation of generated artifacts remains a build-tooling task.
-
 ### Available memory and commit headroom
 
 - **Date:** 2026-10-29

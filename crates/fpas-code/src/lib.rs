@@ -41,7 +41,7 @@ pub use intrinsic::{
     Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic, McpIntrinsic, NetIntrinsic,
     OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
     ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
-    TomlIntrinsic,
+    TokenizerIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
     Constant, DistinctTypeName, EnumLayout, EnumVariant, ErrorCause, ErrorInstanceKey,

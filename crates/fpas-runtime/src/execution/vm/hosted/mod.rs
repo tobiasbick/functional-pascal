@@ -27,6 +27,7 @@ mod random;
 pub(in crate::execution::vm) mod server;
 pub(in crate::execution::vm) mod terminal_input;
 mod test_host;
+mod tokenizer;
 
 use http_handles::HttpStateRegistry;
 use net::{NetworkConnections, NetworkListeners};
@@ -44,6 +45,9 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         let result = match intrinsic {
+            Intrinsic::Tokenizer(_) => {
+                self.execute_tokenizer_intrinsic(intrinsic, arguments, location)
+            }
             Intrinsic::Acp(_) => self.execute_acp_intrinsic(intrinsic, arguments, location),
             Intrinsic::Mcp(_) => self.execute_mcp_intrinsic(intrinsic, arguments, location),
             Intrinsic::Server(_) => self.execute_server_intrinsic(intrinsic, arguments, location),
@@ -76,6 +80,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    tokenizers: tokenizer::Cache,
     pub(in crate::execution::vm) acp: acp::Registry,
     pub(in crate::execution::vm) mcp: mcp::Registry,
     pub(in crate::execution::vm) servers: server::ServerRegistry,
@@ -142,6 +147,7 @@ impl HostedState {
         program_args: Vec<String>,
     ) -> Self {
         Self {
+            tokenizers: Default::default(),
             acp: Default::default(),
             mcp: Default::default(),
             servers: Default::default(),

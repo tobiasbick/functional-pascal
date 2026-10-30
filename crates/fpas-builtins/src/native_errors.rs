@@ -34,6 +34,8 @@ pub enum NativeErrorFamily {
     Acp,
     /// Independent MCP registration and serving failures.
     Mcp,
+    /// `Std.Ai.Tokenizer.TokenizerError`.
+    Tokenizer,
 }
 
 /// Payload type in a native error declaration.
@@ -99,6 +101,7 @@ impl NativeErrorFamily {
         Self::Encoding,
         Self::Acp,
         Self::Mcp,
+        Self::Tokenizer,
     ];
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
@@ -116,6 +119,7 @@ impl NativeErrorFamily {
             Self::Encoding => crate::std_symbols::STD_ENCODING_ERROR,
             Self::Acp => "Std.Ai.Acp.Types.AcpError",
             Self::Mcp => "Std.Ai.Mcp.Types.McpError",
+            Self::Tokenizer => "Std.Ai.Tokenizer.TokenizerError",
         }
     }
     /// Ordered declared variants.
@@ -124,6 +128,33 @@ impl NativeErrorFamily {
         match self {
             Self::Acp => acp::VARIANTS,
             Self::Mcp => mcp::VARIANTS,
+            Self::Tokenizer => &[
+                ErrorVariant {
+                    name: "UnsupportedEncoding",
+                    message: "Unsupported tokenizer encoding",
+                    fields: &[("Name", String)],
+                },
+                ErrorVariant {
+                    name: "InvalidToken",
+                    message: "Invalid model token",
+                    fields: &[("Index", Integer), ("Value", Integer)],
+                },
+                ErrorVariant {
+                    name: "InvalidUtf8",
+                    message: "Tokens do not form valid UTF-8",
+                    fields: &[],
+                },
+                ErrorVariant {
+                    name: "LimitExceeded",
+                    message: "Tokenizer limit exceeded",
+                    fields: &[("Name", String), ("Limit", Integer)],
+                },
+                ErrorVariant {
+                    name: "BackendFailure",
+                    message: "Tokenizer backend failed",
+                    fields: &[],
+                },
+            ],
             Self::Encoding => &[
                 ErrorVariant {
                     name: "InvalidByte",

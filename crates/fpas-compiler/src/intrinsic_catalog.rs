@@ -5,7 +5,7 @@ use fpas_code::{
     DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic,
     JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic,
     ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic,
-    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -41,6 +41,12 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.rsplit_once('.')?;
     match unit {
+        "Ai.Tokenizer" => family!(
+            member,
+            Tokenizer,
+            TokenizerIntrinsic,
+            [Count, Encode, Decode, Encodings]
+        ),
         "Os.Errors" if member == "Message" => Some(Intrinsic::Conv(ConvIntrinsic::ErrorMessage)),
         "Os.Args" => family!(member, Args, ArgsIntrinsic, [ParamCount, ParamStr]),
         "Console" => resolve_console(member),

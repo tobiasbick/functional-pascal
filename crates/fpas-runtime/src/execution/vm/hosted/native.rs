@@ -2,6 +2,9 @@
 
 use super::HostedState;
 
+#[cfg(test)]
+mod tests;
+
 thread_local! { static DEFER_JOINS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
 
 pub(in crate::execution::vm) fn defer_joins<T>(run: impl FnOnce() -> T) -> T {

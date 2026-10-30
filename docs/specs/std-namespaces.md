@@ -53,6 +53,7 @@ canonical import path.
 | `Std.Ai.Mcp` | MCP tool servers |
 | `Std.Ai.Mcp.Types` | MCP definitions, context and results |
 | `Std.Ai.OpenAi` | OpenAI-compatible model client |
+| `Std.Ai.Tokenizer` | Exact model-token counts and text/token-ID conversion |
 | `Std.Net.Sockets` | TCP/TLS connections and listeners |
 | `Std.Net.Http` | HTTP client/server and SSE helpers |
 | `Std.Net.Uri` | URI parsing and encoding |
@@ -122,7 +123,7 @@ Create only the units that a delivered interface needs.
 | Network foundations | `Std.Net.Sockets`, `Std.Net.Dns`, `Std.Net.Uri`, `Std.Net.Server` | TCP/TLS and future datagram endpoints, name resolution, URIs and server lifetime |
 | Network protocols | `Std.Net.Http`, `Std.Net.WebSocket`, `Std.Net.WebDav`, `Std.Net.Ftp`, `Std.Net.Sftp`, `Std.Net.Ssh`, `Std.Net.Mqtt`, `Std.Net.Rpc` | Each protocol owns its client/server operations; FTPS belongs with FTP, SFTP with SSH-based transfer |
 | Web applications | `Std.Web.Html`, `Std.Web.Templates`, `Std.Web.Routing` | Web content and application composition over HTTP |
-| AI and agents | `Std.Ai.Acp`, `Std.Ai.Mcp`, `Std.Ai.OpenAi` and concrete provider/protocol children | Model services, agent protocols and their host adapters |
+| AI and agents | `Std.Ai.Acp`, `Std.Ai.Mcp`, `Std.Ai.OpenAi`, `Std.Ai.Tokenizer` and concrete provider/protocol children | Model services, agent protocols, model-specific tokenization and their host adapters |
 | Cryptography | `Std.Crypto` and focused children | Secure randomness, hashes, encryption, password hashing and signatures |
 | Security policy | `Std.Security` and focused children | Credential storage, authentication and authorization policy; cryptographic mechanisms stay in `Std.Crypto` |
 | Databases | `Std.Db.Sqlite` and concrete database children | Database-specific connections, statements, transactions and backup |
@@ -158,6 +159,11 @@ home; they do not duplicate parent operations.
 - `Std.Ai` may depend on HTTP, sockets, JSON and bytes. Those dependencies do
   not move the AI interface into `Std.Net` or make lower layers depend on AI.
   Share generic RPC machinery only when it has an independent public use.
+- Model-specific tokenization and exact model-token counts belong to
+  `Std.Ai.Tokenizer`, independently of provider clients or agent protocols.
+  Encoding names such as `o200k_base` select vocabulary/rank tables and
+  pre-tokenization rules within that unit; they do not create public subunits.
+  General Unicode and text-processing facilities remain under `Std.Text`.
 - Graphics and audio can be used without UI. Windows and device input can be
   used by a renderer without widgets. `Std.Ui` composes these services; it does
   not own their general-purpose interfaces. Terminal cell/input operations

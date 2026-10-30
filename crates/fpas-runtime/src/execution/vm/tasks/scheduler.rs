@@ -68,6 +68,7 @@ pub(in crate::execution::vm) struct TaskScheduler {
     pub(in crate::execution::vm) scopes: super::scopes::ScopeRegistry,
     next_id: AtomicU64,
     shutdown: AtomicBool,
+    shutdown_cleanup: Mutex<()>,
     abort: AtomicBool,
     first_error: Mutex<Option<VmError>>,
 }
@@ -91,6 +92,7 @@ impl TaskScheduler {
             scopes: Default::default(),
             next_id: AtomicU64::new(1),
             shutdown: AtomicBool::new(false),
+            shutdown_cleanup: Mutex::new(()),
             abort: AtomicBool::new(false),
             first_error: Mutex::new(None),
         }
@@ -400,6 +402,19 @@ impl TaskScheduler {
     /// Cancels sleepers and wakes every waiter before the runtime joins its threads.
     pub fn finish_main(&self) {
         let _maintenance = crate::defer_maintenance();
+        // Concurrent stop requests must not overtake a caller still retiring saved tasks.
+        // Defer native joins so a queued callback cannot wait for this cleanup lock
+        // while its own thread is being joined under that same lock.
+        crate::execution::vm::hosted::native::defer_joins(|| {
+            let _cleanup = self
+                .shutdown_cleanup
+                .lock()
+                .unwrap_or_else(|p| p.into_inner());
+            self.finish_main_owned();
+        });
+    }
+
+    fn finish_main_owned(&self) {
         self.groups.shutdown();
         self.scopes.shutdown();
         self.accepting_timers.store(false, Ordering::Release);

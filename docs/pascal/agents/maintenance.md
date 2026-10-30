@@ -14,6 +14,10 @@ target model's tokenizer and name the encoding in the delivery report. Label an
 estimate explicitly when no tokenizer is available; do not claim the limit is
 verified from byte or word counts.
 
+Run `fpas run tools/agent-token-budget/agent-token-budget.fpasprj` from the
+repository root for an exact `o200k_base` report and both budget checks.
+It uses [Std.Ai.Tokenizer](../std/ai/tokenizer.md) without an external tokenizer.
+
 Keep common prerequisites in the entrypoint and task-specific rules beside their
 examples. Links must name when to read their target. Prefer a short language rule
 and a focused handbook link over duplicating an API contract. `fpas doc` supplies

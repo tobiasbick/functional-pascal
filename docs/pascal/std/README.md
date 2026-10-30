@@ -55,7 +55,7 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 | Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
 | Host I/O | [host/](host/README.md) | Args, Calendar (Gregorian dates and UTC), Cli (schema parsing/help), Env, Errors, Fs (whole-file and handle I/O), Path, Proc (options and bounded capture), Time |
 | Networking | [network/](network/README.md) | Sockets, Server lifetime, URI, HTTP |
-| AI protocols | [ai/](ai/README.md) | OpenAI-compatible chat completions, native ACP clients, typed events, host adapters and MCP tool servers |
+| AI and agents | [ai/](ai/README.md) | OpenAI-compatible chat completions, tokenization, native ACP clients, typed events, host adapters and MCP tool servers |
 | Text and formats | [text/](text/README.md) | Text.Format, Text.Parse, Text.Utf8, Encoding (Base64/Base64url/hex), Encoding.Json, Encoding.Toml and field helpers |
 | Numeric | [numeric/](numeric/README.md) | Math, Bits, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |

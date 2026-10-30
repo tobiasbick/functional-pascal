@@ -1,0 +1,31 @@
+program AgentTokenBudget;
+
+uses
+  Std.Ai.Tokenizer as Tokenizer, Std.Io.Fs as Fs, Std.Io.Path as Path,
+  Std.Os.Args as Args, Std.Console as Console;
+
+begin
+  if Args.ParamCount() > 1 then
+    panic('Usage: agent-token-budget [repository-root]');
+  end if;
+  const Root := if Args.ParamCount() = 1 then Args.ParamStr(0) else '.' end if;
+  const Directory := Path.Join([Root, 'docs/pascal/agents']);
+  const Files := Fs.Glob(Path.Join([Directory, '*.md'])).Unwrap().Sort();
+  if Files.IsEmpty() then
+    panic('No agent reference Markdown files found');
+  end if;
+  var Total := 0;
+  for File: string in Files do
+    const Count := Tokenizer.Count(Fs.ReadText(File).Unwrap(), 'o200k_base').Unwrap();
+    Console.WriteLn(File, ': ', Count);
+    Total := Total + Count;
+    if Path.BaseName(File) = 'README.md' and Count >= 1000 then
+      panic('Agent entrypoint must stay below 1000 tokens');
+    end if;
+  end for;
+
+  Console.WriteLn('o200k_base total: ', Total);
+  if Total >= 10000 then
+    panic('Agent reference must stay below 10000 tokens');
+  end if;
+end.

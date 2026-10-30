@@ -4,6 +4,10 @@ use super::*;
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::Tokenizer(TokenizerIntrinsic::Count),
+    Intrinsic::Tokenizer(TokenizerIntrinsic::Encode),
+    Intrinsic::Tokenizer(TokenizerIntrinsic::Decode),
+    Intrinsic::Tokenizer(TokenizerIntrinsic::Encodings),
     Intrinsic::Mcp(McpIntrinsic::DefaultLimits),
     Intrinsic::Mcp(McpIntrinsic::DefaultHttpOptions),
     Intrinsic::Mcp(McpIntrinsic::Create),

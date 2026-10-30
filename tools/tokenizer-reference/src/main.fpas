@@ -1,0 +1,52 @@
+program TokenizerReference;
+
+uses
+  Std.Os.Args as Args, Std.Os.Proc as Proc, Std.Io.Fs as Fs,
+  Std.Encoding.Json as Json;
+
+begin
+  if Args.ParamCount() <> 3 then
+    panic('Usage: tokenizer-reference <python> <o200k_base.tiktoken> <output.json>');
+  end if;
+  var Samples: array of string := [
+    '', 'hello world', 'Hello, world!', 'Grüße aus Österreich – Straße.',
+    '你好，世界！日本語 한국어', 'مرحبا بالعالم', 'नमस्ते दुनिया',
+    '🙂👨‍👩‍👧‍👦🏳️‍🌈', 'é é Å Å',
+    'ABCdef ABCDef abcDEF a漢B', 'I''m we''re THEY''LL it''ſ',
+    '0 12 123 1234 123456789 Ⅷ ١٢٣٤',
+    ' '#9' '#13#10'  end  ', '  a   b    ', '.'#13#10'//'#10,
+    'a'#0'b'#1#31#127, #133'       　',
+    '<|endoftext|> <|endofprompt|>',
+    'program T; begin Console.WriteLn(''hi''); end.',
+    '# Heading'#10'Pascal source'#10'const X := 42;',
+    string.Chr(65536) + string.Chr(130000) + string.Chr(1114111)
+  ];
+  Samples.PushInPlace('x'.RepeatStr(8192));
+  Samples.PushInPlace(' '.RepeatStr(512));
+  Samples.PushInPlace(('á').RepeatStr(256));
+  var Corpus: array of Json.JsonValue := [];
+  for Text: string in Samples do
+    Corpus.PushInPlace(Json.JsonValue.String(Text));
+  end for;
+  const Reference := 'import json, sys, tiktoken'#10 +
+    'import tiktoken_ext.openai_public as public'#10 +
+    'load = public.load_tiktoken_bpe'#10 +
+    'public.load_tiktoken_bpe = lambda *a, **k: load(sys.argv[1])'#10 +
+    'encoding = tiktoken.Encoding(**public.o200k_base())'#10 +
+    'cases = [{"text": s, "tokens": encoding.encode_ordinary(s)} for s in json.load(sys.stdin)]'#10 +
+    'json.dump({"reference": "tiktoken " + tiktoken.__version__, "encoding": "o200k_base", "cases": cases}, sys.stdout, ensure_ascii=False)'#10;
+  var Options := Proc.DefaultOptions();
+  Options.Input := Json.Stringify(Json.JsonValue.ArrayValue(Corpus));
+  Options.TimeoutMillis := Some(30000);
+  const Reply := Proc.RunCaptureWithOptions(
+    Args.ParamStr(0),
+    ['-c', Reference, Args.ParamStr(1)],
+    Options
+  ).Unwrap();
+  if Reply.ExitCode <> 0 then
+    panic(Reply.Stderr);
+  end if;
+
+  discard Json.Parse(Reply.Stdout).Unwrap();
+  discard Fs.WriteText(Args.ParamStr(2), Reply.Stdout + #10).Unwrap();
+end.

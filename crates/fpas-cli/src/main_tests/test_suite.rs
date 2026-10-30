@@ -56,8 +56,24 @@ fpas_suite_tests! {
     (fpas_suite_stdlib_str, "tests/stdlib/str/"),
     (fpas_suite_stdlib_tui, "tests/stdlib/tui/"),
     (fpas_suite_stdlib_toml, "tests/stdlib/toml/"),
+    (fpas_suite_stdlib_tokenizer, "tests/stdlib/tokenizer/"),
     (fpas_suite_concurrency, "tests/concurrency/"),
     (fpas_suite_console, "tests/console/"),
+}
+
+#[test]
+fn agent_reference_budget_uses_builtin_tokenizer() {
+    let (exit, stdout, stderr) = super::support::run_cli_args_and_capture_output(
+        &[
+            "run".to_owned(),
+            "tools/agent-token-budget/agent-token-budget.fpasprj".to_owned(),
+            "--".to_owned(),
+            repo_root().to_string_lossy().into_owned(),
+        ],
+        &repo_root(),
+    );
+    assert_eq!(exit, 0, "{stderr}");
+    assert!(stdout.contains("o200k_base total:"), "{stdout}");
 }
 
 #[test]

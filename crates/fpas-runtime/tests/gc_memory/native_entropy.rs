@@ -62,6 +62,35 @@ pub fn entropy() {
 }
 
 pub fn mcp() {
+    // A feature-unified Tokio build may retain its process-global Unix signal
+    // registry after the first I/O runtime. Initialize only that runtime machinery,
+    // without an MCP server or FPAS session, before exact per-VM measurements.
+    std::thread::spawn(|| {
+        drop(
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap(),
+        );
+    })
+    .join()
+    .unwrap();
+    let metadata = crate::measurement::Footprint::now();
+    std::thread::spawn(|| {
+        drop(
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap(),
+        );
+    })
+    .join()
+    .unwrap();
+    assert_eq!(
+        crate::measurement::Footprint::now(),
+        metadata,
+        "Tokio runtime machinery must not keep growing"
+    );
     let executable = image(include_str!(
         "../../src/execution/vm/hosted/mcp/fixtures/publication.fpas"
     ));

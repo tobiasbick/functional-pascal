@@ -43,6 +43,8 @@ wrappers around established Rust libraries. Native FFI and dynamically loadable
 FPAS libraries extend this model so third parties can add missing functionality
 independently of FPAS releases. Bundled libraries should continue to expose
 consistent FPAS types, error handling and resource management.
+Reassess replacing individual Rust dependencies with FPAS implementations after
+the FPAS2 plan is complete; use established Rust libraries for this work first.
 
 This document owns shared language and runtime directions. The
 [graphics application case](graphics.md) records concrete rendering needs and

@@ -34,6 +34,8 @@ mod random_graph;
 mod sessions;
 #[path = "gc_memory/shutdown.rs"]
 mod shutdown;
+#[path = "gc_memory/tokenizer.rs"]
+mod tokenizer;
 #[path = "gc_memory/workloads.rs"]
 mod workloads;
 
@@ -42,6 +44,14 @@ use std::alloc::System;
 
 #[global_allocator]
 static ALLOCATOR: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
+
+#[test]
+fn tokenizer_tables_and_callbacks_return_to_the_allocation_baseline() {
+    measurement::isolated(
+        "tokenizer_tables_and_callbacks_return_to_the_allocation_baseline",
+        tokenizer::teardown,
+    );
+}
 
 #[test]
 fn allocator_observes_retained_bytes_and_cross_thread_release() {

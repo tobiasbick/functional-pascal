@@ -7,8 +7,9 @@ is agreed at the stated scope, with its listed open points. Design agreement doe
 not change the current specification or authorize implementation.
 For graphics and packed multimedia data, native library buffers without new
 scalar numeric types are the current preference; see
-[packed numeric data](#22-packed-numeric-data-and-binary-buffers). This is a
-preferred alternative, not an agreed buffer API or an implementation decision.
+[packed numeric data](#22-packed-numeric-data-and-binary-buffers). The byte-buffer
+contract is defined in AP54; specialized media APIs and their implementation
+remain separate decisions.
 FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 [AP workflow and templates](improve-syntax/README.md); selecting a topic still
 requires an explicit decision before implementation.
@@ -19,7 +20,8 @@ canonical imports. Future allocations do not authorize implementation of those
 capabilities.
 
 Selected foundation work includes [worker-releasing host I/O](#14-host-io-that-releases-vm-workers)
-and the byte-buffer contract under `Std.Bytes`.
+and [AP54's byte-buffer contract](improve-syntax/ap54-byte-buffers/README.md)
+under `Std.Bytes`, including UTF-8 integration.
 Continue the remaining selected FPAS 2 work before
 graphics and the
 [shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
@@ -744,28 +746,38 @@ for the removed type names.
 
 ## 22. Packed numeric data and binary buffers
 
-Status: open proposal. Native library buffers without new scalar numeric types
-are the current preference. No language form, library API or storage layout is
-agreed, and implementation is not authorized by this preference.
+Status: planned in [AP54](improve-syntax/ap54-byte-buffers/README.md), with a
+complete [byte-buffer contract](improve-syntax/ap54-byte-buffers/01-contract.md):
+copy-on-write values, explicit mutation, byte-content equality, a 256 MiB maximum,
+strict UTF-8, proper-subrange copying and automatic memory release. Signatures,
+errors, capacity and artifact/debugger behavior are settled; implementation has
+not started. Specialized media buffers and language-level packed arrays remain
+separate proposals.
 
-The first selected scope is a byte buffer under `Std.Bytes`.
+The first selected scope is `Std.Bytes.ByteBuffer`, strict
+string/UTF-8 transitions in the existing `Std.Text.Utf8`, bulk byte/text append,
+and migration of existing binary APIs to the canonical byte representation.
+There is no separate string or UTF-8 buffer type, and no new scalar numeric type
+is required. AP54 owns the contract decisions, migration and lifecycle checks.
 The binding [namespace specification](../specs/std-namespaces.md) allocates its
-home and puts specialized media buffers in their respective domains. This
-naming decision leaves the buffer API, value/mutation semantics, limits,
-storage layout and implementation authorization open.
+home and puts specialized media buffers in their respective domains. Namespace
+allocation is separate from AP54's behavior decisions and does not authorize
+implementation.
 
 The [graphics application case](graphics.md#bulk-numeric-data) needs contiguous
 vertex, index and pixel data without one tagged runtime value per element or
 repeated conversion at each native handoff. Binary files, codecs, audio, process pipes and native FFI share the need
 for a canonical byte representation. The
-[standard-library roadmap](std-roadmap.md#open-decisions) leaves that choice open.
+[standard-library roadmap](std-roadmap.md#selected-order) points to AP54 for the
+byte foundation; specialized formats remain separate proposals.
 
 ### Preferred alternative: native buffers with existing scalar types
 
 Use one shared native binary-buffer foundation, with specialized interfaces for
 pixels, vertices, indices and audio samples. Illustrative names are `ByteBuffer`,
 `PixelBuffer`, `VertexBuffer`, `IndexBuffer` and `AudioBuffer`; these are possible
-opaque standard-library types, not agreed declarations or new built-in types.
+opaque standard-library types, not new built-in types. Only `ByteBuffer` is
+selected and named by AP54; the specialized media declarations remain unagreed.
 Binary files, codecs, process pipes and native consumers should share the byte
 representation instead of introducing a separate one for each subsystem.
 
@@ -807,7 +819,13 @@ route before selecting an implementation. Graphics alone does not require it.
 
 ### Open questions and evaluation
 
-Open questions: construction, indexing and slicing, value semantics and mutation,
+For the selected byte scope, AP54 records the complete value/mutation, API,
+limits, strict UTF-8, task/native ownership, automatic-release and artifact
+contract with no open design decision. Do not reopen those accepted choices
+through this broader proposal. Implementation and verification remain pending.
+
+For specialized media buffers and the packed-array alternative, open questions
+include construction, indexing and slicing, value semantics and mutation,
 borrowing across native calls, task sharing, bounds and allocation limits,
 alignment, byte order and record padding, asynchronous resource lifetimes and
 release. Define supported storage formats, range and rounding rules, bulk access,

@@ -24,9 +24,12 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 
 ## Selected order
 
-1. Settle the first byte-buffer contract under `Std.Bytes`, then authorize its
-   implementation separately. Construction, copying/mutation, access, errors,
-   limits and I/O integration remain decisions in
+1. Implement [AP54's byte-buffer plan](improve-syntax/ap54-byte-buffers/README.md)
+   under `Std.Bytes` when authorized, including UTF-8 integration and migration
+   of existing binary APIs. Its contract is complete: copy-on-write values,
+   explicit mutation, content equality, strict UTF-8, a 256 MiB maximum, bounded
+   slice retention, automatic release and full artifact/debugger support. The
+   broader alternatives stay in
    [FPAS 2 section 22](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers).
 2. Continue selected FPAS 2 work, then graphics/multimedia and the
    [shared terminal/graphical UI](shared-ui.md) in their recorded order.
@@ -60,7 +63,7 @@ owns their current names and responsibilities.
 
 | Concern | Owning plan | Scope and prerequisites |
 | --- | --- | --- |
-| Byte buffers | [FPAS 2 packed data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers) | Define the first buffer contract; typed media storage follows separately |
+| Byte buffers | [AP54: Native byte buffers and UTF-8 integration](improve-syntax/ap54-byte-buffers/README.md) | Contract complete; implement one shared representation and migrate existing binary APIs when authorized; typed media storage follows separately |
 | SQLite | [SQLite storage](networked-applications/sqlite.md) | Concrete database access, transactions and backup |
 | Cryptography | [Cryptography](networked-applications/cryptography.md) | Password hashing, authentication primitives and signatures |
 | WebSocket | [WebSocket transport](networked-applications/websocket.md) | Bounded messages over TCP/TLS and HTTP |
@@ -98,8 +101,6 @@ and [AP workflow](improve-syntax/README.md) for the owning paths and checks.
 
 ## Open decisions
 
-- Byte-buffer value/mutation semantics, access, error contracts, allocation
-  limits and migration of existing integer-byte APIs.
 - General stream abstractions and worker-releasing I/O, coordinated with
   [FPAS 2 host I/O](fpas2-language-directions.md#14-host-io-that-releases-vm-workers).
 - Future resource/capability contracts and platform-specific behavior, chosen

@@ -24,10 +24,10 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 
 ## Selected order
 
-1. Implement [AP54's byte-buffer plan](improve-syntax/ap54-byte-buffers/README.md)
-   under `Std.Bytes`. AP54.2/AP54.3 implement native storage, core operations,
-   UTF-8 and canonical binary APIs on the integration branch. AP54.4's combined
-   verification remains open. The contract includes copy-on-write values,
+1. [AP54's byte-buffer foundation](improve-syntax/ap54-byte-buffers/README.md)
+   under `Std.Bytes` is implemented and verified, including native storage,
+   core operations, UTF-8, canonical binary APIs and lifecycle/cost evidence.
+   The contract includes copy-on-write values,
    explicit mutation, content equality, strict UTF-8, a 256 MiB maximum, bounded
    slice retention, automatic release and support for artifacts and existing
    debugger capabilities. General snapshots and replay are separate. The
@@ -65,7 +65,7 @@ owns their current names and responsibilities.
 
 | Concern | Owning plan | Scope and prerequisites |
 | --- | --- | --- |
-| Byte buffers | [AP54: Native byte buffers and UTF-8 integration](improve-syntax/ap54-byte-buffers/README.md) | Native storage, UTF-8 and binary API migration implemented; combined verification open; typed media storage follows separately |
+| Byte buffers | [AP54: Native byte buffers and UTF-8 integration](improve-syntax/ap54-byte-buffers/README.md) | Native storage, UTF-8, canonical binary APIs and lifecycle/cost verification delivered; typed media storage follows separately |
 | SQLite | [SQLite storage](networked-applications/sqlite.md) | Concrete database access, transactions and backup |
 | Cryptography | [Cryptography](networked-applications/cryptography.md) | Password hashing, authentication primitives and signatures |
 | WebSocket | [WebSocket transport](networked-applications/websocket.md) | Bounded messages over TCP/TLS and HTTP |

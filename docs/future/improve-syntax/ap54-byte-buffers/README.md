@@ -1,9 +1,9 @@
 # AP54: Native byte buffers and UTF-8 integration
 
-Status: In progress; AP54.1 through AP54.3 are complete. Effort: L.
+Status: Complete. Effort: L.
 Completion is tracked only in the [central plan](../README.md#package-status).
-The contract, native storage, UTF-8 integration and binary API migration are
-implemented. AP54.4's combined verification remains open.
+Native storage, UTF-8 integration, canonical binary APIs and combined
+lifecycle/integration and representation-cost verification are delivered.
 
 ## Goal
 
@@ -21,18 +21,17 @@ It does not implement the entire packed-data proposal.
 
 | Boundary | Current representation and owner |
 | --- | --- |
-| UTF-8 | `Std.Text.Utf8.Encode` produces `array of integer`; `Decode` validates that array. See [the reference](../../../pascal/std/network/utf8.md) and [source unit](../../../../lib/Std/Text/Utf8.fpas). |
-| Files | Whole-file and handle byte reads/writes use integer arrays, with bounded transfers and partial-write rules. See [file streaming](../../../pascal/std/host/fs-streams.md). |
-| TCP/TLS | Byte receive/send operations use integer arrays. See [sockets](../../../pascal/std/network/net.md). |
-| Processes | Interactive pipe reads, writes and selectable callbacks use integer arrays; pending and EOF have distinct representations. See [processes](../../../pascal/std/host/proc.md). |
-| HTTP and URI | Bodies, streams, SSE fragments and private wire/percent helpers retain integer-array bytes. See [HTTP](../../../pascal/std/network/http.md) and [URI source units](../../../../lib/Std/Net/Uri). |
-| Binary-to-text codecs | Base64, Base64url and hex encode/decode integer arrays through `Std.Encoding`. See [encoding](../../../pascal/std/text/encoding.md). |
-| Randomness | `Std.Crypto.RandomBytes` returns an integer array. See [cryptography](../../../pascal/std/cryptography/crypto.md). |
-| Runtime | `Value::Array` holds tagged elements; managed strings, aggregate ownership, task transfer and native-job admission already have their own lifecycle rules. See [values](../../../../crates/fpas-runtime/src/value/mod.rs) and [native-job admission](../../../../crates/fpas-runtime/src/execution/vm/host_value/admission.rs). |
+| UTF-8 | `Std.Text.Utf8.Encode` produces a buffer, `AppendInPlace` appends text, and `Decode` validates bytes strictly. See [the reference](../../../pascal/std/network/utf8.md) and [source unit](../../../../lib/Std/Text/Utf8.fpas). |
+| Files | Whole-file and handle byte reads/writes use buffers, with bounded transfers and partial-write rules. See [file streaming](../../../pascal/std/host/fs-streams.md). |
+| TCP/TLS | Byte receive/send operations use buffers. See [sockets](../../../pascal/std/network/net.md). |
+| Processes | Interactive pipe reads, writes and selectable callbacks use buffers; pending and EOF retain distinct representations. See [processes](../../../pascal/std/host/proc.md). |
+| HTTP and URI | Bodies, streams, SSE fragments and private wire/percent helpers use buffers. See [HTTP](../../../pascal/std/network/http.md) and [URI source units](../../../../lib/Std/Net/Uri). |
+| Binary-to-text codecs | Base64, Base64url and hex consume and produce buffers through `Std.Encoding`. See [encoding](../../../pascal/std/text/encoding.md). |
+| Randomness | `Std.Crypto.RandomBytes` produces a buffer. See [cryptography](../../../pascal/std/cryptography/crypto.md). |
+| Runtime | `Value::Bytes` owns contiguous copy-on-write storage. Task transfer and native jobs retain stable byte values under the existing lifecycle rules. See [values](../../../../crates/fpas-runtime/src/value/mod.rs) and [native-job admission](../../../../crates/fpas-runtime/src/execution/vm/host_value/admission.rs). |
 
-For example, a file chunk currently passes through an integer array before
-`Utf8.Decode` can validate it. Under the proposed contract it stays in the same
-byte representation from the native read to text decoding. An ordinary
+For example, a file chunk stays in the same byte representation from the native
+read to text decoding. An ordinary
 `array of integer`, such as tokenizer token IDs, remains an ordinary array.
 
 ## Agreed scope and boundaries
@@ -122,7 +121,7 @@ when implementation is authorized; creating this plan does not switch branches.
 - [x] [AP54.1: Byte-buffer contract](01-contract.md)
 - [x] [AP54.2: Implement managed byte storage and core operations](02-native-storage.md)
 - [x] [AP54.3: Integrate UTF-8 and migrate canonical binary APIs](03-utf8-and-migration.md)
-- [ ] [AP54.4: Verify lifecycle, integration and representation costs](04-verification.md)
+- [x] [AP54.4: Verify lifecycle, integration and representation costs](04-verification.md)
 
 Execution order is AP54.1 → AP54.2 → AP54.3 → AP54.4. Each implementation part
 includes its own tests and current documentation. AP54.3 deliberately combines

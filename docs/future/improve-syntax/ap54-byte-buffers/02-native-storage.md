@@ -1,8 +1,8 @@
 # AP54.2: Implement managed byte storage and core operations
 
 Package: [AP54](README.md). Status: Complete on the selected integration branch,
-including implementation, documentation, review and verification. AP54.3 remains
-separate and has not started.
+including implementation, documentation, review and verification. AP54.3 owns
+the delivered UTF-8 and binary API integration.
 
 ## Prerequisites
 
@@ -70,8 +70,8 @@ mutation; only their presentation is bounded.
 
 ## Affected files and implementation owners
 
-These are the delivered storage, type, operation and integration owners. Existing
-integer-array byte-I/O owners are deliberately reserved for AP54.3.
+These are the delivered storage, type, operation and integration owners.
+Canonical binary-I/O migration is owned by AP54.3.
 
 | Action | Path | Purpose |
 | --- | --- | --- |
@@ -111,7 +111,7 @@ handoff, VM failure and normal teardown, with normal and most frequent GC
 schedules. Storage tests separately check immediate last-owner release, slice
 retention and injected allocation failures. No representation benchmarks are
 claimed by AP54.2; combined I/O/native-request ownership and representation-cost
-evidence remain in AP54.3/AP54.4.
+evidence are owned by AP54.3/AP54.4.
 
 ## Acceptance and verification
 

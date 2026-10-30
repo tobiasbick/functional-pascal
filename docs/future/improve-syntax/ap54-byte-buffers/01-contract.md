@@ -1,8 +1,8 @@
 # AP54.1: Byte-buffer contract
 
-Package: [AP54](README.md). Status: Complete: the accepted decisions are specified
-below. This is a planned API, not implemented behavior or authorization to start
-AP54.2. The package README owns the decision record and completion checklist.
+Package: [AP54](README.md). Status: Complete. The accepted contract below is
+implemented by AP54.2 and AP54.3. The package README owns the decision record
+and completion checklist.
 
 ## Public model
 
@@ -248,10 +248,9 @@ Debugger/Printable presentation shows ByteBuffer, logical length and at most
 also exposes capacity. Preview truncation never truncates a retained live value;
 raw bytes are not implicitly decoded as text.
 
-## Planned API examples
+## API examples
 
-These examples specify the accepted future API. They are not executable examples
-of the current release and do not add syntax.
+These examples illustrate the implemented API without adding syntax.
 
 ```pascal
 program BufferValues;
@@ -299,16 +298,15 @@ end.
 Q72–Q76 are recorded in the package README with no unresolved design question.
 The examples specify value/copy independence, empty ranges, self-concatenation,
 capacity release, Unicode/NUL contents, invalid/truncated UTF-8 and limit/byte
-errors. Future regression coverage must also include failed allocations,
+errors. Regression coverage also includes failed allocations,
 overlapping copies, dictionary keys, protected iteration, task/native snapshots,
 partial I/O, compiled-artifact reuse and the existing debugger capabilities.
 
 AP54.2 owns native storage/type/catalog/error/metadata and its tests; AP54.3 owns
 the atomic byte-API/caller migration and UTF-8 implementation. Their affected-file
-tables identify the inspected owners; refine concrete module splits before code
-changes. The namespace allocation remains unchanged until implementation adds
-Std.Bytes to the current catalogue. Current handbooks and generated declarations
-change only with delivery, not with this planning work.
+tables identify the implementation owners. The namespace specification includes
+Std.Bytes in the current catalogue; the handbooks and generated declarations
+document the implemented signatures.
 
 Internal container choice, module layout, allocation-failure test injection and
 copy-on-write fast paths remain delegated implementation work. They must honor

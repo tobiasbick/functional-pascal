@@ -376,7 +376,8 @@ application consistent; existing task ownership and cleanup rules must still hol
 ## 13. Managed host processes and interactive pipes
 
 Status: core process management, interactive pipes and selectable pipe waits are
-implemented. Scope-bound cleanup and native-buffer payloads remain separate proposals.
+implemented. Pipe payloads use AP54's native byte buffers; scope-bound cleanup
+remains a separate proposal.
 
 [Std.Os.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
 environment overrides, supplied stdin, bounded stdout/stderr capture, timeouts
@@ -404,8 +405,8 @@ cancellation cases. Selecting or abandoning a case does not close the handle.
 
 Remaining work belongs to [scope-bound cleanup](#5-scope-bound-cleanup-actions), and any selected readiness
 integration with [host events](#25-native-event-loops-and-selectable-host-events).
-Pipe payloads currently use bounded `array of integer` bytes. Coordinate a future
-change with the shared [native-buffer design](#22-packed-numeric-data-and-binary-buffers).
+Pipe payloads use bounded `Std.Bytes.ByteBuffer` values from the shared
+[native-buffer foundation](#22-packed-numeric-data-and-binary-buffers).
 Further stop/grace-period policies require their own scope decision.
 
 Existing regression coverage includes configuration validation, interactive and
@@ -746,16 +747,16 @@ for the removed type names.
 
 ## 22. Packed numeric data and binary buffers
 
-Status: partially implemented in [AP54](improve-syntax/ap54-byte-buffers/README.md), with a
-complete [byte-buffer contract](improve-syntax/ap54-byte-buffers/01-contract.md):
+Status: the selected byte-buffer scope is implemented and verified in
+[AP54](improve-syntax/ap54-byte-buffers/README.md), with a complete
+[contract](improve-syntax/ap54-byte-buffers/01-contract.md):
 copy-on-write values, explicit mutation, byte-content equality, a 256 MiB maximum,
 strict UTF-8, proper-subrange copying and automatic memory release. Signatures,
 errors, capacity and artifact/debugger behavior are settled. Native byte storage
-and core operations, UTF-8 and canonical binary API migration are implemented in
-AP54.2/AP54.3 on the integration branch; AP54.4's combined verification remains
-open. Existing debugger capabilities are included; general snapshots
-and replay stay separate. Specialized media buffers and language-level packed
-arrays remain separate proposals.
+and core operations, UTF-8, canonical binary APIs and combined lifecycle/cost
+verification are delivered. Existing debugger capabilities are included;
+general snapshots and replay stay separate. Specialized media buffers and
+language-level packed arrays remain separate proposals.
 
 The first selected scope is `Std.Bytes.ByteBuffer`, strict
 string/UTF-8 transitions in the existing `Std.Text.Utf8`, bulk byte/text append,
@@ -825,7 +826,8 @@ route before selecting an implementation. Graphics alone does not require it.
 For the selected byte scope, AP54 records the complete value/mutation, API,
 limits, strict UTF-8, task/native ownership, automatic-release and artifact
 contract with no open design decision. Do not reopen those accepted choices
-through this broader proposal. Implementation and verification remain pending.
+through this broader proposal. Implementation and AP54.4's lifecycle,
+integration and representation-cost verification are complete.
 
 For specialized media buffers and the packed-array alternative, open questions
 include construction, indexing and slicing, value semantics and mutation,
@@ -933,11 +935,11 @@ Status: implemented within the agreed scope. See
 `Size`, `SetLength`, complete UTF-8 text output and cooperative cancellation.
 EOF uses existing read results; no `AtEnd` operation is added.
 
+Byte payloads use the [native byte-buffer foundation](#22-packed-numeric-data-and-binary-buffers),
+and blocking calls follow the [host-I/O contract](#14-host-io-that-releases-vm-workers).
 Sharing/locking controls and typed record files remain deferred, requiring
-separate contracts. Native buffers, lexical resource release and worker-releasing
-I/O belong to [packed data](#22-packed-numeric-data-and-binary-buffers),
-[scope-bound cleanup](#5-scope-bound-cleanup-actions) and
-[host I/O](#14-host-io-that-releases-vm-workers).
+separate contracts. [Lexical resource release](#5-scope-bound-cleanup-actions)
+remains a separate proposal.
 
 ## 27. Standard-library namespaces
 

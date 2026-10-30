@@ -7,6 +7,10 @@ type Cycle = record
   Read: function(): integer;
 end record;
 
+type Message = enum
+  Payload(Items: array of Cycle);
+end enum;
+
 procedure BuildCycle(Data: Bytes.ByteBuffer);
 begin
   var Link: option of Cycle := None;
@@ -29,6 +33,45 @@ begin
   return Data.SetAt(0, Value).Unwrap();
 end function;
 
+procedure Send(Data: Bytes.ByteBuffer; Queue: channel of Message; Ready: channel of boolean);
+begin
+  const Item := Cycle(
+    Payload := Data, Read := function(): integer begin
+      return Data.Length();
+    end function
+  );
+  discard Tasks.Send(Ready, true).Unwrap();
+  discard Tasks.Send(Queue, Message.Payload([Item])).Unwrap();
+end procedure;
+
+procedure AbandonMessages(Data: Bytes.ByteBuffer);
+begin
+  const Queue: channel of Message := Tasks.CreateChannel(1);
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  for Attempt: integer := 1 to 1 do
+    scope
+      const First := go Send(Data, Queue, Ready);
+      discard Tasks.Receive(Ready).Unwrap();
+      Tasks.Wait(First);
+      // The queue is full; the second sender and its captured buffer are abandoned.
+      const Second := go Send(Data.SetAt(0, 42).Unwrap(), Queue, Ready);
+      discard Tasks.Receive(Ready).Unwrap();
+      break;
+    end scope;
+  end for;
+
+  discard Tasks.CloseChannel(Queue);
+  case Tasks.Receive(Queue).Unwrap() of
+    when Message.Payload(const Items):
+      Test.AssertEquals(1, Items.Length());
+      Test.AssertTrue(Items[0].Payload = Data);
+      Test.AssertEquals(Data.Length(), Items[0].Read());
+  end case;
+
+  Test.AssertTrue(Tasks.Receive(Queue) is Error(_));
+  discard Tasks.CloseChannel(Ready);
+end procedure;
+
 procedure Exercise(Fail: boolean);
 begin
   const Original := Bytes.Create(262144).Unwrap();
@@ -39,6 +82,7 @@ begin
     BuildCycle(Local);
     const Tiny := Original.Slice(1, 1).Unwrap();
     Test.AssertEquals(1, Tiny.Capacity());
+    AbandonMessages(Local);
   end for;
   const Gate: channel of integer := Tasks.CreateChannel(1);
   scope

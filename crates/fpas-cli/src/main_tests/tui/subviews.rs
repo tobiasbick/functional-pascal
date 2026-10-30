@@ -3,7 +3,8 @@ use super::*;
 
 #[test]
 fn interactive_demo_preserves_focus_then_confirms_and_quits() {
-    let source = include_str!("../../../../../examples/pascal/tui/interactive_demo.fpas");
+    let source = include_str!("../../../../../examples/pascal/tui/interactive_demo.fpas")
+        .replace("\r\n", "\n");
     let (declarations, _) = source.rsplit_once("\nbegin\n").expect("demo main block");
     let declarations = declarations.replace(
         "uses Std.Ui.Terminal as Tui;",

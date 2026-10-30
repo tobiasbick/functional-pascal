@@ -1,93 +1,91 @@
 # AP54.4: Verify lifecycle, integration and representation costs
 
-Package: [AP54](README.md). Status: not started; AP54.2 and AP54.3 are complete.
-Combined lifecycle/integration and representation-cost evidence remain in this part.
+Package: [AP54](README.md). Status: Complete. Lifecycle/integration regressions,
+correctness verification, representation measurements and review are delivered.
 
-## Prerequisites
+## Contract
 
-- [AP54.2](02-native-storage.md) and [AP54.3](03-utf8-and-migration.md) are delivered,
-  including their operation, ownership, migration tests and current documentation.
-- [AP54.1](01-contract.md) completes Q73–Q76 and fixes observable expected
-  outcomes. Use those rather than assumptions about the chosen Rust container;
-  automatic release must not depend on a buffer `Close`.
+[AP54.1](01-contract.md) fixes the observable API, ownership, capacity, UTF-8,
+artifact and debugger rules. [AP54.2](02-native-storage.md) and
+[AP54.3](03-utf8-and-migration.md) deliver their implementation and primary tests.
+This part adds distinct cross-boundary evidence without new APIs, syntax,
+retention pools or unrelated optimizations. Buffers have no `Close` operation.
 
-## Deliverable
+## Delivered coverage and owners
 
-Close distinct cross-boundary test gaps and verify the complete package
-acceptance criterion. Produce reproducible storage/copy and runtime evidence,
-without promising a speedup or using timing thresholds as correctness tests.
-This part does not authorize additional buffer APIs or unrelated optimizations.
-
-## Lifecycle and memory coverage
-
-| Scenario | Required evidence |
+| Boundary | Evidence and owning files |
 | --- | --- |
-| Copy, slice and mutate | Agreed value semantics, no unexpected alias writes, bounded retention and release after the last owner |
-| Growth, clear and resize | Initialized bytes, checked limits, correct retained-capacity accounting and the documented capacity-release behavior |
-| Nested aggregates and cycles | Buffers in records, enums, containers and closure/cell cycles release their actual backing allocation when unreachable |
-| Failed operations | Rejected size/range/UTF-8 operations leave the agreed observable state and leak no temporary storage |
-| Tasks and channels | Copies, queued messages, task results, channel closure, failure and cancellation retain/release precisely the legitimate owners |
-| Native jobs and selection | Queued/running/completed-but-undelivered jobs, dropped cases, callbacks and shutdown neither publish stale bytes nor retain abandoned storage |
-| VM and host boundaries | Session/domain transfers, repeated VM teardown and post-failure cleanup preserve the approved ownership rules |
-| Tools and artifacts | Separately compiled consumers, intrinsic declarations, first-class values, live debug inspection, retained values, detached calls and bounded event capture support buffers; only the preview is truncated, and general snapshots/replay remain separate |
+| Actual backing and capacity | `crates/fpas-build/tests/byte_buffer_memory.rs` counts native allocation bytes and allocations, including metadata, shared owners, copy-on-write detachment, proper subranges, clear and explicit trim. Shared backing counts once, a tiny slice does not retain its parent, and the final owner returns allocation counts exactly to baseline. |
+| Nested messages, cycles and cancellation | `tests/stdlib/bytes/lifetime_test.fpas` retains buffers in records, enums, arrays, closure/cell cycles, queued messages and task results. Its build memory owner repeats normal and failing VM teardown under default and 1/1/1 collection schedules. |
+| Pending sender ownership | The same memory owner uses public `DebugSession` task holds to prevent parent scope exit until the second sender is provably waiting on a full channel. It cancels that sender, resumes the parent and checks exact reclamation. The first nested message and captured callable remain intact; the cancelled sender publishes no message. There is no sleep race or production test hook. |
+| Native file jobs | `crates/fpas-runtime/src/execution/vm/hosted/fs/fixtures/pool.fpas` retains native byte backing in cyclic callbacks. `crates/fpas-runtime/tests/gc_memory/files.rs` owns exact cross-thread allocation checks for completion, cancellation, scope exit and shutdown. Existing file-wait tests own admission, queued I/O and undelivered-result retirement. |
+| Process cases and callbacks | `crates/fpas-runtime/src/execution/vm/hosted/proc/fixtures/selection.fpas` retains byte-backed callback cycles. `crates/fpas-runtime/tests/gc_memory/processes.rs` measures completion, losing cases, timeout, cancellation, scope exit and shutdown, including native pipe payloads and mutated caller inputs. |
+| Complete binary/text flow | `tests/stdlib/net/byte_buffer_transfer_test.fpas` passes every byte value plus appended Unicode/NUL text through file I/O, a channel/task, bounded socket transfers and hex conversion. Raw malformed UTF-8 survives every handoff; strict decoding reports its byte offset, while the valid text suffix decodes exactly. EOF, input snapshots and partial progress remain covered. |
+| Tools and artifacts | Existing `crates/fpas-debug/tests/byte_buffers.rs`, `crates/fpas-build/tests/program_artifact.rs` and runtime host-value tests retain their primary proof for complete values beyond previews, detached mutation, bounded event capture, cross-session exports and compiled-unit/program-image reuse. General snapshots and replay remain separate. |
+| Portable validation fixture | `crates/fpas-cli/src/main_tests/tui/subviews.rs` normalizes embedded CRLF before splitting the demo source. Its existing owner test exposes the Windows failure and verifies focus, confirmation and quit after repair. |
 
-Use the existing GC/allocation infrastructure, extended to see native backing
-bytes and capacity. Warm up unrelated bounded runtime pools, compare against a
-known baseline and count shared backing once. There is no new buffer retention
-pool: require backing allocations to return to baseline after legitimate owners
-are gone and ensure repeated cycles do not accumulate live storage.
-Wrapper counts alone do not establish native memory release, and allocator RSS
-retention alone does not establish a leak. Tests should force the relevant
-ownership/failure path with synchronization rather than relying on sleep races.
+The native lifecycle owners retain the same GC/allocation infrastructure and
+known baselines. Thread-local runtime pools are destroyed before teardown
+comparisons; unrelated bounded initialization is warmed only where its existing
+owner requires it. Wrapper counts and process RSS are not used as substitutes
+for actual native backing reclamation.
 
-## Measurements
+Existing storage/operation and UTF-8 tests remain the primary owners for growth,
+zero initialization, limits, invalid ranges, atomic failure, injected allocation
+failure, equality, dictionary keys, protected iteration and first-class values.
+AP54.4 does not duplicate those cases at every crossed layer.
 
-Before changing representation, preserve a usable baseline and its revision/
-profile/workload metadata. Use equivalent observable work before and after:
+## Representation evidence
 
-- Native file or loopback/process transfer of bounded binary chunks.
-- Repeated append/copy/slice and growth with both unique and shared storage.
-- UTF-8 encode/decode/text append for ASCII and multibyte text.
-- Base64/hex and HTTP/SSE chunk handling where these expose conversion costs.
-- A small existing VM benchmark subset to detect unrelated representation costs.
+The comparison baseline is `295726a77`, immediately before native byte storage
+and API migration. The native implementation is `1b33e47fe`; AP54.4 changes tests
+and documentation without changing production representation code.
 
-Measure backing bytes/capacity and ownership/copy behavior in addition to VM
-program runtime. Do not claim physical zero-copy from elapsed time alone. Keep
-compiler/build time separate from FPAS program execution; use the repository's
-Fat-LTO benchmark profile consistently on both sides. Profile FPAS execution
-with the built-in profiler before adding external instrumentation.
+Reproducible sources, workload arguments, raw results, environment/toolchain
+metadata, profiles and comparison reports belong under
+`.temp-data/ap54-byte-buffers/`. They are not entries in `history.md` or tracked
+timing reports. The built-in FPAS profiler precedes controlled measurements.
 
-Raw results, environment/profile metadata and comparisons belong under
-`.temp-data/ap54-byte-buffers/`, not `history.md` or tracked timing reports.
-Compare like-for-like runs in the same environment; cloud measurements do not
-establish desktop performance. The acceptance gate is correct behavior and
-bounded/reclaimed storage, not a chosen percentage improvement.
+Equivalent observable work covers native file transfers, append/growth,
+shared copy/mutate/slice, ASCII and multibyte UTF-8 encode/decode/text append,
+Base64/hex, fragmented SSE and buffered HTTP. A small existing VM subset checks
+unrelated representation costs. Both representations use the workspace release
+profile with Fat-LTO and default Cargo build parallelism. Compilation and
+program execution are measured separately; builds and tests do not overlap
+timed workloads.
 
-## Affected files and implementation owners
+Three complete runs per representation retain raw observations and their
+spread. Each toolchain is checked against its intended API before timing;
+workspace-local release artifacts are invalidated when switching checkouts.
+The comparison reports workload-specific costs, including unchanged VM controls
+and unresolved timings near the timer's resolution, rather than a package-wide
+speed claim. Build-watch and cross-checkout artifact friction are recorded in
+`docs/future/dogfooding-gaps.md`.
 
-| Action | Path | Purpose |
-| --- | --- | --- |
-| Modify as needed | `crates/fpas-runtime/src/value/` and owning VM lifecycle tests | Distinct backing-allocation, transfer, cancellation and collection gaps |
-| Modify as needed | `crates/fpas-build/tests/`, `tests/stdlib/` and native-job test owners | End-to-end memory and behavioral regressions missing from earlier parts |
-| Modify as needed | Buffer and migrated API handbook pages, generated declarations, agent guidance | Correct documented discrepancies found by final acceptance |
-| Modify | This file and `README.md` | Describe delivered coverage and actual follow-ups; mark only verified work complete |
-| Modify | `../README.md`, `../../fpas2-language-directions.md`, `../../std-roadmap.md` | Package status and compact delivered byte-buffer status, without claiming all packed/media work is complete |
+Backing/capacity accounting accompanies runtime measurements. Elapsed time
+does not prove physical zero-copy or allocator release to the operating system.
+Repeated runs retain their spread; results near timer resolution stay
+unresolved. Correctness and bounded/reclaimed storage are the acceptance gates,
+without a timing threshold or a promised speedup.
 
-Before coding, list only the concrete remaining coverage gaps and their owning
-files. Do not add duplicate tests that merely repeat AP54.2/AP54.3.
+## Verification and review
 
-## Acceptance and verification
+The workspace `dev-fast` program build, separate guarded Rust compilation and
+execution, full FPAS suite, affected app/example checks, all-target/all-feature
+Clippy with warnings denied, formatting, generated declarations, executable
+documentation, agent-reference budget and editor contract/grammar checks pass.
+Rust cases run serially with Cargo's default build parallelism. The Windows
+CRLF fixture failure is repaired at its owner and its sibling tests pass.
 
-The complete package acceptance in the README passes. Run the workspace
-development build, separate Rust test compilation/execution, full FPAS suite,
-affected app/example checks, strict all-target/all-feature Clippy, format checks,
-generated declarations, executable documentation and relevant editor tests.
-Follow the repository's build/resource-guard workflow. Investigate and fix
-encountered failures; do not classify them away as pre-existing.
+Spec and Standards reviews compare the working tree with `1b33e47fe`. The
+confirmed sender synchronization finding is repaired and re-reviewed without
+remaining actionable findings. Exact commands, initial failures and successful
+rechecks are retained with the raw evidence.
 
-Review against the approved contract and repository standards, fix confirmed
-findings and rerun the relevant checks. Preserve any untested platform coverage
-in the delivery report. Mark AP54.4 and the central package row complete only
-after the required evidence is available. Update the FPAS2 plan for this selected
-byte scope; specialized media, packed arrays and binary-layout helpers remain
-separate proposals. Commit, push and merge only when the user authorizes them.
+This part executes on Windows. Linux and macOS are not rerun here; AP54.3's
+Linux evidence does not substitute for those platform runs of the added cases.
+Specialized media buffers, packed arrays and binary-layout helpers remain
+separate proposals.
+
+AP54.4 and the central package row are complete. Commit, push and merge require
+separate user authorization.

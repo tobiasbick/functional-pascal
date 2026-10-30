@@ -1,10 +1,13 @@
 // Native sockets preserve every byte, task input snapshots, partial counts and EOF.
 program ByteBufferTransferTest;
 
-uses Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Test as Test;
+uses
+  Std.Bytes as ByteStorage, Std.Net.Sockets as Net, Std.Tasks as Tasks, Std.Test as Test,
+  Std.Io.Fs as Fs, Std.Text.Utf8 as Utf8, Std.Encoding as Encoding;
 
-procedure WriteAll(Connection: Net.Connection; Data: ByteStorage.ByteBuffer);
+procedure WriteAll(Connection: Net.Connection; Queue: channel of ByteStorage.ByteBuffer);
 begin
+  const Data := Tasks.Receive(Queue).Unwrap();
   var Offset := 0;
   while Offset < Data.Length() do
     const Part := Data.Slice(Offset, Data.Length() - Offset).Unwrap();
@@ -39,7 +42,13 @@ begin
   for Index: integer := 0 to 255 do
     discard Data.SetAtInPlace(Index, Index).Unwrap();
   end for;
+  const Text := 'Grüße'#0'🌍';
+  discard Utf8.AppendInPlace(var Data, Text).Unwrap();
   const Expected := Data;
+  const Path := Test.ScratchDir() + '/byte-transfer.bin';
+  discard Fs.WriteBytes(Path, Data).Unwrap();
+  const Queue: channel of ByteStorage.ByteBuffer := Tasks.CreateChannel(1);
+  discard Tasks.Send(Queue, Fs.ReadBytes(Path).Unwrap()).Unwrap();
   const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
   const Address := Net.ListenerLocalAddress(Listener).Unwrap();
   const Sender := Net.Connect(Address.Host, Address.Port, 5000).Unwrap();
@@ -47,15 +56,25 @@ begin
   discard Net.SetTimeout(Sender, 5000).Unwrap();
   discard Net.SetTimeout(Receiver, 5000).Unwrap();
   scope
-    const Writer := go WriteAll(Sender, Data);
+    const Writer := go WriteAll(Sender, Queue);
     discard Data.FillInPlace(42, 0, Data.Length()).Unwrap();
     const Reader := go ReadAll(Receiver);
     Tasks.Wait(Writer);
-    Test.AssertTrue(Tasks.Wait(Reader) = Expected);
+    const Received := Tasks.Wait(Reader);
+    Test.AssertTrue(Received = Expected);
+    const Decoded := Encoding.HexDecode(Encoding.HexEncode(Received).Unwrap()).Unwrap();
+    Test.AssertTrue(Decoded = Expected);
+    Test.AssertTrue(Utf8.Decode(Decoded) is Error(Utf8.Utf8Error.InvalidByte(128, _)));
+    Test.AssertEquals(
+      Text,
+      Utf8.Decode(Decoded.Slice(256, Decoded.Length() - 256).Unwrap()).Unwrap()
+    );
   end scope;
 
   Test.AssertEquals(42, Data[0]);
   Test.AssertEquals(0, Expected[0]);
   Test.AssertEquals(255, Expected[255]);
   discard Net.CloseListener(Listener).Unwrap();
+  discard Tasks.CloseChannel(Queue);
+  discard Fs.DeleteFile(Path).Unwrap();
 end.

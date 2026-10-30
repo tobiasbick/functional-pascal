@@ -571,30 +571,14 @@ application instances.
 
 ## 20. Selective TUI updates
 
-Status: tree comparison, layout reuse and damaged-row painting are implemented.
-Explicit dependencies, selectors and cached subview construction remain open.
-Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
-
-The [TUI host](../pascal/std/tui/application.md#headless-frame-and-routing-order)
-calls View for each render request, compares the resulting immutable tree with
-the last successful tree, reuses stable layout, and repaints damaged rows.
-Unchanged trees can skip validation, layout and painting. Terminal presentation
-then transfers only changed cells. View construction itself is not skipped.
-
-Consider explicit dependencies and cached subviews that reuse unaffected view
-and layout results after a model change. Connect invalidation to selectors where
-useful, while preserving immutable element trees, controlled inputs and serial
-host execution. A store subscription alone does not define layout invalidation.
-
-Open questions: cache identity and lifetime, dependency declaration, effect rules
-for cached View callbacks, comparison, and propagation to parents and siblings.
-Define invalidation for resize, focus, pointer state, modal changes and palettes,
-including cleanup when elements disappear. Automatic dependency tracking and
-language-level reactivity require their own explicit decisions.
-
-Evaluation should compare visible output and input routing with uncached
-execution, including focus, resize, menus, editing and background updates. Verify
-unaffected work is skipped and measure benefits on representative TUI workloads.
+Status: implemented. [Cached subviews](../pascal/std/tui/subviews.md) use typed,
+explicitly projected dependencies and caller-supplied equality. Each application
+owns its entries; unused entries and closed hosts release retained dependencies
+and trees. Tree comparison, layout reuse and damaged-row painting remain part of
+the [host render contract](../pascal/std/tui/application.md#headless-frame-and-routing-order).
+General stores/subscriptions belong to [application stores](#19-application-stores-and-selectors).
+Automatic dependency tracking and language-level reactivity remain unselected.
+Coordinate future host changes with the [shared UI plan](shared-ui.md).
 
 ## 21. Explicit-width numeric types, money and decimal
 

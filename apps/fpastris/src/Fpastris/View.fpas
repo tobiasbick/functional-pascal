@@ -119,20 +119,8 @@ end function;
 // Value semantics keep this frame immutable when a view paints its own copy.
 const Backdrop: Tui.TuiCellGrid := Background();
 
-public function View(State: Model.Game): Tui.TuiElement;
+function BuildFrame(State: Model.Game): Tui.TuiElement;
 begin
-  if not Model.FitsTerminal(State) then
-    return Tui.TuiElementBuilders.MakeDesktop(
-      None, [
-        Tui.TuiElementBuilders.MakePanel(
-          'fpastris', [
-            Tui.TuiElementBuilders.MakeLabel('Terminal too small. Use at least 62 × 26 cells.'),
-            Tui.TuiElementBuilders.MakeLabel('Play is stopped. Resize, then press Enter. Q quits.')
-          ]
-        )
-      ]
-    );
-  end if;
   var Grid := Backdrop;
   Drawing.Text(var Grid, 48, 0, PhaseText(State), Theme.Accent());
   Sidebar(var Grid, State);
@@ -145,5 +133,55 @@ begin
       Tui.TuiElementBuilders.MakeLayout(Layout, Tui.TuiElementBuilders.MakeCellGrid(Grid))
     ]
   );
+end function;
+
+function SameNumbers(Previous: array of integer; Current: array of integer): boolean;
+begin
+  if Previous.Length() <> Current.Length() then
+    return false;
+  end if;
+
+  for Index: integer := 0 to Current.Length() - 1 do
+    if Previous[Index] <> Current[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Gravity/lock clocks and terminal size do not alter pixels inside the centered frame.
+function SameFrame(Previous: Model.Game; Current: Model.Game): boolean;
+begin
+  return (Previous.Active = Current.Active) and (Previous.Held = Current.Held)
+    and
+    (Previous.HoldUsed = Current.HoldUsed) and (Previous.Status = Current.Status)
+    and
+    (Previous.Score = Current.Score) and (Previous.Best = Current.Best)
+    and
+    (Previous.Lines = Current.Lines) and (Previous.Notice = Current.Notice)
+    and
+    SameNumbers(Previous.Queue, Current.Queue) and SameNumbers(Previous.Board, Current.Board);
+end function;
+
+const FrameView: Tui.TuiSubview of Model.Game := Tui.TuiSubview.Create(BuildFrame, SameFrame);
+const SmallView: Tui.TuiElement := Tui.TuiElementBuilders.MakeDesktop(
+  None, [
+    Tui.TuiElementBuilders.MakePanel(
+      'fpastris', [
+        Tui.TuiElementBuilders.MakeLabel('Terminal too small. Use at least 62 × 26 cells.'),
+        Tui.TuiElementBuilders.MakeLabel('Play is stopped. Resize, then press Enter. Q quits.')
+      ]
+    )
+  ]
+);
+
+public function View(State: Model.Game): Tui.TuiElement;
+begin
+  if not Model.FitsTerminal(State) then
+    return SmallView;
+  end if;
+
+  return FrameView.Render(State);
 end function;
 end unit;

@@ -203,7 +203,11 @@ Every processed message follows:
 dequeue → Update → command check → View → render → present
 ```
 
-`View` runs for every render request, including the initial frame. The host
+`View` runs for every render request, including the initial frame.
+[Cached subviews](subviews.md) skip building unaffected parts of its tree using
+explicit typed dependency values. Entries belong to the host and expire after
+a frame that does not call their `Render` method, or when the host closes.
+The host
 compares its result with the last successfully rendered tree. An unchanged
 tree, viewport, and pressed control reuse the working surface. Changed trees
 are validated before use. Layout is reused when node kinds, child order, and

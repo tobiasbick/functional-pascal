@@ -38,6 +38,11 @@ before settling decisions that affect UI hosts, particularly
 [buffers](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers),
 [clocks](fpas2-language-directions.md#10-distinct-duration-and-clock-types),
 and [native event loops](fpas2-language-directions.md#25-native-event-loops-and-selectable-host-events).
+The terminal host's [cached subviews](../pascal/std/tui/subviews.md) use explicit
+typed dependency values and host-owned cache lifetimes. Carry that ownership and
+dependency contract into the common UI design; it does not require automatic
+tracking or a particular rendering backend.
+
 This is a design review point, not a request to implement the UI early or to
 make every listed proposal a prerequisite. If a concrete FPAS 2 decision makes
 the planned UI impractical, record the conflict and revisit the sequence before

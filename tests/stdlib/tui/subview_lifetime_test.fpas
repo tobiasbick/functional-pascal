@@ -1,0 +1,61 @@
+program TuiSubviewLifetimeTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+function Equal(Previous: string; Current: string): boolean;
+begin
+  return Previous = Current;
+end function;
+
+function MakeSubview(): Tui.TuiSubview of string;
+begin
+  var Link: option of Tui.TuiSubview of string := None;
+  const Pane := Tui.TuiSubview.Create(
+    function(Text: string): Tui.TuiElement begin
+      if Text.IsEmpty() then
+        return Link.Unwrap().Render('cycle');
+      end if;
+
+      return Tui.TuiElementBuilders.MakeLabel('%d'.Format(Text.Length()));
+    end function,
+    Equal
+  );
+  Link := Some(Pane);
+  return Pane;
+end function;
+
+function Update(State: string; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): string;
+begin
+  return State;
+end function;
+
+procedure Exercise(Close: boolean);
+begin
+  const Pane := MakeSubview();
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(8, 2));
+  var Text := 'payload';
+  for Index: integer := 1 to 14 do
+    Text := Text + Text;
+  end for;
+  const View := function(State: string): Tui.TuiElement begin
+    if State = 'hidden' then
+      return Tui.TuiElement.Empty;
+    end if;
+
+    return Pane.Render(State);
+  end function;
+
+  for Index: integer := 0 to 3 do
+    discard App.RunIterations(Text, Update, View, 2, 0);
+    discard App.RunIterations('hidden', Update, View, 0, 0);
+  end for;
+
+  discard App.RunIterations(Text, Update, View, 0, 0);
+  if Close then
+    App.Close();
+  end if;
+end procedure;
+
+begin
+  Exercise(true);
+end.

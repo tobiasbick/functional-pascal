@@ -1,0 +1,79 @@
+program TuiSubviewDependenciesTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+// Callable fields require an explicit comparison of the selected dependency contract.
+type Dependencies = record
+  Version: integer;
+  Metadata: integer;
+  Read: function(): string;
+end record;
+
+var Builds: integer := 0;
+var PreviousMetadata: integer := -1;
+
+function Build(Data: Dependencies): Tui.TuiElement;
+begin
+  Builds := Builds + 1;
+  return Tui.TuiElementBuilders.MakeLabel(Data.Read());
+end function;
+
+function Equal(Previous: Dependencies; Current: Dependencies): boolean;
+begin
+  PreviousMetadata := Previous.Metadata;
+  return Previous.Version = Current.Version;
+end function;
+
+const Content: Tui.TuiSubview of Dependencies := Tui.TuiSubview.Create(Build, Equal);
+
+function View(State: Dependencies): Tui.TuiElement;
+begin
+  return Content.Render(State);
+end function;
+
+function Update(State: Dependencies; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Dependencies;
+begin
+  return State;
+end function;
+
+function Read(): string;
+begin
+  return 'value';
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(8, 1));
+  discard App.RunIterations(
+    Dependencies(Version := 1, Metadata := 1, Read := Read),
+    Update,
+    View,
+    2,
+    0
+  );
+  Test.AssertEquals(1, Builds);
+  discard App.RunIterations(
+    Dependencies(Version := 1, Metadata := 2, Read := Read),
+    Update,
+    View,
+    0,
+    0
+  );
+  discard App.RunIterations(
+    Dependencies(Version := 1, Metadata := 3, Read := Read),
+    Update,
+    View,
+    0,
+    0
+  );
+  Test.AssertEquals(2, PreviousMetadata);
+  Test.AssertEquals(1, Builds);
+  discard App.RunIterations(
+    Dependencies(Version := 2, Metadata := 4, Read := Read),
+    Update,
+    View,
+    0,
+    0
+  );
+  Test.AssertEquals(2, Builds);
+  App.Close();
+end.

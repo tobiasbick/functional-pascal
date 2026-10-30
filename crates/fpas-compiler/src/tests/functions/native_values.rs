@@ -3,6 +3,35 @@
 use super::super::{assert_succeeds, parse_ok};
 
 #[test]
+fn native_callable_mutation_preserves_original_computed_receiver_indices() {
+    assert_succeeds(
+        r#"
+program IndexedMutation;
+type Row = record Values: array of integer; end record;
+var Rows: array of Row := [Row(Values := [1, 2])];
+var Visits: integer := 0;
+function Index(): integer;
+begin Visits := Visits + 1; return 1; end function;
+function Value(): integer;
+begin
+  if Visits <> 1 then panic('receiver must precede argument'); end if;
+  return 3;
+end function;
+begin
+  Rows[Index() - 1].Values.PushInPlace(Value());
+  if Visits <> 1 then panic('push index evaluated twice'); end if;
+  const Last := Rows[Index() - 1].Values.PopInPlace();
+  if Last <> 3 or Visits <> 2 then panic('pop index'); end if;
+  Rows[Index() - 1].Values.MapInPlace(function(N: integer): integer begin return N * 2; end function);
+  if Visits <> 3 or Rows[0].Values[1] <> 4 then panic('map index'); end if;
+  Rows[Index() - 1].Values.ReverseInPlace();
+  if Visits <> 4 or Rows[0].Values[0] <> 4 then panic('reverse index'); end if;
+end.
+"#,
+    );
+}
+
+#[test]
 fn native_callable_values_execute_with_context_aliases_and_value_receivers() {
     for source in [
         include_str!("../../../../../tests/stdlib/fluent/native_callable_routines_test.fpas"),

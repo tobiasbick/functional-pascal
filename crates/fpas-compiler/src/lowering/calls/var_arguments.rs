@@ -32,13 +32,22 @@ impl LoweringContext {
         &mut self,
         designator: &Designator,
     ) -> Result<ValueId, CompileError> {
+        self.lower_var_argument_prefix(designator, designator.parts.len())
+    }
+
+    /// Borrow the checked index expressions when an operation follows the storage path.
+    pub(super) fn lower_var_argument_prefix(
+        &mut self,
+        designator: &Designator,
+        part_count: usize,
+    ) -> Result<ValueId, CompileError> {
         let span = designator.span;
         let (root_name, root_parts) = self.designator_root(designator)?;
         let mut ty = self
             .root_type(&root_name)
             .ok_or_else(|| unsupported(span, "`var` argument root"))?;
         let mut reference = self.reference_to_variable(&root_name, ty, span)?;
-        for part in &designator.parts[root_parts..] {
+        for part in &designator.parts[root_parts..part_count] {
             match part {
                 DesignatorPart::Ident(name, part_span) => {
                     let Some(IrType::Record(layout)) = self.type_kind(ty) else {

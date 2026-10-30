@@ -761,6 +761,7 @@ dependencies = [
  "fpas-project",
  "fpas-runtime",
  "fpas-unit",
+ "stats_alloc",
  "toml",
 ]
 

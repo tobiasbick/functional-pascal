@@ -9,7 +9,8 @@ uses
   Std.Ui.Terminal.Cells.Palette as Palette, Std.Ui.Terminal.Cells.Style as Style,
   Std.Ui.Terminal.Cells.StyleRole as StyleRole, Std.Ui.Terminal.Chrome.Button as Button,
   Std.Ui.Terminal.Chrome.CellGrid as CellGrid, Std.Ui.Terminal.Chrome.Gauge as Gauge, Std.Ui.Terminal.Chrome.Input as Input,
-  Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Elements.Subview as Subview,
+  Std.Ui.Terminal.Geometry.Point as Point,
   Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Geometry.Size as Size,
   Std.Ui.Terminal.Chrome.KeyGesture as KeyGesture, Std.Ui.Terminal.Chrome.MenuItem as MenuItem,
   Std.Ui.Terminal.Chrome.MenuNode as MenuNode, Std.Ui.Terminal.Chrome.StatusItem as StatusItem,
@@ -165,6 +166,26 @@ public type TuiElement = Element.TuiElement;
 
 // Named element constructors.
 public type TuiElementBuilders = Element.TuiElementBuilders;
+
+// Explicitly selected dependencies and an application-owned cached element tree.
+public type TuiSubview of T = record
+  Resolve: function(Dependencies: T): Element.TuiElement;
+
+  // Build and Equal must depend only on their explicit arguments.
+  public static function Create(
+    Build: function(Dependencies: T): Element.TuiElement;
+    Equal: function(Previous: T; Current: T): boolean
+  ): TuiSubview of T;
+  begin
+    return TuiSubview(Resolve := Subview.TuiCreateSubview(Build, Equal));
+  end function;
+
+  // May only be called synchronously while an application evaluates View.
+  public function Render(Self: TuiSubview of T; Dependencies: T): Element.TuiElement;
+  begin
+    return Self.Resolve(Dependencies);
+  end function;
+end record;
 
 // Explicit copy of the last painted headless surface.
 public type TuiSurfaceSnapshot = RenderingSurface.TuiSurfaceSnapshot;

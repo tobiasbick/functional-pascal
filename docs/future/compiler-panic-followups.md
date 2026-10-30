@@ -13,4 +13,17 @@ language or hide the limitation inside a library implementation.
 
 ## Open entries
 
-No open entries.
+### Generic type aliases in facades
+
+- **Source shape:** `public type TuiSubview of T = Subview.TuiSubview of T;`.
+- **Restriction:** FP2001 permits type parameters only on record and enum
+  declarations. A facade can reexport concrete types but cannot express a
+  transparent parameterized alias.
+- **Current implementation:** the public generic record is declared directly
+  in `Std.Ui.Terminal`. Its typed cache implementation remains in a private
+  source unit and returns the record's callable field. There is one public type
+  and API; no second wrapper type or public subunit is introduced.
+- **Later resolution:** evaluate transparent generic aliases as a separate
+  language change, with explicit syntax approval. Cover generic argument
+  substitution, constraints, nominal identity, visibility and methods through
+  independently compiled/reexported units before migrating facade declarations.

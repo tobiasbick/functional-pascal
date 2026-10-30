@@ -1,0 +1,78 @@
+unit Std.Ui.Terminal.Elements.Subview;
+
+uses Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Runtime.Subviews as Subviews;
+
+type TuiSubviewEntry of T = record
+  Owner: integer;
+  Epoch: integer;
+  Dependencies: T;
+  Tree: Element.TuiElement;
+end record;
+
+// A typed dependency projection with one cached tree per live application.
+public function TuiCreateSubview<T>(
+  Build: function(Dependencies: T): Element.TuiElement;
+  Equal: function(Previous: T; Current: T): boolean
+): function(Dependencies: T): Element.TuiElement;
+begin
+  var Entries: array of TuiSubviewEntry of T := [];
+  var Resolving := false;
+  return function(Dependencies: T): Element.TuiElement begin
+    if Resolving then
+      panic('Tui subview callbacks must not reenter the same subview');
+    end if;
+    const Owner := Subviews.TuiSubviewOwner();
+    const Epoch := Subviews.TuiSubviewEpoch(Owner);
+    Resolving := true;
+    var Found := -1;
+    for Index: integer := 0 to Entries.Length() - 1 do
+      if Entries[Index].Owner = Owner then
+        Found := Index;
+        break;
+      end if;
+    end for;
+
+    if Found >= 0 then
+      if Equal(Entries[Found].Dependencies, Dependencies) then
+        Entries[Found].Dependencies := Dependencies;
+        Entries[Found].Epoch := Epoch;
+        Resolving := false;
+        return Entries[Found].Tree;
+      end if;
+    end if;
+    const Tree := Build(Dependencies);
+    const Entry: TuiSubviewEntry of T := TuiSubviewEntry(
+      Owner := Owner, Epoch := Epoch, Dependencies := Dependencies, Tree := Tree
+    );
+    if Found >= 0 then
+      Entries[Found] := Entry;
+    else
+      Entries.PushInPlace(Entry);
+      Subviews.TuiSubviewRegister(
+        function(KeepUsed: boolean): boolean begin
+          for Index: integer := 0 to Entries.Length() - 1 do
+            if Entries[Index].Owner = Owner then
+              if KeepUsed and (Entries[Index].Epoch = Subviews.TuiSubviewEpoch(Owner)) then
+                return true;
+              end if;
+
+              Entries := Entries.Slice(
+                0,
+                Index
+              ).Concat(
+                Entries.Slice(Index + 1, Entries.Length() - Index - 1)
+              );
+              return false;
+            end if;
+          end for;
+
+          return false;
+        end function
+      );
+    end if;
+
+    Resolving := false;
+    return Tree;
+  end function;
+end function;
+end unit;

@@ -46,3 +46,8 @@ apps/local-chat/
 
 The headless workflow regression lives under
 [`tests/apps/local_chat/`](../../tests/apps/local_chat).
+
+The transcript uses a [cached subview](../../docs/pascal/std/tui/subviews.md)
+whose inputs are conversation entries, wrapping width, caret and scroll offset.
+Editing the draft leaves transcript construction unchanged. Header and keyboard
+hints are immutable values; focus and responsive layout stay in the root View.

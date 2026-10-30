@@ -7,6 +7,10 @@ Demonstrates: units and project dependencies, record methods and statics,
 postfix chaining (`Z.Sq().Add(C)`), MVU state, `TuiCellGrid`, concrete
 truecolor cells, panels, rules, gauges, status hints, and a modal overlay.
 
+The detail and gauge subtree uses [cached subviews](../../../docs/pascal/std/tui/subviews.md)
+with explorer settings and render readiness as explicit inputs. Image publication
+remains independent, and status hints are shared immutable values.
+
 The initial frame is blank and remains interactive while a render subscription
 uses one cancellable task per row on the VM's CPU-sized worker pool. It publishes
 one complete image through the application's bounded typed inbox. While a new image

@@ -1,0 +1,86 @@
+program TuiSubviewCacheTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Title: string;
+  Count: integer;
+  Visible: boolean;
+end record;
+
+var Builds: integer := 0;
+var Views: integer := 0;
+
+function Build(Title: string): Tui.TuiElement;
+begin
+  Builds := Builds + 1;
+  return Tui.TuiElementBuilders.MakeLabel(Title);
+end function;
+
+function Equal(Previous: string; Current: string): boolean;
+begin
+  return Previous = Current;
+end function;
+
+const Header: Tui.TuiSubview of string := Tui.TuiSubview.Create(Build, Equal);
+const Alias: Tui.TuiSubview of string := Header;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  Views := Views + 1;
+  var Children := [Tui.TuiElementBuilders.MakeLabel('%d'.Format(State.Count))];
+  if State.Visible then
+    Children.PushInPlace(Alias.Render(State.Title));
+  end if;
+
+  return Tui.TuiElementBuilders.MakeColumn(Children);
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  return Model(Title := State.Title, Count := State.Count + 1, Visible := State.Visible);
+end function;
+
+procedure Render(App: Tui.TuiApplication; Title: string; Visible: boolean);
+begin
+  discard App.RunIterations(
+    Model(Title := Title, Count := 0, Visible := Visible),
+    Update,
+    View,
+    0,
+    0
+  );
+end procedure;
+
+begin
+  const Size := Tui.TuiSize.Create(20, 4);
+  const First := Tui.TuiApplication.OpenForTest(Size);
+  discard First.RunIterations(
+    Model(Title := 'first', Count := 0, Visible := true),
+    Update,
+    View,
+    4,
+    0
+  );
+  Test.AssertEquals(5, Views);
+  Test.AssertEquals(1, Builds);
+  Render(First, 'changed', true);
+  Test.AssertEquals(2, Builds);
+  Render(First, 'changed', false);
+  Render(First, 'changed', true);
+  Test.AssertEquals(3, Builds);
+  const Second := Tui.TuiApplication.OpenForTest(Size);
+  Render(Second, 'changed', true);
+  Test.AssertEquals(4, Builds);
+  Render(First, 'changed', true);
+  Render(Second, 'changed', true);
+  Test.AssertEquals(4, Builds);
+  First.Close();
+  Render(Second, 'changed', true);
+  Test.AssertEquals(4, Builds);
+  Second.Close();
+  const Third := Tui.TuiApplication.OpenForTest(Size);
+  Render(Third, 'changed', true);
+  Test.AssertEquals(5, Builds);
+  Third.Close();
+end.

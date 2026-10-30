@@ -6,7 +6,7 @@
     reason = "integration fixtures use expect to keep lookup assertions focused"
 )]
 
-mod support;
+use crate::support;
 
 use std::path::{Path, PathBuf};
 

@@ -1,31 +1,7 @@
 //! Exact redirect targets and decimal framing through loopback HTTP.
 use super::*;
-use std::time::{Duration, Instant};
-
 fn accept(listener: &TcpListener) -> TcpStream {
-    listener.set_nonblocking(true).expect("nonblocking fixture");
-    let deadline = Instant::now() + Duration::from_secs(20);
-    loop {
-        match listener.accept() {
-            Ok((stream, _)) => {
-                // Accepted sockets can inherit the listener's nonblocking mode (Windows), which
-                // turns a not-yet-arrived request into a spurious `WouldBlock` read failure.
-                stream
-                    .set_nonblocking(false)
-                    .expect("blocking fixture connection");
-                stream
-                    .set_read_timeout(Some(Duration::from_secs(5)))
-                    .expect("read deadline");
-                return stream;
-            }
-            Err(error)
-                if error.kind() == std::io::ErrorKind::WouldBlock && Instant::now() < deadline =>
-            {
-                std::thread::sleep(Duration::from_millis(10))
-            }
-            Err(error) => panic!("accept HTTP fixture: {error}"),
-        }
-    }
+    listener.accept().expect("accept HTTP fixture").0
 }
 
 #[test]
@@ -51,7 +27,7 @@ fn source_review_redirects_preserve_exact_request_paths() {
         .map(|(base, _, _)| format!("'{base}'"))
         .collect::<Vec<_>>()
         .join(", ");
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         for (base, location, expected) in cases {
             let mut first = accept(&listener);
             assert!(read_request(&mut first).starts_with(&format!("GET {base} HTTP/1.1\r\n")));
@@ -83,8 +59,8 @@ end.
 "#
         ),
     );
-    server.join().expect("fixture completed");
     assert_eq!(exit, 0, "{stderr}");
+    server.join().expect("fixture completed");
 }
 
 #[test]
@@ -101,7 +77,7 @@ fn source_review_client_rejects_non_decimal_lengths() {
     ];
     let listener = TcpListener::bind("127.0.0.1:0").expect("fixture");
     let port = listener.local_addr().expect("address").port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         for value in values {
             let mut stream = accept(&listener);
             read_request(&mut stream);
@@ -140,6 +116,6 @@ end.
             values.len()
         ),
     );
-    server.join().expect("fixture completed");
     assert_eq!(exit, 0, "{stderr}");
+    server.join().expect("fixture completed");
 }

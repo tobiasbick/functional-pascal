@@ -1,5 +1,6 @@
 //! Inspect production decoder state through a fixture-only source accessor.
 use super::super::*;
+use super::TempDir;
 use std::path::Path;
 
 fn copy_sources(source: &Path, target: &Path) {
@@ -25,7 +26,7 @@ fn source_review_sse_failure_releases_retained_input() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace");
-    let cwd = create_temp_dir("sse-retained-state");
+    let cwd = TempDir::new("sse-retained-state").expect("fixture directory");
     let library = cwd.join("lib");
     copy_sources(&root.join("lib"), &library);
     let decoder = library.join("Std/Net/Http/Sse.fpas");

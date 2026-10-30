@@ -13,23 +13,40 @@ use std::process::Stdio;
 use std::time::{Duration, Instant};
 use std::{env, fs};
 
+#[path = "../test_support/process.rs"]
+mod process;
+
+struct DapProcess {
+    child: process::Process,
+    reader: Option<std::thread::JoinHandle<()>>,
+}
+
+impl Drop for DapProcess {
+    fn drop(&mut self) {
+        let _ = self.child.terminate();
+        if let Some(reader) = self.reader.take() {
+            let _ = reader.join();
+        }
+    }
+}
+
 #[test]
 fn dap_terminal_acquisition_reaches_a_breakpoint_without_keepalive_requests() {
-    let root = env::temp_dir().join(format!("fpas-dap-terminal-{}", std::process::id()));
-    fs::create_dir_all(&root).expect("fixture directory");
+    let root = process::TempDir::new("fpas-dap-terminal").expect("fixture directory");
     let source = root.join("terminal.fpas");
     fs::write(&source, "program TerminalProbe; uses Std.Console as Console; procedure Marker(); begin Console.WriteLn('ready'); end procedure; begin Console.AcquireInteractiveTerminal(); Marker(); Console.ReleaseInteractiveTerminal(); end.").expect("terminal probe");
-    let mut child = Command::new(env!("CARGO_BIN_EXE_fpas"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_fpas"));
+    command
         .args(["debug"])
         .arg(&source)
         .args(["--protocol", "dap"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-        .expect("DAP process");
-    let mut input = child.stdin.take().expect("DAP input");
-    let output = child.stdout.take().expect("DAP output");
+        .stderr(Stdio::null());
+    let mut child =
+        process::Process::spawn_raw(command, Duration::from_secs(10)).expect("DAP process");
+    let mut input = child.take_stdin().expect("DAP input");
+    let output = child.take_stdout().expect("DAP output");
     let (sender, receiver) = std::sync::mpsc::channel();
     let reader = std::thread::spawn(move || {
         let mut output = BufReader::new(output);
@@ -59,6 +76,10 @@ fn dap_terminal_acquisition_reaches_a_breakpoint_without_keepalive_requests() {
             }
         }
     });
+    let mut process = DapProcess {
+        child,
+        reader: Some(reader),
+    };
     for (index, (command, arguments)) in [
         ("initialize", serde_json::json!({})),
         ("launch", serde_json::json!({"stopOnEntry": false})),
@@ -87,11 +108,14 @@ fn dap_terminal_acquisition_reaches_a_breakpoint_without_keepalive_requests() {
             Err(_) => break,
         }
     }
-    let _ = child.kill();
-    let _ = child.wait();
+    process.child.terminate().expect("DAP process cleanup");
     drop(input);
-    reader.join().expect("DAP reader cleanup");
-    fs::remove_dir_all(root).expect("fixture cleanup");
+    process
+        .reader
+        .take()
+        .expect("DAP reader")
+        .join()
+        .expect("DAP reader cleanup");
     assert!(
         stopped,
         "terminal acquisition blocked with the protocol reader waiting for input"
@@ -237,8 +261,7 @@ end.
 
 #[test]
 fn termination_close_completion_and_failure_reap_interactive_children() {
-    let root = env::temp_dir().join(format!("fpas-pipe-owner-{}", std::process::id()));
-    fs::create_dir_all(&root).expect("fixture directory");
+    let root = process::TempDir::new("fpas-pipe-owner").expect("fixture directory");
     let source = root.join("owner.fpas");
     let prefix = SOURCE
         .split("begin\n  const Options :=")
@@ -269,36 +292,39 @@ end.
 "#).expect("owner controller");
     for mode in ["terminate", "close", "return", "panic"] {
         let listener = TcpListener::bind("127.0.0.1:0").expect("liveness listener");
-        let output = Command::new(env!("CARGO_BIN_EXE_fpas"))
+        let mut command = Command::new(env!("CARGO_BIN_EXE_fpas"));
+        command
             .current_dir(&root)
             .arg("run")
             .arg(&source)
             .arg("--")
             .arg(env::current_exe().expect("test fixture executable"))
             .arg(listener.local_addr().expect("address").to_string())
-            .arg(mode)
-            .output()
-            .expect("FPAS owner");
-        assert_eq!(
-            output.status.success(),
-            mode != "panic",
-            "{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
+            .arg(mode);
+        let mut child =
+            process::Process::spawn(command, Duration::from_secs(30)).expect("bounded FPAS owner");
+        child
+            .observe_exit()
+            .expect("FPAS owner exit before fallback cleanup");
         listener
             .set_nonblocking(true)
             .expect("nonblocking listener");
         let deadline = Instant::now() + Duration::from_secs(3);
         let mut stream = loop {
             match listener.accept() {
-                Ok((stream, _)) => break stream,
+                Ok((stream, _)) => {
+                    stream
+                        .set_nonblocking(false)
+                        .expect("blocking liveness stream");
+                    break stream;
+                }
                 Err(error)
                     if error.kind() == std::io::ErrorKind::WouldBlock
                         && Instant::now() < deadline =>
                 {
                     std::thread::sleep(Duration::from_millis(1))
                 }
-                Err(error) => panic!("child never connected: {error}"),
+                Err(error) => panic!("child never connected: {error}\n{}", child.diagnostics()),
             }
         };
         stream
@@ -309,25 +335,29 @@ end.
             Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset => {}
             other => panic!("owned child must have exited after {mode}: {other:?}"),
         }
+        let output = child
+            .wait()
+            .expect("owner output after SUT child-liveness assertion");
+        assert_eq!(
+            output.status.success(),
+            mode != "panic",
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
-    fs::remove_dir_all(root).expect("fixture cleanup");
 }
 
 #[test]
 fn interactive_pipes_exchange_raw_bytes_and_close_aliases() {
-    let root = env::temp_dir().join(format!("fpas-pipes-{}", std::process::id()));
-    fs::create_dir_all(&root).expect("fixture directory");
+    let root = process::TempDir::new("fpas-pipes").expect("fixture directory");
     let source = root.join("pipes.fpas");
     fs::write(&source, SOURCE).expect("FPAS controller");
     let project = root.join("pipes.fpasprj");
     fs::write(&project, "[project]\nname = 'pipes'\nkind = 'program'\nmain = 'pipes.fpas'\n[sources]\ninclude = ['pipes.fpas']\n").expect("controller project");
     let child = env::current_exe().expect("fixture executable");
-    let build = Command::new(env!("CARGO_BIN_EXE_fpas"))
-        .current_dir(&root)
-        .arg("build")
-        .arg(&project)
-        .output()
-        .expect("build controller image");
+    let mut command = Command::new(env!("CARGO_BIN_EXE_fpas"));
+    command.current_dir(&root).arg("build").arg(&project);
+    let build = process::capture(command, Duration::from_secs(30)).expect("build controller image");
     assert!(
         build.status.success(),
         "{}",
@@ -339,19 +369,19 @@ fn interactive_pipes_exchange_raw_bytes_and_close_aliases() {
         } else {
             source.clone()
         };
-        let output = Command::new(env!("CARGO_BIN_EXE_fpas"))
+        let mut command = Command::new(env!("CARGO_BIN_EXE_fpas"));
+        command
             .current_dir(&root)
             .arg("run")
             .arg(target)
             .arg("--")
-            .arg(&child)
-            .output()
-            .expect("controller process");
+            .arg(&child);
+        let output =
+            process::capture(command, Duration::from_secs(30)).expect("bounded controller process");
         assert!(
             output.status.success(),
             "{}",
             String::from_utf8_lossy(&output.stderr)
         );
     }
-    fs::remove_dir_all(root).expect("fixture cleanup");
 }

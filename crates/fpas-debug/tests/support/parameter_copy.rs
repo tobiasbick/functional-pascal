@@ -1,6 +1,7 @@
 //! Stop after a migrated parameter's writable local copy is initialized.
 
 #![allow(
+    clippy::expect_used,
     clippy::panic,
     reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
 )]

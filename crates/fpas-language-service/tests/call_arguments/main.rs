@@ -2,8 +2,7 @@
 
 #![allow(clippy::expect_used)]
 
-#[path = "../support/mod.rs"]
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;

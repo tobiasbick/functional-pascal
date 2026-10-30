@@ -5,7 +5,7 @@
     reason = "integration fixtures use expect to keep manifest assertions focused"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{WorkspaceContext, WorkspaceKind};
 use support::{TempDirectory, write_program_project};

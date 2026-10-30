@@ -82,6 +82,9 @@ fn connected_socket_is_restored_to_blocking_io() {
     )
     .expect("connect");
     stream
+        .set_nodelay(true)
+        .expect("connected TCP options must be usable");
+    stream
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("timeout");
     let (mut peer, _) = listener.accept().expect("accept");

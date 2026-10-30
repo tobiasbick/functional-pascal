@@ -1,13 +1,10 @@
-use std::time::Duration;
-
-use super::{exchange, finish_server, start_server, unused_port};
+use super::{exchange, finish_server, start_server};
 
 #[test]
 fn fpas_http_server_loop_dispatches_multiple_requests() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-loop",
-        format!(
+        String::from(
             r#"program HttpServerLoop;
 
 uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
@@ -20,9 +17,10 @@ begin
 end function;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
@@ -40,14 +38,14 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 
+    let port = server.port();
     let first = std::thread::spawn(move || {
         exchange(port, &[b"GET /first HTTP/1.1\r\nHost: localhost\r\n\r\n"])
     });
-    std::thread::sleep(Duration::from_millis(20));
     let second = std::thread::spawn(move || {
         exchange(port, &[b"GET /second HTTP/1.1\r\nHost: localhost\r\n\r\n"])
     });
@@ -69,13 +67,12 @@ end.
 
 #[test]
 fn fpas_http_server_loop_isolates_malformed_requests() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-loop-invalid-request",
-        format!(
+        String::from(
             r#"program HttpServerLoopInvalidRequest;
 
-uses Std.Net.Http as Http, Std.Net.Sockets as Net;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net;
 
 function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
@@ -83,9 +80,10 @@ begin
 end function;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
@@ -105,10 +103,11 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 
+    let port = server.port();
     let invalid = std::thread::spawn(move || {
         exchange(port, &[b"GET / HTTP/1.1\r\nHost: one\r\nHost: two\r\n\r\n"])
     });
@@ -131,10 +130,9 @@ end.
 
 #[test]
 fn fpas_http_server_loop_rejects_invalid_options_before_accepting() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-loop-invalid-options",
-        format!(
+        String::from(
             r#"program HttpServerLoopInvalidOptions;
 
 uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net;
@@ -145,9 +143,10 @@ begin
 end function;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 0;
       case Http.Serve(ListenerValue, Options, Handle) of
@@ -168,7 +167,7 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 

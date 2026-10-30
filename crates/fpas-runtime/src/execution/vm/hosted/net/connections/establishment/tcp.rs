@@ -7,7 +7,7 @@ use std::io;
 use std::net::{SocketAddr, TcpStream};
 use std::time::{Duration, Instant};
 
-use socket2::{Domain, Protocol, Socket, Type};
+use mio::{Events, Interest, Poll, Token};
 
 use super::remaining;
 
@@ -20,19 +20,23 @@ pub(super) fn connect(
     is_cancelled: impl Fn() -> bool,
 ) -> Result<TcpStream, Failure> {
     remaining(deadline, &is_cancelled)?;
-    let socket = Socket::new(
-        Domain::for_address(address),
-        Type::STREAM,
-        Some(Protocol::TCP),
-    )
-    .map_err(connect_error)?;
-    socket.set_nonblocking(true).map_err(connect_error)?;
-    match socket.connect(&address.into()) {
-        Ok(()) => {}
-        Err(error) if in_progress(&error) => {}
-        Err(error) => return Err(connect_error(error)),
-    }
+    let mut poll = Poll::new().map_err(connect_error)?;
+    let mut socket = mio::net::TcpStream::connect(address).map_err(connect_error)?;
+    poll.registry()
+        .register(&mut socket, Token(0), Interest::WRITABLE)
+        .map_err(connect_error)?;
+    let mut events = Events::with_capacity(4);
     wait_for_connection(deadline, &is_cancelled, || {
+        events.clear();
+        match poll.poll(&mut events, Some(Duration::ZERO)) {
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => return Ok(false),
+            Err(error) => return Err(error),
+            Ok(()) => {}
+        }
+        // Windows peer_addr can precede completion of the socket's connect context.
+        if events.is_empty() {
+            return Ok(false);
+        }
         if let Some(error) = socket.take_error()? {
             return Err(error);
         }
@@ -44,9 +48,13 @@ pub(super) fn connect(
             Err(error) => Err(error),
         }
     })?;
-    socket.set_nonblocking(false).map_err(connect_error)?;
+    poll.registry()
+        .deregister(&mut socket)
+        .map_err(connect_error)?;
+    let stream: TcpStream = socket.into();
+    stream.set_nonblocking(false).map_err(connect_error)?;
     remaining(deadline, is_cancelled)?;
-    Ok(socket.into())
+    Ok(stream)
 }
 
 fn wait_for_connection(

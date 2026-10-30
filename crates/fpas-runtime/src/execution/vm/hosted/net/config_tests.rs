@@ -1,10 +1,9 @@
 //! Configuration waits must release one worker and retire their native resources.
 
 use super::super::HostedState;
-use crate::execution::vm::{
-    ShutdownHandle, Vm,
-    debug::{DebugRunResult, DebugSession},
-};
+#[cfg(unix)]
+use crate::execution::vm::debug::{DebugRunResult, DebugSession};
+use crate::execution::vm::{ShutdownHandle, Vm};
 use crate::{CollectionSchedule, VerifiedExecutable};
 use std::{
     io::{self, Write},

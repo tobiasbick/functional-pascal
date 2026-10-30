@@ -6,10 +6,7 @@
     reason = "protocol tests keep fixture failures local"
 )]
 
-#[path = "support/parameter_copy.rs"]
-mod parameter_copy;
-
-use parameter_copy::initialized_local_frame;
+use crate::parameter_copy::initialized_local_frame;
 
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use fpas_runtime::execution::{

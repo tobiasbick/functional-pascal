@@ -1,6 +1,6 @@
 //! Editor overlays publish current enum diagnostics and clear them after repair.
 
-mod support;
+use crate::support;
 
 use fpas_diagnostics::codes::{SEMA_BACKING_VALUE_IN_DATA_ENUM, SEMA_DUPLICATE_ENUM_BACKING_VALUE};
 use fpas_language_service::{LanguageService, WorkspaceContext};

@@ -1,5 +1,6 @@
+use super::network_fixture::Listener as TcpListener;
+use super::process::TempDir;
 use std::io::Read;
-use std::net::TcpListener;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -23,19 +24,34 @@ fn https_client_rejects_untrusted_server_certificate() {
         .expect("server certificate");
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind TLS fixture");
     let port = listener.local_addr().expect("TLS fixture address").port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (socket, _) = listener.accept().expect("accept HTTPS client");
         let connection = ServerConnection::new(Arc::new(server_config)).expect("create TLS server");
         let mut stream = StreamOwned::new(connection, socket);
         let mut byte = [0_u8; 1];
-        let _ = stream.read(&mut byte);
+        let error = stream
+            .read(&mut byte)
+            .expect_err("untrusted certificate must stop the handshake");
+        assert!(
+            matches!(
+                error
+                    .get_ref()
+                    .and_then(|error| error.downcast_ref::<rustls::Error>()),
+                Some(rustls::Error::AlertReceived(
+                    rustls::AlertDescription::UnknownCA
+                        | rustls::AlertDescription::CertificateUnknown
+                        | rustls::AlertDescription::BadCertificate
+                ))
+            ),
+            "client did not reject the presented certificate: {error}"
+        );
     });
 
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir("https-untrusted-certificate");
+    let cwd = TempDir::new("https-untrusted-certificate").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -74,8 +90,7 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("HTTPS fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("HTTPS fixture must finish");
     assert_eq!(stdout, "ok\n");
 }

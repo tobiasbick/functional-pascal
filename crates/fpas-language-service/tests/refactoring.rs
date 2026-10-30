@@ -6,7 +6,7 @@
     reason = "source transformation fixtures use direct assertions"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, RefactoringKind, SemanticEdit, WorkspaceContext};
 use support::TempDirectory;

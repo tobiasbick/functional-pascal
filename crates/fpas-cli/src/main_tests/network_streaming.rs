@@ -1,7 +1,8 @@
 mod sse_state;
 
+use super::network_fixture::{Listener as TcpListener, Stream as TcpStream};
+use super::process::TempDir;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::time::Duration;
 
@@ -33,7 +34,7 @@ fn http_stream_decodes_fragmented_chunked_sse_response() {
         .local_addr()
         .expect("streaming fixture address")
         .port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (mut stream, _) = listener.accept().expect("accept streaming client");
         read_request_head(&mut stream);
         stream
@@ -57,7 +58,7 @@ fn http_stream_decodes_fragmented_chunked_sse_response() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir("http-streaming-roundtrip");
+    let cwd = TempDir::new("http-streaming-roundtrip").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -128,9 +129,8 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("streaming fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("streaming fixture must finish");
     assert_eq!(stdout, "200\ntoken:hello\nmessage:world\n");
 }
 
@@ -141,7 +141,7 @@ fn http_stream_rejects_truncated_content_length() {
         .local_addr()
         .expect("truncated fixture address")
         .port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (mut stream, _) = listener.accept().expect("accept truncated response client");
         read_request_head(&mut stream);
         stream
@@ -153,7 +153,7 @@ fn http_stream_rejects_truncated_content_length() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir("http-streaming-truncated");
+    let cwd = TempDir::new("http-streaming-truncated").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -205,9 +205,8 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("truncated fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("truncated fixture must finish");
     assert_eq!(stdout, "ok\n");
 }
 
@@ -236,7 +235,7 @@ fn http_stream_distinguishes_truncated_and_malformed_chunk_terminators() {
     ] {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind chunk terminator fixture");
         let port = listener.local_addr().expect("chunk fixture address").port();
-        let server = std::thread::spawn(move || {
+        let server = listener.spawn(move |listener| {
             let (mut stream, _) = listener.accept().expect("accept chunk terminator client");
             read_request_head(&mut stream);
             stream
@@ -246,7 +245,7 @@ fn http_stream_distinguishes_truncated_and_malformed_chunk_terminators() {
                 .write_all(terminator)
                 .expect("write chunk terminator");
         });
-        let cwd = create_temp_dir(&format!("http-streaming-chunk-{name}"));
+        let cwd = TempDir::new(&format!("http-streaming-chunk-{name}")).expect("fixture directory");
         let source = cwd.join("main.fpas");
         write_text(
             &source,
@@ -274,8 +273,8 @@ end.
             &cwd,
         );
         std::fs::remove_dir_all(&cwd).expect("remove chunk fixture");
-        server.join().expect("chunk terminator fixture must finish");
         assert_eq!(exit, 0, "case {name}: {stderr}");
+        server.join().expect("chunk terminator fixture must finish");
         assert_eq!(stdout, "ok\n", "case {name}");
     }
 }

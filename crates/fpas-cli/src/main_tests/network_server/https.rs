@@ -5,14 +5,13 @@ use rcgen::{CertifiedKey, generate_simple_self_signed};
 use rustls::pki_types::ServerName;
 use rustls::{ClientConfig, ClientConnection, RootCertStore, StreamOwned};
 
-use super::{connect_when_ready, finish_server, spawn_server, unused_port};
+use super::{connect_when_ready, finish_server, spawn_server};
 
 #[test]
 fn fpas_https_server_serves_one_verified_request() {
-    let port = unused_port();
     let CertifiedKey { cert, signing_key } =
         generate_simple_self_signed(["localhost".to_string()]).expect("generate certificate");
-    let cwd = super::create_temp_dir("https-server");
+    let cwd = super::TempDir::new("https-server").expect("fixture directory");
     let certificate_path = cwd.join("certificate.pem");
     let private_key_path = cwd.join("private-key.pem");
     std::fs::write(&certificate_path, cert.pem()).expect("write certificate PEM");
@@ -34,9 +33,10 @@ begin
 end function;
 
 begin
-  case Net.ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
+  case Net.ListenTls('127.0.0.1', 0, '{certificate_source}', '{private_key_source}', 2000) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxRequests := 1;
       case Http.Serve(ListenerValue, Options, Handle) of
@@ -72,7 +72,7 @@ end.
         ServerName::try_from("localhost".to_string()).expect("server name"),
     )
     .expect("TLS client connection");
-    let socket = connect_when_ready(port);
+    let socket = connect_when_ready(server.port());
     let mut client = StreamOwned::new(connection, socket);
     client
         .write_all(b"GET /hello HTTP/1.1\r\nHost: localhost\r\n\r\n")

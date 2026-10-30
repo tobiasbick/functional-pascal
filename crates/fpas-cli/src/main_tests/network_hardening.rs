@@ -1,5 +1,6 @@
+use super::network_fixture::{Listener as TcpListener, Stream as TcpStream};
+use super::process::TempDir;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 
 use super::*;
@@ -33,7 +34,7 @@ fn run_program(name: &str, source_text: &str) -> (i32, String, String) {
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir(name);
+    let cwd = TempDir::new(name).expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(&source, source_text);
     let output = support::run_cli_args_and_capture_output(
@@ -56,7 +57,7 @@ fn http_client_skips_informational_response_and_follows_relative_redirect() {
         .local_addr()
         .expect("redirect fixture address")
         .port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (mut first, _) = listener.accept().expect("accept initial request");
         assert!(read_request(&mut first).starts_with("GET /start HTTP/1.1\r\n"));
         first
@@ -94,8 +95,8 @@ end.
 "#
         ),
     );
-    server.join().expect("redirect fixture must finish");
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("redirect fixture must finish");
     assert_eq!(stdout, "ok\n");
 }
 
@@ -111,7 +112,7 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
         .local_addr()
         .expect("target origin address")
         .port();
-    let redirect_server = std::thread::spawn(move || {
+    let redirect_server = redirect_listener.spawn(move |redirect_listener| {
         let (mut stream, _) = redirect_listener.accept().expect("accept POST request");
         let request = read_request(&mut stream);
         assert!(request.starts_with("POST /submit HTTP/1.1\r\n"));
@@ -130,7 +131,7 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
         )
         .expect("write cross-origin redirect");
     });
-    let target_server = std::thread::spawn(move || {
+    let target_server = target_listener.spawn(move |target_listener| {
         let (mut stream, _) = target_listener.accept().expect("accept redirected GET");
         let request = read_request(&mut stream);
         assert!(request.starts_with("GET /result HTTP/1.1\r\n"));
@@ -172,9 +173,9 @@ end.
 "#
         ),
     );
+    assert_eq!(exit, 0, "stderr: {stderr}");
     redirect_server.join().expect("redirect origin must finish");
     target_server.join().expect("target origin must finish");
-    assert_eq!(exit, 0, "stderr: {stderr}");
     assert_eq!(stdout, "200\n");
 }
 
@@ -185,7 +186,7 @@ fn http_client_enforces_header_and_redirect_limits() {
         .local_addr()
         .expect("header limit address")
         .port();
-    let header_server = std::thread::spawn(move || {
+    let header_server = header_listener.spawn(move |header_listener| {
         let (mut stream, _) = header_listener
             .accept()
             .expect("accept header limit request");
@@ -200,7 +201,7 @@ fn http_client_enforces_header_and_redirect_limits() {
         .local_addr()
         .expect("redirect limit address")
         .port();
-    let redirect_server = std::thread::spawn(move || {
+    let redirect_server = redirect_listener.spawn(move |redirect_listener| {
         let (mut stream, _) = redirect_listener
             .accept()
             .expect("accept redirect limit request");
@@ -241,13 +242,13 @@ end.
 "#
         ),
     );
+    assert_eq!(exit, 0, "stderr: {stderr}");
     header_server
         .join()
         .expect("header limit fixture must finish");
     redirect_server
         .join()
         .expect("redirect limit fixture must finish");
-    assert_eq!(exit, 0, "stderr: {stderr}");
     assert_eq!(stdout, "ok\n");
 }
 
@@ -258,7 +259,7 @@ fn http_client_rejects_ambiguous_framing_and_excess_interim_responses() {
         .local_addr()
         .expect("hostile response address")
         .port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (mut framing, _) = listener.accept().expect("accept framing request");
         read_request(&mut framing);
         framing
@@ -323,8 +324,8 @@ end.
 "#
         ),
     );
-    server.join().expect("hostile response fixture must finish");
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("hostile response fixture must finish");
     assert_eq!(stdout, "ok\n");
 }
 
@@ -335,7 +336,7 @@ fn http_client_rejects_chunk_size_integer_overflow() {
         .local_addr()
         .expect("chunk overflow address")
         .port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         for size in ["8000000000000000", "10000000000000000"] {
             let (mut stream, _) = listener.accept().expect("accept chunk overflow request");
             read_request(&mut stream);
@@ -373,7 +374,7 @@ end.
 "#
         ),
     );
-    server.join().expect("chunk overflow fixture must finish");
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("chunk overflow fixture must finish");
     assert_eq!(stdout, "ok\n");
 }

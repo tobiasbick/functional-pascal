@@ -142,9 +142,18 @@ begin
   end if;
 
   if Mode = 'descendants' then
-    if Net.ReceiveBytes(Descendant.Unwrap(), 1).Unwrap().Length() <> 0 then
-      panic('descendant remained alive');
-    end if;
+    // Terminated descendants can produce EOF or an abortive connection reset.
+    case Net.ReceiveBytes(Descendant.Unwrap(), 1) of
+      when Ok(const Bytes):
+        if Bytes.Length() <> 0 then
+          panic('descendant remained alive');
+        end if;
+      when Error(Net.NetError.ConnectionLost(_)):
+        begin
+        end;
+      when Error(const Failure):
+        panic(Failure.Message());
+    end case;
   end if;
 
   return 2;

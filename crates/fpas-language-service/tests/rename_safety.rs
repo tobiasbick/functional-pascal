@@ -5,7 +5,7 @@
     reason = "rename fixtures use explicit source offsets"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, RenameError, WorkspaceContext};
 use support::TempDirectory;

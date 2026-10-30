@@ -9,7 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fpas_project::{load_project, load_workspace};
+use fpas_project::{SourceOrigin, load_project, load_workspace};
 
 fn temp_dir(name: &str) -> PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(1);
@@ -199,14 +199,36 @@ fn load_project_allows_same_library_reached_through_multiple_dependencies() {
     );
     write(
         &consumer,
-        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[dependencies]\nprojects = [\"../base/base.fpasprj\", \"../wrapper/wrapper.fpasprj\"]\n\n[sources]\ninclude = [\"main.fpas\"]\n",
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[dependencies]\nprojects = [\"../base/base.fpasprj\", \"../wrapper/wrapper.fpasprj\"]\n\n[sources]\ninclude = [\"main.fpas\", \"src/../src/*.fpas\"]\n",
     );
     write(&dir.join("app/main.fpas"), "program App; begin end.\n");
+    let local = dir.join("app/src/local.fpas");
+    write(&local, "unit App.Local;\nend unit;\n");
+    write(
+        &dir.join("app/src/skipped.fpas"),
+        "program Skipped; begin end.\n",
+    );
 
     let loaded = load_project(&consumer).expect("the same library owner must remain valid");
+    assert_eq!(loaded.source_files.len(), 3);
+    assert_eq!(loaded.link_meta.source_origins.len(), 3);
+    assert_eq!(
+        loaded.link_meta.origin_for_source(&local),
+        SourceOrigin::Own
+    );
+    assert_eq!(
+        loaded
+            .link_meta
+            .origin_for_source(&dir.join("base/base.fpas")),
+        SourceOrigin::Library(fs::canonicalize(&base).expect("base owner")),
+    );
+    assert_eq!(
+        loaded
+            .link_meta
+            .origin_for_source(&dir.join("wrapper/wrapper.fpas")),
+        SourceOrigin::Library(fs::canonicalize(&wrapper).expect("wrapper owner")),
+    );
     fs::remove_dir_all(&dir).ok();
-
-    assert_eq!(loaded.source_files.len(), 2);
 }
 
 #[test]

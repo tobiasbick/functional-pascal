@@ -20,18 +20,16 @@ mod publication;
 mod values;
 
 use serde_json::Value;
+use std::time::{Duration, Instant};
 use std::{
     fs,
     path::{Path, PathBuf},
     process::{Command, Output},
     sync::atomic::{AtomicU64, Ordering},
 };
-use std::{
-    io::{BufRead, BufReader},
-    process::{Child, Stdio},
-    sync::mpsc,
-    time::{Duration, Instant},
-};
+
+#[path = "../test_support/process.rs"]
+mod process;
 
 struct Fixture(PathBuf);
 impl Fixture {
@@ -59,7 +57,9 @@ impl Fixture {
         command
     }
     fn run(&self, args: &[&str]) -> Output {
-        self.command().args(args).output().expect("CLI process")
+        let mut command = self.command();
+        command.args(args);
+        process::capture(command, Duration::from_secs(15)).expect("bounded CLI process")
     }
     fn report(&self, path: &str) -> Value {
         let bytes = fs::read(self.0.join(path)).expect("published report");
@@ -113,72 +113,39 @@ fn records(output: &Output) -> Vec<Value> {
         .collect()
 }
 
-struct Process(Option<Child>);
+struct Process {
+    child: process::Process,
+    consumed_ready: bool,
+}
 impl Process {
     fn spawn(fixture: &Fixture, args: &[&str]) -> Self {
         let mut command = fixture.command();
         command.args(args);
         Self::command(command)
     }
-    fn command(mut command: Command) -> Self {
-        Self(Some(
-            command
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
+    fn command(command: Command) -> Self {
+        Self {
+            child: process::Process::spawn(command, Duration::from_secs(15))
                 .expect("start controlled CLI"),
-        ))
+            consumed_ready: false,
+        }
     }
     fn ready(&mut self) {
-        let stdout = self
-            .0
-            .as_mut()
-            .expect("CLI child")
-            .stdout
-            .take()
-            .expect("piped stdout");
-        let (sender, receiver) = mpsc::channel();
-        std::thread::spawn(move || {
-            let mut line = String::new();
-            let result = BufReader::new(stdout).read_line(&mut line).map(|_| line);
-            let _ = sender.send(result);
-        });
         assert_eq!(
-            receiver
-                .recv_timeout(Duration::from_secs(10))
-                .expect("runtime barrier")
-                .expect("stdout barrier"),
+            self.child
+                .wait_for_stdout_line("ready")
+                .expect("runtime barrier"),
             "ready\n"
         );
+        self.consumed_ready = true;
     }
-    fn finish(mut self) -> Output {
-        let deadline = Instant::now() + Duration::from_secs(10);
-        loop {
-            if self
-                .0
-                .as_mut()
-                .expect("CLI child")
-                .try_wait()
-                .expect("poll controlled CLI")
-                .is_some()
-            {
-                break;
-            }
-            assert!(Instant::now() < deadline, "controlled CLI did not exit");
-            std::thread::sleep(Duration::from_millis(2));
+    fn finish(self) -> Output {
+        let mut output = self.child.wait().expect("controlled output");
+        if self.consumed_ready
+            && let Some(stdout) = output.stdout.strip_prefix(b"ready\n")
+        {
+            output.stdout = stdout.to_vec();
         }
-        self.0
-            .take()
-            .expect("CLI child")
-            .wait_with_output()
-            .expect("controlled output")
-    }
-}
-impl Drop for Process {
-    fn drop(&mut self) {
-        if let Some(child) = self.0.as_mut() {
-            let _ = child.kill();
-            let _ = child.wait();
-        }
+        output
     }
 }

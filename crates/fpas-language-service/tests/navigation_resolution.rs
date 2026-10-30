@@ -5,7 +5,7 @@
     reason = "navigation fixtures use explicit source offsets"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;

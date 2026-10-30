@@ -15,7 +15,7 @@ mod error_conventions;
 mod generic_records;
 #[path = "intellisense/native_chains.rs"]
 mod native_chains;
-mod support;
+use crate::support;
 #[path = "intellisense/task_signatures.rs"]
 mod task_signatures;
 

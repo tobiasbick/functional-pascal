@@ -4,7 +4,7 @@
     clippy::expect_used,
     reason = "Source fixture assertions name their observable selection."
 )]
-mod support;
+use crate::support;
 use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;
 

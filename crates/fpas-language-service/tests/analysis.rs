@@ -5,7 +5,7 @@
     reason = "integration fixtures use expect to keep analysis assertions focused"
 )]
 
-mod support;
+use crate::support;
 
 use std::sync::Arc;
 

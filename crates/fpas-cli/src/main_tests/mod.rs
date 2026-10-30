@@ -17,11 +17,14 @@ mod fmt;
 mod init;
 mod input;
 mod network;
+mod network_fixture;
 mod network_hardening;
 mod network_server;
 mod network_streaming;
 mod network_tls;
 mod output;
+#[path = "../../test_support/process.rs"]
+mod process;
 mod projects;
 mod query;
 mod standard_library;

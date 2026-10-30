@@ -88,6 +88,11 @@ mod tests {
     use super::super::super::transport::Transport;
     use super::connect_with_config;
 
+    #[test]
+    fn platform_certificate_verifier_initializes_successfully() {
+        super::platform_config().expect("the system certificate verifier must initialize");
+    }
+
     struct TlsFixture {
         certificate: rustls::pki_types::CertificateDer<'static>,
         server: Arc<ServerConfig>,

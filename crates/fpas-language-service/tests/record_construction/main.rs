@@ -5,8 +5,7 @@
     reason = "editor fixtures assert exact source positions"
 )]
 
-#[path = "../support/mod.rs"]
-mod support;
+use crate::support;
 
 use fpas_language_service::LanguageService;
 use support::TempDirectory;

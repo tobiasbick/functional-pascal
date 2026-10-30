@@ -3,7 +3,7 @@
     clippy::expect_used,
     reason = "editor fixtures use explicit source offsets"
 )]
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, SymbolKind, WorkspaceContext};
 use support::TempDirectory;

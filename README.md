@@ -67,6 +67,9 @@ cargo build --workspace --profile dev-fast
 Development binaries and their adjacent `lib/` are in `target/dev-fast/`.
 The [build guide](docs/bench/build-times.md) describes the profiles, dependency
 boundaries, and how to measure rebuilds.
+Rust test compilation uses reduced debug symbols independently of `dev-fast`.
+See the guide's [test workflow](docs/bench/build-times.md#rust-test-workflow) for
+compilation, focused execution, native debugging and memory supervision.
 
 Alternatively, run a development build without installing:
 

@@ -45,8 +45,13 @@ Release, benchmarks, and dist use Fat-LTO; see the
    ```text
    cargo fmt
    cargo build --profile dev-fast
+   cargo test --workspace --no-run
    cargo test --workspace
    ```
+
+   Test compilation and execution reuse the same default test profile. Follow
+   the [Rust test workflow](docs/bench/build-times.md#rust-test-workflow) for
+   grouped test selection, full native symbols and resource supervision.
 
    For touched `.fpas` sources, also run `fpas fmt --check <paths>` and the
    relevant program checks or tests. The repository-wide formatting wrappers use

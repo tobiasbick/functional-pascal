@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn tls_listener_reports_an_os_assigned_address() {
-    let cwd = create_temp_dir("tls-listener-address");
+    let cwd = TempDir::new("tls-listener-address").expect("fixture directory");
     let rcgen::CertifiedKey { cert, signing_key } =
         rcgen::generate_simple_self_signed(["localhost".to_string()]).expect("certificate");
     write_text(&cwd.join("cert.pem"), &cert.pem());

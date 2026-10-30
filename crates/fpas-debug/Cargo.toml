@@ -1,5 +1,6 @@
 [package]
 name = "fpas-debug"
+autotests = false
 description = "Source debugger protocols for Functional Pascal"
 version.workspace = true
 edition.workspace = true
@@ -24,3 +25,23 @@ fpas-compiler = { path = "../fpas-compiler" }
 fpas-linker = { path = "../fpas-linker" }
 fpas-unit = { path = "../fpas-unit" }
 fpas-program = { path = "../fpas-program" }
+
+[[test]]
+name = "dap_protocol"
+path = "tests/suites/dap_protocol.rs"
+
+[[test]]
+name = "jsonl_protocol"
+path = "tests/suites/jsonl_protocol.rs"
+
+[[test]]
+name = "execution_control"
+path = "tests/suites/execution_control.rs"
+
+[[test]]
+name = "storage_mutation"
+path = "tests/suites/storage_mutation.rs"
+
+[[test]]
+name = "evaluation"
+path = "tests/suites/evaluation.rs"

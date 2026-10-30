@@ -4,6 +4,8 @@
 mod child;
 #[path = "fixtures/observer.rs"]
 mod observer;
+#[path = "fixtures/observer_tests.rs"]
+mod observer_tests;
 
 use crate::CollectionSchedule;
 use crate::execution::vm::{ShutdownHandle, Vm};

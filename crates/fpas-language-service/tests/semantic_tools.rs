@@ -5,7 +5,7 @@
     reason = "semantic tooling fixtures use explicit source offsets and diagnostics"
 )]
 
-mod support;
+use crate::support;
 
 #[path = "semantic_tools/callable_labels.rs"]
 mod callable_labels;

@@ -2,7 +2,7 @@
 
 #![allow(clippy::expect_used, reason = "fixture failures carry local context")]
 
-mod support;
+use crate::support;
 
 use std::sync::Arc;
 

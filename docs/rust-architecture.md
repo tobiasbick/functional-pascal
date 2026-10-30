@@ -131,6 +131,12 @@ integration. Runtime integration tests include process-isolated
 tests, and server lifecycle tests. The FPAS suite exercises the language and
 standard library through unchanged source programs.
 
+Debugger, CLI and language-service integration cases are grouped by topic into
+explicit Cargo targets, with mappings in each crate's `tests/README.md`. Runtime
+allocation and child-process fixtures retain their independent executables.
+The [build guide](bench/build-times.md#rust-test-workflow) owns profile and
+execution commands, including separate test compilation and resource supervision.
+
 Inspect production dependencies with:
 
 ```sh

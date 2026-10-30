@@ -1,5 +1,6 @@
+use super::network_fixture::{Listener as TcpListener, Stream as TcpStream};
+use super::process::TempDir;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 
 use super::*;
@@ -34,7 +35,7 @@ fn read_http_request(stream: &mut TcpStream) -> Vec<u8> {
 fn http_client_sends_request_and_decodes_chunked_response() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind local HTTP fixture");
     let port = listener.local_addr().expect("fixture address").port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (mut stream, _) = listener.accept().expect("accept HTTP client");
         let request = read_http_request(&mut stream);
         let request = String::from_utf8(request).expect("HTTP request is UTF-8");
@@ -54,7 +55,7 @@ fn http_client_sends_request_and_decodes_chunked_response() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir("http-client-roundtrip");
+    let cwd = TempDir::new("http-client-roundtrip").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -97,9 +98,8 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("HTTP fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("HTTP fixture must finish");
     assert_eq!(stdout, "200\nhello world\ntext/plain\n");
 }
 
@@ -107,7 +107,7 @@ end.
 fn http_client_supports_standard_extension_and_head_methods() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind local HTTP method fixture");
     let port = listener.local_addr().expect("fixture address").port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let expected = [
             ("GET", "/get"),
             ("POST", "/post"),
@@ -144,7 +144,7 @@ fn http_client_supports_standard_extension_and_head_methods() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir("http-client-methods");
+    let cwd = TempDir::new("http-client-methods").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -214,9 +214,8 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("HTTP method fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("HTTP method fixture must finish");
     assert_eq!(stdout, "ok\n");
 }
 
@@ -224,7 +223,7 @@ end.
 fn openai_compatible_client_sends_configured_chat_completion() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind local OpenAI fixture");
     let port = listener.local_addr().expect("fixture address").port();
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let (mut stream, _) = listener.accept().expect("accept OpenAI client");
         let request = read_http_request(&mut stream);
 
@@ -260,7 +259,7 @@ fn openai_compatible_client_sends_configured_chat_completion() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace root");
-    let cwd = create_temp_dir("openai-compatible-roundtrip");
+    let cwd = TempDir::new("openai-compatible-roundtrip").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -299,8 +298,7 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("OpenAI fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("OpenAI fixture must finish");
     assert_eq!(stdout, "Mock reply\n");
 }

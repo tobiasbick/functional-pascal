@@ -5,7 +5,7 @@
     reason = "integration fixtures use expect to keep index assertions focused"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{CancellationToken, LanguageService, LanguageServiceError};
 use support::TempDirectory;

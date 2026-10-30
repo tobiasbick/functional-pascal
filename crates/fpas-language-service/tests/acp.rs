@@ -3,7 +3,7 @@
     clippy::expect_used,
     reason = "editor fixtures require direct public results"
 )]
-mod support;
+use crate::support;
 use fpas_language_service::LanguageService;
 use std::path::Path;
 use support::TempDirectory;

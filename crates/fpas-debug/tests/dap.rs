@@ -5,6 +5,7 @@
     reason = "DAP transcript fixtures use direct assertions"
 )]
 
+#[path = "support/mod.rs"]
 mod support;
 
 use std::io::{BufReader, Cursor};

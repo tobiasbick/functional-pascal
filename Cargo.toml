@@ -11,6 +11,16 @@ inherits = "release"
 lto = "thin"
 codegen-units = 16
 
+[profile.test]
+debug = "line-tables-only"
+
+[profile.test.package."*"]
+debug = false
+
+[profile.test-debug]
+inherits = "dev"
+debug = "full"
+
 [workspace.package]
 version = "0.0.1"
 edition = "2024"
@@ -41,6 +51,7 @@ getrandom = "0.4.3"
 futures = { version = "0.3.32", default-features = false, features = ["std", "async-await"] }
 libc = "0.2.191"
 mimalloc = "0.1.52"
+mio = { version = "1.2.4", features = ["net", "os-poll"] }
 rand = "0.10.3"
 rand_chacha = "0.10.0"
 rmcp = { version = "=3.7.0", default-features = false, features = ["server", "schemars", "transport-streamable-http-server"] }

@@ -5,7 +5,7 @@
     reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{CompletionKind, LanguageService, WorkspaceContext};
 use support::TempDirectory;

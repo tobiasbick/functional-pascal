@@ -5,7 +5,7 @@
     reason = "navigation fixtures use explicit source offsets and readable assertions"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{
     HighlightKind, LanguageService, SymbolKind, WORKSPACE_SYMBOL_LIMIT, WorkspaceContext,

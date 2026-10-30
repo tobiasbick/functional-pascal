@@ -6,7 +6,7 @@
     reason = "navigation fixtures use explicit assertions and source offsets"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{DocumentSymbol, LanguageService, SymbolKind, WorkspaceContext};
 use support::{TempDirectory, write_program_project};

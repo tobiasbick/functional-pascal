@@ -16,6 +16,8 @@ Development binaries are in `target/dev-fast/`. Rust test compilation and test
 execution are separate from this program build.
 Use Fat-LTO for release, benchmarks, and dist. See the
 [build guide](docs/bench/build-times.md) for profile details and build measurements.
+Before a full Rust test run, follow that guide's separate compilation and
+execution workflow and use its resource guard where memory headroom is uncertain.
 
 ## Code
 

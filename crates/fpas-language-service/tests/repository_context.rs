@@ -6,7 +6,7 @@
     reason = "integration fixtures use expect to keep discovery assertions focused"
 )]
 
-mod support;
+use crate::support;
 
 use std::path::Path;
 

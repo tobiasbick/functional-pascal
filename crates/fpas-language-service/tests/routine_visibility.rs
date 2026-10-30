@@ -1,6 +1,6 @@
 //! Editor resolution uses the same scope-wide signatures and lexical shadowing as the compiler.
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;

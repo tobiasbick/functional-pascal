@@ -5,7 +5,7 @@
     reason = "fixtures assert on source query results"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;

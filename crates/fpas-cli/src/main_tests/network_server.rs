@@ -1,110 +1,28 @@
-use std::io::{Read, Write};
-use std::net::{Shutdown, TcpListener, TcpStream};
-use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
-
+use super::process::TempDir;
 use super::*;
 
 mod decimal_framing;
+mod fixture;
 mod https;
 mod listener_address;
 mod parallel_echo;
 mod server_loop;
-
-fn unused_port() -> u16 {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("reserve server fixture port");
-    listener.local_addr().expect("reserved address").port()
-}
-
-fn start_server(
-    name: &str,
-    source_text: String,
-) -> (PathBuf, std::thread::JoinHandle<(i32, String, String)>) {
-    let cwd = create_temp_dir(name);
-    let server = spawn_server(&cwd, source_text);
-    (cwd, server)
-}
-
-fn spawn_server(cwd: &Path, source_text: String) -> std::thread::JoinHandle<(i32, String, String)> {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .expect("workspace root")
-        .to_path_buf();
-    let source = cwd.join("main.fpas");
-    write_text(&source, &source_text);
-    let thread_cwd = cwd.to_path_buf();
-    std::thread::spawn(move || {
-        support::run_cli_args_and_capture_output(
-            &[
-                String::from("run"),
-                String::from("--std-lib"),
-                root.join("lib").to_string_lossy().into_owned(),
-                source.to_string_lossy().into_owned(),
-            ],
-            &thread_cwd,
-        )
-    })
-}
-
-fn connect_when_ready(port: u16) -> TcpStream {
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
-        match TcpStream::connect(("127.0.0.1", port)) {
-            Ok(stream) => {
-                stream
-                    .set_read_timeout(Some(Duration::from_secs(5)))
-                    .expect("set fixture read timeout");
-                return stream;
-            }
-            Err(error) if Instant::now() < deadline => {
-                drop(error);
-                std::thread::sleep(Duration::from_millis(10));
-            }
-            Err(error) => panic!("connect to FPAS HTTP server: {error}"),
-        }
-    }
-}
-
-fn exchange(port: u16, fragments: &[&[u8]]) -> Vec<u8> {
-    let mut stream = connect_when_ready(port);
-    for fragment in fragments {
-        stream.write_all(fragment).expect("write HTTP request");
-    }
-    stream
-        .shutdown(Shutdown::Write)
-        .expect("finish HTTP request");
-    let mut response = Vec::new();
-    stream
-        .read_to_end(&mut response)
-        .expect("read HTTP response");
-    response
-}
-
-fn finish_server(
-    cwd: PathBuf,
-    server: std::thread::JoinHandle<(i32, String, String)>,
-) -> (String, String) {
-    let (exit, stdout, stderr) = server.join().expect("FPAS HTTP server must finish");
-    std::fs::remove_dir_all(cwd).expect("temporary directory must be removed");
-    assert_eq!(exit, 0, "stderr: {stderr}");
-    (stdout, stderr)
-}
+use fixture::{connect_when_ready, exchange, finish_server, spawn_server, start_server};
 
 #[test]
 fn fpas_http_server_accepts_get_and_writes_response() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-get",
-        format!(
+        String::from(
             r#"program HttpServerGet;
 
 uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
@@ -150,12 +68,12 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 
     let response = exchange(
-        port,
+        server.port(),
         &[b"GET /hello?name=fpas HTTP/1.1\r\nHost: localhost\r\n\r\n"],
     );
     let (stdout, _) = finish_server(cwd, server);
@@ -169,18 +87,18 @@ end.
 
 #[test]
 fn fpas_http_server_reads_fragmented_post_body() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-post",
-        format!(
+        String::from(
             r#"program HttpServerPost;
 
-uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
@@ -229,12 +147,12 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 
     let response = exchange(
-        port,
+        server.port(),
         &[
             b"POST /items HTTP/1.1\r\nHost: localhost\r\nContent-Length: 7\r\n\r\n",
             b"pay",
@@ -251,18 +169,18 @@ end.
 
 #[test]
 fn fpas_http_server_rejects_ambiguous_request_framing() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-hostile",
-        format!(
+        String::from(
             r#"program HttpServerHostile;
 
-uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
@@ -303,12 +221,12 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 
     let response = exchange(
-        port,
+        server.port(),
         &[b"POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\nContent-Length: 1\r\n\r\n0\r\n\r\n"],
     );
     finish_server(cwd, server);
@@ -321,18 +239,18 @@ end.
 
 #[test]
 fn fpas_http_server_enforces_request_body_limit() {
-    let port = unused_port();
     let (cwd, server) = start_server(
         "http-server-body-limit",
-        format!(
+        String::from(
             r#"program HttpServerBodyLimit;
 
-uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 
 begin
-  case Net.Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', 0) of
     when Ok(const ListenerValue):
     begin
+      Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
       case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
@@ -373,12 +291,12 @@ begin
     when Error(const Message): panic(Message.Message());
   end case;
 end.
-"#
+"#,
         ),
     );
 
     let response = exchange(
-        port,
+        server.port(),
         &[b"POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\n\r\nhello"],
     );
     finish_server(cwd, server);

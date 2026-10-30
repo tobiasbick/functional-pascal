@@ -213,18 +213,14 @@ fn library_owner_for_source<'a>(
     link_meta: &'a ProjectLinkMeta,
     source_path: &Path,
 ) -> Option<&'a Path> {
-    link_meta
+    // Project loading inserts canonical keys when merging dependencies and own files.
+    match link_meta
         .source_origins
-        .iter()
-        .find_map(|(recorded_path, origin)| {
-            if !same_file(recorded_path, source_path) {
-                return None;
-            }
-            match origin {
-                SourceOrigin::Library(project_path) => Some(project_path.as_path()),
-                SourceOrigin::Own => None,
-            }
-        })
+        .get(&canonical_source_path(source_path))
+    {
+        Some(SourceOrigin::Library(project_path)) => Some(project_path.as_path()),
+        Some(SourceOrigin::Own) | None => None,
+    }
 }
 
 fn source_ownership_conflict_error(
@@ -263,12 +259,16 @@ fn ensure_library_dependency(
 }
 
 fn prune_link_meta_origins(link_meta: &mut ProjectLinkMeta, source_files: &[PathBuf]) {
+    let retained = source_files
+        .iter()
+        .map(|path| canonical_source_path(path))
+        .collect::<HashSet<_>>();
     link_meta
         .source_origins
-        .retain(|path, _| source_files.iter().any(|source| same_file(source, path)));
+        .retain(|path, _| retained.contains(&canonical_source_path(path)));
     link_meta
         .trusted_standard_library_sources
-        .retain(|path| source_files.iter().any(|source| same_file(source, path)));
+        .retain(|path| retained.contains(&canonical_source_path(path)));
 }
 
 fn mark_own_source_origins(
@@ -276,14 +276,14 @@ fn mark_own_source_origins(
     source_files: &[PathBuf],
     own_source_paths: &[PathBuf],
 ) {
+    let owned = own_source_paths
+        .iter()
+        .map(|path| canonical_source_path(path))
+        .collect::<HashSet<_>>();
     for source_path in source_files {
-        if own_source_paths
-            .iter()
-            .any(|own_path| same_file(own_path, source_path))
-        {
-            link_meta
-                .source_origins
-                .insert(canonical_source_path(source_path), SourceOrigin::Own);
+        let source = canonical_source_path(source_path);
+        if owned.contains(&source) {
+            link_meta.source_origins.insert(source, SourceOrigin::Own);
         }
     }
 }

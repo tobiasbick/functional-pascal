@@ -5,12 +5,15 @@
     reason = "editor fixtures assert exact source positions"
 )]
 
+#[path = "completion.rs"]
 mod completion;
+#[path = "highlighting.rs"]
 mod highlighting;
+#[path = "navigation.rs"]
 mod navigation;
+#[path = "rename.rs"]
 mod rename;
-#[path = "../support/mod.rs"]
-mod support;
+use crate::support;
 
 use std::path::PathBuf;
 

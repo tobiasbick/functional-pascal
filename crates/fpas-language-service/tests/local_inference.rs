@@ -5,7 +5,7 @@
     reason = "editor fixtures assert on query results"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;

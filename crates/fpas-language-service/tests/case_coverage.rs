@@ -1,6 +1,6 @@
 //! Editor overlays replace stale coverage diagnostics after explicit finite handling.
 
-mod support;
+use crate::support;
 
 use fpas_diagnostics::codes::{SEMA_CASE_ELSE_FORBIDDEN, SEMA_NON_EXHAUSTIVE_CASE};
 use fpas_language_service::{LanguageService, WorkspaceContext};

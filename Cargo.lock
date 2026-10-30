@@ -1002,6 +1002,7 @@ dependencies = [
  "getrandom 0.4.3",
  "glob",
  "libc",
+ "mio",
  "nix",
  "process-wrap",
  "rand",

@@ -3,19 +3,19 @@
 use std::io::{Read, Write};
 use std::net::Shutdown;
 
-use super::{connect_when_ready, finish_server, start_server, unused_port};
+use super::{connect_when_ready, finish_server, start_server};
 
 #[test]
 fn parallel_echo_example_serves_second_client_and_cancels_idle_reads() {
-    let port = unused_port();
     let source = include_str!("../../../../../examples/network/tcp_parallel_echo_server.fpas")
-        .replace("18082", &port.to_string())
+        .replace("18082", "0")
         .replace("10000", "2500")
-        // This socket regression embeds the VM in the test runner. Process policy is
-        // covered by disposable-process tests in fpas-runtime, never by this thread.
-        .replace("CreateLifetime(1000, true)", "CreateLifetime(1000, false)")
-        .replace("discard Server.ObserveSignals(Life).Unwrap();", "");
+        .replace(
+            "const ListenerValue: Net.Listener := Net.Listen('127.0.0.1', Port).Unwrap();",
+            "const ListenerValue: Net.Listener := Net.Listen('127.0.0.1', Port).Unwrap();\n  Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);",
+        );
     let (cwd, server) = start_server("parallel-echo-example", source);
+    let port = server.port();
     let mut idle = connect_when_ready(port);
     idle.write_all(b"ready").expect("prime first connection");
     let mut ready = [0; 5];

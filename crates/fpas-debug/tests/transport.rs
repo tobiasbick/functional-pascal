@@ -5,6 +5,7 @@
     reason = "protocol tests use expect to keep fixture failures local"
 )]
 
+#[path = "support/mod.rs"]
 mod support;
 
 use std::io::Cursor;

@@ -8,14 +8,13 @@ use std::sync::{
 fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind boundary fixture");
     let port = listener.local_addr().expect("address").port();
-    listener.set_nonblocking(true).expect("nonblocking fixture");
     let stopped = Arc::new(AtomicBool::new(false));
     let server_stopped = Arc::clone(&stopped);
     let head = "HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n";
-    let server = std::thread::spawn(move || {
+    let server = listener.spawn(move |listener| {
         let mut request = 0;
         while !server_stopped.load(Ordering::Acquire) {
-            match listener.accept() {
+            match listener.try_accept() {
                 Ok((mut stream, _)) => {
                     stream
                         .set_nonblocking(false)
@@ -41,7 +40,7 @@ fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
         .parent()
         .and_then(Path::parent)
         .expect("workspace");
-    let cwd = create_temp_dir("http-exact-limit");
+    let cwd = TempDir::new("http-exact-limit").expect("fixture directory");
     let source = cwd.join("main.fpas");
     write_text(
         &source,
@@ -98,7 +97,7 @@ end.
         &cwd,
     );
     stopped.store(true, Ordering::Release);
-    server.join().expect("join fixture");
     std::fs::remove_dir_all(&cwd).expect("remove fixture");
     assert_eq!(exit, 0, "{stderr}");
+    server.join().expect("join fixture");
 }

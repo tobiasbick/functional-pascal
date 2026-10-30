@@ -1,0 +1,250 @@
+program ResourceGuard;
+
+uses
+  Std.Console as Console, Std.Os.Args as Args, Std.Os.Env as Env, Std.Os.Proc as Proc,
+  Std.Encoding.Json.Fields as Fields, Std.Io.Fs as Fs, Std.Tasks as Tasks,
+  Std.Text.Parse as Parse, Std.Time as Time;
+
+type Memory = record
+  Available: integer;
+  BudgetAvailable: integer;
+end record;
+
+function IsWindows(): boolean;
+begin
+  return Env.Get('OS') = Some('Windows_NT');
+end function;
+
+function CgroupAvailable(Directory: string; Available: integer): integer;
+begin
+  if Fs.IsFile(Directory + '/memory.max') and Fs.IsFile(Directory + '/memory.current') then
+    const Limit := Fs.ReadText(Directory + '/memory.max').Unwrap().Trim();
+    if Limit <> 'max' then
+      const Remaining := Parse.Int(Limit).Unwrap() -
+        Parse.Int(Fs.ReadText(Directory + '/memory.current').Unwrap().Trim()).Unwrap();
+      if Remaining < 0 then
+        return 0;
+      end if;
+
+      if Remaining < Available then
+        return Remaining;
+      end if;
+    end if;
+  end if;
+
+  return Available;
+end function;
+
+function MemoryNow(): Memory;
+begin
+  if IsWindows() then
+    const Options := Proc.DefaultOptions() with TimeoutMillis := Some(10000); end with;
+    const Output := Proc.RunCaptureWithOptions(
+      'powershell.exe',
+      [
+        '-NoProfile', '-NonInteractive', '-Command',
+        'Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory | Select-Object AvailableBytes,CommittedBytes,CommitLimit | ConvertTo-Json -Compress'
+      ], Options
+    ).Unwrap();
+    if Output.ExitCode <> 0 then
+      panic('Windows memory query failed: ' + Output.Stderr);
+    end if;
+    const Values := Fields.ParseObject(Output.Stdout).Unwrap();
+    return Memory(
+      Available := Fields.IntegerField(Values, 'AvailableBytes').Unwrap(),
+      BudgetAvailable := Fields.IntegerField(Values, 'CommitLimit').Unwrap() -
+      Fields.IntegerField(Values, 'CommittedBytes').Unwrap()
+    );
+  end if;
+  var Available: integer := 0;
+  var Swap: integer := 0;
+  var CommitLimit: integer := 0;
+  var Committed: integer := 0;
+  for Line: string in Fs.ReadText('/proc/meminfo').Unwrap().Split(#10) do
+    const Parts := Line.Split(':');
+    if Parts.Length() = 2 then
+      const Number := Parts[1].Trim().Split(' ')[0];
+      if Parts[0] = 'MemAvailable' then
+        Available := Parse.Int(Number).Unwrap() * 1024;
+      end if;
+
+      if Parts[0] = 'SwapFree' then
+        Swap := Parse.Int(Number).Unwrap() * 1024;
+      end if;
+
+      if Parts[0] = 'CommitLimit' then
+        CommitLimit := Parse.Int(Number).Unwrap() * 1024;
+      end if;
+
+      if Parts[0] = 'Committed_AS' then
+        Committed := Parse.Int(Number).Unwrap() * 1024;
+      end if;
+    end if;
+  end for;
+
+  if Available <= 0 then
+    panic('No usable memory counters in /proc/meminfo');
+  end if;
+
+  if Fs.IsFile('/proc/self/cgroup') then
+    for Line: string in Fs.ReadText('/proc/self/cgroup').Unwrap().Split(#10) do
+      const Parts := Line.Split(':');
+      if (Parts.Length() = 3) and (Parts[0] = '0') then
+        var Directory: string := '/sys/fs/cgroup';
+        Available := CgroupAvailable(Directory, Available);
+        for Segment: string in Parts[2].Split('/') do
+          if Segment <> '' then
+            Directory := Directory + '/' + Segment;
+            Available := CgroupAvailable(Directory, Available);
+          end if;
+        end for;
+      end if;
+    end for;
+  end if;
+  var Budget := Available + Swap;
+  if Fs.IsFile('/proc/sys/vm/overcommit_memory') then
+    if Fs.ReadText('/proc/sys/vm/overcommit_memory').Unwrap().Trim() = '2' then
+      if CommitLimit - Committed < Budget then
+        Budget := CommitLimit - Committed;
+      end if;
+    end if;
+  end if;
+
+  return Memory(Available := Available, BudgetAvailable := Budget);
+end function;
+
+function Execute(
+  Command: string; Arguments: array of string; Timeout: integer;
+  Token: Tasks.CancellationToken
+): result of (Proc.ProcessOutput, Proc.ProcError);
+begin
+  const Options := Proc.DefaultOptions() with TimeoutMillis := Some(Timeout); CancellationToken := Some(
+    Token
+  ); MaxOutputBytes := 16777216; end with;
+
+  return Proc.RunCaptureWithOptions(Command, Arguments, Options);
+end function;
+
+procedure Main();
+begin
+  if (Args.ParamCount() = 0) or (Args.ParamStr(0) = '--help') then
+    Console.WriteLn(
+      'Usage: fpas run tools/resource-guard.fpas -- <timeout-ms> <command> [arguments...]'
+    );
+    Console.WriteLn(
+      'Example: fpas run tools/resource-guard.fpas -- 900000 cargo test --locked -p fpas-debug --test evaluation --no-run'
+    );
+    Console.WriteLn('FPAS_RESOURCE_RESERVE_BYTES overrides the automatic memory reserve.');
+    Console.WriteLn(
+      'Linux: use for Cargo compilation only; new Unix groups/sessions escape outer cancellation.'
+    );
+    return;
+  end if;
+
+  if Args.ParamCount() < 2 then
+    panic('Usage: resource-guard <timeout-ms> <command> [arguments...]');
+  end if;
+  const Timeout := Parse.Int(Args.ParamStr(0)).Unwrap();
+  if Timeout <= 0 then
+    panic('timeout-ms must be positive; use --help for an example');
+  end if;
+  const Initial := MemoryNow();
+  var Reserve := Initial.Available div 4;
+  if Reserve > 8589934592 then
+    Reserve := 8589934592;
+  end if;
+
+  if Reserve < 536870912 then
+    Reserve := 536870912;
+  end if;
+
+  case Env.Get('FPAS_RESOURCE_RESERVE_BYTES') of
+    when Some(const Override):
+      Reserve := Parse.Int(Override).Unwrap();
+    when None:
+      begin
+      end;
+  end case;
+
+  if Reserve <= 0 then
+    panic('FPAS_RESOURCE_RESERVE_BYTES must be positive');
+  end if;
+
+  if (Initial.Available < Reserve) or (Initial.BudgetAvailable < Reserve) then
+    panic('Insufficient memory headroom before launch');
+  end if;
+  var Arguments: array of string := [];
+  for Index: integer := 2 to Args.ParamCount() - 1 do
+    Arguments.PushInPlace(Args.ParamStr(Index));
+  end for;
+  const Source := Tasks.CreateCancellationSource();
+  const Started := Time.MonotonicMillis();
+  var MinimumAvailable := Initial.Available;
+  var MinimumBudget := Initial.BudgetAvailable;
+  Console.WriteLn('RESOURCE_GUARD reserve_bytes=', Reserve);
+  scope
+    const Work := go Execute(
+      Args.ParamStr(1),
+      Arguments,
+      Timeout,
+      Tasks.GetCancellationToken(Source)
+    );
+    var Finished: boolean := false;
+    var Stopped: boolean := false;
+    while not Finished do
+      case Tasks.WaitAnyWithTimeout([Work], 1000) of
+        when Ok(_):
+          Finished := true;
+        when Error(_):
+          begin
+            const Current := MemoryNow();
+            if Current.Available < MinimumAvailable then
+              MinimumAvailable := Current.Available;
+            end if;
+
+            if Current.BudgetAvailable < MinimumBudget then
+              MinimumBudget := Current.BudgetAvailable;
+            end if;
+
+            if (Current.Available < Reserve) or (Current.BudgetAvailable < Reserve) then
+              Console.WriteLn('RESOURCE_GUARD stopping owned process tree: memory reserve reached');
+              discard Tasks.Cancel(Source);
+              Stopped := true;
+              Finished := true;
+            end if;
+          end;
+      end case;
+    end while;
+    const Outcome := Tasks.Wait(Work);
+    Console.WriteLn(
+      'RESOURCE_GUARD minimum_available_bytes=', MinimumAvailable,
+      ' minimum_budget_headroom_bytes=', MinimumBudget
+    );
+    case Outcome of
+      when Ok(const Output):
+        begin
+          Console.WriteLn(Output.Stdout);
+          Console.WriteLn(Output.Stderr);
+          Console.WriteLn(
+            'RESOURCE_GUARD elapsed_ms=',
+            Time.ElapsedMillis(Started),
+            ' child_exit=',
+            Output.ExitCode
+          );
+          if Output.ExitCode <> 0 then
+            panic('Child command failed');
+          end if;
+        end;
+      when Error(const Failure):
+        panic(Failure.Message());
+    end case;
+
+    if Stopped then
+      panic('Memory reserve exhausted');
+    end if;
+  end scope;
+end procedure;
+
+begin
+  Main();
+end.

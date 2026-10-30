@@ -2,6 +2,7 @@
 name = "fpas-cli"
 default-run = "fpas"
 description = "Command-line interface for the Functional Pascal compiler"
+autotests = false
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -41,6 +42,31 @@ rustix = { version = "1.1.5", features = ["process"] }
 [dev-dependencies]
 rcgen.workspace = true
 rustls.workspace = true
+process-wrap = { version = "10.0.1", default-features = false, features = ["std", "process-group", "job-object"] }
+
+[[test]]
+name = "language"
+path = "tests/language/main.rs"
+
+[[test]]
+name = "tools"
+path = "tests/tools/main.rs"
+
+[[test]]
+name = "host_io"
+path = "tests/host_io/main.rs"
+
+[[test]]
+name = "distribution"
+path = "tests/distribution/main.rs"
+
+[[test]]
+name = "proc_pipes"
+path = "tests/proc_pipes.rs"
+
+[[test]]
+name = "failure_dump"
+path = "tests/failure_dump.rs"
 
 [target.'cfg(unix)'.dev-dependencies]
 nix = { version = "0.31.3", features = ["term", "fs"] }

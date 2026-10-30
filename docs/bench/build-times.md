@@ -2,7 +2,7 @@
 
 ## Build profiles
 
-The workspace defines two optimized profiles:
+Program builds use two optimized profiles:
 
 | Use | Cargo option | LTO | Codegen units | Output directory |
 | --- | --- | --- | --- | --- |
@@ -17,8 +17,103 @@ cargo build --profile dev-fast -p fpas-cli -p fpas-lsp -p fpas-runner
 ```
 
 Run the CLI with `cargo run --profile dev-fast -p fpas-cli -- <arguments>`.
-Cargo keeps each profile's artifacts separate. Plain `cargo build` and
-`cargo test --workspace` retain Cargo's default debug profiles.
+Cargo keeps custom profiles' artifacts separate. Plain `cargo build` retains
+Cargo's default development settings. Rust tests use their own settings:
+
+| Use | Cargo option | Debug information | Output directory |
+| --- | --- | --- | --- |
+| Rust tests | default `cargo test` | Workspace line tables; no external dependency symbols | `target/debug/` |
+| Native Rust debugging | `--profile test-debug` | Full symbols, types and locals | `target/test-debug/` |
+
+Both test modes retain development assertions and overflow checks. The default
+test profile reduces repeated symbol generation and linking across integration
+executables. `test-debug` inherits `dev` and is an explicit rebuild when native
+Rust breakpoints and local-variable inspection are needed. FPAS source debugging
+uses FPAS executable metadata and does not require full native Rust symbols.
+
+## Rust test workflow
+
+Build tools, compile tests and execute tests as separate operations:
+
+```sh
+cargo build --workspace --locked --profile dev-fast
+cargo test --workspace --locked --no-run --timings
+cargo test --workspace --locked
+```
+
+The last two commands share the same profile and flags, so execution reuses
+compiled test artifacts. For focused work, select a test executable and filter:
+
+```sh
+cargo test --locked -p fpas-debug --test evaluation call_evaluation
+cargo test --locked -p fpas-cli --test host_io test_timeout
+cargo test --locked -p fpas-debug --profile test-debug --test evaluation --no-run
+```
+
+Mappings from previous target names are documented beside the
+[debugger tests](../../crates/fpas-debug/tests/README.md),
+[CLI tests](../../crates/fpas-cli/tests/README.md), and
+[language-service tests](../../crates/fpas-language-service/tests/README.md).
+Runtime allocator, terminal and process-lifecycle tests retain separate targets
+where the executable itself is part of the fixture.
+
+Cargo build jobs control compilation/linking. Libtest `--test-threads` controls
+cases within an executable; VM pools and fixture children have their own workers.
+Keep program build jobs at Cargo's default. Serial case execution is available
+for diagnosis by appending `-- --test-threads=1` to `cargo test`.
+
+### Resource guard
+
+On Windows, where test compilation or execution risks exhausting memory, use
+the FPAS supervisor with an already built development CLI:
+
+```sh
+target/dev-fast/fpas run tools/resource-guard.fpas -- 900000 cargo test --workspace --locked --no-run --timings
+target/dev-fast/fpas run tools/resource-guard.fpas -- 1800000 cargo test --workspace --locked
+```
+
+The first argument is a positive process-tree timeout in milliseconds. The guard
+samples available memory while owning the command and its descendants, and
+cancels its owned process tree if the reserve is reached. It reserves one quarter
+of initially available RAM, bounded between 512 MiB and 8 GiB. Override the byte
+reserve with `FPAS_RESOURCE_RESERVE_BYTES`; `--help` shows usage. Windows samples
+physical availability and system commit headroom through a bounded CIM query.
+Linux samples available memory and swap from `/proc/meminfo`. These are sampled
+limits, not a hard memory quota; a sudden allocation can outrun a sample. Native
+hardware-query gaps are recorded in [dogfooding gaps](../future/dogfooding-gaps.md#available-memory-and-commit-headroom).
+
+On Linux, cgroup v2 ancestor memory limits also constrain available memory, and
+strict kernel overcommit mode constrains the commit budget. Use this outer guard
+for compilation (`cargo test --no-run`), then execute tests normally. FPAS process
+cancellation owns an inherited Unix process group; test workers that create new
+groups or sessions can escape that outer group. Linux execution therefore relies
+on each fixture's independent deadline and identity-checked descendant cleanup,
+rather than a claim that the FPAS outer guard contains those separate groups.
+
+The supervisor captures output with a 16 MiB bound per stream and prints it when
+the command completes. A nonzero child exit, deadline, query failure or exhausted
+reserve produces a nonzero supervisor exit. Record full logs in ignored scratch
+storage and commit only portable summaries. It changes neither Cargo jobs nor
+test thread counts.
+
+When rebuilding the development CLI itself, run the guard from another existing
+profile, such as `target/debug/fpas`, so Windows can replace `target/dev-fast/fpas`.
+Choose the outer timeout for the complete command, including compilation and
+fixture cleanup; it is independent of the timeout a test exercises.
+
+The [Windows/Linux validation record](test-build-structure.md) found no need for
+an additional execution scheduler with the grouped targets and reduced symbols.
+Cargo and the harness keep their CPU-based defaults; the guard calculates its
+reserve from available memory. A reserve-triggered cancellation is a failed run
+that needs more headroom or a deliberate manual concurrency adjustment.
+
+Loopback fixtures require binding and connecting to local sockets. Process tests
+need child execution; Cargo incremental caches benefit from same-volume hard
+links. A restricted environment can deny these independently of the code under
+test. Report denied capabilities and the execution environment, then verify in
+an authorized environment with those capabilities. Build/test tooling must not
+change firewall, antivirus, sandbox or filesystem security settings. A repeated
+Cargo warning from a cached build is not evidence of a new hard-link failure.
 
 ## Distribution
 

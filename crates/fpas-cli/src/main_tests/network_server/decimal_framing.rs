@@ -15,14 +15,14 @@ fn source_review_server_checks_decimal_lengths_and_boundaries() {
         ("0002", true),
         ("9223372036854775807", false),
     ];
-    let port = unused_port();
     let (cwd, server) = start_server(
         "source-review-server-decimal",
         format!(
             r#"program DecimalServer;
-uses Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
+uses Std.Console as Console, Std.Net.Http as Http, Std.Net.Sockets as Net, Std.Text.Utf8 as Utf8;
 begin
-  const ListenerValue: Net.Listener := Net.Listen('127.0.0.1', {port}).Unwrap();
+  const ListenerValue: Net.Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  Console.WriteLn('FPAS_SERVER_FIXTURE_PORT=', Net.ListenerLocalAddress(ListenerValue).Unwrap().Port);
   for I: integer := 1 to {} do
   begin
     const ConnectionValue: Net.Connection := Net.Accept(ListenerValue).Unwrap();
@@ -52,7 +52,7 @@ end.
     for (value, valid) in cases {
         let request =
             format!("POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: {value}\r\n\r\nok");
-        let response = exchange(port, &[request.as_bytes()]);
+        let response = exchange(server.port(), &[request.as_bytes()]);
         assert!(
             response.ends_with(if valid { b"accepted" } else { b"rejected" }),
             "length {value}: {}",

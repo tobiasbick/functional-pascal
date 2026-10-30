@@ -1,6 +1,6 @@
 //! Unsaved Unicode literal edits refresh diagnostics without changing on-disk source.
 
-mod support;
+use crate::support;
 
 use fpas_diagnostics::codes::LEX_INVALID_CHARACTER_CODE_LITERAL;
 use fpas_language_service::{LanguageService, WorkspaceContext};

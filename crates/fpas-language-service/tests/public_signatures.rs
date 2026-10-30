@@ -1,7 +1,7 @@
 //! Snapshot ownership and rejection rules for the public unit view.
 
 #![allow(clippy::expect_used, reason = "fixtures use direct assertions")]
-mod support;
+use crate::support;
 
 use fpas_language_service::{LanguageService, SourceVersion, WorkspaceContext};
 use support::TempDirectory;

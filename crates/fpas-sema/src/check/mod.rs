@@ -11,6 +11,7 @@ mod imports;
 mod inference_completion;
 mod initialization;
 mod name_resolution;
+mod native_values;
 mod record_visibility;
 mod references;
 mod stmt;
@@ -35,5 +36,6 @@ pub use context::MethodCallTarget;
 pub use context::NamedArgumentOrderMap;
 pub use context::NamedTypeMap;
 pub use context::RecordDefaultsMap;
+pub use native_values::{NativeCallable, NativeCallableMap};
 
 mod return_capabilities;

@@ -19,18 +19,36 @@ impl Checker {
     }
 
     fn designator_is_type(&self, designator: &Designator) -> bool {
-        designator
-            .parts
+        self.designator_parts_denote_type(&designator.parts)
+    }
+
+    /// Distinguish a type owner from a captured value without cloning index expressions.
+    pub(in crate::check) fn designator_parts_denote_type(&self, parts: &[DesignatorPart]) -> bool {
+        parts
             .iter()
             .all(|part| matches!(part, DesignatorPart::Ident(..)))
             && self
                 .scopes
-                .lookup(&Self::resolve_designator_name(designator))
+                .lookup(&Self::resolve_designator_parts_name(parts))
                 .is_some_and(|symbol| symbol.kind == SymbolKind::Type)
     }
 
-    /// Resolves a value name, rejecting type declarations and unspecialized polymorphic intrinsics.
-    pub(super) fn check_value_designator_expr(&mut self, designator: &Designator) -> Ty {
+    /// Resolves values and checked native callable references.
+    pub(super) fn check_value_designator_expr(
+        &mut self,
+        designator: &Designator,
+        expected: Option<&Ty>,
+    ) -> Ty {
+        if let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice()
+            && let Some(constructor) = crate::types::PayloadConstructor::from_name(name)
+        {
+            self.enum_members
+                .insert(crate::designator_lookup_key(designator));
+            return Ty::Function(constructor.signature());
+        }
+        if let Some(ty) = self.try_native_callable_designator(designator, expected) {
+            return ty;
+        }
         let ty = self.check_designator_expr(designator);
         let name = Self::resolve_designator_name(designator);
         if self
@@ -40,8 +58,8 @@ impl Checker {
         {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
-                format!("Polymorphic operation `{name}` must be called directly"),
-                "Declare a wrapper with explicit parameter and result types, and call this operation through its import alias inside the wrapper.",
+                format!("Polymorphic operation `{name}` needs a callable signature"),
+                "Use an explicit callable type or call the operation directly.",
                 designator.span,
             );
             return Ty::Error;

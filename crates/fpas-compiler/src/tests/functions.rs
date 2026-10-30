@@ -1,6 +1,7 @@
 use super::assert_succeeds;
 
 mod named_arguments;
+mod native_values;
 mod std_shadowing;
 mod var_parameters;
 

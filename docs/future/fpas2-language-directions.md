@@ -58,18 +58,13 @@ Status: implemented. See [native error families](../pascal/language/types/errors
 
 ## 2. Uniform first-class operations
 
-[Ordinary generic routines](../pascal/language/functions/generic-routines.md)
-can specialize from a receiving callable signature. Some polymorphic intrinsics,
-such as Math.Abs, cannot be used directly that way. Native receiver operations
-also require wrapper functions when used as callbacks.
-
-Consider making declared signatures sufficient to obtain callable values,
-independent of whether implementation uses source code or an intrinsic. Preserve
-static parameter labels, receiver capture by value, var modes and task effects.
-Arbitrary callable-expression chaining remains deferred and is outside this topic.
-
-Open questions: which native operations can be bound, variadic operations,
-generic specialization and the cost of consistent compiler/editor support.
+Status: implemented. Source routines, Rust intrinsics, factories and payload
+constructors share the name/reference and parenthesized-call rule. Receiving
+signatures specialize generic and variadic operations; native receivers are
+captured once by value. InPlace operations retain writable-storage requirements.
+See [function values](../pascal/language/functions/first-class.md#native-operation-values)
+and [payload constructors](../pascal/language/functions/function-types.md#payload-constructors-as-functions).
+Type names remain types; arbitrary callable-expression chaining remains deferred.
 
 ## 3. Separate equality from ordering constraints
 

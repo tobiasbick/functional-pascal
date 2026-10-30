@@ -152,6 +152,8 @@ pub struct AnalysisMetadata {
     pub enum_members: HashSet<usize>,
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub intrinsic_calls: IntrinsicCallMap,
+    /// Standard and native receiver operations used as callable values.
+    pub native_values: super::NativeCallableMap,
     /// Parameter order of named calls keyed by the first written argument's identity.
     pub named_argument_orders: NamedArgumentOrderMap,
     /// Calls resolved to record types, rather than routines returning records.
@@ -270,6 +272,7 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub(crate) bound_methods: BoundMethodMap,
+    pub(crate) native_values: super::NativeCallableMap,
     /// Static transfer evidence for checked expression values.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -351,6 +354,7 @@ impl Checker {
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
+            native_values: super::NativeCallableMap::new(),
             routine_results: Default::default(),
             expr_capabilities: HashMap::new(),
             native_capabilities: HashMap::new(),
@@ -398,6 +402,7 @@ impl Checker {
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,
+            native_values: self.native_values,
         }
     }
 

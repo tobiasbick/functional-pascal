@@ -1,0 +1,72 @@
+program NativeCallableReceivers;
+
+uses Std.Test as Test, Std.Math as Math;
+
+var Evaluations: integer := 0;
+
+function NextText(): string;
+begin
+  Evaluations := Evaluations + 1;
+  return ' once ';
+end function;
+
+function Snapshot(var Text: string): function(): integer;
+begin
+  return Text.Length;
+end function;
+
+begin
+  var Text := '  Grüße 🙂  ';
+  const Trim := Text.Trim;
+  Text := 'changed';
+  Test.AssertEquals('Grüße 🙂', Trim());
+  const Length := '🙂ab'.Length;
+  Test.AssertEquals(3, Length());
+  const Format: function(N: integer; Text: string): string := '%d:%s'.Format;
+  Test.AssertEquals('7:ok', Format(7, 'ok'));
+  const Chr := string.Chr;
+  Test.AssertEquals('🙂', Chr(128578));
+  const Fill: function(Value: integer; Count: integer): array of integer := array.Fill;
+  const Filled := Fill(4, 3);
+  Test.AssertEquals(4, Filled[2]);
+  var Numbers := [-3, 1, -2];
+  const Reverse := Numbers.Reverse;
+  const Map: function(F: function(X: integer): integer): array of integer := Numbers.Map;
+  Numbers[0] := 99;
+  const Reversed := Reverse();
+  Test.AssertEquals(-2, Reversed[0]);
+  const Absolute := Map(Math.Abs);
+  Test.AssertEquals(3, Absolute[0]);
+  const Empty := Filled.IsEmpty;
+  Test.AssertFalse(Empty());
+  const Pop := Filled.Pop;
+  const Popped := Pop();
+  Test.AssertEquals(4, Popped.Value);
+  Test.AssertEquals(2, Popped.Remaining.Length());
+  const Values: dict of string to integer := ['one': 1];
+  const Get := Values.Get;
+  Test.AssertEquals(1, Get('one').Unwrap());
+  const Value: option of integer := Some(8);
+  const Unwrap := Value.Unwrap;
+  Test.AssertEquals(8, Unwrap());
+  const Reply: result of (integer, string) := Ok(9);
+  const UnwrapResult := Reply.Unwrap;
+  Test.AssertEquals(9, UnwrapResult());
+  const Once := NextText().Trim;
+  Test.AssertEquals(1, Evaluations);
+  Test.AssertEquals('once', Once());
+  Test.AssertEquals('once', Once());
+  Test.AssertEquals(1, Evaluations);
+  var Input := '🙂ab';
+  const Size := Snapshot(var Input);
+  Input := '';
+  Test.AssertEquals(3, Size());
+  var Sum := 0;
+  const Visit: procedure(F: procedure(X: integer)) := Filled.ForEach;
+  Visit(
+    procedure(X: integer) begin
+      Sum := Sum + X;
+    end procedure
+  );
+  Test.AssertEquals(12, Sum);
+end.

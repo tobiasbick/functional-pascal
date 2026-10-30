@@ -39,6 +39,7 @@ pub use check::NamedTypeMap;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
 pub use check::RecordDefaultsMap;
+pub use check::{NativeCallable, NativeCallableMap};
 pub use error::SemaError;
 pub use interface::{
     InterfaceConversionError, UnitAnalysis, analyze_program_with_interface_support,
@@ -51,6 +52,7 @@ pub use std_registry::{
     native_operation, native_operation_by_implementation, native_operations,
     validate_native_catalog,
 };
+pub use types::PayloadConstructor;
 pub use types::{
     DistinctTy, EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, ParamMode, ParamTy,
     ProcedureTy, RecordTy, Ty, TypeConstraint, array_pop_result, array_pop_result_declaration,

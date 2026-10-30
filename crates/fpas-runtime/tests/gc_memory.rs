@@ -24,6 +24,8 @@ mod native_console;
 mod native_entropy;
 #[path = "gc_memory/native_process.rs"]
 mod native_process;
+#[path = "gc_memory/native_values.rs"]
+mod native_values;
 #[path = "gc_memory/network.rs"]
 mod network;
 #[path = "gc_memory/processes.rs"]
@@ -44,6 +46,14 @@ use std::alloc::System;
 
 #[global_allocator]
 static ALLOCATOR: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
+
+#[test]
+fn native_callable_receivers_release_captures_cycles_and_payloads() {
+    measurement::isolated(
+        "native_callable_receivers_release_captures_cycles_and_payloads",
+        native_values::teardown,
+    );
+}
 
 #[test]
 fn tokenizer_tables_and_callbacks_return_to_the_allocation_baseline() {

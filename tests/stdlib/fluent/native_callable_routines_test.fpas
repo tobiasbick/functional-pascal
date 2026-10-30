@@ -1,0 +1,33 @@
+program NativeCallableRoutines;
+
+uses Std.Math as Math, Std.Test as Test, Std.Console as Console, Std.Time as Time;
+
+function Apply<T>(F: function(N: T): T; N: T): T;
+begin
+  return F(N);
+end function;
+
+begin
+  const Abs: function(N: integer): integer := Math.Abs;
+  const RealAbs: function(N: real): real := Math.Abs;
+  Test.AssertEquals(7, Abs(N := -7));
+  Test.AssertEquals(2.5, RealAbs(-2.5));
+  Test.AssertEquals(9, Apply(Math.Abs, -9));
+  Test.AssertEquals(3, Apply(Math.Abs, -3));
+  const Min: function(A: integer; B: integer): integer := Math.Min;
+  Test.AssertEquals(2, Min(B := 4, A := 2));
+  const Sign: function(N: real): integer := Math.Sign;
+  Test.AssertEquals(-1, Sign(-2.5));
+  const Clamp: function(V: integer; Lo: integer; Hi: integer): integer := Math.Clamp;
+  Test.AssertEquals(5, Clamp(9, 0, 5));
+  const Sqrt := Math.Sqrt;
+  Test.AssertEquals(3.0, Sqrt(9.0));
+  const Check: procedure(Expected: integer; Actual: integer) := Test.AssertEquals;
+  Check(8, Abs(-8));
+  const Clock := Time.MonotonicMillis;
+  Test.AssertTrue(Clock() >= 0);
+  const Write: procedure(Text: string; Value: integer) := Console.WriteLn;
+  Write('native callable ', 42);
+  const EmptyLine: procedure() := Console.WriteLn;
+  EmptyLine();
+end.

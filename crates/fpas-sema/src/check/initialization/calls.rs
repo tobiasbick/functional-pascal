@@ -116,6 +116,7 @@ impl Walker<'_, '_> {
                 continue;
             }
             match *origin {
+                Origin::Constructor => returned.extend(values.iter().flatten().copied()),
                 Origin::Routine(owner) => {
                     let Some(summary) = self.summaries.get(&owner) else {
                         self.unknown(span);
@@ -208,6 +209,22 @@ impl Walker<'_, '_> {
                         let mut arguments = vec![receiver];
                         arguments.extend_from_slice(values);
                         returned.extend(self.method(&method.qualified_name, &arguments, span));
+                    } else {
+                        self.unknown(span);
+                    }
+                }
+                Origin::Native(key) => {
+                    if let Some(native) = self.checker.native_values.get(&key) {
+                        let receiver = if native
+                            .receiver_ty
+                            .as_ref()
+                            .is_some_and(|ty| self.checker.type_can_contain_callable(ty))
+                        {
+                            [Origin::Unknown].into_iter().collect()
+                        } else {
+                            Value::new()
+                        };
+                        returned.extend(self.standard(&native.name, values, receiver, span));
                     } else {
                         self.unknown(span);
                     }

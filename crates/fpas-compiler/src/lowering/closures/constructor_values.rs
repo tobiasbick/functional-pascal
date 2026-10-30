@@ -4,7 +4,13 @@
 use super::*;
 use fpas_ir::{EnumLayoutId, IrType, Operation, Terminator, TypeId, VariantId};
 use fpas_parser::DesignatorPart;
-use fpas_sema::Ty;
+use fpas_sema::{PayloadConstructor, Ty};
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Construction {
+    Enum(EnumLayoutId, VariantId),
+    Payload(PayloadConstructor),
+}
 
 pub(in crate::lowering) struct ConstructorRoutine {
     pub id: FunctionId,
@@ -13,8 +19,7 @@ pub(in crate::lowering) struct ConstructorRoutine {
     parameters: Vec<TypeId>,
     result: TypeId,
     semantic_result: Ty,
-    layout: EnumLayoutId,
-    variant: VariantId,
+    construction: Construction,
     span: fpas_lexer::Span,
 }
 
@@ -44,17 +49,23 @@ impl ClosureRegistry<'_> {
         };
         let span = expression.span();
         let result = types.intern(&signature.return_type, span.line, span.column)?;
-        let Some(IrType::Enum(layout)) = types.kind(result) else {
-            return Err(unsupported(span, "constructor result layout"));
+        let construction = if designator.parts.len() == 1
+            && let Some(constructor) = PayloadConstructor::from_name(name)
+        {
+            Construction::Payload(constructor)
+        } else {
+            let Some(IrType::Enum(layout)) = types.kind(result) else {
+                return Err(unsupported(span, "constructor result layout"));
+            };
+            let layout = *layout;
+            let variant = types.enum_layouts[layout.get() as usize]
+                .variants
+                .iter()
+                .find(|variant| variant.name.eq_ignore_ascii_case(name))
+                .ok_or_else(|| unsupported(span, "constructor variant"))?
+                .id;
+            Construction::Enum(layout, variant)
         };
-        let layout = *layout;
-        let stored = &types.enum_layouts[layout.get() as usize];
-        let variant = stored
-            .variants
-            .iter()
-            .find(|variant| variant.name.eq_ignore_ascii_case(name))
-            .ok_or_else(|| unsupported(span, "constructor variant"))?
-            .id;
         let parameters = signature
             .params
             .iter()
@@ -64,7 +75,7 @@ impl ClosureRegistry<'_> {
         let existing = self.constructor_routines.iter().find(|routine| {
             routine.result == result
                 && routine.semantic_result == *signature.return_type
-                && routine.variant == variant
+                && routine.construction == construction
                 && routine.parameters == parameters
                 && routine.owner == owner
         });
@@ -83,8 +94,7 @@ impl ClosureRegistry<'_> {
                 parameters,
                 result,
                 semantic_result: *signature.return_type.clone(),
-                layout,
-                variant,
+                construction,
                 span,
             });
             id
@@ -136,8 +146,25 @@ impl ClosureRegistry<'_> {
             cell_names: BTreeSet::new(),
             type_table: types.clone(),
         })?;
-        let field_types = context.type_table.enum_layouts[routine.layout.get() as usize].variants
-            [routine.variant.get() as usize]
+        if let Construction::Payload(constructor) = routine.construction {
+            let parameter = parameters
+                .first()
+                .ok_or_else(|| unsupported(routine.span, "payload constructor parameter"))?;
+            let payload = context.read_named_local(&parameter.name, routine.span)?;
+            let operation = match constructor {
+                PayloadConstructor::Some => Operation::MakeSome(payload),
+                PayloadConstructor::Ok => Operation::MakeOk(payload),
+                PayloadConstructor::Error => Operation::MakeError(payload),
+            };
+            let value = context.emit_value(operation, routine.result, routine.span)?;
+            context.terminate(Terminator::Return(Some(value)))?;
+            return context.finish(routine.span);
+        }
+        let Construction::Enum(layout, variant) = routine.construction else {
+            return Err(unsupported(routine.span, "enum constructor layout"));
+        };
+        let field_types = context.type_table.enum_layouts[layout.get() as usize].variants
+            [variant.get() as usize]
             .fields
             .clone();
         let fields = parameters
@@ -150,8 +177,8 @@ impl ClosureRegistry<'_> {
             .collect::<Result<Vec<_>, CompileError>>()?;
         let value = context.emit_value(
             Operation::MakeEnum {
-                layout: routine.layout,
-                variant: routine.variant,
+                layout,
+                variant,
                 fields,
             },
             routine.result,

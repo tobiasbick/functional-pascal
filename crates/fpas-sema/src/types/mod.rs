@@ -14,6 +14,7 @@ mod generic_parameters;
 mod identity;
 /// Partial type evidence collected from generic arguments.
 mod inference;
+mod payload_constructors;
 pub use identity::{error_schema, semantic_type_identity};
 /// Record identities, generic arguments, and resolved members.
 mod records;
@@ -25,6 +26,7 @@ pub use enums::{EnumTy, EnumVariantTy};
 pub(crate) use generic_parameters::parameter_name;
 pub use generic_parameters::{GenericParamDef, TypeConstraint};
 pub(crate) use inference::{has_inference_holes, merge_inferred_types, needs_expected_type};
+pub use payload_constructors::PayloadConstructor;
 pub use records::{MethodKind, RecordTy};
 pub use subranges::SubrangeTy;
 pub(crate) use substitution::substitute_type_parameters;

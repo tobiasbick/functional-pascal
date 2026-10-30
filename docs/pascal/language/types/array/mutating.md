@@ -41,8 +41,10 @@ Both Pop forms retain FP5003 on empty arrays. Failed empty PopInPlace does not
 alter storage. Check IsEmpty first when emptiness is expected.
 
 Positional and fully named arguments are supported. Value is read-only;
-Items.PushInPlace(var Value) is rejected. Native stack operations have no free
-routines or bound routine values. Use wrappers when a callback is needed.
+Items.PushInPlace(var Value) is rejected. Bind the value operations as
+`Items.Push` or `Items.Pop` when passing callbacks. InPlace operations require
+writable source storage; use an ordinary routine with an explicit `var` parameter
+when a mutating callback is needed. No separate free-routine API is provided.
 
 Storage, path evaluation, aliases, callback/failure rules and go restrictions
 are specified in [collection mutation](../collection-mutation.md). Direct local

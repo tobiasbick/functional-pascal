@@ -20,7 +20,7 @@ fn formal_go_call_requires_a_direct_or_final_postfix_call() {
         alternatives,
         [
             "designator call_args",
-            "native_array_factory",
+            "'array' '.' identifier call_args",
             "primary_atom { postfix_suffix } '.' identifier call_args",
         ],
         "go_call must retain direct calls and require the final postfix suffix to be a call"
@@ -103,6 +103,10 @@ fn postfix_task_call_fixtures_end_in_a_method_call_in_both_go_forms() {
 fn non_call_task_targets_report_fp2005_in_both_go_forms() {
     for target in [
         "Worker",
+        "array.Fill",
+        "Some",
+        "Ok",
+        "Error",
         "42",
         "Make().Value",
         "MakeWorkers()[0]",

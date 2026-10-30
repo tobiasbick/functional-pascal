@@ -15,6 +15,7 @@ mod handler_fields;
 mod if_expressions;
 mod named_arguments;
 mod native;
+mod native_values;
 mod numeric;
 mod ordinary_names;
 mod postfix;
@@ -240,6 +241,7 @@ fn analysis_metadata_exposes_all_named_results() {
         binding_types: _,
         enum_members,
         intrinsic_calls,
+        native_values: _,
         named_argument_orders,
         named_types,
         method_calls,

@@ -1,0 +1,41 @@
+program NativeCallableTasks;
+
+uses Std.Tasks as Tasks, Std.Math as Math, Std.Test as Test;
+
+function Read(Queue: channel of integer): integer;
+begin
+  const Receive: function(Queue: channel of integer): result of (integer, Tasks.TaskError) := Tasks.Receive;
+  return Receive(Queue).Unwrap();
+end function;
+
+function Work(Token: Tasks.CancellationToken): integer;
+begin
+  if Tasks.IsCancellationRequested(Token) then
+    return 0;
+  end if;
+
+  return 23;
+end function;
+
+begin
+  const Create: function(Capacity: integer): channel of integer := Tasks.CreateChannel;
+  const Queue := Create(1);
+  const Send: function(Queue: channel of integer; Value: integer): result of (boolean, Tasks.TaskError) := Tasks.Send;
+  scope
+    const ReadJob := go Read(Queue);
+    discard Send(Value := 42, Queue := Queue).Unwrap();
+    Test.AssertEquals(42, Tasks.Wait(ReadJob));
+    const Abs: function(N: integer): integer := Math.Abs;
+    const MathJob := go Abs(-7);
+    Test.AssertEquals(7, Tasks.Wait(MathJob));
+  end scope;
+  const Close: function(Queue: channel of integer): boolean := Tasks.CloseChannel;
+  Test.AssertTrue(Close(Queue));
+  const Group := Tasks.CreateTaskGroup();
+  const Start: function(
+    Group: Tasks.TaskGroup; Work: function(Token: Tasks.CancellationToken): integer
+  ): task of integer := Tasks.StartTaskInGroup;
+  const Job := Start(Group, Work);
+  Test.AssertEquals(23, Tasks.Wait(Job));
+  discard Tasks.CloseTaskGroup(Group);
+end.

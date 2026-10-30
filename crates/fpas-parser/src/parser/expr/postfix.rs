@@ -33,6 +33,15 @@ impl Parser {
             self.parse_named_type_arguments();
         }
 
+        self.finish_designator_expression(designator, start)
+    }
+
+    /// Ordinary names and reserved factory owners share one reference/call rule.
+    pub(super) fn finish_designator_expression(
+        &mut self,
+        designator: Designator,
+        start: fpas_lexer::Span,
+    ) -> Expr {
         if self.check(&Token::LParen) {
             self.advance();
             let args = if self.check(&Token::RParen) {

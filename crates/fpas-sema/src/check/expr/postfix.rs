@@ -185,6 +185,10 @@ impl Checker {
         match operation {
             PostfixOperation::Field { name, span } => {
                 let key = Self::postfix_operation_lookup_key(operation);
+                if let Some(native) = crate::native_operation(&resolved, name) {
+                    return self
+                        .check_native_callable_receiver(native, resolved, key, 0, *span, expected);
+                }
                 self.check_record_member_access(&resolved, name, *span, Some((key, 0, *span)))
             }
             PostfixOperation::Index { index, span } => {

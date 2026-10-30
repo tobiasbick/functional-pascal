@@ -183,7 +183,6 @@ impl<'a> ClosureRegistry<'a> {
         metadata: &AnalysisMetadata,
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
-        self.register_conversion_value(expression, owner, metadata, types)?;
         self.register_constructor_value(expression, owner, metadata, types)?;
         match expression {
             Expr::Closure(closure) => {
@@ -261,6 +260,13 @@ impl<'a> ClosureRegistry<'a> {
             }
             Expr::Designator(designator) => {
                 let key = fpas_sema::designator_lookup_key(designator);
+                if let Some(info) = metadata.native_values.get(&key) {
+                    let ty = metadata
+                        .expr_types
+                        .get(&fpas_sema::expr_lookup_key(expression))
+                        .ok_or_else(|| unsupported(designator.span, "native callable type"))?;
+                    self.register_native_value(key, info, ty, owner, designator.span, types)?;
+                }
                 if let Some(info) = metadata.bound_methods.get(&key) {
                     self.register_bound_method(key, info, owner, designator.span, types)?;
                 }
@@ -374,6 +380,15 @@ impl<'a> ClosureRegistry<'a> {
                         }
                         PostfixOperation::Field { span, .. } => {
                             let key = fpas_sema::postfix_operation_lookup_key(operation);
+                            if let Some(info) = metadata.native_values.get(&key) {
+                                let ty = metadata
+                                    .path_types
+                                    .get(&(span.source_id, span.offset))
+                                    .ok_or_else(|| {
+                                        unsupported(*span, "native callable field type")
+                                    })?;
+                                self.register_native_value(key, info, ty, owner, *span, types)?;
+                            }
                             if let Some(info) = metadata.bound_methods.get(&key) {
                                 self.register_bound_method(key, info, owner, *span, types)?;
                             }

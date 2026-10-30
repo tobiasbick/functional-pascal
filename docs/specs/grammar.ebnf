@@ -530,7 +530,7 @@ continue_stmt       = 'continue' ;
 (* It requires a same-routine lexical scope; bind or discard the value.  *)
 (* Documentation: docs/pascal/language/concurrency/go.md                *)
 go_call             = designator call_args
-                    | native_array_factory
+                    | 'array' '.' identifier call_args
                     | primary_atom { postfix_suffix } '.' identifier call_args ;
 
 (* -- Task scope -- *)
@@ -615,9 +615,7 @@ primary_atom        = native_array_factory
                     | string_literal
                     | 'true'
                     | 'false'
-                    | 'ok' '(' payload_argument ')'      (* Result Ok      *)
-                    | 'error' '(' payload_argument ')'   (* Result Error   *)
-                    | 'some' '(' payload_argument ')'    (* Option Some    *)
+                    | payload_constructor [ '(' payload_argument ')' ]
                     | 'none'                             (* Option None    *)
                     | '(' expression ')'
                     | array_literal
@@ -656,10 +654,13 @@ closure_expr        = 'function' '(' [ param_list ] ')' ':' type_expr
 (* statement, declaration, or field_init supplies its terminator.        *)
 (* Arguments end directly before ',' or ')' after their named closer.    *)
 
-(* string.Chr parses as a keyword-owned designator call. array is reserved,
-   so its factory has a dedicated primary production. Sema admits only the
-   fixed factory names, without explicit generic arguments. *)
-native_array_factory = 'array' '.' identifier call_args ;
+(* Names without call_args refer to callable values. Calls supply arguments.
+   Reserved array ownership uses the same rule as ordinary qualified names,
+   including string.Chr. Sema admits catalog factories, without explicit
+   generic arguments. Payload constructors use a receiving callable signature
+   when referenced without parentheses. None remains a fieldless value. *)
+native_array_factory = 'array' '.' identifier [ call_args ] ;
+payload_constructor  = 'ok' | 'error' | 'some' ;
 
 postfix_suffix      = '.' identifier [ call_args ]
                     | '[' expression ']' ;

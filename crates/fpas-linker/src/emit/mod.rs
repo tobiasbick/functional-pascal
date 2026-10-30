@@ -34,16 +34,13 @@ pub fn link_objects(
     units: &[fpas_unit::object::RelocatableObject],
     program: &fpas_unit::object::RelocatableObject,
 ) -> Result<fpas_code::VerifiedExecutable, LinkError> {
-    if let Some((units, program)) = crate::errors::prepare(units, program)? {
-        return link_prepared(&units, &program);
+    if let Some(prepared) = crate::errors::prepare(units, program)? {
+        return link_prepared(LinkPlan::build_prepared(&prepared)?);
     }
-    link_prepared(units, program)
+    link_prepared(LinkPlan::build(units, program)?)
 }
 
-fn link_prepared(
-    units: &[fpas_unit::object::RelocatableObject],
-    program: &fpas_unit::object::RelocatableObject,
-) -> Result<fpas_code::VerifiedExecutable, LinkError> {
+fn link_prepared(plan: LinkPlan<'_>) -> Result<fpas_code::VerifiedExecutable, LinkError> {
     let LinkPlan {
         objects,
         symbols,
@@ -52,7 +49,7 @@ fn link_prepared(
         linked_debug_types,
         initializer_targets,
         code_layout,
-    } = LinkPlan::build(units, program)?;
+    } = plan;
     let mut strings = strings::StringInterner::default();
 
     let mut linked_globals = ids

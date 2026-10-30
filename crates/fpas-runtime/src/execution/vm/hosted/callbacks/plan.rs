@@ -142,14 +142,10 @@ fn dict_operation(
         .ok_or_else(|| worker.arity_error("dict callback"))?
         .clone();
     let operation = match operation {
-        DictIntrinsic::Map => {
-            CallbackOperation::DictMap(Dictionary::new(entries.iter().cloned().collect()))
-        }
-        DictIntrinsic::Filter => {
-            CallbackOperation::DictFilter(Dictionary::new(entries.iter().cloned().collect()))
-        }
+        DictIntrinsic::Map => CallbackOperation::DictMap(Dictionary::new(entries.clone())),
+        DictIntrinsic::Filter => CallbackOperation::DictFilter(Dictionary::new(entries.clone())),
         DictIntrinsic::Reduce => CallbackOperation::DictReduce(DictionaryReduction::new(
-            entries.iter().cloned().collect(),
+            entries.clone(),
             arguments
                 .get(1)
                 .ok_or_else(|| worker.arity_error("Std.Dictionaries.Reduce"))?

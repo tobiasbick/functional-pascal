@@ -87,23 +87,11 @@ pub(crate) fn lower_with_options(
 /// See `docs/pascal/program-structure/units.md`.
 pub(crate) fn lower_unit(
     unit: &Unit,
+    metadata: fpas_sema::AnalysisMetadata,
     interfaces: &[fpas_unit::interface::UnitInterface],
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],
     options: crate::CompileOptions,
 ) -> Result<LoweredUnit, Vec<CompileError>> {
-    let analysis =
-        fpas_sema::analyze_unit_with_interface_support(unit, interfaces, supporting_interfaces)
-            .map_err(|error| {
-                vec![crate::error::internal_compiler_error(
-                    error.to_string(),
-                    "Rebuild the dependency sidecar; its semantic interface is invalid.",
-                    unit.span.line,
-                    unit.span.column,
-                )]
-            })?;
-    if !analysis.metadata.errors.is_empty() {
-        return Err(analysis.metadata.errors.into_iter().map(Box::new).collect());
-    }
     lower_analyzed_root(
         SourceRoot {
             name: &unit.name.parts.join("."),
@@ -112,7 +100,7 @@ pub(crate) fn lower_unit(
             body: &[],
             span: unit.span,
         },
-        analysis.metadata,
+        metadata,
         interfaces,
         supporting_interfaces,
         options,

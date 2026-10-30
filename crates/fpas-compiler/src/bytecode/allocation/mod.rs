@@ -175,13 +175,16 @@ impl Allocation {
         index: usize,
         instruction: &fpas_ir::Instruction,
     ) -> Vec<u16> {
-        let operands = operation_values(&instruction.operation);
-        operands
-            .iter()
-            .filter(|value| operands.iter().filter(|other| other == value).count() == 1)
-            .filter(|value| self.is_final_read(**value, block, index))
-            .filter_map(|value| self.values.get(value).map(|register| register.get()))
-            .collect()
+        let mut candidates = BTreeMap::new();
+        operation_values(&instruction.operation, |value| {
+            if self.is_final_read(value, block, index) {
+                candidates
+                    .entry(value)
+                    .and_modify(|register| *register = None)
+                    .or_insert_with(|| self.values.get(&value).map(|register| register.get()));
+            }
+        });
+        candidates.into_values().flatten().collect()
     }
 
     pub fn call_window(&self) -> Register {
@@ -200,14 +203,14 @@ fn coalesced_local_writes(function: &Function) -> BTreeMap<ValueId, LocalId> {
     let mut use_counts = BTreeMap::<ValueId, usize>::new();
     for block in &function.blocks {
         for instruction in &block.instructions {
-            for value in operation_values(&instruction.operation) {
+            operation_values(&instruction.operation, |value| {
                 *use_counts.entry(value).or_default() += 1;
-            }
+            });
         }
         if let Some(terminator) = block.terminators.first() {
-            for value in terminator_values(terminator) {
+            terminator_values(terminator, |value| {
                 *use_counts.entry(value).or_default() += 1;
-            }
+            });
         }
     }
 
@@ -281,17 +284,17 @@ fn last_uses(function: &Function) -> BTreeMap<ValueId, usize> {
     for block in &function.blocks {
         for (index, instruction) in block.instructions.iter().enumerate() {
             let immediate = dead_values::immediate_operand(block, index);
-            for value in operation_values(&instruction.operation) {
+            operation_values(&instruction.operation, |value| {
                 if Some(value) != immediate {
                     uses.insert(value, position);
                 }
-            }
+            });
             position = position.saturating_add(1);
         }
         if let Some(terminator) = block.terminators.first() {
-            for value in terminator_values(terminator) {
+            terminator_values(terminator, |value| {
                 uses.insert(value, position);
-            }
+            });
         }
         position = position.saturating_add(1);
     }

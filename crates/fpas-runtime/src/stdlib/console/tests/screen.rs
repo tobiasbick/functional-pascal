@@ -227,6 +227,12 @@ fn console_resize_preserves_overlapping_cells() {
         c.test_line_text(1).chars().take(2).collect::<String>(),
         "ab"
     );
+    c.resize(300, 220);
+    c.window(1, 1, 300, 220, test_location()).unwrap();
+    c.goto_xy(300, 220, test_location()).unwrap();
+    c.write(&Value::Str("X".into()), test_location()).unwrap();
+    c.resize(301, 221);
+    assert_eq!(c.test_line_text(220).chars().nth(299), Some('X'));
 }
 
 #[test]

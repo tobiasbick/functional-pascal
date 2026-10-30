@@ -11,21 +11,18 @@ use fpas_ir::{
 #[allow(clippy::too_many_arguments)]
 pub(super) fn bind(
     functions: &mut Vec<Function>,
+    max_function_id: &mut u32,
     types: &mut TypeTable,
     owner: &mut Function,
     instruction: &Instruction,
     target: FunctionId,
+    target_function: &TargetFunction,
     captures: Vec<ValueId>,
     factories: Vec<ValueId>,
     prefix: &mut Vec<Instruction>,
     next: &mut u32,
     span: fpas_lexer::Span,
 ) -> Result<Operation, CompileError> {
-    let target_function = functions
-        .iter()
-        .find(|function| function.id == target)
-        .cloned()
-        .ok_or_else(|| error("bound error routine is unavailable"))?;
     let visible = instruction
         .result
         .ok_or_else(|| error("bound error routine has no result"))?
@@ -56,8 +53,7 @@ pub(super) fn bind(
     if !captures.is_empty() {
         let mut callable_parameters = parameters.clone();
         callable_parameters.extend_from_slice(&capture_types);
-        let ty =
-            types.function_type(callable_parameters, target_function.signature.result, span)?;
+        let ty = types.function_type(callable_parameters, target_function.result, span)?;
         let callee = value(next, ty)?;
         prefix.push(Instruction {
             source: instruction.source,
@@ -117,15 +113,10 @@ pub(super) fn bind(
             kind: CaptureKind::Value,
         });
     }
-    let id = FunctionId::new(
-        functions
-            .iter()
-            .map(|function| function.id.get())
-            .max()
-            .unwrap_or(0)
-            .checked_add(1)
-            .ok_or_else(|| error("bound error function identifier overflow"))?,
-    );
+    *max_function_id = max_function_id
+        .checked_add(1)
+        .ok_or_else(|| error("bound error function identifier overflow"))?;
+    let id = FunctionId::new(*max_function_id);
     let params = parameters
         .iter()
         .enumerate()
@@ -242,7 +233,7 @@ pub(super) fn bind(
     types.errors.displays.insert(
         id,
         if target_function.name.contains('.') {
-            target_function.name
+            target_function.name.clone()
         } else {
             format!("{}.{}", types.errors.owner, target_function.name)
         },

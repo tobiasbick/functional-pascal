@@ -10,22 +10,22 @@ use crate::BuildEvent;
 
 use super::CompiledUnits;
 
-pub(super) fn direct_interfaces_from_map(
+pub(super) fn direct_interfaces(
     uses: &[fpas_parser::Import],
-    interfaces: &HashMap<String, UnitInterface>,
+    interfaces: &[UnitInterface],
+    positions: &HashMap<String, usize>,
 ) -> Vec<UnitInterface> {
     uses.iter()
         .filter_map(|used| {
-            interfaces
+            positions
                 .get(&used.unit.parts.join(".").to_ascii_lowercase())
-                .cloned()
+                .map(|position| interfaces[*position].clone())
         })
         .collect()
 }
 
 #[derive(Default)]
 pub(super) struct InterfaceRegistry {
-    names: Vec<String>,
     interfaces: Vec<UnitInterface>,
     positions: HashMap<String, usize>,
     hashes: HashMap<String, Digest>,
@@ -91,7 +91,6 @@ impl InterfaceRegistry {
         dependencies: Vec<DependencyIdentity>,
     ) {
         let position = self.interfaces.len();
-        self.names.push(name.clone());
         self.interfaces.push(interface);
         self.positions.insert(name.clone(), position);
         self.dependencies.insert(name.clone(), dependencies);
@@ -104,17 +103,12 @@ impl InterfaceRegistry {
         linked_units: Vec<LinkedUnitIdentity>,
         events: Vec<BuildEvent>,
     ) -> CompiledUnits<Object> {
-        let interfaces = self
-            .names
-            .into_iter()
-            .zip(self.interfaces.iter().cloned())
-            .collect();
         CompiledUnits {
             objects,
-            interfaces,
+            interfaces: self.interfaces,
+            interface_positions: self.positions,
             events,
             linked_units,
-            supporting_interfaces: self.interfaces,
         }
     }
 }

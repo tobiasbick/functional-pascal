@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/text/toml.md`
 
 use crate::stdlib::error::{StdError, std_runtime_error};
-use crate::stdlib::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
+use crate::stdlib::intrinsic_args::{IntrinsicCall, expect_str, pop_value};
 use crate::stdlib::limits::MAX_TOML_DEPTH;
 use crate::stdlib::std_symbols as s;
 use crate::{Intrinsic, SourceLocation, TomlIntrinsic, Value};
@@ -112,11 +112,11 @@ fn expected_toml_value_error(value: &Value, location: SourceLocation) -> StdErro
 
 fn expect_one_field(
     variant: &str,
-    fields: Vec<Value>,
+    mut fields: Vec<Value>,
     location: SourceLocation,
 ) -> Result<Value, StdError> {
-    if let [field] = fields.as_slice() {
-        return Ok(field.clone());
+    if fields.len() == 1 {
+        return Ok(fields.remove(0));
     }
     Err(std_runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -263,8 +263,8 @@ pub(crate) fn run(
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Toml(TomlIntrinsic::Parse) => {
-            let text = pop_string(pop_value(call, location)?, location)?;
-            match toml::from_str::<TomlValue>(&text) {
+            let text = expect_str(pop_value(call, location)?, location)?;
+            match toml::from_str::<TomlValue>(text) {
                 Ok(value) => match toml_to_fpas(call, value, location) {
                     Ok(value) => call.push(Value::result_ok(value)),
                     Err(error)

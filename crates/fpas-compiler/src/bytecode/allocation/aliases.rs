@@ -50,14 +50,14 @@ pub(super) fn aliased_local_reads(
     }
     for block in &function.blocks {
         for (index, instruction) in block.instructions.iter().enumerate() {
-            for value in operation_values(&instruction.operation) {
+            operation_values(&instruction.operation, |value| {
                 record_use(&mut candidates, value, block.id, index);
-            }
+            });
         }
         for terminator in &block.terminators {
-            for value in terminator_values(terminator) {
+            terminator_values(terminator, |value| {
                 record_use(&mut candidates, value, block.id, block.instructions.len());
-            }
+            });
         }
     }
 

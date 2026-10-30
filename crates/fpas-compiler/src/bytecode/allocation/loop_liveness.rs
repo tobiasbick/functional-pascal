@@ -66,14 +66,14 @@ pub(super) fn extend_across_back_edges(
     };
     for (index, block) in function.blocks.iter().enumerate() {
         for (offset, instruction) in block.instructions.iter().enumerate() {
-            for value in operation_values(&instruction.operation) {
+            operation_values(&instruction.operation, |value| {
                 extend(value, starts[index] + offset);
-            }
+            });
         }
         for terminator in &block.terminators {
-            for value in terminator_values(terminator) {
+            terminator_values(terminator, |value| {
                 extend(value, starts[index] + block.instructions.len());
-            }
+            });
         }
     }
 }

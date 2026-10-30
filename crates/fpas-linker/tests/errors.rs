@@ -255,6 +255,32 @@ fn executable_admission_rejects_each_corrupted_error_relationship() {
 }
 
 #[test]
+fn schema_expansion_rejects_program_entries_in_dependency_units() {
+    let (mut libraries, root) = inputs();
+    libraries[0].entry = Some(0);
+    let owner = libraries[0].owner.clone();
+    assert!(matches!(
+        link_objects(&libraries, &root),
+        Err(LinkError::UnitEntry(actual)) if actual == owner
+    ));
+}
+
+#[test]
+fn schema_input_validation_precedes_expansion_and_unit_entry_checks() {
+    for entry in [None, Some(0)] {
+        let (mut libraries, mut root) = inputs();
+        libraries[0].entry = entry;
+        let mut malformed = libraries[0].error_schemas[0].clone();
+        malformed.location.source = root.sources.len() as u32;
+        root.error_schemas.push(malformed);
+        assert!(matches!(
+            link_objects(&libraries, &root),
+            Err(LinkError::InvalidObject { owner, .. }) if owner == root.owner
+        ));
+    }
+}
+
+#[test]
 fn schema_constraints_and_requests_fail_before_execution() {
     let (libraries, root) = inputs();
     let mut wrong_bound = root.clone();

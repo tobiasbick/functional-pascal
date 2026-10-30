@@ -167,14 +167,13 @@ impl ConsoleState {
         };
         let old_width = self.width;
         let old_height = self.height;
-        let old_cells = self.cells.clone();
         let mut new_cells = vec![blank; new_width as usize * new_height as usize];
 
         for y in 1..=old_height.min(new_height) {
             for x in 1..=old_width.min(new_width) {
-                let old_idx = ((y - 1) * old_width + (x - 1)) as usize;
-                let new_idx = ((y - 1) * new_width + (x - 1)) as usize;
-                new_cells[new_idx] = old_cells[old_idx].clone();
+                let old_idx = usize::from(y - 1) * usize::from(old_width) + usize::from(x - 1);
+                let new_idx = usize::from(y - 1) * usize::from(new_width) + usize::from(x - 1);
+                new_cells[new_idx] = self.cells[old_idx].clone();
             }
         }
 
@@ -212,7 +211,7 @@ impl ConsoleState {
     }
 
     pub(super) fn index(&self, x: u16, y: u16) -> usize {
-        ((y - 1) * self.width + (x - 1)) as usize
+        usize::from(y - 1) * usize::from(self.width) + usize::from(x - 1)
     }
 
     fn blank_cell(&self) -> ScreenCell {

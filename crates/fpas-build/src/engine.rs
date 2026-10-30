@@ -18,7 +18,7 @@ use fpas_unit::object::RelocatableObject;
 use fpas_unit::{CompiledUnit, Digest, ExpectedUnitIdentity, UnitIdentity, write_sidecar};
 
 use self::backend::{Backend, UnitBackend, sidecar_error};
-use self::interfaces::{InterfaceRegistry, direct_interfaces_from_map};
+use self::interfaces::{InterfaceRegistry, direct_interfaces};
 use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
 
@@ -26,12 +26,12 @@ use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
 pub struct BuiltUnits {
     /// Objects in deterministic dependency order.
     pub objects: Vec<RelocatableObject>,
-    /// Interfaces indexed by canonical unit name.
-    pub interfaces: HashMap<String, UnitInterface>,
+    /// Interfaces in deterministic dependency order.
+    pub interfaces: Vec<UnitInterface>,
     /// Structured activity stream.
     pub events: Vec<BuildEvent>,
     pub(crate) linked_units: Vec<LinkedUnitIdentity>,
-    supporting_interfaces: Vec<UnitInterface>,
+    interface_positions: HashMap<String, usize>,
 }
 
 impl BuiltUnits {
@@ -42,7 +42,7 @@ impl BuiltUnits {
     }
 
     fn supporting_interfaces(&self) -> &[UnitInterface] {
-        &self.supporting_interfaces
+        &self.interfaces
     }
 }
 
@@ -105,16 +105,16 @@ fn compile_library_units(
         interfaces: units.interfaces,
         events: units.events,
         linked_units: units.linked_units,
-        supporting_interfaces: units.supporting_interfaces,
+        interface_positions: units.interface_positions,
     })
 }
 
 pub(super) struct CompiledUnits<Object> {
     pub(super) objects: Vec<Object>,
-    pub(super) interfaces: HashMap<String, UnitInterface>,
+    pub(super) interfaces: Vec<UnitInterface>,
+    pub(super) interface_positions: HashMap<String, usize>,
     pub(super) events: Vec<BuildEvent>,
     pub(super) linked_units: Vec<LinkedUnitIdentity>,
-    pub(super) supporting_interfaces: Vec<UnitInterface>,
 }
 
 fn compile_units<Backend: UnitBackend>(
@@ -272,7 +272,8 @@ pub(crate) fn link_program(
     source_path: Option<&std::path::Path>,
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
-    let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
+    let root_interfaces =
+        direct_interfaces(&program.uses, &units.interfaces, &units.interface_positions);
     let mut program_object = fpas_compiler::compile_program_object_with_options(
         program,
         &root_interfaces,

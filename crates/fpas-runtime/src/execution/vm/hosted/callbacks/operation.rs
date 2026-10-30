@@ -3,7 +3,7 @@
 mod roots;
 
 use crate::execution::vm::calls::PreparedCall;
-use crate::{FunctionId, InstructionAddress, SharedArray, SharedFunction, Value};
+use crate::{FunctionId, InstructionAddress, SharedArray, SharedDict, SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
 use super::sorting::KeyedSort;
@@ -68,14 +68,14 @@ pub(super) struct Sequence {
 
 /// Cursor and accumulated dictionary output.
 pub(super) struct Dictionary {
-    pub(super) entries: Vec<(Value, Value)>,
+    pub(super) entries: SharedDict,
     next: usize,
     output: Vec<(Value, Value)>,
 }
 
 /// Input snapshot and accumulator for dictionary entry reduction.
 pub(super) struct DictionaryReduction {
-    entries: Vec<(Value, Value)>,
+    entries: SharedDict,
     next: usize,
     accumulator: Value,
 }
@@ -373,7 +373,7 @@ impl Sequence {
 
 impl Dictionary {
     /// Create an empty dictionary result for the supplied entries.
-    pub(super) fn new(entries: Vec<(Value, Value)>) -> Self {
+    pub(super) fn new(entries: SharedDict) -> Self {
         Self {
             entries,
             next: 0,
@@ -411,7 +411,7 @@ impl Dictionary {
 
 impl DictionaryReduction {
     /// Snapshot entries and retain the initial accumulator.
-    pub(super) fn new(entries: Vec<(Value, Value)>, initial: Value) -> Self {
+    pub(super) fn new(entries: SharedDict, initial: Value) -> Self {
         Self {
             entries,
             next: 0,

@@ -17,7 +17,6 @@ pub(super) fn invalid() -> CodecError {
 
 pub(super) struct Builder {
     pub version: Version,
-    pub schemas: BTreeMap<String, Value>,
     pub modules: BTreeMap<String, &'static str>,
     pub declarations: BTreeMap<String, Declaration>,
 }
@@ -28,15 +27,12 @@ pub(super) fn catalog(version: Version) -> Result<Catalog, CodecError> {
         .as_object()
         .ok_or_else(invalid)?
         .iter()
-        .map(|(name, value)| (name.clone(), value.clone()))
+        .map(|(name, value)| (name.clone(), value))
         .collect::<BTreeMap<_, _>>();
     let roots = document["prefixItems"].as_array().ok_or_else(invalid)?;
     for (index, name) in ROOTS.iter().enumerate() {
         let index = if index == 6 { 9 } else { index };
-        schemas.insert(
-            (*name).into(),
-            roots.get(index).ok_or_else(invalid)?.clone(),
-        );
+        schemas.insert((*name).into(), roots.get(index).ok_or_else(invalid)?);
     }
     let mut stable = BTreeSet::new();
     for name in ROOTS {
@@ -66,13 +62,11 @@ pub(super) fn catalog(version: Version) -> Result<Catalog, CodecError> {
         .collect();
     let mut builder = Builder {
         version,
-        schemas,
         modules,
         declarations: BTreeMap::new(),
     };
-    for key in builder.schemas.keys().cloned().collect::<Vec<_>>() {
-        let schema = builder.schemas[&key].clone();
-        builder.declare(&key, &schema)?;
+    for (key, schema) in schemas {
+        builder.declare(&key, schema)?;
     }
     Ok(Catalog {
         version,
@@ -80,7 +74,7 @@ pub(super) fn catalog(version: Version) -> Result<Catalog, CodecError> {
     })
 }
 
-fn mark_stable(schemas: &BTreeMap<String, Value>, schema: &Value, seen: &mut BTreeSet<String>) {
+fn mark_stable(schemas: &BTreeMap<String, &Value>, schema: &Value, seen: &mut BTreeSet<String>) {
     if schema["description"]
         .as_str()
         .is_some_and(|text| text.starts_with("**UNSTABLE**"))
@@ -172,35 +166,25 @@ impl Builder {
         if let Some(name) = reference(schema) {
             return Ok(Type::Named(name.into()));
         }
-        let mut schema = schema.clone();
-        let nullable = if let Some(types) = schema["type"].as_array() {
+        if let Some(types) = schema["type"].as_array() {
             let nonnull = types
                 .iter()
                 .filter(|ty| ty.as_str() != Some("null"))
-                .cloned()
                 .collect::<Vec<_>>();
             if nonnull.len() == 1 && nonnull.len() < types.len() {
-                schema["type"] = nonnull[0].clone();
-                true
-            } else {
-                false
+                let mut normalized = schema.clone();
+                normalized["type"] = nonnull[0].clone();
+                return Ok(Type::Option(Box::new(self.ty(owner, &normalized)?)));
             }
-        } else if let Some(branches) = schema["anyOf"].as_array() {
-            if branches.len() == 2 && branches.iter().any(|s| s["type"] == "null") {
-                schema = branches
-                    .iter()
-                    .find(|s| s["type"] != "null")
-                    .ok_or_else(invalid)?
-                    .clone();
-                true
-            } else {
-                false
-            }
-        } else {
-            false
-        };
-        if nullable {
-            return Ok(Type::Option(Box::new(self.ty(owner, &schema)?)));
+        } else if let Some(branches) = schema["anyOf"].as_array()
+            && branches.len() == 2
+            && branches.iter().any(|s| s["type"] == "null")
+        {
+            let branch = branches
+                .iter()
+                .find(|s| s["type"] != "null")
+                .ok_or_else(invalid)?;
+            return Ok(Type::Option(Box::new(self.ty(owner, branch)?)));
         }
         if schema
             .get("oneOf")
@@ -213,7 +197,7 @@ impl Builder {
             let key = format!("{owner}Value");
             let module = self.module(owner);
             self.modules.entry(key.clone()).or_insert(module);
-            self.declare(&key, &schema)?;
+            self.declare(&key, schema)?;
             return Ok(Type::Named(key));
         }
         Ok(match schema["type"].as_str() {
@@ -251,7 +235,7 @@ impl Builder {
             None if schema
                 .as_object()
                 .is_some_and(|schema| !schema.contains_key("type"))
-                || schema == true =>
+                || *schema == true =>
             {
                 Type::Raw { object: false }
             }

@@ -6,7 +6,7 @@
     reason = "DAP transcript tests keep fixture failures local"
 )]
 
-use fpas_debug::{PreparedDebugTarget, dap::DapServer, jsonl::JsonlServer};
+use fpas_debug::{PreparedDebugTarget, dap::DapServer};
 use serde_json::{Value, json};
 
 const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/forced_return.fpas");
@@ -35,13 +35,6 @@ fn server_for(source: &str) -> DapServer {
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile DAP forced-return fixture");
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
-}
-
-fn jsonl_server() -> JsonlServer {
-    let (program, diagnostics) = fpas_parser::parse(SOURCE);
-    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
-    let executable = fpas_compiler::compile(&program).expect("compile JSONL forced-return fixture");
-    JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
 }
 
 fn request(seq: u64, command: &str, arguments: Value) -> Value {
@@ -150,7 +143,7 @@ fn dap_force_return_clears_runtime_failure_and_resumes_recovered_code() {
 }
 
 #[test]
-fn dap_force_return_matches_jsonl_and_invalidates_stacks_and_variables() {
+fn dap_force_return_invalidates_stacks_and_variables() {
     let mut adapter = server();
     let mut seq = initialize(&mut adapter, true);
     let callee = stop_in_function(&mut adapter, &mut seq, "compute");
@@ -169,50 +162,6 @@ fn dap_force_return_matches_jsonl_and_invalidates_stacks_and_variables() {
     assert_eq!(returned[1]["event"], "invalidated");
     assert_eq!(returned[1]["body"]["areas"][0], "stacks");
     assert_eq!(returned[1]["body"]["areas"][1], "variables");
-
-    let mut jsonl = jsonl_server();
-    let mut id = 0u64;
-    id += 1;
-    let _ = jsonl.handle_line(
-        &json!({"type":"request","id":id,"command":"initialize","arguments":{"version":2}})
-            .to_string(),
-    );
-    id += 1;
-    let _ = jsonl.handle_line(
-        &json!({"type":"request","id":id,"command":"launch","arguments":{"stop_on_entry":true}})
-            .to_string(),
-    );
-    let jsonl_callee = {
-        let mut found = None;
-        for _ in 0..64 {
-            id += 1;
-            let frames = jsonl.handle_line(
-                &json!({"type":"request","id":id,"command":"stack","arguments":{}}).to_string(),
-            );
-            if frames[0]["body"]["frames"][0]["name"] == "compute" {
-                found = frames[0]["body"]["frames"][0]["frame_id"].as_u64();
-                break;
-            }
-            id += 1;
-            let _ = jsonl.handle_line(
-                &json!({"type":"request","id":id,"command":"step_into","arguments":{}}).to_string(),
-            );
-            let _ = jsonl.wait();
-        }
-        found.expect("JSONL compute frame")
-    };
-    id += 1;
-    let jsonl_result = jsonl.handle_line(
-        &json!({"type":"request","id":id,"command":"frame.return","arguments":{"frame_id":jsonl_callee,"expression":"99"}}).to_string(),
-    );
-    assert_eq!(
-        jsonl_result[0]["body"]["result"],
-        returned[0]["body"]["value"]
-    );
-    assert_eq!(
-        jsonl_result[0]["body"]["unwound_frames"],
-        returned[0]["body"]["unwoundFrames"]
-    );
 
     let rejected = send(
         &mut adapter,

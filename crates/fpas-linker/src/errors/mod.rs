@@ -15,10 +15,27 @@ pub(super) struct SchemaSource<'a> {
 use fpas_unit::object::{ObjectConstant, RelocatableObject};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(crate) fn prepare(
-    units: &[RelocatableObject],
-    program: &RelocatableObject,
-) -> Result<Option<(Vec<RelocatableObject>, RelocatableObject)>, LinkError> {
+/// Error expansion over validated immutable inputs and a validated generated object.
+pub(super) struct PreparedObjects<'a> {
+    units: &'a [RelocatableObject],
+    program: &'a RelocatableObject,
+    generated: RelocatableObject,
+}
+
+impl PreparedObjects<'_> {
+    pub(super) fn units(&self) -> impl Iterator<Item = &RelocatableObject> {
+        self.units.iter().chain(std::iter::once(&self.generated))
+    }
+
+    pub(super) fn program(&self) -> &RelocatableObject {
+        self.program
+    }
+}
+
+pub(crate) fn prepare<'a>(
+    units: &'a [RelocatableObject],
+    program: &'a RelocatableObject,
+) -> Result<Option<PreparedObjects<'a>>, LinkError> {
     let objects = units.iter().chain(std::iter::once(program));
     let mut requests = BTreeSet::new();
     for object in objects.clone() {
@@ -77,9 +94,11 @@ pub(crate) fn prepare(
             "input object uses the reserved error-constructor owner",
         ));
     }
-    let mut units = units.to_vec();
-    units.push(generated);
-    Ok(Some((units, program.clone())))
+    Ok(Some(PreparedObjects {
+        units,
+        program,
+        generated,
+    }))
 }
 
 pub(super) fn invalid(message: impl Into<String>) -> LinkError {

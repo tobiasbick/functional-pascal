@@ -6,8 +6,8 @@
 
 use crate::stdlib::error::{StdError, std_internal_error, std_runtime_error};
 use crate::stdlib::intrinsic_args::{
-    IntrinsicCall, expect_str, pad_fill_char, pop_array, pop_int, pop_single_char, pop_string,
-    pop_value, value_as_string_for_join,
+    IntrinsicCall, expect_array, expect_str, pad_fill_char, pop_int, pop_single_char, pop_value,
+    value_as_string_for_join,
 };
 use crate::stdlib::limits::checked_collection_len;
 use crate::{Intrinsic, SourceLocation, StrIntrinsic, Value};
@@ -37,15 +37,15 @@ pub(crate) fn run(
             call.push(Value::Integer(s.char_len() as i64));
         }
         Intrinsic::Str(StrIntrinsic::ToUpper) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.to_uppercase().into()));
         }
         Intrinsic::Str(StrIntrinsic::ToLower) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.to_lowercase().into()));
         }
         Intrinsic::Str(StrIntrinsic::Trim) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.trim().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::StartsWith) => {
@@ -74,14 +74,14 @@ pub(crate) fn run(
             call.push(idx);
         }
         Intrinsic::Str(StrIntrinsic::Replace) => {
-            let new_s = pop_string(pop_value(call, location)?, location)?;
-            let old = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Str(s.replace(&old, &new_s).into()));
+            let new_s = expect_str(pop_value(call, location)?, location)?;
+            let old = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Str(s.replace(old.as_ref(), new_s.as_ref()).into()));
         }
         Intrinsic::Str(StrIntrinsic::Split) => {
-            let delim = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let delim = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             if delim.is_empty() {
                 return Err(std_runtime_error(
                     RUNTIME_INTRINSIC_STACK_STATE_ERROR,
@@ -97,13 +97,13 @@ pub(crate) fn run(
             call.push(Value::Array(parts.into()));
         }
         Intrinsic::Str(StrIntrinsic::Join) => {
-            let delim = pop_string(pop_value(call, location)?, location)?;
-            let arr = pop_array(pop_value(call, location)?, location)?;
+            let delim = expect_str(pop_value(call, location)?, location)?;
+            let arr = expect_array(pop_value(call, location)?, location)?;
             let mut out = String::new();
             for (i, v) in arr.iter().enumerate() {
                 let part = value_as_string_for_join(v, location)?;
                 if i > 0 {
-                    out.push_str(&delim);
+                    out.push_str(delim);
                 }
                 out.push_str(part);
             }
@@ -115,7 +115,7 @@ pub(crate) fn run(
         }
         Intrinsic::Str(StrIntrinsic::Repeat) => {
             let n = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let out = if n <= 0 {
                 String::new()
             } else {
@@ -125,42 +125,42 @@ pub(crate) fn run(
             call.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::PadLeft) => {
-            let pad_fill = pop_string(pop_value(call, location)?, location)?;
-            let pad_char = pad_fill_char(&pad_fill, location)?;
+            let pad_fill = expect_str(pop_value(call, location)?, location)?;
+            let pad_char = pad_fill_char(pad_fill, location)?;
             let width = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let width = checked_pad_width(width, "PadLeft", location)?;
-            let char_count = s.chars().count();
+            let char_count = s.char_len();
             if char_count >= width {
-                call.push(Value::Str(s.into()));
+                call.push(Value::Str(s.clone()));
             } else {
                 let padding: String = std::iter::repeat_n(pad_char, width - char_count).collect();
                 call.push(Value::Str(format!("{padding}{s}").into()));
             }
         }
         Intrinsic::Str(StrIntrinsic::PadRight) => {
-            let pad_fill = pop_string(pop_value(call, location)?, location)?;
-            let pad_char = pad_fill_char(&pad_fill, location)?;
+            let pad_fill = expect_str(pop_value(call, location)?, location)?;
+            let pad_char = pad_fill_char(pad_fill, location)?;
             let width = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let width = checked_pad_width(width, "PadRight", location)?;
-            let char_count = s.chars().count();
+            let char_count = s.char_len();
             if char_count >= width {
-                call.push(Value::Str(s.into()));
+                call.push(Value::Str(s.clone()));
             } else {
                 let padding: String = std::iter::repeat_n(pad_char, width - char_count).collect();
                 call.push(Value::Str(format!("{s}{padding}").into()));
             }
         }
         Intrinsic::Str(StrIntrinsic::PadCenter) => {
-            let pad_fill = pop_string(pop_value(call, location)?, location)?;
-            let pad_char = pad_fill_char(&pad_fill, location)?;
+            let pad_fill = expect_str(pop_value(call, location)?, location)?;
+            let pad_char = pad_fill_char(pad_fill, location)?;
             let width = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let width = checked_pad_width(width, "PadCenter", location)?;
-            let char_count = s.chars().count();
+            let char_count = s.char_len();
             if char_count >= width {
-                call.push(Value::Str(s.into()));
+                call.push(Value::Str(s.clone()));
             } else {
                 let total_pad = width - char_count;
                 let left_pad = total_pad / 2;
@@ -173,21 +173,23 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::SetCharAt) => {
             let c = pop_single_char(pop_value(call, location)?, location)?;
             let idx = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let mut chars: Vec<char> = s.chars().collect();
-            if idx < 0 || idx >= chars.len() as i64 {
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let length = s.char_len();
+            if idx < 0 || idx >= length as i64 {
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
-                    format!(
-                        "SetCharAt index {idx} out of range (length {})",
-                        chars.len()
-                    ),
-                    character_index_hint(chars.len()),
+                    format!("SetCharAt index {idx} out of range (length {length})"),
+                    character_index_hint(length),
                     location,
                 ));
             }
-            chars[idx as usize] = c;
-            call.push(Value::Str(chars.into_iter().collect::<String>().into()));
+            let start = s.byte_offset(idx as usize).unwrap_or(s.len());
+            let end = s.byte_offset(idx as usize + 1).unwrap_or(s.len());
+            let mut result = String::with_capacity(s.len() - (end - start) + c.len_utf8());
+            result.push_str(&s[..start]);
+            result.push(c);
+            result.push_str(&s[end..]);
+            call.push(Value::Str(result.into()));
         }
         Intrinsic::Str(StrIntrinsic::Ord) => {
             let c = pop_single_char(pop_value(call, location)?, location)?;
@@ -209,29 +211,30 @@ pub(crate) fn run(
             call.push(Value::Str(c.to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::Insert) => {
-            let sub = pop_string(pop_value(call, location)?, location)?;
+            let sub = expect_str(pop_value(call, location)?, location)?;
             let idx = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let chars: Vec<char> = s.chars().collect();
-            if idx < 0 || idx > chars.len() as i64 {
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let length = s.char_len();
+            if idx < 0 || idx > length as i64 {
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
-                    format!("Insert index {idx} out of range (length {})", chars.len()),
+                    format!("Insert index {idx} out of range (length {length})"),
                     "Ensure the index is within 0..S.Length().",
                     location,
                 ));
             }
-            let byte_offset: usize = chars[..idx as usize].iter().map(|c| c.len_utf8()).sum();
-            let mut result = s;
-            result.insert_str(byte_offset, &sub);
+            let byte_offset = s.byte_offset(idx as usize).unwrap_or(s.len());
+            let mut result = String::with_capacity(s.len() + sub.len());
+            result.push_str(&s[..byte_offset]);
+            result.push_str(sub);
+            result.push_str(&s[byte_offset..]);
             call.push(Value::Str(result.into()));
         }
         Intrinsic::Str(StrIntrinsic::Delete) => {
             let len = pop_int(pop_value(call, location)?, location)?;
             let idx = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let chars: Vec<char> = s.chars().collect();
-            let n = chars.len() as i64;
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let n = s.char_len() as i64;
             if idx < 0 || len < 0 || idx > n || len > n - idx {
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
@@ -240,22 +243,23 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            let end = idx + len;
-            let mut result: String = chars[..idx as usize].iter().collect();
-            let tail: String = chars[end as usize..].iter().collect();
-            result.push_str(&tail);
+            let start = s.byte_offset(idx as usize).unwrap_or(s.len());
+            let end = s.byte_offset((idx + len) as usize).unwrap_or(s.len());
+            let mut result = String::with_capacity(s.len() - (end - start));
+            result.push_str(&s[..start]);
+            result.push_str(&s[end..]);
             call.push(Value::Str(result.into()));
         }
         Intrinsic::Str(StrIntrinsic::Reverse) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.chars().rev().collect::<String>().into()));
         }
         Intrinsic::Str(StrIntrinsic::TrimLeft) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.trim_start().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::TrimRight) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.trim_end().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::LastIndexOf) => {
@@ -285,8 +289,8 @@ pub(crate) fn run(
                 args.push(pop_value(call, location)?.clone());
             }
             args.reverse();
-            let template = pop_string(pop_value(call, location)?, location)?;
-            let result = format::apply_format(&template, &args, location)?;
+            let template = expect_str(pop_value(call, location)?, location)?;
+            let result = format::apply_format(template, &args, location)?;
             call.push(Value::Str(result.into()));
         }
         _ => return Ok(None),

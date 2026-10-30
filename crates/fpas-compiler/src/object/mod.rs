@@ -81,8 +81,13 @@ pub fn compile_unit_object_with_options(
             unit.span.column,
         )]);
     };
-    let mut lowered =
-        crate::lowering::lower_unit(unit, interfaces, supporting_interfaces, options)?;
+    let mut lowered = crate::lowering::lower_unit(
+        unit,
+        analysis.metadata,
+        interfaces,
+        supporting_interfaces,
+        options,
+    )?;
     lowered
         .errors
         .export_requirements(&mut interface, &lowered.program.functions)

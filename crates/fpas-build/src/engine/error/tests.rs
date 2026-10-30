@@ -40,7 +40,7 @@ fn linking_preserves_the_native_error_and_error_chain() {
         interfaces: Default::default(),
         events: Vec::new(),
         linked_units: Vec::new(),
-        supporting_interfaces: Vec::new(),
+        interface_positions: Default::default(),
     };
     let failure =
         crate::engine::link_program(units, &program, None, &crate::BuildOptions::default())

@@ -100,6 +100,7 @@ pub(super) fn factory_type(
 
 pub(super) fn factory(
     functions: &mut Vec<Function>,
+    max_function_id: &mut u32,
     types: &mut TypeTable,
     request: &Request,
     span: fpas_lexer::Span,
@@ -121,15 +122,10 @@ pub(super) fn factory(
         .ok_or_else(|| error("unknown error variant"))?;
     let arity = variant.fields.len();
     let name = format!("{}.{}", stored.name, variant.name);
-    let id = FunctionId::new(
-        functions
-            .iter()
-            .map(|function| function.id.get())
-            .max()
-            .unwrap_or(0)
-            .checked_add(1)
-            .ok_or_else(|| error("error factory function overflow"))?,
-    );
+    *max_function_id = max_function_id
+        .checked_add(1)
+        .ok_or_else(|| error("error factory function overflow"))?;
+    let id = FunctionId::new(*max_function_id);
     let result_type = types.intern_kind(IrType::Enum(layout), span)?;
     let parameters = (0..arity)
         .map(|index| {

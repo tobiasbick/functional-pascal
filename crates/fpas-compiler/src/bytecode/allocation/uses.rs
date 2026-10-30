@@ -1,9 +1,9 @@
-//! Values read by IR operations and terminators.
+//! Visit IR operands without temporary collections.
 
 use fpas_ir::{Operation, Terminator, ValueId};
 
-/// Values read by `operation`, in operand order.
-pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
+/// Visit every value read by `operation`, preserving operand order and repetitions.
+pub(super) fn operation_values(operation: &Operation, mut visit: impl FnMut(ValueId)) {
     match operation {
         Operation::Const(_)
         | Operation::ReadLocal(_)
@@ -14,7 +14,7 @@ pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::Yield
         | Operation::EnterTaskScope
         | Operation::ExitTaskScope
-        | Operation::CancelTaskScope => Vec::new(),
+        | Operation::CancelTaskScope => {}
         Operation::WriteLocal { value, .. }
         | Operation::StoreGlobal { value, .. }
         | Operation::MakeCell(value)
@@ -23,9 +23,15 @@ pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::ReferenceRead(value)
         | Operation::ReferenceField {
             reference: value, ..
-        } => vec![*value],
-        Operation::ReferenceElement { reference, index } => vec![*reference, *index],
-        Operation::ReferenceWrite { reference, value } => vec![*reference, *value],
+        } => visit(*value),
+        Operation::ReferenceElement { reference, index } => {
+            visit(*reference);
+            visit(*index);
+        }
+        Operation::ReferenceWrite { reference, value } => {
+            visit(*reference);
+            visit(*value);
+        }
         Operation::MakeOk(value)
         | Operation::MakeError(value)
         | Operation::MakeSome(value)
@@ -33,84 +39,103 @@ pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::IsOptionSome(value)
         | Operation::UnwrapOk(value)
         | Operation::UnwrapError(value)
-        | Operation::UnwrapSome(value) => vec![*value],
-        Operation::MakeArray(values) => values.clone(),
-        Operation::ArrayPush { value, .. } => vec![*value],
-        Operation::MakeDictionary(pairs) => pairs
-            .iter()
-            .flat_map(|(key, value)| [*key, *value])
-            .collect(),
-        Operation::IndexGet { collection, index } => vec![*collection, *index],
-        Operation::StoreLocalIndex { index, value, .. } => vec![*index, *value],
+        | Operation::UnwrapSome(value) => visit(*value),
+        Operation::MakeArray(values) => values.iter().copied().for_each(visit),
+        Operation::ArrayPush { value, .. } => visit(*value),
+        Operation::MakeDictionary(pairs) => {
+            for (key, value) in pairs {
+                visit(*key);
+                visit(*value);
+            }
+        }
+        Operation::IndexGet { collection, index } => {
+            visit(*collection);
+            visit(*index);
+        }
+        Operation::StoreLocalIndex { index, value, .. } => {
+            visit(*index);
+            visit(*value);
+        }
         Operation::IndexSet {
             collection,
             index,
             value,
-        } => vec![*collection, *index, *value],
+        } => {
+            visit(*collection);
+            visit(*index);
+            visit(*value);
+        }
         Operation::StoreGlobalIndexPath {
             root,
             indexes,
             value,
             ..
-        } => std::iter::once(*root)
-            .chain(indexes.iter().copied())
-            .chain(std::iter::once(*value))
-            .collect(),
-        Operation::Contains { value, collection } => vec![*value, *collection],
-        Operation::Binary { left, right, .. } => vec![*left, *right],
-        Operation::Unary { operand, .. } => vec![*operand],
+        } => {
+            visit(*root);
+            indexes.iter().copied().for_each(&mut visit);
+            visit(*value);
+        }
+        Operation::Contains { value, collection } => {
+            visit(*value);
+            visit(*collection);
+        }
+        Operation::Binary { left, right, .. } => {
+            visit(*left);
+            visit(*right);
+        }
+        Operation::Unary { operand, .. } => visit(*operand),
         Operation::CallDirect { arguments, .. } | Operation::Intrinsic { arguments, .. } => {
-            arguments.clone()
+            arguments.iter().copied().for_each(visit)
         }
         Operation::CallValue { callee, arguments } | Operation::SpawnTask { callee, arguments } => {
-            let mut values = vec![*callee];
-            values.extend(arguments.iter().copied());
-            values
+            visit(*callee);
+            arguments.iter().copied().for_each(visit);
         }
         Operation::MakeRecord { fields, .. }
         | Operation::MakeEnum { fields, .. }
         | Operation::MakeClosure {
             captures: fields, ..
-        } => fields.clone(),
-        Operation::LoadField { record, .. } => vec![*record],
-        Operation::UpdateRecord { record, fields, .. } => std::iter::once(*record)
-            .chain(fields.iter().map(|(_, value)| *value))
-            .collect(),
+        } => fields.iter().copied().for_each(visit),
+        Operation::LoadField { record, .. } => visit(*record),
+        Operation::UpdateRecord { record, fields, .. } => {
+            visit(*record);
+            fields.iter().map(|(_, value)| *value).for_each(visit);
+        }
         Operation::StoreField { record, value, .. }
         | Operation::CellWrite {
             cell: record,
             value,
-        } => vec![*record, *value],
-        Operation::TestVariant { value, .. } => vec![*value],
-        Operation::LoadEnumField { value, .. } => vec![*value],
+        } => {
+            visit(*record);
+            visit(*value);
+        }
+        Operation::TestVariant { value, .. } => visit(*value),
+        Operation::LoadEnumField { value, .. } => visit(*value),
     }
 }
 
-/// Values read by `terminator`, including block-target arguments.
-pub(super) fn terminator_values(terminator: &Terminator) -> Vec<ValueId> {
+/// Visit terminator inputs, including block-target arguments.
+pub(super) fn terminator_values(terminator: &Terminator, mut visit: impl FnMut(ValueId)) {
     match terminator {
         Terminator::Branch {
             condition,
             then_target,
             else_target,
         } => {
-            let mut values = vec![*condition];
-            values.extend(then_target.arguments.iter().copied());
-            values.extend(else_target.arguments.iter().copied());
-            values
+            visit(*condition);
+            then_target.arguments.iter().copied().for_each(&mut visit);
+            else_target.arguments.iter().copied().for_each(visit);
         }
-        Terminator::Jump(target) => target.arguments.clone(),
+        Terminator::Jump(target) => target.arguments.iter().copied().for_each(visit),
         Terminator::ForLoop {
             body_target,
             after_target,
             ..
         } => {
-            let mut values = Vec::new();
-            values.extend(body_target.arguments.iter().copied());
-            values.extend(after_target.arguments.iter().copied());
-            values
+            body_target.arguments.iter().copied().for_each(&mut visit);
+            after_target.arguments.iter().copied().for_each(visit);
         }
-        Terminator::Return(value) => value.iter().copied().collect(),
-        Terminator::Panic(value) => vec![*value],
+        Terminator::Return(value) => value.iter().copied().for_each(visit),
+        Terminator::Panic(value) => visit(*value),
     }
 }

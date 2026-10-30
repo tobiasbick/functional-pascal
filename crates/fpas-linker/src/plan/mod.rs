@@ -51,17 +51,34 @@ impl<'a> LinkPlan<'a> {
         program: &'a RelocatableObject,
     ) -> Result<Self, LinkError> {
         validate_objects(units, program)?;
-        validate_initializers(units)?;
+        Self::from_validated(units.iter().collect(), program)
+    }
 
-        let objects = units
-            .iter()
-            .chain(std::iter::once(program))
-            .collect::<Vec<_>>();
+    /// Use the immutable validation proof retained by error-constructor expansion.
+    pub(super) fn build_prepared(
+        prepared: &'a crate::errors::PreparedObjects<'_>,
+    ) -> Result<Self, LinkError> {
+        let units = prepared.units().collect::<Vec<_>>();
+        for unit in &units {
+            if unit.entry.is_some() {
+                return Err(LinkError::UnitEntry(unit.owner.clone()));
+            }
+        }
+        Self::from_validated(units, prepared.program())
+    }
+
+    fn from_validated(
+        units: Vec<&'a RelocatableObject>,
+        program: &'a RelocatableObject,
+    ) -> Result<Self, LinkError> {
+        validate_initializers(&units)?;
         let program_index = units.len();
         let entry = program
             .entry
             .and_then(|index| usize::try_from(index).ok())
             .ok_or(LinkError::MissingProgramEntry)?;
+        let mut objects = units;
+        objects.push(program);
         let symbols = SymbolTable::build(&objects)?;
         let ids = LinkIds {
             functions: functions::assign(&objects, program_index, entry, &symbols)?,
@@ -69,7 +86,7 @@ impl<'a> LinkPlan<'a> {
             layouts: layouts::assign(&objects, &symbols)?,
         };
         let (debug_type_ids, linked_debug_types) = debug_types::merge(&objects, &ids, &symbols)?;
-        let initializer_targets = initializer_targets(units, &ids)?;
+        let initializer_targets = initializer_targets(&objects[..program_index], &ids)?;
         let code_layout =
             CodeLayout::build(&objects, &ids.functions.order, initializer_targets.len())?;
 
@@ -155,7 +172,7 @@ fn validate_objects(
         })
 }
 
-fn validate_initializers(units: &[RelocatableObject]) -> Result<(), LinkError> {
+fn validate_initializers(units: &[&RelocatableObject]) -> Result<(), LinkError> {
     use fpas_unit::object::ObjectReturn;
 
     for object in units {
@@ -183,7 +200,7 @@ fn validate_initializers(units: &[RelocatableObject]) -> Result<(), LinkError> {
 }
 
 fn initializer_targets(
-    units: &[RelocatableObject],
+    units: &[&RelocatableObject],
     ids: &LinkIds,
 ) -> Result<Vec<FunctionId>, LinkError> {
     units

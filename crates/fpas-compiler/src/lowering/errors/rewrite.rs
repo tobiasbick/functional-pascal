@@ -6,6 +6,12 @@ mod bindings;
 use super::*;
 use fpas_ir::{IntrinsicId, IrType, ValueDefinition};
 
+struct TargetFunction {
+    name: String,
+    result: TypeId,
+    can_spawn_tasks: bool,
+}
+
 pub(super) fn rewrite(
     functions: &mut Vec<Function>,
     types: &mut TypeTable,
@@ -46,9 +52,27 @@ pub(super) fn rewrite(
             }
         }
     }
-    let original = functions.len();
-    for index in 0..original {
-        let mut function = functions[index].clone();
+    let targets = functions
+        .iter()
+        .map(|function| {
+            (
+                function.id,
+                TargetFunction {
+                    name: function.name.clone(),
+                    result: function.signature.result,
+                    can_spawn_tasks: function.can_spawn_tasks,
+                },
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let mut max_function_id = functions
+        .iter()
+        .map(|function| function.id.get())
+        .max()
+        .unwrap_or(0);
+    let originals = std::mem::take(functions);
+    let mut generated = Vec::new();
+    for mut function in originals {
         let mut next = next_value(&function)?;
         let mut hidden = BTreeMap::new();
         let mut locations = BTreeMap::new();
@@ -64,14 +88,17 @@ pub(super) fn rewrite(
             let mut rewritten = Vec::new();
             for (old_index, mut instruction) in old.into_iter().enumerate() {
                 let source = instruction.source;
-                match instruction.operation.clone() {
+                match &mut instruction.operation {
                     Operation::MakeEnum {
                         layout,
                         variant,
                         fields,
-                    } if types.errors.layouts.contains_key(&layout)
-                        && types.errors.concrete(layout).is_none() =>
+                    } if types.errors.layouts.contains_key(layout)
+                        && types.errors.concrete(*layout).is_none() =>
                     {
+                        let layout = *layout;
+                        let variant = *variant;
+                        let fields = std::mem::take(fields);
                         let request = Request {
                             instance: construction_instance(
                                 &instruction,
@@ -97,8 +124,10 @@ pub(super) fn rewrite(
                     }
                     Operation::CallDirect {
                         function: target,
-                        mut arguments,
+                        arguments,
                     } => {
+                        let target = *target;
+                        let mut arguments = std::mem::take(arguments);
                         for request in requirements.get(&target).into_iter().flatten() {
                             let request = apply(
                                 request,
@@ -109,7 +138,8 @@ pub(super) fn rewrite(
                                 types,
                             )?;
                             arguments.push(factory_value(
-                                functions,
+                                &mut generated,
+                                &mut max_function_id,
                                 types,
                                 &request,
                                 &hidden,
@@ -128,13 +158,15 @@ pub(super) fn rewrite(
                     }
                     Operation::MakeClosure {
                         function: target, ..
-                    } if constructors.contains_key(&target) => {
+                    } if constructors.contains_key(target) => {
+                        let target = *target;
                         // The generated body and its reference share a lexical type
                         // parameter universe; constructor specialization was checked
                         // in that universe before lowering.
                         let request = constructors[&target].clone();
                         let factory = factory_value(
-                            functions,
+                            &mut generated,
+                            &mut max_function_id,
                             types,
                             &request,
                             &hidden,
@@ -169,9 +201,11 @@ pub(super) fn rewrite(
                         function: target,
                         captures,
                     } if requirements
-                        .get(&target)
+                        .get(target)
                         .is_some_and(|requests| !requests.is_empty()) =>
                     {
+                        let target = *target;
+                        let captures = std::mem::take(captures);
                         let mut supplied = Vec::new();
                         for request in &requirements[&target] {
                             let request = apply(
@@ -183,7 +217,8 @@ pub(super) fn rewrite(
                                 types,
                             )?;
                             supplied.push(factory_value(
-                                functions,
+                                &mut generated,
+                                &mut max_function_id,
                                 types,
                                 &request,
                                 &hidden,
@@ -194,11 +229,15 @@ pub(super) fn rewrite(
                             )?);
                         }
                         instruction.operation = bindings::bind(
-                            functions,
+                            &mut generated,
+                            &mut max_function_id,
                             types,
                             &mut function,
                             &instruction,
                             target,
+                            targets
+                                .get(&target)
+                                .ok_or_else(|| error("bound error routine is unavailable"))?,
                             captures,
                             supplied,
                             &mut rewritten,
@@ -210,10 +249,11 @@ pub(super) fn rewrite(
                         value: tested,
                         layout,
                         variant,
-                    } if types.errors.layouts.contains_key(&layout)
-                        && types.errors.concrete(layout).is_none() =>
+                    } if types.errors.layouts.contains_key(layout)
+                        && types.errors.concrete(*layout).is_none() =>
                     {
-                        let enumeration = &types.errors.layouts[&layout];
+                        let tested = *tested;
+                        let enumeration = &types.errors.layouts[layout];
                         let name = format!(
                             "{}.{}",
                             types.errors.display_name(enumeration),
@@ -271,8 +311,9 @@ pub(super) fn rewrite(
                 initializer.location.instruction = updated;
             }
         }
-        functions[index] = function;
+        functions.push(function);
     }
+    functions.extend(generated);
     let templates = types
         .enum_layouts
         .iter()
@@ -290,6 +331,7 @@ pub(super) fn rewrite(
 #[allow(clippy::too_many_arguments)]
 fn factory_value(
     functions: &mut Vec<Function>,
+    max_function_id: &mut u32,
     types: &mut TypeTable,
     request: &Request,
     hidden: &BTreeMap<Request, ValueId>,
@@ -302,7 +344,7 @@ fn factory_value(
         return Ok(*value);
     }
     request.instance.validate(0).map_err(error)?;
-    let (function, ty) = instances::factory(functions, types, request, span)?;
+    let (function, ty) = instances::factory(functions, max_function_id, types, request, span)?;
     let result = value(next, ty)?;
     instructions.push(Instruction {
         source,

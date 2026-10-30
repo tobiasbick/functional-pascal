@@ -97,3 +97,46 @@ fn insertion_keeps_valid_start_and_end_positions_including_empty_strings() {
         assert_eq!(arguments, [Value::Str(expected.into())]);
     }
 }
+
+#[test]
+fn unicode_edits_use_scalar_boundaries_in_long_strings() {
+    let source = "aé😀".repeat(30);
+    let mut set = vec![
+        Value::Str(source.clone().into()),
+        Value::Integer(64),
+        Value::Str("日".into()),
+    ];
+    run_str(StrIntrinsic::SetCharAt, &mut set).unwrap();
+    assert_eq!(
+        set,
+        [Value::Str(
+            format!("{}a日😀{}", "aé😀".repeat(21), "aé😀".repeat(8)).into()
+        )]
+    );
+
+    let mut insert = vec![
+        Value::Str(source.clone().into()),
+        Value::Integer(64),
+        Value::Str("日".into()),
+    ];
+    run_str(StrIntrinsic::Insert, &mut insert).unwrap();
+    assert_eq!(
+        insert,
+        [Value::Str(
+            format!("{}a日é😀{}", "aé😀".repeat(21), "aé😀".repeat(8)).into()
+        )]
+    );
+
+    let mut delete = vec![
+        Value::Str(source.into()),
+        Value::Integer(64),
+        Value::Integer(2),
+    ];
+    run_str(StrIntrinsic::Delete, &mut delete).unwrap();
+    assert_eq!(
+        delete,
+        [Value::Str(
+            format!("{}a{}", "aé😀".repeat(21), "aé😀".repeat(8)).into()
+        )]
+    );
+}

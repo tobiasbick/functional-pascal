@@ -1,9 +1,10 @@
 # Julia Showcase
 
-Fullscreen terminal Julia-set explorer (`Std.Console`). Multi-unit `.fpasprj`.
+Fullscreen terminal Julia-set explorer using `Std.Console` and a separate core library project.
 
-Same scaffold as Mandelbrot, plus `WASD` to adjust the Julia constant and
-postfix iteration via `Z.Sq().Add(C)`.
+Four row workers feed a bounded channel while the Console loop processes input and
+draws available rows. Use `WASD` to adjust the Julia constant; the iteration uses
+postfix calls via `Z.Sq().Add(C)`.
 
 ## Run
 

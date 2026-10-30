@@ -1,8 +1,8 @@
 # Language-service integration tests
 
-Four explicit Cargo targets load all 31 previous test entry points as modules.
+Four explicit Cargo targets load 31 case modules.
 The crate uses `autotests = false`; add each new case module to exactly one
-suite. The test bodies and source fixtures remain unchanged.
+suite.
 
 | Target | Case modules | Protected boundary |
 | --- | --- | --- |
@@ -22,14 +22,13 @@ fixture paths even when cases run concurrently with the same label. Each
 The tests own their service/document state and do not mutate process environment
 variables, install a global allocator or re-execute the test binary. No case
 requires a standalone process. Tests that inspect the repository standard library
-keep the same paths; editing fixtures use owned temporary projects or document
-overlays. Production dependencies remain unchanged.
+use repository paths; editing fixtures use owned temporary projects or document
+overlays.
 
 ## Case selection
 
-An old target `old_target` with filter `case` now uses the target below and filter
-`old_target::case`. Nested case suffixes remain intact. The three existing
-directory entry points also keep their target name as their module name:
+Select a suite target and filter by `module::case`, including nested module
+prefixes where needed. The three directory entry points use their directory name:
 `call_arguments/main.rs`, `import_aliases/main.rs` and
 `record_construction/main.rs`.
 
@@ -41,11 +40,11 @@ cargo test --locked -p fpas-language-service --test editor_queries -- call_argum
 
 ## Entry-point mapping
 
-Each row maps an original file to its owning target. The old file stem becomes
-the module prefix of every retained test; directory entry points use their
-directory name. All case files are included once, including their nested modules.
+Each row maps a case file to its owning target. Its file stem supplies the module
+prefix; directory entry points use their directory name. Each case file is
+included once, including its nested modules.
 
-| Original entry point | Target |
+| Case file | Target |
 | --- | --- |
 | `analysis.rs` | `analysis_state` |
 | `case_coverage.rs` | `analysis_state` |

@@ -1,4 +1,4 @@
-// Decodes one Server-Sent InputEvent split across arbitrary byte fragments.
+// Decodes one Server-Sent Event split across arbitrary byte fragments.
 program NetworkSseDecoder;
 
 uses Std.Console as Console, Std.Net.Http as Http, Std.Text.Utf8 as Utf8;

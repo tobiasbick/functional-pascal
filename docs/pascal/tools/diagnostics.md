@@ -506,8 +506,7 @@ entries still retain the artifact's known main path.
 | Runtime | FP5000–FP5999; FP5017 remains reserved |
 | Internal | FP9000–FP9999; other unassigned ranges also classify as internal |
 
-These identifiers replace the previous `Fxxxx` scheme. Compiler and project
-diagnostics share Q01's FP4xxx range, with separate subranges so their `phase`
+Compiler and project diagnostics share the FP4xxx range, with separate subranges so their `phase`
 remains distinguishable. Codes are allocated explicitly; unused values are not
 diagnostics. FP1002, FP1003 and FP5017 remain unallocated.
 

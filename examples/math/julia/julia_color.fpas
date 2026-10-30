@@ -1,4 +1,4 @@
-// Built only via julia.fpasprj — not a standalone program.
+// Color unit in the julia-core.fpasprj library.
 
 unit Julia.Color;
 

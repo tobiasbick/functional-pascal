@@ -7,7 +7,8 @@ fpas run examples/network/acp-mcp-tools/acp-mcp-tools.fpasprj -- /path/to/agent 
 ```
 
 Use Windows executable and directory paths on Windows. Arguments after the
-prompt go to the agent. The example neither installs an agent nor selects a
+prompt go to the agent, except for the example's `--attach` and `--allow-write` flags.
+The example neither installs an agent nor selects a
 provider or model. Configure the agent separately; local Codex acceptance uses
 `gpt-6-luna`. File and terminal capabilities remain disabled.
 

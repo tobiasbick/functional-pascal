@@ -120,7 +120,9 @@ On Windows, invoke `target/release/fpas.exe`. Optional second argument `MAX_MILL
 
 ### Projects (`.fpasprj`)
 
-Use when the main program imports **non-library units** (for example `App.*` or `Mandelbrot.*`). The project file links all sources:
+Use a project when a program imports its own units or depends on a library project.
+The units-basic project includes its `App.*` units directly; Mandelbrot and Julia
+depend on separate core libraries containing units such as `Mandelbrot.*` and `Julia.*`:
 
 ```sh
 fpas run examples/pascal/units-basic/units-basic.fpasprj
@@ -267,8 +269,7 @@ four available rows per event-loop iteration; it does not wait for a whole image
 palette changes, and exit cancel and join the old render before releasing its queue. Workers
 check cancellation between pixels and every 32 fractal iterations, and their result sends are
 cancellable. Each replacement owns a fresh queue, so old rows cannot overwrite the new view.
-This uses the existing Console loop, not a new `Std.Ui.Terminal` background-message API. No rendering
-speedup is claimed; the change concerns work bounds and event processing.
+The Console event loop bounds drawing work per iteration so it can continue processing input.
 
 Run the additional TCP example with an optional port and lifetime in milliseconds:
 
@@ -283,8 +284,8 @@ At lifetime expiry or a shutdown signal, the server lifetime cancels accept and 
 and closes its owned listener. The task group uses the remaining shutdown deadline. Orderly
 completion finishes the lifetime; if workers cannot stop in time, its armed watchdog escalates
 to process exit. Active requests may be interrupted: this demonstrates cancellation, not graceful draining.
-Hosted network calls occupy VM workers; actual parallelism also depends on the runtime pool.
-The original single-request TCP tutorial remains unchanged.
+Socket waits suspend pool tasks while owned native workers perform the I/O, leaving VM workers
+available for other tasks. Concurrency is bounded by native-job admission and task scheduling.
 
 `cargo test -p fpas-cli parallel_echo_example` tests the checked-in server with loopback clients,
 including a second client while the first is idle, multi-chunk echo, and cancellation during reads

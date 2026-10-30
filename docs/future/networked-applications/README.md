@@ -1,26 +1,29 @@
 # Future: Networked Application Platform
 
-> Capability roadmap with implementation progress recorded in each plan.
-> Concurrency foundations C1-C4 and cooperative timed group close are implemented;
-> `Std.Net.Server` now adds listener/group ownership and explicit process-level shutdown escalation.
-> TUI background events are implemented with bounded typed inboxes and host-owned work.
-> The canonical Mandelbrot TUI uses CPU-pool row tasks, atomic image updates, and nonblocking subscription replacement.
-> Current behavior is documented under [Std.Tasks](../../pascal/std/concurrency/task.md).
+Functional Pascal provides TCP/TLS connections and listeners, HTTP client and server helpers,
+tasks, JSON, filesystem access, and a local terminal UI. Long-running secure networked
+applications still need durable transactions, security primitives, further transport and lifecycle
+adapters, operations tooling, and explicit distributed-node semantics.
 
-Functional Pascal already provides blocking TCP/TLS connections and listeners, HTTP client and
-server helpers, tasks, JSON, filesystem access, and a local terminal UI. Long-running secure
-networked applications still need durable transactions, security primitives, coordination between
-background work and interactive hosts, production lifecycle support, and explicit distributed-node
-semantics.
-
-This plan keeps those concerns in separate modules. The first approved language extension is the
-implemented `channel of T` type; any additional syntax or semantic change still requires its own
-explicit decision.
+This plan keeps those concerns in separate modules. Additional syntax or semantic changes require
+their own explicit decisions.
 
 Public names follow the binding [namespace specification](../../specs/std-namespaces.md).
 Descriptions of implemented behavior below use canonical names; future
 capability plans use their allocated homes. A namespace allocation does not
 change a feature's deferred status.
+
+## Implemented foundations
+
+- [Task selection](../../pascal/std/concurrency/task.md#mixed-source-selection),
+  [task groups](../../pascal/std/concurrency/task.md#task-groups),
+  [supervision](../../pascal/std/concurrency/task.md#startsupervisedtask), and
+  [completion waits](../../pascal/std/concurrency/task.md#waiting-for-any-task)
+  provide bounded coordination, cancellation and child ownership.
+- [Terminal background messages](../../pascal/std/tui/application.md#background-messages-and-owned-work)
+  deliver typed events to the UI thread and retain ownership of background work.
+- [`Std.Net.Server`](../../pascal/std/network/server.md) owns listeners and task groups,
+  coordinates shutdown deadlines, and provides explicit process-level escalation.
 
 ## Capability plans
 
@@ -28,22 +31,18 @@ change a feature's deferred status.
 |---------|------|---------------|
 | Durable storage | [SQLite](sqlite.md) | One concrete embedded database adapter with opaque handles and transactions |
 | Security | [Cryptography](cryptography.md) | High-level safe operations over operating-system randomness and reviewed algorithms |
-| Coordination | [Concurrency](concurrency.md) | Bounded channels, cancellation, multi-wait, and supervised task ownership |
 | Bidirectional transport | [WebSocket](websocket.md) | Bounded message transport over existing TCP/TLS and HTTP foundations |
 | Datagrams | [UDP](udp.md) | Explicit datagram endpoints without reliability promises |
-| Interactive clients | [TUI background events](tui-background-events.md) | Implemented wakeable application-owned event delivery onto the main TUI thread |
 | Process lifetime | [Server lifecycle](server-lifecycle.md) | Coordinated stop signals, listener closure, draining, and deadlines |
 | Operations | [Observability](observability.md) | Structured events, metrics, and health state independent of presentation |
 | Multiple nodes | [Distributed nodes](distributed-nodes.md) | Authenticated envelopes, durable delivery, synchronization, and conflict policy |
 
 ## Dependency order
 
-1. Settle concurrency ownership and cryptographic requirements before exposing higher-level
-   background or distributed interfaces.
-2. Add SQLite as a concrete adapter and server lifecycle support so state and work can shut down
-   consistently.
-3. TUI background-event integration now uses the settled cancellation and queueing model; WebSocket
-   remains to be added at the same boundary.
+1. Define cryptographic requirements before exposing higher-level distributed interfaces.
+2. Add SQLite as a concrete adapter and extend lifecycle adapters so state and work can shut down
+   consistently under the existing ownership and deadline model.
+3. Add WebSocket integration using the existing cancellation and queueing model.
 4. Add observability at the same seams used for lifecycle, storage, and transport failures.
 5. Start distributed-node work only after identity, durable outbox/inbox storage, idempotency, and
    version negotiation have concrete designs.

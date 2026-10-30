@@ -498,7 +498,8 @@ Timeout returns `Error(TaskError.Timeout(Operation))`; cancellation returns
   was not observing. Completions are not timestamped.
 - A cancelled token wins over successful completion, including on entry. Invalid task identities
   and task failures are checked first; they remain runtime diagnostics, not ordinary Result errors.
-  Invalid tokens and timeouts also produce runtime diagnostics.
+  Invalid tokens also produce runtime diagnostics. A negative timeout returns
+  `Error(TaskError.InvalidArgument(Parameter, Reason))`.
 - Main-task waits request parking intervals of at most 10 ms, shortened to the remaining timeout;
   child waits use the shared suspended-operation path described above.
   This is cooperative, not a hard wall-clock bound: timer granularity and scheduling delays can

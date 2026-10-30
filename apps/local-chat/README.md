@@ -12,7 +12,7 @@ Start llama.cpp on `127.0.0.1:11434`, then run:
 fpas run apps/local-chat/local-chat.fpasprj
 ```
 
-The first version has a deliberately fixed configuration:
+The application uses a fixed configuration:
 
 - base URL: `http://127.0.0.1:11434/v1`
 - model: `unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL`
@@ -24,7 +24,7 @@ Type a one-line prompt and press `Enter` or activate **Send**. `Tab` moves
 between the transcript, input, and button. `Alt+X` exits the application. The
 interface requires a terminal of at least 50 by 14 cells.
 
-Network requests are synchronous in this initial slice. A slow model therefore
+The application sends requests synchronously. A slow model therefore
 pauses input while a completion is being generated.
 
 ## Project layout

@@ -81,7 +81,8 @@ these same rules. A failing operation is not optimized away, including under
 | `in`     | Membership        | `A in B`   |
 
 Equality (`=` and `<>`) accepts compatible scalar values (`integer`, `real`, `boolean`, `string`,
-simple enums, and [distinct types](../types/distinct-types.md)). `Option` and `Result` values,
+simple enums, and [distinct types](../types/distinct-types.md)).
+[`ByteBuffer`](../../std/bytes.md) values compare by byte contents. `Option` and `Result` values,
 records, and enums with associated data compare structurally when every payload or field compares:
 two records are equal when all their fields are equal, two enum values are equal when they have
 the same variant and equal fields, and `Some(A) = Some(B)` compares `A` with `B`. Both operands

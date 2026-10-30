@@ -3,7 +3,6 @@
 Five explicit Cargo targets share the 73 case modules in this directory.
 `autotests = false` in the crate manifest prevents each case file from also
 becoming an executable. Add a new case module to exactly one suite entry point.
-The production dependency graph is unchanged.
 
 | Target | Case modules | Protected boundary |
 | --- | --- | --- |
@@ -13,18 +12,15 @@ The production dependency graph is unchanged.
 | [storage_mutation](suites/storage_mutation.rs) | 16 | Atomic mutation, live storage ownership and expired inspection handles |
 | [evaluation](suites/evaluation.rs) | 6 | Expression parsing, detached calls, parameter modes and portable metadata |
 
-The case files, assertions and source fixtures remain in their original places.
 Explicit support paths in `dap.rs` and `transport.rs` keep their shared reader
-fixtures available when the files are loaded as modules. Existing nested case
-modules and `include_str!` paths remain unchanged.
+fixtures available when the files are loaded as modules.
 Storage-mutation cases share one suite-owned parameter-copy stopping helper.
 
 ## Case selection
 
-An old target `old_target` with filter `case` now belongs to the target listed
-below and has filter `old_target::case`. Nested suffixes are preserved. For
-example, `call_evaluation` with filter `named_arguments::case` becomes
-`evaluation` with filter `call_evaluation::named_arguments::case`.
+Select a suite target and filter by `module::case`. Nested modules add their own
+prefix: a case in `call_evaluation::named_arguments` uses
+`call_evaluation::named_arguments::case` in the `evaluation` target.
 
 ```sh
 cargo test --locked -p fpas-debug
@@ -32,11 +28,10 @@ cargo test --locked -p fpas-debug --test jsonl_protocol
 cargo test --locked -p fpas-debug --test storage_mutation -- variable_mutation::jsonl_sets_variables_with_stable_errors_and_fresh_handles --exact
 ```
 
-## Target mapping
+## Case modules
 
-Each listed name is the original `<name>.rs` file and its unchanged module name.
-All existing cases are retained. There are no standalone process-isolation
-exceptions in this crate: cases own their debugger sessions and scripted input.
+Each listed module loads the corresponding `<name>.rs` case file.
+Cases own their debugger sessions and scripted input within the suite process.
 They do not mutate the environment, install a global allocator or re-execute the
 test binary. The call-evaluation request counter uses atomic increments and does
 not require a fresh process.

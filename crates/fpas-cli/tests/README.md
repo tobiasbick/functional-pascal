@@ -1,8 +1,8 @@
 # CLI integration tests
 
 Cargo builds six integration executables. Automatic discovery is disabled in
-the manifest, so root case files remain at their existing relative include paths
-without also becoming independent test executables.
+the manifest. Each case file belongs to one target and uses relative includes
+for its child modules.
 
 | Target | Case files | Contract |
 | --- | --- | --- |
@@ -11,10 +11,9 @@ without also becoming independent test executables.
 | `host_io` | `console_eof`, `mcp_workers`, `test_timeout` | Stream EOF, MCP lifecycle and independent timeout supervision |
 | `distribution` | `acp`, `native_executable` | Distributed declarations and executable bundles without source files |
 | `proc_pipes` | `proc_pipes` | Raw interactive bytes, process ownership and DAP stdin/reader lifecycle |
-| `failure_dump` | `failure_dump` and its existing child modules | Failure capture, publication, limits and native cleanup barriers |
+| `failure_dump` | `failure_dump` and its child modules | Failure capture, publication, limits and native cleanup barriers |
 
-Every former root entry belongs to exactly one row. Existing assertions and
-submodule paths remain in their original case files. For a focused case, use
+Each case file belongs to exactly one row. For a focused case, use
 `cargo test -p fpas-cli --test language calendar::` or select another target and
 module prefix from this table.
 

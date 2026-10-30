@@ -102,7 +102,7 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 23 and register-bytecode version 29.
+The sectioned envelope uses program format version 23 and register-bytecode version 31.
 Relocatable unit objects use schema version 18 and compiled-unit envelopes use
 version 24. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional
@@ -123,30 +123,22 @@ noncapturing functions using the existing instruction set. Error values reuse sh
 enum storage. A shared expansion budget rejects amplified schemas before copying
 their fields or labels. Error values use
 automatic iterative display and stack-safe aggregate destruction;
-the Value representation remains 16 bytes. Native error declarations and
+the Value representation is 16 bytes. Native error declarations and
 Error-constrained generic routines emit this metadata. Hidden constructor
 parameters and bound callable environments preserve the source arity and labels.
 Generated linkage names are separate from their defining display names. Hidden
 callable captures are immutable, type-checked functions and remain absent from
-normal debugger scopes. Existing Std Result signatures retain their current types.
+normal debugger scopes.
 
-Bytecode version 29 binds native record and error layouts to the canonical
-standard-library namespaces. Earlier images retain incompatible nominal type
-identities and are rejected before execution. Source-backed program images and
-unit sidecars rebuild through their bytecode identity checks. Instruction numbers,
-envelope layouts and unit-object schemas are unchanged by this namespace migration.
-
-Since bytecode version 28, Result/Option construction permits auxiliary flag 1
+Native record and error layouts use canonical standard-library type identities.
+Result/Option construction permits auxiliary flag 1
 to consume a source register proven dead by the compiler.
 Validation succeeds before the source is removed; failed operations preserve it
 for diagnostics and inspection. Live sources use the ordinary copying form.
 Pattern payload extraction keeps its source for subsequent pattern arms.
 Single-argument intrinsics borrow the argument's existing register without an
-intermediate copy window. Their error behavior and ownership checks are unchanged.
-Older images and unit objects require rebuilding.
-Source-backed caches rebuild through their bytecode identity checks; standalone
-artifacts with the earlier ABI are rejected before execution. Instruction
-encoding, envelope layouts and the 16-byte value representation are unchanged.
+intermediate copy window, with the same error behavior and ownership checks.
+
 These formats are versioned independently: a producer that changes a wire
 contract or executable ABI must increment the corresponding version. The version
 numbers need not match.

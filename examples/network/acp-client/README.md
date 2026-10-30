@@ -1,8 +1,9 @@
 # ACP console clients
 
 Run a separately installed ACP agent with an explicit executable, working
-directory and prompt. Remaining arguments are passed directly to that executable;
-there is no shell, package installation or provider-specific setup in the example.
+directory and prompt. Both examples handle `--allow-host` themselves; other remaining
+arguments are passed directly to the executable. There is no shell, package installation
+or provider-specific setup in the example.
 
 ```text
 fpas run examples/network/acp-client/acp-client.fpasprj -- /path/to/agent /absolute/workspace "Explain this project" --stdio

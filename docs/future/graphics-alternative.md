@@ -67,8 +67,9 @@ Equalization, mixing, and analysis would need an explicit native processing path
 
 ## Preferred data alternative: native buffers
 
-Both backends can use one shared native binary-buffer foundation with specialized
-pixel, vertex, index and audio interfaces. FPAS would continue calculating with
+Both backends can build specialized pixel, vertex, index and audio interfaces on
+the existing [`Std.Bytes.ByteBuffer`](../pascal/std/bytes.md) foundation and its
+[`Std.Io.Fs`](../pascal/std/host/fs.md) binary-file integration. FPAS would continue calculating with
 `integer` and `real`. Formats such as `RGBA8`, `Float32`, `Index16` and signed
 16-bit PCM describe storage, without introducing matching scalar types into the
 language or requiring a rename of the existing ones.
@@ -276,8 +277,8 @@ configuration must be checked for each target before claiming this goal works.
 ## Shared prerequisites and open questions
 
 Both routes still need the shared foundations recorded in the existing graphics
-note: compact binary/numeric storage integrated with binary file access, native
-event integration, precise monotonic time, and optional native capabilities.
+note: specialized numeric storage formats, native event integration, precise
+monotonic time, and optional native capabilities.
 The preferred buffer route supplies storage formats without making new small
 scalar types a prerequisite. Choosing a backend does not settle buffer APIs,
 ownership or the remaining language and runtime designs.

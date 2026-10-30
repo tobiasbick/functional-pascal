@@ -53,11 +53,11 @@ These parts of the current runtime already fit a graphics capability:
 
 Arrays store one tagged runtime value per element. A vertex buffer of `N` floats therefore costs
 several times the memory of a packed `f32` buffer, and every upload converts each element at the
-native boundary. Bytes are `array of integer` with a range check per element;
-`Std.Io.Fs` already supports binary reads and writes using that representation.
-Large or frequently changing meshes, image data, and audio samples pay the
-tagged-storage and conversion cost. The [standard library roadmap](std-roadmap.md) lists the canonical byte
-representation as an open decision.
+native boundary. [`Std.Bytes.ByteBuffer`](../pascal/std/bytes.md) provides compact
+byte storage, and [`Std.Io.Fs`](../pascal/std/host/fs.md) reads and writes it directly.
+Specialized layouts and bulk operations for vertices, pixels and audio samples
+remain open; representing numeric samples as ordinary arrays still incurs
+tagged-storage and conversion costs.
 
 ### Numeric types
 
@@ -84,8 +84,9 @@ There is no operator overloading, so vector math is written as nested function c
 
 ### Event loop integration
 
-The `Std.Ui.Terminal` host reads console input from a blocking call inside a worker task. Native windowing
-systems instead deliver events through a loop that must be pumped on the main thread. FPAS has no
+The `Std.Ui.Terminal` host selects console input, background messages and timers.
+Stateful console operations in pool tasks suspend through owned native jobs.
+Native windowing systems require event pumping on the main thread. FPAS has no
 general way to wait on "window events or channel messages or a frame deadline" in a single
 `Select`. Without one, a frame loop must poll with `TryReceive`.
 
@@ -104,10 +105,8 @@ headless servers and the test runner.
 
 ### Runtime and standard library
 
-- A shared native binary-buffer foundation under `Std.Bytes`, integrated with
-  binary filesystem access, whose target home is `Std.Io.Fs`.
 - Specialized pixel, vertex, index and audio buffers with explicit storage
-  formats, bulk operations and compatible native handoffs without per-element
+  formats over the existing `Std.Bytes` foundation, bulk operations and compatible native handoffs without per-element
   conversion. Existing `integer` and `real` remain the FPAS scalar interface.
 - Main-thread event pumping as a selectable source, so `Select` can combine window events, channels,
   task completion, and timeouts.

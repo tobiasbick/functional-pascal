@@ -12,9 +12,9 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Agent tools | [Source queries for coding agents](agent-source-queries.md) | Proposed name selection, bounded inspection, direct call relationships, and later checked refactorings |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | FPAS 2 | [Language directions](fpas2-language-directions.md) | Recorded decisions, implemented topics and open proposals |
-| Standard library | [Standard library roadmap](std-roadmap.md) | Byte-buffer design, future capabilities and links to their owning plans |
+| Standard library | [Standard library roadmap](std-roadmap.md) | Future capabilities, specialized binary layouts and links to their owning plans |
 | UI | [Shared terminal and graphical UI](shared-ui.md) | Planned common UI and application migration during graphics work, after FPAS 2 |
-| Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
+| Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, transports, lifecycle, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |
 | FTP | [FTP and FTPS](ftp.md) | Deferred FTP and FTPS ideas |
 

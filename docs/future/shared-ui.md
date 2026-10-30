@@ -101,7 +101,7 @@ are not part of the initial scope.
 
 Inventory terminal UI features, public interfaces and callers, including
 examples, tests, benchmarks, documentation and tools in both repositories.
-Use `Std.Ui.Terminal`; its pre-migration name was `Std.Tui`.
+Use `Std.Ui.Terminal`.
 Cover menus, modal and focus routing, pointer and keyboard input, text editing,
 themes, cells, background work, resize and incremental rendering. Map each to a
 shared contract, a host extension or an intentional replacement. Design example

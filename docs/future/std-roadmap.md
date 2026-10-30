@@ -24,18 +24,14 @@ APIs. A reserved namespace is not an implemented feature or a delivery promise.
 
 ## Selected order
 
-1. [AP54's byte-buffer foundation](improve-syntax/ap54-byte-buffers/README.md)
-   under `Std.Bytes` is implemented and verified, including native storage,
-   core operations, UTF-8, canonical binary APIs and lifecycle/cost evidence.
-   The contract includes copy-on-write values,
-   explicit mutation, content equality, strict UTF-8, a 256 MiB maximum, bounded
-   slice retention, automatic release and support for artifacts and existing
-   debugger capabilities. General snapshots and replay are separate. The
-   broader alternatives stay in
-   [FPAS 2 section 22](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers).
-2. Continue selected FPAS 2 work, then graphics/multimedia and the
-   [shared terminal/graphical UI](shared-ui.md) in their recorded order.
-   Other capability plans keep their actual prerequisites.
+The [native byte-buffer foundation](../pascal/std/bytes.md) and
+[strict UTF-8 integration](../pascal/std/network/utf8.md) are implemented and
+verified. Binary APIs share this representation. Broader storage alternatives
+stay in [FPAS 2 section 22](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers).
+
+Continue selected FPAS 2 work, then graphics/multimedia and the
+[shared terminal/graphical UI](shared-ui.md) in their recorded order.
+Other capability plans keep their actual prerequisites.
 
 Streams, UDP, additional protocols, graphics, audio and shared UI retain their
 separate feature plans.
@@ -49,6 +45,9 @@ structured formats, tasks/channels, file handles, processes, TCP/TLS, HTTP,
 secure randomness and AI protocol integrations. Their current names and
 contracts are documented in the handbook. In particular:
 
+- [Native byte buffers](../pascal/std/bytes.md) and
+  [strict UTF-8 conversion](../pascal/std/network/utf8.md) support binary I/O,
+  codecs, randomness, HTTP and task transfer with one managed representation.
 - [Tasks](../pascal/std/concurrency/task.md) include bounded channels,
   cancellation, selection, groups and supervision.
 - [Server lifetime](../pascal/std/network/server.md) owns task/listener shutdown
@@ -65,7 +64,6 @@ owns their current names and responsibilities.
 
 | Concern | Owning plan | Scope and prerequisites |
 | --- | --- | --- |
-| Byte buffers | [AP54: Native byte buffers and UTF-8 integration](improve-syntax/ap54-byte-buffers/README.md) | Native storage, UTF-8, canonical binary APIs and lifecycle/cost verification delivered; typed media storage follows separately |
 | SQLite | [SQLite storage](networked-applications/sqlite.md) | Concrete database access, transactions and backup |
 | Cryptography | [Cryptography](networked-applications/cryptography.md) | Password hashing, authentication primitives and signatures |
 | WebSocket | [WebSocket transport](networked-applications/websocket.md) | Bounded messages over TCP/TLS and HTTP |

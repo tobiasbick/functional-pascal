@@ -104,14 +104,14 @@ requires a string: write `Failure.Message()` when building formatted text.
 constraint does not add implicit conversion or wrapping.
 
 
-## Migrating a Result boundary
+## Concrete error families
 
-Selected Std operations now return concrete error families. Match the variant
+Selected Std operations return concrete error families. Match the variant
 instead of interpreting message wording: channel closure is TaskError.Closed,
 URI syntax is UriError.InvalidSyntax and an HTTP transport failure retains its
 NetError inside HttpError.Transport. See the owning [Std pages](../../std/README.md)
 for the complete cases and the operations that keep ordinary EOF or absence as
-success. Existing application-authored string Result payloads remain valid.
+success. Application-authored Result values can also use string error payloads.
 
 To change the error family, apply MapError before try. A one-field cause variant
 can be passed directly as a constructor value. Use an ordinary closure to add
@@ -128,7 +128,7 @@ Constructor values and captured closures use the same explicit error mapping.
 The [agent reference](../../agents/patterns-errors.md) gives a shorter introduction
 to typed error mapping and propagation.
 
-Compiled libraries and standalone images from before native error metadata must
-be rebuilt. The loader rejects unsupported formats and inconsistent native
-contracts rather than guessing a string payload. Optional debugger types can be
+Compiled libraries and standalone images must use supported formats and matching
+native contracts. The loader rejects incompatible artifacts rather than guessing
+a string payload. Optional debugger types can be
 stripped without removing the essential identities, payload types and Cause.

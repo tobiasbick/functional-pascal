@@ -1,0 +1,108 @@
+program TuiSubviewRenderTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+var Builds: integer := 0;
+
+function Build(State: integer): Tui.TuiElement;
+begin
+  Builds := Builds + 1;
+  const RootId := Tui.TuiMenuNodeId.Create(1);
+  const Nodes := [
+    Tui.TuiMenuNodeBuilders.Submenu(RootId, None, 'File', 'F'),
+    Tui.TuiMenuNodeBuilders.Command(
+      Tui.TuiMenuNodeId.Create(2), Some(RootId), 'Open', 'O', Tui.TuiAction.Create(20)
+    )
+  ];
+  var Menu := Tui.TuiMenuState.Closed();
+  if State = 2 then
+    Menu := Tui.TuiMenuState.OpenAt(RootId);
+  end if;
+  var Children := [
+    Tui.TuiElementBuilders.MakePanel(
+      'Frame', [
+        Tui.TuiElementBuilders.MakeColumn([
+          Tui.TuiElementBuilders.MakeMenu(
+            Tui.TuiControlId.Create(9),
+            Nodes,
+            Menu,
+            Tui.TuiAction.Create(9)
+          ),
+          Tui.TuiElementBuilders.MakeLabel(if State mod 2 = 0 then '界é' else 'A界' end if),
+          Tui.TuiElementBuilders.MakeInput(
+            Tui.TuiControlId.Create(1),
+            'edit',
+            State mod 5,
+            Tui.TuiAction.Create(1)
+          ),
+          Tui.TuiElementBuilders.MakeCheckBox(
+            Tui.TuiControlId.Create(2),
+            'Check',
+            State mod 2 = 1,
+            Tui.TuiAction.Create(2)
+          )
+        ])
+      ]
+    )
+  ];
+  if State = 3 then
+    Children.PushInPlace(
+      Tui.TuiElementBuilders.MakeOverlay('Modal', [Tui.TuiElementBuilders.MakeLabel('opaque')])
+    );
+  end if;
+
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), Children);
+end function;
+
+function Equal(Previous: integer; Current: integer): boolean;
+begin
+  return Previous = Current;
+end function;
+
+const Content: Tui.TuiSubview of integer := Tui.TuiSubview.Create(Build, Equal);
+
+function View(State: integer): Tui.TuiElement;
+begin
+  return Content.Render(State);
+end function;
+
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  Cmd.SetPalette(Tui.TuiPalette.Default());
+  return State;
+end function;
+
+procedure AssertSame(Left: Tui.TuiSurfaceSnapshot; Right: Tui.TuiSurfaceSnapshot);
+begin
+  Test.AssertEquals(Left.Width, Right.Width);
+  Test.AssertEquals(Left.Height, Right.Height);
+  for Index: integer := 0 to Left.Cells.Length() - 1 do
+    Test.AssertTrue(Left.Cells[Index] = Right.Cells[Index]);
+  end for;
+end procedure;
+
+begin
+  const Size := Tui.TuiSize.Create(24, 9);
+  const App := Tui.TuiApplication.OpenForTest(Size);
+  for State: integer := 0 to 4 do
+    const Before := Builds;
+    discard App.RunIterations(State, Update, View, 3, 0);
+    Test.AssertEquals(Before + 1, Builds);
+    const Fresh := Tui.TuiApplication.OpenForTest(Size);
+    discard Fresh.RunIterations(State, Update, Build, 0, 0);
+    AssertSame(Fresh.SurfaceSnapshot(), App.SurfaceSnapshot());
+    Fresh.Close();
+  end for;
+  const Before := Builds;
+  for Extent: Tui.TuiSize in [Tui.TuiSize.Create(12, 5), Tui.TuiSize.Create(0, 0), Size] do
+    App.InjectResizeForTest(Extent);
+    discard App.RunIterations(4, Update, View, 1, 0);
+    const Fresh := Tui.TuiApplication.OpenForTest(Extent);
+    discard Fresh.RunIterations(4, Update, Build, 0, 0);
+    AssertSame(Fresh.SurfaceSnapshot(), App.SurfaceSnapshot());
+    Fresh.Close();
+  end for;
+
+  Test.AssertEquals(Before + 3, Builds);
+  App.Close();
+end.

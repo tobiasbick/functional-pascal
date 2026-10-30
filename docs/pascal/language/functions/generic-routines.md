@@ -31,6 +31,8 @@ arguments have contributed. Context comes from an annotation, assignment,
 return, routine argument, constructor field, or typed callable signature.
 Direct calls, record instance/static methods, and callable values use the same
 rule, including imported routines. Named argument order does not change inference.
+Native operation and payload-constructor values use the same receiving-context
+rule; see [native operation values](first-class.md#native-operation-values).
 
 ```pascal id=example-3
 program ContextualFactory;

@@ -1,0 +1,39 @@
+program TokenizerErrors;
+
+uses Std.Ai.Tokenizer as Tokenizer, Std.Test as Test;
+
+begin
+  Test.AssertTrue(
+    Tokenizer.Count('hello', 'unknown') is Error(Tokenizer.TokenizerError.UnsupportedEncoding(_))
+  );
+  Test.AssertTrue(
+    Tokenizer.Encode('hello', 'O200K_BASE') is Error(Tokenizer.TokenizerError.UnsupportedEncoding(_))
+  );
+  Test.AssertTrue(
+    Tokenizer.Decode([], 'unknown') is Error(Tokenizer.TokenizerError.UnsupportedEncoding(_))
+  );
+  Test.AssertTrue(
+    Tokenizer.Decode([-1], 'o200k_base') is Error(Tokenizer.TokenizerError.InvalidToken(_, _))
+  );
+  Test.AssertTrue(
+    Tokenizer.Decode([4294967296], 'o200k_base') is Error(Tokenizer.TokenizerError.InvalidToken(_, _))
+  );
+  Test.AssertTrue(
+    Tokenizer.Decode([2147483647], 'o200k_base') is Error(Tokenizer.TokenizerError.InvalidToken(_, _))
+  );
+  Test.AssertTrue(
+    Tokenizer.Decode([94], 'o200k_base') is Error(Tokenizer.TokenizerError.InvalidUtf8)
+  );
+  case Tokenizer.Decode([24912, -7], 'o200k_base') of
+    when Ok(_):
+      panic('Expected invalid token');
+    when Error(const Cause):
+      case Cause of
+        when Tokenizer.TokenizerError.InvalidToken(const Index, const Value):
+          Test.AssertEquals(1, Index);
+          Test.AssertEquals(-7, Value);
+        when Tokenizer.TokenizerError.UnsupportedEncoding(_), Tokenizer.TokenizerError.InvalidUtf8, Tokenizer.TokenizerError.LimitExceeded(_, _), Tokenizer.TokenizerError.BackendFailure:
+          panic('Wrong tokenizer failure');
+      end case;
+  end case;
+end.

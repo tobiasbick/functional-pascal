@@ -53,7 +53,7 @@ impl Checker {
             Expr::Bool(_, _) => Ty::Boolean,
             Expr::Designator(designator) => {
                 self.reject_var_parameter_routine_value(designator);
-                let ty = self.check_value_designator_expr(designator);
+                let ty = self.check_value_designator_expr(designator, expected);
                 let ty = self.constructor_callable_type(designator, ty);
                 let name = Self::resolve_designator_name(designator);
                 if self

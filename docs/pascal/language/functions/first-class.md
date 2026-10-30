@@ -67,6 +67,72 @@ end.
 `C.Add` captures `C` by value once; calling `AddTen` supplies only the remaining
 parameters. See [Record methods](../types/record-methods.md#bound-methods-as-values).
 
+## Native operation values
+
+A callable name without argument parentheses denotes a function or procedure
+value; parentheses invoke it. The same rule applies to source routines, Rust
+intrinsics, factory functions and payload constructors. Each operation keeps its
+canonical name; passing it as a callback does not require another helper API.
+
+A fixed signature such as `Math.Sqrt` can be inferred. Polymorphic operations
+such as `Math.Abs` need a receiving callable signature. An annotation or typed
+callback parameter supplies the argument and result types:
+
+```pascal id=native-callable-values run
+program NativeCallables;
+
+uses Std.Math as Math, Std.Test as Test;
+
+begin
+  const Abs: function(N: integer): integer := Math.Abs;
+  Test.AssertEquals(7, Abs(N := -7));
+  const Positive := [-3, 1, -2].Map(Math.Abs);
+  Test.AssertEquals(3, Positive[0]);
+  const Fill: function(Value: integer; Count: integer): array of integer := array.Fill;
+  Test.AssertEquals(7, Fill(7, 3)[2]);
+end.
+```
+
+A native receiver reference such as `Text.Trim` evaluates the receiver once and
+captures its current value. Later changes to the original binding do not replace
+that value. Arrays and dictionaries retain value semantics; shared-resource
+fields keep their existing shared-handle behavior. Computed and indexed receivers
+follow the same rule, for example `ReadText().Trim` or `Texts[Index].Length`.
+The callable takes only the operation's remaining parameters. Operations returning
+no value, such as `Items.ForEach`, produce procedure values.
+
+```pascal id=native-receiver-values run
+program NativeReceiverValues;
+
+uses Std.Math as Math, Std.Test as Test;
+
+begin
+  var Text := '  hello  ';
+  const Trim := Text.Trim;
+  Text := 'changed';
+  Test.AssertEquals('hello', Trim());
+  const Values := [-3, 1];
+  const Map: function(F: function(X: integer): integer): array of integer := Values.Map;
+  Test.AssertEquals(3, Map(Math.Abs)[0]);
+end.
+```
+
+Generic operations need enough context to resolve every remaining type.
+Variadic operations specialize to one fixed callable arity and parameter list:
+`const Write: procedure(Text: string; N: integer) := Console.WriteLn;` requires
+`uses Std.Console as Console;`. Likewise,
+`const Format: function(N: integer): string := '%d'.Format;` captures the template.
+Argument types and comparison constraints remain those of the selected operation.
+Labels at later calls come from the visible callable signature, including explicit
+receiving annotations.
+
+Native InPlace operations require writable source storage and cannot capture
+their receiver by value. Call them directly, or declare an ordinary routine with
+an explicit `var` parameter. Callable values preserve their existing `var` modes,
+capture restrictions, task-handle lifetimes and worker-transfer checks. Binding a
+function does not execute its body. Type names remain types: record construction
+and scalar conversions do not become function values.
+
 ## Optional handlers
 
 A callback can be an ordinary record field of type `Option of HandlerType`.

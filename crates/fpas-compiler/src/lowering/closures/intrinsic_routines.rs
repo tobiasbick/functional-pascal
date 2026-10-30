@@ -4,12 +4,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use fpas_ir::{Constant, Function, IntrinsicId, Operation, Terminator};
+use fpas_ir::{CaptureKind, Constant, Function, IntrinsicId, Operation, Terminator};
 use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
 use crate::lowering::context::{
-    FunctionInput, GlobalBinding, LoweringContext, ParameterInput, unsupported,
+    CaptureInput, FunctionInput, GlobalBinding, LoweringContext, ParameterInput, unsupported,
 };
 use crate::lowering::types;
 
@@ -37,13 +37,25 @@ impl ClosureRegistry<'_> {
                 reference: false,
             })
             .collect::<Vec<_>>();
+        let captures = routine
+            .receiver
+            .into_iter()
+            .map(|ty| CaptureInput {
+                name: "__native_receiver".into(),
+                ty,
+                storage_ty: ty,
+                kind: CaptureKind::Value,
+                declaration: None,
+                reference: false,
+            })
+            .collect::<Vec<_>>();
         let mut context = LoweringContext::new(FunctionInput {
             name: &routine.name,
             source_name: &self.source_name,
             id: routine.id,
             result: routine.result,
             parameters: &parameters,
-            captures: &[],
+            captures: &captures,
             globals: globals.clone(),
             constants: constants.clone(),
             metadata,
@@ -59,6 +71,9 @@ impl ClosureRegistry<'_> {
             .map(|parameter| context.read_named_local(&parameter.name, routine.span))
             .collect::<Result<Vec<_>, _>>()?;
         if let Some(native) = &routine.native {
+            if let Some(receiver) = captures.first() {
+                arguments.insert(0, context.read_capture(receiver, routine.span)?);
+            }
             let count = arguments.len().saturating_sub(1);
             let result = context.lower_native_values(
                 &native.name,

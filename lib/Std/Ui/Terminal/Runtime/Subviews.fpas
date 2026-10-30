@@ -1,0 +1,86 @@
+unit Std.Ui.Terminal.Runtime.Subviews;
+
+type TuiSubviewHost = record
+  Open: boolean;
+  Rendering: boolean;
+  Epoch: integer;
+  Sweep: array of function(KeepUsed: boolean): boolean;
+end record;
+
+var Hosts: array of TuiSubviewHost := [];
+var Current: integer := 0;
+
+public procedure TuiSubviewsOpen();
+begin
+  Hosts.PushInPlace(TuiSubviewHost(Open := true, Rendering := false, Epoch := 0, Sweep := []));
+end procedure;
+
+// A nested host restores the caller's render context on completion.
+public function TuiSubviewsBegin(ApplicationId: integer): integer;
+begin
+  if not Hosts[ApplicationId - 1].Open then
+    panic('Tui subview host is closed');
+  end if;
+
+  if Hosts[ApplicationId - 1].Rendering then
+    panic('Tui View must not reenter its application');
+  end if;
+  const Previous := Current;
+  Hosts[ApplicationId - 1].Rendering := true;
+  Hosts[ApplicationId - 1].Epoch := Hosts[ApplicationId - 1].Epoch + 1;
+  Current := ApplicationId;
+  return Previous;
+end function;
+
+public function TuiSubviewOwner(): integer;
+begin
+  if Current = 0 then
+    panic('Tui subviews can only render inside View');
+  end if;
+
+  return Current;
+end function;
+
+public function TuiSubviewEpoch(ApplicationId: integer): integer;
+begin
+  return Hosts[ApplicationId - 1].Epoch;
+end function;
+
+public procedure TuiSubviewRegister(Sweep: function(KeepUsed: boolean): boolean);
+begin
+  const Slot := TuiSubviewOwner() - 1;
+  Hosts[Slot].Sweep.PushInPlace(Sweep);
+end procedure;
+
+// Drop entries absent from this frame; never retain a history of dependencies.
+public procedure TuiSubviewsEnd(Previous: integer);
+begin
+  const Slot := Current - 1;
+  const Sweeps := Hosts[Slot].Sweep;
+  var Retained: array of function(KeepUsed: boolean): boolean := [];
+  for Sweep: function(KeepUsed: boolean): boolean in Sweeps do
+    if Sweep(true) then
+      Retained.PushInPlace(Sweep);
+    end if;
+  end for;
+
+  Hosts[Slot].Sweep := Retained;
+  Hosts[Slot].Rendering := false;
+  Current := Previous;
+end procedure;
+
+public procedure TuiSubviewsClose(ApplicationId: integer);
+begin
+  const Slot := ApplicationId - 1;
+  if Hosts[Slot].Rendering then
+    panic('Tui View must not close its application');
+  end if;
+  const Sweeps := Hosts[Slot].Sweep;
+  for Sweep: function(KeepUsed: boolean): boolean in Sweeps do
+    discard Sweep(false);
+  end for;
+
+  Hosts[Slot].Sweep := [];
+  Hosts[Slot].Open := false;
+end procedure;
+end unit;

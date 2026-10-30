@@ -15,6 +15,8 @@ pub(super) enum Origin {
     Routine(Owner),
     Imported(BindingId),
     BoundMethod(usize, BindingId),
+    Native(usize),
+    Constructor,
     Parameter(usize),
     Binding(BindingId),
     Unknown,

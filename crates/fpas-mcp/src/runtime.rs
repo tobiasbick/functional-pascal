@@ -7,6 +7,9 @@ use tokio_util::sync::CancellationToken;
 
 const OPEN_QUEUE: usize = 16;
 const PUBLICATIONS: usize = 256;
+mod startup;
+#[cfg(test)]
+mod tests;
 type Cleanup = Result<(), HttpError>;
 type OpenResult = Result<Arc<Publication>, HttpError>;
 
@@ -60,6 +63,7 @@ struct Record {
 }
 struct State {
     stopping: bool,
+    failure: Option<HttpError>,
     opening: usize,
     publications: Vec<Weak<Publication>>,
     records: Vec<Record>,
@@ -221,44 +225,34 @@ pub struct HttpRuntime {
     thread: Mutex<Option<JoinHandle<()>>>,
 }
 impl HttpRuntime {
-    /// Allocate the executor without binding listeners.
+    /// Start owned executor initialization without waiting or binding listeners.
+    /// Initialization failures complete queued publication tickets with their cause.
     pub fn new() -> Result<Self, HttpError> {
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .map_err(HttpError::from)?;
+        Self::with_builder(|| {
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .map_err(HttpError::from)
+        })
+    }
+    fn with_builder(
+        build: impl FnOnce() -> Result<tokio::runtime::Runtime, HttpError> + Send + 'static,
+    ) -> Result<Self, HttpError> {
         let state = Arc::new(Mutex::new(State {
             stopping: false,
+            failure: None,
             opening: 0,
             publications: Vec::new(),
             records: Vec::new(),
         }));
         let shutdown = CancellationToken::new();
         let owned_shutdown = shutdown.clone();
-        let (opens, mut receiver) = tokio::sync::mpsc::channel::<Open>(OPEN_QUEUE);
+        let (opens, receiver) = tokio::sync::mpsc::channel::<Open>(OPEN_QUEUE);
+        let owned_state = state.clone();
         let thread = std::thread::Builder::new()
             .name("fpas-mcp".into())
             .spawn(move || {
-                runtime.block_on(async move {
-                    let mut tasks = tokio::task::JoinSet::new();
-                    loop {
-                        tokio::select! {
-                            biased;
-                            _ = owned_shutdown.cancelled() => break,
-                            Some(_) = tasks.join_next(), if !tasks.is_empty() => {},
-                            open = receiver.recv() => {
-                                let Some(open) = open else { break; };
-                                tasks.spawn(open_publication(open, owned_shutdown.clone()));
-                            },
-                        }
-                    }
-                    receiver.close();
-                    while let Some(open) = receiver.recv().await {
-                        open.request.finish(Err(Fault::Closed.into()));
-                        open.receipt.finish(Ok(()));
-                    }
-                    while tasks.join_next().await.is_some() {}
-                });
+                startup::run(build, owned_state, owned_shutdown, receiver);
             })
             .map_err(HttpError::from)?;
         Ok(Self {
@@ -294,6 +288,9 @@ impl HttpRuntime {
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         if state.stopping || server.is_closed() {
             return Err(Fault::Closed.into());
+        }
+        if let Some(error) = &state.failure {
+            return Err(error.clone());
         }
         state
             .publications

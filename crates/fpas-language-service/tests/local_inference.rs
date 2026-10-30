@@ -11,6 +11,105 @@ use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;
 
 #[test]
+fn native_callable_factory_and_constructor_values_keep_receiving_signatures() {
+    let temp = TempDirectory::new("native-constructor-inference");
+    let source = "program T; begin
+      const Fill: function(Item: integer; Size: integer): array of integer := array.Fill;
+      const Wrap: function(Input: integer): option of integer := Some;
+      const Results := [1, 2].Map(Some);
+      discard Fill(Item := 7, Size := 2);
+      discard Wrap(Input := 9); discard Results; end.";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let analysis = service.analyze_document(&path).expect("analysis");
+    assert!(
+        analysis.diagnostics().is_empty(),
+        "{:?}",
+        analysis.diagnostics()
+    );
+    for (needle, detail) in [
+        (
+            "discard Fill",
+            "const Fill: function(Item: integer; Size: integer): array of integer",
+        ),
+        (
+            "discard Wrap",
+            "const Wrap: function(Input: integer): option of integer",
+        ),
+        (
+            "discard Results",
+            "const Results: array of Option of integer",
+        ),
+    ] {
+        let offset = source.find(needle).expect("use") + "discard ".len();
+        let hover = service
+            .hover(&path, offset)
+            .expect("hover")
+            .value
+            .expect("binding");
+        assert_eq!(hover.contents, detail);
+    }
+    for (needle, parameters) in [
+        ("Fill(Item :=", vec!["Item: integer", "Size: integer"]),
+        ("Wrap(Input :=", vec!["Input: integer"]),
+    ] {
+        let offset = source.find(needle).expect("call") + needle.find('(').expect("arguments") + 1;
+        let help = service
+            .signature_help(&path, offset)
+            .expect("signature")
+            .value
+            .expect("callable");
+        assert_eq!(help.signature.parameters, parameters);
+    }
+}
+
+#[test]
+fn native_callable_references_keep_inferred_types_and_receiving_labels() {
+    let temp = TempDirectory::new("native-callable-inference");
+    let source = "program T; uses Std.Math as Math; begin
+      const Abs: function(Input: integer): integer := Math.Abs;
+      const Text := 'abc'; const Length := Text.Length;
+      discard Abs(Input := -1); discard Length(); end.";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let analysis = service.analyze_document(&path).expect("analysis");
+    assert!(
+        analysis.diagnostics().is_empty(),
+        "{:?}",
+        analysis.diagnostics()
+    );
+    for (needle, detail) in [
+        (
+            "discard Abs",
+            "const Abs: function(Input: integer): integer",
+        ),
+        ("discard Length", "const Length: function(): integer"),
+    ] {
+        let offset = source.find(needle).expect("use") + "discard ".len();
+        let hover = service
+            .hover(&path, offset)
+            .expect("hover")
+            .value
+            .expect("binding");
+        assert_eq!(hover.contents, detail);
+    }
+    let call = source.find("Abs(Input :=").expect("call") + "Abs(".len();
+    let help = service
+        .signature_help(&path, call)
+        .expect("signature")
+        .value
+        .expect("callable");
+    assert_eq!(help.signature.parameters, ["Input: integer"]);
+    let label = source.find("Input :=").expect("label");
+    let definitions = service.definitions(&path, label).expect("definition").value;
+    assert_eq!(definitions.len(), 1);
+    assert_eq!(
+        definitions[0].symbol.selection_span.offset(),
+        source.find("Input: integer").expect("annotation")
+    );
+}
+
+#[test]
 fn inferred_subranges_retain_the_declared_type_for_hover_and_navigation() {
     let temp = TempDirectory::new("subrange-inference");
     let source = "program T; type Percent = 0..100; begin const P := Percent(50); const Found: boolean := P in Percent; discard P; discard Found; end.";

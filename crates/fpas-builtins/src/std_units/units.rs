@@ -12,6 +12,7 @@ macro_rules! standard_unit_names {
 }
 
 standard_unit_names! {
+    STD_UNIT_TOKENIZER = "Std.Ai.Tokenizer";
     STD_UNIT_MCP = "Std.Ai.Mcp";
     STD_UNIT_MCP_TYPES = "Std.Ai.Mcp.Types";
     STD_UNIT_ACP = "Std.Ai.Acp";
@@ -53,6 +54,7 @@ standard_unit_names! {
 
 /// Standard units supplied entirely by compiler, VM, or runtime intrinsics.
 pub const STD_UNITS_INTRINSIC: &[&str] = &[
+    STD_UNIT_TOKENIZER,
     STD_UNIT_MCP,
     STD_UNIT_MCP_TYPES,
     STD_UNIT_ACP,
@@ -85,6 +87,7 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
 
 /// Standard units recognized by tooling, including source-defined units.
 pub const STD_UNITS_KNOWN: &[&str] = &[
+    STD_UNIT_TOKENIZER,
     STD_UNIT_MCP,
     STD_UNIT_MCP_TYPES,
     STD_UNIT_ACP,

@@ -7,7 +7,7 @@ uses
   Std.Ui.Terminal.Runtime.Application.State as ApplicationState, Std.Ui.Terminal.Runtime.Cmd as RuntimeCmd,
   Std.Ui.Terminal.Runtime.Frame as Frame, Std.Ui.Terminal.Runtime.Input as RuntimeInput,
   Std.Ui.Terminal.Runtime.Msg as RuntimeMsg, Std.Ui.Terminal.Runtime.Routing.Pointer as Pointer,
-  Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer;
+  Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer, Std.Ui.Terminal.Runtime.Subviews as Subviews;
 
 procedure TuiLoopRender(ApplicationId: integer; Tree: Element.TuiElement; Present: boolean);
 begin
@@ -26,6 +26,19 @@ begin
       );
     end;
   end if;
+end procedure;
+
+procedure TuiLoopView<TModel>(
+  ApplicationId: integer;
+  Model: TModel;
+  View: function(State: TModel): Element.TuiElement;
+  Present: boolean
+);
+begin
+  const Previous := Subviews.TuiSubviewsBegin(ApplicationId);
+  const Tree := View(Model);
+  Subviews.TuiSubviewsEnd(Previous);
+  TuiLoopRender(ApplicationId, Tree, Present);
 end procedure;
 
 function TuiLoopApplyFramework<TModel>(
@@ -67,7 +80,7 @@ begin
     end;
   end if;
 
-  TuiLoopRender(ApplicationId, View(Model), Present);
+  TuiLoopView(ApplicationId, Model, View, Present);
   return false;
 end function;
 
@@ -113,7 +126,7 @@ begin
     end;
   end if;
   var Model: TModel := InitialModel;
-  TuiLoopRender(ApplicationId, View(Model), false);
+  TuiLoopView(ApplicationId, Model, View, false);
   if BackgroundEnabled then
     begin
       ApplicationState.TuiAppStart(ApplicationId);
@@ -253,7 +266,7 @@ begin
     end function
   );
   var Model: TModel := InitialModel;
-  TuiLoopRender(ApplicationId, View(Model), true);
+  TuiLoopView(ApplicationId, Model, View, true);
   if BackgroundEnabled then
     begin
       ApplicationState.TuiAppStart(ApplicationId);

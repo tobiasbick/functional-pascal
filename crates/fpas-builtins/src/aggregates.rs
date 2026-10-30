@@ -5,6 +5,7 @@
 /// Compilers retain these layouts when present because their constructors are not represented by a
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
+    "Std.Ai.Tokenizer.TokenizerError",
     "Std.Ai.Mcp.Limits",
     "Std.Ai.Mcp.HttpOptions",
     "Std.Ai.Mcp.Types.RawJson",

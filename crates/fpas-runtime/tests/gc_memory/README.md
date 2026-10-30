@@ -89,6 +89,10 @@ and then checks that releasing it on a third thread restores the baseline.
 | Pending task teardown | Explicit idempotent VM shutdown, root failure and early scope exit release parked task frames, pending operations, unused/claimed selection callbacks, channel buffers and timers. Eleven wait modes run with default and 1/1/1 schedules; every first and repeated run returns exactly to its byte/allocation baseline. |
 | Native socket waits | Pending accepts and reads retain cyclic captures and unused selection cases across cancellation, listener close, timeout, scope exit and VM shutdown. Native jobs join and every first/repeated run returns exactly to its allocation baseline, with default and 1/1/1 schedules. Cancelled or abandoned established connections remain usable. |
 | Native connects and DNS | Plain and cancellation-aware connects resolve a loopback hostname, exchange bytes through nested callbacks and release frame payloads. Joined VM, socket and completed resolver workers return every first/repeated run exactly to its byte/allocation baseline, with default and 1/1/1 schedules. |
+| Native entropy | OS bytes, integer sampling, explicit randomization and automatic PRNG seeding retain cyclic callbacks and unused cases across completion, scope exit and writer-triggered VM shutdown. All 96 first/repeated VM sessions return exactly to their byte/allocation baseline with default and 1/1/1 schedules. |
+| MCP executor initialization | First HTTP publication through nested callbacks retains cyclic captures and unused cases. Completion and scope abandonment join the native executor, retire publications and release every allocation in 16 first/repeated VM sessions, with default and 1/1/1 schedules. |
+| Tokenizer ownership | Concurrent tasks reuse VM-owned BPE tables through nested callbacks with cyclic captures and unused cases. Eight first/repeated VM sessions require exact byte/allocation balance with default and 1/1/1 schedules. No tokenizer or VM is warmed up. |
+| Native callable receivers | Bound native operations retain arrays whose callable elements close cycles through the adapter itself. Sixteen first/repeated VM sessions, including runtime failures, return every receiver, cycle and large captured payload exactly to the allocation baseline under default and 1/1/1 schedules. |
 | Owned process waits | All four Run variants retain cyclic captures and unused cases while child/peer gates require concurrent progress. Duplex stdin/stdout/stderr, owned descendants, cancellation, scope exit and VM or stderr-receiver shutdown return exactly to the first and repeated allocation baselines under default and 1/1/1 schedules. Independent host sockets prove children and descendants have exited. |
 | Callbacks | A persistent session repeatedly exports aliases, invokes them and handles failed callbacks without memory growth. An independent closure remains alive; its last host root is released after session destruction. |
 | Debugger | Repeated breakpoint stops, variable expansion and detached evaluation of a cyclic captured value have stable memory use. Disconnecting a stopped session releases its current payload and inspection/helper roots. |
@@ -170,6 +174,19 @@ have joined. Thread-local pools are destroyed at that point; their cached buffer
 are part of the required release, rather than an allowance subtracted from the
 balance. A child completion marker also ensures a mistaken test filter cannot
 silently pass without executing the requested case.
+
+The tokenizer case also initializes regex-automata's process-global CPU-count
+metadata directly before its baseline. It checks that this costs at most one
+`usize` allocation (eight bytes on a 64-bit host), and a second query allocates
+nothing. This does not construct a regex, tokenizer or FPAS session. Every table,
+regex instance and callback allocation made by the first/repeated VM runs must
+still be released, with no byte allowance.
+
+The MCP executor case initializes an empty native Tokio I/O runtime separately
+before its baseline. Feature-unified builds may retain Tokio's process-global
+signal registry. A second empty runtime must leave the same footprint. Neither
+step constructs an MCP server or FPAS session; every first/repeated MCP VM run
+still requires an exact allocation balance.
 
 The value pool tests separately saturate value, dictionary and string buffers
 to exercise byte and bucket limits independently. They check take/recycle

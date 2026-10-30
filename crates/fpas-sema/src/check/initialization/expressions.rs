@@ -13,7 +13,17 @@ impl Walker<'_, '_> {
         let value = match expr {
             Expr::Designator(designator) => {
                 let value = self.designator(designator, true);
-                if self
+                let key = crate::designator_lookup_key(designator);
+                if self.checker.enum_members.contains(&key)
+                    && matches!(
+                        self.checker.expr_types.get(&crate::expr_lookup_key(expr)),
+                        Some(crate::Ty::Function(_))
+                    )
+                {
+                    [Origin::Constructor].into_iter().collect()
+                } else if self.checker.native_values.contains_key(&key) {
+                    [Origin::Native(key)].into_iter().collect()
+                } else if self
                     .checker
                     .bound_methods
                     .contains_key(&crate::designator_lookup_key(designator))
@@ -78,7 +88,12 @@ impl Walker<'_, '_> {
                 let mut receiver = self.expr(base);
                 for operation in operations {
                     match operation {
-                        PostfixOperation::Field { .. } => {}
+                        PostfixOperation::Field { .. } => {
+                            let key = crate::postfix_operation_lookup_key(operation);
+                            if self.checker.native_values.contains_key(&key) {
+                                receiver = [Origin::Native(key)].into_iter().collect();
+                            }
+                        }
                         PostfixOperation::Index { index, .. } => {
                             self.expr(index);
                         }

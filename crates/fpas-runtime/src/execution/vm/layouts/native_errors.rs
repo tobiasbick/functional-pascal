@@ -71,6 +71,11 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
             Some(Intrinsic::Parse(_)) => Some(Family::Parse),
             Some(Intrinsic::Encoding(_)) => Some(Family::Encoding),
             Some(Intrinsic::Crypto(_)) => Some(Family::Crypto),
+            Some(Intrinsic::Tokenizer(operation))
+                if operation != crate::TokenizerIntrinsic::Encodings =>
+            {
+                Some(Family::Tokenizer)
+            }
             Some(Intrinsic::Json(crate::JsonIntrinsic::Parse)) => Some(Family::Json),
             Some(Intrinsic::Toml(crate::TomlIntrinsic::Parse)) => Some(Family::Toml),
             _ => None,

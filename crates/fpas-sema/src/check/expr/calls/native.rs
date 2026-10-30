@@ -194,7 +194,16 @@ impl Checker {
         span: Span,
     ) -> FunctionTy {
         let receiver_ty = receiver.map(|value| self.check_expr(value));
-        let mut signature = operation.signature_for(receiver_ty.as_ref());
+        self.native_signature_for_type(operation, receiver_ty.as_ref(), span)
+    }
+
+    pub(in crate::check) fn native_signature_for_type(
+        &mut self,
+        operation: &NativeOperation,
+        receiver_ty: Option<&Ty>,
+        span: Span,
+    ) -> FunctionTy {
+        let mut signature = operation.signature_for(receiver_ty);
         let raw = Ty::Function((operation.signature)());
         let mut parameters = HashMap::new();
         self.collect_type_param_bindings(&raw, &raw, &mut parameters, &mut HashSet::new(), span);

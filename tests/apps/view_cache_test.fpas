@@ -1,0 +1,232 @@
+program ViewCacheTest;
+
+uses
+  Notes.Model as NotesModel, Notes.View as NotesView,
+  LocalChat.Model as Chat, LocalChat.View as ChatView,
+  Fpastris.Model as Game, Fpastris.View as GameView,
+  Mandelbrot.Model as Fractal, Mandelbrot.View as FractalView, Mandelbrot.Render as Render,
+  Std.Console as Console, Std.Tasks as Tasks,
+  Std.Ui.Terminal as Tui, Std.Test as Test;
+
+const Actual: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(80, 30));
+
+var Compared: integer := 0;
+
+function Keep<T>(State: T; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): T;
+begin
+  return State;
+end function;
+
+procedure Compare<T>(
+  State: T; View: function(State: T): Tui.TuiElement;
+  Width: integer; Height: integer
+);
+begin
+  Actual.InjectResizeForTest(Tui.TuiSize.Create(Width, Height));
+  const Expected := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(Width, Height));
+  discard Actual.RunIterations(State, Keep, View, 1, 0);
+  discard Expected.RunIterations(State, Keep, View, 0, 0);
+  const Left := Actual.SurfaceSnapshot();
+  const Right := Expected.SurfaceSnapshot();
+  Test.AssertEquals(Right.Width, Left.Width);
+  Test.AssertEquals(Right.Height, Left.Height);
+  for Index: integer := 0 to Left.Cells.Length() - 1 do
+    if Left.Cells[Index] <> Right.Cells[Index] then
+      panic('View mismatch in case %d, cell %d'.Format(Compared, Index));
+    end if;
+  end for;
+
+  Expected.Close();
+  Compared := Compared + 1;
+end procedure;
+
+procedure NotesCases();
+begin
+  var Note := NotesModel.NoteCreate('first', 1);
+  Note.Body := 'first' + #10 + 'needle' + #10 + 'third';
+  var State := NotesModel.NotesModelCreate(
+    'unused',
+    NotesModel.NotesLoad(Notes := [Note, NotesModel.NoteCreate('second', 2)], Issues := [])
+  );
+  for Step: integer := 0 to 17 do
+    case Step of
+      when 1:
+        State.Notes[0].Body := State.Notes[0].Body + '!';
+      when 2:
+        State.Search := 'needle';
+        State.SearchCaret := 6;
+      when 3:
+        State.Notes[0].Body := 'no longer matches';
+      when 4:
+        State.Search := '';
+        State.SearchCaret := 0;
+        State.Notes[0].Tags := ['tag'];
+      when 5:
+        State.TitleCaret := 1;
+      when 6:
+        State.Selected := 1;
+      when 7:
+        State.Notes[1].Body := 'line' + #10 + 'other';
+        State.BodyOffset := Tui.TuiPoint.Create(0, 1);
+      when 8:
+        State.Notes[1].Pinned := true;
+      when 9:
+        State.Notes[0].Archived := true;
+      when 10:
+        State.Overlay := NotesModel.NotesOverlay.Help;
+      when 11:
+        State.Overlay := NotesModel.NotesOverlay.Commands;
+      when 12:
+        State.Overlay := NotesModel.NotesOverlay.SaveFailure;
+        State.ErrorMessage := 'error';
+      when 13:
+        State.Overlay := NotesModel.NotesOverlay.QuitConfirmation;
+      when 14:
+        State.Overlay := NotesModel.NotesOverlay.Closed;
+        State.Width := 60;
+        State.Pane := NotesModel.NotesPane.Editor;
+      when 15:
+        State.Width := 49;
+      when 16:
+        State.Width := 100;
+        State.Focus := 2;
+      when 17:
+        State.Selected := -1;
+        State.Notes := [];
+      else
+        null;
+    end case;
+
+    Compare(State, NotesView.NotesView, State.Width, State.Height);
+  end for;
+end procedure;
+
+procedure ChatCases();
+begin
+  var State := Chat.LocalChatModelCreate(80, 24);
+  for Step: integer := 0 to 10 do
+    case Step of
+      when 1:
+        State.Entries := [
+          Chat.ChatEntry.User('Hello 界'),
+          Chat.ChatEntry.Assistant('one' + #10 + 'two')
+        ];
+      when 2:
+        State.Draft := 'hello';
+        State.DraftCaret := 5;
+      when 3:
+        State.DraftCaret := 4;
+      when 4:
+        State.TranscriptOffset := Tui.TuiPoint.Create(0, 1);
+      when 5:
+        State.TranscriptCaret := 3;
+      when 6:
+        State.Width := 60;
+        State.Height := 18;
+      when 7:
+        State.Entries[1] := Chat.ChatEntry.Assistant('Changed answer');
+      when 8:
+        State.Status := 'failed';
+      when 9:
+        State.Width := 49;
+      when 10:
+        State.Width := 80;
+        State.Focus := 3;
+      else
+        null;
+    end case;
+
+    Compare(State, ChatView.LocalChatView, State.Width, State.Height);
+  end for;
+end procedure;
+
+procedure GameCases();
+begin
+  var State := Game.Create(62, 26);
+  State.Status := Game.Phase.Playing;
+  for Step: integer := 0 to 14 do
+    case Step of
+      when 1:
+        State.FallMillis := 50;
+        State.LockMillis := 20;
+      when 2:
+        State.Active.X := 2;
+      when 3:
+        State.Board[200] := 4;
+      when 4:
+        State.Score := 123;
+      when 5:
+        State.Best := 1234;
+      when 6:
+        State.Lines := 3;
+      when 7:
+        State.Held := 2;
+        State.HoldUsed := true;
+      when 8:
+        State.Queue[0] := 5;
+      when 9:
+        State.Status := Game.Phase.Paused;
+      when 10:
+        State.Notice := 'changed';
+      when 11:
+        State.Width := 100;
+        State.Height := 32;
+      when 12:
+        State.Width := 50;
+      when 13:
+        State.Width := 62;
+      when 14:
+        State.Status := Game.Phase.GameOver;
+      else
+        null;
+    end case;
+
+    Compare(State, GameView.View, State.Width, State.Height);
+  end for;
+end procedure;
+
+procedure FractalCases();
+begin
+  const Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(1);
+  var State := Fractal.NewMandelbrotModel(Inbox, 24, 15);
+  for Step: integer := 0 to 7 do
+    case Step of
+      when 1:
+        State.HelpOpen := true;
+      when 2:
+        State.HelpOpen := false;
+        State.RowsRendered := State.Grid.Height;
+      when 3:
+        State.Explorer.CenterX := -0.4;
+      when 4:
+        State.Explorer.MaxIter := 512;
+      when 5:
+        State.FailureMessage := 'failed';
+      when 6:
+        State.Grid := Tui.TuiCellGrid.Create(
+          State.Grid.Width, State.Grid.Height,
+          array.Fill(
+            Tui.TuiCell.Create('X', Tui.TuiStyleRole.Accent),
+            State.Grid.Width * State.Grid.Height
+          )
+        );
+      when 7:
+        State.HelpOpen := true;
+      else
+        null;
+    end case;
+
+    Compare(State, FractalView.ViewMandelbrot, State.TerminalWidth, State.TerminalHeight);
+  end for;
+
+  discard Tasks.CloseChannel(Inbox);
+end procedure;
+
+begin
+  NotesCases();
+  ChatCases();
+  GameCases();
+  FractalCases();
+  Actual.Close();
+  Console.WriteLn('Cached/fresh frames compared: ', Compared);
+end.

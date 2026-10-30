@@ -21,6 +21,10 @@ impl LoweringContext {
         if let Some(target) = self
             .intrinsic_targets
             .get(&fpas_sema::expr_lookup_key(expression))
+            .or_else(|| {
+                self.intrinsic_targets
+                    .get(&fpas_sema::designator_lookup_key(designator))
+            })
             .cloned()
         {
             return self.emit_value(

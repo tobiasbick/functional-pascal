@@ -50,6 +50,11 @@ Pass a named routine without `@`. Anonymous routines use a complete
 expression. Bind a returned callable before invoking it; `MakeAdder(3)(5)` is
 unsupported.
 
+Native routines and factories are callable values too (`Math.Abs`, `array.Fill`);
+a receiving signature specializes them. `Value.Operation` captures its receiver
+once by value. `Some`, `Ok` and `Error` also supply payload-constructor functions;
+`None` remains a value. See [native operation values](../language/functions/first-class.md#native-operation-values).
+
 Ordinary captured parameters and `const` values are snapshots; a captured local
 `var` is a shared mutable cell that can outlive its declaring call. Such callables
 stay in their owning task. Anonymous closures cannot capture `var` parameters.

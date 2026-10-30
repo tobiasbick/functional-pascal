@@ -8,6 +8,7 @@ impl LoweringContext {
     pub(super) fn lower_array_push_target(
         &mut self,
         target: &Designator,
+        part_count: usize,
         value: &Expr,
         array_ty: TypeId,
         span: fpas_lexer::Span,
@@ -17,11 +18,11 @@ impl LoweringContext {
             _ => return Err(unsupported(target.span, "mutable array target type")),
         };
         let (root, root_parts) = self.designator_root(target)?;
-        let local = (root_parts == target.parts.len())
+        let local = (root_parts == part_count)
             .then(|| self.direct_local(&root))
             .flatten();
         let reference = if local.is_none() {
-            let reference = self.lower_var_argument(target)?;
+            let reference = self.lower_var_argument_prefix(target, part_count)?;
             Some(self.save_value(reference))
         } else {
             None
@@ -67,6 +68,7 @@ impl LoweringContext {
     pub(super) fn lower_array_pop_target(
         &mut self,
         target: &Designator,
+        part_count: usize,
         result: TypeId,
         array_ty: TypeId,
         span: fpas_lexer::Span,
@@ -75,13 +77,13 @@ impl LoweringContext {
         let Some(fpas_ir::IrType::Array(element)) = self.type_kind(array_ty) else {
             return Err(unsupported(span, "PopInPlace element type"));
         };
-        if root_parts == target.parts.len()
+        if root_parts == part_count
             && let Some(local) = self.direct_local(&root)
         {
             let popped = self.emit_value(Operation::ArrayPop { local }, element, span)?;
             return self.value_as(popped, result, span);
         }
-        let reference = self.lower_var_argument(target)?;
+        let reference = self.lower_var_argument_prefix(target, part_count)?;
         let (array, storage_ty) = self.read_collection_reference(reference, array_ty, span)?;
         let reference = self.save_value(reference);
         let (shortened, popped) = self.lower_array_pop_copy(array, array_ty, element, span)?;

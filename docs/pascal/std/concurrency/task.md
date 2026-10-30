@@ -56,6 +56,12 @@ jobs too, including terminal authentication and nested callbacks. Undelivered
 connections and terminals remain owned by their job and are closed on abandonment.
 Native resource admission precedes host request claims and OS effects.
 
+[Cryptographic randomness](../cryptography/crypto.md#execution-and-ownership) and
+[PRNG seeding](../numeric/random.md#execution-and-ownership) also release workers
+through bounded native entropy jobs. Seeded PRNG draws remain in-memory calls.
+[MCP publication](../ai/mcp/README.md#ownership-and-execution) covers native executor
+initialization as well as listener setup, including the first publication.
+
 The main task never executes queued tasks while it waits; pool workers run them. A queued child
 may wait for the main task itself, for example for a request it sends on a channel or socket, so
 running that child on the main task's thread could deadlock until the child's I/O times out, and a

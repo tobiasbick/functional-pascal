@@ -53,6 +53,7 @@ pub mod str_ops;
 pub mod task;
 pub mod test;
 pub mod time;
+pub mod tokenizer;
 pub mod toml;
 
 pub use acp::AcpIntrinsic;
@@ -83,6 +84,7 @@ pub use str_ops::StrIntrinsic;
 pub use task::TaskIntrinsic;
 pub use test::TestIntrinsic;
 pub use time::TimeIntrinsic;
+pub use tokenizer::TokenizerIntrinsic;
 pub use toml::TomlIntrinsic;
 
 /// VM intrinsic instruction payload.
@@ -90,6 +92,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Model-tokenization and exact token counts.
+    Tokenizer(TokenizerIntrinsic),
     /// Registered MCP tool and publication operation.
     Mcp(McpIntrinsic),
     /// Detached ACP value operation.
@@ -229,6 +233,7 @@ impl Intrinsic {
                     "Random" => "Math.Random",
                     "Server" => "Net.Server",
                     "Toml" => "Encoding.Toml",
+                    "Tokenizer" => "Ai.Tokenizer",
                     "Array" => "Arrays",
                     "Dict" => "Dictionaries",
                     "Option" => "Options",
@@ -265,6 +270,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    Tokenizer(TokenizerIntrinsic),
     Mcp(McpIntrinsic),
     Acp(AcpIntrinsic),
     Server(ServerIntrinsic),

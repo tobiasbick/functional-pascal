@@ -65,7 +65,7 @@ fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
         Intrinsic::Server(_) => Some("Std.Net.Server"),
         Intrinsic::Random(_) => Some("Std.Math.Random"),
         Intrinsic::Crypto(_) => Some("Std.Crypto"),
-        Intrinsic::Acp(_) | Intrinsic::Encoding(_) => None,
+        Intrinsic::Acp(_) | Intrinsic::Encoding(_) | Intrinsic::Tokenizer(_) => None,
         Intrinsic::Time(TimeIntrinsic::Sleep) => None,
         Intrinsic::Time(_) => Some("wall-clock Std.Time"),
         Intrinsic::Fs(_) => Some("Std.Io.Fs"),

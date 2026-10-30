@@ -77,6 +77,8 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::execution::vm) enum TaskSuspension {
+    /// OS entropy and automatic seeding retain native buffers until task-side delivery.
+    Entropy(Box<crate::execution::vm::hosted::entropy::wait::Wait>),
     /// Owned console I/O; bytecode frames and result construction stay on their task.
     ConsoleIo(Box<crate::execution::vm::hosted::console_io::wait::Wait>),
     /// Debugger terminal input waits without running a polling loop in FPAS.
@@ -182,6 +184,7 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::execution::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::Entropy(_) => TaskSuspensionState::Waiting,
             Self::ConsoleIo(_) => TaskSuspensionState::Waiting,
             Self::Net(_) => TaskSuspensionState::Waiting,
             Self::Fs(_) => TaskSuspensionState::Waiting,

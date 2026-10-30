@@ -30,9 +30,10 @@ parameter names occurs. See [named arguments](parameters.md#named-arguments).
 
 ## Payload constructors as functions
 
-A payload enum or native-error constructor is an ordinary noncapturing function
-value. Its fields supply readonly parameters and its result is the declaring
-family. Generic constructor arguments must be inferable from the receiving
+A payload constructor is an ordinary noncapturing function value. This includes
+enum variants, native-error variants and `Some`, `Ok` and `Error`. Its fields
+supply readonly parameters and its result is the declaring family.
+Generic constructor arguments must be inferable from the receiving
 callable signature, including parameters and result. The normal ambiguity
 diagnostic rejects missing evidence.
 
@@ -51,6 +52,26 @@ end.
 The receiving callable's labels govern calls, just as for named routines.
 Multiple payload fields require matching arity; there is no currying or automatic
 capture. Fieldless variants remain values and never accept `()`.
+
+```pascal id=builtin-constructor-values run
+program BuiltinConstructors;
+
+uses Std.Test as Test;
+
+begin
+  const Wrap: function(Value: integer): option of integer := Some;
+  const Success: function(Value: integer): result of (integer, string) := Ok;
+  const Failure: function(Value: string): result of (integer, string) := Error;
+  Test.AssertEquals(7, Wrap(7).Unwrap());
+  Test.AssertEquals(8, Success(8).Unwrap());
+  Test.AssertTrue(Failure('failed') is Error('failed'));
+  const Values := [1, 2].Map(Some);
+  Test.AssertEquals(2, Values[1].Unwrap());
+end.
+```
+
+The receiving signature must determine both Result payload types even though
+`Ok` or `Error` constructs only one branch. `None` remains a value.
 
 ## See also
 

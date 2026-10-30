@@ -60,8 +60,8 @@ begin
     LocalChatModel.ChatEntry.Assistant('Local answer')
   ];
   Model := LocalChatModel.LocalChatScrollToEnd(Model);
-  Test.AssertTrue(('YOU' in LocalChatModel.LocalChatTranscript(Model)));
-  Test.AssertTrue(('ASSISTANT' in LocalChatModel.LocalChatTranscript(Model)));
+  Test.AssertTrue(('YOU' in LocalChatModel.LocalChatTranscript(Model.Entries, Model.Width)));
+  Test.AssertTrue(('ASSISTANT' in LocalChatModel.LocalChatTranscript(Model.Entries, Model.Width)));
   Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 0, 0);
   Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Local answer'));
   App.InjectResizeForTest(Tui.TuiSize.Create(60, 18));

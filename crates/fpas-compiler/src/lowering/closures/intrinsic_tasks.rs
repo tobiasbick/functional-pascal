@@ -100,6 +100,7 @@ impl ClosureRegistry<'_> {
             name: format!("$intrinsic_task_{}", id.get()),
             intrinsic,
             native: metadata.fluent_calls.get(&key).cloned(),
+            receiver: None,
             parameters,
             result,
             span,

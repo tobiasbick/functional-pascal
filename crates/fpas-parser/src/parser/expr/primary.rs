@@ -74,18 +74,9 @@ impl Parser {
             }
             Token::LBracket => self.parse_array_or_dict_literal(),
             Token::Record => self.reject_record_literal(),
-            Token::Ok => {
-                let (inner, span) = self.parse_paren_wrapped_after_keyword();
-                Expr::ResultOk(Box::new(inner), span)
-            }
-            Token::Error => {
-                let (inner, span) = self.parse_paren_wrapped_after_keyword();
-                Expr::ResultError(Box::new(inner), span)
-            }
-            Token::Some => {
-                let (inner, span) = self.parse_paren_wrapped_after_keyword();
-                Expr::OptionSome(Box::new(inner), span)
-            }
+            Token::Ok => self.parse_payload_constructor("Ok", Expr::ResultOk),
+            Token::Error => self.parse_payload_constructor("Error", Expr::ResultError),
+            Token::Some => self.parse_payload_constructor("Some", Expr::OptionSome),
             Token::None => {
                 let span = self.current_span();
                 self.advance();
@@ -123,48 +114,43 @@ impl Parser {
         }
     }
 
-    /// Parses the keyword-owned `string.Chr` and `array.Fill` call shape.
+    /// Parse a reserved type owner through the same reference/call shape as names.
     fn parse_native_factory(&mut self) -> Expr {
         let start = self.current_span();
-        let owner = if self.check(&Token::Array) {
-            "array"
-        } else {
-            "string"
-        };
         self.advance();
         self.expect(&Token::Dot);
         let (name, name_span) = self
             .expect_ident()
             .unwrap_or_else(|| self.error_ident(self.current_span()));
-        self.expect(&Token::LParen);
-        let args = if self.check(&Token::RParen) {
-            Vec::new()
-        } else {
-            self.parse_arg_list()
+        let designator = Designator {
+            parts: vec![
+                DesignatorPart::Ident("array".into(), start),
+                DesignatorPart::Ident(name, name_span),
+            ],
+            span: self.span_from(start),
         };
-        self.expect(&Token::RParen);
-        let span = self.span_from(start);
-        Expr::Call {
-            designator: Designator {
-                parts: vec![
-                    DesignatorPart::Ident(owner.into(), start),
-                    DesignatorPart::Ident(name, name_span),
-                ],
-                span,
-            },
-            args,
-            span,
-        }
+        self.finish_designator_expression(designator, start)
     }
 
-    fn parse_paren_wrapped_after_keyword(&mut self) -> (Expr, fpas_lexer::Span) {
+    /// Payload constructors are values without parentheses, applications with them.
+    fn parse_payload_constructor(
+        &mut self,
+        name: &str,
+        construct: fn(Box<Expr>, fpas_lexer::Span) -> Expr,
+    ) -> Expr {
         let start = self.current_span();
         self.advance();
-        self.expect(&Token::LParen);
+        if !self.check(&Token::LParen) {
+            return Expr::Designator(Designator {
+                parts: vec![DesignatorPart::Ident(name.into(), start)],
+                span: start,
+            });
+        }
+        self.advance();
         // Preserve `Value := …` and its source span for semantic validation and formatting.
         let inner = self.parse_argument();
         self.expect(&Token::RParen);
-        (inner, self.span_from(start))
+        construct(Box::new(inner), self.span_from(start))
     }
 
     fn parse_array_or_dict_literal(&mut self) -> Expr {

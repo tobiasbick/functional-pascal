@@ -2,13 +2,13 @@
 
 mod bound_methods;
 mod constructor_values;
-mod conversion_values;
 mod discover;
 mod intrinsic_routines;
 mod intrinsic_tasks;
 mod mutating_receivers;
 mod named_routines;
 mod names;
+mod native_values;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -49,6 +49,7 @@ pub(super) struct IntrinsicRoutine {
     name: String,
     intrinsic: Option<fpas_code::Intrinsic>,
     native: Option<fpas_sema::FluentCallTarget>,
+    receiver: Option<fpas_ir::TypeId>,
     parameters: Vec<fpas_ir::TypeId>,
     result: fpas_ir::TypeId,
     span: fpas_lexer::Span,

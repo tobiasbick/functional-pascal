@@ -1,0 +1,119 @@
+program TuiSubviewRoutingTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Text: string;
+  Caret: integer;
+  Action: integer;
+  Total: integer;
+end record;
+
+type InputData = record
+  Text: string;
+  Caret: integer;
+end record;
+
+var InputBuilds: integer := 0;
+var ButtonBuilds: integer := 0;
+
+function BuildInput(Data: InputData): Tui.TuiElement;
+begin
+  InputBuilds := InputBuilds + 1;
+  return Tui.TuiElementBuilders.MakeInput(
+    Tui.TuiControlId.Create(1),
+    Data.Text,
+    Data.Caret,
+    Tui.TuiAction.Create(1)
+  );
+end function;
+
+function EqualInput(Previous: InputData; Current: InputData): boolean;
+begin
+  return Previous = Current;
+end function;
+
+function BuildButton(Action: integer): Tui.TuiElement;
+begin
+  ButtonBuilds := ButtonBuilds + 1;
+  return Tui.TuiElementBuilders.MakeButton(
+    Tui.TuiControlId.Create(2),
+    'Go',
+    Tui.TuiAction.Create(Action)
+  );
+end function;
+
+function EqualAction(Previous: integer; Current: integer): boolean;
+begin
+  return Previous = Current;
+end function;
+
+const Input: Tui.TuiSubview of InputData := Tui.TuiSubview.Create(BuildInput, EqualInput);
+const Button: Tui.TuiSubview of integer := Tui.TuiSubview.Create(BuildButton, EqualAction);
+
+function View(State: Model): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeColumn([
+        Input.Render(InputData(Text := State.Text, Caret := State.Caret)),
+        Button.Render(State.Action)
+      ])
+    ]
+  );
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  var Next := State;
+  case Msg of
+    when Tui.TuiMsg.TextChanged(_, _, const Text, const Caret):
+      Next.Text := Text;
+      Next.Caret := Caret;
+    when Tui.TuiMsg.Action(_, const Action):
+      Next.Total := Next.Total + Action.Value;
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+      null;
+  end case;
+
+  return Next;
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(16, 4));
+  var State := Model(Text := 'A', Caret := 1, Action := 5, Total := 0);
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(1, InputBuilds);
+  Test.AssertEquals(1, ButtonBuilds);
+  App.InjectKeyForTest(
+    Tui.TuiKeyEvent(
+      kind := Tui.TuiKeyKind.Character,
+      ch := '界',
+      shift := false,
+      ctrl := false,
+      alt := false,
+      meta := false
+    )
+  );
+  State := App.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals('A界', State.Text);
+  Test.AssertEquals(2, InputBuilds);
+  Test.AssertEquals(1, ButtonBuilds);
+  State.Action := 7;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Test.AssertEquals(2, ButtonBuilds);
+  const Position := Tui.TuiPoint.Create(1, 1);
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Position)
+  );
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(0, State.Total);
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Up, Tui.TuiPointerButton.Left, Position)
+  );
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(7, State.Total);
+  Test.AssertEquals(2, InputBuilds);
+  Test.AssertEquals(2, ButtonBuilds);
+  App.Close();
+end.

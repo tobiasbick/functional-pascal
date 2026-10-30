@@ -1,0 +1,7 @@
+[project]
+name = "agent-token-budget"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]

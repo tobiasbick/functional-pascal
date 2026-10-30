@@ -1,202 +1,6 @@
 unit Notes.View;
 
-uses
-  Notes.Actions as Actions, Notes.Model as Model, Notes.Update as Update, Std.Text.Format as Conv,
-  Std.Ui.Terminal as Tui;
-
-function Expanding(Child: Tui.TuiElement; Stretch: integer): Tui.TuiElement;
-begin
-  return Tui.TuiElementBuilders.MakeLayout(
-    Tui.TuiLayoutSettings.Create(
-      Tui.TuiMargins.Uniform(0),
-      Tui.TuiSizePolicy.Expanding(),
-      Tui.TuiAlignment.Fill(),
-      Stretch
-    ),
-    Child
-  );
-end function;
-
-function SidebarWidth(State: Model.NotesModel): integer;
-begin
-  const Width: integer := State.Width div 3;
-  if Width < 32 then
-    begin
-      return 32;
-    end;
-  end if;
-
-  if Width > 52 then
-    begin
-      return 52;
-    end;
-  end if;
-
-  return Width;
-end function;
-
-function ListPaneWidth(State: Model.NotesModel): integer;
-begin
-  if State.Width < 65 then
-    begin
-      return State.Width;
-    end;
-  end if;
-
-  return SidebarWidth(State);
-end function;
-
-function FixedWidthExpanding(Child: Tui.TuiElement; Width: integer): Tui.TuiElement;
-begin
-  return Tui.TuiElementBuilders.MakeLayout(
-    Tui.TuiLayoutSettings.Create(
-      Tui.TuiMargins.Uniform(0),
-      Tui.TuiSizePolicy.Create(Tui.TuiSizePolicyKind.Preferred, Tui.TuiSizePolicyKind.Expanding),
-      Tui.TuiAlignment.Fill(),
-      0
-    ).WithFixedWidth(Width),
-    Child
-  );
-end function;
-
-function Header(State: Model.NotesModel): Tui.TuiElement;
-begin
-  var Dirty: string := '';
-  var Issues: string := '';
-  if State.Dirty then
-    begin
-      Dirty := '  ● unsaved';
-    end;
-  end if;
-
-  if State.Issues.Length() > 0 then
-    begin
-      Issues := '  ·  ' + Conv.IntToStr(State.Issues.Length()) + ' invalid';
-    end;
-  end if;
-
-  return Tui.TuiElementBuilders.MakeRule(
-    ' NOTES  ·  ' + Conv.IntToStr(Model.NotesFilteredIndices(State.Notes, '').Length()) + ' active' +
-    Issues + Dirty +
-    '  ·  Ctrl+K commands '
-  );
-end function;
-
-function ListPane(State: Model.NotesModel): Tui.TuiElement;
-begin
-  const Search: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
-    Tui.TuiControlId.Create(Actions.SearchControl),
-    State.Search,
-    State.SearchCaret,
-    'Search notes…',
-    Tui.TuiAction.Create(Actions.SearchChangedAction)
-  );
-  const Items: array of string := Model.NotesListItems(
-    State.Notes, State.Search, ListPaneWidth(State) -
-    4
-  );
-  const NotesList: Tui.TuiElement := Tui.TuiElementBuilders.MakeList(
-    Tui.TuiControlId.Create(Actions.ListControl),
-    Items,
-    Update.NotesSelectedFilteredPosition(State),
-    Tui.TuiAction.Create(Actions.SelectionChangedAction)
-  );
-  return Tui.TuiElementBuilders.MakePanel(
-    'Notes', [
-      Search,
-      Tui.TuiElementBuilders.MakeRule(''),
-      Expanding(NotesList, 1)
-    ]
-  );
-end function;
-
-function EmptyEditor(): Tui.TuiElement;
-begin
-  return Tui.TuiElementBuilders.MakePanel(
-    'Editor', [
-      Tui.TuiElementBuilders.MakeLabel('No note selected'),
-      Tui.TuiElementBuilders.MakeLabel('Press Ctrl+N to create one.')
-    ]
-  );
-end function;
-
-function EditorPane(State: Model.NotesModel): Tui.TuiElement;
-begin
-  if (State.Selected < 0) or (State.Selected >= State.Notes.Length()) then
-    begin
-      return EmptyEditor();
-    end;
-  end if;
-  const NoteValue: Model.Note := State.Notes[State.Selected];
-  const Title: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
-    Tui.TuiControlId.Create(Actions.TitleControl),
-    NoteValue.Title,
-    State.TitleCaret,
-    'Note title',
-    Tui.TuiAction.Create(Actions.TitleChangedAction)
-  );
-  const Tags: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
-    Tui.TuiControlId.Create(Actions.TagsControl),
-    State.TagsText,
-    State.TagsCaret,
-    'tags, separated, by commas',
-    Tui.TuiAction.Create(Actions.TagsChangedAction)
-  );
-  const Body: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(
-    Tui.TuiControlId.Create(Actions.BodyControl),
-    NoteValue.Body,
-    State.BodyCaret,
-    State.BodyOffset,
-    Tui.TuiAction.Create(Actions.BodyChangedAction)
-  );
-  var Pin: string := '';
-  if NoteValue.Pinned then
-    begin
-      Pin := ' ★';
-    end;
-  end if;
-
-  return Tui.TuiElementBuilders.MakePanel(
-    'Editor' + Pin, [
-      Title,
-      Tags,
-      Tui.TuiElementBuilders.MakeRule('Markdown'),
-      Expanding(Body, 1)
-    ]
-  );
-end function;
-
-function MainContent(State: Model.NotesModel): Tui.TuiElement;
-begin
-  if State.Width < 65 then
-    begin
-      if State.Pane = Model.NotesPane.List then
-        begin
-          return ListPane(State);
-        end;
-      end if;
-
-      return EditorPane(State);
-    end;
-  end if;
-
-  return Tui.TuiElementBuilders.MakeRow([
-    FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
-    Expanding(EditorPane(State), 1)
-  ]);
-end function;
-
-function Status(State: Model.NotesModel): Tui.TuiElement;
-begin
-  return Tui.TuiElementBuilders.MakeStatusLine([
-    Tui.TuiStatusItemBuilders.MakeHint(State.Status),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+N', 'new'),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+S', 'save'),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+F', 'search'),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+1/2', 'panes'),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('F1', 'help')
-  ]);
-end function;
+uses Notes.Actions as Actions, Notes.Model as Model, Notes.View.Panes as Panes, Std.Ui.Terminal as Tui;
 
 function CommandOverlay(State: Model.NotesModel): Tui.TuiElement;
 begin
@@ -332,6 +136,9 @@ begin
   );
 end function;
 
+const HelpView: Tui.TuiElement := HelpOverlay();
+const QuitView: Tui.TuiElement := QuitOverlay();
+
 function Overlay(State: Model.NotesModel): Tui.TuiElement;
 begin
   case State.Overlay of
@@ -341,11 +148,11 @@ begin
       end;
     when Model.NotesOverlay.Help:
       begin
-        return HelpOverlay();
+        return HelpView;
       end;
     when Model.NotesOverlay.QuitConfirmation:
       begin
-        return QuitOverlay();
+        return QuitView;
       end;
     when Model.NotesOverlay.SaveFailure:
       begin
@@ -490,9 +297,9 @@ begin
   end if;
   var Children: array of Tui.TuiElement := [
     Tui.TuiElementBuilders.MakeColumn([
-      Header(State),
-      Expanding(MainContent(State), 1),
-      Status(State)
+      Panes.Header(State),
+      Panes.Expanding(Panes.MainContent(State), 1),
+      Panes.Status(State)
     ])
   ];
   if State.Overlay <> Model.NotesOverlay.Closed then

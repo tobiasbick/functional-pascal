@@ -88,15 +88,17 @@ const Message: string := '%s: %d'.Format('items', 3);
 Named arguments still evaluate in written order, then map to declaration order.
 `Format` is the sole variadic native operation and accepts only positional,
 heterogeneously typed arguments. `string.Chr(N)` and `array.Fill(Value, Count)`
-construct values without a receiver. `Fill` infers its element type from
+construct values without a receiver. Without parentheses they refer to callable
+values, using a receiving signature when needed. `Fill` infers its element type from
 `Value`, including when `Count` is zero. Statement-local bindings may infer
 the resulting type; declarations outside statement lists require annotations.
 Explicit factory generic arguments and `(array of T).Fill` are invalid.
 
-The former helper units `Std.Str`, `Std.Arrays`, `Std.Dictionaries`,
-`Std.Options`, and `Std.Results`, their free calls, and their free routine
-references have been removed. Use a named or anonymous wrapper when a callback
-is needed, such as `function(S: string): integer begin return S.Length(); end function`.
+Built-in operations have one receiver/factory interface without separate helper
+units or free-routine aliases. Bind native value operations directly, for example
+`const Length := Text.Length;`. The receiver is captured once by value; see
+[native operation values](first-class.md#native-operation-values).
+InPlace operations require a direct call on writable storage.
 Other standard-library units still require `uses`.
 
 ## Procedures, mutation, and tasks

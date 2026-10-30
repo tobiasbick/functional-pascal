@@ -313,8 +313,10 @@ Console.WriteLn(Math.Sign(3.14)); // 1
 Fixed-arity polymorphic operations accept their published labels, just like
 ordinary routines: `Clamp(Hi := 10, V := 20, Lo := 0)`. Every argument is
 positional or every argument is named; values evaluate once in written order.
-Polymorphic operations are called directly. Use a typed wrapper to pass one
-as a callable value, for example `function(N: integer): integer begin return Abs(N); end function`.
+Polymorphic operations can also be passed as callable values. The receiving
+signature selects the numeric kind, for example
+`const Abs: function(N: integer): integer := Math.Abs;`.
+See [native operation values](../../language/functions/first-class.md#native-operation-values).
 
 Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same numeric kind. Result matches the input kind.
 

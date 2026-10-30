@@ -15,17 +15,22 @@ impl LoweringContext {
         designator: &Designator,
         key: usize,
     ) -> Result<ValueId, CompileError> {
-        let info = self
-            .bound_methods
+        let receiver_part_count = self
+            .native_values
             .get(&key)
-            .cloned()
-            .ok_or_else(|| unsupported(designator.span, "bound method metadata"))?;
+            .map(|info| info.receiver_part_count)
+            .or_else(|| {
+                self.bound_methods
+                    .get(&key)
+                    .map(|info| info.receiver_part_count)
+            })
+            .ok_or_else(|| unsupported(designator.span, "bound callable metadata"))?;
         let target = self
             .bound_method_targets
             .get(&key)
             .cloned()
             .ok_or_else(|| unsupported(designator.span, "bound method adapter"))?;
-        let (receiver, _) = self.lower_member_receiver(designator, info.receiver_part_count)?;
+        let (receiver, _) = self.lower_member_receiver(designator, receiver_part_count)?;
         self.emit_value(
             Operation::MakeClosure {
                 function: target.function,

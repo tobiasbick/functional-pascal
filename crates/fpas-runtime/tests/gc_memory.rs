@@ -20,8 +20,12 @@ mod mixed;
 mod native_acp;
 #[path = "gc_memory/native_console.rs"]
 mod native_console;
+#[path = "gc_memory/native_entropy.rs"]
+mod native_entropy;
 #[path = "gc_memory/native_process.rs"]
 mod native_process;
+#[path = "gc_memory/native_values.rs"]
+mod native_values;
 #[path = "gc_memory/network.rs"]
 mod network;
 #[path = "gc_memory/processes.rs"]
@@ -32,6 +36,8 @@ mod random_graph;
 mod sessions;
 #[path = "gc_memory/shutdown.rs"]
 mod shutdown;
+#[path = "gc_memory/tokenizer.rs"]
+mod tokenizer;
 #[path = "gc_memory/workloads.rs"]
 mod workloads;
 
@@ -40,6 +46,22 @@ use std::alloc::System;
 
 #[global_allocator]
 static ALLOCATOR: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
+
+#[test]
+fn native_callable_receivers_release_captures_cycles_and_payloads() {
+    measurement::isolated(
+        "native_callable_receivers_release_captures_cycles_and_payloads",
+        native_values::teardown,
+    );
+}
+
+#[test]
+fn tokenizer_tables_and_callbacks_return_to_the_allocation_baseline() {
+    measurement::isolated(
+        "tokenizer_tables_and_callbacks_return_to_the_allocation_baseline",
+        tokenizer::teardown,
+    );
+}
 
 #[test]
 fn allocator_observes_retained_bytes_and_cross_thread_release() {
@@ -211,6 +233,22 @@ fn native_console_boundaries_release_frames_and_jobs() {
     measurement::isolated(
         "native_console_boundaries_release_frames_and_jobs",
         native_console::teardown,
+    );
+}
+
+#[test]
+fn native_entropy_releases_callbacks_seeds_and_buffers() {
+    measurement::isolated(
+        "native_entropy_releases_callbacks_seeds_and_buffers",
+        native_entropy::entropy,
+    );
+}
+
+#[test]
+fn initial_mcp_executors_release_callbacks_and_publications() {
+    measurement::isolated(
+        "initial_mcp_executors_release_callbacks_and_publications",
+        native_entropy::mcp,
     );
 }
 

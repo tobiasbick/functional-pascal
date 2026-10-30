@@ -142,6 +142,7 @@ mod string;
 mod task;
 mod test;
 mod time;
+mod tokenizer;
 mod toml;
 
 pub use acp::*;
@@ -170,4 +171,5 @@ pub use string::*;
 pub use task::*;
 pub use test::*;
 pub use time::*;
+pub use tokenizer::*;
 pub use toml::*;

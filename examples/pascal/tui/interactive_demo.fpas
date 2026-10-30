@@ -6,6 +6,7 @@ type DemoModel = record
   Text: string;
   Caret: integer;
   Confirming: boolean;
+  Focus: integer;
 end record;
 
 function UpdateDemo(State: DemoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): DemoModel;
@@ -18,13 +19,13 @@ begin
       end;
     when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
-        return DemoModel(Text := Text, Caret := Caret, Confirming := State.Confirming);
+        return State with Text := Text; Caret := Caret; end with;
       end;
     when Tui.TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 2 then
           begin
-            return DemoModel(Text := State.Text, Caret := State.Caret, Confirming := true);
+            return State with Confirming := true; Focus := 3; end with;
           end;
         end if;
 
@@ -59,7 +60,12 @@ begin
       end;
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
-        return State;
+        case Current of
+          when Some(const Control):
+            return State with Focus := Control.Value; end with;
+          when None:
+            return State;
+        end case;
       end;
     when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const TextAreaOffset):
       begin
@@ -88,6 +94,34 @@ begin
   end case;
 end function;
 
+const ConfirmButton: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(
+  Tui.TuiControlId.Create(2), 'Confirm', Tui.TuiAction.Create(2)
+);
+const QuitButton: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(
+  Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(3)
+);
+const Menu: Tui.TuiElement := Tui.TuiElementBuilders.MakeMenuBar([
+  Tui.TuiMenuItem.WithShortcut(Tui.TuiControlId.Create(4), 'File', Tui.TuiAction.Create(3), 'F')
+]);
+const Footer: Tui.TuiElement := Tui.TuiElementBuilders.MakeStatusLine([
+  Tui.TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')
+]);
+
+function BuildConfirmation(Text: string): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeOverlay(
+    'Confirm',
+    [Tui.TuiElementBuilders.MakeLabel(Text), QuitButton]
+  );
+end function;
+
+function SameText(Previous: string; Current: string): boolean;
+begin
+  return Previous = Current;
+end function;
+
+const Confirmation: Tui.TuiSubview of string := Tui.TuiSubview.Create(BuildConfirmation, SameText);
+
 function ViewDemo(State: DemoModel): Tui.TuiElement;
 begin
   const Input: Tui.TuiElement := Tui.TuiElementBuilders.MakeInput(
@@ -96,51 +130,27 @@ begin
     State.Caret,
     Tui.TuiAction.Create(1)
   );
-  const Confirm: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(
-    Tui.TuiControlId.Create(2),
-    'Confirm',
-    Tui.TuiAction.Create(2)
-  );
-  const Quit: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(
-    Tui.TuiControlId.Create(3),
-    'Quit',
-    Tui.TuiAction.Create(3)
-  );
-  var Content: array of Tui.TuiElement := [Input, Confirm, Quit];
-  var Focused: option of Tui.TuiControlId := Some(Tui.TuiControlId.Create(1));
+  var Content: array of Tui.TuiElement := [Input, ConfirmButton, QuitButton];
+  var Focused: option of Tui.TuiControlId := Some(Tui.TuiControlId.Create(State.Focus));
   if State.Confirming then
     begin
-      Content := [
-        Tui.TuiElementBuilders.MakeOverlay(
-          'Confirm',
-          [Tui.TuiElementBuilders.MakeLabel(State.Text), Quit]
-        )
-      ];
+      Content := [Confirmation.Render(State.Text)];
       Focused := Some(Tui.TuiControlId.Create(3));
     end;
   end if;
 
   return Tui.TuiElementBuilders.MakeDesktop(
     Focused, [
-      Tui.TuiElementBuilders.MakeMenuBar([
-        Tui.TuiMenuItem.WithShortcut(
-          Tui.TuiControlId.Create(4),
-          'File',
-          Tui.TuiAction.Create(3),
-          'F'
-        )
-      ]),
+      Menu,
       Tui.TuiElementBuilders.MakePanel('Tui interactive demo', Content),
-      Tui.TuiElementBuilders.MakeStatusLine([
-        Tui.TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')
-      ])
+      Footer
     ]
   );
 end function;
 
 begin
   discard Tui.TuiApplication.Run(
-    DemoModel(Text := '', Caret := 0, Confirming := false),
+    DemoModel(Text := '', Caret := 0, Confirming := false, Focus := 1),
     UpdateDemo,
     ViewDemo
   );

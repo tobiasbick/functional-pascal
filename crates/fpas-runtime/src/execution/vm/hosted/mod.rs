@@ -16,6 +16,7 @@ mod console_args;
 pub(in crate::execution::vm) mod console_io;
 mod console_wait;
 mod crypto;
+pub(in crate::execution::vm) mod entropy;
 pub(in crate::execution::vm) mod fs;
 mod http_handles;
 pub(in crate::execution::vm) mod mcp;
@@ -26,6 +27,7 @@ mod random;
 pub(in crate::execution::vm) mod server;
 pub(in crate::execution::vm) mod terminal_input;
 mod test_host;
+mod tokenizer;
 
 use http_handles::HttpStateRegistry;
 use net::{NetworkConnections, NetworkListeners};
@@ -43,6 +45,9 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         let result = match intrinsic {
+            Intrinsic::Tokenizer(_) => {
+                self.execute_tokenizer_intrinsic(intrinsic, arguments, location)
+            }
             Intrinsic::Acp(_) => self.execute_acp_intrinsic(intrinsic, arguments, location),
             Intrinsic::Mcp(_) => self.execute_mcp_intrinsic(intrinsic, arguments, location),
             Intrinsic::Server(_) => self.execute_server_intrinsic(intrinsic, arguments, location),
@@ -75,6 +80,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    tokenizers: tokenizer::Cache,
     pub(in crate::execution::vm) acp: acp::Registry,
     pub(in crate::execution::vm) mcp: mcp::Registry,
     pub(in crate::execution::vm) servers: server::ServerRegistry,
@@ -93,6 +99,8 @@ pub(super) struct HostedState {
     pub(in crate::execution::vm::hosted) retired_native_jobs: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
     pub(in crate::execution::vm) console_jobs: std::sync::atomic::AtomicUsize,
     pub(in crate::execution::vm) acp_jobs: std::sync::atomic::AtomicUsize,
+    pub(in crate::execution::vm) entropy_jobs: std::sync::atomic::AtomicUsize,
+    entropy_source: Arc<entropy::Source>,
     console_regions: std::sync::Arc<Mutex<Vec<crate::stdlib::SavedRegionId>>>,
     console_order: Arc<console_io::Order>,
     pub(in crate::execution::vm::hosted) http_states: HttpStateRegistry,
@@ -139,6 +147,7 @@ impl HostedState {
         program_args: Vec<String>,
     ) -> Self {
         Self {
+            tokenizers: Default::default(),
             acp: Default::default(),
             mcp: Default::default(),
             servers: Default::default(),
@@ -154,6 +163,8 @@ impl HostedState {
             retired_native_jobs: Default::default(),
             console_jobs: Default::default(),
             acp_jobs: Default::default(),
+            entropy_jobs: Default::default(),
+            entropy_source: Default::default(),
             console_regions: Default::default(),
             console_order: Default::default(),
             http_states: HttpStateRegistry::new(),

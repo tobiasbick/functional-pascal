@@ -139,8 +139,17 @@ apps/notes/
         ├── Theme.fpas       # truecolor palette
         ├── Selection.fpas   # note identity, editor selection and filter visibility
         ├── Update.fpas      # state transitions and shortcuts
-        └── View.fpas        # responsive TUI and overlays
+        ├── View.fpas        # responsive TUI, focus and overlays
+        └── View/
+            └── Panes.fpas   # list/editor subviews and layout
 ```
 
 Regression tests live under [`tests/apps/notes/`](../../tests/apps/notes) and
 use the same `notes-core` library as the application.
+
+The list and editor use [cached subviews](../../docs/pascal/std/tui/subviews.md)
+with explicit input records. Editor-only changes do not rebuild list labels.
+An active search also depends on note bodies, so editing matching text updates
+the filtered list. Width, selection and controlled caret/scroll inputs invalidate
+their affected pane. Static help, quit content and keyboard hints are immutable
+values.

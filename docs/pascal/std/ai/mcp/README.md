@@ -66,6 +66,15 @@ server revokes every endpoint and reply right. Release also drops retained
 handler roots; callables and captures still held by application code remain
 ordinary application values. Handles and call identities never revive.
 
+The VM's HTTP executor initializes Tokio on its owned native thread. The first
+publication ticket covers initialization as well as listener setup, so pool
+tasks and all-stop debugger tasks release their VM worker throughout both.
+ACP tool attachments use the same executor. Native construction holds no MCP
+registry lock and retains no FPAS values. Initialization failure completes every
+queued ticket with a transport error; cleanup receipts still finish and release
+opening capacity. Shutdown signals without waiting for construction, then joins
+the owned executor during VM teardown.
+
 ## Bounds
 
 Default limits are 128 tools, 1 MiB of catalog definitions, 1 MiB per message,
@@ -74,6 +83,7 @@ HTTP defaults to 127.0.0.1:0, 64 sockets, a 30-second request deadline and a
 five-second shutdown deadline. Host must match the actual bound address and
 port. Every present Origin header is rejected.
 
-The VM permits 16 servers. Its native HTTP executor bounds publication openings
-and active publications independently. Close remains available when ordinary
+The VM permits 16 servers. Its native HTTP executor admits at most 16 queued
+openings, including during initialization, and 256 opening/active publications
+in total. Close remains available when ordinary
 admission is full and reports transport cleanup failures.

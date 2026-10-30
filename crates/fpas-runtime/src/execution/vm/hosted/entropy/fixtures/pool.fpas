@@ -1,0 +1,94 @@
+program EntropyPool;
+
+uses
+  Std.Crypto as Crypto, Std.Math.Random as Random, Std.Console as Console,
+  Std.Tasks as Tasks, Std.Os.Args as Args;
+
+function Cycle(): function(): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Current: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Current := function(): integer begin
+    if Text.Length() < 0 then
+      return Current();
+    end if;
+
+    return Text.Length();
+  end function;
+
+  return Current;
+end function;
+
+function Draw(Ready: channel of boolean): integer;
+begin
+  const Keep := Cycle();
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  const Values := [0].Map(
+    function(Index: integer): integer begin
+      discard Tasks.Send(Ready, true).Unwrap();
+      const Kind := Args.ParamStr(1);
+      if Kind = 'bytes' then
+        const Bytes := Crypto.RandomBytes(131072).Unwrap();
+        if Bytes.Length() <> 131072 then
+          panic('native bytes');
+        end if;
+      else
+        if Kind = 'integer' then
+          const Number := Crypto.RandomInt(-100, 100).Unwrap();
+          if Number < -100 or Number > 100 then
+            panic('native integer');
+          end if;
+        else
+          if Kind = 'randomize' then
+            Random.Randomize();
+          end if;
+
+          if Random.Random() < 0.0 then
+            panic('native seed');
+          end if;
+
+          discard Random.RandomInt(-100, 100);
+        end if;
+      end if;
+
+      return Index + Keep();
+    end function
+  );
+  return Values[0];
+end function;
+
+procedure Release(Ready: channel of boolean);
+begin
+  if not Tasks.Receive(Ready).Unwrap() then
+    panic('entropy task not started');
+  end if;
+
+  Console.WriteText('release');
+end procedure;
+
+begin
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  for Attempt: integer := 1 to 1 do
+    scope
+      const Pending := go Draw(Ready);
+      const Peer := go Release(Ready);
+      Tasks.Wait(Peer);
+      if Args.ParamStr(0) = 'scope_exit' then
+        break;
+      end if;
+
+      if Tasks.Wait(Pending) <> 65536 then
+        panic('entropy callback');
+      end if;
+    end scope;
+  end for;
+
+  discard Tasks.CloseChannel(Ready);
+end.

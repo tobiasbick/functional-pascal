@@ -1,7 +1,7 @@
 # `Std.Ui.Terminal`
 
 `Std.Ui.Terminal` is the source-level Model-Update-View terminal UI facade. Applications
-return a fresh immutable `TuiElement` tree from `View`; they do not create,
+return an immutable `TuiElement` tree from `View`; they do not create,
 attach, or destroy live widgets. The same application contract supports
 deterministic headless tests and an interactive Console terminal.
 
@@ -19,6 +19,7 @@ implementation details.
 | [Text area](text-area.md) | Controlled multiline editing, caret movement, scrolling, and painting. |
 | [Layout](layout.md) | Measurement, arrangement, frames, and clipping. |
 | [Application](application.md) | Update/View, headless execution, routing, and the terminal host. |
+| [Cached subviews](subviews.md) | Explicit typed dependencies and host-owned subtree reuse. |
 
 ## Quick reference
 
@@ -32,6 +33,7 @@ implementation details.
 | `TuiControlId.Create(Value)` | Positive focus and message-source identity. |
 | `TuiAction.Create(Value)` | Positive application intent; values may repeat. |
 | `TuiElement` / `TuiElementBuilders` | Closed element tree and constructors. |
+| `TuiSubview of T` | Cached subtree with an explicit dependency value and comparison. |
 | `TuiElementBuilders.MakeTextArea(...)` | Controlled multiline editor with model-owned text, caret, and offset. |
 | `MakePanel` / `MakeOverlay` | Ordinary bordered content and fixed centered modal content. |
 | `MakeRule` / `MakeGauge` / `MakeCellGrid` | Dashboard separators, bounded values, and custom cell views. |

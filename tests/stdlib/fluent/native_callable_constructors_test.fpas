@@ -1,0 +1,31 @@
+program NativeCallableConstructors;
+
+uses Std.Test as Test;
+
+type Number = enum
+  Item(Value: integer);
+end enum;
+
+function Wrap<T>(Values: array of T): array of option of T;
+begin
+  return Values.Map(Some);
+end function;
+
+begin
+  const SomeValue: function(Input: integer): option of integer := Some;
+  Test.AssertEquals(7, SomeValue(Input := 7).Unwrap());
+  const Success: function(Input: integer): result of (integer, string) := Ok;
+  Test.AssertEquals(9, Success(9).Unwrap());
+  const Failure: function(Cause: string): result of (integer, string) := Error;
+  Test.AssertTrue(Failure(Cause := 'failed') is Error('failed'));
+  const MakeNumber: function(Input: integer): Number := Number.Item;
+  Test.AssertTrue(MakeNumber(4) is Number.Item(4));
+  const Values := [1, 2].Map(Some);
+  Test.AssertEquals(2, Values[1].Unwrap());
+  const Wrapped := Wrap(['a', 'b']);
+  Test.AssertEquals('b', Wrapped[1].Unwrap());
+  const Results: array of result of (integer, string) := [3, 4].Map(Ok);
+  Test.AssertEquals(4, Results[1].Unwrap());
+  const Failures: array of result of (integer, string) := ['bad'].Map(Error);
+  Test.AssertTrue(Failures[0] is Error('bad'));
+end.

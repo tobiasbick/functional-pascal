@@ -1,0 +1,42 @@
+program TokenizerTasks;
+
+uses Std.Ai.Tokenizer as Tokenizer, Std.Tasks as Tasks, Std.Test as Test;
+
+function Run(Encoding: string): integer;
+begin
+  var Text := 'abcdefgh'.RepeatStr(8192);
+  var Keep: function(): integer := function(): integer begin
+    return 0;
+  end function;
+
+  Keep := function(): integer begin
+    if Text.Length() < 0 then
+      return Keep();
+    end if;
+
+    return Text.Length();
+  end function;
+  const Unused := Tasks.TimerCase(
+    3600000, procedure() begin
+      discard Keep();
+    end procedure
+  );
+  const Results := [0, 1].Map(
+    function(Index: integer): integer begin
+      const Tokens := Tokenizer.Encode(Text, Encoding).Unwrap();
+      Test.AssertEquals(Tokens.Length(), Tokenizer.Count(Text, Encoding).Unwrap());
+      Test.AssertEquals(Text, Tokenizer.Decode(Tokens, Encoding).Unwrap());
+      return Keep() + Index;
+    end function
+  );
+  return Results[0] + Results[1];
+end function;
+
+begin
+  scope
+    const First := go Run('o200k_base');
+    const Second := go Run('o200k_base');
+    Test.AssertEquals(131073, Tasks.Wait(First));
+    Test.AssertEquals(131073, Tasks.Wait(Second));
+  end scope;
+end.

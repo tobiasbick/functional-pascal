@@ -1,0 +1,292 @@
+unit Notes.View.Panes;
+
+uses Notes.Actions as Actions, Notes.Model as Model, Std.Text.Format as Conv, Std.Ui.Terminal as Tui;
+
+type ListData = record
+  Notes: array of Model.Note;
+  Search: string;
+  Caret: integer;
+  Selected: integer;
+  Width: integer;
+end record;
+
+type EditorData = record
+  Title: string;
+  TitleCaret: integer;
+  Tags: string;
+  TagsCaret: integer;
+  Body: string;
+  BodyCaret: integer;
+  BodyOffset: Tui.TuiPoint;
+  Pinned: boolean;
+end record;
+
+function SameList(Previous: ListData; Current: ListData): boolean;
+begin
+  if (Previous.Search <> Current.Search) or (Previous.Caret <> Current.Caret)
+    or
+    (Previous.Selected <> Current.Selected) or (Previous.Width <> Current.Width)
+    or
+    (Previous.Notes.Length() <> Current.Notes.Length())
+  then
+    return false;
+  end if;
+  const SearchBody := Current.Search.Trim() <> '';
+  for Index: integer := 0 to Current.Notes.Length() - 1 do
+    const Left := Previous.Notes[Index];
+    const Right := Current.Notes[Index];
+    if (Left.Id <> Right.Id) or (Left.Title <> Right.Title)
+      or
+      (Left.Tags.Length() <> Right.Tags.Length())
+      or
+      (Left.Pinned <> Right.Pinned) or (Left.Archived <> Right.Archived)
+      or
+      (SearchBody and (Left.Body <> Right.Body))
+    then
+      return false;
+    end if;
+
+    for TagIndex: integer := 0 to Left.Tags.Length() - 1 do
+      if Left.Tags[TagIndex] <> Right.Tags[TagIndex] then
+        return false;
+      end if;
+    end for;
+  end for;
+
+  return true;
+end function;
+
+function SameEditor(Previous: EditorData; Current: EditorData): boolean;
+begin
+  return Previous = Current;
+end function;
+
+public function Expanding(Child: Tui.TuiElement; Stretch: integer): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeLayout(
+    Tui.TuiLayoutSettings.Create(
+      Tui.TuiMargins.Uniform(0),
+      Tui.TuiSizePolicy.Expanding(),
+      Tui.TuiAlignment.Fill(),
+      Stretch
+    ),
+    Child
+  );
+end function;
+
+function SidebarWidth(State: Model.NotesModel): integer;
+begin
+  const Width: integer := State.Width div 3;
+  if Width < 32 then
+    begin
+      return 32;
+    end;
+  end if;
+
+  if Width > 52 then
+    begin
+      return 52;
+    end;
+  end if;
+
+  return Width;
+end function;
+
+function ListPaneWidth(State: Model.NotesModel): integer;
+begin
+  if State.Width < 65 then
+    begin
+      return State.Width;
+    end;
+  end if;
+
+  return SidebarWidth(State);
+end function;
+
+function FixedWidthExpanding(Child: Tui.TuiElement; Width: integer): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeLayout(
+    Tui.TuiLayoutSettings.Create(
+      Tui.TuiMargins.Uniform(0),
+      Tui.TuiSizePolicy.Create(Tui.TuiSizePolicyKind.Preferred, Tui.TuiSizePolicyKind.Expanding),
+      Tui.TuiAlignment.Fill(),
+      0
+    ).WithFixedWidth(Width),
+    Child
+  );
+end function;
+
+public function Header(State: Model.NotesModel): Tui.TuiElement;
+begin
+  var Dirty: string := '';
+  var Issues: string := '';
+  if State.Dirty then
+    begin
+      Dirty := '  ● unsaved';
+    end;
+  end if;
+
+  if State.Issues.Length() > 0 then
+    begin
+      Issues := '  ·  ' + Conv.IntToStr(State.Issues.Length()) + ' invalid';
+    end;
+  end if;
+
+  return Tui.TuiElementBuilders.MakeRule(
+    ' NOTES  ·  ' + Conv.IntToStr(Model.NotesFilteredIndices(State.Notes, '').Length()) + ' active' +
+    Issues + Dirty +
+    '  ·  Ctrl+K commands '
+  );
+end function;
+
+function BuildList(Data: ListData): Tui.TuiElement;
+begin
+  const Search: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
+    Tui.TuiControlId.Create(Actions.SearchControl),
+    Data.Search,
+    Data.Caret,
+    'Search notes…',
+    Tui.TuiAction.Create(Actions.SearchChangedAction)
+  );
+  const Items: array of string := Model.NotesListItems(
+    Data.Notes, Data.Search, Data.Width -
+    4
+  );
+  const Indices := Model.NotesFilteredIndices(Data.Notes, Data.Search);
+  var Selected := -1;
+  for Index: integer := 0 to Indices.Length() - 1 do
+    if Indices[Index] = Data.Selected then
+      Selected := Index;
+      break;
+    end if;
+  end for;
+  const NotesList: Tui.TuiElement := Tui.TuiElementBuilders.MakeList(
+    Tui.TuiControlId.Create(Actions.ListControl),
+    Items,
+    Selected,
+    Tui.TuiAction.Create(Actions.SelectionChangedAction)
+  );
+  return Tui.TuiElementBuilders.MakePanel(
+    'Notes', [
+      Search,
+      Tui.TuiElementBuilders.MakeRule(''),
+      Expanding(NotesList, 1)
+    ]
+  );
+end function;
+
+const ListView: Tui.TuiSubview of ListData := Tui.TuiSubview.Create(BuildList, SameList);
+
+function ListPane(State: Model.NotesModel): Tui.TuiElement;
+begin
+  return ListView.Render(
+    ListData(
+      Notes := State.Notes, Search := State.Search, Caret := State.SearchCaret,
+      Selected := State.Selected, Width := ListPaneWidth(State)
+    )
+  );
+end function;
+
+function EmptyEditor(): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakePanel(
+    'Editor', [
+      Tui.TuiElementBuilders.MakeLabel('No note selected'),
+      Tui.TuiElementBuilders.MakeLabel('Press Ctrl+N to create one.')
+    ]
+  );
+end function;
+
+function BuildEditor(Data: EditorData): Tui.TuiElement;
+begin
+  const Title: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
+    Tui.TuiControlId.Create(Actions.TitleControl),
+    Data.Title,
+    Data.TitleCaret,
+    'Note title',
+    Tui.TuiAction.Create(Actions.TitleChangedAction)
+  );
+  const Tags: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
+    Tui.TuiControlId.Create(Actions.TagsControl),
+    Data.Tags,
+    Data.TagsCaret,
+    'tags, separated, by commas',
+    Tui.TuiAction.Create(Actions.TagsChangedAction)
+  );
+  const Body: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(
+    Tui.TuiControlId.Create(Actions.BodyControl),
+    Data.Body,
+    Data.BodyCaret,
+    Data.BodyOffset,
+    Tui.TuiAction.Create(Actions.BodyChangedAction)
+  );
+  var Pin: string := '';
+  if Data.Pinned then
+    begin
+      Pin := ' ★';
+    end;
+  end if;
+
+  return Tui.TuiElementBuilders.MakePanel(
+    'Editor' + Pin, [
+      Title,
+      Tags,
+      Tui.TuiElementBuilders.MakeRule('Markdown'),
+      Expanding(Body, 1)
+    ]
+  );
+end function;
+
+const EditorView: Tui.TuiSubview of EditorData := Tui.TuiSubview.Create(BuildEditor, SameEditor);
+const EmptyView: Tui.TuiElement := EmptyEditor();
+
+function EditorPane(State: Model.NotesModel): Tui.TuiElement;
+begin
+  if (State.Selected < 0) or (State.Selected >= State.Notes.Length()) then
+    return EmptyView;
+  end if;
+  const NoteValue := State.Notes[State.Selected];
+  return EditorView.Render(
+    EditorData(
+      Title := NoteValue.Title, TitleCaret := State.TitleCaret, Tags := State.TagsText,
+      TagsCaret := State.TagsCaret, Body := NoteValue.Body, BodyCaret := State.BodyCaret,
+      BodyOffset := State.BodyOffset, Pinned := NoteValue.Pinned
+    )
+  );
+end function;
+
+public function MainContent(State: Model.NotesModel): Tui.TuiElement;
+begin
+  if State.Width < 65 then
+    begin
+      if State.Pane = Model.NotesPane.List then
+        begin
+          return ListPane(State);
+        end;
+      end if;
+
+      return EditorPane(State);
+    end;
+  end if;
+
+  return Tui.TuiElementBuilders.MakeRow([
+    FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
+    Expanding(EditorPane(State), 1)
+  ]);
+end function;
+
+const StatusHints: array of Tui.TuiStatusItem := [
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+N', 'new'),
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+S', 'save'),
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+F', 'search'),
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Ctrl+1/2', 'panes'),
+  Tui.TuiStatusItemBuilders.MakeKeyHint('F1', 'help')
+];
+
+public function Status(State: Model.NotesModel): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeStatusLine(
+    [Tui.TuiStatusItemBuilders.MakeHint(State.Status)].Concat(StatusHints)
+  );
+end function;
+end unit;

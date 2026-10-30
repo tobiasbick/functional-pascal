@@ -264,13 +264,8 @@ fn named_payloads_and_pattern_fields_require_complete_unique_labels() {
 }
 
 #[test]
-fn polymorphic_labels_do_not_make_unspecialized_intrinsics_callable_values() {
-    let errors = check_errors(&program(
+fn polymorphic_intrinsic_values_specialize_from_the_receiving_signature() {
+    check_ok(&program(
         "const F: function(N: integer): integer := Math.Abs; const A := F(N := -1);",
     ));
-    assert!(
-        errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH
-            && error.message.contains("must be called directly")),
-        "{errors:#?}"
-    );
 }

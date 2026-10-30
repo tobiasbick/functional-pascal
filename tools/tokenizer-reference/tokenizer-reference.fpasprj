@@ -1,0 +1,7 @@
+[project]
+name = "tokenizer-reference"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]

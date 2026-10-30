@@ -104,6 +104,7 @@ fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
                 "Random" => "Math.Random",
                 "Server" => "Net.Server",
                 "Toml" => "Encoding.Toml",
+                "Tokenizer" => "Ai.Tokenizer",
                 "Array" => "Arrays",
                 "Dict" => "Dictionaries",
                 "Result" => "Results",

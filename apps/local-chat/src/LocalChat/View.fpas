@@ -3,6 +3,31 @@ unit LocalChat.View;
 
 uses LocalChat.Model as Model, Std.Ui.Terminal as Tui;
 
+type TranscriptData = record
+  Entries: array of Model.ChatEntry;
+  Width: integer;
+  Caret: integer;
+  Offset: Tui.TuiPoint;
+end record;
+
+function SameTranscript(Previous: TranscriptData; Current: TranscriptData): boolean;
+begin
+  if (Previous.Width <> Current.Width) or (Previous.Caret <> Current.Caret)
+    or
+    (Previous.Offset <> Current.Offset) or (Previous.Entries.Length() <> Current.Entries.Length())
+  then
+    return false;
+  end if;
+
+  for Index: integer := 0 to Current.Entries.Length() - 1 do
+    if Previous.Entries[Index] <> Current.Entries[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;
 // Identifier of the transcript text area.
@@ -42,17 +67,23 @@ end function;
 //
 // Parameters:
 // - `State`: Current application state rendered by the panel.
-function Transcript(State: Model.LocalChatModel): Tui.TuiElement;
+function Transcript(Data: TranscriptData): Tui.TuiElement;
 begin
   const Content: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(
     Tui.TuiControlId.Create(TranscriptControl),
-    Model.LocalChatTranscript(State),
-    State.TranscriptCaret,
-    State.TranscriptOffset,
+    Model.LocalChatTranscript(Data.Entries, Data.Width),
+    Data.Caret,
+    Data.Offset,
     Tui.TuiAction.Create(TranscriptChangedAction)
   );
   return Tui.TuiElementBuilders.MakePanel('Conversation', [Expanding(Content, 1)]);
 end function;
+
+const TranscriptView: Tui.TuiSubview of TranscriptData := Tui.TuiSubview.Create(
+  Transcript,
+  SameTranscript
+);
+const HeaderView: Tui.TuiElement := Header();
 
 // Builds the prompt input and send-button panel.
 //
@@ -80,18 +111,18 @@ begin
   );
 end function;
 
-// Builds the footer status line and keyboard hints.
-//
-// Parameters:
-// - `State`: Current application state providing status text.
+// Immutable hints shared by all footer values.
+const StatusHints: array of Tui.TuiStatusItem := [
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Enter', 'send'),
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Tab', 'focus'),
+  Tui.TuiStatusItemBuilders.MakeKeyHint('Alt+X', 'quit')
+];
+
 function Status(State: Model.LocalChatModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeStatusLine([
-    Tui.TuiStatusItemBuilders.MakeHint(State.Status),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Enter', 'send'),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Tab', 'focus'),
-    Tui.TuiStatusItemBuilders.MakeKeyHint('Alt+X', 'quit')
-  ]);
+  return Tui.TuiElementBuilders.MakeStatusLine(
+    [Tui.TuiStatusItemBuilders.MakeHint(State.Status)].Concat(StatusHints)
+  );
 end function;
 
 // Builds the responsive Local Chat element tree for one model state.
@@ -118,8 +149,15 @@ begin
   return Tui.TuiElementBuilders.MakeDesktop(
     Some(Tui.TuiControlId.Create(State.Focus)), [
       Tui.TuiElementBuilders.MakeColumn([
-        Header(),
-        Expanding(Transcript(State), 1),
+        HeaderView,
+        Expanding(
+          TranscriptView.Render(
+            TranscriptData(
+              Entries := State.Entries, Width := State.Width,
+              Caret := State.TranscriptCaret, Offset := State.TranscriptOffset
+            )
+          ), 1
+        ),
         Composer(State),
         Status(State)
       ])

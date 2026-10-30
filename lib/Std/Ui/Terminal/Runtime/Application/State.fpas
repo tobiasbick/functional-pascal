@@ -7,7 +7,8 @@ uses
   Std.Ui.Terminal.Runtime.Cmd as Cmd, Std.Ui.Terminal.Runtime.Input as RuntimeInput,
   Std.Ui.Terminal.Runtime.Msg as RuntimeMsg, Std.Ui.Terminal.Runtime.Routing as Routing,
   Std.Ui.Terminal.Runtime.Routing.Pointer as RoutingPointer,
-  Std.Ui.Terminal.Runtime.TerminalSession as TerminalSession, Std.Time as Time;
+  Std.Ui.Terminal.Runtime.TerminalSession as TerminalSession, Std.Ui.Terminal.Runtime.Subviews as Subviews,
+  Std.Time as Time;
 
 public var TuiAppInputHead: array of integer := [];
 public var TuiAppMessageHead: array of integer := [];
@@ -46,6 +47,7 @@ begin
   TuiAppTickDueAt := TuiAppTickDueAt.Concat([-1]);
   Background.TuiBackgroundOpenApplication();
   RoutingPointer.TuiPointerRoutingOpen();
+  Subviews.TuiSubviewsOpen();
   return TuiAppOpen.Length();
 end function;
 
@@ -63,6 +65,8 @@ begin
       return [];
     end;
   end if;
+
+  Subviews.TuiSubviewsClose(ApplicationId);
   const BackgroundFailures: array of RuntimeMsg.TuiMsg := Background.TuiBackgroundCloseApplication(
     ApplicationId
   );

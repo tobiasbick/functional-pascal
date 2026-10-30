@@ -1,10 +1,11 @@
-# AI protocols
+# AI and agents
 
-Protocol clients for model servers. Model execution remains outside the FPAS runtime.
+Model clients, agent protocols and model-tokenization tools. Model execution remains outside the FPAS runtime.
 
 | Unit | Description |
 |------|-------------|
 | [`Std.Ai.OpenAi`](openai.md) | OpenAI-compatible non-streaming chat completions |
+| [`Std.Ai.Tokenizer`](tokenizer.md) | Exact model-token counts and text/token-ID conversion |
 | [`Std.Ai.Acp`](acp/README.md) | Bounded native ACP connections, events and deferred replies |
 | [`Std.Ai.Acp.Types`](acp/types.md) | Stable v1 DTOs, lossless values and typed payload codecs |
 | [`Std.Ai.Acp.Host`](acp/host.md) | Explicit file, terminal, interaction and login adapters |

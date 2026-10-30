@@ -21,6 +21,7 @@ mod random;
 mod server;
 mod test;
 mod time;
+mod tokenizer;
 mod toml;
 mod type_registration;
 
@@ -45,6 +46,7 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
+        fpas_builtins::STD_UNIT_TOKENIZER => tokenizer::register(checker),
         fpas_builtins::STD_UNIT_MCP | fpas_builtins::STD_UNIT_MCP_TYPES => mcp::register(checker),
         fpas_builtins::STD_UNIT_ACP
         | fpas_builtins::STD_UNIT_ACP_TYPES

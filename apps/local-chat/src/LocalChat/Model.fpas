@@ -157,15 +157,16 @@ end function;
 // Builds the width-bounded transcript displayed by the read-only transcript area.
 //
 // Parameters:
-// - `State`: Current application state containing entries and terminal dimensions.
-public function LocalChatTranscript(State: LocalChatModel): string;
+// - `Entries`: Conversation entries in display order.
+// - `Width`: Terminal width used to wrap the transcript.
+public function LocalChatTranscript(Entries: array of ChatEntry; Width: integer): string;
 begin
-  if State.Entries.Length() = 0 then
+  if Entries.Length() = 0 then
     begin
       return 'No messages yet.' + string.Chr(10) + 'Type below and press Enter.';
     end;
   end if;
-  var MaximumWidth: integer := State.Width - 6;
+  var MaximumWidth: integer := Width - 6;
   if MaximumWidth < 1 then
     begin
       MaximumWidth := 1;
@@ -173,7 +174,7 @@ begin
   end if;
   var Transcript: string := '';
   const NewLine: string := string.Chr(10);
-  for Index: integer := 0 to State.Entries.Length() - 1 do
+  for Index: integer := 0 to Entries.Length() - 1 do
     begin
       if Transcript <> '' then
         begin
@@ -181,8 +182,8 @@ begin
         end;
       end if;
 
-      Transcript := Transcript + RoleLabel(State.Entries[Index].Role) + NewLine +
-        WrapText(State.Entries[Index].Text, MaximumWidth);
+      Transcript := Transcript + RoleLabel(Entries[Index].Role) + NewLine +
+        WrapText(Entries[Index].Text, MaximumWidth);
     end;
   end for;
 
@@ -196,7 +197,7 @@ end function;
 public function LocalChatScrollToEnd(State: LocalChatModel): LocalChatModel;
 begin
   var Next: LocalChatModel := State;
-  const Transcript: string := LocalChatTranscript(Next);
+  const Transcript: string := LocalChatTranscript(Next.Entries, Next.Width);
   Next.TranscriptCaret := Transcript.Length();
   var VisibleLines: integer := Next.Height - 7;
   if VisibleLines < 1 then

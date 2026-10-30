@@ -48,6 +48,7 @@ impl Intrinsic {
             | Self::Http(_)
             | Self::Random(_)
             | Self::Crypto(_)
+            | Self::Tokenizer(_)
             | Self::Proc(
                 ProcIntrinsic::Run
                 | ProcIntrinsic::RunCapture

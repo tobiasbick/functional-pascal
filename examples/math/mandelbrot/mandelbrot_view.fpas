@@ -6,34 +6,67 @@ uses
   Std.Text.Format as Conv, Std.Math as Math, Std.Ui.Terminal as Tui, Mandelbrot.Color as Color,
   Mandelbrot.Model as Model;
 
-// Builds the Tui view while keeping the previous image visible during rendering.
-public function ViewMandelbrot(State: Model.MandelbrotModel): Tui.TuiElement;
+type DetailData = record
+  Explorer: Model.ExplorerState;
+  Ready: boolean;
+end record;
+
+function SameDetail(Previous: DetailData; Current: DetailData): boolean;
+begin
+  return Previous = Current;
+end function;
+
+function BuildDetail(Data: DetailData): Tui.TuiElement;
 begin
   var Status: string := 'rendering';
-  if State.RowsRendered = State.Grid.Height then
+  if Data.Ready then
     begin
       Status := 'ready';
     end;
   end if;
   const Detail: string := 'center=(%f, %f)  zoom=%f  palette=%s  %s'.Format(
-    State.Explorer.CenterX,
-    State.Explorer.CenterY,
-    State.Explorer.GetZoom(),
-    Color.PaletteName(State.Explorer.Palette),
+    Data.Explorer.CenterX,
+    Data.Explorer.CenterY,
+    Data.Explorer.GetZoom(),
+    Color.PaletteName(Data.Explorer.Palette),
     Status
   );
-  var MainChildren: array of Tui.TuiElement := [
-    Tui.TuiElementBuilders.MakePanel(
-      'Mandelbrot Explorer', [
-        Tui.TuiElementBuilders.MakeCellGrid(State.Grid)
-      ]
-    ),
+  return Tui.TuiElementBuilders.MakeColumn([
     Tui.TuiElementBuilders.MakeRule(Detail),
-    Tui.TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
+    Tui.TuiElementBuilders.MakeGauge('Iterations', Data.Explorer.MaxIter, 2048),
     Tui.TuiElementBuilders.MakeGauge(
       'Zoom',
-      Math.Min(Math.Trunc(State.Explorer.GetZoom() * 10.0), 1000),
+      Math.Min(Math.Trunc(Data.Explorer.GetZoom() * 10.0), 1000),
       1000
+    )
+  ]);
+end function;
+
+const DetailView: Tui.TuiSubview of DetailData := Tui.TuiSubview.Create(BuildDetail, SameDetail);
+
+function Footer(): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeStatusLine([
+    Tui.TuiStatusItemBuilders.MakeKeyHint('Arrows', 'pan'),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('+/-', 'zoom'),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('1/2/3', 'palette'),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
+  ]);
+end function;
+
+const FooterView: Tui.TuiElement := Footer();
+
+// The image remains a value: cache bookkeeping never compares every pixel.
+public function ViewMandelbrot(State: Model.MandelbrotModel): Tui.TuiElement;
+begin
+  var MainChildren: array of Tui.TuiElement := [
+    Tui.TuiElementBuilders.MakePanel(
+      'Mandelbrot Explorer',
+      [Tui.TuiElementBuilders.MakeCellGrid(State.Grid)]
+    ),
+    DetailView.Render(
+      DetailData(Explorer := State.Explorer, Ready := State.RowsRendered = State.Grid.Height)
     )
   ];
   if State.FailureMessage.Length() > 0 then
@@ -47,15 +80,7 @@ begin
     end;
   end if;
 
-  MainChildren.PushInPlace(
-    Tui.TuiElementBuilders.MakeStatusLine([
-      Tui.TuiStatusItemBuilders.MakeKeyHint('Arrows', 'pan'),
-      Tui.TuiStatusItemBuilders.MakeKeyHint('+/-', 'zoom'),
-      Tui.TuiStatusItemBuilders.MakeKeyHint('1/2/3', 'palette'),
-      Tui.TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
-      Tui.TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
-    ])
-  );
+  MainChildren.PushInPlace(FooterView);
   const Main: Tui.TuiElement := Tui.TuiElementBuilders.MakeColumn(MainChildren);
   var Children: array of Tui.TuiElement := [Main];
   if State.HelpOpen then

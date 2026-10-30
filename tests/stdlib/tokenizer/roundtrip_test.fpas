@@ -1,0 +1,31 @@
+program TokenizerRoundtrip;
+
+uses Std.Ai.Tokenizer as Tokenizer, Std.Test as Test;
+
+procedure Verify(Text: string; Encoding: string);
+begin
+  const Tokens := Tokenizer.Encode(Text, Encoding).Unwrap();
+  Test.AssertEquals(Tokens.Length(), Tokenizer.Count(Text, Encoding).Unwrap());
+  Test.AssertEquals(Text, Tokenizer.Decode(Tokens, Encoding).Unwrap());
+end procedure;
+
+begin
+  Test.AssertEquals(6, Tokenizer.Encodings().Length());
+  Test.AssertEquals(0, Tokenizer.Count('', 'o200k_base').Unwrap());
+  const Tokens := Tokenizer.Encode('hello world', 'o200k_base').Unwrap();
+  Test.AssertEquals(2, Tokens.Length());
+  Test.AssertEquals(24912, Tokens[0]);
+  Test.AssertEquals(2375, Tokens[1]);
+  const Other := Tokenizer.Encode('hello world', 'cl100k_base').Unwrap();
+  Test.AssertEquals(15339, Other[0]);
+  Test.AssertEquals(1917, Other[1]);
+  for Encoding: string in Tokenizer.Encodings() do
+    Verify('Grüße 🙂 中文 العربية नमस्ते é'#13#10'123456789', Encoding);
+    Verify('a'#0'b'#9' '#10, Encoding);
+    Verify('<|endoftext|> <|endofprompt|>', Encoding);
+  end for;
+
+  // Literal marker text is ordinary text, not a request to insert special IDs.
+  Test.AssertTrue(Tokenizer.Count('<|endoftext|>', 'o200k_base').Unwrap() > 1);
+  Test.AssertEquals('<|endoftext|>', Tokenizer.Decode([199999], 'o200k_base').Unwrap());
+end.

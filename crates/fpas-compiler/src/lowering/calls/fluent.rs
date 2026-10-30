@@ -21,10 +21,6 @@ impl LoweringContext {
         if let Some(operation) = fpas_sema::native_operation_by_implementation(&target.name)
             && let NativeLowering::InPlace(base) = operation.lowering
         {
-            let receiver = Designator {
-                parts: designator.parts[..part_count].to_vec(),
-                span: designator.span,
-            };
             let receiver_ty = self
                 .type_table
                 .id(&target.receiver_ty, span.line, span.column)?;
@@ -32,12 +28,24 @@ impl LoweringContext {
                 let value = self
                     .argument_for_parameter(args, 0)
                     .ok_or_else(|| unsupported(span, "PushInPlace argument"))?;
-                return self.lower_array_push_target(&receiver, value, receiver_ty, span);
+                return self.lower_array_push_target(
+                    designator,
+                    part_count,
+                    value,
+                    receiver_ty,
+                    span,
+                );
             }
             if base == fpas_builtins::std_symbols::STD_ARRAY_POP {
-                return self.lower_array_pop_target(&receiver, result, receiver_ty, span);
+                return self.lower_array_pop_target(
+                    designator,
+                    part_count,
+                    result,
+                    receiver_ty,
+                    span,
+                );
             }
-            let reference = self.lower_var_argument(&receiver)?;
+            let reference = self.lower_var_argument_prefix(designator, part_count)?;
             let reference = self.save_value(reference);
             let mut values = self.lower_argument_values(args, span)?;
             let reference = self.restore_value(reference, span)?;

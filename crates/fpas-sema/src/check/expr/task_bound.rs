@@ -127,6 +127,12 @@ impl Checker {
 
     /// A named callable, aggregate projection, or bound receiver preserves its source capability.
     pub(crate) fn designator_capability(&self, designator: &Designator) -> TransferCapability {
+        if self
+            .enum_members
+            .contains(&crate::designator_lookup_key(designator))
+        {
+            return TransferCapability::Transferable;
+        }
         let name = Self::resolve_designator_name(designator);
         let symbol = self.scopes.lookup(&name).or_else(|| {
             designator.parts.first().and_then(|part| match part {

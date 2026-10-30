@@ -50,6 +50,12 @@ below the minimum pauses play; resize and press Enter to resume.
 and one-shot TUI ticks; `View`, `Drawing` and `Theme` build the colored cell grid.
 The terminal lifecycle and damage rendering belong to `Std.Ui.Terminal`.
 
+The colored frame is a [cached subview](../../docs/pascal/std/tui/subviews.md).
+Its comparison includes the board, active/held/queued pieces, phase, scores,
+lines and notice. Gravity and lock clocks do not rebuild an unchanged frame.
+Terminal resize still recomputes centering, and an undersized terminal selects
+the immutable size notice.
+
 ```sh
 fpas check apps/fpastris/fpastris.fpasprj
 fpas test tests/suite.fpasprj --filter fpastris

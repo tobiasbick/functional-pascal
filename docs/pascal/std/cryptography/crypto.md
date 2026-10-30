@@ -55,6 +55,21 @@ end case;
 
 The unit supplies random material; it does not yet supply hashing, password hashing, message authentication, signatures, key storage, or constant-time comparison. Do not construct those algorithms yourself from `RandomBytes`.
 
+## Execution and ownership
+
+Pool tasks and ordinary all-stop debugging release their VM worker during OS
+entropy requests, including calls inside higher-order callbacks. Arguments are
+validated before admission; native jobs own byte buffers and integer sampling,
+while the calling VM task constructs the FPAS result.
+
+Up to 64 native entropy jobs per VM include undelivered results and are shared
+with `Std.Math.Random` seeding. Further requests queue. Abandonment cancels queued
+requests and joins started work before discarding native buffers. Integer
+rejection sampling checks cancellation between OS samples; an OS call already
+in progress must return before joining completes. No failure substitutes a
+predictable source. Main-program and explicit synchronous evaluation retain
+synchronous execution; seeded scheduling rejects this unit's effects.
+
 ## Implementation (contributors)
 
 | Concern | Location |

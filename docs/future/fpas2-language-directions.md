@@ -397,14 +397,13 @@ with timeout, cancellation and process cleanup.
 Handles are VM-owned and aliases share the same child and close state. Callers
 close completed handles explicitly; VM teardown releases remaining children and
 pipes. A lexical task scope is not a general process-handle close scope.
-Run/RunCapture and their options variants suspend pool tasks and all-stop debugger
-tasks while waiting. Native launch, synchronous callbacks and RunInteractive can
-still occupy their calling thread. Interactive handles offer typed read, write,
+Process startup, Run variants, RunInteractive and close release pool workers and
+all-stop debugger tasks through the [managed host-I/O contract](#14-host-io-that-releases-vm-workers).
+Interactive handles offer typed read, write,
 stdin-close and status cases for `Tasks.Select`, combined with its timer and
 cancellation cases. Selecting or abandoning a case does not close the handle.
 
-Remaining work belongs to [worker-releasing host I/O](#14-host-io-that-releases-vm-workers),
-[scope-bound cleanup](#5-scope-bound-cleanup-actions), and any selected readiness
+Remaining work belongs to [scope-bound cleanup](#5-scope-bound-cleanup-actions), and any selected readiness
 integration with [host events](#25-native-event-loops-and-selectable-host-events).
 Pipe payloads currently use bounded `array of integer` bytes. Coordinate a future
 change with the shared [native-buffer design](#22-packed-numeric-data-and-binary-buffers).
@@ -418,181 +417,36 @@ callbacks and debugger execution, plus exact allocation balance after abandonmen
 
 ## 14. Host I/O that releases VM workers
 
-Status: partially implemented. Managed filesystem, socket and process calls release
-ordinary pool workers, including TLS close, startup, terminal-aware process calls
-and native process callbacks. Stateful Console I/O, ACP startup and ACP host
-adapters also release workers. OS entropy and initial MCP HTTP runtime creation
-still run synchronously and remain concrete follow-up work.
+Status: implemented for the managed standard-library host operations. Filesystem,
+socket configuration/I/O/TLS close, process startup/I/O/teardown, Console and ACP
+host operations suspend pool tasks and ordinary all-stop debugger tasks, including
+inline callbacks. OS entropy and PRNG seeding use bounded native jobs; seeded
+PRNG draws stay in memory. MCP executor initialization and publication run on
+its owned native thread from the first call.
 
-[Task waits and channels](../pascal/std/concurrency/task.md#waiting-and-execution)
-already suspend a task and release its pool thread. Selected ACP/MCP receive,
-serve, publication and cleanup waits also retain suspension state rather than
-occupying a pool worker. Inline hosted callbacks can suspend with their
-owner task and resume their partially completed operation.
+Native requests contain owned Rust data; FPAS arguments and results remain on
+their task. Admission bounds include undelivered results. Abandonment cancels
+queued work, joins started work and disposes of unpublished resources. Shutdown
+signals before joining, including from host callbacks. Main-program and explicit
+synchronous evaluation retain their documented contracts. OS/library calls and
+arbitrary native providers already in progress must return before joining; effects
+are not rolled back. Short native queries and CPU computations remain synchronous.
 
-Pool tasks and the all-stop debugger share socket connect/accept/read/write suspension,
-including cancellable forms and inline callbacks. Each VM permits at most 64
-native socket jobs, including undelivered results; saturation is a typed I/O
-failure. Task abandonment joins native work and closes unpublished outgoing or accepted
-connections. One-worker TCP exchanges, larger transfers, cancellation, close,
-timeout, scope exit and shutdown have functional and allocation regressions.
-See [network execution and ownership](../pascal/std/network/net.md#task-execution-and-resource-ownership).
+One-worker gates, nested callbacks, ordinary debugger runs, bounded admission,
+startup failures and exact first/repeated allocation balances cover these paths.
+No throughput or latency improvement is claimed. Execution and ownership contracts:
+[filesystem](../pascal/std/host/fs.md#execution-and-cancellation),
+[file handles](../pascal/std/host/fs-streams.md#execution-and-native-ownership),
+[network](../pascal/std/network/net.md#task-execution-and-resource-ownership),
+[processes](../pascal/std/host/proc.md#blocking-and-concurrency),
+[Console](../pascal/std/console/README.md#task-execution-and-ownership),
+[ACP](../pascal/std/ai/acp/host.md#execution-and-response-rights),
+[entropy](../pascal/std/cryptography/crypto.md#execution-and-ownership),
+[PRNG](../pascal/std/numeric/random.md#execution-and-ownership) and
+[MCP](../pascal/std/ai/mcp/README.md#ownership-and-execution).
 
-Connection close detaches and invalidates an idle transport, then sends TLS
-close_notify through nonblocking probes without occupying a native-job slot.
-Busy transports retain out-of-band interruption. Pending close state owns the
-socket until flush, timeout or abandonment; completed flush wins over expiry.
-Real TLS backpressure tests preserve every accepted plaintext byte, require
-pending progress, and abort an abandoned close even while an alias remains alive.
-
-All connect variants share a deadline spanning admission, DNS, TCP addresses and TLS.
-OS resolution uses a separate process-wide limit of 64 lookups. An abandoned resolver
-retains only native input and discards late addresses, without opening sockets or retaining
-VM state. Numeric hosts bypass DNS; ordinary resolution completion joins its native thread.
-Synchronous platform TLS configuration and certificate checks remain uninterruptible
-within their current native call, so joining cancellation can still wait for those calls.
-Controlled resolver regressions cover late results, deadlines, cancellation and limits;
-single-worker TLS peers and nested callbacks cover cancellation and scope/VM teardown.
-
-TCP/TLS listener creation and connection timeout configuration share the 64-job
-socket budget and suspend inline callbacks in pool/debugger execution. Listener
-resolution uses the bounded OS resolver without introducing a DNS timeout parameter.
-Abandonment closes undelivered listeners and checks cancellation before publication.
-Timeout configuration observes cancellation while waiting for an alias's I/O lock;
-completed changes are not rolled back. Native PEM reads and cryptographic calls
-already in progress remain uninterruptible and are joined. Unix FIFO certificate
-loading and a gated busy connection require progress with one VM worker. Configuration
-callbacks additionally have 24 exact-allocation VM teardown regressions under default
-and 1/1/1 schedules.
-
-All process Run variants, `RunInteractive`, `Start` and process `Close` use owned
-native jobs in pool tasks and the all-stop debugger. Startup, terminal providers,
-pipe supervision, foreground restoration, stderr callbacks and reaping leave VM
-workers available. At most 64 native jobs include undelivered results; Close queues
-at saturation. The existing process/handle limits remain separate. Timeout budgets
-span native-input copying, admission, startup and execution. Native supervision
-continues while all-stop FPAS execution is paused.
-
-Abandonment signals and joins work, kills owned groups and closes undelivered Start
-handles. Process startup never holds the interactive-handle registry lock. Native
-callbacks may request shutdown: retired jobs join after callbacks return, avoiding
-self-joins, cross-callback cycles and joins under host-writer locks. Arbitrary host callbacks and OS calls already
-in progress still have to return before their native job can be joined. Child/peer
-gates, duplex transfers, descendant cleanup and callback-triggered shutdown retain
-72 exact-allocation VM regressions. Gated terminal providers, process startup/close,
-cyclic captures, scope exit and VM shutdown add 24 more under default and 1/1/1
-collection schedules.
-
-Interactive handles support `ReadStdoutCase`, `ReadStderrCase`, `WriteStdinCase`,
-`CloseStdinCase` and `WaitStatusCase` through `Tasks.Select`. Ordered probing commits
-only the winner; construction and discarded cases leave pipes untouched. Native
-readiness uses periodic selection probes rather than OS event registration. Pending
-selection releases pool workers and debugger tasks, including inline callbacks.
-Timers and cancellation use existing task cases. Case abandonment releases native
-write payloads and callback roots, leaving independent handles open until explicit
-close or VM teardown. See [selectable pipes](../pascal/std/host/proc.md#selectable-interactive-pipes).
-
-`Std.Io.Fs` handle operations, including open/close, size/resize, positioning,
-byte/line I/O and text output, share native requests between synchronous calls
-and suspended pool/debugger execution. Up to 64 native jobs per VM include
-undelivered results and reject saturation before starting OS work. Transfers
-retain native payloads rather than FPAS values. Waiting on registry/alias locks
-observes cancellation; shutdown signals precede joins and final descriptor cleanup.
-Abandonment joins work and closes unpublished opens without rolling back file
-effects. Native filesystem calls already in progress remain uninterruptible.
-Single-worker lock gates, inline callbacks, debugger execution, queued cancellation,
-admission and undelivered-open cleanup have functional tests. Thirty-two VM
-teardowns with cyclic captures and oversized payloads require exact allocation
-balances under default and 1/1/1 schedules. See [file execution and ownership](../pascal/std/host/fs-streams.md#execution-and-native-ownership).
-
-Whole-file, directory, copy, glob, metadata and temporary-path functions share
-native-only requests with their synchronous implementation. They use the same
-64-job budget as handles. Plain-return queries queue at saturation; their API
-types remain unchanged. Byte/text loops and directory/copy traversal observe
-cancellation between bounded steps. In-flight OS/library calls still require a
-join; completed effects are not rolled back. Unpublished temporary results own
-their new paths until delivery and clean them on abandonment. A real Unix FIFO
-requires two tasks to progress on one VM worker and in the all-stop debugger;
-whole-file operations and cyclic callbacks additionally have 24 exact-allocation
-VM teardown regressions. See [filesystem execution](../pascal/std/host/fs.md#execution-and-cancellation).
-
-Stateful Console calls use owned native jobs in pool tasks and the ordinary
-all-stop debugger, including direct text reads/writes, raw terminal events,
-frames, saved regions and queries. Up to 64 native jobs include undelivered
-results; further calls queue before admission. Issue order is preserved separately
-for output/screen, text input and keyboard; terminal handoffs reserve both affected
-resources together. Pure constructors and grapheme helpers stay on the VM.
-Formatting and result allocation remain on the owning task, including inline
-callbacks. Seeded debugger runs retain deterministic queued/captured I/O.
-
-Abandonment cancels queued requests, joins started jobs and discards unpublished
-regions. Lock and bounded terminal-readiness waits observe cancellation. In-flight
-host reader/writer and OS calls still have to return before joining finishes;
-completed output and consumed input are not rolled back. Native callbacks can
-request shutdown without joining jobs under writer locks. Gated input/output
-fixtures require progress with one VM worker. Queue/order, cancellation and region
-cleanup regressions accompany 24 exact-allocation VM sessions covering completion,
-scope exit and VM shutdown under default and 1/1/1 schedules.
-See [Console ownership](../pascal/std/console/README.md#task-execution-and-ownership).
-
-ACP message/process connection creation and host filesystem/terminal operations
-use native-only jobs in pool tasks and ordinary all-stop debugging, including
-inline callbacks. V1/V2 terminal authentication shares the same path. Up to 64
-native ACP jobs include undelivered results; typed `NativeJobs` admission failures
-precede request claims and OS effects. Main-program and explicit synchronous
-evaluation keep their synchronous contract; terminal exit waits suspend the main
-task too. Conversion and result allocation stay on the owning VM task.
-
-The SDK's 16-connection admission includes unfinished constructors. Runtime and
-process startup release registry/admission locks before native construction;
-shutdown can signal while construction is still pending. Terminal startup also
-releases its entry lock, and the protocol pump skips busy entries. Native terminal
-lock waits and file loops observe cancellation. Authentication retains one timeout
-budget from argument conversion through provider, startup and execution.
-Unpublished connections and terminal results close their resources on abandonment
-or failed conversion. Started native work is joined without rolling back effects;
-in-flight OS/provider calls still have to return. Real FIFO file requests require
-progress with one VM worker and the debugger. Gated authentication, cyclic
-callbacks, scope exit and writer-triggered shutdown add 24 exact-allocation VM
-regressions; host file callbacks and oversized native payloads add eight more.
-Both use default and 1/1/1 collection schedules. See
-[ACP ownership](../pascal/std/ai/acp/host.md#execution-and-response-rights).
-
-Ordinary bytecode callbacks must use the resumable implementation; an unsupported
-callback cannot silently fall back to a synchronous helper. Explicit synchronous
-debugger-expression and native evaluation helpers remain outside scheduled-task
-execution. Arbitrary native FFI and host callbacks outside the managed Console,
-filesystem, network and process paths can still occupy their calling thread.
-Releasing managed I/O does not make arbitrary native calls preemptible. The remaining
-audit identifies OS entropy in `Std.Crypto.RandomBytes`/`RandomInt`, and in
-`Std.Math.Random.Randomize` and first-use automatic seeding. These calls still enter
-the OS synchronously; ordinary seeded PRNG generation is in-memory work. The first
-MCP HTTP publication also creates its native runtime while holding the registry
-lock. Its existing publication ticket suspends publication after that setup, but
-does not release a VM worker during runtime construction. Address those paths
-before declaring point 14 complete; short native queries and CPU computations
-remain synchronous unless a concrete waiting operation requires a different contract.
-
-Assess remaining native FFI calls separately where the host operation cannot
-suspend directly. Compare
-event-driven backends and bounded blocking execution using concrete workloads;
-do not assume that cancellation polling or nonblocking sockets alone release a
-VM worker.
-
-The remaining backends need operation ownership, wake registration, completion
-race, backpressure, resource-limit, shutdown and debugger contracts.
-Distinguish stopping the caller's wait from ending underlying host work, including
-DNS, certificate verification and arbitrary native calls. Define late completion
-and resource cleanup before choosing a backend.
-
-[Native event loops](#25-native-event-loops-and-selectable-host-events) add
-main-thread ownership and host wakeups to this assessment. Releasing a VM worker
-does not by itself integrate a window event loop or satisfy its thread rules.
-
-Evaluation should demonstrate progress with one VM worker and overlapping pending
-operations, including nested callbacks. Cover registration/wakeup races,
-cancellation, timeout, teardown and bounded resource use. Measure throughput and
-latency on the affected workloads before claiming a performance improvement.
+[Native event loops](#25-native-event-loops-and-selectable-host-events) separately
+cover main-thread ownership and host wakeups.
 
 ## 15. Shared deadlines and linked cancellation
 

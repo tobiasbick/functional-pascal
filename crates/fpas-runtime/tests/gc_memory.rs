@@ -20,6 +20,8 @@ mod mixed;
 mod native_acp;
 #[path = "gc_memory/native_console.rs"]
 mod native_console;
+#[path = "gc_memory/native_entropy.rs"]
+mod native_entropy;
 #[path = "gc_memory/native_process.rs"]
 mod native_process;
 #[path = "gc_memory/network.rs"]
@@ -211,6 +213,22 @@ fn native_console_boundaries_release_frames_and_jobs() {
     measurement::isolated(
         "native_console_boundaries_release_frames_and_jobs",
         native_console::teardown,
+    );
+}
+
+#[test]
+fn native_entropy_releases_callbacks_seeds_and_buffers() {
+    measurement::isolated(
+        "native_entropy_releases_callbacks_seeds_and_buffers",
+        native_entropy::entropy,
+    );
+}
+
+#[test]
+fn initial_mcp_executors_release_callbacks_and_publications() {
+    measurement::isolated(
+        "initial_mcp_executors_release_callbacks_and_publications",
+        native_entropy::mcp,
     );
 }
 

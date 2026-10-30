@@ -44,6 +44,7 @@ struct State {
 #[derive(Default)]
 pub(in crate::execution::vm) struct Registry {
     state: Arc<Mutex<State>>,
+    initialization: Mutex<()>,
 }
 
 pub(super) struct Claim {
@@ -191,15 +192,37 @@ impl Registry {
             .ok_or(Fault::Closed)
     }
     pub(super) fn runtime(&self) -> Result<Arc<HttpRuntime>, fpas_mcp::HttpError> {
-        let mut state = self.lock();
+        {
+            let state = self.lock();
+            if state.stopping {
+                return Err(Fault::Closed.into());
+            }
+            if let Some(runtime) = &state.runtime {
+                return Ok(runtime.clone());
+            }
+        }
+        let _initialization = self
+            .initialization
+            .lock()
+            .unwrap_or_else(|p| p.into_inner());
+        let state = self.lock();
         if state.stopping {
             return Err(Fault::Closed.into());
         }
         if let Some(runtime) = &state.runtime {
             return Ok(runtime.clone());
         }
+        drop(state);
+        // Only queue/executor ownership is created here; Tokio setup runs natively.
         let runtime = Arc::new(HttpRuntime::new()?);
+        let mut state = self.lock();
         state.runtime = Some(runtime.clone());
+        let stopping = state.stopping;
+        drop(state);
+        if stopping {
+            runtime.request_shutdown();
+            return Err(Fault::Closed.into());
+        }
         Ok(runtime)
     }
     pub(super) fn publish(

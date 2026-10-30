@@ -59,6 +59,18 @@ impl Worker {
         if INLINE_CALLBACKS
             && !self.capture_callback
             && (self.debug_tasks || self.task_id != 0)
+            && matches!(intrinsic, Intrinsic::Crypto(_) | Intrinsic::Random(_))
+        {
+            let arguments = self.registers[start..end].to_vec();
+            self.start_entropy(intrinsic, &arguments, destination)?;
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
+            }
+            return Ok(());
+        }
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
             && let Intrinsic::Acp(operation) = intrinsic
             && crate::execution::vm::hosted::acp::native::supported(operation)
         {

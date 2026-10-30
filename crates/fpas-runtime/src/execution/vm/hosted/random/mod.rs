@@ -12,6 +12,90 @@ use fpas_diagnostics::codes::{
 
 use super::super::{VmError, worker::Worker};
 
+#[derive(Clone, Copy)]
+pub(super) enum Call {
+    Real,
+    Integer(i64, i64),
+    Randomize,
+    SetSeed(i64),
+}
+
+impl Call {
+    pub(super) fn prepare(
+        worker: &Worker,
+        operation: RandomIntrinsic,
+        arguments: &[Value],
+    ) -> Result<Self, VmError> {
+        match operation {
+            RandomIntrinsic::Random => {
+                argument_count(arguments, 0, worker)?;
+                Ok(Self::Real)
+            }
+            RandomIntrinsic::RandomInt => {
+                argument_count(arguments, 2, worker)?;
+                let (lo, hi) = (
+                    integer(arguments, 0, worker)?,
+                    integer(arguments, 1, worker)?,
+                );
+                if lo > hi {
+                    return Err(worker.runtime_error(
+                        RUNTIME_NUMERIC_DOMAIN_ERROR,
+                        format!("RandomInt lower bound {lo} must be <= upper bound {hi}"),
+                        "Pass bounds where `Lo <= Hi` to Std.Math.Random.RandomInt.",
+                    ));
+                }
+                Ok(Self::Integer(lo, hi))
+            }
+            RandomIntrinsic::Randomize => {
+                argument_count(arguments, 0, worker)?;
+                Ok(Self::Randomize)
+            }
+            RandomIntrinsic::SetSeed => {
+                argument_count(arguments, 1, worker)?;
+                Ok(Self::SetSeed(integer(arguments, 0, worker)?))
+            }
+        }
+    }
+
+    /// This path never contacts the operating system or waits for native work.
+    pub(super) fn ready(self, state: &mut state::RandomState) -> Option<Value> {
+        match self {
+            Self::SetSeed(seed) => {
+                state.set_seed(seed);
+                Some(Value::Unit)
+            }
+            Self::Real if state.initialized() => Some(Value::Real(state.real())),
+            Self::Integer(lo, hi) if state.initialized() => {
+                Some(Value::Integer(state.integer(lo, hi)))
+            }
+            _ => None,
+        }
+    }
+
+    pub(super) fn finish(
+        self,
+        state: &mut state::RandomState,
+        seed: Result<[u8; 32], getrandom::Error>,
+    ) -> Result<Value, getrandom::Error> {
+        // A concurrent SetSeed/Randomize wins over an unfinished automatic seed.
+        if !matches!(self, Self::Randomize)
+            && let Some(value) = self.ready(state)
+        {
+            return Ok(value);
+        }
+        state.reseed(seed?);
+        Ok(match self {
+            Self::Real => Value::Real(state.real()),
+            Self::Integer(lo, hi) => Value::Integer(state.integer(lo, hi)),
+            Self::SetSeed(seed) => {
+                state.set_seed(seed);
+                Value::Unit
+            }
+            Self::Randomize => Value::Unit,
+        })
+    }
+}
+
 impl Worker {
     pub(super) fn execute_random_intrinsic(
         &self,
@@ -22,54 +106,23 @@ impl Worker {
         let Intrinsic::Random(operation) = intrinsic else {
             return Ok(None);
         };
-        let mut state = self
-            .hosted
-            .random
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let value = match operation {
-            RandomIntrinsic::Random => {
-                argument_count(arguments, 0, self)?;
-                Some(Value::Real(
-                    state
-                        .real()
-                        .map_err(|error| self.random_source_error(error))?,
-                ))
+        let call = Call::prepare(self, operation, arguments)?;
+        {
+            let mut state = self.hosted.random.lock().unwrap_or_else(|p| p.into_inner());
+            if let Some(value) = call.ready(&mut state) {
+                return Ok(Some(Some(value)));
             }
-            RandomIntrinsic::RandomInt => {
-                argument_count(arguments, 2, self)?;
-                let lo = integer(arguments, 0, self)?;
-                let hi = integer(arguments, 1, self)?;
-                if lo > hi {
-                    return Err(self.runtime_error(
-                        RUNTIME_NUMERIC_DOMAIN_ERROR,
-                        format!("RandomInt lower bound {lo} must be <= upper bound {hi}"),
-                        "Pass bounds where `Lo <= Hi` to Std.Math.Random.RandomInt.",
-                    ));
-                }
-                Some(Value::Integer(
-                    state
-                        .integer(lo, hi)
-                        .map_err(|error| self.random_source_error(error))?,
-                ))
-            }
-            RandomIntrinsic::Randomize => {
-                argument_count(arguments, 0, self)?;
-                state
-                    .randomize()
-                    .map_err(|error| self.random_source_error(error))?;
-                Some(Value::Unit)
-            }
-            RandomIntrinsic::SetSeed => {
-                argument_count(arguments, 1, self)?;
-                state.set_seed(integer(arguments, 0, self)?);
-                Some(Value::Unit)
-            }
-        };
-        Ok(Some(value))
+        }
+        let mut seed = [0; 32];
+        let seed = self.hosted.entropy_source.fill(&mut seed).map(|()| seed);
+        let mut state = self.hosted.random.lock().unwrap_or_else(|p| p.into_inner());
+        let value = call
+            .finish(&mut state, seed)
+            .map_err(|e| self.random_source_error(e))?;
+        Ok(Some(Some(value)))
     }
 
-    fn random_source_error(&self, error: getrandom::Error) -> VmError {
+    pub(super) fn random_source_error(&self, error: getrandom::Error) -> VmError {
         self.runtime_error(
             RUNTIME_RANDOM_SOURCE_FAILURE,
             format!("Operating-system random source failed: {error}"),

@@ -13,7 +13,7 @@ pub(in crate::execution::vm::hosted) struct RandomState {
 }
 
 impl RandomState {
-    /// Create state that seeds itself from the operating system on first use.
+    /// Create uninitialized state; callers supply OS entropy before the first draw.
     pub(in crate::execution::vm::hosted) fn new() -> Self {
         Self {
             rng: ChaCha12Rng::from_seed([0_u8; 32]),
@@ -27,32 +27,32 @@ impl RandomState {
         self.initialized = true;
     }
 
-    /// Replace the state with a seed from the operating system.
-    pub(super) fn randomize(&mut self) -> Result<(), getrandom::Error> {
-        let mut seed = [0_u8; 32];
-        getrandom::fill(&mut seed)?;
+    pub(super) fn initialized(&self) -> bool {
+        self.initialized
+    }
+
+    /// Install entropy obtained outside the generator's lock.
+    pub(super) fn reseed(&mut self, seed: [u8; 32]) {
         self.rng = ChaCha12Rng::from_seed(seed);
         self.initialized = true;
-        Ok(())
     }
 
     /// Draw a real value in `[0.0, 1.0)`.
-    pub(super) fn real(&mut self) -> Result<f64, getrandom::Error> {
-        let bits = self.rng()?.next_u64() >> 11;
-        Ok((bits as f64) * REAL_SCALE)
+    pub(super) fn real(&mut self) -> f64 {
+        debug_assert!(self.initialized);
+        let bits = self.rng.next_u64() >> 11;
+        (bits as f64) * REAL_SCALE
     }
 
     /// Draw an unbiased integer from the inclusive range.
-    pub(super) fn integer(&mut self, lo: i64, hi: i64) -> Result<i64, getrandom::Error> {
-        let rng = self.rng()?;
-        uniform_i64_with(lo, hi, || Ok(rng.next_u64()))
-    }
-
-    fn rng(&mut self) -> Result<&mut ChaCha12Rng, getrandom::Error> {
-        if !self.initialized {
-            self.randomize()?;
+    pub(super) fn integer(&mut self, lo: i64, hi: i64) -> i64 {
+        debug_assert!(self.initialized);
+        match uniform_i64_with(lo, hi, || {
+            Ok::<_, std::convert::Infallible>(self.rng.next_u64())
+        }) {
+            Ok(value) => value,
+            Err(impossible) => match impossible {},
         }
-        Ok(&mut self.rng)
     }
 }
 
@@ -103,25 +103,19 @@ mod tests {
         let mut second = RandomState::new();
         first.set_seed(-17);
         second.set_seed(-17);
-        let first_values = [
-            first.integer(i64::MIN, i64::MAX).unwrap(),
-            first.integer(1, 6).unwrap(),
-        ];
-        let second_values = [
-            second.integer(i64::MIN, i64::MAX).unwrap(),
-            second.integer(1, 6).unwrap(),
-        ];
+        let first_values = [first.integer(i64::MIN, i64::MAX), first.integer(1, 6)];
+        let second_values = [second.integer(i64::MIN, i64::MAX), second.integer(1, 6)];
         assert_eq!(first_values, second_values);
-        assert_eq!(first.real().unwrap(), second.real().unwrap());
+        assert_eq!(first.real(), second.real());
     }
 
     #[test]
     fn seeded_sequence_keeps_its_portable_contract() {
         let mut state = RandomState::new();
         state.set_seed(-17);
-        assert_eq!(state.integer(-1_000_000, 1_000_000), Ok(436_834));
-        assert_eq!(state.real(), Ok(0.018_693_080_316_887_545));
-        assert_eq!(state.integer(-1_000_000, 1_000_000), Ok(-809_256));
+        assert_eq!(state.integer(-1_000_000, 1_000_000), 436_834);
+        assert_eq!(state.real(), 0.018_693_080_316_887_545);
+        assert_eq!(state.integer(-1_000_000, 1_000_000), -809_256);
     }
 
     #[test]

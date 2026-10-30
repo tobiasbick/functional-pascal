@@ -16,6 +16,7 @@ mod console_args;
 pub(in crate::execution::vm) mod console_io;
 mod console_wait;
 mod crypto;
+pub(in crate::execution::vm) mod entropy;
 pub(in crate::execution::vm) mod fs;
 mod http_handles;
 pub(in crate::execution::vm) mod mcp;
@@ -93,6 +94,8 @@ pub(super) struct HostedState {
     pub(in crate::execution::vm::hosted) retired_native_jobs: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
     pub(in crate::execution::vm) console_jobs: std::sync::atomic::AtomicUsize,
     pub(in crate::execution::vm) acp_jobs: std::sync::atomic::AtomicUsize,
+    pub(in crate::execution::vm) entropy_jobs: std::sync::atomic::AtomicUsize,
+    entropy_source: Arc<entropy::Source>,
     console_regions: std::sync::Arc<Mutex<Vec<crate::stdlib::SavedRegionId>>>,
     console_order: Arc<console_io::Order>,
     pub(in crate::execution::vm::hosted) http_states: HttpStateRegistry,
@@ -154,6 +157,8 @@ impl HostedState {
             retired_native_jobs: Default::default(),
             console_jobs: Default::default(),
             acp_jobs: Default::default(),
+            entropy_jobs: Default::default(),
+            entropy_source: Default::default(),
             console_regions: Default::default(),
             console_order: Default::default(),
             http_states: HttpStateRegistry::new(),

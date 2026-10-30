@@ -22,18 +22,29 @@ impl Worker {
         let Intrinsic::Crypto(operation) = intrinsic else {
             return Ok(None);
         };
-        let result = match operation {
-            CryptoIntrinsic::RandomBytes => {
-                argument_count(arguments, 1, self)?;
-                random_bytes(integer(arguments, 0, self)?)
-            }
-            CryptoIntrinsic::RandomInt => {
-                argument_count(arguments, 2, self)?;
-                random_integer(integer(arguments, 0, self)?, integer(arguments, 1, self)?)
-            }
-        };
-        Ok(Some(Some(match result {
-            Ok(value) => Value::result_ok(value),
+        let result = Request::prepare(self, operation, arguments)?.and_then(|request| {
+            request
+                .run(|bytes| self.hosted.entropy_source.fill(bytes))
+                .map_err(CryptoFailure::Entropy)
+        });
+        Ok(Some(Some(self.crypto_result(operation, result, location)?)))
+    }
+
+    pub(super) fn crypto_result(
+        &self,
+        operation: CryptoIntrinsic,
+        result: Result<Output, CryptoFailure>,
+        location: SourceLocation,
+    ) -> Result<Value, VmError> {
+        Ok(match result {
+            Ok(Output::Integer(value)) => Value::result_ok(Value::Integer(value)),
+            Ok(Output::Bytes(bytes)) => Value::result_ok(Value::Array(
+                bytes
+                    .into_iter()
+                    .map(|v| Value::Integer(i64::from(v)))
+                    .collect::<Vec<_>>()
+                    .into(),
+            )),
             Err(error) => {
                 use crate::stdlib::native_errors::{self, NativeErrorFamily};
                 let (variant, fields) = match error {
@@ -64,51 +75,85 @@ impl Worker {
                     location,
                 )?)
             }
-        })))
+        })
+    }
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum Request {
+    Bytes(usize),
+    Integer(i64, i64),
+}
+pub(super) enum Output {
+    Bytes(Vec<u8>),
+    Integer(i64),
+}
+impl Request {
+    pub(super) fn prepare(
+        worker: &Worker,
+        operation: CryptoIntrinsic,
+        arguments: &[Value],
+    ) -> Result<Result<Self, CryptoFailure>, VmError> {
+        Ok(match operation {
+            CryptoIntrinsic::RandomBytes => {
+                argument_count(arguments, 1, worker)?;
+                let count = integer(arguments, 0, worker)?;
+                validate_count(count).map(|()| Self::Bytes(count as usize))
+            }
+            CryptoIntrinsic::RandomInt => {
+                argument_count(arguments, 2, worker)?;
+                let (lo, hi) = (
+                    integer(arguments, 0, worker)?,
+                    integer(arguments, 1, worker)?,
+                );
+                validate_bounds(lo, hi).map(|()| Self::Integer(lo, hi))
+            }
+        })
+    }
+    pub(super) fn run<E>(
+        self,
+        mut fill: impl FnMut(&mut [u8]) -> Result<(), E>,
+    ) -> Result<Output, E> {
+        match self {
+            Self::Bytes(count) => {
+                let mut bytes = vec![0; count];
+                fill(&mut bytes)?;
+                Ok(Output::Bytes(bytes))
+            }
+            Self::Integer(lo, hi) => uniform_i64_with(lo, hi, || {
+                let mut bytes = [0; 8];
+                fill(&mut bytes)?;
+                Ok(u64::from_le_bytes(bytes))
+            })
+            .map(Output::Integer),
+        }
     }
 }
 
 #[derive(Debug, PartialEq)]
-enum CryptoFailure {
+pub(super) enum CryptoFailure {
     Argument(&'static str, String),
     Entropy(getrandom::Error),
 }
 
-fn random_bytes(count: i64) -> Result<Value, CryptoFailure> {
-    random_bytes_with(count, getrandom::fill)
-}
-
-fn random_bytes_with(
-    count: i64,
-    fill: impl FnOnce(&mut [u8]) -> Result<(), getrandom::Error>,
-) -> Result<Value, CryptoFailure> {
+fn validate_count(count: i64) -> Result<(), CryptoFailure> {
     if !(0..=MAX_RANDOM_BYTES).contains(&count) {
         return Err(CryptoFailure::Argument(
             "Count",
             format!("Count must be in 0..={MAX_RANDOM_BYTES}, got {count}"),
         ));
     }
-    let mut bytes = vec![0_u8; count as usize];
-    fill(&mut bytes).map_err(CryptoFailure::Entropy)?;
-    Ok(Value::Array(
-        bytes
-            .into_iter()
-            .map(|byte| Value::Integer(i64::from(byte)))
-            .collect::<Vec<_>>()
-            .into(),
-    ))
+    Ok(())
 }
 
-fn random_integer(lo: i64, hi: i64) -> Result<Value, CryptoFailure> {
+fn validate_bounds(lo: i64, hi: i64) -> Result<(), CryptoFailure> {
     if lo > hi {
         return Err(CryptoFailure::Argument(
             "Lo",
             format!("RandomInt lower bound {lo} must be <= upper bound {hi}"),
         ));
     }
-    uniform_i64_with(lo, hi, getrandom::u64)
-        .map(Value::Integer)
-        .map_err(CryptoFailure::Entropy)
+    Ok(())
 }
 
 fn argument_count(arguments: &[Value], expected: usize, worker: &Worker) -> Result<(), VmError> {
@@ -148,26 +193,25 @@ mod tests {
 
     #[test]
     fn random_bytes_enforces_the_public_allocation_limit() {
-        assert!(random_bytes(-1).is_err());
-        assert!(random_bytes(MAX_RANDOM_BYTES + 1).is_err());
-        assert_eq!(random_bytes(0), Ok(Value::Array(Vec::new().into())));
+        assert!(validate_count(-1).is_err());
+        assert!(validate_count(MAX_RANDOM_BYTES + 1).is_err());
+        assert!(
+            matches!(Request::Bytes(0).run(getrandom::fill), Ok(Output::Bytes(v)) if v.is_empty())
+        );
     }
 
     #[test]
     fn entropy_adapter_preserves_the_backend_error_without_fallback() {
         let error = getrandom::Error::UNSUPPORTED;
-        assert_eq!(
-            random_bytes_with(8, |_| Err(error)),
-            Err(CryptoFailure::Entropy(error))
-        );
+        assert!(matches!(Request::Bytes(8).run(|_| Err(error)), Err(e) if e == error));
         assert!(matches!(
-            random_bytes_with(-1, |_| panic!("validation must precede entropy")),
+            validate_count(-1),
             Err(CryptoFailure::Argument("Count", _))
         ));
     }
 
     #[test]
     fn random_integer_rejects_inverted_bounds() {
-        assert!(random_integer(2, 1).is_err());
+        assert!(validate_bounds(2, 1).is_err());
     }
 }

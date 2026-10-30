@@ -32,6 +32,24 @@ The generator state belongs to one VM and is shared by its tasks. Calls are sync
 
 Calling `Random` or `RandomInt` before either seeding procedure automatically initializes the state from the operating system.
 
+## Execution and ownership
+
+In pool tasks and ordinary all-stop debugging, `Randomize` and automatic first
+seeding release the VM worker while an owned native job obtains OS entropy.
+The generator lock is never held during that wait. `SetSeed` and draws from an
+initialized generator use only synchronized in-memory state.
+
+The VM shares a limit of 64 native entropy jobs with `Std.Crypto`, including
+results awaiting delivery. Additional calls queue without changing the public
+return types. Cancellation discards an undelivered seed; started OS calls must
+return before their job can be joined. A failed randomization leaves the current
+state intact. Automatic seeding never overwrites a seed another task installed
+while the OS request was pending. Explicit `Randomize` installs its seed when
+its result is delivered. Coordinate concurrent calls when their order matters.
+
+Main-program and explicit synchronous evaluation retain synchronous execution.
+Seeded scheduling continues to reject this unit's effects.
+
 ## `function Random(): real`
 
 Returns a pseudo-random real number in `[0.0, 1.0)`.

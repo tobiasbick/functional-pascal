@@ -12,6 +12,8 @@ end enum;
 public function TuiElementChildren(Node: Element.TuiElement): array of Element.TuiElement;
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      return [];
     when Element.TuiElement.Scroll(_, _, _, const Children), Element.TuiElement.Row(const Children, _), Element.TuiElement.Column(const Children, _), Element.TuiElement.Layout(_, const Children), Element.TuiElement.Panel(_, const Children), Element.TuiElement.Overlay(_, const Children), Element.TuiElement.Desktop(_, const Children):
       return Children;
     when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
@@ -38,9 +40,15 @@ end function;
 public function TuiElementSameLocal(Left: Element.TuiElement; Right: Element.TuiElement): boolean;
 begin
   case TuiNodePair.Nodes(Left, Right) of
+    when TuiNodePair.Nodes(Element.TuiElement.TabBar(const A), Element.TuiElement.TabBar(const B)):
+      return (A.Id = B.Id) and (A.Selected = B.Selected) and (A.Position = B.Position)
+        and
+        (A.ChangeAction = B.ChangeAction) and TuiSameItems(A.Items, B.Items);
     when TuiNodePair.Nodes(Element.TuiElement.Empty, Element.TuiElement.Empty):
       return true;
-    when TuiNodePair.Nodes(Element.TuiElement.Label(const A), Element.TuiElement.Label(const B)), TuiNodePair.Nodes(Element.TuiElement.Rule(const A), Element.TuiElement.Rule(const B)):
+    when TuiNodePair.Nodes(Element.TuiElement.Label(const A), Element.TuiElement.Label(const B)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Rule(const A), Element.TuiElement.Rule(const B)):
       return A = B;
     when TuiNodePair.Nodes(Element.TuiElement.Button(const A), Element.TuiElement.Button(const B)):
       return A = B;
@@ -74,7 +82,9 @@ begin
       return A = B;
     when TuiNodePair.Nodes(Element.TuiElement.Spacer(const A), Element.TuiElement.Spacer(const B)):
       return A = B;
-    when TuiNodePair.Nodes(Element.TuiElement.Panel(const A, _), Element.TuiElement.Panel(const B, _)), TuiNodePair.Nodes(Element.TuiElement.Overlay(const A, _), Element.TuiElement.Overlay(const B, _)):
+    when TuiNodePair.Nodes(Element.TuiElement.Panel(const A, _), Element.TuiElement.Panel(const B, _)):
+      return A = B;
+    when TuiNodePair.Nodes(Element.TuiElement.Overlay(const A, _), Element.TuiElement.Overlay(const B, _)):
       return A = B;
     when TuiNodePair.Nodes(Element.TuiElement.Desktop(const A, _), Element.TuiElement.Desktop(const B, _)):
       return A = B;

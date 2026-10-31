@@ -17,6 +17,7 @@ implementation details.
 | [Elements](elements.md) | Tree variants, identities, validation, and focus. |
 | [Menus](menus.md) | Flat parent-linked menus, popups, mnemonics, and shortcuts. |
 | [Text area](text-area.md) | Controlled multiline editing, caret movement, scrolling, and painting. |
+| [Tabs](tabs.md) | Model-controlled tab bars, placement, input, overflow, and styles. |
 | [Layout](layout.md) | Measurement, arrangement, frames, and clipping. |
 | [Application](application.md) | Update/View, headless execution, routing, and the terminal host. |
 | [Cached subviews](subviews.md) | Explicit typed dependencies and host-owned subtree reuse. |
@@ -36,6 +37,8 @@ implementation details.
 | `TuiSubview of T` | Cached subtree with an explicit dependency value and comparison. |
 | `TuiElementBuilders.MakeTextArea(...)` | Controlled multiline editor with model-owned text, caret, and offset. |
 | `MakePanel` / `MakeOverlay` | Ordinary bordered content and fixed centered modal content. |
+| `MakeResponsiveOverlay` / `TuiOverlaySizeRule` | Content-independent centered modal sizing. |
+| `MakeTabs` | Controlled tab bar and active page on any of four sides. |
 | `MakeRule` / `MakeGauge` / `MakeCellGrid` | Dashboard separators, bounded values, and custom cell views. |
 | `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` | Layout value inputs. |
 | `TuiLayoutSettings.WithFixedHeight(Height)` | Copy of layout settings with one fixed total height. |

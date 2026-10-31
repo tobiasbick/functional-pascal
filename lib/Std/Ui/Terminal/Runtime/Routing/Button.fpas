@@ -7,6 +7,8 @@ uses
 function TuiButtonFind(Node: Element.TuiElement; RequireDefault: boolean; Mnemonic: string): option of ChromeButton.TuiButtonSpec;
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      return None;
     when Element.TuiElement.Button(const Button):
       begin
         if Button.Enabled
@@ -30,6 +32,8 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
+              when Element.TuiElement.TabBar(_):
+                null;
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := Index;

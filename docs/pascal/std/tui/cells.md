@@ -28,6 +28,8 @@ concrete colors. `TuiCell.Styled` stores a concrete style that bypasses palette
 lookup. This is useful inside `TuiCellGrid` for plots and images whose colors
 are data rather than theme roles. Continuation cells for wide glyphs remain
 private surface state and are not part of the public cell value.
+Button cells additionally carry their semantic appearance for theme lookup and
+terminal damage tracking.
 
 `TuiWorkingSurface.Resize(Size)` replaces the mutable grid with a blank grid of
 the requested size while preserving the surface handle. Existing snapshots stay
@@ -40,8 +42,17 @@ one style and `WithRole` returns a copy with one replacement, leaving the
 original palette unchanged.
 
 The RGB default palette uses a dark terminal background, restrained borders,
-and blue selection accents. General roles (`Normal`, `Focused`, `Frame`, and
-`Title`) style the desktop, panels, and overlays. Menus use `MenuNormal`,
+and blue selection accents. `Normal` styles the desktop. Panels use
+`PanelNormal`, `Frame`, `PanelFocusedFrame`, and `PanelTitle`; overlays use
+`OverlayNormal`, `OverlayFrame`, `OverlayFocusedFrame`, and `OverlayTitle`.
+Ordinary text within each container inherits its surface role. A panel is
+focused when it contains the focused control; the last desktop overlay is active
+even without a focused control. Concrete cells retain their own styles.
+Container roles are optional palette overrides: unset roles fall back to
+`Normal`, `Frame`, or `Title` respectively, including after those styles change.
+Tab bars provide optional `TabNormal`, `TabSelected`, `TabSelectedFocused`, and
+`TabDisabled` styles; see [Tabs](tabs.md).
+Menus use `MenuNormal`,
 `MenuDisabled`, `MenuShortcut`, `MenuSelected`, and
 `MenuSelectedShortcut`; status lines use
 `StatusNormal`, `StatusDisabled`, `StatusShortcut`, and `StatusSelected`. The
@@ -50,9 +61,14 @@ their chrome remains distinct from the desktop.
 
 Buttons use `ButtonNormal`, `ButtonDefault`, `ButtonSelected`,
 `ButtonDisabled`, `ButtonShortcut`, `ButtonDefaultShortcut`,
-and `ButtonSelectedShortcut`. The corresponding styles are grouped in
-`TuiPalette.Buttons` as `TuiButtonPalette`. `TuiButtonPalette.WithRole` returns
-a copy with one button role replaced, while `ForRole` resolves one button role.
+and `ButtonSelectedShortcut` as fallback roles. `TuiPalette.Buttons` also accepts
+`TuiButtonColors` per semantic button kind, with normal, active, focused,
+pressed, disabled, and idle-default styles. `Resolve` combines a button's kind,
+state, default flag, and mnemonic. For enabled buttons, an optional
+`TuiButtonColors.ShortcutForeground` overrides the mnemonic foreground. When
+unset, the matching fallback shortcut role supplies the foreground. The state
+style supplies the background and attributes. Disabled buttons do not highlight
+their mnemonic. `WithRole` and `ForRole` operate on the fallback roles.
 
 `Rule`, `GaugeTrack`, and `GaugeFill` style the dashboard primitives.
 

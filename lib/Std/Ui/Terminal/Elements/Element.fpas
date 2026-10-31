@@ -6,7 +6,15 @@ uses
   Std.Ui.Terminal.Chrome.MenuItem as MenuItem, Std.Ui.Terminal.Chrome.MenuNode as MenuNode,
   Std.Ui.Terminal.Chrome.StatusItem as StatusItem, Std.Ui.Terminal.Geometry.Point as Point,
   Std.Ui.Terminal.Ids.Action as IdsAction, Std.Ui.Terminal.Ids.ControlId as ControlId,
-  Std.Ui.Terminal.Layout.LayoutSettings as LayoutSettings, Std.Ui.Terminal.Layout.Spacer as LayoutSpacer;
+  Std.Ui.Terminal.Layout.LayoutSettings as LayoutSettings, Std.Ui.Terminal.Layout.Spacer as LayoutSpacer,
+  Std.Ui.Terminal.Chrome.Tabs as Tabs, Std.Ui.Terminal.Chrome.Overlay as Overlay,
+  Std.Ui.Terminal.Chrome.List as List, Std.Ui.Terminal.Cells.StyleRole as StyleRole;
+
+// One-line text and its theme role; normal labels inherit the surrounding surface.
+public type TuiLabel = record
+  public Text: string;
+  public Role: StyleRole.TuiStyleRole;
+end record;
 
 function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
@@ -27,7 +35,7 @@ public type TuiElement = enum
   //
   // Parameters:
   // - `Text`: Text carried or displayed by the variant.
-  Label(Text: string);
+  Label(Value: TuiLabel);
   // Represents the `Button` variant of `TuiElement`.
   //
   // Parameters:
@@ -62,7 +70,9 @@ public type TuiElement = enum
   // - `Items`: Ordered items carried by the variant.
   // - `Selected`: Selected item index.
   // - `ChangeAction`: Application action emitted when the value changes.
-  List(Id: ControlId.TuiControlId; Items: array of string; Selected: integer; ChangeAction: IdsAction.TuiAction);
+  List(Id: ControlId.TuiControlId; Items: array of string; Selected: integer; Actions: List.TuiListActions);
+  // Controlled tab bar; the application supplies and retains the selected page.
+  TabBar(Value: Tabs.TuiTabBar);
   // Represents the `Scroll` variant of `TuiElement`.
   //
   // Parameters:
@@ -138,7 +148,7 @@ public type TuiElement = enum
   // Parameters:
   // - `Title`: Title displayed by the container.
   // - `Children`: Ordered child elements contained by the variant.
-  Overlay(Title: string; Children: array of TuiElement);
+  Overlay(Spec: Overlay.TuiOverlaySpec; Children: array of TuiElement);
   // Represents the `Desktop` variant of `TuiElement`.
   //
   // Parameters:
@@ -161,7 +171,13 @@ public type TuiElementBuilders = record
   // - `TextValue`: Text displayed by the created element.
   public static function MakeLabel(TextValue: string): TuiElement;
   begin
-    return TuiElement.Label(TextValue);
+    return TuiElement.Label(TuiLabel(Text := TextValue, Role := StyleRole.TuiStyleRole.Normal));
+  end function;
+
+  // Creates a heading with the theme's title color on the current surface.
+  public static function MakeHeading(TextValue: string): TuiElement;
+  begin
+    return TuiElement.Label(TuiLabel(Text := TextValue, Role := StyleRole.TuiStyleRole.Title));
   end function;
 
   // Creates a focusable button that emits the supplied action.
@@ -173,6 +189,22 @@ public type TuiElementBuilders = record
   public static function MakeButton(Id: ControlId.TuiControlId; TextValue: string; Action: IdsAction.TuiAction): TuiElement;
   begin
     return TuiElement.Button(ChromeButton.TuiButtonSpec.Normal(Id, TextValue, '', Action));
+  end function;
+
+  // Creates an enabled button with a semantic meaning chosen by the application.
+  public static function MakeButtonOfKind(Id: ControlId.TuiControlId; TextValue: string; Action: IdsAction.TuiAction; Kind: ChromeButton.TuiButtonKind): TuiElement;
+  begin
+    return TuiElement.Button(
+      ChromeButton.TuiButtonSpec.Normal(Id, TextValue, '', Action) with Kind := Kind; end with
+    );
+  end function;
+
+  // Creates a button representing an active choice, independently of focus.
+  public static function MakeActiveButton(Id: ControlId.TuiControlId; TextValue: string; Action: IdsAction.TuiAction): TuiElement;
+  begin
+    return TuiElement.Button(
+      ChromeButton.TuiButtonSpec.Normal(Id, TextValue, '', Action) with Active := true; end with
+    );
   end function;
 
   // Creates an enabled normal button with a keyboard mnemonic.
@@ -351,7 +383,39 @@ public type TuiElementBuilders = record
     ChangeAction: IdsAction.TuiAction
   ): TuiElement;
   begin
-    return TuiElement.List(Id, Items, Selected, ChangeAction);
+    return TuiElement.List(
+      Id,
+      Items,
+      Selected,
+      List.TuiListActions(Change := ChangeAction, Activate := None)
+    );
+  end function;
+
+  // Creates a list that also emits an activation action on Enter or a left click.
+  public static function MakeActivatingList(Id: ControlId.TuiControlId; Items: array of string; Selected: integer; ChangeAction: IdsAction.TuiAction; ActivateAction: IdsAction.TuiAction): TuiElement;
+  begin
+    return TuiElement.List(
+      Id,
+      Items,
+      Selected,
+      List.TuiListActions(Change := ChangeAction, Activate := Some(ActivateAction))
+    );
+  end function;
+
+  // Builds a controlled tab bar and places it on the requested side of the active page.
+  // Only the supplied page participates in layout and input routing.
+  public static function MakeTabs(Bar: Tabs.TuiTabBar; Page: TuiElement): TuiElement;
+  begin
+    case Bar.Position of
+      when Tabs.TuiTabPosition.Top:
+        return TuiElement.Column([TuiElement.TabBar(Bar), Page], 0);
+      when Tabs.TuiTabPosition.Bottom:
+        return TuiElement.Column([Page, TuiElement.TabBar(Bar)], 0);
+      when Tabs.TuiTabPosition.Left:
+        return TuiElement.Row([TuiElement.TabBar(Bar), Page], 1);
+      when Tabs.TuiTabPosition.Right:
+        return TuiElement.Row([Page, TuiElement.TabBar(Bar)], 1);
+    end case;
   end function;
 
   // Creates a controlled single-child scroll viewport.
@@ -509,7 +573,16 @@ public type TuiElementBuilders = record
   // - `Items`: Ordered child or menu items.
   public static function MakeOverlay(TitleValue: string; Items: array of TuiElement): TuiElement;
   begin
-    return TuiElement.Overlay(TitleValue, Items);
+    return TuiElement.Overlay(Overlay.TuiOverlaySpec(Title := TitleValue, SizeRule := None), Items);
+  end function;
+
+  // Creates a centered modal whose outer size follows a content-independent viewport rule.
+  public static function MakeResponsiveOverlay(TitleValue: string; Rule: Overlay.TuiOverlaySizeRule; Items: array of TuiElement): TuiElement;
+  begin
+    return TuiElement.Overlay(
+      Overlay.TuiOverlaySpec(Title := TitleValue, SizeRule := Some(Rule)),
+      Items
+    );
   end function;
 
   // Creates the root element and declares the model-controlled focus.

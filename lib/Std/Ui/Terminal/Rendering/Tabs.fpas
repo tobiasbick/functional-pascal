@@ -1,0 +1,62 @@
+// Tab bar painting, sharing item visibility with pointer routing.
+unit Std.Ui.Terminal.Rendering.Tabs;
+
+uses
+  Std.Ui.Terminal.Chrome.Tabs as Tabs, Std.Ui.Terminal.Cells.Cell as Cell,
+  Std.Ui.Terminal.Cells.StyleRole as Role, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Rendering.Canvas as Canvas;
+
+// Paints visible tab labels and overflow indicators inside the arranged bar.
+public procedure TuiPaintTabBar(Target: Canvas.TuiCanvas; Bounds: Rect.TuiRect; Bar: Tabs.TuiTabBar; Focused: boolean);
+begin
+  const Horizontal := Tabs.TuiTabsHorizontal(Bar.Position);
+  const Extent := if Horizontal then Bounds.Width else Bounds.Height end if;
+  if (Extent <= 0) or (Bounds.Width <= 0) or (Bounds.Height <= 0) then
+    return;
+  end if;
+  const First := Tabs.TuiTabsFirst(Bar, Extent);
+  var Offset := 0;
+  var Index := First;
+  while (Index < Bar.Items.Length()) and (Offset < Extent) do
+    const Item := Bar.Items[Index];
+    const Span := if Horizontal then Tabs.TuiTabWidth(Item) else 1 end if;
+    var ItemRole := Role.TuiStyleRole.TabNormal;
+    if not Item.Enabled then
+      ItemRole := Role.TuiStyleRole.TabDisabled;
+    elsif Index = Bar.Selected then
+      if Focused then
+        ItemRole := Role.TuiStyleRole.TabSelectedFocused;
+      else
+        ItemRole := Role.TuiStyleRole.TabSelected;
+      end if;
+    end if;
+    var ItemBounds := Rect.TuiRect.Create(Bounds.X + Offset, Bounds.Y, Span, 1);
+    if not Horizontal then
+      ItemBounds := Rect.TuiRect.Create(Bounds.X, Bounds.Y + Offset, Bounds.Width, 1);
+    end if;
+    const Visible := ItemBounds.Intersect(Bounds);
+    Target.FillRect(Visible, Cell.TuiCell.Create(' ', ItemRole));
+    Target.Child(Visible).WriteText(Point.TuiPoint.Create(0, 0), ' ' + Item.Text + ' ', ItemRole);
+    Offset := Offset + Span;
+    Index := Index + 1;
+  end while;
+
+  if First > 0 then
+    const Glyph := if Horizontal then '‹' else '↑' end if;
+    Target.PutCell(
+      Point.TuiPoint.Create(Bounds.X, Bounds.Y),
+      Cell.TuiCell.Create(Glyph, Role.TuiStyleRole.TabNormal)
+    );
+  end if;
+
+  if (Index < Bar.Items.Length()) or (Offset > Extent) then
+    const X := if Horizontal then Bounds.Right() - 1 else Bounds.X end if;
+    const Y := if Horizontal then Bounds.Y else Bounds.Bottom() - 1 end if;
+    const Glyph := if Horizontal then '›' else '↓' end if;
+    Target.PutCell(
+      Point.TuiPoint.Create(X, Y),
+      Cell.TuiCell.Create(Glyph, Role.TuiStyleRole.TabNormal)
+    );
+  end if;
+end procedure;
+end unit;

@@ -136,6 +136,8 @@ begin
     ], 2
   );
   case Spaced of
+    when Tui.TuiElement.TabBar(_):
+      Test.Fail('expected spaced row');
     when Tui.TuiElement.Row(const Children, const Spacing):
       begin
         Test.AssertEquals(2, Spacing);
@@ -151,6 +153,8 @@ begin
     Tui.TuiElementBuilders.MakeLabel('X')
   );
   case Wrapped of
+    when Tui.TuiElement.TabBar(_):
+      Test.Fail('expected layout wrapper');
     when Tui.TuiElement.Layout(const WrappedSettings, const WrappedChildren):
       begin
         Test.AssertEquals(1, WrappedChildren.Length());
@@ -163,6 +167,8 @@ begin
   end case;
   const SpacerElement: Tui.TuiElement := Tui.TuiElementBuilders.MakeSpacer(FixedSpacer);
   case SpacerElement of
+    when Tui.TuiElement.TabBar(_):
+      Test.Fail('expected spacer element');
     when Tui.TuiElement.Spacer(const Value):
       begin
         Test.AssertEquals(3, Value.MinimumExtent);

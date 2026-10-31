@@ -1,0 +1,148 @@
+// Model-controlled tab bar values and shared visibility geometry.
+unit Std.Ui.Terminal.Chrome.Tabs;
+
+uses
+  Std.Console as Console, Std.Ui.Terminal.Ids.ControlId as ControlId,
+  Std.Ui.Terminal.Ids.Action as Action;
+
+// Side on which the tab bar is placed relative to its page.
+public type TuiTabPosition = enum
+  Top;
+  Bottom;
+  Left;
+  Right;
+end enum;
+
+// One tab's label and whether it may be selected.
+public type TuiTabItem = record
+  public Text: string;
+  public Enabled: boolean;
+end record;
+
+// A controlled tab bar; Selected is -1 only for an empty or fully disabled list.
+public type TuiTabBar = record
+  public Id: ControlId.TuiControlId;
+  public Items: array of TuiTabItem;
+  public Selected: integer;
+  public Position: TuiTabPosition;
+  public ChangeAction: Action.TuiAction;
+end record;
+
+// True for bars whose items run horizontally.
+public function TuiTabsHorizontal(Position: TuiTabPosition): boolean;
+begin
+  return (Position = TuiTabPosition.Top) or (Position = TuiTabPosition.Bottom);
+end function;
+
+// Width of one horizontal label including its padding.
+public function TuiTabWidth(Item: TuiTabItem): integer;
+begin
+  return Console.DisplayWidth(Item.Text) + 2;
+end function;
+
+// First visible item, keeping the selected item in the available extent.
+public function TuiTabsFirst(Bar: TuiTabBar; Extent: integer): integer;
+begin
+  if (Bar.Selected < 0) or (Extent <= 0) then
+    return 0;
+  end if;
+  var First := Bar.Selected;
+  var Used := if TuiTabsHorizontal(Bar.Position) then TuiTabWidth(Bar.Items[First]) else 1 end if;
+  while First > 0 do
+    const Previous := if TuiTabsHorizontal(Bar.Position) then TuiTabWidth(Bar.Items[First - 1])
+      else 1
+      end if;
+    if Used + Previous > Extent then
+      return First;
+    end if;
+
+    Used := Used + Previous;
+    First := First - 1;
+  end while;
+
+  return First;
+end function;
+
+// Selects the next enabled item with wrapping; -1 means there is no enabled item.
+public function TuiTabsStep(Bar: TuiTabBar; Direction: integer): integer;
+begin
+  const Count := Bar.Items.Length();
+  if Count = 0 then
+    return -1;
+  end if;
+  var Index := Bar.Selected;
+  if Index < 0 then
+    Index := 0;
+  end if;
+
+  for Attempt: integer := 0 to Count - 1 do
+    Index := (Index + Direction + Count) mod Count;
+    if Bar.Items[Index].Enabled then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Returns the first or last enabled tab, or -1 when none are enabled.
+public function TuiTabsEdge(Bar: TuiTabBar; First: boolean): integer;
+begin
+  if First then
+    for Index: integer := 0 to Bar.Items.Length() - 1 do
+      if Bar.Items[Index].Enabled then
+        return Index;
+      end if;
+    end for;
+  else
+    var Index := Bar.Items.Length() - 1;
+    while Index >= 0 do
+      if Bar.Items[Index].Enabled then
+        return Index;
+      end if;
+
+      Index := Index - 1;
+    end while;
+  end if;
+
+  return -1;
+end function;
+
+// Returns the clicked enabled tab, or -1; overflow indicators move one enabled tab.
+public function TuiTabsHit(Bar: TuiTabBar; Width: integer; Height: integer; X: integer; Y: integer): integer;
+begin
+  const Horizontal := TuiTabsHorizontal(Bar.Position);
+  const Extent := if Horizontal then Width else Height end if;
+  const Local := if Horizontal then X else Y end if;
+  if (Extent <= 0) or (X < 0) or (Y < 0) or (X >= Width) or (Y >= Height) then
+    return -1;
+  end if;
+  const First := TuiTabsFirst(Bar, Extent);
+  var Index := First;
+  var Offset := 0;
+  var Hit := -1;
+  while (Index < Bar.Items.Length()) and (Offset < Extent) do
+    const Span := if Horizontal then TuiTabWidth(Bar.Items[Index]) else 1 end if;
+    if (Local >= Offset) and (Local < Offset + Span) and Bar.Items[Index].Enabled then
+      Hit := Index;
+    end if;
+
+    Offset := Offset + Span;
+    Index := Index + 1;
+  end while;
+  const IndicatorColumn := Horizontal or (X = 0);
+  // The forward marker is painted last when both indicators share one cell.
+  if IndicatorColumn and (Local = Extent - 1)
+    and
+    ((Index < Bar.Items.Length()) or (Offset > Extent))
+  then
+    return TuiTabsStep(Bar, 1);
+  end if;
+
+  if IndicatorColumn and (Local = 0) and (First > 0) then
+    return TuiTabsStep(Bar, -1);
+  end if;
+
+  return Hit;
+end function;
+end unit;

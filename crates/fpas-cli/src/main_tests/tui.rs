@@ -91,6 +91,29 @@ end.
 "#,
     );
 
+    let appearance = cwd.join("appearance.fpas");
+    write_text(
+        &appearance,
+        r#"program FlushAppearanceChange;
+
+uses Std.Console as Console, Std.Test as Test, Std.Ui.Terminal as Tui, Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer;
+
+begin
+  const Surface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(1, 1));
+  const Appearance := Tui.TuiButtonAppearance(Kind := Tui.TuiButtonKind.Dangerous, State := Tui.TuiButtonState.Focused, Default := false, Shortcut := false);
+  const Cell := Tui.TuiCell.Create('X', Tui.TuiStyleRole.ButtonSelected) with ButtonAppearance := Some(Appearance); end with;
+  Surface.PutCell(Tui.TuiPoint.Create(0, 0), Cell);
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+  const Before := Console.GetCell(1, 1).Unwrap();
+  Surface.PutCell(Tui.TuiPoint.Create(0, 0), Cell with ButtonAppearance := Some(Appearance with Kind := Tui.TuiButtonKind.Primary; end with); end with);
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+  const After := Console.GetCell(1, 1).Unwrap();
+  Test.AssertEquals('X', After.glyph);
+  Test.AssertTrue(Before.foreground.red <> After.foreground.red);
+end.
+"#,
+    );
+
     let standard_library = fpas_project::load_standard_library(&library)
         .expect("terminal renderer standard library must load");
     let program_graph = fpas_project::prepare_program_unit_graph(
@@ -106,12 +129,14 @@ end.
     let (unchanged_exit, unchanged_stdout, unchanged_stderr) = run(&unchanged);
     let (changed_exit, changed_stdout, changed_stderr) = run(&changed);
     let (wide_exit, _wide_stdout, wide_stderr) = run(&wide);
+    let (appearance_exit, _appearance_stdout, appearance_stderr) = run(&appearance);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(once_exit, 0, "stderr: {once_stderr}");
     assert_eq!(unchanged_exit, 0, "stderr: {unchanged_stderr}");
     assert_eq!(changed_exit, 0, "stderr: {changed_stderr}");
     assert_eq!(wide_exit, 0, "stderr: {wide_stderr}");
+    assert_eq!(appearance_exit, 0, "stderr: {appearance_stderr}");
     assert_eq!(
         unchanged_stdout, once_stdout,
         "an unchanged second frame must not write terminal output"

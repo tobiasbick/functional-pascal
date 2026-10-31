@@ -85,5 +85,12 @@ begin
   App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Up, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   Test.AssertEquals(1, Model.Actions);
+  const RightPadding := Tui.TuiPoint.Create(GoX + 2, 0);
+  Test.AssertEquals(' ', App.SurfaceSnapshot().CellAt(RightPadding.X, 0).Glyph);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Down, RightPadding));
+  Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Up, RightPadding));
+  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  Test.AssertEquals(2, Model.Actions);
   App.Close();
 end.

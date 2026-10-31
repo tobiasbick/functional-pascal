@@ -41,10 +41,14 @@ end function;
 begin
   const Tree: Tui.TuiElement := ViewTree(0);
   case Tree of
+    when Tui.TuiElement.TabBar(_):
+      panic('expected desktop element');
     when Tui.TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         Test.AssertEquals(2, DesktopChildren.Length());
         case DesktopChildren[0] of
+          when Tui.TuiElement.TabBar(_):
+            panic('expected panel element');
           when Tui.TuiElement.Panel(const Title, const PanelChildren):
             begin
               Test.AssertEquals('Dashboard', Title);
@@ -57,9 +61,11 @@ begin
         end case;
 
         case DesktopChildren[1] of
+          when Tui.TuiElement.TabBar(_):
+            panic('expected overlay element');
           when Tui.TuiElement.Overlay(const Title, const OverlayChildren):
             begin
-              Test.AssertEquals('Confirm', Title);
+              Test.AssertEquals('Confirm', Title.Title);
               Test.AssertEquals(1, OverlayChildren.Length());
             end;
           when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Desktop(_, _):

@@ -1,0 +1,94 @@
+// Defers pointer activation until the controlled list still selects the clicked row.
+unit Std.Ui.Terminal.Runtime.Routing.ListActivation;
+
+uses
+  Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Elements.Tree as Tree,
+  Std.Ui.Terminal.Ids.Action as Action, Std.Ui.Terminal.Ids.ControlId as ControlId,
+  Std.Ui.Terminal.Runtime.Msg as Msg, Std.Ui.Terminal.Runtime.Routing.Focus as Focus;
+
+type PendingActivation = record
+  Id: ControlId.TuiControlId;
+  Action: Action.TuiAction;
+  Selected: integer;
+  Text: string;
+end record;
+
+var Pending: array of option of PendingActivation := [];
+
+// Remembers the row associated with the next pointer-generated activation.
+public procedure TuiListActivationRemember(ApplicationId: integer; Id: ControlId.TuiControlId; Activate: Action.TuiAction; Selected: integer; Text: string);
+begin
+  if ApplicationId <= 0 then
+    return;
+  end if;
+
+  while Pending.Length() < ApplicationId do
+    Pending.PushInPlace(None);
+  end while;
+
+  Pending[ApplicationId - 1] := Some(
+    PendingActivation(Id := Id, Action := Activate, Selected := Selected, Text := Text)
+  );
+end procedure;
+
+// Releases any activation left queued when an application closes.
+public procedure TuiListActivationClear(ApplicationId: integer);
+begin
+  if (ApplicationId > 0) and (ApplicationId <= Pending.Length()) then
+    Pending[ApplicationId - 1] := None;
+  end if;
+end procedure;
+
+function Matches(Node: Element.TuiElement; Request: PendingActivation): boolean;
+begin
+  case Node of
+    when Element.TuiElement.List(const Id, const Items, const Selected, const Actions):
+      return (Id = Request.Id) and (Selected = Request.Selected)
+        and
+        (Actions.Activate = Some(Request.Action))
+        and
+        (Selected >= 0) and (Selected < Items.Length()) and (Items[Selected] = Request.Text);
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.TabBar(_), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Overlay(_, _), Element.TuiElement.Desktop(_, _):
+      null;
+  end case;
+
+  for Child: Element.TuiElement in Tree.TuiElementChildren(Node) do
+    if Matches(Child, Request) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Discards stale pointer actions after selection, focus, or view changes.
+public function TuiListActivationAllows(ApplicationId: integer; Root: Element.TuiElement; Message: Msg.TuiMsg): boolean;
+begin
+  if (ApplicationId <= 0) or (ApplicationId > Pending.Length()) then
+    return true;
+  end if;
+
+  case Pending[ApplicationId - 1] of
+    when Some(const Request):
+      case Message of
+        when Msg.TuiMsg.Action(const Id, const Activate):
+          if (Id = Request.Id) and (Activate = Request.Action) then
+            TuiListActivationClear(ApplicationId);
+            for Candidate: ControlId.TuiControlId in Focus.TuiFocusableControls(Root) do
+              if Candidate = Request.Id then
+                return Matches(Root, Request);
+              end if;
+            end for;
+
+            return false;
+          end if;
+        when Msg.TuiMsg.Started, Msg.TuiMsg.Key(_), Msg.TuiMsg.Pointer(_), Msg.TuiMsg.Tick(_), Msg.TuiMsg.Resize(_), Msg.TuiMsg.FocusChanged(_, _), Msg.TuiMsg.TextChanged(_, _, _, _), Msg.TuiMsg.TextAreaChanged(_, _, _, _, _), Msg.TuiMsg.CheckChanged(_, _, _), Msg.TuiMsg.SelectionChanged(_, _, _), Msg.TuiMsg.ScrollChanged(_, _, _), Msg.TuiMsg.MenuChanged(_, _, _), Msg.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Msg.TuiMsg.QuitRequested:
+          null;
+      end case;
+    when None:
+      null;
+  end case;
+
+  return true;
+end function;
+end unit;

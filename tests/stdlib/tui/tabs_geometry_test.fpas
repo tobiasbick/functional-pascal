@@ -1,0 +1,180 @@
+// Exercises clipped tabs, focus traversal and model-controlled selection.
+program TuiTabsGeometryTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Mode: integer;
+  Selected: integer;
+  Focus: integer;
+  Proposed: integer;
+  Changes: integer;
+  Reject: boolean;
+end record;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  var Items := [
+    Tui.TuiTabItem(Text := 'A', Enabled := true),
+    Tui.TuiTabItem(Text := 'Long last tab', Enabled := true)
+  ];
+  if State.Mode = 1 then
+    Items := [
+      Tui.TuiTabItem(Text := 'A', Enabled := true),
+      Tui.TuiTabItem(Text := 'B', Enabled := true),
+      Tui.TuiTabItem(Text := 'C', Enabled := true)
+    ];
+  elsif State.Mode = 2 then
+    Items := [Tui.TuiTabItem(Text := '界界', Enabled := true)];
+  end if;
+  const Bar := Tui.TuiTabBar(
+    Id := Tui.TuiControlId.Create(1), Items := Items, Selected := State.Selected,
+    Position := Tui.TuiTabPosition.Top, ChangeAction := Tui.TuiAction.Create(5)
+  );
+  const Page := Tui.TuiElementBuilders.MakeRow([
+    Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'First', Tui.TuiAction.Create(2)),
+    Tui.TuiElementBuilders.MakeButton(
+      Tui.TuiControlId.Create(3),
+      'Second',
+      Tui.TuiAction.Create(3)
+    )
+  ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [Tui.TuiElementBuilders.MakeTabs(Bar, Page)]
+  );
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  case Msg of
+    when Tui.TuiMsg.SelectionChanged(const Id, const Action, const Selected):
+      Test.AssertEquals(1, Id.Value);
+      Test.AssertEquals(5, Action.Value);
+      var Next := State with Proposed := Selected; Changes := State.Changes + 1; end with;
+
+      if not State.Reject then
+        Next.Selected := Selected;
+      end if;
+
+      return Next;
+    when Tui.TuiMsg.FocusChanged(_, Some(const Id)):
+      return State with Focus := Id.Value; end with;
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, None), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+      return State;
+  end case;
+end function;
+
+function Key(Kind: Tui.TuiKeyKind; Shift: boolean): Tui.TuiKeyEvent;
+begin
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := Shift,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
+end function;
+
+procedure Click(App: Tui.TuiApplication; X: integer);
+begin
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(
+      Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, 0)
+    )
+  );
+end procedure;
+
+begin
+  // A partially clipped last tab still has a forward marker that wraps to the first tab.
+  const Narrow := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 3));
+  var State := Model(
+    Mode := 0,
+    Selected := 1,
+    Focus := 1,
+    Proposed := -1,
+    Changes := 0,
+    Reject := false
+  );
+  State := Narrow.RunIterations(State, Update, View, 0, 0);
+  Test.AssertEquals('›', Narrow.SurfaceSnapshot().CellAt(5, 0).Glyph);
+  Click(Narrow, 5);
+  State := Narrow.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(0, State.Selected);
+  Narrow.Close();
+  // Both markers occupy one cell; its visible forward marker wins the hit.
+  const Tiny := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(1, 3));
+  State := Model(
+    Mode := 1,
+    Selected := 1,
+    Focus := 1,
+    Proposed := -1,
+    Changes := 0,
+    Reject := false
+  );
+  State := Tiny.RunIterations(State, Update, View, 0, 0);
+  Test.AssertEquals('›', Tiny.SurfaceSnapshot().CellAt(0, 0).Glyph);
+  Click(Tiny, 0);
+  State := Tiny.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(2, State.Selected);
+  Tiny.Close();
+  // A double-width glyph fits as a whole or is removed when the marker overlaps it.
+  const Unicode := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(4, 3));
+  State := Model(
+    Mode := 2,
+    Selected := 0,
+    Focus := 1,
+    Proposed := -1,
+    Changes := 0,
+    Reject := false
+  );
+  State := Unicode.RunIterations(State, Update, View, 0, 0);
+  Test.AssertEquals('界', Unicode.SurfaceSnapshot().CellAt(1, 0).Glyph);
+  Test.AssertEquals(2, Unicode.SurfaceSnapshot().CellAt(1, 0).Columns);
+  Test.AssertEquals('›', Unicode.SurfaceSnapshot().CellAt(3, 0).Glyph);
+  Unicode.InjectResizeForTest(Tui.TuiSize.Create(3, 3));
+  State := Unicode.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(' ', Unicode.SurfaceSnapshot().CellAt(1, 0).Glyph);
+  Test.AssertEquals('›', Unicode.SurfaceSnapshot().CellAt(2, 0).Glyph);
+  Unicode.Close();
+  const Controlled := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 4));
+  State := Model(
+    Mode := 1,
+    Selected := 0,
+    Focus := 1,
+    Proposed := -1,
+    Changes := 0,
+    Reject := true
+  );
+  State := Controlled.RunIterations(State, Update, View, 0, 0);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Right, false));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(1, State.Proposed);
+  Test.AssertEquals(0, State.Selected);
+  Test.AssertTrue(
+    Controlled.SurfaceSnapshot().CellAt(1, 0).Role = Tui.TuiStyleRole.TabSelectedFocused
+  );
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Right, false));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(1, State.Proposed);
+  Test.AssertEquals(2, State.Changes);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Tab, false));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(2, State.Focus);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Tab, false));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(3, State.Focus);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Tab, true));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(2, State.Focus);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Tab, true));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(1, State.Focus);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Tab, true));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(3, State.Focus);
+  Controlled.InjectKeyForTest(Key(Tui.TuiKeyKind.Tab, false));
+  State := Controlled.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(1, State.Focus);
+  Controlled.Close();
+end.

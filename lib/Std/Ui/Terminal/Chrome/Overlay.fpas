@@ -1,0 +1,70 @@
+// Content-independent sizing policy for centered terminal overlays.
+unit Std.Ui.Terminal.Chrome.Overlay;
+
+uses Std.Ui.Terminal.Geometry.Size as Size;
+
+function Clamp(Value: integer; Minimum: integer; Maximum: integer): integer;
+begin
+  if Value < Minimum then
+    return Minimum;
+  end if;
+
+  if Value > Maximum then
+    return Maximum;
+  end if;
+
+  return Value;
+end function;
+
+// Overlay minimum dimensions and minimum cell and proportional margins per side.
+public type TuiOverlaySizeRule = record
+  public Minimum: Size.TuiSize;
+  public MarginCells: integer;
+  public MarginPercent: integer;
+
+  // Percentage is per side, in 0..50; minimum dimensions and cell margins are non-negative.
+  public static function Create(Minimum: Size.TuiSize; MarginCells: integer; MarginPercent: integer): TuiOverlaySizeRule;
+  begin
+    if (Minimum.Width < 0) or (Minimum.Height < 0) or (MarginCells < 0)
+      or
+      (MarginPercent < 0) or (MarginPercent > 50)
+    then
+      panic(
+        'Tui overlay size rule requires non-negative dimensions and a margin percentage in 0..50'
+      );
+    end if;
+
+    return TuiOverlaySizeRule(
+      Minimum := Minimum,
+      MarginCells := MarginCells,
+      MarginPercent := MarginPercent
+    );
+  end function;
+
+  // Resolves one axis, relaxing the cell margin before reducing the minimum on small screens.
+  function Axis(Self: TuiOverlaySizeRule; Available: integer; Minimum: integer): integer;
+  begin
+    const Margin := Clamp((Available - Minimum) div 2, 0, Self.MarginCells);
+    const PercentageMargin := (Available div 100) * Self.MarginPercent +
+      ((Available mod 100) * Self.MarginPercent) div 100;
+    const Desired := Available - 2 * PercentageMargin;
+    const Maximum := Available - 2 * Margin;
+    return Clamp(Desired, Clamp(Minimum, 0, Maximum), Maximum);
+  end function;
+
+  // Resolves the complete outer frame size inside a non-negative terminal extent.
+  public function Resolve(Self: TuiOverlaySizeRule; Available: Size.TuiSize): Size.TuiSize;
+  begin
+    return Size.TuiSize.Create(
+      Self.Axis(Available.Width, Self.Minimum.Width),
+      Self.Axis(Available.Height, Self.Minimum.Height)
+    );
+  end function;
+end record;
+
+// Overlay title and optional responsive sizing rule; absent means content-sized.
+public type TuiOverlaySpec = record
+  public Title: string;
+  public SizeRule: option of TuiOverlaySizeRule;
+end record;
+end unit;

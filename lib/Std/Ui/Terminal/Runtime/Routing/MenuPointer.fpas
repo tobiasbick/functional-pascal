@@ -33,6 +33,8 @@ function TuiPointerMenuWalk(
 begin
   var Next: integer := Index + 1;
   case Node of
+    when Element.TuiElement.TabBar(_):
+      null;
     when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu then
@@ -58,6 +60,8 @@ begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             case Children[ChildIndex] of
+              when Element.TuiElement.TabBar(_):
+                null;
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := ChildIndex;

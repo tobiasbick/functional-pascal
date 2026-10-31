@@ -3,7 +3,8 @@ unit Std.Ui.Terminal.Elements.Validate;
 uses
   Std.Text.Format as Conv, Std.Ui.Terminal.Chrome.StatusItem as StatusItem, Std.Ui.Terminal.Elements.Element as Element,
   Std.Ui.Terminal.Elements.MenuValidate as MenuValidate, Std.Ui.Terminal.Ids.Action as IdsAction,
-  Std.Ui.Terminal.Ids.ControlId as ControlId;
+  Std.Ui.Terminal.Ids.ControlId as ControlId, Std.Ui.Terminal.Chrome.Tabs as Tabs,
+  Std.Ui.Terminal.Chrome.Overlay as Overlay;
 
 function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
 begin
@@ -41,6 +42,8 @@ end procedure;
 function TuiElementChildren(Node: Element.TuiElement): array of Element.TuiElement;
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      return [];
     when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         return Children;
@@ -63,6 +66,17 @@ begin
       end;
     when Element.TuiElement.Overlay(const Title, const Children):
       begin
+        case Title.SizeRule of
+          when Some(const Rule):
+            discard Overlay.TuiOverlaySizeRule.Create(
+              Rule.Minimum,
+              Rule.MarginCells,
+              Rule.MarginPercent
+            );
+          when None:
+            null;
+        end case;
+
         return Children;
       end;
     when Element.TuiElement.Desktop(const Focused, const Children):
@@ -80,6 +94,29 @@ function TuiElementValidateAndCollect(Node: Element.TuiElement): array of intege
 begin
   var Seen: array of integer := [];
   case Node of
+    when Element.TuiElement.TabBar(const Bar):
+      TuiElementValidateControl(Bar.Id);
+      TuiElementValidateAction(Bar.ChangeAction);
+      var Enabled := false;
+      for Item: Tabs.TuiTabItem in Bar.Items do
+        if Item.Enabled then
+          Enabled := true;
+        end if;
+      end for;
+
+      if Enabled then
+        if (Bar.Selected < 0) or (Bar.Selected >= Bar.Items.Length()) then
+          panic('Tui tab selection must be within its items');
+        end if;
+
+        if not Bar.Items[Bar.Selected].Enabled then
+          panic('Tui tab selection must be enabled');
+        end if;
+      elsif Bar.Selected <> -1 then
+        panic('Tui tabs without enabled items require selection -1');
+      end if;
+
+      Seen.PushInPlace(Bar.Id.Value);
     when Element.TuiElement.Button(const Button):
       begin
         TuiElementValidateControl(Button.Id);
@@ -137,7 +174,13 @@ begin
     when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
-        TuiElementValidateAction(ChangeAction);
+        TuiElementValidateAction(ChangeAction.Change);
+        case ChangeAction.Activate of
+          when Some(const Value):
+            TuiElementValidateAction(Value);
+          when None:
+            null;
+        end case;
         const Count: integer := Items.Length();
         if Count = 0 then
           begin
@@ -278,6 +321,8 @@ begin
   end for;
 
   case Node of
+    when Element.TuiElement.TabBar(_):
+      null;
     when Element.TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         case Focused of

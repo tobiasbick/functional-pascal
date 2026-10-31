@@ -2,6 +2,32 @@ unit Std.Ui.Terminal.Chrome.Button;
 
 uses Std.Ui.Terminal.Ids.Action as IdsAction, Std.Ui.Terminal.Ids.ControlId as ControlId;
 
+// Semantic purpose, independent of focus or default-action behavior.
+public type TuiButtonKind = enum
+  Normal;
+  Primary;
+  Cancel;
+  Warning;
+  Dangerous;
+end enum;
+
+// Current visual interaction state, resolved together with the button kind.
+public type TuiButtonState = enum
+  Normal;
+  Active;
+  Focused;
+  Pressed;
+  Disabled;
+end enum;
+
+// Theme lookup key carried by rendered button cells.
+public type TuiButtonAppearance = record
+  public Kind: TuiButtonKind;
+  public State: TuiButtonState;
+  public Default: boolean;
+  public Shortcut: boolean;
+end record;
+
 // Immutable description of one flat terminal button.
 public type TuiButtonSpec = record
   // Stable identifier of the value.
@@ -14,6 +40,10 @@ public type TuiButtonSpec = record
   public Action: IdsAction.TuiAction;
   // Style used for the default state.
   public Default: boolean;
+  // Marks a persistent choice without making it the default action.
+  public Active: boolean := false;
+  // Meaning used by the theme, independently of keyboard behavior.
+  public Kind: TuiButtonKind := TuiButtonKind.Normal;
   // Whether the item can be activated.
   public Enabled: boolean;
 

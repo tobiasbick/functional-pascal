@@ -1,0 +1,133 @@
+// Semantic button colors remain meaningful across focus, presses and redraws.
+program ButtonMeaningTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Kind: Tui.TuiButtonKind;
+  Focus: boolean;
+  Active: boolean;
+  Enabled: boolean;
+  Default: boolean;
+end record;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  var Focus: option of Tui.TuiControlId := None;
+  if State.Focus then
+    Focus := Some(Tui.TuiControlId.Create(1));
+  end if;
+  const Button := Tui.TuiButtonSpec.Normal(
+    Tui.TuiControlId.Create(1),
+    'Erase',
+    '',
+    Tui.TuiAction.Create(1)
+  ) with Kind := State.Kind; Active := State.Active; Enabled := State.Enabled; Default := State.Default; end with;
+
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Focus, [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeColumn([
+            Tui.TuiElementBuilders.MakeHeading('Übersicht'), Tui.TuiElement.Button(Button)
+          ])
+        ]
+      )
+    ]
+  );
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
+  var State := Model(
+    Kind := Tui.TuiButtonKind.Dangerous, Focus := false,
+    Active := false, Enabled := true, Default := true
+  );
+  State := App.RunIterations(State, Update, View, 0, 0);
+  var Screen := App.SurfaceSnapshot();
+  const X := Screen.LineAt(2).IndexOf('Erase').Unwrap();
+  Test.AssertFalse('[' in Screen.LineAt(2));
+  const TitleX := Screen.LineAt(1).IndexOf('Übersicht').Unwrap();
+  Test.AssertTrue(Screen.CellAt(TitleX, 1).Role = Tui.TuiStyleRole.PanelTitle);
+  var Appearance := Screen.CellAt(X, 2).ButtonAppearance.Unwrap();
+  Test.AssertTrue(Appearance.Kind = Tui.TuiButtonKind.Dangerous);
+  Test.AssertTrue(Appearance.State = Tui.TuiButtonState.Normal);
+  Test.AssertTrue(Appearance.Default);
+  const Palette := Tui.TuiPalette.Default();
+  const DefaultColor := Palette.Buttons.Resolve(Appearance);
+
+  State.Focus := true;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Appearance := App.SurfaceSnapshot().CellAt(X, 2).ButtonAppearance.Unwrap();
+  Test.AssertTrue(Appearance.Kind = Tui.TuiButtonKind.Dangerous);
+  Test.AssertTrue(Appearance.State = Tui.TuiButtonState.Focused);
+  Test.AssertTrue(Palette.Buttons.Resolve(Appearance) <> DefaultColor);
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(
+      Tui.TuiPointerAction.Down,
+      Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, 2)
+    )
+  );
+  State := App.RunIterations(State, Update, View, 1, 0);
+  Appearance := App.SurfaceSnapshot().CellAt(X, 2).ButtonAppearance.Unwrap();
+  Test.AssertTrue(Appearance.State = Tui.TuiButtonState.Pressed);
+  Test.AssertTrue(Appearance.Kind = Tui.TuiButtonKind.Dangerous);
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(
+      Tui.TuiPointerAction.Up,
+      Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, 2)
+    )
+  );
+  State := App.RunIterations(State, Update, View, 1, 0);
+
+  State.Focus := false;
+  State.Active := true;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Appearance := App.SurfaceSnapshot().CellAt(X, 2).ButtonAppearance.Unwrap();
+  Test.AssertTrue(Appearance.State = Tui.TuiButtonState.Active);
+  State.Enabled := false;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Appearance := App.SurfaceSnapshot().CellAt(X, 2).ButtonAppearance.Unwrap();
+  Test.AssertTrue(Appearance.State = Tui.TuiButtonState.Disabled);
+  Test.AssertTrue(Appearance.Kind = Tui.TuiButtonKind.Dangerous);
+  State.Enabled := true;
+  State.Focus := true;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  const Danger := Palette.Buttons.Resolve(
+    App.SurfaceSnapshot().CellAt(X, 2).ButtonAppearance.Unwrap()
+  );
+  State.Kind := Tui.TuiButtonKind.Primary;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Appearance := App.SurfaceSnapshot().CellAt(X, 2).ButtonAppearance.Unwrap();
+  Test.AssertTrue(Appearance.Kind = Tui.TuiButtonKind.Primary);
+  Test.AssertTrue(Palette.Buttons.Resolve(Appearance) <> Danger);
+  App.Close();
+  const Base := Tui.TuiStyle.Create(
+    Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6), true, true, true, true
+  );
+  const Colors := Tui.TuiButtonColors.Create(Base, Base, Base, Base, Base, Base);
+  var Buttons := Palette.Buttons;
+  Buttons.Primary := Some(Colors);
+  const Shortcut := Tui.TuiButtonAppearance(
+    Kind := Tui.TuiButtonKind.Primary, State := Tui.TuiButtonState.Focused,
+    Default := false, Shortcut := true
+  );
+  var Resolved := Buttons.Resolve(Shortcut);
+  Test.AssertTrue(Resolved.Foreground = Buttons.SelectedShortcut.Foreground);
+  Test.AssertTrue(Resolved.Background = Base.Background);
+  Test.AssertTrue(Resolved.Bold and Resolved.Dim and Resolved.Underline and Resolved.Inverse);
+  const Override := Tui.TuiColor.FromRgb(7, 8, 9);
+  Buttons.Primary := Some(Colors with ShortcutForeground := Some(Override); end with);
+  Resolved := Buttons.Resolve(Shortcut);
+  Test.AssertTrue(Resolved.Foreground = Override);
+  Test.AssertTrue(Resolved.Background = Base.Background);
+  Test.AssertTrue(
+    Buttons.Resolve(Shortcut with State := Tui.TuiButtonState.Disabled; end with) = Base
+  );
+end.

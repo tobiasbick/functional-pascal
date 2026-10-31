@@ -70,6 +70,8 @@ end function;
 function TuiArrangeGrowthWeight(Node: Element.TuiElement; Horizontal: boolean): integer;
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      return 0;
     when Element.TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         return 1;
@@ -394,6 +396,8 @@ begin
   const Clip: Rect.TuiRect := NodeBounds.Intersect(ParentClip);
   const SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
   case Node of
+    when Element.TuiElement.TabBar(_):
+      null;
     when Element.TuiElement.Row(const Children, const Spacing):
       begin
         ArrangeRowColumn(true, Children, Spacing, NodeBounds, Clip, SelfIndex);
@@ -454,7 +458,7 @@ begin
           end;
         end if;
       end;
-    when Element.TuiElement.Panel(const Title, const Children), Element.TuiElement.Overlay(const Title, const Children):
+    when Element.TuiElement.Panel(_, const Children), Element.TuiElement.Overlay(_, const Children):
       begin
         ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex);
       end;
@@ -466,17 +470,29 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
+              when Element.TuiElement.TabBar(_):
+                ArrangeNode(Children[Index], NodeBounds, Clip, SelfIndex);
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   const Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasure(
                     Children[Index],
                     Spec
                   );
-                  const Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
-                  const Height: integer := TuiArrangeMin(
+                  var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
+                  var Height: integer := TuiArrangeMin(
                     Measured.Preferred.Height,
                     NodeBounds.Height
                   );
+                  case Title.SizeRule of
+                    when Some(const Rule):
+                      const Resolved := Rule.Resolve(
+                        Size.TuiSize.Create(NodeBounds.Width, NodeBounds.Height)
+                      );
+                      Width := Resolved.Width;
+                      Height := Resolved.Height;
+                    when None:
+                      null;
+                  end case;
                   const X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
                   const Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
                   ArrangeNode(

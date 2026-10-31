@@ -26,6 +26,13 @@ end function;
 function TuiCellToConsole(Cell: CellsCell.TuiCell; Palette: CellsPalette.TuiPalette): Console.Cell;
 begin
   var Style: CellsStyle.TuiStyle := Palette.ForRole(Cell.Role);
+  case Cell.ButtonAppearance of
+    when Some(const Appearance):
+      Style := Palette.Buttons.Resolve(Appearance);
+    when None:
+      null;
+  end case;
+
   case Cell.ConcreteStyle of
     when Some(const Concrete):
       begin

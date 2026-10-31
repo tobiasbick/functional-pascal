@@ -8,6 +8,8 @@ uses
 function TuiButtonFocusControls(Node: Element.TuiElement): array of ControlId.TuiControlId;
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      return [];
     when Element.TuiElement.Button(const Button):
       begin
         if Button.Enabled then
@@ -24,6 +26,8 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
+              when Element.TuiElement.TabBar(_):
+                null;
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;

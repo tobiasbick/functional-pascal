@@ -14,6 +14,8 @@ uses
   Std.Ui.Terminal.Geometry.Rect as Rect, Std.Ui.Terminal.Geometry.Size as Size,
   Std.Ui.Terminal.Chrome.KeyGesture as KeyGesture, Std.Ui.Terminal.Chrome.MenuItem as MenuItem,
   Std.Ui.Terminal.Chrome.MenuNode as MenuNode, Std.Ui.Terminal.Chrome.StatusItem as StatusItem,
+  Std.Ui.Terminal.Chrome.Tabs as Tabs, Std.Ui.Terminal.Chrome.Overlay as Overlay,
+  Std.Ui.Terminal.Chrome.List as List,
   Std.Ui.Terminal.Ids.Action as IdsAction, Std.Ui.Terminal.Ids.ControlId as ControlId,
   Std.Ui.Terminal.Layout.Alignment as Alignment, Std.Ui.Terminal.Layout.LayoutFit as LayoutFit,
   Std.Ui.Terminal.Layout.LayoutSettings as LayoutSettings, Std.Ui.Terminal.Layout.Margins as Margins,
@@ -55,6 +57,9 @@ public type TuiPalette = Palette.TuiPalette;
 
 // Concrete styles for every visual button state.
 public type TuiButtonPalette = ButtonPalette.TuiButtonPalette;
+
+// Styles for all states of one semantic button meaning.
+public type TuiButtonColors = ButtonPalette.TuiButtonColors;
 
 // Concrete styles for every visual one-line input state.
 public type TuiInputPalette = InputPalette.TuiInputPalette;
@@ -106,6 +111,34 @@ public type TuiAction = IdsAction.TuiAction;
 
 // Immutable button identity, label, mnemonic, action, and state.
 public type TuiButtonSpec = Button.TuiButtonSpec;
+
+// Semantic button meaning and independent visual interaction state.
+public type TuiButtonKind = Button.TuiButtonKind;
+
+public type TuiButtonState = Button.TuiButtonState;
+
+public type TuiButtonAppearance = Button.TuiButtonAppearance;
+
+// Text and theme role of a label.
+public type TuiLabel = Element.TuiLabel;
+
+// Placement of a tab bar relative to its active page.
+public type TuiTabPosition = Tabs.TuiTabPosition;
+
+// Label and enabled state of one tab.
+public type TuiTabItem = Tabs.TuiTabItem;
+
+// Model-controlled selection and input identity for a tab bar.
+public type TuiTabBar = Tabs.TuiTabBar;
+
+// Selection and optional activation actions for a controlled list.
+public type TuiListActions = List.TuiListActions;
+
+// Viewport-relative sizing and margins for a centered overlay.
+public type TuiOverlaySizeRule = Overlay.TuiOverlaySizeRule;
+
+// Overlay title and optional viewport-relative sizing.
+public type TuiOverlaySpec = Overlay.TuiOverlaySpec;
 
 // Immutable one-line input state, hint, and optional history.
 public type TuiInputSpec = Input.TuiInputSpec;

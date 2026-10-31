@@ -1,0 +1,170 @@
+program TuiListActivationTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Focus: integer;
+  Selected: integer;
+  Activated: integer;
+  Count: integer;
+  Reject: boolean := false;
+  ReplaceOnSelection: boolean := false;
+  Items: array of string := ['Alpha', 'Beta', 'Gamma', 'Delta'];
+end record;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'List', [
+          Tui.TuiElementBuilders.MakeColumn([
+            Tui.TuiElementBuilders.MakeLayout(
+              Tui.TuiLayoutSettings.Default().WithFixedWidth(18).WithFixedHeight(2),
+              Tui.TuiElementBuilders.MakeActivatingList(
+                Tui.TuiControlId.Create(1),
+                State.Items, State.Selected,
+                Tui.TuiAction.Create(5), Tui.TuiAction.Create(6)
+              )
+            ),
+            Tui.TuiElementBuilders.MakeButton(
+              Tui.TuiControlId.Create(2),
+              'Other',
+              Tui.TuiAction.Create(2)
+            )
+          ])
+        ]
+      )
+    ]
+  );
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  case Msg of
+    when Tui.TuiMsg.FocusChanged(_, Some(const Id)):
+      return State with Focus := Id.Value; end with;
+    when Tui.TuiMsg.SelectionChanged(const Source, const Action, const Selected):
+      Test.AssertEquals(1, Source.Value);
+      Test.AssertEquals(5, Action.Value);
+      if State.Reject then
+        return State;
+      end if;
+      var Next := State with Selected := Selected; end with;
+
+      if State.ReplaceOnSelection then
+        Next.Items := ['Beta', 'Changed', 'Gamma', 'Delta'];
+      end if;
+
+      return Next;
+    when Tui.TuiMsg.Action(const Source, const Action):
+      Test.AssertEquals(1, Source.Value);
+      Test.AssertEquals(6, Action.Value);
+      return State with Activated := State.Selected; Count := State.Count + 1; end with;
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, None), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+      return State;
+  end case;
+end function;
+
+function Find(Snapshot: Tui.TuiSurfaceSnapshot; Text: string): Tui.TuiPoint;
+begin
+  for Y: integer := 0 to Snapshot.Height - 1 do
+    case Snapshot.LineAt(Y).IndexOf(Text) of
+      when Some(const X):
+        return Tui.TuiPoint.Create(X, Y);
+      when None:
+        null;
+    end case;
+  end for;
+
+  panic('text not found');
+end function;
+
+function Key(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
+begin
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
+  var State := Model(Focus := 1, Selected := 0, Activated := -1, Count := 0);
+  State := App.RunIterations(State, Update, View, 0, 0);
+  for Index: integer := 1 to 3 do
+    App.InjectKeyForTest(Key(Tui.TuiKeyKind.Down));
+    State := App.RunIterations(State, Update, View, 1, 0);
+    Test.AssertEquals(Index, State.Selected);
+  end for;
+  const Focused := Find(App.SurfaceSnapshot(), 'Delta');
+  Test.AssertTrue(
+    App.SurfaceSnapshot().CellAt(Focused.X, Focused.Y).Role = Tui.TuiStyleRole.Focused
+  );
+  App.InjectKeyForTest(Key(Tui.TuiKeyKind.Enter));
+  State := App.RunIterations(State, Update, View, 1, 0);
+  Test.AssertEquals(3, State.Activated);
+  Test.AssertEquals(1, State.Count);
+
+  State.Focus := 2;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  const Unfocused := Find(App.SurfaceSnapshot(), 'Delta');
+  Test.AssertTrue(
+    App.SurfaceSnapshot().CellAt(Unfocused.X, Unfocused.Y).Role = Tui.TuiStyleRole.Selected
+  );
+  const Gamma := Find(App.SurfaceSnapshot(), 'Gamma');
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(
+      Tui.TuiPointerAction.Down,
+      Tui.TuiPointerButton.Left, Gamma
+    )
+  );
+  State := App.RunIterations(State, Update, View, 3, 0);
+  Test.AssertEquals(1, State.Focus);
+  Test.AssertEquals(2, State.Selected);
+  Test.AssertEquals(2, State.Activated);
+  Test.AssertEquals(2, State.Count);
+  const Selected := Find(App.SurfaceSnapshot(), 'Gamma');
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(
+      Tui.TuiPointerAction.Down,
+      Tui.TuiPointerButton.Left, Selected
+    )
+  );
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(3, State.Count);
+  State.Reject := true;
+  State.Selected := 0;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  const Beta := Find(App.SurfaceSnapshot(), 'Beta');
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Beta)
+  );
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(0, State.Selected);
+  Test.AssertEquals(3, State.Count);
+  State.Reject := false;
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Beta)
+  );
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(1, State.Selected);
+  Test.AssertEquals(4, State.Count);
+  Test.AssertEquals(1, State.Activated);
+  State.Selected := 0;
+  State.ReplaceOnSelection := true;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Beta)
+  );
+  State := App.RunIterations(State, Update, View, 2, 0);
+  Test.AssertEquals(1, State.Selected);
+  Test.AssertEquals('Changed', State.Items[State.Selected]);
+  Test.AssertEquals(4, State.Count);
+  App.Close();
+end.

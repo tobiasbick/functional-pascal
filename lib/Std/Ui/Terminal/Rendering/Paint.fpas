@@ -10,7 +10,9 @@ uses
   Std.Ui.Terminal.Rendering.Chrome as Chrome, Std.Ui.Terminal.Rendering.Gauge as RenderingGauge,
   Std.Ui.Terminal.Rendering.Input as RenderingInput, Std.Ui.Terminal.Rendering.Menu as Menu,
   Std.Ui.Terminal.Rendering.Rule as Rule, Std.Ui.Terminal.Rendering.StatusLine as StatusLine,
-  Std.Ui.Terminal.Rendering.Surface as RenderingSurface, Std.Ui.Terminal.Rendering.TextArea as TextArea;
+  Std.Ui.Terminal.Rendering.Surface as RenderingSurface, Std.Ui.Terminal.Rendering.TextArea as TextArea,
+  Std.Ui.Terminal.Runtime.Routing.Focus as Focus, Std.Ui.Terminal.Rendering.Tabs as Tabs,
+  Std.Ui.Terminal.Chrome.List as List;
 
 function TuiPaintFocused(Focused: option of ControlId.TuiControlId; Id: ControlId.TuiControlId): boolean;
 begin
@@ -58,21 +60,33 @@ begin
     Canvas.Surface,
     Point.TuiPoint.Create(0, 0),
     Entry.Clip.Intersect(Canvas.Clip)
-  );
+  ) with SurfaceRole := Canvas.SurfaceRole; ActiveOverlay := Canvas.ActiveOverlay; end with;
+
   if Clipped.Clip.IsEmpty() then
     return Entry.SubtreeEnd;
   end if;
 
   case Node of
+    when Element.TuiElement.TabBar(const Bar):
+      Tabs.TuiPaintTabBar(Clipped, Entry.Bounds, Bar, TuiPaintFocused(Focused, Bar.Id));
     when Element.TuiElement.Empty:
       begin
       end;
     when Element.TuiElement.Spacer(const Value):
       begin
       end;
-    when Element.TuiElement.Label(const Text):
+    when Element.TuiElement.Label(const Label):
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, Text, StyleRole.TuiStyleRole.Normal);
+        var Role := Label.Role;
+        if Role = StyleRole.TuiStyleRole.Title then
+          if Clipped.SurfaceRole = StyleRole.TuiStyleRole.PanelNormal then
+            Role := StyleRole.TuiStyleRole.PanelTitle;
+          elsif Clipped.SurfaceRole = StyleRole.TuiStyleRole.OverlayNormal then
+            Role := StyleRole.TuiStyleRole.OverlayTitle;
+          end if;
+        end if;
+
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, Label.Text, Role);
       end;
     when Element.TuiElement.Button(const Button):
       begin
@@ -137,19 +151,31 @@ begin
       end;
     when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
+        const First := List.TuiListFirst(Items.Length(), Selected, Entry.Bounds.Height);
         var RowLimit: integer := Entry.Bounds.Height;
-        if RowLimit > Items.Length() then
+        if RowLimit > Items.Length() - First then
           begin
-            RowLimit := Items.Length();
+            RowLimit := Items.Length() - First;
           end;
         end if;
 
         for Row: integer := 0 to RowLimit - 1 do
           begin
             var Prefix: string := '  ';
-            if Row = Selected then
+            const ItemIndex := First + Row;
+            var RowRole := StyleRole.TuiStyleRole.Normal;
+            if ItemIndex = Selected then
               begin
                 Prefix := '> ';
+                RowRole := StyleRole.TuiStyleRole.Selected;
+                if TuiPaintFocused(Focused, Id) then
+                  RowRole := StyleRole.TuiStyleRole.Focused;
+                end if;
+
+                Clipped.FillRect(
+                  Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1),
+                  Cell.TuiCell.Create(' ', RowRole)
+                );
               end;
             end if;
 
@@ -157,7 +183,7 @@ begin
               Clipped,
               Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1),
               Prefix +
-              Items[Row], StyleRole.TuiStyleRole.Normal
+              Items[ItemIndex], RowRole
             );
           end;
         end for;
@@ -236,25 +262,89 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Panel(const Title, const Children), Element.TuiElement.Overlay(const Title, const Children):
+    when Element.TuiElement.Panel(const Title, const Children):
       begin
-        Chrome.TuiPaintPanel(Clipped, Entry.Bounds, Title);
+        var FrameRole := StyleRole.TuiStyleRole.Frame;
+        for Id: ControlId.TuiControlId in Focus.TuiFocusableControls(Node) do
+          if TuiPaintFocused(Focused, Id) then
+            FrameRole := StyleRole.TuiStyleRole.PanelFocusedFrame;
+          end if;
+        end for;
+        const PanelCanvas := Canvas with SurfaceRole := StyleRole.TuiStyleRole.PanelNormal; end with;
+        const PanelClip := Clipped with SurfaceRole := StyleRole.TuiStyleRole.PanelNormal; end with;
+
+        Chrome.TuiPaintPanel(
+          PanelClip,
+          Entry.Bounds,
+          Title,
+          FrameRole,
+          StyleRole.TuiStyleRole.PanelTitle
+        );
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
-            Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed);
+            Next := TuiPaintArranged(
+              PanelCanvas,
+              Frame,
+              Children[ChildIndex],
+              Next,
+              Focused,
+              Pressed
+            );
+          end;
+        end for;
+      end;
+    when Element.TuiElement.Overlay(const Title, const Children):
+      begin
+        var FrameRole := StyleRole.TuiStyleRole.OverlayFrame;
+        if Canvas.ActiveOverlay then
+          FrameRole := StyleRole.TuiStyleRole.OverlayFocusedFrame;
+        end if;
+        const OverlayCanvas := Canvas with SurfaceRole := StyleRole.TuiStyleRole.OverlayNormal; end with;
+        const OverlayClip := Clipped with SurfaceRole := StyleRole.TuiStyleRole.OverlayNormal; end with;
+
+        Chrome.TuiPaintPanel(
+          OverlayClip,
+          Entry.Bounds,
+          Title.Title,
+          FrameRole,
+          StyleRole.TuiStyleRole.OverlayTitle
+        );
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
+          begin
+            Next := TuiPaintArranged(
+              OverlayCanvas,
+              Frame,
+              Children[ChildIndex],
+              Next,
+              Focused,
+              Pressed
+            );
           end;
         end for;
       end;
     when Element.TuiElement.Desktop(const DesktopFocus, const Children):
       begin
+        var ModalIndex := -1;
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
+          if Children[ChildIndex] is Element.TuiElement.Overlay(_, _) then
+            ModalIndex := ChildIndex;
+          end if;
+        end for;
+
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
+            var ChildFocus := DesktopFocus;
+            if (ModalIndex >= 0) and (ChildIndex <> ModalIndex) then
+              ChildFocus := None;
+            end if;
+            const ChildCanvas := Canvas with ActiveOverlay := ChildIndex = ModalIndex; end with;
+
             Next := TuiPaintArranged(
-              Canvas,
+              ChildCanvas,
               Frame,
               Children[ChildIndex],
               Next,
-              DesktopFocus,
+              ChildFocus,
               Pressed
             );
           end;
@@ -275,6 +365,8 @@ function TuiPaintMenuOverlays(
 begin
   var Next: integer := Index + 1;
   case Node of
+    when Element.TuiElement.TabBar(_):
+      null;
     when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu and State.Open then
@@ -289,6 +381,8 @@ begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             case Children[ChildIndex] of
+              when Element.TuiElement.TabBar(_):
+                null;
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := ChildIndex;

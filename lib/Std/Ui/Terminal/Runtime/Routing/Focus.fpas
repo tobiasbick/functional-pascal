@@ -19,6 +19,8 @@ begin
   var Next: integer := Index + 1;
   var Descendants: array of Element.TuiElement := [];
   case Node of
+    when Element.TuiElement.TabBar(_):
+      null;
     when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const ScrollChildren):
       begin
         Descendants := ScrollChildren;
@@ -91,6 +93,12 @@ public function TuiFocusableControls(Node: Element.TuiElement): array of Control
 begin
   var Descendants: array of Element.TuiElement := [];
   case Node of
+    when Element.TuiElement.TabBar(const Bar):
+      if Bar.Selected >= 0 then
+        return [Bar.Id];
+      end if;
+
+      return [];
     when Element.TuiElement.Button(const Button):
       begin
         if Button.Enabled then
@@ -197,6 +205,8 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
+              when Element.TuiElement.TabBar(_):
+                null;
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;
@@ -246,6 +256,8 @@ end function;
 public function TuiRootFocus(Root: Element.TuiElement): option of ControlId.TuiControlId;
 begin
   case Root of
+    when Element.TuiElement.TabBar(_):
+      return None;
     when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         return Focused;

@@ -1,0 +1,223 @@
+// Exercises reusable tabs with every placement, selection, input, and overflow.
+program TuiTabsTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Position: Tui.TuiTabPosition;
+  Selected: integer;
+  Focus: integer;
+end record;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  const Bar := Tui.TuiTabBar(
+    Id := Tui.TuiControlId.Create(1),
+    Items := [
+      Tui.TuiTabItem(Text := 'Alpha', Enabled := true),
+      Tui.TuiTabItem(Text := 'Disabled', Enabled := false),
+      Tui.TuiTabItem(Text := 'Gamma', Enabled := true)
+    ],
+    Selected := State.Selected, Position := State.Position, ChangeAction := Tui.TuiAction.Create(5)
+  );
+  const PageText := if State.Selected = 0 then 'Page A' else 'Page C' end if;
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakeTabs(
+        Bar,
+        Tui.TuiElementBuilders.MakeButton(
+          Tui.TuiControlId.Create(2),
+          PageText,
+          Tui.TuiAction.Create(2)
+        )
+      )
+    ]
+  );
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  case Msg of
+    when Tui.TuiMsg.SelectionChanged(const Source, const Action, const Selected):
+      Test.AssertEquals(1, Source.Value);
+      Test.AssertEquals(5, Action.Value);
+      return State with Selected := Selected; end with;
+    when Tui.TuiMsg.FocusChanged(_, const Current):
+      case Current of
+        when Some(const Id):
+          return State with Focus := Id.Value; end with;
+        when None:
+          return State;
+      end case;
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+      return State;
+  end case;
+end function;
+
+function Find(Screen: Tui.TuiSurfaceSnapshot; Text: string): Tui.TuiPoint;
+begin
+  for Y: integer := 0 to Screen.Height - 1 do
+    case Screen.LineAt(Y).IndexOf(Text) of
+      when Some(const X):
+        return Tui.TuiPoint.Create(X, Y);
+      when None:
+        null;
+    end case;
+  end for;
+
+  panic('tab label missing');
+end function;
+
+function Key(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
+begin
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
+end function;
+
+function DisabledView(State: integer): Tui.TuiElement;
+begin
+  const Bar := Tui.TuiTabBar(
+    Id := Tui.TuiControlId.Create(10),
+    Items := [Tui.TuiTabItem(Text := 'Unavailable', Enabled := false)],
+    Selected := -1, Position := Tui.TuiTabPosition.Top, ChangeAction := Tui.TuiAction.Create(10)
+  );
+  return Tui.TuiElementBuilders.MakeDesktop(
+    None, [
+      Tui.TuiElementBuilders.MakeTabs(Bar, Tui.TuiElementBuilders.MakeLabel('No page'))
+    ]
+  );
+end function;
+
+function DisabledUpdate(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  return State;
+end function;
+
+begin
+  const Colors := Tui.TuiPalette.Default().WithRole(
+    Tui.TuiStyleRole.TabSelected,
+    Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6))
+  );
+  Test.AssertEquals(1, Colors.ForRole(Tui.TuiStyleRole.TabSelected).Foreground.Red);
+  Test.AssertEquals(6, Colors.ForRole(Tui.TuiStyleRole.TabSelected).Background.Blue);
+  for Position: Tui.TuiTabPosition in [
+    Tui.TuiTabPosition.Top, Tui.TuiTabPosition.Bottom,
+    Tui.TuiTabPosition.Left, Tui.TuiTabPosition.Right
+  ] do
+    const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(50, 10));
+    var State := Model(Position := Position, Selected := 0, Focus := 1);
+    State := App.RunIterations(State, Update, View, 0, 0);
+    var Screen := App.SurfaceSnapshot();
+    const Alpha := Find(Screen, 'Alpha');
+    const Page := Find(Screen, 'Page');
+    if Position = Tui.TuiTabPosition.Top then
+      Test.AssertTrue(Alpha.Y < Page.Y);
+    end if;
+
+    if Position = Tui.TuiTabPosition.Bottom then
+      Test.AssertTrue(Alpha.Y > Page.Y);
+    end if;
+
+    if Position = Tui.TuiTabPosition.Left then
+      Test.AssertTrue(Alpha.X < Page.X);
+    end if;
+
+    if Position = Tui.TuiTabPosition.Right then
+      Test.AssertTrue(Alpha.X > Page.X);
+    end if;
+
+    Test.AssertTrue(Screen.CellAt(Alpha.X, Alpha.Y).Role = Tui.TuiStyleRole.TabSelectedFocused);
+    const Disabled := Find(Screen, 'Disabled');
+    Test.AssertTrue(Screen.CellAt(Disabled.X, Disabled.Y).Role = Tui.TuiStyleRole.TabDisabled);
+    App.InjectPointerForTest(
+      Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Disabled)
+    );
+    State := App.RunIterations(State, Update, View, 1, 0);
+    Test.AssertEquals(0, State.Selected);
+    const Forward := if (Position = Tui.TuiTabPosition.Top)
+      or
+      (Position = Tui.TuiTabPosition.Bottom) then Tui.TuiKeyKind.Right
+      else Tui.TuiKeyKind.Down
+      end if;
+    App.InjectKeyForTest(Key(Forward));
+    State := App.RunIterations(State, Update, View, 1, 0);
+    Test.AssertEquals(2, State.Selected);
+    App.InjectKeyForTest(Key(Tui.TuiKeyKind.Home));
+    State := App.RunIterations(State, Update, View, 1, 0);
+    Test.AssertEquals(0, State.Selected);
+    App.InjectKeyForTest(Key(Tui.TuiKeyKind.EndKey));
+    State := App.RunIterations(State, Update, View, 1, 0);
+    Test.AssertEquals(2, State.Selected);
+    Screen := App.SurfaceSnapshot();
+    discard Find(Screen, 'Page C');
+    const Gamma := Find(Screen, 'Gamma');
+    Test.AssertTrue(Screen.CellAt(Gamma.X, Gamma.Y).Role = Tui.TuiStyleRole.TabSelectedFocused);
+    const Pointer := Tui.TuiPointerEvent.Create(
+      Tui.TuiPointerAction.Down,
+      Tui.TuiPointerButton.Left,
+      Alpha
+    );
+    App.InjectPointerForTest(Pointer);
+    State := App.RunIterations(State, Update, View, 1, 0);
+    Test.AssertEquals(0, State.Selected);
+    State.Focus := 2;
+    State := App.RunIterations(State, Update, View, 0, 0);
+    Screen := App.SurfaceSnapshot();
+    const SelectedAt := Find(Screen, 'Alpha');
+    Test.AssertTrue(Screen.CellAt(SelectedAt.X, SelectedAt.Y).Role = Tui.TuiStyleRole.TabSelected);
+    const ClickGamma := Find(Screen, 'Gamma');
+    App.InjectPointerForTest(
+      Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, ClickGamma)
+    );
+    State := App.RunIterations(State, Update, View, 2, 0);
+    Test.AssertEquals(1, State.Focus);
+    Test.AssertEquals(2, State.Selected);
+    App.Close();
+  end for;
+  const Narrow := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 4));
+  var Small := Model(Position := Tui.TuiTabPosition.Top, Selected := 0, Focus := 1);
+  Small := Narrow.RunIterations(Small, Update, View, 0, 0);
+  const Next := Find(Narrow.SurfaceSnapshot(), '›');
+  Narrow.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Next)
+  );
+  Small := Narrow.RunIterations(Small, Update, View, 1, 0);
+  Test.AssertEquals(2, Small.Selected);
+  const Previous := Find(Narrow.SurfaceSnapshot(), '‹');
+  Narrow.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Previous)
+  );
+  Small := Narrow.RunIterations(Small, Update, View, 1, 0);
+  Test.AssertEquals(0, Small.Selected);
+  Narrow.Close();
+  const Short := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(15, 2));
+  Small := Model(Position := Tui.TuiTabPosition.Left, Selected := 0, Focus := 1);
+  Small := Short.RunIterations(Small, Update, View, 0, 0);
+  const Down := Find(Short.SurfaceSnapshot(), '↓');
+  Short.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Down)
+  );
+  Small := Short.RunIterations(Small, Update, View, 1, 0);
+  Test.AssertEquals(2, Small.Selected);
+  const Up := Find(Short.SurfaceSnapshot(), '↑');
+  Short.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Up)
+  );
+  Small := Short.RunIterations(Small, Update, View, 1, 0);
+  Test.AssertEquals(0, Small.Selected);
+  Short.Close();
+  const DisabledApp := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
+  discard DisabledApp.RunIterations(0, DisabledUpdate, DisabledView, 0, 0);
+  const DisabledAt := Find(DisabledApp.SurfaceSnapshot(), 'Unavailable');
+  Test.AssertTrue(
+    DisabledApp.SurfaceSnapshot().CellAt(DisabledAt.X, DisabledAt.Y).Role =
+    Tui.TuiStyleRole.TabDisabled
+  );
+  DisabledApp.Close();
+end.

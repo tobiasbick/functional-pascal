@@ -11,21 +11,30 @@ procedure TuiPaintButtonText(
   Position: Point.TuiPoint;
   Button: ChromeButton.TuiButtonSpec;
   Role: StyleRole.TuiStyleRole;
-  ShortcutRole: StyleRole.TuiStyleRole
+  ShortcutRole: StyleRole.TuiStyleRole;
+  Appearance: ChromeButton.TuiButtonAppearance
 );
 begin
   var X: integer := Position.X;
-  for Index: integer := 0 to Button.Text.Length() - 1 do
+  for Glyph: string in Console.SplitGraphemes(Button.Text) do
     begin
-      const Glyph: string := Button.Text[Index];
+      if Glyph = string.Chr(10) then
+        return;
+      end if;
       var GlyphRole: StyleRole.TuiStyleRole := Role;
-      if (Button.Mnemonic <> '') and (Glyph.ToLower() = Button.Mnemonic.ToLower()) then
+      const IsShortcut := (Button.Mnemonic <> '') and (Glyph.ToLower() = Button.Mnemonic.ToLower());
+      if IsShortcut then
         begin
           GlyphRole := ShortcutRole;
         end;
       end if;
 
-      Canvas.WriteText(Point.TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
+      Canvas.PutCell(
+        Point.TuiPoint.Create(X, Position.Y),
+        Cell.TuiCell.Create(Glyph, GlyphRole) with ButtonAppearance := Some(
+          Appearance with Shortcut := IsShortcut; end with
+        ); end with
+      );
       X := X + Console.DisplayWidth(Glyph);
     end;
   end for;
@@ -45,7 +54,7 @@ begin
     end;
   end if;
 
-  if Button.Default then
+  if Button.Default or Button.Active then
     begin
       return StyleRole.TuiStyleRole.ButtonDefault;
     end;
@@ -68,7 +77,7 @@ begin
     end;
   end if;
 
-  if Button.Default then
+  if Button.Default or Button.Active then
     begin
       return StyleRole.TuiStyleRole.ButtonDefaultShortcut;
     end;
@@ -102,11 +111,9 @@ begin
   var ShortcutRole: StyleRole.TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
   const ContentWidth: integer := Bounds.Width;
   const TextWidth: integer := Console.DisplayWidth(Button.Text);
-  var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
-  if TextX < Bounds.X + 1 then
-    begin
-      TextX := Bounds.X + 1;
-    end;
+  var Left: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
+  if Left < Bounds.X then
+    Left := Bounds.X;
   end if;
 
   if Pressed and Button.Enabled then
@@ -115,13 +122,38 @@ begin
       ShortcutRole := StyleRole.TuiStyleRole.ButtonSelectedShortcut;
     end;
   end if;
-
-  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', Role));
-  TuiPaintButtonText(Canvas, Point.TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
-  if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then
-    begin
-      Canvas.WriteText(Point.TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role);
-    end;
+  var State := ChromeButton.TuiButtonState.Normal;
+  if Button.Active then
+    State := ChromeButton.TuiButtonState.Active;
   end if;
+
+  if Focused then
+    State := ChromeButton.TuiButtonState.Focused;
+  end if;
+
+  if Pressed then
+    State := ChromeButton.TuiButtonState.Pressed;
+  end if;
+
+  if not Button.Enabled then
+    State := ChromeButton.TuiButtonState.Disabled;
+  end if;
+  const Appearance := ChromeButton.TuiButtonAppearance(
+    Kind := Button.Kind, State := State,
+    Default := Button.Default, Shortcut := false
+  );
+  Canvas.FillRect(
+    Bounds,
+    Cell.TuiCell.Create(' ', Role) with ButtonAppearance := Some(Appearance); end with
+  );
+  const Clipped := Canvas.Child(Bounds);
+  TuiPaintButtonText(
+    Clipped,
+    Point.TuiPoint.Create(Left - Bounds.X, 0),
+    Button,
+    Role,
+    ShortcutRole,
+    Appearance
+  );
 end procedure;
 end unit;

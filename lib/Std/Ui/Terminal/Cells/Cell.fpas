@@ -2,7 +2,7 @@ unit Std.Ui.Terminal.Cells.Cell;
 
 uses
   Std.Ui.Terminal.Cells.Glyph as CellsGlyph, Std.Ui.Terminal.Cells.Style as CellsStyle,
-  Std.Ui.Terminal.Cells.StyleRole as StyleRole;
+  Std.Ui.Terminal.Cells.StyleRole as StyleRole, Std.Ui.Terminal.Chrome.Button as Button;
 
 // One validated renderable grapheme with a semantic or concrete style.
 public type TuiCell = record
@@ -14,6 +14,8 @@ public type TuiCell = record
   public ConcreteStyle: option of CellsStyle.TuiStyle;
   // Display width of the glyph in terminal cells.
   public Columns: integer;
+  // Optional semantic button appearance resolved by the application theme.
+  public ButtonAppearance: option of Button.TuiButtonAppearance := None;
 
   // Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
   //

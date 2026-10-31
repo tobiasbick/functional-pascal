@@ -28,6 +28,29 @@ space from a `Row` or `Column`; negative extents panic.
 spacing. A direct desktop `Overlay` is centered at its preferred size; a
 `Panel` participates in ordinary layout.
 
+## Responsive overlays
+
+`TuiOverlaySizeRule.Create(Minimum, MarginCells, MarginPercent)` describes a
+centered overlay independently of its contents. `Minimum` is its desired outer
+frame size, `MarginCells` is the minimum gap on each side, and `MarginPercent`
+is the desired percentage of the viewport on each side, from 0 to 50 inclusive.
+For each axis the rule chooses the larger of the minimum and the viewport minus
+the two percentage margins, capped to preserve the cell margins. When a screen
+cannot fit the minimum and those margins, the margins shrink first; when even
+the minimum does not fit, the overlay uses the available extent. Percentage
+rounding is down. The rule is re-resolved when the viewport changes.
+
+Pass the rule to `MakeResponsiveOverlay(Title, Rule, Children)` directly under
+the desktop. It retains ordinary overlay stacking, focus and pointer behavior.
+`Rule.Resolve(Size)` exposes the same outer dimensions to applications that
+need to paginate or adapt their content. For example, a minimum of 72 × 17,
+four-cell margins and 25% per side resolves to 72 × 17 at 80 × 25 and
+100 × 30 at 200 × 60.
+
+The rule sizes the frame; it does not automatically scroll or reflow content.
+Applications must adapt or provide scrollable content and keep controls
+reachable when the available space is smaller than their preferred size.
+
 `TextArea` measures to a minimum of one cell, prefers its widest logical line
 and logical-line count, and permits expansion in both axes. A direct `TextArea`
 participates in stable remaining-space distribution, so its arranged bounds

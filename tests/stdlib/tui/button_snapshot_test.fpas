@@ -44,6 +44,8 @@ begin
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 10));
   discard App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
   const Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertFalse('[' in Surface.LineAt(1));
+  Test.AssertFalse(']' in Surface.LineAt(1));
   const GoX: integer := Surface.LineAt(1).IndexOf('G').Unwrap();
   const OkX: integer := Surface.LineAt(2).IndexOf('O').Unwrap();
   const StopX: integer := Surface.LineAt(3).IndexOf('S').Unwrap();

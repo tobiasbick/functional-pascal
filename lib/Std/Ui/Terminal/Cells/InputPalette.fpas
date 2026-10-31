@@ -48,10 +48,14 @@ public type TuiInputPalette = record
   public function ForRole(Self: TuiInputPalette; Role: StyleRole.TuiStyleRole): CellsStyle.TuiStyle;
   begin
     case Role of
+      when StyleRole.TuiStyleRole.PanelNormal, StyleRole.TuiStyleRole.PanelTitle, StyleRole.TuiStyleRole.PanelFocusedFrame, StyleRole.TuiStyleRole.OverlayNormal, StyleRole.TuiStyleRole.OverlayFrame, StyleRole.TuiStyleRole.OverlayFocusedFrame, StyleRole.TuiStyleRole.OverlayTitle:
+        panic('Tui input palette requires an input style role');
       when StyleRole.TuiStyleRole.InputNormal:
         begin
           return Self.Normal;
         end;
+      when StyleRole.TuiStyleRole.TabNormal, StyleRole.TuiStyleRole.TabSelected, StyleRole.TuiStyleRole.TabSelectedFocused, StyleRole.TuiStyleRole.TabDisabled:
+        panic('Tui input palette requires an input style role');
       when StyleRole.TuiStyleRole.InputFocused:
         begin
           return Self.Focused;
@@ -85,10 +89,14 @@ public type TuiInputPalette = record
   begin
     var Updated: TuiInputPalette := Self;
     case Role of
+      when StyleRole.TuiStyleRole.PanelNormal, StyleRole.TuiStyleRole.PanelTitle, StyleRole.TuiStyleRole.PanelFocusedFrame, StyleRole.TuiStyleRole.OverlayNormal, StyleRole.TuiStyleRole.OverlayFrame, StyleRole.TuiStyleRole.OverlayFocusedFrame, StyleRole.TuiStyleRole.OverlayTitle:
+        panic('Tui input palette requires an input style role');
       when StyleRole.TuiStyleRole.InputNormal:
         begin
           Updated.Normal := Style;
         end;
+      when StyleRole.TuiStyleRole.TabNormal, StyleRole.TuiStyleRole.TabSelected, StyleRole.TuiStyleRole.TabSelectedFocused, StyleRole.TuiStyleRole.TabDisabled:
+        panic('Tui input palette requires an input style role');
       when StyleRole.TuiStyleRole.InputFocused:
         begin
           Updated.Focused := Style;

@@ -1,0 +1,25 @@
+// Controlled-list actions and selection-following viewport geometry.
+unit Std.Ui.Terminal.Chrome.List;
+
+uses Std.Ui.Terminal.Ids.Action as Action;
+
+// Selection-change action and optional explicit activation action.
+public type TuiListActions = record
+  public Change: Action.TuiAction;
+  public Activate: option of Action.TuiAction;
+end record;
+
+// First visible row; keeps the selected item in a clipped viewport.
+public function TuiListFirst(Count: integer; Selected: integer; Height: integer): integer;
+begin
+  if (Count <= 0) or (Selected < 0) or (Height <= 0) then
+    return 0;
+  end if;
+
+  if Selected >= Height then
+    return Selected - Height + 1;
+  end if;
+
+  return 0;
+end function;
+end unit;

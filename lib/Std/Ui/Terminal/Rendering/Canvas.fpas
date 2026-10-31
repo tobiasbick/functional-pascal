@@ -13,6 +13,10 @@ public type TuiCanvas = record
   public Clip: Rect.TuiRect;
   // Canvas origin in surface coordinates.
   public Origin: Point.TuiPoint;
+  // Semantic normal role inherited by cells on this surface.
+  public SurfaceRole: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.Normal;
+  // Whether the current desktop child is the topmost overlay.
+  public ActiveOverlay: boolean := false;
 
   // Creates a canvas clipped to `Bounds` intersected with the surface.
   //
@@ -62,7 +66,17 @@ public type TuiCanvas = record
         Self.Origin.X + LocalBounds.X, Self.Origin.Y +
         LocalBounds.Y
       ), ChildClip
-    );
+    ) with SurfaceRole := Self.SurfaceRole; ActiveOverlay := Self.ActiveOverlay; end with;
+  end function;
+
+  // Resolves ordinary semantic cells against the enclosing surface without changing concrete cells.
+  public function SurfaceCell(Self: TuiCanvas; Cell: CellsCell.TuiCell): CellsCell.TuiCell;
+  begin
+    if (Cell.Role = StyleRole.TuiStyleRole.Normal) and (Cell.ConcreteStyle is None) then
+      return Cell with Role := Self.SurfaceRole; end with;
+    end if;
+
+    return Cell;
   end function;
 
   // Paints one cell in local coordinates; clipped and wide-glyph aware.
@@ -88,7 +102,7 @@ public type TuiCanvas = record
           Point.TuiPoint.Create(
             Self.Origin.X + Position.X, Self.Origin.Y +
             Position.Y
-          ), CellsCell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal)
+          ), Self.SurfaceCell(CellsCell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal))
         );
         return;
       end;
@@ -98,7 +112,7 @@ public type TuiCanvas = record
       Point.TuiPoint.Create(
         Self.Origin.X + Position.X, Self.Origin.Y +
         Position.Y
-      ), Cell
+      ), Self.SurfaceCell(Cell)
     );
   end procedure;
 
@@ -136,7 +150,7 @@ public type TuiCanvas = record
       Self.Surface, Rect.TuiRect.Create(
         Self.Origin.X + Visible.X, Self.Origin.Y +
         Visible.Y, Visible.Width, Visible.Height
-      ), Cell
+      ), Self.SurfaceCell(Cell)
     );
   end procedure;
 
@@ -375,6 +389,17 @@ begin
       Values[Count - 1] := CellsCell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal);
     end;
   end if;
+
+  for Index: integer := 0 to Values.Length() - 1 do
+    if (Values[Index].Role = StyleRole.TuiStyleRole.Normal)
+      and
+      (Values[Index].ConcreteStyle is None)
+      and
+      (Canvas.SurfaceRole <> StyleRole.TuiStyleRole.Normal)
+    then
+      Values[Index] := Canvas.SurfaceCell(Values[Index]);
+    end if;
+  end for;
 
   RenderingSurface.TuiSurfacePutCells(
     Canvas.Surface, Point.TuiPoint.Create(

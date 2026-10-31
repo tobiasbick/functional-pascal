@@ -7,6 +7,7 @@ uses
   Std.Ui.Terminal.Runtime.Application.State as ApplicationState, Std.Ui.Terminal.Runtime.Cmd as RuntimeCmd,
   Std.Ui.Terminal.Runtime.Frame as Frame, Std.Ui.Terminal.Runtime.Input as RuntimeInput,
   Std.Ui.Terminal.Runtime.Msg as RuntimeMsg, Std.Ui.Terminal.Runtime.Routing.Pointer as Pointer,
+  Std.Ui.Terminal.Runtime.Routing.ListActivation as ListActivation,
   Std.Ui.Terminal.Runtime.TerminalRenderer as TerminalRenderer, Std.Ui.Terminal.Runtime.Subviews as Subviews;
 
 procedure TuiLoopRender(ApplicationId: integer; Tree: Element.TuiElement; Present: boolean);
@@ -51,6 +52,13 @@ begin
   ApplicationState.TuiAppApplyResizeIfNeeded(ApplicationId, Msg);
   const Cmd: RuntimeCmd.TuiCmdOutput := ApplicationState.TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
+  if not ListActivation.TuiListActivationAllows(
+    ApplicationId, ApplicationState.TuiAppRenderStates[ApplicationId - 1].Tree, Msg
+  )
+  then
+    return Model;
+  end if;
+
   return Update(Model, Msg, Cmd);
 end function;
 

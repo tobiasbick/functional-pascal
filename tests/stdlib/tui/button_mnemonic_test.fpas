@@ -1,0 +1,60 @@
+// Mnemonic cells remain visible in the default palette across button states.
+program ButtonMnemonicTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+function View(Kind: Tui.TuiButtonKind): Tui.TuiElement;
+begin
+  const Button := Tui.TuiButtonSpec.Normal(
+    Tui.TuiControlId.Create(1), 'Erase', 'E', Tui.TuiAction.Create(1)
+  ) with Kind := Kind; end with;
+
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [Tui.TuiElement.Button(Button)]
+  );
+end function;
+
+function Update(Kind: Tui.TuiButtonKind; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiButtonKind;
+begin
+  return Kind;
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
+  const Palette := Tui.TuiPalette.Default();
+  for Kind: Tui.TuiButtonKind in [
+    Tui.TuiButtonKind.Normal, Tui.TuiButtonKind.Primary, Tui.TuiButtonKind.Cancel,
+    Tui.TuiButtonKind.Warning, Tui.TuiButtonKind.Dangerous
+  ] do
+    discard App.RunIterations(Kind, Update, View, 0, 0);
+    const Screen := App.SurfaceSnapshot();
+    const X := Screen.LineAt(0).IndexOf('Erase').Unwrap();
+    const Mnemonic := Palette.Buttons.Resolve(Screen.CellAt(X, 0).ButtonAppearance.Unwrap());
+    const Ordinary := Palette.Buttons.Resolve(Screen.CellAt(X + 1, 0).ButtonAppearance.Unwrap());
+    Test.AssertTrue(Mnemonic.Foreground <> Ordinary.Foreground);
+    Test.AssertTrue(Mnemonic.Background = Ordinary.Background);
+    for State: Tui.TuiButtonState in [
+      Tui.TuiButtonState.Normal, Tui.TuiButtonState.Active,
+      Tui.TuiButtonState.Focused, Tui.TuiButtonState.Pressed,
+      Tui.TuiButtonState.Disabled
+    ] do
+      for IsDefault: boolean in [false, true] do
+        const Appearance := Tui.TuiButtonAppearance(
+          Kind := Kind, State := State, Default := IsDefault, Shortcut := false
+        );
+        const TextStyle := Palette.Buttons.Resolve(Appearance);
+        const ShortcutStyle := Palette.Buttons.Resolve(
+          Appearance with Shortcut := true; end with
+        );
+        if State = Tui.TuiButtonState.Disabled then
+          Test.AssertTrue(TextStyle = ShortcutStyle);
+        else
+          Test.AssertTrue(TextStyle.Foreground <> ShortcutStyle.Foreground);
+          Test.AssertTrue(TextStyle.Background = ShortcutStyle.Background);
+        end if;
+      end for;
+    end for;
+  end for;
+
+  App.Close();
+end.

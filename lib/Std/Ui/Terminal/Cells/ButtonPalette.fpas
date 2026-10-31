@@ -1,6 +1,50 @@
 unit Std.Ui.Terminal.Cells.ButtonPalette;
 
-uses Std.Ui.Terminal.Cells.Style as CellsStyle, Std.Ui.Terminal.Cells.StyleRole as StyleRole;
+uses
+  Std.Ui.Terminal.Cells.Style as CellsStyle, Std.Ui.Terminal.Cells.StyleRole as StyleRole,
+  Std.Ui.Terminal.Chrome.Button as Button, Std.Ui.Terminal.Cells.Color as Color;
+
+// Theme styles for one button meaning across independent interaction states.
+public type TuiButtonColors = record
+  public Normal: CellsStyle.TuiStyle;
+  public Active: CellsStyle.TuiStyle;
+  public Focused: CellsStyle.TuiStyle;
+  public Pressed: CellsStyle.TuiStyle;
+  public Disabled: CellsStyle.TuiStyle;
+  public Default: CellsStyle.TuiStyle;
+  // Optional mnemonic foreground; absent uses the matching fallback shortcut role.
+  public ShortcutForeground: option of Color.TuiColor := None;
+
+  // Supplies explicit colors for each state and the idle default action.
+  public static function Create(Normal: CellsStyle.TuiStyle; Active: CellsStyle.TuiStyle; Focused: CellsStyle.TuiStyle; Pressed: CellsStyle.TuiStyle; Disabled: CellsStyle.TuiStyle; Default: CellsStyle.TuiStyle): TuiButtonColors;
+  begin
+    return TuiButtonColors(
+      Normal := Normal, Active := Active, Focused := Focused,
+      Pressed := Pressed, Disabled := Disabled, Default := Default
+    );
+  end function;
+
+  // Resolves state first; default action affects the idle style only.
+  public function Resolve(Self: TuiButtonColors; State: Button.TuiButtonState; IsDefault: boolean): CellsStyle.TuiStyle;
+  begin
+    case State of
+      when Button.TuiButtonState.Normal:
+        if IsDefault then
+          return Self.Default;
+        end if;
+
+        return Self.Normal;
+      when Button.TuiButtonState.Active:
+        return Self.Active;
+      when Button.TuiButtonState.Focused:
+        return Self.Focused;
+      when Button.TuiButtonState.Pressed:
+        return Self.Pressed;
+      when Button.TuiButtonState.Disabled:
+        return Self.Disabled;
+    end case;
+  end function;
+end record;
 
 // Concrete styles for every flat button state.
 public type TuiButtonPalette = record
@@ -18,6 +62,90 @@ public type TuiButtonPalette = record
   public DefaultShortcut: CellsStyle.TuiStyle;
   // Shortcut style used by a selected button.
   public SelectedShortcut: CellsStyle.TuiStyle;
+  // Optional per-meaning palettes. None uses the legacy button roles.
+  public NormalKind: option of TuiButtonColors := None;
+  public Primary: option of TuiButtonColors := None;
+  public Cancel: option of TuiButtonColors := None;
+  public Warning: option of TuiButtonColors := None;
+  public Dangerous: option of TuiButtonColors := None;
+
+  // Resolves a button's meaning and interaction state with legacy fallback.
+  public function Resolve(Self: TuiButtonPalette; Appearance: Button.TuiButtonAppearance): CellsStyle.TuiStyle;
+  begin
+    var Colors: option of TuiButtonColors := None;
+    case Appearance.Kind of
+      when Button.TuiButtonKind.Normal:
+        Colors := Self.NormalKind;
+      when Button.TuiButtonKind.Primary:
+        Colors := Self.Primary;
+      when Button.TuiButtonKind.Cancel:
+        Colors := Self.Cancel;
+      when Button.TuiButtonKind.Warning:
+        Colors := Self.Warning;
+      when Button.TuiButtonKind.Dangerous:
+        Colors := Self.Dangerous;
+    end case;
+
+    case Colors of
+      when Some(const Value):
+        var Style := Value.Resolve(Appearance.State, Appearance.Default);
+        if Appearance.Shortcut and (Appearance.State <> Button.TuiButtonState.Disabled) then
+          var Foreground := Self.Shortcut.Foreground;
+          if (Appearance.State = Button.TuiButtonState.Focused)
+            or
+            (Appearance.State = Button.TuiButtonState.Pressed)
+          then
+            Foreground := Self.SelectedShortcut.Foreground;
+          elsif (Appearance.State = Button.TuiButtonState.Active) or Appearance.Default then
+            Foreground := Self.DefaultShortcut.Foreground;
+          end if;
+
+          case Value.ShortcutForeground of
+            when Some(const Override):
+              Foreground := Override;
+            when None:
+              null;
+          end case;
+
+          Style.Foreground := Foreground;
+        end if;
+
+        return Style;
+      when None:
+        null;
+    end case;
+
+    case Appearance.State of
+      when Button.TuiButtonState.Disabled:
+        return Self.Disabled;
+      when Button.TuiButtonState.Focused, Button.TuiButtonState.Pressed:
+        if Appearance.Shortcut then
+          return Self.SelectedShortcut;
+        end if;
+
+        return Self.Selected;
+      when Button.TuiButtonState.Active:
+        if Appearance.Shortcut then
+          return Self.DefaultShortcut;
+        end if;
+
+        return Self.Default;
+      when Button.TuiButtonState.Normal:
+        if Appearance.Default then
+          if Appearance.Shortcut then
+            return Self.DefaultShortcut;
+          end if;
+
+          return Self.Default;
+        end if;
+
+        if Appearance.Shortcut then
+          return Self.Shortcut;
+        end if;
+
+        return Self.Normal;
+    end case;
+  end function;
 
   // Creates a complete button palette.
   //
@@ -58,10 +186,14 @@ public type TuiButtonPalette = record
   public function ForRole(Self: TuiButtonPalette; Role: StyleRole.TuiStyleRole): CellsStyle.TuiStyle;
   begin
     case Role of
+      when StyleRole.TuiStyleRole.PanelNormal, StyleRole.TuiStyleRole.PanelTitle, StyleRole.TuiStyleRole.PanelFocusedFrame, StyleRole.TuiStyleRole.OverlayNormal, StyleRole.TuiStyleRole.OverlayFrame, StyleRole.TuiStyleRole.OverlayFocusedFrame, StyleRole.TuiStyleRole.OverlayTitle:
+        panic('Tui button palette requires a button style role');
       when StyleRole.TuiStyleRole.ButtonNormal:
         begin
           return Self.Normal;
         end;
+      when StyleRole.TuiStyleRole.TabNormal, StyleRole.TuiStyleRole.TabSelected, StyleRole.TuiStyleRole.TabSelectedFocused, StyleRole.TuiStyleRole.TabDisabled:
+        panic('Tui button palette requires a button style role');
       when StyleRole.TuiStyleRole.ButtonDefault:
         begin
           return Self.Default;
@@ -103,10 +235,14 @@ public type TuiButtonPalette = record
   begin
     var Updated: TuiButtonPalette := Self;
     case Role of
+      when StyleRole.TuiStyleRole.PanelNormal, StyleRole.TuiStyleRole.PanelTitle, StyleRole.TuiStyleRole.PanelFocusedFrame, StyleRole.TuiStyleRole.OverlayNormal, StyleRole.TuiStyleRole.OverlayFrame, StyleRole.TuiStyleRole.OverlayFocusedFrame, StyleRole.TuiStyleRole.OverlayTitle:
+        panic('Tui button palette requires a button style role');
       when StyleRole.TuiStyleRole.ButtonNormal:
         begin
           Updated.Normal := Style;
         end;
+      when StyleRole.TuiStyleRole.TabNormal, StyleRole.TuiStyleRole.TabSelected, StyleRole.TuiStyleRole.TabSelectedFocused, StyleRole.TuiStyleRole.TabDisabled:
+        panic('Tui button palette requires a button style role');
       when StyleRole.TuiStyleRole.ButtonDefault:
         begin
           Updated.Default := Style;

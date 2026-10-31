@@ -21,6 +21,8 @@ end record;
 function TuiFindRouteMenu(Node: Element.TuiElement): option of TuiRouteMenu;
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      return None;
     when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         return Some(
@@ -33,6 +35,8 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
+              when Element.TuiElement.TabBar(_):
+                null;
               when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;

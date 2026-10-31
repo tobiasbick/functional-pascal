@@ -1,0 +1,74 @@
+// Responsive modal sizing stays stable across content, focus, and terminal resize.
+program ResponsiveOverlayTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+function Rule(): Tui.TuiOverlaySizeRule;
+begin
+  return Tui.TuiOverlaySizeRule.Create(Tui.TuiSize.Create(72, 17), 4, 25);
+end function;
+
+function View(State: integer): Tui.TuiElement;
+begin
+  const Content := if State = 0 then 'Short' else 'A longer page with different content' end if;
+  const Sizing := if State = 2 then Tui.TuiOverlaySizeRule.Create(
+    Tui.TuiSize.Create(30, 10),
+    1,
+    10
+  )
+    else Rule()
+    end if;
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeLabel('background'),
+      Tui.TuiElementBuilders.MakeResponsiveOverlay(
+        'Settings', Sizing, [
+          Tui.TuiElementBuilders.MakeLabel(Content),
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(1),
+            'OK',
+            Tui.TuiAction.Create(1)
+          )
+        ]
+      )
+    ]
+  );
+end function;
+
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  return State;
+end function;
+
+procedure AssertFrame(Screen: Tui.TuiSurfaceSnapshot; X: integer; Y: integer; Width: integer; Height: integer);
+begin
+  Test.AssertEquals('╭', Screen.CellAt(X, Y).Glyph);
+  Test.AssertEquals('╮', Screen.CellAt(X + Width - 1, Y).Glyph);
+  Test.AssertEquals('╰', Screen.CellAt(X, Y + Height - 1).Glyph);
+  Test.AssertEquals('╯', Screen.CellAt(X + Width - 1, Y + Height - 1).Glyph);
+  Test.AssertTrue(Screen.CellAt(X, Y).Role = Tui.TuiStyleRole.OverlayFocusedFrame);
+end procedure;
+
+begin
+  Test.AssertTrue(Rule().Resolve(Tui.TuiSize.Create(80, 25)) = Tui.TuiSize.Create(72, 17));
+  Test.AssertTrue(Rule().Resolve(Tui.TuiSize.Create(120, 40)) = Tui.TuiSize.Create(72, 20));
+  Test.AssertTrue(Rule().Resolve(Tui.TuiSize.Create(200, 60)) = Tui.TuiSize.Create(100, 30));
+  Test.AssertTrue(Rule().Resolve(Tui.TuiSize.Create(40, 12)) = Tui.TuiSize.Create(40, 12));
+  Test.AssertTrue(Rule().Resolve(Tui.TuiSize.Create(0, 0)) = Tui.TuiSize.Create(0, 0));
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(80, 25));
+  discard App.RunIterations(0, Update, View, 0, 0);
+  AssertFrame(App.SurfaceSnapshot(), 4, 4, 72, 17);
+  discard App.RunIterations(1, Update, View, 0, 0);
+  AssertFrame(App.SurfaceSnapshot(), 4, 4, 72, 17);
+  discard App.RunIterations(2, Update, View, 0, 0);
+  AssertFrame(App.SurfaceSnapshot(), 8, 2, 64, 21);
+  discard App.RunIterations(1, Update, View, 0, 0);
+  AssertFrame(App.SurfaceSnapshot(), 4, 4, 72, 17);
+  App.InjectResizeForTest(Tui.TuiSize.Create(200, 60));
+  discard App.RunIterations(1, Update, View, 1, 0);
+  AssertFrame(App.SurfaceSnapshot(), 50, 15, 100, 30);
+  App.InjectResizeForTest(Tui.TuiSize.Create(40, 12));
+  discard App.RunIterations(1, Update, View, 1, 0);
+  AssertFrame(App.SurfaceSnapshot(), 0, 0, 40, 12);
+  App.Close();
+end.

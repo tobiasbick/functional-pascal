@@ -16,6 +16,28 @@ public type TuiStyleRole = enum
   Frame;
   // Represents the `Title` variant of `TuiStyleRole`.
   Title;
+  // Normal text and background inside a panel.
+  PanelNormal;
+  // Panel title on its surface.
+  PanelTitle;
+  // Frame of a panel containing the focused control.
+  PanelFocusedFrame;
+  // Normal text and background inside an overlay.
+  OverlayNormal;
+  // Frame of an inactive overlay.
+  OverlayFrame;
+  // Frame of the active overlay.
+  OverlayFocusedFrame;
+  // Overlay title on its surface.
+  OverlayTitle;
+  // Tab label in its ordinary state.
+  TabNormal;
+  // Selected tab without keyboard focus.
+  TabSelected;
+  // Selected tab whose bar owns keyboard focus.
+  TabSelectedFocused;
+  // Tab that cannot be selected.
+  TabDisabled;
   // Represents the `MenuNormal` variant of `TuiStyleRole`.
   MenuNormal;
   // Represents the `MenuDisabled` variant of `TuiStyleRole`.

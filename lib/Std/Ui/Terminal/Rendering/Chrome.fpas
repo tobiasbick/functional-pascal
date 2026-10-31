@@ -11,7 +11,10 @@ uses
 // - `Canvas`: Canvas that receives the drawing operation.
 // - `Bounds`: Rectangle affected by the operation.
 // - `Title`: Title displayed by the panel.
-public procedure TuiPaintPanel(Canvas: RenderingCanvas.TuiCanvas; Bounds: Rect.TuiRect; Title: string);
+public procedure TuiPaintPanel(
+  Canvas: RenderingCanvas.TuiCanvas; Bounds: Rect.TuiRect; Title: string;
+  FrameRole: StyleRole.TuiStyleRole; TitleRole: StyleRole.TuiStyleRole
+);
 begin
   if Bounds.IsEmpty() then
     begin
@@ -20,12 +23,12 @@ begin
   end if;
 
   Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
-  Canvas.DrawFrame(Bounds, StyleRole.TuiStyleRole.Frame);
+  Canvas.DrawFrame(Bounds, FrameRole);
   if (Title <> '') and (Bounds.Width > 6) then
     begin
       Canvas.Child(
         Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1)
-      ).WriteText(Point.TuiPoint.Create(0, 0), ' ' + Title + ' ', StyleRole.TuiStyleRole.Title);
+      ).WriteText(Point.TuiPoint.Create(0, 0), ' ' + Title + ' ', TitleRole);
     end;
   end if;
 end procedure;

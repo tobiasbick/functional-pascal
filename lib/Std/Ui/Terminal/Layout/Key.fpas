@@ -4,7 +4,8 @@ uses
   Std.Console as Console, Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Elements.Tree as Tree,
   Std.Ui.Terminal.Layout.Measure as Measure, Std.Ui.Terminal.Layout.MeasureSpec as Spec,
   Std.Ui.Terminal.Layout.MeasureResult as Measured, Std.Ui.Terminal.Layout.LayoutSettings as Settings,
-  Std.Ui.Terminal.Layout.Spacer as Spacer, Std.Ui.Terminal.Geometry.Point as Point;
+  Std.Ui.Terminal.Layout.Spacer as Spacer, Std.Ui.Terminal.Geometry.Point as Point,
+  Std.Ui.Terminal.Chrome.Overlay as Overlay;
 
 // Preorder tokens contain only geometry inputs, including parent-axis growth rules.
 public type TuiLayoutToken = enum
@@ -15,6 +16,7 @@ public type TuiLayoutToken = enum
   TextArea(Hint: Measured.TuiMeasureResult);
   CheckBox(Hint: Measured.TuiMeasureResult);
   List(Hint: Measured.TuiMeasureResult);
+  TabBar(Hint: Measured.TuiMeasureResult);
   MenuBar(Hint: Measured.TuiMeasureResult);
   Menu(Hint: Measured.TuiMeasureResult);
   StatusLine(Hint: Measured.TuiMeasureResult);
@@ -27,13 +29,17 @@ public type TuiLayoutToken = enum
   Scroll(Offset: Point.TuiPoint);
   Spacer(Value: Spacer.TuiSpacer);
   Panel(Count: integer; TitleWidth: integer);
-  Overlay(Count: integer; TitleWidth: integer);
+  Overlay(Count: integer; TitleWidth: integer; Rule: option of Overlay.TuiOverlaySizeRule);
   Desktop(Count: integer);
 end enum;
 
 procedure TuiCollectLayoutKey(Node: Element.TuiElement; var Key: array of TuiLayoutToken);
 begin
   case Node of
+    when Element.TuiElement.TabBar(_):
+      Key.PushInPlace(
+        TuiLayoutToken.TabBar(Measure.TuiMeasure(Node, Spec.TuiMeasureSpec.Unbounded()))
+      );
     when Element.TuiElement.Empty:
       Key.PushInPlace(TuiLayoutToken.Empty);
     when Element.TuiElement.Label(_):
@@ -97,7 +103,13 @@ begin
     when Element.TuiElement.Panel(const Title, const Children):
       Key.PushInPlace(TuiLayoutToken.Panel(Children.Length(), Console.DisplayWidth(Title)));
     when Element.TuiElement.Overlay(const Title, const Children):
-      Key.PushInPlace(TuiLayoutToken.Overlay(Children.Length(), Console.DisplayWidth(Title)));
+      Key.PushInPlace(
+        TuiLayoutToken.Overlay(
+          Children.Length(),
+          Console.DisplayWidth(Title.Title),
+          Title.SizeRule
+        )
+      );
     when Element.TuiElement.Desktop(_, const Children):
       Key.PushInPlace(TuiLayoutToken.Desktop(Children.Length()));
   end case;

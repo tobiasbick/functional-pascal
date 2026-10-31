@@ -13,7 +13,7 @@ begin
     Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Ok', Tui.TuiAction.Create(1)),
     Tui.TuiMeasureSpec.Unbounded()
   );
-  Test.AssertEquals(6, ButtonSize.Preferred.Width);
+  Test.AssertEquals(4, ButtonSize.Preferred.Width);
   Test.AssertEquals(1, ButtonSize.Preferred.Height);
   const EmptyIgnored: Tui.TuiMeasureResult := Tui.TuiMeasure(
     Tui.TuiElementBuilders.MakeRow([

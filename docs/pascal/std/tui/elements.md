@@ -4,12 +4,13 @@
 
 ```text
 TuiElement.Empty
-TuiElement.Label(Text)
+TuiElement.Label(Value)
 TuiElement.Button(Value)
 TuiElement.Input(Value)
 TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction)
 TuiElement.CheckBox(Id, Text, Checked, ChangeAction)
-TuiElement.List(Id, Items, Selected, ChangeAction)
+TuiElement.List(Id, Items, Selected, Actions)
+TuiElement.TabBar(Value)
 TuiElement.Scroll(Id, Offset, ChangeAction, Children)
 TuiElement.MenuBar(Items)
 TuiElement.Menu(Id, Nodes, State, ChangeAction)
@@ -22,7 +23,7 @@ TuiElement.Column(Children, Spacing)
 TuiElement.Layout(Settings, Children)
 TuiElement.Spacer(Value)
 TuiElement.Panel(Title, Children)
-TuiElement.Overlay(Title, Children)
+TuiElement.Overlay(Spec, Children)
 TuiElement.Desktop(Focused, Children);
 ```
 
@@ -37,19 +38,42 @@ creates the focusable, actionable status item. Status lines containing only
 hints and key hints are not focusable.
 
 `Button(Value)` stores a `TuiButtonSpec` containing its identity, text,
-one-character mnemonic, action, default state, and enabled state. Prefer the
+one-character mnemonic, action, default, active, and enabled states. Prefer the
 builders:
 
 - `MakeButton` creates an enabled ordinary button without a mnemonic;
+- `MakeActiveButton` marks an active choice without assigning a default action;
 - `MakeButtonWithMnemonic` creates an enabled ordinary button;
 - `MakeDefaultButton` creates the action selected by Enter when no focused
   control handles Enter;
 - `MakeDisabledButton` creates a non-focusable, non-actionable button.
 
 The mnemonic must occur in the button text, ignoring case. Buttons are compact
-one-row controls. Focus, default state, disabled state, and mnemonics are
+one-row controls with a space of padding on each side and no automatic brackets.
+Focus, active and default states, disabled state, and mnemonics are
 expressed through semantic colors instead of block shadows or directional
 markers.
+
+`MakeButtonOfKind` sets the semantic meaning (`Normal`, `Primary`, `Cancel`,
+`Warning`, or `Dangerous`) independently of interaction and default-action
+behavior. Themes provide `TuiButtonColors` for each meaning. A button's visual
+state is normal, active, focused, pressed, or disabled; an idle default action
+has its own style. Applications can also construct a `TuiButtonSpec` directly
+to combine a meaning with a default action or disabled state.
+
+`MakeHeading` paints one-line text using the title color of its surrounding
+panel or overlay. Ordinary `MakeLabel` text inherits the surrounding surface.
+
+`MakeList` emits a controlled selection change. `MakeActivatingList` additionally
+accepts an activation action: Enter activates the focused selection, and a click
+selects and activates the clicked item. When both occur, the selection change
+arrives before the activation. Pointer activation is delivered only if the next
+view still has that list and activation action, with the clicked index and text
+still selected inside the active focus scope. Rejecting the proposed selection
+or replacing the clicked item does not activate a different row.
+A list constrained to fewer rows than items scrolls to keep the selection
+visible. The lower-level `TuiListActions` record
+contains `Change` and optional `Activate` actions.
 
 `Input(Value)` stores a `TuiInputSpec` with controlled text and caret, optional
 hint text, optional oldest-to-newest history, a restorable history draft, and
@@ -71,6 +95,11 @@ newer entries, finally restoring `HistoryDraft`.
 centered modal content when placed directly under `Desktop`. The last overlay
 is the active key, menu, focus, and pointer subtree. Overlays are intentionally
 not movable and do not paint shadows.
+`MakeResponsiveOverlay` uses the same modal behavior with a viewport-relative
+size rule; see [Layout](layout.md#responsive-overlays).
+
+`MakeTabs` places a controlled `TabBar` beside its active page. See
+[Tabs](tabs.md) for selection, input, placement, and overflow.
 
 `MakeCellGrid` accepts a flat row-major `TuiCellGrid`. It is the escape hatch
 for truecolor dashboards, plots, and visualizations while keeping layout and

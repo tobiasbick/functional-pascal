@@ -6,6 +6,7 @@ uses
   Std.Ui.Terminal.Layout.Frame as LayoutFrame, Std.Ui.Terminal.Runtime.Msg as Msg,
   Std.Ui.Terminal.Runtime.PointerEvent as PointerEvent,
   Std.Ui.Terminal.Runtime.Routing.ButtonCapture as ButtonCapture, Std.Ui.Terminal.Runtime.Routing.Focus as Focus,
+  Std.Ui.Terminal.Runtime.Routing.ListActivation as ListActivation,
   Std.Ui.Terminal.Runtime.Routing.MenuPointer as RoutingMenuPointer,
   Std.Ui.Terminal.Runtime.Routing.PointerHit as PointerHit, Std.Ui.Terminal.Runtime.Routing.TextArea as TextArea,
   Std.Ui.Terminal.Text.Input as TextInput;
@@ -53,7 +54,7 @@ begin
       begin
         return Hit.Id.Value = Button.Id.Value;
       end;
-    when PointerHit.TuiPointerHit.Miss, PointerHit.TuiPointerHit.ImmediateButton(_, _), PointerHit.TuiPointerHit.Input(_, _), PointerHit.TuiPointerHit.TextArea(_, _, _, _, _), PointerHit.TuiPointerHit.CheckBox(_, _, _), PointerHit.TuiPointerHit.List(_, _, _, _), PointerHit.TuiPointerHit.Scroll(_):
+    when PointerHit.TuiPointerHit.Miss, PointerHit.TuiPointerHit.ImmediateButton(_, _), PointerHit.TuiPointerHit.Input(_, _), PointerHit.TuiPointerHit.TextArea(_, _, _, _, _), PointerHit.TuiPointerHit.CheckBox(_, _, _), PointerHit.TuiPointerHit.List(_, _, _, _, _, _), PointerHit.TuiPointerHit.Scroll(_):
       begin
         return false;
       end;
@@ -73,6 +74,7 @@ end procedure;
 public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
   ButtonCapture.TuiButtonCaptureClose(ApplicationId);
+  ListActivation.TuiListActivationClear(ApplicationId);
 end procedure;
 
 // Returns the button painted pressed for one application.
@@ -299,9 +301,29 @@ begin
           ])
         );
       end;
-    when PointerHit.TuiPointerHit.List(const Id, const Action, const CurrentSelected, const Proposed):
+    when PointerHit.TuiPointerHit.List(const Id, const Action, const CurrentSelected, const Proposed, const Activate, const Text):
       begin
         const FocusMessages: array of Msg.TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+        case Activate of
+          when Some(const ActivateAction):
+            ListActivation.TuiListActivationRemember(
+              ApplicationId,
+              Id,
+              ActivateAction,
+              Proposed,
+              Text
+            );
+            var Messages := FocusMessages;
+            if Proposed <> CurrentSelected then
+              Messages.PushInPlace(Msg.TuiMsg.SelectionChanged(Id, Action, Proposed));
+            end if;
+
+            Messages.PushInPlace(Msg.TuiMsg.Action(Id, ActivateAction));
+            return TuiIdlePointerResult(ApplicationId, Messages);
+          when None:
+            null;
+        end case;
+
         if Proposed = CurrentSelected then
           begin
             if FocusMessages.Length() = 0 then

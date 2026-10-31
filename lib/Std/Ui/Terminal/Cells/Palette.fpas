@@ -5,6 +5,28 @@ uses
   Std.Ui.Terminal.Cells.InputPalette as InputPalette, Std.Ui.Terminal.Cells.StyleRole as StyleRole,
   Std.Ui.Terminal.Cells.Style as CellsStyle;
 
+function TuiContainerStyle(Override: option of CellsStyle.TuiStyle; Fallback: CellsStyle.TuiStyle): CellsStyle.TuiStyle;
+begin
+  case Override of
+    when Some(const Style):
+      return Style;
+    when None:
+      return Fallback;
+  end case;
+end function;
+
+function TuiDefaultButtonColors(Foreground: Color.TuiColor; Surface: Color.TuiColor; Focus: Color.TuiColor; Muted: Color.TuiColor; Shortcut: Color.TuiColor): ButtonPalette.TuiButtonColors;
+begin
+  return ButtonPalette.TuiButtonColors.Create(
+    CellsStyle.TuiStyle.FromColors(Foreground, Surface),
+    CellsStyle.TuiStyle.FromColors(Foreground, Focus),
+    CellsStyle.TuiStyle.FromColors(Foreground, Focus),
+    CellsStyle.TuiStyle.FromColors(Surface, Foreground),
+    CellsStyle.TuiStyle.FromColors(Muted, Surface),
+    CellsStyle.TuiStyle.FromColors(Focus, Foreground)
+  ) with ShortcutForeground := Some(Shortcut); end with;
+end function;
+
 // Maps every semantic `TuiStyleRole` to a concrete terminal style.
 public type TuiPalette = record
   // Style used for normal content.
@@ -21,6 +43,21 @@ public type TuiPalette = record
   public Frame: CellsStyle.TuiStyle;
   // Style used for titles.
   public Title: CellsStyle.TuiStyle;
+  // Normal content and title styles on panel surfaces.
+  public PanelNormal: option of CellsStyle.TuiStyle;
+  public PanelTitle: option of CellsStyle.TuiStyle;
+  // Frame style for a panel containing the focused control.
+  public PanelFocusedFrame: option of CellsStyle.TuiStyle;
+  // Normal content, frame, focused frame and title styles on overlays.
+  public OverlayNormal: option of CellsStyle.TuiStyle;
+  public OverlayFrame: option of CellsStyle.TuiStyle;
+  public OverlayFocusedFrame: option of CellsStyle.TuiStyle;
+  public OverlayTitle: option of CellsStyle.TuiStyle;
+  // Optional styles for ordinary, selected, focused, and disabled tabs.
+  public TabNormal: option of CellsStyle.TuiStyle;
+  public TabSelected: option of CellsStyle.TuiStyle;
+  public TabSelectedFocused: option of CellsStyle.TuiStyle;
+  public TabDisabled: option of CellsStyle.TuiStyle;
   // Style used for normal menu items.
   public MenuNormal: CellsStyle.TuiStyle;
   // Style used for disabled menu items.
@@ -69,17 +106,28 @@ public type TuiPalette = record
     const Success: Color.TuiColor := Color.TuiColor.FromRgb(63, 185, 80);
     const Failure: Color.TuiColor := Color.TuiColor.FromRgb(248, 81, 73);
     const Warning: Color.TuiColor := Color.TuiColor.FromRgb(210, 153, 34);
+    const ButtonShortcut: Color.TuiColor := Color.TuiColor.FromRgb(255, 223, 100);
     const NormalStyle: CellsStyle.TuiStyle := CellsStyle.TuiStyle.FromColors(Text, Background);
     const SelectedStyle: CellsStyle.TuiStyle := CellsStyle.TuiStyle.FromColors(Text, Selected);
     const AccentStyle: CellsStyle.TuiStyle := CellsStyle.TuiStyle.FromColors(Accent, Background);
-    const Buttons: ButtonPalette.TuiButtonPalette := ButtonPalette.TuiButtonPalette.Create(
+    var Buttons: ButtonPalette.TuiButtonPalette := ButtonPalette.TuiButtonPalette.Create(
       CellsStyle.TuiStyle.FromColors(Text, Surface),
       CellsStyle.TuiStyle.FromColors(Background, Accent),
       SelectedStyle,
       CellsStyle.TuiStyle.FromColors(Muted, Surface),
       CellsStyle.TuiStyle.FromColors(Accent, Surface),
-      CellsStyle.TuiStyle.FromColors(Background, Accent),
-      CellsStyle.TuiStyle.FromColors(Text, Selected)
+      CellsStyle.TuiStyle.FromColors(ButtonShortcut, Accent),
+      CellsStyle.TuiStyle.FromColors(ButtonShortcut, Selected)
+    );
+    Buttons.Primary := Some(
+      TuiDefaultButtonColors(Accent, Surface, Selected, Muted, ButtonShortcut)
+    );
+    Buttons.Cancel := Some(TuiDefaultButtonColors(Text, Surface, Border, Muted, ButtonShortcut));
+    Buttons.Warning := Some(
+      TuiDefaultButtonColors(Warning, Surface, Border, Muted, ButtonShortcut)
+    );
+    Buttons.Dangerous := Some(
+      TuiDefaultButtonColors(Failure, Surface, Border, Muted, ButtonShortcut)
     );
     const Inputs: InputPalette.TuiInputPalette := InputPalette.TuiInputPalette.Create(
       CellsStyle.TuiStyle.FromColors(Text, Surface),
@@ -96,6 +144,17 @@ public type TuiPalette = record
       Shortcut := AccentStyle,
       Frame := CellsStyle.TuiStyle.FromColors(Border, Background),
       Title := CellsStyle.TuiStyle.FromColors(Text, Background),
+      PanelNormal := None,
+      PanelTitle := None,
+      PanelFocusedFrame := None,
+      OverlayNormal := None,
+      OverlayFrame := None,
+      OverlayFocusedFrame := None,
+      OverlayTitle := None,
+      TabNormal := None,
+      TabSelected := None,
+      TabSelectedFocused := None,
+      TabDisabled := None,
       MenuNormal := CellsStyle.TuiStyle.FromColors(Text, Surface),
       MenuDisabled := CellsStyle.TuiStyle.FromColors(Muted, Surface),
       MenuShortcut := CellsStyle.TuiStyle.FromColors(Accent, Surface),
@@ -156,6 +215,28 @@ public type TuiPalette = record
         begin
           return Self.MenuNormal;
         end;
+      when StyleRole.TuiStyleRole.PanelNormal:
+        return TuiContainerStyle(Self.PanelNormal, Self.Normal);
+      when StyleRole.TuiStyleRole.PanelTitle:
+        return TuiContainerStyle(Self.PanelTitle, Self.Title);
+      when StyleRole.TuiStyleRole.PanelFocusedFrame:
+        return TuiContainerStyle(Self.PanelFocusedFrame, Self.Frame);
+      when StyleRole.TuiStyleRole.OverlayNormal:
+        return TuiContainerStyle(Self.OverlayNormal, Self.Normal);
+      when StyleRole.TuiStyleRole.OverlayFrame:
+        return TuiContainerStyle(Self.OverlayFrame, Self.Frame);
+      when StyleRole.TuiStyleRole.OverlayFocusedFrame:
+        return TuiContainerStyle(Self.OverlayFocusedFrame, Self.Frame);
+      when StyleRole.TuiStyleRole.OverlayTitle:
+        return TuiContainerStyle(Self.OverlayTitle, Self.Title);
+      when StyleRole.TuiStyleRole.TabNormal:
+        return TuiContainerStyle(Self.TabNormal, Self.Normal);
+      when StyleRole.TuiStyleRole.TabSelected:
+        return TuiContainerStyle(Self.TabSelected, Self.Selected);
+      when StyleRole.TuiStyleRole.TabSelectedFocused:
+        return TuiContainerStyle(Self.TabSelectedFocused, Self.Focused);
+      when StyleRole.TuiStyleRole.TabDisabled:
+        return TuiContainerStyle(Self.TabDisabled, Self.Disabled);
       when StyleRole.TuiStyleRole.MenuDisabled:
         begin
           return Self.MenuDisabled;
@@ -265,6 +346,28 @@ public type TuiPalette = record
         begin
           Updated.MenuNormal := Style;
         end;
+      when StyleRole.TuiStyleRole.PanelNormal:
+        Updated.PanelNormal := Some(Style);
+      when StyleRole.TuiStyleRole.PanelTitle:
+        Updated.PanelTitle := Some(Style);
+      when StyleRole.TuiStyleRole.PanelFocusedFrame:
+        Updated.PanelFocusedFrame := Some(Style);
+      when StyleRole.TuiStyleRole.OverlayNormal:
+        Updated.OverlayNormal := Some(Style);
+      when StyleRole.TuiStyleRole.OverlayFrame:
+        Updated.OverlayFrame := Some(Style);
+      when StyleRole.TuiStyleRole.OverlayFocusedFrame:
+        Updated.OverlayFocusedFrame := Some(Style);
+      when StyleRole.TuiStyleRole.OverlayTitle:
+        Updated.OverlayTitle := Some(Style);
+      when StyleRole.TuiStyleRole.TabNormal:
+        Updated.TabNormal := Some(Style);
+      when StyleRole.TuiStyleRole.TabSelected:
+        Updated.TabSelected := Some(Style);
+      when StyleRole.TuiStyleRole.TabSelectedFocused:
+        Updated.TabSelectedFocused := Some(Style);
+      when StyleRole.TuiStyleRole.TabDisabled:
+        Updated.TabDisabled := Some(Style);
       when StyleRole.TuiStyleRole.MenuDisabled:
         begin
           Updated.MenuDisabled := Style;

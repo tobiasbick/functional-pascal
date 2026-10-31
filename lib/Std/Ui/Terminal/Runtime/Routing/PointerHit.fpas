@@ -5,7 +5,8 @@ uses
   Std.Ui.Terminal.Chrome.StatusItem as StatusItem, Std.Ui.Terminal.Elements.Element as Element,
   Std.Ui.Terminal.Geometry.Point as GeometryPoint, Std.Ui.Terminal.Geometry.Rect as Rect,
   Std.Ui.Terminal.Ids.Action as IdsAction, Std.Ui.Terminal.Ids.ControlId as ControlId,
-  Std.Ui.Terminal.Layout.Frame as LayoutFrame;
+  Std.Ui.Terminal.Layout.Frame as LayoutFrame, Std.Ui.Terminal.Chrome.Tabs as Tabs,
+  Std.Ui.Terminal.Chrome.List as List;
 
 // Hit result for pointer routing against arranged geometry.
 public type TuiPointerHit = enum
@@ -51,7 +52,7 @@ public type TuiPointerHit = enum
   // - `Action`: Application action carried by the variant.
   // - `CurrentSelected`: Current selected item index.
   // - `Proposed`: Proposed selected item index.
-  List(Id: ControlId.TuiControlId; Action: IdsAction.TuiAction; CurrentSelected: integer; Proposed: integer);
+  List(Id: ControlId.TuiControlId; Action: IdsAction.TuiAction; CurrentSelected: integer; Proposed: integer; Activate: option of IdsAction.TuiAction; Text: string);
   // Represents the `Scroll` variant of `TuiPointerHit`.
   //
   // Parameters:
@@ -67,6 +68,8 @@ begin
   for Index: integer := 0 to Children.Length() - 1 do
     begin
       case Children[Index] of
+        when Element.TuiElement.TabBar(_):
+          null;
         when Element.TuiElement.Overlay(const Title, const OverlayChildren):
           begin
             LastOverlay := Index;
@@ -91,18 +94,29 @@ begin
   const Entry: LayoutFrame.TuiArrangedEntry := Frame.EntryAt(Index);
   var Next: integer := Index + 1;
   case Node of
+    when Element.TuiElement.TabBar(const Bar):
+      if AllowHits and Entry.Clip.Contains(Point) then
+        const ItemIndex := Tabs.TuiTabsHit(
+          Bar, Entry.Bounds.Width, Entry.Bounds.Height,
+          Point.X - Entry.Bounds.X, Point.Y - Entry.Bounds.Y
+        );
+        if ItemIndex >= 0 then
+          TuiPointerBestHit := TuiPointerHit.List(
+            Bar.Id,
+            Bar.ChangeAction,
+            Bar.Selected,
+            ItemIndex,
+            None,
+            Bar.Items[ItemIndex].Text
+          );
+        end if;
+      end if;
     when Element.TuiElement.Button(const Button):
       begin
-        var ActiveWidth: integer := Entry.Bounds.Width - 1;
-        if ActiveWidth < 0 then
-          begin
-            ActiveWidth := 0;
-          end;
-        end if;
         const ActiveBounds: Rect.TuiRect := Rect.TuiRect.Create(
           Entry.Bounds.X,
           Entry.Bounds.Y,
-          ActiveWidth,
+          Entry.Bounds.Width,
           1
         );
         if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
@@ -145,10 +159,18 @@ begin
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
-            const Row: integer := Point.Y - Entry.Bounds.Y;
+            const Row: integer := Point.Y - Entry.Bounds.Y +
+              List.TuiListFirst(Items.Length(), Selected, Entry.Bounds.Height);
             if (Row >= 0) and (Row < Items.Length()) then
               begin
-                TuiPointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row);
+                TuiPointerBestHit := TuiPointerHit.List(
+                  Id,
+                  ChangeAction.Change,
+                  Selected,
+                  Row,
+                  ChangeAction.Activate,
+                  Items[Row]
+                );
               end;
             end if;
           end;

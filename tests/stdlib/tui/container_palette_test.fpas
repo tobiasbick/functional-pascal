@@ -1,0 +1,130 @@
+// Panel and modal surfaces follow focus and stacking during incremental rendering.
+program TuiContainerPaletteTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
+begin
+  return State;
+end function;
+
+function View(State: integer): Tui.TuiElement;
+begin
+  var Focus := 1;
+  if State = 1 then
+    Focus := 2;
+  elsif State >= 2 then
+    Focus := 3;
+  end if;
+  var Items: array of Tui.TuiElement := [
+    Tui.TuiElementBuilders.MakeRow([
+      Tui.TuiElementBuilders.MakePanel(
+        'First', [
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(1),
+            'First button',
+            Tui.TuiAction.Create(1)
+          )
+        ]
+      ),
+      Tui.TuiElementBuilders.MakePanel(
+        'Second', [
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(2),
+            'Second button',
+            Tui.TuiAction.Create(2)
+          )
+        ]
+      )
+    ])
+  ];
+  if State >= 2 then
+    Items.PushInPlace(
+      Tui.TuiElementBuilders.MakeOverlay(
+        'Large dialog', [
+          Tui.TuiElementBuilders.MakeColumn([
+            Tui.TuiElementBuilders.MakeLabel('Overlay text'),
+            Tui.TuiElementBuilders.MakeLabel('One'),
+            Tui.TuiElementBuilders.MakeLabel('Two'),
+            Tui.TuiElementBuilders.MakeLabel('Three'),
+            Tui.TuiElementBuilders.MakeButton(
+              Tui.TuiControlId.Create(3),
+              'Close',
+              Tui.TuiAction.Create(3)
+            )
+          ])
+        ]
+      )
+    );
+  end if;
+
+  if State >= 3 then
+    Focus := 4;
+    Items.PushInPlace(
+      Tui.TuiElementBuilders.MakeOverlay(
+        'Confirm', [
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(4),
+            'OK',
+            Tui.TuiAction.Create(4)
+          )
+        ]
+      )
+    );
+  end if;
+
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), Items);
+end function;
+
+function Find(Snapshot: Tui.TuiSurfaceSnapshot; Text: string): Tui.TuiPoint;
+begin
+  for Y: integer := 0 to Snapshot.Height - 1 do
+    case Snapshot.LineAt(Y).IndexOf(Text) of
+      when Some(const X):
+        return Tui.TuiPoint.Create(X, Y);
+      when None:
+        null;
+    end case;
+  end for;
+
+  panic('text missing from container palette test');
+end function;
+
+function FrameRole(Snapshot: Tui.TuiSurfaceSnapshot; Title: string): Tui.TuiStyleRole;
+begin
+  const At := Find(Snapshot, Title);
+  return Snapshot.CellAt(At.X - 3, At.Y).Role;
+end function;
+
+begin
+  var Palette := Tui.TuiPalette.Default();
+  const Custom := Tui.TuiStyle.FromColors(
+    Tui.TuiColor.FromRgb(1, 2, 3),
+    Tui.TuiColor.FromRgb(4, 5, 6)
+  );
+  Palette.Normal := Custom;
+  Palette.Frame := Custom;
+  Palette.Title := Custom;
+  Test.AssertTrue(Palette.ForRole(Tui.TuiStyleRole.PanelNormal) = Custom);
+  Test.AssertTrue(Palette.ForRole(Tui.TuiStyleRole.OverlayFocusedFrame) = Custom);
+  Test.AssertTrue(Palette.ForRole(Tui.TuiStyleRole.OverlayTitle) = Custom);
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(60, 20));
+  discard App.RunIterations(0, Update, View, 0, 0);
+  var Screen := App.SurfaceSnapshot();
+  Test.AssertTrue(FrameRole(Screen, 'First') = Tui.TuiStyleRole.PanelFocusedFrame);
+  Test.AssertTrue(FrameRole(Screen, 'Second') = Tui.TuiStyleRole.Frame);
+  discard App.RunIterations(1, Update, View, 0, 0);
+  Screen := App.SurfaceSnapshot();
+  Test.AssertTrue(FrameRole(Screen, 'First') = Tui.TuiStyleRole.Frame);
+  Test.AssertTrue(FrameRole(Screen, 'Second') = Tui.TuiStyleRole.PanelFocusedFrame);
+  discard App.RunIterations(2, Update, View, 0, 0);
+  Screen := App.SurfaceSnapshot();
+  Test.AssertTrue(FrameRole(Screen, 'Large dialog') = Tui.TuiStyleRole.OverlayFocusedFrame);
+  const TextAt := Find(Screen, 'Overlay text');
+  Test.AssertTrue(Screen.CellAt(TextAt.X, TextAt.Y).Role = Tui.TuiStyleRole.OverlayNormal);
+  discard App.RunIterations(3, Update, View, 0, 0);
+  Screen := App.SurfaceSnapshot();
+  Test.AssertTrue(FrameRole(Screen, 'Large dialog') = Tui.TuiStyleRole.OverlayFrame);
+  Test.AssertTrue(FrameRole(Screen, 'Confirm') = Tui.TuiStyleRole.OverlayFocusedFrame);
+  App.Close();
+end.

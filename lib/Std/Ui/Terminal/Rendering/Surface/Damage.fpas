@@ -103,7 +103,9 @@ begin
 
   return ((CurrentCell.Glyph <> PresentedCell.Glyph) or (CurrentCell.Role <> PresentedCell.Role))
     or
-    not TuiSurfaceConcreteStyleEqual(CurrentCell.ConcreteStyle, PresentedCell.ConcreteStyle);
+    not TuiSurfaceConcreteStyleEqual(CurrentCell.ConcreteStyle, PresentedCell.ConcreteStyle)
+    or
+    (CurrentCell.ButtonAppearance <> PresentedCell.ButtonAppearance);
 end function;
 
 // Builds one terminal-damage range from a working-surface row.

@@ -88,39 +88,10 @@ necessary. Until a replacement is agreed, retrieve once and pass the value on.
 
 ## 5. Scope-bound cleanup actions
 
-Status: implemented under [AP55](improve-syntax/ap55-resources/README.md).
-The design uses `using const` resource locals and contextual record release
-procedures. Its
-[contract](improve-syntax/ap55-resources/contract.md) records the lifetime and
-failure rules.
-
-Tasks already have [lexical ownership and cleanup](../pascal/language/concurrency/README.md).
-Other resources have explicit close operations and can also use scoped cleanup;
-for example, a `using const` local closes an
-[HTTP body stream](../pascal/std/network/http.md#streaming-responses) when its
-block exits, including on return or a failed `try`.
-
-### Resource bindings
-
-A resource local registers cleanup after its initializer succeeds. Its nearest
-lexical block releases it on exit. The existing `try` expression continues to
-propagate Result/Option failures.
-
-```pascal
-uses Std.Io.Fs as Fs;
-
-function ReadFirstLine(Path: string): result of (option of string, Fs.FsError);
-begin
-  using const File := try Fs.Open(Path, Fs.FileMode.Read);
-  return Fs.ReadLine(File);
-end function;
-```
-
-Resources release in reverse order on normal and early exits. AP55 implements
-custom release procedures, native close operations, cancellation, cleanup
-failure reporting and escape restrictions. It does not add `finally`, `defer`
-or a general ownership type system. Its regressions cover real resource
-consumers, nested cleanup, failures and task cancellation.
+Status: implemented. See [resource locals](../pascal/language/basics/local-variables.md#resource-locals)
+for `using const`, guarded initialization, lexical cleanup and failure rules.
+[Record release procedures](../pascal/language/types/records.md#resource-release)
+support custom resources; native handles use their existing close operations.
 
 ## 6. Entry-value snapshots in postconditions
 
@@ -325,7 +296,7 @@ application consistent; existing task ownership and cleanup rules must still hol
 
 Status: core process management, interactive pipes and selectable pipe waits are
 implemented. Pipe payloads use [native byte buffers](../pascal/std/bytes.md).
-AP55 adds scoped cleanup for process handles.
+Process handles support [scoped cleanup](../pascal/language/basics/local-variables.md#resource-locals).
 
 [Std.Os.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
 environment overrides, supplied stdin, bounded stdout/stderr capture, timeouts
@@ -879,7 +850,7 @@ Byte payloads use the [native byte-buffer foundation](#22-packed-numeric-data-an
 and blocking calls follow the [host-I/O contract](#14-host-io-that-releases-vm-workers).
 Sharing/locking controls and typed record files remain deferred, requiring
 separate contracts. [Lexical resource release](#5-scope-bound-cleanup-actions)
-is implemented by AP55.
+is available for file handles.
 
 ## 27. Standard-library namespaces
 

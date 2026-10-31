@@ -86,6 +86,7 @@ timeout_ms = 120000
 [[bench]]
 id = "integer_loop"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/integer_loop_benchmark.fpas"
 args = ["50000000"]
 timeout_ms = 120000
@@ -93,83 +94,95 @@ timeout_ms = 120000
 [[bench]]
 id = "typed_real"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/typed_scalar_benchmark.fpas"
-args = ["5000000", "real"]
+args = ["35000000", "real"]
 timeout_ms = 120000
 
 [[bench]]
 id = "typed_boolean"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/typed_scalar_benchmark.fpas"
-args = ["5000000", "boolean"]
+args = ["25000000", "boolean"]
 timeout_ms = 120000
 
 [[bench]]
 id = "typed_string"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/typed_scalar_benchmark.fpas"
-args = ["5000000", "string"]
+args = ["35000000", "string"]
 timeout_ms = 120000
 
 [[bench]]
 id = "global_access"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/global_access_benchmark.fpas"
-args = ["5000000"]
+args = ["35000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "record_field_access"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/record_field_access_benchmark.fpas"
-args = ["3000000"]
+args = ["8000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "closure_call"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/closure_call_benchmark.fpas"
-args = ["3000000"]
+args = ["16000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "mutable_capture"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/mutable_capture_benchmark.fpas"
-args = ["3000000"]
+args = ["12000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "branch_dispatch"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/branch_dispatch_benchmark.fpas"
-args = ["20000000"]
+args = ["50000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "dynamic_numeric"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/dynamic_numeric_benchmark.fpas"
-args = ["5000000"]
+args = ["15000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "array_push"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/array_push_benchmark.fpas"
-args = ["2000000"]
+args = ["28000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "array_length"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/array_length_benchmark.fpas"
-args = ["500000"]
+args = ["70000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "string_concat"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/string_concat_benchmark.fpas"
 args = ["5000000"]
 timeout_ms = 120000
@@ -177,27 +190,31 @@ timeout_ms = 120000
 [[bench]]
 id = "string_length"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/string_length_benchmark.fpas"
-args = ["500000"]
+args = ["70000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "intrinsic_dispatch"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/intrinsic_dispatch_benchmark.fpas"
-args = ["5000000"]
+args = ["25000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "function_call"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/function_call_benchmark.fpas"
-args = ["3000000"]
+args = ["9000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "array_callbacks"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/array_callbacks_benchmark.fpas"
 args = ["50000"]
 timeout_ms = 120000
@@ -205,22 +222,25 @@ timeout_ms = 120000
 [[bench]]
 id = "record_update"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/record_update_benchmark.fpas"
-args = ["1000000"]
+args = ["8000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "unicode_char_at"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/unicode_char_at_benchmark.fpas"
-args = ["3000000"]
+args = ["9000000"]
 timeout_ms = 120000
 
 [[bench]]
 id = "wrapper_payload"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/wrapper_payload_benchmark.fpas"
-args = ["5000000"]
+args = ["12000000"]
 timeout_ms = 120000
 
 [[bench]]
@@ -267,8 +287,9 @@ timeout_ms = 60000
 [[bench]]
 id = "string_search"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/string_search_benchmark.fpas"
-args = ["500000"]
+args = ["6000000"]
 timeout_ms = 120000
 [[bench]]
 id = "compiler_lowering"
@@ -280,15 +301,17 @@ timeout_ms = 60000
 [[bench]]
 id = "substring_ascii"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/string_substring_benchmark.fpas"
-args = ["10000", "ascii"]
+args = ["1200000", "ascii"]
 timeout_ms = 120000
 
 [[bench]]
 id = "substring_unicode"
 group = "vm"
+samples = 5
 path = "examples/pascal/vm/string_substring_benchmark.fpas"
-args = ["10000", "unicode"]
+args = ["700000", "unicode"]
 timeout_ms = 120000
 
 [[bench]]

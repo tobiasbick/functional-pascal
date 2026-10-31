@@ -2,18 +2,23 @@
 
 mod command;
 mod executable;
+mod measurements;
 mod runner;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
+use std::num::NonZeroUsize;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub use executable::ensure_release_fpas;
+#[cfg(test)]
+pub(crate) use measurements::tests::fixture_run;
+pub use measurements::{BenchRun, BenchSample, TimingSummary};
 pub use runner::run_suite;
 
 /// One curated benchmark from `docs/bench/suite.toml`.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BenchSpec {
     /// Short identifier used in tables and JSON results.
     pub id: String,
@@ -29,10 +34,17 @@ pub struct BenchSpec {
     pub args: Vec<String>,
     /// Maximum wall-clock runtime before the process is terminated.
     pub timeout_ms: u64,
+    /// Independent process measurements; each performs its own workload warmup.
+    #[serde(default = "single_sample")]
+    pub samples: NonZeroUsize,
+}
+
+fn single_sample() -> NonZeroUsize {
+    NonZeroUsize::MIN
 }
 
 /// Supported benchmark processes.
-#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BenchDriver {
     /// Typed error rendering and portable deep Cause checks through the production VM.
@@ -59,19 +71,6 @@ pub enum BenchDriver {
 #[derive(Debug, Deserialize)]
 struct SuiteFile {
     bench: Vec<BenchSpec>,
-}
-
-/// Outcome of a single benchmark process.
-#[derive(Debug, Clone)]
-pub struct BenchRun {
-    /// Spec id.
-    pub id: String,
-    /// Parsed `elapsed: N ms` value.
-    pub elapsed_ms: u64,
-    /// Optional `throughput: …` line from stdout.
-    pub throughput: Option<String>,
-    /// Full captured stdout.
-    pub raw_stdout: String,
 }
 
 /// Load `docs/bench/suite.toml` from the repository root.
@@ -192,6 +191,7 @@ mod tests {
             path: "unused.fpas".to_owned(),
             args: Vec::new(),
             timeout_ms: 1,
+            samples: super::single_sample(),
         }
     }
 }

@@ -1,48 +1,70 @@
 //! Validate benchmark baselines and build complete comparison rows.
 
 use super::BenchSnapshot;
-use crate::suite::BenchRun;
+use crate::suite::{BenchRun, BenchSpec, TimingSummary};
 use std::collections::HashMap;
 
 /// A validated baseline indexed by benchmark id.
 #[derive(Debug)]
-pub struct ComparisonBaseline {
+pub struct ComparisonBaseline<'a> {
     label: String,
-    elapsed_ms_by_id: HashMap<String, u64>,
+    by_id: HashMap<&'a str, &'a BenchRun>,
 }
 
-impl ComparisonBaseline {
+impl<'a> ComparisonBaseline<'a> {
     /// Validate snapshot group identity and reject duplicate benchmark ids.
-    pub fn new(snapshot: &BenchSnapshot, requested_group: Option<&str>) -> Result<Self, String> {
+    pub fn new(snapshot: &'a BenchSnapshot, requested_group: Option<&str>) -> Result<Self, String> {
         if snapshot.group.as_deref() != requested_group {
             return Err(group_mismatch_error(snapshot, requested_group));
         }
 
-        let mut elapsed_ms_by_id = HashMap::with_capacity(snapshot.benches.len());
+        let mut by_id = HashMap::with_capacity(snapshot.benches.len());
         for result in &snapshot.benches {
-            if elapsed_ms_by_id
-                .insert(result.id.clone(), result.elapsed_ms)
-                .is_some()
-            {
+            result.summary()?;
+            if by_id.insert(result.spec.id.as_str(), result).is_some() {
                 return Err(format!(
                     "baseline snapshot `{}` contains duplicate benchmark id `{}`; save the baseline again before comparing",
-                    snapshot.label, result.id
+                    snapshot.label, result.spec.id
                 ));
             }
         }
 
         Ok(Self {
             label: snapshot.label.clone(),
-            elapsed_ms_by_id,
+            by_id,
         })
+    }
+
+    /// Reject changed workloads before spending time building or measuring them.
+    pub fn validate_specs(&self, specs: &[BenchSpec]) -> Result<(), String> {
+        for spec in specs {
+            if let Some(baseline) = self.by_id.get(spec.id.as_str()) {
+                self.validate_workload(&baseline.spec, spec)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_workload(&self, baseline: &BenchSpec, current: &BenchSpec) -> Result<(), String> {
+        if baseline.driver != current.driver
+            || baseline.path != current.path
+            || baseline.args != current.args
+            || baseline.samples != current.samples
+        {
+            return Err(format!(
+                "baseline snapshot `{}` has different driver, path, arguments or sample count for benchmark `{}`; save a fresh baseline with the same workload",
+                self.label, current.id
+            ));
+        }
+        Ok(())
     }
 
     /// Compare current runs after requiring one baseline result for every benchmark id.
     pub fn compare(&self, current: &[BenchRun]) -> Result<Vec<CompareRow>, String> {
         let missing: Vec<&str> = current
             .iter()
-            .filter(|run| !self.elapsed_ms_by_id.contains_key(&run.id))
-            .map(|run| run.id.as_str())
+            .filter(|run| !self.by_id.contains_key(run.spec.id.as_str()))
+            .map(|run| run.spec.id.as_str())
             .collect();
         if !missing.is_empty() {
             return Err(format!(
@@ -56,31 +78,31 @@ impl ComparisonBaseline {
     }
 
     fn compare_run(&self, run: &BenchRun) -> Result<CompareRow, String> {
-        let baseline_ms = self.elapsed_ms_by_id.get(&run.id).copied().ok_or_else(|| {
+        let baseline = self.by_id.get(run.spec.id.as_str()).ok_or_else(|| {
             format!(
                 "baseline snapshot `{}` is missing current benchmark id `{}`",
-                self.label, run.id
+                self.label, run.spec.id
             )
         })?;
-        let delta_pct = match (baseline_ms, run.elapsed_ms) {
-            (0, 0) => 0.0,
-            (0, current_ms) => {
+        self.validate_workload(&baseline.spec, &run.spec)?;
+        let before = baseline.summary()?;
+        let after = run.summary()?;
+        let delta_pct = match (before.median_ms, after.median_ms) {
+            (0.0, 0.0) => 0.0,
+            (0.0, current_ms) => {
                 return Err(format!(
                     "baseline snapshot `{}` reports 0 ms for benchmark `{}`, but the current run reports {current_ms} ms; increase the benchmark workload and save a new baseline",
-                    self.label, run.id
+                    self.label, run.spec.id
                 ));
             }
-            (baseline_ms, current_ms) => {
-                ((current_ms as f64) - (baseline_ms as f64)) / (baseline_ms as f64) * 100.0
-            }
+            (baseline_ms, current_ms) => (current_ms - baseline_ms) / baseline_ms * 100.0,
         };
 
         Ok(CompareRow {
-            id: run.id.clone(),
-            baseline_ms,
-            current_ms: run.elapsed_ms,
+            id: run.spec.id.clone(),
+            before,
+            after,
             delta_pct,
-            throughput: run.throughput.clone(),
         })
     }
 }
@@ -90,14 +112,12 @@ impl ComparisonBaseline {
 pub struct CompareRow {
     /// Benchmark id.
     pub id: String,
-    /// Baseline elapsed milliseconds.
-    pub baseline_ms: u64,
-    /// Current elapsed milliseconds.
-    pub current_ms: u64,
+    /// Baseline timing distribution.
+    pub before: TimingSummary,
+    /// Current timing distribution.
+    pub after: TimingSummary,
     /// Percent change versus baseline: `(current - baseline) / baseline * 100`.
     pub delta_pct: f64,
-    /// Optional throughput from the current run.
-    pub throughput: Option<String>,
 }
 
 /// Return whether any compared benchmark exceeds `threshold_pct` slowdown.
@@ -128,35 +148,22 @@ fn quote_ids(ids: &[&str]) -> String {
 #[cfg(test)]
 mod tests {
     use super::ComparisonBaseline;
-    use crate::results::{BenchResult, BenchSnapshot};
-    use crate::suite::BenchRun;
+    use crate::results::BenchSnapshot;
+    use crate::suite::{BenchRun, fixture_run};
 
     fn snapshot(group: Option<&str>, benches: &[(&str, u64)]) -> BenchSnapshot {
         BenchSnapshot {
             label: "baseline".to_owned(),
             timestamp_unix: 0,
             group: group.map(str::to_owned),
-            benches: benches
-                .iter()
-                .map(|(id, elapsed_ms)| BenchResult {
-                    id: (*id).to_owned(),
-                    elapsed_ms: *elapsed_ms,
-                    throughput: None,
-                    raw_stdout: String::new(),
-                })
-                .collect(),
+            benches: runs(benches),
         }
     }
 
     fn runs(benches: &[(&str, u64)]) -> Vec<BenchRun> {
         benches
             .iter()
-            .map(|(id, elapsed_ms)| BenchRun {
-                id: (*id).to_owned(),
-                elapsed_ms: *elapsed_ms,
-                throughput: None,
-                raw_stdout: String::new(),
-            })
+            .map(|(id, elapsed_ms)| fixture_run(id, &[*elapsed_ms]))
             .collect()
     }
 
@@ -212,10 +219,10 @@ mod tests {
             .map(|rows| {
                 rows.into_iter()
                     .next()
-                    .map(|row| (row.baseline_ms, row.current_ms, row.delta_pct))
+                    .map(|row| (row.before.median_ms, row.after.median_ms, row.delta_pct))
             });
 
-        assert_eq!(result, Ok(Some((10, 12, 20.0))));
+        assert_eq!(result, Ok(Some((10.0, 12.0, 20.0))));
     }
 
     #[test]
@@ -226,6 +233,33 @@ mod tests {
             .map(|rows| rows.into_iter().next().map(|row| row.delta_pct));
 
         assert_eq!(result, Ok(Some(0.0)));
+    }
+
+    #[test]
+    fn comparison_rejects_changed_workload_or_sampling() {
+        let snapshot = snapshot(Some("vm"), &[("length", 10)]);
+        let baseline = ComparisonBaseline::new(&snapshot, Some("vm")).unwrap();
+        for change in 0..4 {
+            let mut current = fixture_run("length", &[10]);
+            match change {
+                0 => current.spec.args = vec!["10000".to_owned()],
+                1 => current.spec.path = "different.fpas".to_owned(),
+                2 => current.spec.driver = crate::suite::BenchDriver::CompilerLowering,
+                _ => current.spec.samples = 5.try_into().unwrap(),
+            }
+            assert!(
+                baseline
+                    .validate_specs(&[current.spec.clone()])
+                    .unwrap_err()
+                    .contains("same workload")
+            );
+            assert!(
+                baseline
+                    .compare(&[current])
+                    .unwrap_err()
+                    .contains("same workload")
+            );
+        }
     }
 
     #[test]

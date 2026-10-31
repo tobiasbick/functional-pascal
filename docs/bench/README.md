@@ -16,6 +16,18 @@ controlled before/after timing comparisons.
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`). The `typed_real`, `typed_boolean`, and `typed_string` VM rows exercise typed scalar handlers separately.
 
+VM workloads run five independent process measurements each. The table reports
+the median and the observed minimum–maximum range in milliseconds. This range
+describes the five samples; it is not a confidence interval. Each process performs
+the program's existing untimed warmup. Compilation and process startup remain
+outside the program's timer. Samples run sequentially and outliers are retained.
+
+The VM iteration counts target approximately 500–1,000 ms per sample on the local
+reference machine. They stay fixed between comparisons; faster or slower machines
+may fall outside that range. Input setup and warmup are unchanged. Workloads that
+grow their result, such as array push, naturally produce larger results with more
+iterations. Use a fresh baseline after changing iteration counts.
+
 The [`failure-dump` group](failure-dump.md) pairs identical compiled programs with
 capture disabled/enabled, covering scalar work, calls, globals, tasks, timer
 suspension and small/large failure reports. Use a quiet local release build for
@@ -86,11 +98,12 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
-The complete 87-row baseline from 2026-10-27 is recorded in [history.md](history.md).
-It uses the release FPAS executable resolved from PATH and matching native drivers.
-The entry includes its reference values and marks changes above 3% and timings at
-or below 10 ms. Repeat suspected regressions before interpreting single-run
-differences. Comparisons still require matching workload selections and arguments.
+The current full-suite baseline is recorded in [history.md](history.md). It uses
+the release CLI built by the harness and matching native drivers. VM rows contain
+five samples; other groups retain their configured single measurement. The table
+includes sample counts, medians, observed ranges and workload arguments. Repeat
+suspected regressions before interpreting differences, especially for short or
+single-sample rows. Comparisons require matching workload selections and arguments.
 
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
 and full-range slices of a 32,768-scalar string. Input construction and warmup
@@ -219,7 +232,11 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 | `cargo bench-fpas compare <label>` | Re-run and print Δ vs a saved label |
 | `cargo bench-fpas record <title…>` | Run and prepend a dated entry to [`history.md`](history.md) |
 
-Saved snapshots record whether they contain the complete suite or one `--group`. A comparison must use the same group selection and must find exactly one baseline result for every current benchmark. Save a new baseline when the selected suite changes or snapshot group metadata is missing.
+Saved snapshots record the group, workload configuration and every sample's time,
+throughput and stdout in execution order. Comparisons use medians and show both
+ranges. They require the same group, driver, path, arguments and sample count,
+with exactly one baseline result for every current benchmark. Save a fresh
+baseline when the workload changes or an older snapshot lacks this metadata.
 
 Compare is **advisory** by default (exit 0 when all benches complete). To fail the process when any bench is slower by more than a percent threshold:
 
@@ -244,6 +261,9 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, `program-artifact`, and `error-values` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
+- `samples` — positive number of independent process measurements (default 1;
+  VM entries use 5). The timeout applies separately to each sample. For an even
+  sample count, the median is the mean of the two central values.
 
 The curated suite uses 120 seconds for most entries and 60 seconds for the `analysis_queries` and `compiler_lowering` tooling entries. Give intentionally longer workloads an explicit larger value instead of disabling the bound.
 
@@ -255,7 +275,7 @@ You can still invoke one program directly:
 
 ```sh
 cargo build --release -p fpas-cli
-target/release/fpas run examples/pascal/vm/string_length_benchmark.fpas -- 500000
+target/release/fpas run examples/pascal/vm/string_length_benchmark.fpas -- 70000000
 target/release/fpas run examples/pascal/tui/notes-headless/notes-headless-benchmark.fpasprj -- 250
 ```
 

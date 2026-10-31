@@ -79,13 +79,13 @@ fn execute(options: Options) -> Result<ExitCode, String> {
         Command::Run => {
             let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
-            print_run_table(&runs);
+            print_run_table(&runs)?;
             Ok(ExitCode::SUCCESS)
         }
         Command::Save { label } => {
             let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
-            print_run_table(&runs);
+            print_run_table(&runs)?;
             let path = save_snapshot(
                 &repo_root,
                 &label,
@@ -99,6 +99,7 @@ fn execute(options: Options) -> Result<ExitCode, String> {
         Command::Compare { label } => {
             let baseline = load_snapshot(&repo_root, &label)?;
             let baseline = ComparisonBaseline::new(&baseline, options.group.as_deref())?;
+            baseline.validate_specs(&specs)?;
             let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
             let rows = baseline.compare(&runs)?;
@@ -115,7 +116,7 @@ fn execute(options: Options) -> Result<ExitCode, String> {
         Command::Record { title } => {
             let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
-            print_run_table(&runs);
+            print_run_table(&runs)?;
             let path = record_history(&repo_root, &title, options.group.as_deref(), &runs)?;
             println!("recorded {}", path.display());
             Ok(ExitCode::SUCCESS)
@@ -145,31 +146,42 @@ fn find_repo_root() -> Result<PathBuf, String> {
     Err("could not find repository root containing docs/bench/suite.toml".to_owned())
 }
 
-fn print_run_table(runs: &[BenchRun]) {
+fn print_run_table(runs: &[BenchRun]) -> Result<(), String> {
     println!();
-    println!("{:<16} {:>10}  throughput", "bench", "elapsed_ms");
-    println!("{}", "-".repeat(60));
+    println!(
+        "{:<22} {:>7} {:>10} {:>10} {:>10}",
+        "bench", "samples", "median_ms", "min_ms", "max_ms"
+    );
+    println!("{}", "-".repeat(63));
     for run in runs {
-        let throughput = run.throughput.as_deref().unwrap_or("-");
-        println!("{:<16} {:>10}  {}", run.id, run.elapsed_ms, throughput);
+        let stats = run.summary()?;
+        println!(
+            "{:<22} {:>7} {:>10.1} {:>10} {:>10}",
+            run.spec.id, stats.count, stats.median_ms, stats.min_ms, stats.max_ms
+        );
     }
     println!();
+    Ok(())
 }
 
 fn print_compare_table(rows: &[CompareRow]) {
     println!();
     println!(
-        "{:<16} {:>10} {:>10} {:>10}  throughput",
-        "bench", "before_ms", "after_ms", "delta_%"
+        "{:<22} {:>7} {:>10} {:>10} {:>10} {:>15} {:>15}",
+        "bench", "samples", "before_ms", "after_ms", "delta_%", "before_min-max", "after_min-max"
     );
     println!("{}", "-".repeat(72));
     for row in rows {
-        let before = row.baseline_ms.to_string();
         let delta = format!("{:+.1}", row.delta_pct);
-        let throughput = row.throughput.as_deref().unwrap_or("-");
         println!(
-            "{:<16} {:>10} {:>10} {:>10}  {}",
-            row.id, before, row.current_ms, delta, throughput
+            "{:<22} {:>7} {:>10.1} {:>10.1} {:>10} {:>15} {:>15}",
+            row.id,
+            row.after.count,
+            row.before.median_ms,
+            row.after.median_ms,
+            delta,
+            format!("{}-{}", row.before.min_ms, row.before.max_ms),
+            format!("{}-{}", row.after.min_ms, row.after.max_ms)
         );
     }
     println!();

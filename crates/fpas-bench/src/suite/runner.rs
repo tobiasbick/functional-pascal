@@ -1,6 +1,6 @@
 //! Run benchmark processes with bounded execution and captured diagnostics.
 
-use super::{BenchRun, BenchSpec};
+use super::{BenchRun, BenchSample, BenchSpec};
 #[cfg(windows)]
 use process_wrap::std::JobObject;
 #[cfg(unix)]
@@ -26,7 +26,7 @@ struct CapturedOutput {
 }
 
 /// Run one suite entry and parse its elapsed time.
-pub fn run_bench(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<BenchRun, String> {
+fn run_sample(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<BenchSample, String> {
     let mut command = super::command::command(repo_root, fpas, spec)?;
     command.stdout(Stdio::piped()).stderr(Stdio::piped());
     let child = spawn_benchmark(command)
@@ -50,8 +50,7 @@ pub fn run_bench(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<Benc
     })?;
     let throughput = parse_throughput_line(&stdout);
 
-    Ok(BenchRun {
-        id: spec.id.clone(),
+    Ok(BenchSample {
         elapsed_ms,
         throughput,
         raw_stdout: stdout,
@@ -75,8 +74,15 @@ pub fn run_suite(
 ) -> Result<Vec<BenchRun>, String> {
     let mut runs = Vec::with_capacity(specs.len());
     for spec in specs {
-        eprintln!("running {}…", spec.id);
-        runs.push(run_bench(repo_root, fpas, spec)?);
+        let mut samples = Vec::with_capacity(spec.samples.get());
+        for index in 1..=spec.samples.get() {
+            eprintln!("running {} ({index}/{})…", spec.id, spec.samples);
+            samples.push(run_sample(repo_root, fpas, spec)?);
+        }
+        runs.push(BenchRun {
+            spec: spec.clone(),
+            samples,
+        });
     }
     Ok(runs)
 }

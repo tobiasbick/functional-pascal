@@ -12,6 +12,15 @@ uses
 // Sentinel maximum extent used by expanding layout measurements.
 public const TuiMeasureExpandingMaximum: integer := 9223372036854775807;
 
+function TuiMeasureAddMaximum(Left: integer; Right: integer): integer;
+begin
+  if Left = TuiMeasureExpandingMaximum or Right = TuiMeasureExpandingMaximum then
+    return TuiMeasureExpandingMaximum;
+  end if;
+
+  return MeasureAxis.TuiMeasureAxis.Add(Left, Right);
+end function;
+
 function TuiMeasureLeafLabel(Text: string): MeasureResult.TuiMeasureResult;
 begin
   return MeasureResult.TuiMeasureResult.Fixed(Size.TuiSize.Create(Console.DisplayWidth(Text), 1));
@@ -268,13 +277,13 @@ begin
   var MaxHeight := 0;
   for Child: Element.TuiElement in Children do
     if TuiMeasureChildParticipates(Child) then
-      const Measured := TuiMeasure(Child, Spec);
+      const Measured := TuiMeasureForAxis(Child, Spec, false);
       MinWidth := MeasureAxis.TuiMeasureAxis.Max(MinWidth, Measured.Minimum.Width);
       PreferredWidth := MeasureAxis.TuiMeasureAxis.Max(PreferredWidth, Measured.Preferred.Width);
       MaxWidth := MeasureAxis.TuiMeasureAxis.Max(MaxWidth, Measured.Maximum.Width);
       MinHeight := MeasureAxis.TuiMeasureAxis.Add(MinHeight, Measured.Minimum.Height);
       PreferredHeight := MeasureAxis.TuiMeasureAxis.Add(PreferredHeight, Measured.Preferred.Height);
-      MaxHeight := MeasureAxis.TuiMeasureAxis.Add(MaxHeight, Measured.Maximum.Height);
+      MaxHeight := TuiMeasureAddMaximum(MaxHeight, Measured.Maximum.Height);
     end if;
   end for;
   const TitleWidth := Console.DisplayWidth(Title) + 6;
@@ -284,17 +293,16 @@ begin
       MeasureAxis.TuiMeasureAxis.Max(PreferredWidth + 2, TitleWidth),
       PreferredHeight + 2
     ),
-    Size.TuiSize.Create(MeasureAxis.TuiMeasureAxis.Max(MaxWidth + 2, TitleWidth), MaxHeight + 2)
+    Size.TuiSize.Create(
+      MeasureAxis.TuiMeasureAxis.Max(TuiMeasureAddMaximum(MaxWidth, 2), TitleWidth),
+      TuiMeasureAddMaximum(MaxHeight, 2)
+    )
   );
   return TuiMeasureApplyPolicy(Hint, SizePolicy.TuiSizePolicy.Preferred(), Spec);
 end function;
 
-// Measures one element under the given constraints.
-//
-// Parameters:
-// - `Node`: Element or menu node processed by the operation.
-// - `Spec`: Measurement constraints for width and height.
-public function TuiMeasure(Node: Element.TuiElement; Spec: MeasureSpec.TuiMeasureSpec): MeasureResult.TuiMeasureResult;
+// Measures a child in the axis supplied by its enclosing layout.
+public function TuiMeasureForAxis(Node: Element.TuiElement; Spec: MeasureSpec.TuiMeasureSpec; Horizontal: boolean): MeasureResult.TuiMeasureResult;
 begin
   case Node of
     when Element.TuiElement.Empty:
@@ -467,7 +475,7 @@ begin
     when Element.TuiElement.Spacer(const Value):
       begin
         return TuiMeasureApplyPolicy(
-          TuiMeasureSpacerValue(Value, true),
+          TuiMeasureSpacerValue(Value, Horizontal),
           SizePolicy.TuiSizePolicy.Preferred(),
           Spec
         );
@@ -485,12 +493,16 @@ begin
           begin
             if TuiMeasureChildParticipates(Children[Index]) then
               begin
-                const Measured: MeasureResult.TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+                const Measured: MeasureResult.TuiMeasureResult := TuiMeasureForAxis(
+                  Children[Index],
+                  Spec,
+                  true
+                );
                 if VisibleCount > 0 then
                   begin
                     MinimumMain := MeasureAxis.TuiMeasureAxis.Add(MinimumMain, Spacing);
                     PreferredMain := MeasureAxis.TuiMeasureAxis.Add(PreferredMain, Spacing);
-                    MaximumMain := MeasureAxis.TuiMeasureAxis.Add(MaximumMain, Spacing);
+                    MaximumMain := TuiMeasureAddMaximum(MaximumMain, Spacing);
                   end;
                 end if;
 
@@ -499,7 +511,7 @@ begin
                   PreferredMain,
                   Measured.Preferred.Width
                 );
-                MaximumMain := MeasureAxis.TuiMeasureAxis.Add(MaximumMain, Measured.Maximum.Width);
+                MaximumMain := TuiMeasureAddMaximum(MaximumMain, Measured.Maximum.Width);
                 MinimumCross := MeasureAxis.TuiMeasureAxis.Max(
                   MinimumCross,
                   Measured.Minimum.Height
@@ -541,12 +553,16 @@ begin
           begin
             if TuiMeasureChildParticipates(Children[Index]) then
               begin
-                const Measured: MeasureResult.TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+                const Measured: MeasureResult.TuiMeasureResult := TuiMeasureForAxis(
+                  Children[Index],
+                  Spec,
+                  false
+                );
                 if VisibleCount > 0 then
                   begin
                     MinimumMain := MeasureAxis.TuiMeasureAxis.Add(MinimumMain, Spacing);
                     PreferredMain := MeasureAxis.TuiMeasureAxis.Add(PreferredMain, Spacing);
-                    MaximumMain := MeasureAxis.TuiMeasureAxis.Add(MaximumMain, Spacing);
+                    MaximumMain := TuiMeasureAddMaximum(MaximumMain, Spacing);
                   end;
                 end if;
 
@@ -555,7 +571,7 @@ begin
                   PreferredMain,
                   Measured.Preferred.Height
                 );
-                MaximumMain := MeasureAxis.TuiMeasureAxis.Add(MaximumMain, Measured.Maximum.Height);
+                MaximumMain := TuiMeasureAddMaximum(MaximumMain, Measured.Maximum.Height);
                 MinimumCross := MeasureAxis.TuiMeasureAxis.Max(
                   MinimumCross,
                   Measured.Minimum.Width
@@ -591,7 +607,7 @@ begin
         );
         if (Children.Length() = 1) and TuiMeasureChildParticipates(Children[0]) then
           begin
-            Child := TuiMeasure(Children[0], Spec);
+            Child := TuiMeasureForAxis(Children[0], Spec, Horizontal);
           end;
         end if;
         var Hint: MeasureResult.TuiMeasureResult := MeasureResult.TuiMeasureResult.Create(
@@ -604,9 +620,8 @@ begin
             Settings.Margins.Horizontal(), Child.Preferred.Height +
             Settings.Margins.Vertical()
           ), Size.TuiSize.Create(
-            Child.Maximum.Width +
-            Settings.Margins.Horizontal(), Child.Maximum.Height +
-            Settings.Margins.Vertical()
+            TuiMeasureAddMaximum(Child.Maximum.Width, Settings.Margins.Horizontal()),
+            TuiMeasureAddMaximum(Child.Maximum.Height, Settings.Margins.Vertical())
           )
         );
         Hint := TuiMeasureApplyPolicy(Hint, Settings.SizePolicy, Spec);
@@ -697,6 +712,12 @@ begin
         );
       end;
   end case;
+end function;
+
+// Measures one element under the given constraints. An isolated spacer is horizontal.
+public function TuiMeasure(Node: Element.TuiElement; Spec: MeasureSpec.TuiMeasureSpec): MeasureResult.TuiMeasureResult;
+begin
+  return TuiMeasureForAxis(Node, Spec, true);
 end function;
 
 // Returns the unconstrained preferred size of an element subtree.

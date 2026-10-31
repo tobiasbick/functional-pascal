@@ -25,6 +25,21 @@ Remove an entry once the gap is fixed and covered by tests and current documenta
 
 ## Open entries
 
+### Batch debugger worker exits during a TUI test
+
+- **Date:** 2026-10-31
+- **Kind:** awkward (diagnosis remained in FPAS)
+- **Area:** diagnostics
+- **Task:** Inspect the viewport and footer position at a failing headless TUI
+  test assertion in the game client.
+- **Missing or wrong:** The batch debugger returned `worker_failure` before
+  publishing a breakpoint result; the underlying cause was not established.
+- **Minimal example:** In the game workspace, run `fpas debug` on
+  `tests/client/client-tests.fpasprj` with a breakpoint in
+  `tests/client/inventory_window_test.fpas` and request its `Screen.Height`.
+- **Fallback:** Temporarily print the FPAS test's surface snapshot and remove
+  the diagnostic output after correcting the layout.
+
 ### Available memory and commit headroom
 
 - **Date:** 2026-10-29

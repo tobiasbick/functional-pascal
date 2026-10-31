@@ -117,19 +117,25 @@ begin
     const Alpha := Find(Screen, 'Alpha');
     const Page := Find(Screen, 'Page');
     if Position = Tui.TuiTabPosition.Top then
-      Test.AssertTrue(Alpha.Y < Page.Y);
+      Test.AssertEquals(Alpha.Y + 1, Page.Y);
     end if;
 
     if Position = Tui.TuiTabPosition.Bottom then
-      Test.AssertTrue(Alpha.Y > Page.Y);
+      Test.AssertEquals(Page.Y + 1, Alpha.Y);
     end if;
 
     if Position = Tui.TuiTabPosition.Left then
       Test.AssertTrue(Alpha.X < Page.X);
+      Test.AssertTrue(Screen.CellAt(Page.X - 2, Page.Y).Role = Tui.TuiStyleRole.TabSelectedFocused);
+      Test.AssertTrue(Screen.CellAt(Page.X - 1, Page.Y).Role = Tui.TuiStyleRole.ButtonNormal);
     end if;
 
     if Position = Tui.TuiTabPosition.Right then
       Test.AssertTrue(Alpha.X > Page.X);
+      Test.AssertTrue(Screen.CellAt(Alpha.X - 2, Alpha.Y).Role = Tui.TuiStyleRole.ButtonNormal);
+      Test.AssertTrue(
+        Screen.CellAt(Alpha.X - 1, Alpha.Y).Role = Tui.TuiStyleRole.TabSelectedFocused
+      );
     end if;
 
     Test.AssertTrue(Screen.CellAt(Alpha.X, Alpha.Y).Role = Tui.TuiStyleRole.TabSelectedFocused);

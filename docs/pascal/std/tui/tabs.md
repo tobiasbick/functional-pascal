@@ -4,7 +4,7 @@
 one side of the supplied active page. `TuiTabPosition.Top`, `Bottom`, `Left`,
 and `Right` choose its side and orientation. The application constructs only
 the selected page and keeps the selection and all page drafts in its model.
-Vertical tab bars leave one column between the bar and the page.
+The tab bar and page are adjacent; applications can add their own spacing.
 Hidden pages therefore do not receive focus or input.
 
 ```pascal id=tabs run

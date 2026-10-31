@@ -101,6 +101,46 @@ begin
   );
   Test.AssertEquals(4, FixedSpacer.Preferred.Width);
   Test.AssertEquals(0, FixedSpacer.Preferred.Height);
+  const ColumnSpacer: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeColumn([
+      Tui.TuiElementBuilders.MakeLabel('A'),
+      Tui.TuiElementBuilders.MakeSpacer(Tui.TuiSpacer.Fixed(2)),
+      Tui.TuiElementBuilders.MakeLabel('B')
+    ]), Tui.TuiMeasureSpec.Unbounded()
+  );
+  Test.AssertEquals(1, ColumnSpacer.Preferred.Width);
+  Test.AssertEquals(4, ColumnSpacer.Preferred.Height);
+  const RowSpacer: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeRow([
+      Tui.TuiElementBuilders.MakeLabel('A'),
+      Tui.TuiElementBuilders.MakeSpacer(Tui.TuiSpacer.Fixed(2)),
+      Tui.TuiElementBuilders.MakeLabel('B')
+    ]), Tui.TuiMeasureSpec.Unbounded()
+  );
+  Test.AssertEquals(4, RowSpacer.Preferred.Width);
+  Test.AssertEquals(1, RowSpacer.Preferred.Height);
+  const ExpandingColumn: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeColumn([
+      Tui.TuiElementBuilders.MakeLabel('A'),
+      Tui.TuiElementBuilders.MakeSpacer(Tui.TuiSpacer.Expanding(2)),
+      Tui.TuiElementBuilders.MakeLabel('B')
+    ]), Tui.TuiMeasureSpec.Unbounded()
+  );
+  Test.AssertEquals(4, ExpandingColumn.Minimum.Height);
+  Test.AssertEquals(4, ExpandingColumn.Preferred.Height);
+  Test.AssertTrue(ExpandingColumn.Maximum.Height > ExpandingColumn.Preferred.Height);
+  const PanelSpacer: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakePanel(
+      'P', [
+        Tui.TuiElementBuilders.MakeLabel('A'),
+        Tui.TuiElementBuilders.MakeSpacer(Tui.TuiSpacer.Expanding(2)),
+        Tui.TuiElementBuilders.MakeLabel('B')
+      ]
+    ), Tui.TuiMeasureSpec.Unbounded()
+  );
+  Test.AssertEquals(6, PanelSpacer.Minimum.Height);
+  Test.AssertEquals(6, PanelSpacer.Preferred.Height);
+  Test.AssertTrue(PanelSpacer.Maximum.Height > PanelSpacer.Preferred.Height);
   const Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(
     Tui.TuiElementBuilders.MakeLabel('ABCDEFGH'),
     Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(3, 1))

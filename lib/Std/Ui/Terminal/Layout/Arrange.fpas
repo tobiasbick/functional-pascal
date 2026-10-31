@@ -265,9 +265,10 @@ begin
       if TuiArrangeChildParticipates(Children[Index]) then
         begin
           ParticipatingIndices.PushInPlace(Index);
-          const Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasure(
+          const Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasureForAxis(
             Children[Index],
-            Spec
+            Spec,
+            Horizontal
           );
           Assigned[Index] := TuiArrangeMainMinimum(Measured, Horizontal);
           Preferred[Index] := TuiArrangeMainPreferred(Measured, Horizontal);

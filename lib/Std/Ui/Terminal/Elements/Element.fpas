@@ -412,9 +412,9 @@ public type TuiElementBuilders = record
       when Tabs.TuiTabPosition.Bottom:
         return TuiElement.Column([Page, TuiElement.TabBar(Bar)], 0);
       when Tabs.TuiTabPosition.Left:
-        return TuiElement.Row([TuiElement.TabBar(Bar), Page], 1);
+        return TuiElement.Row([TuiElement.TabBar(Bar), Page], 0);
       when Tabs.TuiTabPosition.Right:
-        return TuiElement.Row([Page, TuiElement.TabBar(Bar)], 1);
+        return TuiElement.Row([Page, TuiElement.TabBar(Bar)], 0);
     end case;
   end function;
 

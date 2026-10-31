@@ -24,6 +24,11 @@ copies whose total horizontal or vertical extent, including margins, is fixed
 to the supplied non-negative cell count. Fixed axes do not receive remaining
 space from a `Row` or `Column`; negative extents panic.
 
+A `TuiSpacer.Fixed(N)` reserves `N` cells along its enclosing row or column;
+`TuiSpacer.Expanding(N)` reserves at least `N` cells and can grow along that
+axis. Panel and overlay children use the vertical axis. Measuring an isolated
+spacer with `TuiMeasure` uses the horizontal axis.
+
 `Panel` and `Overlay` arrange their inset children as a vertical column without
 spacing. A direct desktop `Overlay` is centered at its preferred size; a
 `Panel` participates in ordinary layout.

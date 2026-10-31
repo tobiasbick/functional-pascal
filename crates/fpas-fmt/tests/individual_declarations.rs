@@ -5,7 +5,7 @@
     reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
 )]
 
-mod common;
+use crate::common;
 
 #[test]
 fn subrange_declarations_round_trip_bounds_comments_and_parentheses() {

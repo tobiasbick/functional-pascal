@@ -126,3 +126,25 @@ fn constructor_rejects_wrong_source_hash_count() {
         })
     );
 }
+
+#[test]
+fn constructor_rejects_source_labels_that_collapse_to_one_portable_path() {
+    let mut executable = executable().into_unverified();
+    executable.strings = StringTable::new(vec![
+        "main".into(),
+        "source-1.fpas".into(),
+        "other.fpas".into(),
+    ]);
+    executable.source_map.sources = vec![StringId::new(1), StringId::new(2)];
+    let error = ProgramImage::new(
+        identity(),
+        vec!["first.fpas".into(), "second.fpas".into()],
+        vec![Digest::of(b"first"), Digest::of(b"second")],
+        executable.verify().unwrap(),
+    )
+    .err();
+    assert_eq!(
+        error,
+        Some(ImageError::DuplicateSourcePath("second.fpas".into()))
+    );
+}

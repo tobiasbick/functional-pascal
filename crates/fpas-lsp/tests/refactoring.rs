@@ -6,7 +6,7 @@
     reason = "protocol fixtures assert source edits"
 )]
 
-mod support;
+use crate::support;
 
 use serde_json::{Value, json};
 use support::{TempDirectory, exit, initialize_with_root, initialized, response, run, shutdown};

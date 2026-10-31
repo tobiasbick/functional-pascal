@@ -404,15 +404,17 @@ impl fmt::Display for ValidationError {
 
 impl std::error::Error for ValidationError {}
 
-pub(super) fn validate(executable: &crate::Executable) -> Result<(), ValidationError> {
+pub(super) fn validate(
+    executable: &crate::Executable,
+) -> Result<Vec<crate::DecodedInstruction>, ValidationError> {
     resources::validate_resources(executable)?;
     layouts::validate_tables(executable)?;
     errors::validate(executable)?;
     debug_types::validate_debug_types(executable)?;
-    control_flow::validate_functions(executable)?;
+    let decoded = control_flow::validate_functions(executable)?;
     source_map::validate_source_map(executable)?;
     debug::validate_debug_info(executable)?;
-    Ok(())
+    Ok(decoded)
 }
 
 pub(super) fn limit(

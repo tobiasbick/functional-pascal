@@ -61,7 +61,7 @@ pub use console_event::{
     event_kind_index, mouse_action_index, mouse_button_index,
 };
 pub use error::StdError;
-pub use fpas_builtins::{RUNTIME_AGGREGATE_TYPES, runtime_aggregate_types};
+pub use fpas_builtins::{RUNTIME_AGGREGATE_TYPES, is_runtime_aggregate_type};
 pub use fpas_builtins::{
     STD_UNIT_ACP, STD_UNIT_ACP_EXPERIMENTAL, STD_UNIT_ACP_HOST, STD_UNIT_ACP_TYPES,
     STD_UNIT_ACP_V2, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CALENDAR, STD_UNIT_CLI,

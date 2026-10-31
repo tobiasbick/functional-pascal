@@ -245,7 +245,7 @@ impl Checker {
                 contains_callable
             }
             Ty::Enum(enumeration) => {
-                let resolved = self.resolve_visible_type(&Ty::Enum(enumeration.clone()));
+                let resolved = self.resolve_visible_type(&Ty::Enum(enumeration));
                 let Ty::Enum(enumeration) = resolved else {
                     return false;
                 };

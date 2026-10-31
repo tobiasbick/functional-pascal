@@ -46,6 +46,20 @@ pub fn register_loaded_std(checker: &mut Checker) {
 
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
+    let family = match unit {
+        fpas_builtins::STD_UNIT_ACP
+        | fpas_builtins::STD_UNIT_ACP_TYPES
+        | fpas_builtins::STD_UNIT_ACP_HOST
+        | fpas_builtins::STD_UNIT_ACP_EXPERIMENTAL
+        | fpas_builtins::STD_UNIT_ACP_V2 => fpas_builtins::STD_UNIT_ACP,
+        fpas_builtins::STD_UNIT_MCP | fpas_builtins::STD_UNIT_MCP_TYPES => {
+            fpas_builtins::STD_UNIT_MCP
+        }
+        _ => unit,
+    };
+    if !checker.registered_std_units.insert(family.to_owned()) {
+        return;
+    }
     match unit {
         fpas_builtins::STD_UNIT_BYTES => bytes::register(checker),
         fpas_builtins::STD_UNIT_TOKENIZER => tokenizer::register(checker),

@@ -59,8 +59,8 @@ impl Checker {
 
         let func_ty = Ty::Function(FunctionTy {
             type_params: type_param_defs,
-            params: params.clone(),
-            return_type: Box::new(return_ty.clone()),
+            params,
+            return_type: Box::new(return_ty),
             variadic: false,
         });
 
@@ -129,7 +129,7 @@ impl Checker {
         let proc_ty = Ty::Procedure(ProcedureTy {
             type_params: type_param_defs,
             variadic: false,
-            params: params.clone(),
+            params,
         });
 
         if has_type_params {

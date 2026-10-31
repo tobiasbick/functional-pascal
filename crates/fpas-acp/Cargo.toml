@@ -13,9 +13,8 @@ fpas-acp-codec = { path = "../fpas-acp-codec" }
 fpas-mcp = { path = "../fpas-mcp" }
 agent-client-protocol.workspace = true
 futures.workspace = true
-fancy-regex = "0.16"
+fancy-regex = "0.19.2"
 tokio.workspace = true
-serde.workspace = true
 serde_json = { workspace = true, features = ["raw_value", "arbitrary_precision"] }
 
 [lints]

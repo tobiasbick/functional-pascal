@@ -1,6 +1,6 @@
 //! Long expressions expand automatically without source-authored line breaks.
 
-mod common;
+use crate::common;
 
 #[test]
 fn long_builder_calls_expand_each_argument_at_the_structural_indent() {

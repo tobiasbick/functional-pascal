@@ -133,6 +133,7 @@ impl Checker {
             .map(|used| used.unit.parts.join(".").to_ascii_lowercase())
             .collect();
         self.loaded_std_units.clear();
+        self.registered_std_units.clear();
         self.imported_candidates.clear();
         for u in intrinsic_uses {
             match canonical_unit_from_uses_clause(&u.unit) {

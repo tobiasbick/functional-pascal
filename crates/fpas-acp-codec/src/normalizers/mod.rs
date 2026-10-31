@@ -3,10 +3,12 @@
 use crate::{CodecError, RawJson, codec, schema::Version};
 use serde::{Serialize, de::DeserializeOwned};
 
-type Normalize = fn(&RawJson) -> Result<RawJson, CodecError>;
+type Normalize = fn(crate::raw::RawJsonRef<'_>) -> Result<RawJson, CodecError>;
 
-fn typed<T: Serialize + DeserializeOwned>(raw: &RawJson) -> Result<RawJson, CodecError> {
-    let value: T = codec::deserialize(raw)?;
+fn typed<T: Serialize + DeserializeOwned>(
+    raw: crate::raw::RawJsonRef<'_>,
+) -> Result<RawJson, CodecError> {
+    let value: T = codec::deserialize_view(raw)?;
     codec::encode(&value, crate::raw::MAX_RAW_BYTES)
 }
 

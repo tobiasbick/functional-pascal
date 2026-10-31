@@ -2,7 +2,7 @@
 
 mod limits;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 
 use fpas_code::{StringId, StringTable, ValidationError, VerifiedExecutable};
@@ -101,20 +101,15 @@ impl ProgramImage {
         validate_source_paths(&source_paths)?;
         validate_source_hash_count(source_hashes.len(), source_paths.len())?;
         validate_identity_resources(&identity)?;
-        let (executable, selected_paths) = install_source_paths(executable, &source_paths)?;
-        let selected_hashes = selected_paths
+        let (executable, selected_sources) = install_source_paths(executable, &source_paths)?;
+        let selected_hashes = selected_sources
             .iter()
-            .map(|path| {
-                source_paths
-                    .iter()
-                    .position(|candidate| candidate == path)
-                    .map(|index| source_hashes[index])
-                    .ok_or(ImageError::SourcePathCount {
-                        paths: source_paths.len(),
-                        sources: selected_paths.len(),
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+            .map(|&index| source_hashes[index])
+            .collect();
+        let selected_paths = selected_sources
+            .into_iter()
+            .map(|index| source_paths[index].clone())
+            .collect();
         Ok(Self {
             identity,
             source_paths: selected_paths,
@@ -184,21 +179,6 @@ impl ProgramImage {
     pub fn into_executable(self) -> VerifiedExecutable {
         self.executable
     }
-
-    pub(crate) fn validate(&self) -> Result<(), ImageError> {
-        validate_identity(&self.identity)?;
-        validate_identity_resources(&self.identity)?;
-        validate_source_paths(&self.source_paths)?;
-        let actual = self.executable.executable().source_map.sources.len();
-        if self.source_paths.len() != actual {
-            return Err(ImageError::SourcePathCount {
-                paths: self.source_paths.len(),
-                sources: actual,
-            });
-        }
-        validate_source_hash_count(self.source_hashes.len(), actual)?;
-        Ok(())
-    }
 }
 
 fn validate_source_hash_count(hashes: usize, sources: usize) -> Result<(), ImageError> {
@@ -229,7 +209,7 @@ fn validate_identity(identity: &ProgramIdentity) -> Result<(), ImageError> {
         if unit.unit_name.trim().is_empty() {
             return Err(ImageError::EmptyIdentityField("unit_name"));
         }
-        if !units.insert(unit.unit_name.to_ascii_lowercase()) {
+        if !units.insert(&unit.unit_name) {
             return Err(ImageError::DuplicateUnit(unit.unit_name.clone()));
         }
     }
@@ -255,37 +235,45 @@ fn validate_source_paths(source_paths: &[String]) -> Result<(), ImageError> {
 fn install_source_paths(
     verified: VerifiedExecutable,
     source_paths: &[String],
-) -> Result<(VerifiedExecutable, Vec<String>), ImageError> {
+) -> Result<(VerifiedExecutable, Vec<usize>), ImageError> {
     let mut executable = verified.into_unverified();
     let mut strings = executable
         .strings
         .iter()
         .map(str::to_owned)
         .collect::<Vec<_>>();
-    let selected_paths = executable
+    let selected_sources = executable
         .source_map
         .sources
         .iter()
         .enumerate()
         .map(|(source_index, source)| {
             let label = executable.strings.get(*source).unwrap_or_default();
-            source_path_for_label(label, source_index, source_paths).cloned()
+            source_index_for_label(label, source_index, source_paths.len())
         })
         .collect::<Option<Vec<_>>>()
         .ok_or(ImageError::SourcePathCount {
             paths: source_paths.len(),
             sources: executable.source_map.sources.len(),
         })?;
+    let mut string_indices = executable
+        .strings
+        .iter()
+        .enumerate()
+        .map(|(index, text)| (text, index))
+        .collect::<HashMap<_, _>>();
+    let mut unique_sources = HashSet::with_capacity(selected_sources.len());
     executable.source_map.sources.clear();
-    for path in &selected_paths {
-        let index = strings
-            .iter()
-            .position(|entry| entry == path)
-            .unwrap_or_else(|| {
-                let index = strings.len();
-                strings.push(path.clone());
-                index
-            });
+    for &source in &selected_sources {
+        let path = &source_paths[source];
+        if !unique_sources.insert(source) {
+            return Err(ImageError::DuplicateSourcePath(path.clone()));
+        }
+        let index = *string_indices.entry(path.as_str()).or_insert_with(|| {
+            let index = strings.len();
+            strings.push(path.clone());
+            index
+        });
         let id = StringId::try_from_index(index).map_err(|_| ImageError::ResourceLimit {
             field: "strings",
             size: strings.len(),
@@ -295,20 +283,16 @@ fn install_source_paths(
     }
     executable.strings = StringTable::new(strings);
     let executable = executable.verify().map_err(ImageError::Executable)?;
-    Ok((executable, selected_paths))
+    Ok((executable, selected_sources))
 }
 
-fn source_path_for_label<'a>(
-    label: &str,
-    source_index: usize,
-    source_paths: &'a [String],
-) -> Option<&'a String> {
+fn source_index_for_label(label: &str, source_index: usize, source_count: usize) -> Option<usize> {
     label
         .strip_prefix("source-")
         .and_then(|suffix| suffix.strip_suffix(".fpas"))
         .and_then(|index| index.parse::<usize>().ok())
-        .and_then(|index| source_paths.get(index))
-        .or_else(|| source_paths.get(source_index))
+        .filter(|&index| index < source_count)
+        .or_else(|| (source_index < source_count).then_some(source_index))
 }
 
 fn is_portably_absolute(path: &str) -> bool {

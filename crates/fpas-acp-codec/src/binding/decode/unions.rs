@@ -1,9 +1,9 @@
 //! Enum selection follows SDK declaration order while retaining future tags as data.
 
-use super::{Decoder, Object, invalid};
+use super::{Decoder, invalid};
+use crate::CodecError;
 use crate::binding::{Declaration, Unknown, Value, Variant};
-use crate::{CodecError, RawJson};
-use serde_json::value::RawValue;
+use crate::raw::RawJsonRef;
 
 impl Decoder<'_> {
     pub(super) fn union(
@@ -11,18 +11,18 @@ impl Decoder<'_> {
         declaration: &Declaration,
         variants: &[Variant],
         unknown: Option<&Unknown>,
-        raw: &RawValue,
+        raw: RawJsonRef<'_>,
     ) -> Result<Value, CodecError> {
-        let object = serde_json::from_str::<Object<'_>>(raw.get()).ok();
+        let object = raw.members().ok();
         let scalar =
-            serde_json::from_str::<serde_json::Value>(raw.get()).map_err(CodecError::json)?;
+            serde_json::from_str::<serde_json::Value>(raw.text()).map_err(CodecError::json)?;
         if let Some(unknown) = unknown {
             let tag = match unknown {
                 Unknown::String => scalar.as_str().map(str::to_owned),
                 Unknown::Tagged(name) => object
                     .as_ref()
-                    .and_then(|object| object.0.iter().find(|(key, _)| key == name))
-                    .and_then(|(_, raw)| serde_json::from_str::<String>(raw.get()).ok()),
+                    .and_then(|object| object.iter().find(|(key, _)| key == name))
+                    .and_then(|(_, raw)| serde_json::from_str::<String>(raw.text()).ok()),
             };
             if let Some(tag) = tag {
                 let known = variants.iter().any(|variant| {
@@ -38,7 +38,7 @@ impl Decoder<'_> {
                         fields: match unknown {
                             Unknown::String => vec![Value::String(tag)],
                             Unknown::Tagged(_) => {
-                                vec![Value::String(tag), Value::Raw(RawJson::parse(raw.get())?)]
+                                vec![Value::String(tag), Value::Raw(raw.to_owned())]
                             }
                         },
                     });
@@ -50,8 +50,8 @@ impl Decoder<'_> {
                 let actual = if let Some(property) = property {
                     object
                         .as_ref()
-                        .and_then(|object| object.0.iter().find(|(key, _)| key == property))
-                        .and_then(|(_, raw)| serde_json::from_str(raw.get()).ok())
+                        .and_then(|object| object.iter().find(|(key, _)| key == property))
+                        .and_then(|(_, raw)| serde_json::from_str(raw.text()).ok())
                         .unwrap_or_else(|| {
                             if variant.default_tag {
                                 expected.clone()

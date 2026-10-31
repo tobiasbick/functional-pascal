@@ -66,9 +66,9 @@ impl Checker {
             .iter()
             .zip(&arguments)
             .filter(|(_, ty)| needs_expected_type(ty))
-            .map(|(parameter, _)| parameter.display_name())
+            .map(|(parameter, _)| parameter.display_name().to_owned())
             .collect();
-        self.complete_or_defer_type_arguments(name, missing.into_iter().map(str::to_owned).collect(),
+        self.complete_or_defer_type_arguments(name, missing,
             "Add a type annotation, such as `const Value: Lookup of string := Lookup.Missing;`. Record defaults do not infer type arguments.", span, true);
         self.validate_constraints(parameters, &arguments, span);
         for field in fields {

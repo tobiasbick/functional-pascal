@@ -87,12 +87,10 @@ impl DebugTaskRuntime {
     /// Stopped commands can address peer frames and main-domain globals. Acquire
     /// their gates in stable task order, without retaining runtime/storage borrows.
     pub(in crate::execution::vm::debug) fn access_domains(&self) -> Vec<crate::DomainAccess> {
-        let domains: Vec<_> = self
-            .tasks
+        self.tasks
             .values()
-            .map(|slot| slot.worker.domain.clone())
-            .collect();
-        domains.into_iter().map(|domain| domain.access()).collect()
+            .map(|slot| slot.worker.domain.access())
+            .collect()
     }
 }
 

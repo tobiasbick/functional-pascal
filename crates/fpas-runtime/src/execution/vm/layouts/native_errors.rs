@@ -99,12 +99,10 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
     // Close over declared Cause families without requiring unrelated native modules.
     loop {
         let mut changed = false;
-        for family in Family::ALL
-            .iter()
-            .copied()
-            .filter(|f| required[*f as usize])
-            .collect::<Vec<_>>()
-        {
+        for &family in Family::ALL {
+            if !required[family as usize] {
+                continue;
+            }
             for dependency in family
                 .variants()
                 .iter()

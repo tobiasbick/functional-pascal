@@ -631,17 +631,6 @@ dependencies = [
 
 [[package]]
 name = "fancy-regex"
-version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "998b056554fbe42e03ae0e152895cd1a7e1002aec800fdc6635d20270260c46f"
-dependencies = [
- "bit-set",
- "regex-automata",
- "regex-syntax",
-]
-
-[[package]]
-name = "fancy-regex"
 version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d301f5bf187b3c295fce6468d3875037a0bccc5f6b151c63cac2f85babf21912"
@@ -691,12 +680,11 @@ name = "fpas-acp"
 version = "0.0.1"
 dependencies = [
  "agent-client-protocol",
- "fancy-regex 0.16.2",
+ "fancy-regex",
  "fpas-acp-codec",
  "fpas-acp-model",
  "fpas-mcp",
  "futures",
- "serde",
  "serde_json",
  "tokio",
 ]
@@ -853,7 +841,6 @@ dependencies = [
  "fpas-program",
  "fpas-runtime",
  "fpas-unit",
- "serde",
  "serde_json",
 ]
 
@@ -1534,7 +1521,7 @@ dependencies = [
  "bytecount",
  "data-encoding",
  "email_address",
- "fancy-regex 0.19.2",
+ "fancy-regex",
  "fraction",
  "getrandom 0.3.4",
  "itoa",
@@ -1570,7 +1557,7 @@ version = "0.60.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46226bcac3338786466c9221b536397618e6e35f2330862df57c080e4dd5a4cb"
 dependencies = [
- "fancy-regex 0.19.2",
+ "fancy-regex",
  "indexmap 2.14.2",
  "jsonschema-regex",
  "percent-encoding",
@@ -1841,7 +1828,6 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
 dependencies = [
- "proc-macro-crate",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -2726,7 +2712,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "bstr",
- "fancy-regex 0.19.2",
+ "fancy-regex",
  "regex",
  "rustc-hash",
 ]

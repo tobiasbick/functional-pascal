@@ -108,7 +108,6 @@ pub fn compile_unit_object_with_options(
     let retained_layouts = owned_layouts
         .iter()
         .flat_map(|(short, qualified)| [short.clone(), qualified.clone()])
-        .chain(runtime_aggregate_types())
         .collect();
     prune_unreferenced_layouts(&mut object, &retained_layouts)
         .map_err(|error| object_error(unit.span, error))?;
@@ -164,18 +163,12 @@ pub fn compile_program_object_with_options(
         .map_err(|error| object_error(program.span, error))?;
     apply_imports(&mut object, lowered.imports)
         .map_err(|error| object_error(program.span, error))?;
-    prune_unreferenced_layouts(&mut object, &runtime_aggregate_types().collect())
+    prune_unreferenced_layouts(&mut object, &BTreeSet::new())
         .map_err(|error| object_error(program.span, error))?;
     object
         .validate()
         .map_err(|error| object_error(program.span, error))?;
     Ok(object)
-}
-
-fn runtime_aggregate_types() -> impl Iterator<Item = String> {
-    fpas_builtins::runtime_aggregate_types()
-        .iter()
-        .map(|name| name.to_ascii_lowercase())
 }
 
 fn qualify_unit_definitions(

@@ -16,6 +16,10 @@ to reduce build time. Build the development binaries with:
 cargo build --profile dev-fast -p fpas-cli -p fpas-lsp -p fpas-runner
 ```
 
+`cargo build --workspace --profile dev-fast` also skips the benchmark executable.
+Its `bench-tools` feature is enabled by `cargo bench-fpas`, which keeps benchmarks
+on the release profile. Direct harness builds need `--features bench-tools`.
+
 Run the CLI with `cargo run --profile dev-fast -p fpas-cli -- <arguments>`.
 Cargo keeps custom profiles' artifacts separate. Plain `cargo build` retains
 Cargo's default development settings. Rust tests use their own settings:
@@ -70,12 +74,13 @@ Build tools, compile tests and execute tests as separate operations:
 
 ```sh
 cargo build --workspace --locked --profile dev-fast
-cargo test --workspace --locked --no-run --timings
-cargo test --workspace --locked
+cargo test --workspace --all-features --locked --no-run --timings
+cargo test --workspace --all-features --locked
 ```
 
-The last two commands share the same profile and flags, so execution reuses
-compiled test artifacts. For focused work, select a test executable and filter:
+The last two commands include the benchmark harness tests and share the same
+profile and flags, so execution reuses compiled test artifacts. For focused work,
+select a test executable and filter:
 
 ```sh
 cargo test --locked -p fpas-debug --test evaluation call_evaluation
@@ -86,7 +91,9 @@ cargo test --locked -p fpas-debug --profile test-debug --test evaluation --no-ru
 Mappings from previous target names are documented beside the
 [debugger tests](../../crates/fpas-debug/tests/README.md),
 [CLI tests](../../crates/fpas-cli/tests/README.md), and
-[language-service tests](../../crates/fpas-language-service/tests/README.md).
+[language-service tests](../../crates/fpas-language-service/tests/README.md),
+[formatter tests](../../crates/fpas-fmt/tests/README.md), and
+[LSP tests](../../crates/fpas-lsp/tests/README.md).
 Runtime allocator, terminal and process-lifecycle tests retain separate targets
 where the executable itself is part of the fixture.
 
@@ -101,8 +108,8 @@ On Windows, where test compilation or execution risks exhausting memory, use
 the FPAS supervisor with an already built development CLI:
 
 ```sh
-target/dev-fast/fpas run tools/resource-guard.fpas -- 900000 cargo test --workspace --locked --no-run --timings
-target/dev-fast/fpas run tools/resource-guard.fpas -- 1800000 cargo test --workspace --locked
+target/dev-fast/fpas run tools/resource-guard.fpas -- 900000 cargo test --workspace --all-features --locked --no-run --timings
+target/dev-fast/fpas run tools/resource-guard.fpas -- 1800000 cargo test --workspace --all-features --locked
 ```
 
 The first argument is a positive process-tree timeout in milliseconds. The guard
@@ -184,6 +191,15 @@ The catalog codec uses static dispatch. Schema features and SDK versions remain
 pinned; splitting the crates does not change protocol fields or wire behavior.
 The model participates in the compiler artifact identity. Runtime connection
 changes do not change this identity.
+
+The artifact identity hashes compiler source, production/build manifests and
+their locked dependency closure. Runtime-only package upgrades and development
+dependencies do not invalidate FPAS artifacts. External dependencies shared with
+the compiler still do. An explicit list in `fpas-build/build/compiler_identity.rs`
+excludes separate `cfg(test)` modules; inline tests and unknown source files stay
+in the hash. Keep that list limited to modules used exclusively by tests.
+The identity's TOML reader reuses the workspace dependency rather than parsing
+Cargo's manifests or lockfile with a separate ad hoc parser.
 
 Check the production dependency graph with `cargo tree -p fpas-lsp -e normal`.
 It should include `fpas-acp-model`, but not `fpas-runtime`, `fpas-acp`, `fpas-acp-codec`,

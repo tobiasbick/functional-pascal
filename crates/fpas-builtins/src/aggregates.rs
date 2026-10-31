@@ -53,40 +53,55 @@ pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
     "Std.Console.Cell",
 ];
 
-/// Native aggregate names retained even when only a payload decoder constructs them.
-pub fn runtime_aggregate_types() -> &'static [String] {
-    static NAMES: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(|| {
-        let mut names = RUNTIME_AGGREGATE_TYPES
-            .iter()
-            .map(|name| (*name).to_owned())
-            .collect::<Vec<_>>();
-        for version in [
-            fpas_acp_model::schema::Version::V1,
-            fpas_acp_model::schema::Version::V2,
-        ] {
-            if let Ok(catalog) = fpas_acp_model::binding::catalog(version) {
-                names.extend(
-                    catalog
-                        .declarations
-                        .values()
-                        .filter(|declaration| {
-                            !matches!(declaration.shape, fpas_acp_model::binding::Shape::Scalar(_))
-                        })
-                        .map(|declaration| declaration.name.clone()),
-                );
-                let module = if version == fpas_acp_model::schema::Version::V1 {
-                    "Std.Ai.Acp.Types"
-                } else {
-                    "Std.Ai.Acp.V2"
-                };
-                names.extend(
-                    fpas_acp_model::binding::ROOTS
-                        .into_iter()
-                        .map(|root| format!("{module}.Decoded{root}")),
-                );
+/// Whether a case-insensitive aggregate name needs retention for native construction.
+/// ACP schemas are initialized only when an object actually contains an ACP aggregate.
+pub fn is_runtime_aggregate_type(name: &str) -> bool {
+    if RUNTIME_AGGREGATE_TYPES
+        .iter()
+        .any(|known| known.eq_ignore_ascii_case(name))
+    {
+        return true;
+    }
+    const ACP_PREFIX: &str = "Std.Ai.Acp.";
+    if !name
+        .get(..ACP_PREFIX.len())
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case(ACP_PREFIX))
+    {
+        return false;
+    }
+    static NAMES: std::sync::LazyLock<std::collections::HashSet<String>> =
+        std::sync::LazyLock::new(|| {
+            let mut names = std::collections::HashSet::new();
+            for version in [
+                fpas_acp_model::schema::Version::V1,
+                fpas_acp_model::schema::Version::V2,
+            ] {
+                if let Ok(catalog) = fpas_acp_model::binding::catalog(version) {
+                    names.extend(
+                        catalog
+                            .declarations
+                            .values()
+                            .filter(|declaration| {
+                                !matches!(
+                                    declaration.shape,
+                                    fpas_acp_model::binding::Shape::Scalar(_)
+                                )
+                            })
+                            .map(|declaration| declaration.name.to_ascii_lowercase()),
+                    );
+                    let module = if version == fpas_acp_model::schema::Version::V1 {
+                        "Std.Ai.Acp.Types"
+                    } else {
+                        "Std.Ai.Acp.V2"
+                    };
+                    names.extend(
+                        fpas_acp_model::binding::ROOTS
+                            .into_iter()
+                            .map(|root| format!("{module}.Decoded{root}").to_ascii_lowercase()),
+                    );
+                }
             }
-        }
-        names
-    });
-    &NAMES
+            names
+        });
+    NAMES.contains(&name.to_ascii_lowercase())
 }

@@ -21,11 +21,13 @@ fpas-code = { path = "../fpas-code" }
 
 [build-dependencies]
 blake3 = { workspace = true }
+toml.workspace = true
 
 [lints]
 workspace = true
 
 [dev-dependencies]
+blake3.workspace = true
 toml.workspace = true
 fpas-runtime = { path = "../fpas-runtime" }
 stats_alloc.workspace = true

@@ -238,7 +238,7 @@ impl Connection {
         if !self.shared.commands.push(
             Command::Notify {
                 method: method.into(),
-                raw: raw.clone(),
+                raw,
                 cancelled: cancelled.clone(),
             },
             bytes.saturating_add(

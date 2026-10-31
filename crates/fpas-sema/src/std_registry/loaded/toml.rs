@@ -102,7 +102,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         checker,
         s::STD_TOML_PARSE,
         vec![p("Text", Ty::String)],
-        Ty::Result(Box::new(toml_ty.clone()), Box::new(error_ty.clone())),
+        Ty::Result(Box::new(toml_ty.clone()), Box::new(error_ty)),
     );
     define_func(
         checker,

@@ -4,7 +4,7 @@
     clippy::expect_used,
     reason = "protocol assertions use fixed transcripts"
 )]
-mod support;
+use crate::support;
 
 use serde_json::json;
 use support::{TempDirectory, exit, initialize_with_root, initialized, response, run, shutdown};

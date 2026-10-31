@@ -243,6 +243,8 @@ pub struct Checker {
     pub(crate) prechecked_receivers: ExprTypeMap,
     /// Canonical std unit names from `uses` (e.g. `Std.Console`).
     pub(crate) loaded_std_units: HashSet<String>,
+    /// Native declaration families already installed in the current import context.
+    pub(crate) registered_std_units: HashSet<String>,
     /// All unit names in the current `uses` clause, including source units.
     pub(crate) used_unit_names: HashSet<String>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
@@ -343,6 +345,7 @@ impl Checker {
             imported_candidates: HashMap::new(),
             prechecked_receivers: ExprTypeMap::new(),
             loaded_std_units: HashSet::new(),
+            registered_std_units: HashSet::new(),
             used_unit_names: HashSet::new(),
             record_defaults: RecordDefaultsMap::new(),
             record_constructions: HashSet::new(),

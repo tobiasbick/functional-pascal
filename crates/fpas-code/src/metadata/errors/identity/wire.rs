@@ -172,12 +172,10 @@ fn decode(tokens: Vec<Token>) -> Result<TypeIdentity, &'static str> {
         if depth >= 64 {
             return Err("error type identity exceeds its graph limit");
         }
-        let children = stack
+        let mut children = stack
             .split_off(stack.len() - count)
             .into_iter()
-            .map(|(ty, _)| ty)
-            .collect::<Vec<_>>();
-        let mut children = children.into_iter();
+            .map(|(ty, _)| ty);
         let mut next = || {
             children
                 .next()

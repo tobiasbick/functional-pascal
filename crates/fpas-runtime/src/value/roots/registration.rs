@@ -73,7 +73,7 @@ impl RegisteredRoots {
             .unwrap_or_else(|e| e.into_inner())
             .insert(Arc::as_ptr(&entry) as usize, Arc::downgrade(&entry));
         Self {
-            domain: domain.clone(),
+            domain,
             entry: Some(entry),
         }
     }

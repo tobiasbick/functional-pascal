@@ -1,9 +1,9 @@
 //! Record defaults and raw-data preservation follow the pinned SDK declarations.
 
-use super::{Decoder, Object};
+use super::Decoder;
 use crate::binding::{Declaration, Field, Value, WireField};
+use crate::raw::RawJsonRef;
 use crate::{CodecError, RawJson};
-use serde_json::value::RawValue;
 use std::collections::HashSet;
 
 impl Decoder<'_> {
@@ -11,14 +11,11 @@ impl Decoder<'_> {
         &mut self,
         declaration: &Declaration,
         fields: &[Field],
-        raw: &RawJson,
+        raw: RawJsonRef<'_>,
         normalized: Option<&RawJson>,
     ) -> Result<Value, CodecError> {
-        let original: Object<'_> = serde_json::from_str(raw.text()).map_err(CodecError::json)?;
-        let normalized: Option<Object<'_>> = normalized
-            .map(|raw| serde_json::from_str(raw.text()))
-            .transpose()
-            .map_err(CodecError::json)?;
+        let original = raw.members()?;
+        let normalized = normalized.map(|raw| raw.view().members()).transpose()?;
         let mut values = Vec::new();
         for field in fields {
             let flattened = if matches!(field.wire, WireField::Flatten) {
@@ -35,13 +32,15 @@ impl Decoder<'_> {
                 Some(
                     super::super::wire::Wire::Object(
                         original
-                            .0
                             .iter()
                             .filter(|(name, _)| !common.contains(name))
                             .map(|(name, value)| {
-                                Ok((name.clone(), super::super::wire::Wire::parse(value.get())?))
+                                (
+                                    name.clone(),
+                                    super::super::wire::Wire::Raw(value.to_owned()),
+                                )
                             })
-                            .collect::<Result<_, CodecError>>()?,
+                            .collect(),
                     )
                     .finish()?,
                 )
@@ -50,16 +49,10 @@ impl Decoder<'_> {
             };
             let node = match &field.wire {
                 WireField::Property(name) => original
-                    .0
                     .iter()
                     .find(|(key, _)| key == name)
                     .map(|(_, value)| *value),
-                WireField::Flatten => Some(
-                    serde_json::from_str::<&RawValue>(
-                        flattened.as_ref().ok_or_else(super::invalid)?.text(),
-                    )
-                    .map_err(CodecError::json)?,
-                ),
+                WireField::Flatten => Some(flattened.as_ref().ok_or_else(super::invalid)?.view()),
                 WireField::Extra => {
                     let mut excluded = HashSet::new();
                     for field in fields {
@@ -79,13 +72,15 @@ impl Decoder<'_> {
                     }
                     let extra = super::super::wire::Wire::Object(
                         original
-                            .0
                             .iter()
                             .filter(|(name, _)| !excluded.contains(name))
                             .map(|(name, value)| {
-                                Ok((name.clone(), super::super::wire::Wire::parse(value.get())?))
+                                (
+                                    name.clone(),
+                                    super::super::wire::Wire::Raw(value.to_owned()),
+                                )
                             })
-                            .collect::<Result<_, CodecError>>()?,
+                            .collect(),
                     )
                     .finish()?;
                     values.push(Value::Raw(extra));
@@ -99,7 +94,7 @@ impl Decoder<'_> {
                     let normalized_node = match &field.wire {
                         WireField::Property(name) => normalized
                             .as_ref()
-                            .and_then(|object| object.0.iter().find(|(key, _)| key == name))
+                            .and_then(|object| object.iter().find(|(key, _)| key == name))
                             .map(|(_, value)| *value),
                         _ => None,
                     };
@@ -107,11 +102,7 @@ impl Decoder<'_> {
                         self.ty(&field.ty, Some(raw), field.skip_invalid_items)?
                     } else if let Some(default) = &field.default {
                         let raw = crate::codec::encode(default, crate::raw::MAX_RAW_BYTES)?;
-                        self.ty(
-                            &field.ty,
-                            Some(serde_json::from_str(raw.text()).map_err(CodecError::json)?),
-                            field.skip_invalid_items,
-                        )?
+                        self.ty(&field.ty, Some(raw.view()), field.skip_invalid_items)?
                     } else {
                         self.ty(&field.ty, None, false).map_err(|_| error)?
                     }

@@ -62,7 +62,7 @@ impl DebugTaskRuntime {
                     return Ok(());
                 }
             }
-            match slot.worker.finish_owned_groups(Err(error.clone())) {
+            match slot.worker.finish_owned_groups(Err(error)) {
                 Ok(None) => {
                     let _ = slot.worker.publish_execution(&[]);
                     slot.state = DebugTaskState::Waiting;

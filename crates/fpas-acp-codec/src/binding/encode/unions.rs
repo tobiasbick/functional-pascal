@@ -107,7 +107,7 @@ impl Encoder<'_> {
                         let mut chosen = None;
                         for candidate in ["", "/", "application/octet-stream", "file:///", "x"] {
                             let raw = crate::codec::encode(&candidate, 4096)?;
-                            if normalize.is_none_or(|normalize| normalize(&raw).is_ok()) {
+                            if normalize.is_none_or(|normalize| normalize(raw.view()).is_ok()) {
                                 chosen = Some(candidate.to_owned());
                                 break;
                             }

@@ -25,6 +25,9 @@ pub(crate) use self::superinstructions::integer_immediate;
 pub(super) fn compile_program(
     program: Program,
 ) -> Result<fpas_code::VerifiedExecutable, CompileError> {
+    program
+        .validate()
+        .map_err(|error| compile_error(&error.to_string()))?;
     compile_with_errors(program, &crate::errors::ErrorMetadata::default())
 }
 
@@ -56,9 +59,7 @@ pub(super) fn compile_with_errors(
     mut program: Program,
     errors: &crate::errors::ErrorMetadata,
 ) -> Result<fpas_code::VerifiedExecutable, CompileError> {
-    program
-        .validate()
-        .map_err(|error| compile_error(&error.to_string()))?;
+    // Lowering owns IR validation; production callers only pass its checked output.
     crate::optimize::optimize(&mut program);
     let program = &program;
     if program.entry != fpas_ir::FunctionId::new(0) || program.functions.is_empty() {

@@ -5,7 +5,7 @@
     reason = "protocol fixtures use explicit assertions for hard-coded LSP transcripts"
 )]
 
-mod support;
+use crate::support;
 
 use serde_json::{Value, json};
 

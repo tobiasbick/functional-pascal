@@ -2,7 +2,7 @@
 
 #![allow(clippy::expect_used)]
 
-mod common;
+use crate::common;
 
 #[test]
 fn native_errors_keep_literal_messages_and_named_closers() {

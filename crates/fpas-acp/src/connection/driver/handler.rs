@@ -207,7 +207,7 @@ impl Handler {
                     )?;
                 }
                 let payload = if !supported {
-                    Payload::UnknownNotification(notification.method().into(), params.clone())
+                    Payload::UnknownNotification(notification.method().into(), params)
                 } else {
                     match catalog.decode_message(
                         "AgentNotification",

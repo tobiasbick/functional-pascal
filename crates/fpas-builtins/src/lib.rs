@@ -13,7 +13,7 @@ pub mod native_errors;
 pub mod native_records;
 mod std_units;
 
-pub use aggregates::{RUNTIME_AGGREGATE_TYPES, runtime_aggregate_types};
+pub use aggregates::{RUNTIME_AGGREGATE_TYPES, is_runtime_aggregate_type};
 pub use console::{
     CONSOLE_COLOR_KIND_VARIANTS, EVENT_KIND_VARIANTS, MOUSE_ACTION_VARIANTS, MOUSE_BUTTON_VARIANTS,
     event_kind_index, mouse_action_index, mouse_button_index,

@@ -26,8 +26,13 @@ pub fn decode<T: DeserializeOwned>(raw: RawJson) -> Result<Decoded<T>, CodecErro
 
 /// Deserialize a borrowed payload using the SDK's finite-number rules.
 pub fn deserialize<T: DeserializeOwned>(raw: &RawJson) -> Result<T, CodecError> {
-    let node = serde_json::from_str(raw.text()).map_err(CodecError::json)?;
-    T::deserialize(de::Sdk(node)).map_err(CodecError::json)
+    deserialize_view(raw.view())
+}
+
+pub(crate) fn deserialize_view<T: DeserializeOwned>(
+    raw: crate::raw::RawJsonRef<'_>,
+) -> Result<T, CodecError> {
+    T::deserialize(de::Sdk(raw.raw())).map_err(CodecError::json)
 }
 
 /// Encode a pinned SDK type after validating finite numbers and the message budget.

@@ -1,6 +1,6 @@
 //! Terminators in nested bodies, expressions, and comments.
 
-mod common;
+use crate::common;
 
 use fpas_parser::parse_compilation_unit;
 

@@ -25,15 +25,12 @@ impl Wire {
     pub fn object(self) -> Result<Vec<(String, Self)>, CodecError> {
         match self {
             Self::Object(fields) => Ok(fields),
-            Self::Raw(raw) => {
-                let fields =
-                    serde_json::from_str::<Object<'_>>(raw.text()).map_err(CodecError::json)?;
-                fields
-                    .0
-                    .into_iter()
-                    .map(|(name, raw)| Ok((name, Self::parse(raw.get())?)))
-                    .collect()
-            }
+            Self::Raw(raw) => Ok(raw
+                .view()
+                .members()?
+                .into_iter()
+                .map(|(name, raw)| (name, Self::Raw(raw.to_owned())))
+                .collect()),
             _ => Err(super::invalid()),
         }
     }
@@ -58,30 +55,5 @@ impl Serialize for Wire {
                 map.end()
             }
         }
-    }
-}
-
-pub(super) struct Object<'a>(pub Vec<(String, &'a serde_json::value::RawValue)>);
-
-impl<'de> serde::Deserialize<'de> for Object<'de> {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct Visitor;
-        impl<'de> serde::de::Visitor<'de> for Visitor {
-            type Value = Object<'de>;
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("a JSON object")
-            }
-            fn visit_map<M: serde::de::MapAccess<'de>>(
-                self,
-                mut map: M,
-            ) -> Result<Self::Value, M::Error> {
-                let mut values = Vec::new();
-                while let Some(value) = map.next_entry()? {
-                    values.push(value);
-                }
-                Ok(Object(values))
-            }
-        }
-        deserializer.deserialize_map(Visitor)
     }
 }

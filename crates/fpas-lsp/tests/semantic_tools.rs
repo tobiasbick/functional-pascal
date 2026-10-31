@@ -6,7 +6,7 @@
     reason = "semantic-tool protocol fixtures use explicit JSON assertions"
 )]
 
-mod support;
+use crate::support;
 
 use fpas_diagnostics::codes::SEMA_UNKNOWN_NAME;
 use fpas_language_service::{LanguageService, diagnostics_for_document};

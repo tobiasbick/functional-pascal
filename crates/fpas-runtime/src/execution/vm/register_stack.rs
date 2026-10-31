@@ -20,6 +20,7 @@ impl Worker {
 
     /// Activate a register prefix; new slots start as uninitialized `Unit` values.
     pub(super) fn activate_registers(&mut self, active_count: usize) {
+        debug_assert_eq!(self.registers.len(), self.register_initialized.len());
         if active_count < self.active_register_count() {
             self.release_registers(active_count);
             return;
@@ -32,6 +33,7 @@ impl Worker {
 
     /// Release active slots and drop their values without shrinking the allocation.
     pub(super) fn release_registers(&mut self, active_count: usize) {
+        debug_assert_eq!(self.registers.len(), self.register_initialized.len());
         debug_assert!(active_count <= self.active_register_count());
         self.registers.truncate(active_count);
         self.register_initialized.truncate(active_count);
@@ -50,7 +52,7 @@ impl Worker {
     /// Write an absolute active register and mark it initialized.
     #[inline(always)]
     pub(super) fn store_register(&mut self, index: usize, value: Value) -> Result<(), VmError> {
-        if index >= self.registers.len() || index >= self.register_initialized.len() {
+        if index >= self.registers.len() {
             return Err(self.register_outside_frame(index));
         }
         self.registers[index] = value;
@@ -64,7 +66,7 @@ impl Worker {
     /// puts every preceding check on the arithmetic dependency chain; the in-place path avoids it.
     #[inline(always)]
     pub(super) fn store_real_register(&mut self, index: usize, value: f64) -> Result<(), VmError> {
-        if index >= self.registers.len() || index >= self.register_initialized.len() {
+        if index >= self.registers.len() {
             return Err(self.register_outside_frame(index));
         }
         match &mut self.registers[index] {
@@ -85,7 +87,7 @@ impl Worker {
         index: usize,
         value: i64,
     ) -> Result<(), VmError> {
-        if index >= self.registers.len() || index >= self.register_initialized.len() {
+        if index >= self.registers.len() {
             return Err(self.register_outside_frame(index));
         }
         match &mut self.registers[index] {
@@ -103,7 +105,7 @@ impl Worker {
         index: usize,
         value: bool,
     ) -> Result<(), VmError> {
-        if index >= self.registers.len() || index >= self.register_initialized.len() {
+        if index >= self.registers.len() {
             return Err(self.register_outside_frame(index));
         }
         match &mut self.registers[index] {
@@ -117,7 +119,7 @@ impl Worker {
     /// Remove an absolute active register value and mark the slot uninitialized.
     #[inline]
     pub(super) fn take_register(&mut self, index: usize) -> Result<Value, VmError> {
-        if index >= self.registers.len() || index >= self.register_initialized.len() {
+        if index >= self.registers.len() {
             return Err(self.register_outside_frame(index));
         }
         self.register_initialized[index] = false;

@@ -5,13 +5,18 @@ mod superinstructions;
 use crate::validate::site::InstructionSite;
 use std::collections::VecDeque;
 
-use crate::{FunctionId, FunctionInfo, InstructionAddress, Opcode, ReturnConvention, limits};
+use crate::{
+    DecodedInstruction, FunctionId, FunctionInfo, InstructionAddress, Opcode, ReturnConvention,
+    limits,
+};
 
 use self::superinstructions::validate_superinstruction_payload;
 use super::instruction::validate_instruction;
 use super::{ValidationError, ValidationErrorKind};
 
-pub(super) fn validate_functions(executable: &crate::Executable) -> Result<(), ValidationError> {
+pub(super) fn validate_functions(
+    executable: &crate::Executable,
+) -> Result<Vec<DecodedInstruction>, ValidationError> {
     if executable.entry != FunctionId::new(0) || executable.functions.is_empty() {
         return Err(ValidationError::executable(
             ValidationErrorKind::EntryFunction {
@@ -37,6 +42,7 @@ pub(super) fn validate_functions(executable: &crate::Executable) -> Result<(), V
     }
 
     let mut expected_start = 0_u32;
+    let mut decoded = Vec::with_capacity(executable.code.len());
     for (index, function) in executable.functions.iter().enumerate() {
         let function_id = FunctionId::try_from_index(index).map_err(|_| {
             ValidationError::executable(ValidationErrorKind::ResourceLimit {
@@ -47,7 +53,7 @@ pub(super) fn validate_functions(executable: &crate::Executable) -> Result<(), V
         })?;
         validate_function_range(executable, function_id, function, expected_start)?;
         validate_frame(executable, function_id, function)?;
-        validate_function_code(executable, function_id, function)?;
+        validate_function_code(executable, function_id, function, &mut decoded)?;
         expected_start = function.code.end.get();
     }
     let code_end = u32::try_from(executable.code.len()).map_err(|_| {
@@ -65,7 +71,7 @@ pub(super) fn validate_functions(executable: &crate::Executable) -> Result<(), V
             },
         ));
     }
-    Ok(())
+    Ok(decoded)
 }
 
 fn validate_function_range(
@@ -151,12 +157,14 @@ fn validate_function_code(
     executable: &crate::Executable,
     function_id: FunctionId,
     function: &FunctionInfo,
+    decoded: &mut Vec<DecodedInstruction>,
 ) -> Result<(), ValidationError> {
     let mut emitted_spawn = false;
     let mut raw_address = function.code.start.get();
     while raw_address < function.code.end.get() {
         let address = InstructionAddress::new(raw_address);
-        let opcode = validate_instruction(executable, function_id, function, address)?;
+        let instruction = validate_instruction(executable, function_id, function, address)?;
+        let opcode = instruction.opcode();
         validate_superinstruction_payload(InstructionSite {
             executable,
             function_id,
@@ -167,23 +175,11 @@ fn validate_function_code(
         emitted_spawn |= matches!(opcode, Opcode::SpawnTask);
         if opcode == Opcode::Intrinsic {
             // Operand shape and intrinsic identity were checked by validate_instruction.
-            emitted_spawn |= executable.code[raw_address as usize]
-                .abc_operands()
-                .ok()
-                .and_then(|operands| crate::Intrinsic::from_u16(operands.b))
+            emitted_spawn |= crate::Intrinsic::from_u16(instruction.abc().b)
                 .is_some_and(crate::Intrinsic::starts_task);
         }
-        raw_address = raw_address.checked_add(1).ok_or_else(|| {
-            ValidationError::function(
-                executable,
-                function_id,
-                ValidationErrorKind::CodeRange {
-                    start: function.code.start.get(),
-                    end: function.code.end.get(),
-                    code: executable.code.len(),
-                },
-            )
-        })?;
+        decoded.push(instruction);
+        raw_address += 1;
     }
     if emitted_spawn != function.flags.uses_spawn_tasks {
         return Err(ValidationError::function(
@@ -195,65 +191,30 @@ fn validate_function_code(
             },
         ));
     }
-    validate_reachable_control_flow(executable, function_id, function)
+    validate_reachable_control_flow(executable, function_id, function, decoded)
 }
 
 fn validate_reachable_control_flow(
     executable: &crate::Executable,
     function_id: FunctionId,
     function: &FunctionInfo,
+    decoded: &[DecodedInstruction],
 ) -> Result<(), ValidationError> {
     let length = usize::try_from(function.code.len().unwrap_or(0)).unwrap_or(0);
     let mut reached = vec![false; length];
     let mut pending = VecDeque::from([function.code.start]);
 
     while let Some(address) = pending.pop_front() {
-        let local = address.get().checked_sub(function.code.start.get());
-        let Some(local) = local.and_then(|value| usize::try_from(value).ok()) else {
-            return Err(branch_error(
-                executable,
-                function_id,
-                function,
-                address,
-                address.get(),
-            ));
-        };
-        let Some(seen) = reached.get_mut(local) else {
-            return Err(branch_error(
-                executable,
-                function_id,
-                function,
-                address,
-                address.get(),
-            ));
-        };
+        // Every queued address is admitted by push_target or push_fallthrough.
+        let local = (address.get() - function.code.start.get()) as usize;
+        let seen = &mut reached[local];
         if *seen {
             continue;
         }
         *seen = true;
 
-        let Some(instruction) = usize::try_from(address.get())
-            .ok()
-            .and_then(|index| executable.code.get(index))
-            .copied()
-        else {
-            return Err(branch_error(
-                executable,
-                function_id,
-                function,
-                address,
-                address.get(),
-            ));
-        };
-        let opcode = instruction.opcode().map_err(|error| {
-            ValidationError::instruction(
-                executable,
-                function_id,
-                address,
-                None,
-                ValidationErrorKind::Instruction(error),
-            )
-        })?;
+        let instruction = decoded[address.get() as usize];
+        let opcode = instruction.opcode();
         match opcode {
             Opcode::BranchIfEqualInteger
             | Opcode::BranchIfNotEqualInteger
@@ -261,7 +222,7 @@ fn validate_reachable_control_flow(
             | Opcode::BranchIfGreaterInteger
             | Opcode::BranchIfLessEqualInteger
             | Opcode::BranchIfGreaterEqualInteger => {
-                let payload = executable.code[address.get() as usize + 1].abx_payload();
+                let payload = decoded[address.get() as usize + 1].abx();
                 push_target(
                     executable,
                     function_id,
@@ -281,9 +242,7 @@ fn validate_reachable_control_flow(
             }
             Opcode::ForLoop => {
                 for offset in [1, 2] {
-                    let target = executable.code[address.get() as usize + offset]
-                        .abx_payload()
-                        .bx;
+                    let target = decoded[address.get() as usize + offset].abx().bx;
                     push_target(
                         executable,
                         function_id,
@@ -295,18 +254,7 @@ fn validate_reachable_control_flow(
                 }
             }
             Opcode::Jump => {
-                let target = instruction
-                    .abx_operands()
-                    .map_err(|error| {
-                        ValidationError::instruction(
-                            executable,
-                            function_id,
-                            address,
-                            Some(opcode),
-                            ValidationErrorKind::Instruction(error),
-                        )
-                    })?
-                    .bx;
+                let target = instruction.abx().bx;
                 push_target(
                     executable,
                     function_id,
@@ -317,18 +265,7 @@ fn validate_reachable_control_flow(
                 )?;
             }
             Opcode::BranchIfFalse | Opcode::BranchIfTrue => {
-                let target = instruction
-                    .abx_operands()
-                    .map_err(|error| {
-                        ValidationError::instruction(
-                            executable,
-                            function_id,
-                            address,
-                            Some(opcode),
-                            ValidationErrorKind::Instruction(error),
-                        )
-                    })?
-                    .bx;
+                let target = instruction.abx().bx;
                 push_target(
                     executable,
                     function_id,

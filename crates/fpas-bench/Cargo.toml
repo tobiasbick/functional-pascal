@@ -6,10 +6,25 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+autotests = false
+
+[features]
+bench-tools = []
 
 [[bin]]
 name = "fpas-bench"
 path = "src/main.rs"
+required-features = ["bench-tools"]
+
+[[test]]
+name = "cli"
+path = "tests/cli.rs"
+required-features = ["bench-tools"]
+
+[[test]]
+name = "project_queries"
+path = "tests/project_queries.rs"
+required-features = ["bench-tools"]
 
 [dependencies]
 fpas-compiler = { path = "../fpas-compiler" }

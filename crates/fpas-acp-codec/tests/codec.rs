@@ -20,6 +20,17 @@ fn raw_json_preserves_numbers_spelling_order_and_rejects_decoded_duplicate_keys(
     let text = r#"{"z":9007199254740993,"a":[18446744073709551615,18446744073709551616,1e400,-0],"$serde_json::private::Number":"ordinary key"}"#;
     let raw = RawJson::parse(text).expect("arbitrary JSON numbers are protocol data");
     assert_eq!(raw.text(), text);
+    let members = raw.view().members().unwrap();
+    assert_eq!(members[0].0, "z");
+    assert_eq!(members[0].1.text(), "9007199254740993");
+    let elements = members[1].1.elements().unwrap();
+    let detached = elements[2].to_owned();
+    assert_eq!(elements[3].text(), "-0");
+    assert!(raw.view().elements().is_err());
+    assert!(elements[0].members().is_err());
+    drop(raw);
+    assert_eq!(detached.text(), "1e400");
+    let raw = RawJson::parse(text).unwrap();
     for duplicate in [r#"{"a":1,"\u0061":2}"#, r#"{"x":[{"n":1,"n":2}]}"#] {
         assert_eq!(kind(RawJson::parse(duplicate)), ErrorKind::DuplicateKey);
     }

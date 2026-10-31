@@ -150,9 +150,9 @@ impl Encoder<'_> {
             && let Some(normalize) = normalizers::lookup(self.catalog.version, key)
         {
             if value.contains_unknown() {
-                normalize(&encode_masked(self.catalog, key, value)?)?;
+                normalize(encode_masked(self.catalog, key, value)?.view())?;
             } else {
-                normalize(&raw)?;
+                normalize(raw.view())?;
             }
         }
         Ok(Wire::Raw(raw))

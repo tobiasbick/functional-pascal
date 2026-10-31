@@ -1,6 +1,6 @@
 //! Source layout is an author choice; formatting normalizes its indentation.
 
-mod common;
+use crate::common;
 
 #[test]
 fn builder_layout_preserves_concatenation_groups_and_nested_arguments() {

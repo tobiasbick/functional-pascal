@@ -9,7 +9,7 @@ use fpas_fmt::format_source;
 use fpas_parser::parse_compilation_unit;
 
 /// Parses `source`, formats it, and asserts the formatted text parses without errors.
-pub fn assert_round_trip(name: &str, source: &str) {
+pub fn assert_round_trip(name: &str, source: &str) -> String {
     let (unit, source_errors) = parse_compilation_unit(source);
     assert!(
         source_errors.is_empty(),
@@ -21,27 +21,24 @@ pub fn assert_round_trip(name: &str, source: &str) {
         normalized_comments(&formatted),
         "{name}: formatting must preserve every comment"
     );
-    let (_, errors) = parse_compilation_unit(&formatted);
+    let (unit_again, errors) = parse_compilation_unit(&formatted);
     assert!(
         errors.is_empty(),
         "{name}: formatted output must re-parse: {errors:?}\n--- formatted ---\n{formatted}"
     );
 
-    let (unit_again, _) = parse_compilation_unit(&formatted);
     let formatted_again =
         format_source(&formatted, &unit_again).expect("matching formatted source and AST");
     assert_eq!(
         formatted, formatted_again,
         "{name}: format must be idempotent\n--- first ---\n{formatted}\n--- second ---\n{formatted_again}"
     );
+    formatted
 }
 
 /// Parses `source`, formats it, and compares to `expected`.
 pub fn assert_golden(name: &str, source: &str, expected: &str) {
-    assert_round_trip(name, source);
-    let (unit, errors) = parse_compilation_unit(source);
-    assert!(errors.is_empty(), "{name}: {errors:?}");
-    let formatted = format_source(source, &unit).expect("matching source and AST");
+    let formatted = assert_round_trip(name, source);
     assert_eq!(formatted, normalize_newlines(expected), "{name}");
 }
 

@@ -8,7 +8,15 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-const COMPILER_IDENTITY_SOURCE: &str = include_str!("../build/compiler_identity.rs");
+#[allow(
+    dead_code,
+    reason = "the integration test invokes identity directly, not the Cargo entry point"
+)]
+#[path = "../build/compiler_identity.rs"]
+mod identity;
+
+#[path = "compiler_identity/cache_inputs.rs"]
+mod cache_inputs;
 
 fn dependencies(name: &str) -> BTreeSet<String> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -55,17 +63,9 @@ fn normal_workspace_graph(root: &str) -> BTreeSet<String> {
 
 #[test]
 fn compiler_identity_covers_every_normal_workspace_dependency() {
-    let (_, after_declaration) = COMPILER_IDENTITY_SOURCE
-        .split_once("const COMPILER_CRATES: &[&str] = &[")
-        .expect("compiler identity crate declaration");
-    let (list, _) = after_declaration
-        .split_once("];")
-        .expect("compiler identity crate list terminator");
-    let actual = list
-        .lines()
-        .filter_map(|line| line.trim().strip_prefix('"'))
-        .filter_map(|line| line.strip_suffix("\","))
-        .map(str::to_owned)
+    let actual = identity::COMPILER_CRATES
+        .iter()
+        .map(|name| (*name).to_owned())
         .collect::<BTreeSet<_>>();
 
     assert_eq!(actual, normal_workspace_graph("fpas-build"));

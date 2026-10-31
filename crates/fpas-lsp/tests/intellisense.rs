@@ -8,7 +8,7 @@
 
 #[path = "intellisense/native_chains.rs"]
 mod native_chains;
-mod support;
+use crate::support;
 
 use serde_json::{Value, json};
 use support::{

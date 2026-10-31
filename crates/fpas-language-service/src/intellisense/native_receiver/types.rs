@@ -81,10 +81,7 @@ pub(super) fn from_symbol(
             .detail
             .rsplit_once(": ")
             .and_then(|(_, name)| fpas_sema::TypeConstraint::from_name(name));
-        return Some(Ty::GenericParam(
-            parameter.qualified_name.clone(),
-            constraint,
-        ));
+        return Some(Ty::GenericParam(parameter.qualified_name, constraint));
     }
     if let Some(semantic) = documents[owner]
         .analysis

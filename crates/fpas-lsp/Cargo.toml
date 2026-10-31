@@ -6,6 +6,27 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Language Server Protocol transport for Functional Pascal"
+autotests = false
+
+[[test]]
+name = "analysis"
+path = "tests/suites/analysis.rs"
+
+[[test]]
+name = "editing"
+path = "tests/suites/editing.rs"
+
+[[test]]
+name = "workspace"
+path = "tests/suites/workspace.rs"
+
+[[test]]
+name = "process"
+path = "tests/process.rs"
+
+[[test]]
+name = "protocol"
+path = "tests/protocol.rs"
 
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }

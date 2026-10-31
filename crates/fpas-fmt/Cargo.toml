@@ -6,6 +6,19 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+autotests = false
+
+[[test]]
+name = "formatting"
+path = "tests/suites/formatting.rs"
+
+[[test]]
+name = "syntax"
+path = "tests/suites/syntax.rs"
+
+[[test]]
+name = "corpus"
+path = "tests/suites/corpus.rs"
 
 [dependencies]
 fpas-parser = { path = "../fpas-parser" }

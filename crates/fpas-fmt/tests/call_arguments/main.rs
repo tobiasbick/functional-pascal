@@ -2,8 +2,7 @@
 
 #![allow(clippy::expect_used)]
 
-#[path = "../common/mod.rs"]
-mod common;
+use crate::common;
 
 #[test]
 fn typed_record_calls_round_trip_without_reordering_fields_or_comments() {

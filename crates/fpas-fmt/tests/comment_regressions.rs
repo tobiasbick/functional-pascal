@@ -2,7 +2,7 @@
 
 #![allow(clippy::expect_used)]
 
-mod common;
+use crate::common;
 
 use fpas_fmt::format_source;
 use fpas_parser::parse_compilation_unit;

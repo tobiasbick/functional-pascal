@@ -32,7 +32,6 @@ rand.workspace = true
 rand_chacha.workspace = true
 rustls.workspace = true
 rustls-platform-verifier.workspace = true
-socket2.workspace = true
 mio.workspace = true
 process-wrap = { version = "10.0.1", default-features = false, features = ["std", "process-group", "job-object"] }
 
@@ -45,6 +44,7 @@ rustix = { version = "1.1.5", features = ["process"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "process", "io-util"] }
 
 [dev-dependencies]
+socket2.workspace = true
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-parser = { path = "../fpas-parser" }
 rcgen.workspace = true

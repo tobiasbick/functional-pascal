@@ -12,6 +12,15 @@ pub(in crate::object) fn prune_unreferenced_layouts(
     retained_names: &BTreeSet<String>,
 ) -> Result<(), fpas_unit::object::ObjectError> {
     let mut retained_names = retained_names.clone();
+    retained_names.extend(
+        object
+            .records
+            .iter()
+            .map(|layout| &layout.name)
+            .chain(object.enums.iter().map(|layout| &layout.name))
+            .filter(|name| fpas_builtins::is_runtime_aggregate_type(name))
+            .map(|name| name.to_ascii_lowercase()),
+    );
     retained_names.extend(object.debug_types.iter().filter_map(|ty| match ty {
         fpas_unit::object::ObjectDebugType::Record(name)
         | fpas_unit::object::ObjectDebugType::Enum(name) => Some(name.to_ascii_lowercase()),

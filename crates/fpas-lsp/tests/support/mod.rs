@@ -1,6 +1,8 @@
 #![allow(
     dead_code,
-    reason = "each integration-test binary uses a different subset of transcript helpers"
+    clippy::expect_used,
+    clippy::panic,
+    reason = "integration transcripts assert fixture setup and responses; each suite uses a subset of helpers"
 )]
 
 use std::io::{BufRead, BufReader, Read, Write};

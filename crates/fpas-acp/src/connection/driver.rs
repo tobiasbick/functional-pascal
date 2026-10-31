@@ -219,7 +219,7 @@ async fn publish(
                     return Ok(());
                 };
                 pending.wire = Some(id.clone());
-                pending.cancellation = Some(cancellation.clone());
+                pending.cancellation = Some(cancellation);
                 state
                     .publications
                     .push_back((Publication::Request(id), Box::new(command)));

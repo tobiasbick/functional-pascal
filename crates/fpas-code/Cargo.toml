@@ -9,7 +9,7 @@ repository.workspace = true
 
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }
-num_enum = "0.7.6"
+num_enum = { version = "0.7.6", default-features = false }
 serde.workspace = true
 
 [lints]

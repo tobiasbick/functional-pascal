@@ -5,7 +5,7 @@
     reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
 )]
 
-mod common;
+use crate::common;
 
 fn format(source: &str) -> String {
     common::assert_round_trip("expression closers", source);

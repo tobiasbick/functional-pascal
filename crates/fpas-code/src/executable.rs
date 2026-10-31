@@ -8,8 +8,7 @@ use std::sync::Arc;
 
 use crate::{
     Constant, DebugType, DecodedInstruction, DistinctTypeName, EnumLayout, EnumVariant, FunctionId,
-    FunctionInfo, GlobalInfo, Instruction, InstructionAddress, RecordLayout, SourceMap,
-    StringTable, ValidationError, ValidationErrorKind,
+    FunctionInfo, GlobalInfo, Instruction, RecordLayout, SourceMap, StringTable, ValidationError,
 };
 
 /// Complete untrusted register-bytecode candidate produced by a compiler or decoder.
@@ -48,21 +47,7 @@ impl Executable {
     ///
     /// Returns a contextual [`ValidationError`] for the first deterministic violation.
     pub fn verify(self) -> Result<VerifiedExecutable, ValidationError> {
-        crate::validate::validate(&self)?;
-        let decoded = self
-            .code
-            .iter()
-            .enumerate()
-            .map(|(index, instruction)| {
-                DecodedInstruction::decode(*instruction).map_err(|error| ValidationError {
-                    function: None,
-                    function_name: None,
-                    instruction: InstructionAddress::try_from_index(index).ok(),
-                    opcode: None,
-                    kind: ValidationErrorKind::Instruction(error),
-                })
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+        let decoded = crate::validate::validate(&self)?;
         let function_names = self
             .functions
             .iter()

@@ -5,7 +5,8 @@ mod operands;
 
 use crate::validate::site::InstructionSite;
 use crate::{
-    FunctionId, FunctionInfo, InstructionAddress, InstructionError, InstructionForm, Opcode,
+    DecodedInstruction, FunctionId, FunctionInfo, InstructionAddress, InstructionError,
+    InstructionForm, Opcode,
 };
 
 use self::abc::validate_abc;
@@ -18,33 +19,19 @@ pub(super) fn validate_instruction(
     function_id: FunctionId,
     function: &FunctionInfo,
     address: InstructionAddress,
-) -> Result<Opcode, ValidationError> {
-    let Some(instruction) = usize::try_from(address.get())
-        .ok()
-        .and_then(|index| executable.code.get(index))
-        .copied()
-    else {
-        return Err(ValidationError::instruction(
-            executable,
-            function_id,
-            address,
-            None,
-            ValidationErrorKind::CodeRange {
-                start: function.code.start.get(),
-                end: function.code.end.get(),
-                code: executable.code.len(),
-            },
-        ));
-    };
-    let opcode = instruction.opcode().map_err(|error| {
-        ValidationError::instruction(
-            executable,
-            function_id,
-            address,
-            None,
-            ValidationErrorKind::Instruction(error),
-        )
-    })?;
+) -> Result<DecodedInstruction, ValidationError> {
+    // The caller has checked the function range and walks only its instructions.
+    let instruction =
+        DecodedInstruction::decode(executable.code[address.get() as usize]).map_err(|error| {
+            ValidationError::instruction(
+                executable,
+                function_id,
+                address,
+                None,
+                ValidationErrorKind::Instruction(error),
+            )
+        })?;
+    let opcode = instruction.opcode();
     let site = InstructionSite {
         executable,
         function_id,
@@ -54,16 +41,10 @@ pub(super) fn validate_instruction(
     };
     match opcode.form() {
         InstructionForm::Abc => {
-            let operands = instruction
-                .abc_operands()
-                .map_err(|error| instruction_error(site, error))?;
-            validate_abc(site, operands)?;
+            validate_abc(site, instruction.abc())?;
         }
         InstructionForm::Abx => {
-            let operands = instruction
-                .abx_operands()
-                .map_err(|error| instruction_error(site, error))?;
-            validate_abx(site, operands)?;
+            validate_abx(site, instruction.abx())?;
         }
         InstructionForm::Ax => {
             return Err(ValidationError::instruction(
@@ -75,7 +56,7 @@ pub(super) fn validate_instruction(
             ));
         }
     }
-    Ok(opcode)
+    Ok(instruction)
 }
 
 fn validate_abx(

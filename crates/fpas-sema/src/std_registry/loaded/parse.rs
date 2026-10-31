@@ -31,6 +31,6 @@ pub(super) fn register_std_parse(checker: &mut Checker) {
         checker,
         s::STD_PARSE_HEX_INT,
         vec![p("Text", Ty::String)],
-        Ty::Result(Box::new(Ty::Integer), Box::new(error_ty.clone())),
+        Ty::Result(Box::new(Ty::Integer), Box::new(error_ty)),
     );
 }

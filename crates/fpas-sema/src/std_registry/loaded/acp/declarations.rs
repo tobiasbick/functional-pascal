@@ -226,6 +226,7 @@ impl Registry<'_> {
             private_members: vec![],
             fields,
             methods: vec![],
+            release_method: None,
             static_functions: vec![],
             static_procedures: vec![],
         }))

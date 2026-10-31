@@ -78,8 +78,10 @@ pub(super) struct LoweringContext {
     locals: Vec<Local>,
     bindings: Vec<Binding>,
     // Each loop with the task-scope depth at its entry.
-    loops: Vec<(LoopTargets, u32)>,
-    task_scope_depth: u32,
+    loops: Vec<(LoopTargets, usize)>,
+    pub(in crate::lowering) exit_scopes: Vec<super::cleanup::ExitScope>,
+    pub(in crate::lowering) resource_releases: HashMap<(u32, usize), fpas_sema::ResourceRelease>,
+    pub(in crate::lowering) resource_producers: Vec<super::cleanup::ResourceProducer>,
     /// Shared postcondition exit, absent for routines without return clauses.
     pub(super) checked_return: Option<super::contracts::CheckedReturn>,
     scope_depth: u32,
@@ -298,7 +300,9 @@ impl LoweringContext {
             locals,
             bindings,
             loops: Vec::new(),
-            task_scope_depth: 0,
+            exit_scopes: Vec::new(),
+            resource_releases: metadata.resource_releases.clone(),
+            resource_producers: Vec::new(),
             checked_return: None,
             scope_depth: 0,
             debug,
@@ -356,6 +360,15 @@ impl LoweringContext {
         ty: TypeId,
         span: Span,
     ) -> Result<ValueId, CompileError> {
+        if self
+            .resource_producers
+            .iter()
+            .any(|producer| producer.matches(span, &operation))
+        {
+            self.resource_producers
+                .retain(|producer| !producer.matches(span, &operation));
+            self.emit_effect(Operation::ArmResourceInit, span)?;
+        }
         let value = ValueId::new(self.next_value);
         self.next_value = self.next_value.checked_add(1).ok_or_else(|| {
             internal_compiler_error(

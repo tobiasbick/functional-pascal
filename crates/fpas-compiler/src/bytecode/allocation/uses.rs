@@ -14,7 +14,17 @@ pub(super) fn operation_values(operation: &Operation, mut visit: impl FnMut(Valu
         | Operation::Yield
         | Operation::EnterTaskScope
         | Operation::ExitTaskScope
-        | Operation::CancelTaskScope => {}
+        | Operation::CancelTaskScope
+        | Operation::EnterCleanupScope
+        | Operation::BeginResourceInit
+        | Operation::ArmResourceInit => {}
+        Operation::RegisterCleanup {
+            resource, release, ..
+        } => {
+            visit(*resource);
+            visit(*release);
+        }
+        Operation::ExitCleanupScope { outcome, .. } => outcome.iter().copied().for_each(visit),
         Operation::WriteLocal { value, .. }
         | Operation::StoreGlobal { value, .. }
         | Operation::MakeCell(value)

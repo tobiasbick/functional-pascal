@@ -37,6 +37,8 @@ use crate::{Intrinsic, SourceLocation, Value};
 use super::worker::Worker;
 use super::{VmError, cancellation::CancellationRegistry, channels::ChannelRegistry, diagnostics};
 
+type DiagnosticReceiver = Arc<dyn Fn(&fpas_diagnostics::Diagnostic) + Send + Sync>;
+
 impl Worker {
     pub(super) fn execute_hosted_intrinsic(
         &self,
@@ -116,6 +118,8 @@ pub(super) struct HostedState {
     pub(super) test_scratch_dir: Mutex<PathBuf>,
     /// Receiver for stderr lines of `Std.Os.Proc.Run` children; inherited when `None`.
     pub(super) program_stderr: Mutex<Option<crate::stdlib::ProgramStderr>>,
+    pub(in crate::execution::vm) supplemental_diagnostic: Mutex<Option<DiagnosticReceiver>>,
+    pub(in crate::execution::vm) supplemental_diagnostics: Mutex<Vec<fpas_diagnostics::Diagnostic>>,
     /// Routine and line samples, installed only for `fpas run/debug --profile`.
     pub(in crate::execution::vm) profile: std::sync::OnceLock<Arc<super::profile::ProfileSink>>,
 }
@@ -178,6 +182,8 @@ impl HostedState {
             cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
             program_stderr: Mutex::new(None),
+            supplemental_diagnostic: Mutex::new(None),
+            supplemental_diagnostics: Mutex::new(Vec::new()),
             profile: std::sync::OnceLock::new(),
         }
     }

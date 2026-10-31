@@ -59,6 +59,8 @@ impl Vm {
             capture.start_root(&mut worker);
         }
         if self.pool_size == 0 {
+            scheduler.worker_started(0);
+            let _root_ticket = scheduler.worker_ticket(0);
             let result = worker.run_retained();
             return self.finish_server_execution(result, &worker);
         }
@@ -72,15 +74,17 @@ impl Vm {
             }
             let timer_scheduler = Arc::clone(&scheduler);
             let timer = scope.spawn(move || timer_scheduler.timer_loop());
+            scheduler.worker_started(0);
+            let root_ticket = scheduler.worker_ticket(0);
             let root = worker.run_retained();
             let main = self.finish_server_execution(root, &worker);
+            drop(root_ticket);
             if let Err(error) = &main {
                 self.notify_failure(error);
                 scheduler.fail(error.clone());
             } else {
                 scheduler.finish_main();
             }
-            self.hosted.shutdown_blocking_operations();
             let mut pool_error = None;
             for handle in handles {
                 match handle.join() {
@@ -104,6 +108,9 @@ impl Vm {
                     "Register task timer panicked",
                 ));
             }
+            // Resource release can itself use host services and suspend on the timer driver.
+            // Close shared host resources only after every task has retired its obligations.
+            self.hosted.shutdown_blocking_operations();
             let result = main.and_then(|value| pool_error.map_or(Ok(value), Err));
             worker.capture_root_globals(result.is_err());
             result

@@ -53,7 +53,13 @@ impl Worker {
     ) -> Result<DispatchBatch, VmError> {
         let access = self.execution_access()?;
         let started = self.hosted.profile.get().map(|_| std::time::Instant::now());
-        let result = self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget);
+        let result = match self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget) {
+            Err(error) => self.begin_cleanup_failure(error).map(|()| DispatchBatch {
+                step: DispatchStep::Continue,
+                steps: 1,
+            }),
+            result => result,
+        };
         if let (Some(started), Ok(batch)) = (started, &result) {
             self.record_profile_batch(batch.steps, started.elapsed());
         }
@@ -96,6 +102,16 @@ impl Worker {
         let mut steps = 0;
         'batch: while steps < budget {
             self.check_task_cancellation()?;
+            if self.cleanup_resume_pending() {
+                self.advance_cleanup()?;
+                if self.suspend_requested {
+                    return Ok(DispatchBatch {
+                        step: DispatchStep::Suspend,
+                        steps,
+                    });
+                }
+                continue;
+            }
             // A ready hosted continuation advances as one scheduling step inside the batch,
             // so each callback does not pay a separate execution-access round trip.
             if self.callback_resume_pending() {
@@ -106,6 +122,9 @@ impl Worker {
                     .callback_origin()
                     .unwrap_or((self.function, self.current_address));
                 let result = self.resume_callback_continuation();
+                if result.is_ok() {
+                    self.complete_resource_producer(None);
+                }
                 // Continuation work has no declaration store, even if current_address still
                 // names the last completed Move in a callback frame.
                 if TRACE {
@@ -166,7 +185,11 @@ impl Worker {
                 let owner = self.function;
                 let address = self.current_address;
                 let old_depth = self.call_stack.len();
+                self.observe_resource_producer(instruction);
                 let result = self.execute(instruction);
+                if result.is_ok() {
+                    self.complete_resource_producer(None);
+                }
                 if TRACE {
                     let tail = matches!(
                         instruction.opcode(),

@@ -42,9 +42,104 @@ fn runtime(retain_child: bool) -> DebugTaskRuntime {
             failure: None,
             exited: false,
             paused: false,
+            ticket: None,
         },
     );
     runtime
+}
+
+#[test]
+fn disconnect_retires_claimed_tasks_before_scheduler_shutdown() {
+    let mut runtime = runtime(false);
+    runtime.tasks.remove(&1);
+    runtime.test_enqueue_pending_task(FunctionId::new(0));
+    runtime.drain_spawned();
+    assert!(
+        runtime.tasks.contains_key(&1),
+        "the child must be claimed by the debugger"
+    );
+
+    runtime.scheduler.request_cancel();
+    assert!(
+        !runtime.scheduler.is_shutdown(),
+        "live debugger workers retain drain ownership"
+    );
+    runtime.cancel();
+    assert!(
+        runtime.scheduler.is_shutdown(),
+        "disconnect retires root and child ownership"
+    );
+}
+
+#[test]
+fn disconnect_keeps_scheduler_alive_until_claimed_resource_cleanup_finishes() {
+    let source = r#"program T;
+uses Std.Console as Console, Std.Time as Time;
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin Time.Sleep(5); Console.WriteLn('released'); end procedure;
+end record;
+procedure Child();
+begin
+  using const Item := Resource();
+  Time.Sleep(100000);
+end procedure;
+begin scope
+  discard go Child();
+  Time.Sleep(100000);
+end scope; end."#;
+    let (program, errors) = fpas_parser::parse(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    let image = Arc::new(fpas_compiler::compile(&program).expect("compile"));
+    let scheduler = Arc::new(TaskScheduler::new());
+    let clock = Arc::new(TaskClock::manual());
+    let root = Worker::new(image)
+        .expect("root")
+        .with_scheduler(Some(Arc::clone(&scheduler)))
+        .with_debug_tasks(Arc::clone(&clock));
+    let mut runtime = DebugTaskRuntime::new(root, Arc::clone(&scheduler), clock);
+    for _ in 0..1000 {
+        if runtime
+            .worker(1)
+            .is_some_and(|worker| worker.has_cleanup_obligations())
+        {
+            break;
+        }
+        match runtime.schedule(None).expect("schedule") {
+            super::super::DebugSchedule::Runnable { task_id, .. } => {
+                runtime.dispatch(task_id).expect("dispatch");
+            }
+            super::super::DebugSchedule::Idle(wait) => runtime.wait(wait),
+            _ => panic!("resource acquisition must make progress"),
+        }
+    }
+    assert!(
+        runtime
+            .worker(1)
+            .is_some_and(|worker| worker.has_cleanup_obligations())
+    );
+    scheduler.request_cancel();
+    assert!(
+        !scheduler.is_shutdown(),
+        "live resource ownership keeps scheduler active"
+    );
+    runtime.cancel();
+    assert!(
+        scheduler.is_shutdown(),
+        "scheduler shuts down after release completes"
+    );
+    assert_eq!(
+        runtime
+            .worker(0)
+            .unwrap()
+            .hosted
+            .console
+            .lock()
+            .unwrap()
+            .output()
+            .lines,
+        ["released"]
+    );
 }
 
 fn retain_case(runtime: &mut DebugTaskRuntime, task_id: u64) -> OwnedCell {

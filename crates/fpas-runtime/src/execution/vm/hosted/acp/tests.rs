@@ -47,6 +47,113 @@ fn vm_completion_and_failure_close_unreleased_native_connections() {
 }
 
 #[test]
+fn cancelled_close_waits_for_native_connection_retirement_before_task_completion() {
+    use crate::execution::vm::{
+        TaskResultPoll,
+        hosted::proc::AcpLaunch,
+        tasks::{TaskScheduler, TaskSuspension, pool},
+        worker::Worker,
+    };
+    use fpas_acp::connection::{Limits, Settings};
+    use std::{
+        sync::{Arc, mpsc},
+        time::Duration,
+    };
+
+    let marker = std::env::temp_dir().join(format!(
+        "fpas-acp-retirement-{}-{}.ready",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos(),
+    ));
+    let (program, errors) = fpas_parser::parse("program T; begin null; end.");
+    assert!(errors.is_empty());
+    let image = Arc::new(fpas_compiler::compile(&program).expect("fixture"));
+    let scheduler = Arc::new(TaskScheduler::new());
+    let mut worker = Worker::new(image)
+        .unwrap()
+        .with_scheduler(Some(scheduler.clone()));
+    let limits = Limits {
+        shutdown_millis: 5000,
+        ..Limits::default()
+    };
+    let id = worker
+        .hosted
+        .acp
+        .connect_process_controlled(
+            Settings::for_version(fpas_acp::schema::Version::V1),
+            limits,
+            AcpLaunch {
+                command: std::env::current_exe()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned(),
+                arguments: vec![
+                    "--ignored".into(),
+                    "--exact".into(),
+                    "execution::vm::hosted::acp::tests::close_peer".into(),
+                    "--nocapture".into(),
+                ],
+                directory: None,
+                environment: vec![(
+                    "FPAS_ACP_CLOSE_MARKER".into(),
+                    Some(marker.to_string_lossy().into_owned()),
+                )],
+            },
+            worker.hosted.piped_processes.clone(),
+            || false,
+        )
+        .expect("connection");
+    let connection = worker.hosted.acp.connection(id).unwrap();
+    assert!(connection.close().unwrap());
+    assert!(!connection.is_closed(), "the subprocess is gated");
+    worker.task_id = 7;
+    worker.retain_result = true;
+    worker.task_suspension = Some(TaskSuspension::Acp(Box::new(super::wait::Wait::Close {
+        connection: connection.clone(),
+        first: true,
+        release: false,
+        destination: None,
+    })));
+    scheduler.register_result(7);
+    let template = worker.pool_template();
+    scheduler.enqueue(worker.take_task_state());
+    scheduler.request_cancel();
+    let pool_scheduler = scheduler.clone();
+    let (finished, completion) = mpsc::channel();
+    let pool = std::thread::spawn(move || {
+        let result = pool::pool_loop(&template, pool_scheduler);
+        finished.send(result).unwrap();
+    });
+    let timer_scheduler = scheduler.clone();
+    let timer = std::thread::spawn(move || timer_scheduler.timer_loop());
+    let premature = completion.recv_timeout(Duration::from_millis(100)).is_ok();
+    let pending = matches!(scheduler.poll_result(7), TaskResultPoll::Pending);
+    std::fs::write(&marker, b"ready").unwrap();
+    let completed = completion.recv_timeout(Duration::from_secs(10));
+    if completed.is_err() {
+        scheduler.request_cancel();
+    }
+    pool.join().unwrap();
+    timer.join().unwrap();
+    let _ = std::fs::remove_file(&marker);
+    assert!(
+        !premature && pending,
+        "completion must wait for physical ACP retirement"
+    );
+    completed
+        .expect("retirement completes")
+        .expect("cancelled task is contained");
+    assert!(connection.is_closed());
+    assert!(matches!(
+        scheduler.poll_result(7),
+        TaskResultPoll::Failed(_)
+    ));
+}
+
+#[test]
 fn closing_process_cleanup_leaves_the_single_worker_available_to_its_peer() {
     let marker = std::env::temp_dir().join(format!("fpas-acp-close-{}.ready", std::process::id()));
     assert!(!marker.exists());

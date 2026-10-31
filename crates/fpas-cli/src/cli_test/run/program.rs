@@ -1,7 +1,7 @@
 //! Compile, execute, and classify one FPAS test program run.
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use fpas_diagnostics::codes::{RUNTIME_TEST_ASSERTION_FAILED, TEST_RUNNER_FAILED};
@@ -225,6 +225,13 @@ pub(in crate::cli_test) fn run_prepared_program(
     reporter.load_sources(&sources);
     let mut vm =
         fpas_runtime::execution::Vm::new(executable).with_collection_schedule(collection_schedule);
+    let supplemental = Arc::new(Mutex::new(Vec::new()));
+    let received = Arc::clone(&supplemental);
+    vm.set_supplemental_diagnostic(Arc::new(move |diagnostic| {
+        if let Ok(mut diagnostics) = received.lock() {
+            diagnostics.push(diagnostic.clone());
+        }
+    }));
     vm.set_test_scratch_dir(scratch_dir);
     let (program_stderr, receiver) = process::ProgramStderrBuffer::new(reporter.format());
     if let Some(receiver) = receiver {
@@ -242,6 +249,16 @@ pub(in crate::cli_test) fn run_prepared_program(
     gate()?;
     let execution = execute_vm(vm);
     program_stderr.forward(reporter);
+    let diagnostics = supplemental
+        .lock()
+        .map(|mut diagnostics| std::mem::take(&mut *diagnostics))
+        .unwrap_or_default();
+    for diagnostic in &diagnostics {
+        log::record(
+            reporter,
+            &locate(&test_path, source_paths.as_deref(), diagnostic),
+        );
+    }
     Ok(classify_execution(
         &test_path,
         source_paths.as_ref(),

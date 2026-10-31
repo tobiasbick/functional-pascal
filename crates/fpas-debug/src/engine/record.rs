@@ -140,6 +140,7 @@ pub(crate) enum DebugEvent {
         diagnostic: fpas_diagnostics::Diagnostic,
         task_id: u64,
     },
+    SupplementalDiagnostic(fpas_diagnostics::Diagnostic),
     ProtocolError(EngineFailure),
     SourceBreakpoint(fpas_runtime::execution::BoundBreakpoint),
     FunctionBreakpoint(fpas_runtime::execution::BoundFunctionBreakpoint),

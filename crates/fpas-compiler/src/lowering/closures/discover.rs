@@ -76,6 +76,9 @@ impl<'a> ClosureRegistry<'a> {
             }
             Stmt::Const(definition) | Stmt::Var(definition) => {
                 self.visit_expression(&definition.value, owner, metadata, types)?;
+                if definition.using {
+                    self.register_resource_release(definition, owner, metadata, types)?;
+                }
             }
             Stmt::Assign { target, value, .. } => {
                 self.visit_designator(target.parts.as_slice(), owner, metadata, types)?;

@@ -1,6 +1,7 @@
 //! Register executable verifier and contextual failures.
 
 mod calls;
+mod cleanup;
 mod control_flow;
 mod debug;
 mod debug_types;
@@ -78,6 +79,11 @@ impl ValidationError {
 /// Specific register executable invariant violated by untrusted input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValidationErrorKind {
+    /// Resource lifetime state is inconsistent across executable control flow.
+    CleanupState {
+        /// Violated lifetime or publication invariant.
+        reason: &'static str,
+    },
     /// Essential native-error metadata is inconsistent or unbounded.
     ErrorMetadata {
         /// Violated layout or identity invariant.

@@ -84,3 +84,55 @@ fn nonmatching_exception_filter_exits_nonzero_without_stopped_event() {
         .expect("termination");
     assert!(output < exited && exited < terminated, "{messages:?}");
 }
+
+#[test]
+fn supplemental_cleanup_diagnostic_does_not_stop_successful_completion() {
+    let source = r#"program CleanupDiagnostic;
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin
+    panic('cleanup failed');
+  end procedure;
+end record;
+function Failure(): result of (integer, string);
+begin
+  return Error('original');
+end function;
+function Work(): result of (integer, string);
+begin
+  using const Item := Resource();
+  return Ok(try Failure());
+end function;
+begin
+  if not (Work() is Error('original')) then panic('result lost'); end if;
+end.
+"#;
+    let (program, diagnostics) = fpas_parser::parse(source);
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile cleanup fixture");
+    let mut server = DapServer::new(PreparedDebugTarget::new(executable, Vec::new()))
+        .expect("create DAP server");
+    let _ = server.handle(request(1, "initialize", json!({})));
+    let _ = server.handle(request(2, "launch", json!({"stopOnEntry":false})));
+    let mut messages = server.handle(request(3, "configurationDone", json!({})));
+    while server.is_running() {
+        messages.extend(server.wait());
+    }
+    assert!(
+        messages.iter().any(|message| {
+            message["event"] == "output"
+                && message["body"]["category"] == "stderr"
+                && message["body"]["output"]
+                    .as_str()
+                    .is_some_and(|text| text.contains("FP5010") && text.contains("cleanup failed"))
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|message| { message["event"] == "exited" && message["body"]["exitCode"] == 0 }),
+        "{messages:?}"
+    );
+    assert!(!messages.iter().any(|message| message["event"] == "stopped"));
+}

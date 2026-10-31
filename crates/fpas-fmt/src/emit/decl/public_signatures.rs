@@ -64,7 +64,12 @@ fn public_method(emitter: &mut Emitter, method: &RecordMethod, comments: &Commen
     match method {
         RecordMethod::Function(value) => function(emitter, value, "", comments),
         RecordMethod::StaticFunction(value) => function(emitter, value, "static ", comments),
-        RecordMethod::Procedure(value) => procedure(emitter, value, "", comments),
+        RecordMethod::Procedure(value) => procedure(
+            emitter,
+            value,
+            if value.is_release { "release " } else { "" },
+            comments,
+        ),
         RecordMethod::StaticProcedure(value) => procedure(emitter, value, "static ", comments),
     }
 }

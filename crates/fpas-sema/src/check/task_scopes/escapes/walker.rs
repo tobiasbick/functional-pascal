@@ -18,6 +18,7 @@ pub(super) struct EscapeError {
     pub(super) scope: Span,
     /// How the handle leaves, phrased to complete "would escape its scope through ...".
     pub(super) route: String,
+    pub(super) resource: bool,
 }
 
 /// Result of resolving a name at the current lexical position.
@@ -43,6 +44,7 @@ pub(super) struct Walker<'c, 'a> {
     /// Parameters of the analyzed routine whose values may escape.
     pub(super) escapes: Vec<bool>,
     pub(super) errors: Vec<EscapeError>,
+    pub(super) spawning: bool,
 }
 
 impl<'c, 'a> Walker<'c, 'a> {
@@ -58,7 +60,24 @@ impl<'c, 'a> Walker<'c, 'a> {
             frame.bindings.insert(
                 canonical_symbol_name(&param.name),
                 Binding {
-                    owners: vec![Origin::Parameter(index)],
+                    owners: vec![if match &param.type_expr {
+                        fpas_parser::TypeExpr::FunctionType { .. }
+                        | fpas_parser::TypeExpr::ProcedureType { .. } => true,
+                        fpas_parser::TypeExpr::Named { id, .. } => checker
+                            .scopes
+                            .lookup_type(&id.parts.join("."))
+                            .is_some_and(|symbol| {
+                                matches!(
+                                    checker.resolve_visible_type(&symbol.ty),
+                                    crate::types::Ty::Function(_) | crate::types::Ty::Procedure(_)
+                                )
+                            }),
+                        _ => false,
+                    } {
+                        Origin::CallableParameter(index)
+                    } else {
+                        Origin::Parameter(index)
+                    }],
                     depth: 0,
                     outer: param.mode == ParamMode::Var,
                 },
@@ -72,6 +91,7 @@ impl<'c, 'a> Walker<'c, 'a> {
             scopes: Vec::new(),
             escapes: vec![false; params.len()],
             errors: Vec::new(),
+            spawning: false,
         }
     }
 
@@ -154,7 +174,9 @@ impl<'c, 'a> Walker<'c, 'a> {
             return;
         };
         for origin in owners {
-            if binding.may_hold(origin) {
+            if binding.may_hold(origin)
+                && !matches!(origin, Origin::Resource { frame: owner, .. } | Origin::Dependency { frame: owner, .. } if frame < owner)
+            {
                 if !binding.owners.contains(&origin) {
                     binding.owners.push(origin);
                 }
@@ -183,12 +205,30 @@ impl<'c, 'a> Walker<'c, 'a> {
                             span,
                             scope,
                             route: route.to_string(),
+                            resource: false,
                         });
                     }
                 }
-                Origin::Parameter(index) => {
+                Origin::Parameter(index)
+                | Origin::CallableParameter(index)
+                | Origin::BorrowedCapture(index)
+                | Origin::DependencyParameter(index) => {
                     if let Some(escapes) = self.escapes.get_mut(index) {
                         *escapes = true;
+                    }
+                }
+                Origin::Resource { span: scope, .. } | Origin::Dependency { span: scope, .. } => {
+                    if !self
+                        .errors
+                        .iter()
+                        .any(|error| error.span == span && error.scope == scope)
+                    {
+                        self.errors.push(EscapeError {
+                            span,
+                            scope,
+                            route: route.to_string(),
+                            resource: true,
+                        });
                     }
                 }
             }

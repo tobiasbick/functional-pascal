@@ -58,6 +58,13 @@ fn poll_suspended(
         Ok(false) => slot.state = state_from_suspension(&slot.worker),
         Err(error) => {
             progress = true;
+            let error = match slot.worker.begin_cleanup_failure(error) {
+                Ok(()) => {
+                    slot.state = DebugTaskState::Runnable;
+                    return Ok(true);
+                }
+                Err(error) => error,
+            };
             if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
                 slot.state = state_from_suspension(&slot.worker);
                 if (access.outermost() || slot.worker.domain.maintenance_pending())

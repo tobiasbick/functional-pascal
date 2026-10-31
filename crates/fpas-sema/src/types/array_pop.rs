@@ -22,6 +22,7 @@ pub fn array_pop_result_declaration() -> Ty {
             ("Value".into(), element),
         ],
         methods: vec![],
+        release_method: None,
         static_functions: vec![],
         static_procedures: vec![],
     }))

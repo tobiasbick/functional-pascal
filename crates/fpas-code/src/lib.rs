@@ -10,6 +10,7 @@
     )
 )]
 
+mod cleanup_family;
 mod debug;
 mod decoded;
 mod executable;
@@ -21,6 +22,7 @@ mod metadata;
 mod operand;
 mod validate;
 
+pub use cleanup_family::CleanupFamily;
 pub use debug::{
     DebugBinding, DebugBindingKind, DebugCaptureKind, DebugCaptureSource, DebugEffectSet,
     DebugProjection, DebugProjectionKind, DebugScope, DebugSourceLocation, DebugType,
@@ -56,4 +58,4 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 /// Persistent instruction-set and intrinsic ABI version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 31;
+pub const BYTECODE_VERSION: u32 = 32;

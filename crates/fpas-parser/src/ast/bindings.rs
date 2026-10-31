@@ -38,6 +38,8 @@ pub struct VarDef {
 /// A statement-local `const` or `var` binding with an optional type annotation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LocalBinding {
+    /// Release the acquired resource when this binding's scope exits.
+    pub using: bool,
     /// The declared binding name.
     pub name: String,
     /// The written type annotation, when present.

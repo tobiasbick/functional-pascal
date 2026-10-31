@@ -56,12 +56,12 @@ impl LoweringContext {
             } => self.lower_case(expr, arms, else_body.as_deref(), *span),
             Stmt::Break(span) => {
                 let targets = self.loop_targets(*span)?;
-                self.cancel_task_scopes_above(self.loop_task_scope_depth(), *span)?;
+                self.leave_exit_scopes(self.loop_exit_scope_depth(), None, *span)?;
                 self.jump(targets.break_block)
             }
             Stmt::Continue(span) => {
                 let targets = self.loop_targets(*span)?;
-                self.cancel_task_scopes_above(self.loop_task_scope_depth(), *span)?;
+                self.leave_exit_scopes(self.loop_exit_scope_depth(), None, *span)?;
                 self.jump(targets.continue_block)
             }
             _ => Err(unsupported(statement.span(), "control-flow statement")),

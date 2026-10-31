@@ -251,11 +251,21 @@ pub enum Opcode {
     /// Cancel the innermost task scope's children, wait for them, then close it.
     /// All operands are zero.
     CancelTaskScope = 115,
+    /// Opens a lexical resource lifetime owned by the current frame.
+    EnterCleanupScope = 116,
+    /// Begins a cancellable resource initializer and its publication handoff.
+    BeginResourceInit = 117,
+    /// Registers an initialized resource and its release callable atomically.
+    RegisterCleanup = 118,
+    /// Releases the innermost resource lifetime, retaining an optional pending outcome.
+    ExitCleanupScope = 119,
+    /// Marks the following resource producer for atomic publication on successful completion.
+    ArmResourceInit = 120,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 110] = [
+    pub const ALL: [Self; 115] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -366,6 +376,11 @@ impl Opcode {
         Self::EnterTaskScope,
         Self::ExitTaskScope,
         Self::CancelTaskScope,
+        Self::EnterCleanupScope,
+        Self::BeginResourceInit,
+        Self::RegisterCleanup,
+        Self::ExitCleanupScope,
+        Self::ArmResourceInit,
     ];
 
     /// Return the physical payload form assigned to this opcode.

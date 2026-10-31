@@ -105,6 +105,7 @@ impl Worker {
 
     pub(super) fn return_from_call(&mut self, value: Value) -> Result<DispatchStep, VmError> {
         let callback_return = self.callback_accepts_return();
+        let cleanup_return = self.cleanup_accepts_return();
         let Some(frame) = self.call_stack.pop() else {
             return Ok(DispatchStep::Return(value));
         };
@@ -113,7 +114,10 @@ impl Worker {
         self.function = frame.function;
         self.ip = frame.ip;
         self.base = frame.base;
-        if callback_return {
+        self.complete_resource_producer(Some(&value));
+        if cleanup_return {
+            self.accept_cleanup_return(value);
+        } else if callback_return {
             self.accept_callback_return(value)?;
         } else if let Some(destination) = frame.return_destination {
             self.store_register(destination, value)?;

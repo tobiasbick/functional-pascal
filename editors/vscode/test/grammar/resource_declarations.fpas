@@ -1,0 +1,34 @@
+program ResourceHighlighting;
+
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin
+    null;
+  end procedure;
+
+  procedure Release(Self: Resource);
+  begin
+    null;
+  end procedure;
+end record;
+
+type OtherResource = record
+  ReLeAsE PrOcEdUrE Dispose(Self: OtherResource);
+  begin
+    null;
+  end procedure;
+end record;
+
+procedure Release();
+begin
+  null;
+end procedure;
+
+begin
+  using const Item := Resource();
+  UsInG const Other := OtherResource();
+  Item.Release();
+  Release();
+  const ReleaseValue := 'using release';
+  // using release procedure
+end.

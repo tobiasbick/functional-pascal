@@ -146,10 +146,20 @@ fn blocked_native_child() {
             thread: Some(std::thread::spawn(move || {
                 let task = scheduler.dequeue().unwrap();
                 let mut worker = template.worker_for_task(task);
+                let _ticket = scheduler.worker_ticket(worker.task_id);
                 // Explicit synchronous native evaluation is outside owned Console jobs.
                 worker.capture_callback = true;
                 let _capture = worker.capture_pool_guard();
-                worker.run_task().unwrap();
+                if let Err(error) = worker.run_task() {
+                    assert!(
+                        matches!(
+                            error.code,
+                            fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN
+                                | fpas_diagnostics::codes::RUNTIME_TASK_CANCELLED
+                        ),
+                        "unexpected native worker failure: {error:?}"
+                    );
+                }
                 worker.retire_execution();
             })),
         }

@@ -116,6 +116,12 @@ pub(in crate::execution::vm::debug) fn prepare_selection(
             "Step past `end scope` first so the scope can wait for or cancel its child tasks.",
         ));
     }
+    if worker.has_cleanup_from_depth(new_call_stack_len + 1) {
+        return Err(unsupported(
+            "forced return is not available while a discarded frame has an open resource scope",
+            "Continue execution until its resource scope has been released.",
+        ));
+    }
     prove_restore(worker, selected_base, &caller)?;
     Ok(PreparedSelection {
         depth,

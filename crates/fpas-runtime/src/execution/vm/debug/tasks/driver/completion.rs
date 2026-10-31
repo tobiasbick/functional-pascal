@@ -69,7 +69,6 @@ impl DebugTaskRuntime {
                     .root_values(crate::RootKind::Native, vec![value.clone()]),
             );
             self.root_result = Some(value);
-            self.scheduler.finish_main();
         } else if !slot.exited {
             slot.exited = true;
             self.events.push(DebugTaskEvent {
@@ -77,7 +76,7 @@ impl DebugTaskRuntime {
                 kind: DebugTaskEventKind::Exited,
             });
         }
-        slot.worker.retire_execution();
+        slot.retire_execution();
         if root {
             self.cancel_after_root_completion();
         }
@@ -106,7 +105,6 @@ impl DebugTaskRuntime {
                     .root_values(crate::RootKind::Native, vec![value.clone()]),
             );
             self.root_result = Some(value);
-            self.scheduler.finish_main();
         } else if !slot.exited {
             slot.exited = true;
             self.events.push(DebugTaskEvent {
@@ -114,7 +112,7 @@ impl DebugTaskRuntime {
                 kind: DebugTaskEventKind::Exited,
             });
         }
-        slot.worker.retire_execution();
+        slot.retire_execution();
         if root {
             self.cancel_after_root_completion();
         }
@@ -122,6 +120,14 @@ impl DebugTaskRuntime {
     }
 
     pub(super) fn cancel_after_root_completion(&mut self) {
+        if self
+            .tasks
+            .values()
+            .any(|slot| slot.worker.has_cleanup_obligations())
+        {
+            self.drain_disconnect_cleanup();
+        }
+        self.scheduler.finish_main();
         for (&task_id, slot) in &mut self.tasks {
             if task_id == 0
                 || matches!(
@@ -132,7 +138,7 @@ impl DebugTaskRuntime {
                 continue;
             }
             slot.state = DebugTaskState::Cancelled;
-            slot.worker.retire_execution();
+            slot.retire_execution();
             if slot.worker.retain_result {
                 self.scheduler.cancel_result(task_id);
             }
@@ -144,6 +150,7 @@ impl DebugTaskRuntime {
                 });
             }
         }
+        self.retire_terminal_tickets();
         if let Some(worker) = self.worker(0) {
             worker.hosted.close_process_handles();
             worker.hosted.close_file_handles();

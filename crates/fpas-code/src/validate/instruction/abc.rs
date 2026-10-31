@@ -169,6 +169,30 @@ pub(super) fn validate_abc(
             }
             canonical_u8(site, "auxiliary", auxiliary, 0)
         }
+        Opcode::RegisterCleanup => {
+            validate_registers(site, &[("resource", a), ("release callable", b)])?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)?;
+            if crate::CleanupFamily::from_u16(c).is_some() {
+                Ok(())
+            } else {
+                canonical_u16(
+                    site,
+                    "resource family",
+                    c,
+                    crate::CleanupFamily::HttpStream.to_u16(),
+                )
+            }
+        }
+        Opcode::ExitCleanupScope => {
+            validate_optional_register(site, "pending outcome", a)?;
+            canonical_u16(site, "B", b, 0)?;
+            canonical_u16(site, "C", c, 0)?;
+            if auxiliary <= 1 {
+                Ok(())
+            } else {
+                canonical_u8(site, "propagating outcome", auxiliary, 1)
+            }
+        }
         Opcode::Return => {
             validate_destination(site, a, function.return_convention)?;
             canonical_u16(site, "B", b, 0)?;
@@ -245,7 +269,10 @@ pub(super) fn validate_abc(
         Opcode::Yield
         | Opcode::EnterTaskScope
         | Opcode::ExitTaskScope
-        | Opcode::CancelTaskScope => {
+        | Opcode::CancelTaskScope
+        | Opcode::EnterCleanupScope
+        | Opcode::BeginResourceInit
+        | Opcode::ArmResourceInit => {
             canonical_u16(site, "A", a, 0)?;
             canonical_u16(site, "B", b, 0)?;
             canonical_tail(site, c, auxiliary)

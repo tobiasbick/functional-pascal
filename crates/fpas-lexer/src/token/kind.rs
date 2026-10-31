@@ -28,6 +28,7 @@ pub enum Token {
     Unit,
     Uses,
     Const,
+    Using,
     Var,
     Function,
     Procedure,

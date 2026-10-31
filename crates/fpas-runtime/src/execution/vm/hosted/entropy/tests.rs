@@ -72,7 +72,7 @@ fn entropy_releases_one_worker_and_joins_callback_shutdown_and_scope_exit() {
                     bytes.fill(17);
                     Ok(())
                 }));
-                let hosted = Arc::downgrade(&vm.hosted);
+                let hosted = Arc::clone(&vm.hosted);
                 let stop = Arc::new(vm.shutdown_handle());
                 assert!(slot.set(Arc::downgrade(&stop)).is_ok());
                 let (send, receive) = mpsc::channel();
@@ -99,14 +99,14 @@ fn entropy_releases_one_worker_and_joins_callback_shutdown_and_scope_exit() {
                 }
                 assert_eq!(
                     hosted
-                        .upgrade()
-                        .unwrap()
                         .entropy_jobs
                         .load(std::sync::atomic::Ordering::Acquire),
                     0
                 );
+                let weak_hosted = Arc::downgrade(&hosted);
+                drop(hosted);
                 drop(stop);
-                assert!(hosted.upgrade().is_none());
+                assert!(weak_hosted.upgrade().is_none());
             }
         }
     }

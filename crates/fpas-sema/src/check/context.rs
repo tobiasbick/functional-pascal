@@ -103,6 +103,17 @@ pub type BoundMethodMap = HashMap<usize, BoundMethodInfo>;
 /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
 pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<Expr>>)>>;
 
+/// Resolved release operation for a resource binding.
+#[derive(Debug, Clone)]
+pub struct ResourceRelease {
+    /// Canonical callable name.
+    pub name: String,
+    /// Full callable signature, including its resource parameter.
+    pub signature: Ty,
+    /// The operation is implemented by a VM intrinsic.
+    pub native: bool,
+}
+
 /// Compiler-facing diagnostics and lowering metadata produced by semantic analysis.
 ///
 /// Identity-keyed maps refer to the immutable source AST or the retained expressions in
@@ -147,6 +158,8 @@ pub struct AnalysisMetadata {
     /// Inferred statement-local binding types keyed by source id and declaration offset.
     /// **Documentation:** `docs/pascal/language/basics/local-variables.md`
     pub binding_types: HashMap<(u32, usize), Ty>,
+    /// Canonical release routine for each checked resource binding.
+    pub resource_releases: HashMap<(u32, usize), ResourceRelease>,
     /// Designators resolved to enum members, keyed by full designator identity.
     /// **Documentation:** `docs/pascal/language/pattern-matching/syntax.md`
     pub enum_members: HashSet<usize>,
@@ -220,6 +233,7 @@ pub struct Checker {
     pub(crate) pattern_types: HashMap<(u32, usize), Ty>,
     /// Inferred statement-local types keyed by source id and declaration offset.
     pub(crate) binding_types: HashMap<(u32, usize), Ty>,
+    pub(crate) resource_releases: HashMap<(u32, usize), ResourceRelease>,
     /// Nested constructors may retain holes until all enclosing fields are checked.
     pub(crate) deferred_constructor_inference: usize,
     /// Spawn argument/result checking, suspended while checking a separate routine body.
@@ -333,6 +347,7 @@ impl Checker {
             needs_error_constructors: false,
             source_expr_types: HashMap::new(),
             binding_types: HashMap::new(),
+            resource_releases: HashMap::new(),
             deferred_constructor_inference: 0,
             task_call_depth: 0,
             enum_members: HashSet::new(),
@@ -389,6 +404,7 @@ impl Checker {
             postfix_types: self.postfix_types,
             pattern_types: self.pattern_types,
             binding_types: self.binding_types,
+            resource_releases: self.resource_releases,
             enum_members: self.enum_members,
             intrinsic_calls: self.intrinsic_calls,
             named_argument_orders: self.named_argument_orders,

@@ -177,7 +177,7 @@ fn shutdown_from_a_host_writer_returns_before_joining_a_blocked_terminal_provide
             Stdio::null(),
         ))
     }));
-    let hosted = Arc::downgrade(&vm.hosted);
+    let hosted = Arc::clone(&vm.hosted);
     let stop = Arc::new(vm.shutdown_handle());
     assert!(slot.set(Arc::downgrade(&stop)).is_ok());
     let (send, receive) = mpsc::channel();
@@ -207,14 +207,9 @@ fn shutdown_from_a_host_writer_returns_before_joining_a_blocked_terminal_provide
         returned.load(Ordering::Acquire),
         "shutdown must return so the writer can release the provider"
     );
-    assert_eq!(
-        hosted
-            .upgrade()
-            .unwrap()
-            .process_jobs
-            .load(Ordering::Acquire),
-        0
-    );
+    assert_eq!(hosted.process_jobs.load(Ordering::Acquire), 0);
+    let weak_hosted = Arc::downgrade(&hosted);
+    drop(hosted);
     drop(stop);
-    assert!(hosted.upgrade().is_none());
+    assert!(weak_hosted.upgrade().is_none());
 }

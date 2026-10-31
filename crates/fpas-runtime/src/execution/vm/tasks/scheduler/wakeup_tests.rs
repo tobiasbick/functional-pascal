@@ -52,6 +52,7 @@ fn queued_work_wakes_a_registered_helper_without_consuming_the_task() {
         capture_record: None,
         observed_task_failure: None,
         pending_completion: None,
+        cleanup: Default::default(),
         suspension: None,
         supervision: None,
         id: 9,

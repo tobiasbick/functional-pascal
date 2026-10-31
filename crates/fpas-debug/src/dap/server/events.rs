@@ -72,6 +72,13 @@ impl DapServer {
                     "output": format!("{}\n", diagnostic.message)
                 }),
             )],
+            DebugEvent::SupplementalDiagnostic(diagnostic) => vec![self.event(
+                "output",
+                json!({
+                    "category": "stderr",
+                    "output": format!("{}: {}\n", diagnostic.code, diagnostic.message)
+                }),
+            )],
             DebugEvent::ProtocolError(error) => vec![self.event(
                 "output",
                 json!({

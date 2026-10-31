@@ -128,7 +128,7 @@ contains these fields:
 | `outcome` | `breakpoint`, `runtime_error`, `completed`, `limit`, or `error`. |
 | `exit_code` | The process exit code below. |
 | `stop` | Stopping task, reason, source location and bound requests, or null. |
-| `diagnostics` | Structured FP diagnostics or batch `code`/`stage`/`message` records. |
+| `diagnostics` | Structured FP diagnostics, including supplemental cleanup failures, or batch `code`/`stage`/`message` records. |
 | `sources` | Source IDs and portable paths; no source text. |
 | `globals` | Globals captured once in declaration order. |
 | `tasks` | Actual task IDs/states and bounded logical stack frames. |

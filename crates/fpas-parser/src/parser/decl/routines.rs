@@ -175,6 +175,7 @@ impl Parser {
         let (requires, ensures, body) =
             self.parse_routine_rest(&head.name, ada_body, Token::Procedure);
         ProcedureDecl {
+            is_release: false,
             name: head.name,
             type_params: head.type_params,
             params: head.params,

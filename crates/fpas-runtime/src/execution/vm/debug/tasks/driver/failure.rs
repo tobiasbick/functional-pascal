@@ -24,7 +24,7 @@ pub(super) fn record(
             slot.failure = None;
         }
         slot.worker.task_suspension = None;
-        slot.worker.retire_execution();
+        slot.retire_execution();
         slot.exited = true;
         events.push(DebugTaskEvent {
             task_id,

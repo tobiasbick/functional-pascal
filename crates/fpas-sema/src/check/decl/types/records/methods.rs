@@ -29,8 +29,26 @@ impl Checker {
         let mut checked_methods = Vec::new();
         let mut checked_static = Vec::new();
         let mut checked_static_procedures = Vec::new();
+        let mut seen_release = false;
 
         for method in methods {
+            if let RecordMethod::Procedure(procedure) = method
+                && procedure.is_release
+            {
+                if seen_release
+                    || !procedure.type_params.is_empty()
+                    || procedure.params.len() != 1
+                    || procedure
+                        .params
+                        .first()
+                        .is_some_and(|p| p.mode != crate::types::ParamMode::Value)
+                {
+                    self.error_with_code(fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                            "Invalid release procedure",
+                            "A record may declare one release procedure with only a value Self parameter and no method type parameters.", procedure.span);
+                }
+                seen_release = true;
+            }
             let (routine, dispatch) = match method {
                 RecordMethod::Function(function) => {
                     (RecordRoutine::function(function), RoutineDispatch::Instance)

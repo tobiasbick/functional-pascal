@@ -305,6 +305,28 @@ pub enum Operation {
     ExitTaskScope,
     /// Leaves the innermost task scope early: cancels its children, then waits for them.
     CancelTaskScope,
+    /// Opens the resource lifetime of a lexical statement list.
+    EnterCleanupScope,
+    /// Starts resource initialization without suppressing a pending acquisition wait.
+    BeginResourceInit,
+    /// Marks the following producer for atomic successful publication.
+    ArmResourceInit,
+    /// Registers a successfully initialized resource and its release operation.
+    RegisterCleanup {
+        /// Initialized resource retained until release completes.
+        resource: ValueId,
+        /// Callable accepting the resource as its sole argument.
+        release: ValueId,
+        /// Registered native resource family, or zero for a custom release procedure.
+        family: u16,
+    },
+    /// Releases one lexical resource lifetime before continuing a pending exit.
+    ExitCleanupScope {
+        /// Complete pending return value, if any.
+        outcome: Option<ValueId>,
+        /// Preserve a propagated Error or None and report release failures separately.
+        propagating: bool,
+    },
 }
 
 impl Operation {

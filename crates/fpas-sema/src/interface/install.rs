@@ -38,6 +38,15 @@ impl check::Checker {
             }
             for exported in &interface.symbols {
                 self.install_native_error_dependencies(&exported.ty);
+                if exported
+                    .qualified_name
+                    .eq_ignore_ascii_case("Std.Net.Http.CloseStream")
+                {
+                    self.scopes.imports.define_metadata(
+                        &exported.qualified_name,
+                        interface_symbol_to_sema(exported)?,
+                    );
+                }
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
                 }

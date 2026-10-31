@@ -84,7 +84,7 @@ impl LoweringContext {
         self.bindings.iter().rev().find(|binding| binding.name.eq_ignore_ascii_case(name)).map(|binding| (binding.storage, binding.ty)).ok_or_else(|| internal_compiler_error(format!("Local `{name}` was not present in register-lowering scope metadata."), "This is an internal compiler error. Re-run compilation and report the source program.", span.line, span.column))
     }
 
-    pub(super) fn binding_is_cell(&self, name: &str) -> bool {
+    pub(in crate::lowering) fn binding_is_cell(&self, name: &str) -> bool {
         self.bindings
             .iter()
             .rev()

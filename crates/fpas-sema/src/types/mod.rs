@@ -28,6 +28,7 @@ pub use generic_parameters::{GenericParamDef, TypeConstraint};
 pub(crate) use inference::{has_inference_holes, merge_inferred_types, needs_expected_type};
 pub use payload_constructors::PayloadConstructor;
 pub use records::{MethodKind, RecordTy};
+pub(crate) use records::{native_resource_fresh_result, native_resource_release};
 pub use subranges::SubrangeTy;
 pub(crate) use substitution::substitute_type_parameters;
 

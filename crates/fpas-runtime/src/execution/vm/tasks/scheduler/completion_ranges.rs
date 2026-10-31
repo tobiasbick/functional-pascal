@@ -5,13 +5,13 @@ use std::ops::Bound::{Excluded, Unbounded};
 
 /// Disjoint inclusive ranges of consumed task identifiers.
 #[derive(Default)]
-pub(super) struct CompletionRanges {
+pub(in crate::execution::vm) struct CompletionRanges {
     ranges: BTreeMap<u64, u64>,
 }
 
 impl CompletionRanges {
     /// Returns whether `id` belongs to a consumed range.
-    pub(super) fn contains(&self, id: &u64) -> bool {
+    pub(in crate::execution::vm) fn contains(&self, id: &u64) -> bool {
         self.ranges
             .range(..=id)
             .next_back()
@@ -19,7 +19,7 @@ impl CompletionRanges {
     }
 
     /// Inserts `id` and merges directly adjacent ranges.
-    pub(super) fn insert(&mut self, id: u64) {
+    pub(in crate::execution::vm) fn insert(&mut self, id: u64) {
         if self.contains(&id) {
             return;
         }

@@ -4,7 +4,7 @@
 
 use fpas_parser::{CaseArm, Decl, DesignatorPart, FuncBody, Stmt};
 
-use super::origins::Frame;
+use super::origins::{Frame, Origin};
 use super::walker::Walker;
 
 impl Walker<'_, '_> {
@@ -55,8 +55,44 @@ impl Walker<'_, '_> {
                 self.scopes.pop();
             }
             Stmt::Const(binding) | Stmt::Var(binding) => {
-                let owners = self.expr(&binding.value);
+                let safe_callback =
+                    matches!(statement, Stmt::Const(_)) && self.callback_is_safe(&binding.value);
+                let mut owners = self.expr(&binding.value);
+                if binding.using {
+                    let claimed: super::origins::Owners = owners
+                        .iter()
+                        .copied()
+                        .filter(|owner| {
+                            !matches!(
+                                owner,
+                                Origin::Dependency { .. } | Origin::DependencyParameter(_)
+                            )
+                        })
+                        .collect();
+                    self.escape_all(&claimed, binding.span, "another resource binding");
+                    if owners
+                        .iter()
+                        .any(|owner| matches!(owner, Origin::Parameter(_)))
+                    {
+                        self.errors.push(super::walker::EscapeError {
+                            span: binding.span,
+                            scope: binding.span,
+                            route: "a new resource binding created from a borrowed parameter"
+                                .into(),
+                            resource: true,
+                        });
+                    }
+                    owners.push(Origin::Resource {
+                        frame: self.frames.len() - 1,
+                        span: binding.span,
+                    });
+                }
                 self.declare(&binding.name, owners);
+                if safe_callback && let Some(frame) = self.frames.last_mut() {
+                    frame
+                        .safe_callbacks
+                        .insert(crate::scope::canonical_symbol_name(&binding.name));
+                }
             }
             Stmt::Assign {
                 target,

@@ -34,6 +34,7 @@ pub(super) struct InterfaceSet<'a> {
     pub uses: &'a [fpas_parser::Import],
     pub direct: &'a [UnitInterface],
     pub supporting: &'a [UnitInterface],
+    pub required_releases: &'a std::collections::HashMap<(u32, usize), fpas_sema::ResourceRelease>,
 }
 
 pub(super) struct BindingTables<'a> {
@@ -172,6 +173,32 @@ pub(super) fn install(
     {
         install_record_callables(
             record,
+            types,
+            callables,
+            &mut plan,
+            &mut stubs,
+            &mut installed_callables,
+            first_function,
+            span,
+        )?;
+    }
+    for symbol in interfaces
+        .supporting
+        .iter()
+        .flat_map(|interface| &interface.symbols)
+    {
+        if !interfaces.required_releases.values().any(|release| {
+            !release.native && release.name.eq_ignore_ascii_case(&symbol.qualified_name)
+        }) {
+            continue;
+        }
+        let callable = match &symbol.ty {
+            InterfaceType::Function(callable) | InterfaceType::Procedure(callable) => callable,
+            _ => continue,
+        };
+        install_callable(
+            &symbol.qualified_name,
+            callable,
             types,
             callables,
             &mut plan,

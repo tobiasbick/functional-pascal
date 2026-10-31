@@ -3,6 +3,7 @@
 mod completed_result;
 mod completion;
 mod control;
+mod disconnect;
 mod failure;
 mod lifecycle;
 mod live_image;
@@ -36,9 +37,26 @@ struct TaskSlot {
     failure: Option<VmError>,
     exited: bool,
     paused: bool,
+    ticket: Option<DebugTicket>,
+}
+
+struct DebugTicket {
+    scheduler: Arc<TaskScheduler>,
+    task: u64,
+}
+
+impl Drop for DebugTicket {
+    fn drop(&mut self) {
+        self.scheduler.worker_finished(self.task);
+    }
 }
 
 impl TaskSlot {
+    fn retire_execution(&mut self) {
+        self.worker.retire_execution();
+        self.ticket.take();
+    }
+
     fn is_schedulable(&self) -> bool {
         self.state == DebugTaskState::Runnable && !self.paused
     }
@@ -116,6 +134,11 @@ impl DebugTaskRuntime {
             )),
         );
         let entry_function = root.function;
+        scheduler.worker_started(0);
+        let ticket = DebugTicket {
+            scheduler: Arc::clone(&scheduler),
+            task: 0,
+        };
         let tasks = BTreeMap::from([(
             0,
             TaskSlot {
@@ -126,6 +149,7 @@ impl DebugTaskRuntime {
                 failure: None,
                 exited: false,
                 paused: false,
+                ticket: Some(ticket),
             },
         )]);
         Self {
@@ -319,7 +343,7 @@ impl DebugTaskRuntime {
                         kind: DebugTaskEventKind::Exited,
                     });
                 }
-                slot.worker.retire_execution();
+                slot.retire_execution();
                 DebugDispatch::Completed {
                     task_id,
                     main: task_id == 0,
@@ -361,8 +385,28 @@ impl DebugTaskRuntime {
 
     /// Begin normal root teardown and cancel timer-suspended tasks.
     pub(in crate::execution::vm::debug) fn finish_main(&mut self) {
+        if self
+            .tasks
+            .values()
+            .any(|slot| slot.worker.has_cleanup_obligations())
+        {
+            self.drain_disconnect_cleanup();
+        }
         self.scheduler.finish_main();
         self.cancel_sleeping_tasks();
+        self.retire_terminal_tickets();
+    }
+
+    fn retire_terminal_tickets(&mut self) {
+        for slot in self.tasks.values_mut() {
+            if matches!(
+                slot.state,
+                DebugTaskState::Completed | DebugTaskState::Cancelled | DebugTaskState::Failed
+            ) && !slot.worker.has_cleanup_obligations()
+            {
+                slot.retire_execution();
+            }
+        }
     }
 
     /// Whether every spawned task has reached a terminal lifecycle state.
@@ -404,6 +448,14 @@ impl DebugTaskRuntime {
 
     /// Cancel every remaining task immediately for explicit disconnect or fatal teardown.
     pub(in crate::execution::vm::debug) fn cancel(&mut self) {
+        self.drain_spawned();
+        if self
+            .tasks
+            .values()
+            .any(|slot| slot.worker.has_cleanup_obligations())
+        {
+            self.drain_disconnect_cleanup();
+        }
         self.scheduler.request_cancel();
         if let Some(worker) = self.worker(0) {
             worker.hosted.close_process_handles();
@@ -415,7 +467,7 @@ impl DebugTaskRuntime {
             // Claimed Select cases belong to the suspended operation, not the closed registry.
             // Shutdown and hosted cleanup have completed, so no operation can resume.
             slot.worker.task_suspension = None;
-            slot.worker.retire_execution();
+            slot.retire_execution();
             if !matches!(
                 slot.state,
                 DebugTaskState::Completed | DebugTaskState::Failed | DebugTaskState::Cancelled
@@ -435,6 +487,10 @@ impl DebugTaskRuntime {
     fn drain_spawned(&mut self) {
         while let Some(task) = self.scheduler.try_dequeue() {
             let task_id = task.id;
+            let ticket = DebugTicket {
+                scheduler: Arc::clone(&self.scheduler),
+                task: task_id,
+            };
             let function = task.function;
             let Some(template) = self.tasks.get(&0).map(|slot| &slot.worker) else {
                 break;
@@ -462,6 +518,7 @@ impl DebugTaskRuntime {
                     failure: None,
                     exited: false,
                     paused: false,
+                    ticket: Some(ticket),
                 },
             );
             self.resumed_at_boundary.insert(task_id);
@@ -478,7 +535,7 @@ impl DebugTaskRuntime {
                 continue;
             }
             slot.state = DebugTaskState::Cancelled;
-            slot.worker.retire_execution();
+            slot.retire_execution();
             slot.exited = true;
             if slot.worker.retain_result {
                 self.scheduler.cancel_result(task_id);

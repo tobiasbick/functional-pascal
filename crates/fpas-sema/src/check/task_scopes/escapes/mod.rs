@@ -95,6 +95,12 @@ impl Checker {
     }
 
     fn report_task_handle_escape(&mut self, error: EscapeError) {
+        if error.resource {
+            self.error_with_code(SEMA_TASK_HANDLE_ESCAPE,
+                format!("A resource owned by the `using` binding at line {} would escape through {}", error.scope.line, error.route),
+                "Keep the resource within its owning scope and pass it only to routines that do not retain it.", error.span);
+            return;
+        }
         self.error_with_code(
             SEMA_TASK_HANDLE_ESCAPE,
             format!(

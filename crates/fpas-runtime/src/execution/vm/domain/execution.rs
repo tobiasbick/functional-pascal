@@ -37,6 +37,7 @@ impl Worker {
         self.hosted.cases.close_owner(self.task_id);
         self.task_suspension = None;
         self.pending_completion = None;
+        self.cleanup = Default::default();
         self.supervision = None;
         self.callback_continuations.clear();
         self.callback_worker.get_mut().take();

@@ -62,7 +62,23 @@ impl<'a> Selector<'a> {
             .get(index)
             .ok_or_else(|| selection_error("instruction index is outside its block"))?;
         let words = self.select_words(block, index, instruction, metadata)?;
-        self.mark_consuming_operands(words, block.id, index, instruction)
+        let mut words = self.mark_consuming_operands(words, block.id, index, instruction)?;
+        if index
+            .checked_sub(1)
+            .and_then(|index| block.instructions.get(index))
+            .is_some_and(|previous| matches!(previous.operation, Operation::ArmResourceInit))
+        {
+            if words.is_empty() {
+                // A coalesced local read still needs an explicit publication boundary.
+                let register = self.result_register(instruction.result.map(|value| value.id))?;
+                words.push(abc(Opcode::Move, register, register, 0)?);
+            }
+            // Selected calls and constructors prepare their register windows first. Only
+            // the final producer word begins the successful publication handoff.
+            let producer = words.len() - 1;
+            words.insert(producer, abc(Opcode::ArmResourceInit, 0, 0, 0)?);
+        }
+        Ok(words)
     }
 
     fn select_words(
@@ -204,6 +220,33 @@ impl<'a> Selector<'a> {
             Operation::EnterTaskScope => abc(Opcode::EnterTaskScope, 0, 0, 0),
             Operation::ExitTaskScope => abc(Opcode::ExitTaskScope, 0, 0, 0),
             Operation::CancelTaskScope => abc(Opcode::CancelTaskScope, 0, 0, 0),
+            Operation::EnterCleanupScope => abc(Opcode::EnterCleanupScope, 0, 0, 0),
+            Operation::BeginResourceInit => abc(Opcode::BeginResourceInit, 0, 0, 0),
+            Operation::ArmResourceInit => return Ok(Vec::new()),
+            Operation::RegisterCleanup {
+                resource,
+                release,
+                family,
+            } => abc_aux(
+                Opcode::RegisterCleanup,
+                self.allocation.value(*resource)?.get(),
+                self.allocation.value(*release)?.get(),
+                *family,
+                0,
+            ),
+            Operation::ExitCleanupScope {
+                outcome,
+                propagating,
+            } => abc_aux(
+                Opcode::ExitCleanupScope,
+                outcome
+                    .map(|value| self.allocation.value(value).map(|reg| reg.get()))
+                    .transpose()?
+                    .unwrap_or(fpas_code::NO_REGISTER),
+                0,
+                0,
+                u8::from(*propagating),
+            ),
             other => Err(selection_error(&format!(
                 "IR operation {other:?} has no bytecode selection"
             ))),

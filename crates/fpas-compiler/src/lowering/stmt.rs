@@ -19,9 +19,7 @@ impl LoweringContext {
             Stmt::Null(_) => Ok(()),
             Stmt::Block(statements, _) => {
                 self.begin_scope();
-                for statement in statements {
-                    self.lower_statement(statement)?;
-                }
+                self.lower_statements(statements)?;
                 self.end_scope();
                 Ok(())
             }
@@ -106,8 +104,12 @@ impl LoweringContext {
     }
 
     pub(super) fn lower_statements(&mut self, statements: &[Stmt]) -> Result<(), CompileError> {
+        let entered = self.enter_resource_list(statements)?;
         for statement in statements {
             self.lower_statement(statement)?;
+        }
+        if let Some(statement) = statements.last() {
+            self.finish_resource_list(entered, statement.span())?;
         }
         Ok(())
     }
@@ -128,7 +130,13 @@ impl LoweringContext {
             Some(ty) => self.declared_type(ty)?,
             None => self.expression_ir_type(&definition.value)?,
         };
+        if definition.using {
+            self.prepare_resource_init(&definition.value, definition.span)?;
+        }
         let value = self.lower_expression_as(&definition.value, ty)?;
+        if definition.using {
+            self.register_resource(definition, value)?;
+        }
         if mutable && self.is_cell_backed(&definition.name) {
             let cell_ty = self.cell_type(ty, definition.span)?;
             let cell = self.emit_value(Operation::MakeCell(value), cell_ty, definition.span)?;

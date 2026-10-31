@@ -59,6 +59,12 @@ impl Checker {
             private_members,
             fields,
             methods: Vec::new(),
+            release_method: record.methods.iter().find_map(|method| match method {
+                fpas_parser::RecordMethod::Procedure(procedure) if procedure.is_release => {
+                    Some(procedure.name.clone())
+                }
+                _ => None,
+            }),
             static_functions: Vec::new(),
             static_procedures: Vec::new(),
         }

@@ -18,7 +18,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use fpas_diagnostics::codes::{BUILD_ARTIFACT_ENCODING_FAILED, BUILD_ARTIFACT_IO_FAILED};
 use fpas_diagnostics::{Diagnostic, FileDiagnostic};
@@ -94,6 +94,13 @@ fn run(json: bool) -> i32 {
         Box::new(io::stdout()),
         args,
     );
+    let supplemental = Arc::new(Mutex::new(Vec::new()));
+    let received = Arc::clone(&supplemental);
+    vm.set_supplemental_diagnostic(Arc::new(move |diagnostic| {
+        if let Ok(mut diagnostics) = received.lock() {
+            diagnostics.push(diagnostic.clone());
+        }
+    }));
     vm.allow_process_lifecycle();
     if let Some(terminal) = fpas_runtime::execution::InteractiveProcessTerminal::inherited() {
         vm.set_interactive_process_terminal(terminal);
@@ -105,7 +112,21 @@ fn run(json: bool) -> i32 {
             }
         }));
     }
-    if let Err(diagnostic) = vm.run() {
+    let outcome = vm.run();
+    let diagnostics = supplemental
+        .lock()
+        .map(|mut diagnostics| std::mem::take(&mut *diagnostics))
+        .unwrap_or_default();
+    for diagnostic in diagnostics {
+        let path = diagnostic
+            .span
+            .and_then(|span| usize::try_from(span.source_id()).ok())
+            .and_then(|index| source_paths.get(index))
+            .cloned()
+            .unwrap_or_else(|| PathBuf::from(name.to_string()));
+        report(json, &FileDiagnostic::new(diagnostic, Some(path)));
+    }
+    if let Err(diagnostic) = outcome {
         let path = diagnostic
             .span
             .and_then(|span| usize::try_from(span.source_id()).ok())

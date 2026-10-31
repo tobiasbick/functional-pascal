@@ -5,6 +5,38 @@
 use super::{PreparedCall, Value, VmError, Worker, diagnostics};
 
 impl Worker {
+    /// Enter a one-argument callable without relying on a caller register window.
+    /// The caller retains ownership of the operation and consumes its return separately.
+    pub(in crate::execution::vm) fn enter_cleanup_callable(
+        &mut self,
+        function: &crate::SharedFunction,
+        argument: Value,
+    ) -> Result<(), VmError> {
+        self.require_function_task_owner(function)?;
+        let argument_count = 1 + usize::from(function.bound_receiver.is_some());
+        let prepared = self.prepare_call::<false>(
+            function.function,
+            crate::NO_REGISTER,
+            argument_count,
+            function.captures.len(),
+        )?;
+        self.activate_call(&prepared, self.active_register_count())?;
+        let mut index = self.base;
+        if let Some(receiver) = &function.bound_receiver {
+            self.store_register(index, receiver.clone())?;
+            index += 1;
+        }
+        self.store_register(index, argument)?;
+        index += 1;
+        for capture in &function.captures {
+            self.store_register(index, capture.clone())?;
+            index += 1;
+        }
+        self.function = prepared.target;
+        self.ip = prepared.instruction_pointer;
+        Ok(())
+    }
+
     /// Prepare only the first invocation; every invocation checks current stack limits.
     pub(in crate::execution::vm) fn enter_callback_inline(
         &mut self,

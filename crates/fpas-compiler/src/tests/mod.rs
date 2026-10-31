@@ -56,5 +56,6 @@ mod native_error_methods;
 mod native_errors;
 mod numeric_contracts;
 mod optimization;
+mod resources;
 mod structure;
 mod subranges;

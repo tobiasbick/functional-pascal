@@ -39,6 +39,7 @@ pub use check::NamedTypeMap;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
 pub use check::RecordDefaultsMap;
+pub use check::ResourceRelease;
 pub use check::{NativeCallable, NativeCallableMap};
 pub use error::SemaError;
 pub use interface::{

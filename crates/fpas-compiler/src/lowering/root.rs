@@ -78,6 +78,7 @@ pub(super) fn lower_analyzed_root(
             uses,
             direct: interfaces,
             supporting: supporting_interfaces,
+            required_releases: &metadata.resource_releases,
         },
         imports::BindingTables {
             types: &mut type_table,
@@ -161,11 +162,9 @@ pub(super) fn lower_analyzed_root(
             .map_err(|error| vec![error])?;
         global_initializers.push((global, location));
     }
-    for statement in body {
-        context
-            .lower_statement(statement)
-            .map_err(|error| vec![error])?;
-    }
+    context
+        .lower_statements(body)
+        .map_err(|error| vec![error])?;
     let (mut root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
     // Preserve the source scope during lowering, then isolate the generated root symbol.
     root.name = format!("$entry_{}", name.to_ascii_lowercase());

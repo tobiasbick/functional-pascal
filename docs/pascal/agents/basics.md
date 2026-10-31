@@ -23,6 +23,11 @@ The inferred type stays fixed; integer and real do not merge through inference.
 Its initializer executes when reached. Case labels and subrange bounds require
 compile-time constants.
 
+Use `using const File := try Fs.Open(Path, Fs.FileMode.Read);` for a resource
+local. The nearest lexical block releases acquired resources in reverse order
+when it exits. A resource binding is read-only; do not return it, store it in a
+global, or capture it in an escaping closure. A synchronous borrow is allowed.
+
 ## Expressions
 
 Assignment is `:=`; equality and inequality are `=` and `<>`. Arithmetic operands

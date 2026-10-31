@@ -5,6 +5,8 @@ mod aggregates;
 mod callback_frames;
 mod callbacks;
 mod calls;
+mod cleanup;
+mod cleanup_compiler;
 mod closure_calls;
 mod console_eof;
 mod dispatch_budget;

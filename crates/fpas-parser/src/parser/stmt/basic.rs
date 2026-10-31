@@ -28,6 +28,19 @@ impl Parser {
         self.parse_local_binding(BindingKeyword::Const)
     }
 
+    pub(super) fn parse_using_stmt(&mut self) -> Stmt {
+        self.advance();
+        if !self.check(&Token::Const) {
+            self.expect(&Token::Const);
+            return Stmt::Block(Vec::new(), self.current_span());
+        }
+        let mut stmt = self.parse_const_stmt();
+        if let Stmt::Const(binding) = &mut stmt {
+            binding.using = true;
+        }
+        stmt
+    }
+
     /// Parses a reassignable inline binding.
     pub(super) fn parse_var_stmt(&mut self) -> Stmt {
         self.parse_local_binding(BindingKeyword::Var)

@@ -102,7 +102,7 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 23 and register-bytecode version 31.
+The sectioned envelope uses program format version 23 and register-bytecode version 32.
 Relocatable unit objects use schema version 18 and compiled-unit envelopes use
 version 24. Error layouts retain complete nominal instance keys, literal labels,
 concrete semantic payload types and typed Cause references independently of optional

@@ -107,6 +107,8 @@ pub struct RecordType {
     pub fields: Vec<FieldType>,
     /// Instance methods in canonical name order.
     pub methods: Vec<MethodType>,
+    /// Instance procedure implementing deterministic resource release.
+    pub release_method: Option<String>,
     /// Static routines in canonical name order.
     pub static_routines: Vec<MethodType>,
 }

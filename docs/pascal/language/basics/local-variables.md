@@ -11,6 +11,51 @@ See [Constants](constants.md) for runtime initialization and static classificati
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`const_stmt` and `var_stmt` in statement position).
 
+## Resource locals
+
+`using const` declares an immutable local whose value is released when its
+nearest lexical block exits. Its initializer runs once when the declaration is
+reached. A failed acquisition does not register a resource. Resources acquired
+in the same block are released in reverse order, including on early return,
+`try` propagation, loop control, and failure. An already closed native handle
+is skipped; an explicit close retains its normal result and error behavior.
+An error or `None` being propagated remains the function result if release also
+fails; the release failure is reported separately. For runtime failures, the
+first failure remains primary.
+
+```pascal id=resource-file
+program ResourceFile;
+
+uses Std.Io.Fs as Fs;
+
+function ReadFirstLine(Path: string): result of (option of string, Fs.FsError);
+begin
+  using const File := try Fs.Open(Path, Fs.FileMode.Read);
+  return Fs.ReadLine(File);
+end function;
+
+begin
+  null;
+end.
+```
+
+The enclosing function must support the error returned by `try`. Resource
+bindings cannot escape through a return value, global, or escaping closure. For a custom
+record resource, declare a [release procedure](../types/records.md#resource-release).
+An alias that already existed before the `using` declaration remains valid;
+native handle aliases observe the same closed resource after release.
+
+The compiler recognizes these native resource types and release operations:
+
+| Resource | Automatic release |
+| --- | --- |
+| [`Std.Io.Fs.File`](../../std/host/fs-streams.md) | `Fs.Close` |
+| [`Std.Net.Sockets.Connection` and `Listener`](../../std/network/net.md) | `Sockets.Close` and `Sockets.CloseListener` |
+| [`Std.Os.Proc.Process`](../../std/host/proc.md) | `Proc.Close` |
+| [`Std.Ai.Acp.Connection`](../../std/ai/acp/connections.md) | `Acp.Release` |
+| [`Std.Ai.Mcp.Server` and `Endpoint`](../../std/ai/mcp/README.md) | `Mcp.Release` and `Mcp.CloseEndpoint` |
+| [`Std.Net.Http.BodyStream`](../../std/network/http.md#streaming-responses) | `Http.CloseStream` |
+
 ```pascal id=example-1 fragment context=declarations
 function FullName(First: string; Last: string): string;
 begin

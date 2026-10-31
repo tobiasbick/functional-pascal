@@ -95,3 +95,12 @@ pub(super) fn output_events(
 pub(super) fn task_event(change: fpas_runtime::execution::DebugTaskEvent) -> DebugRecord {
     event(DebugEvent::Task(change))
 }
+
+pub(super) fn supplemental_events(
+    session: &fpas_runtime::execution::DebugSession,
+) -> impl Iterator<Item = DebugRecord> {
+    session
+        .take_supplemental_diagnostics()
+        .into_iter()
+        .map(|diagnostic| event(DebugEvent::SupplementalDiagnostic(diagnostic)))
+}

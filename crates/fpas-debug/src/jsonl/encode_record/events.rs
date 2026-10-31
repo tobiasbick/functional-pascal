@@ -81,6 +81,17 @@ pub(super) fn encode_event(debug_event: DebugEvent) -> Value {
                 "task_id": task_id
             }),
         ),
+        DebugEvent::SupplementalDiagnostic(diagnostic) => event(
+            "supplemental_diagnostic",
+            json!({
+                "code": diagnostic.code.to_string(),
+                "message": diagnostic.message,
+                "help": diagnostic.help,
+                "line": diagnostic.span.map(|span| span.line()),
+                "column": diagnostic.span.map(|span| span.column()),
+                "source_id": diagnostic.span.map(|span| span.source_id())
+            }),
+        ),
         DebugEvent::ProtocolError(error) => event(
             "protocol_error",
             json!({

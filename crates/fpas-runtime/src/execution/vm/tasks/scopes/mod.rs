@@ -122,6 +122,20 @@ impl Worker {
     /// Stop this task when its owning scope was cancelled or an enclosing scope failed.
     #[inline(always)]
     pub(in crate::execution::vm) fn check_task_cancellation(&self) -> Result<(), VmError> {
+        if self.cleanup_masks_cancellation() {
+            return Ok(());
+        }
+        if self
+            .scheduler
+            .as_ref()
+            .is_some_and(|scheduler| scheduler.is_aborted())
+        {
+            return Err(self.runtime_error(
+                RUNTIME_VM_SHUTDOWN,
+                "Register VM execution was canceled",
+                "Allow active resource cleanup to finish before stopping the runtime.",
+            ));
+        }
         // Runs before every instruction; code without scope ownership has nothing to observe.
         if self.has_task_scope_ownership() {
             self.check_scope_cancellation()

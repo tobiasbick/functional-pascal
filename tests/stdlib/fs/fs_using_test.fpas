@@ -1,0 +1,15 @@
+program FsUsingTest;
+
+uses Std.Io.Fs as Fs, Std.Test as Test;
+
+begin
+  const FileName := Test.ScratchDir() + '/using.txt';
+  Test.AssertTrue(Fs.WriteText(FileName, 'resource').Unwrap());
+  // More acquisitions than the runtime's simultaneous handle limit.
+  for I: integer := 1 to 1025 do
+    using const File := Fs.Open(FileName, Fs.FileMode.Read).Unwrap();
+    Test.AssertEquals(0, Fs.Tell(File).Unwrap());
+  end for;
+
+  Test.AssertTrue(Fs.DeleteFile(FileName).Unwrap());
+end.

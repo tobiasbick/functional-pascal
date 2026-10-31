@@ -273,7 +273,7 @@ fn keyword_candidates(context: &super::context::CompletionContext) -> Vec<Comple
     let keywords: &[&str] = if context.statements {
         &[
             "begin", "case", "discard", "false", "for", "go", "if", "panic", "repeat", "scope",
-            "true", "var", "while",
+            "true", "using", "var", "while",
         ]
     } else {
         &["const", "function", "procedure", "public", "type", "var"]

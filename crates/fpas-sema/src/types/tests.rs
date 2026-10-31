@@ -12,6 +12,7 @@ fn cloning_record_type_shares_immutable_descriptor() {
         private_members: Vec::new(),
         fields: vec![("X".to_string(), Ty::Integer)],
         methods: Vec::new(),
+        release_method: None,
         static_functions: Vec::new(),
         static_procedures: Vec::new(),
     }));

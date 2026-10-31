@@ -384,6 +384,7 @@ impl Parser {
             .into_iter()
             .map(|name| {
                 let binding = LocalBinding {
+                    using: false,
                     name,
                     type_expr: item.type_expr.clone(),
                     value: item.value.clone(),

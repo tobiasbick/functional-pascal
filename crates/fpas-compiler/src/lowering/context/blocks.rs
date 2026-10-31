@@ -80,7 +80,7 @@ impl LoweringContext {
     }
 
     pub(in crate::lowering) fn push_loop(&mut self, targets: LoopTargets) {
-        self.loops.push((targets, self.task_scope_depth));
+        self.loops.push((targets, self.exit_scopes.len()));
     }
 
     pub(in crate::lowering) fn pop_loop(&mut self) {
@@ -209,23 +209,8 @@ impl LoweringContext {
 }
 
 impl LoweringContext {
-    /// Records one more open task scope in the current routine body.
-    pub(in crate::lowering) fn enter_task_scope(&mut self) {
-        self.task_scope_depth += 1;
-    }
-
-    /// Records that the innermost task scope of the current routine body has closed.
-    pub(in crate::lowering) fn exit_task_scope(&mut self) {
-        self.task_scope_depth = self.task_scope_depth.saturating_sub(1);
-    }
-
-    /// Number of task scopes open at the current lowering position.
-    pub(in crate::lowering) fn task_scope_depth(&self) -> u32 {
-        self.task_scope_depth
-    }
-
-    /// Task-scope depth at the entry of the innermost loop, for `break` and `continue`.
-    pub(in crate::lowering) fn loop_task_scope_depth(&self) -> u32 {
+    /// Retains all lifetimes surrounding the target loop when leaving one iteration.
+    pub(in crate::lowering) fn loop_exit_scope_depth(&self) -> usize {
         self.loops.last().map_or(0, |(_, depth)| *depth)
     }
 }

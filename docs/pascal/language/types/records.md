@@ -12,6 +12,43 @@ finite construction; see [type declaration order](declaration-order.md).
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, `typed_record_construction`).
 
+## Resource release
+
+A record may declare one `release procedure` to clean up values held by
+`using const` locals. It is an instance procedure with only its `Self`
+parameter, typed as the enclosing record. It cannot be static or generic.
+Ordinary member visibility controls explicit calls. Automatic release also works
+for a private release member, including in importing code: a record's resource
+capability does not expose that member for direct calls.
+If code calls the release procedure explicitly, it must be idempotent: the
+automatic call still runs when the resource local leaves scope.
+
+```pascal id=resource-release run
+program RecordRelease;
+
+uses Std.Test as Test;
+
+var Releases: integer := 0;
+
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin
+    Releases := Releases + 1;
+  end procedure;
+end record;
+
+begin
+  begin
+    using const Item := Resource();
+  end;
+
+  Test.AssertEquals(1, Releases);
+end.
+```
+
+See [resource locals](../basics/local-variables.md#resource-locals) for their
+scope and release order.
+
 ## Declaring a record
 
 A record declaration ends with `end record;`. Its methods use `end function;` or

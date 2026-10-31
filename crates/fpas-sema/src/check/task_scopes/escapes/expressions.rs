@@ -64,7 +64,10 @@ impl Walker<'_, '_> {
                 owners
             }
             Expr::Go(call, _) => {
+                let was_spawning = self.spawning;
+                self.spawning = true;
                 let _ = self.expr(call);
+                self.spawning = was_spawning;
                 self.scopes
                     .last()
                     .map(|span| {
@@ -85,10 +88,7 @@ impl Walker<'_, '_> {
             Expr::Postfix {
                 base, operations, ..
             } => self.postfix(base, operations),
-            Expr::Closure(closure) => {
-                self.closure(Checker::expr_lookup_key(expr), closure);
-                Vec::new()
-            }
+            Expr::Closure(closure) => self.closure(Checker::expr_lookup_key(expr), closure),
             Expr::VarArgument { designator, .. } => designator
                 .parts
                 .first()
@@ -195,23 +195,55 @@ impl Walker<'_, '_> {
     }
 
     /// Reject captured tracked values, then walk the anonymous routine as its own body.
-    fn closure(&mut self, key: usize, closure: &ClosureExpr) {
+    fn closure(&mut self, key: usize, closure: &ClosureExpr) -> Owners {
+        let mut captured_resources = Vec::new();
+        let mut captures = Vec::new();
         if let Some(info) = self.checker.closure_infos.get(&key) {
             for capture in &info.captures {
                 let owners = self.read(&capture.name);
+                let may_hold_resource = self.checker.may_hold_resource(&capture.ty);
+                let (resources, other): (Owners, Owners) = owners.into_iter().partition(|owner| {
+                    matches!(
+                        owner,
+                        Origin::Resource { .. }
+                            | Origin::Dependency { .. }
+                            | Origin::DependencyParameter(_)
+                            | Origin::BorrowedCapture(_)
+                    ) || (may_hold_resource && matches!(owner, Origin::Parameter(_)))
+                });
+                let resources: Owners = resources
+                    .into_iter()
+                    .map(|owner| match owner {
+                        Origin::Parameter(index) => Origin::BorrowedCapture(index),
+                        other => other,
+                    })
+                    .collect();
                 self.escape_all(
-                    &owners,
+                    &other,
                     closure.span,
                     &format!("capture of `{}` by an anonymous routine", capture.name),
                 );
+                merge(&mut captured_resources, resources.iter().copied());
+                captures.push((capture.name.clone(), resources));
             }
         }
         let scopes = std::mem::take(&mut self.scopes);
-        let escapes = std::mem::take(&mut self.escapes);
+        let mut escapes = std::mem::take(&mut self.escapes);
+        self.escapes = vec![false; escapes.len()];
         let mut frame = Frame {
             routine_boundary: true,
             ..Frame::default()
         };
+        for (name, owners) in captures {
+            frame.bindings.insert(
+                crate::scope::canonical_symbol_name(&name),
+                super::origins::Binding {
+                    owners,
+                    depth: 0,
+                    outer: false,
+                },
+            );
+        }
         for param in &closure.params {
             frame.bindings.insert(
                 crate::scope::canonical_symbol_name(&param.name),
@@ -224,7 +256,11 @@ impl Walker<'_, '_> {
         self.frames.push(frame);
         self.walk_body(&closure.body, None);
         self.frames.pop();
+        for (outer, captured) in escapes.iter_mut().zip(&self.escapes) {
+            *outer |= *captured;
+        }
         self.escapes = escapes;
         self.scopes = scopes;
+        captured_resources
     }
 }

@@ -465,6 +465,34 @@ async function verifyImportAliases(grammar) {
   assertScope(tokenAt(fixture, "const Text:", "as"), "string.quoted.single.fpas");
 }
 
+async function verifyResourceDeclarations(grammar) {
+  const fixture = await tokenizeFixture(grammar, "resource_declarations.fpas");
+  for (const [line, keyword] of [
+    ["using const Item", "using"],
+    ["UsInG const Other", "UsInG"],
+    ["release procedure Close", "release"],
+    ["ReLeAsE PrOcEdUrE Dispose", "ReLeAsE"]
+  ]) {
+    assertScope(tokenAt(fixture, line, keyword), "keyword.declaration.fpas");
+  }
+  assertScope(tokenAt(fixture, "using const Item", "const"), "storage.type.constant.fpas");
+  assertScope(tokenAt(fixture, "using const Item", "Item"), "entity.name.constant.fpas");
+  assertScope(tokenAt(fixture, "release procedure Close", "Close"), "entity.name.function.fpas");
+  assertScope(tokenAt(fixture, "procedure Release();", "Release"), "entity.name.function.fpas");
+  assertScope(tokenAt(fixture, "Item.Release();", "Release"), "variable.other.qualified.fpas");
+  for (const line of ["procedure Release(Self:", "Item.Release();", "  Release();", "const ReleaseValue"]) {
+    assertNoKeywordScope(tokenAt(fixture, line, line.includes("ReleaseValue") ? "ReleaseValue" : "Release"));
+  }
+  for (const [line, expectedScope] of [["'using release'", "string.quoted.single.fpas"],
+    ["// using release procedure", "comment.line.double-slash.fpas"]]) {
+    for (const word of ["using", "release"]) {
+      const token = tokenAt(fixture, line, word);
+      assertScope(token, expectedScope);
+      assertNoKeywordScope(token);
+    }
+  }
+}
+
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyDeclarationClosers(grammar);
@@ -474,6 +502,7 @@ export async function verifyGrammar() {
   await verifyPositiveScopes(grammar);
   await verifyIndividualDeclarations(grammar);
   await verifyImportAliases(grammar);
+  await verifyResourceDeclarations(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);
   await verifyReservedKeywordScopes(grammar);

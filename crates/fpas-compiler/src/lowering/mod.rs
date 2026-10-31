@@ -6,6 +6,7 @@ mod aggregates;
 mod builtin_constants;
 mod calls;
 mod case;
+mod cleanup;
 mod closures;
 mod concurrency;
 mod context;

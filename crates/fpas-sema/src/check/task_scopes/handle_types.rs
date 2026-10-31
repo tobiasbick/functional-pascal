@@ -6,6 +6,50 @@ use crate::types::{Ty, TypeConstraint};
 use std::collections::HashSet;
 
 impl Checker {
+    pub(in crate::check) fn may_hold_resource(&self, ty: &Ty) -> bool {
+        self.type_may_hold_resource(ty, &mut HashSet::new())
+    }
+
+    fn type_may_hold_resource(&self, ty: &Ty, seen: &mut HashSet<String>) -> bool {
+        match ty {
+            Ty::Array(inner) | Ty::Channel(inner) | Ty::Option(inner) => {
+                self.type_may_hold_resource(inner, seen)
+            }
+            Ty::Dict(left, right) | Ty::Result(left, right) => {
+                self.type_may_hold_resource(left, seen) || self.type_may_hold_resource(right, seen)
+            }
+            Ty::Named(_) | Ty::Record(_) | Ty::Enum(_) => {
+                let resolved = self.resolve_visible_type(ty);
+                let key = resolved.to_string().to_ascii_lowercase();
+                if !seen.insert(key.clone()) {
+                    return false;
+                }
+                let found = match &resolved {
+                    Ty::Record(record) => {
+                        record.release_method.is_some()
+                            || crate::types::native_resource_release(&record.name).is_some()
+                            || record
+                                .fields
+                                .iter()
+                                .any(|(_, field)| self.type_may_hold_resource(field, seen))
+                    }
+                    Ty::Enum(enumeration) => enumeration.variants.iter().any(|variant| {
+                        variant
+                            .fields
+                            .iter()
+                            .any(|(_, field)| self.type_may_hold_resource(field, seen))
+                    }),
+                    Ty::Named(_) => true,
+                    _ => false,
+                };
+                seen.remove(&key);
+                found
+            }
+            Ty::GenericParam(..) => true,
+            _ => false,
+        }
+    }
+
     /// Whether a declared value type may contain a handle, including callable captures.
     pub(in crate::check) fn may_hold_task_handle(&self, ty: &Ty) -> bool {
         self.type_may_hold_task(ty, &mut HashSet::new())
@@ -49,10 +93,14 @@ impl Checker {
                     return false;
                 }
                 let result = match &resolved {
-                    Ty::Record(record) => record
-                        .fields
-                        .iter()
-                        .any(|(_, field)| self.type_may_hold_task(field, seen)),
+                    Ty::Record(record) => {
+                        record.release_method.is_some()
+                            || crate::types::native_resource_release(&record.name).is_some()
+                            || record
+                                .fields
+                                .iter()
+                                .any(|(_, field)| self.type_may_hold_task(field, seen))
+                    }
                     Ty::Enum(enumeration) => enumeration.variants.iter().any(|variant| {
                         variant
                             .fields

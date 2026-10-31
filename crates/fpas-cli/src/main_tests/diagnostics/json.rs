@@ -112,6 +112,67 @@ fn run_keeps_program_stdout_and_exit_status_for_runtime_records() {
 }
 
 #[test]
+fn cleanup_failure_is_reported_while_propagated_error_remains_the_result() {
+    let cwd = create_temp_dir("cleanup-supplemental");
+    let main = cwd.join("main.fpas");
+    write_text(
+        &main,
+        r#"program CleanupDiagnostic;
+uses Std.Console as Console;
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin
+    panic('cleanup failed');
+  end procedure;
+end record;
+function Failure(): result of (integer, string);
+begin
+  return Error('original');
+end function;
+function Work(): result of (integer, string);
+begin
+  using const Item := Resource();
+  return Ok(try Failure());
+end function;
+begin
+  case Work() of
+    when Ok(_): panic('unexpected success');
+    when Error(const Message): Console.WriteLn(Message);
+  end case;
+end.
+"#,
+    );
+
+    for json in [false, true] {
+        let arguments = if json {
+            args(&["run", "--diagnostics", "json", &main.to_string_lossy()])
+        } else {
+            args(&["run", &main.to_string_lossy()])
+        };
+        let (exit_code, stdout, stderr) =
+            support::run_cli_args_and_capture_output(&arguments, &cwd);
+        assert_eq!(exit_code, 0, "{stderr}");
+        assert_eq!(stdout, "original\n");
+        if json {
+            let records = records(&stderr);
+            assert_eq!(records.len(), 1, "{stderr}");
+            assert_eq!(records[0]["kind"], "diagnostic");
+            assert_eq!(records[0]["phase"], "runtime");
+            assert_eq!(records[0]["code"], "FP5010");
+            assert!(
+                records[0]["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("cleanup failed")
+            );
+        } else {
+            assert!(stderr.contains("cleanup failed"), "{stderr}");
+        }
+    }
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
 fn project_warnings_are_warning_records() {
     let cwd = create_temp_dir("json-warnings");
     let project_file = cwd.join("app.fpasprj");

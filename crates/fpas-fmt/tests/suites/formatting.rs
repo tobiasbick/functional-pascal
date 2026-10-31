@@ -23,6 +23,8 @@ mod individual_declarations;
 mod layout_regressions;
 #[path = "../literal_regressions.rs"]
 mod literal_regressions;
+#[path = "../resources.rs"]
+mod resources;
 #[path = "../source_layout.rs"]
 mod source_layout;
 #[path = "../terminator_regressions.rs"]

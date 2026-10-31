@@ -6,6 +6,7 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use crate::cli_output::{CliFailure, DiagnosticFormat, Reporter, locate};
 use crate::{CliInput, ResolvedCli, resolve_cli_config};
@@ -422,6 +423,13 @@ fn run_executable(
     let mut vm =
         fpas_runtime::execution::Vm::with_writer_and_args(executable, stdout, program_args)
             .with_collection_schedule(collection_schedule);
+    let supplemental = Arc::new(Mutex::new(Vec::new()));
+    let received = Arc::clone(&supplemental);
+    vm.set_supplemental_diagnostic(Arc::new(move |diagnostic| {
+        if let Ok(mut diagnostics) = received.lock() {
+            diagnostics.push(diagnostic.clone());
+        }
+    }));
     if let Some(terminal) = fpas_runtime::execution::InteractiveProcessTerminal::inherited() {
         vm.set_interactive_process_terminal(terminal);
     }
@@ -439,6 +447,13 @@ fn run_executable(
         vm.set_program_stderr(receiver);
     }
     let outcome = vm.run();
+    let diagnostics = supplemental
+        .lock()
+        .map(|mut diagnostics| std::mem::take(&mut *diagnostics))
+        .unwrap_or_default();
+    for diagnostic in &diagnostics {
+        reporter.record(&locate(path, source_paths.as_deref(), diagnostic));
+    }
     let publication = session.map(|session| {
         session
             .and_then(|session| session.finish(outcome.as_ref().err().map(|error| error.as_ref())))

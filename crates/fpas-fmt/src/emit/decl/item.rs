@@ -207,6 +207,9 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
             emitter.write_current_indent();
             emit_visibility(emitter, procedure.visibility);
+            if procedure.is_release {
+                emitter.write("release ");
+            }
             emit_procedure_signature(emitter, procedure, comments);
             emit_func_body(
                 emitter,

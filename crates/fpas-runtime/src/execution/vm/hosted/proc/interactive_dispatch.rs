@@ -13,6 +13,13 @@ enum Output {
 }
 
 impl Worker {
+    pub(in crate::execution::vm) fn process_resource_owned(&self, resource: &Value) -> bool {
+        matches!(resource, Value::OpaqueHandle(handle) if self.hosted.piped_processes.issued_handle(*handle))
+    }
+
+    pub(in crate::execution::vm) fn process_resource_closed(&self, resource: &Value) -> bool {
+        matches!(resource, Value::OpaqueHandle(handle) if !self.hosted.piped_processes.contains_handle(*handle))
+    }
     pub(super) fn execute_interactive_process(
         &self,
         operation: ProcIntrinsic,

@@ -60,21 +60,24 @@ fn root_entry_completion_is_typed_atomic_and_terminal() {
 }
 
 #[test]
-fn root_entry_completion_cancels_a_spawned_peer_without_dispatch() {
+fn root_entry_completion_rejects_an_open_task_scope_without_dispatch() {
     let mut session = DebugSession::new(spawn_then_call_executable()).expect("debug session");
     let _callee = stop_in_callee(&mut session, "compute");
     let _ = session.take_task_events();
     let root = frame_at_depth(&mut session, 1);
     let instructions = session.test_instruction_count();
-    let result = session.force_return(root, None).expect("complete root");
-    assert!(result.terminated);
+    let task_id = session.last_stop().task_id;
+    let before = fingerprint(&mut session, task_id);
+    let error = session
+        .force_return(root, None)
+        .expect_err("open task scope");
+    assert_eq!(error.kind, DebugErrorKind::FrameReturnUnsupported);
     assert_eq!(session.test_instruction_count(), instructions);
-    assert!(session.take_task_events().iter().any(|event| {
-        event.task_id == 1 && event.kind == crate::execution::DebugTaskEventKind::Exited
-    }));
+    assert_eq!(fingerprint(&mut session, task_id), before);
+    assert!(session.take_task_events().is_empty());
     assert!(matches!(
         session.test_poll_task_result(1),
-        crate::execution::vm::TaskResultPoll::Failed(_)
+        crate::execution::vm::TaskResultPoll::Pending
     ));
 }
 

@@ -130,17 +130,47 @@ impl Walker<'_, '_> {
         span: Span,
     ) -> Owners {
         let mut owners = receiver.unwrap_or_default();
+        let mut callback_inputs = owners.clone();
+        let mut saw_callback = false;
+        let mut safe_callbacks = true;
         let mut targets: Vec<String> = writable_receiver.map(str::to_string).into_iter().collect();
         for arg in args {
             match arg.argument_value() {
                 Expr::VarArgument { designator, .. } => {
                     if let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() {
-                        merge(&mut owners, self.read(name));
+                        let input = self.read(name);
+                        merge(&mut callback_inputs, input.iter().copied());
+                        merge(&mut owners, input);
                         targets.push(name.clone());
                     }
                 }
                 value => {
                     let input = self.expr(value);
+                    let callable = matches!(
+                        self.checker
+                            .expr_types
+                            .get(&Checker::expr_lookup_key(value)),
+                        Some(Ty::Function(_) | Ty::Procedure(_))
+                    );
+                    if callable {
+                        saw_callback = true;
+                        let safe = self.callback_is_safe(value);
+                        safe_callbacks &= safe;
+                    }
+                    merge(
+                        &mut callback_inputs,
+                        input.iter().copied().filter(|origin| {
+                            !callable
+                                || !matches!(
+                                    origin,
+                                    super::origins::Origin::Resource { .. }
+                                        | super::origins::Origin::Dependency { .. }
+                                        | super::origins::Origin::DependencyParameter(_)
+                                        | super::origins::Origin::BorrowedCapture(_)
+                                        | super::origins::Origin::CallableParameter(_)
+                                )
+                        }),
+                    );
                     if name.starts_with("Std.Tasks.")
                         && matches!(
                             self.checker
@@ -162,15 +192,56 @@ impl Walker<'_, '_> {
             self.escape_all(&owners, span, "a channel send");
             return Vec::new();
         }
+        if self.spawning {
+            let resources: Owners = owners
+                .iter()
+                .copied()
+                .filter(|origin| {
+                    matches!(
+                        origin,
+                        super::origins::Origin::Resource { .. }
+                            | super::origins::Origin::Dependency { .. }
+                            | super::origins::Origin::DependencyParameter(_)
+                            | super::origins::Origin::Parameter(_)
+                            | super::origins::Origin::CallableParameter(_)
+                            | super::origins::Origin::BorrowedCapture(_)
+                    )
+                })
+                .collect();
+            self.escape_all(&resources, span, "a spawned task");
+        }
         // Declared callback parameters distinguish invocation from ordinary value storage.
         if !owners.is_empty()
             && !name.starts_with("Std.Tasks.")
             && self.standard_invokes_callback(name)
+            && (!saw_callback || !safe_callbacks)
         {
-            self.escape_all(&owners, span, &format!("a callback invoked by `{name}`"));
+            self.escape_all(
+                &callback_inputs,
+                span,
+                &format!("a callback invoked by `{name}`"),
+            );
         }
         for target in targets {
             self.store(&target, owners.clone(), span);
+        }
+        if name.eq_ignore_ascii_case(fpas_builtins::std_symbols::STD_MCP_PUBLISH) {
+            return owners
+                .into_iter()
+                .map(|origin| match origin {
+                    super::origins::Origin::Resource { frame, span } => {
+                        super::origins::Origin::Dependency { frame, span }
+                    }
+                    super::origins::Origin::Parameter(index)
+                    | super::origins::Origin::BorrowedCapture(index) => {
+                        super::origins::Origin::DependencyParameter(index)
+                    }
+                    other => other,
+                })
+                .collect();
+        }
+        if crate::types::native_resource_fresh_result(name) {
+            return Vec::new();
         }
         owners
     }
@@ -193,6 +264,40 @@ impl Walker<'_, '_> {
                 }
                 _ => false,
             })
+    }
+
+    pub(super) fn callback_is_safe(&self, value: &Expr) -> bool {
+        match value {
+            Expr::Designator(designator) => {
+                if let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() {
+                    match self.resolve(name) {
+                        Resolved::Routine(index) => {
+                            return self.flags[index].iter().all(|escapes| !escapes);
+                        }
+                        Resolved::Local(frame) => {
+                            return self.frames[frame]
+                                .safe_callbacks
+                                .contains(&canonical_symbol_name(name));
+                        }
+                        Resolved::Outer => return false,
+                        Resolved::Global => {}
+                    }
+                }
+                let name = Checker::resolve_designator_name(designator);
+                self.checker
+                    .scopes
+                    .param_escapes(&name)
+                    .is_some_and(|flags| flags.iter().all(|escapes| !escapes))
+            }
+            Expr::Closure(closure) => {
+                let mut callback =
+                    Walker::new(self.checker, self.table, self.flags, &closure.params);
+                callback.walk_body(&closure.body, None);
+                callback.escapes.iter().all(|escapes| !escapes)
+            }
+            Expr::Paren(inner, _) => self.callback_is_safe(inner),
+            _ => false,
+        }
     }
 
     /// Arguments of a routine call may only carry tracked values to non-escaping parameters.
@@ -219,7 +324,43 @@ impl Walker<'_, '_> {
         }
         let offset = usize::from(receiver.is_some());
         if let Some(receiver) = receiver {
-            self.argument_escape(&callee, name, 0, &receiver, span);
+            if self.spawning {
+                let resources: Owners = receiver
+                    .iter()
+                    .copied()
+                    .filter(|origin| {
+                        matches!(
+                            origin,
+                            super::origins::Origin::Resource { .. }
+                                | super::origins::Origin::Dependency { .. }
+                                | super::origins::Origin::DependencyParameter(_)
+                                | super::origins::Origin::Parameter(_)
+                                | super::origins::Origin::CallableParameter(_)
+                                | super::origins::Origin::BorrowedCapture(_)
+                        )
+                    })
+                    .collect();
+                self.escape_all(&resources, span, "a spawned task");
+            }
+            if matches!(callee, Callee::Value) {
+                let other: Owners = receiver
+                    .iter()
+                    .copied()
+                    .filter(|origin| {
+                        !matches!(
+                            origin,
+                            super::origins::Origin::Resource { .. }
+                                | super::origins::Origin::Dependency { .. }
+                                | super::origins::Origin::DependencyParameter(_)
+                                | super::origins::Origin::BorrowedCapture(_)
+                                | super::origins::Origin::CallableParameter(_)
+                        )
+                    })
+                    .collect();
+                self.argument_escape(&callee, name, 0, &other, span);
+            } else {
+                self.argument_escape(&callee, name, 0, &receiver, span);
+            }
         }
         let order = args
             .first()
@@ -260,6 +401,24 @@ impl Walker<'_, '_> {
     ) {
         if owners.is_empty() {
             return;
+        }
+        if self.spawning {
+            let resources: Owners = owners
+                .iter()
+                .copied()
+                .filter(|origin| {
+                    matches!(
+                        origin,
+                        super::origins::Origin::Resource { .. }
+                            | super::origins::Origin::Dependency { .. }
+                            | super::origins::Origin::DependencyParameter(_)
+                            | super::origins::Origin::Parameter(_)
+                            | super::origins::Origin::CallableParameter(_)
+                            | super::origins::Origin::BorrowedCapture(_)
+                    )
+                })
+                .collect();
+            self.escape_all(&resources, span, "a spawned task");
         }
         let (escapes, route) = match callee {
             Callee::Routine(index) => (

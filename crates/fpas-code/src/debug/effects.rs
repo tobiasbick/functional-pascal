@@ -113,8 +113,16 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                 | Opcode::Yield
                 | Opcode::EnterTaskScope
                 | Opcode::ExitTaskScope
-                | Opcode::CancelTaskScope => {
+                | Opcode::CancelTaskScope
+                | Opcode::EnterCleanupScope
+                | Opcode::BeginResourceInit
+                | Opcode::ArmResourceInit => {
                     local[index] = local[index].union(DebugEffectSet::TASK);
+                }
+                Opcode::RegisterCleanup | Opcode::ExitCleanupScope => {
+                    local[index] = local[index]
+                        .union(DebugEffectSet::DYNAMIC_CALL)
+                        .union(DebugEffectSet::TASK);
                 }
                 _ => {}
             }

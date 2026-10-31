@@ -202,6 +202,24 @@ impl Worker {
                     DispatchStep::Continue | DispatchStep::Suspend => Flow::Boundary,
                 });
             }
+            Opcode::EnterCleanupScope => self.enter_cleanup_scope(),
+            Opcode::BeginResourceInit => self.begin_resource_init(),
+            Opcode::ArmResourceInit => self.arm_resource_init(),
+            Opcode::RegisterCleanup => {
+                let operands = instruction.abc();
+                self.register_cleanup(operands.a, operands.b, operands.c)?;
+            }
+            Opcode::ExitCleanupScope => {
+                let operands = instruction.abc();
+                let protected = operands.auxiliary == 1
+                    && operands.a != NO_REGISTER
+                    && matches!(
+                        self.read_operand(operands.a)?,
+                        Value::ResultError(_) | Value::OptionNone
+                    );
+                self.begin_cleanup_exit(protected)?;
+                return Ok(Flow::Boundary);
+            }
             Opcode::Panic => {
                 let value = self.read_operand(instruction.abc().a)?.to_string();
                 return Err(self.runtime_error(
@@ -256,6 +274,7 @@ impl Worker {
             Opcode::LoadEnumField => self.load_enum_field(instruction.abc())?,
             Opcode::Intrinsic => {
                 self.execute_intrinsic::<true>(instruction.abc())?;
+                self.complete_resource_producer(None);
                 return Ok(Flow::Boundary);
             }
             Opcode::SpawnTask => {

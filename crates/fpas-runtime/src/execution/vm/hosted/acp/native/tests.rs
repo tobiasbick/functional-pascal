@@ -84,7 +84,7 @@ fn authentication_releases_one_worker_and_joins_on_scope_exit_and_callback_shutd
                     Stdio::null(),
                 ))
             }));
-            let hosted = Arc::downgrade(&vm.hosted);
+            let hosted = Arc::clone(&vm.hosted);
             let stop = Arc::new(vm.shutdown_handle());
             assert!(slot.set(Arc::downgrade(&stop)).is_ok());
             let (send, receive) = mpsc::channel();
@@ -110,15 +110,13 @@ fn authentication_releases_one_worker_and_joins_on_scope_exit_and_callback_shutd
                 result.unwrap();
             }
             assert_eq!(
-                hosted
-                    .upgrade()
-                    .unwrap()
-                    .acp_jobs
-                    .load(std::sync::atomic::Ordering::Acquire),
+                hosted.acp_jobs.load(std::sync::atomic::Ordering::Acquire),
                 0
             );
+            let weak_hosted = Arc::downgrade(&hosted);
+            drop(hosted);
             drop(stop);
-            assert!(hosted.upgrade().is_none());
+            assert!(weak_hosted.upgrade().is_none());
         }
     }
 }

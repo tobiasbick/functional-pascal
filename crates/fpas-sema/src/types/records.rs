@@ -4,6 +4,34 @@
 use super::{FunctionTy, GenericParamDef, ProcedureTy, Ty, substitute_type_parameters};
 use std::collections::HashMap;
 
+/// Canonical standard resource type identities and their release operations.
+pub(crate) fn native_resource_release(name: &str) -> Option<&'static str> {
+    use fpas_builtins::std_symbols as s;
+    [
+        (s::STD_FS_FILE, s::STD_FS_CLOSE),
+        (s::STD_NET_CONNECTION, s::STD_NET_CLOSE),
+        (s::STD_NET_LISTENER, s::STD_NET_CLOSE_LISTENER),
+        (s::STD_PROC_PROCESS, s::STD_PROC_CLOSE),
+        ("Std.Ai.Acp.Connection", "Std.Ai.Acp.Release"),
+        ("Std.Ai.Mcp.Server", s::STD_MCP_RELEASE),
+        ("Std.Ai.Mcp.Endpoint", s::STD_MCP_CLOSE_ENDPOINT),
+        (
+            "Std.Net.Http.Handles.BodyStream",
+            "Std.Net.Http.CloseStream",
+        ),
+    ]
+    .into_iter()
+    .find_map(|(ty, release)| name.eq_ignore_ascii_case(ty).then_some(release))
+}
+
+/// Operations that borrow resource inputs but return a separately owned resource.
+pub(crate) fn native_resource_fresh_result(name: &str) -> bool {
+    use fpas_builtins::std_symbols as s;
+    [s::STD_NET_ACCEPT, s::STD_NET_ACCEPT_WITH_CANCELLATION]
+        .iter()
+        .any(|operation| name.eq_ignore_ascii_case(operation))
+}
+
 /// Resolved record shape, ownership, generic arguments, and members.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordTy {
@@ -21,6 +49,8 @@ pub struct RecordTy {
     pub fields: Vec<(String, Ty)>,
     /// Instance methods with implicit `Self`.
     pub methods: Vec<(String, MethodKind)>,
+    /// Name of the instance procedure used for deterministic resource release.
+    pub release_method: Option<String>,
     /// Static functions without a receiver.
     pub static_functions: Vec<(String, FunctionTy)>,
     /// Static procedures without a receiver.
@@ -51,6 +81,7 @@ impl RecordTy {
             private_members: Vec::new(),
             fields: Vec::new(),
             methods: Vec::new(),
+            release_method: None,
             static_functions: Vec::new(),
             static_procedures: Vec::new(),
         }

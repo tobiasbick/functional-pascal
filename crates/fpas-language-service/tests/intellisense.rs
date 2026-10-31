@@ -26,6 +26,45 @@ use fpas_parser::parse_compilation_unit;
 use support::TempDirectory;
 
 #[test]
+fn unsaved_resource_binding_is_visible_to_completion_and_hover() {
+    let temp = TempDirectory::new("resource-binding");
+    let path = temp.write("resource.fpas", "program Resource; begin end.");
+    let source = r#"program Resource;
+type Handle = record
+  Value: integer;
+  release procedure Close(Self: Handle);
+  begin
+    null;
+  end procedure;
+end record;
+begin
+  using const Item: Handle := Handle(Value := 1);
+  discard Item.Value;
+end.
+"#;
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    service
+        .documents_mut()
+        .open_document(&path, 1, source)
+        .expect("open buffer");
+    let offset = source.find("Item.Value").expect("resource use");
+    let hover = service
+        .hover(&path, offset)
+        .expect("hover query")
+        .value
+        .expect("hover");
+    assert!(
+        hover.contents.contains("using const Item: Handle"),
+        "{hover:?}"
+    );
+    let candidates = service
+        .completions(&path, offset + 2)
+        .expect("completion")
+        .value;
+    assert!(candidates.iter().any(|candidate| candidate.label == "Item"));
+}
+
+#[test]
 fn completion_reports_member_metadata_and_replaces_the_complete_identifier() {
     let temp = TempDirectory::new("intellisense-members");
     let source = r#"program Complete;

@@ -18,6 +18,16 @@ pub(super) enum Origin {
     },
     /// Value derived from the parameter at this position of the current routine.
     Parameter(usize),
+    /// A callable supplied by a routine's caller.
+    CallableParameter(usize),
+    /// A resource-bearing parameter retained by a callback value.
+    BorrowedCapture(usize),
+    /// A newly owned value whose validity depends on a borrowed parameter.
+    DependencyParameter(usize),
+    /// Resource owned by the lexical frame that declared a using binding.
+    Resource { frame: usize, span: Span },
+    /// A separately owned resource whose validity depends on another resource.
+    Dependency { frame: usize, span: Span },
 }
 
 /// Origins of one value; usually empty.
@@ -50,6 +60,10 @@ impl Binding {
             && match origin {
                 Origin::Scope { depth, .. } => self.depth >= depth,
                 Origin::Parameter(_) => true,
+                Origin::CallableParameter(_) => true,
+                Origin::BorrowedCapture(_) => true,
+                Origin::DependencyParameter(_) => true,
+                Origin::Resource { .. } | Origin::Dependency { .. } => true,
             }
     }
 }
@@ -59,6 +73,8 @@ impl Binding {
 pub(super) struct Frame {
     pub(super) bindings: HashMap<String, Binding>,
     pub(super) routines: HashMap<String, usize>,
+    /// Proven non-retaining local callback values.
+    pub(super) safe_callbacks: std::collections::HashSet<String>,
     /// Entering an anonymous routine body: enclosing bindings become outer storage.
     pub(super) routine_boundary: bool,
 }

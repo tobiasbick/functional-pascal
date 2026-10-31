@@ -16,6 +16,9 @@ pub(super) fn emit_var_stmt(
     comments: &CommentMap,
 ) {
     write_indented(emitter);
+    if var.using {
+        emitter.write("using ");
+    }
     emitter.write(keyword);
     emitter.write(" ");
     emitter.write(&var.name);

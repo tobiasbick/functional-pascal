@@ -163,6 +163,7 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             }
             record.name = canonical_name(&record.name);
             record.owner_unit = record.owner_unit.as_deref().map(canonical_name);
+            record.release_method = record.release_method.as_deref().map(canonical_name);
             for member in &mut record.private_members {
                 *member = canonical_name(member);
             }

@@ -6,6 +6,7 @@ mod callback_call;
 mod calls;
 mod cancellation;
 mod channels;
+mod cleanup;
 mod debug;
 mod diagnostics;
 mod dispatch;
@@ -127,6 +128,30 @@ pub struct Vm {
 }
 
 impl Vm {
+    /// Receive cleanup diagnostics which accompany a preserved program outcome.
+    /// The callback may run on any VM worker thread and must not block that worker.
+    pub fn set_supplemental_diagnostic(
+        &mut self,
+        receiver: Arc<dyn Fn(&fpas_diagnostics::Diagnostic) + Send + Sync>,
+    ) {
+        *self
+            .hosted
+            .supplemental_diagnostic
+            .lock()
+            .unwrap_or_else(|error| error.into_inner()) = Some(receiver);
+    }
+
+    /// Take cleanup diagnostics retained alongside a preserved program outcome.
+    pub fn take_supplemental_diagnostics(&self) -> Vec<fpas_diagnostics::Diagnostic> {
+        std::mem::take(
+            &mut *self
+                .hosted
+                .supplemental_diagnostics
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()),
+        )
+    }
+
     /// Select collection thresholds for this VM and every domain derived from it.
     /// Configure before starting execution; existing constructors select defaults.
     #[must_use]
@@ -335,7 +360,6 @@ impl Vm {
     pub fn shutdown_handle(&self) -> ShutdownHandle {
         ShutdownHandle {
             scheduler: Arc::clone(&self.scheduler),
-            hosted: Arc::clone(&self.hosted),
         }
     }
 
@@ -412,17 +436,13 @@ impl Drop for Vm {
 #[derive(Clone)]
 pub struct ShutdownHandle {
     scheduler: Arc<TaskScheduler>,
-    hosted: Arc<HostedState>,
 }
 
 impl ShutdownHandle {
-    /// Request cancellation and interrupt blocking hosted operations.
-    /// Native joins finish at the run/teardown barrier, after host callbacks return.
+    /// Request cooperative cancellation. Resource cleanup and native joins finish at the
+    /// run/teardown barrier, after host callbacks return.
     pub fn shutdown(&self) {
-        hosted::native::defer_joins(|| {
-            self.scheduler.request_cancel();
-            self.hosted.shutdown_blocking_operations();
-        });
+        self.scheduler.request_cancel();
     }
 }
 

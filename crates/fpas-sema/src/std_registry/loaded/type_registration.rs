@@ -72,6 +72,7 @@ pub(super) fn register_record_type(
         private_members: Vec::new(),
         fields,
         methods: Vec::new(),
+        release_method: None,
         static_functions: Vec::new(),
         static_procedures: Vec::new(),
     }));
@@ -104,6 +105,7 @@ pub(super) fn register_opaque_type(checker: &mut Checker, qualified_name: &str) 
         private_members: vec!["_IntrinsicHandle".into()],
         fields: vec![("_IntrinsicHandle".into(), Ty::Integer)],
         methods: Vec::new(),
+        release_method: None,
         static_functions: Vec::new(),
         static_procedures: Vec::new(),
     }));

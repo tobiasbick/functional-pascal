@@ -143,9 +143,10 @@ fn debugger_path_calls_preserve_native_results_and_scope_cleanup() {
         let root = fixture.path("paths");
         std::fs::create_dir(&root).unwrap();
         let mut session = DebugSession::with_args(image.clone(), vec![root, mode.into()]).unwrap();
-        assert!(matches!(
-            session.continue_execution().unwrap(),
-            DebugRunResult::Terminated(_)
-        ));
+        let result = session.continue_execution().unwrap();
+        assert!(
+            matches!(result, DebugRunResult::Terminated(_)),
+            "mode {mode}: {result:?}"
+        );
     }
 }

@@ -28,6 +28,8 @@ pub struct FunctionDecl {
 /// Parsed named procedure declaration.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProcedureDecl {
+    /// This instance procedure provides its record's resource-release contract.
+    pub is_release: bool,
     /// Declared procedure name.
     pub name: String,
     /// Generic type parameters in declaration order.

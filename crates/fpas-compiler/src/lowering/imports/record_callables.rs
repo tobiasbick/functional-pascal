@@ -23,10 +23,14 @@ pub(super) fn install_record_callables(
     span: fpas_lexer::Span,
 ) -> Result<(), CompileError> {
     for method in record.methods.iter().chain(&record.static_routines) {
-        if record
-            .private_members
-            .iter()
-            .any(|private| private.eq_ignore_ascii_case(&method.name))
+        if !record
+            .release_method
+            .as_ref()
+            .is_some_and(|release| release.eq_ignore_ascii_case(&method.name))
+            && record
+                .private_members
+                .iter()
+                .any(|private| private.eq_ignore_ascii_case(&method.name))
         {
             continue;
         }

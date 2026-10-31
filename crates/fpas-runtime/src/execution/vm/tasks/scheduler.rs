@@ -3,7 +3,8 @@
 #[cfg(test)]
 mod any_tests;
 mod capture;
-mod completion_ranges;
+pub(in crate::execution::vm) mod completion_ranges;
+mod drain;
 mod group_results;
 #[cfg(test)]
 mod group_tests;
@@ -60,6 +61,10 @@ pub(in crate::execution::vm) struct TaskScheduler {
     available: Condvar,
     timers: TaskTimers<ScheduledTask>,
     accepting_timers: AtomicBool,
+    sleeping_tasks: AtomicUsize,
+    active_workers: Mutex<HashMap<u64, usize>>,
+    draining: AtomicBool,
+    preparing_drain: AtomicBool,
     results: Mutex<HashMap<u64, TaskResultState>>,
     completions: Mutex<CompletionRanges>,
     results_available: Condvar,
@@ -84,6 +89,10 @@ impl TaskScheduler {
             available: Condvar::new(),
             timers: TaskTimers::new(),
             accepting_timers: AtomicBool::new(true),
+            sleeping_tasks: AtomicUsize::new(0),
+            active_workers: Mutex::new(HashMap::new()),
+            draining: AtomicBool::new(false),
+            preparing_drain: AtomicBool::new(false),
             results: Mutex::new(HashMap::new()),
             completions: Mutex::new(CompletionRanges::default()),
             results_available: Condvar::new(),
@@ -145,6 +154,15 @@ impl TaskScheduler {
 
     fn enqueue_owned(&self, task: ScheduledTask) {
         let _maintenance = crate::defer_maintenance();
+        if self.draining.load(Ordering::Acquire) {
+            let task = task.take();
+            if !drain::needs_execution(&task) {
+                self.cancel(task);
+                return;
+            }
+            self.enqueue_draining(task);
+            return;
+        }
         let rejected = {
             let mut queue = self.lock_queue();
             if self.is_shutdown() {
@@ -176,7 +194,11 @@ impl TaskScheduler {
         let mut queue = self.lock_queue();
         let task = queue.pop_front();
         self.queued.store(queue.len(), Ordering::Release);
-        task.map(ScheduledTask::take)
+        task.map(|task| {
+            let task = task.take();
+            self.worker_started(task.id);
+            task
+        })
     }
     /// Transfer runnable ownership, waiting until work or shutdown is available.
     pub fn dequeue(&self) -> Option<TaskState> {
@@ -185,7 +207,9 @@ impl TaskScheduler {
         loop {
             if let Some(task) = queue.pop_front() {
                 self.queued.store(queue.len(), Ordering::Release);
-                return Some(task.take());
+                let task = task.take();
+                self.worker_started(task.id);
+                return Some(task);
             }
             if self.is_shutdown() {
                 return None;
@@ -383,21 +407,27 @@ impl TaskScheduler {
             Some(capture) => capture.save(task, true),
             None => ScheduledTask::Direct(task),
         };
+        self.sleeping_tasks.fetch_add(1, Ordering::AcqRel);
         if let Err(task) = self
             .timers
             .schedule(task, milliseconds, &self.accepting_timers)
         {
+            self.sleeping_tasks.fetch_sub(1, Ordering::AcqRel);
             self.cancel(task.take());
         }
     }
     /// Transfer due timer entries to the runnable queue without duplicating saved state.
     pub fn timer_loop(&self) {
         while self.timers.dispatch_next_due(&self.shutdown, |tasks| {
+            let count = tasks.len();
             for task in tasks {
                 task.timer_ready();
                 self.enqueue_owned(task);
             }
-        }) {}
+            self.sleeping_tasks.fetch_sub(count, Ordering::AcqRel);
+        }) {
+            self.try_finish_drain();
+        }
     }
     /// Cancels sleepers and wakes every waiter before the runtime joins its threads.
     pub fn finish_main(&self) {
@@ -415,37 +445,18 @@ impl TaskScheduler {
     }
 
     fn finish_main_owned(&self) {
-        self.groups.shutdown();
-        self.scopes.shutdown();
-        self.accepting_timers.store(false, Ordering::Release);
-        for task in self.timers.cancel_all() {
-            self.cancel(task.take());
-        }
-        self.shutdown.store(true, Ordering::Release);
-        let queued = {
-            let mut queue = self.lock_queue();
-            self.queued.store(0, Ordering::Release);
-            std::mem::take(&mut *queue)
-        };
-        for task in queued {
-            self.cancel(task.take());
-        }
-        self.close_all_cases();
-        self.complete_pending_results();
-        self.timers.notify_shutdown();
-        {
-            // Serialize notification with the worker's predicate-to-wait transition.
-            let _queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
-            self.available.notify_all();
-        }
-        self.notify_result_change();
+        self.begin_drain();
     }
     /// Complete one retained task with the standard runtime-shutdown diagnostic.
     pub(in crate::execution::vm) fn cancel_result(&self, task_id: u64) {
         self.store_failure(task_id, self.shutdown_error(task_id));
     }
     pub fn fail(&self, error: VmError) {
-        *self.first_error.lock().unwrap_or_else(|e| e.into_inner()) = Some(error);
+        let mut first = self.first_error.lock().unwrap_or_else(|e| e.into_inner());
+        if first.is_none() {
+            *first = Some(error);
+        }
+        drop(first);
         self.abort.store(true, Ordering::Release);
         self.finish_main();
     }

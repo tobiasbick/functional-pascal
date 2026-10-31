@@ -136,3 +136,55 @@ fn invalid_replacement_is_atomic() {
         );
     }
 }
+
+#[test]
+fn supplemental_cleanup_diagnostic_is_a_structured_nonterminal_event() {
+    let source = r#"program CleanupDiagnostic;
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin
+    panic('cleanup failed');
+  end procedure;
+end record;
+function Failure(): result of (integer, string);
+begin
+  return Error('original');
+end function;
+function Work(): result of (integer, string);
+begin
+  using const Item := Resource();
+  return Ok(try Failure());
+end function;
+begin
+  if not (Work() is Error('original')) then panic('result lost'); end if;
+end.
+"#;
+    let (program, diagnostics) = fpas_parser::parse(source);
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile cleanup fixture");
+    let mut server = JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new()))
+        .expect("create JSONL server");
+    let _ = server.handle_line(&request(1, "initialize", json!({})));
+    let records = run(&mut server);
+    let diagnostic = records
+        .iter()
+        .find(|record| record["event"] == "supplemental_diagnostic")
+        .expect("supplemental diagnostic event");
+    assert_eq!(diagnostic["body"]["code"], "FP5010");
+    assert!(
+        diagnostic["body"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("cleanup failed"))
+    );
+    assert!(
+        records
+            .iter()
+            .any(|record| { record["event"] == "terminated" && record["body"]["exit_code"] == 0 }),
+        "{records:?}"
+    );
+    assert!(
+        !records
+            .iter()
+            .any(|record| record["event"] == "runtime_error")
+    );
+}

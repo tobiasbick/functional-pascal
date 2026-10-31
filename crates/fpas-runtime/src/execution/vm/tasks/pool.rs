@@ -15,9 +15,11 @@ pub(in crate::execution::vm) fn pool_loop(
     scheduler: Arc<TaskScheduler>,
 ) -> Result<(), VmError> {
     while let Some(task) = scheduler.dequeue() {
-        run_to_completion(template.worker_for_task(task), &scheduler)?;
+        if let Err(error) = run_to_completion(template.worker_for_task(task), &scheduler) {
+            scheduler.fail(error);
+        }
     }
-    Ok(())
+    scheduler.first_error().map_or(Ok(()), Err)
 }
 
 /// Run one dequeued task on the caller's thread; tests use it to drive tasks deterministically.
@@ -31,6 +33,7 @@ pub(super) fn run_helped(
 }
 
 fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<(), VmError> {
+    let _worker_ticket = scheduler.worker_ticket(worker.task_id);
     let access = worker.execution_access()?;
     let _capture_panic = worker.capture_pool_guard();
     let attempt = (|| {
@@ -40,6 +43,13 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         worker.run_task()
     })();
     // A body that ends with open task scopes first waits for their cancelled children.
+    let attempt = match attempt {
+        Err(error) => match worker.begin_cleanup_failure(error) {
+            Ok(()) => worker.run_task(),
+            Err(error) => Err(error),
+        },
+        other => other,
+    };
     let attempt = match attempt {
         Err(error) => {
             let error = worker.capture_failure(error);
@@ -97,8 +107,18 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
                     return Ok(());
                 }
             }
-            scheduler.fail(error.clone());
-            Err(error)
+            if scheduler.is_aborted()
+                && matches!(
+                    error.code,
+                    fpas_diagnostics::codes::RUNTIME_TASK_CANCELLED
+                        | fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN
+                )
+            {
+                Ok(())
+            } else {
+                scheduler.fail(error.clone());
+                Err(error)
+            }
         }
     };
     if worker.suspend_requested && worker.execution.is_some() {

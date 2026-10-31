@@ -21,6 +21,7 @@ impl TraceRoots for super::super::worker::Worker {
         if let Some(Ok(value)) = &self.pending_completion {
             visit(value);
         }
+        self.cleanup.trace_roots(visit)?;
         if let Some(suspension) = &self.task_suspension {
             suspension.trace_roots(visit)?;
         }
@@ -57,6 +58,7 @@ impl TraceRoots for super::super::tasks::TaskState {
         if let Some(Ok(value)) = &self.pending_completion {
             visit(value);
         }
+        self.cleanup.trace_roots(visit)?;
         if let Some(suspension) = &self.suspension {
             suspension.trace_roots(visit)?;
         }

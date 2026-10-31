@@ -43,6 +43,12 @@ pub(in crate::execution::vm::debug) fn prepare(
             "Step past `end scope` first so the scope can wait for or cancel its child tasks.",
         ));
     }
+    if worker.has_cleanup_from_depth(new_call_stack_len) {
+        return Err(unsupported(
+            "frame restart is not available while a restarted frame has an open resource scope",
+            "Continue execution until its resource scope has been released.",
+        ));
+    }
     let (function, base) = if depth == 0 {
         (worker.function, worker.base)
     } else {

@@ -9,6 +9,7 @@ mod mutating_receivers;
 mod named_routines;
 mod names;
 mod native_values;
+mod resource_releases;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 

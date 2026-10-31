@@ -31,6 +31,19 @@ impl Parser {
                         self.parse_record_procedure_decl(visibility),
                     ));
                 }
+                Token::Ident(name)
+                    if name.eq_ignore_ascii_case("release")
+                        && self.peek_token() == &Token::Procedure =>
+                {
+                    self.advance();
+                    if self.check(&Token::Procedure) {
+                        let mut procedure = self.parse_record_procedure_decl(visibility);
+                        procedure.is_release = true;
+                        methods.push(RecordMethod::Procedure(procedure));
+                    } else {
+                        self.expect(&Token::Procedure);
+                    }
+                }
                 Token::Static => {
                     if let Some(method) = self.parse_static_record_method(visibility) {
                         methods.push(method);

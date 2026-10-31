@@ -46,8 +46,22 @@ begin
       return Sum;
     end function
   );
-  const Child := Proc.Start(Args.ParamStr(0), ['--help'], Proc.DefaultStartOptions()).Unwrap();
+  using const Child := Proc.Start(
+    Args.ParamStr(0),
+    ['--help'],
+    Proc.DefaultStartOptions()
+  ).Unwrap();
   discard Proc.Close(Child).Unwrap();
+  const ClosedChild := Proc.Start(
+    Args.ParamStr(0),
+    ['--help'],
+    Proc.DefaultStartOptions()
+  ).Unwrap();
+  discard Proc.Close(ClosedChild).Unwrap();
+  begin
+    using const Closed := ClosedChild;
+  end;
+
   return Results[0];
 end function;
 

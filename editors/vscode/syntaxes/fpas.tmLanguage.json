@@ -188,7 +188,11 @@
       "patterns": [
         {
           "name": "keyword.declaration.fpas",
-          "match": "(?i:\\b(program|unit|uses|const|var|function|procedure|type|public|static)\\b)"
+          "match": "(?i:\\brelease\\b(?=\\s+procedure\\b))"
+        },
+        {
+          "name": "keyword.declaration.fpas",
+          "match": "(?i:\\b(program|unit|uses|const|var|function|procedure|type|public|static|using)\\b)"
         },
         {
           "name": "keyword.control.fpas",

@@ -1,0 +1,30 @@
+program SocketUsingLifecycleTest;
+
+uses Std.Net.Sockets as Net, Std.Test as Test;
+
+begin
+  const Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+  const Address := Net.ListenerLocalAddress(Listener).Unwrap();
+  const Client := Net.Connect(Address.Host, Address.Port, 2000).Unwrap();
+  begin
+    using const OwnedListener := Listener;
+    const Peer := Net.Accept(OwnedListener).Unwrap();
+    begin
+      using const OwnedClient := Client;
+      Test.AssertTrue(Net.SetTimeout(OwnedClient, 2000).Unwrap());
+    end;
+
+    Test.AssertTrue(Net.SetTimeout(Client, 2000) is Error(_));
+    Test.AssertTrue(Net.Close(Peer).Unwrap());
+    begin
+      using const AlreadyClosed := Peer;
+    end;
+  end;
+
+  Test.AssertTrue(Net.ListenerLocalAddress(Listener) is Error(_));
+  const ClosedListener := Net.Listen('127.0.0.1', 0).Unwrap();
+  Test.AssertTrue(Net.CloseListener(ClosedListener).Unwrap());
+  begin
+    using const AlreadyClosed := ClosedListener;
+  end;
+end.

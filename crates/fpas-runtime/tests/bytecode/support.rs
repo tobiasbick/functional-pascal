@@ -61,6 +61,16 @@ pub fn replace_root_code(executable: &mut Executable, code: Vec<Instruction>) {
 pub fn all_opcodes_executable() -> Executable {
     let mut code = Vec::new();
     for opcode in Opcode::ALL {
+        if matches!(
+            opcode,
+            Opcode::EnterCleanupScope
+                | Opcode::BeginResourceInit
+                | Opcode::ArmResourceInit
+                | Opcode::RegisterCleanup
+                | Opcode::ExitCleanupScope
+        ) {
+            continue;
+        }
         let address = u32::try_from(code.len()).expect("test code length must fit u32");
         code.push(valid_instruction(opcode, address.saturating_add(1)));
         match opcode {
@@ -80,6 +90,14 @@ pub fn all_opcodes_executable() -> Executable {
             _ => {}
         }
     }
+    code.extend([
+        abc(Opcode::EnterCleanupScope, 0, 0, 0, 0),
+        abc(Opcode::BeginResourceInit, 0, 0, 0, 0),
+        abc(Opcode::ArmResourceInit, 0, 0, 0, 0),
+        abc(Opcode::Move, 0, 1, 0, 0),
+        abc(Opcode::RegisterCleanup, 0, 1, 0, 0),
+        abc(Opcode::ExitCleanupScope, NO_REGISTER, 0, 0, 0),
+    ]);
     let callee_start = u32::try_from(code.len()).expect("test code length must fit u32");
     code.push(return_unit());
     let code_end = u32::try_from(code.len()).expect("test code length must fit u32");

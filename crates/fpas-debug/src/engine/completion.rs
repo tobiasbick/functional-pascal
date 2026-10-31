@@ -3,7 +3,7 @@
 use super::actor::{ActorCompletion, EvaluationCompletion, ResumeCommand, ResumeCompletion};
 use super::error::EngineFailure;
 use super::record::{DebugEvent, DebugRecord, ResponseBody};
-use super::reply::{event, ok, output_events, session_error, task_event};
+use super::reply::{event, ok, output_events, session_error, supplemental_events, task_event};
 use super::{DebugEngine, DebugStatus};
 use crate::breakpoints::BreakpointOutcome;
 
@@ -21,6 +21,7 @@ impl DebugEngine {
             result,
         } = completion;
         let mut records = output_events(&session, &mut self.output_cursor);
+        records.extend(supplemental_events(&session));
         records.extend(session.take_task_events().into_iter().map(task_event));
         match result {
             Ok(fpas_runtime::execution::DebugRunResult::Stopped(stop)) => {
@@ -34,6 +35,7 @@ impl DebugEngine {
                     }));
                     if !self.runtime_failure_policy.should_stop(diagnostic.code) {
                         session.disconnect();
+                        records.extend(supplemental_events(&session));
                         records.extend(session.take_task_events().into_iter().map(task_event));
                         self.status = DebugStatus::Terminated;
                         records.push(event(DebugEvent::Terminated {

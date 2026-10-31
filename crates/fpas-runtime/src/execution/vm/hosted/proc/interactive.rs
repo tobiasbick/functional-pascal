@@ -124,6 +124,7 @@ type Entry = Arc<Mutex<Option<Process>>>;
 #[derive(Default)]
 struct Registry {
     entries: HashMap<u64, Entry>,
+    issued: crate::execution::vm::tasks::scheduler::completion_ranges::CompletionRanges,
     pending: usize,
     shutdown: bool,
 }
@@ -142,6 +143,21 @@ pub(in crate::execution::vm::hosted) struct PipedProcesses {
 }
 
 impl PipedProcesses {
+    pub(in crate::execution::vm) fn contains_handle(&self, handle: u64) -> bool {
+        self.registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .entries
+            .contains_key(&handle)
+    }
+
+    pub(in crate::execution::vm) fn issued_handle(&self, handle: u64) -> bool {
+        self.registry
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .issued
+            .contains(&handle)
+    }
     pub(super) fn start(&self, request: &Request<'_>) -> Result<u64, Failure> {
         self.start_with_cancellation(request, || false)
     }
@@ -203,6 +219,7 @@ impl PipedProcesses {
                 stderr,
             }))),
         );
+        registry.issued.insert(handle);
         Ok(handle)
     }
 

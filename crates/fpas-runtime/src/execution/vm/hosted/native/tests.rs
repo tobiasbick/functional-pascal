@@ -1,4 +1,4 @@
-//! A second stop request cannot overtake retirement of an extracted native wait.
+//! Cancellation publishes task completion only after its native wait is retired.
 
 use super::*;
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
 use std::{
     io::{self, Write},
     sync::{Arc, mpsc},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 struct Writer {
@@ -29,7 +29,7 @@ impl Write for Writer {
 }
 
 #[test]
-fn concurrent_shutdown_waits_for_native_retirement_before_the_final_join_barrier() {
+fn shutdown_does_not_publish_completion_before_native_job_is_joined() {
     let (program, errors) =
         fpas_parser::parse("program S; uses Std.Console as C; begin C.WriteText('hold'); end.");
     assert!(errors.is_empty(), "{errors:?}");
@@ -55,36 +55,40 @@ fn concurrent_shutdown_waits_for_native_retirement_before_the_final_join_barrier
         )
         .unwrap();
     entry.recv_timeout(Duration::from_secs(5)).unwrap();
+    let template = worker.pool_template();
     scheduler.enqueue(worker.take_task_state());
-
-    // Hold retirement after queue extraction, while permitting another stop caller.
-    let retirement = hosted.retired_native_jobs.lock().unwrap();
-    let first = scheduler.clone();
-    let a = std::thread::spawn(move || first.finish_main());
-    let deadline = Instant::now() + Duration::from_secs(5);
-    while scheduler.has_queued() && Instant::now() < deadline {
-        std::thread::yield_now();
-    }
-    assert!(
-        !scheduler.has_queued(),
-        "first stop did not extract queued work"
+    scheduler.request_cancel();
+    let pending_at_stop = matches!(
+        scheduler.poll_result(7),
+        crate::execution::vm::TaskResultPoll::Pending
     );
-    let second = scheduler.clone();
+    let pool_scheduler = scheduler.clone();
     let (done, completed) = mpsc::channel();
-    let b = std::thread::spawn(move || {
-        second.finish_main();
-        done.send(()).unwrap();
+    let pool = std::thread::spawn(move || {
+        let result = crate::execution::vm::tasks::pool::pool_loop(&template, pool_scheduler);
+        done.send(result).unwrap();
     });
-    let overtook_retirement = completed.recv_timeout(Duration::from_millis(100)).is_ok();
-    drop(retirement);
+    let premature = completed.recv_timeout(Duration::from_millis(100)).is_ok();
+    let pending_while_running = matches!(
+        scheduler.poll_result(7),
+        crate::execution::vm::TaskResultPoll::Pending
+    );
     release.send(()).unwrap();
-    a.join().unwrap();
-    b.join().unwrap();
+    pool.join().unwrap();
     hosted.wait_process_handles();
     assert!(
-        !overtook_retirement,
-        "a stop caller returned before saved native work was retired"
+        pending_at_stop,
+        "cancellation must not publish before native retirement"
     );
+    assert!(
+        pending_while_running && !premature,
+        "the blocked job must still own completion"
+    );
+    assert!(matches!(
+        scheduler.poll_result(7),
+        crate::execution::vm::TaskResultPoll::Failed(_)
+    ));
+    assert!(scheduler.is_shutdown());
     assert_eq!(
         hosted
             .console_jobs

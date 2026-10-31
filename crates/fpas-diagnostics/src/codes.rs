@@ -317,6 +317,7 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// Native I/O execution failed for an operation without a Result return type.
     RUNTIME_HOST_IO_FAILURE = 5027;
+    RUNTIME_RESOURCE_RELEASE_FAILURE = 5028;
 });
 
 define_codes!(PROJECT_ALLOCATED_CODES => {

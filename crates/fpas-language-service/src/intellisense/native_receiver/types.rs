@@ -387,6 +387,7 @@ fn named_type(
                     .map(|field| field.name.clone())
                     .collect(),
                 methods: Vec::new(),
+                release_method: None,
                 static_functions: Vec::new(),
                 static_procedures: Vec::new(),
             };

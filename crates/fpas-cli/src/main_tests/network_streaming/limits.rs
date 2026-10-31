@@ -5,6 +5,77 @@ use std::sync::{
 };
 
 #[test]
+fn imported_facade_stream_is_released_at_block_exit() {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind facade fixture");
+    let port = listener.local_addr().expect("address").port();
+    let server = listener.spawn(move |listener| {
+        let (mut stream, _) = listener.accept().expect("accept facade client");
+        read_request_head(&mut stream);
+        stream
+            .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\nhello")
+            .expect("write response");
+    });
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace");
+    let cwd = TempDir::new("http-facade-release").expect("fixture directory");
+    let project = cwd.join("app.fpasprj");
+    write_text(
+        &project,
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+    write_text(
+        &cwd.join("facade.fpas"),
+        r#"unit App.Facade;
+uses Std.Net.Http as Http;
+public type Body = Http.BodyStream;
+public function Open(Url: string): Body;
+begin
+  return Http.OpenStream(Http.Request.Get(Url)).Unwrap().Body;
+end function;
+public function ReadOne(Value: Body): integer;
+begin
+  return Http.ReadStream(Value, 1).Unwrap().Length();
+end function;
+public function IsClosed(Value: Body): boolean;
+begin
+  return Http.ReadStream(Value, 1).Unwrap().Length() = 0;
+end function;
+end unit;
+"#,
+    );
+    write_text(
+        &cwd.join("main.fpas"),
+        &format!(
+            r#"program FacadeResource;
+uses App.Facade as Facade, Std.Test as Test;
+begin
+  const Original := Facade.Open('http://127.0.0.1:{port}/');
+  begin
+    using const Body := Original;
+    Test.AssertEquals(1, Facade.ReadOne(Body));
+  end;
+  Test.AssertTrue(Facade.IsClosed(Original));
+end.
+"#
+        ),
+    );
+    let (exit, _, stderr) = support::run_cli_args_and_capture_output(
+        &[
+            "run".into(),
+            "--std-lib".into(),
+            root.join("lib").to_string_lossy().into_owned(),
+            project.to_string_lossy().into_owned(),
+        ],
+        &cwd,
+    );
+    std::fs::remove_dir_all(&cwd).expect("remove fixture");
+    assert_eq!(exit, 0, "{stderr}");
+    server.join().expect("join fixture");
+}
+
+#[test]
 fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind boundary fixture");
     let port = listener.local_addr().expect("address").port();
@@ -56,11 +127,12 @@ begin
     return Ok(ResponseValue.Body.Length());
   end; end if;
   const ResponseValue: Http.StreamResponse := try Http.OpenStream(RequestValue);
+  using const Body := ResponseValue.Body;
   var Count: integer := 0;
   var Reading: boolean := true;
   while Reading do
   begin
-    const Bytes := try Http.ReadStream(ResponseValue.Body, 2);
+    const Bytes := try Http.ReadStream(Body, 2);
     Count := Count + Bytes.Length();
     Reading := Bytes.Length() > 0;
   end; end while;

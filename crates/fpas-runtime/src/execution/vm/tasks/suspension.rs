@@ -99,6 +99,11 @@ pub(in crate::execution::vm) enum TaskSuspension {
     Acp(Box<crate::execution::vm::hosted::acp::wait::Wait>),
     /// Native MCP serving/publication state; callbacks retain their own VM roots.
     Mcp(Box<crate::execution::vm::hosted::mcp::wait::Wait>),
+    /// Cancellation waits for already-started cooperative native cleanup receipts.
+    NativeRetirement {
+        wait: Box<super::retirement::NativeRetirement>,
+        error: crate::execution::vm::VmError,
+    },
     /// Retain a terminal body outcome until the creating task's groups have joined.
     OwnerCleanup {
         groups: Vec<u64>,
@@ -191,6 +196,7 @@ impl TaskSuspension {
             Self::Proc(_) => TaskSuspensionState::Waiting,
             Self::Acp(wait) => wait.debug_state(clock),
             Self::Mcp(wait) => wait.debug_state(clock),
+            Self::NativeRetirement { .. } => TaskSuspensionState::Waiting,
             Self::OwnerCleanup { .. } => TaskSuspensionState::Waiting,
             Self::GroupClose {
                 deadline_millis: None,

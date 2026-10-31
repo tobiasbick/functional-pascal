@@ -24,6 +24,7 @@ impl Parser {
             }
             Token::Null => Stmt::Null(self.advance().span),
             Token::Const => self.parse_const_stmt(),
+            Token::Using => self.parse_using_stmt(),
             Token::Var => self.parse_var_stmt(),
             Token::Ident(_) if self.is_mutable_var_start() => {
                 self.reject_mutable_binding();
@@ -71,6 +72,7 @@ impl Parser {
             Token::Begin
                 | Token::Null
                 | Token::Const
+                | Token::Using
                 | Token::Var
                 | Token::Return
                 | Token::Discard

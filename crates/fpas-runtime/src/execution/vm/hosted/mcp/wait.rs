@@ -26,6 +26,73 @@ pub(in crate::execution::vm) enum Wait {
     },
     Serve(ServeWait),
 }
+
+/// Physical cleanup receipts retained after cancellation revokes an MCP operation.
+pub(in crate::execution::vm) enum Retirement {
+    Publish(CleanupReceipt),
+    Close {
+        receipts: Vec<CleanupReceipt>,
+        id: Option<u64>,
+        endpoint: bool,
+        release: bool,
+    },
+}
+
+impl Wait {
+    pub(in crate::execution::vm) fn into_retirement(self) -> Option<Retirement> {
+        match self {
+            Self::Publish { ticket, .. } => {
+                let receipt = ticket.cleanup_receipt();
+                drop(ticket);
+                Some(Retirement::Publish(receipt))
+            }
+            Self::Close {
+                receipts,
+                id,
+                endpoint,
+                release,
+                ..
+            } => Some(Retirement::Close {
+                receipts,
+                id,
+                endpoint,
+                release,
+            }),
+            Self::Serve(_) => None,
+        }
+    }
+}
+
+impl Retirement {
+    pub(in crate::execution::vm) fn poll(&self, worker: &Worker) -> Result<bool, VmError> {
+        let (results, close) = match self {
+            Self::Publish(receipt) => (receipt.result().map(|result| vec![result]), None),
+            Self::Close {
+                receipts,
+                id,
+                endpoint,
+                release,
+            } => (
+                receipts.iter().map(CleanupReceipt::result).collect(),
+                id.map(|id| (id, *endpoint, *release)),
+            ),
+        };
+        let Some(results): Option<Vec<_>> = results else {
+            return Ok(false);
+        };
+        if let Some((id, endpoint, release)) = close {
+            worker.hosted.mcp.finish_close(id, endpoint, release);
+        }
+        if let Some(error) = results.into_iter().find_map(Result::err) {
+            return Err(worker.runtime_error(
+                fpas_diagnostics::codes::RUNTIME_RESOURCE_RELEASE_FAILURE,
+                format!("MCP resource retirement failed: {error}"),
+                "Inspect the transport cleanup failure.",
+            ));
+        }
+        Ok(true)
+    }
+}
 pub(in crate::execution::vm) struct ServeWait {
     reader: Reader,
     server: u64,
@@ -208,7 +275,9 @@ impl Worker {
         }
         if !self.debug_tasks && self.task_id == 0 {
             loop {
-                self.wait_observing_scopes()?;
+                if let Err(error) = self.wait_observing_scopes() {
+                    self.retire_wait_error(error)?;
+                }
                 if self.poll_task_suspension()? {
                     break;
                 }

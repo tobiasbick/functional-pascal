@@ -88,91 +88,39 @@ necessary. Until a replacement is agreed, retrieve once and pass the value on.
 
 ## 5. Scope-bound cleanup actions
 
-Status: preferred syntax proposal; behavior and implementation remain open.
+Status: implemented under [AP55](improve-syntax/ap55-resources/README.md).
+The design uses `using const` resource locals and contextual record release
+procedures. Its
+[contract](improve-syntax/ap55-resources/contract.md) records the lifetime and
+failure rules.
 
 Tasks already have [lexical ownership and cleanup](../pascal/language/concurrency/README.md).
-Other resources still have explicit close operations; for example, callers must
-[close an HTTP body stream](../pascal/std/network/http.md#streaming-responses)
-when abandoning a response early. Adding a return or failed `try` can otherwise
-leave application cleanup missing from an exit path.
+Other resources have explicit close operations and can also use scoped cleanup;
+for example, a `using const` local closes an
+[HTTP body stream](../pascal/std/network/http.md#streaming-responses) when its
+block exits, including on return or a failed `try`.
 
-### Preferred syntax
+### Resource bindings
 
-The preferred form attaches an indented `finally` section to an explicit
-`begin ... end` block and closes it with `end finally;`. It follows FPAS's named
-closers and is inspired by Pascal cleanup blocks and Ada's scope-bound resource
-management. This is a proposal, not implemented syntax or an approval to implement.
-The existing `try` expression continues to propagate Result/Option failures.
+A resource local registers cleanup after its initializer succeeds. Its nearest
+lexical block releases it on exit. The existing `try` expression continues to
+propagate Result/Option failures.
 
 ```pascal
 uses Std.Io.Fs as Fs;
 
 function ReadFirstLine(Path: string): result of (option of string, Fs.FsError);
 begin
-  const File := try Fs.Open(Path, Fs.FileMode.Read);
-
-  begin
-    return Fs.ReadLine(File);
-
-    finally
-      discard Fs.Close(File);
-    end finally;
-  end;
+  using const File := try Fs.Open(Path, Fs.FileMode.Read);
+  return Fs.ReadLine(File);
 end function;
 ```
 
-The proposed `finally` section belongs to its surrounding block rather than
-being an ordinary statement after `return`. It runs when that block is left,
-including by `return` or a failed `try`. If opening the file fails before the
-block is entered, there is no close action. The explicit `discard` in this example
-deliberately ignores a possible close error; it is not a general error policy.
-
-Nested blocks can close resources in the reverse order of acquisition:
-
-```pascal
-function CopyChunk(SourcePath: string; TargetPath: string): result of (integer, Fs.FsError);
-begin
-  const Source := try Fs.Open(SourcePath, Fs.FileMode.Read);
-
-  begin
-    const Target := try Fs.Open(TargetPath, Fs.FileMode.Create);
-
-    begin
-      const Bytes := try Fs.Read(Source, 4096);
-      const Written := try Fs.Write(Target, Bytes);
-      return Ok(Written);
-
-      finally
-        discard Fs.Close(Target);
-      end finally;
-    end;
-
-    finally
-      discard Fs.Close(Source);
-    end finally;
-  end;
-end function;
-```
-
-If opening `Target` fails, the outer block still closes `Source`. This example
-writes one chunk and returns the number of bytes actually written; partial writes
-remain possible. The proposal concerns explicit resource cleanup and does not
-make the existing task `scope` automatically close file handles.
-
-### Open questions and evaluation
-
-Define visibility and initialization of values used in `finally`, and whether
-the form is allowed on every block or also directly on routines and task scopes.
-Specify exit behavior for normal completion, `return`, failed `try`, `break`,
-`continue`, cancellation and `panic`; nested blocks and loop iterations need
-clear lifetimes. Define which control transfers are permitted inside cleanup,
-cleanup failure handling and precedence over an existing failure, and ordering
-relative to postconditions and task joins. Cooperative cleanup must not imply
-a hard shutdown deadline. Go-style function-level `defer` remains an alternative,
-not the selected form.
-
-Evaluation should cover real resource consumers, nested cleanup, every supported
-exit path, multiple cleanup failures and interactions with task cancellation.
+Resources release in reverse order on normal and early exits. AP55 implements
+custom release procedures, native close operations, cancellation, cleanup
+failure reporting and escape restrictions. It does not add `finally`, `defer`
+or a general ownership type system. Its regressions cover real resource
+consumers, nested cleanup, failures and task cancellation.
 
 ## 6. Entry-value snapshots in postconditions
 
@@ -377,7 +325,7 @@ application consistent; existing task ownership and cleanup rules must still hol
 
 Status: core process management, interactive pipes and selectable pipe waits are
 implemented. Pipe payloads use [native byte buffers](../pascal/std/bytes.md).
-Scope-bound cleanup remains a separate proposal.
+AP55 adds scoped cleanup for process handles.
 
 [Std.Os.Proc](../pascal/std/host/proc.md) provides per-launch working directories and
 environment overrides, supplied stdin, bounded stdout/stderr capture, timeouts
@@ -395,16 +343,17 @@ signal information. `RunInteractive` uses an explicitly provided host terminal
 with timeout, cancellation and process cleanup.
 
 Handles are VM-owned and aliases share the same child and close state. Callers
-close completed handles explicitly; VM teardown releases remaining children and
-pipes. A lexical task scope is not a general process-handle close scope.
+can close completed handles explicitly or use a resource local; VM teardown
+releases remaining children and pipes. A lexical task scope alone is not a
+general process-handle close scope.
 Process startup, Run variants, RunInteractive and close release pool workers and
 all-stop debugger tasks through the [managed host-I/O contract](#14-host-io-that-releases-vm-workers).
 Interactive handles offer typed read, write,
 stdin-close and status cases for `Tasks.Select`, combined with its timer and
 cancellation cases. Selecting or abandoning a case does not close the handle.
 
-Remaining work belongs to [scope-bound cleanup](#5-scope-bound-cleanup-actions), and any selected readiness
-integration with [host events](#25-native-event-loops-and-selectable-host-events).
+Remaining readiness integration belongs to
+[host events](#25-native-event-loops-and-selectable-host-events).
 Pipe payloads use bounded `Std.Bytes.ByteBuffer` values from the shared
 [native-buffer foundation](#22-packed-numeric-data-and-binary-buffers).
 Further stop/grace-period policies require their own scope decision.
@@ -930,7 +879,7 @@ Byte payloads use the [native byte-buffer foundation](#22-packed-numeric-data-an
 and blocking calls follow the [host-I/O contract](#14-host-io-that-releases-vm-workers).
 Sharing/locking controls and typed record files remain deferred, requiring
 separate contracts. [Lexical resource release](#5-scope-bound-cleanup-actions)
-remains a separate proposal.
+is implemented by AP55.
 
 ## 27. Standard-library namespaces
 

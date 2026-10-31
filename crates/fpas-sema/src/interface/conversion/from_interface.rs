@@ -225,6 +225,7 @@ fn interface_to_record(
             .collect::<Result<_, _>>()?,
         name: record.name.clone(),
         owner_unit: record.owner_unit.clone(),
+        release_method: record.release_method.clone(),
         private_members: record.private_members.clone(),
         fields: record
             .fields

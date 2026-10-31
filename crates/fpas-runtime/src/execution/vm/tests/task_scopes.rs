@@ -111,6 +111,7 @@ fn cancelled_children_stop_before_the_next_instruction_in_a_batch() {
         Ok(None) => loop {
             let task = scheduler.dequeue().expect("resume cancelled output task");
             let mut resumed = template.worker_for_task(task);
+            let _ticket = scheduler.worker_ticket(resumed.task_id);
             let result = resumed
                 .resume_pool_suspension()
                 .and_then(|ready| if ready { resumed.run_task() } else { Ok(None) });

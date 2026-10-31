@@ -46,8 +46,16 @@ impl Worker {
                 .scheduler
                 .as_ref()
                 .is_some_and(|scheduler| scheduler.is_aborted())
+                && !self.cleanup_masks_cancellation()
             {
-                return Ok(None);
+                let error = diagnostics::at_address(
+                    self.executable.executable(),
+                    self.current_address,
+                    RUNTIME_VM_SHUTDOWN,
+                    "Register task was canceled",
+                    "Keep the runtime active until its resource cleanup completes.",
+                );
+                self.begin_cleanup_failure(error)?;
             }
             let scheduled = self.task_id != 0;
             let budget = if scheduled {
@@ -159,14 +167,16 @@ impl Worker {
                 .scheduler
                 .as_ref()
                 .is_some_and(|scheduler| scheduler.is_aborted())
+                && !self.cleanup_masks_cancellation()
             {
-                return Err(diagnostics::at_address(
+                let error = diagnostics::at_address(
                     self.executable.executable(),
                     self.current_address,
                     RUNTIME_VM_SHUTDOWN,
                     "Register VM execution was canceled",
                     "Create a new VM instance to run the program again.",
-                ));
+                );
+                self.begin_cleanup_failure(error)?;
             }
             match self.dispatch_batch::<false>(ABORT_CHECK_INTERVAL)?.step {
                 DispatchStep::Continue => {}

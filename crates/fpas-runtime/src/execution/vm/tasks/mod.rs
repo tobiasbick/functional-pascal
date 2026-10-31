@@ -8,7 +8,8 @@ mod channel;
 mod errors;
 pub(in crate::execution::vm) mod groups;
 pub(super) mod pool;
-mod scheduler;
+mod retirement;
+pub(in crate::execution::vm) mod scheduler;
 pub(in crate::execution::vm) mod scopes;
 pub(in crate::execution::vm) mod selection;
 mod spawn;
@@ -298,9 +299,12 @@ impl Worker {
         };
         if !matches!(
             suspension,
-            TaskSuspension::ScopeUnwind { .. } | TaskSuspension::OwnerCleanup { .. }
-        ) {
-            self.check_task_cancellation()?;
+            TaskSuspension::ScopeUnwind { .. }
+                | TaskSuspension::OwnerCleanup { .. }
+                | TaskSuspension::NativeRetirement { .. }
+        ) && let Err(error) = self.check_task_cancellation()
+        {
+            return self.retire_cancelled_suspension(suspension, error);
         }
         let ready = match suspension {
             TaskSuspension::Entropy(wait) => self.poll_entropy(*wait),
@@ -317,6 +321,9 @@ impl Worker {
             TaskSuspension::Proc(wait) => self.poll_proc_wait(*wait),
             TaskSuspension::Acp(wait) => self.poll_acp_wait(*wait),
             TaskSuspension::Mcp(wait) => self.poll_mcp_wait(*wait),
+            TaskSuspension::NativeRetirement { wait, error } => {
+                return self.poll_native_retirement(*wait, error);
+            }
             TaskSuspension::OwnerCleanup { groups, outcome } => {
                 self.poll_owned_groups(groups, outcome)
             }
@@ -408,6 +415,7 @@ impl Worker {
         }?;
         if ready {
             self.suspend_requested = false;
+            self.complete_resource_producer(None);
         }
         Ok(ready)
     }

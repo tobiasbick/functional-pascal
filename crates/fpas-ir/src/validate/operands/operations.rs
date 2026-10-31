@@ -238,6 +238,26 @@ Operation::StoreLocalIndex {
         Operation::Yield
         | Operation::EnterTaskScope
         | Operation::ExitTaskScope
-        | Operation::CancelTaskScope => Ok(()),
+        | Operation::CancelTaskScope
+        | Operation::EnterCleanupScope
+        | Operation::BeginResourceInit
+        | Operation::ArmResourceInit => Ok(()),
+        Operation::RegisterCleanup { resource, release, .. } => {
+            let resource_type = value_type(function, block, instruction, *resource, all_values, available)?;
+            let release_type = value_type(function, block, instruction, *release, all_values, available)?;
+            let Some(IrType::Function { parameters, .. }) = program.ty(release_type).map(|definition| &definition.kind) else {
+                return Err(unknown(function, block, instruction, EntityKind::Type, release_type.get()));
+            };
+            if parameters.len() != 1 {
+                return Err(unknown(function, block, instruction, EntityKind::Type, release_type.get()));
+            }
+            require_assignable(program, function, block, instruction, "released resource", parameters[0], resource_type)
+        }
+        Operation::ExitCleanupScope { outcome, .. } => {
+            if let Some(value) = outcome {
+                value_type(function, block, instruction, *value, all_values, available)?;
+            }
+            Ok(())
+        }
     }
 }

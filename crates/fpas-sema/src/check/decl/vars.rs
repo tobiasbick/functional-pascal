@@ -28,6 +28,107 @@ impl Checker {
             mutable,
             !mutable,
         );
+        if binding.using {
+            let resolved = self.resolve_visible_type(&ty);
+            let release_name = match &resolved {
+                crate::types::Ty::Record(record) => {
+                    crate::types::native_resource_release(&record.name)
+                        .map(str::to_owned)
+                        .or_else(|| {
+                            record.release_method.as_ref().map(|method| {
+                                let name = if record.name.contains('.') {
+                                    record.name.clone()
+                                } else if let Some(owner) = &record.owner_unit {
+                                    format!("{owner}.{}", record.name)
+                                } else {
+                                    record.name.clone()
+                                };
+                                format!("{name}.{method}")
+                            })
+                        })
+                }
+                _ => None,
+            };
+            if let Some(name) = release_name {
+                let signature = if let crate::types::Ty::Record(record) = &resolved {
+                    record
+                        .release_method
+                        .as_ref()
+                        .and_then(|release| {
+                            record
+                                .methods
+                                .iter()
+                                .find(|(method, _)| method.eq_ignore_ascii_case(release))
+                        })
+                        .map(|(_, method)| match method {
+                            crate::types::MethodKind::Procedure(procedure) => {
+                                crate::types::Ty::Procedure(procedure.clone())
+                            }
+                            crate::types::MethodKind::Function(function) => {
+                                crate::types::Ty::Function(function.clone())
+                            }
+                        })
+                } else {
+                    None
+                }
+                .or_else(|| {
+                    self.scopes
+                        .imports
+                        .lookup_metadata(&name)
+                        .or_else(|| self.scopes.lookup(&name))
+                        .or_else(|| {
+                            name.rsplit_once('.')
+                                .and_then(|(unit, _)| {
+                                    self.scopes.imports.source_name_for(unit, &name)
+                                })
+                                .and_then(|source| self.scopes.imports.lookup_source(&source))
+                        })
+                        .map(|symbol| symbol.ty.clone())
+                });
+                if let Some(signature) = signature {
+                    let native = matches!(&resolved, crate::types::Ty::Record(record) if crate::types::native_resource_release(&record.name).is_some())
+                        && name != "Std.Net.Http.CloseStream";
+                    let custom = matches!(&resolved, crate::types::Ty::Record(record) if record.release_method.is_some());
+                    if custom
+                        && !matches!(&signature, crate::types::Ty::Procedure(procedure)
+                        if procedure.params.len() == 1
+                            && procedure.type_params.is_empty()
+                            && procedure.params[0].mode == crate::types::ParamMode::Value
+                            && resolved.assignment_compatible_with(&self.resolve_visible_type(&procedure.params[0].ty)))
+                    {
+                        self.error_with_code(
+                            fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                            format!("Release operation `{name}` has an invalid signature"),
+                            "A release procedure must take exactly its record as a value receiver.",
+                            binding.span,
+                        );
+                        return;
+                    }
+                    self.resource_releases.insert(
+                        (binding.span.source_id, binding.span.offset),
+                        crate::ResourceRelease {
+                            name,
+                            signature,
+                            native,
+                        },
+                    );
+                } else {
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                        format!("Release operation `{name}` is unavailable"),
+                        "Import the unit providing the resource release operation.",
+                        binding.span,
+                    );
+                }
+            } else if ty != crate::types::Ty::Error {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    format!("Type `{ty}` has no resource release contract"),
+                    "Use a resource type or declare a release procedure on the record.",
+                    binding.span,
+                );
+            }
+        }
         if binding.type_expr.is_none() {
             self.binding_types
                 .insert((binding.span.source_id, binding.span.offset), ty);

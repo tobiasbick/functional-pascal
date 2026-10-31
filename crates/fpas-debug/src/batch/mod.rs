@@ -308,6 +308,12 @@ fn run_inner(
             match record {
                 // The host writer already captures console writes without line buffering.
                 DebugRecord::Event(DebugEvent::Output { .. }) => {}
+                DebugRecord::Event(DebugEvent::SupplementalDiagnostic(error)) => {
+                    report["diagnostics"]
+                        .as_array_mut()
+                        .unwrap()
+                        .push(fp_diagnostic(None, None, &error));
+                }
                 DebugRecord::Event(DebugEvent::Stopped(stop)) => {
                     let runtime = stop.diagnostic.is_some();
                     report["outcome"] = json!(if runtime {
@@ -390,6 +396,12 @@ fn run_inner(
         }
         trace::coverage(&mut report);
         session.disconnect();
+        for diagnostic in session.take_supplemental_diagnostics() {
+            report["diagnostics"]
+                .as_array_mut()
+                .unwrap()
+                .push(fp_diagnostic(None, None, &diagnostic));
+        }
     } else {
         report["capture"]["incomplete"] = json!(true);
         report["capture"]["reasons"] = json!(["state_unavailable"]);
@@ -442,5 +454,44 @@ mod tests {
         assert_eq!(report["schedule"]["status"], "interrupted");
         assert_eq!(report["schedule"]["reasons"], json!(["external_cancel"]));
         assert!(report["schedule"]["dispatches"].is_string());
+    }
+
+    #[test]
+    fn supplemental_cleanup_failure_keeps_completed_outcome() {
+        let source = r#"program CleanupDiagnostic;
+type Resource = record
+  release procedure Close(Self: Resource);
+  begin
+    panic('cleanup failed');
+  end procedure;
+end record;
+function Failure(): result of (integer, string);
+begin
+  return Error('original');
+end function;
+function Work(): result of (integer, string);
+begin
+  using const Item := Resource();
+  return Ok(try Failure());
+end function;
+begin
+  if not (Work() is Error('original')) then
+    panic('result lost');
+  end if;
+end.
+"#;
+        let (program, diagnostics) = fpas_parser::parse(source);
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let image = fpas_compiler::compile(&program).unwrap();
+        let report = run(
+            PreparedDebugTarget::new(image, Vec::new()),
+            Options::default(),
+            Box::new(std::io::sink()),
+            || false,
+        );
+        assert_eq!(report["outcome"], "completed", "{report}");
+        assert_eq!(report["exit_code"], 0);
+        assert_eq!(report["diagnostics"].as_array().unwrap().len(), 1);
+        assert_eq!(report["diagnostics"][0]["code"], "FP5010");
     }
 }

@@ -15,7 +15,7 @@ fn minimal_candidate_becomes_a_verified_executable() {
 #[test]
 fn verifier_accepts_a_fixture_covering_every_active_opcode() {
     let executable = all_opcodes_executable();
-    assert_eq!(executable.code.len(), fpas_runtime::Opcode::ALL.len() + 11);
+    assert_eq!(executable.code.len(), fpas_runtime::Opcode::ALL.len() + 12);
     assert!(executable.verify().is_ok());
 }
 

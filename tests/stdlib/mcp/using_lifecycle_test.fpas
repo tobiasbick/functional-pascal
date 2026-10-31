@@ -1,0 +1,58 @@
+program McpUsingLifecycleTest;
+
+uses Std.Ai.Acp as Acp, Std.Ai.Mcp as Mcp, Std.Test as Test;
+
+begin
+  const Messages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+  begin
+    using const Connection := Messages.Connection;
+    Test.AssertTrue(Acp.State(Connection) is Ok(_));
+  end;
+
+  Test.AssertTrue(Acp.State(Messages.Connection) is Error(_));
+  Test.AssertTrue(Acp.CloseInput(Messages.Endpoint) is Error(_));
+  const ReleasedMessages := Acp.ConnectMessages(Acp.DefaultOptions()).Unwrap();
+  Test.AssertTrue(Acp.Release(ReleasedMessages.Connection).Unwrap());
+  begin
+    using const AlreadyReleased := ReleasedMessages.Connection;
+  end;
+  const Definition := Mcp.ToolDefinition(
+    Name := 'probe', Description := 'Resource lifecycle test',
+    InputSchema := Mcp.ParseJson('{"type":"object"}').Unwrap(),
+    OutputSchema := None, Annotations := None, Meta := None
+  );
+  var Calls := 0;
+  const Handler: Mcp.ToolHandler := function(Context: Mcp.RequestContext; Arguments: Mcp.RawJson): result of (Mcp.ToolResult, Mcp.McpError) begin
+    Calls := Calls + 1;
+    return Ok(Mcp.TextResult('probe'));
+  end function;
+
+  // Exceed the simultaneous-server limit while retaining a handler in each server.
+  for Index: integer := 1 to 17 do
+    using const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+    Test.AssertTrue(Mcp.RegisterTool(Server, Definition, Handler).Unwrap());
+  end for;
+  const Server := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  begin
+    using const OwnedServer := Server;
+    const Endpoint := Mcp.Publish(OwnedServer, Mcp.DefaultHttpOptions()).Unwrap();
+    begin
+      using const OwnedEndpoint := Endpoint;
+      Test.AssertTrue(Mcp.Access(OwnedEndpoint) is Ok(_));
+    end;
+
+    Test.AssertTrue(Mcp.Access(Endpoint) is Error(_));
+    const ClosedEndpoint := Mcp.Publish(OwnedServer, Mcp.DefaultHttpOptions()).Unwrap();
+    Test.AssertTrue(Mcp.CloseEndpoint(ClosedEndpoint).Unwrap());
+    begin
+      using const AlreadyClosed := ClosedEndpoint;
+    end;
+  end;
+
+  Test.AssertTrue(Mcp.Close(Server) is Error(_));
+  const ReleasedServer := Mcp.Create(Mcp.DefaultLimits()).Unwrap();
+  Test.AssertTrue(Mcp.Release(ReleasedServer).Unwrap());
+  begin
+    using const AlreadyReleased := ReleasedServer;
+  end;
+end.

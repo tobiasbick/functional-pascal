@@ -107,9 +107,10 @@ begin
   case Http.OpenStream(Http.Request.Get(BaseUrl + '/stream')) of
     when Ok(const ResponseValue):
       begin
+        using const Body := ResponseValue.Body;
         Console.WriteLn(
           'STREAM ' + Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
-          ReadAll(ResponseValue.Body)
+          ReadAll(Body)
         );
       end;
     when Error(const Message):

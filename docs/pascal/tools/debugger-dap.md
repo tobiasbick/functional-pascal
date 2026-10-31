@@ -77,6 +77,10 @@ framed and is distinct from stopped-state line input through `fpas/input`.
 `fpas/terminalPoll` has no arguments or state effect; terminal-owning clients
 use it to flush output while execution remains active.
 
+Supplemental cleanup diagnostics are DAP `output` events in the `stderr`
+category, with the FP diagnostic code and message. They do not change the
+debuggee's preserved Result or None outcome.
+
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
 `stepOut` select that task. Unknown or expired DAP thread IDs fail explicitly

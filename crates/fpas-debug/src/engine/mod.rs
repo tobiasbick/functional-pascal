@@ -387,11 +387,13 @@ impl DebugEngine {
             return Vec::new();
         };
         session.disconnect();
-        session
+        let mut records: Vec<_> = session
             .take_task_events()
             .into_iter()
             .map(crate::engine::reply::task_event)
-            .collect()
+            .collect();
+        records.extend(crate::engine::reply::supplemental_events(session));
+        records
     }
 
     fn cancel_evaluation(&mut self, request_id: u64, command: &str) -> Vec<DebugRecord> {

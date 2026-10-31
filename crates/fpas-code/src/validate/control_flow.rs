@@ -191,7 +191,8 @@ fn validate_function_code(
             },
         ));
     }
-    validate_reachable_control_flow(executable, function_id, function, decoded)
+    validate_reachable_control_flow(executable, function_id, function, decoded)?;
+    super::cleanup::validate(executable, function_id, function, decoded)
 }
 
 fn validate_reachable_control_flow(

@@ -20,7 +20,7 @@ dict      with      static    numeric
 comparable printable self     elsif
 when      null      discard   is
 distinct  requires  ensures   scope
-equatable
+equatable using
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
@@ -36,6 +36,10 @@ routine heading. Both are reserved; see [contracts](../language/functions/contra
 
 `scope` opens a [task scope](../language/concurrency/task-scopes.md) that owns
 the tasks started inside it.
+
+`using const` declares a [resource local](../language/basics/local-variables.md#resource-locals).
+`release` remains an ordinary identifier except before `procedure` in a
+[record release declaration](../language/types/records.md#resource-release).
 
 `event`, `nil`, `read`, `write`, and `Assigned` are ordinary identifiers.
 Their declarations and references follow normal case-insensitive name resolution.

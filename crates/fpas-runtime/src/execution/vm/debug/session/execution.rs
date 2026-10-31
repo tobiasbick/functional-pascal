@@ -6,6 +6,18 @@ use super::*;
 use crate::execution::vm::debug::tasks::{DebugDispatch, DebugSchedule};
 
 impl DebugSession {
+    /// Take cleanup diagnostics which accompany a preserved program outcome.
+    pub fn take_supplemental_diagnostics(&self) -> Vec<fpas_diagnostics::Diagnostic> {
+        self.runtime.worker(0).map_or_else(Vec::new, |worker| {
+            std::mem::take(
+                &mut *worker
+                    .hosted
+                    .supplemental_diagnostics
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner()),
+            )
+        })
+    }
     /// Continue all tasks until a breakpoint, pause, runtime failure, or termination.
     ///
     /// # Errors

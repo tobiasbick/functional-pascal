@@ -18,27 +18,13 @@ impl LoweringContext {
         span: Span,
     ) -> Result<(), CompileError> {
         self.emit_effect(Operation::EnterTaskScope, span)?;
-        self.enter_task_scope();
+        self.exit_scopes.push(super::cleanup::ExitScope::Tasks);
         self.begin_scope();
-        for statement in body {
-            self.lower_statement(statement)?;
-        }
+        self.lower_statements(body)?;
         self.end_scope();
-        self.exit_task_scope();
+        self.exit_scopes.pop();
         if !self.is_terminated() {
             self.emit_effect(Operation::ExitTaskScope, span)?;
-        }
-        Ok(())
-    }
-
-    /// Cancels and leaves every task scope opened after `depth`, innermost first.
-    pub(in crate::lowering) fn cancel_task_scopes_above(
-        &mut self,
-        depth: u32,
-        span: Span,
-    ) -> Result<(), CompileError> {
-        for _ in depth..self.task_scope_depth() {
-            self.emit_effect(Operation::CancelTaskScope, span)?;
         }
         Ok(())
     }

@@ -26,6 +26,54 @@ pub(in crate::execution::vm) enum Wait {
     },
 }
 
+/// A close already initiated by a cancelled task must finish before its owner retires.
+pub(in crate::execution::vm) struct Retirement {
+    connection: Connection,
+    release: bool,
+}
+
+impl Wait {
+    pub(in crate::execution::vm) fn into_retirement(self) -> Option<Retirement> {
+        match self {
+            Self::Close {
+                connection,
+                release,
+                ..
+            } => Some(Retirement {
+                connection,
+                release,
+            }),
+            _ => None,
+        }
+    }
+}
+
+impl Retirement {
+    pub(in crate::execution::vm) fn poll(&self, worker: &Worker) -> Result<bool, VmError> {
+        if !self.connection.is_closed() {
+            return Ok(false);
+        }
+        worker.hosted.mcp.release_owned(self.connection.id());
+        let outcome = self.connection.cleanup_result().and_then(|()| {
+            if self.release {
+                match worker.hosted.acp.release(&self.connection) {
+                    Ok(_) | Err(Fault::Closed) => Ok(()),
+                    Err(error) => Err(error),
+                }
+            } else {
+                Ok(())
+            }
+        });
+        outcome.map(|()| true).map_err(|error| {
+            worker.runtime_error(
+                fpas_diagnostics::codes::RUNTIME_RESOURCE_RELEASE_FAILURE,
+                format!("ACP resource retirement failed: {error}"),
+                "Inspect the connection cleanup failure.",
+            )
+        })
+    }
+}
+
 impl Wait {
     pub(in crate::execution::vm) fn debug_state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
@@ -129,7 +177,9 @@ impl Worker {
         }
         if !self.debug_tasks && self.task_id == 0 {
             loop {
-                self.wait_observing_scopes()?;
+                if let Err(error) = self.wait_observing_scopes() {
+                    self.retire_wait_error(error)?;
+                }
                 if self.poll_task_suspension()? {
                     break;
                 }

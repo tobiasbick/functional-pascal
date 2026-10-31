@@ -46,6 +46,7 @@ impl DebugTaskRuntime {
                 capture_record: None,
                 observed_task_failure: None,
                 pending_completion: None,
+                cleanup: Default::default(),
                 suspension: None,
                 supervision: None,
                 id: self.scheduler.alloc_id(),

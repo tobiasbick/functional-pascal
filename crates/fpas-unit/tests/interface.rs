@@ -122,6 +122,7 @@ fn sample_interface() -> UnitInterface {
                         },
                     ],
                     methods: Vec::new(),
+                    release_method: Some("Close".to_string()),
                     static_routines: vec![MethodType {
                         name: "CreateHidden".to_string(),
                         callable: CallableType {

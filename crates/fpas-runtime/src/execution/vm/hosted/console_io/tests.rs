@@ -101,7 +101,7 @@ fn console_writes_and_text_reads_release_one_worker_and_preserve_frames() {
                 bytes: io::Cursor::new("line🙂\r\nlast".as_bytes().to_vec()),
                 first: true,
             }));
-            let hosted = Arc::downgrade(&vm.hosted);
+            let hosted = Arc::clone(&vm.hosted);
             let stop = Arc::new(vm.shutdown_handle());
             assert!(slot.set(Arc::downgrade(&stop)).is_ok());
             let (send, receive) = mpsc::channel();
@@ -133,16 +133,14 @@ fn console_writes_and_text_reads_release_one_worker_and_preserve_frames() {
             if mode == "normal" {
                 assert!(output.lock().unwrap().starts_with(b"hold65536\n"));
             }
-            assert_eq!(
-                hosted
-                    .upgrade()
-                    .unwrap()
-                    .console_jobs
-                    .load(Ordering::Acquire),
-                0
-            );
+            assert_eq!(hosted.console_jobs.load(Ordering::Acquire), 0);
+            let weak_hosted = Arc::downgrade(&hosted);
+            drop(hosted);
             drop(stop);
-            assert!(hosted.upgrade().is_none(), "console jobs retained their VM");
+            assert!(
+                weak_hosted.upgrade().is_none(),
+                "console jobs retained their VM"
+            );
         }
     }
 }

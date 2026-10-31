@@ -46,13 +46,43 @@ impl DebugTaskRuntime {
             }
             if matches!(
                 slot.worker.task_suspension,
-                Some(TaskSuspension::ScopeUnwind { .. } | TaskSuspension::OwnerCleanup { .. })
+                Some(
+                    TaskSuspension::ScopeUnwind { .. }
+                        | TaskSuspension::OwnerCleanup { .. }
+                        | TaskSuspension::NativeRetirement { .. }
+                )
             ) {
                 return Err(TaskCancelError::Unknown);
             }
             let error = cancellation_error(slot, task_id);
             slot.worker.observed_task_failure.set(None);
             slot.worker.supervision = None;
+            if slot.worker.defer_cleanup_cancel(error.clone()) {
+                slot.paused = false;
+                return Ok(());
+            }
+            let error = if let Some(suspension) = slot.worker.task_suspension.take() {
+                match slot.worker.retire_cancelled_suspension(suspension, error) {
+                    Ok(_) => {
+                        let _ = slot.worker.publish_execution(&[]);
+                        slot.state = DebugTaskState::Waiting;
+                        slot.paused = false;
+                        return Ok(());
+                    }
+                    Err(error) => error,
+                }
+            } else {
+                error
+            };
+            let error = match slot.worker.begin_cleanup_failure(error) {
+                Ok(()) => {
+                    let _ = slot.worker.publish_execution(&[]);
+                    slot.state = DebugTaskState::Runnable;
+                    slot.paused = false;
+                    return Ok(());
+                }
+                Err(error) => error,
+            };
             if !slot.worker.task_scopes.is_empty() {
                 // Joining runs after resume; the stopped command never dispatches child code.
                 if slot.worker.begin_scope_unwind(error.clone()).is_ok() {

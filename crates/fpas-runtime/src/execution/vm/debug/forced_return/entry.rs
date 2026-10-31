@@ -31,6 +31,18 @@ pub(in crate::execution::vm::debug) fn prepare_entry(
             "Request the current stack and select its oldest frame.",
         ));
     }
+    if worker.has_cleanup_from_depth(0) {
+        return Err(unsupported(
+            "forced entry completion is not available while a frame has an open resource scope",
+            "Continue execution until its resource scope has been released.",
+        ));
+    }
+    if worker.has_task_scope_from_depth(0) {
+        return Err(unsupported(
+            "forced entry completion is not available while a frame has an open task scope",
+            "Step past `end scope` first so its children can finish.",
+        ));
+    }
     let (function, base) = worker
         .call_stack
         .first()

@@ -33,7 +33,8 @@ impl Worker {
             return Ok(None);
         };
         let call = Call::prepare(self, operation, values)?;
-        let outcome = call.and_then(|call| call.run(&self.hosted, || false));
+        let outcome = call
+            .and_then(|call| call.run(&self.hosted, || self.check_task_cancellation().is_err()));
         self.fs_result(operation, outcome, location)
             .map(|value| Some(Some(value)))
     }

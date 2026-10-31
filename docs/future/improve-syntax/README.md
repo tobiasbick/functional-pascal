@@ -28,7 +28,7 @@ The example is a template, not an active AP or an approved proposal.
 1. Select a concrete problem and inspect its current implementation, handbook,
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
-2. Copy `example-apNN-topic/` to `ap55-<topic>/` for the next package. Continue
+2. Copy `example-apNN-topic/` to `ap56-<topic>/` for the next package. Continue
    with the next unused number for later packages. AP01 through AP54 are
    closed. Do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
@@ -44,19 +44,19 @@ The example is a template, not an active AP or an approved proposal.
    missing. Record the user's decision before implementing affected behavior.
    Follow the [development process](development-process.md) for delivery.
 
-Use `AP55` for the next package and `AP55.1`, `AP55.2`, and so on for its work
-packages. Decision IDs continue at `Q77`; Q01 through Q76 belong to closed
-packages. Record each decision and its affected work packages in the owning
-package README. Do not create a second decision or completion index.
+Use `AP56` for the next package and `AP56.1`, `AP56.2`, and so on for its work
+packages. Decision IDs continue at `Q84`; Q01 through Q76 belong to closed
+packages and Q77 through Q83 belong to AP55. Record each decision and its
+affected work packages in the owning package README. Do not create a second
+decision or completion index.
 
 ## Package status
-
-There are no active packages. Add newly selected packages to this table.
 
 Keep the example out of this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
+| [x] | [AP55: Scope-bound resources](ap55-resources/README.md) | Large | Existing task-scope and managed host-I/O contracts | Complete |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

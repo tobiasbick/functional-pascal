@@ -20,7 +20,13 @@ pub(super) fn collect_statement_symbols(
         match statement {
             Stmt::Const(value) | Stmt::Var(value) => {
                 let constant = matches!(statement, Stmt::Const(_));
-                let keyword = if constant { "const" } else { "var" };
+                let keyword = if constant && value.using {
+                    "using const"
+                } else if constant {
+                    "const"
+                } else {
+                    "var"
+                };
                 let annotation = value
                     .type_expr
                     .as_ref()

@@ -765,6 +765,7 @@ can describe a structural restriction and leave those fields null.
 | FP5025 | Host random failure | OS random-byte provider fails | Restore the host provider and retry the operation. |
 | FP5026 | Unsupported seeded scheduling effect | A controlled debug run reaches a host effect or a task operation inside a synchronous native callback | Use ordinary debugging, fixed arguments/queued text input, or move the task operation outside the synchronous callback. |
 | FP5027 | Host I/O worker failure | A suspended plain-return filesystem or Console call cannot start its native worker, or that worker exits without a result | Restore host thread resources and retry the call; ordinary I/O errors retain the API's documented outcome. |
+| FP5028 | Resource release failure | An automatic native release returns an operational error | Inspect the release failure and its resource; a propagated Result error or None remains the function result. |
 
 ### Internal invariants
 

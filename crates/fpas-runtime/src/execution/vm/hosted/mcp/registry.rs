@@ -24,7 +24,7 @@ fn identity() -> Result<u64, Fault> {
 struct Entry {
     catalog: Option<Catalog>,
     server: Option<Server>,
-    handlers: BTreeMap<u64, RootValues>,
+    handlers: BTreeMap<u64, Arc<RootValues>>,
     next_handler: u64,
     closed: bool,
 }
@@ -93,7 +93,7 @@ impl Registry {
             Entry {
                 catalog: Some(catalog),
                 server: None,
-                handlers: BTreeMap::from([(1, handler)]),
+                handlers: BTreeMap::from([(1, Arc::new(handler))]),
                 next_handler: 1,
                 closed: false,
             },
@@ -146,7 +146,7 @@ impl Registry {
         let key = entry.next_handler.checked_add(1).ok_or(Fault::Closed)?;
         catalog.register(tool, key)?;
         entry.next_handler = key;
-        entry.handlers.insert(key, handler);
+        entry.handlers.insert(key, Arc::new(handler));
         Ok(())
     }
     pub(super) fn server(&self, id: u64) -> Result<Server, Fault> {
@@ -168,28 +168,31 @@ impl Registry {
         Ok(server.clone())
     }
     pub(super) fn handlers(&self, id: u64) -> Result<Vec<Value>, Fault> {
-        let state = self.lock();
-        let entry = state.servers.get(&id).ok_or(Fault::Closed)?;
-        if entry.closed {
-            return Err(Fault::Closed);
-        }
-        Ok(entry
-            .handlers
-            .values()
+        // Domain access can wait for a VM that is itself entering this registry.
+        // Retain the existing roots without entering their domain under our lock.
+        let handlers: Vec<_> = {
+            let state = self.lock();
+            let entry = state.servers.get(&id).ok_or(Fault::Closed)?;
+            if entry.closed {
+                return Err(Fault::Closed);
+            }
+            entry.handlers.values().cloned().collect()
+        };
+        Ok(handlers
+            .iter()
             .map(|roots| roots.with_values(|v| v[0].clone()))
             .collect())
     }
     pub(super) fn handler(&self, id: u64, key: u64) -> Result<Value, Fault> {
-        let state = self.lock();
-        let entry = state.servers.get(&id).ok_or(Fault::Closed)?;
-        if entry.closed {
-            return Err(Fault::Closed);
-        }
-        entry
-            .handlers
-            .get(&key)
-            .map(|roots| roots.with_values(|v| v[0].clone()))
-            .ok_or(Fault::Closed)
+        let roots = {
+            let state = self.lock();
+            let entry = state.servers.get(&id).ok_or(Fault::Closed)?;
+            if entry.closed {
+                return Err(Fault::Closed);
+            }
+            entry.handlers.get(&key).cloned().ok_or(Fault::Closed)?
+        };
+        Ok(roots.with_values(|v| v[0].clone()))
     }
     pub(super) fn runtime(&self) -> Result<Arc<HttpRuntime>, fpas_mcp::HttpError> {
         {

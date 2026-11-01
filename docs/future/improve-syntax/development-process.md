@@ -11,8 +11,9 @@ Use the [example package](example-apNN-topic/README.md) when creating new work.
 - A work package (`APnn.m`) is a bounded, separately reviewable part of that
   change. It has one numbered file, such as `01-decision.md` or
   `02-implementation.md`, in the package directory.
-- A decision work package delivers a recorded user decision rather than code.
-  Its acceptance criterion names the questions that must be resolved.
+- A decision work package delivers a recorded choice and a precise contract
+  rather than feature code. Its acceptance criterion names the unresolved work.
+  Agents own technical choices; the user approves changes to FPAS syntax.
 
 ## Status tracking
 
@@ -23,8 +24,8 @@ in its README checklist is complete.
 Each package README owns the only checklist of its work packages. A work-package
 checkbox becomes `[x]` after its implementation, consumer migration,
 documentation and applicable verification are complete in the working branch.
-For a decision work package, completion means the user's decision is recorded
-in the package README and reflected in dependent work-package files.
+For a decision work package, completion means the choice, its owner and required
+contract examples are recorded and reflected in dependent work-package files.
 
 Known pre-existing check failures need evidence that they are independent of
 the delivery. Failures caused by the work package keep its checkbox open.
@@ -46,15 +47,18 @@ follow-ups. Remove intermediate states, superseded rules and stale test counts.
 ## Decision gates
 
 Before implementation, state the current behavior, proposed replacement,
-preserved behavior, exclusions and acceptance criterion. Record language
-decisions in the owning package README, with their IDs and affected work
+preserved behavior, exclusions and acceptance criterion. Record decisions in the
+owning package README, with their owner, rationale, IDs and affected work
 packages. An agreed direction is not a complete specification.
 
-List unresolved details under Open decisions and name them as prerequisites of
-the affected work packages. Resolve them with the user before changing syntax,
-semantics or user-facing language specifications. Draft examples stay in this
-plan and are identified as proposals. Check the current checkout before relying
-on any earlier plan or result.
+List unresolved details and their owner as prerequisites of affected work
+packages. Agents resolve architecture, internal APIs, data structures, CLI
+contracts and implementation choices autonomously. Existing designs may be
+replaced, with no compatibility layer or historical notes required.
+Only a change to FPAS syntax needs the user's explicit approval before
+implementation. CLI options, JSON schemas and source transformations that emit
+existing FPAS syntax do not change that syntax. A planning-only request stays
+planning-only. Check the current checkout before relying on earlier results.
 
 ## Dependencies and branches
 
@@ -81,7 +85,9 @@ belongs in one work package.
 
 ## Migration
 
-Preserve behavior unless the user explicitly agrees to a semantic change.
+Preserve behavior outside the selected change. Record intentional behavior
+changes and their rationale in the owning contract; agents decide them within
+assigned scope. FPAS syntax changes still require explicit user approval.
 Implement the selected contract without a compatibility layer or a shipped
 legacy parser mode. Choose intermediate steps only when each step builds,
 passes its applicable checks and has accurate current documentation.
@@ -95,14 +101,14 @@ Temporary conversion helpers stay outside tracked deliverables.
 
 ## Review
 
-Review the final change against both the approved contract (Spec) and repository
+Review the final change against both the selected contract (Spec) and repository
 rules, module ownership and test quality (Standards). Record the selected work
 packages and fixed baseline/target revisions. Confirm findings with concrete
 evidence, expected versus actual behavior, an owning path and a bounded repair.
 Keep unresolved suspicions out of the required repair list.
 
 Repair confirmed findings at their owning boundary, run the relevant checks and
-review the result again. Review completion does not authorize a language change,
+review the result again. Review completion does not approve new FPAS syntax,
 commit, push or merge. Preserve any coverage limits in the delivery report.
 
 ## Required checks

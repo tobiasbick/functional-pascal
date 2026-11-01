@@ -3,14 +3,15 @@
 These checks supplement each work package's verification list and the
 [development process](development-process.md). They are not a second backlog
 or language specification. Apply the relevant boundaries when completing a
-package; name any intentional behavior change in its approved contract.
+package; name any intentional behavior change in its selected contract.
 
 ## Planning boundaries
 
 - Use the [current handbook](../../pascal/README.md) and
   [grammar](../../specs/grammar.ebnf) as the implemented baseline.
-- Keep unresolved language choices explicit. Do not approve one indirectly
-  through an implementation detail, dependency update or source migration.
+- Keep unresolved choices and their owner explicit. Agents decide technical
+  details autonomously. Changes to FPAS syntax require the user's approval;
+  do not introduce them indirectly through a source migration or tool option.
 - Prefer one canonical contract and established Pascal-family terminology.
   Do not add a parallel syntax, compatibility mode or speculative abstraction.
 - Preserve evaluation count, ordering, effects and ownership unless the agreed

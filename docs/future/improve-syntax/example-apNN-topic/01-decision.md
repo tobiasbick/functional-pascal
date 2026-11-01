@@ -6,7 +6,8 @@ package. Package: [APNN](README.md). Status: Decision pending.
 ## Deliverable
 
 `<The precise questions this work package resolves and where their decisions are recorded.>`
-The deliverable is a recorded user decision, not an implementation.
+The deliverable is a recorded choice and contract. Agents decide technical
+details; only an FPAS syntax change needs the user's approval.
 
 ## Prerequisites
 
@@ -30,11 +31,12 @@ Replace or extend this table with the actual paths before starting work.
 
 ## Acceptance and verification
 
-`<Questions requiring an explicit user answer.>`
-After the answer, record it once in the package README and align dependent
+`<Unresolved choices, their owner and required contract examples.>`
+After resolving them, record the choices once in the package README and align dependent
 files. Verify that examples, scope, prerequisites and acceptance agree, that
 relative links resolve and that `git diff --check` passes.
 
 Mark APNN.1 complete in the package README only after the decision is recorded.
-An accepted direction with unresolved blocking details does not authorize
-APNN.2. Follow the [decision gates](../development-process.md#decision-gates).
+Resolve blocking technical details autonomously before APNN.2; obtain user
+approval if FPAS syntax changes. Follow the
+[decision gates](../development-process.md#decision-gates).

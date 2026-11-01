@@ -2,7 +2,8 @@
 
 Status: prioritized directions and scope decisions. This revision selects
 priorities and closes the alternatives listed below; it authorizes no
-implementation. Open interface and syntax decisions still need agreement.
+implementation. Agents resolve technical/interface choices autonomously;
+changes to FPAS syntax need the user's explicit approval.
 Implemented topics retain a short status and handbook reference. The
 [numeric design](#21-explicit-width-numeric-types-money-and-decimal) remains agreed
 at its recorded scope, with its listed open points.
@@ -977,25 +978,32 @@ and [Std reference](../pascal/std/README.md). Future priorities belong to the
 
 Status: Agreed direction; detailed contracts remain proposed in
 [source queries for coding agents](agent-source-queries.md). Priority: P1.
-No implementation is authorized by adding this topic.
+[AP56](improve-syntax/ap56-source-queries/README.md) plans the common foundation,
+find, inspect, direct call queries and checked refactoring on `ap56`. Technical
+choices are delegated to the implementing agent; only changes to FPAS syntax
+require user approval. Implementation has not started.
+AP56 extends the common `fpas-language-service` analysis core. CLI and LSP/editor
+connections are required parts of each feature, with shared semantic validation
+and explicit handling of saved sources versus unsaved editor snapshots.
 
 Existing positional queries expose definitions, references and checked types;
 rename already provides checked edits. The linked plan owns extensions for name
-discovery, focused inspection, direct callers/callees and later parameter changes.
+discovery, focused inspection, direct callers/callees and checked parameter changes.
 Follow its phases, starting with common query contracts, then find and inspect.
 Read queries do not depend on runtime replay, C FFI or new language syntax.
 
 Reuse compiler resolution and exact source snapshots. Bound the returned context
 and distinguish complete answers, ambiguity, omitted data and unresolved dynamic
 calls. A missing proven caller is not proof that a routine cannot execute.
-Checked refactorings follow read-only discovery and require their own edit-policy
-decision; this topic does not authorize arbitrary automatic source rewrites.
+Checked refactorings follow read-only discovery. AP56 specifies a shared plan/apply
+flow for rename, extract-variable, organize-imports and append-only parameter
+insertion, with explicit unsupported cases and complete validation before writes.
 
-Acceptance and measurement belong to the linked plan. Evaluate locating an
-unfamiliar declaration, understanding it with its relevant types, enumerating
-known uses and making a checked change. Compare correct task completion,
-correction rounds, context size and elapsed time on fixed tasks. No measured
-productivity or error-rate improvement is claimed yet.
+Acceptance belongs to the linked plan. Verify declaration lookup, relevant type
+context, known uses and checked changes on fixed source fixtures, including
+incomplete results and refusal cases. Use compiler, behavior and adapter checks;
+LLM task comparisons and model-based acceptance gates are outside AP56. No
+productivity or error-rate improvement is claimed.
 
 ## 29. Structural test comparisons
 
@@ -1084,8 +1092,8 @@ with explicit binding mutation, rather than a guarantee that every function is p
 For each selected topic, first record concrete failing or awkward examples,
 the smallest replacement contract, migration scope, compiler/runtime/tooling
 cost and tests that establish the improvement. Preserve recorded design agreements
-and resolve remaining open decisions with the user before creating implementation
-work. An agreed design still needs an explicit implementation decision. This
+and resolve technical choices autonomously; obtain user approval for FPAS syntax
+changes before implementation. An agreed design still needs an explicit implementation decision. This
 document is not a second package-completion index.
 
 State observable behavior independently of the implementation, using concrete

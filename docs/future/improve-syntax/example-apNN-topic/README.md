@@ -20,12 +20,13 @@ Completion is tracked only in the [central plan](../README.md#package-status).
 
 ## Decisions
 
-| ID | Question | User decision | Affected work packages |
+| ID | Question | Decision, owner and rationale | Affected work packages |
 | --- | --- | --- | --- |
 | QNN | `<Required design choice>` | Pending | APNN.1, APNN.2 |
 
-Record the actual user decision here. Agreement on a direction, a complete
-specification, implementation and verification are separate states.
+Record technical choices autonomously, with their owner and rationale. Record
+the user's approval for an FPAS syntax change. Direction, a complete contract,
+implementation and verification are separate states.
 
 ## Open decisions
 
@@ -37,7 +38,7 @@ Prerequisites: `<Link actual package/work-package prerequisites or write None.>`
 Execution order follows those prerequisites, not the package number.
 
 - [ ] [APNN.1: Decide the contract](01-decision.md)
-- [ ] [APNN.2: Implement the approved contract](02-implementation.md)
+- [ ] [APNN.2: Implement the selected contract](02-implementation.md)
 
 This is the only work-package checklist for this AP. Follow
 [status tracking](../development-process.md#status-tracking); completion does

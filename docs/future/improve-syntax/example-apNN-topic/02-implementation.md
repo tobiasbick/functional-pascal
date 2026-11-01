@@ -1,4 +1,4 @@
-# APNN.2: Implement the approved contract
+# APNN.2: Implement the selected contract
 
 Template only. Replace placeholders and remove this paragraph in the copied
 package. Package: [APNN](README.md). Status: not started; blocked on APNN.1.

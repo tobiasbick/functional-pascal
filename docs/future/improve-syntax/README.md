@@ -7,9 +7,11 @@ Completed plans are removed after delivery; implemented behavior remains in the
 current handbook and grammar.
 
 Implemented behavior belongs in the [current handbook](../../pascal/README.md)
-and [grammar](../../specs/grammar.ebnf). A proposal here does not authorize a
-language change. Syntax, semantics and the user-facing language specification
-require explicit user agreement before implementation.
+and [grammar](../../specs/grammar.ebnf). Changes to FPAS syntax require explicit
+user approval. Within assigned work, agents decide architecture, internal APIs,
+CLI contracts and implementation autonomously. This hobby project requires no
+backward compatibility; replace obsolete designs and migrate their consumers.
+A planning request produces a plan, not implementation.
 
 ## Files
 
@@ -28,7 +30,7 @@ The example is a template, not an active AP or an approved proposal.
 1. Select a concrete problem and inspect its current implementation, handbook,
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
-2. Copy `example-apNN-topic/` to `ap56-<topic>/` for the next package. Continue
+2. Copy `example-apNN-topic/` to `ap57-<topic>/` for the next package. Continue
    with the next unused number for later packages. AP01 through AP55 are
    closed. Do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
@@ -40,21 +42,25 @@ The example is a template, not an active AP or an approved proposal.
 5. Add the package to the table below and its work packages to the copied
    package README. Link dependencies to their owning package or work-package
    file. Numbering groups work; prerequisites determine execution order.
-6. Start with `Decision pending` where approval or a required design choice is
-   missing. Record the user's decision before implementing affected behavior.
-   Follow the [development process](development-process.md) for delivery.
+6. Record technical choices and their rationale autonomously. Use `Decision
+   pending` for an unresolved choice, and identify its owner. Only an FPAS syntax
+   change requires a user decision before implementation. Follow the
+   [development process](development-process.md) for delivery.
 
-Use `AP56` for the next package and `AP56.1`, `AP56.2`, and so on for its work
-packages. Decision IDs continue at `Q84`; Q01 through Q83 belong to closed
-packages. Record each decision and its affected work packages in the owning
-package README. Do not create a second decision or completion index.
+Use `AP57` for the next package and `AP57.1`, `AP57.2`, and so on for its work
+packages. Decision IDs continue at `Q92`; Q84 through Q91 belong to AP56,
+and Q01 through Q83 belong to closed packages. Record each decision and its
+affected work packages in the owning package README. Do not create a second
+decision or completion index.
 
 ## Package status
 
-Keep the example out of this table. There are no active packages.
+Keep the example out of this table. Planning, implementation and Git integration
+are separate tasks; technical decisions do not create extra approval gates.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
+| [ ] | [AP56: Shared analysis core, source queries and refactoring](ap56-source-queries/README.md) | XL | Existing language service, CLI and LSP | Planned on `ap56`; both adapters are required deliverables, implementation not started |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed
@@ -62,10 +68,10 @@ delivery, following [status tracking](development-process.md#status-tracking).
 
 | Status | Meaning |
 | --- | --- |
-| Decision pending | A proposal or required design choice is unresolved; affected implementation is not approved. |
+| Decision pending | A required choice is unresolved; the named owner resolves it before dependent work. FPAS syntax changes require the user's approval. |
 | Agreed direction | The direction is accepted; named open details may still block implementation. |
-| Planned | The delegated design and work packages are recorded; implementation still requires authorization. |
-| In progress | Implementation is authorized and delivery is underway. |
+| Planned | Design and work packages are recorded; implementation has not started. |
+| In progress | Delivery of the assigned work is underway. |
 | Complete | Every work package is delivered and verified within the agreed scope. |
 | Deferred | The user has parked the proposal; no work is scheduled and reopening requires a new decision. |
 | Rejected; closed | The proposal will not be implemented under this plan. |

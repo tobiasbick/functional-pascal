@@ -1,17 +1,21 @@
 # Source queries for coding agents
 
-> **Status: proposed specification; implementation not started.** The repository
-> behavior described below was checked on `refactor/runtime-architecture` at
-> `3f8a22390`. Commands marked proposed are not available yet. This document
-> defines a later implementation, without changing FPAS syntax or execution.
+Status: planned specification; implementation not started. The code baseline is
+`a5f65fcdb`. [AP56](improve-syntax/ap56-source-queries/README.md) owns all five
+phases on branch `ap56`: foundation, find, inspect, direct call queries and
+checked refactoring. Commands marked proposed are unavailable. Agents decide
+technical and CLI contracts autonomously; only FPAS syntax changes require user
+approval. This plan requires no FPAS syntax or execution change.
+The [adapter contract](improve-syntax/ap56-source-queries/adapter-contract.md)
+requires the shared analysis core and both CLI/LSP connections in each delivery.
 
 ## Problem and goal
 
 Agents can already ask semantic questions at a saved source position. Finding
 that position, collecting a useful implementation context, and separating calls
 from other references still require several operations and manual interpretation.
-The goal is a bounded, reproducible source interface that makes those steps
-explicit and eventually supports checked edits.
+The goal is a bounded, reproducible analysis core whose typed facts and checked
+edits are used by both CLI and LSP, including unsaved editor snapshots.
 
 FPAS source remains the authoritative program representation. Symbols, types,
 relations, and edit plans are derived from exact source snapshots and compiler
@@ -32,15 +36,24 @@ contracts from the additions in this proposal.
 | Area | Present behavior and source evidence |
 | --- | --- |
 | CLI selection | [`cli_input/query.rs`](../../crates/fpas-cli/src/cli_input/query.rs) accepts `refs`, `definition`, `type`, and `rename`. All require one `file.fpas:line:column`; there is no name selector, `find`, `inspect`, `callers`, or `callees`. |
-| Read-only queries | [`worker.rs`](../../crates/fpas-cli/src/cli_query/worker.rs) calls the shared [`LanguageService::source_query`](../../crates/fpas-language-service/src/navigation/source_query.rs). It analyzes saved sources without bytecode compilation or program execution. `type` uses checked AST metadata, not hover text. |
-| Read contract | [`report.rs`](../../crates/fpas-cli/src/cli_query/report.rs) emits schema version 1 with snake_case fields, outcomes, diagnostics, locations, limits, and coverage. Even invalid requests receive JSON; a final stdout failure is exceptional. |
-| Context and snapshots | [`SourceInputs`](../../crates/fpas-project/src/source_inputs.rs) freezes source and manifest bytes, bounds discovery, records canonical and lexical path identities and file selections, and verifies them before reporting. The worker exports SHA-256 hashes of exact input bytes. |
-| Name search | [`workspace_symbols.rs`](../../crates/fpas-language-service/src/navigation/workspace_symbols.rs) searches indexed names case-insensitively, ranks exact short names before partial matches, sorts deterministically, and truncates at 100. Its vector result does not report truncation or query coverage. [`WorkspaceSymbolIndex`](../../crates/fpas-language-service/src/symbols/index.rs) retains ambiguous qualified and unqualified candidates. |
-| Navigation metadata | [`DocumentSymbol`](../../crates/fpas-language-service/src/symbols/document.rs) has qualified names, kinds, declaration/name/scope spans, visibility, detail, and optional callable signatures. [`navigation/service.rs`](../../crates/fpas-language-service/src/navigation/service.rs) shares resolution, references, rename, and declaration documentation. |
+| Read-only queries | [`request.rs`](../../crates/fpas-cli/src/cli_query/request.rs) supervises a worker and handles parser errors as JSON. [`worker.rs`](../../crates/fpas-cli/src/cli_query/worker.rs) calls [`LanguageService::source_query`](../../crates/fpas-language-service/src/navigation/source_query.rs). Read queries neither compile bytecode nor execute FPAS. |
+| Read contract | [`report.rs`](../../crates/fpas-cli/src/cli_query/report.rs) builds schema-1 JSON with `serde_json::Value`, including diagnostics and coverage. A typed schema-2 wire model is new work. `request::selected` explicitly bypasses rename, whose dispatcher and error path remain separate. |
+| Context and snapshots | [`SourceInputs`](../../crates/fpas-project/src/source_inputs.rs) freezes bytes and verifies lexical/physical aliases and glob membership. Its guard is thread-local and exports files/reasons, not a reusable owned inventory of every scope input. The worker hashes files read during that operation; this is not an operation-independent snapshot or target reference. |
+| Name search | [`workspace_symbols.rs`](../../crates/fpas-language-service/src/navigation/workspace_symbols.rs) ranks case-insensitive matches, collects all matching declarations, then truncates at 100 without coverage. [`analysis/service.rs`](../../crates/fpas-language-service/src/analysis/service.rs) builds that index from parser symbols and includes all editor API sources. It is not a checked, visibility-filtered, bounded `find` implementation. |
+| Navigation metadata | [`DocumentSymbol`](../../crates/fpas-language-service/src/symbols/document.rs) has identity, spans, visibility and callable detail. [`DocumentAnalysis`](../../crates/fpas-language-service/src/analysis/document.rs) retains checked metadata on the original AST; [`AnalysisMetadata`](../../crates/fpas-sema/src/check/context.rs) already has declaration types and binding references. Reuse these instead of parsing hover text. |
+| Intrinsic declarations | [`StandardLibraryContext`](../../crates/fpas-language-service/src/workspace/standard_library.rs) identifies generated `lib/api/Std` sources. Their FPAS bodies are declaration stubs, not native implementations. Existing API lookup shares documentation extraction but excludes routine locals and does not provide source-query completeness. |
 | Analysis reuse | [`DocumentSnapshot`](../../crates/fpas-language-service/src/document/snapshot.rs) owns immutable text, parsed AST, line index, and store-local revisions. [`AnalysisCache`](../../crates/fpas-language-service/src/analysis/cache.rs) keys completed analyses by participating revisions and project context; request forks share it within a running service. Separate CLI worker processes do not share that cache. |
 | Rename | [`rename.rs`](../../crates/fpas-cli/src/cli_query/rename.rs) pins known source snapshots, checks analysis before and after in-memory edits, checks conflicts through the service, and supports `--dry-run`. [`publication.rs`](../../crates/fpas-cli/src/cli_query/publication.rs) stages replacements and verifies source bytes before publishing. |
+| Other refactorings | [`refactoring/mod.rs`](../../crates/fpas-language-service/src/refactoring/mod.rs) offers checked extract-variable and organize-imports editor actions. They have no CLI plan/apply interface. Reuse their evaluation-order and initializer-effect restrictions. |
+| Call metadata | [`AnalysisMetadata`](../../crates/fpas-sema/src/check/context.rs) already retains binding references, named-argument ordering, method/fluent/intrinsic targets and constructor/conversion classifications. It does not expose a complete source-call inventory or parameter-change engine. |
 | Unit dependencies | [`UnitGraph`](../../crates/fpas-project/src/unit_graph/model.rs) retains parsed units, origins, direct `uses`, and source identities. Import reachability is not a function-call graph. |
 | Debugger effects | [`fpas-code/src/debug/effects.rs`](../../crates/fpas-code/src/debug/effects.rs) classifies verified bytecode, follows direct call/tail-call edges to transitive effects, and marks dynamic calls and callback intrinsics conservatively. A general source-call query still requires source-level relationships. |
+| Tool identity | [`compiler_identity.rs`](../../crates/fpas-build/build/compiler_identity.rs) hashes compiler/artifact inputs, excluding the CLI and language-service crates. It cannot alone identify this query implementation. No query-specific build fingerprint or canonical target-reference serialization exists. |
+
+The units-basic example resolves `App.Math.Clamp` through schema 1; `query find`
+is an invalid request. AP56 retains the semantic results while adding checked
+selection and adapter mappings. Work files own paths, migration and acceptance;
+the phases below are not a second completion index.
 
 Read queries accept `--context` with a project or workspace manifest. Position
 queries otherwise discover source ownership; loose files have explicitly limited
@@ -93,13 +106,15 @@ fpas query type src/client.fpas:12:5 --context dungeon.fpasworkspace
 fpas query inspect --symbol Dungeon.Client.Requests.Queue --context dungeon.fpasworkspace
 fpas query callers --symbol Dungeon.Client.Requests.Queue --context dungeon.fpasworkspace
 fpas query callees --symbol Dungeon.Client.Requests.Queue --context dungeon.fpasworkspace
-fpas query rename src/client.fpas:12:5 Submit --context dungeon.fpasworkspace --dry-run
+fpas refactor rename src/client.fpas:12:5 --name Submit --context dungeon.fpasworkspace --out rename.plan.json
+fpas refactor apply --plan rename.plan.json
 ```
 
-`find` takes search text. Other operations accept exactly one of a position,
+`find` takes search text. Declaration operations accept exactly one of a position,
 `--symbol <name>`, or `--target-ref <json-file>`. Reject mixed selectors, missing
 values, repeated options, and unsupported operation options through the common
-error envelope. Rename also requires its replacement name. Keep positional
+error envelope. Rename also requires `--name`. Range/file refactorings use the
+selectors specified in AP56.6. Keep positional
 selection for expressions, locals, aliases, and shadowed declarations.
 
 Use `--context` consistently; remove rename's separate `--project` spelling.
@@ -127,10 +142,12 @@ result. `inspect` handles declaration information for these cases.
 
 ### Versioned result and failure model
 
-Use a common `schema_version: 2` envelope for all queries, including rename.
+Use a common `schema_version: 2` envelope for queries and refactoring commands.
 Keep one UTF-8 JSON object plus newline on stdout for success and failure;
 reserve stderr for inability to deliver the final report. Help remains help.
 The exact operation payloads must have schema fixtures before implementation.
+Preparation distinguishes a checked no-change result from an unsupported action
+or incomplete analysis; absence of an editor action is not evidence of no change.
 
 | Field | Proposed meaning |
 | --- | --- |
@@ -139,7 +156,7 @@ The exact operation payloads must have schema fixtures before implementation.
 | `context` | Kind, manifest, sorted projects, standard-library selection, path base, and searched scope. |
 | `snapshot` | Content-derived request identity, analysis-contract identity, and hashed input inventory; null if unavailable. |
 | `target`, `candidates` | Selected declaration and reusable reference, or bounded ambiguity candidates. |
-| `result` | Tagged operation payload: symbols, locations, type, inspection sections, relations, or edit/publication information. |
+| `result` | Tagged operation payload: symbols, locations, type, inspection sections, relations, or refactoring plan/publication information. |
 | `diagnostics` | Original attributed FP diagnostics and structured query diagnostics with stable codes. |
 | `coverage` | Analysis completeness, reasons, searched/excluded scope, returned/known-total counts per collection, and text omissions. |
 | `limits` | Effective deadline, analysis/input ceilings, and all output budgets. |
@@ -181,6 +198,10 @@ limits. Save exactly that object as `queue.target.json`, then use:
 fpas query inspect --target-ref queue.target.json
 ```
 
+Limit reference-file reads/decoding to the shared 8 MiB public ceiling. Resolve
+recorded identity paths from their original context/path base, independent of
+the new invocation's working directory; display paths remain presentation only.
+
 Separate three concepts:
 
 1. **Symbol identity:** the resolved declaration in an owning semantic context.
@@ -206,9 +227,14 @@ then re-resolve and verify identity and span. Reject changes to any participatin
 source, manifest, membership, library, path binding, or analysis contract. Do not
 fall back to a similar name, moved span, or a fresh search. References are local
 to the checked source tree, not portable across arbitrary repository moves.
-Require complete, verified snapshot identity before issuing a reusable reference;
-partial observations may still carry locations but cannot silently become edit
-authorization. References are validation data, not filesystem access permission.
+Require a complete, verified input scope and checked declaration before issuing
+a reusable reference. AP56.1 distinguishes that scope verification from a clipped
+result collection; clipping cannot establish short-name uniqueness. Partial
+analysis may carry locations but no reusable references. References are validation
+data, not filesystem access permission; a mutation repeats complete validation.
+AP56 uses references only for source-backed checked declarations.
+Source-less builtins keep their known identity with a null reference and explicit
+reason; generated API declarations with real spans may still have references.
 
 Use the existing frozen-input mechanism throughout discovery and analysis, then
 verify bytes, membership, and identities before reporting. Never mix revisions
@@ -225,11 +251,11 @@ bounded selection, not only after building unbounded vectors. Proposed defaults:
 | --- | --- | --- |
 | `find --limit` | 100 symbols | 10,000 |
 | `refs`, `callers`, `callees --limit` | 1,000 entries per named relation collection | 10,000 per collection |
-| `inspect` | 32 KiB aggregate source excerpts; 12 supporting types | 256 KiB; 64 types |
+| `inspect` | 32 KiB aggregate source excerpts; 12 supporting types | Same fixed budgets in AP56 |
 | Documentation/signature text; one-line previews | 4,096 scalars; 160 scalars | Existing limits |
 
-Initially keep inspection budgets fixed and reported; configurable spellings are
-an open UX decision. Count UTF-8 excerpt bytes and JSON escaping separately, and
+AP56 uses fixed, reported inspection budgets without new budget flags.
+Count UTF-8 excerpt bytes and JSON escaping separately, and
 clip excerpts only at valid character boundaries.
 Explicitly report omitted sections, clipped text, and unknown totals. Never clip
 an edit's replacement bytes and then publish it; oversized mutation plans fail
@@ -255,85 +281,44 @@ identical semantic JSON; omit wall-clock timestamps and random IDs from it.
 
 ### Phase 0: common infrastructure and existing-query convergence
 
-Define typed service request/results, schema-2 fixtures, selectors, snapshot
-references, coverage categories, and bounded serialization. Migrate existing
-read queries and rename's interface without weakening rename checks. Reuse
-structured diagnostics and cancellation rather than adding parallel CLI logic.
-
-Move rename preparation onto the shared frozen-input/context contract, including
-manifests and membership; retain before/after overlay analysis. The hard read
-worker deadline must not be copied blindly to an in-progress multi-file commit.
-Keep publication owned by the surviving CLI coordinator: cancellation/deadlines
-can abort preparation or pre-publication checks; once replacement begins, finish
-publication or restoration and report its state. This bounded-analysis versus
-uninterruptible-publication distinction must be explicit in help and `limits`.
-
-**Acceptance:** existing navigation and rename safety fixtures pass under the new
-schema; failures produce structured outcomes; no program executes or read query
-writes source/build artifacts. Validate wrong context, invalid selectors,
-source/manifest/membership changes, stale references, timeout, output failure,
-permissions, staging failure, commit failure, and failed restoration. Publication
-results must identify unchanged, replaced, restored, and unresolved paths.
+[AP56.1](improve-syntax/ap56-source-queries/01-contract.md) specifies schema,
+snapshot/reference and publication fixtures for the recorded technical choices.
+[AP56.2](improve-syntax/ap56-source-queries/02-foundation.md) owns delivery and
+migration of existing queries. Preserve semantic results, edit checks and
+attributed diagnostics. Worker preparation is bounded; the surviving coordinator
+finishes publication or ordinary recovery once replacement begins. Oversized
+edit bytes and identity fields are rejected before publication, never clipped.
 
 ### Phase 1: `find` and declaration selection
 
-Expose symbol discovery from the language service with name, qualified name,
-kind, signature where available, source location, short declaration documentation,
-origin, owner/project, and analysis state. Reuse declaration spans and documentation
-extraction; absent documentation is absent, not an invented summary. Syntax-only
-candidates may be returned but must be labeled and cannot establish a unique
-checked target. Extend existing queries with the selectors defined above.
-
-Search declarations owned by selected projects, including their private/local
-symbols as source navigation, and eligible dependency exports. Label visibility
-and origin. Being discoverable never makes a private symbol callable by another
-project. Dependency-private implementations remain outside consumer discovery;
-select their owning project to inspect them. Do not index the entire installed
-Std implementation by default; eligible imported Std APIs and source-less builtin
-declarations are distinguishable, with null physical locations where appropriate.
-
-**Acceptance:** exact matches precede partial matches; duplicate short names and
-same qualified names in different projects remain ambiguous. Test case differences,
-aliases, shadowed locals, generic source declarations, dependency exports, excluded
-files, builtins, and repeated deterministic runs. A reduced limit reports omissions
-without selecting the first candidate. Position and reference selection of the
-same declaration agree; expression `type` behavior remains intact.
+[AP56.3](improve-syntax/ap56-source-queries/03-find.md) owns checked discovery,
+bounded ranking and position/name/reference selection. Require nonempty find
+text. Respect owned/private versus dependency/export scope, label origins and
+incomplete analysis, and preserve declaration identity across selectors. Existing
+editor workspace search is a reuse source, not proof of complete discovery.
+Its current unbounded collect-then-truncate path cannot satisfy this contract.
+Preserve its empty-pattern, open-document and unimported API discovery through
+the adapter contract's explicit `editor_catalog` policy. CLI and rich extension
+find default to `checked_context`; catalogue-only results grant no portable
+reference, uniqueness or edit eligibility.
 
 ### Phase 2: bounded `inspect` context
 
-Return sections in this order: selected declaration signature/documentation,
-implementation if available, then directly relevant project types. Each section
-has a reason for inclusion, owning symbol, exact source range/hash, origin,
-analysis state, and `excerpt`/`truncated` flags. Keep declaration and implementation
-locations distinct where necessary. A missing body is explicitly unavailable,
-for example for a builtin or declaration-only dependency; never synthesize one.
-
-Use the compiler-linked declaration/AST for implementation bounds. Supporting
-types are direct nominal types in the signature, receiver, and explicit local
-type annotations, in that priority and source order. Unwrap structural wrappers
-such as arrays to identify their directly named type arguments, deduplicating
-semantic identities. Include the named type or alias declaration once; do not
-recursively expand its members' types, callees, imports, or method bodies.
-Library-private details follow the selected context's visibility policy.
-
-For large records/enums, return labeled source excerpts such as the header and
-selected member declarations with their separate ranges; expose omitted members
-and known counts. A set of excerpts is not a complete compilable declaration.
-If a routine body exceeds the budget, return clearly labeled partial ranges and
-the full body's location/size. Do not splice disjoint source into apparently
-continuous code. Missing checked type links yield explicit unavailable context,
-not a guessed type from a name or hover string.
-
-**Acceptance:** generic signatures and imported aliases resolve to original
-declarations; supporting types follow the stated one-hop rules. Recursive types,
-large bodies, nested routines, and unavailable implementations stay bounded.
-All excerpts reproduce exact snapshot bytes, including Unicode and line endings.
-Absent docs, deliberate omissions, budget clipping, and failed analysis remain
-distinguishable. Inspecting one function never recursively includes its callees.
+[AP56.4](improve-syntax/ap56-source-queries/04-inspect.md) owns ordered declaration,
+implementation and direct-type context, exact excerpt provenance, fixed budgets
+and omission reporting. Retain contract clauses and original checked AST identity.
+Generated editor API bodies are declaration stubs, never native implementation.
+Source-backed Std routines remain inspectable under their visibility policy.
+Supporting types are one-hop checked identities; no recursive callee/import
+expansion or semantic inference from display strings is permitted.
 
 ### Phase 3: direct `callers` and `callees`
 
-Build source relationships from checked AST and compiler resolution metadata in
+[AP56.5](improve-syntax/ap56-source-queries/05-call-relations.md) owns delivery,
+the source-form audit, affected paths and regression coverage.
+
+Build source relationships from snapshot-owned checked AST/retained expression
+allocations and compiler resolution metadata in
 the language service. Existing references alone cannot classify calls. If the
 compiler does not retain a needed binding, add snapshot-scoped metadata at its
 existing resolution point; do not infer a target from matching names, argument
@@ -347,6 +332,11 @@ aliases, shadowing, methods, and imported declarations through their original
 semantic identities. Attribute nested closure bodies to that closure, with a
 snapshot-bound span identity when anonymous, not to its enclosing routine. Use
 an explicit owner kind for program entry or unit initialization.
+Record-field defaults have a declaration/default owner: they execute in their
+declaration environment when construction needs the default. Traverse checked
+`record_defaults` and `static_bound_declarations` allocations with their retained
+metadata and deduplicate original/retained source sites. Do not multiply a default
+call by its construction sites or misattribute it to unit initialization.
 
 | Relationship | Meaning and reporting |
 | --- | --- |
@@ -372,6 +362,9 @@ scope-wide unresolved inventory is acceptable. Narrowing it requires compiler
 proof, not name matching. Apply and report separate collection counts/limits.
 
 Expose `direct_edges_complete` and `runtime_targets_complete` in relation coverage.
+The latter describes possible targets of inventoried source sites, not all runtime
+effects. Report compiler-generated invocation exclusions, such as resource cleanup;
+refactoring must still account for compiler-bound uses of the changed declaration.
 Relevant unknown targets make the overall result incomplete even when all proven
 direct edges were enumerated. Zero direct callers is not proof of zero possible
 runtime calls. Analysis failures, omitted bodies, and external consumers are
@@ -383,32 +376,54 @@ generic calls, methods, imports, and multiple call sites resolve correctly.
 Passing a routine as callback yields a related use, not a fabricated direct call
 to it. Calling a stored routine value remains unresolved unless binding is proven.
 Test nested/anonymous closures, callable fields, spawns, builtins, initializers,
+record defaults and retained static-bound expressions,
 broken sources, export boundaries, and empty direct-call lists with dynamic uses.
 No unresolved or unsearched region may disappear into a complete empty answer.
 
-### Phase 4: later checked parameter refactoring
+### Phase 4: checked refactoring and parameter insertion
 
-This phase is outside the initial read-query implementation and needs its own API
-decision. The proposed operation is: add a parameter to a selected routine and
-adapt its known call sites. Do not publish a CLI spelling until its edit-policy
-and unsupported cases are decided.
+[AP56.6](improve-syntax/ap56-source-queries/06-refactor.md) owns the shared
+`fpas refactor` preview/plan/apply interface, migrating rename and exposing the
+existing extract-variable and organize-imports transformations.
+[AP56.7](improve-syntax/ap56-source-queries/07-add-parameter.md) appends an explicit
+parameter and adapts proven supported calls. These are agent-owned CLI and
+implementation decisions; emitting existing FPAS syntax needs no grammar approval.
+Proposed commands are documented in those work files and stay out of installed
+help until implemented. Remove `query rename` when its canonical replacement ships.
 
-Require an explicit parameter name/type/mode and an explicit argument policy.
-First support ordinary, fully resolved calls; unknown dynamic uses, callable-value
-references, callbacks, unsupported method/constructor cases, and generic cases
-without sufficient metadata block application with locations and reasons. Do not
+Require an explicit parameter name/type/mode and one caller-supplied argument
+expression, checked independently in every caller's scope. Append only; parameter
+removal/reordering and per-call expression policies are outside this operation.
+Use AP56.7's fixed matrix: non-generic named routines and ordinary direct calls,
+including checked non-generic nested routines and record defaults. Generic bodies,
+methods/fluent calls, spawns, callable-value/callback uses and unresolved relevant
+calls block application with locations and reasons. Parse complete type/argument
+fragments, reject trailing tokens and validate the type in the declaration's scope.
+Compiler-bound implicit uses also block unsupported transformations. Do not
 silently edit direct calls while leaving incompatible function values behind.
 Exported routines require an explicit statement that only selected consumers are
 covered, never a claim of whole-ecosystem safety.
 
-Generate a deterministic preview tied to the starting snapshot, including every
-edit, old text, and affected source hash. Check identifier/parameter conflicts,
+Generate AP56.6's deterministic plan tied to the starting snapshot, including the
+recipe, complete before/after inventories, every edit, old text and source hash.
+Only explicit `apply --plan` writes source. Check identifier/parameter conflicts,
 named/positional arguments, `var` storage requirements, types, and evaluation
-order. A caller-supplied new argument can introduce effects: do not invent a
-default expression or claim behavioral equivalence merely because it type-checks.
+order and unchanged binding identities. A new argument can introduce effects;
+do not invent a default or claim equivalence merely because it type-checks.
 Analyze all known affected projects and consumers against in-memory overlays
 before publishing. Application rechecks the exact preview/preconditions rather
 than silently recomputing a different plan. Incomplete analysis blocks mutation.
+Validate plan structure/context first, then compare full inventories before
+resolving the pre-edit target. Matching expected-after state reports `ok` with
+`result.status: already_applied` and no writes; an eligible empty plan reports
+`no_change`. A partial state is `stale_plan`. Bound artifact decoding and keep
+identity paths independent of the applying process's current directory.
+
+Standard editor extract/import actions carry a snapshot-bound recipe command,
+not a cached edit. Invocation revalidates all relevant inputs before requesting
+editor application. Standard rename checks in its final request. Client rejection
+is reported; the adapter contract documents the remaining delivery/application
+race for unedited dependencies and closed files.
 
 Reuse the staged publisher and strengthen its input checks as established in
 Phase 0. Keep per-file replacement and best-effort restoration guarantees explicit.
@@ -429,17 +444,19 @@ Follow the [Rust architecture](../rust-architecture.md):
 
 - `fpas-parser` supplies recovered ASTs and exact source spans; `fpas-sema` owns
   bindings, checked types, generic substitutions, and any missing call metadata.
-  Preserve metadata's association with the original snapshot AST allocation.
+  Preserve metadata's association with its snapshot-owned original or retained allocation.
 - `fpas-project` owns manifest discovery, dependency/export rules, `UnitGraph`,
   and frozen inputs. Extend its snapshot inventory where needed; do not reproduce
   project selection or path-containment rules in new CLI commands.
 - `fpas-language-service` owns reusable query semantics, symbol selection,
-  inspection/context rules, source relations, and edit planning. Reuse snapshots,
-  cancellation, diagnostics, navigation, and analysis caching. Use typed results
-  so CLI and later editor clients consume the same meaning.
+  inspection/context rules, relations, edit planning and semantic revalidation.
+  Reuse snapshots, cancellation, diagnostics and analysis caching. Both adapters
+  must call these operations; reusable checks move out of CLI-only rename logic.
 - `fpas-cli` parses selectors, coordinates deadlines, renders bounded JSON, and
   publishes checked edits. It performs no independent name or call resolution.
-  `fpas-lsp` retains protocol/position conversion and can later adapt shared APIs.
+- `fpas-lsp` maps standard requests and the required query/refactoring extensions
+  to that same core, with synchronized overlays and versioned editor edits.
+  The adapter contract fixes required editor commands and parity/overlay tests.
 - `fpas-code` retains debugger bytecode effect analysis. These source queries
   introduce no dependency on VM execution, native host operations, or runtime
   values and do not require compiling the inspected program.
@@ -452,14 +469,20 @@ warm query costs and identifying a material bottleneck. Any later cache must
 validate manifests, library selection, membership, source bytes, and compiler
 contract, with the same correctness as an uncached query.
 
-## Cross-phase verification and benefit measurement
+## Cross-phase verification
 
 Extend service tests for resolution and coverage, CLI tests for schemas and exit
-codes, and filesystem tests for snapshot/publication behavior. Reuse the existing
+codes, and filesystem tests for snapshot/publication behavior. AP56's work files
+name the primary owner for each regression. Reuse the existing
 [navigation](../../crates/fpas-language-service/tests/navigation_resolution.rs),
 [cache](../../crates/fpas-language-service/tests/query_cache.rs),
 [rename safety](../../crates/fpas-language-service/tests/rename_safety.rs), and
-[CLI query](../../crates/fpas-cli/src/main_tests/query.rs) fixtures.
+[CLI rename](../../crates/fpas-cli/src/main_tests/query/rename.rs) and
+[CLI source-query](../../crates/fpas-cli/tests/source_queries.rs) fixtures.
+The CLI integration cases run under target `tools`; semantic cases run under
+language-service `navigation_edits`, with cache checks under `analysis_state`.
+Register new case modules explicitly; both crates disable automatic integration
+test discovery. Compile tests separately from execution as the build guide requires.
 Each phase must additionally pass this shared matrix:
 
 | Case | Required observation |
@@ -473,33 +496,23 @@ Each phase must additionally pass this shared matrix:
 | Repeated runs and reordered discovery | Same semantic output and deduplication for identical snapshots/options. |
 | Dynamic callables and callbacks | References distinct from calls; uncertain targets remain visible. |
 
-After correctness, evaluate realistic FPAS tasks: locate an unfamiliar API,
-explain a routine using its types, enumerate known callers across projects, and
-make a validated change. Compare existing tools (text search plus positional
-queries/editor navigation) with the extensions on identical repository snapshots,
-task descriptions, selected contexts, and validation criteria. For automated
-agents hold model, instructions, budgets, and available validation tools constant;
-repeat tasks and alternate order to limit learning/cache effects. Include failures
-and incomplete answers, not only successful examples.
-
-Measure correctly completed tasks, missed or misattributed uses, correction
-rounds, tool calls, transferred context bytes and tokens, and total elapsed time
-including tool execution. Record tool latency separately, cold versus warm service
-state, output limits, environment, and token-counting method. Validate final edits
-with the same compiler/tests and independently reviewed expected usages. Store
-experimental reports under `.temp-data`, not as claims of established productivity.
-No productivity improvement or reliable test-selection benefit has been measured
-for this proposal.
+Use fixed source fixtures for unfamiliar API lookup, declaration/type context,
+known callers and checked edits. Assert exact expected identities, omissions,
+blockers and post-edit compiler behavior through the owning tests above. Include
+failure and incomplete cases. No LLM task benchmarks, repair-count comparisons or
+model-based acceptance gates belong to AP56. Tool latency can be measured
+separately if an observed performance problem warrants it. No productivity or
+automatic test-selection benefit is claimed.
 
 ## Open decisions and exclusions
 
-Before Phase 0, finalize canonical reference serialization and tool fingerprint,
-schema fixtures, publication-state fields, and cancellation behavior at the write
-boundary. The required rejection and recovery guarantees above are not optional.
-Before Phase 2, decide whether to expose inspection-budget flags. Before Phase 3,
-audit available call metadata and enumerate the exact supported source forms;
-keep unsupported forms explicit. Phase 4 needs its argument-policy and review/apply
-interface decisions. These decisions do not require a language syntax change.
+AP56.1 specifies canonical encoding, CLI/LSP contracts and core build inputs.
+AP56.2 generates the shared analysis-core fingerprint, independent of adapter
+executables; source/library hashes and editor version guards remain distinct.
+AP56.5 audits call forms; AP56.7 maps its fixed supported/blocked forms to metadata
+and regression owners.
+Agents resolve these engineering details autonomously. Rejection and recovery
+guarantees remain required; no FPAS syntax change is needed.
 
 Excluded from the initial scope: a primary graph store or graph database, a new
 source representation, persistent node IDs across arbitrary edits, program
@@ -509,6 +522,6 @@ calls can be considered after direct queries; a static graph alone cannot provid
 complete change-impact analysis or reliable automatic test selection. A daemon,
 persistent index, and broader refactorings require separate evidence and design.
 
-The next implementation step is Phase 0's contract and fixture work, followed by
-Phase 1. Keep this plan current as decisions are made; move implemented contracts
+The next step is AP56.1's concrete contract fixtures, followed by AP56.2.
+Keep this plan aligned with the owning AP; move implemented contracts
 to the handbook only when code and tests provide them.

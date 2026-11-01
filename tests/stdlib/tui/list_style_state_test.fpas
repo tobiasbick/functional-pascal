@@ -1,0 +1,64 @@
+// Keeps native list selection and focus visible alongside item roles and disabled text.
+program TuiListStyleStateTest;
+
+uses Std.Test as Test, Std.Ui.Terminal as Tui;
+
+type Model = record
+  Focus: integer := 1;
+  Selected: integer := 0;
+end record;
+
+function View(State: Model): Tui.TuiElement;
+begin
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakeColumn([
+        Tui.TuiElementBuilders.MakeLayout(
+          Tui.TuiLayoutSettings.Default().WithFixedWidth(18).WithFixedHeight(2),
+          Tui.TuiElement.List(
+            Tui.TuiControlId.Create(1), ['Alert', 'Off', 'Unavailable'], State.Selected,
+            Tui.TuiListActions(
+              Change := Tui.TuiAction.Create(1), Activate := Some(Tui.TuiAction.Create(2)),
+              ItemRoles := Some([Tui.TuiStyleRole.Warning, Tui.TuiStyleRole.Normal]),
+              DisabledItems := Some([false, true])
+            )
+          )
+        ),
+        Tui.TuiElementBuilders.MakeButton(
+          Tui.TuiControlId.Create(2), 'Other', Tui.TuiAction.Create(3)
+        )
+      ])
+    ]
+  );
+end function;
+
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
+begin
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
+
+begin
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
+  var State := Model();
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(2, 0).Role = Tui.TuiStyleRole.Focused);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(12, 0).Role = Tui.TuiStyleRole.Focused);
+
+  State.Focus := 2;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(2, 0).Role = Tui.TuiStyleRole.Selected);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(12, 0).Role = Tui.TuiStyleRole.Selected);
+
+  State.Selected := 1;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(2, 0).Role = Tui.TuiStyleRole.Warning);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(2, 1).Role = Tui.TuiStyleRole.Disabled);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(12, 1).Role = Tui.TuiStyleRole.Selected);
+
+  State.Focus := 1;
+  State := App.RunIterations(State, Update, View, 0, 0);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(2, 1).Role = Tui.TuiStyleRole.Disabled);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(12, 1).Role = Tui.TuiStyleRole.Focused);
+  App.Close();
+end.

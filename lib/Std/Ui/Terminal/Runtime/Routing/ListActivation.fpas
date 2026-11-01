@@ -4,7 +4,8 @@ unit Std.Ui.Terminal.Runtime.Routing.ListActivation;
 uses
   Std.Ui.Terminal.Elements.Element as Element, Std.Ui.Terminal.Elements.Tree as Tree,
   Std.Ui.Terminal.Ids.Action as Action, Std.Ui.Terminal.Ids.ControlId as ControlId,
-  Std.Ui.Terminal.Runtime.Msg as Msg, Std.Ui.Terminal.Runtime.Routing.Focus as Focus;
+  Std.Ui.Terminal.Runtime.Msg as Msg, Std.Ui.Terminal.Runtime.Routing.Focus as Focus,
+  Std.Ui.Terminal.Chrome.List as List;
 
 type PendingActivation = record
   Id: ControlId.TuiControlId;
@@ -46,6 +47,8 @@ begin
       return (Id = Request.Id) and (Selected = Request.Selected)
         and
         (Actions.Activate = Some(Request.Action))
+        and
+        List.TuiListCanActivate(Actions, Selected)
         and
         (Selected >= 0) and (Selected < Items.Length()) and (Items[Selected] = Request.Text);
     when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.TabBar(_), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Overlay(_, _), Element.TuiElement.Desktop(_, _):

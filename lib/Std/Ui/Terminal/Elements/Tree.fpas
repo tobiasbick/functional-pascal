@@ -1,3 +1,4 @@
+// Tree traversal and semantic equality used by layout, routing and repaint caches.
 unit Std.Ui.Terminal.Elements.Tree;
 
 uses
@@ -18,6 +19,21 @@ begin
       return Children;
     when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       return [];
+  end case;
+end function;
+
+function SameOptionalItems<T: Equatable>(Left: option of array of T; Right: option of array of T): boolean;
+begin
+  case Left of
+    when Some(const A):
+      case Right of
+        when Some(const B):
+          return TuiSameItems(A, B);
+        when None:
+          return false;
+      end case;
+    when None:
+      return Right is None;
   end case;
 end function;
 
@@ -63,7 +79,15 @@ begin
     when TuiNodePair.Nodes(Element.TuiElement.CheckBox(const A, const AT, const AC, const AA), Element.TuiElement.CheckBox(const B, const BT, const BC, const BA)):
       return (A = B) and (AT = BT) and (AC = BC) and (AA = BA);
     when TuiNodePair.Nodes(Element.TuiElement.List(const A, const AT, const SelectedA, const AA), Element.TuiElement.List(const B, const BT, const BS, const BA)):
-      return (A = B) and (SelectedA = BS) and (AA = BA) and TuiSameItems(AT, BT);
+      return (A = B) and (SelectedA = BS) and (AA.Change = BA.Change)
+        and
+        (AA.Activate = BA.Activate)
+        and
+        (AA.FirstRow = BA.FirstRow) and (AA.HandleKeys = BA.HandleKeys)
+        and
+        SameOptionalItems(AA.ItemRoles, BA.ItemRoles)
+        and
+        SameOptionalItems(AA.DisabledItems, BA.DisabledItems) and TuiSameItems(AT, BT);
     when TuiNodePair.Nodes(Element.TuiElement.Scroll(const A, const AO, const AA, _), Element.TuiElement.Scroll(const B, const BO, const BA, _)):
       return (A = B) and (AO = BO) and (AA = BA);
     when TuiNodePair.Nodes(Element.TuiElement.MenuBar(const A), Element.TuiElement.MenuBar(const B)):

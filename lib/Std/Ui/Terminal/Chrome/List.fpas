@@ -1,13 +1,52 @@
 // Controlled-list actions and selection-following viewport geometry.
 unit Std.Ui.Terminal.Chrome.List;
 
-uses Std.Ui.Terminal.Ids.Action as Action;
+uses Std.Ui.Terminal.Ids.Action as Action, Std.Ui.Terminal.Cells.StyleRole as StyleRole;
 
 // Selection-change action and optional explicit activation action.
 public type TuiListActions = record
   public Change: Action.TuiAction;
   public Activate: option of Action.TuiAction;
+  // Optional unselected-item roles; native selection styles take precedence for enabled rows.
+  public ItemRoles: option of array of StyleRole.TuiStyleRole := None;
+  // Disabled items remain selectable for inspection but cannot be activated.
+  public DisabledItems: option of array of boolean := None;
+  // An explicit first row supports document-like lists; absent follows selection.
+  public FirstRow: option of integer := None;
+  // False delegates keys, including Enter and Tab, while retaining native pointer routing.
+  public HandleKeys: boolean := true;
 end record;
+
+// Resolves a bounded viewport start for painting and pointer hit testing alike.
+public function TuiListStart(Actions: TuiListActions; Count: integer; Selected: integer; Height: integer): integer;
+begin
+  case Actions.FirstRow of
+    when Some(const Offset):
+      return if Count <= Height then 0
+        else if Offset < 0 then 0
+          elsif Offset > Count - Height then Count - Height
+          else Offset
+          end if
+        end if;
+    when None:
+      return TuiListFirst(Count, Selected, Height);
+  end case;
+end function;
+
+// Disabled metadata is optional and never removes an item from keyboard navigation.
+public function TuiListCanActivate(Actions: TuiListActions; Index: integer): boolean;
+begin
+  if Index < 0 then
+    return false;
+  end if;
+
+  case Actions.DisabledItems of
+    when Some(const Disabled):
+      return (Index >= Disabled.Length()) or not Disabled[Index];
+    when None:
+      return true;
+  end case;
+end function;
 
 // First visible row; keeps the selected item in a clipped viewport.
 public function TuiListFirst(Count: integer; Selected: integer; Height: integer): integer;

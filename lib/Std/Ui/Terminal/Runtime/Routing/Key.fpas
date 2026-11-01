@@ -1,3 +1,4 @@
+// Routes focused controls and delegates application-owned list key maps intact.
 unit Std.Ui.Terminal.Runtime.Routing.Key;
 
 uses
@@ -9,7 +10,7 @@ uses
   Std.Ui.Terminal.Runtime.Routing.Button as RoutingButton, Std.Ui.Terminal.Runtime.Routing.Focus as Focus,
   Std.Ui.Terminal.Runtime.Routing.Menu as Menu, Std.Ui.Terminal.Runtime.Routing.FocusNavigation as FocusNavigation,
   Std.Ui.Terminal.Runtime.Routing.Input as RoutingInput, Std.Ui.Terminal.Runtime.Routing.TextArea as TextArea,
-  Std.Ui.Terminal.Chrome.Tabs as Tabs;
+  Std.Ui.Terminal.Chrome.Tabs as Tabs, Std.Ui.Terminal.Chrome.List as List;
 
 function TuiScrollClamp(Value: integer; Maximum: integer): integer;
 begin
@@ -179,6 +180,10 @@ begin
             return None;
           end;
         end if;
+
+        if not ChangeAction.HandleKeys then
+          return Some(RuntimeMsg.TuiMsg.Key(Key));
+        end if;
         const Count: integer := Items.Length();
         if Count = 0 then
           begin
@@ -187,6 +192,10 @@ begin
         end if;
 
         if Key.kind = Console.KeyKind.Enter then
+          if not List.TuiListCanActivate(ChangeAction, Selected) then
+            return None;
+          end if;
+
           case ChangeAction.Activate of
             when Some(const Activate):
               return Some(RuntimeMsg.TuiMsg.Action(Id, Activate));

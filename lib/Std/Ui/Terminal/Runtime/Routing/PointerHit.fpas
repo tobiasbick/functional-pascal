@@ -1,3 +1,4 @@
+// Resolves native pointer hits against arranged controls and their visible list rows.
 unit Std.Ui.Terminal.Runtime.Routing.PointerHit;
 
 uses
@@ -160,7 +161,7 @@ begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
             const Row: integer := Point.Y - Entry.Bounds.Y +
-              List.TuiListFirst(Items.Length(), Selected, Entry.Bounds.Height);
+              List.TuiListStart(ChangeAction, Items.Length(), Selected, Entry.Bounds.Height);
             if (Row >= 0) and (Row < Items.Length()) then
               begin
                 TuiPointerBestHit := TuiPointerHit.List(
@@ -168,7 +169,9 @@ begin
                   ChangeAction.Change,
                   Selected,
                   Row,
-                  ChangeAction.Activate,
+                  if List.TuiListCanActivate(ChangeAction, Row) then ChangeAction.Activate
+                    else None
+                    end if,
                   Items[Row]
                 );
               end;

@@ -1,3 +1,4 @@
+// Paints arranged elements with surface-aware styles and controlled list viewports.
 unit Std.Ui.Terminal.Rendering.Paint;
 
 uses
@@ -151,32 +152,52 @@ begin
       end;
     when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
-        const First := List.TuiListFirst(Items.Length(), Selected, Entry.Bounds.Height);
+        const First := List.TuiListStart(
+          ChangeAction,
+          Items.Length(),
+          Selected,
+          Entry.Bounds.Height
+        );
         var RowLimit: integer := Entry.Bounds.Height;
         if RowLimit > Items.Length() - First then
           begin
             RowLimit := Items.Length() - First;
           end;
         end if;
-
+        const SelectionRole := if TuiPaintFocused(Focused, Id) then StyleRole.TuiStyleRole.Focused
+          else StyleRole.TuiStyleRole.Selected
+          end if;
         for Row: integer := 0 to RowLimit - 1 do
           begin
             var Prefix: string := '  ';
             const ItemIndex := First + Row;
             var RowRole := StyleRole.TuiStyleRole.Normal;
-            if ItemIndex = Selected then
-              begin
-                Prefix := '> ';
-                RowRole := StyleRole.TuiStyleRole.Selected;
-                if TuiPaintFocused(Focused, Id) then
-                  RowRole := StyleRole.TuiStyleRole.Focused;
+            case ChangeAction.ItemRoles of
+              when Some(const Roles):
+                if ItemIndex < Roles.Length() then
+                  RowRole := Roles[ItemIndex];
                 end if;
+              when None:
+                null;
+            end case;
 
-                Clipped.FillRect(
-                  Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1),
-                  Cell.TuiCell.Create(' ', RowRole)
-                );
-              end;
+            if ItemIndex = Selected then
+              Prefix := '> ';
+              RowRole := SelectionRole;
+            end if;
+
+            if not List.TuiListCanActivate(ChangeAction, ItemIndex) then
+              RowRole := StyleRole.TuiStyleRole.Disabled;
+            end if;
+
+            if (ItemIndex = Selected) or (RowRole = StyleRole.TuiStyleRole.Focused) then
+              Clipped.FillRect(
+                Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1),
+                Cell.TuiCell.Create(
+                  ' ',
+                  if ItemIndex = Selected then SelectionRole else RowRole end if
+                )
+              );
             end if;
 
             TuiPaintTextInBounds(

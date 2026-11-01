@@ -73,7 +73,26 @@ still selected inside the active focus scope. Rejecting the proposed selection
 or replacing the clicked item does not activate a different row.
 A list constrained to fewer rows than items scrolls to keep the selection
 visible. The lower-level `TuiListActions` record
-contains `Change` and optional `Activate` actions.
+contains `Change` and optional `Activate` actions. `ItemRoles` and `DisabledItems`
+default to `None`. Missing array entries use the ordinary styles and remain
+enabled; extra entries are ignored. Enabled selected rows use `Focused` while
+the list has focus and `Selected` otherwise, taking precedence over their item
+role. Unselected rows retain their supplied role. Disabled items use `Disabled`
+text and can still be selected to inspect a reason,
+but neither Enter nor a click activates them; disabling the selected item before
+a queued pointer activation also cancels that activation.
+Their selection marker and row highlight remain visible after focus moves away.
+`FirstRow` defaults to `None`; an explicit value overrides selection-following
+scrolling. Negative values become zero, values past the last full viewport are
+clamped back, and zero is used when all items fit. Painting and pointer hit
+testing use the same offset. Applications setting `FirstRow` own keeping the
+selected row visible.
+`HandleKeys` defaults to `true`. Set it to false to deliver keys, including Enter
+and Tab, to the application's update function while retaining native list pointer
+input. Such applications own keyboard selection, activation and focus traversal.
+Use the default for ordinary host-managed Tab/Shift+Tab navigation.
+The [interactive demo](../../../../examples/pascal/tui/interactive_demo.fpas)
+shows an activating list with a warning role and a disabled item.
 
 `Input(Value)` stores a `TuiInputSpec` with controlled text and caret, optional
 hint text, optional oldest-to-newest history, a restorable history draft, and

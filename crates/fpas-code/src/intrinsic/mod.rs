@@ -52,6 +52,7 @@ pub mod random;
 pub mod result;
 pub mod server;
 pub mod str_ops;
+pub mod system_info;
 pub mod task;
 pub mod test;
 pub mod time;
@@ -84,6 +85,7 @@ pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
 pub use server::ServerIntrinsic;
 pub use str_ops::StrIntrinsic;
+pub use system_info::SystemInfoIntrinsic;
 pub use task::TaskIntrinsic;
 pub use test::TestIntrinsic;
 pub use time::TimeIntrinsic;
@@ -95,6 +97,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Read-only host information.
+    SystemInfo(SystemInfoIntrinsic),
     /// Native contiguous byte-buffer operation.
     Bytes(BytesIntrinsic),
     /// Model-tokenization and exact token counts.
@@ -172,6 +176,7 @@ impl Intrinsic {
     #[must_use]
     pub fn debugger_name(self) -> String {
         match self {
+            Self::SystemInfo(operation) => operation.source_name().to_owned(),
             Self::Bytes(BytesIntrinsic::JoinChunks) => "Std.Net.Http.Io.JoinBuffers".to_string(),
             Self::Bytes(BytesIntrinsic::DecodePercent) => "Std.Net.Uri.Percent.DecodeBytes".to_string(),
             Self::Mcp(operation) => operation.source_name(),
@@ -279,6 +284,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    SystemInfo(SystemInfoIntrinsic),
     Bytes(BytesIntrinsic),
     Tokenizer(TokenizerIntrinsic),
     Mcp(McpIntrinsic),

@@ -44,6 +44,18 @@ impl Worker {
         let destination = (operands.a != NO_REGISTER)
             .then(|| register(operands.a))
             .transpose()?;
+        if INLINE_CALLBACKS
+            && !self.capture_callback
+            && (self.debug_tasks || self.task_id != 0)
+            && let Intrinsic::SystemInfo(operation) = intrinsic
+        {
+            let arguments = self.registers[start..end].to_vec();
+            self.start_host_info(operation, &arguments, destination)?;
+            if !self.debug_tasks && self.task_suspension.is_some() {
+                self.park_pool_suspension()?;
+            }
+            return Ok(());
+        }
         if self.debug_tasks
             && INLINE_CALLBACKS
             && intrinsic == Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout)

@@ -62,6 +62,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 # Objects keep insertion order so Std.Json agrees with ordered FPAS dictionaries.
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 socket2 = "0.6.5"
+sysinfo = "=0.40.1"
 stats_alloc = "0.1.10"
 toml = "1.1.8"
 tokio = { version = "1.54.1", features = ["rt", "sync", "time", "macros"] }

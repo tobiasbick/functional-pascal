@@ -1,5 +1,6 @@
 //! Runtime-shared aggregate layouts and string constants derived from verified metadata.
 
+mod host_info;
 mod native_errors;
 mod native_records;
 use std::sync::Arc;
@@ -21,6 +22,7 @@ pub(super) struct RuntimeLayouts {
 impl RuntimeLayouts {
     pub fn build(executable: &Executable, address: InstructionAddress) -> Result<Self, VmError> {
         native_errors::validate(executable, address)?;
+        host_info::validate(executable, address)?;
         let records = executable
             .records
             .iter()

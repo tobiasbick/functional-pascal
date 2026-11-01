@@ -1,6 +1,6 @@
 # `Std.Os.Proc`
 
-Host process execution and interactive binary pipes for FPAS programs.
+Host process execution, interactive binary pipes and read-only process inspection for FPAS programs.
 
 ```pascal id=example-1
 program Example;
@@ -36,7 +36,46 @@ restrict the programs that may be launched. Configuration validation runs
 before launch.
 
 
-## Importing and names
+## Read-only process inspection
+
+`InspectProcesses(): result of (ProcessSample, Std.Os.System.SystemError)`
+refreshes the visible processes through sysinfo. It does not require a child
+handle and does not start, stop or modify a process. Import `Std.Os.System`
+to name its collection error explicitly. [System](system.md) describes
+collection lifetime, errors, concurrency and platform coverage.
+
+`ProcessSample` contains integer `SampledAtMilliseconds`, optional integer
+`IntervalMilliseconds`, and `Processes: array of ProcessInfo`. Results are
+sorted by PID. PIDs can be reused; use `Pid` and `StartTimeSeconds` together
+when correlating snapshots. A process may disappear while being inspected.
+
+| `ProcessInfo` fields | Type and meaning |
+| --- | --- |
+| `Pid`, `StartTimeSeconds`, `RunTimeSeconds` | Integers; PID, Unix start timestamp and uptime duration |
+| `ParentPid`, `SessionId` | Optional integer identifiers |
+| `Name`, `Status` | Strings; backend status labels are not a closed FPAS enum |
+| `Executable`, `WorkingDirectory`, `RootDirectory` | Optional strings; non-Unicode native text uses replacement characters |
+| `Arguments`, `Environment` | Arrays of strings; backend-visible arguments and environment entries |
+| `MemoryBytes`, `VirtualMemoryBytes` | Integer resident and virtual-memory measurements with OS-specific semantics |
+| `CpuTimeMilliseconds` | Integer cumulative CPU time |
+| `CpuUsagePercent` | Optional real; absent on first observation or below the minimum sample interval, can exceed 100 for a multicore process |
+| `ReadBytes`, `WrittenBytes`, `TotalReadBytes`, `TotalWrittenBytes` | Integer I/O deltas and cumulative counters |
+| `UserId`, `EffectiveUserId`, `GroupId`, `EffectiveGroupId` | Optional textual OS account IDs |
+| `ThreadKind` | Optional backend thread-kind label |
+| `Tasks` | Optional array of integer thread/task IDs, sorted ascending |
+| `OpenFiles`, `OpenFilesLimit` | Optional integer counts/limits |
+| `GpuUsagePercent`, `GpuMemoryBytes` | Optional real usage and integer GPU memory |
+| `Cgroup` | Optional `Std.Os.Hardware.CgroupMemory` |
+
+CPU usage needs two observations of the same process identity at least
+200 ms apart. Each call advances process history, independently of the CPU
+hardware sampler. The first I/O delta and data for newly discovered processes
+follow sysinfo's initialization. Missing paths and optional readings remain
+`None`. Empty argument/environment arrays and zero counters can also mean the
+backend could not retrieve them; this interface cannot distinguish causes
+that sysinfo does not expose. Permissions and sandboxing affect visibility.
+
+## Process execution imports
 
 After `uses Std.Os.Proc as Proc;`, access functions and records through that alias.
 
@@ -48,6 +87,7 @@ Requires `uses Std.Os.Proc as Proc;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
+| function | `InspectProcesses(): result of (ProcessSample, Std.Os.System.SystemError)` | Refresh read-only process information using sysinfo |
 | type | `ProcessOutput` | captured `ExitCode`, `Stdout`, and `Stderr` |
 | type | `EnvironmentVariable` | `Name: string` and `Value: Option of string`; `None` removes the child variable |
 | type | `ProcessOptions` | child configuration; start from `DefaultOptions()` |

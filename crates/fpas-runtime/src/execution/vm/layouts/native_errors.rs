@@ -12,6 +12,7 @@ pub(super) fn validate(image: &Executable, address: InstructionAddress) -> Resul
             continue;
         }
         let family = match Intrinsic::from_u16(instruction.abc_payload().b) {
+            Some(Intrinsic::SystemInfo(_)) => Some(Family::SystemInfo),
             Some(Intrinsic::Str(crate::StrIntrinsic::Utf8Decode)) => Some(Family::Utf8),
             Some(Intrinsic::Str(
                 crate::StrIntrinsic::Utf8Encode | crate::StrIntrinsic::Utf8Append,

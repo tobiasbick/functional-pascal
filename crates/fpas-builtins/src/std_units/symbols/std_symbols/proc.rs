@@ -35,6 +35,9 @@ pub const STD_PROC_RUN: &str = std_proc!("Run");
 pub const STD_PROC_RUN_CAPTURE: &str = std_proc!("RunCapture");
 
 pub(in crate::std_units) const STD_PROC_SYMBOLS: &[&str] = &[
+    "Std.Os.Proc.InspectProcesses",
+    "Std.Os.Proc.ProcessInfo",
+    "Std.Os.Proc.ProcessSample",
     STD_PROC_PROCESS,
     STD_PROC_START_OPTIONS,
     STD_PROC_DEFAULT_START_OPTIONS,

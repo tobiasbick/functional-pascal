@@ -21,6 +21,17 @@ macro_rules! family {
 /// Resolve one semantically validated canonical standard-library call.
 #[must_use]
 pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrinsic> {
+    if name.starts_with("Std.Os.")
+        && let Some(operation) = (fpas_code::SystemInfoIntrinsic::Info as u16
+            ..=fpas_code::SystemInfoIntrinsic::ListGroups as u16)
+            .filter_map(Intrinsic::from_u16)
+            .find(|intrinsic| {
+                matches!(intrinsic,
+        Intrinsic::SystemInfo(operation) if operation.source_name() == name)
+            })
+    {
+        return Some(operation);
+    }
     if let Some(entry) = fpas_sema::native_operation_by_implementation(name)
         && entry.lowering == fpas_sema::NativeLowering::IsEmpty
     {

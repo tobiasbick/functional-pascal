@@ -56,6 +56,11 @@ pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
 /// Whether a case-insensitive aggregate name needs retention for native construction.
 /// ACP schemas are initialized only when an object actually contains an ACP aggregate.
 pub fn is_runtime_aggregate_type(name: &str) -> bool {
+    if crate::host_info::record(name).is_some()
+        || name.eq_ignore_ascii_case("Std.Os.System.SystemError")
+    {
+        return true;
+    }
     if RUNTIME_AGGREGATE_TYPES
         .iter()
         .any(|known| known.eq_ignore_ascii_case(name))

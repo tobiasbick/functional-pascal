@@ -63,7 +63,10 @@ canonical import path.
 | `Std.Io.Path` | Pure filesystem-path manipulation |
 | `Std.Os.Args` | Process arguments |
 | `Std.Os.Env` | Process environment |
-| `Std.Os.Proc` | Child processes and their pipe operations |
+| `Std.Os.Proc` | Child processes, their pipe operations and read-only process inspection |
+| `Std.Os.Hardware` | CPU, memory, disk and network-interface telemetry, sensors, machine identity and GPUs |
+| `Std.Os.System` | OS metadata, host-information collection errors and aggregate host snapshots |
+| `Std.Os.Users` | Read-only user and group inventories |
 | `Std.Os.Errors` | Shared native host error causes |
 | `Std.Cli` | Command-line schemas, parsing and help |
 | `Std.Console` | Terminal text, cells, screen and input |
@@ -108,7 +111,7 @@ Create only the units that a delivered interface needs.
 | --- | --- | --- |
 | Binary number layouts | `Std.Bytes.Binary` | Multi-byte number encoding and explicit byte order; general byte storage is already owned by `Std.Bytes` |
 | I/O | `Std.Io.Fs`, `Std.Io.Path`, `Std.Io.Streams`, `Std.Io.Pipes` | Filesystem operations, paths, general stream contracts and standalone pipes |
-| Host services | `Std.Os.Args`, `Std.Os.Env`, `Std.Os.Proc`, `Std.Os.Errors`, `Std.Os.Signals`, `Std.Os.Hardware` | Portable process and host facilities, native causes and hardware information |
+| Host services | `Std.Os.Args`, `Std.Os.Env`, `Std.Os.Proc`, `Std.Os.Errors`, `Std.Os.Signals`, `Std.Os.Hardware`, `Std.Os.System`, `Std.Os.Users` | Portable process and host facilities, native causes, hardware/system information and account inventories |
 | Platform-specific access | `Std.Platform.Windows`, `Std.Platform.Unix` and focused children | Explicitly platform-specific facilities that cannot keep a portable contract |
 | Command lines | `Std.Cli` | User-facing option schemas, help and validation; raw arguments stay in `Std.Os.Args` |
 | Terminal primitives | `Std.Console`, optional `Std.Console.Screen` and `Std.Console.Input` | Text streams, cell rendering and terminal events without a widget framework |
@@ -144,6 +147,14 @@ Optional subdivisions require a deliberate interface change and one canonical
 home; they do not duplicate parent operations.
 
 ## Boundaries between domains
+
+- `Std.Os.Hardware` owns hardware/resource observations, including disk and
+  network-interface counters. Filesystem operations stay in `Std.Io.Fs` and
+  network protocols in `Std.Net`. Read-only process inspection belongs to
+  `Std.Os.Proc`; account inventories belong to `Std.Os.Users`. `Std.Os.System`
+  owns OS metadata and composes these existing types in a full host snapshot.
+  Its `SystemError` is shared only by host-information queries. The native
+  information dependency does not define public unit names or duplicate types.
 
 - A byte buffer belongs to `Std.Bytes` even when most callers perform I/O.
   Pixel, vertex/index and sample buffers belong to graphics or audio. They may

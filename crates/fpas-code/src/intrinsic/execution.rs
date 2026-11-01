@@ -42,6 +42,7 @@ impl Intrinsic {
                 IntrinsicOwner::Hosted
             }
             Self::Server(_)
+            | Self::SystemInfo(_)
             | Self::Args(_)
             | Self::Console(_)
             | Self::Net(_)

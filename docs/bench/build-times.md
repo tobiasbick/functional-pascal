@@ -116,11 +116,12 @@ The first argument is a positive process-tree timeout in milliseconds. The guard
 samples available memory while owning the command and its descendants, and
 cancels its owned process tree if the reserve is reached. It reserves one quarter
 of initially available RAM, bounded between 512 MiB and 8 GiB. Override the byte
-reserve with `FPAS_RESOURCE_RESERVE_BYTES`; `--help` shows usage. Windows samples
-physical availability and system commit headroom through a bounded CIM query.
-Linux samples available memory and swap from `/proc/meminfo`. These are sampled
+reserve with `FPAS_RESOURCE_RESERVE_BYTES`; `--help` shows usage. Physical
+availability and free swap use `Std.Os.Hardware.Memory`. Windows samples
+system commit headroom through a bounded CIM query. Linux keeps file queries
+for strict-overcommit counters and ancestor cgroup limits. These are sampled
 limits, not a hard memory quota; a sudden allocation can outrun a sample. Native
-hardware-query gaps are recorded in [dogfooding gaps](../future/dogfooding-gaps.md#available-memory-and-commit-headroom).
+hardware-query gaps are recorded in [dogfooding gaps](../future/dogfooding-gaps.md#commit-headroom-and-ancestor-memory-limits).
 
 On Linux, cgroup v2 ancestor memory limits also constrain available memory, and
 strict kernel overcommit mode constrains the commit budget. Use this outer guard

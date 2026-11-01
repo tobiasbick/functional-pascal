@@ -17,6 +17,7 @@ pub(super) fn needs_execution(task: &TaskState) -> bool {
             task.suspension,
             Some(
                 TaskSuspension::Entropy(_)
+                    | TaskSuspension::HostInfo(_)
                     | TaskSuspension::ConsoleIo(_)
                     | TaskSuspension::Net(_)
                     | TaskSuspension::Fs(_)

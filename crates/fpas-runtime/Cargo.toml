@@ -24,6 +24,7 @@ toml.workspace = true
 unicode-width.workspace = true
 unicode-segmentation.workspace = true
 tiktoken-rs.workspace = true
+sysinfo.workspace = true
 futures.workspace = true
 tokio.workspace = true
 ctrlc = { version = "3.5.2", features = ["termination"] }

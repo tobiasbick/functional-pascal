@@ -19,8 +19,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 ## Ideas and designs without an implementation plan
 
-- [Hardware information](hardware-information.md): access to CPU parallelism, RAM, and related
-  hardware information; recorded as an idea only.
 - [Graphics and 3D rendering](graphics.md): application case for the shared FPAS 2
   foundations, with graphics-specific windowing, GPU, platform and deployment
   questions; no graphics implementation plan or API is agreed.

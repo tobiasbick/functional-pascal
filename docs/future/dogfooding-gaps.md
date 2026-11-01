@@ -40,18 +40,21 @@ Remove an entry once the gap is fixed and covered by tests and current documenta
 - **Fallback:** Temporarily print the FPAS test's surface snapshot and remove
   the diagnostic output after correcting the layout.
 
-### Available memory and commit headroom
+### Commit headroom and ancestor memory limits
 
 - **Date:** 2026-10-29
 - **Kind:** awkward (helper written in FPAS)
 - **Area:** host information API
 - **Task:** Reserve memory before launching and while supervising Rust builds
   and tests in `tools/resource-guard.fpas`.
-- **Missing or wrong:** FPAS has no native query for available physical memory,
-  commit headroom or container memory limits.
-- **Minimal example:** Process capture and cancellation are available through
-  `Std.Os.Proc`, but memory-budget sampling needs OS-specific data queries.
-- **Fallback:** Read Linux `/proc` and cgroup files; use a bounded PowerShell CIM
-  query on Windows. Policy and owned-process cancellation remain in FPAS, and
-  system settings stay unchanged. A native API remains an idea in
-  [hardware-information.md](hardware-information.md).
+- **Missing or wrong:** Native RAM, swap and backend cgroup information are
+  available through `Std.Os.Hardware.Memory`, but `sysinfo` does not expose the
+  Windows commit counters or a complete ancestor-limit inventory needed by
+  the guard.
+- **Minimal example:** `Std.Os.Hardware.Memory().Unwrap().AvailableBytes`
+  supplies available host RAM, not system commit headroom.
+- **Fallback:** The guard uses the native API for RAM and swap. Windows commit
+  sampling keeps its bounded PowerShell CIM query; Linux strict-overcommit
+  counters and ancestor cgroup limits keep their file queries. Policy and
+  owned-process cancellation remain in FPAS, and system settings stay unchanged.
+  See the [hardware API](../pascal/std/host/hardware.md#memory) for its scope.

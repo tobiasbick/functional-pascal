@@ -10,6 +10,8 @@ mod utf8;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]
 pub enum NativeErrorFamily {
+    /// Read-only host information collection failures.
+    SystemInfo,
     /// `Std.Bytes.BufferError`.
     Buffer,
     /// `Std.Text.Utf8.Utf8Error`, declared by its source unit.
@@ -94,6 +96,7 @@ impl NativeErrorFamily {
 
     /// Every native family in stable catalog order.
     pub const ALL: &'static [Self] = &[
+        Self::SystemInfo,
         Self::Buffer,
         Self::Utf8,
         Self::Host,
@@ -114,6 +117,7 @@ impl NativeErrorFamily {
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
         match self {
+            Self::SystemInfo => "Std.Os.System.SystemError",
             Self::Buffer => "Std.Bytes.BufferError",
             Self::Utf8 => "Std.Text.Utf8.Utf8Error",
             Self::Host => "Std.Os.Errors.HostError",
@@ -136,6 +140,18 @@ impl NativeErrorFamily {
     pub const fn variants(self) -> &'static [ErrorVariant] {
         use ErrorFieldType::*;
         match self {
+            Self::SystemInfo => &[
+                ErrorVariant {
+                    name: "QueryFailed",
+                    message: "Host information query failed",
+                    fields: &[("Operation", String), ("Reason", String)],
+                },
+                ErrorVariant {
+                    name: "OutOfRange",
+                    message: "Host information exceeds the FPAS integer range",
+                    fields: &[("Field", String)],
+                },
+            ],
             Self::Buffer => bytes::VARIANTS,
             Self::Utf8 => utf8::VARIANTS,
             Self::Acp => acp::VARIANTS,

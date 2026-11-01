@@ -108,6 +108,7 @@ fn dispatch_intrinsic(
         Intrinsic::Toml(_) => toml::run(intrinsic, call, location),
         Intrinsic::Test(_) => crate::stdlib::test::run(intrinsic, call, location),
         Intrinsic::Server(_)
+        | Intrinsic::SystemInfo(_)
         | Intrinsic::Args(_)
         | Intrinsic::Console(_)
         | Intrinsic::Net(_)

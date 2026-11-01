@@ -307,6 +307,7 @@ impl Worker {
             return self.retire_cancelled_suspension(suspension, error);
         }
         let ready = match suspension {
+            TaskSuspension::HostInfo(wait) => self.poll_host_info(*wait),
             TaskSuspension::Entropy(wait) => self.poll_entropy(*wait),
             TaskSuspension::ConsoleIo(wait) => self.poll_console_io(*wait),
             TaskSuspension::ConsoleRead {

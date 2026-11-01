@@ -4,6 +4,18 @@ use super::*;
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Info),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Snapshot),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Cpu),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Memory),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Disks),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Networks),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Components),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Machine),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::Gpus),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::InspectProcesses),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::ListUsers),
+    Intrinsic::SystemInfo(SystemInfoIntrinsic::ListGroups),
     Intrinsic::Bytes(BytesIntrinsic::Create),
     Intrinsic::Bytes(BytesIntrinsic::FromArray),
     Intrinsic::Bytes(BytesIntrinsic::Length),

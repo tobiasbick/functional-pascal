@@ -12,6 +12,9 @@ macro_rules! standard_unit_names {
 }
 
 standard_unit_names! {
+    STD_UNIT_HARDWARE = "Std.Os.Hardware";
+    STD_UNIT_SYSTEM = "Std.Os.System";
+    STD_UNIT_USERS = "Std.Os.Users";
     STD_UNIT_TOKENIZER = "Std.Ai.Tokenizer";
     STD_UNIT_MCP = "Std.Ai.Mcp";
     STD_UNIT_MCP_TYPES = "Std.Ai.Mcp.Types";
@@ -55,6 +58,9 @@ standard_unit_names! {
 
 /// Standard units supplied entirely by compiler, VM, or runtime intrinsics.
 pub const STD_UNITS_INTRINSIC: &[&str] = &[
+    STD_UNIT_HARDWARE,
+    STD_UNIT_SYSTEM,
+    STD_UNIT_USERS,
     STD_UNIT_TOKENIZER,
     STD_UNIT_MCP,
     STD_UNIT_MCP_TYPES,
@@ -89,6 +95,9 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
 
 /// Standard units recognized by tooling, including source-defined units.
 pub const STD_UNITS_KNOWN: &[&str] = &[
+    STD_UNIT_HARDWARE,
+    STD_UNIT_SYSTEM,
+    STD_UNIT_USERS,
     STD_UNIT_TOKENIZER,
     STD_UNIT_MCP,
     STD_UNIT_MCP_TYPES,

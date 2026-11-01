@@ -3,7 +3,7 @@ program ResourceGuard;
 uses
   Std.Console as Console, Std.Os.Args as Args, Std.Os.Env as Env, Std.Os.Proc as Proc,
   Std.Encoding.Json.Fields as Fields, Std.Io.Fs as Fs, Std.Tasks as Tasks,
-  Std.Text.Parse as Parse, Std.Time as Time;
+  Std.Text.Parse as Parse, Std.Time as Time, Std.Os.Hardware as Hardware;
 
 type Memory = record
   Available: integer;
@@ -37,13 +37,14 @@ end function;
 
 function MemoryNow(): Memory;
 begin
+  const Native := Hardware.Memory().Unwrap();
   if IsWindows() then
     const Options := Proc.DefaultOptions() with TimeoutMillis := Some(10000); end with;
     const Output := Proc.RunCaptureWithOptions(
       'powershell.exe',
       [
         '-NoProfile', '-NonInteractive', '-Command',
-        'Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory | Select-Object AvailableBytes,CommittedBytes,CommitLimit | ConvertTo-Json -Compress'
+        'Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory | Select-Object CommittedBytes,CommitLimit | ConvertTo-Json -Compress'
       ], Options
     ).Unwrap();
     if Output.ExitCode <> 0 then
@@ -51,27 +52,19 @@ begin
     end if;
     const Values := Fields.ParseObject(Output.Stdout).Unwrap();
     return Memory(
-      Available := Fields.IntegerField(Values, 'AvailableBytes').Unwrap(),
+      Available := Native.AvailableBytes,
       BudgetAvailable := Fields.IntegerField(Values, 'CommitLimit').Unwrap() -
       Fields.IntegerField(Values, 'CommittedBytes').Unwrap()
     );
   end if;
-  var Available: integer := 0;
-  var Swap: integer := 0;
+  var Available := Native.AvailableBytes;
+  const Swap := Native.FreeSwapBytes;
   var CommitLimit: integer := 0;
   var Committed: integer := 0;
   for Line: string in Fs.ReadText('/proc/meminfo').Unwrap().Split(#10) do
     const Parts := Line.Split(':');
     if Parts.Length() = 2 then
       const Number := Parts[1].Trim().Split(' ')[0];
-      if Parts[0] = 'MemAvailable' then
-        Available := Parse.Int(Number).Unwrap() * 1024;
-      end if;
-
-      if Parts[0] = 'SwapFree' then
-        Swap := Parse.Int(Number).Unwrap() * 1024;
-      end if;
-
       if Parts[0] = 'CommitLimit' then
         CommitLimit := Parse.Int(Number).Unwrap() * 1024;
       end if;
@@ -83,7 +76,7 @@ begin
   end for;
 
   if Available <= 0 then
-    panic('No usable memory counters in /proc/meminfo');
+    panic('No usable available-memory reading');
   end if;
 
   if Fs.IsFile('/proc/self/cgroup') then

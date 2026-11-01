@@ -18,6 +18,7 @@ mod console_wait;
 mod crypto;
 pub(in crate::execution::vm) mod entropy;
 pub(in crate::execution::vm) mod fs;
+pub(in crate::execution::vm) mod host_info;
 mod http_handles;
 pub(in crate::execution::vm) mod mcp;
 pub(in crate::execution::vm) mod native;
@@ -47,6 +48,9 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         let result = match intrinsic {
+            Intrinsic::SystemInfo(_) => {
+                self.execute_host_info_intrinsic(intrinsic, arguments, location)
+            }
             Intrinsic::Tokenizer(_) => {
                 self.execute_tokenizer_intrinsic(intrinsic, arguments, location)
             }
@@ -82,6 +86,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    host_info: host_info::State,
     tokenizers: tokenizer::Cache,
     pub(in crate::execution::vm) acp: acp::Registry,
     pub(in crate::execution::vm) mcp: mcp::Registry,
@@ -151,6 +156,7 @@ impl HostedState {
         program_args: Vec<String>,
     ) -> Self {
         Self {
+            host_info: Default::default(),
             tokenizers: Default::default(),
             acp: Default::default(),
             mcp: Default::default(),

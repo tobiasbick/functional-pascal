@@ -21,6 +21,24 @@ fn stable_intrinsics_have_only_their_canonical_source_route() {
 
 fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
     match intrinsic {
+        Intrinsic::SystemInfo(operation) => {
+            use fpas_code::SystemInfoIntrinsic::*;
+            let name = match operation {
+                Info => "Std.Os.System.Info",
+                Snapshot => "Std.Os.System.Snapshot",
+                Cpu => "Std.Os.Hardware.Cpu",
+                Memory => "Std.Os.Hardware.Memory",
+                Disks => "Std.Os.Hardware.Disks",
+                Networks => "Std.Os.Hardware.Networks",
+                Components => "Std.Os.Hardware.Components",
+                Machine => "Std.Os.Hardware.Machine",
+                Gpus => "Std.Os.Hardware.Gpus",
+                InspectProcesses => "Std.Os.Proc.InspectProcesses",
+                ListUsers => "Std.Os.Users.ListUsers",
+                ListGroups => "Std.Os.Users.ListGroups",
+            };
+            (name.into(), None)
+        }
         Intrinsic::Acp(operation) if operation.codec().is_some() => {
             let (version, decode, root) = operation.codec().expect("payload codec");
             (

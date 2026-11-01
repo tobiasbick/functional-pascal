@@ -56,6 +56,8 @@ contracts are documented in the handbook. In particular:
   and strict UTF-8 lines. Existing text-file operations use UTF-8.
 - [Cryptography](../pascal/std/cryptography/crypto.md) supplies operating-system
   random bytes and secure integer sampling.
+- [Host information](../pascal/std/host/system.md) provides typed OS, hardware,
+  process and account observations through the bundled `sysinfo` backend.
 
 The specification's [canonical-unit catalogue](../specs/std-namespaces.md#current-public-units)
 owns their current names and responsibilities.
@@ -74,7 +76,6 @@ owns their current names and responsibilities.
 | Distributed applications | [Distributed nodes](networked-applications/distributed-nodes.md) | Compose identity, storage, transport and conflict handling |
 | Graphics and audio | [Graphics](graphics.md) and [multimedia alternatives](graphics-alternative.md) | Rendering, media, windows, input and native delivery after relevant FPAS 2 foundations |
 | Shared UI | [Terminal and graphical UI](shared-ui.md) | Common UI and both hosts during graphics work |
-| Hardware information | [Hardware information](hardware-information.md) | CPU/memory information; idea only |
 
 The [networked application platform](networked-applications/README.md) owns
 cross-capability dependencies for storage, security, transports and operations.

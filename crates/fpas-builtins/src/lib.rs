@@ -5,6 +5,8 @@
 
 mod aggregates;
 mod console;
+/// Host-information record and query contracts.
+pub mod host_info;
 /// Discriminant names and lookup for standard console keys.
 pub mod key_event;
 /// Nominal error families and their declared payloads.

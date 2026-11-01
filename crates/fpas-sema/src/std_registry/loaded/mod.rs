@@ -10,6 +10,7 @@ mod env;
 mod errors;
 mod format;
 mod fs;
+mod host_info;
 mod json;
 mod math;
 mod mcp;
@@ -61,6 +62,9 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         return;
     }
     match unit {
+        fpas_builtins::STD_UNIT_HARDWARE
+        | fpas_builtins::STD_UNIT_SYSTEM
+        | fpas_builtins::STD_UNIT_USERS => host_info::register(checker, unit),
         fpas_builtins::STD_UNIT_BYTES => bytes::register(checker),
         fpas_builtins::STD_UNIT_TOKENIZER => tokenizer::register(checker),
         fpas_builtins::STD_UNIT_MCP | fpas_builtins::STD_UNIT_MCP_TYPES => mcp::register(checker),
@@ -78,7 +82,10 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         }
         STD_UNIT_ARGS => args::register_std_args(checker),
         STD_UNIT_ENV => env::register_std_env(checker),
-        STD_UNIT_PROC => proc::register_std_proc(checker),
+        STD_UNIT_PROC => {
+            proc::register_std_proc(checker);
+            host_info::register(checker, unit);
+        }
         STD_UNIT_PATH => path::register_std_path(checker),
         STD_UNIT_FS => fs::register_std_fs(checker),
         STD_UNIT_CONSOLE => console::register_std_console(checker),

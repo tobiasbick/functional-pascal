@@ -55,6 +55,7 @@ impl Worker {
 
 fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
     match intrinsic {
+        Intrinsic::SystemInfo(_) => Some("host information"),
         Intrinsic::Bytes(_) => None,
         Intrinsic::Mcp(_) => {
             if crate::intrinsic_debug_effects(intrinsic).is_debug_safe() {

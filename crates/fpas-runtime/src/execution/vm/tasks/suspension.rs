@@ -77,6 +77,8 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::execution::vm) enum TaskSuspension {
+    /// Read-only native host collection with task-side conversion.
+    HostInfo(Box<crate::execution::vm::hosted::host_info::wait::Wait>),
     /// OS entropy and automatic seeding retain native buffers until task-side delivery.
     Entropy(Box<crate::execution::vm::hosted::entropy::wait::Wait>),
     /// Owned console I/O; bytecode frames and result construction stay on their task.
@@ -189,6 +191,7 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::execution::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::HostInfo(_) => TaskSuspensionState::Waiting,
             Self::Entropy(_) => TaskSuspensionState::Waiting,
             Self::ConsoleIo(_) => TaskSuspensionState::Waiting,
             Self::Net(_) => TaskSuspensionState::Waiting,

@@ -1,33 +1,88 @@
 # FPAS 2 language directions
 
-Status: proposal collection; implemented topics retain a short status and reference.
-Topics are open proposals unless their section records implementation or an
-agreement. The [numeric design](#21-explicit-width-numeric-types-money-and-decimal)
-is agreed at the stated scope, with its listed open points. Design agreement does
-not change the current specification or authorize implementation.
-For graphics and packed multimedia data, native library buffers without new
-scalar numeric types are the current preference; see
-[packed numeric data](#22-packed-numeric-data-and-binary-buffers). The byte-buffer
-contract is documented in the [current handbook](../pascal/std/bytes.md).
-Specialized media APIs and their implementation remain separate decisions.
+Status: prioritized directions and scope decisions. This revision selects
+priorities and closes the alternatives listed below; it authorizes no
+implementation. Open interface and syntax decisions still need agreement.
+Implemented topics retain a short status and handbook reference. The
+[numeric design](#21-explicit-width-numeric-types-money-and-decimal) remains agreed
+at its recorded scope, with its listed open points.
+
 FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
-[AP workflow and templates](improve-syntax/README.md); selecting a topic still
-requires an explicit decision before implementation.
+[AP workflow and templates](improve-syntax/README.md). Design agreement and
+priority do not change the current specification or authorize implementation.
 
 The [standard-library namespace policy](../specs/std-namespaces.md) is binding
 for contributor naming decisions. The current handbook documents the implemented
 canonical imports. Future allocations do not authorize implementation of those
 capabilities.
 
-Selected foundation work includes [worker-releasing host I/O](#14-host-io-that-releases-vm-workers)
-and [native byte buffers](../pascal/std/bytes.md)
-under `Std.Bytes`, including UTF-8 integration.
-Continue the remaining selected FPAS 2 work before
-graphics and the
-[shared terminal/graphical UI plan](shared-ui.md). While deciding relevant
-runtime and application topics, consult its coordination note so those decisions
-do not accidentally preclude the later UI. This does not authorize early UI work
-or change the status of any FPAS 2 proposal.
+The managed [host-I/O foundation](#14-host-io-that-releases-vm-workers) and
+[native byte buffers](../pascal/std/bytes.md), including UTF-8 integration, are
+implemented. Native library buffers are the selected storage direction;
+language-level packed arrays will not be implemented in FPAS 2. Specialized
+media interfaces and their implementation remain separate decisions.
+
+Continue selected foundations before graphics and the
+[shared terminal/graphical UI plan](shared-ui.md). Topics assigned to that phase,
+P3 topics and rejected alternatives are not prerequisites for starting graphics.
+Consult the UI plan's coordination note when deciding relevant foundations.
+
+## Priorities and status
+
+Priorities order remaining work; section numbers identify topics. Within a
+priority, use actual prerequisites and bounded deliverables to choose the next
+topic. Priority is independent of agreement, implementation and verification.
+
+| Priority | Meaning |
+| --- | --- |
+| P1 | First remaining improvements. |
+| P2 | Follow after the relevant P1 foundations. |
+| P3 | Retained for a concrete application need; no scheduled implementation. |
+| Consumer-driven | Schedule the integration with its concrete consuming feature. |
+| Graphics/UI phase | Decide with the graphics or shared UI application work. |
+| Measured need | Select only after profiling demonstrates the problem. |
+
+| Remaining topic | Priority | Actual prerequisites or owner |
+| --- | --- | --- |
+| [28. Semantic source queries](#28-semantic-source-queries) | P1 | Follow the existing source-query plan's phases. |
+| [7. Format-string checking](#7-compile-time-format-string-checking) | P1 | Existing formatter grammar and argument rules. |
+| [8. Option-valued access](#8-option-valued-array-and-string-access) | P1 | Existing Option, value and Unicode indexing rules. |
+| [10. Duration and clock types](#10-distinct-duration-and-clock-types) | P1 | Existing distinct types and time/task interfaces. |
+| [18. Validation and decoders](#18-validation-and-typed-decoders) | P1 | Existing records, callables and typed field access. |
+| [29. Structural test comparisons](#29-structural-test-comparisons) | P1 | Existing equality rules and test diagnostics. |
+| [4. Task results](#4-task-completion-and-result-retrieval) | P2 | Existing task ownership and cleanup rules. |
+| [6. Entry-value snapshots](#6-entry-value-snapshots-in-postconditions) | P2 | Existing contracts, value semantics and alias rules. |
+| [15. Deadlines and cancellation](#15-shared-deadlines-and-linked-cancellation) | P2 | Settle 10's clock/duration contract before this interface. |
+| [16. Concurrency patterns](#16-reusable-concurrency-patterns) | P2 | Existing tasks/channels; use 15 where a shared budget is exposed. |
+| [17. Fair selection](#17-fair-selection) | P2 | Existing Select winner and ownership rules. |
+| [21. Money and decimal](#21-explicit-width-numeric-types-money-and-decimal) | P2 | Resolve each type's open arithmetic, conversion and failure rules. |
+| [30. Generative behavior tests](#30-generative-behavior-tests) | P2 | Existing test runner and seeded PRNG; reuse 29's diagnostics. |
+| [31. Bounded record and replay](#31-bounded-record-and-replay) | P2 | A demonstrated gap in current debug tools; D2 owns the detailed scope. |
+| [9. Early-exit pattern binding](#9-pattern-binding-with-an-early-exit) | P3 | A demonstrated benefit over case and try; syntax agreement. |
+| [11. C FFI](#11-c-foreign-function-interface) | P3 | Native ABI, deployment and resource contracts; reuse byte buffers. |
+| [12. Loadable FPAS libraries](#12-dynamically-loadable-fpas-libraries) | P3 | Typed exports, artifact compatibility and code/value lifetimes. |
+| [21. Numeric widths](#21-explicit-width-numeric-types-money-and-decimal) | P3 | Retain the agreed design; renaming is a prerequisite of the first selected new type. |
+| [21. JSON/TOML integration](#21-explicit-width-numeric-types-money-and-decimal) | Consumer-driven | Exact JSON numbers need decimal; decide TOML integration separately. |
+| [19. Stores and selectors](#19-application-stores-and-selectors) | Graphics/UI phase | Shared UI owns application-state needs; demonstrate a gap beyond Update/View. |
+| [22. Specialized media buffers](#22-packed-numeric-data-and-binary-buffers) | Graphics/UI phase | Existing byte foundation plus concrete media consumers. |
+| [23. Existing-record optimization](#23-small-records-without-heap-allocation) | Measured need | Allocation profile and behavior-preserving representation design. |
+| [25. Host events](#25-native-event-loops-and-selectable-host-events) | Graphics/UI phase | Main-thread/event ownership; coordinate 10 and 17. |
+
+Implemented topics have no remaining priority at their delivered scope. They are
+1, 2, 3, 5, 13, 14, 20, 26 and 27, plus the byte-buffer foundation in 22.
+Their handbook references own current behavior. Broader extensions retain the
+status recorded in their sections.
+
+Sections use `Decision pending` for unresolved designs, `Agreed direction` for
+accepted directions with open details, and `Implemented` for delivered scope.
+`Transferred` names another owning plan. `Deferred` parks work pending a new
+decision. `Rejected; closed for FPAS 2` means it will not be implemented under
+this plan; reopening requires a new explicit decision. The AP index alone tracks
+implementation packages and their completion.
+
+The closed alternatives are user-defined record operators in 24, language-level
+packed arrays in 22, and a separate record declaration category in 23. The
+existing rejection of a general purity/effects system remains in force.
 
 ## Boundary
 
@@ -75,6 +130,8 @@ Status: implemented. See [dictionary keys](../pascal/language/types/dictionaries
 
 ## 4. Task completion and result retrieval
 
+Status: Decision pending. Priority: P2.
+
 `Wait` consumes a result once across all aliases of a handle, while WaitAll,
 WaitAny and TaskCase only observe completion. A copied handle therefore does
 not provide an independently readable result; see
@@ -86,6 +143,11 @@ against result retention, shared-resource payloads, failure propagation and
 supervised logical tasks. Do not assume a new linear/ownership type system is
 necessary. Until a replacement is agreed, retrieve once and pass the value on.
 
+The goal is to reduce dependence on result-consumption state hidden behind
+aliases. Evaluation must cover repeated reads through copied handles, failure
+results, retained shared resources, cancellation, supervision and cleanup.
+Preserve existing task ownership unless an explicit replacement is agreed.
+
 ## 5. Scope-bound cleanup actions
 
 Status: implemented. See [resource locals](../pascal/language/basics/local-variables.md#resource-locals)
@@ -94,6 +156,8 @@ for `using const`, guarded initialization, lexical cleanup and failure rules.
 support custom resources; native handles use their existing close operations.
 
 ## 6. Entry-value snapshots in postconditions
+
+Status: Decision pending. Priority: P2.
 
 [Postconditions](../pascal/language/functions/contracts.md) read completed `var`
 parameter values but cannot refer to their values on entry. A routine that
@@ -119,6 +183,8 @@ entry values from final values.
 
 ## 7. Compile-time format-string checking
 
+Status: Decision pending. Priority: P1.
+
 [String formatting](../pascal/language/types/string/format-chars.md) currently
 reports malformed templates, argument-count errors and argument-type mismatches
 at runtime. Even a literal template with statically known arguments can therefore
@@ -140,6 +206,8 @@ templates and dynamic templates. Confirm that checking does not evaluate runtime
 arguments or change their evaluation order.
 
 ## 8. Option-valued array and string access
+
+Status: Decision pending. Priority: P1.
 
 [Dictionaries](../pascal/language/types/dictionary-operations.md) already provide
 Get returning Option. [Array access](../pascal/language/types/arrays.md) and
@@ -163,6 +231,9 @@ boundaries, Unicode strings, generic elements, and unchanged direct-index
 behavior. Compare equivalent dictionary, array and string lookup consumers.
 
 ## 9. Pattern binding with an early exit
+
+Status: Decision pending. Priority: P3. Require a concrete consumer before
+selecting additional syntax.
 
 [Case arms](../pascal/language/pattern-matching/syntax.md#pattern-bindings) bind
 variant payloads; [is tests](../pascal/language/pattern-matching/is-test.md) do
@@ -189,6 +260,9 @@ and every permitted exit form. Include examples that distinguish local handling
 from automatic failure propagation.
 
 ## 10. Distinct duration and clock types
+
+Status: Decision pending. Priority: P1. Settle this contract before the shared
+deadline interface in 15; additional numeric widths are not a prerequisite.
 
 [Std.Time](../pascal/std/host/time.md) represents durations, UTC timestamps and
 monotonic clock readings as integer. [Task timeouts](../pascal/std/concurrency/task.md)
@@ -219,6 +293,9 @@ and migrated time and task consumers. Preserve existing clock and scheduling
 semantics.
 
 ## 11. C foreign-function interface
+
+Status: Decision pending. Priority: P3. Retain the independent extension goal;
+general FFI is not a prerequisite for bundled graphics or agent tooling.
 
 Native standard-library integrations currently use built-in Rust code and
 intrinsics. Applications cannot describe an arbitrary additional native library
@@ -260,6 +337,8 @@ symbols and unsupported signatures. General native-code memory safety cannot be
 established by FPAS bytecode verification alone.
 
 ## 12. Dynamically loadable FPAS libraries
+
+Status: Decision pending. Priority: P3. This capability is independent of C FFI.
 
 [Library projects](../pascal/program-structure/projects.md) already provide
 public unit interfaces and separately compiled source-adjacent objects. Their
@@ -370,6 +449,9 @@ cover main-thread ownership and host wakeups.
 
 ## 15. Shared deadlines and linked cancellation
 
+Status: Decision pending. Priority: P2. Depends on the clock/duration contract
+in 10 and existing task ownership; it does not require a new ownership system.
+
 [Std.Tasks](../pascal/std/concurrency/task.md) provides cancellation tokens and
 individual timeouts. [Std.Net.Server](../pascal/std/network/server.md#one-shutdown-budget)
 already shares one remaining budget across shutdown phases. There is no general
@@ -379,8 +461,8 @@ task, network and process operations.
 Consider a composable library contract for parent/child cancellation and a common
 monotonic deadline. A child operation should receive the remaining budget rather
 than restarting a full timeout at each step. Reuse existing cancellation and task
-ownership; connect the design to typed operational errors and distinct duration
-and clock types if those proposals are selected.
+ownership and typed operational errors. Use the duration and monotonic-clock
+contract selected in 10, with explicit conversion at remaining integer APIs.
 
 Open questions: API shape, parent/child lifetime, deadline inheritance, explicit
 cancellation versus expiry, disposal of registrations and result precedence when
@@ -394,29 +476,37 @@ confirmed termination of an external process.
 
 ## 16. Reusable concurrency patterns
 
+Status: Agreed direction for a bounded first scope. Priority: P2. Interface
+details remain open; no implementation is authorized.
+
 Tasks, bounded channels, groups, selection and supervised retries already supply
 the foundations for pipelines, worker pools and message loops. Applications still
 compose their own coordination for many recurring patterns.
 
-Consider bundled library operations for bounded parallel Map, semaphores,
-request/reply, broadcast subscriptions and latest-value state notifications.
-Small actor/message-loop helpers can build on the same ownership model; a full
-actor runtime or supervision tree needs a separate scope decision. Prefer FPAS
-composition where existing primitives suffice and focused Rust-backed support
+Start with bounded parallel Map and request/reply, using real application
+consumers. Each operation must define failure propagation, cancellation and
+joining or releasing unfinished work. Reuse existing task/channel ownership and
+15's context where the interface exposes a shared deadline. Prefer FPAS
+composition where existing operations suffice and focused Rust-backed support
 where runtime integration is needed.
 
-Open questions: operation names, result ordering, concurrency and queue limits,
-failure propagation, cancellation and joining unfinished work. Define semaphore
-permit lifetimes, reply ownership, subscriber cleanup and slow-consumer policies.
-Broadcast delivery and latest-value notification need distinct contracts for
-retaining or dropping intermediate values. Additional supervision policies must
-state how they extend the existing fixed-retry behavior.
+Semaphores, broadcast subscriptions, latest-value notifications and actor helpers
+are deferred pending concrete consumers. A full actor runtime or supervision
+tree remains outside this first scope and needs a separate decision.
 
-Evaluation should use real pipeline, worker-pool and request/reply consumers.
-Cover empty input, concurrency limits, failures, cancellation, permit release,
-closed replies, slow subscribers and shutdown without abandoned tasks.
+Open questions for the first scope: operation names, result ordering, concurrency
+and queue limits, failure propagation, reply ownership, cancellation and joining
+unfinished work. Avoid unbounded queues and abandoned reply waiters.
+
+Evaluation should use real parallel-map and request/reply consumers. Cover empty
+input, concurrency limits, ordered results, failures, cancellation, closed or
+abandoned replies and shutdown without abandoned tasks. Later patterns need
+their own lifetime, buffering and slow-consumer contracts.
 
 ## 17. Fair selection
+
+Status: Decision pending. Priority: P2. Build on existing Select semantics and
+coordinate future host-event eligibility with 25.
 
 [Select](../pascal/std/concurrency/task.md#ordering-and-callbacks) currently commits
 the first ready case in input order. This permits explicit priority but does not
@@ -445,6 +535,9 @@ controlled readiness rather than timing-dependent expectations.
 
 ## 18. Validation and typed decoders
 
+Status: Agreed direction. Priority: P1. Start with explicit record types and
+decoding functions; composition and error contracts remain open.
+
 [Std.Encoding.Json.Fields](../pascal/std/text/json-fields.md) already provides strict typed
 field access and rejects unknown fields using typed `FieldError` variants with
 the original parser cause for parse failures.
@@ -456,6 +549,17 @@ and decoders returning a declared FPAS type or validation issues with field path
 codes and messages. Support form input as well as external data. Invalid input
 should remain expected Result data; a TUI draft must retain invalid text so users
 can correct it. Existing generics, callables and records are the starting point.
+
+Construct validated domain values once at the input boundary. Reuse distinct
+types, subranges, variants and records with private fields where they prevent
+mixups or bypassing validation. Distinct type identity alone does not validate
+the wrapped value. Decoder composition should replace repeated field plumbing
+while keeping missing-field, default and unknown-field rules explicit.
+
+Exact numeric decoding needs a lossless input representation. Decoding cannot
+restore digits already lost by a binary-floating JSON parser. Coordinate such
+consumers with 21's separate decimal and format-integration decisions; ordinary
+typed decoding does not require the complete numeric-width family.
 
 Open questions: rule and decoder composition, optional fields, defaults,
 transformations, cross-field rules, error accumulation and validation limits.
@@ -469,14 +573,21 @@ a TUI form that retains its draft and associates errors with the correct fields.
 
 ## 19. Application stores and selectors
 
-Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
+Status: Transferred to the shared UI design for application-state requirements.
+Priority: Graphics/UI phase. The reusable store interface remains undecided.
+
+The [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans) owns
+the application need and host integration. This section retains the shared
+library constraints; a standalone store library is not a prerequisite for that UI.
 
 [Std.Ui.Terminal](../pascal/std/tui/application.md#update-and-view) already owns an
 application model processed through Update and View. Generics and closures can
 express typed state operations, but there is no reusable application-store and
 selector-subscription library.
 
-Consider typed stores with explicit actions, state snapshots, derived selectors
+First identify a real state-management gap beyond the existing Update/View
+model and cached subviews. If that gap requires reusable stores, consider
+explicit actions, typed state snapshots, derived selectors
 and subscriptions notified when their selected value changes. Integrate with
 Model-Update-View and serial host-task ownership; background work should continue
 to deliver typed messages through the application inbox. Allow explicit equality
@@ -505,19 +616,36 @@ Coordinate future host changes with the [shared UI plan](shared-ui.md).
 
 ## 21. Explicit-width numeric types, money and decimal
 
-Status: agreed numeric design, carried forward from the
+Status: Agreed direction for the numeric design, carried forward from the
 [graphics application case](graphics.md#numeric-types) and extended with
 arbitrary-precision `decimal` for exact decimal calculations and lossless JSON
 number values. The open points below still need decisions. No implementation is
 scheduled. These types are not FPAS 1 prerequisites, and graphics is only one
 consumer of the design.
 
-The [preferred native-buffer alternative](#22-packed-numeric-data-and-binary-buffers)
+The [selected native-buffer direction](#22-packed-numeric-data-and-binary-buffers)
 can meet graphics storage needs without adding these scalar types or renaming
 `integer` and `real`. Graphics therefore does not require implementing this
 numeric design first. The design remains recorded for independent numeric
-language work; the buffer preference does not cancel it. `money` and `decimal`
-are outside this comparison of storage alternatives and retain their existing status.
+language work; selecting native buffers does not cancel it.
+
+### Delivery priorities and prerequisites
+
+Plan these parts separately while preserving the agreed arithmetic and conversion
+rules below. Selecting one part does not authorize the others.
+
+| Part | Priority | Prerequisites and scope |
+| --- | --- | --- |
+| `money` | P2 | Decide multiplication/division rounding, conversions and failures. |
+| `decimal` | P2 | Decide arithmetic, rounding, resource limits, representation and failures. |
+| Additional numeric widths | P3 | Require a concrete numeric consumer independent of graphics storage. |
+| JSON integration | Consumer-driven | Requires decimal and a separate lossless JSON value/parser contract. |
+| TOML integration | Consumer-driven | Decide preservation of TOML integer/float distinctions independently. |
+
+The agreed mechanical rename from `integer`/`real` to `integer64`/`real64` remains
+a prerequisite before adding new numeric types. Schedule that shared prerequisite
+with the first selected type, including money or decimal if they come first.
+Prioritizing money/decimal does not require delivering all additional widths.
 
 FPAS offers exactly one way to express each numeric concept: every built-in
 numeric type has one name, without alternative built-in aliases.
@@ -538,8 +666,8 @@ numeric type has one name, without alternative built-in aliases.
 - Subranges (`type Percent = 0..100;`) remain the only way to restrict values.
   Width types describe representation; subranges describe permitted values.
   There is no separate range type.
-- There are no 128-bit integers and no 8-bit floats. A 16-bit float may later
-  become a storage format of packed arrays only.
+- There are no 128-bit integers and no 8-bit floats. A 16-bit float as a
+  language-level packed-array storage format is outside FPAS 2 under 22's closure.
 
 ### Arithmetic and literals
 
@@ -631,12 +759,13 @@ to its binary64 float interoperability rules; it is not changed by this agreemen
 Fixed-width operations keep computing in 64-bit integers or 64-bit floats. The
 width of a typed operation is an instruction operand, and the result is checked
 or narrowed when it is stored. This keeps the opcode set small and the runtime
-value at 16 bytes. The width matters for storage only in packed arrays.
+value at 16 bytes. This representation does not add compact array storage;
+section 22 selects native buffers for packed data in FPAS 2.
 
 `decimal` needs variable-sized coefficient storage rather than the fixed-width
 register-only representation. Evaluate shared heap-backed value storage without
-enlarging common runtime values. Decimal layout and packed-storage eligibility
-are not agreed by this numeric design.
+enlarging common runtime values. Decimal layout is not agreed by this numeric
+design; any native-buffer integration needs a separate format contract.
 
 ### Open points and evaluation
 
@@ -670,9 +799,9 @@ for the removed type names.
 Status: native byte buffers, strict UTF-8 integration and canonical binary APIs
 are implemented and verified. The current [byte-buffer](../pascal/std/bytes.md)
 and [UTF-8](../pascal/std/network/utf8.md) references own their API, value,
-capacity, lifecycle and artifact/debugger contracts. General snapshots and replay,
-specialized media buffers and language-level packed arrays remain separate
-proposals.
+capacity, lifecycle and artifact/debugger contracts. Specialized media buffers
+remain open for the Graphics/UI phase. Language-level packed arrays are
+Rejected; closed for FPAS 2. Record/replay is a separate topic in 31.
 
 The foundation is `Std.Bytes.ByteBuffer`, with string/byte transitions in
 `Std.Text.Utf8` and bulk byte/text append. Existing binary APIs share this
@@ -688,7 +817,7 @@ for a canonical byte representation. The
 [standard-library roadmap](std-roadmap.md#selected-order) points to the implemented
 byte foundation; specialized formats remain separate proposals.
 
-### Preferred alternative: native buffers with existing scalar types
+### Selected direction: native buffers with existing scalar types
 
 Use one shared native binary-buffer foundation, with specialized interfaces for
 pixels, vertices, indices and audio samples. Illustrative names are `ByteBuffer`,
@@ -722,17 +851,16 @@ This route keeps numeric expression rules smaller, at the cost of explicit
 buffer-format APIs and runtime boundary checks. It does not supply general
 fixed-width scalar arithmetic, arbitrary C FFI layouts, or an allocation-free
 representation for vector and matrix calculations. Coordinate those separate
-needs with the numeric, FFI and small-record proposals. `money` and `decimal`
-are outside this comparison.
+needs with the numeric, FFI and existing-record optimization proposals. `money`
+and `decimal` retain their separate numeric design and delivery priorities.
 
-### Alternative: language-level packed arrays and explicit-width types
+### Language-level packed arrays will not be implemented in FPAS 2
 
-Keep packed arrays using the
-[explicit-width numeric design](#21-explicit-width-numeric-types-money-and-decimal)
-as an alternative. They could expose general typed contiguous numeric and
-eligible fixed-layout record data, with corresponding compiler, VM, tooling and
-image-format work. Compare this generality with the preferred library-buffer
-route before selecting an implementation. Graphics alone does not require it.
+Status: Rejected; closed for FPAS 2. Use the native-buffer foundation for packed
+data instead of adding a second language-level storage mechanism. Do not plan
+packed-array declarations, compiler/VM representation or artifact changes under
+this topic. Reopening requires a new explicit decision. This closure does not
+cancel the agreed scalar numeric design in 21 or preclude native buffer formats.
 
 ### Open questions and evaluation
 
@@ -740,13 +868,12 @@ The implemented byte-buffer and UTF-8 contracts have no open design decision.
 Follow the current handbook rather than reopening their accepted value,
 mutation, limit, ownership and artifact rules through this broader proposal.
 
-For specialized media buffers and the packed-array alternative, open questions
-include construction, indexing and slicing, value semantics and mutation,
-borrowing across native calls, task sharing, bounds and allocation limits,
+For specialized media buffers, open questions include construction, indexing
+and slicing, value semantics and mutation, borrowing across native calls, task
+sharing, bounds and allocation limits,
 alignment, byte order and record padding, asynchronous resource lifetimes and
-release. Define supported storage formats, range and rounding rules, bulk access,
-and layout validation. For the packed-array alternative, also decide which
-numeric types and fixed-layout records are eligible.
+release. Define supported storage formats, range and rounding rules, bulk access
+and layout validation.
 Contiguous FPAS storage does not automatically establish C-ABI compatibility.
 
 Evaluation should include binary-file round trips, embedded zero bytes, malformed
@@ -759,17 +886,20 @@ the affected standard units.
 
 ## 23. Small records without heap allocation
 
-Status: open proposal; no new record declaration form is agreed.
+Status: Decision pending for optimization of existing records. Priority: Measured
+need. A separate record declaration category is Rejected; closed for FPAS 2.
 
 Small vectors, matrices, colors and rectangles in the
 [graphics application case](graphics.md#small-value-aggregates) expose allocation
 costs from heap-backed records and intermediate arithmetic results.
 
-First evaluate an optimized representation of existing
-[records](../pascal/language/types/records.md) that preserves their value semantics.
-Establish whether compiler/runtime changes can remove allocation without adding
-another user-visible record category. A separate value-record declaration or
-layout guarantee requires its own justification and explicit agreement.
+First demonstrate the allocation cost with a profile, then evaluate an optimized
+representation of existing [records](../pascal/language/types/records.md) that
+preserves their value semantics.
+Use compiler/runtime representation changes that preserve the existing record
+declaration and caller behavior. A new value-record category or declaration form
+will not be implemented in FPAS 2. Reopening requires a new explicit decision.
+Native layout guarantees remain separate from allocation optimization.
 
 Open questions: eligible field types and sizes, nested and generic records,
 register and call representation, collection storage, copy costs and interaction
@@ -784,33 +914,18 @@ code before selecting a representation or claiming a performance improvement.
 
 ## 24. Record arithmetic operators
 
-Status: open proposal; user-defined operators are not approved.
+Status: Rejected; closed for FPAS 2. User-defined record operators will not be
+implemented under this plan. Reopening requires a new explicit decision.
 
-The [graphics application case](graphics.md#vector-arithmetic-notation) expresses
-vector arithmetic with calls such as `Add(Scale(V, 2.0), W)`. It suggests operator
-declarations for arithmetic and comparisons on records.
-
-Evaluate this against the rule of one canonical form per concept. Shorter or
-more familiar notation alone does not justify a second form. Record concrete
-transform and matrix examples, establish whether ordinary unit-level routines
-serve them cleanly, and decide whether operator declarations belong in FPAS at all.
-This topic is separate from equality and ordering constraints.
-
-If selected, consider only established arithmetic and comparison operators with
-pure, statically resolved implementations. Open questions include declaration
-syntax, eligible operand/result types, generic resolution, mixed-type rejection,
-equality and ordering consistency, diagnostics and tooling. New symbolic
-operators, implicit numeric conversions and a general effects system are outside
-this proposal.
-
-Evaluation should compare equivalent routine and operator expressions, cover
-matrix multiplication and scalar/vector operands, and test rejected ambiguous or
-effectful declarations under the selected contract. Implementation requires an
-explicit design decision after this evaluation.
+Use named routines for vector, matrix and other record calculations, including
+the [graphics application's](graphics.md#vector-arithmetic-notation)
+`Add(Scale(V, 2.0), W)` form. Additional operator declaration and resolution rules
+are outside FPAS 2. Existing built-in equality and ordering constraints are unchanged.
 
 ## 25. Native event loops and selectable host events
 
-Status: open proposal; no host-event API or new Select case is agreed.
+Status: Decision pending. Priority: Graphics/UI phase. No host-event interface
+or new Select case is agreed.
 Coordinate decisions with the later [shared UI plan](shared-ui.md#sequence-and-relationship-to-other-plans).
 
 Windowing systems can require event pumping on the main thread. The
@@ -858,12 +973,111 @@ Status: implemented. See the binding [namespace specification](../specs/std-name
 and [Std reference](../pascal/std/README.md). Future priorities belong to the
 [Std roadmap](std-roadmap.md).
 
+## 28. Semantic source queries
+
+Status: Agreed direction; detailed contracts remain proposed in
+[source queries for coding agents](agent-source-queries.md). Priority: P1.
+No implementation is authorized by adding this topic.
+
+Existing positional queries expose definitions, references and checked types;
+rename already provides checked edits. The linked plan owns extensions for name
+discovery, focused inspection, direct callers/callees and later parameter changes.
+Follow its phases, starting with common query contracts, then find and inspect.
+Read queries do not depend on runtime replay, C FFI or new language syntax.
+
+Reuse compiler resolution and exact source snapshots. Bound the returned context
+and distinguish complete answers, ambiguity, omitted data and unresolved dynamic
+calls. A missing proven caller is not proof that a routine cannot execute.
+Checked refactorings follow read-only discovery and require their own edit-policy
+decision; this topic does not authorize arbitrary automatic source rewrites.
+
+Acceptance and measurement belong to the linked plan. Evaluate locating an
+unfamiliar declaration, understanding it with its relevant types, enumerating
+known uses and making a checked change. Compare correct task completion,
+correction rounds, context size and elapsed time on fixed tasks. No measured
+productivity or error-rate improvement is claimed yet.
+
+## 29. Structural test comparisons
+
+Status: Agreed direction. Priority: P1. The comparison interface and supported
+types remain Decision pending.
+
+Current [test assertions](../pascal/std/testing/test.md) compare scalar values.
+Consider structural comparisons for records, variants, arrays and dictionaries,
+using existing equality rules. A failure should identify the differing field,
+variant or element and show expected and actual values. Reuse existing test
+diagnostics and structured reporting instead of requiring application-specific
+debug printing for each aggregate.
+
+Open questions: eligible generic types, callable/native-resource fields,
+dictionary ordering, path notation, limits for nested or large values and
+whether one failure reports the first difference or a bounded set. Comparing a
+handle must not imply comparing the external resource's contents. Do not
+introduce new equality semantics through assertions.
+
+Evaluation should cover nested records, variant/payload differences, missing
+dictionary keys, array lengths, Unicode strings and equal aggregate values.
+Require deterministic paths and explicit truncation in bounded text/JSON output.
+Unsupported comparisons must report their limitation rather than pass silently.
+
+## 30. Generative behavior tests
+
+Status: Agreed direction. Priority: P2. Generator, shrinking and runner contracts
+remain Decision pending.
+
+Consider tests that generate many inputs for a declared behavioral property and
+reduce a failing input to a smaller counterexample. Use the existing test runner
+and seeded pseudorandom generator; reuse 29's aggregate diagnostics. Express
+properties with existing FPAS routines before considering compiler support.
+
+Record the seed, generator configuration and actual counterexample. Repeated
+runs with the same code, configuration and seed should reproduce generated
+cases. Shrinking must preserve input validity and the observed failure within a
+bounded budget; it need not establish a globally minimal counterexample.
+Generated-input reproducibility does not reproduce ordinary concurrent task
+ordering or external host responses.
+
+Open questions: generator composition, valid-domain constraints, case counts,
+size/work limits, rejected inputs, shrinking order, timeouts and report format.
+Expected behavior must come from stated properties or independent examples;
+copying the implementation into a test oracle provides no independent check.
+
+Evaluation should cover encode/decode round trips, collection invariants and
+state transitions such as a rejected purchase preserving currency and inventory.
+Include fixed-seed reproduction, constrained inputs, counterexample reduction,
+budget exhaustion and reuse of a counterexample as a regression test.
+
+## 31. Bounded record and replay
+
+Status: Agreed direction for evaluating a bounded first delivery. Priority: P2.
+The [D2 record/replay wish](agent-wishes.md#d2-record-replay-and-query) owns the
+detailed scope and feasibility decisions. No replay interface is agreed.
+
+Start with a concrete failure that existing failure dumps, batch debugging,
+tracepoints and controlled scheduling cannot explain adequately. Select the
+smallest useful recorded input and host-result set for that case, such as UI
+events, clock readings or random values. The first delivery must state its
+supported effects and concurrency coverage; it is not general recording of all
+native execution.
+
+Define executable/source identity, recording size and work limits, task-order
+coverage, incomplete recordings and the host effects replaced by recorded
+responses during replay. Unsupported effects must be explicit rather than
+silently using live inputs. Existing bounded session recording and seeded debug
+scheduling do not already implement replay of ordinary execution.
+
+Evaluation should record one supported failure, replay it headlessly and inspect
+the same relevant state repeatedly. Cover changed executable identity, omitted
+inputs, exhausted limits and unsupported effects. General time-travel queries
+and broader effect capture remain later D2 decisions. Preserve existing JSONL
+debugging and its supported commands.
+
 ## Other deferred scope
 
-A purity/effects system was rejected and is not reopened here. Reconsideration
-would require a new decision and a demonstrated benefit. FPAS currently remains
-function-oriented with explicit binding mutation, rather than a guarantee that
-every function is pure.
+A general purity/effects system is Rejected; closed for FPAS 2. It will not be
+implemented under this plan. Reconsideration would require a new explicit
+decision and a demonstrated benefit. FPAS currently remains function-oriented
+with explicit binding mutation, rather than a guarantee that every function is pure.
 
 ## Evaluation before implementation
 
@@ -873,3 +1087,13 @@ cost and tests that establish the improvement. Preserve recorded design agreemen
 and resolve remaining open decisions with the user before creating implementation
 work. An agreed design still needs an explicit implementation decision. This
 document is not a second package-completion index.
+
+State observable behavior independently of the implementation, using concrete
+input/output examples, state invariants or UI outcomes that can become executable
+acceptance tests. A test that repeats the implementation's assumptions is not
+independent evidence of the requested behavior.
+
+Use existing distinct types, subranges, variants and private-field records to
+separate domain values and restrict construction where that prevents mistakes.
+Keep validation at explicit construction/input boundaries. These are design
+rules for the selected work, not additional language features.

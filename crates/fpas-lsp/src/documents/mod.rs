@@ -2,6 +2,7 @@
 
 mod errors;
 mod lifecycle;
+pub(crate) mod read_set;
 mod results;
 pub(crate) mod tasks;
 
@@ -20,12 +21,14 @@ pub(crate) use results::{
 /// Primary editor state shared by lifecycle notifications and snapshot capture.
 pub(crate) struct SynchronizedDocuments {
     pub(crate) service: Arc<Mutex<LanguageService>>,
+    pub(crate) refactor_handles: Mutex<crate::refactor_requests::Handles>,
 }
 
 impl SynchronizedDocuments {
     pub(crate) fn new(initial_root: PathBuf) -> Self {
         Self {
             service: Arc::new(Mutex::new(LanguageService::load(&initial_root))),
+            refactor_handles: Mutex::new(crate::refactor_requests::Handles::default()),
         }
     }
 }

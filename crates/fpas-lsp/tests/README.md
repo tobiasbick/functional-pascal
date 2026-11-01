@@ -6,8 +6,8 @@ transcript still starts its own server process and owns its temporary files.
 | Target | Modules |
 | --- | --- |
 | `analysis` | `diagnostics`, `intellisense`, `semantic_tools`, `snippets` |
-| `editing` | `formatting`, `refactoring`, `references_rename`, `public_signatures` |
-| `workspace` | `navigation`, `workspace_navigation`, `document_lifetime` |
+| `editing` | `formatting`, `refactoring`, `refactoring_plans`, `references_rename`, `public_signatures` |
+| `workspace` | `navigation`, `workspace_navigation`, `document_lifetime`, `source_tools`, `call_hierarchy` |
 | `process` | Raw transport and process fixtures; remains standalone |
 | `protocol` | Protocol and shutdown lifecycle fixtures; remains standalone |
 

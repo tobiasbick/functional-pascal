@@ -11,6 +11,41 @@ use fpas_language_service::{LanguageService, RenameError, WorkspaceContext};
 use support::TempDirectory;
 
 #[test]
+fn rename_rejects_errors_in_an_unedited_consumer_before_returning_edits() {
+    let temp = TempDirectory::new("rename-invalid-consumer");
+    let (manifest, main, unit) = support::write_program_project(&temp);
+    let declaration = std::fs::read_to_string(&unit).expect("declaration");
+    temp.write(
+        "src/main.fpas",
+        "program App; uses Demo.Math as M; begin discard M.Answer(); discard Missing; end.",
+    );
+    let mut service = LanguageService::load(&manifest);
+    let error = service
+        .rename(
+            &unit,
+            declaration.find("Answer").expect("routine name"),
+            "Compute",
+        )
+        .expect_err("an invalid consumer blocks the entire edit set");
+    let failure = match error {
+        RenameError::Validation(failure) => Some(failure),
+        _ => None,
+    }
+    .expect("whole-context validation rejection");
+    assert_eq!(failure.code, "analysis_incomplete");
+    assert!(
+        failure
+            .diagnostics
+            .iter()
+            .any(|d| d.path.as_ref() == Some(&main) && d.diagnostic.code.to_string() == "FP3003")
+    );
+    assert_eq!(
+        std::fs::read_to_string(unit).expect("unchanged source"),
+        declaration
+    );
+}
+
+#[test]
 fn rename_ignores_unrelated_member_declarations_matching_the_new_name() {
     let temp = TempDirectory::new("rename-unrelated-fields");
     let source = "program Fields;\ntype Point = record\n  X: integer;\nend record;\ntype Other = record\n  Left: integer;\nend record;\nbegin\n  const P := Point(X := 1);\n  const Q := Other(Left := 2);\n  discard P.X + Q.Left;\nend.\n";
@@ -53,7 +88,7 @@ begin
 end function;
 
 begin
-  const Result: integer := ReadValue();
+  const Answer: integer := ReadValue();
 end.
 "#;
     let path = temp.write("global.fpas", source);
@@ -88,7 +123,7 @@ begin
 end function;
 
 begin
-  const Result: integer := ReadValue();
+  const Answer: integer := ReadValue();
 end.
 "#;
     let path = temp.write("local.fpas", source);
@@ -127,7 +162,7 @@ begin
 end function;
 
 begin
-  const Result: integer := First() + Second();
+  const Answer: integer := First() + Second();
 end.
 "#;
     let path = temp.write("disjoint.fpas", source);

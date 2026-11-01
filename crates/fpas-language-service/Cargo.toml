@@ -16,6 +16,12 @@ fpas-parser = { path = "../fpas-parser" }
 fpas-project = { path = "../fpas-project" }
 fpas-sema = { path = "../fpas-sema" }
 fpas-unit = { path = "../fpas-unit" }
+ring = "0.17.14"
+serde = { workspace = true }
+
+[build-dependencies]
+ring = "0.17.14"
+toml = { workspace = true }
 
 [lints]
 workspace = true

@@ -99,7 +99,7 @@ fn ignored_directory(path: &Path) -> bool {
         .is_some_and(|name| {
             matches!(
                 name.to_ascii_lowercase().as_str(),
-                ".git" | ".vscode-test" | "node_modules" | "target"
+                ".git" | ".temp-data" | ".vscode-test" | "node_modules" | "target"
             )
         })
 }

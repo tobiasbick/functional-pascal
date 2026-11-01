@@ -37,6 +37,9 @@ pub use context::NamedArgumentOrderMap;
 pub use context::NamedTypeMap;
 pub use context::RecordDefaultsMap;
 pub use context::ResourceRelease;
+pub use context::TypeReference;
+mod source_bindings;
 pub use native_values::{NativeCallable, NativeCallableMap};
+pub use source_bindings::{SourceBinding, SourceBindingKind};
 
 mod return_capabilities;

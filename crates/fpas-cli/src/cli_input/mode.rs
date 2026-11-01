@@ -45,8 +45,7 @@ impl CliMode {
     }
 }
 
-const SUBCOMMANDS: &str =
-    "`init`, `build`, `run`, `debug`, `check`, `doc`, `query`, `stdlib`, `test`, `fmt`, or `env`";
+const SUBCOMMANDS: &str = "`init`, `build`, `run`, `debug`, `check`, `doc`, `query`, `refactor`, `stdlib`, `test`, `fmt`, or `env`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {

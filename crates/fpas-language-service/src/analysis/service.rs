@@ -23,6 +23,13 @@ pub struct LanguageService {
 }
 
 impl LanguageService {
+    /// Selected source-library root, used when reconstructing a complete checked context.
+    pub fn standard_library_root(&self) -> Option<&Path> {
+        self.standard_library
+            .as_ref()
+            .map(StandardLibraryContext::root)
+    }
+
     pub(crate) fn editor_api_source_paths(&self) -> Vec<std::path::PathBuf> {
         self.standard_library
             .as_ref()
@@ -211,6 +218,32 @@ impl LanguageService {
         )
     }
 
+    /// Checks each explicitly selected project in its own import/export allocation.
+    pub(crate) fn project_source_analyses(
+        &mut self,
+        project: &ProjectContext,
+    ) -> Result<Vec<Arc<DocumentAnalysis>>, LanguageServiceError> {
+        let project = self
+            .standard_library
+            .as_ref()
+            .map_or_else(|| project.clone(), |library| library.compose(project));
+        Ok(self.analyzed_project(&project)?.documents())
+    }
+
+    pub(crate) fn project_syntax_analyses(
+        &mut self,
+        project: &ProjectContext,
+    ) -> Result<Vec<Arc<DocumentAnalysis>>, LanguageServiceError> {
+        let project = self
+            .standard_library
+            .as_ref()
+            .map_or_else(|| project.clone(), |library| library.compose(project));
+        self.project_snapshots(&project)?
+            .into_iter()
+            .map(|s| self.cached_syntax_only(s))
+            .collect()
+    }
+
     /// Retains supporting-unit diagnostics from the same checked project allocation.
     pub(crate) fn source_analyses(
         &mut self,
@@ -286,6 +319,24 @@ impl LanguageService {
     /// Builds a collision-safe symbol index for every source in the current project catalog.
     pub fn workspace_symbol_index(&mut self) -> Result<WorkspaceSymbolIndex, LanguageServiceError> {
         let mut index = WorkspaceSymbolIndex::new();
+        let documents = self
+            .catalog_source_paths()
+            .into_iter()
+            .map(|path| {
+                let snapshot = self.snapshot(&path)?;
+                let symbols = if self.is_editor_api_source(&path) {
+                    DocumentSymbols::from_editor_snapshot(&snapshot)
+                } else {
+                    DocumentSymbols::from_snapshot(&snapshot)
+                };
+                Ok((path, symbols))
+            })
+            .collect::<Result<Vec<_>, LanguageServiceError>>()?;
+        index.replace_documents(documents);
+        Ok(index)
+    }
+
+    pub(crate) fn catalog_source_paths(&self) -> Vec<std::path::PathBuf> {
         let mut paths = self
             .workspace
             .projects()
@@ -308,20 +359,7 @@ impl LanguageService {
         }
         paths.sort();
         paths.dedup();
-        let documents = paths
-            .into_iter()
-            .map(|path| {
-                let snapshot = self.snapshot(&path)?;
-                let symbols = if self.is_editor_api_source(&path) {
-                    DocumentSymbols::from_editor_snapshot(&snapshot)
-                } else {
-                    DocumentSymbols::from_snapshot(&snapshot)
-                };
-                Ok((path, symbols))
-            })
-            .collect::<Result<Vec<_>, LanguageServiceError>>()?;
-        index.replace_documents(documents);
-        Ok(index)
+        paths
     }
 
     fn project_snapshots(

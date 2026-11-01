@@ -1,12 +1,18 @@
 # AP56.2: Build the shared core and migrate both adapters
 
-Package: [AP56](README.md). Status: not started; depends on AP56.1.
+Package: [AP56](README.md). Status: complete; depends on AP56.1.
+
+The concrete encoding and adapter fields are in [the wire contract](wire-contract.md).
+The foundation adds `source_inputs/inventory.rs` to `fpas-project`
+for detached verification, `analysis/identity.rs` and `build/analysis_identity.rs`
+to the language service for shared fingerprints, and their owning tests. The
+adapter migrations use the paths in the implementation table below.
 
 ## Prerequisites
 
 - [AP56.1](01-contract.md) is complete; Q85, Q86 and Q91 are recorded.
-- Existing positional navigation and rename safety regressions establish the
-  baseline. The current code has two dispatch/report paths, not a shared protocol.
+- Existing positional navigation and rename safety regressions remain covered
+  through the shared protocol.
 
 ## Contract and scope
 

@@ -11,6 +11,32 @@ use fpas_language_service::{CancellationToken, LanguageService, LanguageServiceE
 use support::TempDirectory;
 
 #[test]
+fn folder_catalog_skips_scratch_trees_but_explicit_projects_remain_available() {
+    let temp = TempDirectory::new("project-index-scratch");
+    let source = write_core(&temp);
+    let scratch_manifest = temp.write(
+        ".temp-data/cache/cache.fpasprj",
+        "[project]\nname = \"cache\"\nkind = \"library\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+    );
+    let scratch = temp.write(
+        ".temp-data/cache/value.fpas",
+        "unit Scratch.Value;\nend unit;\n",
+    );
+    temp.write(".temp-data/broken.fpasprj", "invalid manifest");
+
+    let service = LanguageService::load_with_cancellation(temp.path(), &CancellationToken::new())
+        .expect("folder catalog");
+    assert_eq!(service.workspace().projects().len(), 1);
+    assert!(service.workspace().issues().is_empty());
+    assert!(service.workspace().project_for_source(&source).is_some());
+    assert!(service.workspace().project_for_source(&scratch).is_none());
+
+    let explicit = LanguageService::load(&scratch_manifest);
+    assert!(explicit.workspace().issues().is_empty());
+    assert!(explicit.workspace().project_for_source(&scratch).is_some());
+}
+
+#[test]
 fn folder_catalog_refreshes_dependencies_and_is_open_order_independent() {
     let temp = TempDirectory::new("project-index-dependency");
     let declaration = write_core(&temp);

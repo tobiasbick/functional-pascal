@@ -43,6 +43,38 @@ pub(crate) struct InitializationState {
 }
 
 impl InitializationState {
+    /// Move checked reference evidence into the public snapshot metadata without another lookup.
+    pub(crate) fn into_source_bindings(self) -> HashMap<BindingId, super::SourceBinding> {
+        use super::{SourceBinding, SourceBindingKind};
+        self.references
+            .into_iter()
+            .map(|(site, reference)| {
+                let kind = match reference.kind {
+                    SymbolKind::Function | SymbolKind::Procedure => SourceBindingKind::Routine,
+                    SymbolKind::BuiltinStd => SourceBindingKind::Native,
+                    SymbolKind::Type => SourceBindingKind::Type,
+                    SymbolKind::EnumMember | SymbolKind::EnumVariantConstructor => {
+                        SourceBindingKind::EnumConstructor
+                    }
+                    SymbolKind::Const
+                    | SymbolKind::Var
+                    | SymbolKind::Param
+                    | SymbolKind::ForVar => SourceBindingKind::Value,
+                };
+                (
+                    site,
+                    SourceBinding {
+                        parts: reference.parts,
+                        declaration: reference.declaration,
+                        name: reference.name,
+                        kind,
+                        ty: reference.ty,
+                    },
+                )
+            })
+            .collect()
+    }
+
     /// Expose compiler-selected unqualified bindings to editor queries.
     pub(crate) fn binding_references(&self) -> HashMap<BindingId, BindingId> {
         self.references

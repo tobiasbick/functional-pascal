@@ -9,6 +9,8 @@ import {
 } from "vscode-languageclient/node";
 
 import { ToolchainResolver } from "./toolchain";
+import type { InspectRequest, InspectResponse } from "./sourceTools/protocol";
+import type { ParameterRequest, RefactorResponse } from "./sourceTools/refactor";
 
 /** Owns exactly one Functional Pascal language-client process. */
 export class LanguageClientController {
@@ -112,5 +114,32 @@ export class LanguageClientController {
     const result = this.operation.then(operation);
     this.operation = result.then(() => undefined, () => undefined);
     return result;
+  }
+
+  /** Prepares a parameter recipe using the server's complete dirty-buffer inventory. */
+  public prepareParameter(request: ParameterRequest, token: vscode.CancellationToken): Promise<RefactorResponse> {
+    return this.enqueue(async () => {
+      await this.startClient();
+      if (this.client === undefined) throw new Error("The language server is not running.");
+      return this.client.sendRequest<RefactorResponse>("fpas/refactor", request, token);
+    });
+  }
+
+  /** Revalidates the session handle and lets the language client apply versioned edits. */
+  public applyRefactor(handle: string): Promise<{ status: "applied" }> {
+    return this.enqueue(async () => {
+      await this.startClient();
+      if (this.client === undefined) throw new Error("The language server is not running.");
+      return this.client.sendRequest("workspace/executeCommand", { command: "fpas.applyRefactor", arguments: [handle] });
+    });
+  }
+
+  /** Reads checked inspection sections directly from synchronized editor buffers. */
+  public inspect(request: InspectRequest, token: vscode.CancellationToken): Promise<InspectResponse> {
+    return this.enqueue(async () => {
+      await this.startClient();
+      if (this.client === undefined) throw new Error("The language server is not running.");
+      return this.client.sendRequest<InspectResponse>("fpas/sourceQuery", request, token);
+    });
   }
 }

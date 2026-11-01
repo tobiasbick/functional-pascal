@@ -11,6 +11,7 @@ use crate::convert::{FileUriError, PositionConversionError};
 pub(crate) enum DocumentRequestError {
     Service(LanguageServiceError),
     Rename(RenameError),
+    SourceTool(fpas_language_service::SourceQueryError),
     Position(PositionConversionError),
     DocumentNotOpen { path: PathBuf },
     Task(String),
@@ -21,6 +22,7 @@ impl fmt::Display for DocumentRequestError {
         match self {
             Self::Service(error) => error.fmt(formatter),
             Self::Rename(error) => error.fmt(formatter),
+            Self::SourceTool(error) => error.fmt(formatter),
             Self::Position(error) => error.fmt(formatter),
             Self::DocumentNotOpen { path } => write!(
                 formatter,
@@ -41,6 +43,12 @@ impl From<LanguageServiceError> for DocumentRequestError {
 impl From<RenameError> for DocumentRequestError {
     fn from(error: RenameError) -> Self {
         Self::Rename(error)
+    }
+}
+
+impl From<fpas_language_service::SourceQueryError> for DocumentRequestError {
+    fn from(error: fpas_language_service::SourceQueryError) -> Self {
+        Self::SourceTool(error)
     }
 }
 

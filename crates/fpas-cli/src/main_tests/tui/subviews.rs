@@ -2,7 +2,7 @@
 use super::*;
 
 #[test]
-fn interactive_demo_preserves_focus_then_confirms_and_quits() {
+fn interactive_demo_selects_a_template_then_confirms_and_quits() {
     let source = include_str!("../../../../../examples/pascal/tui/interactive_demo.fpas")
         .replace("\r\n", "\n");
     let (declarations, _) = source.rsplit_once("\nbegin\n").expect("demo main block");
@@ -19,6 +19,14 @@ fn interactive_demo_preserves_focus_then_confirms_and_quits() {
 begin
   const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(80, 24));
   var State := DemoModel(Text := 'hello', Caret := 5, Confirming := false, Focus := 1);
+  App.InjectKeyForTest(Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Tab, ch := '', shift := false, ctrl := false, alt := false, meta := false));
+  State := App.RunIterations(State, UpdateDemo, ViewDemo, 1, 0);
+  Test.AssertEquals(5, State.Focus);
+  App.InjectKeyForTest(Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Enter, ch := '', shift := false, ctrl := false, alt := false, meta := false));
+  State := App.RunIterations(State, UpdateDemo, ViewDemo, 1, 0);
+  Test.AssertEquals('Plain text', State.Text);
+  Test.AssertFalse(State.Confirming);
+  Test.AssertEquals(5, State.Focus);
   App.InjectKeyForTest(Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Tab, ch := '', shift := false, ctrl := false, alt := false, meta := false));
   State := App.RunIterations(State, UpdateDemo, ViewDemo, 1, 0);
   Test.AssertEquals(2, State.Focus);

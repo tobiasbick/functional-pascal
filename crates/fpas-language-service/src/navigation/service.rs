@@ -5,12 +5,13 @@ use std::path::Path;
 use std::sync::Arc;
 
 use super::{
-    HoverInfo, NavigationDocument, NavigationResult, ReferenceLocation, RenameEdit, RenameError,
-    RenameTarget, find_references, prepare_rename, rename_symbol, resolve, resolve_target,
+    HoverInfo, NavigationDocument, NavigationResult, ReferenceLocation, RenameError, RenameTarget,
+    find_references, prepare_rename, rename_symbol, resolve, resolve_target,
 };
 use crate::{
     CancellationToken, DocumentSnapshot, DocumentSymbol, DocumentSymbols, LanguageService,
-    LanguageServiceError, SymbolLocation, WorkspaceKind, documentation::preceding_documentation,
+    LanguageServiceError, SourceEdit, SymbolLocation, WorkspaceKind,
+    documentation::preceding_documentation,
 };
 
 pub(crate) struct NavigationContext {
@@ -88,7 +89,12 @@ impl LanguageService {
                         context.documents[document_index].snapshot.source(),
                         symbol.full_span.offset(),
                     ),
-                    contents: symbol.detail,
+                    contents: if context.documents[document_index].is_editor_api {
+                        super::source_query::intrinsic::detail(&symbol.qualified_name)
+                            .unwrap_or(symbol.detail)
+                    } else {
+                        symbol.detail
+                    },
                     range,
                 },
             )
@@ -197,7 +203,7 @@ impl LanguageService {
         path: &Path,
         offset: usize,
         new_name: &str,
-    ) -> Result<NavigationResult<Vec<RenameEdit>>, RenameError> {
+    ) -> Result<NavigationResult<Vec<SourceEdit>>, RenameError> {
         self.rename_with_cancellation(path, offset, new_name, &CancellationToken::new())
     }
 
@@ -208,7 +214,28 @@ impl LanguageService {
         offset: usize,
         new_name: &str,
         cancellation: &CancellationToken,
-    ) -> Result<NavigationResult<Vec<RenameEdit>>, RenameError> {
+    ) -> Result<NavigationResult<Vec<SourceEdit>>, RenameError> {
+        let checked = self.checked_rename(path, offset, new_name, cancellation)?;
+        let mut value = checked.value.edits;
+        value.sort_by(|a, b| {
+            a.path
+                .cmp(&b.path)
+                .then(b.range.offset().cmp(&a.range.offset()))
+        });
+        Ok(NavigationResult {
+            snapshot: checked.snapshot,
+            value,
+        })
+    }
+
+    /// Prepares rename edits and exact replacements with shared whole-context validation.
+    pub fn checked_rename(
+        &mut self,
+        path: &Path,
+        offset: usize,
+        new_name: &str,
+        cancellation: &CancellationToken,
+    ) -> Result<NavigationResult<crate::CheckedChanges>, RenameError> {
         let context = self.reference_navigation_context(path, offset, cancellation)?;
         let target_index = context.target_index.ok_or(RenameError::NoSymbol)?;
         let value = rename_symbol(
@@ -219,6 +246,9 @@ impl LanguageService {
             new_name,
             cancellation,
         )?;
+        let value = self
+            .validate_source_edits(path, &value, cancellation)
+            .map_err(RenameError::Validation)?;
         Ok(NavigationResult {
             snapshot: context.snapshot,
             value,
@@ -381,6 +411,9 @@ impl LanguageService {
 
     fn navigation_allowed(&self, path: &Path) -> bool {
         self.is_editor_api_source(path)
+            || self
+                .standard_library_source_paths()
+                .contains(&crate::document::normalized_path(path))
             || matches!(
                 self.workspace().kind(),
                 WorkspaceKind::Loose | WorkspaceKind::Folder

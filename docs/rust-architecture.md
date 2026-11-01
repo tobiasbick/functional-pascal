@@ -8,6 +8,7 @@ runtime values, memory ownership, and VM execution belong to one crate.
 flowchart TD
     CLI[CLI and debug adapters] --> Compiler[Compiler and build engine]
     CLI --> Runtime[Runtime]
+    CLI --> Analysis[Language service]
     Runner[Standalone runner] --> Runtime
     LSP[LSP transport] --> Analysis[Language service]
     Compiler --> Sema[Semantic analysis]
@@ -89,6 +90,21 @@ project analysis. The LSP crate handles protocol transport. Analysis shares the
 compiler's language rules and the portable declaration/model layers; terminal
 backends, native operation implementations, and VM memory management are not
 part of its dependency graph.
+
+Saved-source CLI queries and LSP source tools share `SourceSession`: a frozen
+project/library input inventory, checked compiler facts, canonical build/snapshot
+identity and source selectors. Editor sessions include unsaved overlays. Find,
+inspection and call relationships keep semantic completeness separate from bounded
+presentation. A shared streaming call inventory visits original and retained AST
+allocations; the CLI and LSP project those facts into their own position encodings.
+
+Refactoring recipes produce exact edits after whole-context validation. Parameter
+changes additionally compare bindings and call targets through insertion-coordinate
+maps, including a fresh-name overlay that exposes argument capture. CLI apply
+reconstructs and regenerates immutable plans before staged publication/recovery;
+LSP applies session handles through versioned editor edits. Neither adapter owns a
+second transformation engine. See [source queries](pascal/tools/source-queries.md)
+and [refactoring](pascal/tools/refactoring.md).
 
 ## Execution and host operations
 

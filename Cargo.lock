@@ -880,6 +880,9 @@ dependencies = [
  "fpas-project",
  "fpas-sema",
  "fpas-unit",
+ "ring",
+ "serde",
+ "toml",
 ]
 
 [[package]]
@@ -910,6 +913,7 @@ dependencies = [
  "fpas-fmt",
  "fpas-language-service",
  "fpas-parser",
+ "fpas-project",
  "serde",
  "serde_json",
  "tokio",

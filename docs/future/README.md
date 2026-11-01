@@ -9,7 +9,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
-| Agent tools | [Source queries for coding agents](agent-source-queries.md) | Proposed name selection, bounded inspection, direct call relationships, and later checked refactorings |
+| Agent tools | [Source queries for coding agents](agent-source-queries.md) | Delivered in AP56: name selection, bounded inspection, direct call relationships and checked refactoring |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | FPAS 2 | [Language directions](fpas2-language-directions.md) | Recorded decisions, implemented topics and open proposals |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future capabilities, specialized binary layouts and links to their owning plans |

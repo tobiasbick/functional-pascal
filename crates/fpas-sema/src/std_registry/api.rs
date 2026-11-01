@@ -44,12 +44,13 @@ pub struct IntrinsicStdSymbol {
 /// [`fpas_builtins::STD_UNITS_INTRINSIC`].
 #[must_use]
 pub fn intrinsic_std_symbols(unit: &str) -> Vec<IntrinsicStdSymbol> {
-    if !fpas_builtins::STD_UNITS_INTRINSIC
+    let Some(unit) = fpas_builtins::STD_UNITS_INTRINSIC
         .iter()
-        .any(|known| known.eq_ignore_ascii_case(unit))
-    {
+        .copied()
+        .find(|known| known.eq_ignore_ascii_case(unit))
+    else {
         return Vec::new();
-    }
+    };
 
     let mut checker = Checker::new();
     super::register_single_std_unit(&mut checker, unit);
@@ -94,6 +95,7 @@ mod tests {
     #[test]
     fn intrinsic_std_symbols_returns_registered_fs_signatures() {
         let symbols = intrinsic_std_symbols(fpas_builtins::STD_UNIT_FS);
+        assert_eq!(symbols, intrinsic_std_symbols("std.IO.fs"));
         let read_text = symbols
             .iter()
             .find(|symbol| symbol.qualified_name == "Std.Io.Fs.ReadText")

@@ -7,7 +7,7 @@ for its child modules.
 | Target | Case files | Contract |
 | --- | --- | --- |
 | `language` | `acp_types`, `calendar`, `collection_options`, `contract_policy`, `error_mapping`, `fs_handles`, `json_streams`, `proc_options`, `text_diagnostics` | Nominal types, diagnostics and configuration across source, cached units and program images |
-| `tools` | `batch_debug`, `debug_network`, `profile_report`, `source_queries` | Public debugger, profiler and source-query process boundaries |
+| `tools` | `batch_debug`, `debug_network`, `profile_report`, `source_queries`, `refactor` | Public debugger, profiler, source-query and refactoring process boundaries |
 | `host_io` | `console_eof`, `mcp_workers`, `test_timeout` | Stream EOF, MCP lifecycle and independent timeout supervision |
 | `distribution` | `acp`, `native_executable` | Distributed declarations and executable bundles without source files |
 | `proc_pipes` | `proc_pipes` | Raw interactive bytes, process ownership and DAP stdin/reader lifecycle |

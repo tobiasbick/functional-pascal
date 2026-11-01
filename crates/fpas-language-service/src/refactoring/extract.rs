@@ -38,7 +38,7 @@ pub(super) fn extract_variable(
     let statement = find_statements(body, &selection, &aliases)
         .or_else(|| find_declarations(declarations, &selection, &aliases))?;
     let line_start = source[..statement.offset]
-        .rfind('\n')
+        .rfind(['\n', '\r'])
         .map_or(0, |offset| offset + 1);
     let prefix = source.get(line_start..statement.offset)?;
     // LocalBinding spans start at the name, after the declaration keyword.
@@ -68,6 +68,8 @@ pub(super) fn extract_variable(
     }
     let newline = if source.contains("\r\n") {
         "\r\n"
+    } else if source.contains('\r') {
+        "\r"
     } else {
         "\n"
     };

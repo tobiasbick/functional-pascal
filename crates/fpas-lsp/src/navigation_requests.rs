@@ -3,8 +3,7 @@
 use std::path::Path;
 
 use fpas_language_service::{
-    DocumentHighlight, DocumentSymbol, HoverInfo, NavigationResult, ReferenceLocation, RenameEdit,
-    RenameTarget,
+    DocumentHighlight, DocumentSymbol, HoverInfo, NavigationResult, ReferenceLocation, RenameTarget,
 };
 use tower_lsp_server::ls_types::Position;
 
@@ -181,25 +180,6 @@ impl SynchronizedDocuments {
             let result = service.prepare_rename(&path, offset)?;
             cancellation.check()?;
             Ok(result)
-        })
-        .await
-    }
-
-    pub(crate) async fn rename_open(
-        &self,
-        path: &Path,
-        position: Position,
-        new_name: &str,
-    ) -> Result<Vec<RenameEdit>, DocumentRequestError> {
-        let path = path.to_path_buf();
-        let new_name = new_name.to_owned();
-        tasks::run(&self.service, move |service, cancellation| {
-            let snapshot = require_open(service, &path)?;
-            let offset = position_to_byte_offset(&snapshot, position)?;
-            let result =
-                service.rename_with_cancellation(&path, offset, &new_name, cancellation)?;
-            cancellation.check()?;
-            Ok(result.value)
         })
         .await
     }

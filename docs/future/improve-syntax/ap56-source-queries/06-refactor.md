@@ -1,8 +1,25 @@
 # AP56.6: Expose checked refactoring plans and apply
 
-Package: [AP56](README.md). Status: not started; depends on AP56.2 and AP56.3.
+Package: [AP56](README.md). Status: complete; depends on AP56.2 and AP56.3.
 Uses Q85, Q86 and Q89. Direct call queries are not a prerequisite for rename,
 extract-variable or organize-imports.
+
+The shared core now owns recipes, explicit preparation outcomes and deterministic
+plans in `refactoring/{recipe,prepare,plan,revalidate}.rs`, with checksum and
+structural validation under `refactoring/plan/`. The CLI keeps one preparation
+transport and schema renderer in `cli_query/{request,worker,protocol,report}.rs`.
+`cli_refactor/` is a child of that shared command implementation and owns recipe
+projection, plan artifact output and the surviving publication coordinator. The
+old query-rename implementation and publisher have been removed. The canonical
+flow retains one source publisher and preparation supervisor.
+
+The LSP connection is implemented in `refactor_requests.rs` and its `model`,
+`handles` and `projection` modules, with server dispatch in `server/refactoring.rs`.
+`documents/read_set.rs` owns delivery-time disk/configuration/version checks for
+refactorings, rich source queries and standard Call Hierarchy. Standard rename
+uses the same prepare path; extract/import actions invoke `fpas.applyRefactor`
+with a bounded session handle. The real LSP editing/workspace/process suites and
+complete VS Code Extension Host suite pass, together with package-wide checks.
 
 ## Contract and scope
 
@@ -11,7 +28,7 @@ Expose existing checked transformations through one non-interactive
 Only CLI `fpas refactor apply --plan <file>` publishes changes directly to disk.
 Both steps can run autonomously within an assigned editing task; no interactive
 prompt or additional user approval is required.
-Proposed examples:
+Examples:
 
 ```text
 fpas refactor rename --symbol App.Math.Clamp --name Bound --context examples/pascal/units-basic/units-basic.fpasprj --out rename.plan.json

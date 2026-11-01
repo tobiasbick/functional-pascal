@@ -259,6 +259,9 @@ fn analysis_metadata_exposes_all_named_results() {
         static_bound_declarations: _,
         binding_references: _,
         resource_releases: _,
+        type_references: _,
+        source_bindings: _,
+        enum_constructions: _,
     } = analyze_with_types(&program);
 
     assert_eq!(named_types.len(), 5);

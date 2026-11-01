@@ -1,15 +1,15 @@
 # Language-service integration tests
 
-Four explicit Cargo targets load 31 case modules.
+Four explicit Cargo targets load 37 case modules.
 The crate uses `autotests = false`; add each new case module to exactly one
 suite.
 
 | Target | Case modules | Protected boundary |
 | --- | --- | --- |
-| [analysis_state](suites/analysis_state.rs) | 11 | Incremental diagnostics, document versions, checked types and public snapshots |
+| [analysis_state](suites/analysis_state.rs) | 12 | Incremental diagnostics, document versions, checked types and frozen source inventories |
 | [project_context](suites/project_context.rs) | 3 | Project indexes, repository discovery and workspace ownership |
 | [editor_queries](suites/editor_queries.rs) | 8 | Completion, hover, API metadata, call signatures and constructor queries |
-| [navigation_edits](suites/navigation_edits.rs) | 9 | Canonical symbol identities, references, rename, semantic tokens and refactorings |
+| [navigation_edits](suites/navigation_edits.rs) | 14 | Canonical symbol identities, find/inspection/calls, references, semantic tokens and checked refactoring plans |
 
 ## Fixtures and isolation
 
@@ -56,6 +56,7 @@ included once, including its nested modules.
 | `public_signatures.rs` | `analysis_state` |
 | `query_cache.rs` | `analysis_state` |
 | `routine_visibility.rs` | `analysis_state` |
+| `source_scope.rs` | `analysis_state` |
 | `unicode_character_literals.rs` | `analysis_state` |
 | `project_index.rs` | `project_context` |
 | `repository_context.rs` | `project_context` |
@@ -73,7 +74,12 @@ included once, including its nested modules.
 | `navigation.rs` | `navigation_edits` |
 | `navigation_resolution.rs` | `navigation_edits` |
 | `refactoring.rs` | `navigation_edits` |
+| `refactoring_plans.rs` | `navigation_edits` |
+| `refactoring_add_parameter.rs` | `navigation_edits` |
 | `references_rename.rs` | `navigation_edits` |
 | `rename_safety.rs` | `navigation_edits` |
 | `semantic_tools.rs` | `navigation_edits` |
+| `source_query_find.rs` | `navigation_edits` |
+| `source_query_inspect.rs` | `navigation_edits` |
+| `source_query_calls.rs` | `navigation_edits` |
 | `workspace_navigation.rs` | `navigation_edits` |

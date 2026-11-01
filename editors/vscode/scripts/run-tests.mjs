@@ -13,7 +13,7 @@ import { verifyManifest } from "./verify-manifest.mjs";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
 const fixtureRoot = path.join(extensionRoot, "test", "fixtures");
-const transientFixturePrefixes = [".project-index-", ".workspace-navigation-", ".structured-editing-", ".refactoring-"];
+const transientFixturePrefixes = [".project-index-", ".workspace-navigation-", ".structured-editing-", ".refactoring-", ".source-tools-", ".parameter-tools-"];
 
 function cleanupTransientFixtures() {
   for (const entry of readdirSync(fixtureRoot, { withFileTypes: true })) {
@@ -61,7 +61,7 @@ function runCommand(command, args) {
 /** Runs compilation, manifest checks, and extension-host tests. */
 export async function runTests() {
   const restricted = process.argv.includes("--restricted");
-  runCommand("cargo", ["build", "-p", "fpas-cli", "-p", "fpas-lsp", "-p", "fpas-runner"]);
+  runCommand("cargo", ["build", "--locked", "--profile", "dev-fast", "-p", "fpas-cli", "-p", "fpas-lsp", "-p", "fpas-runner"]);
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   cleanupTransientFixtures();
   const userDataDirectory = mkdtempSync(path.join(os.tmpdir(), "fpas-vscode-test-"));
@@ -77,7 +77,7 @@ export async function runTests() {
       restricted ? "restricted.test.js" : "extension.test.js");
     const environment = {
       ...process.env,
-      PATH: `${path.resolve(extensionRoot, "..", "..", "target", "debug")}${path.delimiter}${process.env.PATH ?? ""}`
+      PATH: `${path.resolve(extensionRoot, "..", "..", "target", "dev-fast")}${path.delimiter}${process.env.PATH ?? ""}`
     };
     if (restricted) {
       const executable = await downloadAndUnzipVSCode({ version });

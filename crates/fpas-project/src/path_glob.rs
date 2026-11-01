@@ -7,6 +7,11 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+mod candidate;
+pub use candidate::would_select_path;
+#[cfg(test)]
+mod tests;
+
 /// Failure while parsing or walking a filesystem glob.
 #[derive(Debug)]
 pub enum PathGlobError {
@@ -55,7 +60,12 @@ pub(crate) fn expand_selected(
         return Ok(paths);
     }
     let paths = expand_disk_selected(root, pattern, exclude)?;
-    crate::source_inputs::retain_glob(root, pattern, exclude, &paths);
+    crate::source_inputs::retain_glob(root, pattern, exclude, &paths).map_err(|source| {
+        PathGlobError::ReadPath {
+            path: root.into(),
+            source,
+        }
+    })?;
     Ok(paths)
 }
 
@@ -67,7 +77,12 @@ pub(crate) fn expand_disk_selected(
     if !crate::source_inputs::active() {
         return expand_disk(root, pattern);
     }
-    let exclusions = exclude
+    let exclusions = exclusions(root, exclude)?;
+    expand_walk(root, pattern, |path| !excluded(&exclusions, path))
+}
+
+fn exclusions(root: &Path, exclude: &[String]) -> Result<Vec<Pattern>, PathGlobError> {
+    exclude
         .iter()
         .map(|entry| {
             Pattern::new(&if Path::new(entry).is_absolute() {
@@ -81,20 +96,22 @@ pub(crate) fn expand_disk_selected(
             })
         })
         .collect::<Result<Vec<_>, _>>()
-        .map_err(PathGlobError::InvalidPattern)?;
-    expand_walk(root, pattern, |path| {
-        let text = path.to_string_lossy().replace('\\', "/");
-        !exclusions.iter().any(|p| {
-            p.matches_with(
-                &text,
-                MatchOptions {
-                    case_sensitive: true,
-                    require_literal_separator: true,
-                    require_literal_leading_dot: false,
-                },
-            )
-        })
-    })
+        .map_err(PathGlobError::InvalidPattern)
+}
+
+fn excluded(exclusions: &[Pattern], path: &Path) -> bool {
+    let text = path.to_string_lossy().replace('\\', "/");
+    exclusions
+        .iter()
+        .any(|p| p.matches_with(&text, match_options()))
+}
+
+fn match_options() -> MatchOptions {
+    MatchOptions {
+        case_sensitive: true,
+        require_literal_separator: true,
+        require_literal_leading_dot: false,
+    }
 }
 
 pub(crate) fn expand_disk(root: &Path, pattern: &str) -> Result<Vec<PathBuf>, PathGlobError> {
@@ -147,7 +164,16 @@ fn expand_below_non_utf8_root(root: &Path, pattern: &str) -> Result<Vec<PathBuf>
 fn expand_walk(
     root: &Path,
     pattern: &str,
+    retain: impl FnMut(&Path) -> bool,
+) -> Result<Vec<PathBuf>, PathGlobError> {
+    walk_directories(root, pattern, retain, |_, _| Ok(()))
+}
+
+fn walk_directories(
+    root: &Path,
+    pattern: &str,
     mut retain: impl FnMut(&Path) -> bool,
+    mut directory_seen: impl FnMut(&Path, &Path) -> Result<(), PathGlobError>,
 ) -> Result<Vec<PathBuf>, PathGlobError> {
     let pattern_path = Path::new(pattern);
     let (walk_root, relative_pattern) = split_literal_prefix(root, pattern_path);
@@ -172,11 +198,7 @@ fn expand_walk(
             ),
         })?;
     let matcher = Pattern::new(relative_pattern).map_err(PathGlobError::InvalidPattern)?;
-    let options = MatchOptions {
-        case_sensitive: true,
-        require_literal_separator: true,
-        require_literal_leading_dot: false,
-    };
+    let options = match_options();
     let mut pending = vec![(walk_root.clone(), Vec::new())];
     let mut matches = Vec::new();
     let mut visited_count = 0;
@@ -191,6 +213,7 @@ fn expand_walk(
         if ancestors.contains(&canonical) {
             continue;
         }
+        directory_seen(&directory, &canonical)?;
         ancestors.push(canonical);
         visited_count += 1;
         if crate::source_inputs::active()

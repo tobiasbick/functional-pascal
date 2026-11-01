@@ -30,6 +30,10 @@ mod semantic_tools;
 mod symbols;
 mod workspace;
 
+pub use analysis::identity::{
+    ANALYSIS_BUILD_ID, GlobIdentity, InputIdentity, InventoryIdentity, identity_path,
+    inventory_digest, source_digest,
+};
 pub use analysis::{DiagnosticAnalysis, DocumentAnalysis, LanguageService, SemanticAnalysis};
 pub use api_lookup::{ApiCatalog, ApiEntry, ApiEntryKind, ApiLocation, ApiLookup, ApiMember};
 pub use cancellation::CancellationToken;
@@ -44,11 +48,23 @@ pub use intellisense::{
     SignatureHelp,
 };
 pub use navigation::{
-    DocumentHighlight, ExpressionType, HighlightKind, HoverInfo, NavigationResult,
-    ReferenceLocation, RenameEdit, RenameError, RenameTarget, SelectionRange, SourceQueryOperation,
-    SourceQueryResult, SourceQueryTarget, WORKSPACE_SYMBOL_LIMIT,
+    CallArgument, CallArgumentProjection, CallCollection, CallCollectionCoverage,
+    CallInventoryCoverage, CallRelation, CallRelationKind, CallRelationProjection, CallRelations,
+    CallRelationsProjection, CallableIdentity, CallableKind, CallableProjection, CallableReference,
+    DeclarationOrigin, DeclarationType, DocumentHighlight, ExpressionType, HighlightKind,
+    HoverInfo, INSPECT_EXCERPT_BYTES, INSPECT_SUPPORTING_TYPES, Inspection,
+    InspectionExcerptProjection, InspectionOmission, InspectionProjection, InspectionSection,
+    InspectionSectionKind, InspectionSectionProjection, InvocationKind, NavigationResult,
+    QueryPolicy, ReferenceLocation, RenameError, RenameTarget, ScopeContext, ScopeKind,
+    ScopeSnapshot, SelectionRange, SourceCallable, SourceCandidate, SourceExcerpt,
+    SourceFindResult, SourceQueryError, SourceQueryOperation, SourceQueryResult, SourceQueryTarget,
+    SourceSession, TargetReference, WORKSPACE_SYMBOL_LIMIT,
 };
-pub use refactoring::{Refactoring, RefactoringKind};
+pub use refactoring::{
+    CheckedChanges, ParameterMode, PlannedEdit, REFACTOR_JSON_BYTES, RefactorBlocker, RefactorPlan,
+    RefactorPreparation, RefactorRecipe, RefactorStatus, Refactoring, RefactoringKind,
+    SourceChange, SourceEdit, SourceSelector,
+};
 pub use semantic_tools::{
     DiagnosticIdentity, SemanticCodeAction, SemanticEdit, SemanticToken, SemanticTokenKind,
     SemanticTokenModifiers,

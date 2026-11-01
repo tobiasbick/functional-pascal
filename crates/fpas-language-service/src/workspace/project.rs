@@ -148,7 +148,7 @@ impl ProjectContext {
         }
     }
 
-    pub(super) fn source_origin(&self, path: &Path) -> SourceOrigin {
+    pub(crate) fn source_origin(&self, path: &Path) -> SourceOrigin {
         self.source_origins
             .get(&normalized_path(path))
             .cloned()

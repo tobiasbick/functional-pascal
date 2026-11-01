@@ -1,13 +1,13 @@
 # AP56.5: Add direct call relationships
 
-Package: [AP56](README.md). Status: not started; depends on AP56.2.
+Package: [AP56](README.md). Status: complete; depends on AP56.2.
 Uses Q85 and Q88. AP56.3 supplies name/reference selectors when available;
 positional call queries must remain usable independently of those selectors.
 
 ## Contract and scope
 
 Implement the detail plan's [direct call queries](../../agent-source-queries.md#phase-3-direct-callers-and-callees).
-Proposed commands:
+Commands:
 
 ```text
 fpas query callers --symbol App.Math.Clamp --context examples/pascal/units-basic/units-basic.fpasprj
@@ -66,6 +66,31 @@ call inventory; `runtime_targets_complete` concerns the inventoried sites, not
 every runtime effect. A parameter change must still account for all declaration
 uses, including compiler-bound uses outside ordinary call syntax.
 This is agent-owned engineering work, not a user approval gate.
+
+### Resolution-owner audit
+
+The collector now lives in `navigation/source_query/calls/` in the language
+service: `resolution.rs` classifies compiler evidence, `walk/` visits original and
+retained allocations, `index.rs` links exact declarations, and `projection.rs`
+serves both CLI and rich LSP. `hierarchy.rs` supplies snapshot-bound anonymous and
+named owners for standard LSP hierarchy. The following matrix records the
+semantic evidence used by those implementations.
+
+| Source form | Existing checked evidence and owner | Collector treatment / missing fact |
+| --- | --- | --- |
+| Named expression or statement call, including imports and recursion | `check/expr/calls/mod.rs::resolve_call_target`, `check/stmt/calls.rs::check_call_stmt`; `record_initialization_reference` retains the selected kind, canonical import identity and local declaration span | `AnalysisMetadata.source_bindings` now exports this evidence, including qualified and nonlocal bindings. Its regression distinguishes imported/local routines from callable values. A callable type alone does not prove a routine target. |
+| Callable variable, parameter, field or indexed value | Selected symbol kind, `member_value_calls`, expression/path types; `check/expr/calls/indexed.rs` | Explicit dynamic site; do not infer the initializer's target. |
+| Instance/static record call and bound method value | `method_calls` and `bound_methods`, populated by `check/expr/calls/methods/` and `check/expr/bound_method.rs` | Map the compiler-selected nominal owner/member to its source declaration; preserve receiver and written argument spans. |
+| Native intrinsic and fluent operation | `intrinsic_calls`, `fluent_calls` and `native_values`, owned by the corresponding call/designator checkers | Known compiler identity and builtin origin; no fabricated source implementation. |
+| Record/enum construction and scalar conversion | `record_constructions`, exported `enum_constructions`, `distinct_conversions`, `subrange_conversions` at the call checker | Exclude constructor/conversion syntax from source routine edges; traverse its argument expressions. |
+| Named actual arguments | `named_argument_orders` from `check/calls/named.rs` | Preserve written evaluation order and report its checked parameter mapping. |
+| Callable value / callback argument | Value designator resolution, bound/native value metadata; receiving call signature and named-argument mapping | Separate value/callback use; passage does not establish execution. |
+| Nested routine, anonymous closure and task spawn | Snapshot routine/closure AST, `closure_infos`, `nested_routine_captures`, and the task-call checker | Separate physical containing owner; tag proven spawn edges without attributing nested bodies to outer routines. |
+| Record-field default | `record_defaults` retains `Arc<Expr>` allocations checked in `check/decl/types/records/defaults.rs::check_record_defaults` | Walk the retained allocation once under its declaration/default owner; the original AST clone has different identity-keyed metadata. |
+| Static-bound constant/subrange expression | `static_bound_declarations` retains checked declaration allocations | Traverse these allocations under their original source owner and deduplicate exact source sites. |
+| Resource release and other implicit invocation | `resource_releases` records canonical release identity/signature/native state | Explicit source-inventory exclusion; retain it as a blocker for changing an affected callable's signature. |
+
+Paths in this table are relative to `crates/fpas-sema/src/`.
 
 AP56.7 consumes the full typed relation inventory, not clipped CLI JSON.
 It must see callable-value/callback uses and unresolved sites as well as direct

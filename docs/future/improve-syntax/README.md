@@ -60,7 +60,7 @@ are separate tasks; technical decisions do not create extra approval gates.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [ ] | [AP56: Shared analysis core, source queries and refactoring](ap56-source-queries/README.md) | XL | Existing language service, CLI and LSP | Planned on `ap56`; both adapters are required deliverables, implementation not started |
+| [x] | [AP56: Shared analysis core, source queries and refactoring](ap56-source-queries/README.md) | XL | Existing language service, CLI and LSP | Complete: shared core, CLI, LSP and editor connections delivered and verified |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

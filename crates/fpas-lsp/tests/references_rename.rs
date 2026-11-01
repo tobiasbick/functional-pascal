@@ -59,7 +59,12 @@ fn references_and_rename_use_utf16_ranges_and_workspace_edits() {
     );
 
     let document_edit = &response(&transcript.messages, 4)["result"]["documentChanges"][0];
-    assert_eq!(document_edit["textDocument"]["uri"], uri);
+    assert_eq!(
+        document_edit["textDocument"]["uri"],
+        uri,
+        "{}",
+        response(&transcript.messages, 4)
+    );
     assert_eq!(document_edit["textDocument"]["version"], 1);
     let changes = document_edit["edits"].as_array().expect("rename edits");
     assert_eq!(changes.len(), 2, "{changes:?}");

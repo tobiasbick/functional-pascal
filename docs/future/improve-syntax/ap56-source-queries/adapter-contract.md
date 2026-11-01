@@ -1,7 +1,7 @@
 # Shared analysis core and mandatory adapters
 
 This reference defines Q91's architecture and adapter acceptance for
-[AP56](README.md). It is planned behavior, not an implemented protocol.
+[AP56](README.md). Both adapters implement this contract.
 Each delivering work package includes its CLI and LSP connections; neither
 adapter may be postponed to an unspecified later package.
 
@@ -133,13 +133,13 @@ this planning change. Individual work files name their feature-specific paths.
 | --- | --- |
 | Common core | `crates/fpas-language-service/src/analysis/`, `src/document/`, `src/navigation/source_query/`, `src/refactoring/`; `crates/fpas-project/src/source_inputs.rs` and its inventory module |
 | Shared build identity | New `crates/fpas-language-service/build.rs`, `build/analysis_identity.rs`, `src/analysis/identity.rs`; modify that crate's `Cargo.toml` and module exports |
-| LSP extension and refactoring-command registration | `crates/fpas-lsp/src/lib.rs`, `src/capabilities.rs`, `src/server/mod.rs`, `src/server/backend.rs`; new `src/source_tools_requests.rs`, `src/server/source_tools.rs` |
+| LSP extension and refactoring-command registration | `crates/fpas-lsp/src/lib.rs`, `src/capabilities.rs`, `src/server/mod.rs`, `src/server/backend.rs`; `src/source_tools_requests.rs`, `src/server/source_tools.rs`, `src/refactor_requests.rs` and its modules, `src/server/refactoring.rs` |
 | Existing LSP consumers | `crates/fpas-lsp/src/navigation_requests.rs`, `src/semantic_tools_requests.rs`, `src/navigation/`, `src/server/navigation.rs`, `src/server/semantic_tools.rs`, `src/documents/` |
 | LSP Call Hierarchy | New `crates/fpas-lsp/src/call_hierarchy.rs`, `src/server/call_hierarchy.rs`; module/trait wiring in `src/lib.rs`, `src/server/mod.rs`, `src/server/backend.rs`, `src/capabilities.rs` |
 | Editor connections | `editors/vscode/src/languageClient.ts`, `src/extension.ts`, `package.json`; new `src/sourceTools.ts` for registration and `src/sourceTools/` (`inspect.ts`, `refactor.ts`) for the respective commands |
 | Core proof | Existing language-service `navigation_edits`, `analysis_state` and `project_context` targets |
 | LSP proof | Existing `workspace`, `editing`, `analysis`, `protocol` targets; new `tests/source_tools.rs` and `tests/call_hierarchy.rs` in `tests/suites/workspace.rs`, new `tests/refactoring_plans.rs` in `tests/suites/editing.rs` |
-| Editor proof | Existing `editors/vscode/test/refactoring.ts`, `test/extension.test.ts`, `test/language_client_lifecycle.ts`; new `test/source_tools.ts` registered in the extension suite |
+| Editor proof | Existing `editors/vscode/test/refactoring.ts`, `test/extension.test.ts`, `test/language_client_lifecycle.ts`; `test/source_tools.ts` and `test/add_parameter.ts` registered in the extension suite |
 
 Abbreviated paths in a row are relative to its named crate or editor directory.
 Keep files focused; register new modules and handlers rather than relying on

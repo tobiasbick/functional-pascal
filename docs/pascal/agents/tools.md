@@ -16,16 +16,24 @@ for connection ownership, typed requests, host decisions and explicit v2 selecti
 | Which declarations does a unit expose? | `fpas doc Std.Io.Fs`; the editor's **Show Public Signatures** also includes unsaved unit edits |
 | Which binding/type does this source expression have? | `fpas query definition file.fpas:12:5` or `fpas query type file.fpas:12:5` |
 | Where is the declaration used? | `fpas query refs file.fpas:12:5` |
+| Which declarations match a name? | `fpas query find Name --context app.fpasprj` |
+| What implements this declaration and which direct types matter? | `fpas query inspect --symbol App.Math.Clamp --context app.fpasprj` |
+| Which calls reach this routine or leave its body? | `fpas query callers` / `callees --symbol App.Math.Clamp --context app.fpasprj`; inspect both completeness flags and dynamic sites. |
 | Does the program check? | `fpas check --diagnostics json app.fpasprj` |
 | Which tests are selected? | `fpas test app-tests.fpasprj --list` |
 | What passes or fails? | `fpas test app-tests.fpasprj --report json` |
 | How do I create a project? | `fpas init project my-app`; see [initializing](../program-structure/initializing.md) |
 
 Use explicit project/workspace paths when discovery is ambiguous. Source queries
-use `--context <manifest>`; inspect `coverage.complete` before treating no matches
-as proof of absence. Incomplete analysis exits 3. Safe rename uses
-`fpas query rename file.fpas:12:5 NewName --dry-run`; its context selector is
-`--project`. Review the plan before applying. See [source queries](../tools/source-queries.md).
+use `--context <manifest>`; inspect `coverage.analysis_complete` and the relevant
+`coverage.collections` entry before treating no locations
+as proof of absence. Incomplete analysis exits 3. Prepare a rename with
+`fpas refactor rename file.fpas:12:5 --name NewName --out rename.json`, then use
+`fpas refactor apply --plan rename.json`. Both use the checked context; preparation
+changes no source. `refactor add-parameter` requires `--name`, `--type`,
+`--mode value|var` and `--argument`; it appends an explicit argument to every
+supported call or refuses the whole plan. See [refactoring](../tools/refactoring.md)
+for supported forms, caller-scope checks and argument effects.
 
 ## Check the actual sources
 

@@ -1,8 +1,8 @@
 //! Raw-mode selection and parent-owned query deadlines, including parser failures.
 
+use super::protocol::{Outcome, Report};
 use super::report;
 use crate::oneshot::{Files, Request};
-use serde_json::{Value, json};
 use std::{
     io::Write,
     path::Path,
@@ -11,8 +11,7 @@ use std::{
 };
 
 pub(crate) fn selected(args: &[String]) -> bool {
-    args.first().map(String::as_str) == Some("query")
-        && args.get(1).map(String::as_str) != Some("rename")
+    matches!(args.first().map(String::as_str), Some("query" | "refactor"))
         && !args
             .iter()
             .any(|s| ["--help", "-h", "--version", "-V"].contains(&s.as_str()))
@@ -26,7 +25,6 @@ pub(crate) fn cwd_failure(args: &[String], error: &std::io::Error) -> Vec<u8> {
         &error.to_string(),
         1,
     );
-    report["context"]["path_base"] = Value::Null;
     report::finish(&mut report)
 }
 
@@ -39,26 +37,40 @@ pub(crate) fn run(
     let started = Instant::now();
     let mut report = parent(args, cwd, started);
     let mut bytes = report::finish(&mut report);
-    let timeout = report["limits"]["timeout_seconds"].as_u64().unwrap_or(30);
-    if started.elapsed() >= Duration::from_secs(timeout) {
-        let failed = report["outcome"] == "error" && report["exit_code"] == 3;
+    let timeout = report.limits.timeout_ms;
+    if started.elapsed() >= Duration::from_millis(timeout) {
+        let failed = report.outcome == Outcome::Error && report.exit_code == 3;
         report::incomplete(&mut report, "execution_timeout");
         if failed {
-            report["outcome"] = json!("error");
+            report.outcome = Outcome::Error;
         }
         bytes = report::finish(&mut report);
+    } else if let Ok(crate::ResolvedCli::Refactor(config)) = crate::resolve_cli_config(args, cwd)
+        && let Some(deadline) = started.checked_add(Duration::from_millis(timeout))
+    {
+        // After this coordinator begins replacement, the preparation timeout cannot kill
+        // publication/recovery or relabel a successfully delivered edit as a timeout.
+        super::refactor::coordinate(&config, &mut report, deadline);
+        bytes = report::finish(&mut report);
     }
-    let exit = report["exit_code"].as_i64().unwrap_or(3) as i32;
+    let exit = report.exit_code;
     if let Err(error) = stdout.write_all(&bytes) {
-        let _ = writeln!(stderr, "Cannot write query output: {error}");
+        let _ = if args.first().is_some_and(|a| a == "refactor") {
+            writeln!(
+                stderr,
+                "Cannot deliver refactoring report: {error}. Inspect saved files before retrying."
+            )
+        } else {
+            writeln!(stderr, "Cannot write query output: {error}")
+        };
         return 1;
     }
     exit
 }
 
-fn parent(args: &[String], cwd: &Path, started: Instant) -> Value {
+fn parent(args: &[String], cwd: &Path, started: Instant) -> Report {
     let config = match crate::resolve_cli_config(args, cwd) {
-        Ok(crate::ResolvedCli::Query(config)) => config,
+        Ok(config @ (crate::ResolvedCli::Query(_) | crate::ResolvedCli::Refactor(_))) => config,
         Ok(_) => {
             return report::failure(args, cwd, "invalid_request", "Expected a source query.", 1);
         }
@@ -69,7 +81,7 @@ fn parent(args: &[String], cwd: &Path, started: Instant) -> Value {
         effective_limits(&mut report, &config);
         report
     };
-    let Some(deadline) = started.checked_add(Duration::from_secs(config.timeout)) else {
+    let Some(deadline) = started.checked_add(Duration::from_secs(timeout(&config))) else {
         return failure("invalid_request", "Timeout is too large.", 1);
     };
     let files = match Files::create("query") {
@@ -97,24 +109,19 @@ fn parent(args: &[String], cwd: &Path, started: Instant) -> Value {
         Err(error) => return failure("worker_start", &error.to_string(), 3),
     };
     let (result, ended) = crate::oneshot::wait(&mut child, &files, deadline, || false);
-    let mut report = match result {
-        Ok(report)
-            if report["schema_version"] == 1
-                && report["diagnostics"].is_array()
-                && report["coverage"]["reasons"].is_array()
-                && [0, 1, 3].iter().any(|e| report["exit_code"] == *e) =>
-        {
-            report
-        }
+    let mut report = match result
+        .and_then(|value| serde_json::from_value::<Report>(value).map_err(|e| e.to_string()))
+    {
+        Ok(report) if report.schema_version == 2 && [0, 1, 3].contains(&report.exit_code) => report,
         Ok(_) => report::failure(args, cwd, "worker_failure", "Invalid worker result.", 3),
         Err(error) => report::failure(args, cwd, "worker_failure", &error, 3),
     };
     effective_limits(&mut report, &config);
     if let Some(reason) = ended {
-        let failed = report["outcome"] == "error";
+        let failed = report.outcome == Outcome::Error;
         report::incomplete(&mut report, reason);
         if failed {
-            report["outcome"] = json!("error");
+            report.outcome = Outcome::Error;
         }
         report::diagnostic(
             &mut report,
@@ -125,11 +132,27 @@ fn parent(args: &[String], cwd: &Path, started: Instant) -> Value {
     report
 }
 
-fn effective_limits(report: &mut Value, config: &crate::cli_input::QueryCliConfig) {
-    report["limits"]["timeout_seconds"] = json!(config.timeout);
-    report["limits"]["result_count"] = if config.kind == crate::cli_input::QueryKind::Refs {
-        json!(config.limit)
-    } else {
-        Value::Null
+fn timeout(config: &crate::ResolvedCli) -> u64 {
+    match config {
+        crate::ResolvedCli::Query(c) => c.timeout,
+        crate::ResolvedCli::Refactor(c) => c.timeout,
+        _ => 30,
+    }
+}
+
+fn effective_limits(report: &mut Report, config: &crate::ResolvedCli) {
+    report.limits.timeout_ms = timeout(config).saturating_mul(1000);
+    let crate::ResolvedCli::Query(config) = config else {
+        report.limits.result_count = None;
+        return;
     };
+    report.limits.timeout_ms = config.timeout.saturating_mul(1000);
+    report.limits.result_count = matches!(
+        config.kind,
+        crate::cli_input::QueryKind::Refs
+            | crate::cli_input::QueryKind::Find
+            | crate::cli_input::QueryKind::Callers
+            | crate::cli_input::QueryKind::Callees
+    )
+    .then_some(config.limit);
 }

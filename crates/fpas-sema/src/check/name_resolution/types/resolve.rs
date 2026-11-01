@@ -8,7 +8,7 @@ use fpas_parser::{QualifiedId, TypeExpr};
 impl Checker {
     /// Resolve a type expression, lazily completing pending whole-unit type headers.
     pub(crate) fn resolve_type_expr(&mut self, type_expr: &TypeExpr) -> Ty {
-        match type_expr {
+        let ty = match type_expr {
             TypeExpr::Named { id, .. } => self.resolve_named_type(id),
             TypeExpr::Application {
                 id,
@@ -76,7 +76,31 @@ impl Checker {
                 let value = self.resolve_type_expr(value_type);
                 Ty::Dict(Box::new(key), Box::new(value))
             }
+        };
+        if let TypeExpr::Named { id, .. } | TypeExpr::Application { id, .. } = type_expr
+            && !ty.is_error()
+        {
+            let name = id.parts.join(".");
+            let declaration = self
+                .scopes
+                .lookup_with_scope_and_declaration(&name)
+                .filter(|(_, symbol, _)| symbol.kind == SymbolKind::Type)
+                .and_then(|(_, _, declaration)| declaration);
+            let qualified_name = self
+                .scopes
+                .imports
+                .original_source_name(&name)
+                .map(str::to_owned);
+            self.type_references.insert(
+                (id.span.source_id, id.span.offset),
+                crate::TypeReference {
+                    declaration,
+                    qualified_name,
+                    ty: ty.clone(),
+                },
+            );
         }
+        ty
     }
 
     fn resolve_named_type(&mut self, qid: &QualifiedId) -> Ty {

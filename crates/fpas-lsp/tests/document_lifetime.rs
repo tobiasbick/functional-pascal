@@ -7,8 +7,6 @@
 
 use crate::support;
 
-use std::time::Duration;
-
 use serde_json::{Value, json};
 use support::{TranscriptStep, exit, initialize, initialized, notifications, run_script, shutdown};
 
@@ -19,14 +17,14 @@ fn reopened_client_version_publishes_analysis_for_the_new_document_lifetime() {
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
         TranscriptStep::Message(open(uri, 1, "program First;\nbegin\nend.\n")),
-        TranscriptStep::Wait(Duration::from_millis(260)),
+        TranscriptStep::WaitForDiagnostics(uri.into(), 1),
         TranscriptStep::Message(close(uri)),
         TranscriptStep::Message(open(
             uri,
             1,
             "program Second;\nbegin\n  const Broken: integer := 'text';\nend.\n",
         )),
-        TranscriptStep::Wait(Duration::from_millis(260)),
+        TranscriptStep::WaitForDiagnostics(uri.into(), 1),
         TranscriptStep::Message(shutdown(2)),
         TranscriptStep::Message(exit()),
     ]);

@@ -2,6 +2,7 @@
 
 mod cache;
 mod document;
+pub(crate) mod identity;
 mod project;
 mod service;
 

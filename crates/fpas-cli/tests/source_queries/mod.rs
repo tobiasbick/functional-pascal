@@ -1,6 +1,9 @@
 //! Operation-specific and platform lifecycle checks share the real query fixture.
 
 use super::*;
+mod calls;
+mod find;
+mod inspect;
 
 #[test]
 fn definition_returns_source_names_for_aliases_members_self_and_callable_values() {
@@ -20,13 +23,13 @@ fn definition_returns_source_names_for_aliases_members_self_and_callable_values(
         ("math.fpas:2:17", "math.fpas", 2, 17),
     ] {
         let r = f.run(&["definition", position], 0);
-        assert_eq!(r["matches"].as_array().unwrap().len(), 1, "{r}");
-        assert_eq!(r["matches"][0]["path"], file);
+        assert_eq!(r["result"]["locations"].as_array().unwrap().len(), 1, "{r}");
+        assert_eq!(r["result"]["locations"][0]["path"], file);
         assert_eq!(
-            r["matches"][0]["range"]["start"],
+            r["result"]["locations"][0]["range"]["start"],
             json!({"line":line,"column":column})
         );
-        assert_eq!(r["matches"][0], r["target"]["declaration"]);
+        assert_eq!(r["result"]["locations"][0], r["target"]["declaration"]);
     }
     f.write("other.fpasprj","[project]\nname='other'\nkind='program'\nmain='main.fpas'\n[sources]\ninclude=['*.fpas']\n");
     let ambiguous = f.run(&["definition", "main.fpas:5:11"], 1);
@@ -66,18 +69,18 @@ fn checked_type_has_a_value_object_and_missing_metadata_is_incomplete() {
         "program T;\nbegin\n  const Count := 1;\n  discard '😀€'; discard Count + 2;\nend.\n",
     );
     let r = f.run(&["type", "main.fpas:3:9"], 0);
-    assert_eq!(r["matches"], json!([]));
-    assert_eq!(r["type"]["display"], "integer");
-    assert_eq!(r["type"]["kind"], "integer");
+    assert_eq!(r["result"]["kind"], "type");
+    assert_eq!(r["result"]["type"]["display"], "integer");
+    assert_eq!(r["result"]["type"]["kind"], "integer");
     assert_eq!(
-        r["type"]["location"]["range"]["start"],
+        r["result"]["type"]["location"]["range"]["start"],
         json!({"line":3,"column":9})
     );
     let string = f.run(&["type", "main.fpas:4:12"], 0);
-    assert_eq!(string["type"]["display"], "string");
+    assert_eq!(string["result"]["type"]["display"], "string");
     let binary = f.run(&["type", "main.fpas:4:31"], 0);
     assert_eq!(
-        binary["type"]["location"]["range"],
+        binary["result"]["type"]["location"]["range"],
         json!({"start":{"line":4,"column":25},"end":{"line":4,"column":34}})
     );
     let absent = f.run(&["type", "main.fpas:5:1"], 1);
@@ -87,7 +90,7 @@ fn checked_type_has_a_value_object_and_missing_metadata_is_incomplete() {
         "program T; begin const Count := Missing; discard Count; end.",
     );
     let broken = f.run(&["type", "main.fpas:1:24"], 3);
-    assert!(broken["type"].is_null());
+    assert!(broken["result"]["type"].is_null());
     assert!(
         broken["coverage"]["reasons"]
             .as_array()
@@ -109,7 +112,7 @@ fn locations_keep_unicode_scalars_utf8_bytes_and_all_line_endings() {
         "\u{feff}program T;\r\nbegin\r  const Count := 1;\n  discard '😀€'; discard Count;\rend.\r",
     );
     let r = f.run(&["refs", "main.fpas:3:9"], 0);
-    let usage = &r["matches"][0];
+    let usage = &r["result"]["locations"][0];
     assert_eq!(
         usage["range"],
         json!({"start":{"line":4,"column":25},"end":{"line":4,"column":30}})
@@ -120,7 +123,7 @@ fn locations_keep_unicode_scalars_utf8_bytes_and_all_line_endings() {
     let absolute = format!("{}:4:25", f.0.join("main.fpas").display());
     let r = f.run(&["definition", &absolute], 0);
     assert_eq!(
-        r["matches"][0]["range"]["start"],
+        r["result"]["locations"][0]["range"]["start"],
         json!({"line":3,"column":9})
     );
 }
@@ -180,7 +183,7 @@ fn imported_standard_parse_diagnostics_keep_their_file_in_partial_results() {
     f.write("lib/example.fpas", "unit Std.Example; public function Read(): integer; begin return 1 + ; end function; end unit;");
     let result = f.run(&["type", "main.fpas:1:49", "--std-lib", "lib"], 3);
     assert_eq!(result["outcome"], "incomplete");
-    assert!(result["type"].is_null());
+    assert!(result["result"]["type"].is_null());
     assert!(
         result["diagnostics"].as_array().unwrap().iter().any(|d| {
             d["code"] == "FP2005" && d["source"] == "lib/example.fpas" && d["location"].is_object()

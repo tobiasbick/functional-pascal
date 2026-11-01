@@ -114,9 +114,8 @@ pub(crate) fn run_cli(
             let mut reporter = Reporter::new(DiagnosticFormat::Text, stderr).with_color(color);
             crate::cli_doc::doc_cli(&config, stdout.as_mut(), &mut reporter)
         }
-        ResolvedCli::Query(config) => {
-            let mut reporter = Reporter::new(DiagnosticFormat::Json, stderr);
-            crate::cli_query::query_cli(&config, stdout.as_mut(), &mut reporter)
+        ResolvedCli::Query(_) | ResolvedCli::Refactor(_) => {
+            crate::cli_query::run(args, cwd, stdout.as_mut(), stderr)
         }
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => {

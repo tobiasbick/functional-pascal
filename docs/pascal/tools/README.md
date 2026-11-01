@@ -6,7 +6,8 @@ Compiler and editor tooling for Functional Pascal projects.
 |------|-------------|
 | [Declaration lookup](../program-structure/cli.md#looking-up-declarations) | `fpas doc` signatures, declaration documentation, and handbook links |
 | [Shared diagnostics](diagnostics.md) | Codes, source positions and Rust text/JSON rendering |
-| [Source queries](source-queries.md) | JSON references, definitions, checked expression types, and safe rename through `fpas query` |
+| [Source queries](source-queries.md) | JSON discovery, inspection, references, definitions, checked types and call relationships |
+| [Refactoring](refactoring.md) | Checked rename, extraction and import plans with explicit revalidated application |
 | [Runtime failure reports](failure-dump.md) | Opt-in `fpas run --failure-dump` with bounded task/frame/value JSON and atomic new-file publication |
 | [Profile reports](profiler.md) | `fpas run --profile` and `fpas debug --profile` with hot routines, lines, runtime counters and debugger timings as one JSON report |
 | [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |

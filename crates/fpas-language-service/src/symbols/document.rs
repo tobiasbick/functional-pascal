@@ -5,7 +5,8 @@ use fpas_diagnostics::SourceSpan;
 use crate::DocumentSnapshot;
 
 /// Editor-facing declaration category independent from LSP symbol kinds.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SymbolKind {
     /// Program compilation-unit declaration.
     Program,
@@ -41,7 +42,8 @@ pub enum SymbolKind {
 }
 
 /// Cross-document visibility of a declaration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SymbolVisibility {
     /// The declaration is visible to importing units.
     Public,

@@ -75,18 +75,20 @@ fn fmt_list_fails_when_changed_file_list_cannot_be_written() {
 }
 
 #[test]
-fn query_fails_when_its_json_document_is_only_partially_written() {
+fn queries_and_refactoring_previews_fail_when_json_is_only_partially_written() {
     let cwd = create_temp_dir("contract-output-query");
     let source = "program T;\nbegin\n  const Count := 1;\n  discard Count;\nend.\n";
-    for (command, expected) in [
-        (vec!["type", "main.fpas:3:18"], source),
+    for (command, message) in [
         (
-            vec!["rename", "main.fpas:3:9", "Total"],
-            "program T;\nbegin\n  const Total := 1;\n  discard Total;\nend.\n",
+            vec!["query", "type", "main.fpas:3:18"],
+            "Cannot write query output",
+        ),
+        (
+            vec!["refactor", "rename", "main.fpas:3:9", "--name", "Total"],
+            "Cannot deliver refactoring report",
         ),
     ] {
-        let mut args = vec!["query".to_owned()];
-        args.extend(command.into_iter().map(str::to_owned));
+        let mut args = command.into_iter().map(str::to_owned).collect::<Vec<_>>();
         args.extend([
             "--std-lib".into(),
             Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -99,22 +101,11 @@ fn query_fails_when_its_json_document_is_only_partially_written() {
             let mut stderr = Vec::new();
             let code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
             assert_eq!(code, 1);
-            if args[1] == "rename" {
-                let record: serde_json::Value =
-                    serde_json::from_slice(&stderr).expect("structured rename write failure");
-                assert!(
-                    record["message"]
-                        .as_str()
-                        .expect("message")
-                        .contains("Cannot write query output")
-                );
-            } else {
-                assert!(String::from_utf8_lossy(&stderr).contains("Cannot write query output"));
-            }
+            assert!(String::from_utf8_lossy(&stderr).contains(message));
             assert_eq!(
                 fs::read_to_string(cwd.join("main.fpas")).unwrap(),
-                expected,
-                "publication precedes output, so a broken pipe cannot undo a successful rename"
+                source,
+                "read queries and refactoring previews never publish source edits"
             );
         }
     }

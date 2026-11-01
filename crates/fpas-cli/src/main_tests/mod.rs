@@ -26,7 +26,6 @@ mod output;
 #[path = "../../test_support/process.rs"]
 mod process;
 mod projects;
-mod query;
 mod standard_library;
 mod stdlib_stage;
 #[path = "../../stdlib_sync.rs"]

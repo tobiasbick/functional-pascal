@@ -1,12 +1,27 @@
 //! Conservative, snapshot-bound source refactorings.
 
+mod add_parameter;
+mod edit;
 mod extract;
 mod imports;
+mod plan;
+mod prepare;
+mod recipe;
+mod revalidate;
+mod validation;
+pub use edit::{CheckedChanges, SourceChange, SourceEdit};
+pub use plan::{PlannedEdit, REFACTOR_JSON_BYTES, RefactorPlan};
+pub use recipe::{
+    ParameterMode, RefactorBlocker, RefactorPreparation, RefactorRecipe, RefactorStatus,
+    SourceSelector,
+};
 
 use std::ops::Range;
 use std::path::Path;
 
-use crate::{LanguageService, LanguageServiceError, NavigationResult, SemanticEdit, SourceVersion};
+use crate::{
+    CancellationToken, LanguageService, LanguageServiceError, NavigationResult, SemanticEdit,
+};
 
 /// User-facing refactoring category, independent from an editor protocol.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,6 +68,9 @@ impl LanguageService {
             return Ok(NavigationResult { snapshot, value });
         }
         let context = self.navigation_context(path)?;
+        if context.snapshot.source() != snapshot.source() {
+            return Ok(NavigationResult { snapshot, value });
+        }
         if let Some(index) = context.target_index
             && let Some(edits) = extract::extract_variable(&context.documents, index, selection)
             && self.valid_refactoring(&snapshot, &edits)?
@@ -64,7 +82,8 @@ impl LanguageService {
             });
         }
         if let Some(index) = context.target_index
-            && let Some(edits) = imports::organize(&context.documents, index)
+            && let Ok(edits) = imports::organize(&context.documents, index)
+            && !edits.is_empty()
             && self.valid_refactoring(&snapshot, &edits)?
         {
             value.push(Refactoring {
@@ -77,44 +96,22 @@ impl LanguageService {
     }
 
     fn valid_refactoring(
-        &self,
-        snapshot: &crate::DocumentSnapshot,
+        &mut self,
+        snapshot: &std::sync::Arc<crate::DocumentSnapshot>,
         edits: &[SemanticEdit],
     ) -> Result<bool, LanguageServiceError> {
-        let Some(source) = apply_edits(snapshot.source(), edits) else {
-            return Ok(false);
-        };
-        let version = match snapshot.version() {
-            SourceVersion::Editor(version) => version.checked_add(1),
-            SourceVersion::Disk(_) => Some(1),
-        };
-        let Some(version) = version else {
-            return Ok(false);
-        };
-        let mut candidate = self.fork_for_edits();
-        candidate
-            .documents_mut()
-            .open_document(snapshot.path(), version, source)?;
-        let analysis = candidate.analyze_document(snapshot.path())?;
-        Ok(analysis.semantic().is_some()
-            && !analysis
-                .diagnostics()
-                .iter()
-                .any(|diagnostic| diagnostic.is_error()))
+        let snapshot = std::sync::Arc::clone(snapshot);
+        let edits = edits
+            .iter()
+            .map(|edit| SourceEdit {
+                path: snapshot.path().to_path_buf(),
+                range: edit.span,
+                new_text: edit.new_text.clone(),
+                snapshot: std::sync::Arc::clone(&snapshot),
+            })
+            .collect::<Vec<_>>();
+        Ok(self
+            .validate_source_edits(snapshot.path(), &edits, &CancellationToken::new())
+            .is_ok())
     }
-}
-
-fn apply_edits(source: &str, edits: &[SemanticEdit]) -> Option<String> {
-    let mut result = source.to_owned();
-    let mut ordered = edits.iter().collect::<Vec<_>>();
-    ordered.sort_by_key(|edit| std::cmp::Reverse(edit.span.offset()));
-    let mut previous = source.len();
-    for edit in ordered {
-        if edit.span.end() > previous || source.get(edit.span.offset()..edit.span.end()).is_none() {
-            return None;
-        }
-        result.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
-        previous = edit.span.offset();
-    }
-    Some(result)
 }

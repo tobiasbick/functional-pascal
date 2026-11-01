@@ -125,6 +125,16 @@
     ],
     "commands": [
       {
+        "command": "functionalPascal.addParameter",
+        "title": "Add Parameter",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.inspect",
+        "title": "Inspect Declaration",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.showPublicSignatures",
         "title": "Show Public Signatures",
         "category": "Functional Pascal"

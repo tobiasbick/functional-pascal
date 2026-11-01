@@ -47,15 +47,25 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas doc <name> [<path>]` — print the signature, documentation and handbook page of a
   declaration or built-in operation without compiling; see
   [Looking up declarations](#looking-up-declarations).
-- `fpas query refs|definition|type <file.fpas:line:column>` — find references, definitions,
+- `fpas query find <text> --context <manifest>` — search checked declarations with
+  bounded ranking, source identity, visibility and coverage. `--limit` defaults to 100.
+- `fpas query inspect <selector>` — read a declaration, its real source body and
+  bounded direct type context, with exact excerpts and explicit omissions.
+- `fpas query callers|callees <selector>` — read direct call sites, callable values,
+  callback arguments and dynamic calls. `--limit` applies independently to each
+  collection; direct-edge completeness and runtime-target completeness are separate.
+- `fpas query refs|definition|type <selector>` — find references, definitions,
   or checked expression types as JSON through the shared language service, without
   writing artifacts. `--context <manifest>` selects the boundary; `--timeout`
   bounds the complete request and `refs --limit` bounds retained uses. Incomplete
-  coverage exits 3. See [Source queries](../tools/source-queries.md).
-- `fpas query rename <file.fpas:line:column> <new-name>` — safely rename a
-  declaration and its references, returning the edits as JSON. `--dry-run`
-  validates and lists edits without writing. `--project <path>` selects the
-  project, workspace, or folder context. See [Safe rename](../tools/source-queries.md#safe-rename).
+  coverage exits 3. Select one `file.fpas:line:column`, `--symbol <exact-name>`
+  with a manifest context, or `--target-ref <json-file>` from a previous checked
+  result. See [Source queries](../tools/source-queries.md).
+- `fpas refactor rename|add-parameter|extract-variable|organize-imports` — prepare checked source
+  edits as JSON without changing source. `--context <manifest>` selects the scope;
+  `--out <plan.json>` saves the complete preview. `fpas refactor apply --plan
+  <plan.json>` revalidates and publishes exact replacements. Repeating an applied
+  plan returns `already_applied`. See [Refactoring](../tools/refactoring.md).
 - `--diagnostics <text | json>` — accepted by `check`, `build`, `run`, and `test`; selects the stderr diagnostic format (see [Machine-readable diagnostics](#machine-readable-diagnostics)).
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--show-output` (print captured standard output of passing tests too), `--filter <pattern>`, repeatable `--file <path>` (select an exact discovered file, relative to the current directory), `--report json`, `--timeout <secs>` (default: `300`), `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (scripted input) and `<test>.expect.stdout`. See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; JSON test entries identify their full source paths, including nested directories. Progress lines stay on stderr. A failing test's captured standard output is always printed below its result line; `--show-output` does the same for passing tests. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Each test's timeout budget starts before its isolated worker is spawned and covers worker preparation and VM execution. Tests run in a terminable process tree, so blocking startup, VM, or host calls cannot extend the timeout indefinitely.
 - `fpas debug [<path>]` — run once to the first breakpoint, runtime error or

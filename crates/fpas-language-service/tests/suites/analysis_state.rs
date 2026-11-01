@@ -33,5 +33,8 @@ mod query_cache;
 #[path = "../routine_visibility.rs"]
 mod routine_visibility;
 
+#[path = "../source_scope.rs"]
+mod source_scope;
+
 #[path = "../unicode_character_literals.rs"]
 mod unicode_character_literals;

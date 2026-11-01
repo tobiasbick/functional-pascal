@@ -1,6 +1,11 @@
 # AP56.4: Add bounded inspect
 
-Package: [AP56](README.md). Status: not started; depends on AP56.3.
+Package: [AP56](README.md). Status: complete; depends on AP56.3.
+
+The shared core, isolated CLI worker and native LSP expose bounded inspection.
+The VS Code command/view is registered and its real Extension Host workflow
+passes with dirty dependencies, read-only rendering and stale-view rejection.
+The core, CLI and LSP inspection cases pass within the complete workspace checks.
 
 ## Prerequisites
 
@@ -12,7 +17,7 @@ Package: [AP56](README.md). Status: not started; depends on AP56.3.
 ## Contract and scope
 
 Deliver the detail plan's [bounded inspection](../../agent-source-queries.md#phase-2-bounded-inspect-context).
-These commands are proposals until implemented:
+Implemented selectors:
 
 ```text
 fpas query inspect --symbol App.Math.Clamp --context examples/pascal/units-basic/units-basic.fpasprj

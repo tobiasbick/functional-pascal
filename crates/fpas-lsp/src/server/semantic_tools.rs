@@ -60,26 +60,54 @@ impl Backend {
                 .collect::<std::result::Result<Vec<_>, _>>()
                 .map_err(conversion_error)?;
         }
-        if kind_requested(
-            params.context.only.as_deref(),
-            &CodeActionKind::REFACTOR_EXTRACT,
-        ) || kind_requested(
-            params.context.only.as_deref(),
-            &CodeActionKind::SOURCE_ORGANIZE_IMPORTS,
-        ) {
-            let result = self
-                .documents
-                .refactorings_open(&path, params.range)
-                .await
-                .map_err(errors::request)?;
-            for action in result.value {
-                if kind_requested(
-                    params.context.only.as_deref(),
-                    &semantic_tools::refactoring_kind(action.kind),
-                ) {
+        if self.supports_refactor_application() {
+            use crate::refactor_requests::{EditorRecipe, RefactorParams};
+            let recipes = [
+                (
+                    "Extract variable",
+                    CodeActionKind::REFACTOR_EXTRACT,
+                    EditorRecipe::ExtractVariable {
+                        uri: uri.clone(),
+                        range: params.range,
+                    },
+                ),
+                (
+                    "Organize imports",
+                    CodeActionKind::SOURCE_ORGANIZE_IMPORTS,
+                    EditorRecipe::OrganizeImports { uri },
+                ),
+            ];
+            for (title, kind, recipe) in recipes {
+                if !kind_requested(params.context.only.as_deref(), &kind)
+                    || (kind == CodeActionKind::REFACTOR_EXTRACT
+                        && params.range.start == params.range.end)
+                {
+                    continue;
+                }
+                let prepared = self
+                    .documents
+                    .refactor(RefactorParams::Prepare {
+                        version: 1,
+                        context: None,
+                        recipe: Box::new(recipe),
+                    })
+                    .await
+                    .map_err(errors::request)?;
+                if prepared.status != fpas_language_service::RefactorStatus::Prepared {
+                    continue;
+                }
+                if let Some(handle) = prepared.handle {
                     actions.push(CodeActionOrCommand::CodeAction(
-                        semantic_tools::refactoring_action(&result.snapshot, uri.clone(), action)
-                            .map_err(conversion_error)?,
+                        tower_lsp_server::ls_types::CodeAction {
+                            title: title.into(),
+                            kind: Some(kind),
+                            command: Some(tower_lsp_server::ls_types::Command {
+                                title: title.into(),
+                                command: "fpas.applyRefactor".into(),
+                                arguments: Some(vec![serde_json::Value::String(handle)]),
+                            }),
+                            ..Default::default()
+                        },
                     ));
                 }
             }

@@ -6,5 +6,7 @@ mod batch_debug;
 mod debug_network;
 #[path = "../profile_report.rs"]
 mod profile_report;
+#[path = "../refactor.rs"]
+mod refactor;
 #[path = "../source_queries.rs"]
 mod source_queries;

@@ -14,6 +14,7 @@
 //! synchronization plus diagnostic publication and formatting edits. Language behavior remains in
 //! `fpas-language-service` and its compiler crates.
 
+mod call_hierarchy;
 mod capabilities;
 pub mod convert;
 mod diagnostics;
@@ -25,9 +26,11 @@ mod intellisense_requests;
 mod navigation;
 mod navigation_requests;
 mod presentation;
+mod refactor_requests;
 mod semantic_tools;
 mod semantic_tools_requests;
 mod server;
+mod source_tools_requests;
 
 use std::path::PathBuf;
 
@@ -43,6 +46,8 @@ pub fn create_service(
 ) -> (OrderedLspService, tower_lsp_server::ClientSocket) {
     let (service, socket) = LspService::build(move |client| Backend::new(initial_root, client))
         .custom_method("fpas/publicSignatures", Backend::public_signatures_request)
+        .custom_method("fpas/sourceQuery", Backend::source_query_request)
+        .custom_method("fpas/refactor", Backend::refactor_request)
         .finish();
     (OrderedLspService::new(service), socket)
 }

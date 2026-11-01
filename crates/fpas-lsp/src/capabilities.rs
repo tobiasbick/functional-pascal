@@ -13,6 +13,13 @@ use tower_lsp_server::ls_types::{
 pub(crate) fn initialize_result() -> InitializeResult {
     InitializeResult {
         capabilities: ServerCapabilities {
+            experimental: Some(
+                serde_json::json!({"fpasSourceQuery": {"version": 1}, "fpasRefactor": {"version": 1}}),
+            ),
+            execute_command_provider: Some(tower_lsp_server::ls_types::ExecuteCommandOptions {
+                commands: vec!["fpas.applyRefactor".into()],
+                ..Default::default()
+            }),
             position_encoding: Some(PositionEncodingKind::UTF16),
             text_document_sync: Some(TextDocumentSyncCapability::Options(
                 TextDocumentSyncOptions {
@@ -34,6 +41,9 @@ pub(crate) fn initialize_result() -> InitializeResult {
             type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
             selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
             references_provider: Some(OneOf::Left(true)),
+            call_hierarchy_provider: Some(
+                tower_lsp_server::ls_types::CallHierarchyServerCapability::Simple(true),
+            ),
             rename_provider: Some(OneOf::Right(RenameOptions {
                 prepare_provider: Some(true),
                 work_done_progress_options: WorkDoneProgressOptions::default(),

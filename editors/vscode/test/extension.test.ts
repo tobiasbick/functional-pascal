@@ -8,6 +8,8 @@ import { verifyIntelliSense } from "./intellisense";
 import { verifyRefactoring } from "./refactoring";
 import { verifySemanticTools } from "./semantic_tools";
 import { verifyStructuredEditing } from "./structured_editing";
+import { verifySourceTools } from "./source_tools";
+import { verifyAddParameter } from "./add_parameter";
 import { verifyWorkflowHost } from "./workflow/host";
 import { verifyWorkflowUnits } from "./workflow/unit";
 import { verifyProjectIndex } from "./workflow/project_index";
@@ -161,6 +163,8 @@ export async function run(): Promise<void> {
   await verifyRefactoring();
   await verifySemanticTools(extension);
   await verifyStructuredEditing();
+  await verifySourceTools();
+  await verifyAddParameter();
   await verifyWorkflowHost(api);
   await verifyDebuggerHost();
 

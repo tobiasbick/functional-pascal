@@ -24,6 +24,13 @@ pub(crate) struct StandardLibraryContext {
 }
 
 impl StandardLibraryContext {
+    pub(crate) fn root(&self) -> &Path {
+        self.project
+            .manifest_path()
+            .parent()
+            .unwrap_or(self.project.manifest_path())
+    }
+
     /// Loads the standard library while preserving project records on failure.
     pub(crate) fn load(root: &Path) -> Result<Self, LanguageServiceError> {
         let project = load_standard_library_project(root).map_err(LanguageServiceError::from)?;

@@ -22,8 +22,7 @@ export async function verifyRefactoring(): Promise<void> {
     const document = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(document);
     const organize = await action(uri, new vscode.Range(0, 0, 0, 0), vscode.CodeActionKind.SourceOrganizeImports);
-    assert.ok(organize.edit);
-    assert.equal(await vscode.workspace.applyEdit(organize.edit), true);
+    await applyAction(organize);
     assert.match(document.getText(), /uses Host.A as Alpha, Host.Z as Zed;/);
     assert.doesNotMatch(document.getText(), /Host.Unused/);
     assert.equal(document.isDirty, true, "organization updates the unsaved editor buffer");
@@ -33,8 +32,7 @@ export async function verifyRefactoring(): Promise<void> {
     assert.ok(start >= 0);
     const range = new vscode.Range(document.positionAt(start), document.positionAt(start+selected.length));
     const extract = await action(uri, range, vscode.CodeActionKind.RefactorExtract);
-    assert.ok(extract.edit);
-    assert.equal(await vscode.workspace.applyEdit(extract.edit), true);
+    await applyAction(extract);
     assert.match(document.getText(), /const ExtractedValue := \(Alpha.Value\(\) \+ Zed.Value\(\)\);/);
     assert.match(document.getText(), /const Value := ExtractedValue \* 3;/);
     assert.equal(await fs.readFile(uri.fsPath, "utf8"), source, "refactorings do not save the source implicitly");
@@ -50,9 +48,16 @@ async function action(uri: vscode.Uri, range: vscode.Range, kind: vscode.CodeAct
     const actions = await vscode.commands.executeCommand<Array<vscode.CodeAction | vscode.Command>>(
       "vscode.executeCodeActionProvider", uri, range, kind.value);
     const result = actions?.find((candidate): candidate is vscode.CodeAction =>
-      "edit" in candidate && candidate.kind?.value === kind.value);
+      "kind" in candidate && candidate.kind?.value === kind.value);
     if (result) return result;
     await new Promise(resolve => setTimeout(resolve, 50));
   }
   assert.fail(`no ${kind.value} code action`);
+}
+
+async function applyAction(action: vscode.CodeAction): Promise<void> {
+  assert.equal(action.edit, undefined, "refactorings never cache an applicable edit");
+  assert.equal(action.command?.command, "fpas.applyRefactor");
+  const result = await vscode.commands.executeCommand<{status: string}>(action.command.command, ...action.command.arguments ?? []);
+  assert.equal(result?.status, "applied");
 }

@@ -121,6 +121,8 @@ pub struct ResourceRelease {
 /// inspecting those same allocations.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
+    /// Compiler-resolved named type annotations, keyed by exact source identifier span.
+    pub type_references: HashMap<(u32, usize), TypeReference>,
     /// Exact enum-member suffixes, including members used as native receivers.
     pub enum_member_paths: HashSet<(u32, usize)>,
     /// Checked substitutions for generic calls and generic routine values.
@@ -142,6 +144,8 @@ pub struct AnalysisMetadata {
     /// Compiler and editor resolution retain lexical shadowing and later enclosing bindings.
     /// **Documentation:** `docs/pascal/language/types/declaration-order.md`
     pub binding_references: HashMap<(u32, usize), (u32, usize)>,
+    /// Checked designator prefixes, including imported routines and callable value bindings.
+    pub source_bindings: HashMap<(u32, usize), super::SourceBinding>,
     /// Canonical direct unit identities to source-local aliases.
     /// **Documentation:** `docs/pascal/program-structure/units.md`
     pub import_aliases: BTreeMap<String, String>,
@@ -172,6 +176,8 @@ pub struct AnalysisMetadata {
     /// Calls resolved to record types, rather than routines returning records.
     /// **Documentation:** `docs/pascal/language/types/records.md`
     pub record_constructions: HashSet<usize>,
+    /// Calls resolved to enum variant constructors rather than source routines.
+    pub enum_constructions: HashSet<usize>,
     /// Calls that convert into or out of a distinct type; they lower to their argument.
     /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
     pub distinct_conversions: HashSet<usize>,
@@ -201,6 +207,17 @@ pub struct AnalysisMetadata {
     pub bound_methods: BoundMethodMap,
 }
 
+/// A checked type annotation's binding, retaining aliases and lexical declaration identity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypeReference {
+    /// Exact locally declared type span, when this source owns the declaration.
+    pub declaration: Option<Span>,
+    /// Compiler-owned qualified import identity, before source alias spelling.
+    pub qualified_name: Option<String>,
+    /// Resolved type, including the arguments of generic applications.
+    pub ty: Ty,
+}
+
 /// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
     pub(crate) needs_error_constructors: bool,
@@ -211,6 +228,7 @@ pub struct Checker {
     pub(crate) source_expr_types: HashMap<(u32, usize, usize), Ty>,
     pub(crate) member_receivers: HashMap<(u32, usize), Ty>,
     pub(crate) selection_types: HashMap<(u32, usize), (Span, Ty)>,
+    pub(crate) type_references: HashMap<(u32, usize), TypeReference>,
     /// Declaration-resolved dependencies used to prove ordered initialization safe.
     pub(crate) initialization: super::initialization::InitializationState,
     /// Value headers replaced when their ordered initializer is checked.
@@ -339,6 +357,7 @@ impl Checker {
             postfix_types: HashMap::new(),
             pattern_types: HashMap::new(),
             selection_types: HashMap::new(),
+            type_references: HashMap::new(),
             member_receivers: HashMap::new(),
             routine_type_arguments: HashMap::new(),
             method_owner_type_arguments: HashMap::new(),
@@ -387,6 +406,8 @@ impl Checker {
     /// Return lowering metadata while retaining checked default and bound-input allocations.
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
+        let binding_references = self.initialization.binding_references();
+        let source_bindings = self.initialization.into_source_bindings();
         AnalysisMetadata {
             routine_type_arguments: self.routine_type_arguments,
             method_owner_type_arguments: self.method_owner_type_arguments,
@@ -396,7 +417,9 @@ impl Checker {
             declaration_types: self.scopes.declaration_types(),
             value_declaration_types: self.scopes.value_declaration_types(),
             selection_types: self.selection_types,
-            binding_references: self.initialization.binding_references(),
+            type_references: self.type_references,
+            binding_references,
+            source_bindings,
             import_aliases: self.scopes.imports.aliases.clone(),
             errors: self.errors,
             expr_types: self.expr_types,
@@ -415,6 +438,7 @@ impl Checker {
             record_defaults: self.record_defaults,
             static_bound_declarations: self.type_collection.static_bound_declarations,
             record_constructions: self.record_constructions,
+            enum_constructions: self.enum_constructions,
             distinct_conversions: self.distinct_conversions,
             subrange_conversions: self.subrange_conversions,
             subrange_memberships: self.subrange_memberships,

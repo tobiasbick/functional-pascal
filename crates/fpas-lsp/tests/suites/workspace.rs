@@ -9,3 +9,9 @@ mod document_lifetime;
 mod navigation;
 #[path = "../workspace_navigation.rs"]
 mod workspace_navigation;
+
+#[path = "../source_tools.rs"]
+mod source_tools;
+
+#[path = "../call_hierarchy.rs"]
+mod call_hierarchy;

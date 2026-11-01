@@ -8,6 +8,8 @@ use tokio::sync::watch;
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
 use tower_lsp_server::ls_types::{
+    CallHierarchyIncomingCall, CallHierarchyIncomingCallsParams, CallHierarchyItem,
+    CallHierarchyOutgoingCall, CallHierarchyOutgoingCallsParams, CallHierarchyPrepareParams,
     CodeActionParams, CodeActionResponse, CompletionItem, CompletionParams, CompletionResponse,
     DidChangeTextDocumentParams, DidChangeWatchedFilesParams, DidCloseTextDocumentParams,
     DidOpenTextDocumentParams, DidSaveTextDocumentParams, DocumentFormattingParams,
@@ -31,10 +33,11 @@ use crate::server::watched_files;
 
 /// Functional Pascal LSP backend with full-text synchronized documents.
 pub struct Backend {
-    client: Client,
+    pub(super) client: Client,
     pub(super) documents: Arc<SynchronizedDocuments>,
     diagnostics: DiagnosticPublisher,
     document_changes: AtomicBool,
+    apply_edit: AtomicBool,
     pub(super) definition_links: AtomicBool,
     watched_files_dynamic_registration: AtomicBool,
     shutdown_started: watch::Sender<bool>,
@@ -49,6 +52,7 @@ impl Backend {
             client,
             documents,
             document_changes: AtomicBool::new(false),
+            apply_edit: AtomicBool::new(false),
             definition_links: AtomicBool::new(false),
             watched_files_dynamic_registration: AtomicBool::new(false),
             shutdown_started: watch::channel(false).0,
@@ -68,6 +72,10 @@ impl Backend {
 
     pub(super) fn supports_document_changes(&self) -> bool {
         self.document_changes.load(Ordering::Acquire)
+    }
+
+    pub(super) fn supports_refactor_application(&self) -> bool {
+        self.supports_document_changes() && self.apply_edit.load(Ordering::Acquire)
     }
 
     fn log_sync_error(operation: &str, error: impl std::fmt::Display) {
@@ -110,6 +118,15 @@ impl LanguageServer for Backend {
             .unwrap_or(false);
         self.document_changes
             .store(supports_document_changes, Ordering::Release);
+        self.apply_edit.store(
+            params
+                .capabilities
+                .workspace
+                .as_ref()
+                .and_then(|w| w.apply_edit)
+                .unwrap_or(false),
+            Ordering::Release,
+        );
         let supports_watched_file_registration = params
             .capabilities
             .workspace
@@ -280,6 +297,25 @@ impl LanguageServer for Backend {
         self.document_highlight_request(params).await
     }
 
+    async fn prepare_call_hierarchy(
+        &self,
+        params: CallHierarchyPrepareParams,
+    ) -> Result<Option<Vec<CallHierarchyItem>>> {
+        self.prepare_call_hierarchy_request(params).await
+    }
+    async fn incoming_calls(
+        &self,
+        params: CallHierarchyIncomingCallsParams,
+    ) -> Result<Option<Vec<CallHierarchyIncomingCall>>> {
+        self.incoming_calls_request(params).await
+    }
+    async fn outgoing_calls(
+        &self,
+        params: CallHierarchyOutgoingCallsParams,
+    ) -> Result<Option<Vec<CallHierarchyOutgoingCall>>> {
+        self.outgoing_calls_request(params).await
+    }
+
     async fn selection_range(
         &self,
         params: SelectionRangeParams,
@@ -323,5 +359,12 @@ impl LanguageServer for Backend {
 
     async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
         self.rename_request(params).await
+    }
+
+    async fn execute_command(
+        &self,
+        params: tower_lsp_server::ls_types::ExecuteCommandParams,
+    ) -> Result<Option<serde_json::Value>> {
+        self.execute_refactor_command(params).await
     }
 }

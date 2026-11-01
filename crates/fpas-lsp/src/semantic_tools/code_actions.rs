@@ -2,8 +2,7 @@
 
 use fpas_diagnostics::{DiagnosticCode, SourceSpan};
 use fpas_language_service::{
-    DiagnosticIdentity, DocumentSnapshot, Refactoring, RefactoringKind, SemanticCodeAction,
-    SemanticEdit, SourceVersion,
+    DiagnosticIdentity, DocumentSnapshot, SemanticCodeAction, SemanticEdit, SourceVersion,
 };
 use tower_lsp_server::ls_types::{
     CodeAction, CodeActionKind, Diagnostic, DocumentChanges, NumberOrString, OneOf,
@@ -66,26 +65,6 @@ pub(crate) fn code_action(
         is_preferred: Some(value.preferred),
         ..CodeAction::default()
     })
-}
-
-pub(crate) fn refactoring_action(
-    snapshot: &DocumentSnapshot,
-    uri: Uri,
-    value: Refactoring,
-) -> Result<CodeAction, PositionConversionError> {
-    Ok(CodeAction {
-        title: value.title,
-        kind: Some(refactoring_kind(value.kind)),
-        edit: Some(workspace_edit(snapshot, uri, value.edits)?),
-        ..CodeAction::default()
-    })
-}
-
-pub(crate) fn refactoring_kind(kind: RefactoringKind) -> CodeActionKind {
-    match kind {
-        RefactoringKind::ExtractVariable => CodeActionKind::REFACTOR_EXTRACT,
-        RefactoringKind::OrganizeImports => CodeActionKind::SOURCE_ORGANIZE_IMPORTS,
-    }
 }
 
 fn workspace_edit(

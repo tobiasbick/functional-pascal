@@ -9,7 +9,32 @@ pub(super) fn request(error: DocumentRequestError) -> Error {
     match error {
         DocumentRequestError::Service(error) => service(error),
         DocumentRequestError::Rename(RenameError::Service(error)) => service(error),
+        DocumentRequestError::Rename(RenameError::Validation(error)) => {
+            request(DocumentRequestError::SourceTool(error))
+        }
         DocumentRequestError::Rename(error) => Error::invalid_params(error.to_string()),
+        DocumentRequestError::SourceTool(error) => {
+            if error.code == "query_cancelled" {
+                return Error::request_cancelled();
+            }
+            let mut result = Error::invalid_params(error.message);
+            let diagnostics = error
+                .diagnostics
+                .iter()
+                .filter_map(|record| {
+                    let path = record.path.as_ref().map(|p| p.to_string_lossy());
+                    fpas_diagnostics::render_json(
+                        path.as_deref(),
+                        record.source.as_deref(),
+                        &record.diagnostic,
+                    )
+                    .ok()
+                    .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                })
+                .collect::<Vec<_>>();
+            result.data = Some(serde_json::json!({"code": error.code, "diagnostics": diagnostics}));
+            result
+        }
         DocumentRequestError::Position(error) => Error::invalid_params(error.to_string()),
         DocumentRequestError::DocumentNotOpen { path } => Error::invalid_params(format!(
             "Cannot query `{}` because the document is not open.",

@@ -56,6 +56,7 @@ location. The extension validates both paths and starts `fpas-lsp` directly.
 | Refactoring | Validated symbol rename, local variable extraction, import organization, and syntax-aware selection expansion. |
 | Formatting and highlighting | The canonical `fpas fmt` style, semantic highlighting, and TextMate highlighting during startup. |
 | Public signatures | **Show Public Signatures** opens a read-only view of a unit's public declarations and contracts, updated as you edit. |
+| Source inspection | **Inspect Declaration** shows the selected signature, source implementation, directly named types and omitted context, including unsaved dependencies. Source changes invalidate the read-only view. |
 
 The language server discovers nested projects and workspaces in the opened
 folder and follows their dependencies, visibility, and exports. Unsaved buffers
@@ -74,6 +75,13 @@ introduce a local `const`; use **F2** to give it your preferred name. Run
 actions check the result before offering an edit. Expressions whose evaluation
 would move across other work, and import clauses containing comments, are kept
 unchanged. See the [refactoring rules](https://github.com/tobiasbick/functional-pascal/blob/main/docs/pascal/tools/editor-integration.md#refactoring).
+
+**Functional Pascal: Add Parameter** prepares a checked signature change and a
+read-only preview. It appends the supplied argument to every supported caller,
+including dirty buffers, and applies with normal editor undo. Unsupported uses
+block the complete change. Automation can pass complete typed arguments to
+`functionalPascal.addParameter`; see the
+[parameter contract](https://github.com/tobiasbick/functional-pascal/blob/main/docs/pascal/tools/refactoring.md#add-parameter).
 
 ## Projects and tests
 

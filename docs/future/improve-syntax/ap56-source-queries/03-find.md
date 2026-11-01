@@ -1,7 +1,13 @@
 # AP56.3: Add checked find and declaration selection
 
-Package: [AP56](README.md). Status: not started; depends on AP56.2.
+Package: [AP56](README.md). Status: complete; depends on AP56.2.
 Uses the recorded Q85 contract.
+
+Checked find, exact read selectors and reference-file reuse are connected to
+the CLI and `fpas/sourceQuery`. Standard workspace symbols and rich
+`editor_catalog` use the same bounded collector. Core, CLI-process and LSP
+transcript fixtures cover clipping, ambiguity, dependency visibility, dirty
+buffers and intrinsic APIs. Refactoring uses those same selectors.
 
 ## Prerequisites
 
@@ -12,7 +18,7 @@ candidate metadata but does not establish checked query coverage.
 ## Contract and scope
 
 Implement the detail plan's [name discovery and selection](../../agent-source-queries.md#selectors-and-context).
-These are proposed forms until delivered:
+Supported forms:
 
 ```text
 fpas query find Clamp --context examples/pascal/units-basic/units-basic.fpasprj

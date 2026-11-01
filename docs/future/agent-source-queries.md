@@ -1,9 +1,8 @@
 # Source queries for coding agents
 
-Status: planned specification; implementation not started. The code baseline is
-`a5f65fcdb`. [AP56](improve-syntax/ap56-source-queries/README.md) owns all five
+Status: delivered. [AP56](improve-syntax/ap56-source-queries/README.md) implements all five
 phases on branch `ap56`: foundation, find, inspect, direct call queries and
-checked refactoring. Commands marked proposed are unavailable. Agents decide
+checked refactoring. Current user contracts are in the handbook. Agents decide
 technical and CLI contracts autonomously; only FPAS syntax changes require user
 approval. This plan requires no FPAS syntax or execution change.
 The [adapter contract](improve-syntax/ap56-source-queries/adapter-contract.md)
@@ -26,12 +25,12 @@ relationships. Adding a parameter and updating known calls comes after the
 read-only tools. Existing rename provides useful infrastructure, not proof that
 arbitrary refactorings are safe.
 
-## Verified current behavior
+## Planning baseline
 
 The implemented user contracts are documented in [source queries](../pascal/tools/source-queries.md),
 [editor integration](../pascal/tools/editor-integration.md), and
-[diagnostics](../pascal/tools/diagnostics.md). The following distinguishes those
-contracts from the additions in this proposal.
+[diagnostics](../pascal/tools/diagnostics.md). The following baseline at `a5f65fcdb`
+motivated the additions delivered by AP56.
 
 | Area | Present behavior and source evidence |
 | --- | --- |
@@ -43,7 +42,7 @@ contracts from the additions in this proposal.
 | Navigation metadata | [`DocumentSymbol`](../../crates/fpas-language-service/src/symbols/document.rs) has identity, spans, visibility and callable detail. [`DocumentAnalysis`](../../crates/fpas-language-service/src/analysis/document.rs) retains checked metadata on the original AST; [`AnalysisMetadata`](../../crates/fpas-sema/src/check/context.rs) already has declaration types and binding references. Reuse these instead of parsing hover text. |
 | Intrinsic declarations | [`StandardLibraryContext`](../../crates/fpas-language-service/src/workspace/standard_library.rs) identifies generated `lib/api/Std` sources. Their FPAS bodies are declaration stubs, not native implementations. Existing API lookup shares documentation extraction but excludes routine locals and does not provide source-query completeness. |
 | Analysis reuse | [`DocumentSnapshot`](../../crates/fpas-language-service/src/document/snapshot.rs) owns immutable text, parsed AST, line index, and store-local revisions. [`AnalysisCache`](../../crates/fpas-language-service/src/analysis/cache.rs) keys completed analyses by participating revisions and project context; request forks share it within a running service. Separate CLI worker processes do not share that cache. |
-| Rename | [`rename.rs`](../../crates/fpas-cli/src/cli_query/rename.rs) pins known source snapshots, checks analysis before and after in-memory edits, checks conflicts through the service, and supports `--dry-run`. [`publication.rs`](../../crates/fpas-cli/src/cli_query/publication.rs) stages replacements and verifies source bytes before publishing. |
+| Rename | The former `cli_query/rename.rs` pinned known source snapshots, checked analysis before and after in-memory edits, checked conflicts through the service, and supported `--dry-run`. Its `publication.rs` staged replacements and verified source bytes before publishing. |
 | Other refactorings | [`refactoring/mod.rs`](../../crates/fpas-language-service/src/refactoring/mod.rs) offers checked extract-variable and organize-imports editor actions. They have no CLI plan/apply interface. Reuse their evaluation-order and initializer-effect restrictions. |
 | Call metadata | [`AnalysisMetadata`](../../crates/fpas-sema/src/check/context.rs) already retains binding references, named-argument ordering, method/fluent/intrinsic targets and constructor/conversion classifications. It does not expose a complete source-call inventory or parameter-change engine. |
 | Unit dependencies | [`UnitGraph`](../../crates/fpas-project/src/unit_graph/model.rs) retains parsed units, origins, direct `uses`, and source identities. Import reachability is not a function-call graph. |
@@ -477,7 +476,7 @@ name the primary owner for each regression. Reuse the existing
 [navigation](../../crates/fpas-language-service/tests/navigation_resolution.rs),
 [cache](../../crates/fpas-language-service/tests/query_cache.rs),
 [rename safety](../../crates/fpas-language-service/tests/rename_safety.rs), and
-[CLI rename](../../crates/fpas-cli/src/main_tests/query/rename.rs) and
+[CLI refactoring](../../crates/fpas-cli/tests/refactor.rs) and
 [CLI source-query](../../crates/fpas-cli/tests/source_queries.rs) fixtures.
 The CLI integration cases run under target `tools`; semantic cases run under
 language-service `navigation_edits`, with cache checks under `analysis_state`.
@@ -522,6 +521,6 @@ calls can be considered after direct queries; a static graph alone cannot provid
 complete change-impact analysis or reliable automatic test selection. A daemon,
 persistent index, and broader refactorings require separate evidence and design.
 
-The next step is AP56.1's concrete contract fixtures, followed by AP56.2.
-Keep this plan aligned with the owning AP; move implemented contracts
-to the handbook only when code and tests provide them.
+All five phases are delivered. The handbook owns the current
+[source-query](../pascal/tools/source-queries.md) and
+[refactoring](../pascal/tools/refactoring.md) contracts.

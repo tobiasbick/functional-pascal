@@ -9,5 +9,7 @@ mod formatting;
 mod public_signatures;
 #[path = "../refactoring.rs"]
 mod refactoring;
+#[path = "../refactoring_plans.rs"]
+mod refactoring_plans;
 #[path = "../references_rename.rs"]
 mod references_rename;

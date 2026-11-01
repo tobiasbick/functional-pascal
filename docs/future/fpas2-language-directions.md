@@ -976,34 +976,21 @@ and [Std reference](../pascal/std/README.md). Future priorities belong to the
 
 ## 28. Semantic source queries
 
-Status: Agreed direction; detailed contracts remain proposed in
-[source queries for coding agents](agent-source-queries.md). Priority: P1.
-[AP56](improve-syntax/ap56-source-queries/README.md) plans the common foundation,
-find, inspect, direct call queries and checked refactoring on `ap56`. Technical
-choices are delegated to the implementing agent; only changes to FPAS syntax
-require user approval. Implementation has not started.
-AP56 extends the common `fpas-language-service` analysis core. CLI and LSP/editor
-connections are required parts of each feature, with shared semantic validation
-and explicit handling of saved sources versus unsaved editor snapshots.
+Status: implemented. See [source queries](../pascal/tools/source-queries.md),
+[checked refactoring](../pascal/tools/refactoring.md) and
+[editor integration](../pascal/tools/editor-integration.md).
 
-Existing positional queries expose definitions, references and checked types;
-rename already provides checked edits. The linked plan owns extensions for name
-discovery, focused inspection, direct callers/callees and checked parameter changes.
-Follow its phases, starting with common query contracts, then find and inspect.
-Read queries do not depend on runtime replay, C FFI or new language syntax.
+The shared `fpas-language-service` core provides checked declaration discovery,
+bounded inspection, direct callers/callees and validated source edits to CLI and
+LSP. Editors include unsaved buffers in their snapshots. Query results distinguish
+complete answers, ambiguity, omissions and unresolved dynamic calls; missing a
+proven caller does not establish that a routine cannot execute.
 
-Reuse compiler resolution and exact source snapshots. Bound the returned context
-and distinguish complete answers, ambiguity, omitted data and unresolved dynamic
-calls. A missing proven caller is not proof that a routine cannot execute.
-Checked refactorings follow read-only discovery. AP56 specifies a shared plan/apply
-flow for rename, extract-variable, organize-imports and append-only parameter
-insertion, with explicit unsupported cases and complete validation before writes.
-
-Acceptance belongs to the linked plan. Verify declaration lookup, relevant type
-context, known uses and checked changes on fixed source fixtures, including
-incomplete results and refusal cases. Use compiler, behavior and adapter checks;
-LLM task comparisons and model-based acceptance gates are outside AP56. No
-productivity or error-rate improvement is claimed.
+Rename, extract-variable, organize-imports and append-only parameter insertion
+share recipe validation and complete before/after checks. Unsupported uses and
+stale inputs prevent application. The CLI publishes saved edits; the editor uses
+versioned workspace edits and supports undo. No program execution or new language
+syntax is required for these operations.
 
 ## 29. Structural test comparisons
 

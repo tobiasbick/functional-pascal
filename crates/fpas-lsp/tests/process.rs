@@ -79,12 +79,15 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
     assert_eq!(
         capability_names,
         [
+            "callHierarchyProvider",
             "codeActionProvider",
             "completionProvider",
             "definitionProvider",
             "documentFormattingProvider",
             "documentHighlightProvider",
             "documentSymbolProvider",
+            "executeCommandProvider",
+            "experimental",
             "hoverProvider",
             "positionEncoding",
             "referencesProvider",

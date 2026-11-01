@@ -1,13 +1,14 @@
 # AP56.1: Specify the common contract and fixtures
 
-Package: [AP56](README.md). Status: not started. This work package turns recorded
+Package: [AP56](README.md). Status: complete; see the [wire contract](wire-contract.md).
+This work package turns recorded
 technical choices Q85 through Q91 into precise schemas, encoding vectors and
 worked examples. It requires no user decision or feature implementation.
 
 ## Prerequisites
 
 Q84 selects the package scope and branch. The
-[detail plan](../../agent-source-queries.md#verified-current-behavior) records the
+[detail plan](../../agent-source-queries.md#planning-baseline) records the
 code-backed baseline. Confirm those owning paths before implementation.
 
 ## Selected technical direction

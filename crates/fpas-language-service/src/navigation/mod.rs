@@ -15,7 +15,19 @@ mod resolve;
 mod selection;
 mod service;
 mod source_query;
-pub use source_query::{SourceQueryOperation, SourceQueryResult, SourceQueryTarget};
+pub(crate) use source_query::discovery::checked as checked_source_context;
+pub(crate) use source_query::visit_call_inventory;
+pub use source_query::{
+    CallArgument, CallArgumentProjection, CallCollection, CallCollectionCoverage,
+    CallInventoryCoverage, CallRelation, CallRelationKind, CallRelationProjection, CallRelations,
+    CallRelationsProjection, CallableIdentity, CallableKind, CallableProjection, CallableReference,
+    DeclarationOrigin, DeclarationType, INSPECT_EXCERPT_BYTES, INSPECT_SUPPORTING_TYPES,
+    Inspection, InspectionExcerptProjection, InspectionOmission, InspectionProjection,
+    InspectionSection, InspectionSectionKind, InspectionSectionProjection, InvocationKind,
+    QueryPolicy, ScopeContext, ScopeKind, ScopeSnapshot, SourceCallable, SourceCandidate,
+    SourceExcerpt, SourceFindResult, SourceQueryError, SourceQueryOperation, SourceQueryResult,
+    SourceQueryTarget, SourceSession, TargetReference,
+};
 mod type_aliases;
 mod type_definition;
 mod workspace_symbols;
@@ -31,7 +43,8 @@ pub use expression_type::ExpressionType;
 pub use highlights::{DocumentHighlight, HighlightKind};
 pub use references::ReferenceLocation;
 pub(crate) use references::{find_references, resolve_target};
-pub use rename::{RenameEdit, RenameError, RenameTarget};
+pub(crate) use rename::validate_identifier;
+pub use rename::{RenameError, RenameTarget};
 pub(crate) use rename::{prepare_rename, rename_symbol};
 pub(crate) use resolve::{find_type, resolve, resolve_qualified, resolve_unqualified, token_name};
 pub use selection::SelectionRange;

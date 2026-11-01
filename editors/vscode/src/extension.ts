@@ -14,6 +14,7 @@ import {
 import { WorkflowController, WORKFLOW_COMMANDS } from "./workflow/controller";
 import type { WorkflowTestStatus } from "./workflow/model";
 import type { ParsedWorkflowDiagnostic } from "./workflow/model";
+import { registerSourceTools } from "./sourceTools";
 
 /** Command that reveals the Functional Pascal output channel. */
 export const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -70,6 +71,7 @@ export async function activate(
   const toolchain = new ToolchainResolver();
   languageClient = new LanguageClientController(toolchain, outputChannel);
   registerPublicSignatures(context, languageClient);
+  registerSourceTools(context, languageClient);
   const workflow = new WorkflowController(context, outputChannel, toolchain);
   registerDebugger(context, toolchain);
   const workflowApi = {

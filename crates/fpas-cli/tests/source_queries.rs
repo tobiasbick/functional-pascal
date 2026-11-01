@@ -71,7 +71,7 @@ impl Fixture {
         assert!(output.stdout.ends_with(b"\n"));
         assert!(output.stdout.len() <= 8 * 1024 * 1024);
         let report: Value = serde_json::from_slice(&output.stdout).expect("one JSON object");
-        assert_eq!(report["schema_version"], 1);
+        assert_eq!(report["schema_version"], 2);
         assert_eq!(report["exit_code"], exit);
         for key in [
             "operation",
@@ -79,8 +79,9 @@ impl Fixture {
             "request",
             "context",
             "target",
-            "matches",
-            "type",
+            "snapshot",
+            "candidates",
+            "result",
             "diagnostics",
             "coverage",
             "limits",
@@ -114,36 +115,42 @@ fn references_separate_identity_from_empty_missing_degraded_and_limited_results(
     assert_eq!(r["outcome"], "ok");
     assert_eq!(r["target"]["name"], "Count");
     assert_eq!(r["target"]["declaration"]["path"], "main.fpas");
-    assert_eq!(r["matches"].as_array().unwrap().len(), 2);
+    assert_eq!(r["result"]["locations"].as_array().unwrap().len(), 2);
     assert_eq!(
-        r["matches"][0]["range"]["start"],
+        r["result"]["locations"][0]["range"]["start"],
         json!({"line":4,"column":11})
     );
-    assert_eq!(r["coverage"]["complete"], true);
+    assert_eq!(r["coverage"]["analysis_complete"], true);
     assert!(
-        r["coverage"]["files"]
+        r["snapshot"]["inventory"]["files"]
             .as_array()
             .unwrap()
             .iter()
-            .any(|file| file["path"] == "main.fpas"
+            .any(|file| file["path"]
+                .as_str()
+                .is_some_and(|p| p.ends_with("/main.fpas"))
                 && file["sha256"]
                     == "e64c7e89481f78b0a27a070d884bd20a6b97ce3f61bd02fabbce6284bacf2c6e")
     );
     let limited = f.run(&["refs", "main.fpas:3:9", "--limit", "1"], 3);
-    assert_eq!(limited["matches"].as_array().unwrap().len(), 1);
+    assert_eq!(limited["result"]["locations"].as_array().unwrap().len(), 1);
     assert_eq!(limited["coverage"]["reasons"], json!(["result_limit"]));
-    assert!(limited["coverage"]["total_count"].is_null());
+    assert!(limited["coverage"]["collections"]["locations"]["known_total"].is_null());
+    assert!(limited["target"]["target_ref"].is_object());
     f.write("main.fpas", "program T; begin const Unused := 1; end.");
     let unused = f.run(&["refs", "main.fpas:1:24"], 0);
-    assert_eq!(unused["matches"], json!([]));
+    assert_eq!(unused["result"]["locations"], json!([]));
     assert_eq!(unused["target"]["name"], "Unused");
-    assert_eq!(unused["coverage"]["total_count"], 0);
+    assert_eq!(
+        unused["coverage"]["collections"]["locations"]["known_total"],
+        0
+    );
     f.write(
         "main.fpas",
         "program T; begin const Count := 1; discard Count; discard Missing; end.",
     );
     let broken = f.run(&["refs", "main.fpas:1:24"], 3);
-    assert_eq!(broken["matches"].as_array().unwrap().len(), 1);
+    assert_eq!(broken["result"]["locations"].as_array().unwrap().len(), 1);
     assert!(
         broken["diagnostics"]
             .as_array()
@@ -177,7 +184,7 @@ fn strict_requests_and_token_boundaries_use_stdout_json() {
     for position in ["main.fpas:3:14", "main.fpas:3:2", "main.fpas:7:1"] {
         let r = f.run(&["refs", position], 1);
         assert_eq!(r["outcome"], "not_found");
-        assert_eq!(r["coverage"]["complete"], true);
+        assert_eq!(r["coverage"]["analysis_complete"], true);
     }
 }
 
@@ -212,9 +219,9 @@ fn references_include_workspace_consumers_and_separate_test_programs() {
         ],
         0,
     );
-    assert_eq!(r["matches"].as_array().unwrap().len(), 2, "{r}");
-    assert_eq!(r["matches"][0]["path"], "tests/a_test.fpas");
-    assert_eq!(r["matches"][1]["path"], "tests/b_test.fpas");
+    assert_eq!(r["result"]["locations"].as_array().unwrap().len(), 2, "{r}");
+    assert_eq!(r["result"]["locations"][0]["path"], "tests/a_test.fpas");
+    assert_eq!(r["result"]["locations"][1]["path"], "tests/b_test.fpas");
     assert_eq!(r["context"]["kind"], "workspace");
     assert_eq!(
         f.run(

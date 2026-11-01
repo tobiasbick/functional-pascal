@@ -62,6 +62,56 @@ identifier occurrences while preserving other source text, including comments
 and string literals. Rename does not reformat the source; use normal document
 formatting when a changed identifier requires a different line layout.
 
+## Checked source queries
+
+The native `fpas/sourceQuery` extension uses version 1 and the common analysis
+core. Its `operation` is `find`, `inspect`, `definition`, `refs`, `type`, `callers`
+or `callees`; `context` is an optional
+manifest file URI. A positional selector is
+`{"kind":"position","uri":"file:...","position":{"line":0,"character":0}}`.
+Positions use LSP UTF-16 coordinates. A reference selector is
+`{"kind":"reference","target_ref":...}` using a previously returned checked
+reference. The server advertises `experimental.fpasSourceQuery.version: 1`.
+An exact name selector is `{"kind":"symbol","name":"App.Math.Clamp"}`;
+find uses `{"kind":"search","text":"Clamp"}`. Both require an explicit
+manifest context under the default `checked_context` policy. Ambiguity returns
+candidates and never selects the first match.
+
+Replies carry `outcome`, context, snapshot inventory, target, operation result,
+diagnostics and coverage. Locations include UTF-16 ranges and UTF-8 byte offsets.
+An optional `limit` bounds retained uses or candidates (1–10,000; default 100 for
+find and 1,000 otherwise). Per-collection coverage distinguishes returned counts
+from known totals. Explicit `policy: "editor_catalog"` is available only for
+find, including empty text, loose open documents and unimported standard APIs.
+Those candidates are unchecked and have no portable reference. Standard
+`workspace/symbol` uses the same bounded catalogue collector. This route
+reads all participating open-buffer overlays,
+including dirty dependencies, and never saves a document. Equal saved source
+bytes and core builds have the same reference identity as CLI queries.
+Changed inputs reject old references with `stale_target`. A document version
+changed during analysis makes the reply incomplete and removes reusable references.
+JSON-RPC cancellation cancels the shared analysis operation.
+
+Standard prepare/incoming/outgoing Call Hierarchy uses the same checked direct
+relationships as `callers`/`callees`. It groups exact call ranges by physical
+owner and keeps nested routines, closures and field defaults separate. Native
+targets have no physical hierarchy item. Item `data` binds the owner to the whole
+snapshot; changed participating files, overlays or membership reject it with
+`stale_target`. An incomplete direct-edge inventory is rejected rather than
+silently shown as a complete hierarchy. The rich query retains callable-value,
+callback and dynamic-call collections, plus `direct_edges_complete` and
+`runtime_targets_complete`; a standard hierarchy alone does not prove all runtime
+targets. Both routes include dirty callers without saving them.
+
+**Functional Pascal: Inspect Declaration** (`functionalPascal.inspect`) opens a
+read-only view from the current source selection. It shows the shared signature,
+implementation, supporting-type sections and omissions, including unsaved
+dependencies. The fixed bounds are 32 KiB of source excerpts and 12 supporting
+types. Source changes invalidate the view; running the command again obtains a
+fresh selection. It never saves files or invokes the CLI. Automation may pass
+`{uri, position, context?}` with VS Code URIs and a UTF-16 position. Hover uses
+the same declaration and native signature facts without constructing an inspection.
+
 ## Source debugging and variable editing
 
 The contributed `fpas` debug type launches the selected installed CLI's DAP adapter.
@@ -348,9 +398,10 @@ through a dependency.
 
 Discovery uses the same manifests, source ownership, dependencies, workspace
 members, exports, and standard-library rules as the compiler. Traversal excludes
-generated and dependency directories such as `.git`, `target`, `node_modules`, and
-`.vscode-test`; it has no fixed directory-depth, manifest-count, or time limit. A file without a matching
-manifest remains a loose file, while overlapping direct owners produce an
+generated and dependency directories such as `.git`, `.temp-data`, `target`,
+`node_modules`, and `.vscode-test`; it has no fixed directory-depth, manifest-count,
+or time limit. Explicitly selected projects inside these directories still work.
+A file without a matching manifest remains a loose file, while overlapping direct owners produce an
 actionable ambiguity error. Open dependency units are analyzed with their own
 URI and source ranges.
 
@@ -602,8 +653,24 @@ Already organized sources receive no edit.
 Both actions use the current unsaved source, require a valid checked document,
 and recheck the proposed result in an isolated overlay before returning edits.
 They cannot edit generated APIs or sources outside the opened editor folder.
-LSP actions use `refactor.extract` and `source.organizeImports` and include the
-analyzed document version. They work with normal undo and do not save files.
+LSP actions use `refactor.extract` and `source.organizeImports`. They carry a
+snapshot-bound handle for `fpas.applyRefactor`, without cached edits. Execution
+rechecks every participating file and open-document version before requesting
+`workspace/applyEdit`. Clients need `workspace.applyEdit` and versioned
+`documentChanges` support; otherwise these actions are omitted. The editor
+applies the edits with normal undo and does not save files. Client refusal is
+reported as `editor_rejected`.
+
+**Functional Pascal: Add Parameter** appends one named value or `var` parameter
+to a supported function/procedure and updates every checked call. It collects
+the type and caller argument, shows a read-only preview, then uses the same
+versioned application route. Complete typed command arguments allow automation
+without prompts; `previewOnly` requests preparation alone. Unresolved or
+unsupported uses block all edits. Dirty declarations and callers stay unsaved.
+
+The version-1 `fpas/refactor` extension exposes the same prepare/revalidate
+workflow used by standard rename and these actions. See
+[checked source refactoring](refactoring.md#editor-preparation-and-application).
 
 ## Semantic highlighting and quick fixes
 

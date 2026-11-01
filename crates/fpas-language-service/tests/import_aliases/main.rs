@@ -45,7 +45,7 @@ fn fixture(source: &str) -> Fixture {
 
 fn apply_edits(
     source: &str,
-    edits: &[fpas_language_service::RenameEdit],
+    edits: &[fpas_language_service::SourceEdit],
     path: &std::path::Path,
 ) -> String {
     let mut result = source.to_owned();

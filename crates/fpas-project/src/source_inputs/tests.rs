@@ -23,6 +23,24 @@ impl Drop for Fixture {
 }
 
 #[test]
+fn parent_relative_globs_verify_with_the_same_absolute_membership_encoding() {
+    let f = Fixture::new();
+    let root = f.0.join("member");
+    fs::create_dir(&root).unwrap();
+    fs::write(f.0.join("shared.fpas"), "unit Demo.Shared; end unit;").unwrap();
+    let inputs = SourceInputs::begin(|| false).unwrap();
+    let selected = crate::expand_path_glob(&root, "../*.fpas").unwrap();
+    assert_eq!(selected.len(), 1);
+    inputs.freeze_selected().unwrap();
+    let inventory = inputs.inventory().unwrap();
+    assert!(inventory.verify().unwrap());
+    drop(inputs);
+    assert!(inventory.verify().unwrap());
+    fs::write(f.0.join("added.fpas"), "unit Demo.Added; end unit;").unwrap();
+    assert!(!inventory.verify().unwrap());
+}
+
+#[test]
 fn request_freezes_exact_bytes_and_detects_content_and_membership_changes() {
     let f = Fixture::new();
     let source = f.0.join("a.fpas");
@@ -91,6 +109,41 @@ fn excluded_files_do_not_consume_snapshot_admission() {
     assert_eq!(selected, vec![f.0.join("keep.fpas")]);
     assert!(inputs.reason().is_none());
     assert!(inputs.verify().unwrap());
+    inputs.freeze_selected().unwrap();
+    let inventory = inputs.inventory().unwrap();
+    drop(inputs);
+    // Detached verification must still apply exclusions and bounded discovery.
+    assert!(inventory.verify().unwrap());
+    fs::write(f.0.join("added.fpas"), "unit Demo.Added; end unit;").unwrap();
+    assert!(!inventory.verify().unwrap());
+}
+
+#[test]
+fn owned_inventory_requires_all_admitted_bytes_and_survives_the_request_thread() {
+    let f = Fixture::new();
+    let source = f.0.join("a.fpas");
+    fs::write(&source, "unit Demo.A; end unit;").unwrap();
+    let inputs = SourceInputs::begin(|| false).unwrap();
+    crate::expand_path_glob(&f.0, "*.fpas").unwrap();
+    crate::expand_path_glob(&f.0, "*.fpasprj").unwrap();
+    assert!(inputs.inventory().is_err());
+    inputs.freeze_selected().unwrap();
+    let inventory = inputs.inventory().unwrap();
+    drop(inputs);
+    let inventory = std::thread::spawn(move || {
+        assert!(inventory.verify().unwrap());
+        inventory
+    })
+    .join()
+    .unwrap();
+    fs::write(f.0.join("new.fpasprj"), "[project]").unwrap();
+    assert!(
+        !inventory.verify().unwrap(),
+        "an originally empty glob is part of the read set"
+    );
+    fs::remove_file(f.0.join("new.fpasprj")).unwrap();
+    fs::write(&source, "unit Demo.Changed; end unit;").unwrap();
+    assert!(!inventory.verify().unwrap());
 }
 
 #[cfg(any(unix, windows))]

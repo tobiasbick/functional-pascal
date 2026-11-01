@@ -12,16 +12,20 @@ use crate::navigation::NavigationDocument;
 pub(super) fn organize(
     documents: &[NavigationDocument],
     target: usize,
-) -> Option<Vec<SemanticEdit>> {
+) -> Result<Vec<SemanticEdit>, &'static str> {
     let document = &documents[target];
-    let uses = document
+    let Some(uses) = document
         .tokens
         .iter()
-        .position(|token| matches!(token.token, Token::Uses))?;
+        .position(|token| matches!(token.token, Token::Uses))
+    else {
+        return Ok(Vec::new());
+    };
     let start = document.tokens[uses].span.offset;
     let semicolon = document.tokens[uses..]
         .iter()
-        .find(|token| matches!(token.token, Token::Semicolon))?;
+        .find(|token| matches!(token.token, Token::Semicolon))
+        .ok_or("invalid_import_syntax")?;
     let end = semicolon.span.offset + semicolon.span.length;
     if collect_comments(document.snapshot.source())
         .iter()
@@ -29,7 +33,7 @@ pub(super) fn organize(
             comment.span.offset < end && start < comment.span.offset + comment.span.length
         })
     {
-        return None;
+        return Err("import_comments");
     }
 
     let mut organized = Vec::new();
@@ -42,7 +46,7 @@ pub(super) fn organize(
             &mut HashSet::new(),
             &mut inert_cache,
         );
-        let alias = import.alias.as_ref()?;
+        let alias = import.alias.as_ref().ok_or("import_alias_unavailable")?;
         let used = document.tokens.iter().any(|token| {
             !(start..end).contains(&token.span.offset)
                 && matches!(&token.token, Token::Ident(name) if name.eq_ignore_ascii_case(&alias.name))
@@ -68,19 +72,31 @@ pub(super) fn organize(
         String::new()
     } else {
         let formatted = fpas_fmt::format_compilation_unit(&compilation);
-        let start = formatted.find("uses ")?;
-        let end = start + formatted[start..].find(';')? + 1;
+        let start = formatted.find("uses ").ok_or("invalid_import_syntax")?;
+        let end = start
+            + formatted[start..]
+                .find(';')
+                .ok_or("invalid_import_syntax")?
+            + 1;
         formatted[start..end].to_owned()
     };
     let replacement = if document.snapshot.source().contains("\r\n") {
         replacement.replace('\n', "\r\n")
+    } else if document.snapshot.source().contains('\r') {
+        replacement.replace('\n', "\r")
     } else {
         replacement
     };
-    if document.snapshot.source().get(start..end)? == replacement {
-        return None;
+    if document
+        .snapshot
+        .source()
+        .get(start..end)
+        .ok_or("invalid_import_syntax")?
+        == replacement
+    {
+        return Ok(Vec::new());
     }
-    Some(vec![SemanticEdit {
+    Ok(vec![SemanticEdit {
         span: SourceSpan::new(start, end - start, 1, 1),
         new_text: replacement,
     }])

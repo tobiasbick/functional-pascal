@@ -1,17 +1,14 @@
 //! LSP request handlers for symbols, navigation, references, and rename.
 
-use std::collections::BTreeMap;
 use std::sync::atomic::Ordering;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
 use tower_lsp_server::ls_types::{
-    DocumentChanges, DocumentHighlight, DocumentHighlightParams, DocumentSymbolParams,
-    DocumentSymbolResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
-    Location, OneOf, OptionalVersionedTextDocumentIdentifier, PrepareRenameResponse,
-    ReferenceParams, RenameParams, SelectionRange, SelectionRangeParams, TextDocumentEdit,
-    TextDocumentPositionParams, TextEdit, Uri, WorkspaceEdit, WorkspaceSymbolParams,
-    WorkspaceSymbolResponse,
+    DocumentHighlight, DocumentHighlightParams, DocumentSymbolParams, DocumentSymbolResponse,
+    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, Location,
+    PrepareRenameResponse, ReferenceParams, RenameParams, SelectionRange, SelectionRangeParams,
+    TextDocumentPositionParams, WorkspaceEdit, WorkspaceSymbolParams, WorkspaceSymbolResponse,
 };
 
 use super::{Backend, errors};
@@ -196,33 +193,26 @@ impl Backend {
             return Ok(None);
         }
         let text = params.text_document_position;
-        let path = request_path(&text.text_document.uri)?;
-        let edits = self
+        use crate::refactor_requests::{EditorRecipe, EditorSelector, RefactorParams};
+        let response = self
             .documents
-            .rename_open(&path, text.position, &params.new_name)
+            .refactor(RefactorParams::Prepare {
+                version: 1,
+                context: None,
+                recipe: Box::new(EditorRecipe::Rename {
+                    selector: EditorSelector::Position {
+                        uri: text.text_document.uri,
+                        position: text.position,
+                    },
+                    name: params.new_name,
+                }),
+            })
             .await
             .map_err(errors::request)?;
-        let mut changes = BTreeMap::<String, (Uri, Option<i32>, Vec<TextEdit>)>::new();
-        for edit in edits {
-            let (uri, version, text_edit) =
-                navigation::rename_edit(edit).map_err(conversion_error)?;
-            changes
-                .entry(uri.to_string())
-                .or_insert_with(|| (uri, version, Vec::new()))
-                .2
-                .push(text_edit);
-        }
-        let edits = changes
-            .into_values()
-            .map(|(uri, version, edits)| TextDocumentEdit {
-                text_document: OptionalVersionedTextDocumentIdentifier { uri, version },
-                edits: edits.into_iter().map(OneOf::Left).collect(),
-            })
-            .collect();
-        Ok(Some(WorkspaceEdit {
-            document_changes: Some(DocumentChanges::Edits(edits)),
-            ..WorkspaceEdit::default()
-        }))
+        response
+            .applicable_edit()
+            .map(Some)
+            .map_err(errors::request)
     }
 }
 

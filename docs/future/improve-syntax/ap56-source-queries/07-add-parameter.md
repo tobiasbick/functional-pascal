@@ -1,14 +1,53 @@
 # AP56.7: Add checked parameter insertion
 
-Package: [AP56](README.md). Status: not started; depends on AP56.5 and AP56.6.
+Package: [AP56](README.md). Status: complete; depends on AP56.5 and AP56.6.
 Uses Q85, Q86, Q88, Q89 and Q90. No FPAS grammar change is required.
+
+## Implementation design
+
+Reuse `parse_type_expression` and `parse_expression`, which already require a
+complete fragment. Retain the full streaming call inventory and compare physical
+declaration identities; presentation limits never select the affected calls.
+Parameter and argument insertions come from existing AST spans and matching lexer
+delimiters. The shared checked-edit validator remains the before/after owner.
+
+To check new arguments before introducing the requested parameter name, first
+validate an isolated overlay using a parameter name absent from all input identifiers.
+Named calls use that temporary label; their argument expressions stay exactly as
+requested. This establishes the argument's bindings without allowing capture by
+the final parameter. Compare those bindings to the final checked overlay, and map
+all unchanged declaration/use offsets across insertions. Neither overlay writes
+source. Reject references to the modified routine within inserted arguments and
+compare unaffected calls and bindings, including retained record defaults and
+resource-release metadata, before producing the ordinary deterministic plan.
+
+The implementation lives in `refactoring/add_parameter.rs` with focused fragment,
+insertion-coordinate and binding-fact modules. Coordinate lookup uses per-file
+binary search, so semantic comparison does not rescan every edit for each binding.
+The retained fact budget is 32 MiB per comparison; preparation also bounds affected
+physical calls (65,536) and blocking sites (8,192). Refusal never returns a subset.
+
+## Regression and metadata owners
+
+| Supported or refused form | Owning evidence |
+| --- | --- |
+| Source function/procedure, nested routine and generic ancestry | `SourceCallable`, `calls/index.rs`, `calls/walk.rs`; `refactoring_add_parameter::imports_nested_routines_record_defaults_and_empty_unused_signatures_are_supported` and `callable_values_callbacks_dynamic_spawns_and_generic_owners_block_the_entire_plan` |
+| Recursion, named/positional calls, import aliases, comments and Unicode | `CallRelation` checked argument mapping and lexer delimiters; `append_preserves_recursion_named_order_comments_unicode_and_line_endings` and CLI `refactor::parameter` |
+| Record defaults and concrete generic parameter types | Compiler-retained `record_defaults` plus owner generic flags; `imports_nested_routines_record_defaults_and_empty_unused_signatures_are_supported` and `contracts_bare_cr_nested_parameter_types_and_concrete_generic_types_keep_their_meaning` |
+| Capture and changed call targets | `AnalysisMetadata.source_bindings`, `type_references`, shared call inventory and insertion mapping; `both_old_body_capture_and_recursive_argument_capture_are_refused` |
+| Complete fragments, visibility, writable/disjoint storage and self-reference | Existing complete-fragment parsers and full overlay checker; `var_arguments_require_writable_disjoint_storage_and_preserve_existing_modes` and `fragments_visibility_duplicate_names_and_self_referential_new_arguments_are_rejected` |
+| Callable values, callbacks, dynamic calls, spawns and generic owners | Full `CallRelationKind` inventory, invocation and owner metadata; `callable_values_callbacks_dynamic_spawns_and_generic_owners_block_the_entire_plan` |
+| Methods and implicit release operations | Method declaration classification and preserved `resource_releases` comparison; `implicit_resource_release_and_method_declarations_are_never_treated_as_unused_routines` |
+| Generated/standard/external sources and broken consumers | Shared `editable_source` and `checked_edit_overlay` owners; core `refactoring_plans`, `rename_safety` and CLI `refactor::safety` |
+| Same saved edits, dirty callers, Unicode positions and version-only staleness | LSP `refactoring_plans::parameter_recipe_shares_core_edits_and_applies_dirty_unicode_callers_with_versions` |
+| Actual command, preview, dirty multi-file application and undo | VS Code `test/add_parameter.ts`; complete Extension Host suite passes |
 
 ## Contract and scope
 
 Add `fpas refactor add-parameter` to AP56.6's existing preview/plan/apply flow.
 The initial operation appends one parameter to a named source function or
 procedure and appends an explicit argument to every proven supported call.
-Proposed example:
+Example:
 
 ```text
 fpas refactor add-parameter --symbol App.Math.Clamp --context examples/pascal/units-basic/units-basic.fpasprj --name Offset --type integer --mode value --argument '0' --out parameter.plan.json
@@ -118,8 +157,8 @@ save or CLI subprocess. Follow the
 | Modify | `crates/fpas-cli/src/cli_input/refactor.rs`, `crates/fpas-cli/src/cli_refactor/` (`mod.rs`, `plan.rs`), shared worker/protocol/report modules | Arguments, typed recipe and bounded blocker/edit rendering |
 | Create/register | `crates/fpas-language-service/tests/refactoring_add_parameter.rs`, `crates/fpas-language-service/tests/suites/navigation_edits.rs` | Parameter/call semantics, bindings and refusal boundaries |
 | Extend | `crates/fpas-cli/tests/refactor.rs` | End-to-end preview, exact apply, stale/repeat outcomes and no writes on refusal |
-| Extend | `crates/fpas-lsp/src/source_tools_requests.rs`, `src/server/source_tools.rs`, `tests/refactoring_plans.rs` under that crate | Parameter recipe preparation/revalidation, versioned edits and matching blockers |
-| Create/modify | Editor connection paths in `adapter-contract.md`, including `editors/vscode/src/sourceTools/refactor.ts`, `test/source_tools.ts` | Registered add-parameter command with typed recipe input and a real editor application workflow |
+| Extend | `crates/fpas-lsp/src/refactor_requests.rs`, its `model.rs`/`projection.rs`, `tests/refactoring_plans.rs` under that crate | Parameter recipe preparation/revalidation, versioned edits and matching blockers |
+| Create/modify | Editor connection paths in `adapter-contract.md`, including `editors/vscode/src/sourceTools/refactor.ts`, `test/add_parameter.ts` | Registered add-parameter command with typed recipe input and a real editor application workflow |
 
 Keep eligibility and edit construction focused; split files by those concerns
 if they approach the repository's size guideline. Reuse the existing edit model,

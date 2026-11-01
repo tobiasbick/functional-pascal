@@ -40,7 +40,9 @@ pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
 pub use check::RecordDefaultsMap;
 pub use check::ResourceRelease;
+pub use check::TypeReference;
 pub use check::{NativeCallable, NativeCallableMap};
+pub use check::{SourceBinding, SourceBindingKind};
 pub use error::SemaError;
 pub use interface::{
     InterfaceConversionError, UnitAnalysis, analyze_program_with_interface_support,

@@ -1,14 +1,14 @@
-//! Isolated saved-source discovery and analysis; never compiles or executes FPAS.
+//! Isolated shared-core analysis; no bytecode, execution or source publication.
 
-use super::report;
+use super::{protocol::*, report};
 use crate::{
-    cli_input::{QueryCliConfig, QueryKind},
+    cli_input::{QueryCliConfig, QueryKind, QuerySelector},
     oneshot::Files,
 };
-use fpas_language_service::{CancellationToken, LanguageService, SourceQueryOperation};
-use fpas_project::source_inputs::SourceInputs;
-use serde_json::{Value, json};
-use std::path::Path;
+use fpas_language_service::{
+    CancellationToken, SourceQueryError, SourceQueryOperation, SourceSession, TargetReference,
+};
+use std::{io::Read, path::Path};
 
 pub(super) const ARGUMENT: &str = "__fpas-source-query";
 
@@ -30,7 +30,7 @@ fn execute(files: &Files) -> std::io::Result<()> {
     let request = files.read_request()?;
     let mut report = report::empty(&request.args, &request.cwd);
     let config = match crate::resolve_cli_config(&request.args, &request.cwd) {
-        Ok(crate::ResolvedCli::Query(config)) if config.kind != QueryKind::Rename => config,
+        Ok(config @ (crate::ResolvedCli::Query(_) | crate::ResolvedCli::Refactor(_))) => config,
         _ => {
             return Err(std::io::Error::other(
                 "Invalid private source-query request.",
@@ -39,227 +39,183 @@ fn execute(files: &Files) -> std::io::Result<()> {
     };
     let cancel = files.cancel();
     let cancellation = CancellationToken::with_probe(move || cancel.is_file());
-    let probe = cancellation.clone();
-    let inputs = SourceInputs::begin(move || probe.is_cancelled())?;
-    if let Err((code, error, records)) = prepare(&config, &request.cwd, &cancellation, &mut report)
-    {
-        if let Some(items) = report["diagnostics"].as_array_mut() {
-            items.extend(
-                records
-                    .iter()
-                    .map(|record| report::fp_diagnostic(record, &request.cwd)),
-            );
+    let prepared = match &config {
+        crate::ResolvedCli::Query(config) => {
+            prepare(config, &request.cwd, &cancellation, &mut report)
         }
-        report::diagnostic(&mut report, code, &error);
-    }
-    let mut input_files = inputs.files().into_iter().map(|(path,bytes)| {
-        let digest = ring::digest::digest(&ring::digest::SHA256,&bytes);
-        let sha256 = digest.as_ref().iter().map(|b| format!("{b:02x}")).collect::<String>();
-        json!({"path":report::path(&normalized(&path),&request.cwd),"sha256":sha256,"bytes":bytes.len(),
-            "kind":if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("fpas")) {"source"} else {"manifest"}})
-    }).collect::<Vec<_>>();
-    input_files.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
-    report["coverage"]["files"] = json!(input_files);
-    if let Some(reason) = inputs.reason() {
-        report::incomplete(&mut report, reason);
-    }
-    // Serialize before the final consistency check so text preparation shares the deadline.
-    let _ = report::finish(&mut report);
-    if !inputs.verify().unwrap_or(false) {
-        report::incomplete(&mut report, "source_changed");
-        report::diagnostic(
-            &mut report,
-            "source_changed",
-            "Sources, manifests or selected file membership changed during the query.",
+        crate::ResolvedCli::Refactor(config) => {
+            super::refactor::prepare(config, &request.cwd, &cancellation, &mut report)
+        }
+        _ => return Err(std::io::Error::other("Invalid source-tool request.")),
+    };
+    if let Err(error) = prepared {
+        report.diagnostics.extend(
+            error
+                .diagnostics
+                .iter()
+                .map(|d| report::fp_diagnostic(d, &request.cwd)),
         );
+        report::diagnostic(&mut report, error.code, &error.message);
+        report.outcome = Outcome::Error;
+        report.exit_code = 1;
+        if [
+            "analysis_unavailable",
+            "analysis_incomplete",
+            "query_cancelled",
+            "source_limit",
+            "source_changed",
+        ]
+        .contains(&error.code)
+        {
+            report::incomplete(&mut report, error.code);
+        }
     }
     files.publish(&report::finish(&mut report))
 }
-
-type Failure = (&'static str, String, Vec<fpas_diagnostics::FileDiagnostic>);
 
 fn prepare(
     config: &QueryCliConfig,
     cwd: &Path,
     cancellation: &CancellationToken,
-    report: &mut Value,
-) -> Result<(), Failure> {
-    for path in std::iter::once(&config.path).chain(config.project.iter()) {
-        fpas_project::source_inputs::select(path)
-            .map_err(|error| ("source_read", error.to_string(), Vec::new()))?;
-    }
-    let library = match &config.standard_library {
-        Some(root) => Some(root.clone()),
-        None => crate::standard_library::default_standard_library_root()
-            .map_err(|error| ("standard_library", error, Vec::new()))?,
-    };
-    let input = config.project.as_deref().unwrap_or(&config.path);
-    let mut service = match library {
-        Some(root) => {
-            LanguageService::load_with_standard_library_and_cancellation(input, &root, cancellation)
-        }
-        None => LanguageService::load_with_cancellation(input, cancellation),
-    }
-    .map_err(|e| ("context_error", e.to_string(), e.diagnostics()))?;
-    let workspace = service.workspace();
-    report["context"]["kind"] = json!(match workspace.kind() {
-        fpas_language_service::WorkspaceKind::Loose => "loose",
-        fpas_language_service::WorkspaceKind::Project => "project",
-        fpas_language_service::WorkspaceKind::Workspace => "workspace",
-        _ => "unavailable",
+    report: &mut Report,
+) -> Result<(), SourceQueryError> {
+    report.request.selector = Some(match &config.selector {
+        QuerySelector::Search(text) => Selector::Search { text: text.clone() },
+        QuerySelector::Symbol(name) => Selector::Symbol { name: name.clone() },
+        QuerySelector::Reference(path) => Selector::Reference {
+            path: report::path(path, cwd),
+        },
+        QuerySelector::Position { path, line, column } => Selector::Position {
+            path: report::path(path, cwd),
+            line: *line,
+            column: *column,
+        },
     });
-    report["context"]["manifest"] = json!(workspace.manifest_path().map(|p| report::path(p, cwd)));
-    let mut projects = workspace
-        .projects()
-        .iter()
-        .map(|p| json!({"name":p.name(),"manifest":report::path(p.manifest_path(),cwd)}))
-        .collect::<Vec<_>>();
-    projects.sort_by(|a, b| a["manifest"].as_str().cmp(&b["manifest"].as_str()));
-    report["context"]["projects"] = json!(projects);
-    if !workspace.issues().is_empty() {
-        return Err((
-            "context_error",
-            "The selected source context could not be loaded.".into(),
-            workspace
-                .issues()
-                .iter()
-                .flat_map(|i| i.diagnostics())
-                .collect(),
-        ));
-    }
-    if workspace
-        .projects()
-        .iter()
-        .filter(|p| p.owns_source(&config.path))
-        .count()
-        > 1
-    {
-        return Err((
-            "ambiguous_context",
-            "Several projects directly own the selected source.".into(),
-            Vec::new(),
-        ));
-    }
-    let snapshot = service
-        .snapshot(&config.path)
-        .map_err(|e| ("source_read", e.to_string(), e.diagnostics()))?;
-    if config.project.is_some()
-        && service
-            .workspace()
-            .project_for_source(snapshot.path())
-            .is_none()
-    {
-        return Err((
-            "outside_context",
-            "The source does not belong to the selected context.".into(),
-            Vec::new(),
-        ));
-    }
-    let offset = super::source_offset(&snapshot, config.line, config.column).ok_or_else(|| {
-        (
-            "invalid_position",
-            "The line or Unicode-scalar column is outside the source.".into(),
-            Vec::new(),
-        )
-    })?;
-    report["request"]["file"] = json!(report::path(snapshot.path(), cwd));
-    let operation = match config.kind {
-        QueryKind::Refs => SourceQueryOperation::References,
-        QueryKind::Definition => SourceQueryOperation::Definition,
-        QueryKind::Type => SourceQueryOperation::Type,
-        QueryKind::Rename => {
-            return Err((
-                "invalid_request",
-                "Rename is not a source query worker operation.".into(),
-                Vec::new(),
-            ));
-        }
-    };
-    let result = service
-        .source_query(
-            snapshot.path(),
-            offset,
-            operation,
-            config.limit,
-            cancellation,
-        )
-        .map_err(|e| {
-            report::incomplete(report, "analysis_unavailable");
-            ("analysis_unavailable", e.to_string(), e.diagnostics())
-        })?;
-    report["diagnostics"] = json!(
-        result
-            .diagnostics
-            .iter()
-            .map(|d| report::fp_diagnostic(d, cwd))
-            .collect::<Vec<_>>()
+    report.request.options.insert(
+        "timeout_ms".into(),
+        serde_json::json!(config.timeout.saturating_mul(1000)),
     );
-    let target = result.target.as_ref().map(|target| {
-        let declaration = target.snapshot.as_ref().zip(target.symbol.as_ref())
-            .and_then(|(s,t)| report::location(s,t.selection_span,cwd));
-        json!({"name":target.name,"qualified_name":target.qualified_name,
-            "kind":target.symbol.as_ref().map_or("builtin".into(),|s| format!("{:?}",s.kind).to_ascii_lowercase()),
-            "origin":if target.snapshot.is_some() {"source"} else {"builtin"},"declaration":declaration})
-    });
-    report["target"] = json!(target);
-    let mut matches = result
-        .matches
-        .iter()
-        .filter_map(|m| report::location(&m.snapshot, m.span, cwd))
-        .collect::<Vec<_>>();
-    matches.sort_by(|a, b| {
-        a["path"].as_str().cmp(&b["path"].as_str()).then_with(|| {
-            a["byte_span"]["start"]
-                .as_u64()
-                .cmp(&b["byte_span"]["start"].as_u64())
-        })
-    });
-    report["matches"] = json!(matches);
-    if let Some(ty) = &result.expression_type {
-        report["type"] = json!({"display":ty.type_name,"kind":ty.kind, "location":report::location(&snapshot,ty.span,cwd),"declaration":ty.declaration.as_ref().and_then(|d|report::location(&d.snapshot,d.span,cwd))});
-    }
-    let found = if operation == SourceQueryOperation::Type {
-        result.expression_type.is_some()
-    } else if operation == SourceQueryOperation::Definition {
-        !result.matches.is_empty()
-    } else {
-        result.target.is_some()
+    report
+        .request
+        .options
+        .insert("limit".into(), serde_json::json!(config.limit));
+    let reference = match &config.selector {
+        QuerySelector::Reference(path) => Some(read_reference(path)?),
+        _ => None,
     };
-    report["outcome"] = json!(if found { "ok" } else { "not_found" });
-    report["exit_code"] = json!(if found { 0 } else { 1 });
-    report["coverage"] = json!({"complete":true,"reasons":[],"files":[],"returned_count":matches.len(),"total_count":matches.len()});
-    let invalid_location = matches.len() != result.matches.len()
-        || result
-            .target
-            .as_ref()
-            .is_some_and(|t| t.snapshot.is_some() && report["target"]["declaration"].is_null())
-        || result.expression_type.is_some() && report["type"]["location"].is_null();
-    if !found {
-        let reason = if result.target.as_ref().is_some_and(|t| t.snapshot.is_none()) {
-            "no_source_definition"
-        } else {
-            "no_target"
+    let recorded_library = reference
+        .as_ref()
+        .and_then(|r| r.context.standard_library.as_ref())
+        .map(std::path::PathBuf::from);
+    let library = if config.standard_library.is_some() {
+        config.standard_library.clone()
+    } else if reference.is_some() {
+        recorded_library
+    } else {
+        crate::standard_library::default_standard_library_root()
+            .map_err(|e| failure("standard_library", e))?
+    };
+    let input = config
+        .project
+        .as_deref()
+        .or_else(|| reference.as_ref().map(|r| Path::new(&r.context.input)))
+        .or(match &config.selector {
+            QuerySelector::Position { path, .. } => Some(path.as_path()),
+            _ => None,
+        })
+        .ok_or_else(|| failure("invalid_request", "A manifest context is required."))?;
+    let mut session = SourceSession::load(input, library.as_deref(), &[], cancellation)?;
+    report.context = Some(Context {
+        scope: session.context().clone(),
+        path_base: report::path(cwd, Path::new("")),
+    });
+    report.snapshot = Some(session.snapshot().clone());
+    if let QuerySelector::Search(text) = &config.selector {
+        let found = session.find_declarations(text, false, config.limit, cancellation)?;
+        super::projection::find(report, found, cwd);
+    } else {
+        let operation = match config.kind {
+            QueryKind::Refs => SourceQueryOperation::References,
+            QueryKind::Definition => SourceQueryOperation::Definition,
+            QueryKind::Type => SourceQueryOperation::Type,
+            QueryKind::Inspect => SourceQueryOperation::Inspect,
+            QueryKind::Callers => SourceQueryOperation::Callers,
+            QueryKind::Callees => SourceQueryOperation::Callees,
+            _ => {
+                return Err(failure(
+                    "invalid_request",
+                    "This operation requires search text.",
+                ));
+            }
         };
+        let (result, selected) = match &config.selector {
+            QuerySelector::Position { path, line, column } => {
+                let selected = session.service().snapshot(path)?;
+                let offset = super::source_offset(&selected, *line, *column).ok_or_else(|| {
+                    failure(
+                        "invalid_position",
+                        "The line or Unicode-scalar column is outside the source.",
+                    )
+                })?;
+                (
+                    session.query_position(path, offset, operation, config.limit, cancellation)?,
+                    Some(selected),
+                )
+            }
+            QuerySelector::Symbol(name) => {
+                let result = session.query_symbol(name, operation, config.limit, cancellation)?;
+                let selected = result.target.as_ref().and_then(|t| t.snapshot.clone());
+                (result, selected)
+            }
+            QuerySelector::Reference(_) => {
+                let reference = reference
+                    .as_ref()
+                    .ok_or_else(|| failure("invalid_request", "Missing target reference."))?;
+                let result =
+                    session.query_reference(reference, operation, config.limit, cancellation)?;
+                let selected = result.target.as_ref().and_then(|t| t.snapshot.clone());
+                (result, selected)
+            }
+            QuerySelector::Search(_) => {
+                return Err(failure("invalid_request", "Unexpected search selector."));
+            }
+        };
+        super::projection::query(report, result, selected.as_deref(), operation, cwd);
+    }
+    let _ = report::finish(report);
+    if !session.verify().unwrap_or(false) {
+        report::incomplete(report, "source_changed");
         report::diagnostic(
             report,
-            reason,
-            "No source construct satisfying this operation was selected.",
+            "source_changed",
+            "Sources, manifests or selected membership changed during the query.",
         );
-    }
-    for reason in result.reasons {
-        report::incomplete(report, reason);
-    }
-    if invalid_location {
-        report::incomplete(report, "invalid_location");
     }
     Ok(())
 }
 
-fn normalized(path: &Path) -> std::path::PathBuf {
-    let text = path.to_string_lossy();
-    if let Some(path) = text.strip_prefix("\\\\?\\UNC\\") {
-        return format!("\\\\{path}").into();
+pub(super) fn read_reference(path: &Path) -> Result<TargetReference, SourceQueryError> {
+    let file = std::fs::File::open(path).map_err(|e| failure("reference_read", e.to_string()))?;
+    let mut bytes = Vec::new();
+    file.take(report::MAX_JSON as u64 + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| failure("reference_read", e.to_string()))?;
+    if bytes.len() > report::MAX_JSON {
+        return Err(failure(
+            "invalid_request",
+            "Target reference exceeds the public JSON limit.",
+        ));
     }
-    text.strip_prefix("\\\\?\\")
-        .map_or_else(|| path.into(), Into::into)
+    let reference: TargetReference = serde_json::from_slice(&bytes)
+        .map_err(|e| failure("invalid_request", format!("Invalid target reference: {e}")))?;
+    reference.validate()?;
+    Ok(reference)
+}
+
+fn failure(code: &'static str, message: impl Into<String>) -> SourceQueryError {
+    SourceQueryError {
+        code,
+        message: message.into(),
+        diagnostics: Vec::new(),
+    }
 }

@@ -35,6 +35,8 @@ pub enum TranscriptStep {
     WaitForRequest(&'static str),
     /// Reads server messages until diagnostics for this document version have been published.
     WaitForDiagnostics(String, i32),
+    /// Sets the client's reply for subsequent requests of this method.
+    RespondTo(&'static str, Value),
     Action(Box<dyn Fn()>),
     Wait(Duration),
 }
@@ -83,6 +85,9 @@ pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
                 });
             }
             TranscriptStep::Action(action) => action(),
+            TranscriptStep::RespondTo(method, value) => {
+                server.replies.insert(method, value.clone());
+            }
             TranscriptStep::Wait(duration) => std::thread::sleep(*duration),
         }
     }
@@ -102,6 +107,7 @@ struct RunningServer {
     stdin: ChildStdin,
     messages: Receiver<Value>,
     reader: JoinHandle<()>,
+    replies: std::collections::BTreeMap<&'static str, Value>,
 }
 
 impl RunningServer {
@@ -121,6 +127,10 @@ impl RunningServer {
             stdin,
             messages,
             reader,
+            replies: std::collections::BTreeMap::from([(
+                "workspace/applyEdit",
+                serde_json::json!({"applied":true}),
+            )]),
         }
     }
 
@@ -148,7 +158,7 @@ impl RunningServer {
                 self.send(&serde_json::json!({
                     "jsonrpc": "2.0",
                     "id": id,
-                    "result": null
+                    "result": self.replies.get(message["method"].as_str().unwrap_or_default()).cloned().unwrap_or(Value::Null)
                 }));
             }
             messages.push(message);
@@ -164,6 +174,7 @@ impl RunningServer {
             stdin,
             messages: received,
             reader,
+            ..
         } = self;
         drop(stdin);
         while let Some(message) = next_message(&received) {
@@ -243,6 +254,7 @@ pub fn initialize_with_root(id: i64, root_uri: Option<&str>) -> Value {
             "rootUri": root_uri,
             "capabilities": {
                 "workspace": {
+                    "applyEdit": true,
                     "workspaceEdit": {"documentChanges": true}
                 }
             }

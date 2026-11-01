@@ -1,6 +1,6 @@
 # AP56: Shared analysis core, source queries and refactoring
 
-Status: Planned; implementation not started. Priority: P1. Effort: XL.
+Status: Complete. Priority: P1. Effort: XL.
 Branch: `ap56`, based on `main` at `a5f65fcdb`.
 Completion is tracked in the [central plan](../README.md#package-status).
 
@@ -17,30 +17,37 @@ contract before implementing a work package here.
 The [adapter contract](adapter-contract.md) defines the mandatory mapping,
 source modes, shared build identity and completion checks for both consumers.
 
-## Current behavior and proposed contract
+## Delivery state and target contract
 
-The baseline has positional `refs`, `definition`, `type` and `rename`. Read
-queries run in an isolated worker and emit schema 1, including errors. Rename
-uses a separate in-process path, `--project`, camelCase success JSON and stderr
-failures. It pins source snapshots and validates overlays, but its publisher
-does not verify the read worker's full manifest/membership inventory.
+The shared core now owns frozen inventories, build/snapshot identity, checked
+find and position/name/reference selection, bounded inspection, and common
+before/after edit validation. Read queries emit schema 2 through an isolated CLI
+worker. Native `fpas/sourceQuery` routes use editor overlays, while standard
+workspace symbols use the shared bounded collector with catalogue policy.
+The registered VS Code inspection view passes the complete Extension Host suite,
+including dirty dependencies and explicit stale-view rejection.
 
-The editor's workspace-symbol search is syntax-based, includes the editor API
-catalogue and truncates after collecting matches. Reuse its declaration model
-and matching logic, not its completeness or resource policy. Checked types,
-binding references, source spans and documentation extraction already exist.
-Generated intrinsic declarations have physical FPAS stubs, not implementations.
+Direct call relationships now share checked original/retained AST traversal,
+bounded CLI/rich-LSP projections and standard Call Hierarchy. Focused semantic,
+CLI and hierarchy tests pass, including dirty and stale editor inputs. The
+hierarchy tests also fixed inferred-context snapshots differing from their
+recorded manifest reconstruction.
 
-The language service already offers conservative extract-variable and
-organize-imports edits in `src/refactoring/`; the CLI does not expose them.
-Semantic analysis retains binding references, named-argument ordering, method,
-fluent, intrinsic and constructor classifications. This is useful evidence for
-source calls, not an already complete call index or parameter refactoring engine.
-Both executables already depend on `fpas-language-service`. LSP request handlers
-and CLI source queries call it directly, but additional rename overlay checks
-remain in the CLI and new query operations are not connected to LSP yet.
+The core and CLI now prepare deterministic rename/extract/import plans, distinguish
+no-change from unsupported/incomplete, and revalidate complete before/after states.
+The canonical `refactor` family replaces query-rename and its separate publisher.
+CLI lifecycle/safety tests cover immutable artifact output, stale
+membership, Windows replacement failure/recovery and final stdout failure. LSP
+recipe handles, command-backed extract/import actions and standard rename now
+share those core checks. Parameter insertion now uses the full call inventory,
+fresh-name argument validation and mapped before/after binding comparisons. Its
+core matrix and CLI/LSP process checks pass. The complete VS Code Extension Host
+suite also passes, including parameter preview, dirty multi-file application and
+undo. The full Rust workspace, FPAS suite, documentation examples and editor suite
+pass. Repository discovery excludes scratch trees while preserving explicitly
+selected projects inside them.
 
-The proposed result is one schema-2 envelope and `--context` contract, checked
+The delivered result is one schema-2 envelope and `--context` contract, checked
 snapshot-bound targets, deterministic `find`, bounded `inspect`, direct
 `callers`/`callees` and `fpas refactor` plan/apply commands. Keep source
 positions, semantic resolution, diagnostics, import/export visibility and rename
@@ -77,13 +84,13 @@ an agent may perform both steps within an assigned source-editing task.
 
 Only this table records decision outcomes. Work files refer to these IDs.
 
-## Remaining specification work
+## Contract details
 
-AP56.1 owns schema/plan fixtures, canonical-encoding vectors and exact diagnostic
+The [wire contract](wire-contract.md) records schema/plan shapes, canonical-encoding
+vectors and exact diagnostic
 and publication fields, including LSP extension contracts and core build inputs.
-AP56.5 owns the source-form coverage audit; AP56.7 adds metadata and regression
-owners to its fixed edit-site matrix. Agents complete these details within the recorded
-choices. They are engineering deliverables, not requests for user approval.
+AP56.5 records the source-form coverage audit; AP56.7 maps metadata and regression
+owners to its fixed edit-site matrix. These details implement the recorded choices.
 There is no pending FPAS syntax decision.
 
 ## Dependencies and work packages
@@ -94,13 +101,13 @@ and staged publisher.
 The user selected `ap56` as this package's integration branch; completed
 prerequisites on that branch may be used by the next work package.
 
-- [ ] [AP56.1: Specify the common contract and fixtures](01-contract.md)
-- [ ] [AP56.2: Build the shared core and migrate both adapters](02-foundation.md)
-- [ ] [AP56.3: Add checked find and declaration selection](03-find.md)
-- [ ] [AP56.4: Add bounded inspect](04-inspect.md)
-- [ ] [AP56.5: Add direct call relationships](05-call-relations.md)
-- [ ] [AP56.6: Expose checked refactoring plans and apply](06-refactor.md)
-- [ ] [AP56.7: Add checked parameter insertion](07-add-parameter.md)
+- [x] [AP56.1: Specify the common contract and fixtures](01-contract.md)
+- [x] [AP56.2: Build the shared core and migrate both adapters](02-foundation.md)
+- [x] [AP56.3: Add checked find and declaration selection](03-find.md)
+- [x] [AP56.4: Add bounded inspect](04-inspect.md)
+- [x] [AP56.5: Add direct call relationships](05-call-relations.md)
+- [x] [AP56.6: Expose checked refactoring plans and apply](06-refactor.md)
+- [x] [AP56.7: Add checked parameter insertion](07-add-parameter.md)
 
 This is the only work-package checklist for AP56. Follow
 [status tracking](../development-process.md#status-tracking). Each implementation

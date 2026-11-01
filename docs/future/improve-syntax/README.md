@@ -31,7 +31,7 @@ The example is a template, not an active AP or an approved proposal.
    consumers and tests. For FPAS 2, select a topic from the retained directions
    rather than treating that whole document as approved work.
 2. Copy `example-apNN-topic/` to `ap57-<topic>/` for the next package. Continue
-   with the next unused number for later packages. AP01 through AP55 are
+   with the next unused number for later packages. AP01 through AP56 are
    closed. Do not reuse or renumber those IDs.
 3. Replace `APNN`, `QNN`, the topic and every `<placeholder>`. Keep the README
    and one numbered file per work package, such as `01-decision.md` and
@@ -48,19 +48,18 @@ The example is a template, not an active AP or an approved proposal.
    [development process](development-process.md) for delivery.
 
 Use `AP57` for the next package and `AP57.1`, `AP57.2`, and so on for its work
-packages. Decision IDs continue at `Q92`; Q84 through Q91 belong to AP56,
-and Q01 through Q83 belong to closed packages. Record each decision and its
-affected work packages in the owning package README. Do not create a second
-decision or completion index.
+packages. Decision IDs continue at `Q92`; Q01 through Q91 belong to closed
+packages. Record each decision and its affected work packages in the owning
+package README. Do not create a second decision or completion index.
 
 ## Package status
 
 Keep the example out of this table. Planning, implementation and Git integration
 are separate tasks; technical decisions do not create extra approval gates.
+There are no active packages.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [x] | [AP56: Shared analysis core, source queries and refactoring](ap56-source-queries/README.md) | XL | Existing language service, CLI and LSP | Complete: shared core, CLI, LSP and editor connections delivered and verified |
 
 The central table is the only package-completion index. Each package README
 owns the only checklist of its work packages. Use `[x]` only for completed

@@ -4,8 +4,9 @@ use fpas_code::{
     ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, BytesIntrinsic, ConsoleIntrinsic, ConvIntrinsic,
     CryptoIntrinsic, DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic,
     Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic,
-    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic,
-    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic, TomlIntrinsic,
+    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, RegexIntrinsic, ResultIntrinsic,
+    ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic,
+    TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -63,6 +64,22 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.rsplit_once('.')?;
     match unit {
+        "Text.Regex" => family!(
+            member,
+            Regex,
+            RegexIntrinsic,
+            [
+                DefaultOptions,
+                Compile,
+                IsMatch,
+                Find,
+                FindAll,
+                Replace,
+                Split,
+                Escape,
+                GroupNames
+            ]
+        ),
         "Bytes" => family!(
             member,
             Bytes,

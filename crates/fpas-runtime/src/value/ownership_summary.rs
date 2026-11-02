@@ -19,6 +19,7 @@ impl Value {
                 | Self::Boolean(_)
                 | Self::Str(_)
                 | Self::Bytes(_)
+                | Self::Regex(_)
                 | Self::Unit
                 | Self::Task(_)
                 | Self::OptionNone => return true,

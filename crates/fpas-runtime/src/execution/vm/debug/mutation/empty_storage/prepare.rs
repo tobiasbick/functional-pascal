@@ -168,6 +168,7 @@ fn walk_identity(value: &Value, max_depth: usize, depth: usize) -> Result<(), De
         | Value::Boolean(_)
         | Value::Str(_)
         | Value::Bytes(_)
+        | Value::Regex(_)
         | Value::Unit
         | Value::OptionNone => Ok(()),
     }

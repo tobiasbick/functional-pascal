@@ -32,6 +32,8 @@ mod network;
 mod processes;
 #[path = "gc_memory/random_graph/mod.rs"]
 mod random_graph;
+#[path = "gc_memory/regex.rs"]
+mod regex;
 #[path = "gc_memory/sessions.rs"]
 mod sessions;
 #[path = "gc_memory/shutdown.rs"]
@@ -46,6 +48,14 @@ use std::alloc::System;
 
 #[global_allocator]
 static ALLOCATOR: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
+
+#[test]
+fn compiled_regex_patterns_and_captures_return_to_the_allocation_baseline() {
+    measurement::isolated(
+        "compiled_regex_patterns_and_captures_return_to_the_allocation_baseline",
+        regex::teardown,
+    );
+}
 
 #[test]
 fn native_callable_receivers_release_captures_cycles_and_payloads() {

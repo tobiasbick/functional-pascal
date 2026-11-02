@@ -55,6 +55,7 @@ impl Worker {
 
 fn unsupported(intrinsic: Intrinsic) -> Option<&'static str> {
     match intrinsic {
+        Intrinsic::Regex(_) => None,
         Intrinsic::SystemInfo(_) => Some("host information"),
         Intrinsic::Bytes(_) => None,
         Intrinsic::Mcp(_) => {

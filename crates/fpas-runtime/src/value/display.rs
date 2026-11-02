@@ -33,6 +33,7 @@ impl fmt::Display for Value {
                 Value::Str(string) if field => quoted(formatter, string)?,
                 Value::Str(string) => write!(formatter, "{string}")?,
                 Value::Bytes(bytes) => write!(formatter, "{bytes}")?,
+                Value::Regex(pattern) => write!(formatter, "Pattern({:?})", pattern.as_str())?,
                 Value::Enum(value) => {
                     let body = value.body();
                     if body.layout.error.is_some() && !field {

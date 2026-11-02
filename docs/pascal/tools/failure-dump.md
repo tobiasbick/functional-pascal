@@ -105,7 +105,7 @@ Every **value** has these keys:
 | Key | Meaning |
 | --- | --- |
 | `type` | Declared display type, or known runtime type |
-| `kind` | `integer`, `real`, `boolean`, `string`, `unit`, `record`, `enum`, `array`, `dict`, `option`, `result`, `function`, `task`, `opaque` or `unknown` |
+| `kind` | `integer`, `real`, `boolean`, `string`, `byte_buffer`, `regex`, `unit`, `record`, `enum`, `array`, `dict`, `option`, `result`, `function`, `task`, `opaque` or `unknown` |
 | `status` | `available`, `uninitialized`, `unavailable` or `truncated` |
 | `scalar` | Scalar payload, or `null` |
 | `summary` | Bounded description without evaluating user code |

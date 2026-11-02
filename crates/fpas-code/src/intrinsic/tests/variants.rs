@@ -4,6 +4,15 @@ use super::*;
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::Regex(RegexIntrinsic::DefaultOptions),
+    Intrinsic::Regex(RegexIntrinsic::Compile),
+    Intrinsic::Regex(RegexIntrinsic::IsMatch),
+    Intrinsic::Regex(RegexIntrinsic::Find),
+    Intrinsic::Regex(RegexIntrinsic::FindAll),
+    Intrinsic::Regex(RegexIntrinsic::Replace),
+    Intrinsic::Regex(RegexIntrinsic::Split),
+    Intrinsic::Regex(RegexIntrinsic::Escape),
+    Intrinsic::Regex(RegexIntrinsic::GroupNames),
     Intrinsic::SystemInfo(SystemInfoIntrinsic::Info),
     Intrinsic::SystemInfo(SystemInfoIntrinsic::Snapshot),
     Intrinsic::SystemInfo(SystemInfoIntrinsic::Cpu),

@@ -193,6 +193,7 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
             }
         }
         Intrinsic::Acp(_)
+        | Intrinsic::Regex(_)
         | Intrinsic::Str(_)
         | Intrinsic::Conv(_)
         | Intrinsic::Encoding(_)

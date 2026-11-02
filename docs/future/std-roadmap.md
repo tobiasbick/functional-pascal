@@ -56,6 +56,8 @@ contracts are documented in the handbook. In particular:
   and strict UTF-8 lines. Existing text-file operations use UTF-8.
 - [Cryptography](../pascal/std/cryptography/crypto.md) supplies operating-system
   random bytes and secure integer sampling.
+- [Regular expressions](../pascal/std/text/regex.md) provide managed compiled
+  Unicode patterns, named captures, replacement and splitting.
 - [Host information](../pascal/std/host/system.md) provides typed OS, hardware,
   process and account observations through the bundled `sysinfo` backend.
 

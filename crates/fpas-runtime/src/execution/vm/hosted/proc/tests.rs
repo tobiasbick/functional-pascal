@@ -373,11 +373,47 @@ fn legacy_stderr_receiver_can_reenter_vm_shutdown_without_self_deadlock() {
     let failure = vm
         .hosted
         .processes
-        .run(&request, Some(receiver), || false)
+        .run(&request, Some(receiver), || vm.scheduler.is_aborted())
         .err()
         .expect("receiver requested shutdown");
-    assert!(matches!(failure.kind, Kind::Cancelled));
+    assert!(matches!(failure.kind, Kind::Cancelled), "{failure:?}");
     vm.hosted.wait_process_handles();
+}
+
+#[cfg(unix)]
+#[test]
+fn legacy_stderr_shutdown_cancels_the_process_through_the_vm_dispatch() {
+    let directory = Fixture::new();
+    let marker = directory.0.join("completed");
+    let source = r#"program StderrShutdown;
+uses Std.Os.Proc as Proc, Std.Os.Args as Args;
+begin
+  discard Proc.Run('/bin/sh', [
+    '-c', 'printf ''ready\n'' >&2; sleep 5; printf completed > "$1"',
+    'fixture', Args.ParamStr(0)
+  ]);
+end."#;
+    let (program, diagnostics) = fpas_parser::parse(source);
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+    let mut vm = crate::execution::vm::Vm::with_writer_and_args(
+        fpas_compiler::compile(&program).expect("stderr shutdown program"),
+        Box::new(std::io::sink()),
+        vec![marker.to_string_lossy().into_owned()],
+    );
+    let shutdown = vm.shutdown_handle();
+    let entered = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let receipt = Arc::clone(&entered);
+    vm.set_program_stderr(Arc::new(move |line| {
+        assert_eq!(line, "ready");
+        receipt.store(true, std::sync::atomic::Ordering::Release);
+        shutdown.shutdown();
+    }));
+    assert!(vm.run().is_err(), "the host requested VM cancellation");
+    assert!(entered.load(std::sync::atomic::Ordering::Acquire));
+    assert!(
+        !marker.exists(),
+        "the child must be cancelled before normal completion"
+    );
 }
 
 #[cfg(unix)]

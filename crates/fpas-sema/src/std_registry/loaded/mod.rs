@@ -20,6 +20,7 @@ mod parse;
 mod path;
 mod proc;
 mod random;
+mod regex;
 mod server;
 mod test;
 mod time;
@@ -62,6 +63,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         return;
     }
     match unit {
+        fpas_builtins::STD_UNIT_REGEX => regex::register(checker),
         fpas_builtins::STD_UNIT_HARDWARE
         | fpas_builtins::STD_UNIT_SYSTEM
         | fpas_builtins::STD_UNIT_USERS => host_info::register(checker, unit),

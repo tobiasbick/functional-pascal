@@ -51,6 +51,7 @@ fpas_suite_tests! {
     (fpas_suite_stdlib_path, "tests/stdlib/path/"),
     (fpas_suite_stdlib_proc, "tests/stdlib/proc/"),
     (fpas_suite_stdlib_random, "tests/stdlib/random/"),
+    (fpas_suite_stdlib_regex, "tests/stdlib/regex/"),
     (fpas_suite_stdlib_result, "tests/stdlib/result/"),
     (fpas_suite_stdlib_server, "tests/stdlib/server/"),
     (fpas_suite_stdlib_str, "tests/stdlib/str/"),

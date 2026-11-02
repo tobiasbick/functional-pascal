@@ -43,6 +43,9 @@ fn dispatch_intrinsic(
     }
 
     let handled = match intrinsic {
+        Intrinsic::Regex(operation) => {
+            crate::stdlib::regex::run(operation, call, location).map(|()| Some(()))
+        }
         Intrinsic::Bytes(_) => crate::stdlib::bytes::run(intrinsic, call, location),
         Intrinsic::Acp(_) => crate::stdlib::acp::run(intrinsic, call, location),
         Intrinsic::Str(_) => str::run(intrinsic, call, location),

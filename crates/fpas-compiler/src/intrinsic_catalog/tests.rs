@@ -21,6 +21,7 @@ fn stable_intrinsics_have_only_their_canonical_source_route() {
 
 fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
     match intrinsic {
+        Intrinsic::Regex(operation) => (format!("Std.Text.Regex.{operation:?}"), None),
         Intrinsic::SystemInfo(operation) => {
             use fpas_code::SystemInfoIntrinsic::*;
             let name = match operation {

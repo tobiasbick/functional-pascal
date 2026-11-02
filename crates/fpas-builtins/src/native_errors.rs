@@ -4,12 +4,15 @@ mod acp;
 mod bytes;
 mod mcp;
 mod proc;
+mod regex;
 mod utf8;
 
 /// Public native error family, indexed once in an admitted executable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]
 pub enum NativeErrorFamily {
+    /// `Std.Text.Regex.RegexError`.
+    Regex,
     /// Read-only host information collection failures.
     SystemInfo,
     /// `Std.Bytes.BufferError`.
@@ -96,6 +99,7 @@ impl NativeErrorFamily {
 
     /// Every native family in stable catalog order.
     pub const ALL: &'static [Self] = &[
+        Self::Regex,
         Self::SystemInfo,
         Self::Buffer,
         Self::Utf8,
@@ -117,6 +121,7 @@ impl NativeErrorFamily {
     /// Qualified nominal name.
     pub const fn name(self) -> &'static str {
         match self {
+            Self::Regex => "Std.Text.Regex.RegexError",
             Self::SystemInfo => "Std.Os.System.SystemError",
             Self::Buffer => "Std.Bytes.BufferError",
             Self::Utf8 => "Std.Text.Utf8.Utf8Error",
@@ -140,6 +145,7 @@ impl NativeErrorFamily {
     pub const fn variants(self) -> &'static [ErrorVariant] {
         use ErrorFieldType::*;
         match self {
+            Self::Regex => regex::VARIANTS,
             Self::SystemInfo => &[
                 ErrorVariant {
                     name: "QueryFailed",

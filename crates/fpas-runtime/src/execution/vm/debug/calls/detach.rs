@@ -95,6 +95,7 @@ impl ValueDetacher {
             Value::Boolean(value) => Ok(Value::Boolean(*value)),
             Value::Str(value) => Ok(Value::Str(value.clone())),
             Value::Bytes(value) => Ok(Value::Bytes(value.clone())),
+            Value::Regex(value) => Ok(Value::Regex(value.clone())),
             Value::Unit => Ok(Value::Unit),
             Value::Array(values) => Ok(Value::Array(
                 values

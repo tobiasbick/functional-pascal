@@ -50,6 +50,15 @@ fn validate(
         | (DebugType::String, Value::Str(_)) => Ok(()),
         (DebugType::Dynamic, value) => validate_dynamic(value, max_depth, depth),
         (DebugType::ByteBuffer, Value::Bytes(_)) => Ok(()),
+        (DebugType::Record(record), Value::Regex(_))
+            if executable
+                .records
+                .get(usize::from(record.get()))
+                .and_then(|record| executable.strings.get(record.name))
+                == Some("Std.Text.Regex.Pattern") =>
+        {
+            Ok(())
+        }
         (DebugType::Array(inner), Value::Array(values)) => values
             .iter()
             .try_for_each(|value| validate(executable, *inner, value, max_depth, depth + 1, call)),
@@ -231,6 +240,7 @@ fn validate_dynamic(
         | Value::Boolean(_)
         | Value::Str(_)
         | Value::Bytes(_)
+        | Value::Regex(_)
         | Value::Unit
         | Value::OptionNone => Ok(()),
     }

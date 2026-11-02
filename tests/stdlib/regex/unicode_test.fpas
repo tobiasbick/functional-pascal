@@ -1,0 +1,33 @@
+program RegexUnicode;
+
+uses Std.Text.Regex as Regex, Std.Test as Test;
+
+begin
+  const Letters := Regex.Compile('\p{L}+', Regex.DefaultOptions()).Unwrap();
+  const Found := Regex.Find(Letters, '🙂 é漢', 0).Unwrap().Unwrap();
+  Test.AssertEquals(2, Found.Span.Start);
+  Test.AssertEquals(2, Found.Span.Length);
+  Test.AssertEquals('é漢', Found.Span.Text);
+  const Empty := Regex.Compile('', Regex.DefaultOptions()).Unwrap();
+  const Boundaries := Regex.FindAll(Empty, 'é🙂', 0).Unwrap();
+  Test.AssertEquals(3, Boundaries.Length());
+  Test.AssertEquals(0, Boundaries[0].Span.Start);
+  Test.AssertEquals(1, Boundaries[1].Span.Start);
+  Test.AssertEquals(2, Boundaries[2].Span.Start);
+  Test.AssertEquals(0, Boundaries[2].Span.Length);
+  Test.AssertEquals('-é-🙂-', Regex.Replace(Empty, 'é🙂', '-', 0).Unwrap());
+  Test.AssertEquals(4, Regex.Split(Empty, 'é🙂', 0).Unwrap().Length());
+  Test.AssertEquals(1, Regex.FindAll(Empty, 'é🙂', 2).Unwrap().Length());
+  const Anchored := Regex.Compile('^a', Regex.DefaultOptions()).Unwrap();
+  Test.AssertTrue(Regex.Find(Anchored, 'ba', 1).Unwrap() is None);
+  Test.AssertEquals(0, Regex.FindAll(Anchored, 'ba', 1).Unwrap().Length());
+  const Words := Regex.Compile('\ba', Regex.DefaultOptions()).Unwrap();
+  Test.AssertEquals(3, Regex.Find(Words, 'ba a', 1).Unwrap().Unwrap().Span.Start);
+  const Tail := Regex.FindAll(Letters, 'é漢', 1).Unwrap();
+  Test.AssertEquals(1, Tail[0].Span.Start);
+  Test.AssertEquals('漢', Tail[0].Span.Text);
+  const Optional := Regex.Compile('a?', Regex.DefaultOptions()).Unwrap();
+  Test.AssertEquals(1, Regex.FindAll(Optional, 'a', 0).Unwrap().Length());
+  const Nul := Regex.Compile('\x00', Regex.DefaultOptions()).Unwrap();
+  Test.AssertEquals(1, Regex.Find(Nul, 'é' + #0, 0).Unwrap().Unwrap().Span.Start);
+end.

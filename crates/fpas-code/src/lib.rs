@@ -42,8 +42,8 @@ pub use intrinsic::{
     ConvIntrinsic, CryptoIntrinsic, DictIntrinsic, EncodingIntrinsic, EnvIntrinsic, FsIntrinsic,
     HttpIntrinsic, Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic, McpIntrinsic,
     NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
-    ResultIntrinsic, ServerIntrinsic, StrIntrinsic, SystemInfoIntrinsic, TaskIntrinsic,
-    TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic, TomlIntrinsic,
+    RegexIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, SystemInfoIntrinsic,
+    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TokenizerIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
     Constant, DistinctTypeName, EnumLayout, EnumVariant, ErrorCause, ErrorInstanceKey,
@@ -58,4 +58,4 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 /// Persistent instruction-set and intrinsic ABI version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 33;
+pub const BYTECODE_VERSION: u32 = 34;

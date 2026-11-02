@@ -99,12 +99,15 @@ impl Worker {
                 None
             };
             self.hosted.processes.run(&request, receiver, || {
-                request.options.token.is_some_and(|token| {
-                    self.hosted
-                        .cancellations
-                        .is_cancelled(token)
-                        .unwrap_or(true)
-                })
+                self.scheduler
+                    .as_ref()
+                    .is_some_and(|scheduler| scheduler.is_aborted())
+                    || request.options.token.is_some_and(|token| {
+                        self.hosted
+                            .cancellations
+                            .is_cancelled(token)
+                            .unwrap_or(true)
+                    })
             })
         });
         self.proc_result(operation, command, result, location)

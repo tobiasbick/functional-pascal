@@ -1,0 +1,30 @@
+program RegexTasks;
+
+uses Std.Text.Regex as Regex, Std.Tasks as Tasks, Std.Test as Test;
+
+function Search(Pattern: Regex.Pattern; Text: string): integer;
+begin
+  const MatchFunction: function(Pattern: Regex.Pattern; Text: string): result of (boolean, Regex.RegexError) := Regex.IsMatch;
+  Test.AssertTrue(MatchFunction(Pattern, Text).Unwrap());
+  return Regex.FindAll(Pattern, Text, 0).Unwrap().Length();
+end function;
+
+begin
+  const Compiler: function(Expression: string; Options: Regex.Options): result of (Regex.Pattern, Regex.RegexError) := Regex.Compile;
+  const Pattern := Compiler('[0-9]+', Regex.DefaultOptions()).Unwrap();
+  const Alias := Pattern;
+  Test.AssertTrue(Pattern = Alias);
+  scope
+    const First := go Search(Pattern, 'x12 y34');
+    const Second := go Search(Alias, '56');
+    Test.AssertEquals(2, Tasks.Wait(First));
+    Test.AssertEquals(1, Tasks.Wait(Second));
+  end scope;
+  const Counts := ['a1', 'b2'].Map(
+    function(Text: string): integer begin
+      return Search(Pattern, Text);
+    end function
+  );
+  Test.AssertEquals(1, Counts[0]);
+  Test.AssertEquals(1, Counts[1]);
+end.

@@ -56,6 +56,8 @@ pub enum Value {
     Str(SharedStr),
     /// Contiguous managed byte-buffer value with copy-on-write mutation.
     Bytes(SharedBytes),
+    /// Immutable compiled pattern; the last value releases its native storage.
+    Regex(std::sync::Arc<regex::Regex>),
     /// Enum variant with optional associated data.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
@@ -130,6 +132,7 @@ impl Value {
         match self {
             Self::Str(value) => Self::Str(value.clone()),
             Self::Bytes(value) => Self::Bytes(value.clone()),
+            Self::Regex(value) => Self::Regex(value.clone()),
             Self::Enum(value) => Self::Enum(value.clone()),
             Self::Array(value) => Self::Array(value.clone()),
             Self::Dict(value) => Self::Dict(value.clone()),
@@ -224,6 +227,7 @@ impl Value {
             Value::Task(_) => "task",
             Value::OpaqueHandle(_) => "opaque handle",
             Value::Bytes(_) => "Std.Bytes.ByteBuffer",
+            Value::Regex(_) => "Std.Text.Regex.Pattern",
         }
     }
 }

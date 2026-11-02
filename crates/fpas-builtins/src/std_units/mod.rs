@@ -6,6 +6,7 @@ mod symbols;
 mod units;
 
 pub use symbols::std_symbols;
+pub use units::STD_UNIT_REGEX;
 pub use units::{
     STD_ROOT_SEGMENT, STD_UNIT_ACP, STD_UNIT_ACP_EXPERIMENTAL, STD_UNIT_ACP_HOST,
     STD_UNIT_ACP_TYPES, STD_UNIT_ACP_V2, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS,
@@ -72,6 +73,23 @@ pub fn canonical_std_unit_from_segments(root: &str, tail: &str) -> Option<&'stat
 /// Returns the intrinsic symbol names registered for a canonical standard unit.
 pub fn std_unit_symbols(unit: &str) -> &'static [&'static str] {
     match unit {
+        STD_UNIT_REGEX => &[
+            "Std.Text.Regex.Pattern",
+            "Std.Text.Regex.Options",
+            "Std.Text.Regex.Span",
+            "Std.Text.Regex.Capture",
+            "Std.Text.Regex.Match",
+            "Std.Text.Regex.RegexError",
+            "Std.Text.Regex.DefaultOptions",
+            "Std.Text.Regex.Compile",
+            "Std.Text.Regex.IsMatch",
+            "Std.Text.Regex.Find",
+            "Std.Text.Regex.FindAll",
+            "Std.Text.Regex.Replace",
+            "Std.Text.Regex.Split",
+            "Std.Text.Regex.Escape",
+            "Std.Text.Regex.GroupNames",
+        ],
         STD_UNIT_HARDWARE => crate::host_info::HARDWARE_SYMBOLS,
         STD_UNIT_SYSTEM => crate::host_info::SYSTEM_SYMBOLS,
         STD_UNIT_USERS => crate::host_info::USERS_SYMBOLS,

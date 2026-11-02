@@ -5,6 +5,12 @@
 /// Compilers retain these layouts when present because their constructors are not represented by a
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
+    "Std.Text.Regex.Pattern",
+    "Std.Text.Regex.Options",
+    "Std.Text.Regex.Span",
+    "Std.Text.Regex.Capture",
+    "Std.Text.Regex.Match",
+    "Std.Text.Regex.RegexError",
     "Std.Ai.Tokenizer.TokenizerError",
     "Std.Ai.Mcp.Limits",
     "Std.Ai.Mcp.HttpOptions",

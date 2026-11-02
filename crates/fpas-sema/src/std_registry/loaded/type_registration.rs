@@ -89,10 +89,10 @@ pub(super) fn register_record_type(
     record_ty
 }
 
-/// Register a host-owned handle using persisted nominal record privacy.
+/// Register an opaque native type using persisted nominal record privacy.
 ///
-/// The private field is declaration metadata only. Runtime handles use
-/// `Value::OpaqueHandle`, so FPAS cannot construct or inspect their storage.
+/// The private field is declaration metadata only. Native runtime value variants
+/// own the actual storage, so FPAS cannot construct or inspect it.
 pub(super) fn register_opaque_type(checker: &mut Checker, qualified_name: &str) -> Ty {
     let owner = qualified_name
         .rsplit_once('.')

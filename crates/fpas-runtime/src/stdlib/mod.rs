@@ -42,6 +42,7 @@ pub use fpas_builtins::native_records;
 mod parse;
 mod path;
 mod proc;
+mod regex;
 mod result_option;
 mod str;
 mod test;

@@ -10,6 +10,8 @@ mod byte_buffers;
 mod call_evaluation;
 #[path = "../logical_precedence.rs"]
 mod logical_precedence;
+#[path = "../regex.rs"]
+mod regex;
 #[path = "../unicode_character_literals.rs"]
 mod unicode_character_literals;
 #[path = "../var_parameters.rs"]

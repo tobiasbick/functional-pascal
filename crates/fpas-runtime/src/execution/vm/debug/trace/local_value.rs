@@ -119,6 +119,13 @@ pub(super) fn project(
         | (DebugType::Boolean, Value::Boolean(_))
         | (DebugType::String, Value::Str(_)) => true,
         (DebugType::ByteBuffer, Value::Bytes(_)) => true,
+        (DebugType::Record(record), Value::Regex(_)) => {
+            image
+                .records
+                .get(usize::from(record.get()))
+                .and_then(|record| image.strings.get(record.name))
+                == Some("Std.Text.Regex.Pattern")
+        }
         _ => false,
     };
     valid.then(|| TraceLeaf::Value(value.clone()))

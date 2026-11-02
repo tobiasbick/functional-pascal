@@ -49,6 +49,7 @@ pub mod parse;
 pub mod path;
 pub mod proc;
 pub mod random;
+pub mod regex;
 pub mod result;
 pub mod server;
 pub mod str_ops;
@@ -82,6 +83,7 @@ pub use parse::ParseIntrinsic;
 pub use path::PathIntrinsic;
 pub use proc::ProcIntrinsic;
 pub use random::RandomIntrinsic;
+pub use regex::RegexIntrinsic;
 pub use result::ResultIntrinsic;
 pub use server::ServerIntrinsic;
 pub use str_ops::StrIntrinsic;
@@ -97,6 +99,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Managed compiled Unicode regular expressions.
+    Regex(RegexIntrinsic),
     /// Read-only host information.
     SystemInfo(SystemInfoIntrinsic),
     /// Native contiguous byte-buffer operation.
@@ -234,6 +238,7 @@ impl Intrinsic {
                     .split_once('(')
                     .expect("intrinsic debug representation has family and member");
                 let family = match family {
+                    "Regex" => "Text.Regex",
                     "Args" => "Os.Args",
                     "Bits" => "Math.Bits",
                     "Conv" => "Text.Format",
@@ -284,6 +289,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    Regex(RegexIntrinsic),
     SystemInfo(SystemInfoIntrinsic),
     Bytes(BytesIntrinsic),
     Tokenizer(TokenizerIntrinsic),

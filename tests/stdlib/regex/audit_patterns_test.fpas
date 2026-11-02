@@ -1,0 +1,35 @@
+program RegexAuditPatterns;
+
+uses Std.Text.Regex as Regex, Std.Test as Test;
+
+begin
+  const Expressions := [
+    '(?i)-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|\b(?:gh[pousr]_[A-Za-z0-9_]{30,}|github_pat_[A-Za-z0-9_]{40,}|sk-(?:proj-)?[A-Za-z0-9_-]{25,}|xox[baprs]-[A-Za-z0-9-]{15,})\b|\beyJ[A-Za-z0-9_-]{15,}\.eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}',
+    '(?i)(?:api[_-]?key|secret[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password|passwd)\s*["'']?\s*(?::=|[:=])\s*["''][^"''\s]{8,}["'']|https?://[^/\s:@]+:[^/\s@]+@',
+    '(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b(?:\+?[0-9]{1,3}[- ])?(?:\([0-9]{3}\)|[0-9]{3})[- ][0-9]{3}[- ][0-9]{4}\b',
+    '(?i)/(?:home|Users|workspace)/[A-Za-z0-9_.-]+|[A-Z]:\\Users\\[^\\\s]+|\b(?:10(?:\.[0-9]{1,3}){3}|192\.168(?:\.[0-9]{1,3}){2}|172\.(?:1[6-9]|2[0-9]|3[01])(?:\.[0-9]{1,3}){2})\b|\b[A-Za-z0-9_-]+\.(?:internal|local|lan)\b|/etc/' +
+    'machine-id|\b(?:hostname|machine[_-]?id)\s*[:=]\s*["''][^"'']+["'']'
+  ];
+  const Patterns := Expressions.Map(
+    function(Expression: string): Regex.Pattern begin
+      return Regex.Compile(Expression, Regex.DefaultOptions()).Unwrap();
+    end function
+  );
+  for Pattern: Regex.Pattern in Patterns do
+    Test.AssertFalse(Regex.IsMatch(Pattern, 'ordinary documentation text').Unwrap());
+    Test.AssertFalse(Regex.IsMatch(Pattern, '').Unwrap());
+  end for;
+  const SyntheticToken := 'ghp_' + 'x'.RepeatStr(32);
+  Test.AssertTrue(Regex.IsMatch(Patterns[0], SyntheticToken).Unwrap());
+  for Separator: string in ['=', ':', ':='] do
+    Test.AssertTrue(
+      Regex.IsMatch(
+        Patterns[1],
+        'pass' + 'word ' + Separator + ' ''' + 'x'.RepeatStr(12) + ''''
+      ).Unwrap()
+    );
+  end for;
+
+  Test.AssertTrue(Regex.IsMatch(Patterns[2], 'person' + '@' + 'example' + '.invalid').Unwrap());
+  Test.AssertTrue(Regex.IsMatch(Patterns[3], 'node' + '.internal').Unwrap());
+end.

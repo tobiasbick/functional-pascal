@@ -49,6 +49,25 @@ pub(in crate::execution::vm) fn render_with_executable<O: ValueOrigin>(
         );
     }
     match runtime {
+        Value::Regex(pattern) => {
+            let text = pattern.as_str();
+            let end = text
+                .char_indices()
+                .nth(limits.max_string_chars)
+                .map_or(text.len(), |(byte, _)| byte);
+            leaf(
+                format!("Pattern({:?})", &text[..end]),
+                "Std.Text.Regex.Pattern".to_owned(),
+                Some(
+                    if end < text.len() {
+                        "truncated"
+                    } else {
+                        "read-only"
+                    }
+                    .to_owned(),
+                ),
+            )
+        }
         Value::Bytes(bytes) => aggregate(
             bytes.to_string(),
             "Std.Bytes.ByteBuffer".to_string(),

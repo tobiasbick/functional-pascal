@@ -73,6 +73,7 @@ canonical import path.
 | `Std.Ui.Terminal` | Terminal MVU interface |
 | `Std.Text.Format` | Scalar text formatting |
 | `Std.Text.Parse` | Scalar text parsing |
+| `Std.Text.Regex` | Managed compiled Unicode regular expressions, captures, replacement and splitting |
 | `Std.Text.Utf8` | Checked string/byte-buffer conversion and UTF-8 text append |
 | `Std.Encoding` | Base64, Base64url and hex codecs |
 | `Std.Encoding.Json` | JSON values, parsing and serialization |

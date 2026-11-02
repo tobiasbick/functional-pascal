@@ -57,7 +57,7 @@ unit header ends with a `Handbook:` line naming the unit's handbook page, such a
 | Host I/O | [host/](host/README.md) | Args, Calendar, Cli, Env, Errors, Fs, Path, Proc (execution and inspection), Hardware, System, Users, Time |
 | Networking | [network/](network/README.md) | Sockets, Server lifetime, URI, HTTP |
 | AI and agents | [ai/](ai/README.md) | OpenAI-compatible chat completions, tokenization, native ACP clients, typed events, host adapters and MCP tool servers |
-| Text and formats | [text/](text/README.md) | Text.Format, Text.Parse, Text.Utf8, Encoding (Base64/Base64url/hex), Encoding.Json, Encoding.Toml and field helpers |
+| Text and formats | [text/](text/README.md) | Text.Format, Text.Parse, Text.Regex, Text.Utf8, Encoding (Base64/Base64url/hex), Encoding.Json, Encoding.Toml and field helpers |
 | Numeric | [numeric/](numeric/README.md) | Math, Bits, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |
 | Concurrency | [concurrency/](concurrency/README.md) | Tasks (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |

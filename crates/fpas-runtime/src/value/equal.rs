@@ -13,6 +13,7 @@ pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
             (Value::Boolean(x), Value::Boolean(y)) if x == y => {}
             (Value::Str(x), Value::Str(y)) if x == y => {}
             (Value::Bytes(x), Value::Bytes(y)) if x == y => {}
+            (Value::Regex(x), Value::Regex(y)) if std::sync::Arc::ptr_eq(x, y) => {}
             (Value::Enum(a), Value::Enum(b)) => {
                 let a = a.body();
                 let b = b.body();

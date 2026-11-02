@@ -1,7 +1,0 @@
-program T;
-
-uses Std.Console as Console;
-
-begin
-  Console.WriteLn('abc'.Slice(0, 3));
-end.

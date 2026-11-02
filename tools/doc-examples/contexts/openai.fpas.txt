@@ -1,5 +1,0 @@
-program DocumentationExample;
-uses Std.Ai.OpenAi as OpenAi, Std.Console as Console;
-begin
-// @example
-end.

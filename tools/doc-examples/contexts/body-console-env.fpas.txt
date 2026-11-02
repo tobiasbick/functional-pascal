@@ -1,7 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console, Std.Os.Env as Env;
-
-begin
-// @example
-
-end.

@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="Any CPU" />
+    <ProjectType Name="FPAS" Extension=".fpasproj" TypeId="{5D4B15AB-1024-4803-9015-4F069B13DE5A}">
+      <Platform Project="AnyCPU" />
+    </ProjectType>
+  </Configurations>
+  <Project Path="Shared/Shared.csproj" />
+  <Project Path="Game/Game.fpasproj" />
+  <Project Path="Host/Host.csproj" />
+</Solution>

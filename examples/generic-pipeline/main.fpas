@@ -1,0 +1,24 @@
+program GenericPipeline;
+
+uses System.Console as Console, Pipelines as Pipeline;
+
+function Double(Value: int): int;
+begin
+  return Value * 2;
+end function;
+
+function Label(Value: int): string;
+begin
+  return 'Value: ' + Value.ToString();
+end function;
+
+begin
+  const Format: function(int): string := Pipeline.Compose(Double, Label);
+  const Rows: string[] := Pipeline.Map([1, 2, 3], Format);
+  for Row: string in Rows do
+    Console.WriteLine(Row);
+  end for;
+  const Copy: function(string): string := Pipeline.Identity<string>;
+  Console.WriteLine(Copy('identity'));
+end;
+end program;

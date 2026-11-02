@@ -1,7 +1,0 @@
-unit MyLib.Internal;
-
-public function Scale(X: integer): integer;
-begin
-  return X + X;
-end function;
-end unit;

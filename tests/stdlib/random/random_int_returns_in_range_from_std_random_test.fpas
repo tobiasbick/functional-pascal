@@ -1,8 +1,0 @@
-program T;
-
-uses Std.Console as Console, Std.Math.Random as Random;
-
-begin
-  const N: integer := Random.RandomInt(1, 1);
-  Console.WriteLn(N);
-end.

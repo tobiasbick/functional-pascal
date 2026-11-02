@@ -1,8 +1,0 @@
-program ReadlnTest;
-
-uses Std.Console as Console, Std.Test as Test;
-
-begin
-  Test.PushReadLn('Alice');
-  Test.AssertTrue(Console.ReadLn().Unwrap() = 'Alice');
-end.

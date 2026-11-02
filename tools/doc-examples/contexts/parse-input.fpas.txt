@@ -1,6 +1,0 @@
-program DocumentationExample;
-uses Std.Text.Parse as Parse, Std.Console as Console;
-begin
-const Input := '42';
-// @example
-end.

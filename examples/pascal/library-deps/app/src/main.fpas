@@ -1,7 +1,0 @@
-program LibDemo;
-
-uses MyLib.Core as Core, Std.Console as Console;
-
-begin
-  Console.WriteLn(Core.Double(21));
-end.

@@ -1,0 +1,20 @@
+program InventoryModel;
+
+uses System.Console as Console, Dungeon.Inventory as Inventory;
+
+begin
+  const Rope: Inventory.Item := new Inventory.Item(Name := 'Rope', Weight := 1.5);
+  const Potion: Inventory.Item := new Inventory.Item('Potion', 0.25);
+  const RopeSlot: Inventory.Position := new Inventory.Position(Rope);
+  const Potions: Inventory.Position := new Inventory.Position(Potion, 3);
+  const AfterDrink: Inventory.Position := Potions with Quantity := Potions.Quantity - 1; end with;
+  const Before: Inventory.Position[] := [RopeSlot, Potions];
+  const After: Inventory.Position[] := [RopeSlot, AfterDrink];
+
+  Console.WriteLine('Before: ' + Potions.Quantity.ToString());
+  Console.WriteLine('After: ' + AfterDrink.Quantity.ToString());
+  Console.WriteLine('Weight: ' + Inventory.TotalWeight(After).ToString());
+  Console.WriteLine('Original unchanged: ' + (Before[1] = Potions).ToString());
+  Console.WriteLine('Item retained: ' + (AfterDrink.Item = Potion).ToString());
+end;
+end program;

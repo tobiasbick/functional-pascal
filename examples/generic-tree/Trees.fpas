@@ -1,0 +1,49 @@
+unit Trees;
+
+public type Tree<T> = union
+  Empty;
+  Leaf(Value: T);
+  Branch(Left: Tree<T>; Right: Tree<T>);
+end union;
+
+public type Summary<T> = record
+  Value: T;
+  Count: int;
+  Label: string := 'tree';
+
+  function Reader(): function(): T;
+  begin
+    return function(): T => self.Value;
+  end function;
+end record;
+
+public function Map<T, U>(Value: Tree<T>; Transform: function(T): U): Tree<U>;
+begin
+  return case Value of
+    when Tree.Empty: Tree.Empty;
+    when Tree.Leaf(const Item: T): Tree.Leaf(Transform(Item));
+    when Tree.Branch(const Left: Tree<T>, const Right: Tree<T>):
+      Tree.Branch(Map(Left, Transform), Map(Right, Transform));
+  end case;
+end function;
+
+public function Count<T>(Value: Tree<T>): int;
+begin
+  return case Value of
+    when Tree.Empty: 0;
+    when Tree.Leaf(_): 1;
+    when Tree.Branch(const Left: Tree<T>, const Right: Tree<T>): Count(Left) + Count(Right);
+  end case;
+end function;
+
+public function Render(Value: Tree<string>): string;
+begin
+  return case Value of
+    when Tree.Empty: '.';
+    when Tree.Leaf(const Item: string): Item;
+    when Tree.Branch(const Left: Tree<string>, const Right: Tree<string>):
+      '(' + Render(Left) + ', ' + Render(Right) + ')';
+  end case;
+end function;
+
+end unit;

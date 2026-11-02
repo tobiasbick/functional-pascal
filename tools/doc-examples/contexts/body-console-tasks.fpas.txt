@@ -1,7 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console, Std.Tasks as Tasks;
-
-begin
-// @example
-
-end.

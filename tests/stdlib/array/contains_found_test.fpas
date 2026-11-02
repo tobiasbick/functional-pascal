@@ -1,8 +1,0 @@
-program T;
-
-uses Std.Console as Console;
-
-begin
-  const A: array of integer := [1, 2, 3];
-  Console.WriteLn((2 in A));
-end.

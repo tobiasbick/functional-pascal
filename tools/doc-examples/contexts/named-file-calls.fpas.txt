@@ -1,4 +1,0 @@
-program DocumentationExample;
-const InputPath: string := 'input.txt';
-const BackupPath: string := 'backup.txt';
-// @example

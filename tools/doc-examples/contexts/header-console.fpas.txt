@@ -1,4 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console;
-
-// @example

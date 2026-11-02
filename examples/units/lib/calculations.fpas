@@ -1,0 +1,17 @@
+unit Demo.Numbers;
+
+private function Add(Left: int; Right: int): int;
+begin
+  return Left + Right;
+end function;
+
+public function SumTo(Limit: int): int;
+begin
+  var Sum: int := 0;
+  for Value: int := 1 to Limit do
+    Sum := Add(Sum, Value);
+  end for;
+  return Sum;
+end function;
+
+end unit;

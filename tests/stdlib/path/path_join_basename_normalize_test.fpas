@@ -1,9 +1,0 @@
-program PathJoinBasenameNormalizeTest;
-
-uses Std.Io.Path as Path, Std.Test as Test;
-
-begin
-  Test.AssertEquals('app.txt', Path.BaseName(Path.Join(['src', 'main', 'app.txt'])));
-  Test.AssertEquals('gz', Path.Extension('archive.tar.gz'));
-  Test.AssertEquals('c', Path.BaseName(Path.Normalize('a/b/../c')));
-end.

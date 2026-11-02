@@ -1,6 +1,0 @@
-program DocumentationExample;
-// @include docs/pascal/language/types/records.md#example-1
-// @include docs/pascal/language/types/records.md#example-2
-begin
-// @example
-end.

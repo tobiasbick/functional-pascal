@@ -1,8 +1,0 @@
-program T;
-
-uses Std.Console as Console;
-
-begin
-  const C: array of integer := [1, 2].Concat([]);
-  Console.WriteLn(C.Length());
-end.

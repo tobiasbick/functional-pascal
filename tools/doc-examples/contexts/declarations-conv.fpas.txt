@@ -1,6 +1,0 @@
-program DocumentationExample;
-uses Std.Text.Format as Conv;
-
-// @example
-
-begin end.

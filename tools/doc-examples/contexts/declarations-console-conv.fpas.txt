@@ -1,6 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console, Std.Text.Format as Conv;
-
-// @example
-
-begin end.

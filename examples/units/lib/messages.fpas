@@ -1,0 +1,8 @@
+unit Demo.Messages;
+
+public function Describe(Value: int): string;
+begin
+  return if Value = 55 then 'The expected sum' else 'Unexpected sum' end if;
+end function;
+
+end unit;

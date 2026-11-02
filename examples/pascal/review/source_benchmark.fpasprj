@@ -1,8 +1,0 @@
-[project]
-name = "source-review-benchmark"
-kind = "program"
-main = "source_benchmark.fpas"
-[dependencies]
-projects = ["../../../apps/notes/notes-core.fpasprj"]
-[sources]
-include = ["source_benchmark.fpas"]

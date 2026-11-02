@@ -1,0 +1,55 @@
+<Project>
+  <PropertyGroup>
+    <_FpasRequestedDocumentationFile>$(DocumentationFile)</_FpasRequestedDocumentationFile>
+  </PropertyGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <_FpasDocumentationOutput>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(TargetDir)', '$(TargetName).xml'))</_FpasDocumentationOutput>
+    <_FpasDocumentationIntermediate Condition="'$(GenerateDocumentationFile)' == 'true'">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(TargetName).xml'))</_FpasDocumentationIntermediate>
+    <_FpasRequestedDocumentationFile Condition="'$(GenerateDocumentationFile)' == 'true' and '$(_FpasRequestedDocumentationFile)' == ''">$(_FpasDocumentationOutput)</_FpasRequestedDocumentationFile>
+    <_FpasRequestedDocumentationFile Condition="'$(GenerateDocumentationFile)' == 'true'">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_FpasRequestedDocumentationFile)'))</_FpasRequestedDocumentationFile>
+    <_FpasRequestedDocumentationFile Condition="'$(GenerateDocumentationFile)' != 'true'" />
+    <DocumentationFile>$(_FpasDocumentationIntermediate)</DocumentationFile>
+    <_DocumentationFileProduced Condition="'$(GenerateDocumentationFile)' == 'true'">true</_DocumentationFileProduced>
+    <_DocumentationFileProduced Condition="'$(GenerateDocumentationFile)' != 'true'">false</_DocumentationFileProduced>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="@(Compile)" />
+    <DocFileItem Remove="@(DocFileItem)" />
+    <FinalDocFile Remove="@(FinalDocFile)" />
+    <DocFileItem Include="$(_FpasDocumentationIntermediate)" Condition="'$(GenerateDocumentationFile)' == 'true'" />
+    <FinalDocFile Include="$(_FpasDocumentationOutput)" Condition="'$(GenerateDocumentationFile)' == 'true'" />
+  </ItemGroup>
+  <UsingTask TaskName="Fpas.Build.Tasks.FpasCompile" AssemblyFile="$(FpasTasksPath)" />
+  <UsingTask TaskName="Fpas.Build.Tasks.FpasCleanDocumentation" AssemblyFile="$(FpasTasksPath)" />
+  <Target Name="FpasCleanDocumentation" BeforeTargets="CoreClean">
+    <FpasCleanDocumentation CacheFile="$(IntermediateOutputPath)fpas.compile.json" />
+  </Target>
+  <Target Name="CreateManifestResourceNames">
+    <Error Condition="'@(EmbeddedResource)' != ''" Code="FP5001" Text="FPAS embedded resources are not implemented yet." />
+  </Target>
+  <Target Name="CoreCompile" DependsOnTargets="ResolveReferences" Returns="@(IntermediateAssembly)">
+    <Error Condition="'$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCPU'" Code="FP5001" Text="The initial FPAS compiler supports AnyCPU only." />
+    <Error Condition="'$(DebugType)' != 'none' and '$(DebugType)' != 'portable'" Code="FP5001" Text="FPAS DebugType must be portable or none." />
+    <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" CompilerPath="$(FpasCompilerPath)"
+                 OutputAssembly="@(IntermediateAssembly)" CacheFile="$(IntermediateOutputPath)fpas.compile.json"
+                 DotnetHostPath="$(DotNetHostPath)" OutputType="$(OutputType)"
+                 Configuration="$(Configuration)" TargetFramework="$(TargetFramework)" DebugType="$(DebugType)"
+                 DocumentationFile="$(_FpasDocumentationIntermediate)" DocumentationDestination="$(_FpasRequestedDocumentationFile)"
+                 DocumentationOutput="$(_FpasDocumentationOutput)" TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
+                 WarningsAsErrors="$(WarningsAsErrors)" WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)">
+      <Output TaskParameter="WrittenDocumentation" ItemName="FileWrites" />
+    </FpasCompile>
+    <PropertyGroup>
+      <_DebugSymbolsProduced Condition="'$(DebugType)' == 'portable'">true</_DebugSymbolsProduced>
+      <_DebugSymbolsProduced Condition="'$(DebugType)' == 'none'">false</_DebugSymbolsProduced>
+    </PropertyGroup>
+    <ItemGroup>
+      <FileWrites Include="@(IntermediateAssembly);$(IntermediateOutputPath)fpas.compile.json;$(IntermediateOutputPath)fpas.compile.json.arguments.json" />
+      <FileWrites Include="$(IntermediateOutputPath)$(TargetName).runtimeconfig.json" Condition="Exists('$(IntermediateOutputPath)$(TargetName).runtimeconfig.json')" />
+      <FileWrites Include="$(IntermediateOutputPath)$(TargetName).pdb" Condition="'$(DebugType)' == 'portable'" />
+      <_DebugSymbolsIntermediatePath Include="$(IntermediateOutputPath)$(TargetName).pdb" Condition="'@(_DebugSymbolsIntermediatePath)' == '' and '$(DebugType)' == 'portable'" />
+    </ItemGroup>
+    <Delete Files="$(TargetDir)$(TargetName).pdb" Condition="'$(DebugType)' == 'none'" />
+  </Target>
+</Project>

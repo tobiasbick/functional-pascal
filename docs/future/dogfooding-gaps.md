@@ -1,60 +1,38 @@
 # Dogfooding gaps
 
-Intake list for gaps found while agents write their helper scripts in FPAS instead of Python,
-JavaScript, or shell logic.
-Compiler panics also follow the entry rule in
-[compiler-panic-followups.md](compiler-panic-followups.md).
+The [compiler subset](../implementation/first-program.md) and
+[MSBuild milestone](../implementation/msbuild.md) execute small FPAS programs
+and libraries. These concrete limits currently require host tools:
 
-## Entry format
+- Directory traversal, arrays/indexers, generic collections, args, callable
+  values, closures, and explicit generic .NET method calls now work. Write
+  filesystem/text maintenance helpers in FPAS. The
+  [directory inventory](../../examples/directory-inventory/README.md) uses real
+  LINQ Where/Select and a mutable captured total. Extension methods are called
+  in static form. [Source generic functions](../implementation/generic-routines.md)
+  now support typed Map/Compose helpers and shared reusable routines.
+  [Call/union inference](../implementation/type-argument-inference.md) now closes
+  reusable routines and union constructors from typed inputs and context.
+  [Managed parameter modes and synchronous contracts](../implementation/contracts-and-parameters.md)
+  support direct CLR calls and local validation. [Async functions and programs](../implementation/overloads-interfaces-debugging-and-async.md)
+  now await Task/ValueTask APIs and asynchronous disposal directly. Source
+  overloads and record implementations of CLR interfaces are also available.
+- [Records](../implementation/records.md) now support immutable data
+  models, defaults, methods, and copy updates. [Unions and case matching](../implementation/unions-and-matching.md)
+  now support domain outcomes and exhaustive inspection.
+  [Generic records/unions](../implementation/generic-types.md) add reusable models,
+  recursive payloads, and generic record methods with typed closures. Globals
+  remain unavailable; use the supported subset for helpers.
+- Portable PDB generation now preserves statement locations, local scopes,
+  closure methods, and async yield/resume metadata. Use supported .NET debuggers;
+  automatic IDE/project integration remains pending.
+- [XML API documentation](../implementation/xml-documentation.md) now exports
+  attached Markdown comments through ordinary compiler/SDK options. Use that
+  output for supported public APIs; source hover/completion remains separate work.
 
-Add one entry per gap under [Open entries](#open-entries):
+Multi-source programs and libraries now work, including public/private functions
+and unit imports. The SDK supplies framework/project/package references through
+normal .NET resolution; direct CLI invocation still needs explicit references.
 
-```markdown
-### <Short title>
-
-- **Date:** YYYY-MM-DD
-- **Kind:** blocker (fell back to another language) or awkward (done in FPAS)
-- **Area:** language, `Std.*` API, bug, diagnostics, or performance
-- **Task:** what the helper script had to do
-- **Missing or wrong:** what FPAS could not do or did badly
-- **Minimal example:** the smallest FPAS source that shows the gap
-- **Fallback:** the language or tool used instead, if any
-```
-
-Remove an entry once the gap is fixed and covered by tests and current documentation.
-
-## Open entries
-
-### Batch debugger worker exits during a TUI test
-
-- **Date:** 2026-10-31
-- **Kind:** awkward (diagnosis remained in FPAS)
-- **Area:** diagnostics
-- **Task:** Inspect the viewport and footer position at a failing headless TUI
-  test assertion in the game client.
-- **Missing or wrong:** The batch debugger returned `worker_failure` before
-  publishing a breakpoint result; the underlying cause was not established.
-- **Minimal example:** In the game workspace, run `fpas debug` on
-  `tests/client/client-tests.fpasprj` with a breakpoint in
-  `tests/client/inventory_window_test.fpas` and request its `Screen.Height`.
-- **Fallback:** Temporarily print the FPAS test's surface snapshot and remove
-  the diagnostic output after correcting the layout.
-
-### Commit headroom and ancestor memory limits
-
-- **Date:** 2026-10-29
-- **Kind:** awkward (helper written in FPAS)
-- **Area:** host information API
-- **Task:** Reserve memory before launching and while supervising Rust builds
-  and tests in `tools/resource-guard.fpas`.
-- **Missing or wrong:** Native RAM, swap and backend cgroup information are
-  available through `Std.Os.Hardware.Memory`, but `sysinfo` does not expose the
-  Windows commit counters or a complete ancestor-limit inventory needed by
-  the guard.
-- **Minimal example:** `Std.Os.Hardware.Memory().Unwrap().AvailableBytes`
-  supplies available host RAM, not system commit headroom.
-- **Fallback:** The guard uses the native API for RAM and swap. Windows commit
-  sampling keeps its bounded PowerShell CIM query; Linux strict-overcommit
-  counters and ancestor cgroup limits keep their file queries. Policy and
-  owned-process cancellation remain in FPAS, and system settings stay unchanged.
-  See the [hardware API](../pascal/std/host/hardware.md#memory) for its scope.
+These gaps do not justify validating new FPAS with the former VM/compiler or
+claiming that the complete language/build integration already works.

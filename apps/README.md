@@ -1,11 +1,7 @@
 # Applications
 
-Complete end-user applications written in Functional Pascal live here. Unlike
-the focused programs under `examples/`, an app may contain multiple projects,
-application-specific units, persistent data, and its own regression coverage.
+This directory is reserved for complete end-user applications written in FPAS.
+Each application will own its README, sources, project files, and assets.
+No applications have been added or migrated from the earlier FPAS repository.
 
-| Application | Purpose | Run |
-| --- | --- | --- |
-| [Local Chat](local-chat/README.md) | Simple fixed-endpoint llama.cpp chat TUI | `fpas run apps/local-chat/local-chat.fpasprj` |
-| [Notes](notes/README.md) | Modern local-first terminal note taking with `.note` files | `fpas run apps/notes/notes.fpasprj` |
-| [fpastris](fpastris/README.md) | Falling-block puzzle TUI with hold, ghost and next-piece previews | `fpas run apps/fpastris/fpastris.fpasprj` |
+See the [layout plan](../docs/architecture/project-layout.md#examples-and-applications).

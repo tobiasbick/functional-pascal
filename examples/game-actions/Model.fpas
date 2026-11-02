@@ -1,0 +1,27 @@
+unit Dungeon.Model;
+
+public type Position = record
+  X: int;
+  Y: int;
+end record;
+
+public type ActionOutcome = union
+  Moved(Position: Position);
+  Blocked(Reason: string);
+  ItemFound(Name: string; At: Position);
+  Stayed;
+end union;
+
+public function AttemptMove(Current: Position; DeltaX: int): ActionOutcome;
+begin
+  const Next: Position := Current with X := Current.X + DeltaX; end with;
+  if Next.X < 0 then
+    return ActionOutcome.Blocked('wall');
+  elsif Next.X = 2 then
+    return ActionOutcome.ItemFound('key', Next);
+  else
+    return ActionOutcome.Moved(Next);
+  end if;
+end function;
+
+end unit;

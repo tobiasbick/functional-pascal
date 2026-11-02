@@ -1,9 +1,0 @@
-[project]
-name = "greet"
-kind = "library"
-
-[exports]
-units = ["Demo.Greet"]
-
-[sources]
-include = ["src/**/*.fpas"]

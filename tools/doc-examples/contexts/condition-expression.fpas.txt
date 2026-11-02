@@ -1,4 +1,0 @@
-program DocumentationExample;
-const Count: integer := 1;
-// @example
-begin end.

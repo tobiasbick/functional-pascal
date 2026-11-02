@@ -1,52 +1,119 @@
-# Functional Pascal
+# Functional Pascal for .NET
 
-A functional-first Pascal language with selected Ada conventions. Runs on a managed virtual machine — no pointers, no manual memory management.
+Functional Pascal is a function-first language using Pascal's statement and block
+structure. It compiles directly to Common Intermediate Language (CIL), CLR
+metadata, and portable debug information. It does not generate C# as an
+intermediate source language.
 
-Language specification: [`docs/pascal/`](.) — implemented behavior and stdlib reference.
+**Status: full baseline specification; partially implemented.** The
+[first-program milestone](../implementation/first-program.md) defines the small
+executable subset currently supported; the [MSBuild milestone](../implementation/msbuild.md)
+describes available project builds. The handbook examples generally describe
+the language still to build and must not be treated as compiler-verified.
 
-Planned features: [`docs/future/`](../future).
+## Design decisions
 
-## Design Principles
+- Free functions, procedures, immutable records, and discriminated unions are the
+  primary abstractions. Effects are allowed; functions are not implicitly pure.
+- Distinct scalars and checked integral subranges express named data domains.
+  Records support defaults, private members, and static factories/methods.
+  Explicitly typed globals may be const or var.
+- Keep `begin`, `end function`, `end if`, `:=`, `uses`, and `case ... when`.
+  Program entry blocks close with `end;`, followed by `end program;` for the
+  program declaration. Units close with `end unit;`.
+- Use C# primitive aliases and ordinary CLR generic types: `int`, `double`,
+  `List<int>`, `Task<string>`. `integer` and `real` are not predefined aliases.
+- The language is case-sensitive, including keywords. This preserves CLR names
+  without case-folding collisions. Keywords use lowercase spelling.
+- Source comments use `//`. Attached Markdown documents declarations, with
+  optional .NET XML documentation output for referenced APIs.
+- `const` prevents rebinding; `var` permits it. Neither makes a referenced .NET
+  object deeply immutable.
+- Every user-declared value binding has an explicit type, including local
+  values, loop variables, resources, and pattern bindings. Initializers do not
+  substitute for type annotations.
+- Arrays and imported collections have their CLR reference behavior. No implicit
+  copy-on-write collection layer is inserted.
+- Asynchronous code uses `async`, `await`, .NET tasks, and cooperative cancellation.
+  There is no `go`, language scheduler, or implicit task-ownership scope.
+- Consume CLR classes, structs, interfaces, properties, delegates, and events
+  directly from referenced assemblies; namespaces are imported explicitly.
+- Preserve precise static typing, checked integral arithmetic by default, and
+  exhaustive matching of language-defined unions.
+- `requires` and `ensures` express preconditions and postconditions, checked in
+  every build and enforced through ordinary CLR exceptions.
+- Use CLR exceptions for failures and CLR nullability for absent values.
+  Application-specific unions describe domain outcomes. There is no implicit
+  Option/Result prelude or failure-propagation operator.
+- Declare resources with `using const` or `await using const`, without a separate
+  block closer; cleanup runs at the end of the enclosing lexical scope.
+- Use a small `Fpas.Core` for language-specific support. Do not mirror the .NET
+  class library in a separate `Std.*` API catalog.
 
-- **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.
-- **Explicit Binding Mutability** — `const` declares an immutable binding; `var` allows reassignment.
-- **Safe by Design** — No pointers, no unsafe operations. The VM handles memory.
-- **Explicit Types** — Parameters, routine results, and record fields explicitly state their types. Local bindings support [type inference](language/basics/local-variables.md#type-inference) for fully determined initializers.
-- **Case-Insensitive** — Keywords and identifiers are case-insensitive, as in classical Pascal.
-- **Familiar Syntax** — Pascal's `begin`, `end`, `:=`, `downto`, and other well-known constructs.
+## Source shape
 
-## Documentation areas
+```pascal
+program Hello;
 
-Topic-based layout (Microsoft Learn style).
+uses System.Console as Console;
 
-| Area | Hub | Topics |
-|------|-----|--------|
-| Agent reference | [agents/](agents/README.md) | Short entrypoint, focused language topics, tested examples |
-| Getting started | [getting-started/](getting-started/README.md) | Overview, hello world, keywords |
-| Language | [language/](language/README.md) | Types, basics, control flow, functions, pattern matching, errors, concurrency |
-| Program structure | [program-structure/](program-structure/README.md) | Units, projects, CLI, workspaces |
-| Standard library | [std/](std/README.md) | `Std.*` reference |
-| Tools | [tools/](tools/README.md) | Declaration lookup, source queries, diagnostics, debugging, profiling, formatting, editors |
-| Formal grammar | [../specs/grammar.ebnf](../specs/grammar.ebnf) | Lexer and parser syntax |
+function Greeting(Name: string): string;
+begin
+  return 'Hello, ' + Name;
+end function;
 
-## Start here
+begin
+  Console.WriteLine(Greeting('CLR'));
+end;
+end program;
+```
 
-For authoring without prior FPAS knowledge, start with the
-[agent reference](agents/README.md), then read the topics needed for the task.
+Public declarations belong in units. Values, parameters, function results, and
+record fields have explicit types. Generic argument inference does not permit
+omitting a value binding's type. See
+[program structure](program-structure/README.md).
 
-Ordered learning path for newcomers:
+## Initial language scope
 
-1. [Getting started](getting-started/README.md) — philosophy, hello world, first program
-2. [Basics](language/basics/README.md) — primitives, variables, operators
-3. [Control flow](language/control-flow/README.md) — `if`, loops, `case` intro
-4. [Functions](language/functions/README.md) — routines, first-class calls, contracts
-5. [Types](language/types/README.md) — records, enums, arrays, generics, subranges, distinct types
-6. [Pattern matching](language/pattern-matching/README.md) — guards, exhaustiveness
-7. [Error handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic`
-8. [Concurrency](language/concurrency/README.md) — `go`, task scopes, channels, and scheduling; [Std.Tasks](std/concurrency/task.md) covers cancellation, selection, task groups, supervised retries, and timed close
-9. [Units](program-structure/units.md) — `uses`, namespaces, visibility
-10. [Projects](program-structure/projects.md) — `.fpasprj`, workspaces
-11. [CLI](program-structure/cli.md) — scaffolding, builds, runs, checks, tests, and declaration lookup
-12. [Standard library](std/README.md) — `Std.*` built-in units
-13. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
-14. [Editor integration](tools/editor-integration.md) — highlighting, diagnostics, formatting, navigation
+The baseline includes functions and closures, contracts, CLR generics, records,
+distinct types, subranges, unions, global values, exceptions, disposal, delegates,
+events, method-based interface implementation, and asynchronous methods.
+It supports ordinary managed .NET APIs.
+
+It does not initially include user-authored class hierarchies, user-authored
+interface declarations, unsafe pointers, `ref struct` values, spans, ref returns,
+byref locals, expression-tree conversion, custom awaiter patterns, async iterators,
+dynamic binding, operator declarations, or compiler plug-ins. An unsupported
+metadata signature produces a diagnostic identifying the unsupported feature.
+This scope does not promise access to every possible .NET API.
+
+The [MSBuild integration plan](../build/msbuild.md) adds `.fpasproj` projects,
+`.slnx` solutions, standard dependency restore, and cross-language project
+references as the initial build scope. Some of its requirements remain pending.
+The local SDK already supports the subset documented
+in the MSBuild milestone. Publishing and deployment profiles remain later work.
+
+The [repository layout](../architecture/project-layout.md) defines the C#
+compiler/toolchain projects, xUnit tests, and examples/apps directories.
+
+Visual Studio project-system integration, LSP, VS Code integration, query tools,
+formatter integration, and debugger tooling remain outside this step. Their
+omission is not a decision to remove those tools.
+
+## Reading order
+
+1. [Basics](language/basics.md)
+   and [comments/API documentation](language/comments.md)
+2. [Types](language/types.md)
+   and [data domains](language/data-domains.md)
+3. [Functions](language/functions.md)
+4. [Contracts](language/contracts.md)
+5. [Control flow](language/control-flow.md)
+6. [Errors and resources](language/errors-and-resources.md)
+7. [Concurrency](language/concurrency.md)
+8. [.NET interoperability](interop/README.md)
+9. [Complete examples](examples.md)
+
+The [grammar](../specs/syntax.md) and [CLR mapping](../specs/clr-mapping.md)
+are implementation references. Syntax choices in this baseline are decisions;
+features outside its scope require a separate specification.

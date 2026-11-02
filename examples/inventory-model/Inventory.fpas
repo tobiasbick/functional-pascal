@@ -1,0 +1,29 @@
+unit Dungeon.Inventory;
+
+uses System.Collections.Generic as Collections;
+
+public type Item = record
+  Name: string;
+  Weight: double;
+end record;
+
+public type Position = record
+  Item: Item;
+  Quantity: int := 1;
+
+  function TotalWeight(): double;
+  begin
+    return self.Item.Weight * self.Quantity;
+  end function;
+end record;
+
+public function TotalWeight(Positions: Collections.IEnumerable<Position>): double;
+begin
+  var Total: double := 0.0;
+  for Entry: Position in Positions do
+    Total := Total + Entry.TotalWeight();
+  end for;
+  return Total;
+end function;
+
+end unit;

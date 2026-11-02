@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Fpas.NET.Sdk</PackageId>
+    <Version>0.1.0-dev</Version>
+    <Description>Project SDK and direct CIL compiler for Functional Pascal for .NET.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../src/Fpas.Cli/Fpas.Cli.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../src/Fpas.Core/Fpas.Core.csproj" ReferenceOutputAssembly="false" />
+    <None Update="Sdk/Sdk.props" Pack="true" PackagePath="Sdk/Sdk.props" />
+    <None Update="Sdk/Sdk.targets" Pack="true" PackagePath="Sdk/Sdk.targets" />
+    <None Update="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <Target Name="IncludeFpasToolAssets" BeforeTargets="_GetPackageFiles">
+    <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_FpasCompilerAssembly" />
+    </MSBuild>
+    <MSBuild Projects="../../src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_FpasTaskAssembly" />
+    </MSBuild>
+    <ItemGroup>
+      <None Include="%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Cli.dll;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Cli.deps.json;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Cli.runtimeconfig.json;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Compiler.dll;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Core.dll" Pack="true" PackagePath="tools/compiler/" />
+      <None Include="@(_FpasTaskAssembly)" Pack="true" PackagePath="tools/tasks/" />
+    </ItemGroup>
+  </Target>
+</Project>

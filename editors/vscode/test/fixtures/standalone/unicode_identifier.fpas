@@ -1,5 +1,0 @@
-program UnicodeIdentifier;
-
-begin
-  var café: string := 'Unicode text remains valid'
-end.

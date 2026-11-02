@@ -1,8 +1,0 @@
-program StdoutEchoTest;
-
-uses Std.Console as Console, Std.Test as Test;
-
-begin
-  Console.WriteLn('Hello');
-  Console.WriteLn('World');
-end.

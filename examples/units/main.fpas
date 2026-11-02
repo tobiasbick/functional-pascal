@@ -1,0 +1,10 @@
+program UnitsDemo;
+
+uses Demo.Numbers as Numbers, Demo.Messages as Messages, System.Console as Console;
+
+begin
+  const Sum: int := Numbers.SumTo(10);
+  Console.WriteLine(Sum);
+  Console.WriteLine(Messages.Describe(Sum));
+end;
+end program;

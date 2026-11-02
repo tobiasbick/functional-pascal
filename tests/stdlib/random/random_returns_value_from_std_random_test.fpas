@@ -1,9 +1,0 @@
-program T;
-
-uses Std.Console as Console, Std.Math.Random as Random;
-
-begin
-  const R: real := Random.Random();
-  Console.WriteLn(R >= 0.0);
-  Console.WriteLn(R < 1.0);
-end.

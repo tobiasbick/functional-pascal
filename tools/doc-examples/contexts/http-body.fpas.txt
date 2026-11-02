@@ -1,5 +1,0 @@
-program DocumentationExample;
-uses Std.Net.Http as Http, Std.Text.Utf8 as Utf8, Std.Console as Console;
-begin
-// @example
-end.

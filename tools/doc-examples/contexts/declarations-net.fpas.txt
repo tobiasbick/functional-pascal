@@ -1,6 +1,0 @@
-program DocumentationExample;
-uses Std.Net.Sockets as Net;
-
-// @example
-
-begin end.

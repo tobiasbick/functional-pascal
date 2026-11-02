@@ -1,5 +1,0 @@
-program T;
-
-begin
-  const C: array of integer := [1].Concat([true]);
-end.

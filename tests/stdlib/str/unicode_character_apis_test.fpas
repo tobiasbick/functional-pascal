@@ -1,9 +1,0 @@
-program UnicodeCharacterApisTest;
-
-uses Std.Test as Test;
-
-begin
-  Test.AssertEquals('😀😀', '😀'.RepeatStr(2));
-  Test.AssertEquals('aßc', 'a😀c'.SetCharAt(1, 'ß'));
-  Test.AssertEquals(128512, '😀'.Ord());
-end.

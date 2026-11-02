@@ -1,6 +1,0 @@
-program DocumentationExample;
-uses Std.Tasks as Tasks, Std.Console as Console;
-begin
-const Messages: channel of string := Tasks.CreateChannel(4);
-// @example
-end.

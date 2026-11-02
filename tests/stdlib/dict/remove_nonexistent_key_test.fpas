@@ -1,9 +1,0 @@
-program T;
-
-uses Std.Console as Console;
-
-begin
-  const D: dict of string to integer := ['A': 1];
-  const D2: dict of string to integer := D.Remove('Z');
-  Console.WriteLn(D2.Length());
-end.

@@ -1,7 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console, Std.Math as Math;
-
-begin
-// @example
-
-end.

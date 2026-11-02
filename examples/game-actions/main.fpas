@@ -1,0 +1,32 @@
+program GameActions;
+
+uses System.Console as Console, Dungeon.Model as Model;
+
+function Coordinates(Position: Model.Position): string;
+begin
+  return Position.X.ToString() + ',' + Position.Y.ToString();
+end function;
+
+function Describe(Outcome: Model.ActionOutcome): string;
+begin
+  return case Outcome of
+    when Model.ActionOutcome.Moved(const Position: Model.Position):
+      'Moved to ' + Coordinates(Position);
+    when Model.ActionOutcome.Blocked(const Reason: string):
+      'Blocked: ' + Reason;
+    when Model.ActionOutcome.ItemFound(At := const Position: Model.Position, Name := const Name: string):
+      'Found ' + Name + ' at ' + Coordinates(Position);
+    when Model.ActionOutcome.Stayed:
+      'Stayed';
+  end case;
+end function;
+
+begin
+  const Start: Model.Position := new Model.Position(0, 0);
+  const Outcomes: Model.ActionOutcome[] := [Model.AttemptMove(Start, 1),
+    Model.AttemptMove(Start, -1), Model.AttemptMove(Start, 2), Model.ActionOutcome.Stayed];
+  for Outcome: Model.ActionOutcome in Outcomes do
+    Console.WriteLine(Describe(Outcome));
+  end for;
+end;
+end program;

@@ -1,7 +1,0 @@
-program DocumentationExample;
-uses Std.Math as Math;
-
-begin
-// @example
-
-end.

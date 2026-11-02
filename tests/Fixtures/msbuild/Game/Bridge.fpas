@@ -1,0 +1,11 @@
+// Exposes an FPAS function that calls a referenced C# library.
+unit Demo.Bridge;
+
+uses Demo.SharedApi as Shared;
+
+public function Message(Value: string): string;
+begin
+  return Shared.Decorate(Value);
+end function;
+
+end unit;

@@ -1,7 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console, Std.Crypto as Crypto;
-
-begin
-// @example
-
-end.

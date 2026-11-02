@@ -1,7 +1,0 @@
-[project]
-name = "openai-chat"
-kind = "program"
-main = "src/main.fpas"
-
-[sources]
-include = ["src/**/*.fpas"]

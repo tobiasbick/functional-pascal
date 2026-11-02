@@ -1,51 +1,32 @@
-# Rust / Cargo
-target/
+# .NET build and package output
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+*.nupkg
+*.snupkg
+
+# Test and coverage output
+[Tt]est[Rr]esults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Local IDE state
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.DotSettings.user
+
+# Temporary local work
+.temp-data/
+
+# Legacy FPAS compiler caches
 *.fpascu
 *.fpascu.lock
 *.fpascp
 *.fpascp.lock
-# Alternate CARGO_TARGET_DIR worktrees (e.g. CI/agent local runs)
-/target-*/
-/debug/
-**/*.rs.bk
-*.pdb
-
-# Python tooling
-__pycache__/
-*.pyc
-
-# VS Code
-.vscode/
-/editors/vscode/node_modules/
-/editors/vscode/out/
-/editors/vscode/dist/
-/editors/vscode/server/
-/editors/vscode/cli/
-/editors/vscode/standard-library/
-.vscode-test/
-
-# Cursor — ignore local state; keep shared plans and rules
-.cursor/**
-!.cursor/plans/
-!.cursor/plans/**
-!.cursor/rules/
-!.cursor/rules/**
-
-# Codex
-.codex-review/
-
-# OpenCode
-#opencode.jsonc
-
-# Functional pascal distributable layout (repo root)
-/bin/
-
-.mcp.json
-
-# Scratch files created by FPAS filesystem tests/demos (cwd = repository root)
-.temp-data/
-_temp.fpas
-_temp.pas
-
-# Local data directory used by the Notes example application
-/notes/

@@ -1,9 +1,0 @@
-unit MyLib.Core;
-
-uses MyLib.Internal as Internal;
-
-public function Double(X: integer): integer;
-begin
-  return Internal.Scale(X);
-end function;
-end unit;

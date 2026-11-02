@@ -1,0 +1,16 @@
+program ReadFile;
+
+uses System as Sys, System.IO as IO, System.Console as Console;
+
+begin
+  const Path: string := IO.Path.Combine(Sys.AppContext.BaseDirectory, 'sample.txt');
+  try
+    using const Reader: IO.StreamReader := new IO.StreamReader(Path);
+    Console.Write(Reader.ReadToEnd());
+  catch Failure: IO.IOException do
+    Console.WriteLine(Failure.Message);
+  finally
+    Console.WriteLine('Read attempt finished');
+  end try;
+end;
+end program;

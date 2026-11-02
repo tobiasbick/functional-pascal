@@ -1,0 +1,25 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <Language>FPAS</Language>
+    <DefaultLanguageSourceExtension>.fpas</DefaultLanguageSourceExtension>
+    <LanguageTargets>$(MSBuildToolsPath)/Microsoft.Common.targets</LanguageTargets>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultFpasCompileItems Condition="'$(EnableDefaultFpasCompileItems)' == ''">true</EnableDefaultFpasCompileItems>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateGlobalUsings>false</GenerateGlobalUsings>
+    <UseAppHost>false</UseAppHost>
+    <DebugSymbols Condition="'$(DebugSymbols)' == ''">true</DebugSymbols>
+    <DebugType Condition="'$(DebugType)' == ''">portable</DebugType>
+    <FpasCompilerPath>$(MSBuildThisFileDirectory)../tools/compiler/Fpas.Cli.dll</FpasCompilerPath>
+    <FpasTasksPath>$(MSBuildThisFileDirectory)../tools/tasks/Fpas.Build.Tasks.dll</FpasTasksPath>
+    <ProjectTypeGuids>{5D4B15AB-1024-4803-9015-4F069B13DE5A}</ProjectTypeGuids>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Fpas.Core" HintPath="$(MSBuildThisFileDirectory)../tools/compiler/Fpas.Core.dll" Private="true" />
+    <Compile Include="**/*.fpas" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" Condition="'$(EnableDefaultFpasCompileItems)' == 'true'" />
+  </ItemGroup>
+</Project>

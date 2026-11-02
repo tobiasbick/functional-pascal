@@ -1,0 +1,24 @@
+unit Pipelines;
+
+uses System.Collections.Generic as Collections;
+
+public function Identity<T>(Value: T): T;
+begin
+  return Value;
+end function;
+
+public function Map<T, U>(Items: Collections.IEnumerable<T>; Transform: function(T): U): U[];
+begin
+  const Result: Collections.List<U> := new Collections.List<U>();
+  for Item: T in Items do
+    Result.Add(Transform(Item));
+  end for;
+  return Result.ToArray();
+end function;
+
+public function Compose<T, U, V>(First: function(T): U; Second: function(U): V): function(T): V;
+begin
+  return function(Value: T): V => Second(First(Value));
+end function;
+
+end unit;

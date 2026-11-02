@@ -1,4 +1,0 @@
-program DocumentationExample;
-uses Std.Console as Console;
-// @include docs/pascal/language/functions/generic-routines.md#example-1
-// @example

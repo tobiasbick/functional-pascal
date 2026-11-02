@@ -1,5 +1,0 @@
-program MalformedSyntax
-
-begin
-  const Value: integer := 1
-end.

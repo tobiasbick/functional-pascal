@@ -1,5 +1,0 @@
-program DocumentationExample;
-// @include docs/pascal/language/types/generics.md#example-11
-begin
-// @example
-end.

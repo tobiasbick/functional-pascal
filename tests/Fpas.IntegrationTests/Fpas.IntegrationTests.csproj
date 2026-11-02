@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Fpas.Cli/Fpas.Cli.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
+    <Using Include="Xunit" />
+    <None Include="../../examples/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/mandelbrot/main.fpas;../../examples/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/units/**/*.fpas;../../examples/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/read-file/*.fpas;../../examples/read-file/*.fpasproj;../../examples/read-file/*.txt" Link="Fixtures/read-file/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/directory-inventory/*.fpas;../../examples/directory-inventory/*.fpasproj" Link="Fixtures/directory-inventory/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/inventory-model/*.fpas;../../examples/inventory-model/*.fpasproj" Link="Fixtures/inventory-model/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/game-actions/*.fpas;../../examples/game-actions/*.fpasproj" Link="Fixtures/game-actions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/generic-pipeline/*.fpas;../../examples/generic-pipeline/*.fpasproj" Link="Fixtures/generic-pipeline/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/generic-tree/*.fpas;../../examples/generic-tree/*.fpasproj" Link="Fixtures/generic-tree/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/msbuild/**/*" Link="Fixtures/msbuild/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
+    <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
+  </ItemGroup>
+  <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
+    <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">
+      <Output TaskParameter="TargetOutputs" ItemName="_FpasCliAssembly" />
+    </MSBuild>
+    <ItemGroup>
+      <AssemblyMetadata Include="FpasCliPath" Value="%(_FpasCliAssembly.FullPath)" />
+    </ItemGroup>
+  </Target>
+</Project>

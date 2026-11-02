@@ -1,6 +1,0 @@
-program ValuePopEmpty;
-
-begin
-  const Items: array of integer := [];
-  const Popped := Items.Pop();
-end.

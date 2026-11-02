@@ -1,0 +1,10 @@
+// Prints a message using the first implemented CLR compiler path.
+program Hello;
+
+uses System.Console as Console;
+
+begin
+  const Message: string := 'Hello from FPAS';
+  Console.WriteLine(Message);
+end;
+end program;

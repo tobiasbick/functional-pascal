@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fpas.Compiler/Fpas.Compiler.csproj" />
+    <Project Path="src/Fpas.Cli/Fpas.Cli.csproj" />
+    <Project Path="src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" />
+    <Project Path="src/Fpas.Core/Fpas.Core.csproj" />
+  </Folder>
+  <Folder Name="/sdk/">
+    <Project Path="sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fpas.Compiler.Tests/Fpas.Compiler.Tests.csproj" />
+    <Project Path="tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

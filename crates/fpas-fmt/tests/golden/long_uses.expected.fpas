@@ -1,9 +1,0 @@
-program LongUses;
-
-uses
-  Std.Console as Console, Std.Text.Format as Conv, Std.Crypto as Crypto,
-  MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two;
-
-begin
-  Console.WriteLn('ok');
-end.

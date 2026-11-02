@@ -1,7 +1,0 @@
-program T;
-
-uses Std.Console as Console;
-
-begin
-  Console.WriteLn('Hello'.Delete(0, 2));
-end.

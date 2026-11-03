@@ -212,6 +212,16 @@ property/helper/factory signatures and case bases, retaining nullable annotation
 They verify matching generic arity and all existing readonly/accessibility rules.
 See [implemented generic data types](../implementation/generic-types.md).
 
+## Loop lowering
+
+Repeat/until uses an iteration body followed by a Boolean test, with continue
+targeting the test after lexical cleanup and break bypassing it. Counting loops
+cache both typed bounds once, compare with correct signedness, and guard the
+endpoint before checked stepping/narrowing or subrange construction. Synchronous
+CIL and async state-machine lowering use the same bound operations. Per-iteration
+counter captures preserve the source value, including subrange wrapper identity.
+See [implemented loops](../implementation/loops.md).
+
 ## Generic routines and closures
 
 Source generic routines emit ordinary CLR generic methods with named parameters,

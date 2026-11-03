@@ -25,6 +25,10 @@ helpers, recursion, captures, overloads, generics, contracts, and async methods.
 The [local-functions example](examples/local-functions/README.md) returns a local
 counter as an ordinary CLR delegate.
 
+[Typed loops](docs/implementation/loops.md) support repeat/until and counting
+with all integral types and subranges, including guarded extreme endpoints.
+The [loops example](examples/loops/README.md) also runs these across await.
+
 The [Mandelbrot example](examples/mandelbrot/README.md) is executable through its
 `.fpasproj`; its raster output is verified by the integration tests. The
 [expression/control-flow milestone](docs/implementation/expressions-and-control-flow.md)

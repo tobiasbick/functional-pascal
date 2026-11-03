@@ -127,6 +127,7 @@ internal sealed partial class Binder
         ForgetCapturedFacts();
         foreach (var statement in statements)
         {
+            foreach (var symbol in Expressions(statement).SelectMany(ReferenceWrites)) nonNull.Remove(symbol);
             foreach (var assignedName in AssignedInLambdas(statement))
                 if (FindLocal(assignedName) is { } captured) nonNull.Remove(captured);
             if (statement is AssignmentSyntax { Target: NameExpressionSyntax name } && FindLocal(name.Name.Text) is { } local) nonNull.Remove(local);
@@ -135,11 +136,19 @@ internal sealed partial class Binder
                 CaseStatementSyntax match => match.Arms.SelectMany(arm => arm.Statements ?? []),
                 BlockSyntax block => block.Statements,
                 IfSyntax branch => branch.Arms.SelectMany(arm => arm.Statements).Concat(branch.Else),
-                WhileSyntax loop => loop.Body, ForSyntax loop => loop.Body, ForEachSyntax loop => loop.Body,
+                WhileSyntax loop => loop.Body, RepeatSyntax loop => loop.Body, ForSyntax loop => loop.Body, ForEachSyntax loop => loop.Body,
                 TrySyntax guarded => guarded.Body.Concat(guarded.Catches.SelectMany(handler => handler.Body)).Concat(guarded.Finally ?? []),
                 _ => []
             };
             InvalidateAssigned(nested);
         }
+    }
+
+    private IEnumerable<object> ReferenceWrites(ExpressionSyntax expression)
+    {
+        if (expression is ArgumentModeSyntax { Mode: "ref" or "out" } argument && StableSymbol(argument.Value) is { } symbol)
+            yield return symbol;
+        foreach (var child in Children(expression))
+            foreach (var written in ReferenceWrites(child)) yield return written;
     }
 }

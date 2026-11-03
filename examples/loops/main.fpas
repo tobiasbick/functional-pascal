@@ -1,0 +1,23 @@
+async program LoopDemo;
+uses System.Console as Console, System.Threading.Tasks as Tasks;
+
+type Attempt = byte range 1..3;
+
+begin
+  for Number: Attempt := new Attempt(1) to new Attempt(3) do
+    await Tasks.Task.Delay(1);
+    Console.WriteLine(Number.Value);
+  end for;
+
+  var Count: int := 0;
+  repeat
+    Count := Count + 1;
+    if Count = 1 then continue; end if;
+  until Count = 3;
+  Console.WriteLine('repeat: ' + Count.ToString());
+
+  for Number: ulong := 18446744073709551614UL to 18446744073709551615UL do
+    Console.WriteLine(Number);
+  end for;
+end;
+end program;

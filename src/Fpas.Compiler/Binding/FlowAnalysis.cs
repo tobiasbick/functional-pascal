@@ -19,8 +19,18 @@ internal static class FlowAnalysis
             ? Of(loop.Body) & (ExitFlow.Return | ExitFlow.Throw) | (Of(loop.Body).HasFlag(ExitFlow.Break) ? ExitFlow.Next : ExitFlow.None)
             : ExitFlow.Next | Of(loop.Body) & (ExitFlow.Return | ExitFlow.Throw),
         BoundFor loop => ExitFlow.Next | Of(loop.Body) & (ExitFlow.Return | ExitFlow.Throw),
+        BoundRepeat loop => Repeat(loop),
         _ => ExitFlow.Next
     };
+
+    private static ExitFlow Repeat(BoundRepeat loop)
+    {
+        var body = Of(loop.Body);
+        var result = body & (ExitFlow.Return | ExitFlow.Throw);
+        if (body.HasFlag(ExitFlow.Break) || (body & (ExitFlow.Next | ExitFlow.Continue)) != 0 && loop.Condition is not BoundBoolean { Value: false })
+            result |= ExitFlow.Next;
+        return result;
+    }
 
     private static ExitFlow Try(BoundTry guarded)
     {

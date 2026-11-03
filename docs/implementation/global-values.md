@@ -88,6 +88,7 @@ cross-unit initialization cycles. Compiler tests inspect PDB initializer sequenc
 points, XML field documentation, and deterministic PE/PDB output.
 
 [Named nested routines](nested-routines.md) are implemented.
-Repeat loops, authored interfaces, arbitrary attributes,
+[Typed/repeat loops](loops.md) are implemented.
+Authored interfaces, arbitrary attributes,
 fully general nested generic type paths, lifted numeric nullable arithmetic,
 and LSP/query tooling remain outside this milestone.

@@ -48,15 +48,17 @@ outer body. Import aliases cannot be shadowed. Names declared inside a branch,
 block, or loop are unavailable after it. Every declaration initializes its own
 storage before that binding can be read.
 
-if/elsif/else statements, while loops, and int counting loops with to/downto are
+if/elsif/else statements, while/repeat loops, and integral/subrange counting loops with to/downto are
 implemented. Counting bounds evaluate once in written order; endpoints are
 inclusive, reversed ranges are empty, and the final iteration ends before the
-counter could overflow at int.MinValue/int.MaxValue. A counter is scoped to its
+counter could overflow or leave its subrange. A counter is scoped to its
 loop body. break/continue affect the innermost loop; continue in a counting loop
 still performs the guarded step.
+Repeat executes at least once; continue runs cleanup and then the until condition,
+while break skips the condition. Body-local bindings are unavailable in until.
 
 Functions must return a compatible value on every normal path. A constant-true
-while loop with no reachable break has no normal fallthrough. Statements after
+while loop or constant-false repeat loop with no reachable break has no normal fallthrough. Statements after
 unconditional return/break/continue or exhaustive terminating branches are
 diagnosed at the unreachable statement. A procedure/program may return without
 a value. Emission uses typed locals and branch labels with a shared return point.
@@ -73,7 +75,7 @@ from C#, and the SDK builds the checked-in Mandelbrot program and checks all
 1,920 output characters against an independent System.Numerics.Complex calculation.
 
 [Global values](global-values.md) and [named nested routines](nested-routines.md)
-are implemented. Repeat loops remain later work. [XML documentation](xml-documentation.md) is
+and [typed/repeat loops](loops.md) are implemented. [XML documentation](xml-documentation.md) is
 implemented. [Multiple FPAS sources](multiple-sources.md)
 [CLR objects, nullable types, and exceptions](clr-objects-and-resources.md), and
 [arrays, collections, and enumeration](arrays-and-collections.md), and

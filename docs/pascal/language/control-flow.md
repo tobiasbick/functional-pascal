@@ -44,7 +44,13 @@ repeat
 until Done;
 ```
 
-Counting loops have primitive integral or integral-subrange variables and inclusive
+Repeat executes its body at least once, then evaluates a bool condition: false
+repeats and true exits. Each iteration has a body-local scope; those declarations
+are unavailable in the until condition and after the loop. The condition runs
+after body cleanup. Continue reaches this condition after cleanup; break exits
+without evaluating it. Return/raise and failed cleanup also skip the condition.
+
+Counting loops have primitive integral (including char and native integers) or integral-subrange variables and inclusive
 bounds. For a subrange, endpoints must already have that type or use explicit
 checked construction. Increment/decrement stays within its bounds and stops
 before stepping beyond the final value. Distinct scalars are not loop counters.

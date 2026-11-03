@@ -91,17 +91,8 @@ internal sealed partial class Binder
             case CaseStatementSyntax match: return BindCaseStatement(match);
             case IfSyntax conditional:
                 return BindIf(conditional);
-            case WhileSyntax loop:
-                InvalidateAssigned(loop.Body);
-                var incoming = nonNull.ToHashSet();
-                var condition = Condition(loop.Condition);
-                SetFacts(Refine(loop.Condition, true, incoming));
-                loopDepth++;
-                BoundBlock body;
-                try { body = BindBlock(loop.Body); }
-                finally { loopDepth--; }
-                SetFacts(FlowAnalysis.Of(body).HasFlag(ExitFlow.Break) ? incoming : Refine(loop.Condition, false, incoming));
-                return new BoundWhile(condition, body);
+            case WhileSyntax loop: return BindWhile(loop);
+            case RepeatSyntax loop: return BindRepeat(loop);
             case TrySyntax guarded:
                 return BindTry(guarded);
             case RaiseSyntax raised:
@@ -126,28 +117,4 @@ internal sealed partial class Binder
         }
     }
 
-    private BoundFor BindFor(ForSyntax loop)
-    {
-        if (BindType(loop.Type) != TypeSymbol.Int32)
-            throw source.Error("FP3002", "Counting loops currently require an int counter.", loop.Type.Position);
-        var lower = Convert(BindExpression(loop.Lower), TypeSymbol.Int32, loop.Lower.Position);
-        var upper = Convert(BindExpression(loop.Upper), TypeSymbol.Int32, loop.Upper.Position);
-        InvalidateAssigned(loop.Body);
-        var incoming = nonNull.ToHashSet();
-        scopes.Push(new(StringComparer.Ordinal));
-        loopDepth++;
-        try
-        {
-            var counter = Allocate(loop.Name.Text, TypeSymbol.Int32);
-            Declare(counter, loop.Name.Position);
-            var limit = Allocate("<ForLimit>", TypeSymbol.Int32);
-            return new(counter, limit, lower, upper, loop.Descending, BindBlock(loop.Body, newScope: false));
-        }
-        finally
-        {
-            loopDepth--;
-            foreach (var local in scopes.Pop().Values) nonNull.Remove(local);
-            SetFacts(incoming);
-        }
-    }
 }

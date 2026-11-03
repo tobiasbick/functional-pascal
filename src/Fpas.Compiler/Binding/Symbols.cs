@@ -102,8 +102,9 @@ internal sealed record BoundBlock(IReadOnlyList<BoundStatement> Statements, IRea
 internal sealed record BoundIfArm(BoundExpression Condition, BoundBlock Body);
 internal sealed record BoundIf(IReadOnlyList<BoundIfArm> Arms, BoundBlock Else) : BoundStatement;
 internal sealed record BoundWhile(BoundExpression Condition, BoundBlock Body) : BoundStatement;
+internal sealed record BoundRepeat(BoundExpression Condition, BoundBlock Body, SourceLocation ConditionLocation) : BoundStatement;
 internal sealed record BoundFor(LocalSymbol Counter, LocalSymbol Limit, BoundExpression Lower, BoundExpression Upper,
-    bool Descending, BoundBlock Body) : BoundStatement;
+    BoundExpression Test, BoundExpression AtLimit, BoundExpression Advance, BoundBlock Body) : BoundStatement;
 internal sealed record BoundLoopExit(bool IsBreak) : BoundStatement;
 internal abstract record BoundExpression(TypeSymbol Type);
 internal sealed record BoundString(string Value) : BoundExpression(TypeSymbol.String);

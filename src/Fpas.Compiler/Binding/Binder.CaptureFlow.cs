@@ -33,7 +33,7 @@ internal sealed partial class Binder
         BlockSyntax block => block.Statements,
         CaseStatementSyntax match => match.Arms.SelectMany(arm => arm.Statements ?? []),
         IfSyntax branch => branch.Arms.SelectMany(arm => arm.Statements).Concat(branch.Else),
-        WhileSyntax loop => loop.Body, ForSyntax loop => loop.Body, ForEachSyntax loop => loop.Body,
+        WhileSyntax loop => loop.Body, RepeatSyntax loop => loop.Body, ForSyntax loop => loop.Body, ForEachSyntax loop => loop.Body,
         TrySyntax guarded => guarded.Body.Concat(guarded.Catches.SelectMany(handler => handler.Body)).Concat(guarded.Finally ?? []),
         _ => []
     };
@@ -48,7 +48,7 @@ internal sealed partial class Binder
         ReturnSyntax { Expression: { } expression } => [expression],
         RaiseSyntax { Exception: { } expression } => [expression],
         IfSyntax branch => branch.Arms.Select(arm => arm.Condition),
-        WhileSyntax loop => [loop.Condition], ForSyntax loop => [loop.Lower, loop.Upper], ForEachSyntax loop => [loop.Source],
+        WhileSyntax loop => [loop.Condition], RepeatSyntax loop => [loop.Condition], ForSyntax loop => [loop.Lower, loop.Upper], ForEachSyntax loop => [loop.Source],
         TrySyntax guarded => guarded.Catches.Where(handler => handler.Filter is not null).Select(handler => handler.Filter!),
         _ => []
     };
@@ -62,6 +62,7 @@ internal sealed partial class Binder
         CallSyntax call => new[] { call.Target }.Concat(call.Arguments), MemberSyntax member => [member.Receiver],
         GenericNameSyntax generic => [generic.Name], IndexSyntax index => new[] { index.Receiver }.Concat(index.Indices),
         NamedArgumentSyntax named => [named.Value],
+        ArgumentModeSyntax argument => [argument.Value], AwaitSyntax awaited => [awaited.Operand],
         WithSyntax updated => new[] { updated.Receiver }.Concat(updated.Updates.Select(update => update.Value)),
         NewSyntax created => created.Arguments, NewArraySyntax array => array.Lengths, ArrayLiteralSyntax array => array.Elements,
         ConditionalSyntax branch => branch.Arms.SelectMany(arm => new[] { arm.Condition, arm.Value }).Append(branch.Else),

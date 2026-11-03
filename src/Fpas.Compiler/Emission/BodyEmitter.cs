@@ -127,6 +127,16 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
                 il.MarkLabel(end);
                 loops.Pop();
                 break;
+            case BoundRepeat loop:
+                var repeat = il.DefineLabel();
+                var until = il.DefineLabel();
+                var finished = il.DefineLabel();
+                loops.Push((finished, until, protectedDepth));
+                il.MarkLabel(repeat); EmitStatement(loop.Body);
+                il.MarkLabel(until); DebugPoint(loop.ConditionLocation); Evaluate(loop.Condition); DebugPoint(null);
+                il.Branch(ILOpCode.Brfalse, repeat);
+                il.MarkLabel(finished); loops.Pop();
+                break;
             case BoundFor loop:
                 EmitFor(loop);
                 break;
@@ -169,19 +179,15 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
         il.StoreLocal(loop.Counter.Slot);
         Evaluate(loop.Upper);
         il.StoreLocal(loop.Limit.Slot);
-        il.LoadLocal(loop.Counter.Slot);
-        il.LoadLocal(loop.Limit.Slot);
-        il.Branch(loop.Descending ? ILOpCode.Blt : ILOpCode.Bgt, end);
+        Evaluate(loop.Test);
+        il.Branch(ILOpCode.Brfalse, end);
         loops.Push((end, step, protectedDepth));
         il.MarkLabel(body);
         EmitStatement(loop.Body);
         il.MarkLabel(step);
-        il.LoadLocal(loop.Counter.Slot);
-        il.LoadLocal(loop.Limit.Slot);
-        il.Branch(ILOpCode.Beq, end);
-        il.LoadLocal(loop.Counter.Slot);
-        il.LoadConstantI4(1);
-        il.OpCode(loop.Descending ? ILOpCode.Sub_ovf : ILOpCode.Add_ovf);
+        Evaluate(loop.AtLimit);
+        il.Branch(ILOpCode.Brtrue, end);
+        Evaluate(loop.Advance);
         il.StoreLocal(loop.Counter.Slot);
         il.Branch(ILOpCode.Br, body);
         il.MarkLabel(end);

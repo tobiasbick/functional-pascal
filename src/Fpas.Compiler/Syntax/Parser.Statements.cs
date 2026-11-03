@@ -73,6 +73,13 @@ internal sealed partial class Parser
         }
         if (At("for"))
             return ReadFor();
+        if (At("repeat"))
+        {
+            position++;
+            var body = ReadStatements("until");
+            var until = Current; Expect("until");
+            return new RepeatSyntax(start, until, body, ReadExpression());
+        }
         if (At("break") || At("continue"))
         {
             var isBreak = At("break");

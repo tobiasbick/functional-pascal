@@ -32,6 +32,7 @@ internal sealed record BlockSyntax(int Start, IReadOnlyList<StatementSyntax> Sta
 internal sealed record IfArmSyntax(ExpressionSyntax Condition, IReadOnlyList<StatementSyntax> Statements);
 internal sealed record IfSyntax(int Start, IReadOnlyList<IfArmSyntax> Arms, IReadOnlyList<StatementSyntax> Else) : StatementSyntax(Start);
 internal sealed record WhileSyntax(int Start, ExpressionSyntax Condition, IReadOnlyList<StatementSyntax> Body) : StatementSyntax(Start);
+internal sealed record RepeatSyntax(int Start, Token Until, IReadOnlyList<StatementSyntax> Body, ExpressionSyntax Condition) : StatementSyntax(Start);
 internal sealed record ForSyntax(int Start, Token Name, TypeSyntax Type, ExpressionSyntax Lower, ExpressionSyntax Upper,
     bool Descending, IReadOnlyList<StatementSyntax> Body) : StatementSyntax(Start);
 internal sealed record LoopExitSyntax(int Start, bool IsBreak) : StatementSyntax(Start);

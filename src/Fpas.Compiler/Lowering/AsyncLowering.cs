@@ -99,6 +99,13 @@ internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatal
                 plan.Blocks[conditionEntry].Exit = new AsyncGoto(condition);
                 return conditionEntry;
             case BoundFor loop: return For(loop, next, context);
+            case BoundRepeat loop:
+                var repeatCondition = Block(context, new AsyncGoto(-1));
+                var repeatBody = Statement(loop.Body, repeatCondition, context with { Break = next, Continue = repeatCondition });
+                var until = Expression(loop.Condition, value => Block(context, new AsyncBranch(value, next, repeatBody)), context);
+                plan.Blocks[repeatCondition].Exit = new AsyncGoto(until);
+                plan.Blocks[repeatCondition].Location = loop.ConditionLocation;
+                return repeatBody;
             case BoundTry guarded: return Try(guarded, next, context);
             case BoundUsing resource:
                 var cleanup = resource.IsAsync ? AsyncDispose(resource, context) : new BoundBlock([new BoundDispose(resource)]);
@@ -111,13 +118,12 @@ internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatal
 
     private int For(BoundFor loop, int next, Context context)
     {
-        var counter = new BoundLocal(loop.Counter); var limit = new BoundLocal(loop.Limit);
+        var counter = new BoundLocal(loop.Counter);
         var head = Block(context, new AsyncGoto(-1));
-        var increment = Block(context, new AsyncGoto(head), new BoundAssignment(counter,
-            new BoundBinary(counter, loop.Descending ? "-" : "+", new BoundInteger(1), TypeSymbol.Int32, true)));
-        var step = Block(context, new AsyncBranch(new BoundBinary(counter, "=", limit, TypeSymbol.Boolean, false), next, increment));
+        var increment = Block(context, new AsyncGoto(head), new BoundAssignment(counter, loop.Advance));
+        var step = Block(context, new AsyncBranch(loop.AtLimit, next, increment));
         var body = Statement(loop.Body, step, context with { Break = next, Continue = step });
-        plan.Blocks[head].Exit = new AsyncBranch(new BoundBinary(counter, loop.Descending ? ">=" : "<=", limit, TypeSymbol.Boolean, false), body, next);
+        plan.Blocks[head].Exit = new AsyncBranch(loop.Test, body, next);
         return Expression(loop.Lower, lower => Block(context, new AsyncGoto(Expression(loop.Upper,
             upper => Block(context, new AsyncGoto(head), new BoundBinding(loop.Limit, upper)), context)), new BoundBinding(loop.Counter, lower)), context);
     }

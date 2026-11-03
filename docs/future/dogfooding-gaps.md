@@ -29,6 +29,9 @@ and libraries. These concrete limits currently require host tools:
 - [Named nested routines](../implementation/nested-routines.md) now support lexical
   helpers, recursive algorithms, overloads/generics, managed parameters, contracts,
   and async calls. Initialize captured bindings before calls/delegate conversion.
+- [Typed loops](../implementation/loops.md) now support repeat/until and all
+  primitive integral/subrange counters, including native widths, extreme
+  endpoints, per-iteration captures, cleanup, and asynchronous suspension.
 - [Primitive numbers and scalar domains](../implementation/scalar-types.md) now
   support decimal/unsigned/native values, transparent aliases, actual CLR enums,
   distinct identities, and checked integral ranges. Numeric maintenance helpers

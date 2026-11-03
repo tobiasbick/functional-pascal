@@ -79,6 +79,7 @@ contracts, type/method generic slots inside generic records, actual suspension,
 and calls from another FPAS assembly. Metadata tests inspect generic ownership,
 PDB locations, private visibility, documentation, and deterministic output.
 
-Repeat loops, authored interfaces/events, expression trees, arbitrary attributes,
+[Typed/repeat loops](loops.md) are implemented.
+Authored interfaces/events, expression trees, arbitrary attributes,
 fully general nested generic type paths, lifted numeric nullable arithmetic,
 and LSP/query tooling remain outside this milestone.

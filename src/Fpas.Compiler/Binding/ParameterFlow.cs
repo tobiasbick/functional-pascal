@@ -76,6 +76,7 @@ internal sealed class ParameterFlow(SourceText source, int position)
             case BoundFor loop:
                 Expression(loop.Lower, state); Expression(loop.Upper, state);
                 return Loop(loop.Body, state);
+            case BoundRepeat loop: return Repeat(loop, state);
             case BoundUsing resource:
                 Expression(resource.Initializer, state);
                 return Statement(resource.Body, state);
@@ -108,6 +109,22 @@ internal sealed class ParameterFlow(SourceText source, int position)
         paths.Remove(ExitFlow.Next); paths.Remove(ExitFlow.Continue);
         if (paths.Remove(ExitFlow.Break, out var stopped)) paths.AddPath(ExitFlow.Next, stopped);
         if (!forever) paths.AddPath(ExitFlow.Next, state);
+        return paths;
+    }
+
+    private Paths Repeat(BoundRepeat loop, HashSet<ParameterSymbol> state)
+    {
+        var paths = Statement(loop.Body, state);
+        HashSet<ParameterSymbol>? condition = null;
+        foreach (var exit in new[] { ExitFlow.Next, ExitFlow.Continue })
+            if (paths.Remove(exit, out var arrived))
+                if (condition is null) condition = arrived; else condition.IntersectWith(arrived);
+        if (paths.Remove(ExitFlow.Break, out var stopped)) paths.AddPath(ExitFlow.Next, stopped);
+        if (condition is not null)
+        {
+            Expression(loop.Condition, condition);
+            if (loop.Condition is not BoundBoolean { Value: false }) paths.AddPath(ExitFlow.Next, condition);
+        }
         return paths;
     }
 

@@ -69,7 +69,7 @@ The program prints `Hello from FPAS`. See the checked-in
   Void calls may be statements; returned values must be consumed.
 - Arithmetic, numeric casts, comparisons, Boolean/bitwise operators, string
   concatenation/equality, lexical blocks, assignments, if statements/expressions,
-  while loops, int counting loops, break/continue, and discard. See the
+  while/repeat loops, integral/subrange counting loops, break/continue, and discard. See the
   [expression/control-flow milestone](expressions-and-control-flow.md) for rules
   and verification.
 - Nullable validation/coalescing, try/catch/finally/raise and filters, and blockless
@@ -78,8 +78,9 @@ The program prints `Hello from FPAS`. See the checked-in
 - Duplicate bindings/imports, unknown names, invalid type assignments, missing
   annotations, unsupported calls, and lexical/syntactic errors are diagnosed.
 
-The complete language remains specified in the topic documents. Repeat loops,
-and broader CLR signature forms are later steps.
+The complete language remains specified in the topic documents. Broader CLR
+signature forms remain later steps. [Typed loops](loops.md) now include repeat
+and all specified integral/subrange counters.
 [Arrays, args, closed generic CLR types, indexers, and enumeration](arrays-and-collections.md)
 are implemented, as are [callable values, closures, and explicit generic CLR calls](functions-and-closures.md)
 and [nongeneric records, defaults, methods, equality, and with updates](records.md).

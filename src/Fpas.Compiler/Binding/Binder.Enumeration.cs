@@ -29,7 +29,7 @@ internal sealed partial class Binder
                 BoundExpression current = value.Type.Kind == TypeKind.Array ? new BoundArrayIndex(cached, [counter]) :
                     new BoundProperty(references.Indexer(TypeSymbol.String, [TypeSymbol.Int32], false, source, syntax.Position), cached, [counter]);
                 var body = BindIteration(item, Convert(current, type, syntax.Position), syntax.Body);
-                loop = new BoundFor(index, Allocate("<Limit>", TypeSymbol.Int32), new BoundInteger(0),
+                loop = CountingLoop(index, Allocate("<Limit>", TypeSymbol.Int32), new BoundInteger(0),
                     new BoundBinary(length, "-", new BoundInteger(1), TypeSymbol.Int32, true), false, body);
             }
             else loop = BindEnumerator(syntax, item, cached);

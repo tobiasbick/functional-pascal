@@ -39,6 +39,7 @@ internal sealed partial class Binder
     {
         switch (statement)
         {
+            case SubscriptionSyntax subscription: return BindSubscription(subscription);
             case BindingSyntax binding:
                 var type = BindType(binding.Type);
                 var original = BindExpression(binding.Initializer, expected: type);

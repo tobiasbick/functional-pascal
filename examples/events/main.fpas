@@ -1,0 +1,20 @@
+program CollectionEvents;
+
+uses System as Sys, System.Console as Console, System.ComponentModel as Component;
+
+begin
+  const Values: Component.BindingList<int> := new Component.BindingList<int>();
+  var Changes: int := 0;
+  const Handler: Component.ListChangedEventHandler :=
+    procedure(Sender: object?; Change: Component.ListChangedEventArgs) begin
+      Changes := Changes + 1;
+      Console.WriteLine(Change.ListChangedType);
+    end procedure;
+
+  subscribe Values.ListChanged with Handler;
+  Values.Add(42);
+  unsubscribe Values.ListChanged with Handler;
+  Values.Add(7);
+  Console.WriteLine(Changes);
+end;
+end program;

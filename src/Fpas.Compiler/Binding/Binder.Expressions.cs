@@ -13,6 +13,11 @@ internal sealed partial class Binder
         switch (expression)
         {
             case AwaitSyntax awaited: return BindAwait(awaited);
+            case TypeOfSyntax typeOf:
+                var operandType = BindType(typeOf.Type);
+                var typeClass = references.Symbol(references.Required("System.Type"));
+                var handle = references.Symbol(references.Required("System.RuntimeTypeHandle"));
+                return new BoundTypeOf(operandType, references.FindMethod(typeClass, "GetTypeFromHandle", [handle], typeOf.Position, source));
             case ArgumentModeSyntax argument: return BindAddress(argument, check);
             case LiteralSyntax literal:
                 return BindLiteral(literal);

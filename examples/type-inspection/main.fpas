@@ -1,0 +1,23 @@
+program TypeInspection;
+
+uses System as Sys, System.Console as Console;
+
+type Player = record
+  Name: string;
+  Score: int;
+end record;
+
+function TypeName<T>(): string;
+begin
+  return typeof(T).Name;
+end function;
+
+begin
+  const NumberType: Sys.Type := typeof(int);
+  Console.WriteLine(NumberType.FullName);
+  Console.WriteLine(typeof(int?).IsValueType);
+  Console.WriteLine(typeof(Player).IsClass);
+  Console.WriteLine(typeof(int[,]).GetArrayRank());
+  Console.WriteLine(TypeName<string>());
+end;
+end program;

@@ -181,4 +181,6 @@ Reject missing/mismatched result annotations and disallowed expressions.
 
 The [synchronous implementation](../../implementation/contracts-and-parameters.md)
 covers free routines, record methods, generic routines, and block lambdas.
-Named nested routines and async contracts are implemented. Authored interfaces remain pending.
+Named nested routines and async contracts are implemented. Authored interfaces
+are a [deferred extension](../../future/language-gaps.md#deferred-declare-fpas-interfaces),
+outside the original language baseline.

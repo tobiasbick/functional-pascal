@@ -7,6 +7,7 @@ required of that compiler; implemented subsets are documented separately below.
 | Area | Entry point |
 | --- | --- |
 | Design principles and scope | [Language overview](pascal/README.md) |
+| Remaining baseline work and deferred interface proposal | [Language gaps](future/language-gaps.md) |
 | Implemented compiler subset and first executable program | [First-program milestone](implementation/first-program.md) |
 | Implemented arithmetic, conversions, branches, loops, and Mandelbrot | [Expressions and control flow](implementation/expressions-and-control-flow.md) |
 | Multiple source files, unit imports, and visibility | [Multiple sources and units](implementation/multiple-sources.md) |
@@ -25,6 +26,8 @@ required of that compiler; implemented subsets are documented separately below.
 | Global const/var fields, shared unit state, and CLR type initialization | [Global values](implementation/global-values.md) |
 | Named lexical routines, recursion, captures, generics, and escaping delegates | [Nested routines](implementation/nested-routines.md) |
 | Repeat/until and integral/subrange counting, including cleanup and async loops | [Typed loops](implementation/loops.md) |
+| Imported CLR event subscription/removal with delegate, dispatch, and storage checks | [CLR events](implementation/events.md) |
+| typeof(T), CLR type identity, and generic type tokens | [Runtime type expressions](implementation/typeof.md) |
 | Implemented local SDK, `.fpasproj` builds, and mixed C#/FPAS projects | [MSBuild milestone](implementation/msbuild.md) |
 | C# projects, xUnit tests, examples, and applications | [Repository layout plan](architecture/project-layout.md) |
 | Lexical rules, bindings, and operators | [Basics](pascal/language/basics.md) |

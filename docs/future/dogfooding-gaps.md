@@ -1,5 +1,9 @@
 # Dogfooding gaps
 
+For the completion order of the agreed language baseline and the deferred
+source-interface proposal, see [language gaps](language-gaps.md). This document
+records practical limits when using the implemented compiler for maintenance.
+
 The [compiler subset](../implementation/first-program.md) and
 [MSBuild milestone](../implementation/msbuild.md) execute small FPAS programs
 and libraries. These concrete limits currently require host tools:
@@ -17,6 +21,12 @@ and libraries. These concrete limits currently require host tools:
   support direct CLR calls and local validation. [Async functions and programs](../implementation/overloads-interfaces-debugging-and-async.md)
   now await Task/ValueTask APIs and asynchronous disposal directly. Source
   overloads and record implementations of CLR interfaces are also available.
+- [Imported CLR events](../implementation/events.md) now support typed handlers,
+  subscription/removal, and ordinary .NET accessor calls, including async code.
+  Retain the delegate for later removal and use explicit cleanup when needed.
+- [Runtime type expressions](../implementation/typeof.md) now provide typeof(T)
+  for supported concrete/generic types, including inside closures and async code.
+  Helpers can pass actual Type objects to .NET APIs without constructing values.
 - [Records](../implementation/records.md) now support immutable data
   models, defaults, methods, and copy updates. [Unions and case matching](../implementation/unions-and-matching.md)
   now support domain outcomes and exhaustive inspection.

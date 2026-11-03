@@ -51,6 +51,7 @@ that engineering choice is separate from source syntax.
 | `ref` / `out` / `in` parameter | Managed byref signature with appropriate parameter metadata/modifiers |
 | Nullable value | Nullable<T> |
 | Nullable reference | Reference type with nullable metadata annotations |
+| typeof(T) | Type token loaded with ldtoken and resolved by System.Type.GetTypeFromHandle |
 | Async routine | Task-returning method and compiler-generated async state machine |
 | Using / exception handling | CLR protected regions, handlers, filters, and cleanup |
 | Requires / ensures | Callee entry/exit Boolean checks and ordinary CLR exceptions |
@@ -272,6 +273,18 @@ It must not contain a second GC, bytecode interpreter, scheduler, universal boxe
 FPAS Value type,
 HTTP client wrapper catalog, or replacements for .NET collections. Imported API
 calls stay statically bound to real referenced types.
+
+## Event accessors
+
+subscribe/unsubscribe selects the actual Event/MethodSemantics add/remove handle
+from supplied metadata, checks that accessor, and emits an ordinary method call.
+Receiver storage and handler evaluate once in written order before invocation.
+Preserve static/virtual/interface dispatch, generic substitutions, nullable
+annotations, and writable struct/constrained receiver storage. Existing async
+lowering preserves reference receivers/handlers across suspension and rejects
+managed receiver references live across await. No delegate field read, event
+raising operation, reflection dispatch, or automatic removal is generated.
+See the [implemented event milestone](../implementation/events.md).
 
 ## Resource lowering
 

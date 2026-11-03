@@ -24,6 +24,8 @@
     <None Include="../../examples/shared-state/*.fpas;../../examples/shared-state/*.fpasproj" Link="Fixtures/shared-state/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/local-functions/*.fpas;../../examples/local-functions/*.fpasproj" Link="Fixtures/local-functions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/loops/*.fpas;../../examples/loops/*.fpasproj" Link="Fixtures/loops/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/events/*.fpas;../../examples/events/*.fpasproj" Link="Fixtures/events/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/type-inspection/*.fpas;../../examples/type-inspection/*.fpasproj" Link="Fixtures/type-inspection/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/msbuild/**/*" Link="Fixtures/msbuild/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />

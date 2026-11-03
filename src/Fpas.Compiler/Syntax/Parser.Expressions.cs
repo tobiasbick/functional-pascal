@@ -54,11 +54,17 @@ internal sealed partial class Parser
         return ReadPostfix();
     }
 
-    private ExpressionSyntax ReadPostfix()
+    private ExpressionSyntax ReadPostfix(bool allowWith = true)
     {
         ExpressionSyntax expression;
         var start = Current.Position;
         if (At("async") || At("function") || At("procedure")) expression = ReadLambda();
+        else if (At("typeof"))
+        {
+            position++; Expect("(");
+            var type = ReadType(); Expect(")");
+            expression = new TypeOfSyntax(start, type);
+        }
         else if (At("new"))
         {
             position++;
@@ -78,12 +84,12 @@ internal sealed partial class Parser
         }
         else if (Current.Kind == TokenKind.Identifier) expression = new NameExpressionSyntax(tokens[position++]);
         else throw source.Error("FP2003", $"Expected an expression; '{Current.Text}' is not supported here.", Current.Position, Current.Length);
-        return ReadSuffix(expression);
+        return ReadSuffix(expression, allowWith);
     }
 
-    private ExpressionSyntax ReadSuffix(ExpressionSyntax expression)
+    private ExpressionSyntax ReadSuffix(ExpressionSyntax expression, bool allowWith = true)
     {
-        while (At(".") || At("(") || At("[") || At("<") || At("with"))
+        while (At(".") || At("(") || At("[") || At("<") || allowWith && At("with"))
         {
             if (At("with")) expression = ReadWith(expression);
             else if (At("."))

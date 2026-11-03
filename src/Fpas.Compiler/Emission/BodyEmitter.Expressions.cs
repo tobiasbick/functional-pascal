@@ -10,6 +10,10 @@ internal sealed partial class BodyEmitter
     {
         switch (expression)
         {
+            case BoundTypeOf typeOf:
+                il.OpCode(ILOpCode.Ldtoken); il.Token(typeHandle(typeOf.Operand));
+                il.Call(reference(typeOf.Resolve));
+                break;
             case BoundClosureSelf:
                 il.LoadArgument(0);
                 if (asyncMachine is not null) { il.OpCode(ILOpCode.Ldfld); il.Token(fieldReference(catalog.MachineField(asyncMachine, "<>4__this", asyncMachine.HostType!))); }

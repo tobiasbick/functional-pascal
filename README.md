@@ -5,8 +5,8 @@ Runtime directly through CIL and assembly metadata.
 
 This branch contains a **language design and an initial C# compiler**. The current
 subset compiles programs and units with typed bindings, numeric/Boolean expressions,
-named routines, control flow, CLR objects, nullable values, exceptions, arrays, and generic .NET collections directly to CIL. Most of the language baseline remains
-unimplemented. See the [compiler subset](docs/implementation/first-program.md)
+named routines, control flow, CLR objects, nullable values, exceptions, arrays, and generic .NET collections directly to CIL. Remaining baseline work is tracked
+in [language gaps](docs/future/language-gaps.md). See the [compiler subset](docs/implementation/first-program.md)
 and [implemented MSBuild integration](docs/implementation/msbuild.md) for the
 exact supported behavior.
 
@@ -28,6 +28,14 @@ counter as an ordinary CLR delegate.
 [Typed loops](docs/implementation/loops.md) support repeat/until and counting
 with all integral types and subranges, including guarded extreme endpoints.
 The [loops example](examples/loops/README.md) also runs these across await.
+
+[CLR events](docs/implementation/events.md) support subscribe/unsubscribe with
+ordinary .NET delegates and sync/async cleanup. The
+[events example](examples/events/README.md) listens to a real collection change.
+
+[Runtime type expressions](docs/implementation/typeof.md) provide typeof(T)
+without constructing instances. The
+[type-inspection example](examples/type-inspection/README.md) uses CLR type identity.
 
 The [Mandelbrot example](examples/mandelbrot/README.md) is executable through its
 `.fpasproj`; its raster output is verified by the integration tests. The

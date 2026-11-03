@@ -129,8 +129,9 @@ is built and executed through its real project.
 [Generic records and unions](generic-types.md) now support typed data and methods
 with both enclosing type parameters and their own method parameters.
 [Type argument inference](type-argument-inference.md) now supports source/CLR
-calls and union construction. Authored interfaces and LSP/query tooling
-remain pending. [Contracts and CLR parameters](contracts-and-parameters.md) cover
+calls and union construction. Authored interfaces are a
+[deferred extension](../future/language-gaps.md#deferred-declare-fpas-interfaces);
+LSP/query tooling is outside the baseline. [Contracts and CLR parameters](contracts-and-parameters.md) cover
 synchronous contracts and ref/out/in/params/optional arguments.
 [Primitive numbers and scalar domains](scalar-types.md) are implemented.
 [XML documentation](xml-documentation.md) is implemented.

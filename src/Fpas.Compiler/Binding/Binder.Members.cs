@@ -21,6 +21,17 @@ internal sealed partial class Binder
         }
         var parts = NameParts(expression);
         if (parts is not null && (HasValue(parts[0]))) return null;
+        if (parts is not null && expression is MemberSyntax member)
+        {
+            var prefix = StaticTarget(member.Receiver, allowOpenGeneric: true);
+            if (prefix is null) return null;
+            if (prefix is SourceImport imported &&
+                (imported.Unit.Globals.ContainsKey(member.Name.Text) || imported.Unit.Routines.ContainsKey(member.Name.Text))) return null;
+            var owner = ImportedValueType(prefix, expression.Position, allowOpen: true);
+            if (owner != TypeSymbol.Unsupported &&
+                (references.Property(owner, member.Name.Text, true, recordContext) is not null || references.Field(owner, member.Name.Text, true) is not null ||
+                 references.Event(owner, member.Name.Text, source, member.Name.Position) is not null)) return null;
+        }
         return parts is not null && (imports.ContainsKey(parts[0]) || unit.HasType(parts[0]) || TypeFacts.Primitive(parts[0]) != TypeSymbol.Unsupported)
             ? catalog.ResolvePath(parts, unit, references, expression.Position, arity, allowOpenGeneric) : null;
     }
@@ -53,6 +64,7 @@ internal sealed partial class Binder
 
     private BoundExpression BindClrMember(TypeSymbol owner, BoundExpression? receiver, MemberSyntax member, bool writing = false, TypeSymbol? expected = null)
     {
+        RejectEventValue(owner, member.Name.Text, member.Name.Position);
         CheckRecordMember(owner, member.Name.Text, writing, member.Position);
         if (owner.Kind == TypeKind.Array && member.Name.Text == "Length" && !writing) return new BoundArrayLength(receiver!);
         if (references.Property(owner, member.Name.Text, receiver is null, recordContext) is { } property)

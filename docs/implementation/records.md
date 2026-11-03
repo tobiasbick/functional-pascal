@@ -113,6 +113,7 @@ copy updates, and closures with both type and method parameters.
 [Source overloads, record CLR interfaces, async, and portable PDBs](overloads-interfaces-debugging-and-async.md)
 are implemented, as is [XML documentation](xml-documentation.md).
 [Primitive numbers and scalar domains](scalar-types.md) are implemented.
-[Global fields](global-values.md) are implemented. Authored interfaces remain pending. The broader
+[Global fields](global-values.md) are implemented. Authored interfaces are a
+[deferred extension](../future/language-gaps.md#deferred-declare-fpas-interfaces). The broader
 [record-members design example](../pascal/examples/record-members.md) includes
 several of those planned features and is not yet an executable compiler example.

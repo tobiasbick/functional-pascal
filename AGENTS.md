@@ -22,6 +22,8 @@ Read the [compiler subset](docs/implementation/first-program.md) and
 [global values](docs/implementation/global-values.md), plus
 [named nested routines](docs/implementation/nested-routines.md), plus
 [repeat/typed loops](docs/implementation/loops.md), plus
+[imported CLR events](docs/implementation/events.md), plus
+[runtime type expressions](docs/implementation/typeof.md), plus
 [implemented MSBuild integration](docs/implementation/msbuild.md) before claiming
 feature support. Use a stable .NET 10 SDK and separate test compilation from execution:
 
@@ -64,6 +66,10 @@ separate test compilation from execution when the runner supports it.
   rewritten, reorganized, or replaced.
 - Changes to FPAS syntax require the user's explicit approval before
   implementation.
+- Finish the agreed language/build baseline before adding extensions. Use the
+  [language gaps](docs/future/language-gaps.md) to distinguish missing baseline
+  work from deferred proposals. Source interface declarations are deferred until
+  the original plan is complete.
 - Fix errors when you encounter them. Do not dismiss errors as pre-existing.
 
 ## Before every commit

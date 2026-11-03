@@ -103,6 +103,8 @@ otherwise supported. There is no user-authored interface declaration syntax.
 
 ## Events
 
+Imported CLR event subscription/removal is [implemented](../../implementation/events.md).
+
 ```pascal
 const Handler: Timers.ElapsedEventHandler :=
   procedure(Sender: object?; Event: Timers.ElapsedEventArgs) begin

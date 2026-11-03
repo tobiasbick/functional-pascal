@@ -27,6 +27,7 @@ internal sealed record NestedRoutineSyntax(RoutineSyntax Routine) : StatementSyn
 internal sealed record BindingSyntax(Token Name, TypeSyntax Type, ExpressionSyntax Initializer, bool Mutable, DocumentationComment? Documentation = null) : StatementSyntax(Name.Position);
 internal sealed record AssignmentSyntax(ExpressionSyntax Target, ExpressionSyntax Value) : StatementSyntax(Target.Position);
 internal sealed record ExpressionStatementSyntax(ExpressionSyntax Expression, bool Discard = false) : StatementSyntax(Expression.Position);
+internal sealed record SubscriptionSyntax(int Start, ExpressionSyntax Event, ExpressionSyntax Handler, bool Subscribe) : StatementSyntax(Start);
 internal sealed record ReturnSyntax(int Start, ExpressionSyntax? Expression) : StatementSyntax(Start);
 internal sealed record BlockSyntax(int Start, IReadOnlyList<StatementSyntax> Statements) : StatementSyntax(Start);
 internal sealed record IfArmSyntax(ExpressionSyntax Condition, IReadOnlyList<StatementSyntax> Statements);
@@ -44,6 +45,7 @@ internal sealed record CallSyntax(ExpressionSyntax Target, IReadOnlyList<Express
 internal sealed record UnarySyntax(Token Operator, ExpressionSyntax Operand) : ExpressionSyntax(Operator.Position);
 internal sealed record BinarySyntax(ExpressionSyntax Left, Token Operator, ExpressionSyntax Right) : ExpressionSyntax(Operator.Position);
 internal sealed record CastSyntax(int Start, TypeSyntax Type, ExpressionSyntax Operand) : ExpressionSyntax(Start);
+internal sealed record TypeOfSyntax(int Start, TypeSyntax Type) : ExpressionSyntax(Start);
 internal sealed record UncheckedSyntax(int Start, ExpressionSyntax Operand) : ExpressionSyntax(Start);
 internal sealed record ConditionalArmSyntax(ExpressionSyntax Condition, ExpressionSyntax Value);
 internal sealed record ConditionalSyntax(int Start, IReadOnlyList<ConditionalArmSyntax> Arms, ExpressionSyntax Else) : ExpressionSyntax(Start);

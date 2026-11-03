@@ -102,6 +102,11 @@ are implemented with cross-assembly CLR contracts and valid default domain value
 implemented, including shared state across source units and CLR consumers.
 The compiler currently stops at the first diagnostic.
 
+[Imported CLR events](events.md) support subscribe/unsubscribe with typed handlers,
+ordinary accessor dispatch, and receiver/handler evaluation in written order.
+[Runtime type expressions](typeof.md) support typeof(T) with actual CLR type
+identity, including closed generics and in-scope generic parameters.
+
 ## Compiler and output
 
 Fpas.Compiler owns scanning, parsing, binding, reference metadata, and emission.
@@ -165,6 +170,7 @@ for invalid arguments.
 | FP3031 | Invalid alias, enum, distinct declaration, subrange bounds, or domain construction |
 | FP3032 | Invalid global name or public global exposing private types |
 | FP3033 | Nested routine environment created before captured bindings initialize |
+| FP3034 | Invalid or ambiguous event selection/access, or event used as a delegate value |
 | FP6001 | Documentation warning; severity follows the configured warning policy |
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
 

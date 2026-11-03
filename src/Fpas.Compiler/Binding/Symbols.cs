@@ -116,6 +116,7 @@ internal sealed record BoundParameter(ParameterSymbol Parameter, TypeSymbol? Flo
 internal sealed record BoundCall(ImportedMethod Method, IReadOnlyList<BoundExpression> Arguments, BoundExpression? Receiver = null, IReadOnlyList<ParameterSymbol>? WrittenParameters = null) : BoundExpression(Method.Result);
 internal sealed record BoundNew(TypeSymbol Result, ImportedMethod? Constructor, IReadOnlyList<BoundExpression> Arguments, IReadOnlyList<ParameterSymbol>? WrittenParameters = null) : BoundExpression(Result);
 internal sealed record BoundNull() : BoundExpression(TypeSymbol.Null);
+internal sealed record BoundTypeOf(TypeSymbol Operand, ImportedMethod Resolve) : BoundExpression(Resolve.Result.NonNullable);
 internal sealed record BoundField(ImportedField Field, BoundExpression? Receiver) : BoundExpression(Field.Type);
 internal sealed record BoundProperty(ImportedProperty Property, BoundExpression? Receiver, IReadOnlyList<BoundExpression>? Arguments = null) : BoundExpression(Property.Type);
 internal sealed record BoundCoalesce(BoundExpression Left, BoundExpression Right, TypeSymbol Result) : BoundExpression(Result);

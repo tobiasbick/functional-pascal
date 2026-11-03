@@ -45,6 +45,7 @@ internal sealed partial class Binder
         UsingSyntax resource => [resource.Binding.Initializer],
         AssignmentSyntax assignment => [assignment.Target, assignment.Value],
         ExpressionStatementSyntax expression => [expression.Expression],
+        SubscriptionSyntax subscription => [subscription.Event, subscription.Handler],
         ReturnSyntax { Expression: { } expression } => [expression],
         RaiseSyntax { Exception: { } expression } => [expression],
         IfSyntax branch => branch.Arms.Select(arm => arm.Condition),

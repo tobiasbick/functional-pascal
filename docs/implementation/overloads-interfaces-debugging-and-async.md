@@ -114,6 +114,6 @@ The same solution build and separate test execution run on Windows and Linux.
 [Primitive numbers and scalar domains](scalar-types.md) are implemented.
 [Global fields and initialization](global-values.md) are implemented.
 [Named nested routines](nested-routines.md) preserve generic and async behavior.
-Authored
-interfaces, events, arbitrary attributes, and IDE tooling
-remain outside these four steps.
+[Imported CLR events](events.md) are implemented. Arbitrary attributes remain
+baseline work. Authored interfaces/events and IDE tooling are outside the
+initial baseline; see [language gaps](../future/language-gaps.md).

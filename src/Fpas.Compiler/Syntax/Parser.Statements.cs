@@ -19,6 +19,13 @@ internal sealed partial class Parser
     {
         var start = Current.Position;
         var documentation = Current.Documentation;
+        if (At("subscribe") || At("unsubscribe"))
+        {
+            var subscribe = At("subscribe"); position++;
+            var reference = ReadPostfix(allowWith: false);
+            Expect("with");
+            return new SubscriptionSyntax(start, reference, ReadExpression(), subscribe);
+        }
         if (At("function") || At("procedure") || At("async")) return new NestedRoutineSyntax(ReadRoutine(false, nested: true));
         if (At("const") || At("var"))
         {

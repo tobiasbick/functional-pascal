@@ -150,6 +150,14 @@ application-defined union values into nullable values.
 Compiler-defined casts wrap/unwrap [distinct types and subranges](data-domains.md).
 Subrange bounds remain checked inside unchecked expressions.
 
+`typeof(T)` uses a statically resolved type, not a value expression. It produces
+a non-null Type without constructing an instance or running the operand type's
+static constructor/unit initializer. Transparent aliases identify their CLR target;
+nominal source types retain their emitted identity. Reference nullable annotations
+do not create a distinct runtime type, while nullable values retain Nullable<T>
+identity. Closed generic types and in-scope type parameters follow the existing
+type/constraint rules. See the [implemented typeof milestone](../../implementation/typeof.md).
+
 ## Keywords
 
 ```text

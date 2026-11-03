@@ -4,7 +4,7 @@ The compiler implements synchronous `requires` and `ensures` on free routines,
 record instance/static methods, generic routines, and block-bodied lambdas.
 The language rules are in [contracts](../pascal/language/contracts.md).
 [Named nested routines](nested-routines.md) support these checks and parameter modes.
-Authored interfaces remain pending.
+Authored interfaces are a [deferred extension](../future/language-gaps.md#deferred-declare-fpas-interfaces).
 [Async routines](overloads-interfaces-debugging-and-async.md) now check requires
 inside the state machine and ensures on the inner result after successful cleanup.
 

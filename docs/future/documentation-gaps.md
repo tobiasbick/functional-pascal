@@ -44,8 +44,6 @@ Historical timing reports and the Rust VM harness are not CLR documentation.
 Existing guides cover collections, text/regex, files/streams, and JSON. An async
 HTTP example exists under concurrency. Missing task-oriented guidance includes:
 
-- Process creation, arguments, environment, exit status, bounded output capture,
-  timeout/cancellation, and process/resource lifetime.
 - Environment access, date/time and duration handling, numeric utilities, and
   random values through supported .NET APIs.
 - HTTP request/response lifetime, cancellation, and supported stream/text APIs;

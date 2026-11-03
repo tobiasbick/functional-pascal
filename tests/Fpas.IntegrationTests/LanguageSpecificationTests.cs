@@ -91,6 +91,11 @@ public sealed class LanguageSpecificationTests
         {
             case "Events": Assert.All(lines.Where(line => line.Length != 0), line => Assert.Equal("Tick", line)); break;
             case "DownloadPage": Assert.Contains("502", result.Output); break;
+            case "CaptureVersion":
+                Assert.Equal(2, lines.Length);
+                Assert.Equal("0", lines[0]);
+                Assert.Matches(@"^\d+\.\d+\.\d+(?:[-+].+)?$", lines[1]);
+                break;
             case "Contracts": Assert.Equal(["5", "0"], lines[..2]); Assert.Contains("requires", result.Output); break;
             case "Ranges": Assert.Equal(["60", "1"], lines[..2]); Assert.Contains("range", result.Output, StringComparison.OrdinalIgnoreCase); break;
             case "Mandelbrot": Assert.Equal(24, lines.Length); Assert.All(lines, line => Assert.Equal(80, line.Length)); break;

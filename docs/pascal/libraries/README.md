@@ -9,6 +9,7 @@ the referenced package version determine which overloads are available.
 | Arrays, lists, dictionaries, and projections | [Collections](collections.md) |
 | Unicode, encodings, and regular expressions | [Text and regex](text-and-regex.md) |
 | Files, paths, streams, and disposal | [Files and streams](files-and-streams.md) |
+| Child processes, arguments, bounded capture, timeout, and cancellation | [Process execution](processes.md) |
 | Typed JSON and source attributes | [JSON serialization](json.md) |
 | HTTP, cancellation, and parallel coordination | [Async APIs](../language/concurrency/cancellation-and-coordination.md) |
 | Delegates, events, and interface adapters | [CLR interop](../interop/README.md) |

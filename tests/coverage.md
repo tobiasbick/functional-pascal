@@ -97,6 +97,10 @@ File examples run in isolated directories and cover success/missing-file cleanup
 The HTTP example uses a local rejecting proxy to exercise exception handling
 without external network access. Timer examples do not require exact tick counts.
 Domain and contract examples also exercise expected failures.
+The [process recipe](../docs/pascal/libraries/processes.md) compiles directly from
+Markdown. MsBuildTests.ProcessRecipe calls that exact unit from C# in Debug/Release,
+checking argument/environment/cwd isolation, stdin EOF, nonzero exit, bounded
+concurrent stdout/stderr capture, timeout/cancellation cleanup, and launch failure.
 
 AgentReferenceTests checks the compact reference's policy, complete/unique
 examples, local links, and exact o200k_base budgets using packaged vocabulary.

@@ -98,7 +98,8 @@ Domain and contract examples also exercise expected failures.
 AgentReferenceTests checks the compact reference's policy, complete/unique
 examples, local links, and exact o200k_base budgets using packaged vocabulary.
 HandbookTests checks topic hubs, related navigation, repository documentation
-links/anchors, explicit syntax fragments, and exact copied Markdown inputs.
+links/anchors (including .agents/.claude skills), explicit syntax fragments, and
+exact copied Markdown inputs.
 Deleted articles cannot remain as stale fixtures. See
 [example conventions](../docs/pascal/tools/documentation-examples.md).
 

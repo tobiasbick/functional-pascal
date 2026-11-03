@@ -36,7 +36,7 @@ ordinary test prerequisites.
 
 AgentReferenceTests checks policy, unique complete examples, local links, and
 exact o200k_base token budgets using test-only packaged vocabulary. HandbookTests
-checks navigation, repository documentation links/anchors, explicit fragments,
+checks navigation, repository documentation and hidden skill links/anchors, explicit fragments,
 and current copied inputs. See
 [documentation acceptance](coverage.md#documentation-acceptance) and
 [example conventions](../docs/pascal/tools/documentation-examples.md).

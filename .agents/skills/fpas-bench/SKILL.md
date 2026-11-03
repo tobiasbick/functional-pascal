@@ -1,70 +1,49 @@
 ---
 name: fpas-bench
-description: Measure FPAS runtime, compiler, and editor performance with cargo bench-fpas, compare baselines, and record settled results.
+description: Investigate CLR FPAS program, compiler, or SDK performance with supported .NET tools and controlled before/after observations.
 ---
 
-# FPAS benchmarks
+# FPAS CLR performance
 
-Measure with `cargo bench-fpas`. The [suite](../../../docs/bench/suite.toml)
-defines workloads; [benchmark documentation](../../../docs/bench/README.md)
-explains drivers and measurement boundaries. Use `cargo bench-fpas --help` for
-configured groups and `cargo bench-fpas native --help` for native drivers.
+Use the [profiling guide](../../../docs/pascal/tools/profiling.md),
+[debugging guide](../../../docs/pascal/tools/debugging.md), and
+[development workflow](../../../docs/build/development.md). The current toolchain
+has no repository benchmark command or curated CLR benchmark suite. Its full
+measurement workflow remains a [documentation gap](../../../docs/future/documentation-gaps.md#d1-reproducible-benchmarks).
+Do not invent commands, report schemas, or completed benchmark coverage.
 
-When diagnosing FPAS runtime cost, first profile the actual program with
-`fpas run <file-or-project> --profile .temp-data/<fresh-name>.json`, or
-`fpas debug ... --profile <fresh-path>` for a debug target. The
-[profile report](../../../docs/pascal/tools/profiler.md) identifies which costs
-need a controlled comparison. Use unprofiled benchmark runs for final timings.
+## Investigate the requested cost
 
-## Execution environment
+1. Identify whether the question concerns program execution, compilation, SDK
+   builds, startup, allocation/GC, or blocking work. Choose a bounded existing
+   workload with verified results. Use [fpas-authoring](../fpas-authoring/SKILL.md)
+   and [fpas-projects](../fpas-projects/SKILL.md) when source/project changes are
+   part of the authorized task.
+2. Inspect the actual generated program with supported .NET tooling before
+   writing samplers or variants. Determine which tools and options are installed;
+   the guide names dotnet-trace, dotnet-counters, and dotnet-dump as possible tools,
+   not bundled compiler commands.
+3. Build the measured configuration before collecting samples. For program
+   execution, keep compilation outside the timer. Treat startup and warmed JIT
+   execution as separate questions, and record the chosen boundary and warmup.
+4. Compare the same workload, arguments, build/runtime configuration, and result
+   checks. Use repeated unprofiled samples for timing comparisons; retain sample
+   counts and variation. Investigate noisy or conflicting results before making
+   performance claims. Keep correctness verification independent of timing.
 
-In a cloud environment, run correctness checks only. Do not collect timing
-baselines, compare elapsed times or record cloud results in benchmark history.
-Performance acceptance requires a controlled local host. If only cloud execution
-is available, state that timing acceptance is unverified and continue functional
-verification without creating benchmark reports.
+## Reports and environment
 
-## Before and after
+Store scratch sources, traces, samples, and comparisons under `.temp-data/`.
+Record relevant non-sensitive configuration and tool/runtime versions. Inspect
+reports for secrets, personal data, and machine identifiers before sharing them.
+Do not create committed benchmark history as part of a measurement run.
 
-1. Select workloads that exercise the proposed change. Save a baseline before
-   editing the measured implementation:
+Identify whether the run is local or cloud-hosted. Cloud results describe that
+environment and do not establish a controlled local baseline. When the user
+requests a cloud comparison, report its observations and limitations within that
+scope; do not substitute unrelated local measurements.
 
-   ```text
-   cargo bench-fpas save <label> --group <group>
-   ```
-
-   Omit `--group` for a full-suite baseline. Snapshots live under
-   `.temp-data/bench/`.
-2. Implement the authorized change and verify correctness according to
-   [CONTRIBUTING.md](../../../CONTRIBUTING.md). The harness builds the release CLI before
-   each suite command and obtains its executable path from Cargo.
-3. Compare using the same group selection, benchmark IDs, and workload arguments:
-
-   ```text
-   cargo bench-fpas compare <label> --group <group>
-   ```
-
-   Keep machine load and power settings comparable. Inspect every row; repeat
-   noisy measurements before drawing a conclusion. Save a fresh baseline when
-   the selected workloads change. For changes spanning groups, compare a
-   full-suite baseline.
-4. Record a settled measured improvement or an intentional baseline in
-   [history.md](../../../docs/bench/history.md):
-
-   ```text
-   cargo bench-fpas record "<short description>" --group <group>
-   ```
-
-   Report before/after measurements, meaningful regressions, and whether history
-   was updated. Include history with the performance change when committing is
-   requested. Measurements support claims only within their workload boundaries.
-
-## Add a workload when needed
-
-- Place FPAS benchmark sources under `examples/pascal/` by theme; use
-  [fpas-authoring](../fpas-authoring/SKILL.md) for source edits.
-- Register the workload in `docs/bench/suite.toml` with an explicit timeout and
-  deterministic result checks. Choose an FPAS or native driver for the cost being measured.
-- Add the workload before saving the implementation baseline. Keep default-suite
-  workloads bounded and noninteractive; document useful measurement boundaries
-  in `docs/bench/README.md`.
+Apply [repository policy](../../../AGENTS.md) and
+[contribution checks](../../../CONTRIBUTING.md) before committing any authorized
+implementation change. A request to investigate performance does not authorize
+inventing new language behavior or changing FPAS syntax.

@@ -1,47 +1,53 @@
 ---
 name: fpas-authoring
-description: Write, fix, or format Functional Pascal .fpas sources, including programs, units, examples, and regression tests.
+description: Write and review Functional Pascal CLR .fpas sources, including programs, units, examples, and regression fixtures.
 ---
 
-# FPAS authoring
+# FPAS CLR authoring
 
-Read the [agent reference entrypoint](../../../docs/pascal/agents/README.md) when
-writing FPAS, then load the topics needed for the task. It supplies syntax and
-pitfalls for agents unfamiliar with the language. Use the
-[handbook](../../../docs/pascal/README.md) for detailed semantics and library APIs.
-Repository rules live in [AGENTS.md](../../../AGENTS.md); placement and
-verification workflows live in [CONTRIBUTING.md](../../../CONTRIBUTING.md).
+Start with the [agent reference](../../../docs/pascal/agents/README.md), then load
+the topics needed for the task. The [handbook](../../../docs/pascal/README.md)
+owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
+[contribution workflow](../../../CONTRIBUTING.md).
 
 ## Read for the task
 
 | Task | Reference |
 | --- | --- |
-| Bindings, expressions, branches, loops, collections | [Basics](../../../docs/pascal/agents/basics.md) |
-| Parameters, caller mutation, callbacks, closures, contracts | [Functions](../../../docs/pascal/agents/functions.md) |
-| Records, enums, generics, domain types, imports | [Types and units](../../../docs/pascal/agents/types.md) |
-| Pattern matching, Result, Option, propagation, typed errors | [Patterns and errors](../../../docs/pascal/agents/patterns-errors.md) |
-| Tasks, scopes, channels, cancellation and groups | [Concurrency](../../../docs/pascal/agents/concurrency.md) |
-| API lookup, source navigation, diagnostics, debugging, profiling | [Tools](../../../docs/pascal/agents/tools.md) |
-| Assertions, scripted input, golden output | [Test runner](../../../docs/pascal/std/testing/test.md) |
+| Bindings, expressions, loops, arrays, and strings | [Basics](../../../docs/pascal/agents/basics.md) |
+| Routines, managed parameters, delegates, captures, and contracts | [Functions](../../../docs/pascal/agents/functions.md) |
+| Records, unions, domains, generics, units, and globals | [Types and units](../../../docs/pascal/agents/types.md) |
+| Matching, nullable flow, exceptions, and resource cleanup | [Patterns and resources](../../../docs/pascal/agents/patterns-errors.md) |
+| Tasks, await, cancellation, and shared state | [Concurrency](../../../docs/pascal/agents/concurrency.md) |
+| Actual .NET APIs, events, attributes, and public signatures | [Interop](../../../docs/pascal/agents/interop.md) |
+| Compiler commands and API/runtime inspection | [Tools](../../../docs/pascal/agents/tools.md) |
+| Regression selection and controlled fixtures | [Tests](../../../tests/README.md) and [coverage](../../../tests/coverage.md) |
 
 ## Source workflow
 
-1. Inspect the owning manifest and neighboring sources. Use
-   [fpas-projects](../fpas-projects/SKILL.md) when manifests or dependencies change.
-2. Look up exact declarations with `fpas doc <name>` or `--report json` instead
-   of guessing an API. For exact syntax, consult [grammar.ebnf](../../../docs/specs/grammar.ebnf).
-3. Follow the [formatter style](../../../docs/pascal/tools/fmt-style.md), then
-   run `fpas fmt <paths>`, `fpas fmt --check <paths>` and
-   `fpas check <file-or-project>`. `fpas check --fix` applies compiler fixes in
-   place; format and inspect the result.
-4. Run relevant runtime tests. For a new repository regression test, confirm that
-   [tests/suite.fpasprj](../../../tests/suite.fpasprj) includes its path. After FPAS
-   regression-test changes, run `fpas test tests/suite.fpasprj`. Check interactive
-   programs without launching them in batch validation; use scripted/headless
-   tests for execution.
+1. Inspect the owning `.fpasproj`, imports, and neighboring sources. Use
+   [fpas-projects](../fpas-projects/SKILL.md) for project/dependency changes.
+2. Check the [grammar](../../../docs/specs/syntax.md) and actual reference
+   metadata. Resolve exact CLR names, overloads, parameter modes, and nullability.
+   Use supported .NET APIs through explicit aliases.
+3. Keep case-sensitive names, lowercase keywords, explicit types, and named
+   terminators. Consume returned values or use discard. Use CLR nullability and
+   exceptions; define application unions for domain outcomes.
+4. Compile through the current CLR toolchain using the
+   [development workflow](../../../docs/build/development.md). The CLI provides
+   compile; project builds use the SDK. Formatter and language-service commands
+   are not part of the current toolchain.
+5. Select meaningful xUnit compiler, execution, or mixed-project tests. Rebuild
+   copied inputs before execution and keep fixture/toolchain builds separate.
+   Interactive programs need explicit bounded scenarios.
 
-Use [`fpas debug`](../../../docs/pascal/tools/debugger-batch.md) for a bounded
-failure/stop snapshot and [`--profile`](../../../docs/pascal/tools/profiler.md)
-before writing performance variants. Use [fpas-bench](../fpas-bench/SKILL.md) for
-controlled timing comparisons. For handbook examples, follow the
-[Markdown example instructions](../../../docs/pascal/tools/documentation-examples.md).
+Complete README/handbook programs have execution assertions in the Markdown
+runner. Follow [example conventions](../../../docs/pascal/tools/documentation-examples.md)
+and [reference maintenance](../../../docs/pascal/agents/maintenance.md).
+Debug/profile actual generated programs with supported .NET tools before writing
+variants; use [fpas-bench](../fpas-bench/SKILL.md) for authorized measurements.
+Write maintenance helpers in FPAS when supported CLR APIs suffice. Record concrete
+blockers in [dogfooding gaps](../../../docs/future/dogfooding-gaps.md).
+
+Internal designs may change. FPAS syntax changes require explicit user approval;
+deferred proposals do not supply that approval.

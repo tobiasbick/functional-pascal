@@ -26,6 +26,12 @@ internal sealed partial class ReferenceCatalog
         var signatures = new HashSet<string>(StringComparer.Ordinal);
         foreach (var type in name == ".ctor" ? new[] { owner } : Hierarchy(owner))
         {
+            if (type.Kind == TypeKind.Scalar && !type.NullableValue)
+            {
+                foreach (var method in ScalarMethods(type).Where(method => method.Name == name && method.IsStatic == isStatic && methodArguments is null))
+                    if (signatures.Add("0:" + string.Join(';', method.Parameters.Select(parameter => parameter.Erased)))) result.Add(method);
+                continue;
+            }
             if (type.Union is { } union)
             {
                 if (methodArguments is null)
@@ -96,7 +102,7 @@ internal sealed partial class ReferenceCatalog
                 if (r == arg) return false;
                 if (l == arg) { better = true; continue; }
             }
-            if (!CanAssign(l, r)) return false;
+            if (!CanAssign(l, r) && !(NumericFacts.Integral(l) && NumericFacts.Integral(r) && !NumericFacts.Unsigned(l) && NumericFacts.Unsigned(r) && NumericFacts.Bits(l) <= NumericFacts.Bits(r))) return false;
             better = true;
         }
         if (better) return true;
@@ -110,6 +116,12 @@ internal sealed partial class ReferenceCatalog
     {
         foreach (var type in Hierarchy(owner))
         {
+            if (type.Kind == TypeKind.Scalar)
+            {
+                var info = ScalarInfo(type)!;
+                if (!isStatic && name == "Value" && info.Category != ScalarCategory.Enum) return new(info.Base, DomainGetter(info), null);
+                continue;
+            }
             if (type.Record is { } record)
             {
                 var field = record.Fields.SingleOrDefault(field => field.Name == name);
@@ -157,6 +169,18 @@ internal sealed partial class ReferenceCatalog
     {
         foreach (var type in Hierarchy(owner))
         {
+            if (type.Scalar is { } scalar)
+            {
+                if (!isStatic) continue;
+                if (scalar.Syntax.Category == ScalarCategory.Enum && scalar.Members.FirstOrDefault(member => member.Name.Text == name) is { } member)
+                    return new(type, name, type, true, true, member.Value, true);
+                if (scalar.Syntax.Category == ScalarCategory.Range && name is "LowerBound" or "UpperBound")
+                {
+                    var info = ScalarInfo(type)!;
+                    return new(type, name, info.Base, true, true, NumericValue.ConvertTo(name == "LowerBound" ? info.Lower!.Value : info.Upper!.Value, info.Base, true), true);
+                }
+                continue;
+            }
             if (type.Record is not null || type.Union is not null) continue;
             var definition = Definition(type);
             foreach (var handle in definition.Definition.GetFields())
@@ -172,16 +196,9 @@ internal sealed partial class ReferenceCatalog
                 var literal = field.Attributes.HasFlag(FieldAttributes.Literal);
                 object? value = null;
                 if (literal)
-                {
-                    var constant = definition.Assembly.Reader.GetConstant(field.GetDefaultValue());
-                    var blob = definition.Assembly.Reader.GetBlobReader(constant.Value);
-                    value = constant.TypeCode switch
-                    {
-                        ConstantTypeCode.Int32 => blob.ReadInt32(), ConstantTypeCode.Double => blob.ReadDouble(),
-                        ConstantTypeCode.Boolean => blob.ReadBoolean(), ConstantTypeCode.Char => (char)blob.ReadUInt16(), ConstantTypeCode.String => blob.ReadUTF16(blob.Length),
-                        ConstantTypeCode.NullReference => null, _ => throw new BadImageFormatException("Unsupported field constant type.")
-                    };
-                }
+                    value = MetadataConstants.Read(definition.Assembly.Reader, field.GetDefaultValue());
+                else if (isStatic && result == TypeSymbol.Decimal && MetadataConstants.Decimal(definition.Assembly.Reader, field.GetCustomAttributes()) is { } decimalValue)
+                { literal = true; value = decimalValue; }
                 return new(type, name, result, isStatic, literal || field.Attributes.HasFlag(FieldAttributes.InitOnly), value, literal, raw);
             }
         }

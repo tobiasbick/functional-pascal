@@ -122,8 +122,8 @@ closures, and rejection of a nullable field returned as non-null string. The
 tree example builds and runs through its actual FPAS project.
 
 Fully general nested generic type paths in FPAS annotations, globals,
-additional primitives, authored enum/subrange/distinct domains,
 and LSP/query tooling remain pending.
+[Primitive numbers, aliases, enums, and data domains](scalar-types.md) are implemented.
 [XML documentation](xml-documentation.md) is implemented.
 [Source overloads, record CLR interfaces, async, and portable PDBs](overloads-interfaces-debugging-and-async.md)
 are implemented.

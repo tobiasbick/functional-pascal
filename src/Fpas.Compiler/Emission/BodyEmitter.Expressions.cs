@@ -76,6 +76,7 @@ internal sealed partial class BodyEmitter
             case BoundDouble number:
                 il.LoadConstantR8(number.Value);
                 break;
+            case BoundNumber number: EmitNumber(number.Value); break;
             case BoundBoolean boolean:
                 il.LoadConstantI4(boolean.Value ? 1 : 0);
                 break;
@@ -95,9 +96,15 @@ internal sealed partial class BodyEmitter
                 EmitConversion(conversion);
                 break;
             case BoundUnary unary:
-                var checkedNegation = unary.Operator == "-" && unary.Checked && unary.Type == TypeSymbol.Int32;
+                if (unary.Type == TypeSymbol.Decimal)
+                {
+                    EmitExpression(unary.Operand);
+                    if (unary.Operator == "-") il.Call(reference(new ImportedMethod(TypeSymbol.Decimal, "op_UnaryNegation", TypeSymbol.Decimal, [TypeSymbol.Decimal], true)));
+                    break;
+                }
+                var checkedNegation = unary.Operator == "-" && unary.Checked && NumericFacts.Integral(unary.Type);
                 if (checkedNegation)
-                    il.LoadConstantI4(0);
+                    EmitNumber(NumericValue.ConvertTo(0, unary.Type, false));
                 EmitExpression(unary.Operand);
                 if (unary.Operator == "-")
                     il.OpCode(checkedNegation ? ILOpCode.Sub_ovf : ILOpCode.Neg);
@@ -148,19 +155,26 @@ internal sealed partial class BodyEmitter
         }
         EmitExpression(binary.Left);
         EmitExpression(binary.Right);
-        var check = binary.Checked && binary.Left.Type == TypeSymbol.Int32;
-        var real = binary.Left.Type == TypeSymbol.Double;
+        if (binary.Left.Type == TypeSymbol.Decimal)
+        {
+            var name = binary.Operator switch { "+" => "op_Addition", "-" => "op_Subtraction", "*" => "op_Multiply", "/" => "op_Division",
+                "=" => "op_Equality", "<>" => "op_Inequality", "<" => "op_LessThan", ">" => "op_GreaterThan", "<=" => "op_LessThanOrEqual", ">=" => "op_GreaterThanOrEqual", _ => throw new InvalidOperationException() };
+            il.Call(reference(new ImportedMethod(TypeSymbol.Decimal, name, binary.Type, [TypeSymbol.Decimal, TypeSymbol.Decimal], true))); return;
+        }
+        var check = binary.Checked && NumericFacts.Integral(binary.Left.Type);
+        var real = NumericFacts.Floating(binary.Left.Type);
+        var unsigned = NumericFacts.Unsigned(binary.Left.Type);
         il.OpCode(binary.Operator switch
         {
-            "+" => check ? ILOpCode.Add_ovf : ILOpCode.Add,
-            "-" => check ? ILOpCode.Sub_ovf : ILOpCode.Sub,
-            "*" => check ? ILOpCode.Mul_ovf : ILOpCode.Mul,
-            "/" or "div" => ILOpCode.Div, "mod" => ILOpCode.Rem,
+            "+" => check ? unsigned ? ILOpCode.Add_ovf_un : ILOpCode.Add_ovf : ILOpCode.Add,
+            "-" => check ? unsigned ? ILOpCode.Sub_ovf_un : ILOpCode.Sub_ovf : ILOpCode.Sub,
+            "*" => check ? unsigned ? ILOpCode.Mul_ovf_un : ILOpCode.Mul_ovf : ILOpCode.Mul,
+            "/" or "div" => unsigned ? ILOpCode.Div_un : ILOpCode.Div, "mod" => unsigned ? ILOpCode.Rem_un : ILOpCode.Rem,
             "and" => ILOpCode.And, "or" => ILOpCode.Or, "xor" => ILOpCode.Xor,
-            "shl" => ILOpCode.Shl, "shr" => ILOpCode.Shr,
-            "=" or "<>" => ILOpCode.Ceq, "<" => ILOpCode.Clt, ">" => ILOpCode.Cgt,
-            "<=" => real ? ILOpCode.Cgt_un : ILOpCode.Cgt,
-            ">=" => real ? ILOpCode.Clt_un : ILOpCode.Clt,
+            "shl" => ILOpCode.Shl, "shr" => unsigned ? ILOpCode.Shr_un : ILOpCode.Shr,
+            "=" or "<>" => ILOpCode.Ceq, "<" => unsigned ? ILOpCode.Clt_un : ILOpCode.Clt, ">" => unsigned ? ILOpCode.Cgt_un : ILOpCode.Cgt,
+            "<=" => real || unsigned ? ILOpCode.Cgt_un : ILOpCode.Cgt,
+            ">=" => real || unsigned ? ILOpCode.Clt_un : ILOpCode.Clt,
             _ => throw new InvalidOperationException("Unrecognized bound operator.")
         });
         if (binary.Operator is "<>" or "<=" or ">=")

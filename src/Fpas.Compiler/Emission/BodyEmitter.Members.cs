@@ -81,12 +81,9 @@ internal sealed partial class BodyEmitter
         {
             switch (field.Field.Constant)
             {
-                case int number: il.LoadConstantI4(number); break;
-                case double number: il.LoadConstantR8(number); break;
-                case char character: il.LoadConstantI4(character); break;
-                case bool boolean: il.LoadConstantI4(boolean ? 1 : 0); break;
                 case string text: il.LoadString(userString(text)); break;
-                default: il.OpCode(ILOpCode.Ldnull); break;
+                case null: il.OpCode(ILOpCode.Ldnull); break;
+                default: EmitNumber(field.Field.Constant); break;
             }
             return;
         }
@@ -204,6 +201,15 @@ internal sealed partial class BodyEmitter
             if (from.IsValue) { il.OpCode(ILOpCode.Box); il.Token(typeHandle(from)); }
             il.OpCode(ILOpCode.Unbox_any); il.Token(typeHandle(to)); return;
         }
+        if (catalog.ScalarInfo(from) is { Category: not Syntax.ScalarCategory.Enum } domain &&
+            (TypeFacts.Numeric(to) || to == domain.Base))
+        {
+            EmitConversion(new(new BoundCall(ReferenceCatalog.DomainGetter(domain), [], conversion.Operand), to, conversion.Checked)); return;
+        }
+        if (catalog.ScalarInfo(to) is { Category: not Syntax.ScalarCategory.Enum } targetDomain && from == targetDomain.Base)
+        {
+            EmitExpression(conversion.Operand); il.OpCode(ILOpCode.Newobj); il.Token(reference(ReferenceCatalog.DomainConstructor(targetDomain))); return;
+        }
         EmitExpression(conversion.Operand);
         if (from == to || from.NonNullable == to.NonNullable) return;
         if (from.IsValue && to.IsReference) { il.OpCode(ILOpCode.Box); il.Token(typeHandle(from)); return; }
@@ -213,8 +219,8 @@ internal sealed partial class BodyEmitter
             if (!catalog.Derives(from, to)) { il.OpCode(ILOpCode.Castclass); il.Token(typeHandle(to)); }
             return;
         }
-        il.OpCode(to == TypeSymbol.Double ? ILOpCode.Conv_r8 : to == TypeSymbol.Char
-            ? conversion.Checked ? ILOpCode.Conv_ovf_u2 : ILOpCode.Conv_u2
-            : conversion.Checked ? ILOpCode.Conv_ovf_i4 : ILOpCode.Conv_i4);
+        if (catalog.ScalarInfo(from) is { Category: Syntax.ScalarCategory.Enum } fromScalar) from = fromScalar.Base;
+        if (catalog.ScalarInfo(to) is { Category: Syntax.ScalarCategory.Enum } toEnum) to = toEnum.Base;
+        EmitNumericConversion(from, to, conversion.Checked);
     }
 }

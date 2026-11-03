@@ -23,6 +23,10 @@ and libraries. These concrete limits currently require host tools:
   [Generic records/unions](../implementation/generic-types.md) add reusable models,
   recursive payloads, and generic record methods with typed closures. Globals
   remain unavailable; use the supported subset for helpers.
+- [Primitive numbers and scalar domains](../implementation/scalar-types.md) now
+  support decimal/unsigned/native values, transparent aliases, actual CLR enums,
+  distinct identities, and checked integral ranges. Numeric maintenance helpers
+  can use these directly, including arrays and generic collections.
 - Portable PDB generation now preserves statement locations, local scopes,
   closure methods, and async yield/resume metadata. Use supported .NET debuggers;
   automatic IDE/project integration remains pending.

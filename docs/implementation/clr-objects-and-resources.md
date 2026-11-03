@@ -8,7 +8,7 @@ types and methods from reference metadata, with no Fpas.Core dependency.
 ## Types and members
 
 The compiler now represents CLR type identity and nullability separately from
-primitive arithmetic kinds. Source types include int, bool, double, string,
+primitive arithmetic kinds. Source types include all [CLR primitive aliases](scalar-types.md),
 object, supported imported non-generic classes/interfaces/structs, and T?.
 Reference T? uses nullable annotations; value T? emits actual System.Nullable<T>.
 Byref-like types and System.Void as a value are rejected.
@@ -21,7 +21,7 @@ reference forwarders are resolved from the selected metadata.
 
 Implemented member access includes constructors, chained instance calls, public
 static/instance fields and non-indexed properties, and field/property assignment
-where writable. Overloads use identity, int-to-double widening, reference
+where writable. Overloads use identity, numeric widening, reference
 assignability, and boxing; competing candidates remain errors. Arguments and
 receivers evaluate in source order. Virtual/interface calls dispatch through
 callvirt. Struct receivers use addresses for writable storage and defensive copies
@@ -89,8 +89,8 @@ StreamReader example and retain the existing mixed-project and Mandelbrot cases.
 [Arrays/indexers, args, char, closed CLR generic types, and enumeration](arrays-and-collections.md)
 are implemented, as are [callable values, closures, and explicit generic CLR calls](functions-and-closures.md).
 [Source generic routines](generic-routines.md), [records](records.md), and
-[unions](unions-and-matching.md), including [generic data types](generic-types.md), are also implemented. Other primitive aliases
-and literal forms, nullable lifted operators, and conditional nullable contracts
+[unions](unions-and-matching.md), including [generic data types](generic-types.md), are also implemented.
+[Numbers and scalar domains](scalar-types.md) are implemented. Nullable lifted operators and conditional nullable contracts
 remain later work. [XML documentation](xml-documentation.md) is implemented.
 [Async/await using and portable PDBs](overloads-interfaces-debugging-and-async.md) are implemented. This is
 partial CLR interoperability, not complete access to every .NET signature.

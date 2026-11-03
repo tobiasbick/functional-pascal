@@ -36,6 +36,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var routines = new List<RoutineSyntax>();
         var records = new List<RecordSyntax>();
         var unions = new List<UnionSyntax>();
+        var aliases = new List<AliasSyntax>(); var scalars = new List<ScalarSyntax>();
         while (At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type"))
         {
             var declaration = position;
@@ -45,9 +46,10 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var saved = position;
                 position = declaration + 2;
                 ReadTypeParameters(); Expect("="); ReadConstraints();
-                var union = At("union"); position = saved;
+                var union = At("union"); var record = At("record"); position = saved;
                 if (union) unions.Add(ReadUnion(isProgram));
-                else records.Add(ReadRecord(isProgram));
+                else if (record) records.Add(ReadRecord(isProgram));
+                else ReadScalarDeclaration(isProgram, aliases, scalars);
             }
             else routines.Add(ReadRoutine(isProgram));
         }
@@ -64,7 +66,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         Expect(";");
         if (Current.Kind != TokenKind.End)
             throw source.Error("FP2001", "Unexpected content after the source terminator.", Current.Position, Current.Length);
-        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation);
+        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars);
     }
 
     private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false)

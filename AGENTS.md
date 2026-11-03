@@ -18,6 +18,7 @@ Read the [compiler subset](docs/implementation/first-program.md) and
 [generic routines](docs/implementation/generic-routines.md) and
 [generic data types](docs/implementation/generic-types.md) and
 [type argument inference](docs/implementation/type-argument-inference.md), plus
+[primitive/scalar types](docs/implementation/scalar-types.md), plus
 [implemented MSBuild integration](docs/implementation/msbuild.md) before claiming
 feature support. Use a stable .NET 10 SDK and separate test compilation from execution:
 

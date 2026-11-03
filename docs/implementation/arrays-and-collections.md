@@ -43,8 +43,8 @@ conditional branch context. Otherwise nonempty literals find a common supported
 element type. An allocation that can have nonzero size requires nullable reference
 elements, e.g. new string?[Count]; new string[0] is accepted. The implementation
 recognizes literal zero dimensions, not general constant expressions. Jagged
-arrays can be built from nested literals; source type aliases and jagged new
-suffixes are not implemented.
+arrays can be built from nested literals; source type aliases are supported.
+Jagged new suffixes are not implemented.
 
 Strings expose their CLR UTF-16 indexer returning char. #65 denotes one UTF-16
 code unit; character codes must be in 0..65535. char widens to int/double,
@@ -113,6 +113,6 @@ and [generic source routines/constraints](generic-routines.md).
 [Generic records and unions](generic-types.md) now add reusable typed models.
 [Type argument inference](type-argument-inference.md) now supports source/CLR calls
 and contextual union constructors. [Contracts and CLR parameters](contracts-and-parameters.md)
-cover synchronous checks and broader routine argument modes. Other primitive
-aliases remain pending. [XML documentation](xml-documentation.md) is implemented.
+cover synchronous checks and broader routine argument modes.
+[Primitive aliases and scalar domains](scalar-types.md) and [XML documentation](xml-documentation.md) are implemented.
 [Async and portable PDBs](overloads-interfaces-debugging-and-async.md) are implemented.

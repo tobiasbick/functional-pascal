@@ -36,8 +36,10 @@ redeclared in a type namespace. See [types](types.md).
 Numeric suffixes accept either case. `_` may occur singly between digits.
 Hexadecimal literals may have integral suffixes. Negative numbers use unary `-`;
 a directly negated literal may represent the minimum signed value.
-An integral constant may be contextually converted to a smaller integral type
-when representable. Otherwise, an unsuffixed integral literal must fit `int`;
+An `int` constant may be contextually converted to a smaller integral type,
+an unsigned integral type, or a native integral type when representable;
+a representable `long` constant may also convert to `ulong`. Char requires a
+character literal or an explicit cast. Otherwise, an unsuffixed integral literal must fit `int`;
 use an explicit suffix for larger values. Floating literals must fit their
 chosen representation; use CLR APIs to obtain infinity or NaN.
 

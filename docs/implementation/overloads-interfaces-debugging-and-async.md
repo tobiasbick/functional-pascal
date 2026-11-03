@@ -111,6 +111,7 @@ synchronization-context capture, ConfigureAwait(false), faults/cancellation,
 acquisition/disposal failures, and SDK PDB copying/invalidation/Clean.
 The same solution build and separate test execution run on Windows and Linux.
 
-Additional primitives/domains, globals, named nested routines, authored
+[Primitive numbers and scalar domains](scalar-types.md) are implemented.
+Globals, named nested routines, authored
 interfaces, events, arbitrary attributes, and IDE tooling
 remain outside these four steps.

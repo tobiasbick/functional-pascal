@@ -64,7 +64,7 @@ internal sealed class Lexer(SourceText source)
                 tokens.Add(ReadString());
             else if (char.IsAsciiLetter(Current) || Current is '_' or '@')
                 tokens.Add(ReadIdentifier());
-            else if (char.IsAsciiDigit(Current))
+            else if (char.IsAsciiDigit(Current) || Current == '$')
                 tokens.Add(ReadNumber());
             else
             {
@@ -128,15 +128,17 @@ internal sealed class Lexer(SourceText source)
     private Token ReadNumber()
     {
         var start = position;
-        ReadDigits();
+        var hex = Current == '$';
+        if (hex) position++;
+        if (hex) ReadHexDigits(); else ReadDigits();
         var real = false;
-        if (Current == '.' && char.IsAsciiDigit(Peek))
+        if (!hex && Current == '.' && char.IsAsciiDigit(Peek))
         {
             real = true;
             position++;
             ReadDigits();
         }
-        if (Current is 'e' or 'E')
+        if (!hex && Current is 'e' or 'E')
         {
             real = true;
             position++;
@@ -146,14 +148,31 @@ internal sealed class Lexer(SourceText source)
                 throw source.Error("FP1004", "An exponent requires decimal digits.", start, position - start);
             ReadDigits();
         }
-        if (Current is 'd' or 'D')
+        if (!hex && Current is 'd' or 'D' or 'f' or 'F' or 'm' or 'M')
         {
             real = true;
             position++;
         }
+        else if (!real && Current is 'l' or 'L' or 'u' or 'U')
+        {
+            var first = char.ToLowerInvariant(Current); position++;
+            if (first == 'u' && Current is 'l' or 'L' || first == 'l' && Current is 'u' or 'U') position++;
+        }
         if (char.IsAsciiLetter(Current) || Current == '_')
-            throw source.Error("FP1004", "This compiler supports decimal int and double literals, with an optional D suffix for double.", start, position - start);
+            throw source.Error("FP1004", "Invalid numeric literal or suffix.", start, position - start);
         return new(real ? TokenKind.Real : TokenKind.Integer, source.Text[start..position], start, position - start);
+    }
+
+    private void ReadHexDigits()
+    {
+        if (!char.IsAsciiHexDigit(Current)) throw source.Error("FP1004", "A hexadecimal literal requires digits.", position);
+        while (char.IsAsciiHexDigit(Current))
+        {
+            position++;
+            if (Current != '_') continue;
+            var separator = position++;
+            if (!char.IsAsciiHexDigit(Current)) throw source.Error("FP1003", "A numeric separator must occur singly between digits.", separator);
+        }
     }
 
     private void ReadDigits()

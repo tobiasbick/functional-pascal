@@ -27,6 +27,8 @@ internal sealed class AssemblyLayout
     internal Dictionary<AsyncMachineSymbol, MethodDefinitionHandle> AsyncMoves { get; } = [];
     internal Dictionary<AsyncMachineSymbol, MethodDefinitionHandle> AsyncSets { get; } = [];
     internal Dictionary<string, MethodDefinitionHandle> EntryBridges { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<ScalarSymbol, TypeDefinitionHandle> ScalarTypes { get; } = [];
+    internal Dictionary<ScalarSymbol, TypeDefinitionHandle> ScalarOwners { get; } = [];
 
     internal AssemblyLayout(BoundCompilation program, ReferenceCatalog references)
     {
@@ -38,6 +40,7 @@ internal sealed class AssemblyLayout
         {
             foreach (var routine in unit.Routines) SourceMethods.Add(routine.Symbol, MetadataTokens.MethodDefinitionHandle(method++));
             if (unit.Routines.Any(routine => routine.Symbol.IsEntryPoint && routine.Symbol.IsAsync)) EntryBridges.Add(unit.Name, MetadataTokens.MethodDefinitionHandle(method++));
+            method += unit.Aliases.Count;
         }
         var type = program.Units.Count + 2;
         foreach (var union in Unions)
@@ -87,5 +90,11 @@ internal sealed class AssemblyLayout
                 Add(closure.Body, closure, ClosureTypes[closure], parentName + "+<Closure" + closure.Id + ">" + (arity == 0 ? "" : "`" + arity));
             }
         }
+        foreach (var unit in program.Units)
+            foreach (var scalar in unit.Scalars)
+            {
+                ScalarTypes.Add(scalar, MetadataTokens.TypeDefinitionHandle(type++));
+                ScalarOwners.Add(scalar, MetadataTokens.TypeDefinitionHandle(program.Units.ToList().IndexOf(unit) + 2));
+            }
     }
 }

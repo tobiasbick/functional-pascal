@@ -56,11 +56,11 @@ The program prints `Hello from FPAS`. See the checked-in
   for file selection, visibility, and declaration-order rules.
 - Local immutable `const Name: T := Expression;` and mutable `var Name: T := Expression;`
   declarations with mandatory type and initializer. Types currently implemented
-  include `string`, `int`, `bool`, `double`, `char`, `object`, and supported imported CLR
+  include all specified CLR primitives and [scalar domains](scalar-types.md), and supported imported CLR
   types with nullable reference/value forms. See [CLR objects](clr-objects-and-resources.md).
 - Single-line string literals with doubled apostrophes, Unicode string contents,
-  and decimal Int32/double literals with digit separators. Doubles support a
-  fractional part, exponent, and D suffix. Negative values use unary minus.
+  decimal/hexadecimal integral literals with L/U/UL suffixes, and real F/D/M
+  literals with fractional parts/exponents and digit separators.
 - Reads of parameters and already initialized locals, parenthesized expressions,
   named routines, constructors, static/instance CLR calls, and fields/properties.
 - Overload selection for supported signatures, preferring identity and permitting
@@ -78,8 +78,7 @@ The program prints `Hello from FPAS`. See the checked-in
 - Duplicate bindings/imports, unknown names, invalid type assignments, missing
   annotations, unsupported calls, and lexical/syntactic errors are diagnosed.
 
-The complete language remains specified in the topic documents. Other primitive
-types, repeat loops,
+The complete language remains specified in the topic documents. Globals, repeat loops,
 and broader CLR signature forms are later steps.
 [Arrays, args, closed generic CLR types, indexers, and enumeration](arrays-and-collections.md)
 are implemented, as are [callable values, closures, and explicit generic CLR calls](functions-and-closures.md)
@@ -96,6 +95,8 @@ add source overload groups, records implementing imported CLR interfaces,
 portable PDBs, and async functions/lambdas/programs with awaited cleanup.
 [Source documentation extraction/XML export](xml-documentation.md) is implemented
 for the supported declarations.
+[Primitive numbers, aliases, enums, distinct values, and subranges](scalar-types.md)
+are implemented with cross-assembly CLR contracts and valid default domain values.
 The compiler currently stops at the first diagnostic.
 
 ## Compiler and output
@@ -112,7 +113,7 @@ named methods, arithmetic, branches, returns, and an executable entry point.
 Assembly references/signatures come from the actual
 supplied metadata. The compiler generates neither C# nor an FPAS VM image.
 Identical inputs produce identical PE bytes independent of reference-list order.
-Record/union declarations reference Fpas.Core for metadata attributes; other emitted
+Record/union/domain declarations and public aliases reference Fpas.Core for metadata attributes; other emitted
 programs retain their ordinary framework/project dependencies. See [records](records.md)
 for SDK distribution and direct CLI reference/deployment requirements.
 
@@ -158,6 +159,7 @@ for invalid arguments.
 | FP3026 | Invalid/unsupported source generic declaration or explicit type-argument arity |
 | FP3027 / FP3028 | Invalid contract / parameter modes, defaults, storage, or out flow |
 | FP3029 / FP3030 | Invalid record interface implementation / async or await reference-lifetime error |
+| FP3031 | Invalid alias, enum, distinct declaration, subrange bounds, or domain construction |
 | FP6001 | Documentation warning; severity follows the configured warning policy |
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
 

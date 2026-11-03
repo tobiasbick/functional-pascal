@@ -40,7 +40,7 @@ internal sealed partial class SourceCatalog
         foreach (var name in names ?? [])
         {
             if (TypeFacts.PredefinedName(name.Text) || name.Text is "self" or "args" || unit.Syntax.Imports.Any(import => import.Alias.Text == name.Text) ||
-                unit.Records.ContainsKey(name.Text) || unit.Unions.ContainsKey(name.Text) || outer.Any(parameter => parameter.Name == name.Text) ||
+                unit.HasType(name.Text) || outer.Any(parameter => parameter.Name == name.Text) ||
                 !scope.TryAdd(name.Text, new(name.Text, scope.Count)))
                 throw unit.Source.Error("FP3026", "Type parameters must be unique and cannot shadow types, imports, enclosing parameters, self, or args.", name.Position);
         }
@@ -84,7 +84,7 @@ internal sealed partial class SourceCatalog
                 if (!isInterface)
                 {
                     if (hasBase || parameter.Constraints.Count != 0 || parameter.Primary is not null && !(parameter.Primary == "struct" && isEnumBase) ||
-                        type.IsValue || type.Kind is TypeKind.Object or TypeKind.String or TypeKind.Array or TypeKind.Generated || type.Record is not null ||
+                        type.IsValue || type.Kind is TypeKind.Object or TypeKind.String or TypeKind.Array or TypeKind.Generated || type.Record is not null || type.Scalar is not null ||
                         type.Definition?.FullName is "System.ValueType" or "System.Array" ||
                         type.Definition?.Definition.Attributes.HasFlag(TypeAttributes.Sealed) == true || type.IsParameter && type.IsNullable)
                         throw unit.Source.Error("FP3026", "Invalid or incompatible base/type-parameter constraint.", syntaxConstraint.Position);

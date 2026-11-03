@@ -8,6 +8,8 @@ internal sealed partial class Binder
 
     private BoundExpression Value(string name, int position, TypeSymbol? expected = null)
     {
+        if (enumInitializer?.Members.FirstOrDefault(member => member.Name.Text == name) is { } enumMember)
+            return NumberConstant(enumInitializer.Base, enumMember.Value);
         if (FindLocal(name) is { } local) return new BoundLocal(local, nonNull.Contains(local) ? local.Type.NonNullable : null);
         if (parameters.TryGetValue(name, out var parameter)) return new BoundParameter(parameter, nonNull.Contains(parameter) ? parameter.Type.NonNullable : null);
         if (parent?.HasValue(name) == true)
@@ -103,7 +105,7 @@ internal sealed partial class Binder
     {
         BoundArrayLiteral array when LiteralVector(target) is not null => AcceptsArrayLiteral(array, target),
         BoundDelegate value when references.DelegateSignature(target) is not null => Retarget(value, target) is not null,
-        _ => argument is not BoundMethodGroup && references.Applicable(argument.Type, target)
+        _ => argument is not BoundMethodGroup && (references.Applicable(argument.Type, target) || ConstantFits(argument, target))
     };
 
     private static bool IsMutableCapture(object symbol) => symbol is LocalSymbol { Mutable: true, Captured: true } || symbol is CaptureSymbol { Mutable: true } || symbol is ParameterSymbol { Mode: "ref" or "out" };

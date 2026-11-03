@@ -39,6 +39,9 @@ Default parameter values use `Name: T := ConstantExpression`; required parameter
 must precede optional parameters. Defaults must be CLR-compatible compile-time
 constants and are inserted at the call site. `const` declarations with runtime
 initializers do not qualify as default expressions.
+Decimal defaults use ordinary CLR DecimalConstantAttribute metadata. Native
+integer defaults must fit Int32/UInt32, the CLR constant metadata representation
+used for these types independently of the execution architecture.
 
 Consume a function result or write `discard Expression;`. A bare value-producing
 call statement is an error. A procedure/CLR void call is a statement. Discarding

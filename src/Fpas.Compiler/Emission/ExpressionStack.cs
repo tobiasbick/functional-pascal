@@ -6,6 +6,8 @@ internal static class ExpressionStack
 {
     internal static int Depth(BoundExpression expression) => expression switch
     {
+        BoundNumber { Type.Kind: TypeKind.Decimal } => 5,
+        BoundField { Field.IsLiteral: true, Type.Kind: TypeKind.Decimal } => 5,
         BoundAddress address => Depth(address.Target) + 1,
         BoundDereference dereference => Depth(dereference.Address),
         BoundTypeTest test => Math.Max(2, Depth(test.Value)),
@@ -26,7 +28,7 @@ internal static class ExpressionStack
         BoundCoalesce coalesce => Math.Max(Depth(coalesce.Left), Depth(coalesce.Right)),
         BoundConversion conversion => Depth(conversion.Operand),
         BoundUnary unary => Math.Max(2, Depth(unary.Operand) +
-            (unary.Operator == "-" && unary.Checked && unary.Type == TypeSymbol.Int32 ? 1 : 0)),
+            (unary.Operator == "-" && unary.Checked && NumericFacts.Integral(unary.Type) ? 1 : 0)),
         BoundBinary binary => Math.Max(Depth(binary.Left),
             Depth(binary.Right) + (binary.Left.Type == TypeSymbol.Boolean && binary.Operator is "and" or "or" ? 0 : 1)),
         BoundConditional conditional => conditional.Arms.Select(arm => Math.Max(Depth(arm.Condition), Depth(arm.Value)))

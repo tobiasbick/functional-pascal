@@ -18,6 +18,7 @@ internal sealed partial class AssemblyEmitter
     private EntityHandle TypeHandle(TypeSymbol type)
     {
         type = type.Erased;
+        if (type.Scalar is { } scalar && !type.NullableValue) return layout.ScalarTypes[scalar];
         if (type.Kind == TypeKind.Union && type.Arguments is not { Count: > 0 }) return layout.UnionTypes[type.Union!];
         if (type.Kind == TypeKind.Record && type.Arguments is not { Count: > 0 }) return layout.RecordTypes[type.Record!];
         if (type.Kind == TypeKind.Generated && type.Closure!.GenericParameters.Count == 0) return layout.ClosureTypes[type.Closure];
@@ -139,6 +140,17 @@ internal sealed partial class AssemblyEmitter
             case TypeKind.Int32: encoder.Int32(); break;
             case TypeKind.Boolean: encoder.Boolean(); break;
             case TypeKind.Double: encoder.Double(); break;
+            case TypeKind.SByte: encoder.SByte(); break;
+            case TypeKind.Byte: encoder.Byte(); break;
+            case TypeKind.Int16: encoder.Int16(); break;
+            case TypeKind.UInt16: encoder.UInt16(); break;
+            case TypeKind.UInt32: encoder.UInt32(); break;
+            case TypeKind.Int64: encoder.Int64(); break;
+            case TypeKind.UInt64: encoder.UInt64(); break;
+            case TypeKind.NativeUInt: encoder.UIntPtr(); break;
+            case TypeKind.Single: encoder.Single(); break;
+            case TypeKind.Decimal: encoder.Type(DefinitionHandle(catalog.Definition(type)), isValueType: true); break;
+            case TypeKind.Scalar: encoder.Type(layout.ScalarTypes[type.Scalar!], type.IsValue); break;
             case TypeKind.Char: encoder.Char(); break;
             case TypeKind.Array:
                 if (type.Rank == 1) EncodeType(encoder.SZArray(), type.Element!);

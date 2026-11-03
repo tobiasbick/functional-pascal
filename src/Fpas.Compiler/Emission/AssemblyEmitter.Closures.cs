@@ -18,9 +18,14 @@ internal sealed partial class AssemblyEmitter
         foreach (var parameter in routine.Parameters)
         {
             var attributes = parameter.Mode == "out" ? ParameterAttributes.Out : parameter.Mode == "in" ? ParameterAttributes.In : ParameterAttributes.None;
-            if (parameter.Default is not null) attributes |= ParameterAttributes.Optional | ParameterAttributes.HasDefault;
+            if (parameter.Default is not null) attributes |= ParameterAttributes.Optional | (parameter.Type.NonNullable == TypeSymbol.Decimal ? ParameterAttributes.None : ParameterAttributes.HasDefault);
             var handle = metadata.AddParameter(attributes, metadata.GetOrAddString(parameter.Name), parameter.Index + 1);
-            if (parameter.Default is not null) metadata.AddConstant(handle, ConstantValue.Evaluate(parameter.Default));
+            if (parameter.Default is not null)
+            {
+                var value = ConstantValue.Evaluate(parameter.Default);
+                if (value is decimal number) AddDecimalConstant(handle, number);
+                else metadata.AddConstant(handle, value switch { nint signed => (object)checked((int)signed), nuint unsigned => checked((uint)unsigned), _ => value });
+            }
             if (parameter.Mode == "in") AddParameterMarker(handle, "System.Runtime.CompilerServices.IsReadOnlyAttribute");
             if (parameter.Mode == "params") AddParameterMarker(handle, "System.ParamArrayAttribute");
             if (NullableFlags(parameter.Type).Contains((byte)2)) AddNullableAnnotation(handle, runtime, parameter.Type);

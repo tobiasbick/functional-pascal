@@ -43,6 +43,12 @@ internal sealed partial class ReferenceCatalog
 
     private IEnumerable<TypeSymbol> Parents(TypeSymbol type)
     {
+        if (type.Scalar is { } scalar)
+        {
+            yield return scalar.Syntax.Category == Syntax.ScalarCategory.Enum ? Symbol(Required("System.Enum")) : type.IsValue ? Symbol(Required("System.ValueType")) : TypeSymbol.Object;
+            if (scalar.Syntax.Category != Syntax.ScalarCategory.Enum) yield return Symbol(Required("System.IEquatable`1")) with { Arguments = new([type.NonNullable]) };
+            yield break;
+        }
         if (type.Kind == TypeKind.Async)
         {
             yield return Symbol(Required("System.Runtime.CompilerServices.IAsyncStateMachine"));

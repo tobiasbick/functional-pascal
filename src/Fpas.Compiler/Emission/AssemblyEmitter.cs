@@ -74,12 +74,17 @@ internal sealed partial class AssemblyEmitter
                 EmitEntryBridge(unit.Routines.Single(routine => routine.Symbol.IsEntryPoint), bridge, bodyEncoder, ref parameterCount, program.Runtime);
                 entry = bridge; methodCount++;
             }
+            foreach (var alias in unit.Aliases)
+            {
+                EmitAlias(alias, bodyEncoder, ref parameterCount, program.Runtime); methodCount++;
+            }
         }
 
         EmitUnions(program, bodyEncoder, ref parameterCount, objectType);
         EmitRecords(program, bodyEncoder, ref parameterCount, objectType);
         EmitClosures(program, bodyEncoder, ref parameterCount, objectType);
         EmitAsyncMachines(bodyEncoder, ref parameterCount, objectType, program.Runtime);
+        EmitScalars(bodyEncoder, ref parameterCount, program.Runtime);
         EmitGenericParameters(program.Runtime);
         var symbols = debug?.Build(metadata, entry);
         DebugDirectoryBuilder? directory = null;

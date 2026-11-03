@@ -10,6 +10,11 @@ unimplemented. See the [compiler subset](docs/implementation/first-program.md)
 and [implemented MSBuild integration](docs/implementation/msbuild.md) for the
 exact supported behavior.
 
+[Scalar types](docs/implementation/scalar-types.md) include all specified CLR
+primitive numbers, transparent aliases, real CLR enums, distinct values, and
+checked integral subranges. The [data-domains example](examples/data-domains/README.md)
+demonstrates nominal identities, decimal values, and valid subrange defaults.
+
 The [Mandelbrot example](examples/mandelbrot/README.md) is executable through its
 `.fpasproj`; its raster output is verified by the integration tests. The
 [expression/control-flow milestone](docs/implementation/expressions-and-control-flow.md)

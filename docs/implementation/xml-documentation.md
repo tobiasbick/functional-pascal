@@ -12,10 +12,12 @@ paragraph break. Inline comments remain ordinary comments. Documentation belongs
 before public/private/async/static modifiers. Comments within those modifiers
 do not replace the leading documentation.
 
-Program/unit headers, routines, records, record fields, and union cases retain
+Program/unit headers, routines, records, record fields, union cases, enums,
+enum fields, aliases, and scalar domains retain
 their attached source comments. Private members and local bindings also retain
-comments, but do not appear in the public XML. Enums, globals, source aliases,
-and arbitrary source attributes remain outside the implemented language subset.
+comments, but do not appear in the public XML. Aliases have no CLR type ID;
+method IDs use their target types. Globals and arbitrary source attributes
+remain outside the implemented language subset.
 
 The compiler reads Parameters, Type parameters, Returns, and Remarks Markdown
 sections. Names are case-sensitive source spellings, including @ escapes; XML

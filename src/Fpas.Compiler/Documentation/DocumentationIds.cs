@@ -6,6 +6,7 @@ internal static class DocumentationIds
 {
     internal static string Definition(TypeSymbol type)
     {
+        if (type.Scalar is { } scalar) return scalar.Owner.Syntax.Name.Text + "." + scalar.Name;
         if (type.Record is { } record)
             return record.UnionCase is { } member ? Definition(member.Owner.Type) + "." + record.Name :
                 record.Owner.Syntax.Name.Text + "." + record.Name + Arity(record.GenericParameters.Count);
@@ -34,7 +35,7 @@ internal static class DocumentationIds
         }
         if (type.Kind is TypeKind.TypeParameter or TypeKind.MethodParameter)
             return (type.Kind == TypeKind.TypeParameter ? "`" : "``") + type.ParameterIndex;
-        var primitive = type.Kind switch
+        var primitive = TypeFacts.ClrName(type) ?? type.Kind switch
         {
             TypeKind.String => "System.String", TypeKind.Int32 => "System.Int32", TypeKind.Boolean => "System.Boolean",
             TypeKind.Double => "System.Double", TypeKind.Char => "System.Char", TypeKind.Object => "System.Object",

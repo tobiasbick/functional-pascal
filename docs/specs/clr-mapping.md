@@ -60,6 +60,15 @@ at both source and metadata boundaries. Public nested types in accessible
 containers are available to C# and other .NET consumers using ordinary nested
 type names. Source-only aliases never become new public types.
 
+Public aliases retain their target through a private static, nongeneric
+`<Alias:Name>(): Target` method on the unit container, marked with
+Fpas.Core.AliasAttribute(int version, string name), version 1. Its return signature
+preserves nullable annotations recursively. This method is metadata-only and
+throws NotSupportedException if invoked through reflection. It is not a public
+API or a new type. Importers validate the version, exact helper name, private
+static visibility, zero parameters, and publicly accessible target signature.
+Private aliases need no emitted contract.
+
 ## Records and unions
 
 Record properties use their exact source field names and public/private visibility;
@@ -109,6 +118,19 @@ base-typed LowerBound/UpperBound constants. A zero-initialized subrange must dec
 to LowerBound, not an invalid zero; use a private offset encoding as specified in
 [data domains](../pascal/language/data-domains.md). This is required for array and
 generic defaults as well as explicit construction.
+The version 1 contract uses Fpas.Core.DomainAttribute(int version,
+string primitiveType, string? lowerBound, string? upperBound), where primitiveType
+is the full System type name and bounds are invariant decimal integer strings.
+Distinct types have two null bounds; subranges have both bounds. The sealed,
+nongeneric wrapper derives directly from System.ValueType, or System.Object for
+distinct strings. Its single private readonly instance field has the primitive
+type for distinct values and UInt64 for subranges. Subrange offsets use modular
+64-bit subtraction/addition, followed by unchecked narrowing to the base.
+Importers validate the attribute identity/version, base, storage, read-only Value,
+public constructor and conversion signatures, and exact bound constants. Invalid
+contracts fail before emission. Value equality/hashing uses
+EqualityComparer<Base>.Default; numeric/char ordered operators use numeric
+comparison, and string ordered operators use String.CompareOrdinal.
 Distinct wrappers expose explicit CLR conversions to/from the base. Subranges
 expose an explicit checked base-to-domain conversion and implicit domain-to-base
 conversion. A byref signature always retains the wrapper type; it is not an alias

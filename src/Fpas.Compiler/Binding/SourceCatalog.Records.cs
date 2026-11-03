@@ -14,7 +14,9 @@ internal sealed partial class SourceCatalog
                     throw unit.Source.Error("FP3021", $"Duplicate or conflicting record '{syntax.Name.Text}'.", syntax.Name.Position);
             }
         }
+        DeclareScalarBases(references);
         DeclareTypeGenerics(references);
+        BindScalarValues(references);
         if (Units.Any(unit => unit.Records.Count != 0)) references.Required("Fpas.Core.RecordAttribute");
         foreach (var record in Units.SelectMany(unit => unit.RecordTypes))
             foreach (var field in record.Syntax.Fields)
@@ -75,7 +77,7 @@ internal sealed partial class SourceCatalog
 
     private void ValidateRecordVisibility()
     {
-        static bool Visible(TypeSymbol type) => type.Record?.IsPublic != false && type.Union?.IsPublic != false && (type.Element is null || Visible(type.Element)) && (type.Arguments is null || type.Arguments.All(Visible));
+        static bool Visible(TypeSymbol type) => type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Union?.IsPublic != false && (type.Element is null || Visible(type.Element)) && (type.Arguments is null || type.Arguments.All(Visible));
         void Check(SourceUnit unit, RoutineSymbol method, int position)
         {
             if (method.IsPublic && (!Visible(method.Result) || method.Parameters.Any(parameter => !Visible(parameter.Type)) || method.GenericParameters.SelectMany(parameter => parameter.Constraints).Any(type => !Visible(type))))

@@ -62,8 +62,9 @@ Implemented patterns:
 
 - Literals and CLR metadata constants of supported primitive/enum types, including
   signed numeric constants. Numeric constant patterns use numeric equality;
-  Double.NaN is rejected as a constant pattern because it never equals itself.
-- Inclusive int/char constant ranges, such as 0..9 or #65..#90.
+  Floating NaN is rejected as a constant pattern because it never equals itself.
+- Inclusive integral/char constant ranges, such as 0..9 or #65..#90,
+  including all integer widths and declared subranges.
 - `null`, `_`, and `const Name: T` whole-value bindings.
 - Union cases with positional or named payload patterns, including nested cases.
 - CLR type tests and non-null bindings: `is Sys.Exception as Failure`.
@@ -147,8 +148,10 @@ built and executed as an integration test.
 explicit type arguments and constraints. [Generic unions and records](generic-types.md)
 now support recursive typed data and cross-assembly matching.
 [Constructor inference](type-argument-inference.md) also accepts uninstantiated
-union owners, with payload and expected-type evidence. Additional primitive
-types, authored enum/subrange domains, and LSP/query tools remain outside this milestone. There are
+union owners, with payload and expected-type evidence.
+[Primitive numbers, authored enums, and scalar domains](scalar-types.md) are implemented;
+subrange coverage can prove a complete declared interval.
+LSP/query tools remain outside this milestone. There are
 no compiler-provided Option/Result types or automatic error propagation. Domain
 unions model ordinary outcomes; exceptional failures retain CLR exceptions.
 [XML documentation](xml-documentation.md) is implemented.

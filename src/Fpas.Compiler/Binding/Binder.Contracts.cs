@@ -44,7 +44,7 @@ internal sealed partial class Binder
 
     private bool ContractExpression(BoundExpression value) => value switch
     {
-        BoundNull or BoundBoolean or BoundInteger or BoundDouble or BoundCharacter or BoundString or
+        BoundNull or BoundBoolean or BoundInteger or BoundDouble or BoundNumber or BoundCharacter or BoundString or
             BoundLocal or BoundParameter or BoundCapture or BoundFailure => true,
         BoundField field => field.Field.IsLiteral,
         BoundRecordField field => ContractExpression(field.Receiver),
@@ -66,8 +66,10 @@ internal sealed partial class Binder
 
     private bool ContractGetter(ImportedMethod method)
     {
+        if (references.ScalarInfo(method.Owner) is { Category: not ScalarCategory.Enum })
+            return method.Name is "get_Value" or "op_Equality" or "op_Inequality";
         if (method.Owner == TypeSymbol.String)
-            return method.Name is "get_Length" or "get_Chars" or "op_Equality" or "op_Inequality";
+            return method.Name is "get_Length" or "get_Chars" or "op_Equality" or "op_Inequality" or "CompareOrdinal";
         if (method.Owner.NullableValue || method.Owner.Definition?.FullName == "System.Nullable`1")
             return method.Name is "get_HasValue" or "get_Value";
         if (method.IsStatic || method.Parameters.Count != 0) return false;

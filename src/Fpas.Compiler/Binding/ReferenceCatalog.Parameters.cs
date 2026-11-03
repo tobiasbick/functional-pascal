@@ -20,20 +20,16 @@ internal sealed partial class ReferenceCatalog
                     : parameter.Attributes.HasFlag(ParameterAttributes.In) || MetadataAttributes.Has(reader, parameter.GetCustomAttributes(), "System.Runtime.CompilerServices.IsReadOnlyAttribute") ? "in" : "ref"
                 : MetadataAttributes.Has(reader, parameter.GetCustomAttributes(), "System.ParamArrayAttribute") ? "params" : "";
             result[index] = new(reader.GetString(parameter.Name), types[index], index, mode);
-            if (parameter.Attributes.HasFlag(ParameterAttributes.Optional) && !parameter.GetDefaultValue().IsNil)
+            if (parameter.Attributes.HasFlag(ParameterAttributes.Optional) && MetadataConstants.Decimal(reader, parameter.GetCustomAttributes()) is { } decimalValue)
+                result[index].Default = new BoundNumber(TypeSymbol.Decimal, decimalValue);
+            else if (parameter.Attributes.HasFlag(ParameterAttributes.Optional) && !parameter.GetDefaultValue().IsNil)
             {
-                var constant = reader.GetConstant(parameter.GetDefaultValue());
-                var blob = reader.GetBlobReader(constant.Value);
-                result[index].Default = constant.TypeCode switch
+                var value = MetadataConstants.Read(reader, parameter.GetDefaultValue());
+                result[index].Default = value switch
                 {
-                    ConstantTypeCode.Int32 when types[index].Definition?.IsEnum == true => new BoundField(new ImportedField(types[index], "<default>", types[index], true, true, blob.ReadInt32(), true), null),
-                    ConstantTypeCode.Int32 => new BoundInteger(blob.ReadInt32()),
-                    ConstantTypeCode.Double => new BoundDouble(blob.ReadDouble()),
-                    ConstantTypeCode.Boolean => new BoundBoolean(blob.ReadBoolean()),
-                    ConstantTypeCode.Char => new BoundCharacter((char)blob.ReadUInt16()),
-                    ConstantTypeCode.String => new BoundString(blob.ReadUTF16(blob.Length)),
-                    ConstantTypeCode.NullReference => types[index].IsValue && !types[index].NullableValue ? new BoundNew(types[index], null, []) : new BoundNull(),
-                    _ => null
+                    bool boolean => new BoundBoolean(boolean), string text => new BoundString(text),
+                    null => types[index].IsValue && !types[index].NullableValue ? new BoundNew(types[index], null, []) : new BoundNull(),
+                    _ => Binder.NumberConstant(types[index].NonNullable, value)
                 };
             }
         }

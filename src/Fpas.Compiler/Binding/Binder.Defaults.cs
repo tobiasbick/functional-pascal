@@ -29,7 +29,10 @@ internal sealed partial class Binder
                 if (!ConstantValue.IsConstant(value)) throw new InvalidOperationException();
                 var constant = ConstantValue.Evaluate(value);
                 var constantType = parameter.Type.NonNullable;
-                if (constant is not null && constantType != TypeSymbol.String && constantType != TypeSymbol.Boolean && constantType != TypeSymbol.Int32 && constantType != TypeSymbol.Double && constantType != TypeSymbol.Char && constantType.Definition?.IsEnum != true)
+                if (constantType.Kind is TypeKind.NativeInt or TypeKind.NativeUInt && constant is not null &&
+                    !NumericFacts.Fits(NumericValue.Integer(constant), constantType == TypeSymbol.NativeInt ? TypeSymbol.Int32 : TypeSymbol.UInt32))
+                    throw new InvalidOperationException();
+                if (constant is not null && constantType != TypeSymbol.String && constantType != TypeSymbol.Boolean && !TypeFacts.Numeric(constantType) && constantType.Definition?.IsEnum != true && constantType.Scalar?.Syntax.Category != ScalarCategory.Enum)
                     throw new InvalidOperationException();
                 parameter.Default = value;
             }

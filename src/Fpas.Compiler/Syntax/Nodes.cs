@@ -13,7 +13,8 @@ internal sealed record TypeSyntax(NameSyntax Name, bool Nullable = false, IReadO
 }
 
 internal sealed record CompilationUnitSyntax(NameSyntax Name, bool IsProgram, IReadOnlyList<ImportSyntax> Imports,
-    IReadOnlyList<RoutineSyntax> Routines, IReadOnlyList<StatementSyntax> Statements, IReadOnlyList<RecordSyntax> Records, IReadOnlyList<UnionSyntax> Unions, bool IsAsync = false, DocumentationComment? Documentation = null);
+    IReadOnlyList<RoutineSyntax> Routines, IReadOnlyList<StatementSyntax> Statements, IReadOnlyList<RecordSyntax> Records, IReadOnlyList<UnionSyntax> Unions, bool IsAsync = false, DocumentationComment? Documentation = null,
+    IReadOnlyList<AliasSyntax>? Aliases = null, IReadOnlyList<ScalarSyntax>? Scalars = null);
 internal sealed record RoutineSyntax(Token Name, bool IsPublic, IReadOnlyList<ParameterSyntax> Parameters,
     TypeSyntax? ResultType, IReadOnlyList<StatementSyntax> Statements, bool IsStatic = true, IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, IReadOnlyList<ContractSyntax>? Contracts = null, bool IsAsync = false, DocumentationComment? Documentation = null);
 internal sealed record ContractSyntax(Token Keyword, ParameterSyntax? Result, ExpressionSyntax Condition, string Text);

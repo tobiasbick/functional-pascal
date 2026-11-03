@@ -18,11 +18,11 @@ public sealed class DiagnosticsTests
     [InlineData("const A: string := B; const B: string := 'b';", "FP3001")]
     [InlineData("const A: string := 'a'; const A: string := 'b';", "FP3004")]
     [InlineData("const Console: string := 'a';", "FP3004")]
-    [InlineData("const A: long := 1;", "FP3005")]
+    [InlineData("const A: integer := 1;", "FP3005")]
     [InlineData("const A: int := 2147483648;", "FP3002")]
     [InlineData("const A: int := 1__0;", "FP1003")]
     [InlineData("const A: string := 'unfinished;", "FP1002")]
-    [InlineData("const A: double := 1.5F;", "FP1004")]
+    [InlineData("const A: double := 1.5Q;", "FP1004")]
     [InlineData("var A := 1;", "FP2002")]
     public void Invalid_programs_return_diagnostics_without_output(string body, string code)
     {

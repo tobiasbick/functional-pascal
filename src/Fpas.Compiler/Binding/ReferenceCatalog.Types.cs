@@ -35,7 +35,7 @@ internal sealed partial class ReferenceCatalog
         if (type.NullableValue) return Required("System.Nullable`1");
         if (type.Kind == TypeKind.Array) return Required("System.Array");
         if (type.Definition is not null) return type.Definition;
-        return Required(type.Kind switch
+        return Required(TypeFacts.ClrName(type) ?? type.Kind switch
         {
             TypeKind.String => "System.String", TypeKind.Object => "System.Object", TypeKind.Int32 => "System.Int32",
             TypeKind.Boolean => "System.Boolean", TypeKind.Double => "System.Double", TypeKind.Char => "System.Char",
@@ -118,6 +118,7 @@ internal sealed partial class ReferenceCatalog
                 foreach (var member in Hierarchy(bound)) if (seen.Add(member)) yield return member;
             yield break;
         }
+        if (type.Kind == TypeKind.Scalar) { yield return type; type = Parents(type).First(); }
         if (type.Kind == TypeKind.Record) { yield return type; type = type.Record!.UnionCase is { } member ? member.Owner.Type with { Arguments = type.Arguments } : TypeSymbol.Object; }
         if (type.Kind == TypeKind.Union) { yield return type; type = TypeSymbol.Object; }
         if (type.Kind == TypeKind.Array) type = Symbol(Required("System.Array"));
@@ -153,14 +154,15 @@ internal sealed partial class ReferenceCatalog
 
     internal bool CanAssign(TypeSymbol from, TypeSymbol to)
     {
+        if (from.NonNullable != to.NonNullable && TypeFacts.Numeric(to.NonNullable) && ScalarInfo(from) is { Category: Syntax.ScalarCategory.Range } range)
+            return CanAssign(range.Base with { IsNullable = from.IsNullable }, to);
         if (from.Kind == TypeKind.Void || to.Kind == TypeKind.Void) return false;
         if (from == TypeSymbol.Null) return to.IsNullable;
         if (from.IsParameter && to.IsParameter && from.Parameter == to.Parameter)
             return !from.IsNullable || to.IsNullable || from.NullValidated;
         if ((from.CanHaveNull && from.NeedsNullCheck || from.NullableValue) && to.IsReference && !to.IsNullable) return false;
         if (from.NullableValue && !to.IsNullable && !(to.IsReference && to.IsNullable)) return false;
-        if (from.NonNullable == to.NonNullable || from.NonNullable == TypeSymbol.Int32 && to.NonNullable == TypeSymbol.Double ||
-            from.NonNullable == TypeSymbol.Char && (to.NonNullable.Kind is TypeKind.Int32 or TypeKind.Double))
+        if (from.NonNullable == to.NonNullable || NumericFacts.Widen(from.NonNullable, to.NonNullable))
             return !from.IsNullable || to.IsNullable;
         if (from.Kind == TypeKind.Array && to.Kind == TypeKind.Array && from.Rank == to.Rank)
             return from.Element!.IsReference && to.Element!.IsReference && from.Element.IsNullable == to.Element.IsNullable && CanAssign(from.Element, to.Element);

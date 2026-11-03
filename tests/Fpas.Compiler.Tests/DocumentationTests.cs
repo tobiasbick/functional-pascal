@@ -6,6 +6,32 @@ namespace Fpas.Compiler.Tests;
 public sealed class DocumentationTests
 {
     [Fact]
+    public void Scalar_docs_use_real_type_and_enum_field_ids_and_aliases_use_the_target_signature()
+    {
+        var result = Compile("""
+            unit Domains;
+            // Transparent number.
+            public type Count = ulong;
+            // Account identity.
+            public type Id = distinct long;
+            // Network port.
+            public type Port = ushort range 1..65535;
+            // Direction.
+            public type Direction = enum : byte
+              // First direction.
+              North;
+            end enum;
+            // Read the number.
+            public function Read(Value: Count; IdValue: Id; Cost: decimal; Ratio: float): Count;
+            begin return Value; end function;
+            end unit;
+            """);
+        Assert.True(result.Success, string.Join(';', result.Diagnostics)); Assert.Empty(result.Diagnostics);
+        var members = XDocument.Parse(System.Text.Encoding.UTF8.GetString(result.Program!.XmlDocumentation!)).Descendants("member");
+        Assert.Equal(new[] { "F:Domains.Direction.North", "M:Domains.Read(System.UInt64,Domains.Id,System.Decimal,System.Single)",
+            "T:Domains.Direction", "T:Domains.Id", "T:Domains.Port" }, members.Select(member => (string)member.Attribute("name")!));
+    }
+    [Fact]
     public void Public_XML_uses_CLR_ids_for_overloads_generics_arrays_byrefs_properties_and_union_factories()
     {
         const string source = """

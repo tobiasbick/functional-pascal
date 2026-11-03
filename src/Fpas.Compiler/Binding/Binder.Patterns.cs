@@ -30,11 +30,11 @@ internal sealed partial class Binder
                 return new TypeMatch(target, narrowed);
             case ConstantPatternSyntax constant: return BindConstantPattern(constant.Value, type);
             case RangePatternSyntax range:
-                if (type.NonNullable.Kind is not (TypeKind.Int32 or TypeKind.Char)) throw source.Error("FP3024", "Range patterns currently require int or char selectors.", range.Position);
+                var rangeType = references.ScalarInfo(type) is { Category: ScalarCategory.Range } domain ? domain.Base : type.NonNullable;
+                if (!NumericFacts.Integral(rangeType)) throw source.Error("FP3024", "Range patterns require an integral or subrange selector.", range.Position);
                 var lower = BindConstantPattern(range.Lower, type); var upper = BindConstantPattern(range.Upper, type);
-                var low = System.Convert.ToInt64(lower.Value, System.Globalization.CultureInfo.InvariantCulture);
-                var high = System.Convert.ToInt64(upper.Value, System.Globalization.CultureInfo.InvariantCulture);
                 if (lower.Value is null || upper.Value is null) throw source.Error("FP3024", "Range bounds must be non-null integral constants.", range.Position);
+                var low = NumericValue.Integer(lower.Value); var high = NumericValue.Integer(upper.Value);
                 if (low > high) throw source.Error("FP3024", "A pattern range cannot be reversed.", range.Position);
                 return new RangeMatch(low, high);
             case NamedPatternSyntax named:
@@ -70,39 +70,23 @@ internal sealed partial class Binder
     private ConstantMatch BindConstantPattern(ExpressionSyntax syntax, TypeSymbol selector)
     {
         var expression = BindExpression(syntax);
+        var domain = references.ScalarInfo(selector);
+        var target = domain?.Category == ScalarCategory.Range ? domain.Base : selector.NonNullable;
+        if (TypeFacts.Numeric(target) && (references.CanAssign(expression.Type, target) || ConstantFits(expression, target)))
+            expression = Convert(expression, target, syntax.Position);
         object? value;
-        try { value = PatternConstant(expression); }
+        try { value = ConstantValue.Evaluate(expression); }
         catch (OverflowException) { throw source.Error("FP3024", "The pattern constant is outside its type's range.", syntax.Position); }
         catch (InvalidOperationException) { throw source.Error("FP3024", "A literal or CLR metadata constant is required in a constant pattern.", syntax.Position); }
-        if (value is double number && double.IsNaN(number)) throw source.Error("FP3024", "NaN never matches a numeric constant pattern; use a guard or fallback.", syntax.Position);
+        if (value is double number && double.IsNaN(number) || value is float single && float.IsNaN(single))
+            throw source.Error("FP3024", "NaN never matches a numeric constant pattern; use a guard or fallback.", syntax.Position);
         if (value is null) return new(new BoundNull(), null);
-        expression = expression.Type.Kind switch
-        {
-            TypeKind.Int32 => new BoundInteger((int)value), TypeKind.Double => new BoundDouble((double)value),
-            TypeKind.Char => new BoundCharacter((char)value), TypeKind.String => new BoundString((string)value),
-            TypeKind.Boolean => new BoundBoolean((bool)value), _ => expression
-        };
-        if (!references.CanAssign(expression.Type, selector.NonNullable)) throw source.Error("FP3024", "The constant cannot match this selector type.", syntax.Position);
-        if (selector.NonNullable == TypeSymbol.Double && expression.Type != TypeSymbol.Double)
-        {
-            value = System.Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture);
-            expression = new BoundDouble((double)value);
-        }
-        if (selector.NonNullable == TypeSymbol.Int32 && expression.Type == TypeSymbol.Char) { value = (int)(char)value!; expression = new BoundInteger((int)value); }
+        if (!references.CanAssign(expression.Type, target)) throw source.Error("FP3024", "The constant cannot match this selector type.", syntax.Position);
+        if (domain?.Category == ScalarCategory.Range && (NumericValue.Integer(value) < domain.Lower || NumericValue.Integer(value) > domain.Upper))
+            throw source.Error("FP3024", "The pattern is outside the declared subrange.", syntax.Position);
+        if (TypeFacts.Numeric(expression.Type)) expression = NumberConstant(expression.Type, value);
         return new(expression, value);
     }
-
-    private static object? PatternConstant(BoundExpression expression) => expression switch
-    {
-        BoundNull => null, BoundBoolean boolean => boolean.Value, BoundInteger integer => integer.Value,
-        BoundDouble real => real.Value, BoundCharacter character => character.Value, BoundString text => text.Value,
-        BoundField { Field.IsLiteral: true } field => field.Field.Constant,
-        BoundUnary { Operator: "+" } unary => PatternConstant(unary.Operand),
-        BoundUnary { Operator: "-", Type.Kind: TypeKind.Int32 } unary => checked(-System.Convert.ToInt32(PatternConstant(unary.Operand), System.Globalization.CultureInfo.InvariantCulture)),
-        BoundUnary { Operator: "-", Type.Kind: TypeKind.Double } unary => -System.Convert.ToDouble(PatternConstant(unary.Operand), System.Globalization.CultureInfo.InvariantCulture),
-        BoundConversion { Target.Kind: TypeKind.Int32, Operand.Type.Kind: TypeKind.Char } conversion => (int)(char)PatternConstant(conversion.Operand)!,
-        _ => throw new InvalidOperationException("Not a pattern constant.")
-    };
 
     private TypeSymbol PatternType(TypeSyntax syntax)
     {

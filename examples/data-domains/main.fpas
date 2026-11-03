@@ -1,0 +1,19 @@
+program DomainDemo;
+uses Example.Domains as D, System.Console as Console;
+
+begin
+  const Account: D.AccountId := new D.AccountId(42L);
+  const Name: D.PlayerName := new D.PlayerName('Ada');
+  const State: D.Status := D.Status.Online;
+  const Price: D.Amount := 19.95M;
+  const Endpoint: D.Port := new D.Port(80);
+  const Defaults: D.Port[] := new D.Port[1];
+
+  Console.WriteLine(Account.Value);
+  Console.WriteLine(Name.Value);
+  Console.WriteLine(State.ToString());
+  Console.WriteLine(Price);
+  Console.WriteLine(D.Describe(Endpoint));
+  Console.WriteLine(Defaults[0].Value);
+end;
+end program;

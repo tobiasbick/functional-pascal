@@ -37,6 +37,7 @@ internal sealed partial class Binder
             case NamedArgumentSyntax named: throw source.Error("FP3022", "Named arguments are currently supported only for records and union cases.", named.Position);
             case NewSyntax creation:
                 var created = BindType(creation.Type);
+                if (references.ScalarInfo(created) is { Category: not ScalarCategory.Enum } domain) return DomainNew(domain, creation, check);
                 if (references.RecordInfo(created) is { } recordInfo) return BindRecordNew(creation, recordInfo, check);
                 if (created.IsParameter && !created.NullableValue)
                 {
@@ -56,13 +57,23 @@ internal sealed partial class Binder
                 var targetType = BindType(cast.Type);
                 return Convert(BindExpression(cast.Operand, check, targetType), targetType, cast.Position, explicitCast: true, check: check);
             case UnarySyntax unary:
-                if (unary.Operator.Text == "-" && unary.Operand is LiteralSyntax { Token.Kind: TokenKind.Integer } number &&
-                    number.Token.Text.Replace("_", "", StringComparison.Ordinal) == "2147483648")
-                    return new BoundInteger(int.MinValue);
+                if (unary.Operator.Text == "-" && unary.Operand is LiteralSyntax { Token.Kind: TokenKind.Integer } number && !number.Token.Text.EndsWith('U') && !number.Token.Text.EndsWith('u'))
+                    return NumberLiteral(number.Token, negative: true);
                 var operand = BindExpression(unary.Operand, check);
-                if (operand.Type == TypeSymbol.Char) operand = Convert(operand, TypeSymbol.Int32, unary.Position);
+                if (unary.Operator.Text == "not" && references.ScalarInfo(operand.Type) is { Category: ScalarCategory.Enum } enumType)
+                {
+                    var promotedEnum = NumericFacts.Unary(enumType.Base, "not");
+                    return new BoundConversion(new BoundUnary("not", new BoundConversion(operand, promotedEnum, false), promotedEnum, false), operand.Type, false);
+                }
+                if (TypeFacts.Numeric(operand.Type))
+                {
+                    var promoted = NumericFacts.Unary(operand.Type, unary.Operator.Text);
+                    if (promoted == TypeSymbol.Unsupported || unary.Operator.Text == "not" && !NumericFacts.Integral(promoted))
+                        throw source.Error("FP3002", "Invalid numeric unary operator.", unary.Position);
+                    operand = Convert(operand, promoted, unary.Position);
+                }
                 if ((unary.Operator.Text is "+" or "-" && TypeFacts.Numeric(operand.Type)) ||
-                    (unary.Operator.Text == "not" && operand.Type.Kind is TypeKind.Boolean or TypeKind.Int32))
+                    (unary.Operator.Text == "not" && (operand.Type == TypeSymbol.Boolean || NumericFacts.Integral(operand.Type))))
                     return new BoundUnary(unary.Operator.Text, operand, operand.Type, check);
                 throw source.Error("FP3002", "The unary operator does not accept this operand type.", unary.Position);
             case BinarySyntax binary:
@@ -77,18 +88,17 @@ internal sealed partial class Binder
     private BoundExpression BindLiteral(LiteralSyntax literal)
     {
         var token = literal.Token;
-        if (token.Kind == TokenKind.Character && int.TryParse(token.Text.Replace("_", "", StringComparison.Ordinal), out var character) && character is >= 0 and <= 65535)
-            return new BoundCharacter((char)character);
+        if (token.Kind == TokenKind.Character)
+        {
+            if (int.TryParse(token.Text.Replace("_", "", StringComparison.Ordinal), out var character) && character is >= 0 and <= 65535)
+                return new BoundCharacter((char)character);
+            throw source.Error("FP3002", "A character literal must fit one UTF-16 code unit.", token.Position, token.Length);
+        }
         if (token.Kind == TokenKind.String)
             return new BoundString(token.Text);
         if (token.Text == "null" && token.Kind == TokenKind.Keyword) return new BoundNull();
         if (token.Kind == TokenKind.Keyword) return new BoundBoolean(token.Text == "true");
-        var digits = token.Text.Replace("_", "", StringComparison.Ordinal);
-        if (token.Kind == TokenKind.Integer && int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var number))
-            return new BoundInteger(number);
-        if (token.Kind == TokenKind.Real && double.TryParse(digits.TrimEnd('d', 'D'), NumberStyles.Float, CultureInfo.InvariantCulture, out var real) && double.IsFinite(real))
-            return new BoundDouble(real);
-        throw source.Error("FP3002", "The literal is outside its int or finite double range.", literal.Position, token.Length);
+        return NumberLiteral(token);
     }
 
     private BoundExpression BindBinary(BinarySyntax syntax, bool check)
@@ -101,6 +111,10 @@ internal sealed partial class Binder
         if (left.Type == TypeSymbol.Boolean && syntax.Operator.Text is "and" or "or" || syntax.Operator.Text == "??")
             SetFacts(Merge([incoming, nonNull.ToHashSet()]));
         var op = syntax.Operator.Text;
+        if (ScalarBinary(left, op, right, syntax.Position, check) is { } scalar) return scalar;
+        if (references.ScalarInfo(right.Type) is { Category: ScalarCategory.Range } rightRange && TypeFacts.Numeric(left.Type))
+            right = new BoundCall(ReferenceCatalog.DomainGetter(rightRange), [], right);
+        if (TypeFacts.Numeric(left.Type) && TypeFacts.Numeric(right.Type)) return NumericBinary(left, op, right, syntax.Position, check);
         if (op == "??")
         {
             if (left.Type == TypeSymbol.Null) return right;
@@ -130,7 +144,6 @@ internal sealed partial class Binder
             if (right.Type == TypeSymbol.Char) right = new BoundCall(references.FindMethod(TypeSymbol.Char, "ToString", [], syntax.Position, source, isStatic: false), [], right);
         }
         var common = references.Common(left.Type, right.Type);
-        if (common == TypeSymbol.Char) common = TypeSymbol.Int32;
         if (common.Kind == TypeKind.String && op is "+" or "=" or "<>")
         {
             var method = references.FindMethod(TypeSymbol.String, op == "+" ? "Concat" : op == "=" ? "op_Equality" : "op_Inequality",
@@ -145,14 +158,8 @@ internal sealed partial class Binder
             if (equality is not null) { ForgetCapturedFacts(); return new BoundCall(equality, ConvertArguments([left, right], equality.Parameters, syntax.Position)); }
             return new BoundBinary(Convert(left, common, syntax.Position), op, Convert(right, common, syntax.Position), TypeSymbol.Boolean, check);
         }
-        var arithmetic = (TypeFacts.Numeric(common) && (op is "+" or "-" or "*")) || (common == TypeSymbol.Double && op == "/") ||
-            (common == TypeSymbol.Int32 && (op is "div" or "mod" or "shl" or "shr"));
-        var comparison = (TypeFacts.Numeric(common) && (op is "=" or "<>" or "<" or "<=" or ">" or ">=")) ||
-            (common == TypeSymbol.Boolean && (op is "=" or "<>"));
-        var bitwise = (common.Kind is TypeKind.Boolean or TypeKind.Int32) && (op is "and" or "or" or "xor");
-        if (!arithmetic && !comparison && !bitwise)
+        if (common != TypeSymbol.Boolean || op is not ("=" or "<>" or "and" or "or" or "xor"))
             throw source.Error("FP3002", $"Operator '{op}' does not accept {TypeFacts.Display(left.Type)} and {TypeFacts.Display(right.Type)}.", syntax.Position);
-        return new BoundBinary(Convert(left, common, syntax.Position), op, Convert(right, common, syntax.Position),
-            comparison ? TypeSymbol.Boolean : common, check);
+        return new BoundBinary(left, op, right, TypeSymbol.Boolean, check);
     }
 }

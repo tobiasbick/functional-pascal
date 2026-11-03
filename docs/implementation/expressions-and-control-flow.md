@@ -7,22 +7,23 @@ builds and executes through its ordinary `.fpasproj`.
 
 ## Types, literals, and expressions
 
-- Supported value types are string, int, bool, and double, including source
-  parameters/results and referenced public static CLR methods.
-- Decimal int literals, decimal doubles with a fractional part/exponent/D suffix,
+- All [primitive numbers](scalar-types.md), string, and bool are supported, including source
+  parameters/results and referenced CLR methods.
+- Decimal/hexadecimal integral literals, L/U/UL suffixes, real F/D/M suffixes,
   digit separators, true/false, and single-line strings are implemented.
-  A directly negated literal can express int.MinValue. Double literals must be
+  A directly negated literal can express a signed minimum. Floating literals must be
   finite; runtime floating operations retain IEEE infinity/NaN behavior.
 - Unary +, -, not; binary +, -, *, /, div, mod; comparison =, <>, <, <=, >, >=;
   and Boolean/integer and, or, xor plus integer shl/shr follow the baseline
   precedence. Comparisons require parentheses when nested.
-- int arithmetic and double-to-int casts check overflow by default.
+- Integral arithmetic and numeric casts check overflow by default.
   `unchecked(Expression)` enables wrapping integer arithmetic and unchecked
   conversion only within that expression. Integer division retains CLR errors.
   `div` truncates toward zero; `/` needs floating operands after promotion.
-- int widens implicitly to double in expressions, bindings, arguments, and
-  returns. `cast<int>` narrows a double with truncation toward zero; `cast<double>`
-  widens an int explicitly. No Boolean/numeric or string/numeric conversions
+- C# numeric widening applies in expressions, bindings, arguments, and returns.
+  `cast<int>` narrows a double with truncation toward zero; `cast<double>`
+  widens an int explicitly. Decimal remains checked inside unchecked expressions.
+  No Boolean/numeric or string/numeric conversions
   are inserted.
 - Metadata overload selection prefers identity over numeric widening for each
   argument. A candidate must be at least as good for every argument and better
@@ -71,7 +72,7 @@ exits outside loops. The mixed-project suite verifies exported bool/double metho
 from C#, and the SDK builds the checked-in Mandelbrot program and checks all
 1,920 output characters against an independent System.Numerics.Complex calculation.
 
-Other numeric primitives and literal forms, global values, nested routines,
+Global values, named nested routines,
 and repeat loops remain later work. [XML documentation](xml-documentation.md) is
 implemented. [Multiple FPAS sources](multiple-sources.md)
 [CLR objects, nullable types, and exceptions](clr-objects-and-resources.md), and

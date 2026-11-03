@@ -22,6 +22,8 @@ internal sealed partial class Binder
                     condition = new BoundNullTest(value, false);
                     value = new BoundConversion(value, value.Type.NonNullable, false);
                 }
+                if (references.ScalarInfo(value.Type) is { Category: Syntax.ScalarCategory.Range } domain)
+                    value = new BoundCall(ReferenceCatalog.DomainGetter(domain), [], value);
                 if (value.Type.NonNullable != constant.Expression.Type.NonNullable)
                 {
                     condition = Both(condition, new BoundTypeTest(value, constant.Expression.Type.NonNullable));
@@ -29,13 +31,16 @@ internal sealed partial class Binder
                 }
                 var equals = constant.Expression.Type == TypeSymbol.String
                     ? (BoundExpression)new BoundCall(references.FindMethod(TypeSymbol.String, "op_Equality", [value.Type, constant.Expression.Type], 0, source), [value, constant.Expression])
+                    : TypeFacts.Numeric(value.Type) ? NumericBinary(value, "=", constant.Expression, 0, false)
                     : new BoundBinary(value, "=", constant.Expression, TypeSymbol.Boolean, false);
                 return Both(condition, equals);
             case RangeMatch range:
                 var present = value.Type.NullableValue ? (BoundExpression)new BoundNullTest(value, false) : new BoundBoolean(true);
                 if (value.Type.NullableValue) value = new BoundConversion(value, value.Type.NonNullable, false);
-                return Both(present, Both(new BoundBinary(value, ">=", new BoundInteger((int)range.Lower), TypeSymbol.Boolean, false),
-                    new BoundBinary(value, "<=", new BoundInteger((int)range.Upper), TypeSymbol.Boolean, false)));
+                if (references.ScalarInfo(value.Type) is { Category: Syntax.ScalarCategory.Range } rangeDomain)
+                    value = new BoundCall(ReferenceCatalog.DomainGetter(rangeDomain), [], value);
+                return Both(present, Both(NumericBinary(value, ">=", NumberConstant(value.Type, NumericValue.ConvertTo(range.Lower, value.Type, true)), 0, false),
+                    NumericBinary(value, "<=", NumberConstant(value.Type, NumericValue.ConvertTo(range.Upper, value.Type, true)), 0, false)));
             case CaseMatch item:
                 var temporary = Allocate("<case-value>", item.Case.Type with { IsNullable = true });
                 BoundExpression test = new BoundNullTest(new BoundLocal(temporary), false);

@@ -21,7 +21,7 @@ internal sealed partial class Binder
         }
         var parts = NameParts(expression);
         if (parts is not null && (HasValue(parts[0]))) return null;
-        return parts is not null && (imports.ContainsKey(parts[0]) || unit.Records.ContainsKey(parts[0]) || unit.Unions.ContainsKey(parts[0]) || TypeFacts.Primitive(parts[0]) != TypeSymbol.Unsupported)
+        return parts is not null && (imports.ContainsKey(parts[0]) || unit.HasType(parts[0]) || TypeFacts.Primitive(parts[0]) != TypeSymbol.Unsupported)
             ? catalog.ResolvePath(parts, unit, references, expression.Position, arity, allowOpenGeneric) : null;
     }
 

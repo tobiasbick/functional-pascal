@@ -1,10 +1,12 @@
+using System.Numerics;
+
 namespace Fpas.Compiler.Binding;
 
 // A pattern matrix is specialized one constructor at a time. Payload columns
 // preserve correlations, so nested cases are checked without enumerating values.
 internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.SourceText source, int position)
 {
-    private sealed record Constructor(UnionCaseInfo? Case, object? Constant, TypeSymbol? ActualType, long? Lower = null, long? Upper = null, bool IsNull = false, bool IsOther = false)
+    private sealed record Constructor(UnionCaseInfo? Case, object? Constant, TypeSymbol? ActualType, BigInteger? Lower = null, BigInteger? Upper = null, bool IsNull = false, bool IsOther = false)
     {
         internal IReadOnlyList<TypeSymbol> Fields => Case?.Fields.Select(payload => payload.Type).ToArray() ?? [];
     }
@@ -51,17 +53,18 @@ internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.Source
         {
             yield return new(null, false, type); yield return new(null, true, type); yield break;
         }
-        if (type.Kind is TypeKind.Int32 or TypeKind.Char)
+        var domain = references.ScalarInfo(type);
+        if (NumericFacts.Integral(type) || domain?.Category == Syntax.ScalarCategory.Range)
         {
-            var minimum = type == TypeSymbol.Char ? char.MinValue : (long)int.MinValue;
-            var maximum = type == TypeSymbol.Char ? char.MaxValue : (long)int.MaxValue;
-            var cuts = new SortedSet<long> { minimum, maximum + 1 };
+            var minimum = domain?.Lower ?? NumericFacts.Min(type);
+            var maximum = domain?.Upper ?? NumericFacts.Max(type);
+            var cuts = new SortedSet<BigInteger> { minimum, maximum + 1 };
             foreach (var pattern in patterns)
             {
                 if (pattern is RangeMatch range) { cuts.Add(range.Lower); cuts.Add(range.Upper + 1); }
                 if (pattern is ConstantMatch { Value: not null } constant)
                 {
-                    var value = System.Convert.ToInt64(constant.Value, System.Globalization.CultureInfo.InvariantCulture);
+                    var value = NumericValue.Integer(constant.Value);
                     cuts.Add(value); cuts.Add(value + 1);
                 }
             }
@@ -69,7 +72,7 @@ internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.Source
             for (var index = 0; index < points.Length - 1; index++) yield return new(null, null, type, points[index], points[index + 1] - 1);
             // Open scalar selectors require a fallback even when ranges span all
             // currently representable integers; ranges are not subrange domains.
-            yield return new(null, null, type, IsOther: true);
+            if (domain?.Category != Syntax.ScalarCategory.Range) yield return new(null, null, type, IsOther: true);
             yield break;
         }
         var constants = new HashSet<(TypeSymbol, object)>();
@@ -110,7 +113,7 @@ internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.Source
         {
             if (constant.Value is null) return null;
             if (constructor.Lower is { } low)
-                return System.Convert.ToInt64(constant.Value, System.Globalization.CultureInfo.InvariantCulture) == low && constructor.Upper == low ? [] : null;
+                return NumericValue.Integer(constant.Value) == low && constructor.Upper == low ? [] : null;
             return constant.Expression.Type == constructor.ActualType && Equals(constant.Value, constructor.Constant) ? [] : null;
         }
         return null;

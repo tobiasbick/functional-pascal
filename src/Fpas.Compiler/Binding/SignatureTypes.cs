@@ -11,6 +11,9 @@ internal sealed class SignatureTypes(ReferenceCatalog catalog, ReferenceAssembly
         PrimitiveTypeCode.Void => TypeSymbol.Void, PrimitiveTypeCode.String => TypeSymbol.String,
         PrimitiveTypeCode.Int32 => TypeSymbol.Int32, PrimitiveTypeCode.Boolean => TypeSymbol.Boolean,
         PrimitiveTypeCode.Double => TypeSymbol.Double, PrimitiveTypeCode.Char => TypeSymbol.Char, PrimitiveTypeCode.Object => TypeSymbol.Object,
+        PrimitiveTypeCode.SByte => TypeSymbol.SByte, PrimitiveTypeCode.Byte => TypeSymbol.Byte, PrimitiveTypeCode.Int16 => TypeSymbol.Int16,
+        PrimitiveTypeCode.UInt16 => TypeSymbol.UInt16, PrimitiveTypeCode.UInt32 => TypeSymbol.UInt32, PrimitiveTypeCode.Int64 => TypeSymbol.Int64,
+        PrimitiveTypeCode.UInt64 => TypeSymbol.UInt64, PrimitiveTypeCode.IntPtr => TypeSymbol.NativeInt, PrimitiveTypeCode.UIntPtr => TypeSymbol.NativeUInt, PrimitiveTypeCode.Single => TypeSymbol.Single,
         _ => TypeSymbol.Unsupported
     };
     public TypeSymbol GetGenericInstantiation(TypeSymbol genericType, ImmutableArray<TypeSymbol> arguments)

@@ -59,6 +59,7 @@ internal sealed partial class ReferenceCatalog
     private bool HasDefaultConstructor(TypeSymbol type)
     {
         if (type.IsValue) return true;
+        if (type.Kind == TypeKind.Scalar) return false;
         if (type.IsParameter) return type.Parameter!.HasConstructor;
         if (type.Record is { } record) return record.UnionCase is null && record.Fields.Count == 0;
         if (type.Kind == TypeKind.Union) return false;

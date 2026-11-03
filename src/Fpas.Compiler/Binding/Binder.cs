@@ -30,7 +30,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             methods.Add(BindRoutine(entry, program.Statements, program.Name.Position));
         foreach (var union in unit.Unions.Values) BindUnion(union);
         foreach (var record in unit.RecordTypes) BindRecord(record);
-        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray());
+        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray());
     }
 
     private void InitializeImports()
@@ -110,9 +110,10 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         if (value is BoundDelegate callable && Retarget(callable, target) is { } convertedDelegate) return convertedDelegate;
         if (value.Type == target && target != TypeSymbol.Void)
             return value;
+        if (ScalarConversion(value, target, position, explicitCast, check) is { } scalar) return scalar;
         if (value.Type.CanHaveNull && value.Type.NeedsNullCheck && target.IsReference && !target.IsNullable && !(value.Type.IsParameter && target.IsParameter && value.Type.Parameter == target.Parameter))
             throw source.Error("FP3013", "A nullable reference needs validation before conversion to a non-null reference.", position);
-        if (target != TypeSymbol.Void && (references.CanAssign(value.Type, target) || explicitCast &&
+        if (target != TypeSymbol.Void && (references.CanAssign(value.Type, target) || !explicitCast && ConstantFits(value, target) || explicitCast &&
             (TypeFacts.Numeric(value.Type.NonNullable) && TypeFacts.Numeric(target.NonNullable) ||
              value.Type.IsReference && target.IsReference || value.Type == TypeSymbol.Object && (target.IsValue || target.IsParameter) ||
              target.IsParameter && value.Type.IsReference || value.Type.IsParameter && target.IsParameter ||

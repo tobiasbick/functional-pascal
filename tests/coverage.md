@@ -101,6 +101,12 @@ The [process recipe](../docs/pascal/libraries/processes.md) compiles directly fr
 Markdown. MsBuildTests.ProcessRecipe calls that exact unit from C# in Debug/Release,
 checking argument/environment/cwd isolation, stdin EOF, nonzero exit, bounded
 concurrent stdout/stderr capture, timeout/cancellation cleanup, and launch failure.
+The environment/time and numeric/random recipes also compile and execute directly
+from Markdown. Environment cases cover an absent setting, accepted integer bounds,
+whitespace/signs, invalid text, and overflow in isolated child environments. Fixed
+offsets and invariant formats make time/numeric output deterministic; elapsed time
+has no exact timing assertion. Seeded rolls are compared with a C# Random on the
+current runtime, while unseeded generators have range/size checks.
 
 AgentReferenceTests checks the compact reference's policy, complete/unique
 examples, local links, and exact o200k_base budgets using packaged vocabulary.

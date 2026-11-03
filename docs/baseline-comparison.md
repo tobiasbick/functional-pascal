@@ -105,7 +105,7 @@ Practical documentation work remains in [documentation gaps](future/documentatio
 The [standalone SDK walkthrough](build/standalone-sdk.md) covers an independent
 FPAS/C# consumer with explicit package sources, versions, and deployment files.
 The next useful item is [D2: practical .NET API recipes](future/documentation-gaps.md#d2-practical-net-api-recipes),
-continuing with environment, time/duration, numeric, and random-value workflows.
+continuing with HTTP request/response lifetime, cancellation, and stream/text workflows.
 
 ## See also
 

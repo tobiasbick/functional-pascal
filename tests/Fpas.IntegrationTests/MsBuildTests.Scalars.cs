@@ -14,7 +14,7 @@ public sealed partial class MsBuildTests
         var build = await sdk.Run(project, "build", "Domains/DataDomains.fpasproj");
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var run = await ProcessRunner.RunAsync([project.File("Domains/bin/Debug/net10.0/DataDomains.dll")], workingDirectory: project.Path,
-            environment: new Dictionary<string, string> { ["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1" });
+            environment: new Dictionary<string, string?> { ["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1" });
         Assert.True(run.ExitCode == 0, run.Output + run.Error);
         Assert.Equal(string.Join(Environment.NewLine, "42", "Ada", "Online", "19.95", "system", "1", ""), run.Output);
     }

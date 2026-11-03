@@ -27,7 +27,7 @@ public sealed class StandaloneSdkGuideTests
         var packages = Path.Combine(consumer, ".packages");
         Directory.CreateDirectory(feed);
         Assert.False(Directory.Exists(packages));
-        var environment = new Dictionary<string, string>
+        var environment = new Dictionary<string, string?>
         {
             ["NUGET_PACKAGES"] = packages,
             ["NUGET_HTTP_CACHE_PATH"] = directory.File("http-cache")
@@ -81,7 +81,7 @@ public sealed class StandaloneSdkGuideTests
     private static string Expected(string name) => name == "App" ? "Hello, FPAS" : "Hello, C#";
 
     private static async Task<ProcessResult> Run(string[] arguments, string? workingDirectory = null,
-        IReadOnlyDictionary<string, string>? environment = null)
+        IReadOnlyDictionary<string, string?>? environment = null)
     {
         var result = await ProcessRunner.RunAsync(arguments, workingDirectory: workingDirectory,
             environment: environment, timeLimit: TimeSpan.FromMinutes(2));

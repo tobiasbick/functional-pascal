@@ -24,6 +24,12 @@ different Pascal dialect cannot validate them.
 - Nested CLR type annotations support arguments on every enclosing/nested
   segment. Generic arithmetic and static abstract/virtual calls use imported
   interface constraints; see [generic types](../pascal/language/functions/generic-routines.md).
+- The [time recipe](../pascal/libraries/environment-and-time.md) cannot subtract
+  two concrete DateTimeOffset values with `Deadline - Stamp`: binding
+  `const Duration: Sys.TimeSpan := Deadline - Stamp;` reports FP3002. Concrete
+  imported arithmetic operators are outside the current lookup; use the actual
+  instance `Deadline.Subtract(Stamp)` API. CLR comparison operators and operators
+  through generic interface constraints retain their documented support.
 - Byref-like/span APIs, pointers, ref returns, custom awaiters, expression-tree
   conversion, and async enumeration are outside the supported interoperability
   contract. Choose supported .NET overloads/types where available; record a

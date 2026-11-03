@@ -8,7 +8,7 @@ internal sealed record ProcessResult(int ExitCode, string Output, string Error);
 internal static class ProcessRunner
 {
     internal static async Task<ProcessResult> RunAsync(IEnumerable<string> arguments, string? input = null,
-        string? workingDirectory = null, IReadOnlyDictionary<string, string>? environment = null, TimeSpan? timeLimit = null)
+        string? workingDirectory = null, IReadOnlyDictionary<string, string?>? environment = null, TimeSpan? timeLimit = null)
     {
         var start = new ProcessStartInfo(TestEnvironment.DotnetHost)
         {
@@ -27,7 +27,8 @@ internal static class ProcessRunner
             start.WorkingDirectory = workingDirectory;
         if (environment is not null)
             foreach (var (key, value) in environment)
-                start.Environment[key] = value;
+                if (value is null) start.Environment.Remove(key);
+                else start.Environment[key] = value;
         foreach (var argument in arguments)
             start.ArgumentList.Add(argument);
         using var process = Process.Start(start) ?? throw new InvalidOperationException("Unable to start dotnet.");

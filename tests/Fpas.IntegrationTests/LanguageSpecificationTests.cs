@@ -42,7 +42,8 @@ public sealed class LanguageSpecificationTests
         }
         File.Copy(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasCliPath"))!, "Fpas.Core.dll"), directory.File("Fpas.Core.dll"));
         File.WriteAllText(directory.File("world.json"), "{\"world\":\"test\"}");
-        var environment = new Dictionary<string, string> { ["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1", ["FPAS_PLAYER"] = "Explorer" };
+        var environment = new Dictionary<string, string?> { ["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1", ["FPAS_PLAYER"] = "Explorer",
+            ["FPAS_RECIPE_ATTEMPTS"] = "5" };
         var result = name == "DownloadPage" ? await RunWithRejectedProxy(output, directory.Path, environment)
             : await ProcessRunner.RunAsync([output], workingDirectory: directory.Path, environment: environment);
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
@@ -84,6 +85,9 @@ public sealed class LanguageSpecificationTests
             "TextAndRegex" => ["room#", "3"],
             "LoopValues" => ["7"],
             "ResourceLifetime" => ["Resource released"],
+            "EnvironmentConfiguration" => ["5"],
+            "TimeAndDuration" => ["2030-04-05T10:30:00.0000000+00:00", "01:30:00"],
+            "NumericUtilities" => ["12.34", "12.35", "43"],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);
@@ -91,6 +95,12 @@ public sealed class LanguageSpecificationTests
         {
             case "Events": Assert.All(lines.Where(line => line.Length != 0), line => Assert.Equal("Tick", line)); break;
             case "DownloadPage": Assert.Contains("502", result.Output); break;
+            case "RandomValues":
+                Assert.Equal(4, lines.Length);
+                var random = new Random(1729);
+                for (var index = 0; index < 3; index++) Assert.Equal(random.Next(1, 7).ToString(System.Globalization.CultureInfo.InvariantCulture), lines[index]);
+                Assert.Equal("Random values verified", lines[3]);
+                break;
             case "CaptureVersion":
                 Assert.Equal(2, lines.Length);
                 Assert.Equal("0", lines[0]);
@@ -108,9 +118,22 @@ public sealed class LanguageSpecificationTests
             Assert.Equal(0, missing.ExitCode); Assert.Empty(missing.Error);
             Assert.Contains("world.json", missing.Output); Assert.EndsWith("Read attempt finished" + Environment.NewLine, missing.Output);
         }
+        if (name == "EnvironmentConfiguration")
+        {
+            foreach (var (value, expectedOutput) in new (string?, string?)[]
+                     { (null, "3"), ("1", "1"), ("10", "10"), (" +7 ", "7"), ("", null), ("invalid", null),
+                         ("0", null), ("11", null), ("2147483648", null) })
+            {
+                environment["FPAS_RECIPE_ATTEMPTS"] = value;
+                var configured = await ProcessRunner.RunAsync([output], workingDirectory: directory.Path, environment: environment);
+                Assert.Equal(expectedOutput is null ? 2 : 0, configured.ExitCode);
+                Assert.Equal(expectedOutput is null ? "" : expectedOutput + Environment.NewLine, configured.Output);
+                Assert.Equal(expectedOutput is null ? "Invalid FPAS_RECIPE_ATTEMPTS" + Environment.NewLine : "", configured.Error);
+            }
+        }
     }
 
-    private static async Task<ProcessResult> RunWithRejectedProxy(string output, string directory, Dictionary<string, string> environment)
+    private static async Task<ProcessResult> RunWithRejectedProxy(string output, string directory, Dictionary<string, string?> environment)
     {
         using var proxy = new TcpListener(IPAddress.Loopback, 0);
         proxy.Start();

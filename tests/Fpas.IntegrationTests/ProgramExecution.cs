@@ -11,7 +11,7 @@ internal static class ProgramExecution
         var compiled = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", output,
             "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], source);
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
-        return await ProcessRunner.RunAsync([output, .. arguments], environment: new Dictionary<string, string>
+        return await ProcessRunner.RunAsync([output, .. arguments], environment: new Dictionary<string, string?>
         {
             ["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1"
         });

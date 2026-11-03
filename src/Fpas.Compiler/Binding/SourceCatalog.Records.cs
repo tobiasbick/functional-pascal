@@ -95,6 +95,8 @@ internal sealed partial class SourceCatalog
                 CheckConstraints(unit, union.GenericParameters, union.Syntax.Name.Position);
                 foreach (var method in union.Methods) Check(unit, method, union.Syntax.Name.Position);
             }
+            foreach (var global in unit.Globals.Values.Where(global => global.Syntax.IsPublic))
+                if (!Visible(global.Type)) throw unit.Source.Error("FP3032", "A public global cannot expose private types.", global.Syntax.Binding.Name.Position);
             foreach (var routine in unit.Routines.Values.SelectMany(group => group)) Check(unit, routine, unit.Syntax.Name.Position);
             foreach (var record in unit.RecordTypes.Where(record => record.IsPublic))
             {

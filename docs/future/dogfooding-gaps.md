@@ -21,8 +21,11 @@ and libraries. These concrete limits currently require host tools:
   models, defaults, methods, and copy updates. [Unions and case matching](../implementation/unions-and-matching.md)
   now support domain outcomes and exhaustive inspection.
   [Generic records/unions](../implementation/generic-types.md) add reusable models,
-  recursive payloads, and generic record methods with typed closures. Globals
-  remain unavailable; use the supported subset for helpers.
+  recursive payloads, and generic record methods with typed closures.
+- [Global values](../implementation/global-values.md) now support shared unit
+  state through ordinary static readonly/mutable fields and CLR initialization.
+  Helpers can share configuration and counters without replacing field reads
+  with copied closure captures. Named nested routines remain unavailable.
 - [Primitive numbers and scalar domains](../implementation/scalar-types.md) now
   support decimal/unsigned/native values, transparent aliases, actual CLR enums,
   distinct identities, and checked integral ranges. Numeric maintenance helpers

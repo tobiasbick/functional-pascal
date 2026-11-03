@@ -37,11 +37,20 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var records = new List<RecordSyntax>();
         var unions = new List<UnionSyntax>();
         var aliases = new List<AliasSyntax>(); var scalars = new List<ScalarSyntax>();
-        while (At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type"))
+        var globals = new List<GlobalSyntax>();
+        while (At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type") || At("const") || At("var"))
         {
             var declaration = position;
             if (At("public") || At("private")) declaration++;
-            if (tokens[declaration].Text == "type")
+            if (tokens[declaration].Text is "const" or "var")
+            {
+                var doc = Current.Documentation; var visible = At("public");
+                if (isProgram && visible) throw source.Error("FP2003", "Public free declarations belong in units.", Current.Position);
+                position = declaration;
+                globals.Add(new((BindingSyntax)ReadStatement() with { Documentation = doc }, visible));
+                Expect(";");
+            }
+            else if (tokens[declaration].Text == "type")
             {
                 var saved = position;
                 position = declaration + 2;
@@ -66,7 +75,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         Expect(";");
         if (Current.Kind != TokenKind.End)
             throw source.Error("FP2001", "Unexpected content after the source terminator.", Current.Position, Current.Length);
-        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars);
+        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals);
     }
 
     private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false)

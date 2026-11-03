@@ -121,9 +121,10 @@ defaults/copy helpers, generic method/constructor constraints, nested cases,
 closures, and rejection of a nullable field returned as non-null string. The
 tree example builds and runs through its actual FPAS project.
 
-Fully general nested generic type paths in FPAS annotations, globals,
+Fully general nested generic type paths in FPAS annotations
 and LSP/query tooling remain pending.
 [Primitive numbers, aliases, enums, and data domains](scalar-types.md) are implemented.
+[Global fields](global-values.md) are implemented with closed generic signatures.
 [XML documentation](xml-documentation.md) is implemented.
 [Source overloads, record CLR interfaces, async, and portable PDBs](overloads-interfaces-debugging-and-async.md)
 are implemented.

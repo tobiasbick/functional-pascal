@@ -32,6 +32,8 @@ internal sealed class DocumentationWriter
         var name = unit.Syntax.Name.Text;
         Add(unit.Source, unit.Syntax.Documentation, "T:" + name, [], [], false);
         foreach (var method in unit.Routines.Values.SelectMany(group => group)) Routine(unit, method, method.IsPublic);
+        foreach (var global in unit.Globals.Values)
+            Add(unit.Source, global.Syntax.Binding.Documentation, global.Syntax.IsPublic ? "F:" + name + "." + global.Name : null, [], [], false);
         foreach (var alias in unit.Aliases.Values) Add(unit.Source, alias.Syntax.Documentation, null, [], [], false);
         foreach (var scalar in unit.Scalars.Values)
         {

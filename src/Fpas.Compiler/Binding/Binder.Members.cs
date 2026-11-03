@@ -38,9 +38,14 @@ internal sealed partial class Binder
         var target = StaticTarget(member.Receiver, allowOpenGeneric: true);
         if (!writing && OpenUnionTarget(target) is { } open && open.Info.Cases.Any(item => item.Name == member.Name.Text))
             return InferUnion(open, member.Name.Text, null, expected, check, member.Position);
+        if (target is SourceImport imported)
+        {
+            if (imported.Unit.Globals.TryGetValue(member.Name.Text, out var global)) return GlobalValue(global, member.Position, writing);
+            if (!writing) return SourceDelegate(imported.Unit, member.Name.Text, member.Position, expected);
+            throw source.Error("FP3009", "Assignment requires a writable global field.", member.Position);
+        }
         BoundExpression? receiver = null;
         var owner = target is null ? (receiver = Receiver(member.Receiver, check)).Type : ImportedValueType(target, member.Position);
-        if (!writing && target is SourceImport sourceImport) return SourceDelegate(sourceImport.Unit, member.Name.Text, member.Position, expected);
         if (owner == TypeSymbol.Unsupported)
             throw source.Error("FP3001", "The selected namespace/unit is not a CLR value member receiver.", member.Position);
         return BindClrMember(owner, receiver, member, writing, expected);

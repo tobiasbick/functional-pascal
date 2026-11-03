@@ -15,6 +15,11 @@ primitive numbers, transparent aliases, real CLR enums, distinct values, and
 checked integral subranges. The [data-domains example](examples/data-domains/README.md)
 demonstrates nominal identities, decimal values, and valid subrange defaults.
 
+[Global values](docs/implementation/global-values.md) add readonly/mutable static
+fields with CLR type initialization. The
+[shared-state example](examples/shared-state/README.md) shares unit state through
+functions, delegates, and ref arguments.
+
 The [Mandelbrot example](examples/mandelbrot/README.md) is executable through its
 `.fpasproj`; its raster output is verified by the integration tests. The
 [expression/control-flow milestone](docs/implementation/expressions-and-control-flow.md)

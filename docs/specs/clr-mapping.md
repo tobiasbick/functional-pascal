@@ -138,7 +138,15 @@ for the payload's address.
 
 Top-level const/var fields share a container type initializer that evaluates
 explicit source initializers in written order. Public vars are writable CLR
-static fields. No extra global-state scheduler, automatic synchronization, or
+static fields; const fields are static InitOnly fields, never Literal fields.
+Containers with globals have a private static .cctor marked SpecialName and
+RTSpecialName, without BeforeFieldInit. Active static calls/field access trigger
+CLR initialization; metadata inspection does not. Forward and cyclic reads can
+observe default storage before an initializer runs. CLR initialization failures
+and concurrency semantics are preserved. Field signatures carry the same nullable
+annotations as routine signatures. Source readonly fields are not compile-time
+constants for defaults, constant patterns, scalar bounds, or contract conditions.
+No extra global-state scheduler, automatic synchronization, or
 cross-task ownership checks are generated.
 
 For unions, emit a `private protected` (CLR FamilyAndAssembly) base constructor,

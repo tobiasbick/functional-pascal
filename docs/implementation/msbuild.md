@@ -109,5 +109,7 @@ features such as embedded resources or a non-AnyCPU platform fail rather
 than silently producing those artifacts. [Records](records.md) and [unions](unions-and-matching.md) use Fpas.Core
 metadata attributes. The SDK bundles the matching Core assembly, supplies it as
 a reference, and copies it with runtime dependencies, including through C# hosts.
-Domains remain pending. [Async entry points and portable debugging](overloads-interfaces-debugging-and-async.md)
+[Scalar domains and aliases](scalar-types.md) use the supplied metadata attributes.
+[Global fields](global-values.md) use ordinary CLR signatures and type initialization.
+[Async entry points and portable debugging](overloads-interfaces-debugging-and-async.md)
 are implemented.

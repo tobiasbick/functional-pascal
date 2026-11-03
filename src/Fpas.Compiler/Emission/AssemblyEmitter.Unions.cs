@@ -13,7 +13,7 @@ internal sealed partial class AssemblyEmitter
         {
             genericTypeContext = union.GenericParameters.Count == 0 ? null : union.GenericParameters;
             var type = metadata.AddTypeDefinition(TypeAttributes.Abstract | (union.IsPublic ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
-                default, metadata.GetOrAddString(union.Name + (union.GenericParameters.Count == 0 ? "" : "`" + union.GenericParameters.Count)), objectType, MetadataTokens.FieldDefinitionHandle(1), layout.SourceMethods[union.Method(GeneratedMethodKind.Constructor)]);
+                default, metadata.GetOrAddString(union.Name + (union.GenericParameters.Count == 0 ? "" : "`" + union.GenericParameters.Count)), objectType, MetadataTokens.FieldDefinitionHandle(metadata.GetRowCount(TableIndex.Field) + 1), layout.SourceMethods[union.Method(GeneratedMethodKind.Constructor)]);
             RegisterGenerics(type, union.GenericParameters, genericTypeContext);
             metadata.AddNestedType(type, layout.UnionOwners[union]);
             AddNullabilityContext(type, program.Runtime);

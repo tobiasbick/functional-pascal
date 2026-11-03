@@ -29,6 +29,7 @@ internal sealed class AssemblyLayout
     internal Dictionary<string, MethodDefinitionHandle> EntryBridges { get; } = new(StringComparer.Ordinal);
     internal Dictionary<ScalarSymbol, TypeDefinitionHandle> ScalarTypes { get; } = [];
     internal Dictionary<ScalarSymbol, TypeDefinitionHandle> ScalarOwners { get; } = [];
+    internal Dictionary<string, TypeDefinitionHandle> Containers { get; } = new(StringComparer.Ordinal);
 
     internal AssemblyLayout(BoundCompilation program, ReferenceCatalog references)
     {
@@ -38,6 +39,7 @@ internal sealed class AssemblyLayout
         var method = 1;
         foreach (var unit in program.Units)
         {
+            Containers.Add(unit.Name, MetadataTokens.TypeDefinitionHandle(Containers.Count + 2));
             foreach (var routine in unit.Routines) SourceMethods.Add(routine.Symbol, MetadataTokens.MethodDefinitionHandle(method++));
             if (unit.Routines.Any(routine => routine.Symbol.IsEntryPoint && routine.Symbol.IsAsync)) EntryBridges.Add(unit.Name, MetadataTokens.MethodDefinitionHandle(method++));
             method += unit.Aliases.Count;

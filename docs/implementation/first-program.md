@@ -78,7 +78,7 @@ The program prints `Hello from FPAS`. See the checked-in
 - Duplicate bindings/imports, unknown names, invalid type assignments, missing
   annotations, unsupported calls, and lexical/syntactic errors are diagnosed.
 
-The complete language remains specified in the topic documents. Globals, repeat loops,
+The complete language remains specified in the topic documents. Repeat loops,
 and broader CLR signature forms are later steps.
 [Arrays, args, closed generic CLR types, indexers, and enumeration](arrays-and-collections.md)
 are implemented, as are [callable values, closures, and explicit generic CLR calls](functions-and-closures.md)
@@ -97,6 +97,8 @@ portable PDBs, and async functions/lambdas/programs with awaited cleanup.
 for the supported declarations.
 [Primitive numbers, aliases, enums, distinct values, and subranges](scalar-types.md)
 are implemented with cross-assembly CLR contracts and valid default domain values.
+[Global const/var fields and CLR type initialization](global-values.md) are
+implemented, including shared state across source units and CLR consumers.
 The compiler currently stops at the first diagnostic.
 
 ## Compiler and output
@@ -160,6 +162,7 @@ for invalid arguments.
 | FP3027 / FP3028 | Invalid contract / parameter modes, defaults, storage, or out flow |
 | FP3029 / FP3030 | Invalid record interface implementation / async or await reference-lifetime error |
 | FP3031 | Invalid alias, enum, distinct declaration, subrange bounds, or domain construction |
+| FP3032 | Invalid global name or public global exposing private types |
 | FP6001 | Documentation warning; severity follows the configured warning policy |
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
 

@@ -18,6 +18,7 @@ internal sealed partial class AssemblyEmitter
     private EntityHandle TypeHandle(TypeSymbol type)
     {
         type = type.Erased;
+        if (type.Container is { } container) return layout.Containers[container.Syntax.Name.Text];
         if (type.Scalar is { } scalar && !type.NullableValue) return layout.ScalarTypes[scalar];
         if (type.Kind == TypeKind.Union && type.Arguments is not { Count: > 0 }) return layout.UnionTypes[type.Union!];
         if (type.Kind == TypeKind.Record && type.Arguments is not { Count: > 0 }) return layout.RecordTypes[type.Record!];

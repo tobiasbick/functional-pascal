@@ -1,0 +1,18 @@
+program SharedStateDemo;
+uses Game.Statistics as Statistics, System.Console as Console;
+
+procedure Advance(ref Counter: long);
+begin
+  Counter := Counter + 1L;
+end procedure;
+
+begin
+  Statistics.RecordMove();
+  Statistics.RecordMove();
+  Advance(ref Statistics.TotalMoves);
+  Console.WriteLine(Statistics.Moves());
+  Console.WriteLine(Statistics.MaximumMoves);
+  Statistics.Reset();
+  Console.WriteLine(Statistics.Moves());
+end;
+end program;

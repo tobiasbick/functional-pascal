@@ -9,7 +9,7 @@ internal sealed partial class AssemblyEmitter
 {
     private void EmitAsyncMachines(MethodBodyStreamEncoder bodies, ref int parameterCount, TypeReferenceHandle objectType, AssemblyIdentity runtime)
     {
-        var fieldCount = layout.Records.Sum(record => record.Fields.Count) + layout.Closures.Sum(closure => closure.Captures.Count);
+        var fieldCount = metadata.GetRowCount(TableIndex.Field);
         var stateMachine = catalog.Symbol(catalog.Required("System.Runtime.CompilerServices.IAsyncStateMachine"));
         foreach (var machine in layout.Machines)
         {

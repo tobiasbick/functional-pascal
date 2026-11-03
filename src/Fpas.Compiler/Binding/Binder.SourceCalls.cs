@@ -15,7 +15,7 @@ internal sealed partial class Binder
     }
 
     private BoundExpression? ImplicitReceiver(IReadOnlyList<RoutineSymbol> group, int position)
-        => group.Any(method => method.IsInstance) && HasValue("self") ? Value("self", position) : null;
+        => group.Any(method => method.IsInstance) && HasLexicalValue("self") ? Value("self", position) : null;
 
     private BoundExpression CallRoutine(IReadOnlyList<RoutineSymbol> group, IReadOnlyList<Syntax.ExpressionSyntax> arguments, TypeList? typeArguments, bool check, int position, BoundExpression? receiver = null)
         => BindInvocation(SourceMethods(group, typeArguments, position, receiver), arguments, receiver, check, position, inferGenerics: typeArguments is null);

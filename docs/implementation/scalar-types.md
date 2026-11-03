@@ -95,6 +95,7 @@ Metadata tests reject corrupted contracts and verify deterministic emission.
 XML documentation emits real type/enum-field IDs and uses alias target types in
 method IDs; an alias itself has no CLR type documentation ID.
 
-Globals, named nested routines, authored interfaces, repeat loops, arbitrary
+[Global fields and initialization](global-values.md) are implemented.
+Named nested routines, authored interfaces, repeat loops, arbitrary
 attributes, fully general nested generic type paths, and LSP/query tooling remain
 outside this milestone. Numeric nullable lifted arithmetic is also not included.

@@ -22,6 +22,7 @@ required of that compiler; implemented subsets are documented separately below.
 | Source overloads, record CLR interfaces, portable symbols, and async functions/programs | [Overloads, interfaces, debugging, and async](implementation/overloads-interfaces-debugging-and-async.md) |
 | Markdown source documentation, .NET XML sidecars, and SDK propagation | [XML API documentation](implementation/xml-documentation.md) |
 | All primitive numbers, transparent aliases, enums, distinct values, and checked subranges | [Scalar types](implementation/scalar-types.md) |
+| Global const/var fields, shared unit state, and CLR type initialization | [Global values](implementation/global-values.md) |
 | Implemented local SDK, `.fpasproj` builds, and mixed C#/FPAS projects | [MSBuild milestone](implementation/msbuild.md) |
 | C# projects, xUnit tests, examples, and applications | [Repository layout plan](architecture/project-layout.md) |
 | Lexical rules, bindings, and operators | [Basics](pascal/language/basics.md) |

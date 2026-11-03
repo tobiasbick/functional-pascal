@@ -6,6 +6,24 @@ namespace Fpas.Compiler.Tests;
 public sealed class DocumentationTests
 {
     [Fact]
+    public void Global_documentation_uses_field_ids_and_omits_private_fields_and_initializers()
+    {
+        var result = Compile("""
+            unit State;
+            // Maximum value.
+            public const Limit: int := 100;
+            // Mutable count.
+            public var Count: long := 0L;
+            // Private state.
+            var Hidden: int := 1;
+            end unit;
+            """);
+        Assert.True(result.Success, string.Join(';', result.Diagnostics)); Assert.Empty(result.Diagnostics);
+        var members = XDocument.Parse(System.Text.Encoding.UTF8.GetString(result.Program!.XmlDocumentation!)).Descendants("member").ToArray();
+        Assert.Equal(new[] { "F:State.Count", "F:State.Limit" }, members.Select(member => (string)member.Attribute("name")!));
+        Assert.Contains("Mutable count.", members[0].Value); Assert.Contains("Maximum value.", members[1].Value);
+    }
+    [Fact]
     public void Scalar_docs_use_real_type_and_enum_field_ids_and_aliases_use_the_target_signature()
     {
         var result = Compile("""

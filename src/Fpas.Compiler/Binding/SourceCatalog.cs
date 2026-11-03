@@ -12,6 +12,9 @@ internal sealed class SourceUnit(SourceText source, CompilationUnitSyntax syntax
     internal Dictionary<string, List<RoutineSymbol>> Routines { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, AliasSymbol> Aliases { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, ScalarSymbol> Scalars { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<string, GlobalSymbol> Globals { get; } = new(StringComparer.Ordinal);
+    internal TypeSymbol ContainerType => new(TypeKind.Container, Container: this);
+    internal RoutineSymbol? Initializer { get; set; }
     internal bool HasType(string name) => Records.ContainsKey(name) || Unions.ContainsKey(name) || Scalars.ContainsKey(name) || Aliases.ContainsKey(name);
     internal RoutineSymbol? EntryPoint { get; set; }
 }
@@ -38,12 +41,14 @@ internal sealed partial class SourceCatalog
         catalog.DeclareUnions(references);
         catalog.DeclareRecords(references);
         CompleteUnions(catalog.Units);
+        catalog.DeclareGlobals(references);
         foreach (var unit in catalog.Units)
         {
             var aliases = unit.Syntax.Imports.Select(import => import.Alias.Text).ToHashSet(StringComparer.Ordinal);
+            if (unit.Globals.Count != 0) unit.Initializer = new(".cctor", TypeSymbol.Void, [], false, false, index++);
             foreach (var routine in unit.Syntax.Routines)
             {
-                if (unit.HasType(routine.Name.Text) || aliases.Contains(routine.Name.Text))
+                if (unit.HasType(routine.Name.Text) || unit.Globals.ContainsKey(routine.Name.Text) || aliases.Contains(routine.Name.Text))
                     throw unit.Source.Error("FP3004", $"Routine '{routine.Name.Text}' conflicts with a type or import.", routine.Name.Position);
                 AddOverload(unit.Routines, catalog.DeclareRoutine(unit, routine, references, index++), unit.Source, routine.Name.Position);
             }

@@ -98,6 +98,10 @@ Initializers for both kinds run in written order in the same CLR type initialize
 There is no automatic locking, atomic increment, or task isolation. Shared global
 state needs ordinary .NET synchronization. Contract conditions cannot read global
 vars; use initialized parameters/captures or compile-time constants instead.
+Source global const values are runtime readonly fields rather than CLR metadata
+constants, even when initialized with literals. They do not qualify as constant
+patterns, optional defaults, enum/subrange bounds, or contract operands.
+Forward/cyclic initialization reads follow CLR default-storage semantics.
 
 ## Imports
 

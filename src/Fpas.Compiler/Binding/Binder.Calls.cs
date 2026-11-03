@@ -18,6 +18,11 @@ internal sealed partial class Binder
             var selected = StaticTarget(member.Receiver, allowOpenGeneric: true);
             if (selected is SourceImport imported)
             {
+                if (imported.Unit.Globals.TryGetValue(member.Name.Text, out var global))
+                {
+                    if (typeArguments is not null) throw source.Error("FP3003", "A delegate field does not take explicit method type arguments.", call.Position);
+                    return InvokeDelegate(GlobalValue(global, member.Position), call.Arguments, call.Position, check);
+                }
                 return CallRoutine(AccessibleSource(imported.Unit, member.Name.Text, member.Position), call.Arguments, typeArguments, check, call.Position);
             }
             if (OpenUnionTarget(selected) is { } open)

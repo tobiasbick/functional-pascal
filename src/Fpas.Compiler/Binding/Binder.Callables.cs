@@ -4,7 +4,8 @@ namespace Fpas.Compiler.Binding;
 
 internal sealed partial class Binder
 {
-    private bool HasValue(string name) => FindLocal(name) is not null || parameters.ContainsKey(name) || parent?.HasValue(name) == true;
+    private bool HasLexicalValue(string name) => FindLocal(name) is not null || parameters.ContainsKey(name) || parent?.HasLexicalValue(name) == true;
+    private bool HasValue(string name) => HasLexicalValue(name) || unit.Globals.ContainsKey(name) && recordContext?.UserMethods.ContainsKey(name) != true;
 
     private BoundExpression Value(string name, int position, TypeSymbol? expected = null)
     {
@@ -12,7 +13,7 @@ internal sealed partial class Binder
             return NumberConstant(enumInitializer.Base, enumMember.Value);
         if (FindLocal(name) is { } local) return new BoundLocal(local, nonNull.Contains(local) ? local.Type.NonNullable : null);
         if (parameters.TryGetValue(name, out var parameter)) return new BoundParameter(parameter, nonNull.Contains(parameter) ? parameter.Type.NonNullable : null);
-        if (parent?.HasValue(name) == true)
+        if (parent?.HasLexicalValue(name) == true)
         {
             var original = parent.Value(name, position);
             var symbol = original switch
@@ -44,6 +45,7 @@ internal sealed partial class Binder
         }
         if (recordContext is not null && recordContext.UserMethods.TryGetValue(name, out var recordMethod))
             return RoutineDelegate(recordMethod, expected, position, receiver: ImplicitReceiver(recordMethod, position));
+        if (unit.Globals.TryGetValue(name, out var global)) return GlobalValue(global, position);
         if (routines.TryGetValue(name, out var routine)) return RoutineDelegate(routine, expected, position);
         throw source.Error("FP3001", $"Unknown initialized value '{name}'.", position);
     }

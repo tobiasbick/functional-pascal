@@ -16,8 +16,9 @@ Program/unit headers, routines, records, record fields, union cases, enums,
 enum fields, aliases, and scalar domains retain
 their attached source comments. Private members and local bindings also retain
 comments, but do not appear in the public XML. Aliases have no CLR type ID;
-method IDs use their target types. Globals and arbitrary source attributes
-remain outside the implemented language subset.
+method IDs use their target types. Public global values export F: field IDs;
+private globals retain comments without appearing in the XML. Arbitrary source
+attributes remain outside the implemented language subset.
 
 The compiler reads Parameters, Type parameters, Returns, and Remarks Markdown
 sections. Names are case-sensitive source spellings, including @ escapes; XML

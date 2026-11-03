@@ -1,0 +1,22 @@
+unit Game.Statistics;
+
+// A readonly field initialized once with this unit.
+public const MaximumMoves: long := 1000L;
+
+// Shared mutable state, also accessible to a CLR consumer.
+public var TotalMoves: long := 0L;
+
+// The delegate reads the current field each time it is called.
+public const Moves: function(): long := function(): long => TotalMoves;
+
+public procedure RecordMove();
+begin
+  TotalMoves := TotalMoves + 1L;
+end procedure;
+
+public procedure Reset();
+begin
+  TotalMoves := 0L;
+end procedure;
+
+end unit;

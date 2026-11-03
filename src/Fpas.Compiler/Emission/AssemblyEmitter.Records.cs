@@ -9,7 +9,7 @@ internal sealed partial class AssemblyEmitter
 {
     private void EmitRecords(BoundCompilation program, MethodBodyStreamEncoder bodies, ref int parameterCount, TypeReferenceHandle objectType)
     {
-        var fieldCount = 0;
+        var fieldCount = metadata.GetRowCount(TableIndex.Field);
         foreach (var record in layout.Records)
         {
             genericTypeContext = record.GenericParameters.Count == 0 ? null : record.GenericParameters;

@@ -24,13 +24,14 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         var program = unit.Syntax;
         InitializeImports();
         var methods = new List<BoundRoutine>();
+        if (unit.Initializer is { } initializer) methods.Add(BindRoutine(initializer, [], program.Name.Position));
         foreach (var routine in program.Routines)
             methods.Add(BindRoutine(routines[routine.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, routine)), routine.Statements, routine.Name.Position, routine.Contracts));
         if (unit.EntryPoint is { } entry)
             methods.Add(BindRoutine(entry, program.Statements, program.Name.Position));
         foreach (var union in unit.Unions.Values) BindUnion(union);
         foreach (var record in unit.RecordTypes) BindRecord(record);
-        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray());
+        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray());
     }
 
     private void InitializeImports()
@@ -57,7 +58,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         foreach (var parameter in symbol.Parameters)
             parameters.Add(parameter.Name, parameter);
         var requires = BindContracts(contracts, ensures: false, out _);
-        var block = BindBlock(body);
+        var block = ReferenceEquals(symbol, unit.Initializer) ? BindGlobalInitializers() : BindBlock(body);
         if (symbol.BodyResult != TypeSymbol.Void && FlowAnalysis.Of(block).HasFlag(ExitFlow.Next))
             throw source.Error("FP3007", $"Function '{symbol.Name}' must return a value on every normal path.", position);
         nonNull.Clear();

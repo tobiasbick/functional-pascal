@@ -53,14 +53,16 @@ internal sealed partial class AssemblyEmitter
             var name = unit.Name[(separator + 1)..];
             var container = metadata.AddTypeDefinition(TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed,
                 metadata.GetOrAddString(ns), metadata.GetOrAddString(name), objectType,
-                MetadataTokens.FieldDefinitionHandle(1), MetadataTokens.MethodDefinitionHandle(methodCount + 1));
+                MetadataTokens.FieldDefinitionHandle(metadata.GetRowCount(TableIndex.Field) + 1), MetadataTokens.MethodDefinitionHandle(methodCount + 1));
             AddNullabilityContext(container, program.Runtime);
+            EmitGlobalFields(unit, program.Runtime);
             foreach (var routine in unit.Routines)
             {
                 var firstParameter = AddParameters(routine.Symbol, ref parameterCount, program.Runtime);
                 var signature = MethodSignature(routine.Symbol.Result, routine.Symbol.Parameters.Select(parameter => parameter.SignatureType).ToArray(), genericArity: routine.Symbol.GenericParameters.Count);
                 var attributes = MethodAttributes.Static | MethodAttributes.HideBySig |
                     (routine.Symbol.IsPublic ? MethodAttributes.Public : MethodAttributes.Private);
+                if (routine.Symbol.Name == ".cctor") attributes |= MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
                 var handle = metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL,
                     metadata.GetOrAddString(routine.Symbol.Name), signature, EmitBody(routine, bodyEncoder), firstParameter);
                 if (routine.Symbol.IsAsync) AddAsyncAttribute(handle, layout.AsyncRoutines[routine]);

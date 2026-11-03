@@ -36,7 +36,7 @@ internal sealed partial class AssemblyEmitter
 
     private void EmitClosures(BoundCompilation program, MethodBodyStreamEncoder bodies, ref int parameterCount, TypeReferenceHandle objectType)
     {
-        var fieldCount = layout.Records.Sum(record => record.Fields.Count);
+        var fieldCount = metadata.GetRowCount(TableIndex.Field);
         foreach (var closure in layout.Closures)
         {
             genericTypeContext = closure.GenericParameters.Count == 0 ? null : closure.GenericParameters;

@@ -1,9 +1,9 @@
 namespace Fpas.Compiler.Binding;
 
 internal enum TypeKind { Unsupported, Void, String, Int32, Boolean, Double, Char, Object, Named, Array, Null, TypeParameter, MethodParameter, NativeInt, Generated, Record, Union, Parameter, ByRef, Async,
-    SByte, Byte, Int16, UInt16, UInt32, Int64, UInt64, NativeUInt, Single, Decimal, Scalar }
+    SByte, Byte, Int16, UInt16, UInt32, Int64, UInt64, NativeUInt, Single, Decimal, Scalar, Container }
 
-internal sealed record TypeSymbol(TypeKind Kind, ImportedType? Definition = null, bool IsNullable = false, int ParameterIndex = 0, TypeList? Arguments = null, TypeSymbol? Element = null, int Rank = 0, ClosureSymbol? Closure = null, RecordSymbol? Record = null, UnionSymbol? Union = null, GenericParameterSymbol? Parameter = null, bool NullValidated = false, AsyncMachineSymbol? Machine = null, ScalarSymbol? Scalar = null)
+internal sealed record TypeSymbol(TypeKind Kind, ImportedType? Definition = null, bool IsNullable = false, int ParameterIndex = 0, TypeList? Arguments = null, TypeSymbol? Element = null, int Rank = 0, ClosureSymbol? Closure = null, RecordSymbol? Record = null, UnionSymbol? Union = null, GenericParameterSymbol? Parameter = null, bool NullValidated = false, AsyncMachineSymbol? Machine = null, ScalarSymbol? Scalar = null, SourceUnit? Container = null)
 {
     internal static readonly TypeSymbol NativeInt = new(TypeKind.NativeInt);
     internal static readonly TypeSymbol SByte = new(TypeKind.SByte), Byte = new(TypeKind.Byte), Int16 = new(TypeKind.Int16), UInt16 = new(TypeKind.UInt16),
@@ -30,6 +30,7 @@ internal sealed record TypeSymbol(TypeKind Kind, ImportedType? Definition = null
     };
     public override string ToString()
     {
+        if (Container is { } container) return container.Syntax.Name.Text;
         var name = IsParameter ? Parameter!.Name : Kind == TypeKind.Scalar ? Scalar!.Owner.Syntax.Name.Text + "." + Scalar.Name : Kind == TypeKind.ByRef ? Element + "&" : Kind == TypeKind.Union ? Union!.Owner.Syntax.Name.Text + "." + Union.Name : Kind == TypeKind.Record ? Record!.Owner.Syntax.Name.Text + "." + (Record.UnionCase is { } member ? member.Owner.Name + "." : "") + Record.Name : Kind == TypeKind.Generated ? "<Closure" + Closure!.Id + ">" : Kind == TypeKind.Array ? Element + "[" + new string(',', Rank - 1) + "]" : Definition?.FullName ?? TypeFacts.Alias(this) ?? Kind switch
         {
             TypeKind.String => "string", TypeKind.Int32 => "int", TypeKind.Boolean => "bool", TypeKind.Double => "double", TypeKind.Char => "char",

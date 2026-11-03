@@ -11,17 +11,20 @@ internal static class MarkdownExamples
     private static readonly Regex Header = new(@"(?m)^(?:async )?(program|unit) ([A-Za-z_][A-Za-z_0-9.]*)\s*;", RegexOptions.CultureInvariant);
     private static readonly Regex Project = new(@"(?:^|\s)project=([A-Za-z0-9_-]+)(?:\s|$)", RegexOptions.CultureInvariant);
 
-    internal static IEnumerable<MarkdownFence> ReadFences(string root)
+    internal static IEnumerable<MarkdownFence> ReadFences(string root, string prefix = "")
     {
-        foreach (var path in Directory.GetFiles(root, "*.md", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+        var file = File.Exists(root);
+        var paths = file ? [root] : Directory.GetFiles(root, "*.md", SearchOption.AllDirectories);
+        foreach (var path in paths.Order(StringComparer.Ordinal))
             foreach (var (match, index) in Fences.Matches(File.ReadAllText(path)).Cast<Match>().Select((match, index) => (match, index)))
-                yield return new(Path.GetRelativePath(root, path), index, match.Groups["attributes"].Value, match.Groups["source"].Value);
+                yield return new(prefix + (file ? Path.GetFileName(path) : Path.GetRelativePath(root, path)),
+                    index, match.Groups["attributes"].Value, match.Groups["source"].Value);
     }
 
-    internal static IReadOnlyList<MarkdownExample> Read(string root)
+    internal static IReadOnlyList<MarkdownExample> Read(string root, string prefix = "")
     {
         var examples = new List<MarkdownExample>();
-        foreach (var fence in ReadFences(root))
+        foreach (var fence in ReadFences(root, prefix))
         {
             var header = Header.Match(fence.Source.Trim());
             if (!header.Success) continue;

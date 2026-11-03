@@ -85,7 +85,7 @@ Supported overloads remain usable; excluded ones produce identifying diagnostics
 ## Documentation acceptance
 
 LanguageSpecificationTests compiles complete program/unit fences directly from
-the copied [handbook](../docs/pascal/README.md), with portable PDB and XML output,
+the copied [repository README](../README.md) and [handbook](../docs/pascal/README.md), with portable PDB and XML output,
 then executes programs with explicit assertions. Project-labeled programs compile
 with their unit companions; units compile as libraries. New complete programs
 require execution assertions.

@@ -36,8 +36,9 @@ dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build 
 ```
 
 AgentReferenceTests checks links, the entrypoint policy, and exact o200k_base
-token counts. LanguageSpecificationTests compiles complete Markdown programs/
-units and executes programs. Its assertions cover each example's behavior.
+token counts. LanguageSpecificationTests compiles complete programs/units from
+the repository README and handbook and executes programs. Its assertions cover
+each example's behavior.
 HandbookTests checks topic hubs, related navigation, repository documentation
 links/anchors, explicit syntax fragments, and current copied inputs.
 Read [tests](../../tests/README.md) and the

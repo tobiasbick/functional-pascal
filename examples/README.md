@@ -1,15 +1,29 @@
 # Examples
 
-This directory is reserved for focused FPAS language and .NET API demonstrations.
-Group future examples by topic and use `.fpasproj` projects where needed.
-Identify interactive demos explicitly. [Hello](hello/README.md) is the first
-executable example. [Mandelbrot](mandelbrot/README.md) exercises arithmetic,
-numeric casts, and control flow through a real `.fpasproj`. Most handbook examples
-remain design-only. [Units](units/README.md) demonstrates a program and two units
-compiled together through default source globs.
+These projects demonstrate the CLR language and actual .NET APIs. Each linked
+README identifies its inputs, build/run workflow, and expected behavior. Package
+the local SDK first using the [development workflow](../docs/build/development.md#build-an-fpas-application).
 
-[Read a file](read-file/README.md) uses namespace imports, a CLR constructor,
-StreamReader instance calls, synchronous disposal, and try/catch/finally.
+| Example | Demonstrates |
+| --- | --- |
+| [Hello](hello/README.md) | Minimal program, Console, and SDK project |
+| [Mandelbrot](mandelbrot/README.md) | Numeric calculations, casts, loops, and console rendering |
+| [Units](units/README.md) | Program and companion units with explicit imports |
+| [Read a file](read-file/README.md) | StreamReader, exceptions, and deterministic disposal |
+| [Directory inventory](directory-inventory/README.md) | Arguments, files, collections, static LINQ calls, and captured state |
+| [Inventory model](inventory-model/README.md) | Records, defaults, private state, equality, and copy updates |
+| [Game actions](game-actions/README.md) | Application unions and exhaustive payload matching |
+| [Generic pipeline](generic-pipeline/README.md) | Generic routines, constraints, and higher-order functions |
+| [Generic tree](generic-tree/README.md) | Recursive generic unions, inference, and cross-unit use |
+| [Data domains](data-domains/README.md) | Aliases, decimal, CLR enums, distinct values, and checked ranges |
+| [Shared state](shared-state/README.md) | Unit globals, initialization, delegates, and managed references |
+| [Local functions](local-functions/README.md) | Lexical recursion, captures, and escaping delegates |
+| [Loops](loops/README.md) | Typed/repeat loops, extreme bounds, and async execution |
+| [Events](events/README.md) | Actual .NET collection events and retained handler identity |
+| [Type inspection](type-inspection/README.md) | Type tokens, nominal identity, and generic parameters |
+| [Attributes](attributes/README.md) | Real CLR metadata and JSON property naming |
 
-See the [layout plan](../docs/architecture/project-layout.md#examples-and-applications)
-and the existing [Markdown design examples](../docs/pascal/examples/README.md).
+The [handbook example index](../docs/pascal/examples/README.md) contains additional
+complete programs compiled and executed directly from Markdown. Verification is
+owned by the [xUnit harness](../tests/README.md); examples are demonstrations,
+while complete end-user applications belong under [apps](../apps/README.md).

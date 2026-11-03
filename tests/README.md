@@ -28,7 +28,7 @@ development SDK version.
 
 ## Documentation examples
 
-LanguageSpecificationTests compiles complete handbook and agent-reference fences
+LanguageSpecificationTests compiles complete README, handbook, and agent-reference fences
 through the CLI, checks PDB/XML outputs, and executes programs with explicit
 behavioral assertions. Companion units use project labels. File/environment/HTTP
 inputs are controlled; timer counts and public network availability are not

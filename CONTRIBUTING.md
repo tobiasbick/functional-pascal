@@ -1,102 +1,100 @@
 # Contributing
 
-Thanks for contributing to Functional Pascal.
+Thanks for contributing to Functional Pascal for .NET.
 
-This project is experimental and moves quickly. Useful work includes implementing
-behavior described in [`docs/pascal/`](docs/pascal), fixing diagnostics, improving
-tests, simplifying tangled code, and keeping docs aligned with what actually runs.
+This experimental hobby project moves quickly. Useful work includes implementing
+agreed language behavior, fixing diagnostics, improving meaningful tests,
+simplifying tangled code, and keeping documentation aligned with what runs.
 
 ## Ground rules
 
-- **`docs/pascal/` is the source of truth** for implemented behavior. Do not document
-  unimplemented features there; plans belong in [`docs/future/`](docs/future).
-- Prefer the smallest change that fully solves the problem.
-- Do not duplicate existing logic. Prefer rewriting unclear code over layering more of it.
-- Remove dead code your change makes obsolete.
-- Use English for code, comments, docs, identifiers, and commit messages.
-- When implementing language behavior in Rust, link to the matching page under `docs/pascal/`.
+- The [Pascal handbook](docs/pascal/README.md) describes language behavior. The
+  [grammar](docs/specs/syntax.md), [CLR mapping](docs/specs/clr-mapping.md), and
+  [MSBuild contract](docs/build/msbuild.md) own syntax, public representations,
+  and build behavior. Missing baseline work and proposals belong in
+  [language gaps](docs/future/language-gaps.md).
+- Prefer the smallest complete solution. Rewrite unclear code, share existing
+  logic, and remove dead code rather than accumulating layers or alternate paths.
+- Backward compatibility and implementation history are not goals. Internal
+  designs may change; FPAS syntax changes need the user's explicit approval.
+- Finish the agreed baseline before adding extensions. Source interfaces remain
+  a deferred proposal, not an invitation to extend the grammar.
+- Consume actual .NET APIs. Keep Fpas.Core focused on required language metadata
+  and support; do not recreate a parallel standard-library wrapper catalog.
+- Use English for code, comments, documentation, identifiers, and commit messages.
+- Fix errors encountered during the work and update the owning rule/tests when
+  changing observable behavior or a public CLR contract.
 
-Agent instructions live in [`AGENTS.md`](AGENTS.md).
-The [Rust architecture](docs/rust-architecture.md) describes crate responsibilities,
-dependency boundaries, and the shared compiler/runtime contracts.
+Agent policy lives in [AGENTS.md](AGENTS.md). The
+[architecture](docs/architecture/README.md) describes compiler, CLI, SDK, and
+support-library boundaries. The [agent reference](docs/pascal/agents/README.md)
+provides focused language guidance with verified examples.
 
 ## How to work
 
-Use the Rust toolchain selected by `rust-toolchain.toml`. The workspace declares
-Rust 1.99.1 as its minimum supported version, inherited by every member crate.
-When upgrading Rust, update the toolchain pin, workspace minimum, and build
-documentation together. Keep resolved dependency versions in `Cargo.lock`.
+Use a stable .NET 10 SDK satisfying [global.json](global.json). Shared C# settings
+live in Directory.Build.props; dependency versions are centralized in
+Directory.Packages.props. Update the affected configuration/documentation together
+when changing toolchain or package requirements.
 
-Use `cargo build --profile dev-fast` for development and
-`cargo run --profile dev-fast -p fpas-cli -- <arguments>` to run the CLI.
-This optimized profile uses Thin-LTO and writes to `target/dev-fast/`.
-Release, benchmarks, and dist use Fat-LTO; see the
-[build guide](docs/bench/build-times.md) for the profile settings.
+1. Read the owning handbook topic and CLR/build specification. For .NET APIs,
+   establish exact signatures from the selected framework/package metadata.
+2. Inspect the existing implementation and the
+   [coverage map](tests/coverage.md) before adding code.
+3. Add or update tests for meaningful behavior, including diagnostics or imported
+   metadata boundaries where relevant. Remove obsolete code and documentation.
+4. Follow the [development workflow](docs/build/development.md) to restore/build
+   the toolchain, then execute the appropriate tests as a separate step. Do not
+   rebuild toolchain binaries while tests use them.
+5. Inspect the final diff, documentation, and generated-output ownership before
+   preparing a commit.
 
-1. Read the relevant area under [`docs/pascal/`](docs/pascal/README.md) (stdlib:
-   [`docs/pascal/std/README.md`](docs/pascal/std/README.md)).
-   For language rules or authoring APIs, also check the
-   [agent reference](docs/pascal/agents/README.md) and follow its
-   [maintenance guide](docs/pascal/agents/maintenance.md).
-2. Inspect the existing implementation before adding code.
-3. Add or update tests for meaningful behavior.
-4. Verify the affected behavior. For Rust implementation changes, run:
+Debug is the development configuration; use Release when validating release
+behavior or controlled performance changes. SDK tests package the already built
+tools with isolated versions and execute actual FPAS/C# consumers. Follow the
+[local SDK workflow](docs/build/development.md#build-an-fpas-application) when
+changing packaged tools; do not silently reuse an old NuGet cache entry.
 
-   ```text
-   cargo fmt
-   cargo build --profile dev-fast
-   cargo test --workspace --no-run
-   cargo test --workspace
-   ```
+### Documentation and examples
 
-   Test compilation and execution reuse the same default test profile. Follow
-   the [Rust test workflow](docs/bench/build-times.md#rust-test-workflow) for
-   grouped test selection, full native symbols and resource supervision.
+For documentation changes, validate local links and run `git diff --check`.
+When changing README/handbook Pascal examples, rebuild the integration tests so
+copied Markdown is current and run the focused documentation checks described
+in the development workflow. Complete programs compile and execute with explicit
+assertions; incomplete snippets must be marked as fragments. See
+[example conventions](docs/pascal/tools/documentation-examples.md).
 
-   For touched `.fpas` sources, also run `fpas fmt --check <paths>` and the
-   relevant program checks or tests. The repository-wide formatting wrappers use
-   `scripts/format-fpas-sources.sh --check` or
-   `scripts/format-fpas-sources.ps1 -Check`.
+Changes to the compact [agent reference](docs/pascal/agents/README.md) also follow
+its [maintenance guide](docs/pascal/agents/maintenance.md), including exact token
+budgets. Documentation-only changes do not require the entire compiler/SDK test
+suite when focused checks cover the changed behavior.
 
-For documentation-only changes, validate changed local links and run
-`git diff --check`. When changing Pascal examples in the README or handbook,
-run the [documentation example checker](docs/pascal/tools/documentation-examples.md):
+- **[examples/](examples/README.md)** contains focused FPAS/.NET demonstrations
+  and tutorials with `.fpasproj` projects.
+- **[apps/](apps/README.md)** is reserved for complete end-user applications.
+- **[tests/](tests/README.md)** contains the xUnit regression harness, controlled
+  FPAS/C# fixtures, and execution checks.
 
-```text
-fpas run tools/doc-examples/doc-examples.fpasprj
-```
+Validate touched FPAS through the current CLR compiler and relevant SDK tests.
+Do not assume a formatter, language server, VM runner, or another Pascal dialect
+validates this language. Interactive programs need explicit bounded scenarios;
+do not batch-run arbitrary examples or applications.
 
-Changes to `docs/pascal/agents/` also follow its maintenance guide's focused
-example test and token budgets. Documentation-only changes do not require a
-full Rust build or workspace test run.
+### Before committing
 
-For Windows distribution-script changes, run
-`pwsh -NoProfile -File scripts/tests/dist.ps1` to check Cargo failure handling
-and publication with isolated fixtures, then run `pwsh -NoProfile -File dist.ps1`
-to verify the real release build and standard-library staging.
-
-For POSIX distribution-script changes, run `python3 scripts/tests/dist_sh.py`.
-The test covers build, staging, copy, and permission failures, successful
-publication, and invocation from outside the project. Pass `--shell <path>`
-to select a POSIX shell explicitly. Verify the real Linux release with `sh dist.sh`.
-
-### Examples and FPAS tests
-
-- **`examples/`** — demos and tutorials. Do not put `*_test.fpas` here.
-- **`tests/`** — FPAS regression suite (`*_test.fpas`). Run with `fpas test tests/`
-  or `fpas test tests/suite.fpasprj`.
-
-When validating examples, use the curated allowlists in
-[`crates/fpas-cli/src/main_tests/examples.rs`](crates/fpas-cli/src/main_tests/examples.rs)
-(see also [`examples/README.md`](examples/README.md)). Never batch-run every file under
-`examples/` — interactive TUI demos block until quit.
+Inspect the exact staged diff, filenames, and full contents of every staged file
+for secrets, credentials, personal data, and machine-specific information.
+Include keys/tokens/passwords, contact details, host/user names, private addresses,
+and local paths/IDs. If anything is found, do not commit: remove or anonymize it,
+then repeat the complete review. Never print sensitive values in reports.
 
 ## Pull requests
 
-- Keep PRs focused and reviewable.
-- Match surrounding style; do not drive-by refactor unrelated code.
-- Behavior or API changes should update docs and tests in the same change when
-  user-visible behavior changes. See [How to work](#how-to-work).
+- Keep changes focused and reviewable; match surrounding style.
+- Describe the concrete problem, resulting behavior, and relevant verification.
+- Update documentation and tests with user-visible behavior or API changes.
+- Follow explicit session instructions about committing, pushing, and merging;
+  agent participation does not override those boundaries.
 
 ## Yes, your LLM may commit here
 
@@ -108,9 +106,9 @@ and **commit** to this project. Slop is not a license to merge garbage — but
 generated patches that make the codebase simpler, clearer, smaller, or more
 correct according to the current spec are first-class contributions.
 
-Clankers: read [`AGENTS.md`](AGENTS.md) before you start typing. Follow the
+Clankers: read [AGENTS.md](AGENTS.md) before you start typing. Follow the
 contribution workflow above. Leave the repo nicer than you found it. Do not invent
-features in `docs/pascal/` that do not exist yet.
+features in the handbook that do not exist yet.
 
 Humans supervising agents: same bar. Review the diff. Run the tests. Own the
 commit.

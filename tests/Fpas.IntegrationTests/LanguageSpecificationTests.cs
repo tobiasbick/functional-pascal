@@ -9,7 +9,9 @@ namespace Fpas.IntegrationTests;
 public sealed class LanguageSpecificationTests
 {
     private static string Root => Path.Combine(AppContext.BaseDirectory, "Fixtures", "specification");
-    public static IEnumerable<object[]> CompleteExamples() => MarkdownExamples.Read(Root)
+    private static IReadOnlyList<MarkdownExample> Examples() => [.. MarkdownExamples.Read(Root),
+        .. MarkdownExamples.Read(Path.Combine(AppContext.BaseDirectory, "Fixtures", "repository", "README.md"), "repository/")];
+    public static IEnumerable<object[]> CompleteExamples() => Examples()
         .Select(example => new object[] { example.Document, example.Fence, example.Name, example.Library });
 
     [Theory]
@@ -17,7 +19,7 @@ public sealed class LanguageSpecificationTests
     public async Task Complete_documented_sources_compile_and_execute(string document, int fence, string name, bool library)
     {
         using var directory = new TemporaryDirectory();
-        var examples = MarkdownExamples.Read(Root);
+        var examples = Examples();
         var example = examples.Single(item => item.Document == document && item.Fence == fence);
         Assert.EndsWith(library ? "end unit;" : "end program;", example.Source.Trim());
         var sources = new List<string>();
@@ -49,7 +51,13 @@ public sealed class LanguageSpecificationTests
         string[]? expected = name switch
         {
             "PrimitiveValues" => ["Hello, Mara", "20", "4000000000", "1.5", "12.50", "M", "True"],
+            "Hello" when document == "repository/README.md" => ["Hello, World!"],
             "Hello" => ["Hello, CLR"],
+            "Fibonacci" => ["Fibonacci sequence:", "0", "1", "1", "2", "3", "5", "8", "13", "21", "34"],
+            "PatternMatching" => ["Stop"],
+            "HigherOrderFunctions" => ["20"],
+            "NullableExample" => ["Found: 15", "Not found"],
+            "ParseExample" => ["Doubled: 42", "Input error"],
             "Functions" => ["Functions first", "42", "1", "2"],
             "Shapes" => ["1", "4", "12"],
             "Collections" => ["9", "Mara", "Keeper", "10", "42"],

@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../docs/pascal/**/*.md" Link="Fixtures/specification/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../README.md" Link="Fixtures/repository/README.md" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.ML.Tokenizers" />
     <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" />

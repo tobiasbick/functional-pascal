@@ -1,6 +1,6 @@
 # Documentation examples
 
-The handbook and agent reference use ordinary Markdown with Pascal examples.
+The repository README, handbook, and agent reference use Markdown with Pascal examples.
 Complete source fences are compiled directly by LanguageSpecificationTests;
 programs execute with assertions on output and behavior, and unit examples
 compile as libraries.

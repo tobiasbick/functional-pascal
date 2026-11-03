@@ -26,24 +26,27 @@ public sealed class HandbookTests
         var paths = new[] { "docs", "examples", "apps", "sdk", "tests" }.SelectMany(directory =>
             Directory.GetFiles(Path.Combine(repository, directory), "*.md", SearchOption.AllDirectories))
             .Where(path => !Path.GetRelativePath(repository, path).Replace('\\', '/').Split('/').Any(part => part is "bin" or "obj"))
-            .Concat(new[] { "README.md", "AGENTS.md" }.Select(path => Path.Combine(repository, path)));
+            .Concat(new[] { "README.md", "CONTRIBUTING.md", "AGENTS.md" }.Select(path => Path.Combine(repository, path)));
         DocumentationLinks.Validate(paths);
     }
 
     [Fact]
     public void Pascal_fences_are_complete_sources_or_explicit_syntax_fragments()
     {
-        var examples = MarkdownExamples.Read(Root);
-        foreach (var fence in MarkdownExamples.ReadFences(Root))
+        foreach (var root in new[] { Root, Path.Combine(DocumentationLinks.Repository, "README.md") })
         {
-            var complete = examples.SingleOrDefault(example => example.Document == fence.Document && example.Fence == fence.Index);
-            if (complete is null) Assert.Contains("fragment", fence.Attributes.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            else Assert.EndsWith(complete.Library ? "end unit;" : "end program;", complete.Source.Trim());
-        }
-        foreach (var project in examples.Where(example => example.Project is not null).GroupBy(example => example.Project))
-        {
-            Assert.Single(project, example => !example.Library);
-            Assert.Contains(project, example => example.Library);
+            var examples = MarkdownExamples.Read(root);
+            foreach (var fence in MarkdownExamples.ReadFences(root))
+            {
+                var complete = examples.SingleOrDefault(example => example.Document == fence.Document && example.Fence == fence.Index);
+                if (complete is null) Assert.Contains("fragment", fence.Attributes.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+                else Assert.EndsWith(complete.Library ? "end unit;" : "end program;", complete.Source.Trim());
+            }
+            foreach (var project in examples.Where(example => example.Project is not null).GroupBy(example => example.Project))
+            {
+                Assert.Single(project, example => !example.Library);
+                Assert.Contains(project, example => example.Library);
+            }
         }
     }
 
@@ -56,5 +59,7 @@ public sealed class HandbookTests
         var expected = Paths(Root);
         Assert.Equal(expected, Paths(copied));
         foreach (var path in expected) Assert.Equal(File.ReadAllText(Path.Combine(Root, path)), File.ReadAllText(Path.Combine(copied, path)));
+        Assert.Equal(File.ReadAllText(Path.Combine(DocumentationLinks.Repository, "README.md")),
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "repository", "README.md")));
     }
 }

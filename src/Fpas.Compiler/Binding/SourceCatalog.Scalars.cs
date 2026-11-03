@@ -42,7 +42,7 @@ internal sealed partial class SourceCatalog
         if (alias.Target is not null) return alias.Target;
         if (alias.Resolving) throw alias.Owner.Source.Error("FP3031", "Transparent aliases cannot form a cycle.", alias.Syntax.Name.Position);
         alias.Resolving = true;
-        try { return alias.Target = ResolveType(alias.Syntax.Target, alias.Owner, references); }
+        try { return alias.Target = ResolveType(alias.Syntax.Target, alias.Owner, references, validate: false); }
         finally { alias.Resolving = false; }
     }
 
@@ -94,8 +94,12 @@ internal sealed partial class SourceCatalog
         static bool Visible(TypeSymbol type) => type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Union?.IsPublic != false &&
             (type.Element is null || Visible(type.Element)) && type.TypeArguments.All(Visible);
         foreach (var alias in Units.SelectMany(unit => unit.Aliases.Values))
-            if (alias.Syntax.IsPublic && !Visible(ResolveAlias(alias, references)))
+        {
+            _ = ResolveAlias(alias, references);
+            var target = ResolveType(alias.Syntax.Target, alias.Owner, references);
+            references.ValidateGenericType(target, alias.Owner.Source, alias.Syntax.Target.Position);
+            if (alias.Syntax.IsPublic && !Visible(target))
                 throw alias.Owner.Source.Error("FP3031", "A public alias cannot expose private types.", alias.Syntax.Name.Position);
-            else _ = ResolveAlias(alias, references);
+        }
     }
 }

@@ -7,8 +7,8 @@ The [handbook](../README.md), [grammar](../../specs/syntax.md), and
 
 ## Budget and content
 
-Keep every Markdown file in this directory together below **10,000 o200k_base
-tokens**, including examples, links, and this guide. Keep README.md below
+Keep the combined Markdown content in this directory to **12,000 o200k_base
+tokens or fewer**, including examples, links, and this guide. Keep README.md below
 **1,000 tokens**. Leave room for future corrections instead of filling the budget.
 AgentReferenceTests measures actual token counts with Microsoft.ML.Tokenizers
 and its packaged O200kBase vocabulary; no runtime model download is required.

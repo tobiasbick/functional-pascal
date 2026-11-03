@@ -9,6 +9,8 @@ Constraints follow the type declaration's equals sign and precede record/union.
 They are checked at construction, in field/signature types, and when forwarding
 parameters. A method may introduce its own type parameters without redeclaring an
 enclosing parameter. Defaults must type-check for every valid instantiation.
+Field and signature constraints use the complete source interface graph,
+including forward/recursive record references and transparent aliases.
 Constraints on all field shapes are checked before constructor eligibility, so a
 forward-declared record with required fields cannot accidentally satisfy new().
 Type parameters cannot shadow enclosing parameters, source types, imports,

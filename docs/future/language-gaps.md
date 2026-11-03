@@ -2,8 +2,8 @@
 
 **Priority: finish the agreed language and MSBuild baseline before implementing
 extensions.** This document records confirmed implementation gaps and a deferred
-interface proposal. It does not expand the baseline or claim that its remaining
-requirements have all been verified.
+interface proposal. It does not expand the baseline or promise support for every
+possible CLR signature or development tool.
 
 The scope is defined by the [language overview](../pascal/README.md),
 [language topics](../pascal/README.md#start-here),
@@ -14,13 +14,12 @@ The scope is defined by the [language overview](../pascal/README.md),
 
 ## Finish the existing baseline first
 
-No additional confirmed compiler omission is currently listed. Before calling the
-baseline complete, compare every baseline rule and complete language example
-with compiler behavior. Record any additional demonstrated omissions here.
-Resolve stale implementation-status prose as each
-feature lands. Validate the agreed .fpasproj/.slnx build, dependency, diagnostic,
-incremental, documentation, and cleanup contracts against the
-[build acceptance checks](../../tests/coverage.md#build-acceptance).
+The [baseline comparison](../baseline-comparison.md) maps the agreed language,
+CLR, CLI and MSBuild requirements to implementation and acceptance tests for
+net10.0/AnyCPU on Windows and Ubuntu/WSL. No confirmed baseline implementation
+omission remains open in that comparison. Record any newly demonstrated omission
+here with its owning rule and reproducer before treating it as an extension.
+Practical guides remain tracked in [documentation gaps](documentation-gaps.md).
 
 Numeric lifted nullable arithmetic is unsupported; see
 [nullable types](../pascal/language/types/nullable-types.md). The baseline defines

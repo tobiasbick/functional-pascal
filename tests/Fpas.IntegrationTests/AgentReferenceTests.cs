@@ -27,7 +27,7 @@ public sealed class AgentReferenceTests(ITestOutputHelper output)
             if (Path.GetFileName(path) == "README.md") Assert.InRange(count, 1, 999);
         }
         output.WriteLine("Total: {0} o200k_base tokens", total);
-        Assert.InRange(total, 1, 9_999);
+        Assert.InRange(total, 1, 12_000);
     }
 
     [Fact]

@@ -4,7 +4,7 @@ namespace Fpas.Compiler.Binding;
 
 internal sealed partial class SourceCatalog
 {
-    private void BindRecordInterfaces(ReferenceCatalog references)
+    private void DeclareRecordInterfaces(ReferenceCatalog references)
     {
         foreach (var record in Units.SelectMany(unit => unit.Records.Values))
         {
@@ -20,6 +20,10 @@ internal sealed partial class SourceCatalog
                 record.Interfaces.Add(type);
             }
         }
+    }
+
+    private void BindRecordInterfaces(ReferenceCatalog references)
+    {
         foreach (var record in Units.SelectMany(unit => unit.Records.Values))
         {
             var source = record.Owner.Source;

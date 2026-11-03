@@ -24,6 +24,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Generic constraints, closures, type/method parameter identity | GenericRoutineTests, GenericRoutineMetadataTests, GenericTypeTests, GenericTypeMetadataTests | GenericRoutineExecutionTests, GenericTypeExecutionTests, MsBuildTests.GenericRoutines/GenericTypes |
 | Nested CLR type paths, enclosing arguments, constraints and identities | | MsBuildTests.NestedTypes |
 | Constrained generic operators, checked dispatch, static members/defaults | GenericRoutineTests | MsBuildTests.GenericMath, LanguageSpecificationTests |
+| Complete record/interface graph before field and alias constraints | GenericTypeTests, ScalarDiagnosticsTests | MsBuildTests.Baseline |
 | Inference, variance, contextual arrays/unions, overload evidence | InferenceTests | InferenceExecutionTests, MsBuildTests.Inference |
 | Contracts, ref/out/in, optional/params/named calls | ContractDiagnosticsTests, ParameterDiagnosticsTests | ContractExecutionTests, ParameterExecutionTests, MsBuildTests.ContractsAndParameters/ParameterDiagnostics |
 | Source overloads and CLR interface implementation/defaults | OverloadAndInterfaceDiagnosticsTests | OverloadExecutionTests, MsBuildTests.Overloads/Interfaces |
@@ -114,6 +115,10 @@ it does not depend on a previously installed development package.
 The Shared.csproj → Game.fpasproj → Host.csproj fixture and separate FPAS consumers
 verify mixed project/solution edges, framework/assembly/NuGet references, transitive
 runtime dependencies, public signatures, and nullable warnings as errors.
+MsBuildTests.Baseline also builds FSharpShared.fsproj → Game.fpasproj → C# and F#
+hosts in the same solution for Debug/Release. It restores FSharp.Core from the
+installed SDK's explicit offline package source into an isolated package directory
+and verifies execution with transitive assets in each host output.
 Examples build through their actual projects, including units, file/collection
 tasks, records/unions, generic pipelines/trees, and lexical helpers.
 

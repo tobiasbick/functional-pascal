@@ -25,6 +25,12 @@ Binding/emission order is canonicalized by qualified container name. Diagnostics
 retain the source containing the error; reference-input diagnostics use a stable
 source location.
 
+Source records declare their interface graph before constructed field and method
+types are validated. Transparent aliases retain resolved targets and receive
+complete constraint validation before bodies are bound. This permits recursive/
+forward interface relationships while preserving checks against every field
+when deciding actual parameterless-constructor eligibility.
+
 Overload resolution and [type inference](../pascal/language/functions/type-inference.md)
 finish before emission. Unsupported metadata gets a diagnostic identifying the
 member and excluded signature, never an erased object call or dynamic fallback.

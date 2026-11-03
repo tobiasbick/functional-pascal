@@ -12,6 +12,7 @@ workflow to work on the compiler/toolchain.
 | Repository commands and application SDK bootstrap | [Development workflow](build/development.md) |
 | Project boundaries, compilation, closures, async, and symbols | [Compiler architecture](architecture/README.md) |
 | Test organization and verified behavior | [Tests](../tests/README.md) and [coverage map](../tests/coverage.md) |
+| Language/CLR/CLI/MSBuild requirements compared with implementation and proof | [Baseline comparison](baseline-comparison.md) |
 | Parser-facing grammar | [Syntax specification](specs/syntax.md) |
 | Public CLR identities and language lowering | [CLR mapping](specs/clr-mapping.md) |
 | Project, dependency, diagnostic, incremental, and output contracts | [MSBuild specification](build/msbuild.md) |

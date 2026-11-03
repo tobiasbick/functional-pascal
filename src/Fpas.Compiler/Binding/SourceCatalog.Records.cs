@@ -17,6 +17,7 @@ internal sealed partial class SourceCatalog
         DeclareScalarBases(references);
         DeclareTypeGenerics(references);
         BindScalarValues(references);
+        DeclareRecordInterfaces(references);
         if (Units.Any(unit => unit.Records.Count != 0)) references.Required("Fpas.Core.RecordAttribute");
         foreach (var record in Units.SelectMany(unit => unit.RecordTypes))
             foreach (var field in record.Syntax.Fields)

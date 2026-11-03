@@ -58,6 +58,7 @@ public sealed class LanguageSpecificationTests
             "PatternMatching" => ["Stop"],
             "HigherOrderFunctions" => ["20"],
             "GenericArithmetic" => ["42"],
+            "InterfaceSources" => ["42"],
             "NullableExample" => ["Found: 15", "Not found"],
             "ParseExample" => ["Doubled: 42", "Input error"],
             "Functions" => ["Functions first", "42", "1", "2"],

@@ -43,19 +43,19 @@
 
 The baseline includes functions and closures, contracts, CLR generics, records,
 distinct types, subranges, unions, global values, exceptions, disposal, delegates,
-events, method-based interface implementation, and asynchronous methods.
+events, interface declarations/implementation, and asynchronous methods.
 It supports ordinary managed .NET APIs.
 
-It does not initially include user-authored class hierarchies, user-authored
-interface declarations, unsafe pointers, `ref struct` values, spans, ref returns,
+It does not include user-authored class hierarchies,
+unsafe pointers, `ref struct` values, spans, ref returns,
 byref locals, expression-tree conversion, custom awaiter patterns, async iterators,
 dynamic binding, operator declarations, or compiler plug-ins. An unsupported
 metadata signature produces a diagnostic identifying the unsupported feature.
 This scope does not promise access to every possible .NET API.
 
 Finish this baseline before adding language extensions. The
-[language gaps](../../future/language-gaps.md) track confirmed missing baseline work
-and the separate, deferred proposal for source interface declarations.
+[language gaps](../../future/language-gaps.md) track confirmed missing work and
+the open decision on lifted nullable numeric operators.
 
 The [MSBuild specification](../../build/msbuild.md) defines `.fpasproj` projects,
 `.slnx` solutions, standard dependency restore, and cross-language project

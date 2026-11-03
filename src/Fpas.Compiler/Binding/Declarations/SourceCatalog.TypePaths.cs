@@ -30,10 +30,11 @@ internal sealed partial class SourceCatalog
                     ClrImport imported => references.Symbol(imported.Type),
                     RecordImport record => record.Record.Type,
                     UnionImport union => union.Union.Type,
+                    InterfaceImport contract => contract.Interface.Type,
                     _ => TypeSymbol.Unsupported
                 };
                 if (owner.Definition is { } definition && definition.Definition.GetGenericParameters().Count != owner.TypeArguments.Count ||
-                    target is RecordImport { Record.GenericParameters.Count: > 0 } or UnionImport { Union.GenericParameters.Count: > 0 })
+                    target is RecordImport { Record.GenericParameters.Count: > 0 } or UnionImport { Union.GenericParameters.Count: > 0 } or InterfaceImport { Interface.GenericParameters.Count: > 0 })
                     throw unit.Source.Error("FP3026", "An enclosing generic type requires explicit type arguments.", segments[index - 1].Name.Position);
                 if (owner.Union is { } unionOwner)
                 {
@@ -55,6 +56,7 @@ internal sealed partial class SourceCatalog
         {
             RecordImport own => references.ConstructSource(own.Record.Type, arguments, unit.Source, position, validate),
             UnionImport own => references.ConstructSource(own.Union.Type, arguments, unit.Source, position, validate),
+            InterfaceImport own => references.ConstructSource(own.Interface.Type, arguments, unit.Source, position, validate),
             ClrTypeImport own when own.Type.Record is not null && own.Type.TypeArguments.Count == 0 => references.ConstructSource(own.Type, arguments, unit.Source, position, validate),
             ClrImport imported => references.Construct(imported.Type, arguments, unit.Source, position, validate),
             _ => throw unit.Source.Error("FP3018", "Type arguments require a generic type definition.", position)

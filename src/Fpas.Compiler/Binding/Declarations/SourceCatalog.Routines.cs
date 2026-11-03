@@ -83,7 +83,7 @@ internal sealed partial class SourceCatalog
             foreach (var syntaxConstraint in clause.Constraints.Where(constraint => constraint.Type is not null))
             {
                 var type = ResolveType(syntaxConstraint.Type!, unit, references, scope, validate: false);
-                var isInterface = type.Definition?.Definition.Attributes.HasFlag(TypeAttributes.Interface) == true;
+                var isInterface = type.IsInterface;
                 var isEnumBase = type.Definition?.FullName == "System.Enum";
                 if (!isInterface)
                 {
@@ -117,7 +117,7 @@ internal sealed partial class SourceCatalog
         for (var pass = 0; pass <= scope.Count; pass++)
             foreach (var parameter in parameters)
             {
-                parameter.IsReference |= parameter.Primary != "struct" && parameter.Constraints.Any(bound => bound.IsReference && bound.Definition?.FullName != "System.Enum" && bound.Definition?.Definition.Attributes.HasFlag(TypeAttributes.Interface) != true);
+                parameter.IsReference |= parameter.Primary != "struct" && parameter.Constraints.Any(bound => bound.IsReference && bound.Definition?.FullName != "System.Enum" && !bound.IsInterface);
                 parameter.IsNotNull |= parameter.Primary is "struct" or "class" || parameter.Constraints.Any(bound =>
                     bound.IsParameter ? bound.Parameter!.IsNotNull && !bound.IsNullable : bound.IsReference && !bound.IsNullable);
             }

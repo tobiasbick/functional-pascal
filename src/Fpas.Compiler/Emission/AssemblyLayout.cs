@@ -16,6 +16,9 @@ internal sealed class AssemblyLayout
     internal Dictionary<RecordSymbol, TypeDefinitionHandle> RecordOwners { get; } = [];
     internal Dictionary<RoutineSymbol, MethodDefinitionHandle> SourceMethods { get; } = [];
     internal IReadOnlyList<RecordSymbol> Records { get; }
+    internal IReadOnlyList<InterfaceSymbol> Interfaces { get; }
+    internal Dictionary<InterfaceSymbol, TypeDefinitionHandle> InterfaceTypes { get; } = [];
+    internal Dictionary<InterfaceSymbol, TypeDefinitionHandle> InterfaceOwners { get; } = [];
     internal Dictionary<ClosureSymbol, TypeDefinitionHandle> ClosureTypes { get; } = [];
     internal Dictionary<ClosureSymbol, TypeDefinitionHandle> ClosureOwners { get; } = [];
     internal Dictionary<ClosureSymbol, MethodDefinitionHandle> ClosureConstructors { get; } = [];
@@ -39,6 +42,7 @@ internal sealed class AssemblyLayout
         Closures = program.Units.SelectMany(unit => unit.Closures).OrderBy(closure => closure.Id).ToArray();
         Unions = program.Units.SelectMany(unit => unit.Unions).ToArray();
         Records = program.Units.SelectMany(unit => unit.Records).ToArray();
+        Interfaces = program.Units.SelectMany(unit => unit.Interfaces).ToArray();
         var method = 1;
         foreach (var unit in program.Units)
         {
@@ -63,7 +67,13 @@ internal sealed class AssemblyLayout
             var owner = MetadataTokens.TypeDefinitionHandle(index + 2);
             foreach (var union in program.Units[index].Unions) UnionOwners.Add(union, owner);
             foreach (var record in program.Units[index].Records) RecordOwners.Add(record, record.UnionCase is { } member ? UnionTypes[member.Owner] : owner);
+            foreach (var contract in program.Units[index].Interfaces) InterfaceOwners.Add(contract, owner);
             foreach (var closure in program.Units[index].Closures) ClosureOwners.Add(closure, closure.RecordContext is { } context ? RecordTypes[context] : owner);
+        }
+        foreach (var contract in Interfaces)
+        {
+            InterfaceTypes.Add(contract, MetadataTokens.TypeDefinitionHandle(type++));
+            foreach (var routine in contract.Methods) SourceMethods.Add(routine, MetadataTokens.MethodDefinitionHandle(method++));
         }
         foreach (var closure in Closures)
         {

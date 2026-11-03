@@ -35,6 +35,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         }
         var routines = new List<RoutineSyntax>();
         var records = new List<RecordSyntax>();
+        var interfaces = new List<InterfaceSyntax>();
         var unions = new List<UnionSyntax>();
         var aliases = new List<AliasSyntax>(); var scalars = new List<ScalarSyntax>();
         var globals = new List<GlobalSyntax>();
@@ -58,9 +59,10 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var saved = position;
                 position = declaration + 2;
                 ReadTypeParameters(); Expect("="); ReadConstraints();
-                var union = At("union"); var record = At("record"); position = saved;
+                var union = At("union"); var record = At("record"); var contract = At("interface"); position = saved;
                 if (union) unions.Add(ReadUnion(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else if (record) records.Add(ReadRecord(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
+                else if (contract) interfaces.Add(ReadInterface(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else ReadScalarDeclaration(isProgram, aliases, scalars, attributes, declarationDocumentation);
             }
             else routines.Add(ReadRoutine(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
@@ -78,10 +80,10 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         Expect(";");
         if (Current.Kind != TokenKind.End)
             throw source.Error("FP2001", "Unexpected content after the source terminator.", Current.Position, Current.Length);
-        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals);
+        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals, interfaces);
     }
 
-    private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false, bool nested = false)
+    private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false, bool nested = false, bool abstractMember = false)
     {
         var documentation = Current.Documentation;
         var isPublic = At("public") || inRecord && !At("private");
@@ -119,6 +121,8 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         }
         Expect(";");
         var constraints = ReadConstraints();
+        if (abstractMember)
+            return new(name, true, parameters, result, [], false, typeParameters, constraints, Documentation: documentation);
         var contracts = ReadContracts();
         Expect("begin");
         var body = ReadStatements();

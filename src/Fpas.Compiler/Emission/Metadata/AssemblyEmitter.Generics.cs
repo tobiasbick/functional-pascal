@@ -26,7 +26,7 @@ internal sealed partial class AssemblyEmitter
             {
                 var parameter = entry.Parameters[index];
                 var attributes = GenericParameterAttributes.None;
-                if (parameter.IsReference) attributes |= GenericParameterAttributes.ReferenceTypeConstraint;
+                if (parameter.Primary is "class" or "class?") attributes |= GenericParameterAttributes.ReferenceTypeConstraint;
                 if (parameter.Primary == "struct") attributes |= GenericParameterAttributes.NotNullableValueTypeConstraint | GenericParameterAttributes.DefaultConstructorConstraint;
                 if (parameter.HasConstructor) attributes |= GenericParameterAttributes.DefaultConstructorConstraint;
                 var handle = metadata.AddGenericParameter(entry.Owner, attributes, metadata.GetOrAddString(parameter.Name), index);

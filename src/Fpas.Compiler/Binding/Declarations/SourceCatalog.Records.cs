@@ -19,6 +19,7 @@ internal sealed partial class SourceCatalog
         }
         DeclareScalarBases(references);
         DeclareTypeGenerics(references);
+        DeclareInterfaceBases(references);
         BindScalarValues(references);
         DeclareRecordInterfaces(references);
         if (Units.Any(unit => unit.Records.Count != 0)) references.Required("Fpas.Core.RecordAttribute");
@@ -29,6 +30,7 @@ internal sealed partial class SourceCatalog
         foreach (var record in Units.SelectMany(unit => unit.RecordTypes))
             foreach (var field in record.Fields) references.ValidateGenericType(field.Type, record.Owner.Source, field.Syntax.Name.Position);
         ValidateTypeGenerics(references);
+        DeclareInterfaceMembers(references);
         foreach (var record in Units.SelectMany(unit => unit.RecordTypes))
         {
             var unit = record.Owner;
@@ -81,11 +83,11 @@ internal sealed partial class SourceCatalog
 
     private void ValidateRecordVisibility()
     {
-        static bool Visible(TypeSymbol type) => type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Union?.IsPublic != false && (type.Element is null || Visible(type.Element)) && (type.Arguments is null || type.Arguments.All(Visible));
+        static bool Visible(TypeSymbol type) => type.Interface?.IsPublic != false && type.Scalar?.IsPublic != false && type.Record?.IsPublic != false && type.Union?.IsPublic != false && (type.Element is null || Visible(type.Element)) && (type.Arguments is null || type.Arguments.All(Visible));
         void Check(SourceUnit unit, RoutineSymbol method, int position)
         {
             if (method.IsPublic && (!Visible(method.Result) || method.Parameters.Any(parameter => !Visible(parameter.Type)) || method.GenericParameters.SelectMany(parameter => parameter.Constraints).Any(type => !Visible(type))))
-                throw unit.Source.Error("FP3021", "A public signature cannot expose a private record.", position);
+                throw unit.Source.Error("FP3021", "A public signature cannot expose a private type.", position);
         }
         void CheckConstraints(SourceUnit unit, IReadOnlyList<GenericParameterSymbol> parameters, int position)
         {
@@ -94,6 +96,12 @@ internal sealed partial class SourceCatalog
         }
         foreach (var unit in Units)
         {
+            foreach (var contract in unit.Interfaces.Values.Where(contract => contract.IsPublic))
+            {
+                if (contract.Bases.Any(type => !Visible(type))) throw unit.Source.Error("FP3029", "A public interface cannot extend a private interface.", contract.Syntax.Name.Position);
+                CheckConstraints(unit, contract.GenericParameters, contract.Syntax.Name.Position);
+                foreach (var method in contract.Methods) Check(unit, method, contract.Syntax.Name.Position);
+            }
             foreach (var union in unit.Unions.Values.Where(union => union.IsPublic))
             {
                 CheckConstraints(unit, union.GenericParameters, union.Syntax.Name.Position);

@@ -41,7 +41,7 @@ var_declaration = "var", identifier, ":", type, ":=", expression, ";" ;
 
 type_declaration = "type", identifier, [type_parameters], "=", {constraint},
                    (type | distinct_type | subrange_type |
-                    record_body | union_body | enum_body), ";" ;
+                    record_body | union_body | enum_body | interface_body), ";" ;
 distinct_type   = "distinct", named_type ;
 subrange_type   = named_type, "range", expression, "..", expression ;
 type_parameters = "<", identifier, {",", identifier}, ">" ;
@@ -57,6 +57,14 @@ constraint      = "where", identifier, ":", constraint_item,
                   {",", constraint_item}, ";" ;
 constraint_item = named_type | "class", ["?"] | "struct" | "new", "(", ")" ;
 
+interface_body  = "interface", ["extends", named_type, {",", named_type}],
+                  {interface_member}, "end", "interface" ;
+interface_member = {attribute}, ["public"],
+                  (identifier, ":", type, ";" |
+                   "function", identifier, [type_parameters], "(", [parameters], ")",
+                     ":", type, ";", {constraint} |
+                   "procedure", identifier, [type_parameters], "(", [parameters], ")",
+                     ";", {constraint}) ;
 record_body     = "record", ["implements", named_type, {",", named_type}],
                   {record_member}, "end", "record" ;
 record_member   = {attribute}, [visibility],
@@ -90,8 +98,12 @@ attribute       = "[", named_type, ["(", [arguments], ")"], "]" ;
 
 Empty unions/enums, nullable-byref types, invalid array ranks, unsupported generic
 combinations, and misplaced attributes are rejected by semantic rules even if a
-shape production accepts them. Attributes apply only to types/routines/record
-fields in the baseline. Type annotations are required on value declarations at
+shape production accepts them. Interface members are public abstract instance
+signatures and getter-only properties. They cannot have bodies or contracts;
+extends accepts only distinct non-nullable interfaces without inheritance cycles.
+See [interfaces](../pascal/interop/interfaces.md) for inherited member rules.
+Attributes apply to supported types, routines, record fields, and interface properties.
+Type annotations are required on value declarations at
 every scope; no local-binding annotation is optional.
 Programs terminate with `end program;`; units terminate with `end unit;`.
 The program entry body's `begin` has its own `end;`. A separate `end program;`

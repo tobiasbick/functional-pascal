@@ -190,6 +190,32 @@ record with updates do not apply to them. An unknown/incompatible metadata
 contract is an error, not a guessed set of subclasses. See
 [union semantics](../pascal/language/types/unions.md).
 
+## Source interfaces
+
+A source interface emits a nested Interface/Abstract CLR type under its
+unit/program container with the ordinary source visibility and generic arity.
+It has no base class, instance fields, or constructors. Each declared signature
+emits a public abstract virtual newslot instance MethodDef with no CIL body.
+Getter-only declarations emit Property/getter/MethodSemantics metadata. Bases
+emit InterfaceImpl entries, including constructed source or imported interfaces.
+
+Generic interfaces are invariant. Emit type/method constraints, nullable metadata,
+parameter labels/defaults/params and ref/out/in modes on their ordinary CLR
+targets. An in parameter requires the InAttribute required signature modifier
+as well as the existing parameter flags and readonly annotation. A reference
+constraint inferred from a base constraint does not add an explicit class flag;
+this preserves C# generic implementation compatibility.
+
+Records use the same validated requirements and MethodImpl dispatch mapping for
+source and imported interfaces. Preserve each distinct declaring slot even when
+one record method satisfies several slots. Generic MethodImpl declarations use
+MemberRef signatures, not MethodSpec instantiations. Inherited diamonds deduplicate
+the same slot; incompatible requirements and ambiguous access produce diagnostics.
+Constraints and nullable safety remain checked across assembly boundaries.
+External consumers read ordinary CLR metadata; no additional Core annotation is
+needed. XML documentation uses normal nested type, method, and property IDs.
+See [interface semantics](../pascal/interop/interfaces.md).
+
 ## Generic data types
 
 Generic records/unions use ordinary invariant CLR type parameters and constraints.

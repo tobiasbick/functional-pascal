@@ -59,13 +59,10 @@ internal sealed partial class AssemblyEmitter
                 if (method.IsAsync) AddAsyncAttribute(methodHandle, layout.AsyncRoutines[record.Bodies[method]]);
                 AddSourceAttributes(methodHandle, record.Bodies.GetValueOrDefault(method)?.Attributes);
             }
-            foreach (var implementation in record.InterfaceMethods.DistinctBy(implementation => (implementation.Contract.Owner, implementation.Contract.DefinitionHandle)))
+            foreach (var implementation in record.InterfaceMethods.DistinctBy(implementation => (implementation.Contract.Owner, implementation.Contract.DefinitionHandle, implementation.Contract.SourceMethod)))
             {
                 var contract = implementation.Contract;
-                var signature = MethodSignature(contract.SignatureResult ?? contract.Result, contract.SignatureParameters ?? contract.DelegateParameters,
-                    instance: true, genericArity: contract.MethodArguments?.Count ?? 0);
-                var declaration = metadata.AddMemberReference(TypeHandle(contract.Owner), metadata.GetOrAddString(contract.Name), signature);
-                metadata.AddMethodImplementation(type, layout.SourceMethods[implementation.Body], declaration);
+                metadata.AddMethodImplementation(type, layout.SourceMethods[implementation.Body], Reference(contract, instantiate: false));
             }
             PropertyDefinitionHandle firstProperty = default;
             for (var index = 0; index < record.Fields.Count; index++)

@@ -65,10 +65,11 @@ internal sealed partial class Binder
         var type = target switch
         {
             RecordImport record => record.Record.Type, UnionImport union => union.Union.Type,
+            InterfaceImport contract => contract.Interface.Type,
             ClrTypeImport closed => closed.Type, ClrImport clr => references.Symbol(clr.Type),
             _ => TypeSymbol.Unsupported
         };
-        if (!allowOpen && (target is RecordImport or UnionImport && ReferenceCatalog.SourceParameters(type).Count != 0 ||
+        if (!allowOpen && (target is RecordImport or UnionImport or InterfaceImport && ReferenceCatalog.SourceParameters(type).Count != 0 ||
             type.Definition is { } definition && definition.Definition.GetGenericParameters().Count != type.TypeArguments.Count))
             throw source.Error("FP3026", "A generic type receiver requires explicit type arguments.", position);
         return type;

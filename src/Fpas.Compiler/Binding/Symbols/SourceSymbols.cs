@@ -19,7 +19,7 @@ internal sealed record ParameterSymbol(string Name, TypeSymbol Type, int Index, 
     internal BoundExpression? Default { get; set; }
 }
 internal sealed record RoutineSymbol(string Name, TypeSymbol Result, IReadOnlyList<ParameterSymbol> Parameters,
-    bool IsPublic, bool IsEntryPoint, int Index, bool IsInstance = false, RecordSymbol? Owner = null, GeneratedMethodKind Generated = GeneratedMethodKind.None, UnionSymbol? UnionOwner = null, IReadOnlyList<GenericParameterSymbol>? TypeParameters = null, Syntax.RoutineSyntax? Declaration = null, bool IsAsync = false)
+    bool IsPublic, bool IsEntryPoint, int Index, bool IsInstance = false, RecordSymbol? Owner = null, GeneratedMethodKind Generated = GeneratedMethodKind.None, UnionSymbol? UnionOwner = null, IReadOnlyList<GenericParameterSymbol>? TypeParameters = null, Syntax.RoutineSyntax? Declaration = null, bool IsAsync = false, InterfaceSymbol? InterfaceOwner = null)
 {
     internal IReadOnlyList<GenericParameterSymbol> GenericParameters => TypeParameters ?? [];
     internal TypeSymbol BodyResult => !IsAsync ? Result : Result.TypeArguments.Count == 1 ? Result.TypeArguments[0] : TypeSymbol.Void;

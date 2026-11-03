@@ -97,8 +97,7 @@ internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.Source
         static bool Sealed(TypeSymbol type) => type.Kind is TypeKind.Record or TypeKind.String || type.Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Sealed) == true;
         if (selector.IsValue || Sealed(selector)) return RuntimeAssignable(selector, target);
         if (target.IsValue || Sealed(target)) return RuntimeAssignable(target, selector);
-        return selector.Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Interface) == true ||
-            target.Definition?.Definition.Attributes.HasFlag(System.Reflection.TypeAttributes.Interface) == true ||
+        return selector.IsInterface || target.IsInterface ||
             RuntimeAssignable(selector, target) || RuntimeAssignable(target, selector);
     }
 

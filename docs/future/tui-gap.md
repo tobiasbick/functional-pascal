@@ -66,11 +66,11 @@ Open gaps include:
 - Assembly/package dependencies, XML documentation, SDK bootstrap, and
   cross-language consumer verification through real project builds.
 
-FPAS cannot yet author arbitrary interfaces or user-defined class hierarchies.
-Existing CLR interfaces can be implemented within the supported contract.
-Delegates, records, and composition can express functional extension points
-without adding source interface syntax. Extensibility and any need for separate
-CLR contract types remain design questions, not approved compiler extensions.
+FPAS can declare interfaces and implement source/imported contracts with records;
+user-defined class hierarchies remain unsupported. Delegates, records, interfaces,
+and composition can express extension points within the supported contract.
+The TUI library's public contract remains a design question; see the implemented
+[interface rules](../pascal/interop/interfaces.md) before selecting its shape.
 
 ## MVU and application lifetime
 

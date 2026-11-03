@@ -38,7 +38,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         foreach (var union in unit.Unions.Values) BindUnion(union);
         foreach (var record in unit.RecordTypes) BindRecord(record);
         BindTypeAttributes();
-        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray());
+        return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray(), unit.Interfaces.Values.ToArray());
     }
 
     private void InitializeImports()
@@ -115,7 +115,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
     }
 
     private IReadOnlyDictionary<string, GenericParameterSymbol> TypeParameters =>
-        (closure?.GenericParameters ?? recordContext?.GenericParameters ?? []).Concat(currentRoutine.GenericParameters).ToDictionary(parameter => parameter.Name, StringComparer.Ordinal);
+        (closure?.GenericParameters ?? recordContext?.GenericParameters ?? currentRoutine.InterfaceOwner?.GenericParameters ?? []).Concat(currentRoutine.GenericParameters).ToDictionary(parameter => parameter.Name, StringComparer.Ordinal);
 
     private TypeSymbol BindType(TypeSyntax type) => catalog.ResolveType(type, unit, references, TypeParameters);
 

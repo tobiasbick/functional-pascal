@@ -1,6 +1,5 @@
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.References;
-using System.Reflection;
 
 namespace Fpas.Compiler.Binding.Declarations;
 
@@ -15,8 +14,8 @@ internal sealed partial class SourceCatalog
             foreach (var syntax in record.Syntax.Interfaces ?? [])
             {
                 var type = ResolveType(syntax, record.Owner, references, scope, validate: false);
-                if (type.IsNullable || type.Definition?.Definition.Attributes.HasFlag(TypeAttributes.Interface) != true)
-                    throw source.Error("FP3029", "implements requires a non-nullable imported CLR interface.", syntax.Position);
+                if (type.IsNullable || !type.IsInterface)
+                    throw source.Error("FP3029", "implements requires a non-nullable interface.", syntax.Position);
                 if (record.Interfaces.Any(other => other.Erased == type.Erased))
                     throw source.Error("FP3029", "An interface may occur only once in a record header.", syntax.Position);
                 record.Interfaces.Add(type);

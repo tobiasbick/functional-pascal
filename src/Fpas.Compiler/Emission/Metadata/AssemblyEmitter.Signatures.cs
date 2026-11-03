@@ -24,6 +24,7 @@ internal sealed partial class AssemblyEmitter
         if (type.Scalar is { } scalar && !type.NullableValue) return layout.ScalarTypes[scalar];
         if (type.Kind == TypeKind.Union && type.Arguments is not { Count: > 0 }) return layout.UnionTypes[type.Union!];
         if (type.Kind == TypeKind.Record && type.Arguments is not { Count: > 0 }) return layout.RecordTypes[type.Record!];
+        if (type.Kind == TypeKind.Interface && type.Arguments is not { Count: > 0 }) return layout.InterfaceTypes[type.Interface!];
         if (type.Kind == TypeKind.Generated && type.Closure!.GenericParameters.Count == 0) return layout.ClosureTypes[type.Closure];
         if (type.Kind == TypeKind.Async && type.Arguments is not { Count: > 0 }) return layout.AsyncTypes[type.Machine!];
         var cacheKey = (type, genericTypeContext);
@@ -39,7 +40,9 @@ internal sealed partial class AssemblyEmitter
         return handle;
     }
 
-    private EntityHandle Reference(ImportedMethod method)
+    private EntityHandle Reference(ImportedMethod method) => Reference(method, instantiate: true);
+
+    private EntityHandle Reference(ImportedMethod method, bool instantiate)
     {
         EntityHandle handle;
         if (method.SourceMethod is { } source && ReferenceCatalog.SourceParameters(method.Owner).Count == 0)
@@ -61,7 +64,7 @@ internal sealed partial class AssemblyEmitter
             }
             handle = member;
         }
-        if (method.MethodArguments is null) return handle;
+        if (method.MethodArguments is null || !instantiate) return handle;
         var arguments = new BlobBuilder();
         var encoder = new BlobEncoder(arguments).MethodSpecificationSignature(method.MethodArguments.Count);
         foreach (var argument in method.MethodArguments) EncodeType(encoder.AddArgument(), argument);
@@ -106,12 +109,14 @@ internal sealed partial class AssemblyEmitter
         return metadata.GetOrAddBlob(signature);
     }
 
-    private static IReadOnlyList<TypeSymbol> SourceSignatureParameters(RoutineSymbol method)
+    private IReadOnlyList<TypeSymbol> SourceSignatureParameters(RoutineSymbol method)
     {
         var contract = method.Owner?.InterfaceMethods.FirstOrDefault(implementation => implementation.Body == method).Contract;
         return method.Parameters.Select((parameter, index) => contract?.SignatureParameters?[index] is { Kind: TypeKind.ByRef, Definition: not null } modified
             ? parameter.SignatureType with { Definition = modified.Definition, ParameterIndex = modified.ParameterIndex }
-            : parameter.SignatureType).ToArray();
+            : parameter.Mode == "in" && (method.InterfaceOwner is not null || contract?.SourceMethod?.InterfaceOwner is not null)
+                ? parameter.SignatureType with { Definition = catalog.Required("System.Runtime.InteropServices.InAttribute"), ParameterIndex = 1 }
+                : parameter.SignatureType).ToArray();
     }
 
     private void EncodeType(SignatureTypeEncoder encoder, TypeSymbol type)
@@ -131,7 +136,7 @@ internal sealed partial class AssemblyEmitter
         }
         if (type.Arguments is { Count: > 0 })
         {
-            EntityHandle definition = type.Record is { } record ? layout.RecordTypes[record] : type.Union is { } union ? layout.UnionTypes[union] : type.Machine is { } machine ? layout.AsyncTypes[machine] : DefinitionHandle(type.Definition!);
+            EntityHandle definition = type.Interface is { } contract ? layout.InterfaceTypes[contract] : type.Record is { } record ? layout.RecordTypes[record] : type.Union is { } union ? layout.UnionTypes[union] : type.Machine is { } machine ? layout.AsyncTypes[machine] : DefinitionHandle(type.Definition!);
             var arguments = encoder.GenericInstantiation(definition, type.Arguments.Count, type.IsValue);
             foreach (var argument in type.Arguments) EncodeType(arguments.AddArgument(), argument);
             return;
@@ -170,6 +175,7 @@ internal sealed partial class AssemblyEmitter
             case TypeKind.Generated:
             case TypeKind.Union:
             case TypeKind.Record: encoder.Type(TypeHandle(type), isValueType: false); break;
+            case TypeKind.Interface: encoder.Type(TypeHandle(type), isValueType: false); break;
             case TypeKind.Async: encoder.Type(TypeHandle(type), isValueType: false); break;
             default: throw new InvalidOperationException("Unsupported emitted type.");
         }

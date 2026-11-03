@@ -13,13 +13,14 @@ internal sealed class SourceUnit(SourceText source, CompilationUnitSyntax syntax
     internal Dictionary<string, UnionSymbol> Unions { get; } = new(StringComparer.Ordinal);
     internal IEnumerable<RecordSymbol> RecordTypes => Records.Values.Concat(Unions.Values.SelectMany(union => union.Cases).Select(member => member.Representation));
     internal Dictionary<string, RecordSymbol> Records { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<string, InterfaceSymbol> Interfaces { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, List<RoutineSymbol>> Routines { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, AliasSymbol> Aliases { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, ScalarSymbol> Scalars { get; } = new(StringComparer.Ordinal);
     internal Dictionary<string, GlobalSymbol> Globals { get; } = new(StringComparer.Ordinal);
     internal TypeSymbol ContainerType => new(TypeKind.Container, Container: this);
     internal RoutineSymbol? Initializer { get; set; }
-    internal bool HasType(string name) => Records.ContainsKey(name) || Unions.ContainsKey(name) || Scalars.ContainsKey(name) || Aliases.ContainsKey(name);
+    internal bool HasType(string name) => Records.ContainsKey(name) || Interfaces.ContainsKey(name) || Unions.ContainsKey(name) || Scalars.ContainsKey(name) || Aliases.ContainsKey(name);
     internal RoutineSymbol? EntryPoint { get; set; }
 }
 
@@ -42,6 +43,7 @@ internal sealed partial class SourceCatalog
                 throw unit.Source.Error("FP4002", $"Source container '{name.Text}' conflicts with a referenced CLR type.", name.Position);
         }
         catalog.DeclareScalarNames();
+        catalog.DeclareInterfaceNames();
         catalog.DeclareUnions(references);
         catalog.DeclareRecords(references);
         CompleteUnions(catalog.Units);
@@ -60,6 +62,7 @@ internal sealed partial class SourceCatalog
                 unit.EntryPoint = new(unit.Syntax.IsAsync ? "<AsyncProgram>" : "<EntryPoint>", unit.Syntax.IsAsync ? references.Symbol(references.Required("System.Threading.Tasks.Task")) : TypeSymbol.Void,
                     [new("args", TypeSymbol.Array(TypeSymbol.String), 0)], false, true, index++, IsAsync: unit.Syntax.IsAsync);
         }
+        catalog.ValidateInterfaceContracts(references);
         catalog.BindRecordInterfaces(references);
         catalog.ValidateRecordVisibility();
         catalog.ValidateAliases(references);
@@ -76,6 +79,11 @@ internal sealed partial class SourceCatalog
         {
             foreach (var owner in Units)
             {
+                if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && owner.Interfaces.TryGetValue(name[(owner.Syntax.Name.Text.Length + 1)..], out var contract))
+                {
+                    if (!contract.IsPublic) throw source.Error("FP3029", $"Interface '{contract.Name}' is private to its unit.", position);
+                    return new InterfaceImport(contract);
+                }
                 if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && ResolveScalarPath(owner, name[(owner.Syntax.Name.Text.Length + 1)..], null, references, source, position) is { } scalar)
                     return scalar;
                 if (name.StartsWith(owner.Syntax.Name.Text + ".", StringComparison.Ordinal) && owner.Unions.TryGetValue(name[(owner.Syntax.Name.Text.Length + 1)..], out var union))
@@ -103,6 +111,7 @@ internal sealed partial class SourceCatalog
             return SourceCaseType(containingUnion, parts[1], position, unit.Source);
         if (parts.Count == 1 && unit.Unions.TryGetValue(parts[0], out var ownUnion)) return new UnionImport(ownUnion);
         if (parts.Count == 1 && unit.Records.TryGetValue(parts[0], out var ownRecord)) return new RecordImport(ownRecord);
+        if (parts.Count == 1 && unit.Interfaces.TryGetValue(parts[0], out var ownInterface)) return new InterfaceImport(ownInterface);
         var import = unit.Syntax.Imports.FirstOrDefault(candidate => candidate.Alias.Text == parts[0]);
         if (import is null)
         {
@@ -113,6 +122,11 @@ internal sealed partial class SourceCatalog
         var target = Resolve(import.Target.Text, position, unit.Source, references);
         if (parts.Count == 1) return target;
         if (target is SourceImport scalarUnit && parts.Count == 2 && ResolveScalarPath(scalarUnit.Unit, parts[1], unit, references, unit.Source, position) is { } scalar) return scalar;
+        if (target is SourceImport interfaceUnit && parts.Count == 2 && interfaceUnit.Unit.Interfaces.TryGetValue(parts[1], out var contract))
+        {
+            if (!contract.IsPublic && interfaceUnit.Unit != unit) throw unit.Source.Error("FP3029", "The interface is private to its unit.", position);
+            return new InterfaceImport(contract);
+        }
         if (target is SourceImport caseOwner && parts.Count == 3 && caseOwner.Unit.Unions.TryGetValue(parts[1], out var caseUnion))
         {
             if (!caseUnion.IsPublic && caseOwner.Unit != unit) throw unit.Source.Error("FP3023", "The union is private to its unit.", position);
@@ -182,6 +196,7 @@ internal sealed partial class SourceCatalog
                 {
                     RecordImport own => references.ConstructSource(own.Record.Type, [], unit.Source, syntax.Position, validate),
                     UnionImport own => references.ConstructSource(own.Union.Type, [], unit.Source, syntax.Position, validate),
+                    InterfaceImport own => references.ConstructSource(own.Interface.Type, [], unit.Source, syntax.Position, validate),
                     ClrTypeImport own when own.Type.Record is not null && own.Type.TypeArguments.Count == 0 => references.ConstructSource(own.Type, [], unit.Source, syntax.Position, validate),
                     ClrTypeImport own => own.Type,
                     ClrImport imported => references.Symbol(imported.Type),

@@ -44,6 +44,11 @@ internal sealed partial class ReferenceCatalog
 
     private IEnumerable<TypeSymbol> Parents(TypeSymbol type)
     {
+        if (type.Interface is { } sourceInterface)
+        {
+            foreach (var parent in sourceInterface.Bases) yield return SubstituteSource(parent, sourceInterface.GenericParameters, type.TypeArguments);
+            yield break;
+        }
         if (type.Scalar is { } scalar)
         {
             yield return scalar.Syntax.Category == Syntax.ScalarCategory.Enum ? Symbol(Required("System.Enum")) : type.IsValue ? Symbol(Required("System.ValueType")) : TypeSymbol.Object;

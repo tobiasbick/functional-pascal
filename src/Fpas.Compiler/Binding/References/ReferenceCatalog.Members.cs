@@ -28,6 +28,16 @@ internal sealed partial class ReferenceCatalog
         var signatures = new HashSet<string>(StringComparer.Ordinal);
         foreach (var type in name == ".ctor" ? new[] { owner } : Hierarchy(owner))
         {
+            if (type.Interface is { } contract)
+            {
+                foreach (var method in contract.Methods.Where(method => !isStatic && method.Name == name &&
+                    (includeOpen || method.GenericParameters.Count == (methodArguments?.Count ?? 0))))
+                {
+                    var arguments = methodArguments ?? (method.GenericParameters.Count == 0 ? null : new TypeList(method.GenericParameters.Select(parameter => parameter.Type)));
+                    result.Add(InstantiateSource(method, type, arguments));
+                }
+                continue;
+            }
             if (type.Kind == TypeKind.Scalar && !type.NullableValue)
             {
                 foreach (var method in ScalarMethods(type).Where(method => method.Name == name && method.IsStatic == isStatic && methodArguments is null))
@@ -65,7 +75,7 @@ internal sealed partial class ReferenceCatalog
                 var imported = ConstrainStatic(ReadMethod(type, handle, methodArguments, allowOpen: includeOpen), owner);
                 if (imported is null) continue;
                 var key = method.GetGenericParameters().Count + ":" + string.Join(';', imported.DelegateParameters.Select(parameter => parameter.Erased));
-                if (imported.ConstrainedType is not null || signatures.Add(key)) result.Add(imported);
+                if (owner.Interface is not null || imported.ConstrainedType is not null || signatures.Add(key)) result.Add(imported);
             }
         }
         return MostSpecificStatic(result);
@@ -116,9 +126,12 @@ internal sealed partial class ReferenceCatalog
 
     internal ImportedProperty? Property(TypeSymbol owner, string name, bool isStatic, RecordSymbol? access = null, SourceText? source = null, int position = 0)
     {
+        if (!isStatic && (owner.Interface is not null || owner.IsParameter && Hierarchy(owner).Any(type => type.Interface is not null)))
+            return SourceInterfaceProperty(owner, name, source ?? new SourceText("<interfaces>", ""), position);
         var constrained = new List<(TypeSymbol Owner, ImportedProperty Property)>();
         foreach (var type in Hierarchy(owner))
         {
+            if (type.Interface is not null) continue;
             if (type.Kind == TypeKind.Scalar)
             {
                 var info = ScalarInfo(type)!;
@@ -187,7 +200,7 @@ internal sealed partial class ReferenceCatalog
                 }
                 continue;
             }
-            if (type.Record is not null || type.Union is not null) continue;
+            if (type.Record is not null || type.Union is not null || type.Interface is not null) continue;
             var definition = Definition(type);
             foreach (var handle in definition.Definition.GetFields())
             {

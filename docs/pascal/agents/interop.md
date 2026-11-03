@@ -30,14 +30,23 @@ not a virtual Equals call. Nullable-value operators are not implicitly lifted.
 
 ## Implementing interfaces and using attributes
 
-Source records can implement imported interfaces with compatible public instance
+Declare nominal interfaces with `type ISource<T> = interface ... end interface;`.
+Use `Name: T;` for getter-only properties and bodyless function/procedure
+signatures for methods. Optional extends lists source/imported interfaces.
+Type constraints precede interface; method constraints follow signatures.
+Members are public abstract instance members. Generic interfaces are invariant.
+Read [interfaces](../interop/interfaces.md) for inheritance and ambiguity rules.
+
+Source records can implement source/imported interfaces with compatible public instance
 methods and getter-only properties. List interfaces after implements. Required
 inherited abstract members must be satisfied; applicable default implementations
 remain usable. Labels can differ but CLR types, modes, generic constraints, and
 nullable safety must match. Setter/indexer/event/static-abstract implementations
-cannot be authored by a record, and source interface declarations are deferred.
+cannot be authored by a record. Interface declarations cannot contain bodies,
+contracts, private/static members, setters, indexers, or events. Task-returning
+signatures support async implementations; async is only on the implementation.
 
-Attribute lists precede a type, routine, or record field. Use the complete
+Attribute lists precede a type, routine, record field, or interface property. Use the complete
 Attribute type name. Positional arguments select its constructor; subsequent
 named arguments set public writable properties/fields. Values must be legal CLR
 metadata constants, closed typeof values, or supported array literals. Record

@@ -66,5 +66,4 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 | Update examples, check links, or verify the token budget | [Maintenance](maintenance.md) |
 
 Use the owning handbook/specification for details. Check implementation status
-before using a feature from a proposal. Source interface declarations remain a
-deferred proposal; this reference does not enable them.
+before using a feature from a proposal.

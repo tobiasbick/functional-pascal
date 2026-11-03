@@ -7,7 +7,7 @@ namespace Fpas.Compiler.Binding.References;
 internal sealed partial class ReferenceCatalog
 {
     internal static IReadOnlyList<GenericParameterSymbol> SourceParameters(TypeSymbol type)
-        => type.Record?.GenericParameters ?? type.Union?.GenericParameters ?? type.Closure?.GenericParameters ?? [];
+        => type.Interface?.GenericParameters ?? type.Record?.GenericParameters ?? type.Union?.GenericParameters ?? type.Closure?.GenericParameters ?? [];
 
     internal ImportedField RecordField(RecordFieldSymbol field, TypeSymbol owner) => new(owner, "<" + field.Name + ">k__BackingField",
         field.Type, false, true, SignatureType: SourceSignature(field.Type, SourceParameters(owner)));

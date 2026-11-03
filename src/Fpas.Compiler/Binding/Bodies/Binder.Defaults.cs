@@ -11,6 +11,8 @@ internal sealed partial class Binder
     {
         InitializeImports();
         foreach (var syntax in unit.Syntax.Routines) BindDefaults(routines[syntax.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, syntax)), syntax.Parameters);
+        foreach (var method in unit.Interfaces.Values.SelectMany(contract => contract.Methods).Where(method => method.Declaration is not null))
+            BindDefaults(method, method.Declaration!.Parameters);
         foreach (var record in unit.Records.Values)
         {
             var binder = new Binder(unit, catalog, references, recordContext: record);

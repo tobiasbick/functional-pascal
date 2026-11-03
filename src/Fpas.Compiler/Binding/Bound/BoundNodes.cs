@@ -10,7 +10,7 @@ internal sealed record BoundDereference(BoundExpression Address) : BoundExpressi
 internal sealed record BoundRoutine(RoutineSymbol Symbol, BoundBlock Body, IReadOnlyList<LocalSymbol> Locals,
     IReadOnlyList<BoundContract>? Requires = null, IReadOnlyList<BoundContract>? Ensures = null, LocalSymbol? Result = null, Syntax.SourceText? Source = null, IReadOnlyList<BoundAttribute>? Attributes = null);
 internal sealed record BoundContract(BoundExpression Condition, string Message, SourceLocation? Location = null);
-internal sealed record BoundUnit(string Name, IReadOnlyList<BoundRoutine> Routines, IReadOnlyList<ClosureSymbol> Closures, IReadOnlyList<RecordSymbol> Records, IReadOnlyList<UnionSymbol> Unions, IReadOnlyList<ScalarSymbol> Scalars, IReadOnlyList<AliasSymbol> Aliases, IReadOnlyList<GlobalSymbol> Globals);
+internal sealed record BoundUnit(string Name, IReadOnlyList<BoundRoutine> Routines, IReadOnlyList<ClosureSymbol> Closures, IReadOnlyList<RecordSymbol> Records, IReadOnlyList<UnionSymbol> Unions, IReadOnlyList<ScalarSymbol> Scalars, IReadOnlyList<AliasSymbol> Aliases, IReadOnlyList<GlobalSymbol> Globals, IReadOnlyList<InterfaceSymbol> Interfaces);
 internal sealed record BoundCompilation(AssemblyIdentity Runtime, bool IsExecutable, IReadOnlyList<BoundUnit> Units);
 
 internal abstract record BoundStatement;

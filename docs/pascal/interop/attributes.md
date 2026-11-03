@@ -23,12 +23,14 @@ way to author CLR attribute subclasses.
 | Source declaration | Emitted attribute target |
 | --- | --- |
 | Record or union | Its CLR class definition |
+| Interface | Its CLR interface definition |
 | Enum | Its CLR enum definition |
 | Distinct scalar or subrange | Its actual wrapper class/struct definition |
-| Free routine or record method | Its declared CLR method |
+| Free routine, record method, or interface method | Its declared CLR method |
 | Named nested routine | Its emitted closure method |
 | Async routine | Its kickoff method, retaining compiler-owned state-machine metadata |
 | Record field | Its CLR property, excluding backing field, getter, and constructor parameter |
+| Interface property | Its CLR property, excluding the getter |
 
 Public/private accessibility does not change the target mapping. Transparent
 aliases and globals are not attribute targets in this baseline. Unit/program
@@ -38,10 +40,10 @@ backing-field targets have no source attribute syntax.
 Read AttributeUsage from actual reference metadata, including inherited usage.
 Check the CLR target mask and AllowMultiple. Duplicate non-repeatable attributes
 are errors. A field-only attribute cannot annotate a source record property.
-Compiler-owned Core and nullable metadata cannot be overridden. A record property
-annotation also cannot contradict its explicitly declared nullable type: for
+Compiler-owned Core and nullable metadata cannot be overridden. A record or
+interface property annotation also cannot contradict its declared nullable type: for
 example, use string? rather than MaybeNull on a string property. This preserves
-the record contract when another FPAS assembly imports its metadata.
+the declared contract when another FPAS assembly imports its metadata.
 
 ## Arguments and binding
 

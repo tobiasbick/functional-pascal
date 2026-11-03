@@ -28,6 +28,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Inference, variance, contextual arrays/unions, overload evidence | InferenceTests | InferenceExecutionTests, MsBuildTests.Inference |
 | Contracts, ref/out/in, optional/params/named calls | ContractDiagnosticsTests, ParameterDiagnosticsTests | ContractExecutionTests, ParameterExecutionTests, MsBuildTests.ContractsAndParameters/ParameterDiagnostics |
 | Source overloads and CLR interface implementation/defaults | OverloadAndInterfaceDiagnosticsTests | OverloadExecutionTests, MsBuildTests.Overloads/Interfaces |
+| Source interface declarations, inheritance, constraints, metadata and XML IDs | SourceInterfaceTests | MsBuildTests.SourceInterfaces, LanguageSpecificationTests (InterfaceSources) |
 | Async faults, cancellation, references, contexts, disposal | AsyncDiagnosticsTests | AsyncExecutionTests, MsBuildTests.Async |
 | Portable PDBs, sequence points, scopes, closures, async metadata | PortableDebugInfoTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
 | Comments, XML IDs, public boundaries, warning policy | DocumentationTests | DocumentationCliTests, MsBuildTests.Documentation/DocumentationIds |

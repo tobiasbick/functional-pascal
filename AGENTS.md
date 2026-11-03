@@ -33,7 +33,6 @@ for the task.
   implementation.
 - Finish the agreed language/build baseline before adding extensions. Distinguish
   missing baseline work from deferred proposals in the language-gaps document.
-  Source interface declarations remain deferred until the original plan is complete.
 - Fix errors and code organization issues when you encounter them. Do not
   dismiss them as pre-existing.
 - Keep the agent reference aligned with implemented language and toolchain behavior.

@@ -8,6 +8,7 @@ internal static class DocumentationIds
     internal static string Definition(TypeSymbol type)
     {
         if (type.Scalar is { } scalar) return scalar.Owner.Syntax.Name.Text + "." + scalar.Name;
+        if (type.Interface is { } contract) return contract.Owner.Syntax.Name.Text + "." + contract.Name + Arity(contract.GenericParameters.Count);
         if (type.Record is { } record)
             return record.UnionCase is { } member ? Definition(member.Owner.Type) + "." + record.Name :
                 record.Owner.Syntax.Name.Text + "." + record.Name + Arity(record.GenericParameters.Count);
@@ -17,7 +18,7 @@ internal static class DocumentationIds
 
     internal static string Method(string unit, RoutineSymbol method)
     {
-        var owner = method.Owner is { } record ? Definition(record.Type) : method.UnionOwner is { } union ? Definition(union.Type) : unit;
+        var owner = method.InterfaceOwner is { } contract ? Definition(contract.Type) : method.Owner is { } record ? Definition(record.Type) : method.UnionOwner is { } union ? Definition(union.Type) : unit;
         var name = owner + "." + method.Name.Replace('.', '#') + (method.GenericParameters.Count == 0 ? "" : "``" + method.GenericParameters.Count);
         return "M:" + name + (method.Parameters.Count == 0 ? "" : "(" + string.Join(',', method.Parameters.Select(parameter => Type(parameter.SignatureType, method))) + ")");
     }

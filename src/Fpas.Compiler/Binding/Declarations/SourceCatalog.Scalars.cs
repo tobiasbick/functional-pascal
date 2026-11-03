@@ -14,6 +14,7 @@ internal sealed partial class SourceCatalog
         foreach (var unit in Units)
         {
             var names = unit.Syntax.Records.Select(type => type.Name.Text).Concat(unit.Syntax.Unions.Select(type => type.Name.Text))
+                .Concat((unit.Syntax.Interfaces ?? []).Select(type => type.Name.Text))
                 .Concat(unit.Syntax.Imports.Select(import => import.Alias.Text)).ToHashSet(StringComparer.Ordinal);
             void Name(Token name)
             {

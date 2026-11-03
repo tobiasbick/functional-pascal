@@ -120,5 +120,5 @@ internal sealed class TypeInference(ReferenceCatalog references, IReadOnlyList<T
     private static InferenceBound Reverse(InferenceBound kind) => kind == InferenceBound.Exact ? kind : kind == InferenceBound.Lower ? InferenceBound.Upper : InferenceBound.Lower;
 
     private static bool SameDefinition(TypeSymbol left, TypeSymbol right)
-        => left.Kind == right.Kind && (left.Definition is not null ? left.Definition == right.Definition : left.Record is not null ? left.Record == right.Record : left.Union is not null && left.Union == right.Union);
+        => left.Kind == right.Kind && (left.Interface is not null ? left.Interface == right.Interface : left.Definition is not null ? left.Definition == right.Definition : left.Record is not null ? left.Record == right.Record : left.Union is not null && left.Union == right.Union);
 }

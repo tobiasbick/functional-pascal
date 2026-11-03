@@ -77,18 +77,34 @@ internal sealed partial class Binder
             var binder = Context(record: record);
             record.Attributes = binder.BindAttributes(record.Syntax.Attributes, AttributeTargets.Class);
             foreach (var field in record.Fields)
-            {
-                field.Attributes = binder.BindAttributes(field.Syntax.Attributes, AttributeTargets.Property);
-                if (field.Type.CanHaveNull && field.Attributes.Any(attribute => attribute.Constructor.Owner.Definition?.FullName ==
-                    (field.Type.NeedsNullCheck ? "System.Diagnostics.CodeAnalysis.NotNullAttribute" : "System.Diagnostics.CodeAnalysis.MaybeNullAttribute")))
-                    throw source.Error("FP3035", "A property attribute cannot contradict its declared nullable type; use the matching source type annotation.", field.Syntax.Name.Position);
-            }
+                field.Attributes = binder.BindPropertyAttributes(field.Syntax.Attributes, field.Type, field.Syntax.Name.Position);
         }
         foreach (var union in unit.Unions.Values)
             union.Attributes = Context(union.GenericParameters).BindAttributes(union.Syntax.Attributes, AttributeTargets.Class);
+        foreach (var contract in unit.Interfaces.Values)
+        {
+            var binder = Context(contract.GenericParameters);
+            contract.Attributes = binder.BindAttributes(contract.Syntax.Attributes, AttributeTargets.Interface);
+            foreach (var property in contract.Properties)
+                property.Attributes = binder.BindPropertyAttributes(property.Syntax.Attributes, property.Getter.Result, property.Syntax.Name.Position);
+            foreach (var method in contract.Methods.Where(method => method.Declaration is not null))
+            {
+                binder.currentRoutine = method;
+                contract.MethodAttributes.Add(method, binder.BindAttributes(method.Declaration!.Attributes, AttributeTargets.Method));
+            }
+        }
         foreach (var scalar in unit.Scalars.Values)
             scalar.Attributes = Context().BindAttributes(scalar.Syntax.Attributes, scalar.Syntax.Category == ScalarCategory.Enum ? AttributeTargets.Enum :
                 scalar.Type.IsValue ? AttributeTargets.Struct : AttributeTargets.Class);
+    }
+
+    private IReadOnlyList<BoundAttribute> BindPropertyAttributes(IReadOnlyList<AttributeSyntax>? syntax, TypeSymbol type, int position)
+    {
+        var attributes = BindAttributes(syntax, AttributeTargets.Property);
+        if (type.CanHaveNull && attributes.Any(attribute => attribute.Constructor.Owner.Definition?.FullName ==
+            (type.NeedsNullCheck ? "System.Diagnostics.CodeAnalysis.NotNullAttribute" : "System.Diagnostics.CodeAnalysis.MaybeNullAttribute")))
+            throw source.Error("FP3035", "A property attribute cannot contradict its declared nullable type; use the matching source type annotation.", position);
+        return attributes;
     }
 
     private static bool ContainsAttributeParameter(TypeSymbol type) => type.IsParameter ||

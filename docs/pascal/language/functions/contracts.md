@@ -180,9 +180,8 @@ success/fault/cancellation. Verify conditions execute once in debug and release.
 Reject missing/mismatched result annotations and disallowed expressions.
 
 See the [coverage map](../../../../tests/coverage.md#language-and-metadata) for the
-owning tests. Authored interfaces are a
-[deferred extension](../../../future/language-gaps.md#deferred-declare-fpas-interfaces),
-outside the original language baseline.
+owning tests. [Source interfaces](../../interop/interfaces.md) declare signatures;
+their implementations own the executable contracts.
 
 ## Example
 

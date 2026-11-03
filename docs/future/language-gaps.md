@@ -1,165 +1,31 @@
 # Language gaps and deferred extensions
 
-**Priority: finish the agreed language and MSBuild baseline before implementing
-extensions.** This document records confirmed implementation gaps and a deferred
-interface proposal. It does not expand the baseline or promise support for every
-possible CLR signature or development tool.
+The [baseline comparison](../baseline-comparison.md) leaves no confirmed baseline
+compiler or MSBuild omission open for net10.0/AnyCPU on Windows and Ubuntu/WSL.
+Record newly demonstrated omissions here with their owning rule and reproducer.
+Practical maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md);
+guides remain tracked in [documentation gaps](documentation-gaps.md).
 
-The scope is defined by the [language overview](../pascal/README.md),
-[language topics](../pascal/README.md#start-here),
-[syntax grammar](../specs/syntax.md), [CLR mapping](../specs/clr-mapping.md), and
-[MSBuild contract](../build/msbuild.md). The
-[coverage map](../../tests/coverage.md) identifies verification;
-[dogfooding gaps](dogfooding-gaps.md) describe practical maintenance limits.
+Source interfaces are implemented. Their syntax, inheritance, record
+implementation, and CLR representation are specified in
+[interfaces](../pascal/interop/interfaces.md), the [grammar](../specs/syntax.md),
+and [CLR mapping](../specs/clr-mapping.md). They are no longer a deferred proposal.
 
-## Finish the existing baseline first
-
-The [baseline comparison](../baseline-comparison.md) maps the agreed language,
-CLR, CLI and MSBuild requirements to implementation and acceptance tests for
-net10.0/AnyCPU on Windows and Ubuntu/WSL. No confirmed baseline implementation
-omission remains open in that comparison. Record any newly demonstrated omission
-here with its owning rule and reproducer before treating it as an extension.
-Practical guides remain tracked in [documentation gaps](documentation-gaps.md).
+## Open decision: lifted nullable numeric operators
 
 Numeric lifted nullable arithmetic is unsupported; see
 [nullable types](../pascal/language/types/nullable-types.md). The baseline defines
 nullable storage, flow, validation, and coalescing, but does not give a complete
-lifted-operator contract. Do not silently add a new operator/null behavior while
-closing the explicitly specified gaps. Revisit only if the baseline comparison
-demonstrates an existing requirement or the user chooses to specify it.
-
-## Deferred: declare FPAS interfaces
-
-**Status: future proposal; implement only after completing the original plan.**
-The baseline explicitly excludes authored interfaces. Consuming CLR interfaces
-and implementing them with records is already supported and remains part of the
-baseline. The proposal below is separate from that existing support. Its new
-syntax must be confirmed before implementation.
-
-### Purpose
-
-An interface groups related operations behind a common nominal CLR contract.
-Different FPAS records or external .NET implementations can satisfy it. Use
-ordinary functions/delegates for single operations; a record of delegates can
-group callbacks without adding interface declarations. Own interfaces are an
-optional modeling tool and interoperability feature, not a prerequisite for
-the game or Mandelbrot.
-
-### Proposed syntax
-
-The following is a future design example, not an executable current example:
-
-```pascal
-unit Examples.Contracts;
-
-uses System as Sys, System.Threading.Tasks as Tasks;
-
-public type ISource<T> = interface
-  Name: string;
-  function Read(): T;
-end interface;
-
-public type IRefreshableSource<T> = interface extends ISource<T>, Sys.IDisposable
-  function RefreshAsync(): Tasks.Task;
-  function Map<U>(Transform: function(T): U): U;
-end interface;
-
-public type ConstantSource<T> = record implements ISource<T>
-  Name: string;
-  Value: T;
-
-  function Read(): T;
-  begin
-    return self.Value;
-  end function;
-end record;
-
-end unit;
-```
-
-Interface type and method constraints use the existing where placement:
-
-```pascal
-public type IFactory<T> =
-where T: class;
-interface
-  function Create(): T;
-  function Echo<U>(Value: U): U;
-  where U: class;
-end interface;
-```
-
-### Proposed rules
-
-- A declaration uses type Name, optional generic parameters/where clauses, and
-  interface ... end interface;. Public declarations belong in units; default
-  visibility and accessibility follow ordinary source type rules.
-- Members are function/procedure signatures ending in a semicolon, followed by
-  any method where clauses. There is no begin or end function/procedure because
-  no implementation body is declared. All parameter/result types are explicit.
-- Name: T; declares a getter-only property, not instance storage. It has no
-  initializer. A matching public record field property can implement it.
-- Members are public abstract instance members. Explicit public is permitted;
-  private/static members, bodies, constructors, events, setters, and indexers are
-  outside this proposal. Empty interfaces are permitted.
-- Optional extends lists one or more non-nullable source/imported interfaces.
-  It cannot list classes. Check accessibility, duplicate bases, and inheritance
-  cycles. Substitute generic arguments throughout inherited signatures. A diamond
-  reaching the same base member does not require duplicate implementations.
-- Different inherited slots with compatible signatures may share one record
-  implementation. Reject incompatible requirements, ambiguous calls, and
-  declaration/accessor collisions; do not choose a base by declaration order.
-  Preserve existing checks for unsupported inherited requirements and imported
-  default-interface implementations.
-- Generic interfaces are invariant initially. Generic method constraints,
-  overloads, optional/params parameters, ref/out/in modes, and nullability use
-  the existing rules. Method matching checks CLR identity, generic arity,
-  parameter modes, nullable safety, and compatible generic constraints.
-- Record implements accepts source as well as imported interfaces. Missing
-  implementations are errors. There is no structural conversion merely because
-  a record happens to have matching members, and no explicit-interface syntax.
-- Task/Task<T>-returning signatures express asynchronous APIs. async belongs
-  to an implementing function body, not to an abstract interface signature.
-- Contracts remain on implementations. Interface-level requires/ensures and
-  inherited contract composition are not introduced. Existing implementation
-  checks still execute through interface calls and across .NET languages.
-
-### CLR representation and implementation outline
-
-Emit an actual nested CLR interface under the unit/program container, using the
-existing source type identity/visibility rules. Emit abstract virtual instance
-methods without CIL bodies and real getter-only Property/getter metadata. Emit
-base InterfaceImpl entries, generic parameters/constraints, parameter modes,
-nullable annotations, and normal XML API documentation identities.
-
-Records use the existing interface validation, virtual/final methods, and
-MethodImpl machinery. Calls use normal interface dispatch, including constrained
-calls when appropriate. No generated C#, runtime reflection dispatch, extra VM,
-or interface-specific Fpas.Core wrapper is needed. External FPAS readers consume
-ordinary CLR interface metadata rather than a new compiler-private contract.
-
-Implementation steps after the original plan is complete and syntax is approved:
-
-1. Update the language topics, grammar, and CLR mapping together; add focused
-   interface syntax/symbol files rather than enlarging record-only files.
-2. Declare source interfaces before binding signatures and bases; resolve cycles,
-   accessibility, generics, and inherited member identities.
-3. Reuse/refactor source and imported requirement checking, overload resolution,
-   nullable safety, and record implementation mapping.
-4. Emit interface metadata and documentation, then support source interface calls
-   and cross-assembly consumption through the ordinary reference reader.
-5. Verify ordinary/generic interfaces, methods/properties, inherited diamonds,
-   overloads, constraints, ref/out/in modifiers, nullable metadata, invalid
-   implementations, and deterministic output. Build FPAS and C# implementations
-   and consumers in both directions through mixed-project SDK tests.
+lifted-operator contract. Operator selection, null results, comparisons, and
+checked arithmetic need an agreed contract before implementation. This decision
+is separate from the completed interface work.
 
 ## Scope boundary
 
 Source event declarations, expression-tree conversion, user-authored class
 hierarchies, custom awaiters, async iterators, unsafe/byref-like features,
 operator declarations, automatic extension-method discovery, and interface
-variance/default bodies remain outside the agreed baseline and are not tasks
-created by this document. Neither are publishing/AOT/signing, native apphosts,
-additional platform/framework coverage, LSP, queries, VS Code, or Visual Studio
-project-system integration. Completing an unsupported item mentioned in an old
-milestone is not automatically part of completing the original plan.
+variance/default bodies remain outside the agreed scope. Publishing/AOT/signing,
+native apphosts, additional platform/framework coverage, LSP, queries, VS Code,
+and Visual Studio project-system integration are separate toolchain proposals.
+An unsupported item mentioned in an old milestone does not create a new task.

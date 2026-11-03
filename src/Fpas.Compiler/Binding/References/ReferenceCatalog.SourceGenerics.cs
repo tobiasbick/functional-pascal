@@ -33,7 +33,7 @@ internal sealed partial class ReferenceCatalog
 
     internal static ImportedMethod SourceMethod(RoutineSymbol method, TypeSymbol owner) => new(owner, method.Name, method.Result,
         method.Parameters.Select(parameter => parameter.Type).ToArray(), !method.IsInstance,
-        method.Generated is GeneratedMethodKind.EqualsTyped or GeneratedMethodKind.EqualsObject or GeneratedMethodKind.Hash or GeneratedMethodKind.Tag,
+        method.InterfaceOwner is not null || method.Generated is GeneratedMethodKind.EqualsTyped or GeneratedMethodKind.EqualsObject or GeneratedMethodKind.Hash or GeneratedMethodKind.Tag,
         SourceMethod: method, ParameterInfo: method.Parameters);
 
     internal bool ValidSourceArguments(RoutineSymbol method, TypeList? arguments, TypeSymbol? owner = null)
@@ -65,6 +65,7 @@ internal sealed partial class ReferenceCatalog
         if (type.IsParameter) return type.Parameter!.HasConstructor;
         if (type.Record is { } record) return record.UnionCase is null && record.Fields.Count == 0;
         if (type.Kind == TypeKind.Union) return false;
+        if (type.IsInterface) return false;
         return !Definition(type).Definition.Attributes.HasFlag(TypeAttributes.Abstract) && Methods(type, ".ctor", false).Any(constructor => constructor.Parameters.Count == 0);
     }
 
@@ -76,7 +77,7 @@ internal sealed partial class ReferenceCatalog
         foreach (var argument in type.TypeArguments) if (argument != type) ValidateGenericType(argument, source, position);
         if (type.Definition is not null && !ConstraintsSatisfied(type, type.Definition.Definition.GetGenericParameters(), type.TypeArguments, null))
             throw source.Error("FP3018", "A constructed constraint type violates CLR generic constraints.", position);
-        if (type.Kind is TypeKind.Record or TypeKind.Union && !ValidSourceArguments(SourceParameters(type), type.TypeArguments))
+        if (type.Kind is TypeKind.Record or TypeKind.Union or TypeKind.Interface && !ValidSourceArguments(SourceParameters(type), type.TypeArguments))
             throw source.Error("FP3018", "A constructed source type violates generic constraints.", position);
     }
 

@@ -131,6 +131,11 @@ internal sealed partial class ReferenceCatalog
         {
             if (current == TypeSymbol.Unsupported || !visited.Add(current)) continue;
             yield return current;
+            if (current.Interface is not null)
+            {
+                foreach (var parent in Parents(current)) pending.Enqueue(parent);
+                continue;
+            }
             var definition = Definition(current);
             if (definition.Definition.Attributes.HasFlag(TypeAttributes.Interface))
                 foreach (var parent in Parents(current)) pending.Enqueue(parent);

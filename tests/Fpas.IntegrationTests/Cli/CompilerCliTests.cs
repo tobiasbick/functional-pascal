@@ -104,6 +104,7 @@ public sealed class CompilerCliTests
     }
 
     [Theory]
+    [InlineData()]
     [InlineData("--help")]
     [InlineData("-h")]
     [InlineData("-?")]
@@ -116,6 +117,8 @@ public sealed class CompilerCliTests
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("Example", result.Output);
         Assert.Contains("--output", result.Output);
+        Assert.DoesNotContain("Fpas.Cli", result.Output, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("fpas compile", result.Output);
         Assert.Equal("", result.Error);
     }
 

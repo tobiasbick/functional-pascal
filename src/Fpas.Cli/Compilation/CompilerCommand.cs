@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.CommandLine.Help;
 using System.Text;
 using System.Text.Json;
 using Fpas.Compiler;
@@ -19,13 +20,15 @@ internal static class CompilerCommand
         Console.OutputEncoding = new UTF8Encoding(false);
         var compile = new CompileCommand();
         compile.Command.SetAction(result => Execute(compile.Read(result)));
-        var root = new RootCommand("""
+        var root = new Command("fpas", """
             FPAS compiler for .NET
 
             Examples:
-              dotnet Fpas.Cli.dll compile --help
-              dotnet Fpas.Cli.dll compile examples/hello/main.fpas --output artifacts/Hello.dll --reference-dir <net10.0-reference-directory>
+              fpas compile --help
+              fpas compile examples/hello/main.fpas --output artifacts/Hello.dll --reference-dir <net10.0-reference-directory>
             """);
+        root.Options.Add(new HelpOption());
+        root.Options.Add(new VersionOption());
         root.Subcommands.Add(compile.Command);
         var jsonRequested = false;
         try
@@ -45,7 +48,7 @@ internal static class CompilerCommand
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)
         {
-            Report(jsonRequested, false, null, [new("FP0001", exception.Message + " See compile --help.", new("<command line>", 1, 1, 0))]);
+            Report(jsonRequested, false, null, [new("FP0001", exception.Message + " See fpas compile --help.", new("<command line>", 1, 1, 0))]);
             return 2;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException)

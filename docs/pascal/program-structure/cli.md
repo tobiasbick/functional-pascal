@@ -14,6 +14,8 @@ dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile --help
 
 No arguments show root help. Root and compile help accept `--help`, `-h`, and
 `-?`. Root `--version` prints the CLI's assembly informational version.
+Help usage and examples always use the public command name `fpas`, including
+when the compiler is invoked directly through `dotnet`.
 
 For standalone compilation, set FPAS_REFERENCE_DIR to the installed net10.0
 reference assembly directory as described by the

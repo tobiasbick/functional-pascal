@@ -37,7 +37,7 @@ internal sealed partial class ReferenceCatalog
                 ImportedMethod? Accessor(MethodDefinitionHandle method)
                 {
                     if (method.IsNil || (reader.GetMethodDefinition(method).Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) return null;
-                    var imported = ReadMethod(type, method);
+                    var imported = ConstrainStatic(ReadMethod(type, method), owner);
                     return imported is { Result.Kind: TypeKind.Void, Parameters.Count: 1, MethodArguments: null } &&
                         !imported.Parameter(0).ByRef && imported.Parameters[0].Erased == handler.Erased && DelegateSignature(handler) is not null ? imported : null;
                 }

@@ -78,11 +78,4 @@ internal sealed partial class ReferenceCatalog
             throw source.Error("FP3018", "A constructed source type violates generic constraints.", position);
     }
 
-    internal bool HasStaticAbstractConstraint(TypeSymbol type)
-        => Hierarchy(type).Where(candidate => candidate.Kind is not (TypeKind.Record or TypeKind.Union or TypeKind.Parameter)).Any(candidate =>
-            Definition(candidate).Definition.GetMethods().Any(handle =>
-            {
-                var method = Definition(candidate).Assembly.Reader.GetMethodDefinition(handle);
-                return method.Attributes.HasFlag(MethodAttributes.Static) && method.Attributes.HasFlag(MethodAttributes.Abstract);
-            }));
 }

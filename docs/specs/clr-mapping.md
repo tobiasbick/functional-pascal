@@ -232,6 +232,15 @@ explicit arguments uses a MethodSpec over its MethodDef; an imported call uses a
 MethodSpec over the actual generic MemberRef signature. Source declarations do
 not specialize into unrelated concrete methods or erase T to object.
 
+Imported static abstract/virtual interface members retain their constructed
+interface MemberRef and the constrained implementing type parameter. Calls emit
+`constrained. T` followed by `call`; method-group delegates use `constrained. T`
+followed by `ldftn`. Preserve that parameter through inferred generic calls,
+closures, record methods, and async state machines. Operator selection uses the
+declared interface signatures and checked variants; a direct call on an interface
+without an implementing type parameter is rejected. See the CLR's
+[static interface dispatch rules](https://github.com/dotnet/runtime/blob/main/docs/design/specs/Ecma-335-Augments.md).
+
 Closures from generic methods become nested generic types with the enclosing
 method's parameters/constraints. Closure fields, constructors, and invocation
 bodies use type parameters (!n), while the creating method supplies its method

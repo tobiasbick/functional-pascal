@@ -67,6 +67,11 @@ internal sealed partial class Binder
                 if (unary.Operator.Text == "-" && unary.Operand is LiteralSyntax { Token.Kind: TokenKind.Integer } number && !number.Token.Text.EndsWith('U') && !number.Token.Text.EndsWith('u'))
                     return NumberLiteral(number.Token, negative: true);
                 var operand = BindExpression(unary.Operand, check);
+                if (BindConstrainedOperator(unary.Operator.Text, [operand], unary.Position, check) is { } unaryCall)
+                {
+                    operatorCalls[unary] = false;
+                    return unaryCall;
+                }
                 if (unary.Operator.Text == "not" && references.ScalarInfo(operand.Type) is { Category: ScalarCategory.Enum } enumType)
                 {
                     var promotedEnum = NumericFacts.Unary(enumType.Base, "not");
@@ -122,9 +127,14 @@ internal sealed partial class Binder
         if (references.ScalarInfo(right.Type) is { Category: ScalarCategory.Range } rightRange && TypeFacts.Numeric(left.Type))
             right = new BoundCall(ReferenceCatalog.DomainGetter(rightRange), [], right);
         if (TypeFacts.Numeric(left.Type) && TypeFacts.Numeric(right.Type)) return NumericBinary(left, op, right, syntax.Position, check);
+        if (BindConstrainedOperator(op, [left, right], syntax.Position, check) is { } operatorCall)
+        {
+            operatorCalls[syntax] = false;
+            return operatorCall;
+        }
         if (BindComparisonOperator(left, op, right, syntax.Position) is BoundCall comparison)
         {
-            comparisonCalls[syntax] = references.RecordInfo(comparison.Method.Owner) is not null || references.UnionInfo(comparison.Method.Owner) is not null;
+            operatorCalls[syntax] = references.RecordInfo(comparison.Method.Owner) is not null || references.UnionInfo(comparison.Method.Owner) is not null;
             return comparison;
         }
         if (op == "??")

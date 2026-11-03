@@ -63,6 +63,12 @@ internal sealed partial class BodyEmitter
             if (receiver.Type.IsValue || receiver.Type.IsParameter) EmitAddress(receiver); else EmitExpression(receiver);
         }
         foreach (var argument in arguments) EmitExpression(argument);
+        if (method.ConstrainedType is { } implementor)
+        {
+            il.OpCode(ILOpCode.Constrained); il.Token(typeHandle(implementor));
+            il.Call(reference(method));
+            return;
+        }
         var virtualCall = receiver is not null && (receiver.Type.IsReference || receiver.Type.IsParameter && !receiver.Type.NullableValue || method.IsVirtual || method.Owner.IsReference);
         if (virtualCall && (receiver!.Type.IsValue || receiver.Type.IsParameter)) { il.OpCode(ILOpCode.Constrained); il.Token(typeHandle(receiver.Type)); }
         if (virtualCall) { il.OpCode(ILOpCode.Callvirt); il.Token(reference(method)); }

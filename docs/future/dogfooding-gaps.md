@@ -21,9 +21,9 @@ different Pascal dialect cannot validate them.
 
 ## Current boundaries
 
-- Constrained static-interface/generic-math operators remain a tracked baseline
-  gap. Nested CLR type annotations already support arguments on every enclosing/
-  nested segment; see [generic types](../pascal/language/functions/generic-routines.md).
+- Nested CLR type annotations support arguments on every enclosing/nested
+  segment. Generic arithmetic and static abstract/virtual calls use imported
+  interface constraints; see [generic types](../pascal/language/functions/generic-routines.md).
 - Byref-like/span APIs, pointers, ref returns, custom awaiters, expression-tree
   conversion, and async enumeration are outside the supported interoperability
   contract. Choose supported .NET overloads/types where available; record a

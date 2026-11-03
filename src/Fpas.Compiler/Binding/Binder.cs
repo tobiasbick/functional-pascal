@@ -55,7 +55,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         scopes.Clear();
         parameters.Clear();
         nonNull.Clear();
-        comparisonCalls.Clear();
+        operatorCalls.Clear();
         potentialNestedCaptures = NestedCaptureNames(body).ToHashSet(StringComparer.Ordinal);
         if (symbol.Owner is not null && symbol.IsInstance) parameters.Add("self", new("self", symbol.Owner.Type, -1));
         foreach (var parameter in symbol.Parameters)

@@ -42,7 +42,7 @@ internal sealed partial class Binder
             }
             CheckRecordMember(owner, member.Name.Text, false, member.Position);
             RejectEventValue(owner, member.Name.Text, member.Name.Position);
-            if (typeArguments is null && (references.Property(owner, member.Name.Text, receiver is null, recordContext) is not null || references.Field(owner, member.Name.Text, receiver is null) is not null))
+            if (typeArguments is null && (references.Property(owner, member.Name.Text, receiver is null, recordContext, source, member.Name.Position) is not null || references.Field(owner, member.Name.Text, receiver is null) is not null))
                 return InvokeDelegate(BindClrMember(owner, receiver, member), call.Arguments, call.Position, check);
             var methods = references.Methods(owner, member.Name.Text, receiver is null, typeArguments, recordContext, includeOpen: typeArguments is null);
             if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position);

@@ -112,8 +112,9 @@ setters, and unsupported modifiers/calling conventions receive diagnostics.
 Use an ordinary supported API overload; runtime reflection is not a compiler
 fallback. Nested CLR type paths put each segment's own arguments on that segment,
 as in N.Outer<string>.Inner<int>; N.Outer<string>.Leaf inherits its owner's
-arguments without repeating them. Constrained static-interface operators remain
-in [language gaps](../../future/language-gaps.md).
+arguments without repeating them. Imported static abstract/virtual interface
+members dispatch through constrained type parameters, including generic operators,
+T.Zero, and T.CreateChecked<int>. Read [generic constraints](../language/functions/generic-routines.md).
 
 Before changing public identities/signatures/representations, read the binding
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).

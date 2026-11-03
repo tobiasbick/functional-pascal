@@ -46,6 +46,30 @@ Ambiguous operators are errors. This does not introduce lifted nullable-value
 operators or source operator declarations. See
 [comparisons and acceptance](../../../../tests/coverage.md).
 
+## Operators from generic constraints
+
+For a type parameter, operators resolve from its imported CLR interface
+constraints, including inherited contracts such as INumber<T>. Binary lookup
+uses both operands' type parameters and normal overload applicability; it retains
+the selected interface, implementing parameter, argument types, and result type.
+There is no implicit numeric promotion of an unknown T. Missing and ambiguous
+contracts are errors. Nullable value operators are not lifted.
+
+The existing symbols map to CLR operator members: +, -, *, / and div, mod,
+and/or/xor, shl/shr, unary +/-, not, and comparisons. Both / and div select
+op_Division when used through a constraint; the CLR contract supplies its result
+and division behavior. Not selects op_OnesComplement or, if unavailable,
+op_LogicalNot. Constrained and/or calls are eager; bool and/or retain their
+ordinary short-circuit behavior. Generic equality does not establish that an
+operand is non-null.
+
+Checked arithmetic selects an applicable op_CheckedAddition, op_CheckedSubtraction,
+op_CheckedMultiply, op_CheckedDivision, or op_CheckedUnaryNegation when supplied
+by the contract, otherwise the ordinary operator. Unchecked selects the ordinary
+operator. The implementation, including any CLR default body, determines its
+overflow and exception behavior. This consumes imported contracts; it does not
+declare FPAS operators or static interface implementations on source records.
+
 ## See also
 
 - [Topic overview](README.md)

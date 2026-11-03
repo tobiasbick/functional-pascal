@@ -60,13 +60,13 @@ internal sealed partial class ReferenceCatalog
                 if (definition.Assembly.Reader.GetString(method.Name) != name ||
                     method.Attributes.HasFlag(MethodAttributes.Static) != isStatic ||
                     (method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public || !includeOpen && method.GetGenericParameters().Count != (methodArguments?.Count ?? 0)) continue;
-                var imported = ReadMethod(type, handle, methodArguments, allowOpen: includeOpen);
+                var imported = ConstrainStatic(ReadMethod(type, handle, methodArguments, allowOpen: includeOpen), owner);
                 if (imported is null) continue;
                 var key = method.GetGenericParameters().Count + ":" + string.Join(';', imported.DelegateParameters.Select(parameter => parameter.Erased));
-                if (signatures.Add(key)) result.Add(imported);
+                if (imported.ConstrainedType is not null || signatures.Add(key)) result.Add(imported);
             }
         }
-        return result;
+        return MostSpecificStatic(result);
     }
 
     private ImportedMethod? ReadMethod(TypeSymbol owner, MethodDefinitionHandle handle, TypeList? methodArguments = null, bool includePrivate = false, bool allowOpen = false)
@@ -112,8 +112,9 @@ internal sealed partial class ReferenceCatalog
         return left.MethodArguments is { Count: > 0 } && right.MethodArguments is { Count: > 0 } && MoreSpecific(left, right);
     }
 
-    internal ImportedProperty? Property(TypeSymbol owner, string name, bool isStatic, RecordSymbol? access = null)
+    internal ImportedProperty? Property(TypeSymbol owner, string name, bool isStatic, RecordSymbol? access = null, SourceText? source = null, int position = 0)
     {
+        var constrained = new List<(TypeSymbol Owner, ImportedProperty Property)>();
         foreach (var type in Hierarchy(owner))
         {
             if (type.Kind == TypeKind.Scalar)
@@ -152,17 +153,20 @@ internal sealed partial class ReferenceCatalog
                     if (methodHandle.IsNil) return null;
                     var method = definition.Assembly.Reader.GetMethodDefinition(methodHandle);
                     return method.Attributes.HasFlag(MethodAttributes.Static) == isStatic &&
-                        (method.Attributes & MethodAttributes.MemberAccessMask) == MethodAttributes.Public ? ReadMethod(type, methodHandle) : null;
+                        (method.Attributes & MethodAttributes.MemberAccessMask) == MethodAttributes.Public ? ConstrainStatic(ReadMethod(type, methodHandle), owner) : null;
                 }
                 var getter = Accessor(accessors.Getter); var setter = Accessor(accessors.Setter);
                 if (getter is null && setter is null) continue;
                 var result = Substitute(NullabilityMetadata.Member(signature.ReturnType, definition, property.GetCustomAttributes()), type);
                 if (getter is not null && !NullabilityMetadata.HasNullable(definition.Assembly.Reader, property.GetCustomAttributes())) result = getter.Result;
-                return new(result, getter is null ? null : getter with { Result = result },
-                    setter);
+                var imported = new ImportedProperty(result, getter is null ? null : getter with { Result = result }, setter);
+                if (!owner.IsParameter || !isStatic) return imported;
+                constrained.Add((type, imported));
             }
         }
-        return null;
+        var visible = constrained.Where(candidate => !constrained.Any(other => other.Owner != candidate.Owner && Derives(other.Owner, candidate.Owner))).ToArray();
+        if (visible.Length > 1) throw (source ?? new SourceText("<constraints>", "")).Error("FP3003", $"Ambiguous static interface property '{owner}.{name}'.", position);
+        return visible.SingleOrDefault().Property;
     }
 
     internal ImportedField? Field(TypeSymbol owner, string name, bool isStatic)

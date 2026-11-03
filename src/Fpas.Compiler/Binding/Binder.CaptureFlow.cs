@@ -6,7 +6,7 @@ internal sealed partial class Binder
 {
     private bool MayInvoke(ExpressionSyntax expression)
         => expression is CallSyntax or NewSyntax or MemberSyntax or IndexSyntax or WithSyntax or CaseExpressionSyntax ||
-            comparisonCalls.ContainsKey(expression) || Children(expression).Any(MayInvoke);
+            operatorCalls.ContainsKey(expression) || Children(expression).Any(MayInvoke);
 
     private static IEnumerable<string> AssignedInLambdas(StatementSyntax statement)
         => Expressions(statement).SelectMany(AssignedInLambdas);

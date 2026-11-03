@@ -46,7 +46,7 @@ internal sealed record ImportedType(ReferenceAssembly Assembly, TypeDefinitionHa
     }
 }
 internal sealed record ImportedMethod(TypeSymbol Owner, string Name, TypeSymbol Result, IReadOnlyList<TypeSymbol> Parameters,
-    bool IsStatic, bool IsVirtual = false, TypeSymbol? SignatureResult = null, IReadOnlyList<TypeSymbol>? SignatureParameters = null, bool ReturnsByRef = false, TypeList? MethodArguments = null, MethodDefinitionHandle DefinitionHandle = default, RoutineSymbol? SourceMethod = null, IReadOnlyList<ParameterSymbol>? ParameterInfo = null)
+    bool IsStatic, bool IsVirtual = false, TypeSymbol? SignatureResult = null, IReadOnlyList<TypeSymbol>? SignatureParameters = null, bool ReturnsByRef = false, TypeList? MethodArguments = null, MethodDefinitionHandle DefinitionHandle = default, RoutineSymbol? SourceMethod = null, IReadOnlyList<ParameterSymbol>? ParameterInfo = null, TypeSymbol? ConstrainedType = null)
 {
     internal ParameterSymbol Parameter(int index) => ParameterInfo?[index] ?? new("", Parameters[index], index);
     internal bool Flexible => ParameterInfo?.Any(parameter => parameter.Mode != "" || parameter.Default is not null) == true;

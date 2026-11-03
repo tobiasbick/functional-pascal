@@ -15,6 +15,8 @@ internal sealed partial class Binder
     {
         var path = TypePath(expression);
         if (path is null || HasValue(path[0].Name.Text)) return null;
+        if (path.Count == 1 && path[0].Arguments is null && TypeParameters.TryGetValue(path[0].Name.Text, out var parameter))
+            return new ClrTypeImport(parameter.Type);
         if (expression is MemberSyntax member)
         {
             var prefix = StaticTarget(member.Receiver, allowOpenGeneric: true);
@@ -23,7 +25,7 @@ internal sealed partial class Binder
                 (imported.Unit.Globals.ContainsKey(member.Name.Text) || imported.Unit.Routines.ContainsKey(member.Name.Text))) return null;
             var owner = ImportedValueType(prefix, expression.Position, allowOpen: true);
             if (owner != TypeSymbol.Unsupported &&
-                (references.Property(owner, member.Name.Text, true, recordContext) is not null || references.Field(owner, member.Name.Text, true) is not null ||
+                (references.Property(owner, member.Name.Text, true, recordContext, source, member.Name.Position) is not null || references.Field(owner, member.Name.Text, true) is not null ||
                  references.Event(owner, member.Name.Text, source, member.Name.Position) is not null)) return null;
             if (owner != TypeSymbol.Unsupported)
                 references.DiagnoseUnsupportedMember(owner, member.Name.Text, true, false, source, member.Name.Position);
@@ -71,7 +73,7 @@ internal sealed partial class Binder
         RejectEventValue(owner, member.Name.Text, member.Name.Position);
         CheckRecordMember(owner, member.Name.Text, writing, member.Position);
         if (owner.Kind == TypeKind.Array && member.Name.Text == "Length" && !writing) return new BoundArrayLength(receiver!);
-        if (references.Property(owner, member.Name.Text, receiver is null, recordContext) is { } property)
+        if (references.Property(owner, member.Name.Text, receiver is null, recordContext, source, member.Name.Position) is { } property)
         {
             if (writing ? property.Setter is null : property.Getter is null)
             {

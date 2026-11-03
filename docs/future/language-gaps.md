@@ -14,17 +14,10 @@ The scope is defined by the [language overview](../pascal/README.md),
 
 ## Finish the existing baseline first
 
-The following are implementation tasks for already specified behavior, in the
-proposed execution order. Implement one focused step at a time without adding
-syntax beyond the existing specification.
-
-| Order | Required behavior | Current gap and specification |
-| --- | --- | --- |
-| 1 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions/generic-routines.md). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
-
-After these known gaps, compare every baseline rule and complete language example
-with compiler behavior. Record any additional demonstrated omissions here before
-calling the baseline complete. Resolve stale implementation-status prose as each
+No additional confirmed compiler omission is currently listed. Before calling the
+baseline complete, compare every baseline rule and complete language example
+with compiler behavior. Record any additional demonstrated omissions here.
+Resolve stale implementation-status prose as each
 feature lands. Validate the agreed .fpasproj/.slnx build, dependency, diagnostic,
 incremental, documentation, and cleanup contracts against the
 [build acceptance checks](../../tests/coverage.md#build-acceptance).

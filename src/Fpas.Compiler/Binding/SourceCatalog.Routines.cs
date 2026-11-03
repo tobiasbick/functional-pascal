@@ -126,7 +126,6 @@ internal sealed partial class SourceCatalog
         foreach (var parameter in parameters)
             foreach (var bound in parameter.Constraints)
             {
-                if (references.HasStaticAbstractConstraint(bound)) throw unit.Source.Error("FP3026", "Static-abstract interface constraints are not supported yet.", name.Position);
                 references.ValidateGenericType(bound, unit.Source, name.Position);
             }
     }

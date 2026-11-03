@@ -12,7 +12,7 @@ internal sealed partial class SourceCatalog
             var scope = record.GenericParameters.ToDictionary(parameter => parameter.Name, StringComparer.Ordinal);
             foreach (var syntax in record.Syntax.Interfaces ?? [])
             {
-                var type = ResolveType(syntax, record.Owner, references, scope);
+                var type = ResolveType(syntax, record.Owner, references, scope, validate: false);
                 if (type.IsNullable || type.Definition?.Definition.Attributes.HasFlag(TypeAttributes.Interface) != true)
                     throw source.Error("FP3029", "implements requires a non-nullable imported CLR interface.", syntax.Position);
                 if (record.Interfaces.Any(other => other.Erased == type.Erased))
@@ -23,6 +23,8 @@ internal sealed partial class SourceCatalog
         foreach (var record in Units.SelectMany(unit => unit.Records.Values))
         {
             var source = record.Owner.Source;
+            for (var index = 0; index < record.Interfaces.Count; index++)
+                references.ValidateGenericType(record.Interfaces[index], source, record.Syntax.Interfaces![index].Position);
             foreach (var requirement in references.InterfaceRequirements(record.Interfaces, source, record.Syntax.Name.Position))
             {
                 var required = requirement.Method;

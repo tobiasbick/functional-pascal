@@ -39,7 +39,11 @@ internal sealed partial class BodyEmitter
                 {
                     il.OpCode(ILOpCode.Dup); il.OpCode(ILOpCode.Ldvirtftn); il.Token(reference(method.Method));
                 }
-                else { il.OpCode(ILOpCode.Ldftn); il.Token(reference(method.Method)); }
+                else
+                {
+                    if (method.Method.ConstrainedType is { } implementor) { il.OpCode(ILOpCode.Constrained); il.Token(typeHandle(implementor)); }
+                    il.OpCode(ILOpCode.Ldftn); il.Token(reference(method.Method));
+                }
                 break;
         }
         var constructor = new ImportedMethod(value.Type, ".ctor", TypeSymbol.Void, [TypeSymbol.Object, TypeSymbol.NativeInt], false);

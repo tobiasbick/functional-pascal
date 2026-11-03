@@ -57,10 +57,32 @@ parameter cannot serve as another parameter's base constraint.
 
 The same requirements are validated at source calls, when constructing CLR
 generic types containing these parameters, and when forwarding them to CLR
-methods. The compiler uses constraints to resolve instance members and interface
-dispatch. Static-abstract interface requirements, unmanaged/byref-like
-constraints, and generic-math operators remain unsupported and are rejected.
-There are no built-in Numeric/Printable constraints or runtime reflection fallback.
+methods. Constraints resolve instance members and static abstract/virtual members
+of imported interfaces. For example, `where T: N.INumber<T>;` permits arithmetic,
+`T.Zero`, and `T.CreateChecked(Value)` through the actual System.Numerics contract.
+Static method groups such as `T.CreateChecked<int>` become ordinary CLR delegates.
+Inherited contracts and default implementations retain CLR dispatch. Unrelated
+applicable operators or same-name static properties are ambiguous, not selected
+by constraint order. Unmanaged/byref-like constraints remain unsupported. There
+are no built-in Numeric/Printable constraints or runtime reflection fallback.
+
+```pascal
+program GenericArithmetic;
+uses System.Numerics as N, System.Console as Console;
+
+function Sum<T>(Values: T[]): T;
+where T: N.INumber<T>;
+begin
+  var Total: T := T.Zero;
+  for Value: T in Values do Total := Total + Value; end for;
+  return Total;
+end function;
+
+begin
+  Console.WriteLine(Sum<int>([20, 22]));
+end;
+end program;
+```
 
 `new T()` requires struct or an explicit new() requirement and takes no arguments.
 It calls the actual CLR Activator.CreateInstance<T>(), preserving the CLR's
@@ -88,8 +110,8 @@ reference element annotation. Empty arrays and initialized array literals remain
 available. The pipeline example uses List<U>.ToArray() to construct fully
 initialized results without weakening element annotations.
 
-Ordinary arithmetic on an unknown T is not numeric code; use supported concrete
-types or constrained instance methods. Runtime `is T`, explicit boxing/unboxing,
+Arithmetic on an unknown T requires an applicable imported operator constraint;
+the compiler does not infer one from its call sites. Runtime `is T`, explicit boxing/unboxing,
 and generic null/coalescing checks retain CLR behavior. Generic resources and
 enumerables use constrained interface calls and normal cleanup. Specific case
 patterns on an otherwise unknown T can be expressed after boxing to object?;

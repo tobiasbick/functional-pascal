@@ -55,8 +55,9 @@ inference also uses the expected union type. Binding annotations remain mandator
 Where clauses follow a routine's header, or a type declaration's equals sign.
 Use real CLR requirements: class, class?, struct, base/interface constraints,
 type-parameter dependencies, and new() last. New T() requires a suitable
-constructor constraint. An unknown T does not automatically have numeric
-operators. Constrained static-interface/generic-math dispatch is deferred.
+constructor constraint. An unknown T needs a matching imported interface for
+numeric operators. For example, where T: N.INumber<T>; permits T.Zero,
+T.CreateChecked(Value), and arithmetic through constrained static CLR dispatch.
 
 After where clauses, place requires clauses followed by ensures clauses, then
 begin. Conditions are read-only bool expressions over permitted inputs/captures

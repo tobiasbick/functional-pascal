@@ -18,6 +18,8 @@ internal sealed partial class ReferenceCatalog
                 var method = reader.GetMethodDefinition(handle);
                 if (reader.GetString(method.Name) != name || method.Attributes.HasFlag(MethodAttributes.Static) != isStatic ||
                     (method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) continue;
+                if (isStatic && method.Attributes.HasFlag(MethodAttributes.Virtual) && !owner.IsParameter)
+                    throw source.Error("FP3005", "Static virtual interface members require a constrained type parameter.", position);
                 var limits = new SignatureLimits(this, definition.Assembly);
                 var signature = method.DecodeSignature(limits, null);
                 if (argumentCount is not null && signature.ParameterTypes.Length != argumentCount) continue;

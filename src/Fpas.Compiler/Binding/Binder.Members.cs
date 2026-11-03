@@ -13,15 +13,9 @@ internal sealed partial class Binder
 
     private ImportTarget? StaticTarget(ExpressionSyntax expression, int arity = 0, bool allowOpenGeneric = false)
     {
-        if (expression is GenericNameSyntax generic && NameParts(generic.Name) is { } typeParts &&
-            !HasValue(typeParts[0]))
-        {
-            var tokens = typeParts.Select(part => new Token(TokenKind.Identifier, part, expression.Position, part.Length)).ToArray();
-            return new ClrTypeImport(BindType(new(new(tokens), Arguments: generic.Arguments)));
-        }
-        var parts = NameParts(expression);
-        if (parts is not null && (HasValue(parts[0]))) return null;
-        if (parts is not null && expression is MemberSyntax member)
+        var path = TypePath(expression);
+        if (path is null || HasValue(path[0].Name.Text)) return null;
+        if (expression is MemberSyntax member)
         {
             var prefix = StaticTarget(member.Receiver, allowOpenGeneric: true);
             if (prefix is null) return null;
@@ -34,9 +28,17 @@ internal sealed partial class Binder
             if (owner != TypeSymbol.Unsupported)
                 references.DiagnoseUnsupportedMember(owner, member.Name.Text, true, false, source, member.Name.Position);
         }
-        return parts is not null && (imports.ContainsKey(parts[0]) || unit.HasType(parts[0]) || TypeFacts.Primitive(parts[0]) != TypeSymbol.Unsupported)
-            ? catalog.ResolvePath(parts, unit, references, expression.Position, arity, allowOpenGeneric) : null;
+        return imports.ContainsKey(path[0].Name.Text) || unit.HasType(path[0].Name.Text) || TypeFacts.Primitive(path[0].Name.Text) != TypeSymbol.Unsupported
+            ? catalog.ResolveTypePath(path, unit, references, TypeParameters, inferredArity: arity, allowOpenGeneric: allowOpenGeneric) : null;
     }
+
+    private static IReadOnlyList<TypeSegmentSyntax>? TypePath(ExpressionSyntax expression) => expression switch
+    {
+        NameExpressionSyntax name => [new(name.Name)],
+        MemberSyntax member when TypePath(member.Receiver) is { } prefix => [.. prefix, new(member.Name)],
+        GenericNameSyntax generic when TypePath(generic.Name) is { } path => [.. path.SkipLast(1), path[^1] with { Arguments = generic.Arguments }],
+        _ => null
+    };
 
     private BoundExpression Receiver(ExpressionSyntax syntax, bool check = true)
     {

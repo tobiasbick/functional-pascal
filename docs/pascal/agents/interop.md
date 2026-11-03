@@ -110,8 +110,10 @@ end program;
 Excluded signatures such as Span<T>/ref structs, pointers, ref returns, init-only
 setters, and unsupported modifiers/calling conventions receive diagnostics.
 Use an ordinary supported API overload; runtime reflection is not a compiler
-fallback. General nested generic owner paths and constrained static-interface
-operators remain in [language gaps](../../future/language-gaps.md).
+fallback. Nested CLR type paths put each segment's own arguments on that segment,
+as in N.Outer<string>.Inner<int>; N.Outer<string>.Leaf inherits its owner's
+arguments without repeating them. Constrained static-interface operators remain
+in [language gaps](../../future/language-gaps.md).
 
 Before changing public identities/signatures/representations, read the binding
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).

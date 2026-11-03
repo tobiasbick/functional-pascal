@@ -131,9 +131,15 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
     private TypeSyntax ReadType(bool arrays = true)
     {
         if (At("function") || At("procedure")) return ReadCallableType();
-        var name = ReadName();
-        var arguments = At("<") ? ReadTypeArguments() : null;
-        var type = new TypeSyntax(name, Arguments: arguments);
+        var segments = new List<TypeSegmentSyntax>();
+        do
+        {
+            var name = Identifier();
+            segments.Add(new(name, At("<") ? ReadTypeArguments() : null));
+            if (!At(".")) break;
+            position++;
+        } while (true);
+        var type = new TypeSyntax(segments);
         while (At("?") || arrays && At("[") && position + 1 < tokens.Count && tokens[position + 1].Text is "]" or ",")
         {
             if (At("?"))
@@ -147,7 +153,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var rank = 1;
                 while (At(",")) { rank++; position++; }
                 Expect("]");
-                type = new(name, Element: type, Rank: rank);
+                type = new(segments, Element: type, Rank: rank);
             }
         }
         return type;

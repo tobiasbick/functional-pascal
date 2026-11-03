@@ -19,9 +19,14 @@ Generic arguments use `<...>` in declarations, types, and calls:
 `Identity<int>(42)`. Calls may infer routine type arguments from supplied argument
 types. Expected result type alone does not infer routine type arguments. See
 [type inference](type-inference.md) for overload evidence and contextual unions.
-Namespace-qualified CLR generics are supported. General paths with type arguments
-on every enclosing/nested segment remain a tracked
-[baseline gap](../../../future/language-gaps.md#finish-the-existing-baseline-first).
+Namespace-qualified and nested CLR generics are supported. Put each type's own
+arguments on its name segment, for example `N.Outer<string>.Inner<int>`. An inner
+type that introduces no parameters still inherits the enclosing arguments, as in
+`Collections.Dictionary<string, int>.KeyCollection`. Enclosing arguments are not
+repeated on the nested segment. Every segment must name an accessible type and
+satisfy its arity and constraints; constraints on inner parameters may refer to
+outer parameters. The same paths work in annotations, construction, casts,
+`typeof`, and static member receivers.
 
 Each `where T: ...;` follows the routine header or the type's `=` and precedes
 the body/type definition. Constraints may include a base class, interfaces,

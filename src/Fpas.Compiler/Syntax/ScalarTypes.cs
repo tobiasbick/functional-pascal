@@ -19,7 +19,7 @@ internal sealed partial class Parser
         if (At("enum"))
         {
             position++;
-            var type = new TypeSyntax(new([new(TokenKind.Identifier, "int", name.Position, name.Length)]));
+            var type = new TypeSyntax([new(new(TokenKind.Identifier, "int", name.Position, name.Length))]);
             if (At(":")) { position++; type = ReadType(); }
             var members = new List<EnumMemberSyntax>();
             while (!At("end"))

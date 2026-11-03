@@ -66,5 +66,5 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 | Update examples, check links, or verify the token budget | [Maintenance](maintenance.md) |
 
 Use the owning handbook/specification for details. Check implementation status
-before using a feature from a proposal. The two tracked baseline gaps and source
-interface proposal remain deferred; this reference does not enable them.
+before using a feature from a proposal. The constrained static-interface operator
+gap and source interface proposal remain deferred; this reference does not enable them.

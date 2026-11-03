@@ -6,10 +6,11 @@ internal sealed record NameSyntax(IReadOnlyList<Token> Parts)
     internal int Position => Parts[0].Position;
 }
 
-internal sealed record TypeSyntax(NameSyntax Name, bool Nullable = false, IReadOnlyList<TypeSyntax>? Arguments = null, TypeSyntax? Element = null, int Rank = 0, IReadOnlyList<TypeSyntax>? CallableParameters = null, TypeSyntax? CallableResult = null)
+internal sealed record TypeSegmentSyntax(Token Name, IReadOnlyList<TypeSyntax>? Arguments = null);
+internal sealed record TypeSyntax(IReadOnlyList<TypeSegmentSyntax> Segments, bool Nullable = false, TypeSyntax? Element = null, int Rank = 0, IReadOnlyList<TypeSyntax>? CallableParameters = null, TypeSyntax? CallableResult = null)
 {
-    internal int Position => Name.Position;
-    internal string Text => Name.Text;
+    internal int Position => Segments[0].Name.Position;
+    internal string Text => string.Join('.', Segments.Select(segment => segment.Name.Text));
 }
 
 internal sealed record CompilationUnitSyntax(NameSyntax Name, bool IsProgram, IReadOnlyList<ImportSyntax> Imports,

@@ -25,9 +25,11 @@ dot calls.
 
 ## Generic owners and indexers
 
-Members of a constructed CLR type substitute its actual arguments. Returned
-public nested types retain their declaring-type identity even where source
-annotations cannot yet spell a general nested generic path. Imported constraints
+Members of a constructed CLR type substitute its actual arguments. Public nested
+types retain their declaring-type identity. Source paths put each segment's own
+arguments on that segment, such as `N.Outer<string>.Inner<int>`; a nested type
+with no parameters of its own uses `N.Outer<string>.Leaf`. Its CLR instantiation
+includes the outer arguments followed by the inner arguments. Imported constraints
 include class/class?, struct, new(), notnull, and base/interface requirements.
 Reference variance follows CLR in/out flags. Invariant nullable arguments and
 array element annotations cannot be weakened to permit unsafe writes.

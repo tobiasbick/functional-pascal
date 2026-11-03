@@ -20,8 +20,7 @@ syntax beyond the existing specification.
 
 | Order | Required behavior | Current gap and specification |
 | --- | --- | --- |
-| 1 | Fully qualified nested CLR generic type paths | Types returned by CLR APIs retain their identity, but source annotations cannot put generic arguments on every enclosing/nested name segment. Follow [generic type syntax](../pascal/language/functions/generic-routines.md) and the [grammar](../specs/syntax.md). |
-| 2 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions/generic-routines.md). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
+| 1 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions/generic-routines.md). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
 
 After these known gaps, compare every baseline rule and complete language example
 with compiler behavior. Record any additional demonstrated omissions here before

@@ -135,7 +135,9 @@ internal sealed partial class SourceCatalog
         {
             var name = ns.Namespace + "." + string.Join('.', parts.Skip(1));
             if (arity != 0 && references.HasType(name + "`" + arity)) name += "`" + arity;
-            if (allowOpenGeneric && arity == 0 && !references.HasType(name)) return new ClrImport(references.FindOpenType(name, position, unit.Source));
+            if (allowOpenGeneric && arity == 0 && !references.HasType(name) && !references.HasNamespace(name) &&
+                !names.ContainsKey(name) && !names.Keys.Any(key => key.StartsWith(name + ".", StringComparison.Ordinal)))
+                return new ClrImport(references.FindOpenType(name, position, unit.Source));
             return Resolve(name, position, unit.Source, references);
         }
         throw unit.Source.Error("FP3005", "Unsupported nested type path.", position);
@@ -158,29 +160,27 @@ internal sealed partial class SourceCatalog
         }
         else
         {
-            var primitive = syntax.Name.Parts.Count == 1 ? TypeFacts.Primitive(syntax.Text) : TypeSymbol.Unsupported;
-            if (syntax.Name.Parts.Count == 1 && generic?.TryGetValue(syntax.Text, out var parameter) == true)
+            var primitive = syntax.Segments.Count == 1 ? TypeFacts.Primitive(syntax.Text) : TypeSymbol.Unsupported;
+            var arguments = syntax.Segments[^1].Arguments;
+            if (syntax.Segments.Count == 1 && generic?.TryGetValue(syntax.Text, out var parameter) == true)
             {
-                if (syntax.Arguments is not null) throw unit.Source.Error("FP3026", "A type parameter cannot have type arguments.", syntax.Position);
+                if (arguments is not null) throw unit.Source.Error("FP3026", "A type parameter cannot have type arguments.", syntax.Position);
                 if (validate && syntax.Nullable && !parameter.Type.IsValue && !parameter.Type.IsReference) throw unit.Source.Error("FP3026", "T? requires a reference or struct constraint.", syntax.Position);
                 return parameter.Type with { IsNullable = syntax.Nullable };
             }
-            if (primitive != TypeSymbol.Unsupported && syntax.Arguments is null) type = primitive;
+            if (primitive != TypeSymbol.Unsupported && arguments is null) type = primitive;
             else
             {
-                if (syntax.Name.Parts.Count == 1 && !unit.Syntax.Imports.Any(import => import.Alias.Text == syntax.Text) && !unit.HasType(syntax.Text))
+                if (syntax.Segments.Count == 1 && !unit.Syntax.Imports.Any(import => import.Alias.Text == syntax.Text) && !unit.HasType(syntax.Text))
                     throw unit.Source.Error("FP3005", $"Unknown or unsupported value type '{syntax.Text}'.", syntax.Position);
-                var parts = syntax.Name.Parts.Select(part => part.Text).ToArray();
-                var target = ResolvePath(parts, unit, references, syntax.Position, syntax.Arguments?.Count ?? 0);
-                var arguments = syntax.Arguments?.Select(argument => ResolveType(argument, unit, references, generic, validate)).ToArray() ?? [];
+                var target = ResolveTypePath(syntax.Segments, unit, references, generic, validate);
                 type = target switch
                 {
-                    RecordImport own => references.ConstructSource(own.Record.Type, arguments, unit.Source, syntax.Position, validate),
-                    UnionImport own => references.ConstructSource(own.Union.Type, arguments, unit.Source, syntax.Position, validate),
-                    ClrTypeImport own when own.Type.Record is not null && own.Type.TypeArguments.Count == 0 => references.ConstructSource(own.Type, arguments, unit.Source, syntax.Position, validate),
-                    ClrTypeImport own when syntax.Arguments is null => own.Type,
-                    ClrImport imported => syntax.Arguments is null ? references.Symbol(imported.Type) :
-                        references.Construct(imported.Type, arguments, unit.Source, syntax.Position, validate),
+                    RecordImport own => references.ConstructSource(own.Record.Type, [], unit.Source, syntax.Position, validate),
+                    UnionImport own => references.ConstructSource(own.Union.Type, [], unit.Source, syntax.Position, validate),
+                    ClrTypeImport own when own.Type.Record is not null && own.Type.TypeArguments.Count == 0 => references.ConstructSource(own.Type, [], unit.Source, syntax.Position, validate),
+                    ClrTypeImport own => own.Type,
+                    ClrImport imported => references.Symbol(imported.Type),
                     _ => throw unit.Source.Error("FP3005", $"Unsupported value type '{syntax.Text}'.", syntax.Position)
                 };
             }

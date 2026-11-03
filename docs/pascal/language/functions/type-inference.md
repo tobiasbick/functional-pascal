@@ -103,8 +103,9 @@ This remains local call inference. It does not propagate expected return types
 backwards through arbitrary calls or implement a whole-program type solver.
 If a conditional/case expression or overloaded method group cannot supply its
 own type in an otherwise untyped argument position, use a typed intermediate
-binding or explicit call arguments. Fully general nested generic type paths
-remain a tracked [baseline gap](../../../future/language-gaps.md#finish-the-existing-baseline-first).
+binding or explicit call arguments. Nested CLR type paths require explicit
+arguments for each generic enclosing/inner segment; return context does not
+infer omitted enclosing arguments.
 
 ## See also
 

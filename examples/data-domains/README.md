@@ -13,7 +13,8 @@ dotnet build examples/data-domains/DataDomains.fpasproj
 dotnet examples/data-domains/bin/Debug/net10.0/DataDomains.dll
 ```
 
-Expected output:
+Expected output with invariant culture (the decimal separator otherwise follows
+the current .NET culture):
 
 ```text
 42

@@ -78,7 +78,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals);
     }
 
-    private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false)
+    private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false, bool nested = false)
     {
         var documentation = Current.Documentation;
         var isPublic = At("public") || inRecord && !At("private");
@@ -121,7 +121,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var body = ReadStatements();
         Expect("end");
         Expect(function ? "function" : "procedure");
-        Expect(";");
+        if (!nested) Expect(";");
         return new(name, isPublic, parameters, result, body, isStatic, typeParameters, constraints, contracts, isAsync, documentation);
     }
 

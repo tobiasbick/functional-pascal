@@ -5,9 +5,10 @@ namespace Fpas.Compiler.Binding;
 
 internal sealed partial class SourceCatalog
 {
-    private RoutineSymbol DeclareRoutine(SourceUnit unit, RoutineSyntax syntax, ReferenceCatalog references, int index, RecordSymbol? owner = null)
+    internal RoutineSymbol DeclareRoutine(SourceUnit unit, RoutineSyntax syntax, ReferenceCatalog references, int index, RecordSymbol? owner = null,
+        IReadOnlyList<GenericParameterSymbol>? enclosing = null)
     {
-        var outer = owner?.GenericParameters ?? [];
+        var outer = enclosing ?? owner?.GenericParameters ?? [];
         var generic = CreateTypeParameters(unit, syntax.TypeParameters, outer);
         BindTypeParameterConstraints(unit, syntax.Name, generic, syntax.Constraints, references, outer);
         var scope = outer.Concat(generic).ToDictionary(parameter => parameter.Name, StringComparer.Ordinal);

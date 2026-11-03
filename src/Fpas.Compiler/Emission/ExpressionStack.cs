@@ -6,6 +6,7 @@ internal static class ExpressionStack
 {
     internal static int Depth(BoundExpression expression) => expression switch
     {
+        BoundEnvironment environment => Arguments(environment.Arguments),
         BoundNumber { Type.Kind: TypeKind.Decimal } => 5,
         BoundField { Field.IsLiteral: true, Type.Kind: TypeKind.Decimal } => 5,
         BoundAddress address => Depth(address.Target) + 1,

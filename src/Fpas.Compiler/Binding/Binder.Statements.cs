@@ -10,11 +10,13 @@ internal sealed partial class Binder
             scopes.Push(new(StringComparer.Ordinal));
         try
         {
+            var nested = PrepareNestedRoutines(statements);
             var bound = new List<BoundStatement>();
             var flow = ExitFlow.Next;
             for (var index = 0; index < statements.Count; index++)
             {
                 var statement = statements[index];
+                if (statement is NestedRoutineSyntax) continue;
                 if (!flow.HasFlag(ExitFlow.Next))
                     throw source.Error("FP3008", "This statement is unreachable.", statement.Position);
                 var item = statement is UsingSyntax resource
@@ -23,6 +25,7 @@ internal sealed partial class Binder
                 flow = flow & ~ExitFlow.Next | FlowAnalysis.Of(item);
                 if (statement is UsingSyntax) break;
             }
+            if (nested is not null) BindNestedBodies(nested);
             return new(bound, scopes.Peek().Values.ToArray());
         }
         finally
@@ -41,6 +44,7 @@ internal sealed partial class Binder
                 var original = BindExpression(binding.Initializer, expected: type);
                 var initializer = Convert(original, type, binding.Initializer.Position);
                 var local = Allocate(binding.Name.Text, type, binding.Mutable);
+                local.Captured = local.Mutable && potentialNestedCaptures.Contains(local.Name);
                 local.Documentation = binding.Documentation;
                 Declare(local, binding.Name.Position);
                 UpdateFact(local, original);

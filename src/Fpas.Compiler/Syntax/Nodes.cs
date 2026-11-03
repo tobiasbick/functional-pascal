@@ -23,6 +23,7 @@ internal sealed record ParameterSyntax(Token Name, TypeSyntax Type, string Mode 
 internal sealed record ArgumentModeSyntax(int Start, string Mode, ExpressionSyntax Value) : ExpressionSyntax(Start);
 internal sealed record ImportSyntax(NameSyntax Target, Token Alias);
 internal abstract record StatementSyntax(int Position);
+internal sealed record NestedRoutineSyntax(RoutineSyntax Routine) : StatementSyntax(Routine.Name.Position);
 internal sealed record BindingSyntax(Token Name, TypeSyntax Type, ExpressionSyntax Initializer, bool Mutable, DocumentationComment? Documentation = null) : StatementSyntax(Name.Position);
 internal sealed record AssignmentSyntax(ExpressionSyntax Target, ExpressionSyntax Value) : StatementSyntax(Target.Position);
 internal sealed record ExpressionStatementSyntax(ExpressionSyntax Expression, bool Discard = false) : StatementSyntax(Expression.Position);

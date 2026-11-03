@@ -25,7 +25,10 @@ and libraries. These concrete limits currently require host tools:
 - [Global values](../implementation/global-values.md) now support shared unit
   state through ordinary static readonly/mutable fields and CLR initialization.
   Helpers can share configuration and counters without replacing field reads
-  with copied closure captures. Named nested routines remain unavailable.
+  with copied closure captures.
+- [Named nested routines](../implementation/nested-routines.md) now support lexical
+  helpers, recursive algorithms, overloads/generics, managed parameters, contracts,
+  and async calls. Initialize captured bindings before calls/delegate conversion.
 - [Primitive numbers and scalar domains](../implementation/scalar-types.md) now
   support decimal/unsigned/native values, transparent aliases, actual CLR enums,
   distinct identities, and checked integral ranges. Numeric maintenance helpers

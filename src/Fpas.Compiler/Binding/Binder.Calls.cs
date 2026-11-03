@@ -9,6 +9,8 @@ internal sealed partial class Binder
         var target = call.Target;
         TypeList? typeArguments = null;
         if (target is GenericNameSyntax generic) { typeArguments = new(generic.Arguments.Select(BindType)); target = generic.Name; }
+        if (target is NameExpressionSyntax nestedName && FindNested(nestedName.Name.Text) is { } nested)
+            return CallNested(nested, call, typeArguments, check);
         if (target is NameExpressionSyntax localName && !HasValue(localName.Name.Text) && recordContext is not null && recordContext.UserMethods.TryGetValue(localName.Name.Text, out var ownMethod))
             return CallRoutine(ownMethod, call.Arguments, typeArguments, check, call.Position, ImplicitReceiver(ownMethod, call.Position));
         if (target is NameExpressionSyntax name && !HasValue(name.Name.Text) && routines.TryGetValue(name.Name.Text, out var routine))
@@ -65,6 +67,8 @@ internal sealed partial class Binder
 
     private BoundExpression BindMethodGroup(ExpressionSyntax expression, TypeList? arguments, TypeSymbol? expected)
     {
+        if (expression is NameExpressionSyntax nestedName && FindNested(nestedName.Name.Text) is { } nested)
+            return NestedDelegate(nested, expected, expression.Position, arguments);
         if (expression is NameExpressionSyntax name && !HasValue(name.Name.Text))
         {
             if (recordContext is not null && recordContext.UserMethods.TryGetValue(name.Name.Text, out var own))

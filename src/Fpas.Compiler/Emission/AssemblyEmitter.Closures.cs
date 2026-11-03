@@ -62,12 +62,16 @@ internal sealed partial class AssemblyEmitter
             metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
                 MethodImplAttributes.IL, metadata.GetOrAddString(".ctor"), MethodSignature(TypeSymbol.Void, constructor.Parameters.Select(parameter => parameter.Type).ToArray(), instance: true),
                 EmitClosureConstructor(closure, bodies), firstParameter);
-            var routine = closure.Body;
-            firstParameter = AddParameters(routine.Symbol, ref parameterCount, program.Runtime);
-            var invocation = metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig, MethodImplAttributes.IL,
-                metadata.GetOrAddString("<Invoke>"), MethodSignature(routine.Symbol.Result, routine.Symbol.Parameters.Select(parameter => parameter.SignatureType).ToArray(), instance: true),
-                EmitBody(routine, bodies), firstParameter);
-            if (routine.Symbol.IsAsync) AddAsyncAttribute(invocation, layout.AsyncRoutines[routine]);
+            foreach (var routine in closure.Bodies)
+            {
+                firstParameter = AddParameters(routine.Symbol, ref parameterCount, program.Runtime);
+                var invocation = metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig, MethodImplAttributes.IL,
+                    metadata.GetOrAddString(routine.Symbol.Name), MethodSignature(routine.Symbol.Result,
+                        routine.Symbol.Parameters.Select(parameter => parameter.SignatureType).ToArray(), instance: true, genericArity: routine.Symbol.GenericParameters.Count),
+                    EmitBody(routine, bodies), firstParameter);
+                RegisterGenerics(invocation, routine.Symbol.GenericParameters, genericTypeContext);
+                if (routine.Symbol.IsAsync) AddAsyncAttribute(invocation, layout.AsyncRoutines[routine]);
+            }
         }
         genericTypeContext = null;
     }

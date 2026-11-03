@@ -122,7 +122,7 @@ through Where<string>, materializes paths, and transforms rows with Select. Its
 block lambda captures the root directory and a mutable total; file reads occur
 once while enumerating the rows. SDK tests check the actual file tree and totals.
 
-Named nested routines, expression trees, and events remain pending.
+[Named nested routines](nested-routines.md) are implemented. Expression trees and events remain pending.
 [XML documentation](xml-documentation.md) is implemented.
 [Async and portable PDBs](overloads-interfaces-debugging-and-async.md) are implemented. Callable
 shorthand has the standard Func/Action arity limit. This milestone does not

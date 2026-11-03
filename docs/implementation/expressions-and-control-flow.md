@@ -72,8 +72,8 @@ exits outside loops. The mixed-project suite verifies exported bool/double metho
 from C#, and the SDK builds the checked-in Mandelbrot program and checks all
 1,920 output characters against an independent System.Numerics.Complex calculation.
 
-[Global values](global-values.md) are implemented. Named nested routines
-and repeat loops remain later work. [XML documentation](xml-documentation.md) is
+[Global values](global-values.md) and [named nested routines](nested-routines.md)
+are implemented. Repeat loops remain later work. [XML documentation](xml-documentation.md) is
 implemented. [Multiple FPAS sources](multiple-sources.md)
 [CLR objects, nullable types, and exceptions](clr-objects-and-resources.md), and
 [arrays, collections, and enumeration](arrays-and-collections.md), and

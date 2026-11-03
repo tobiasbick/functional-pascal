@@ -66,7 +66,12 @@ internal sealed class AssemblyLayout
         {
             ClosureTypes.Add(closure, MetadataTokens.TypeDefinitionHandle(type++));
             ClosureConstructors.Add(closure, MetadataTokens.MethodDefinitionHandle(method++));
-            ClosureInvocations.Add(closure, MetadataTokens.MethodDefinitionHandle(method++));
+            ClosureInvocations.Add(closure, MetadataTokens.MethodDefinitionHandle(method));
+            foreach (var body in closure.Bodies)
+            {
+                if (closure.NestedBodies.Count != 0) SourceMethods.Add(body.Symbol, MetadataTokens.MethodDefinitionHandle(method));
+                method++;
+            }
         }
         foreach (var unit in program.Units)
         {
@@ -89,7 +94,8 @@ internal sealed class AssemblyLayout
             {
                 var parentName = unit.Name + (closure.RecordContext is { } context ? "+" + context.Name + (context.GenericParameters.Count == 0 ? "" : "`" + context.GenericParameters.Count) : "");
                 var arity = closure.GenericParameters.Count - (closure.RecordContext?.GenericParameters.Count ?? 0);
-                Add(closure.Body, closure, ClosureTypes[closure], parentName + "+<Closure" + closure.Id + ">" + (arity == 0 ? "" : "`" + arity));
+                foreach (var body in closure.Bodies)
+                    Add(body, closure, ClosureTypes[closure], parentName + "+<Closure" + closure.Id + ">" + (arity == 0 ? "" : "`" + arity));
             }
         }
         foreach (var unit in program.Units)

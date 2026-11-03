@@ -4,7 +4,7 @@ namespace Fpas.Compiler.Binding;
 
 internal sealed partial class SourceCatalog
 {
-    private static void AddOverload(Dictionary<string, List<RoutineSymbol>> groups, RoutineSymbol method, SourceText source, int position)
+    internal static void AddOverload(Dictionary<string, List<RoutineSymbol>> groups, RoutineSymbol method, SourceText source, int position)
     {
         if (!groups.TryGetValue(method.Name, out var overloads)) groups.Add(method.Name, overloads = []);
         var key = OverloadKey(method);

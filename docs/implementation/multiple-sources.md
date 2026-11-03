@@ -85,5 +85,5 @@ Arrays and closed CLR generic types are supported; see [collections](arrays-and-
 [Records](records.md), [unions](unions-and-matching.md), and
 [generic source routines](generic-routines.md) also work across units/projects.
 [Global fields/initializers](global-values.md) and [generic source types](generic-types.md)
-are implemented. Named nested routines remain pending. There are no unit
+and [named nested routines](nested-routines.md) are implemented. There are no unit
 initialization/finalization blocks or per-unit compilation caches.

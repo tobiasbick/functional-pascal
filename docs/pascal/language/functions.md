@@ -117,6 +117,10 @@ Anonymous functions have typed parameters, a result annotation, and either `=>`
 with one expression or a full `begin ... end function` body. Anonymous procedures
 use `begin ... end procedure`. Their parameter names remain local to the body.
 Named nested routines use the ordinary declaration syntax inside a routine body.
+Their signatures are visible throughout the declaring lexical block, allowing
+forward and mutually recursive calls. A declaration has no runtime statement
+effect. Captured bindings must be initialized before a call or conversion to a
+delegate; see the [implemented capture rules](../../implementation/nested-routines.md).
 
 A named routine or lambda converts to a compatible CLR delegate. Context resolves
 an overloaded routine group; an unresolved group cannot be stored. With no other

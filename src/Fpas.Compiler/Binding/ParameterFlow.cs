@@ -192,6 +192,7 @@ internal sealed class ParameterFlow(SourceText source, int position)
             case BoundArrayLiteral array: foreach (var element in array.Elements) Expression(element, state); break;
             case BoundNewArray array: foreach (var length in array.Lengths) Expression(length, state); break;
             case BoundLambda lambda: foreach (var capture in lambda.Closure.Captures) Expression(capture.Value, state); break;
+            case BoundEnvironment environment: foreach (var argument in environment.Arguments) Expression(argument, state); break;
             case BoundMethodDelegate method: if (method.Receiver is not null) Expression(method.Receiver, state); break;
         }
     }

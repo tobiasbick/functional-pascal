@@ -96,6 +96,7 @@ XML documentation emits real type/enum-field IDs and uses alias target types in
 method IDs; an alias itself has no CLR type documentation ID.
 
 [Global fields and initialization](global-values.md) are implemented.
-Named nested routines, authored interfaces, repeat loops, arbitrary
+[Named nested routines](nested-routines.md) are implemented.
+Authored interfaces, repeat loops, arbitrary
 attributes, fully general nested generic type paths, and LSP/query tooling remain
 outside this milestone. Numeric nullable lifted arithmetic is also not included.

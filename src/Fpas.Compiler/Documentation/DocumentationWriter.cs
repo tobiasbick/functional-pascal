@@ -16,9 +16,12 @@ internal sealed class DocumentationWriter
         var writer = new DocumentationWriter();
         foreach (var unit in catalog.Units) writer.Unit(unit);
         foreach (var unit in compilation.Units)
-            foreach (var routine in unit.Routines.Concat(unit.Records.SelectMany(record => record.Bodies.Values)).Concat(unit.Closures.Select(closure => closure.Body)))
+            foreach (var routine in unit.Routines.Concat(unit.Records.SelectMany(record => record.Bodies.Values)).Concat(unit.Closures.SelectMany(closure => closure.Bodies)))
                 foreach (var local in routine.Locals)
                     writer.Add(routine.Source!, local.Documentation, null, [], [], false);
+        foreach (var unit in compilation.Units)
+            foreach (var routine in unit.Closures.SelectMany(closure => closure.NestedBodies))
+                writer.Routine(catalog.Units.Single(source => source.Syntax.Name.Text == unit.Name), routine.Symbol, false);
         var document = new XDocument(new XDeclaration("1.0", "utf-8", null), new XElement("doc",
             new XElement("assembly", new XElement("name", assemblyName)),
             new XElement("members", writer.members.OrderBy(member => (string)member.Attribute("name")!, StringComparer.Ordinal))));

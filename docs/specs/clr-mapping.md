@@ -227,6 +227,18 @@ parameters (!!n) in the constructed closure type. MemberRefs on constructed
 closure types preserve this distinction. GenericParam rows follow the encoded
 TypeOrMethodDef owner order, independent of method/type emission order.
 
+Named nested routines emit instance methods on a private generated closure type
+for their declaring block. They retain source names and ordinary overload/byref/
+optional/params metadata. Enclosing generic parameters belong to the closure;
+each method's own parameters remain !!n in its method signature. An async state
+machine carries both sets as parameters of its generated type.
+Environment construction captures immutable values and shared mutable cells at
+the call/delegate conversion site. Recursive/sibling calls use the current
+receiver. Validate captured-binding initialization before construction; do not
+replace uninitialized values with defaults. Local declarations emit no executing
+statement, public API, or public XML entry. See
+[nested routines](../implementation/nested-routines.md) for the implemented scope.
+
 Nullable<T> contributes its underlying value type's nullability slot rather than
 an additional wrapper slot, including when substitution has not yet resolved a
 generic argument. Keep later reference annotations aligned in nested signatures.

@@ -10,6 +10,14 @@ internal sealed partial class BodyEmitter
     {
         switch (expression)
         {
+            case BoundClosureSelf:
+                il.LoadArgument(0);
+                if (asyncMachine is not null) { il.OpCode(ILOpCode.Ldfld); il.Token(fieldReference(catalog.MachineField(asyncMachine, "<>4__this", asyncMachine.HostType!))); }
+                break;
+            case BoundEnvironment environment:
+                foreach (var argument in environment.Arguments) EmitExpression(argument);
+                il.OpCode(ILOpCode.Newobj); il.Token(reference(catalog.ClosureMethod(environment.Closure, constructor: true)));
+                break;
             case BoundNoValue: break;
             case BoundPendingException:
                 il.LoadArgument(0); il.OpCode(ILOpCode.Ldfld); il.Token(fieldReference(catalog.MachineField(asyncMachine!, "<>exception", catalog.Symbol(catalog.Required("System.Exception"))))); break;

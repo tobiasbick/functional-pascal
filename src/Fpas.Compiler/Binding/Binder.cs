@@ -54,6 +54,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         scopes.Clear();
         parameters.Clear();
         nonNull.Clear();
+        potentialNestedCaptures = NestedCaptureNames(body).ToHashSet(StringComparer.Ordinal);
         if (symbol.Owner is not null && symbol.IsInstance) parameters.Add("self", new("self", symbol.Owner.Type, -1));
         foreach (var parameter in symbol.Parameters)
             parameters.Add(parameter.Name, parameter);
@@ -64,6 +65,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         nonNull.Clear();
         var ensures = BindContracts(contracts, ensures: true, out var result);
         var routine = new BoundRoutine(symbol, block, locals.ToArray(), requires, ensures, result, source);
+        if (parent is null) FinishNestedBindings();
         new ParameterFlow(source, position).Validate(routine);
         return routine;
     }
@@ -77,7 +79,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
 
     private void Declare(LocalSymbol local, int position)
     {
-        if (scopes.Peek().ContainsKey(local.Name) || imports.ContainsKey(local.Name) ||
+        if (scopes.Peek().ContainsKey(local.Name) || ScopeRoutines(scopes.Peek())?.Methods.ContainsKey(local.Name) == true || imports.ContainsKey(local.Name) ||
             scopes.Count == 1 && parameters.ContainsKey(local.Name) || currentRoutine.IsEntryPoint && local.Name == "args" || recordContext is not null && local.Name == "self")
             throw source.Error("FP3004", $"Name '{local.Name}' is already bound or reserved.", position);
         scopes.Peek().Add(local.Name, local);
@@ -93,14 +95,16 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
     private LocalSymbol? FindLocal(string name)
     {
         foreach (var scope in scopes)
+        {
             if (scope.TryGetValue(name, out var local))
                 return local;
+            if (ScopeRoutines(scope)?.Methods.ContainsKey(name) == true) return null;
+        }
         return null;
     }
 
-    private IReadOnlyDictionary<string, GenericParameterSymbol> TypeParameters => closure is not null
-        ? closure.GenericParameters.ToDictionary(parameter => parameter.Name, StringComparer.Ordinal)
-        : (recordContext?.GenericParameters ?? []).Concat(currentRoutine.GenericParameters).ToDictionary(parameter => parameter.Name, StringComparer.Ordinal);
+    private IReadOnlyDictionary<string, GenericParameterSymbol> TypeParameters =>
+        (closure?.GenericParameters ?? recordContext?.GenericParameters ?? []).Concat(currentRoutine.GenericParameters).ToDictionary(parameter => parameter.Name, StringComparer.Ordinal);
 
     private TypeSymbol BindType(TypeSyntax type) => catalog.ResolveType(type, unit, references, TypeParameters);
 

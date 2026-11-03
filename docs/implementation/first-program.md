@@ -45,8 +45,8 @@ The program prints `Hello from FPAS`. See the checked-in
   bindings, and `return`. Unit routines may be `public` or `private`; omitted
   visibility is private. Source calls may reference later routine declarations.
   Public routines emit ordinary static CLR methods with named parameters and
-  nullable reference metadata where annotated. Source overloads are supported;
-  named nested routines remain pending.
+  nullable reference metadata where annotated. Source overloads and
+  [named nested routines](nested-routines.md) are supported.
 - [Synchronous contracts and CLR parameters](contracts-and-parameters.md): callee
   preconditions/postconditions, ref/out/in storage, optional/params parameters,
   and named calls with ordinary CLR metadata.
@@ -163,6 +163,7 @@ for invalid arguments.
 | FP3029 / FP3030 | Invalid record interface implementation / async or await reference-lifetime error |
 | FP3031 | Invalid alias, enum, distinct declaration, subrange bounds, or domain construction |
 | FP3032 | Invalid global name or public global exposing private types |
+| FP3033 | Nested routine environment created before captured bindings initialize |
 | FP6001 | Documentation warning; severity follows the configured warning policy |
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
 

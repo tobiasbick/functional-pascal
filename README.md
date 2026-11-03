@@ -20,6 +20,11 @@ fields with CLR type initialization. The
 [shared-state example](examples/shared-state/README.md) shares unit state through
 functions, delegates, and ref arguments.
 
+[Named nested routines](docs/implementation/nested-routines.md) support lexical
+helpers, recursion, captures, overloads, generics, contracts, and async methods.
+The [local-functions example](examples/local-functions/README.md) returns a local
+counter as an ordinary CLR delegate.
+
 The [Mandelbrot example](examples/mandelbrot/README.md) is executable through its
 `.fpasproj`; its raster output is verified by the integration tests. The
 [expression/control-flow milestone](docs/implementation/expressions-and-control-flow.md)

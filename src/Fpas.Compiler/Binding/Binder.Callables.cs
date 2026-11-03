@@ -4,14 +4,23 @@ namespace Fpas.Compiler.Binding;
 
 internal sealed partial class Binder
 {
-    private bool HasLexicalValue(string name) => FindLocal(name) is not null || parameters.ContainsKey(name) || parent?.HasLexicalValue(name) == true;
-    private bool HasValue(string name) => HasLexicalValue(name) || unit.Globals.ContainsKey(name) && recordContext?.UserMethods.ContainsKey(name) != true;
+    private bool HasLexicalValue(string name)
+    {
+        foreach (var scope in scopes)
+        {
+            if (scope.ContainsKey(name)) return true;
+            if (ScopeRoutines(scope)?.Methods.ContainsKey(name) == true) return false;
+        }
+        return parameters.ContainsKey(name) || parent?.HasLexicalValue(name) == true;
+    }
+    private bool HasValue(string name) => HasLexicalValue(name) || FindNested(name) is not null || unit.Globals.ContainsKey(name) && recordContext?.UserMethods.ContainsKey(name) != true;
 
     private BoundExpression Value(string name, int position, TypeSymbol? expected = null)
     {
         if (enumInitializer?.Members.FirstOrDefault(member => member.Name.Text == name) is { } enumMember)
             return NumberConstant(enumInitializer.Base, enumMember.Value);
         if (FindLocal(name) is { } local) return new BoundLocal(local, nonNull.Contains(local) ? local.Type.NonNullable : null);
+        if (FindNested(name) is { } nested) return NestedDelegate(nested, expected, position);
         if (parameters.TryGetValue(name, out var parameter)) return new BoundParameter(parameter, nonNull.Contains(parameter) ? parameter.Type.NonNullable : null);
         if (parent?.HasLexicalValue(name) == true)
         {
@@ -23,25 +32,7 @@ internal sealed partial class Binder
                 BoundCapture bound => bound.Capture.Original,
                 _ => throw new InvalidOperationException("Invalid lexical capture.")
             };
-            if (symbol is ParameterSymbol { ByRef: true })
-                throw source.Error("FP3028", "Managed reference parameters cannot be captured.", position);
-            if (!captures.TryGetValue(symbol, out var capture))
-            {
-                var mutable = symbol is LocalSymbol { Mutable: true };
-                var type = mutable ? ((LocalSymbol)symbol).Type : original.Type;
-                if (mutable)
-                {
-                    ((LocalSymbol)symbol).Captured = true;
-                    parent.ForgetCapturedFacts();
-                    var storage = references.CellType(type);
-                    original = original is BoundLocal bound ? new BoundLocalStorage(bound.Local, storage) :
-                        new BoundCaptureStorage(((BoundCapture)original).Capture, storage);
-                }
-                capture = new(symbol, type, original, mutable, closure!);
-                captures.Add(symbol, capture);
-                closure!.Captures.Add(capture);
-            }
-            return new BoundCapture(capture, nonNull.Contains(capture) ? capture.Type.NonNullable : null);
+            return CaptureValue(symbol, original, position);
         }
         if (recordContext is not null && recordContext.UserMethods.TryGetValue(name, out var recordMethod))
             return RoutineDelegate(recordMethod, expected, position, receiver: ImplicitReceiver(recordMethod, position));
@@ -59,7 +50,7 @@ internal sealed partial class Binder
         if (signature.Select(parameter => parameter.Name).Distinct(StringComparer.Ordinal).Count() != signature.Length || signature.Any(parameter => imports.ContainsKey(parameter.Name) || recordContext is not null && parameter.Name == "self"))
             throw source.Error("FP3004", "Lambda parameters must be unique and cannot shadow import aliases.", syntax.Position);
         var result = syntax.Result is null ? TypeSymbol.Void : BindType(syntax.Result);
-        var symbol = new ClosureSymbol(catalog.ClosureCount++, recordContext, closure?.GenericParameters ?? TypeParameters.Values.ToArray());
+        var symbol = new ClosureSymbol(catalog.ClosureCount++, recordContext, TypeParameters.Values.ToArray());
         closures.Add(symbol);
         var nested = new Binder(unit, catalog, references, this, symbol, recordContext) { arithmeticChecked = check };
         foreach (var import in imports) nested.imports.Add(import.Key, import.Value);

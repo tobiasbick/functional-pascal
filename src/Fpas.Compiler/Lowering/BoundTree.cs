@@ -31,6 +31,7 @@ internal static class BoundTree
         BoundDereference dereference => [dereference.Address],
         BoundMethodDelegate { Receiver: not null } method => [method.Receiver],
         BoundLambda lambda => lambda.Closure.Captures.Select(capture => capture.Value),
+        BoundEnvironment environment => environment.Arguments,
         _ => []
     };
 }

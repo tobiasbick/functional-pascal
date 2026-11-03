@@ -113,6 +113,7 @@ The same solution build and separate test execution run on Windows and Linux.
 
 [Primitive numbers and scalar domains](scalar-types.md) are implemented.
 [Global fields and initialization](global-values.md) are implemented.
-Named nested routines, authored
+[Named nested routines](nested-routines.md) preserve generic and async behavior.
+Authored
 interfaces, events, arbitrary attributes, and IDE tooling
 remain outside these four steps.

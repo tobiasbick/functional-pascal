@@ -69,6 +69,7 @@ internal sealed partial class Binder
             binder.currentRoutine = field.Default!;
             binder.scopes.Push(new(StringComparer.Ordinal));
             var value = binder.Convert(binder.BindExpression(field.Syntax.Default!, expected: field.Type), field.Type, field.Syntax.Name.Position);
+            binder.FinishNestedBindings();
             record.Bodies.Add(field.Default!, new(field.Default!, new([new BoundReturn(value)]), binder.locals.ToArray()));
         }
         GenerateRecordBodies(record);

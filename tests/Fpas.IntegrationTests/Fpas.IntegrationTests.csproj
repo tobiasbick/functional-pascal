@@ -22,6 +22,7 @@
     <None Include="../../examples/generic-tree/*.fpas;../../examples/generic-tree/*.fpasproj" Link="Fixtures/generic-tree/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/data-domains/*.fpas;../../examples/data-domains/*.fpasproj" Link="Fixtures/data-domains/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/shared-state/*.fpas;../../examples/shared-state/*.fpasproj" Link="Fixtures/shared-state/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/local-functions/*.fpas;../../examples/local-functions/*.fpasproj" Link="Fixtures/local-functions/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/msbuild/**/*" Link="Fixtures/msbuild/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />

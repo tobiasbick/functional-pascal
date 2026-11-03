@@ -19,6 +19,7 @@ internal sealed partial class Parser
     {
         var start = Current.Position;
         var documentation = Current.Documentation;
+        if (At("function") || At("procedure") || At("async")) return new NestedRoutineSyntax(ReadRoutine(false, nested: true));
         if (At("const") || At("var"))
         {
             var mutable = At("var");

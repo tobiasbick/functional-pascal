@@ -1,0 +1,34 @@
+program LocalFunctions;
+uses System.Console as Console;
+
+function Factorial(Value: int): int;
+begin
+  return Multiply(Value);
+
+  function Multiply(N: int): int;
+  begin
+    if N = 0 then return 1; end if;
+    return N * Multiply(N - 1);
+  end function;
+end function;
+
+function MakeCounter(Start: int): function(): int;
+begin
+  var Count: int := Start;
+
+  function Next(): int;
+  begin
+    Count := Count + 1;
+    return Count;
+  end function;
+
+  return Next;
+end function;
+
+begin
+  Console.WriteLine(Factorial(5));
+  const Counter: function(): int := MakeCounter(10);
+  Console.WriteLine(Counter());
+  Console.WriteLine(Counter());
+end;
+end program;

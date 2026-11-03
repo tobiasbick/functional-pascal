@@ -20,6 +20,7 @@ Read the [compiler subset](docs/implementation/first-program.md) and
 [type argument inference](docs/implementation/type-argument-inference.md), plus
 [primitive/scalar types](docs/implementation/scalar-types.md), plus
 [global values](docs/implementation/global-values.md), plus
+[named nested routines](docs/implementation/nested-routines.md), plus
 [implemented MSBuild integration](docs/implementation/msbuild.md) before claiming
 feature support. Use a stable .NET 10 SDK and separate test compilation from execution:
 

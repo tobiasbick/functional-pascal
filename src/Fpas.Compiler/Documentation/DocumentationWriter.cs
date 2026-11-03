@@ -1,7 +1,9 @@
+using Fpas.Compiler.Binding.Symbols;
+using Fpas.Compiler.Binding.Declarations;
+using Fpas.Compiler.Binding.Bound;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Fpas.Compiler.Binding;
 using Fpas.Compiler.Syntax;
 
 namespace Fpas.Compiler.Documentation;

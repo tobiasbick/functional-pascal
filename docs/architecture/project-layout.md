@@ -21,14 +21,30 @@ src/
   Fpas.Compiler/
     Fpas.Compiler.csproj
     Syntax/
+      Parsing/
     Binding/
+      Bodies/
+      Bound/
+      Declarations/
+      Flow/
+      References/
+      Symbols/
+      Types/
     Lowering/
+      Async/
     Emission/
+      Bodies/
+      Debugging/
+      Metadata/
+      StateMachines/
   Fpas.Cli/
     Fpas.Cli.csproj
     Program.cs
+    Compilation/
   Fpas.Build.Tasks/
     Fpas.Build.Tasks.csproj
+    Documentation/
+    Incremental/
   Fpas.Core/
     Fpas.Core.csproj
 sdk/
@@ -42,8 +58,18 @@ sdk/
 tests/
   Fpas.Compiler.Tests/
     Fpas.Compiler.Tests.csproj
+    ControlFlow/
+    Metadata/
+    Routines/
+    Support/
+    Types/
   Fpas.IntegrationTests/
     Fpas.IntegrationTests.csproj
+    Build/
+    Cli/
+    Documentation/
+    Execution/
+    Support/
   Fixtures/
 examples/
   README.md
@@ -82,6 +108,20 @@ the same compiler implementation through the compiler executable/library.
 The emitted program targets the CLR directly; C# is the implementation language,
 not an intermediate source-generation stage. See [CLR mapping](../specs/clr-mapping.md).
 
+Within each phase, directories and namespaces identify the owning concern.
+Syntax owns the syntax model; Syntax.Parsing owns parser implementations.
+Binding separates metadata references, declarations, body binding, types,
+symbols, flow analysis, and typed bound operations. Bound-tree traversal belongs
+with that shared representation, so binding does not depend on lowering.
+Lowering.Async produces resumable plans. Emission owns their association with
+generated machines, field layouts, CIL bodies, metadata, and portable symbols.
+Keep partial implementations of one component together in their topic directory.
+
+CLI compilation/publication code lives in Compilation. Build-task documentation
+outputs and incremental fingerprints have their own topic directories. Public
+compiler APIs, Core metadata attributes, and the MSBuild task retain the CLR
+identities required by their owning contracts.
+
 ## Dependencies and solution
 
 Fpas.slnx groups the C# implementation projects, SDK packaging, and xUnit projects.
@@ -115,6 +155,11 @@ Keep C# xUnit tests under tests, separate from production source. Unit tests cov
 focused behavior such as tokenization, parsing, binding, type diagnostics, and
 lowering. Add tests for a support library/task separately when their own behavior
 warrants it; avoid empty test projects solely to mirror the source tree.
+
+Compiler tests group types, routines, control flow, and metadata by topic.
+Integration tests separate CLI behavior, generated-program execution,
+documentation, and SDK builds. Shared helpers live in Support with matching
+namespaces; tests do not call unrelated test classes for compilation setup.
 
 Integration tests must compile real FPAS, inspect emitted signatures and
 diagnostics, and execute resulting programs as appropriate. Cover FPAS-to-C# and

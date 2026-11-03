@@ -147,7 +147,7 @@ end program;
 
 The program prints `60`. Its complete sources and ChannelBackpressure are checked
 by the Markdown runner. The linked
-[SDK acceptance](../../../tests/Fpas.IntegrationTests/MsBuildTests.CoordinationRecipes.cs)
+[SDK acceptance](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.CoordinationRecipes.cs)
 calls the exact unit in Debug/Release with empty and larger inputs, producer
 enumeration failure, consumer rejection/overflow, and active cancellation.
 Enumerator cleanup is checked before the pipeline returns or throws.

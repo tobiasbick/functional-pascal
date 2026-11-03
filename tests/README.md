@@ -14,6 +14,11 @@ in the [development workflow](../docs/build/development.md).
 | [Fixtures/msbuild](Fixtures/msbuild/) | Shared.csproj → Game.fpasproj → Host.csproj and a mixed .slnx solution |
 | [TestSupport](TestSupport/) and [Directory.Build.targets](Directory.Build.targets) | Shared bounded-process and temporary-directory helpers plus resolved framework reference inputs |
 
+Compiler tests use Types, Routines, ControlFlow, and Metadata directories with
+matching namespaces. Integration tests use Cli, Execution, Documentation, and
+Build. Each project's Support directory owns its shared setup; compiler tests
+compile through TestCompilation rather than another test class.
+
 Build the toolchain and tests before executing them. Do not rebuild toolchain
 binaries while tests use them. Markdown and checked-in examples are copied during
 the test build; rebuild after changing those inputs. HandbookTests checks that

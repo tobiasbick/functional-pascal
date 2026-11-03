@@ -20,16 +20,16 @@ The exact CLR application arguments and marker contract remain open.
 
 Documentation examples are already checked in the CLR branch:
 
-- [MarkdownExamples](../../tests/Fpas.IntegrationTests/MarkdownExamples.cs)
+- [MarkdownExamples](../../tests/Fpas.IntegrationTests/Documentation/MarkdownExamples.cs)
   extracts complete program, async-program, and unit fences. It recognizes
   `project=NAME` for companion sources.
-- [LanguageSpecificationTests](../../tests/Fpas.IntegrationTests/LanguageSpecificationTests.cs)
+- [LanguageSpecificationTests](../../tests/Fpas.IntegrationTests/Documentation/LanguageSpecificationTests.cs)
   compiles complete examples from the handbook, agent reference, and repository
   README. Units compile as libraries. Programs execute with output or behavior
   assertions, and an unrecognized program needs an execution assertion.
 - The existing tests also exercise generated PDB/XML outputs, selected error
   paths, and controlled filesystem/environment/network fixtures.
-- [AgentReferenceTests](../../tests/Fpas.IntegrationTests/AgentReferenceTests.cs)
+- [AgentReferenceTests](../../tests/Fpas.IntegrationTests/Documentation/AgentReferenceTests.cs)
   checks that every agent-reference Pascal fence is a complete, uniquely named
   source, with explicit companions. Other documentation checks cover links,
   fragment marking, and copied inputs.

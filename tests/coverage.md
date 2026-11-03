@@ -16,7 +16,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |
 | Numeric widths, promotions, checked/unchecked, native/decimal | ScalarDiagnosticsTests, ScalarMetadataTests | NumericExecutionTests, ScalarExecutionTests, MsBuildTests.Scalars |
 | Units, visibility, source/reference conflicts, deterministic ordering | MultiSourceTests, EmissionTests | MultiSourceCliTests, MsBuildTests.MultiSource |
-| CLR members, boxing, nullable flow, struct storage, cleanup | InteropDiagnosticsTests | InteropExecutionTests, MsBuildTests.Interop |
+| CLR members, boxing, nullable flow, struct storage, cleanup | InteropDiagnosticsTests, NullableEffectTests | InteropExecutionTests, MsBuildTests.Interop |
 | Arrays, UTF-16, generic owners, indexers, enumeration | CollectionsDiagnosticsTests | CollectionsExecutionTests, MsBuildTests.Collections |
 | Delegates, shared captures, callbacks, method groups | CallableDiagnosticsTests, CallableMetadataTests | CallableExecutionTests, MsBuildTests.Callables |
 | Records, defaults/copy helpers, equality, imported metadata | RecordTests, RecordMetadataTests | RecordExecutionTests, MsBuildTests.Records |
@@ -42,6 +42,10 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 Files live in [compiler tests](Fpas.Compiler.Tests/) and
 [integration tests](Fpas.IntegrationTests/). MsBuildTests uses topic-based partial
 files; the shared fixture owns packaging and process setup.
+
+Compiler files are grouped in Types, Routines, ControlFlow, and Metadata;
+integration files in Cli, Execution, Documentation, and Build. Shared setup lives
+in each project's Support directory.
 
 ## Behavioral checks
 
@@ -84,6 +88,13 @@ and safe nullable flow. Signature-limit builds check methods, method groups,
 delegates, fields, properties, and indexers against a real C# reference with
 unsupported ref returns, pointers, byref-like types, or required modifiers.
 Supported overloads remain usable; excluded ones produce identifying diagnostics.
+
+Nullable-effect regressions check ref/out writes, repeated conditions, catch
+filters, case guards, deferred arguments, and captured writes. Unsafe stale facts
+must produce FP3013; revalidation and saved-value controls remain accepted.
+CompilerOutputOwnershipTests invokes the CLI with reference assemblies placed at
+assembly/PDB/runtime-configuration output paths and checks rejection without
+modifying their bytes, including disabled-sidecar cleanup.
 
 ## Documentation acceptance
 

@@ -1,3 +1,4 @@
+using Fpas.Cli.Compilation;
 namespace Fpas.Cli;
 
 internal static class Program

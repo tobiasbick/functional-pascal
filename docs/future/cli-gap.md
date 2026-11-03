@@ -23,11 +23,11 @@ separate in the [baseline comparison](../baseline-comparison.md).
 
 ## Current CLR support
 
-The [CLI](../../src/Fpas.Cli/CompilerCommand.cs) exposes only `compile`, plus root
+The [CLI](../../src/Fpas.Cli/Compilation/CompilerCommand.cs) exposes only `compile`, plus root
 and compile help. It accepts explicit sources, stdin, assembly references,
 executable/library output, portable symbols, optional XML API documentation,
 warning policy, JSON diagnostics, and JSON response files. Argument parsing is
-hand-written in [CompileArguments](../../src/Fpas.Cli/CompileArguments.cs).
+hand-written in [CompileArguments](../../src/Fpas.Cli/Compilation/CompileArguments.cs).
 
 The project SDK already resolves dependencies and builds `.fpasproj` projects
 and mixed `.slnx` solutions through MSBuild. Generated executable DLLs run through

@@ -1,7 +1,9 @@
+using Fpas.Compiler.Lowering.Async;
+using Fpas.Compiler.Binding.Symbols;
+using Fpas.Compiler.Binding.References;
+using Fpas.Compiler.Binding.Bound;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using Fpas.Compiler.Binding;
-using Fpas.Compiler.Lowering;
 
 namespace Fpas.Compiler.Emission;
 
@@ -20,6 +22,7 @@ internal sealed class AssemblyLayout
     internal Dictionary<ClosureSymbol, MethodDefinitionHandle> ClosureInvocations { get; } = [];
     internal IReadOnlyList<ClosureSymbol> Closures { get; }
     internal List<AsyncMachineSymbol> Machines { get; } = [];
+    internal Dictionary<AsyncMachineSymbol, AsyncPlan> AsyncPlans { get; } = [];
     internal Dictionary<BoundRoutine, AsyncMachineSymbol> AsyncRoutines { get; } = new(ReferenceEqualityComparer.Instance);
     internal Dictionary<AsyncMachineSymbol, TypeDefinitionHandle> AsyncTypes { get; } = [];
     internal Dictionary<AsyncMachineSymbol, TypeDefinitionHandle> AsyncOwners { get; } = [];
@@ -79,7 +82,8 @@ internal sealed class AssemblyLayout
             void Add(BoundRoutine routine, ClosureSymbol? closure, TypeDefinitionHandle parent, string parentName)
             {
                 if (!routine.Symbol.IsAsync) return;
-                var machine = new AsyncMachineSymbol(routine, closure, Machines.Count, parentName) { Plan = AsyncLowering.Lower(routine, references) };
+                var machine = new AsyncMachineSymbol(routine, closure, Machines.Count, parentName);
+                AsyncPlans.Add(machine, AsyncLowering.Lower(routine, references));
                 Machines.Add(machine); AsyncRoutines.Add(routine, machine); AsyncOwners.Add(machine, parent);
                 AsyncTypes.Add(machine, MetadataTokens.TypeDefinitionHandle(type++));
                 AsyncConstructors.Add(machine, MetadataTokens.MethodDefinitionHandle(method++));

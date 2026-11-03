@@ -174,7 +174,7 @@ handle Output.Truncated and Error.Truncated before interpreting retained text.
 Do not share a mutable ProcessStartInfo across concurrent runs.
 
 The Markdown runner compiles both complete sources. The linked
-[SDK acceptance test](../../../tests/Fpas.IntegrationTests/MsBuildTests.ProcessRecipe.cs)
+[SDK acceptance test](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.ProcessRecipe.cs)
 calls the documented unit from C# in Debug/Release with controlled child modes:
 literal arguments, environment/cwd, stdin EOF, nonzero exit, output larger than
 pipe buffers, timeout, cancellation after startup, and launch failure. It verifies

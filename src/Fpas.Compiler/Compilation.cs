@@ -1,5 +1,9 @@
-using Fpas.Compiler.Binding;
-using Fpas.Compiler.Emission;
+using Fpas.Compiler.Syntax.Parsing;
+using Fpas.Compiler.Emission.Metadata;
+using Fpas.Compiler.Binding.References;
+using Fpas.Compiler.Binding.Declarations;
+using Fpas.Compiler.Binding.Bound;
+using Fpas.Compiler.Binding.Bodies;
 using Fpas.Compiler.Syntax;
 using Fpas.Compiler.Documentation;
 

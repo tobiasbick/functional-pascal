@@ -1,3 +1,5 @@
+using Fpas.Build.Tasks.Incremental;
+using Fpas.Build.Tasks.Documentation;
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Build.Framework;

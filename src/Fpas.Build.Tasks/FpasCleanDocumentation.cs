@@ -1,3 +1,5 @@
+using Fpas.Build.Tasks.Incremental;
+using Fpas.Build.Tasks.Documentation;
 using Microsoft.Build.Framework;
 
 namespace Fpas.Build.Tasks;

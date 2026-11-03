@@ -115,7 +115,7 @@ end program;
 The executable needs network access for a successful fetch. Its Markdown test
 uses a local rejecting proxy to check the HTTP failure branch without public
 network access. The linked
-[SDK acceptance test](../../../tests/Fpas.IntegrationTests/MsBuildTests.HttpRecipe.cs)
+[SDK acceptance test](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.HttpRecipe.cs)
 calls the exact unit from C# in Debug/Release. It uses a loopback HTTP endpoint
 for a real UTF-8 response and controlled .NET handlers/streams for limits, status
 errors, invalid UTF-8, and cancellation during headers and body reads. Those

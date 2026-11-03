@@ -47,7 +47,12 @@ object with diagnostic codes and source locations. See [diagnostics](../tools/di
 Failed compilation preserves existing outputs. Publication stages the assembly,
 symbols, runtime configuration, and requested XML together and restores previous
 outputs if replacement fails. Parallel invocations must select distinct output
-paths. Direct deployment must include non-framework dependencies; prefer the
+paths. Source and reference inputs must differ from output paths. Reference
+assemblies are protected from replacement or deletion at the assembly, PDB,
+runtime configuration, and requested XML paths, including stale sidecars removed
+by --debug none or --target library.
+
+Direct deployment must include non-framework dependencies; prefer the
 project SDK for normal applications.
 
 ## See also

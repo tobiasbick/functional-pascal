@@ -1,4 +1,5 @@
-using Fpas.Compiler.Binding;
+using Fpas.Compiler.Binding.Types;
+using Fpas.Compiler.Binding.Symbols;
 
 namespace Fpas.Compiler.Documentation;
 

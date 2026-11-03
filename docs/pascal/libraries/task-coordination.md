@@ -144,7 +144,7 @@ The [channel pipeline](channels.md) demonstrates that policy. Keep resources
 alive until their workers finish, and observe errors from canceled losing work.
 
 The Markdown runner executes both programs. The linked
-[SDK acceptance](../../../tests/Fpas.IntegrationTests/MsBuildTests.CoordinationRecipes.cs)
+[SDK acceptance](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.CoordinationRecipes.cs)
 also calls UnderGate from C# in Debug/Release, checking contention, cancellation
 before acquisition, work faults, and cancellation while holding the permit.
 

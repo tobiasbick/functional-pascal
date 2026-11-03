@@ -12,8 +12,8 @@ and ManagedPEBuilder from .NET.
 | Source and syntax | SourceText, Lexer, and Parser retain source locations and declaration documentation |
 | Reference metadata | ReferenceCatalog uses PEReader/MetadataReader for identities, signatures, nullable annotations, forwarding, and accessibility |
 | Source declarations | SourceCatalog collects containers, types, and routine signatures before binding bodies |
-| Binding | Binder resolves names, overloads, constraints, inference, storage, nullable flow, coverage, and contracts |
-| Lowering | BoundTree and async plans retain typed operations, captured environments, protected regions, and resumable exits |
+| Binding | Binder resolves names, overloads, constraints, inference, storage, nullable flow, coverage, and contracts; bound nodes and BoundTree provide the shared typed representation and traversal |
+| Lowering | Async plans retain typed operations, captured environments, protected regions, and resumable exits |
 | Emission | AssemblyEmitter and BodyEmitter create CIL, metadata, optional portable symbols, and CLR entry points |
 | Documentation | DocumentationWriter derives optional XML from resolved declarations and emitted identities |
 
@@ -88,6 +88,11 @@ configuration, and requested XML as one staged operation. Failed compilation
 leaves existing output intact. Failed replacement restores prior files;
 unrecoverable rollback retains backups and reports their location. Parallel
 callers must choose distinct output paths.
+
+The CLI rejects source or reference paths that coincide with its output files.
+Reference protection includes the assembly, conventional PDB/runtime configuration,
+and requested XML. It also applies when symbols are disabled or the target is a
+library, because publication removes stale compiler-owned sidecars.
 
 Executable output gets a runtime configuration; library output removes a former
 compiler-owned executable configuration. Disabling symbols removes the

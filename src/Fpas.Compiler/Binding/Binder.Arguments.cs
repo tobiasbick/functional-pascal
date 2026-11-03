@@ -38,8 +38,8 @@ internal sealed partial class Binder
         return new(method, slots, expanded, types, missing.Length);
     }
 
-    private BoundExpression BindInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
-        BoundExpression? receiver, bool check, int position, TypeSymbol? constructed = null, bool inferGenerics = false)
+    private (CallShape Shape, BoundExpression[] Values) SelectInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
+        bool check, int position, bool inferGenerics)
     {
         var shapes = templates.SelectMany(method => new[] { Shape(method, syntax, false), Shape(method, syntax, true) })
             .Where(shape => shape is not null).Select(shape => shape!).ToArray();
@@ -75,8 +75,15 @@ internal sealed partial class Binder
                 " Candidates: " + string.Join("; ", templates.Select(method => method.Name + (method.MethodArguments is null ? "" : "<" + string.Join(',', method.MethodArguments) + ">") +
                     "(" + string.Join(", ", method.Parameters.Select((type, index) => method.Parameter(index).Mode + " " + TypeFacts.Display(type))) + ")").Distinct().Take(20)), position);
         var selected = best[0];
+        return (selected, BindDeferredArguments(arguments, values, selected.Types, check));
+    }
+
+    private BoundExpression BindInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
+        BoundExpression? receiver, bool check, int position, TypeSymbol? constructed = null, bool inferGenerics = false)
+    {
+        var (selected, bound) = SelectInvocation(templates, syntax, check, position, inferGenerics);
+        var arguments = syntax.Select(argument => argument is NamedArgumentSyntax named ? named.Value : argument).ToArray();
         if (selected.Method.IsStatic) receiver = null;
-        var bound = BindDeferredArguments(arguments, values, selected.Types, check);
         var bindings = new List<BoundBinding>();
         if (receiver is not null)
         {

@@ -31,6 +31,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             methods.Add(BindRoutine(entry, program.Statements, program.Name.Position));
         foreach (var union in unit.Unions.Values) BindUnion(union);
         foreach (var record in unit.RecordTypes) BindRecord(record);
+        BindTypeAttributes();
         return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray());
     }
 
@@ -58,13 +59,16 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         if (symbol.Owner is not null && symbol.IsInstance) parameters.Add("self", new("self", symbol.Owner.Type, -1));
         foreach (var parameter in symbol.Parameters)
             parameters.Add(parameter.Name, parameter);
+        var attributes = BindAttributes(symbol.Declaration?.Attributes, System.AttributeTargets.Method);
+        if (symbol.IsAsync && attributes.Any(attribute => attribute.Constructor.Owner.Definition?.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute"))
+            throw source.Error("FP3035", "The compiler owns an async routine's state-machine attribute.", position);
         var requires = BindContracts(contracts, ensures: false, out _);
         var block = ReferenceEquals(symbol, unit.Initializer) ? BindGlobalInitializers() : BindBlock(body);
         if (symbol.BodyResult != TypeSymbol.Void && FlowAnalysis.Of(block).HasFlag(ExitFlow.Next))
             throw source.Error("FP3007", $"Function '{symbol.Name}' must return a value on every normal path.", position);
         nonNull.Clear();
         var ensures = BindContracts(contracts, ensures: true, out var result);
-        var routine = new BoundRoutine(symbol, block, locals.ToArray(), requires, ensures, result, source);
+        var routine = new BoundRoutine(symbol, block, locals.ToArray(), requires, ensures, result, source, attributes);
         if (parent is null) FinishNestedBindings();
         new ParameterFlow(source, position).Validate(routine);
         return routine;

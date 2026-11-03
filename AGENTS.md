@@ -24,6 +24,7 @@ Read the [compiler subset](docs/implementation/first-program.md) and
 [repeat/typed loops](docs/implementation/loops.md), plus
 [imported CLR events](docs/implementation/events.md), plus
 [runtime type expressions](docs/implementation/typeof.md), plus
+[source CLR attributes](docs/implementation/attributes.md), plus
 [implemented MSBuild integration](docs/implementation/msbuild.md) before claiming
 feature support. Use a stable .NET 10 SDK and separate test compilation from execution:
 

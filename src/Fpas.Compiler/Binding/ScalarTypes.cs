@@ -15,6 +15,7 @@ internal sealed class ScalarSymbol(SourceUnit owner, ScalarSyntax syntax)
 {
     internal SourceUnit Owner { get; } = owner;
     internal ScalarSyntax Syntax { get; } = syntax;
+    internal IReadOnlyList<BoundAttribute> Attributes { get; set; } = [];
     internal string Name => Syntax.Name.Text;
     internal bool IsPublic => Syntax.IsPublic;
     internal TypeSymbol Type => new(TypeKind.Scalar, Scalar: this);

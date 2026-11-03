@@ -67,6 +67,7 @@ actual async suspension. Mixed C#/FPAS tests verify synchronous/async disposal,
 finally ordering, break/continue/return behavior, condition failures, and cleanup
 failures. The SDK builds and runs the checked-in example.
 
-Authored interfaces/events, expression trees, arbitrary attributes, fully general
+[Source attributes](attributes.md) are implemented.
+Authored interfaces/events, expression trees, fully general
 nested generic type paths, lifted numeric nullable arithmetic, async enumeration,
 and LSP/query tooling remain outside this milestone.

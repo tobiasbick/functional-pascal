@@ -127,6 +127,9 @@ declaration in the initial language.
 
 ## Attributes
 
+Source CLR attributes are [implemented](../../implementation/attributes.md),
+including usage checks, constant values, property mapping, and supported CLR flags.
+
 ```pascal
 type Player = record
   [Serialization.JsonPropertyNameAttribute('player_name')]
@@ -146,6 +149,15 @@ Routine attributes apply to its emitted method. AttributeUsage and constructor
 binding are checked. Assembly/return/parameter/backing-field attribute targets are
 not part of the initial source syntax. Compiler-generated nullability and parameter
 metadata are emitted without requiring user-written attribute syntax.
+
+Use ordinary CLR custom-attribute constants, closed typeof expressions, and array
+literals. Decimal/native/nullable value wrappers and runtime expressions are not
+attribute constants. Aliases have no emitted type target; globals and explicit
+assembly/parameter/return/backing-field targets are outside this syntax.
+Serializable and supported managed-IL MethodImpl options map to CLR flags.
+Unsupported layout/native-interoperability pseudo-attributes are diagnosed rather
+than written as ineffective custom blobs. Compiler-owned metadata and declared
+nullable record-property types cannot be contradicted by source annotations.
 
 ## Resources and async APIs
 

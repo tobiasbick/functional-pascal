@@ -26,12 +26,14 @@ internal sealed partial class Parser
         var methods = new List<RoutineSyntax>();
         while (!At("end"))
         {
+            var memberDocumentation = Current.Documentation;
+            var attributes = ReadAttributes();
             var member = position;
             if (At("public") || At("private")) member++;
-            if (tokens[member].Text is "static" or "async" or "function" or "procedure") methods.Add(ReadRoutine(isProgram, inRecord: true));
+            if (tokens[member].Text is "static" or "async" or "function" or "procedure")
+                methods.Add(ReadRoutine(isProgram, inRecord: true) with { Attributes = attributes, Documentation = memberDocumentation });
             else
             {
-                var fieldDocumentation = Current.Documentation;
                 var visible = !At("private");
                 if (At("public") || At("private")) position++;
                 var field = Identifier();
@@ -39,7 +41,7 @@ internal sealed partial class Parser
                 ExpressionSyntax? value = null;
                 if (At(":=")) { position++; value = ReadExpression(); }
                 Expect(";");
-                fields.Add(new(field, type, value, visible, fieldDocumentation));
+                fields.Add(new(field, type, value, visible, memberDocumentation, attributes));
             }
         }
         Expect("end"); Expect("record"); Expect(";");

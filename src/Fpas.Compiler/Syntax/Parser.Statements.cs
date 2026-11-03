@@ -26,6 +26,7 @@ internal sealed partial class Parser
             Expect("with");
             return new SubscriptionSyntax(start, reference, ReadExpression(), subscribe);
         }
+        if (At("[") && ReadAttributedRoutine(documentation) is { } attributed) return attributed;
         if (At("function") || At("procedure") || At("async")) return new NestedRoutineSyntax(ReadRoutine(false, nested: true));
         if (At("const") || At("var"))
         {

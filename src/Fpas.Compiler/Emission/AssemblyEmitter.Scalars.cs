@@ -20,8 +20,9 @@ internal sealed partial class AssemblyEmitter
             var parent = catalog.Symbol(catalog.Required(info.Category == ScalarCategory.Enum ? "System.Enum" : info.Type.IsValue ? "System.ValueType" : "System.Object"));
             var attributes = TypeAttributes.Sealed | (scalar.IsPublic ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate);
             if (info.Type.IsValue && info.Category != ScalarCategory.Enum) attributes |= TypeAttributes.SequentialLayout;
-            var handle = metadata.AddTypeDefinition(attributes, default, metadata.GetOrAddString(scalar.Name), TypeHandle(parent), firstField, firstMethod);
+            var handle = metadata.AddTypeDefinition(attributes | SourceTypeFlags(scalar.Attributes), default, metadata.GetOrAddString(scalar.Name), TypeHandle(parent), firstField, firstMethod);
             metadata.AddNestedType(handle, layout.ScalarOwners[scalar]); AddNullabilityContext(handle, runtime);
+            AddSourceAttributes(handle, scalar.Attributes);
             if (info.Category == ScalarCategory.Enum)
             {
                 ScalarField("value__", info.Base, FieldAttributes.Public | FieldAttributes.SpecialName | FieldAttributes.RTSpecialName);

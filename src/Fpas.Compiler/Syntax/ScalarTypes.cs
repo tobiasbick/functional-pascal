@@ -3,14 +3,14 @@ namespace Fpas.Compiler.Syntax;
 internal enum ScalarCategory { Distinct, Range, Enum }
 internal sealed record AliasSyntax(Token Name, bool IsPublic, TypeSyntax Target, DocumentationComment? Documentation);
 internal sealed record ScalarSyntax(Token Name, bool IsPublic, ScalarCategory Category, TypeSyntax Base,
-    ExpressionSyntax? Lower, ExpressionSyntax? Upper, IReadOnlyList<EnumMemberSyntax> Members, DocumentationComment? Documentation);
+    ExpressionSyntax? Lower, ExpressionSyntax? Upper, IReadOnlyList<EnumMemberSyntax> Members, DocumentationComment? Documentation, IReadOnlyList<AttributeSyntax>? Attributes = null);
 internal sealed record EnumMemberSyntax(Token Name, ExpressionSyntax? Value, DocumentationComment? Documentation);
 
 internal sealed partial class Parser
 {
-    private void ReadScalarDeclaration(bool isProgram, List<AliasSyntax> aliases, List<ScalarSyntax> scalars)
+    private void ReadScalarDeclaration(bool isProgram, List<AliasSyntax> aliases, List<ScalarSyntax> scalars, IReadOnlyList<AttributeSyntax> attributes, DocumentationComment? documentation)
     {
-        var documentation = Current.Documentation; var visible = At("public");
+        var visible = At("public");
         if (isProgram && visible) throw source.Error("FP2003", "Public types belong in units.", Current.Position);
         if (At("public") || At("private")) position++;
         Expect("type"); var name = Identifier();
@@ -29,16 +29,17 @@ internal sealed partial class Parser
                 Expect(";"); members.Add(new(label, value, doc));
             }
             Expect("end"); Expect("enum"); Expect(";");
-            scalars.Add(new(name, visible, ScalarCategory.Enum, type, null, null, members, documentation)); return;
+            scalars.Add(new(name, visible, ScalarCategory.Enum, type, null, null, members, documentation, attributes)); return;
         }
         var distinct = At("distinct"); if (distinct) position++;
         var baseType = ReadType();
-        if (distinct) { Expect(";"); scalars.Add(new(name, visible, ScalarCategory.Distinct, baseType, null, null, [], documentation)); return; }
+        if (distinct) { Expect(";"); scalars.Add(new(name, visible, ScalarCategory.Distinct, baseType, null, null, [], documentation, attributes)); return; }
         if (At("range"))
         {
             position++; var lower = ReadExpression(); Expect(".."); var upper = ReadExpression(); Expect(";");
-            scalars.Add(new(name, visible, ScalarCategory.Range, baseType, lower, upper, [], documentation)); return;
+            scalars.Add(new(name, visible, ScalarCategory.Range, baseType, lower, upper, [], documentation, attributes)); return;
         }
+        if (attributes.Count != 0) throw source.Error("FP3035", "A transparent alias has no CLR attribute target.", name.Position);
         Expect(";"); aliases.Add(new(name, visible, baseType, documentation));
     }
 }

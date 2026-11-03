@@ -19,6 +19,9 @@ implemented and verified through compiler/metadata tests, mixed C#/FPAS projects
 and an executable collection-events example.
 [Runtime type expressions](../implementation/typeof.md) now implement typeof(T)
 with CLR type tokens, concrete/generic identity, and cross-language verification.
+[Source CLR attributes](../implementation/attributes.md) now implement typed
+constructor/member arguments, usage checks, actual metadata, and supported
+pseudo-attribute flags on the specified declaration targets.
 
 The following are implementation tasks for already specified behavior, in the
 proposed execution order. Implement one focused step at a time without adding
@@ -26,9 +29,8 @@ syntax beyond the existing specification.
 
 | Order | Required behavior | Current gap and specification |
 | --- | --- | --- |
-| 1 | Source attributes on types, routines, and record fields | Attribute syntax, binding, usage checks, and custom-attribute emission are missing. Follow [interop attributes](../pascal/interop/README.md#attributes), including property mapping for record fields and documentation attachment. Compiler-generated attributes already exist; typeof(T) now supplies type-valued arguments. |
-| 2 | Fully qualified nested CLR generic type paths | Types returned by CLR APIs retain their identity, but source annotations cannot put generic arguments on every enclosing/nested name segment. Follow [generic type syntax](../pascal/language/functions.md#generic-routines-and-constraints) and the [grammar](../specs/syntax.md). |
-| 3 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions.md#generic-routines-and-constraints). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
+| 1 | Fully qualified nested CLR generic type paths | Types returned by CLR APIs retain their identity, but source annotations cannot put generic arguments on every enclosing/nested name segment. Follow [generic type syntax](../pascal/language/functions.md#generic-routines-and-constraints) and the [grammar](../specs/syntax.md). |
+| 2 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions.md#generic-routines-and-constraints). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
 
 After these known gaps, compare every baseline rule and complete language example
 with compiler behavior. Record any additional demonstrated omissions here before

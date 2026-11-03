@@ -14,11 +14,13 @@ internal sealed partial class AssemblyEmitter
         {
             genericTypeContext = record.GenericParameters.Count == 0 ? null : record.GenericParameters;
             var name = record.Name + (record.UnionCase is null && record.GenericParameters.Count != 0 ? "`" + record.GenericParameters.Count : "");
-            var type = metadata.AddTypeDefinition(TypeAttributes.Sealed | (record.IsPublic || record.UnionCase is not null ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
+            var typeFlags = SourceTypeFlags(record.Attributes) | (record.UnionCase is { } serializableCase ? SourceTypeFlags(serializableCase.Owner.Attributes) : 0);
+            var type = metadata.AddTypeDefinition(typeFlags | TypeAttributes.Sealed | (record.IsPublic || record.UnionCase is not null ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
                 default, metadata.GetOrAddString(name), record.UnionCase is { } member ? TypeHandle(member.Owner.Type) : objectType, MetadataTokens.FieldDefinitionHandle(fieldCount + 1), layout.SourceMethods[record.Constructor]);
             RegisterGenerics(type, record.GenericParameters, genericTypeContext);
             metadata.AddNestedType(type, layout.RecordOwners[record]);
             AddNullabilityContext(type, program.Runtime);
+            AddSourceAttributes(type, record.Attributes);
             var equatable = catalog.Symbol(catalog.Required("System.IEquatable`1")) with { Arguments = new([record.Type]) };
             metadata.AddInterfaceImplementation(type, TypeHandle(equatable));
             foreach (var contract in record.Interfaces.Where(contract => contract.Erased != equatable.Erased))
@@ -48,10 +50,11 @@ internal sealed partial class AssemblyEmitter
                 if (record.InterfaceMethods.Any(implementation => implementation.Body == method) && method.Generated is GeneratedMethodKind.None or GeneratedMethodKind.Getter)
                     attributes |= MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.NewSlot;
                 var offset = method.Generated == GeneratedMethodKind.Constructor ? EmitRecordConstructor(record, bodies) : EmitBody(record.Bodies[method], bodies);
-                var methodHandle = metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL, metadata.GetOrAddString(method.Name),
+                var methodHandle = metadata.AddMethodDefinition(attributes, SourceMethodFlags(record.Bodies.GetValueOrDefault(method)?.Attributes), metadata.GetOrAddString(method.Name),
                     MethodSignature(method.Result, SourceSignatureParameters(method), method.IsInstance, genericArity: method.GenericParameters.Count), offset, firstParameter);
                 RegisterGenerics(methodHandle, method.GenericParameters, genericTypeContext);
                 if (method.IsAsync) AddAsyncAttribute(methodHandle, layout.AsyncRoutines[record.Bodies[method]]);
+                AddSourceAttributes(methodHandle, record.Bodies.GetValueOrDefault(method)?.Attributes);
             }
             foreach (var implementation in record.InterfaceMethods.DistinctBy(implementation => (implementation.Contract.Owner, implementation.Contract.DefinitionHandle)))
             {
@@ -73,6 +76,7 @@ internal sealed partial class AssemblyEmitter
                 metadata.AddMethodSemantics(property, MethodSemanticsAttributes.Getter, layout.SourceMethods[field.Getter]);
                 if (NullableFlags(field.Type).Contains((byte)2)) AddNullableAnnotation(property, program.Runtime, field.Type);
                 if (record.UnionCase is null) AddRecordFieldAttribute(property, field, index);
+                AddSourceAttributes(property, field.Attributes);
             }
             if (record.UnionCase is not null)
             {

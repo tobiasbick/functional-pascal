@@ -17,7 +17,7 @@ internal sealed record CompilationUnitSyntax(NameSyntax Name, bool IsProgram, IR
     IReadOnlyList<AliasSyntax>? Aliases = null, IReadOnlyList<ScalarSyntax>? Scalars = null, IReadOnlyList<GlobalSyntax>? Globals = null);
 internal sealed record GlobalSyntax(BindingSyntax Binding, bool IsPublic);
 internal sealed record RoutineSyntax(Token Name, bool IsPublic, IReadOnlyList<ParameterSyntax> Parameters,
-    TypeSyntax? ResultType, IReadOnlyList<StatementSyntax> Statements, bool IsStatic = true, IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, IReadOnlyList<ContractSyntax>? Contracts = null, bool IsAsync = false, DocumentationComment? Documentation = null);
+    TypeSyntax? ResultType, IReadOnlyList<StatementSyntax> Statements, bool IsStatic = true, IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, IReadOnlyList<ContractSyntax>? Contracts = null, bool IsAsync = false, DocumentationComment? Documentation = null, IReadOnlyList<AttributeSyntax>? Attributes = null);
 internal sealed record ContractSyntax(Token Keyword, ParameterSyntax? Result, ExpressionSyntax Condition, string Text);
 internal sealed record ParameterSyntax(Token Name, TypeSyntax Type, string Mode = "", ExpressionSyntax? Default = null);
 internal sealed record ArgumentModeSyntax(int Start, string Mode, ExpressionSyntax Value) : ExpressionSyntax(Start);
@@ -68,8 +68,8 @@ internal sealed record LambdaSyntax(int Start, IReadOnlyList<ParameterSyntax> Pa
 internal sealed record AwaitSyntax(int Start, ExpressionSyntax Operand) : ExpressionSyntax(Start);
 
 internal sealed record RecordSyntax(Token Name, bool IsPublic, IReadOnlyList<RecordFieldSyntax> Fields, IReadOnlyList<RoutineSyntax> Methods,
-    IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, IReadOnlyList<TypeSyntax>? Interfaces = null, DocumentationComment? Documentation = null);
-internal sealed record RecordFieldSyntax(Token Name, TypeSyntax Type, ExpressionSyntax? Default, bool IsPublic, DocumentationComment? Documentation = null);
+    IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, IReadOnlyList<TypeSyntax>? Interfaces = null, DocumentationComment? Documentation = null, IReadOnlyList<AttributeSyntax>? Attributes = null);
+internal sealed record RecordFieldSyntax(Token Name, TypeSyntax Type, ExpressionSyntax? Default, bool IsPublic, DocumentationComment? Documentation = null, IReadOnlyList<AttributeSyntax>? Attributes = null);
 internal sealed record NamedArgumentSyntax(Token Name, ExpressionSyntax Value) : ExpressionSyntax(Name.Position);
 internal sealed record RecordUpdateSyntax(Token Name, ExpressionSyntax Value);
 internal sealed record WithSyntax(ExpressionSyntax Receiver, IReadOnlyList<RecordUpdateSyntax> Updates) : ExpressionSyntax(Receiver.Position);

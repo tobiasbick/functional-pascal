@@ -98,6 +98,6 @@ method IDs; an alias itself has no CLR type documentation ID.
 [Global fields and initialization](global-values.md) are implemented.
 [Named nested routines](nested-routines.md) are implemented.
 [Typed/repeat loops](loops.md) are implemented.
-Authored interfaces, arbitrary
-attributes, fully general nested generic type paths, and LSP/query tooling remain
+[Source attributes](attributes.md) are implemented.
+Authored interfaces, fully general nested generic type paths, and LSP/query tooling remain
 outside this milestone. Numeric nullable lifted arithmetic is also not included.

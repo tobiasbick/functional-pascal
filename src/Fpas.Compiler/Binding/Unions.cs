@@ -6,6 +6,7 @@ internal sealed class UnionSymbol(SourceUnit owner, UnionSyntax syntax)
 {
     internal SourceUnit Owner { get; } = owner;
     internal UnionSyntax Syntax { get; } = syntax;
+    internal IReadOnlyList<BoundAttribute> Attributes { get; set; } = [];
     internal string Name => Syntax.Name.Text;
     internal bool IsPublic => Syntax.IsPublic;
     internal IReadOnlyList<GenericParameterSymbol> GenericParameters { get; set; } = [];

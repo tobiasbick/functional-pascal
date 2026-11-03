@@ -27,6 +27,9 @@ and libraries. These concrete limits currently require host tools:
 - [Runtime type expressions](../implementation/typeof.md) now provide typeof(T)
   for supported concrete/generic types, including inside closures and async code.
   Helpers can pass actual Type objects to .NET APIs without constructing values.
+- [Source attributes](../implementation/attributes.md) now annotate real .NET
+  APIs and data models, including record property names consumed by serializers.
+  Values must be legal metadata constants, closed typeof values, or array literals.
 - [Records](../implementation/records.md) now support immutable data
   models, defaults, methods, and copy updates. [Unions and case matching](../implementation/unions-and-matching.md)
   now support domain outcomes and exhaustive inspection.

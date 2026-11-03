@@ -28,6 +28,7 @@ required of that compiler; implemented subsets are documented separately below.
 | Repeat/until and integral/subrange counting, including cleanup and async loops | [Typed loops](implementation/loops.md) |
 | Imported CLR event subscription/removal with delegate, dispatch, and storage checks | [CLR events](implementation/events.md) |
 | typeof(T), CLR type identity, and generic type tokens | [Runtime type expressions](implementation/typeof.md) |
+| Source attributes, usage/constant checks, CLR blobs, and supported pseudo-attribute flags | [CLR attributes](implementation/attributes.md) |
 | Implemented local SDK, `.fpasproj` builds, and mixed C#/FPAS projects | [MSBuild milestone](implementation/msbuild.md) |
 | C# projects, xUnit tests, examples, and applications | [Repository layout plan](architecture/project-layout.md) |
 | Lexical rules, bindings, and operators | [Basics](pascal/language/basics.md) |

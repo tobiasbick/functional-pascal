@@ -89,6 +89,7 @@ points, XML field documentation, and deterministic PE/PDB output.
 
 [Named nested routines](nested-routines.md) are implemented.
 [Typed/repeat loops](loops.md) are implemented.
-Authored interfaces, arbitrary attributes,
+[Source attributes](attributes.md) are implemented for their specified targets;
+globals are not annotation targets. Authored interfaces,
 fully general nested generic type paths, lifted numeric nullable arithmetic,
 and LSP/query tooling remain outside this milestone.

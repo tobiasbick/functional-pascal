@@ -59,9 +59,9 @@ The existing syntax/type/access/constraint diagnostics apply. @typeof remains an
 escaped identifier rather than an invocation of the reserved form.
 
 The result is not a CLR optional-parameter constant and does not expand the
-restricted contract-expression subset. Type-valued custom-attribute arguments
-remain part of the separately planned attribute implementation; typeof support
-does not claim that source attributes already compile.
+restricted contract-expression subset. [Source attributes](attributes.md) now
+serialize closed typeof arguments through their separate metadata constant path;
+this does not make typeof an ordinary optional-parameter constant.
 
 Compiler tests check invalid type operands, existing contract/default limits,
 deterministic PE/PDB output, real ldtoken/GetTypeFromHandle instructions, and

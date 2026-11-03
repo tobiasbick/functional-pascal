@@ -37,6 +37,10 @@ ordinary .NET delegates and sync/async cleanup. The
 without constructing instances. The
 [type-inspection example](examples/type-inspection/README.md) uses CLR type identity.
 
+[Source attributes](docs/implementation/attributes.md) emit real CLR metadata on
+types, routines, and record properties. The
+[attributes example](examples/attributes/README.md) changes JSON property names.
+
 The [Mandelbrot example](examples/mandelbrot/README.md) is executable through its
 `.fpasproj`; its raster output is verified by the integration tests. The
 [expression/control-flow milestone](docs/implementation/expressions-and-control-flow.md)

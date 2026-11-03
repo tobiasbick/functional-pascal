@@ -2,9 +2,9 @@
 
 **Status: implemented for the current compiler's declaration subset.** See
 [XML documentation](../../implementation/xml-documentation.md) for supported
-declarations, CLI/SDK options, and verification. The rules below also cover
-planned declarations such as enums/globals and source attributes; those language
-features and editor tooling remain separate work.
+declarations, CLI/SDK options, and verification. Enums, globals, and
+[source attributes](../../implementation/attributes.md) also preserve these rules.
+Editor tooling remains separate work.
 
 ## Comment syntax
 
@@ -180,8 +180,11 @@ metadata, including overloads, nested/generic types, properties, unions, arrays,
 and byrefs. Exercise XML escaping, deterministic output, generation on/off,
 incremental changes, Clean, and propagation to a C# reference through MSBuild.
 The [implementation milestone](../../implementation/xml-documentation.md) records
-the executed checks for the supported declaration subset. Attribute/enum/global
-checks await those language implementations.
+the executed checks for the supported declaration subset.
+[Scalar types](../../implementation/scalar-types.md),
+[globals](../../implementation/global-values.md), and
+[source attributes](../../implementation/attributes.md) include their metadata and
+documentation checks.
 
 ## References
 

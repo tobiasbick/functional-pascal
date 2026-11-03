@@ -14,6 +14,7 @@ internal static class ConstantValue
         BoundNullTest test => IsConstant(test.Operand),
         BoundConditional conditional => conditional.Arms.All(arm => IsConstant(arm.Condition) && IsConstant(arm.Value)) && IsConstant(conditional.Else),
         BoundCall { Method.Owner.Kind: TypeKind.String, Method.Name: "Concat" or "op_Equality" or "op_Inequality" } call => call.Arguments.All(IsConstant),
+        BoundCall { Method.Owner.Kind: TypeKind.Char, Method.Name: "ToString", Arguments.Count: 0, Receiver: { } receiver } => IsConstant(receiver),
         _ => false
     };
 
@@ -34,6 +35,7 @@ internal static class ConstantValue
         BoundNullTest test => (Evaluate(test.Operand) is null) == test.EqualsNull,
         BoundConditional conditional => Evaluate(conditional.Arms.FirstOrDefault(arm => (bool)Evaluate(arm.Condition)!)?.Value ?? conditional.Else),
         BoundCall { Method.Owner.Kind: TypeKind.String, Method.Name: "Concat" } call => string.Concat(call.Arguments.Select(Evaluate)),
+        BoundCall { Method.Owner.Kind: TypeKind.Char, Method.Name: "ToString", Arguments.Count: 0, Receiver: { } receiver } => ((char)Evaluate(receiver)!).ToString(),
         BoundCall { Method.Owner.Kind: TypeKind.String, Method.Name: "op_Equality" or "op_Inequality" } call
             => Equals(Evaluate(call.Arguments[0]), Evaluate(call.Arguments[1])) == (call.Method.Name == "op_Equality"),
         _ => throw new InvalidOperationException("A compile-time constant is required.")

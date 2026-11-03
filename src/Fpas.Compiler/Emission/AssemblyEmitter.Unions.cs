@@ -12,11 +12,12 @@ internal sealed partial class AssemblyEmitter
         foreach (var union in layout.Unions)
         {
             genericTypeContext = union.GenericParameters.Count == 0 ? null : union.GenericParameters;
-            var type = metadata.AddTypeDefinition(TypeAttributes.Abstract | (union.IsPublic ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
+            var type = metadata.AddTypeDefinition(SourceTypeFlags(union.Attributes) | TypeAttributes.Abstract | (union.IsPublic ? TypeAttributes.NestedPublic : TypeAttributes.NestedPrivate),
                 default, metadata.GetOrAddString(union.Name + (union.GenericParameters.Count == 0 ? "" : "`" + union.GenericParameters.Count)), objectType, MetadataTokens.FieldDefinitionHandle(metadata.GetRowCount(TableIndex.Field) + 1), layout.SourceMethods[union.Method(GeneratedMethodKind.Constructor)]);
             RegisterGenerics(type, union.GenericParameters, genericTypeContext);
             metadata.AddNestedType(type, layout.UnionOwners[union]);
             AddNullabilityContext(type, program.Runtime);
+            AddSourceAttributes(type, union.Attributes);
             var equatable = catalog.Symbol(catalog.Required("System.IEquatable`1")) with { Arguments = new([union.Type]) };
             metadata.AddInterfaceImplementation(type, TypeHandle(equatable));
             var marker = catalog.Symbol(catalog.Required("Fpas.Core.UnionAttribute"));

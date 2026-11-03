@@ -38,12 +38,15 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var unions = new List<UnionSyntax>();
         var aliases = new List<AliasSyntax>(); var scalars = new List<ScalarSyntax>();
         var globals = new List<GlobalSyntax>();
-        while (At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type") || At("const") || At("var"))
+        while (At("[") || At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type") || At("const") || At("var"))
         {
+            var declarationDocumentation = Current.Documentation;
+            var attributes = ReadAttributes();
             var declaration = position;
             if (At("public") || At("private")) declaration++;
             if (tokens[declaration].Text is "const" or "var")
             {
+                if (attributes.Count != 0) throw source.Error("FP3035", "Source attributes target types, routines, or record properties.", Current.Position);
                 var doc = Current.Documentation; var visible = At("public");
                 if (isProgram && visible) throw source.Error("FP2003", "Public free declarations belong in units.", Current.Position);
                 position = declaration;
@@ -56,11 +59,11 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 position = declaration + 2;
                 ReadTypeParameters(); Expect("="); ReadConstraints();
                 var union = At("union"); var record = At("record"); position = saved;
-                if (union) unions.Add(ReadUnion(isProgram));
-                else if (record) records.Add(ReadRecord(isProgram));
-                else ReadScalarDeclaration(isProgram, aliases, scalars);
+                if (union) unions.Add(ReadUnion(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
+                else if (record) records.Add(ReadRecord(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
+                else ReadScalarDeclaration(isProgram, aliases, scalars, attributes, declarationDocumentation);
             }
-            else routines.Add(ReadRoutine(isProgram));
+            else routines.Add(ReadRoutine(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
         }
         IReadOnlyList<StatementSyntax> statements = [];
         if (isProgram)

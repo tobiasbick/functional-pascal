@@ -106,6 +106,8 @@ The compiler currently stops at the first diagnostic.
 ordinary accessor dispatch, and receiver/handler evaluation in written order.
 [Runtime type expressions](typeof.md) support typeof(T) with actual CLR type
 identity, including closed generics and in-scope generic parameters.
+[Source CLR attributes](attributes.md) now bind typed constructor/member constants
+and emit metadata for supported type, routine, and record-property targets.
 
 ## Compiler and output
 
@@ -171,6 +173,7 @@ for invalid arguments.
 | FP3032 | Invalid global name or public global exposing private types |
 | FP3033 | Nested routine environment created before captured bindings initialize |
 | FP3034 | Invalid or ambiguous event selection/access, or event used as a delegate value |
+| FP3035 | Invalid attribute class, target, duplicate, constant value, named member, or structural metadata |
 | FP6001 | Documentation warning; severity follows the configured warning policy |
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
 

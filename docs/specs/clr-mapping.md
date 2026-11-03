@@ -274,6 +274,15 @@ FPAS Value type,
 HTTP client wrapper catalog, or replacements for .NET collections. Imported API
 calls stay statically bound to real referenced types.
 
+## Source attributes
+
+Source custom attributes emit actual constructor MemberRefs and ECMA-335 blobs on
+their mapped type/method/property targets. Record field annotations apply only to
+the property. Preserve constant widths, boxed payload types, array/null encodings,
+and qualified nested/generic type names. Serializable and supported MethodImpl
+options instead set their actual CLR flags. No attribute constructor executes
+during compilation. See [source attribute mapping](../implementation/attributes.md).
+
 ## Event accessors
 
 subscribe/unsubscribe selects the actual Event/MethodSemantics add/remove handle

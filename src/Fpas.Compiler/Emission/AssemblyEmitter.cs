@@ -29,6 +29,7 @@ internal sealed partial class AssemblyEmitter
     private CompiledProgram Build(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog references, bool emitDebug)
     {
         catalog = references;
+        sourceAssemblyName = assemblyName;
         layout = new(program, references);
         if (emitDebug) debug = new(sources);
         using var sourceHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -63,9 +64,10 @@ internal sealed partial class AssemblyEmitter
                 var attributes = MethodAttributes.Static | MethodAttributes.HideBySig |
                     (routine.Symbol.IsPublic ? MethodAttributes.Public : MethodAttributes.Private);
                 if (routine.Symbol.Name == ".cctor") attributes |= MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
-                var handle = metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL,
+                var handle = metadata.AddMethodDefinition(attributes, SourceMethodFlags(routine.Attributes),
                     metadata.GetOrAddString(routine.Symbol.Name), signature, EmitBody(routine, bodyEncoder), firstParameter);
                 if (routine.Symbol.IsAsync) AddAsyncAttribute(handle, layout.AsyncRoutines[routine]);
+                AddSourceAttributes(handle, routine.Attributes);
                 RegisterGenerics(handle, routine.Symbol.GenericParameters);
                 methodCount++;
                 if (routine.Symbol.IsEntryPoint && !routine.Symbol.IsAsync)

@@ -1,7 +1,7 @@
 namespace Fpas.Compiler.Syntax;
 
 internal sealed record UnionSyntax(Token Name, bool IsPublic, IReadOnlyList<UnionCaseSyntax> Cases,
-    IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, DocumentationComment? Documentation = null);
+    IReadOnlyList<Token>? TypeParameters = null, IReadOnlyList<WhereSyntax>? Constraints = null, DocumentationComment? Documentation = null, IReadOnlyList<AttributeSyntax>? Attributes = null);
 internal sealed record UnionCaseSyntax(Token Name, IReadOnlyList<ParameterSyntax> Fields, DocumentationComment? Documentation = null);
 internal sealed record CaseArmSyntax(int Position, IReadOnlyList<PatternSyntax> Patterns, ExpressionSyntax? Guard,
     IReadOnlyList<StatementSyntax>? Statements, ExpressionSyntax? Value);

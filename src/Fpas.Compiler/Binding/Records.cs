@@ -8,6 +8,7 @@ internal sealed class RecordSymbol(SourceUnit owner, RecordSyntax syntax)
 {
     internal SourceUnit Owner { get; } = owner;
     internal RecordSyntax Syntax { get; } = syntax;
+    internal IReadOnlyList<BoundAttribute> Attributes { get; set; } = [];
     internal string Name => Syntax.Name.Text;
     internal UnionCaseSymbol? UnionCase { get; set; }
     internal bool IsPublic => Syntax.IsPublic;
@@ -27,6 +28,7 @@ internal sealed class RecordSymbol(SourceUnit owner, RecordSyntax syntax)
 internal sealed class RecordFieldSymbol(RecordFieldSyntax syntax, TypeSymbol type)
 {
     internal RecordFieldSyntax Syntax { get; } = syntax;
+    internal IReadOnlyList<BoundAttribute> Attributes { get; set; } = [];
     internal string Name => Syntax.Name.Text;
     internal UnionCaseSymbol? UnionCase { get; set; }
     internal TypeSymbol Type { get; } = type;

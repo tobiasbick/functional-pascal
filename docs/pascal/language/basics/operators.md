@@ -44,7 +44,7 @@ Applicable CLR comparison operators are resolved from both operand types using
 ordinary overload rules, including for value types such as DateTime and TimeSpan.
 Ambiguous operators are errors. This does not introduce lifted nullable-value
 operators or source operator declarations. See
-[comparisons and acceptance](../../../implementation/comparisons-and-acceptance.md).
+[comparisons and acceptance](../../../../tests/coverage.md).
 
 ## See also
 

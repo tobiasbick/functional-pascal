@@ -4,7 +4,7 @@ The program annotates a record field with the actual .NET JsonPropertyNameAttrib
 The compiler places it on the emitted property; System.Text.Json uses that name
 when serializing the record. Attribute constructors do not run during compilation.
 
-After the [local SDK bootstrap](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+After the [local SDK bootstrap](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/attributes/Attributes.fpasproj

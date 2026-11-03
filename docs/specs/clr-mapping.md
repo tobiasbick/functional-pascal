@@ -1,8 +1,8 @@
 # CLR mapping and compiler boundary
 
 **Status: language-to-CLR contract with implemented features and tracked gaps.** See
-the [compiler overview](../implementation/first-program.md) and
-[acceptance coverage](../implementation/comparisons-and-acceptance.md) for actual
+the [compiler overview](../architecture/compiler.md) and
+[acceptance coverage](../../tests/coverage.md) for actual
 compiler/emitter support and verification.
 The separate [MSBuild plan](../build/msbuild.md)
 specifies project/solution integration, framework references, restore, and the
@@ -111,8 +111,8 @@ identity/version, sealed class shape, generic arity, property accessors, field o
 and exact helper/constructor signatures and visibility. Private field types may
 remain private; their signatures are inspected only to validate the contract and
 are never exposed by public helpers. A reader must reject an incompatible contract
-rather than treat arbitrary CLR classes as language records. See the implemented
-[record milestone](../implementation/records.md) for the current subset.
+rather than treat arbitrary CLR classes as language records. See
+[record semantics](../pascal/language/types/records.md).
 
 Distinct/subrange metadata records nominal identity and the primitive base. Emit
 checked construction/conversion methods and read-only Value. Subranges also emit
@@ -187,8 +187,8 @@ abstract base/readonly Tag shape, nested sealed case ownership, exact factory
 signatures/parameter names, readonly payload properties/backing fields, nullable
 annotations, and unique contiguous tags. Case types have no RecordAttribute;
 record with updates do not apply to them. An unknown/incompatible metadata
-contract is an error, not a guessed set of subclasses. See the implemented
-[union/matching milestone](../implementation/unions-and-matching.md).
+contract is an error, not a guessed set of subclasses. See
+[union semantics](../pascal/language/types/unions.md).
 
 ## Generic data types
 
@@ -212,7 +212,7 @@ The existing version-1 record/union attributes need no additional fields for
 generics. Readers substitute the actual owner arguments when checking all
 property/helper/factory signatures and case bases, retaining nullable annotations.
 They verify matching generic arity and all existing readonly/accessibility rules.
-See [implemented generic data types](../implementation/generic-types.md).
+See [implemented generic data types](../pascal/language/types/generics.md).
 
 ## Loop lowering
 
@@ -222,7 +222,7 @@ cache both typed bounds once, compare with correct signedness, and guard the
 endpoint before checked stepping/narrowing or subrange construction. Synchronous
 CIL and async state-machine lowering use the same bound operations. Per-iteration
 counter captures preserve the source value, including subrange wrapper identity.
-See [implemented loops](../implementation/loops.md).
+See [implemented loops](../pascal/language/control-flow/loops.md).
 
 ## Generic routines and closures
 
@@ -249,13 +249,13 @@ the call/delegate conversion site. Recursive/sibling calls use the current
 receiver. Validate captured-binding initialization before construction; do not
 replace uninitialized values with defaults. Local declarations emit no executing
 statement, public API, or public XML entry. See
-[nested routines](../implementation/nested-routines.md) for the implemented scope.
+[nested routines](../pascal/language/functions/nested-routines.md) for the implemented scope.
 
 Nullable<T> contributes its underlying value type's nullability slot rather than
 an additional wrapper slot, including when substitution has not yet resolved a
 generic argument. Keep later reference annotations aligned in nested signatures.
-See [implemented generic routines](../implementation/generic-routines.md).
-[Type argument inference](../implementation/type-argument-inference.md) resolves
+See [implemented generic routines](../pascal/language/functions/generic-routines.md).
+[Type argument inference](../pascal/language/functions/type-inference.md) resolves
 the same concrete instantiations before emission. It does not alter generic
 signatures, introduce object erasure, or add a runtime dispatch mechanism.
 
@@ -282,7 +282,7 @@ their mapped type/method/property targets. Record field annotations apply only t
 the property. Preserve constant widths, boxed payload types, array/null encodings,
 and qualified nested/generic type names. Serializable and supported MethodImpl
 options instead set their actual CLR flags. No attribute constructor executes
-during compilation. See [source attribute mapping](../implementation/attributes.md).
+during compilation. See [source attribute mapping](../pascal/interop/attributes.md).
 
 ## Event accessors
 
@@ -294,7 +294,7 @@ annotations, and writable struct/constrained receiver storage. Existing async
 lowering preserves reference receivers/handlers across suspension and rejects
 managed receiver references live across await. No delegate field read, event
 raising operation, reflection dispatch, or automatic removal is generated.
-See the [implemented event milestone](../implementation/events.md).
+See [event binding and evaluation](../pascal/interop/events.md).
 
 ## Resource lowering
 
@@ -415,6 +415,6 @@ defines generation switches, paths, related output files, and incremental inputs
     signatures, and check escaping, generic/byref/nested symbols, deterministic
     output, and C# reference-sidecar propagation with generation enabled/disabled.
 
-The [acceptance coverage](../implementation/comparisons-and-acceptance.md) maps
+The [acceptance coverage](../../tests/coverage.md) maps
 these requirements to compiler, execution, metadata, and build tests. Remaining
 language requirements are tracked separately in [language gaps](../future/language-gaps.md).

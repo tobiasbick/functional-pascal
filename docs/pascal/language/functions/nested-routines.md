@@ -1,11 +1,11 @@
 # Named nested routines
 
-Named functions/procedures now use ordinary routine declarations inside a
-routine body or lexical block. The
-[local-functions example](../../examples/local-functions/README.md) demonstrates
-a forward recursive call and an escaping counter delegate.
+Declare local functions and procedures with ordinary routine syntax inside a
+routine body or lexical block. See the
+[local-functions project](../../../../examples/local-functions/README.md) for a
+recursive helper and an escaping counter delegate.
 
-```pascal
+```pascal fragment
 function MakeCounter(Start: int): function(): int;
 begin
   var Count: int := Start;
@@ -55,32 +55,8 @@ only by a caller do not establish a non-null invariant inside a nested routine.
 Validate/coalesce nullable captures inside the routine, including with requires
 where allowed. Calls invalidate facts about shared mutable captured variables.
 
-## CLR representation and tooling
+## See also
 
-Each declaring block with nested routines has a private generated closure type.
-Its instance methods retain source routine names and ordinary CLR parameter,
-generic, nullable, and async metadata. Enclosing generic parameters become type
-parameters on the closure; a nested routine's own parameters remain method
-parameters. A capture constructor receives values/cells at calls or delegate
-conversion sites. Recursive/sibling calls reuse the current receiver.
-This adds no public generated API or new Fpas.Core runtime feature.
-
-Portable PDBs retain each method's source points and locals; generated environment
-construction remains compiler plumbing. Nested Markdown documentation is retained
-and validated, without public XML entries. PE/PDB generation remains deterministic.
-
-## Verification and limits
-
-Tests execute forward/self/mutual calls, escaping and transitive captures,
-per-iteration cells, shadowing, managed/optional/params/named calls, overloads,
-generic constraints, contract-only captures, and generic async methods. Mixed
-C#/FPAS builds verify returned delegates, byref delegate invocation, callee
-contracts, type/method generic slots inside generic records, actual suspension,
-and calls from another FPAS assembly. Metadata tests inspect generic ownership,
-PDB locations, private visibility, documentation, and deterministic output.
-
-[Typed/repeat loops](loops.md) are implemented.
-[Source attributes](attributes.md) include named nested routines.
-Authored interfaces/events, expression trees,
-fully general nested generic type paths, lifted numeric nullable arithmetic,
-and LSP/query tooling remain outside this milestone.
+- [Topic overview](README.md)
+- [CLR mapping](../../../specs/clr-mapping.md)
+- [Test coverage](../../../../tests/coverage.md)

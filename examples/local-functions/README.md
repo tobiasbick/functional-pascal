@@ -4,7 +4,7 @@ Factorial calls a local function declared later in its lexical block. Multiply
 recurses directly. MakeCounter returns a local function as a CLR delegate; its
 shared captured cell survives the enclosing call.
 
-After [bootstrapping the local SDK](../../docs/implementation/msbuild.md):
+After [bootstrapping the local SDK](../../docs/build/msbuild.md):
 
 ```sh
 dotnet build examples/local-functions/LocalFunctions.fpasproj
@@ -19,5 +19,5 @@ Expected output:
 12
 ```
 
-See [nested routines](../../docs/implementation/nested-routines.md) for scope,
+See [nested routines](../../docs/pascal/language/functions/nested-routines.md) for scope,
 capture initialization, overloads, generics, parameter modes, and async behavior.

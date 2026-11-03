@@ -8,7 +8,8 @@ abstractions. The CLR provides managed memory and task infrastructure.
 This handbook describes the language and its supported .NET workflows. Known
 baseline omissions and deferred extensions are tracked in
 [language gaps](../future/language-gaps.md). The
-[implementation reference](../implementation/README.md) records verified compiler support.
+[architecture reference](../architecture/README.md) explains the compiler;
+[test coverage](../../tests/coverage.md) identifies verified behavior.
 
 ## Design principles
 

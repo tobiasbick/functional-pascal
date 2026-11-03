@@ -3,7 +3,7 @@
 This program obtains CLR Type objects for primitive, nullable, array, source
 record, and generic parameter types without constructing instances.
 
-After the [local SDK bootstrap](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+After the [local SDK bootstrap](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/type-inspection/TypeInspection.fpasproj

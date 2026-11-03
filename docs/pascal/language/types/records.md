@@ -36,6 +36,8 @@ caller's locals. They cannot read self or other instance fields before construct
 They may call routines or read globals under normal initialization rules, and may
 throw. A default must type-check for every valid generic instantiation. Defaults
 are not implicit CLR parameter constants.
+C# callers supply every argument to the all-fields constructor; computed FPAS
+defaults are evaluated by FPAS callers before invoking that constructor.
 
 If any field is private, the generated all-fields constructor is private: only
 code inside the record can construct it, even if that field has a default.

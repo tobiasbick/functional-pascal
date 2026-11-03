@@ -115,5 +115,5 @@ operators remain in [language gaps](../../future/language-gaps.md).
 
 Before changing public identities/signatures/representations, read the binding
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).
-Read [attributes](../../implementation/attributes.md) and
-[events](../../implementation/events.md) for their precise supported contracts.
+Read [attributes](../interop/attributes.md) and
+[events](../interop/events.md) for their precise supported contracts.

@@ -43,4 +43,4 @@ and run the focused documentation tests.
 - [Complete examples](../examples/README.md)
 - [Agent reference maintenance](../agents/maintenance.md)
 - [Source comments and XML documentation](../language/basics/comments.md)
-- [Acceptance coverage](../../implementation/comparisons-and-acceptance.md)
+- [Acceptance coverage](../../../tests/coverage.md)

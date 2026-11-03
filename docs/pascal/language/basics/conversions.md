@@ -15,7 +15,14 @@ static constructor/unit initializer. Transparent aliases identify their CLR targ
 nominal source types retain their emitted identity. Reference nullable annotations
 do not create a distinct runtime type, while nullable values retain Nullable<T>
 identity. Closed generic types and in-scope type parameters follow the existing
-type/constraint rules. See the [implemented typeof milestone](../../../implementation/typeof.md).
+type/constraint rules. It does not accept namespaces, container/value names, open
+generic definitions, void, or unsupported pointer/byref-like types. `@typeof`
+remains an escaped identifier.
+
+The result is not an optional-parameter constant and is outside the restricted
+contract-expression subset. Closed typeof arguments in source attributes use
+their separate metadata-constant rules. Emission uses CLR type tokens rather
+than string-based type lookup; see the [compiler pipeline](../../../architecture/compiler.md).
 
 ## See also
 

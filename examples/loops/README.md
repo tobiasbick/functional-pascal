@@ -4,7 +4,7 @@ The async program counts through a byte subrange, executes a repeat/until loop,
 and reaches ulong.MaxValue without taking an overflowing final step. Continue in
 the repeat body still evaluates the until condition.
 
-After [bootstrapping the local SDK](../../docs/implementation/msbuild.md):
+After [bootstrapping the local SDK](../../docs/build/msbuild.md):
 
 ```sh
 dotnet build examples/loops/Loops.fpasproj
@@ -22,5 +22,5 @@ repeat: 3
 18446744073709551615
 ```
 
-See [typed loops](../../docs/implementation/loops.md) for scope, cleanup, and
+See [typed loops](../../docs/pascal/language/control-flow/loops.md) for scope, cleanup, and
 checked counter rules.

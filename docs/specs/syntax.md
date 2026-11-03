@@ -3,7 +3,7 @@
 This EBNF describes the baseline's parser shape. Semantic requirements, overload
 resolution, definite assignment, coverage, and supported metadata signatures are
 defined by the [language topics](../pascal/README.md). The
-[compiler overview](../implementation/first-program.md) and
+[compiler overview](../architecture/compiler.md) and
 [language gaps](../future/language-gaps.md) describe support and remaining
 requirements; the grammar does not replace the semantic rules.
 

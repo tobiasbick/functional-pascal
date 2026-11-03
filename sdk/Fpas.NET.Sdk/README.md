@@ -5,19 +5,20 @@ Fpas.Core metadata attributes, and the MSBuild task. The task runs the compiler 
 FPAS emits CIL directly. Standard .NET SDK targets handle references and managed
 runtime assets; there is no generated C# compilation stage.
 
-The initial implementation supports multiple FPAS sources per project, net10.0,
+The SDK supports multiple FPAS sources per project, net10.0,
 AnyCPU, Debug/Release, and executable or library output. Executables contain one
 program plus optional units; libraries contain units only. ProjectReference and
-PackageReference work in mixed C#/FPAS solutions. PDBs, XML documentation,
-embedded resources, and IDE integration are pending.
-Record/union declarations use Fpas.Core metadata attributes. The SDK supplies and
-copies its matching Core assembly; outputs without records/unions have no emitted
-Core assembly reference. See the [record milestone](../../docs/implementation/records.md)
-and [unions/matching](../../docs/implementation/unions-and-matching.md).
+PackageReference work in mixed C#/FPAS solutions. Portable PDBs and optional XML
+documentation propagate through ordinary output/reference copying. Embedded
+resources and IDE integration remain outside the supported build scope.
+Records, unions, domains, and public aliases use Fpas.Core metadata attributes.
+The SDK supplies and copies its matching Core assembly. See the
+[CLR mapping](../../docs/specs/clr-mapping.md) for the metadata contracts.
 
 Build the toolchain, pack this project to sdk/feed, and restore the example
 against that local source. NuGet package versions are immutable; use a fresh
 version/cache entry after changing packaged tools. No public package is published.
 
-See the [implemented milestone](../../docs/implementation/msbuild.md) for commands
-and limits, and the [MSBuild plan](../../docs/build/msbuild.md) for the full goal.
+See the [development workflow](../../docs/build/development.md#build-an-fpas-application)
+for commands, the [MSBuild contract](../../docs/build/msbuild.md) for configuration,
+and [build acceptance](../../tests/coverage.md#build-acceptance) for verification.

@@ -9,7 +9,7 @@ total. Rows are enumerated once, so each selected file is read once. Sources and
 once; using const releases each reader and enumeration releases its enumerator.
 
 After building and packaging the local SDK (see the
-[bootstrap instructions](../../docs/implementation/msbuild.md#local-sdk-bootstrap)):
+[bootstrap instructions](../../docs/build/development.md#build-an-fpas-application)):
 
 ```sh
 dotnet restore examples/directory-inventory/DirectoryInventory.fpasproj

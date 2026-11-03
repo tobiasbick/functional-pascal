@@ -1,14 +1,13 @@
 # Repository and project layout
 
-**Status: initial direct compiler and MSBuild integration implemented.**
 The C# projects and xUnit projects are grouped in one primary `Fpas.slnx` solution.
-Compiler and CLI implement the [compiler subset](../implementation/first-program.md).
+Compiler and CLI follow the [direct compilation pipeline](compiler.md).
 Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
-[mixed-project MSBuild builds](../implementation/msbuild.md).
+[mixed-project MSBuild builds](../../tests/coverage.md#build-acceptance).
 Fpas.Core supplies record/union metadata attributes; the SDK packages Core, the compiler,
 and the implemented task.
 Examples build and run through the SDK; applications remain later work. The responsibilities
-below describe the full intended implementation.
+below describe their responsibilities and boundaries.
 
 ## Repository tree
 
@@ -60,7 +59,7 @@ settings live in Directory.Build.props; Directory.Packages.props pins the shared
 xUnit/test dependencies. global.json selects a stable .NET 10 SDK.
 
 The SDK packaging project includes props/targets, compiler/CLI and Core assets,
-the task, and README. The [local bootstrap](../implementation/msbuild.md#local-sdk-bootstrap)
+the task, and README. The [local bootstrap](../build/development.md#build-an-fpas-application)
 packs it into sdk/feed before restoring FPAS consumers. No SDK package is publicly
 published. The SDK resolves and copies its matching Fpas.Core assembly for records and unions.
 
@@ -127,7 +126,7 @@ tests/Fixtures contains the required FPAS/C# sources, project files, and solutio
 organized by scenario. Isolate generated outputs in test work directories and
 keep fixtures unchanged during tests. Planned implementation acceptance cases in
 the language topics and MSBuild plan guide coverage. Implemented xUnit cases cover
-the compiler subset and local SDK, including project/package reference execution,
+the compiler and local SDK, including project/package reference execution,
 incremental builds, and Clean/Rebuild. Test build targets obtain actual reference
 paths; the checked-in Hello source is copied into the integration-test output.
 

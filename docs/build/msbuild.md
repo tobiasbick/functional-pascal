@@ -1,13 +1,11 @@
 # MSBuild and solution integration
 
-**Status: initial net10.0/AnyCPU contract implemented and verified.** The local SDK builds multi-source
-programs/libraries and mixed C#/FPAS solutions using direct CIL output. See the
-[implemented milestone](../implementation/msbuild.md) for bootstrap instructions,
-verified behavior, and exact limits. Portable PDBs and [XML documentation](../implementation/xml-documentation.md)
-are implemented. Public records, unions, domains, and generics work across
-project boundaries. See
-[acceptance coverage](../implementation/comparisons-and-acceptance.md#build-acceptance)
-for the tests and explicit build-scope limits.
+The local SDK builds net10.0/AnyCPU multi-source programs/libraries and mixed
+C#/FPAS solutions with direct CIL output, portable PDBs, and optional XML API
+documentation. Public records, unions, domains, and generics cross project
+boundaries. Use the [development workflow](development.md#build-an-fpas-application)
+for bootstrap commands and [build acceptance](../../tests/coverage.md#build-acceptance)
+for verification and explicit scope limits.
 
 ## Initial goal and scope
 
@@ -145,8 +143,8 @@ MSBuild resolves references first; the compiler binds the resulting metadata.
 | Output items/properties | Expose TargetPath, intermediate/output locations, and generated-file tracking through standard MSBuild conventions |
 
 Reuse standard targets instead of independently reimplementing the restore graph.
-The exact imported-target order is verified during implementation because the
-base SDK may otherwise select language-specific targets by project extension.
+The imported-target order must select language-neutral targets explicitly;
+the base SDK can otherwise select language-specific targets by project extension.
 
 Compiler inputs include the selected source list, resolved compile-time reference
 assemblies, package/project references, compiler-support identity, configuration,
@@ -202,6 +200,27 @@ Documentation warnings follow ordinary build warning policy; failing to write a
 requested output is a build error. These requirements specify compiler/build
 output and do not require an editor or language-service implementation.
 
+## SDK task and incremental state
+
+Fpas.Build.Tasks launches the packaged CLI in a separate bounded .NET process
+using a JSON response file. The compiler is not loaded into the MSBuild host.
+The task uses the host SDK's MSBuild assemblies rather than bundling private
+copies. Project/configuration/framework intermediates remain independent.
+
+The compiler fingerprint hashes selected source/reference paths and contents,
+compiler/task assets, runtime version, and relevant build/documentation/warning
+options. Missing or altered requested assemblies, symbols, or documentation
+invalidate the fingerprint. Cached documentation warnings are reported on
+unchanged builds; suppressing recompilation must not hide those diagnostics.
+
+XML output uses a separate intermediate file before publishing the requested
+destination and conventional assembly-named sidecar. Standard DocFileItem and
+FinalDocFile handling supplies documentation to reference consumers. FileWrites
+tracks owned outputs; a successful build manifest records custom XML paths,
+including paths outside bin/obj. Replacement, disabling generation, and Clean
+remove those owned paths without wildcard XML deletion. Before CoreClean the
+SDK explicitly removes manifest-owned custom paths which standard cleanup excludes.
+
 ## Diagnostics, incremental work, and failure
 
 Report compiler diagnostics as MSBuild errors/warnings with stable codes, source
@@ -255,7 +274,7 @@ dotnet msbuild Game.slnx -restore -t:Rebuild
 
 The mixed-project tests exercise these requirements for net10.0/AnyCPU, including
 parallel configurations, compiler/reference invalidation, target negotiation,
-and clean-output equivalence. See the [coverage map](../implementation/comparisons-and-acceptance.md).
+and clean-output equivalence. See the [coverage map](../../tests/coverage.md).
 No Visual Studio/VS Code extension or language server is required.
 
 ## References

@@ -45,6 +45,13 @@ an acquired disposable enumerator on every exit.
 Rectangular arrays follow CLR enumeration order and retain their known element
 type. There are no user-defined duck-typed enumeration patterns in the baseline.
 
+A generic source needs a unique compatible IEnumerable<T> view; competing views
+without a unique selection are rejected. Non-generic enumeration uses a runtime
+IDisposable check. Acquisition precedes its protected region; completion, break,
+return, body/MoveNext/Current errors, and unwinding release an acquired enumerator.
+Continue advances that same enumerator. Disposal failure follows CLR exception
+replacement while outer cleanup still runs.
+
 Enumeration preserves collection behavior. Modifying a collection can invalidate
 its enumerator; the compiler does not insert a snapshot or prohibit all aliasing.
 
@@ -74,6 +81,15 @@ begin
 end;
 end program;
 ```
+
+## Flow analysis
+
+Repeat flow accounts for the first guaranteed iteration, breaks, continues,
+finally assignments, and a constant-false condition with no exit. Out-parameter
+analysis merges every route to the condition and tracks condition writes.
+Nullable facts remain conservative: body assignments alone cannot prove
+non-nullness in until because continue can bypass them. Ref/out writes and
+shared-capture mutation invalidate earlier facts.
 
 ## See also
 

@@ -4,7 +4,7 @@ This program subscribes a capturing FPAS delegate to the actual .NET
 BindingList<int>.ListChanged event. It removes the same delegate before the second
 addition, so only the first change invokes the handler.
 
-After the [local SDK bootstrap](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+After the [local SDK bootstrap](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/events/Events.fpasproj

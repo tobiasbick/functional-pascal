@@ -8,7 +8,7 @@ Map infer their arguments from supplied callables and values; generic method
 groups such as Identity<string> retain explicit arguments.
 
 After building and locally packaging the compiler as described in
-[MSBuild integration](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+[MSBuild integration](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/generic-pipeline/GenericPipeline.fpasproj
@@ -28,5 +28,5 @@ identity
 Map uses a List<U> because allocating a nonempty U[] would leave uninitialized
 null elements when U is a non-nullable reference type. The compiler enforces this
 rule even when U has not yet been instantiated.
-See [generic routines](../../docs/implementation/generic-routines.md) for
+See [generic routines](../../docs/pascal/language/functions/generic-routines.md) for
 constraints, nullable semantics, CLR interop, and remaining limits.

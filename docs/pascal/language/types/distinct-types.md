@@ -37,6 +37,9 @@ A distinct string emits a sealed immutable reference wrapper. Its value construc
 rejects null with ArgumentNullException; there is no parameterless constructor.
 This avoids a default struct containing null while promising a non-null string.
 `PlayerName?` is nullable-reference annotation; `UserId?` uses Nullable<UserId>.
+Nullable value-domain casts lift their conversions. Nullable string payloads and
+domain receivers require normal validation before wrapping, unwrapping, or ordered
+comparison; equality still permits null reference operands.
 
 ## Example
 

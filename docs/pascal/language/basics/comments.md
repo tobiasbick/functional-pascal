@@ -2,9 +2,10 @@
 
 Use line comments for explanations and attached Markdown for declaration
 documentation. The compiler can export that documentation as a standard .NET XML
-sidecar. See [XML documentation](../../../implementation/xml-documentation.md)
-for supported declarations, CLI/SDK options, and verification. Enums, globals,
-and [source attributes](../../../implementation/attributes.md) preserve these rules.
+sidecar. See the [compiler CLI](../../program-structure/cli.md) and
+[MSBuild contract](../../../build/msbuild.md#documentation-output) for export
+options. Enums, globals,
+and [source attributes](../../interop/attributes.md) preserve these rules.
 
 ## Comment syntax
 
@@ -178,12 +179,8 @@ Exported XML is parsed and matched to emitted metadata, including overloads,
 generic types, properties, unions, arrays, and byrefs. SDK tests exercise XML
 escaping, deterministic output, generation on/off, incremental changes, Clean,
 and propagation to a C# reference through MSBuild.
-The [implementation milestone](../../../implementation/xml-documentation.md) records
-the executed checks for the supported declaration subset.
-[Scalar types](../../../implementation/scalar-types.md),
-[globals](../../../implementation/global-values.md), and
-[source attributes](../../../implementation/attributes.md) include their metadata and
-documentation checks.
+The [coverage map](../../../../tests/coverage.md#language-and-metadata) identifies
+the compiler, CLI, and SDK documentation tests.
 
 ## References
 

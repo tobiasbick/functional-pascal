@@ -61,7 +61,7 @@ The [MSBuild specification](../../build/msbuild.md) defines `.fpasproj` projects
 `.slnx` solutions, standard dependency restore, and cross-language project
 references as the initial build scope. The local SDK supports and tests this
 contract for net10.0 and AnyCPU; see the
-[acceptance coverage](../../implementation/comparisons-and-acceptance.md#build-acceptance).
+[acceptance coverage](../../../tests/coverage.md#build-acceptance).
 Publishing and deployment profiles remain later work.
 
 The [repository layout](../../architecture/project-layout.md) defines the C#

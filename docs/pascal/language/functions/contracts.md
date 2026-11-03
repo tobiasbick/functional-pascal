@@ -179,10 +179,9 @@ cleanup failure, body failure, condition-evaluation exceptions, and async
 success/fault/cancellation. Verify conditions execute once in debug and release.
 Reject missing/mismatched result annotations and disallowed expressions.
 
-The [synchronous implementation](../../../implementation/contracts-and-parameters.md)
-covers free routines, record methods, generic routines, and block lambdas.
-Named nested routines and async contracts are implemented. Authored interfaces
-are a [deferred extension](../../../future/language-gaps.md#deferred-declare-fpas-interfaces),
+See the [coverage map](../../../../tests/coverage.md#language-and-metadata) for the
+owning tests. Authored interfaces are a
+[deferred extension](../../../future/language-gaps.md#deferred-declare-fpas-interfaces),
 outside the original language baseline.
 
 ## Example

@@ -54,5 +54,5 @@ project SDK for normal applications.
 
 - [Projects](projects.md)
 - [Compiled programs](compiled-programs.md)
-- [Source/output contract](../../implementation/first-program.md#compiler-and-output)
+- [Compiler API and output publication](../../architecture/compiler.md#compiler-api-and-output)
 - [Development workflow](../../build/development.md)

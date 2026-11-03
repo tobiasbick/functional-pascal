@@ -1,7 +1,7 @@
 # Record defaults, private state, static factories, and globals
 
 This complete program is compiled and executed by the
-[acceptance tests](../../../implementation/comparisons-and-acceptance.md). Records remain
+[acceptance tests](../../../../tests/coverage.md). Records remain
 immutable; private state is constructed inside the record and retained by updates.
 
 ```pascal

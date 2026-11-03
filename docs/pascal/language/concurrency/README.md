@@ -16,4 +16,4 @@ rules. The language does not add a separate task scheduler or ownership scope.
 - [Functions](../functions/README.md)
 - [Resources](../error-handling/README.md)
 - [CLR interop](../../interop/README.md)
-- [Async implementation](../../../implementation/overloads-interfaces-debugging-and-async.md)
+- [Async implementation](../../../architecture/async-and-cleanup.md)

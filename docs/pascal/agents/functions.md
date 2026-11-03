@@ -109,4 +109,4 @@ end program;
 
 Read [functions](../language/functions/README.md) for overloads and delegates,
 [contracts](../language/functions/contracts.md) for condition/execution restrictions, and
-[nested routines](../../implementation/nested-routines.md) for capture initialization.
+[nested routines](../language/functions/nested-routines.md) for capture initialization.

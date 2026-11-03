@@ -6,7 +6,7 @@ Port matching covers the complete declared interval without a fallback. A freshl
 allocated port array starts at the lower bound, 1.
 
 With the locally packaged SDK available as described in the
-[MSBuild milestone](../../docs/implementation/msbuild.md):
+[development workflow](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet build examples/data-domains/DataDomains.fpasproj
@@ -24,5 +24,6 @@ system
 1
 ```
 
-See the [implemented scalar types](../../docs/implementation/scalar-types.md)
-for conversions, CLR signatures, and cross-assembly contracts.
+See [data domains](../../docs/pascal/language/types/data-domains.md) for wrapping,
+bounds, and cross-assembly use, and [CLR mapping](../../docs/specs/clr-mapping.md)
+for emitted signatures and metadata contracts.

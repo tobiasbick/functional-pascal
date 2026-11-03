@@ -67,6 +67,36 @@ constants, even when initialized with literals. They do not qualify as constant
 patterns, optional defaults, enum/subrange bounds, or contract operands.
 Forward/cyclic initialization reads follow CLR default-storage semantics.
 
+Private globals are accessible only in their unit, including its records and
+lambdas. Local/parameter/record members take precedence over outer globals.
+Lambdas and async routines read the same static storage, rather than captured
+snapshots. Names cannot collide with another declaration/import or entry args.
+Public field types must be publicly accessible through nested aliases, arrays,
+and generic arguments. Field reads do not acquire stable nullable facts; copy or
+coalesce a nullable field into a local before dereferencing it.
+
+## Initialization and failure
+
+A container with globals has one private static .cctor with SpecialName and
+RTSpecialName flags, and no BeforeFieldInit flag. Initializers run once in their
+written order within that source, including declarations interleaved with types
+or routines. A static method call or field access triggers ordinary CLR type
+initialization. Merely importing a unit, inspecting its metadata, or obtaining
+its type does not initialize it.
+
+There is no eager application-wide ordering or generated dependency scheduler.
+Forward and cyclic reads use CLR default storage while initialization is still
+in progress; reference storage can therefore be null before its initializer has
+run. A failed initializer follows CLR TypeInitializationException behavior,
+retains its original inner exception, and is not retried. Concurrent first
+accesses use the CLR's type-initialization synchronization. Later shared field
+mutation needs ordinary .NET synchronization.
+
+Program globals initialize before the entry body and do not have access to args.
+Initializers are synchronous and cannot await. They can construct ordinary
+Task/delegate values without a language task owner or automatic resource cleanup.
+No source unit initialization/finalization blocks are introduced.
+
 ## See also
 
 - [Topic overview](README.md)

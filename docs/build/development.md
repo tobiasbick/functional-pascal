@@ -41,7 +41,7 @@ units and executes programs. Its assertions cover each example's behavior.
 HandbookTests checks topic hubs, related navigation, repository documentation
 links/anchors, explicit syntax fragments, and current copied inputs.
 Read [tests](../../tests/README.md) and the
-[acceptance map](../implementation/comparisons-and-acceptance.md) when selecting
+[acceptance map](../../tests/coverage.md) when selecting
 coverage for compiler, metadata, interop, async, or build changes.
 
 Store local logs, scratch work, and performance data under `.temp-data/`.
@@ -64,9 +64,11 @@ run through dotnet; no native apphost or IDE extension is required.
 
 NuGet caches SDK packages by identity/version. After changing packaged tools,
 use a new development package version or remove only that SDK version from the
-local cache. Do not clear unrelated packages. See
-[SDK bootstrap](../implementation/msbuild.md#local-sdk-bootstrap) for the exact
-version/cache workflow and [MSBuild](msbuild.md) for the project contract.
+local cache. For example, pack with `-p:PackageVersion=0.1.0-dev.2` and update
+the consumer's SDK version to match. To locate the cache, use
+`dotnet nuget locals global-packages --list`; remove only the selected
+`fpas.net.sdk/<version>` directory when intentionally reusing that version.
+Do not clear unrelated packages. See [MSBuild](msbuild.md) for the project contract.
 
 ## Direct compiler invocation
 
@@ -91,7 +93,7 @@ the compiler's process. The CLI adds its matching Core metadata reference.
 Direct deployments must supply their non-framework runtime dependencies; prefer
 the project SDK for normal applications. Portable PDBs are emitted by default;
 XML documentation is optional. See the
-[CLI contract](../implementation/first-program.md#cli-contract) for stdin,
+[CLI contract](../pascal/program-structure/cli.md) for stdin,
 response files, output publication, and structured diagnostic/exit behavior.
 
 ## Compiler work and runtime inspection
@@ -100,14 +102,15 @@ Follow the [repository layout](../architecture/project-layout.md) for project
 boundaries. Language rules live in the [handbook](../pascal/README.md) and
 [grammar](../specs/syntax.md). Public representations follow
 [CLR mapping](../specs/clr-mapping.md); dependency/build behavior follows
-[MSBuild](msbuild.md). Read the affected implementation milestone before changing
-or claiming support. [Language gaps](../future/language-gaps.md) separates missing
+[MSBuild](msbuild.md). Read the affected [architecture](../architecture/README.md)
+and [tests](../../tests/coverage.md) before changing or claiming support.
+[Language gaps](../future/language-gaps.md) separates missing
 baseline work from deferred extensions; record practical authoring limits in
 [dogfooding gaps](../future/dogfooding-gaps.md).
 
 Use supported .NET debuggers/profilers for generated assemblies. Portable symbols
 provide source locations, locals, and closure/async metadata; see
-[debugging and async](../implementation/overloads-interfaces-debugging-and-async.md).
+[debug information](../architecture/debug-information.md).
 Investigate actual program behavior before writing benchmark variants or external
 samplers. The current FPAS CLI provides compilation; formatter, LSP/query tools,
 and automatic IDE integration have their separately documented scope.

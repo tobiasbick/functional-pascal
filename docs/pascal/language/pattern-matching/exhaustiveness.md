@@ -18,6 +18,13 @@
 An `is T as Name` pattern binds `Name` only inside its arm/guard. `Value is T`
 outside patterns is a Boolean type test without introducing a binding.
 
+Coverage preserves relationships between payload columns: all four combinations
+of two bool payloads cover a case, while any missing combination leaves a gap.
+Analysis has a bounded work limit and requests simpler nested patterns if exceeded.
+The selector's declared type governs coverage even when flow knows it non-null.
+If foreign code violates the static assumptions and no arm matches, execution
+throws InvalidOperationException rather than inventing a payload.
+
 ## See also
 
 - [Topic overview](README.md)

@@ -8,20 +8,11 @@ requirements have all been verified.
 The scope is defined by the [language overview](../pascal/README.md),
 [language topics](../pascal/README.md#start-here),
 [syntax grammar](../specs/syntax.md), [CLR mapping](../specs/clr-mapping.md), and
-[MSBuild plan](../build/msbuild.md). The
-[implementation documents](../implementation/README.md) describe current support;
+[MSBuild contract](../build/msbuild.md). The
+[coverage map](../../tests/coverage.md) identifies verification;
 [dogfooding gaps](dogfooding-gaps.md) describe practical maintenance limits.
 
 ## Finish the existing baseline first
-
-[Imported CLR event subscription/removal](../implementation/events.md) is now
-implemented and verified through compiler/metadata tests, mixed C#/FPAS projects,
-and an executable collection-events example.
-[Runtime type expressions](../implementation/typeof.md) now implement typeof(T)
-with CLR type tokens, concrete/generic identity, and cross-language verification.
-[Source CLR attributes](../implementation/attributes.md) now implement typed
-constructor/member arguments, usage checks, actual metadata, and supported
-pseudo-attribute flags on the specified declaration targets.
 
 The following are implementation tasks for already specified behavior, in the
 proposed execution order. Implement one focused step at a time without adding
@@ -36,11 +27,11 @@ After these known gaps, compare every baseline rule and complete language exampl
 with compiler behavior. Record any additional demonstrated omissions here before
 calling the baseline complete. Resolve stale implementation-status prose as each
 feature lands. Validate the agreed .fpasproj/.slnx build, dependency, diagnostic,
-incremental, documentation, and cleanup contracts; the MSBuild milestone is not
-by itself proof that the entire build plan is implemented.
+incremental, documentation, and cleanup contracts against the
+[build acceptance checks](../../tests/coverage.md#build-acceptance).
 
-Numeric lifted nullable arithmetic is recorded as unsupported in the
-[scalar milestone](../implementation/scalar-types.md). The baseline defines
+Numeric lifted nullable arithmetic is unsupported; see
+[nullable types](../pascal/language/types/nullable-types.md). The baseline defines
 nullable storage, flow, validation, and coalescing, but does not give a complete
 lifted-operator contract. Do not silently add a new operator/null behavior while
 closing the explicitly specified gaps. Revisit only if the baseline comparison

@@ -22,6 +22,8 @@
 `null` cannot initialize a non-null reference or non-nullable value type.
 Unconstrained generic parameters cannot be suffixed with `?`; use an appropriate
 reference/value constraint. Repeated nullable suffixes are invalid.
+Numeric nullable arithmetic and comparison operators are not generally lifted;
+validate and unwrap the contained value before applying those operations.
 
 ## Example
 
@@ -46,6 +48,27 @@ begin
 end;
 end program;
 ```
+
+## Flow and imported annotations
+
+Nullability is read from parameter/return/property/field annotations and nullable
+contexts. Oblivious reference results remain conservatively nullable.
+Unconditional MaybeNull/NotNull return and AllowNull/DisallowNull parameter
+contracts are read. Conditional postcondition attributes are not used to prove
+flow facts in this implementation.
+
+Null initializes only nullable values/references. A nullable reference cannot
+be dereferenced or assigned/passed/returned as non-null without validation.
+Stable local/parameter null tests refine if branches and short-circuit and/or
+operands. Assignments invalidate/update facts; branch joins retain common facts.
+Loops account for assigned locals at their back edge, and exception handlers
+use conservative incoming facts. Repeated property reads do not establish
+non-nullness. `??` evaluates the fallback only when the left value is absent.
+
+Public source signatures emit proper CLR class/struct/Nullable<T> signatures and
+NullableAttribute metadata on nullable reference parameters/results, with the
+existing non-null container context. Nested array/generic annotations retain
+their positions across FPAS/C# assembly boundaries.
 
 ## See also
 

@@ -1,61 +1,48 @@
 # Tests
 
-Fpas.Compiler.Tests exercises diagnostics, source locations, emitted metadata,
-and deterministic assemblies through the compiler API. Fpas.IntegrationTests
-invokes the actual compiler CLI and .NET host, including Hello, stdin, CLR calls,
-argument/encoding errors, and output preservation. It also packs and tests the
-actual FPAS SDK/MSBuild task. Both projects use xUnit.
+The repository uses xUnit for compiler and end-to-end verification. See the
+[coverage map](coverage.md) to select a topic's diagnostics, metadata, execution,
+and mixed-project checks. Restore/build/test commands and focused filters live
+in the [development workflow](../docs/build/development.md).
 
-Build/test commands and focused documentation checks are in the
-[development workflow](../docs/build/development.md). Compile the tests before
-running them; copied documentation/examples are build inputs.
+## Projects and fixtures
 
-Directory.Build.targets derives reference inputs from the actual test project
-framework references. TestSupport contains shared bounded process and temporary
-directory helpers. The Hello source is copied from examples during the build;
-Fixtures/msbuild contains Shared.csproj → Game.fpasproj → Host.csproj and a
-mixed-language .slnx. Each test copies it to an isolated directory and resolves a
-uniquely versioned SDK from a temporary local feed. Tests execute the host, check
-transitive project/package assets and public FPAS signatures, and exercise
-incremental builds, source diagnostics, source selection, Clean, and Release
-Rebuild. The [acceptance map](../docs/implementation/comparisons-and-acceptance.md)
-describes the verified net10.0/AnyCPU language/build scope and the remaining gaps.
+| Location | Responsibility |
+| --- | --- |
+| [Fpas.Compiler.Tests](Fpas.Compiler.Tests/) | Compiler API diagnostics, source locations, flow analysis, emitted metadata, and deterministic images |
+| [Fpas.IntegrationTests](Fpas.IntegrationTests/) | Actual CLI/host execution, handbook examples, and packaged SDK/mixed FPAS/C# projects |
+| [Fixtures/msbuild](Fixtures/msbuild/) | Shared.csproj → Game.fpasproj → Host.csproj and a mixed .slnx solution |
+| [TestSupport](TestSupport/) and [Directory.Build.targets](Directory.Build.targets) | Shared bounded-process and temporary-directory helpers plus resolved framework reference inputs |
 
-LanguageSpecificationTests compiles complete handbook programs/units directly
-from the copied Markdown, checks PDB/XML outputs, and executes programs with
-controlled file, environment, and HTTP failure inputs. Comparison and signature
-tests verify real CLR operators and explicit unsupported-feature diagnostics.
-The [agent reference](../docs/pascal/agents/README.md) uses the same runner, with
-explicit project labels for companion units. AgentReferenceTests checks its
-entrypoint policy, complete/unique examples, local links/fragments, and exact
-o200k_base token budgets using test-only Microsoft.ML.Tokenizers packages with
-the packaged O200kBase vocabulary.
-HandbookTests checks topic hubs, related navigation, local documentation links
-and anchors, explicit syntax fragments, and exact copied documentation inputs
-so moved or deleted articles cannot survive as stale test fixtures.
-Additional mixed builds check parallel project/configuration isolation, framework/
-target-path negotiation, compiler asset/reference-list invalidation, and clean
-assembly/PDB/XML equivalence.
+Build the toolchain and tests before executing them. Do not rebuild toolchain
+binaries while tests use them. Markdown and checked-in examples are copied during
+the test build; rebuild after changing those inputs. HandbookTests checks that
+the copied Markdown tree exactly matches the sources, including deleted pages.
 
-Expression/control-flow tests execute arithmetic, widening/casts, checked
-overflow, short-circuit and branch side effects, recursion, lexical scopes,
-nested loops, and boundary-safe counting loops. Diagnostic cases check typing,
-read-only bindings, return paths, and loop exits. The SDK suite builds the exact
-Mandelbrot example and compares all 1,920 output pixels with an independent .NET
-Complex calculation; C# also consumes exported FPAS bool/double functions.
+SDK tests package the already built tools with a unique version into an isolated
+local feed, copy the fixture into a temporary directory, and build actual
+consumers. Those fixture builds are part of the test, not a second toolchain build.
+They verify dependency copying, exported signatures, incremental inputs/outputs,
+configuration isolation, diagnostics, and cleanup. Do not rely on a cached local
+development SDK version.
 
-Multi-source cases verify unit ownership in CLR metadata, deterministic output
-under source reordering/renaming, mutually recursive unit calls, visibility and
-source/reference conflicts, secondary-file diagnostics and encoding failures,
-stdin plus files, and CLI input protection. SDK tests build the Units example
-and a multi-unit FPAS library between C# projects, then check secondary edits and
-added/removed units through incremental builds. Another FPAS project consumes
-that library through its emitted CLR metadata, including string nullability and
-transitive runtime assets.
+## Documentation examples
 
-CLR object cases exercise constructors, chained calls, virtual/interface dispatch,
-fields/properties, reference conversions, boxing, struct storage/defensive copies,
-nullable flow, Nullable<T>, and nullable metadata exported to C#. Resource fixtures
-verify disposal order across return/break/continue, failed acquisition, throwing
-cleanup, filter ordering, and stack-preserving rethrow. The checked-in StreamReader
-project is built and executed with its copied sample file.
+LanguageSpecificationTests compiles complete handbook and agent-reference fences
+through the CLI, checks PDB/XML outputs, and executes programs with explicit
+behavioral assertions. Companion units use project labels. File/environment/HTTP
+inputs are controlled; timer counts and public network availability are not
+ordinary test prerequisites.
+
+AgentReferenceTests checks policy, unique complete examples, local links, and
+exact o200k_base token budgets using test-only packaged vocabulary. HandbookTests
+checks navigation, repository documentation links/anchors, explicit fragments,
+and current copied inputs. See
+[documentation acceptance](coverage.md#documentation-acceptance) and
+[example conventions](../docs/pascal/tools/documentation-examples.md).
+
+## See also
+
+- [Compiler architecture](../docs/architecture/README.md)
+- [Build acceptance](coverage.md#build-acceptance)
+- [Open language requirements](../docs/future/language-gaps.md)

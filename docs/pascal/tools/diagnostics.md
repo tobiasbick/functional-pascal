@@ -56,7 +56,8 @@ location when there is no source token to identify.
 XML documentation diagnostics use `FP6001`. `--warn-as-error` promotes warnings;
 `--warnings-as-errors` promotes selected codes, `--warnings-not-as-errors` excludes
 selected codes from the global promotion, and `--no-warn` suppresses selected
-codes. Code lists accept commas or semicolons. Promoted warnings fail compilation
+codes. Code lists accept commas or semicolons and either FP6001 or 6001 notation.
+Promoted warnings fail compilation
 and prevent publication of new outputs.
 
 The project SDK reports diagnostics through MSBuild with their source locations.

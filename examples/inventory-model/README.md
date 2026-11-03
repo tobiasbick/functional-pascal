@@ -7,7 +7,7 @@ remain available. The unit function sums positions through the real .NET
 IEnumerable interface.
 
 After building and locally packaging the compiler as described in
-[MSBuild integration](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+[MSBuild integration](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/inventory-model/InventoryModel.fpasproj
@@ -25,6 +25,6 @@ Original unchanged: True
 Item retained: True
 ```
 
-See the [record milestone](../../docs/implementation/records.md) for supported
+See [records](../../docs/pascal/language/types/records.md) for supported
 construction, equality, private state, and cross-assembly behavior. This is a
 small data model; the dungeon game is not built by this example.

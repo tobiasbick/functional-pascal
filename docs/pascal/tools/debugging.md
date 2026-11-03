@@ -31,5 +31,5 @@ specific debug command exists.
 
 - [Compiled programs](../program-structure/compiled-programs.md)
 - [Exceptions](../language/error-handling/exceptions.md)
-- [Portable symbol implementation](../../implementation/overloads-interfaces-debugging-and-async.md#portable-symbols)
+- [Portable symbol implementation](../../architecture/debug-information.md)
 - [.NET debugging tools](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/)

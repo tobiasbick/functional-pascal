@@ -17,8 +17,8 @@ end function;
 
 Generic arguments use `<...>` in declarations, types, and calls:
 `Identity<int>(42)`. Calls may infer routine type arguments from supplied argument
-types. Expected result type alone does not infer routine type arguments. Union
-constructor inference also uses expected type as defined in [generic data types](../types/generics.md).
+types. Expected result type alone does not infer routine type arguments. See
+[type inference](type-inference.md) for overload evidence and contextual unions.
 Namespace-qualified CLR generics are supported. General paths with type arguments
 on every enclosing/nested segment remain a tracked
 [baseline gap](../../../future/language-gaps.md#finish-the-existing-baseline-first).
@@ -36,12 +36,59 @@ record
 end record;
 ```
 
-`new T()` requires an appropriate constructor constraint. There are no special
-`Numeric`, `Printable`, `Comparable`, or `Error` constraints. Use actual .NET
-interfaces and conversions. Instance-interface constraints work. Operators through
-constrained static interfaces require CLR static-interface dispatch and remain
-tracked baseline work. Unsupported requirements are diagnosed, never erased into
-unchecked object operations. This does not add source interfaces or operators.
+## Constraints
+
+Where clauses follow the declaration header and precede begin. Each parameter
+has at most one clause. Supported requirements are class, class?, struct, new(),
+an accessible non-sealed CLR/source base class, imported instance interfaces,
+and a non-cyclic type-parameter constraint such as `where T: U;`.
+System.Enum constraints are supported, including `where T: struct, Sys.Enum;`.
+
+Primary class/struct constraints must come first; a base/type-parameter
+constraint precedes interfaces; new() must come last and cannot be combined
+with struct. Duplicate, cyclic, or inconsistent constraints are errors. Nullable
+reference annotations are retained on constraints. A struct-constrained
+parameter cannot serve as another parameter's base constraint.
+
+The same requirements are validated at source calls, when constructing CLR
+generic types containing these parameters, and when forwarding them to CLR
+methods. The compiler uses constraints to resolve instance members and interface
+dispatch. Static-abstract interface requirements, unmanaged/byref-like
+constraints, and generic-math operators remain unsupported and are rejected.
+There are no built-in Numeric/Printable constraints or runtime reflection fallback.
+
+`new T()` requires struct or an explicit new() requirement and takes no arguments.
+It calls the actual CLR Activator.CreateInstance<T>(), preserving the CLR's
+value/reference constructor behavior. Constraints are also emitted for C# and
+other consumers to enforce independently.
+
+## Nullability and type-independent code
+
+An unconstrained T can be a value type, a non-null reference, or a nullable
+argument. Returning/passing the same T preserves that type. It does not let a
+body return null as an unannotated T or assume a value is safe to dereference.
+A stable null check establishes non-nullness before member use or conversion
+to a non-null object. Boxing to object? is available without that check.
+
+Class and non-null interface/base constraints prove non-nullness. A class?
+constraint permits nullable reference arguments and requires validation before
+dereferencing a value of T. T? requires a reference or struct constraint;
+unconstrained T? syntax remains invalid. Reference T? emits nullable annotations,
+while struct T? uses the actual Nullable<T> representation. Nullable annotations
+remain aligned through nested generic return types and assembly boundaries.
+
+Nonempty new T[Count] cannot initialize a non-null reference element for every
+possible T, so it requires a struct element constraint or an explicitly nullable
+reference element annotation. Empty arrays and initialized array literals remain
+available. The pipeline example uses List<U>.ToArray() to construct fully
+initialized results without weakening element annotations.
+
+Ordinary arithmetic on an unknown T is not numeric code; use supported concrete
+types or constrained instance methods. Runtime `is T`, explicit boxing/unboxing,
+and generic null/coalescing checks retain CLR behavior. Generic resources and
+enumerables use constrained interface calls and normal cleanup. Specific case
+patterns on an otherwise unknown T can be expressed after boxing to object?;
+the compiler does not infer a union/constant domain for T from its call sites.
 
 ## See also
 

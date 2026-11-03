@@ -9,7 +9,7 @@ These are ordinary outcomes. Blocked does not throw an exception or cause an
 implicit return in the caller; the caller inspects the returned data explicitly.
 
 After building and locally packaging the compiler as described in
-[MSBuild integration](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+[MSBuild integration](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/game-actions/GameActions.fpasproj
@@ -26,6 +26,6 @@ Found key at 2,0
 Stayed
 ```
 
-See [unions and matching](../../docs/implementation/unions-and-matching.md) for
+See [unions and matching](../../docs/pascal/language/types/unions.md) for
 supported patterns, CLR representation, and remaining limits. This example is a
 small simulation and does not build the separate dungeon game repository.

@@ -45,7 +45,7 @@ Optional XML documentation follows normal output/reference copying. No-change
 builds skip compilation; source/reference lists and contents, compiler assets,
 and relevant options participate in invalidation. Clean/Rebuild tracks owned
 outputs. See [compiled programs](compiled-programs.md) and the
-[implemented SDK](../../implementation/msbuild.md) for verified details.
+[build acceptance](../../../tests/coverage.md#build-acceptance) for verified details.
 
 Multi-targeting, other platforms/framework coverage, publishing, AOT, signing,
 native apphosts, and IDE project loaders have separate scope. A requested

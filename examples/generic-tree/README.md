@@ -7,7 +7,7 @@ All bindings, payloads, routine parameters, and results have explicit types.
 Map/Count calls infer their arguments, and union constructors infer from payloads
 and the expected type.
 
-After the [local SDK bootstrap](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+After the [local SDK bootstrap](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet restore examples/generic-tree/GenericTree.fpasproj
@@ -23,6 +23,6 @@ leaves: 2
 True
 ```
 
-See [generic data types](../../docs/implementation/generic-types.md) for constraints,
-CLR representations and cross-assembly behavior; [call inference](../../docs/implementation/type-argument-inference.md)
+See [generic data types](../../docs/pascal/language/types/generics.md) for constraints,
+CLR representations and cross-assembly behavior; [call inference](../../docs/pascal/language/functions/type-inference.md)
 describes when explicit type arguments remain necessary.

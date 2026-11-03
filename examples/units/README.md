@@ -4,7 +4,7 @@ Units.fpasproj compiles main.fpas and both sources under lib into one assembly.
 The default `**/*.fpas` glob selects them. Unit headers define Demo.Numbers and
 Demo.Messages; source filenames and glob order do not define their identities.
 
-After the [local SDK bootstrap](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+After the [local SDK bootstrap](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet build examples/units/Units.fpasproj

@@ -6,7 +6,7 @@ the text, and disposes the reader through a blockless using const declaration.
 An IOException is handled through ordinary CLR catch semantics; finally runs
 after the reader's cleanup.
 
-After the [local SDK bootstrap](../../docs/implementation/msbuild.md#local-sdk-bootstrap):
+After the [local SDK bootstrap](../../docs/build/development.md#build-an-fpas-application):
 
 ```sh
 dotnet build examples/read-file/ReadFile.fpasproj

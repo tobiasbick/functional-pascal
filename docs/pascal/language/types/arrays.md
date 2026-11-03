@@ -3,7 +3,8 @@
 `T[]` is a one-dimensional zero-based CLR vector; `T[,]` is a rectangular
 two-dimensional array; `T[][]` is jagged. Allocation uses `new int[Count]` or
 `new double[Rows, Columns]`. Indexes are `Values[I]` and `Grid[X, Y]`.
-All dimensions are evaluated once and must be valid `int` lengths.
+All dimensions are evaluated once and must be valid `int` lengths. Rectangular
+rank is at most 32. Length is the total element count, returned as int.
 
 New arrays use CLR default element initialization. For reference elements, an
 allocation with potentially nonzero length requires a nullable element annotation;
@@ -13,11 +14,16 @@ of rectangular arrays. Imported APIs retain their declared annotations and may
 violate them like other external contracts. Jagged arrays can be constructed
 from vector literals or through an element type alias; no special jagged `new`
 suffix syntax is included in this baseline.
+Literal zero dimensions permit non-null reference elements, as in `new string[0]`;
+the compiler recognizes literal zeros rather than general constant expressions.
 
 `[1, 2, 3]` is an array literal. Empty `[]` requires an expected vector type.
 Array elements are mutable. Assigning an array shares it, including through
 `const` bindings. Array bounds errors are CLR exceptions. Array literals are not
 automatically lists or dictionaries.
+Expected vector types can come from declarations, parameters, returns, casts,
+and conditional branches. Otherwise nonempty literals need a common supported
+element type; contextual inference follows [type inference](../functions/type-inference.md).
 
 Use actual .NET collections:
 

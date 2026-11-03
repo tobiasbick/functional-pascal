@@ -16,6 +16,9 @@ Nested generic closers such as `List<List<int>>` are valid.
 Type names and generic arity are resolved exactly. Source declarations cannot
 differ solely by capitalization accidentally: capitalization denotes distinct
 names and is never folded by import lookup.
+Public aliases cannot expose private types. Their target signature and nested
+nullable annotations survive cross-assembly FPAS use through the versioned alias
+metadata contract; other .NET consumers see the target types in ordinary signatures.
 
 Use `type UserId = distinct long;` for a nominal scalar identity and
 `type Percent = int range 0..100;` for a checked integral subrange. Both have

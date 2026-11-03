@@ -1,6 +1,7 @@
 # CLR events
 
-Imported CLR event subscription/removal is [implemented](../../implementation/events.md).
+Use subscribe/unsubscribe with events declared by referenced .NET assemblies
+and ordinary CLR delegates.
 
 ```pascal fragment
 const Handler: Timers.ElapsedEventHandler :=
@@ -50,6 +51,56 @@ end program;
 Tick timing/count is nondeterministic. Unsubscription does not wait for an event
 handler already dispatched by the CLR timer. This example illustrates event
 binding, not a synchronization or exact-timing guarantee.
+
+## Lookup and binding
+
+Resolve actual Event/MethodSemantics metadata rather than guessing add_/remove_
+names or treating an event as a delegate field. Check the selected accessor
+independently: it must be public, have the requested instance/static shape,
+return void, and take one supported by-value delegate argument matching the
+event's CLR type. Missing/inaccessible/unsupported add access does not prevent
+using a supported remove accessor, and conversely.
+
+Lookup includes inherited class/interface events and substituted generic owners,
+including generic parameter constraints. Derived declarations hide base members;
+an inaccessible event or a delegate field does not expose a hidden base event.
+Unrelated inherited event selections are ambiguous; explicitly select
+the desired declaring interface rather than relying on traversal order.
+
+Delegate values, compatible typed lambdas, and named/overloaded routines use the
+ordinary delegate binding, inference, conversion, and nullable rules. Nullable
+event receivers require validation or coalescing. The handler is an ordinary
+accessor argument, including its imported nullable parameter annotations.
+
+Events cannot be read, assigned, invoked, or passed as ordinary delegate values.
+Properties and delegate-valued fields are not event references. FP3034 diagnoses
+event selection/access errors. Existing overload/delegate/type, nullable, out-flow,
+and async reference-lifetime diagnostics still apply to operands.
+
+## Evaluation and execution
+
+Bind subscriptions to ordinary bound accessor calls and use the existing CIL
+emitter/async lowering. Evaluate receiver storage before the handler, once each
+in written order, then invoke the selected accessor. Preserve virtual/interface
+dispatch and generic owner signatures. Static events have no runtime receiver.
+Member chains through static properties and global fields remain value accesses.
+
+Writable struct locals, ref parameters, fields, and array elements retain their
+actual storage. Constrained generic calls do not mutate a boxed replacement.
+Read-only struct receivers retain ordinary defensive-copy behavior. A managed
+receiver reference cannot remain live across an awaited handler; evaluate the
+handler before selecting writable struct storage in that case.
+
+Reference receivers and delegates may survive real async suspension. Receiver,
+handler, and accessor exceptions propagate in ordinary order; a failed operand
+prevents invocation. Accessor calls invalidate mutable-capture nullable facts
+because custom accessors may execute callbacks. Existing flow/capture traversal
+includes both operands, including nested routines and loop ref/out writes.
+
+Retain the delegate when removal requires the same target/instance. Re-evaluating
+a lambda does not invent a stable handler identity. No automatic removal occurs
+at scope exit; use explicit try/finally when the subscription lifetime needs
+cleanup, including async finally.
 
 ## See also
 

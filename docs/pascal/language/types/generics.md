@@ -9,6 +9,10 @@ Constraints follow the type declaration's equals sign and precede record/union.
 They are checked at construction, in field/signature types, and when forwarding
 parameters. A method may introduce its own type parameters without redeclaring an
 enclosing parameter. Defaults must type-check for every valid instantiation.
+Constraints on all field shapes are checked before constructor eligibility, so a
+forward-declared record with required fields cannot accidentally satisfy new().
+Type parameters cannot shadow enclosing parameters, source types, imports,
+predefined types, self, or args. Public constraints cannot expose private types.
 
 Record construction keeps explicit owner arguments. Union factories can infer
 arguments from payloads and expected types; a fieldless generic case needs an

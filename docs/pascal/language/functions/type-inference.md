@@ -1,11 +1,11 @@
 # Type argument inference
 
-Generic calls now infer type arguments from supplied values. This extends
-[generic routines](generic-routines.md) and [generic data types](generic-types.md)
+Generic calls infer type arguments from supplied values. This applies to
+[generic routines](generic-routines.md) and [generic data types](../types/generics.md)
 without changing their CLR representation or declaration syntax. Bindings,
 parameters, lambda signatures, and routine results still require explicit types.
 
-```pascal
+```pascal fragment
 function Identity<T>(Value: T): T;
 begin return Value; end function;
 
@@ -17,7 +17,7 @@ const Copy: function(int): int := Identity<int>;
 
 Inference applies to free FPAS routines, instance/static record methods, imported
 FPAS routines, and supported CLR generic methods. Explicit calls remain valid.
-The [pipeline](../../examples/generic-pipeline/README.md) now uses Compose(Double,
+The [pipeline](../../../../examples/generic-pipeline/README.md) uses Compose(Double,
 Label) and Map(Items, Format); a method group for generic Identity keeps its
 explicit arguments.
 
@@ -49,9 +49,9 @@ an overload and there is no dynamic/reflection fallback.
 
 ## Union constructors and expected types
 
-The uninstantiated name of a generic union now supports case construction:
+The uninstantiated name of a generic union supports case construction:
 
-```pascal
+```pascal fragment
 type Tree<T> = union
   Empty;
   Leaf(Value: T);
@@ -104,22 +104,10 @@ backwards through arbitrary calls or implement a whole-program type solver.
 If a conditional/case expression or overloaded method group cannot supply its
 own type in an otherwise untyped argument position, use a typed intermediate
 binding or explicit call arguments. Fully general nested generic type paths
-remain outside this milestone. [Source overloads, record CLR interfaces, and async](overloads-interfaces-debugging-and-async.md)
-are implemented.
+remain a tracked [baseline gap](../../../future/language-gaps.md#finish-the-existing-baseline-first).
 
-## Verification and diagnostics
+## See also
 
-Tests execute inferred recursion, record methods, Map/Compose, LINQ, nullable
-arguments, recursive unions, fieldless/phantom cases, arrays, and named payload
-evaluation order. A mixed C#/FPAS build compares overload selection, variance,
-custom delegate inputs, callable outputs, and inferred CLR types against actual
-C# calls. Another FPAS assembly constructs and matches generic unions using
-imported metadata. Negative builds cover constraints, ambiguous overloads,
-ambiguous interface views/owners, missing evidence, and stale captured null facts.
-The pipeline and tree examples build and execute through their actual SDK projects.
-
-FP3026 reports missing/conflicting inference evidence or invalid explicit arity.
-FP3018 still reports constraint failures; FP3003 reports failed/ambiguous overloads.
-Existing nullable/accessibility and construction diagnostics still apply. The
-compiler emits the same MethodSpec, constructed owner, and typed CLR calls as
-an equivalent explicit instantiation, with no additional Core runtime dependency.
+- [Generic routines](generic-routines.md)
+- [Generic data types](../types/generics.md)
+- [Test coverage](../../../../tests/coverage.md)

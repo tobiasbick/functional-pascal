@@ -23,10 +23,10 @@ public sealed class HandbookTests
     public void Repository_documentation_links_and_anchors_resolve()
     {
         var repository = DocumentationLinks.Repository;
-        var paths = new[] { "docs", "examples", "apps", "sdk" }.SelectMany(directory =>
+        var paths = new[] { "docs", "examples", "apps", "sdk", "tests" }.SelectMany(directory =>
             Directory.GetFiles(Path.Combine(repository, directory), "*.md", SearchOption.AllDirectories))
             .Where(path => !Path.GetRelativePath(repository, path).Replace('\\', '/').Split('/').Any(part => part is "bin" or "obj"))
-            .Concat(new[] { "README.md", "AGENTS.md", "tests/README.md" }.Select(path => Path.Combine(repository, path)));
+            .Concat(new[] { "README.md", "AGENTS.md" }.Select(path => Path.Combine(repository, path)));
         DocumentationLinks.Validate(paths);
     }
 

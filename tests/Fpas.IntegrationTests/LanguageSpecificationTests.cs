@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Fpas.Tests.Support;
 
@@ -10,33 +9,22 @@ namespace Fpas.IntegrationTests;
 public sealed class LanguageSpecificationTests
 {
     private static string Root => Path.Combine(AppContext.BaseDirectory, "Fixtures", "specification");
-    private static readonly Regex Fences = new(@"(?ms)^```pascal\r?\n(.*?)^```", RegexOptions.CultureInvariant);
-    private static readonly Regex Header = new(@"(?m)^(?:async )?(program|unit) ([A-Za-z_][A-Za-z_0-9.]*)\s*;", RegexOptions.CultureInvariant);
-
-    public static IEnumerable<object[]> CompleteExamples()
-    {
-        foreach (var path in Directory.GetFiles(Root, "*.md", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
-            foreach (var (match, index) in Fences.Matches(File.ReadAllText(path)).Cast<Match>().Select((match, index) => (match, index)))
-                if (Header.Match(match.Groups[1].Value.Trim()) is { Success: true } header)
-                    yield return [Path.GetRelativePath(Root, path), index, header.Groups[2].Value, header.Groups[1].Value == "unit"];
-    }
+    public static IEnumerable<object[]> CompleteExamples() => MarkdownExamples.Read(Root)
+        .Select(example => new object[] { example.Document, example.Fence, example.Name, example.Library });
 
     [Theory]
     [MemberData(nameof(CompleteExamples))]
     public async Task Complete_documented_sources_compile_and_execute(string document, int fence, string name, bool library)
     {
         using var directory = new TemporaryDirectory();
-        var source = Fences.Matches(File.ReadAllText(Path.Combine(Root, document)))[fence].Groups[1].Value;
-        Assert.EndsWith(library ? "end unit;" : "end program;", source.Trim());
-        var sourcePath = directory.File(name + ".fpas");
-        File.WriteAllText(sourcePath, source);
-        var sources = new List<string> { sourcePath };
-        if (name == "MovePoint")
+        var examples = MarkdownExamples.Read(Root);
+        var example = examples.Single(item => item.Document == document && item.Fence == fence);
+        Assert.EndsWith(library ? "end unit;" : "end program;", example.Source.Trim());
+        var sources = new List<string>();
+        foreach (var companion in MarkdownExamples.Sources(example, examples))
         {
-            var geometry = Fences.Matches(File.ReadAllText(Path.Combine(Root, "program-structure", "README.md")))
-                .Cast<Match>().Single(match => match.Groups[1].Value.StartsWith("unit Game.Geometry;", StringComparison.Ordinal));
-            var dependency = directory.File("Geometry.fpas");
-            File.WriteAllText(dependency, geometry.Groups[1].Value); sources.Add(dependency);
+            var path = directory.File(companion.Name + ".fpas");
+            File.WriteAllText(path, companion.Source); sources.Add(path);
         }
         var output = directory.File(name + ".dll");
         var compile = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", .. sources,
@@ -74,6 +62,15 @@ public sealed class LanguageSpecificationTests
             "RecordMembers" => ["2", "3", "Mara", "1", "1"],
             "MovePoint" => ["4"],
             "AsyncHello" => ["Ready"],
+            "AgentStart" => ["42"],
+            "AgentBasics" => ["Basics verified"],
+            "AgentTypes" => ["Types verified"],
+            "AgentUnits" => ["Units verified"],
+            "AgentFunctions" => ["Functions verified"],
+            "AgentPatterns" => ["Patterns verified"],
+            "AgentInterop" => ["Interop verified"],
+            "AgentEvents" => ["Events verified"],
+            "AgentAsync" => ["Async verified"],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);

@@ -38,8 +38,11 @@ No signature is erased into object or invoked through reflection/dynamic binding
 
 LanguageSpecificationTests extracts every complete program/unit code fence under
 docs/pascal. It compiles the exact sources through the CLI with portable PDB and
-XML output, executes programs, and checks output. The two-file example supplies
-its documented Geometry unit. New complete examples require an execution assertion.
+XML output, executes programs, and checks output. Companion sources share an
+explicit project label; each program compiles with its labeled units. This covers
+the Geometry example and the compact [agent reference](../pascal/agents/README.md).
+New complete examples require an execution assertion. AgentReferenceTests also
+checks that reference's links, structure, entrypoint policy, and token budgets.
 
 The file example exercises success and missing-file cleanup; domains/contracts
 exercise their specified failures. The unchanged HTTP example uses a local

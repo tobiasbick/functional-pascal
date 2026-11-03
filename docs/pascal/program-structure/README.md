@@ -36,7 +36,7 @@ no value-returning top-level entry body.
 
 ## Units
 
-```pascal
+```pascal project=geometry
 unit Game.Geometry;
 
 public type Point = record
@@ -134,7 +134,7 @@ are an error in the baseline; extern assembly alias syntax is outside its scope.
 Save the Geometry unit above as `Geometry.fpas` and this program as `Main.fpas`,
 and supply both sources to one compilation:
 
-```pascal
+```pascal project=geometry
 program MovePoint;
 
 uses Game.Geometry as Geometry, System.Console as Console;

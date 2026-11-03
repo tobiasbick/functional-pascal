@@ -103,6 +103,8 @@ output/reference copying.
 Start with the [documentation hub](docs/README.md), the
 [language overview](docs/pascal/README.md), and the
 [complete syntax examples](docs/pascal/examples.md).
+Agents can use the compact [task-oriented reference](docs/pascal/agents/README.md);
+repository commands are collected in the [development workflow](docs/build/development.md).
 
 The locally packaged `Fpas.NET.Sdk` builds `.fpasproj` projects in mixed `.slnx`
 solutions. C# projects can consume FPAS libraries, and FPAS can consume resolved
@@ -118,24 +120,8 @@ reserved for later work.
 
 Use a stable .NET 10 SDK. global.json selects 10.0.100 or a later installed 10.0
 feature band. Package versions are centralized in Directory.Packages.props.
-
-```sh
-dotnet restore Fpas.slnx
-dotnet build Fpas.slnx --no-restore --configuration Debug
-dotnet test Fpas.slnx --no-build --no-restore --configuration Debug
-```
-
-The xUnit tests exercise the compiler, CLI, generated programs, and real MSBuild
-builds using an isolated local SDK package. To build [Hello](examples/hello/main.fpas)
-through its FPAS project after building the toolchain:
-
-```sh
-dotnet pack sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj --no-build --configuration Debug --output sdk/feed
-dotnet restore examples/hello/Hello.fpasproj
-dotnet build examples/hello/Hello.fpasproj --no-restore
-dotnet examples/hello/bin/Debug/net10.0/Hello.dll
-```
-
-The repository NuGet.Config includes sdk/feed. No FPAS SDK is published remotely.
-Use an unused SDK package version when changing packaged tools; see the
-[bootstrap and cache instructions](docs/implementation/msbuild.md#local-sdk-bootstrap).
+The [development workflow](docs/build/development.md) contains restore/build/test
+commands, focused documentation checks, application SDK bootstrap, and CLI use.
+The [test overview](tests/README.md) explains compiler, execution, metadata, and
+mixed-project coverage. The SDK is resolved from the local feed; follow the
+documented version/cache workflow when changing its packaged tools.

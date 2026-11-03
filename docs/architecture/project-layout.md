@@ -150,18 +150,18 @@ belong under tests, including application workflow coverage driven by xUnit.
 Automated runs select bounded noninteractive scenarios explicitly; interactive
 examples/apps can be compiled without launching their UI.
 
-The existing [Markdown programs](../pascal/examples.md) remain design examples.
-Most source extraction, further examples, application selection, and migration of
-old FPAS applications are later work. Hello builds through its `.fpasproj` or
-the direct compiler. The [Units example](../../examples/units/README.md) compiles
-a program and two units into one assembly. The apps directory still contains only its README
-placeholder.
+Complete [Markdown programs](../pascal/examples.md) and the compact
+[agent reference](../pascal/agents/README.md) are compiled directly from their
+documentation and executed by integration tests. Companion units use explicit
+project labels. Hello builds through its `.fpasproj` or the direct compiler.
+The [Units example](../../examples/units/README.md) compiles a program and two
+units into one assembly. The apps directory contains its README placeholder.
 
-## Starting implementation
+## Extending the implementation
 
-Extend the compiler library and CLI beyond the first-program subset, preserving
-compile/execute integration coverage. Add Fpas.Core contents when emitted features
-need them, and extend the implemented task/SDK and mixed-project coverage toward
-the MSBuild plan. Add executable examples and apps once the required language and
-build features work. Publishing and IDE/LSP/query tooling retain their separately
-documented scope.
+Preserve compile/execute integration coverage when extending the compiler or SDK.
+Add Fpas.Core contents only when emitted features need them. Follow the owning
+language/build contracts and their tracked gaps. Add executable examples/apps
+using implemented features. Publishing and IDE/LSP/query tooling retain their
+separately documented scope. Repository commands belong in the
+[development workflow](../build/development.md).

@@ -6,10 +6,9 @@ invokes the actual compiler CLI and .NET host, including Hello, stdin, CLR calls
 argument/encoding errors, and output preservation. It also packs and tests the
 actual FPAS SDK/MSBuild task. Both projects use xUnit.
 
-```sh
-dotnet build Fpas.slnx
-dotnet test Fpas.slnx --no-build --no-restore
-```
+Build/test commands and focused documentation checks are in the
+[development workflow](../docs/build/development.md). Compile the tests before
+running them; copied documentation/examples are build inputs.
 
 Directory.Build.targets derives reference inputs from the actual test project
 framework references. TestSupport contains shared bounded process and temporary
@@ -26,6 +25,11 @@ LanguageSpecificationTests compiles complete handbook programs/units directly
 from the copied Markdown, checks PDB/XML outputs, and executes programs with
 controlled file, environment, and HTTP failure inputs. Comparison and signature
 tests verify real CLR operators and explicit unsupported-feature diagnostics.
+The [agent reference](../docs/pascal/agents/README.md) uses the same runner, with
+explicit project labels for companion units. AgentReferenceTests checks its
+entrypoint policy, complete/unique examples, local links/fragments, and exact
+o200k_base token budgets using test-only Microsoft.ML.Tokenizers packages with
+the packaged O200kBase vocabulary.
 Additional mixed builds check parallel project/configuration isolation, framework/
 target-path negotiation, compiler asset/reference-list invalidation, and clean
 assembly/PDB/XML equivalence.

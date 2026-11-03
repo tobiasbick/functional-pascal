@@ -12,6 +12,10 @@ baseline work and deferred proposals. Complete handbook examples are compiled
 and executed by the [acceptance tests](../implementation/comparisons-and-acceptance.md).
 The [MSBuild milestone](../implementation/msbuild.md) describes project builds.
 
+For task-oriented authoring rules and executable examples, start with the
+[agent reference](agents/README.md). Repository build/test commands are in the
+[development workflow](../build/development.md).
+
 ## Design decisions
 
 - Free functions, procedures, immutable records, and discriminated unions are the

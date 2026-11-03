@@ -6,6 +6,8 @@ required of that compiler; implemented subsets are documented separately below.
 
 | Area | Entry point |
 | --- | --- |
+| Agent-oriented language rules, examples, and task navigation | [FPAS for agents](pascal/agents/README.md) |
+| Repository build/test commands, SDK bootstrap, and compiler invocation | [Development workflow](build/development.md) |
 | CLR comparison operators, signature diagnostics, executable specifications, and build acceptance | [Comparisons and acceptance](implementation/comparisons-and-acceptance.md) |
 | Design principles and scope | [Language overview](pascal/README.md) |
 | Remaining baseline work and deferred interface proposal | [Language gaps](future/language-gaps.md) |
@@ -44,7 +46,7 @@ required of that compiler; implemented subsets are documented separately below.
 | Programs, units, imports, and global values | [Program structure](pascal/program-structure/README.md) |
 | MSBuild projects and mixed-language solutions | [MSBuild integration plan](build/msbuild.md) |
 | Calling and implementing .NET APIs | [.NET interoperability](pascal/interop/README.md) |
-| Complete proposed programs | [Syntax examples](pascal/examples.md) |
+| Complete executable programs | [Syntax examples](pascal/examples.md) |
 | Direct CIL generation and runtime support | [CLR mapping](specs/clr-mapping.md) |
 | Parser-facing syntax reference | [Syntax grammar](specs/syntax.md) |
 

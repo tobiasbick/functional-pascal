@@ -45,7 +45,9 @@ internal sealed partial class Binder
             if (typeArguments is null && (references.Property(owner, member.Name.Text, receiver is null, recordContext) is not null || references.Field(owner, member.Name.Text, receiver is null) is not null))
                 return InvokeDelegate(BindClrMember(owner, receiver, member), call.Arguments, call.Position, check);
             var methods = references.Methods(owner, member.Name.Text, receiver is null, typeArguments, recordContext, includeOpen: typeArguments is null);
-            return BindInvocation(methods, call.Arguments, receiver, check, call.Position, inferGenerics: typeArguments is null);
+            if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position);
+            return BindInvocation(methods, call.Arguments, receiver, check, call.Position, inferGenerics: typeArguments is null,
+                noApplicable: () => references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position, call.Arguments.Count));
         }
         if (typeArguments is not null) throw source.Error("FP3003", "Explicit type arguments require a named source or CLR method.", call.Position);
         return InvokeDelegate(Receiver(target, check), call.Arguments, call.Position, check);
@@ -54,7 +56,11 @@ internal sealed partial class Binder
     private BoundExpression InvokeDelegate(BoundExpression target, IReadOnlyList<ExpressionSyntax> arguments, int position, bool check)
     {
         var invoke = references.DelegateSignature(target.Type);
-        if (invoke is null) throw source.Error("FP3019", "Only a supported CLR delegate value can be invoked.", position);
+        if (invoke is null)
+        {
+            references.DiagnoseUnsupportedMethod(target.Type, "Invoke", false, source, position);
+            throw source.Error("FP3019", "Only a supported CLR delegate value can be invoked.", position);
+        }
         if (target.Type.IsNullable) throw source.Error("FP3013", "The delegate may be null; validate a stable binding before invocation.", position);
         if (!invoke.Flexible && arguments.All(argument => argument is not (NamedArgumentSyntax or ArgumentModeSyntax)))
         {
@@ -88,7 +94,9 @@ internal sealed partial class Binder
     private BoundExpression ImportedDelegate(TypeSymbol owner, string name, BoundExpression? receiver, TypeList? arguments, TypeSymbol? expected, int position)
     {
         var signature = expected is null ? null : references.DelegateSignature(expected);
-        var candidates = references.Methods(owner, name, receiver is null, arguments, recordContext).Where(method =>
+        var methods = references.Methods(owner, name, receiver is null, arguments, recordContext);
+        if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, name, receiver is null, source, position);
+        var candidates = methods.Where(method =>
             references.ValidMethodArguments(method) && (signature is null || references.DelegateCompatible(expected!, method.DelegateParameters, method.Result, method.ParameterInfo))).ToArray();
         if (candidates.Length > 1 && signature is null) return new BoundMethodGroup(candidates, receiver);
         var method = signature is not null ? references.DelegateMethod(expected!, candidates) : candidates.SingleOrDefault();

@@ -3,8 +3,10 @@
 **Implemented:** a synchronous FPAS program with units, or units-only library,
 can be compiled by the C# CLI to a managed DLL. Programs include runtime configuration and execute through
 a normal .NET 10 host. Units export public routines for .NET consumers.
-This is a small implemented subset of the [language baseline](../pascal/README.md),
-not implementation of the complete specification.
+The topic milestones below describe the implemented [language baseline](../pascal/README.md).
+Known remaining requirements are listed in [language gaps](../future/language-gaps.md);
+[acceptance coverage](comparisons-and-acceptance.md) maps the executable examples
+and language/build requirements to tests.
 
 ## Run the example
 
@@ -78,8 +80,8 @@ The program prints `Hello from FPAS`. See the checked-in
 - Duplicate bindings/imports, unknown names, invalid type assignments, missing
   annotations, unsupported calls, and lexical/syntactic errors are diagnosed.
 
-The complete language remains specified in the topic documents. Broader CLR
-signature forms remain later steps. [Typed loops](loops.md) now include repeat
+The complete language is specified in the topic documents. Excluded CLR
+signature forms receive explicit diagnostics. [Typed loops](loops.md) include repeat
 and all specified integral/subrange counters.
 [Arrays, args, closed generic CLR types, indexers, and enumeration](arrays-and-collections.md)
 are implemented, as are [callable values, closures, and explicit generic CLR calls](functions-and-closures.md)

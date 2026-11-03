@@ -59,6 +59,10 @@ defined CLR representations and conversions; see [data domains](data-domains.md)
   and the corresponding short-circuit Boolean operand. A mutable local captured
   by a closure, or invalidated by assignment/byref use, is not stable. Reading a
   mutable property twice does not establish non-nullness.
+- A foreign overloaded equality operator can define its own null behavior and
+  does not establish non-nullness. A runtime `Value is T` check can validate a
+  nullable reference independently of such an operator. Generated FPAS record/
+  union equality retains its compiler-defined null-check behavior.
 - Use a null branch, `??`, or explicit validation to obtain a non-null value.
   There is no null-forgiving `!` operator or implicit conversion to a union.
 

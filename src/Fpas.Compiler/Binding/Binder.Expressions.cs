@@ -55,7 +55,9 @@ internal sealed partial class Binder
                     throw source.Error("FP3005", "Cannot instantiate a nullable, abstract, or static type.", creation.Position);
                 var constructors = references.Methods(created, ".ctor", false);
                 if (created.IsValue && creation.Arguments.Count == 0 && !constructors.Any(method => method.Parameters.Count == 0)) return new BoundNew(created, null, []);
-                return BindInvocation(constructors, creation.Arguments, null, check, creation.Position, created);
+                if (constructors.Count == 0) references.DiagnoseUnsupportedMethod(created, ".ctor", false, source, creation.Position);
+                return BindInvocation(constructors, creation.Arguments, null, check, creation.Position, created,
+                    noApplicable: () => references.DiagnoseUnsupportedMethod(created, ".ctor", false, source, creation.Position, creation.Arguments.Count));
             case UncheckedSyntax wrapping:
                 return BindExpression(wrapping.Operand, check: false, expected: expected);
             case CastSyntax cast:
@@ -120,6 +122,11 @@ internal sealed partial class Binder
         if (references.ScalarInfo(right.Type) is { Category: ScalarCategory.Range } rightRange && TypeFacts.Numeric(left.Type))
             right = new BoundCall(ReferenceCatalog.DomainGetter(rightRange), [], right);
         if (TypeFacts.Numeric(left.Type) && TypeFacts.Numeric(right.Type)) return NumericBinary(left, op, right, syntax.Position, check);
+        if (BindComparisonOperator(left, op, right, syntax.Position) is BoundCall comparison)
+        {
+            comparisonCalls[syntax] = references.RecordInfo(comparison.Method.Owner) is not null || references.UnionInfo(comparison.Method.Owner) is not null;
+            return comparison;
+        }
         if (op == "??")
         {
             if (left.Type == TypeSymbol.Null) return right;
@@ -135,12 +142,6 @@ internal sealed partial class Binder
             var operand = left.Type == TypeSymbol.Null ? right : left;
             if (!operand.Type.CanHaveNull && !operand.Type.NullableValue && operand.Type != TypeSymbol.Null)
                 throw source.Error("FP3002", "Only reference or nullable values can be compared with null.", syntax.Position);
-            if ((operand.Type.Kind is TypeKind.Named or TypeKind.Record or TypeKind.Union) && operand.Type.IsReference)
-            {
-                var equality = references.FindMethod(operand.Type.NonNullable, op == "=" ? "op_Equality" : "op_Inequality",
-                    [left.Type, right.Type], syntax.Position, source, optional: true);
-                if (equality is not null) { ForgetCapturedFacts(); return new BoundCall(equality, ConvertArguments([left, right], equality.Parameters, syntax.Position)); }
-            }
             return new BoundNullTest(operand, op == "=");
         }
         if (op == "+" && (left.Type == TypeSymbol.String && right.Type == TypeSymbol.Char || left.Type == TypeSymbol.Char && right.Type == TypeSymbol.String))
@@ -158,9 +159,6 @@ internal sealed partial class Binder
         }
         if (common.IsReference && op is "=" or "<>")
         {
-            var equality = references.FindMethod(common.NonNullable, op == "=" ? "op_Equality" : "op_Inequality",
-                [left.Type, right.Type], syntax.Position, source, optional: true);
-            if (equality is not null) { ForgetCapturedFacts(); return new BoundCall(equality, ConvertArguments([left, right], equality.Parameters, syntax.Position)); }
             return new BoundBinary(Convert(left, common, syntax.Position), op, Convert(right, common, syntax.Position), TypeSymbol.Boolean, check);
         }
         if (common != TypeSymbol.Boolean || op is not ("=" or "<>" or "and" or "or" or "xor"))

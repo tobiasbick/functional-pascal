@@ -19,7 +19,16 @@ mixed-language .slnx. Each test copies it to an isolated directory and resolves 
 uniquely versioned SDK from a temporary local feed. Tests execute the host, check
 transitive project/package assets and public FPAS signatures, and exercise
 incremental builds, source diagnostics, source selection, Clean, and Release
-Rebuild. They do not claim support for the full language or MSBuild plan.
+Rebuild. The [acceptance map](../docs/implementation/comparisons-and-acceptance.md)
+describes the verified net10.0/AnyCPU language/build scope and the remaining gaps.
+
+LanguageSpecificationTests compiles complete handbook programs/units directly
+from the copied Markdown, checks PDB/XML outputs, and executes programs with
+controlled file, environment, and HTTP failure inputs. Comparison and signature
+tests verify real CLR operators and explicit unsupported-feature diagnostics.
+Additional mixed builds check parallel project/configuration isolation, framework/
+target-path negotiation, compiler asset/reference-list invalidation, and clean
+assembly/PDB/XML equivalence.
 
 Expression/control-flow tests execute arithmetic, widening/casts, checked
 overflow, short-circuit and branch side effects, recursion, lexical scopes,

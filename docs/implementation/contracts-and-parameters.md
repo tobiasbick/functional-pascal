@@ -67,7 +67,7 @@ reference types. Imported methods and constructors use metadata defaults and
 parameter names. Explicit imported delegate types support managed-reference
 routines and lambdas; callable shorthand remains by-value. Anonymous functions
 do not declare optional or params parameters. Source overload declarations are
-supported. Byref locals/returns, pointers, and byref-like CLR types remain pending.
+supported. Byref locals/returns, pointers, and byref-like CLR types are outside the baseline.
 FP3028 diagnoses invalid modes, defaults, storage, captures, and out flow.
 
 ## Verification

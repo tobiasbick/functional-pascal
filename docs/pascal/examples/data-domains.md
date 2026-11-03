@@ -1,7 +1,8 @@
 # Data-domain examples
 
-These are complete proposed programs, not compiler-verified samples. Compile each
-program independently once a compiler exists. See [data domains](../language/data-domains.md)
+These complete programs are compiled independently and executed by the
+[acceptance tests](../../implementation/comparisons-and-acceptance.md).
+See [data domains](../language/data-domains.md)
 for the specified identity, conversion, and default-value rules.
 
 ## Distinct identity and explicit unwrapping

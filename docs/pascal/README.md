@@ -5,11 +5,12 @@ structure. It compiles directly to Common Intermediate Language (CIL), CLR
 metadata, and portable debug information. It does not generate C# as an
 intermediate source language.
 
-**Status: full baseline specification; partially implemented.** The
-[first-program milestone](../implementation/first-program.md) defines the small
-executable subset currently supported; the [MSBuild milestone](../implementation/msbuild.md)
-describes available project builds. The handbook examples generally describe
-the language still to build and must not be treated as compiler-verified.
+**Status: implemented language features with known baseline gaps.** The
+[compiler overview](../implementation/first-program.md) and topic milestones
+describe support; [language gaps](../future/language-gaps.md) lists remaining
+baseline work and deferred proposals. Complete handbook examples are compiled
+and executed by the [acceptance tests](../implementation/comparisons-and-acceptance.md).
+The [MSBuild milestone](../implementation/msbuild.md) describes project builds.
 
 ## Design decisions
 
@@ -91,11 +92,12 @@ Finish this baseline before adding language extensions. The
 [language gaps](../future/language-gaps.md) track confirmed missing baseline work
 and the separate, deferred proposal for source interface declarations.
 
-The [MSBuild integration plan](../build/msbuild.md) adds `.fpasproj` projects,
+The [MSBuild specification](../build/msbuild.md) defines `.fpasproj` projects,
 `.slnx` solutions, standard dependency restore, and cross-language project
-references as the initial build scope. Some of its requirements remain pending.
-The local SDK already supports the subset documented
-in the MSBuild milestone. Publishing and deployment profiles remain later work.
+references as the initial build scope. The local SDK supports and tests this
+contract for net10.0 and AnyCPU; see the
+[acceptance coverage](../implementation/comparisons-and-acceptance.md#build-acceptance).
+Publishing and deployment profiles remain later work.
 
 The [repository layout](../architecture/project-layout.md) defines the C#
 compiler/toolchain projects, xUnit tests, and examples/apps directories.

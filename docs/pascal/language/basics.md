@@ -9,7 +9,7 @@ brace, parenthesis-star, and slash-star forms are not comments. Consecutive
 standalone comments immediately before a declaration supply its Markdown
 documentation; a blank source line detaches them. See
 [source comments and API documentation](comments.md) for attachment, structured
-parameter/return descriptions, and the planned .NET XML export.
+parameter/return descriptions, and .NET XML export.
 
 Keywords and identifiers are **case-sensitive**. Keywords are lowercase;
 `Count` and `count` are different identifiers. Identifiers use ASCII letters,
@@ -138,6 +138,11 @@ Strings compare ordinal contents; arrays use reference identity. Generated
 record/union equality is described in [types](types.md). Other reference types
 without an applicable equality operator use reference identity, not an implicit
 call to virtual `Equals`. Ordering requires an applicable primitive/operator rule.
+Applicable CLR comparison operators are resolved from both operand types using
+ordinary overload rules, including for value types such as DateTime and TimeSpan.
+Ambiguous operators are errors. This does not introduce lifted nullable-value
+operators or source operator declarations. See
+[comparisons and acceptance](../../implementation/comparisons-and-acceptance.md).
 
 ## Casts and runtime types
 

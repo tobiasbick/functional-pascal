@@ -7,7 +7,7 @@ Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
 [mixed-project MSBuild builds](../implementation/msbuild.md).
 Fpas.Core supplies record/union metadata attributes; the SDK packages Core, the compiler,
 and the implemented task.
-Hello is an executable example; applications remain later work. The responsibilities
+Examples build and run through the SDK; applications remain later work. The responsibilities
 below describe the full intended implementation.
 
 ## Repository tree

@@ -39,7 +39,7 @@ internal sealed partial class Binder
     }
 
     private (CallShape Shape, BoundExpression[] Values) SelectInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
-        bool check, int position, bool inferGenerics)
+        bool check, int position, bool inferGenerics, Action? noApplicable = null)
     {
         var shapes = templates.SelectMany(method => new[] { Shape(method, syntax, false), Shape(method, syntax, true) })
             .Where(shape => shape is not null).Select(shape => shape!).ToArray();
@@ -69,6 +69,7 @@ internal sealed partial class Binder
             matches.Add(closed);
         }
         var best = matches.Where(candidate => !matches.Any(other => BetterCall(other, candidate, values))).ToArray();
+        if (best.Length == 0 && !constraintsFailed && !inferenceFailed) noApplicable?.Invoke();
         if (best.Length != 1)
             throw source.Error(best.Length == 0 && constraintsFailed ? "FP3018" : best.Length == 0 && inferenceFailed && matches.Count == 0 ? "FP3026" : "FP3003",
                 (best.Length == 0 ? "No applicable overload for the supplied names, argument modes, types, and optional parameters." : "Ambiguous overloads for the supplied arguments.") +
@@ -79,9 +80,9 @@ internal sealed partial class Binder
     }
 
     private BoundExpression BindInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
-        BoundExpression? receiver, bool check, int position, TypeSymbol? constructed = null, bool inferGenerics = false)
+        BoundExpression? receiver, bool check, int position, TypeSymbol? constructed = null, bool inferGenerics = false, Action? noApplicable = null)
     {
-        var (selected, bound) = SelectInvocation(templates, syntax, check, position, inferGenerics);
+        var (selected, bound) = SelectInvocation(templates, syntax, check, position, inferGenerics, noApplicable);
         var arguments = syntax.Select(argument => argument is NamedArgumentSyntax named ? named.Value : argument).ToArray();
         if (selected.Method.IsStatic) receiver = null;
         var bindings = new List<BoundBinding>();

@@ -1,11 +1,13 @@
 # MSBuild and solution integration
 
-**Status: partially implemented.** The local SDK builds multi-source net10.0
+**Status: initial net10.0/AnyCPU contract implemented and verified.** The local SDK builds multi-source
 programs/libraries and mixed C#/FPAS solutions using direct CIL output. See the
 [implemented milestone](../implementation/msbuild.md) for bootstrap instructions,
 verified behavior, and exact limits. Portable PDBs and [XML documentation](../implementation/xml-documentation.md)
-are implemented. This document also defines wider goals, including public language
-types which remain pending.
+are implemented. Public records, unions, domains, and generics work across
+project boundaries. See
+[acceptance coverage](../implementation/comparisons-and-acceptance.md#build-acceptance)
+for the tests and explicit build-scope limits.
 
 ## Initial goal and scope
 
@@ -41,7 +43,7 @@ consumption is included; a public compiler/SDK publishing workflow is not.
 Use `.fpasproj` for the new MSBuild project format. It is an XML MSBuild project,
 not a source manifest that happens to have a similar filename.
 
-Assign the FPAS project type this stable identity for the planned integration:
+The FPAS project type has this stable identity:
 
 ```text
 Name: FPAS
@@ -83,11 +85,10 @@ additional workflows separately; they are not needed to build this solution.
 
 The SDK identifier is `Fpas.NET.Sdk`. It supplies Sdk.props, Sdk.targets, and
 compiler invocation; a compiler-support reference is added when emitted features
-need one. The following illustrates the full goal, including XML documentation
-which is not yet implemented. Use the milestone's minimal project to build today:
+need one. The following project enables implemented XML documentation:
 
 ```xml
-<Project Sdk="Fpas.NET.Sdk/0.1.0">
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
@@ -100,7 +101,7 @@ which is not yet implemented. Use the milestone's minimal project to build today
 </Project>
 ```
 
-Versions here identify the proposed project; no public FPAS SDK is published.
+No public FPAS SDK is published.
 The implemented development bootstrap uses the repository's sdk/feed local
 package source and version 0.1.0-dev. Missing SDK/compiler
 components must fail clearly instead of falling back to a global unrelated tool.
@@ -220,7 +221,7 @@ state by project/configuration/framework. Do not use a shared mutable global
 compiler cache without proper identity and concurrency handling. An incremental
 rebuild must produce behavior equivalent to a clean build.
 
-## Implementation sequence and acceptance
+## Acceptance requirements
 
 1. Add the Project SDK props/targets and a compiler invocation task/driver. Prove
    SDK resolution from a clean development checkout and deterministic source and
@@ -242,7 +243,7 @@ rebuild must produce behavior equivalent to a clean build.
    Include comment-only edits, missing XML outputs, custom documentation paths,
    and switching generation on/off without leaving stale documentation.
 
-The intended verification entry points, once implemented, include:
+Verification entry points include:
 
 ```sh
 dotnet restore Game.slnx
@@ -252,9 +253,10 @@ dotnet clean Game.slnx
 dotnet msbuild Game.slnx -restore -t:Rebuild
 ```
 
-The implemented mixed-project tests run these build/clean/rebuild entry points;
-the broader acceptance cases above remain the goal. No Visual Studio/VS Code
-extension or language server may be required for them.
+The mixed-project tests exercise these requirements for net10.0/AnyCPU, including
+parallel configurations, compiler/reference invalidation, target negotiation,
+and clean-output equivalence. See the [coverage map](../implementation/comparisons-and-acceptance.md).
+No Visual Studio/VS Code extension or language server is required.
 
 ## References
 

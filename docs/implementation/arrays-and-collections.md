@@ -44,7 +44,7 @@ element type. An allocation that can have nonzero size requires nullable referen
 elements, e.g. new string?[Count]; new string[0] is accepted. The implementation
 recognizes literal zero dimensions, not general constant expressions. Jagged
 arrays can be built from nested literals; source type aliases are supported.
-Jagged new suffixes are not implemented.
+Special jagged new suffixes are outside the baseline syntax.
 
 Strings expose their CLR UTF-16 indexer returning char. #65 denotes one UTF-16
 code unit; character codes must be in 0..65535. char widens to int/double,

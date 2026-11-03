@@ -152,10 +152,10 @@ Two sources cannot declare the same qualified program/unit name.
 
 ## Build integration
 
-Use the planned MSBuild `.fpasproj` format and `.slnx` solution integration from
-the [build plan](../../build/msbuild.md). Compile items select sources;
+Use the MSBuild `.fpasproj` format and `.slnx` solution integration from
+the [build specification](../../build/msbuild.md). Compile items select sources;
 ProjectReference and PackageReference supply dependencies. Source imports still
-resolve names rather than acquiring libraries. The plan includes ordinary restore,
+resolve names rather than acquiring libraries. The SDK supports ordinary restore,
 build, clean/rebuild, and references between FPAS and C# projects.
 
 IDE project loaders, LSP, editor/query integration, and publishing/deployment

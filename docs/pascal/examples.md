@@ -1,16 +1,17 @@
 # Syntax examples
 
-**These are proposed programs, not compiler-verified samples.** The
-[implemented compiler subset](../implementation/first-program.md) does not yet
-cover most of these programs. The [Mandelbrot program](../../examples/mandelbrot/README.md)
-is executable and covered by integration tests. Each Pascal code fence below is a separate complete
+**These complete programs are compiled and executed by integration tests.** See
+[acceptance coverage](../implementation/comparisons-and-acceptance.md) for controlled
+file/network inputs and nondeterministic event output. The
+[Mandelbrot program](../../examples/mandelbrot/README.md) also has pixel-level tests.
+Each Pascal code fence below is a separate complete
 program. Imports and helper declarations are included.
 Programs are independent and must not be concatenated into one compilation.
 
 The [topic documentation](README.md) defines their semantics. A two-file unit
 example is in
 [program structure](program-structure/README.md).
-For a complete documented unit and its planned XML output, see
+For a complete documented unit and its XML output, see
 [source comments and API documentation](language/comments.md#complete-source-example).
 
 ## 1. Hello world and primitive types
@@ -281,7 +282,8 @@ end;
 end program;
 ```
 
-This program needs network access when eventually executed. Starting Download
+This program needs network access for a successful download. Its integration
+test uses a local rejecting proxy to exercise the HTTP failure path. Starting Download
 does not imply a new thread. Its Task and CancellationToken are real .NET types.
 Client is disposed before Download completes; Cancellation remains alive through
 the try/catch and is disposed when the program entry body exits.

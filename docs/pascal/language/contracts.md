@@ -172,7 +172,7 @@ modifier, not just the presence of Task in its result type.
 
 ## Implementation checks
 
-A future compiler must exercise true/false conditions, ordered clauses, typed
+The verification suite exercises true/false conditions, ordered clauses, typed
 result bindings, multiple/early returns, procedure out/ref state, generic routines,
 block lambdas, and interface/delegate/cross-language calls. Cover normal cleanup,
 cleanup failure, body failure, condition-evaluation exceptions, and async

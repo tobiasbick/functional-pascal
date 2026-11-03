@@ -31,6 +31,8 @@ internal sealed partial class Binder
             if (owner != TypeSymbol.Unsupported &&
                 (references.Property(owner, member.Name.Text, true, recordContext) is not null || references.Field(owner, member.Name.Text, true) is not null ||
                  references.Event(owner, member.Name.Text, source, member.Name.Position) is not null)) return null;
+            if (owner != TypeSymbol.Unsupported)
+                references.DiagnoseUnsupportedMember(owner, member.Name.Text, true, false, source, member.Name.Position);
         }
         return parts is not null && (imports.ContainsKey(parts[0]) || unit.HasType(parts[0]) || TypeFacts.Primitive(parts[0]) != TypeSymbol.Unsupported)
             ? catalog.ResolvePath(parts, unit, references, expression.Position, arity, allowOpenGeneric) : null;
@@ -70,7 +72,10 @@ internal sealed partial class Binder
         if (references.Property(owner, member.Name.Text, receiver is null, recordContext) is { } property)
         {
             if (writing ? property.Setter is null : property.Getter is null)
+            {
+                references.DiagnoseUnsupportedMember(owner, member.Name.Text, receiver is null, writing, source, member.Name.Position);
                 throw source.Error("FP3015", "The requested property accessor is not public or supported.", member.Name.Position);
+            }
             if (writing && receiver?.Type.IsValue == true && !Writable(receiver))
                 throw source.Error("FP3009", "A value-type property assignment requires writable storage.", member.Position);
             ForgetCapturedFacts();
@@ -82,6 +87,7 @@ internal sealed partial class Binder
                 throw source.Error("FP3009", "The field or its value-type receiver is read-only.", member.Position);
             return new BoundField(field, receiver);
         }
+        references.DiagnoseUnsupportedMember(owner, member.Name.Text, receiver is null, writing, source, member.Name.Position);
         if (!writing) return ImportedDelegate(owner, member.Name.Text, receiver, null, expected, member.Position);
         throw source.Error("FP3001", $"No supported public field/property '{owner}.{member.Name.Text}'.", member.Name.Position);
     }

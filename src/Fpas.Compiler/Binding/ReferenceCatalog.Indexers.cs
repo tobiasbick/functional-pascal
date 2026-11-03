@@ -34,6 +34,9 @@ internal sealed partial class ReferenceCatalog
             if (best.Length == 1) return writing ? new(best[0].Parameters[^1], null, best[0]) : new(best[0].Result, best[0], null);
             if (best.Length > 1) break;
         }
+        foreach (var type in Hierarchy(owner))
+            if (DefaultMember(Definition(type)) is { } name)
+                DiagnoseUnsupportedMember(type, name, false, writing, source, position);
         throw source.Error("FP3015", $"No unique supported public {(writing ? "setter" : "getter")} indexer for '{owner}'.", position);
     }
 

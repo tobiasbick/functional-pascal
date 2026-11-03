@@ -6,6 +6,7 @@ required of that compiler; implemented subsets are documented separately below.
 
 | Area | Entry point |
 | --- | --- |
+| CLR comparison operators, signature diagnostics, executable specifications, and build acceptance | [Comparisons and acceptance](implementation/comparisons-and-acceptance.md) |
 | Design principles and scope | [Language overview](pascal/README.md) |
 | Remaining baseline work and deferred interface proposal | [Language gaps](future/language-gaps.md) |
 | Implemented compiler subset and first executable program | [First-program milestone](implementation/first-program.md) |

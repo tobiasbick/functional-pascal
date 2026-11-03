@@ -3,12 +3,16 @@
 A function-first language with Pascal-style syntax, targeting the Common Language
 Runtime directly through CIL and assembly metadata.
 
-This branch contains a **language design and an initial C# compiler**. The current
+This branch contains a **language specification and a direct C# compiler**. The current
 subset compiles programs and units with typed bindings, numeric/Boolean expressions,
 named routines, control flow, CLR objects, nullable values, exceptions, arrays, and generic .NET collections directly to CIL. Remaining baseline work is tracked
 in [language gaps](docs/future/language-gaps.md). See the [compiler subset](docs/implementation/first-program.md)
 and [implemented MSBuild integration](docs/implementation/msbuild.md) for the
 exact supported behavior.
+
+[CLR comparisons and acceptance](docs/implementation/comparisons-and-acceptance.md)
+cover imported comparison operators, precise unsupported-signature diagnostics,
+executable handbook examples, and the verified net10.0/AnyCPU build contract.
 
 [Scalar types](docs/implementation/scalar-types.md) include all specified CLR
 primitive numbers, transparent aliases, real CLR enums, distinct values, and

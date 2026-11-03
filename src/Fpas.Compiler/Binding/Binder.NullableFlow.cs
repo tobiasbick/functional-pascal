@@ -50,7 +50,7 @@ internal sealed partial class Binder
             {
                 var candidate = binary.Left is LiteralSyntax { Token.Text: "null", Token.Kind: TokenKind.Keyword } ? binary.Right :
                     binary.Right is LiteralSyntax { Token.Text: "null", Token.Kind: TokenKind.Keyword } ? binary.Left : null;
-                if (candidate is not null && StableSymbol(candidate) is { } symbol)
+                if (candidate is not null && (!comparisonCalls.TryGetValue(binary, out var preservesNull) || preservesNull) && StableSymbol(candidate) is { } symbol)
                 {
                     var type = symbol switch { LocalSymbol local => local.Type, ParameterSymbol parameter => parameter.Type, CaptureSymbol capture => capture.Type, _ => TypeSymbol.Unsupported };
                     var result = input.ToHashSet();

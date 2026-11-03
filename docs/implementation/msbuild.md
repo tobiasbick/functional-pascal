@@ -2,8 +2,10 @@
 
 The initial `Fpas.NET.Sdk` package builds real `.fpasproj` projects through
 `dotnet build`. It uses the direct CIL compiler; no C# source is generated for
-FPAS. This implements part of the [MSBuild plan](../build/msbuild.md), with the
-limits below.
+FPAS. It implements the initial net10.0/AnyCPU contract from the
+[MSBuild specification](../build/msbuild.md), with the limits below. The
+[acceptance map](comparisons-and-acceptance.md#build-acceptance) describes the
+mixed-project, incremental, parallel-build, and cleanup checks.
 
 ## Local SDK bootstrap
 

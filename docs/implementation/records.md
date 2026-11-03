@@ -43,8 +43,8 @@ in written order, followed by omitted defaults once in field declaration order.
 Defaults bind in declaration scope, without self or instance fields, and can call
 unit/static routines. Missing required fields, duplicate/unknown names, and
 positional arguments after named arguments are errors. These named/default
-arguments apply to record construction; ordinary routine arguments remain
-positional and required.
+arguments apply to record construction. Ordinary routine calls also support
+[named, optional, and params arguments](contracts-and-parameters.md).
 
 Any private field makes the constructor private, even if that field has a
 default. A public static factory inside the record can construct the value.
@@ -115,5 +115,5 @@ are implemented, as is [XML documentation](xml-documentation.md).
 [Primitive numbers and scalar domains](scalar-types.md) are implemented.
 [Global fields](global-values.md) are implemented. Authored interfaces are a
 [deferred extension](../future/language-gaps.md#deferred-declare-fpas-interfaces). The broader
-[record-members design example](../pascal/examples/record-members.md) includes
-several of those planned features and is not yet an executable compiler example.
+[record-members example](../pascal/examples/record-members.md) is compiled and
+executed directly from the documentation by LanguageSpecificationTests.

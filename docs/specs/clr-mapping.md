@@ -1,8 +1,9 @@
 # CLR mapping and compiler boundary
 
-**Status: target implementation contract; a small subset is implemented.** See
-the [first-program milestone](../implementation/first-program.md) for actual
-compiler/emitter support. This describes the full language-to-CLR representation.
+**Status: language-to-CLR contract with implemented features and tracked gaps.** See
+the [compiler overview](../implementation/first-program.md) and
+[acceptance coverage](../implementation/comparisons-and-acceptance.md) for actual
+compiler/emitter support and verification.
 The separate [MSBuild plan](../build/msbuild.md)
 specifies project/solution integration, framework references, restore, and the
 compiler's build boundary. IDE and language-service integration are deferred.
@@ -372,7 +373,7 @@ source spans and follow normal build warning policy; an unwritable requested
 output fails the build. The [MSBuild plan](../build/msbuild.md#documentation-output)
 defines generation switches, paths, related output files, and incremental inputs.
 
-## Acceptance requirements for a future implementation
+## Acceptance requirements
 
 1. Build and execute the complete applicable [examples](../pascal/examples.md)
    as separate compilations, including expected error paths.
@@ -414,5 +415,6 @@ defines generation switches, paths, related output files, and incremental inputs
     signatures, and check escaping, generic/byref/nested symbols, deterministic
     output, and C# reference-sidecar propagation with generation enabled/disabled.
 
-The first-program milestone covers only its documented subset of these checks.
-The complete language and acceptance list remain implementation work.
+The [acceptance coverage](../implementation/comparisons-and-acceptance.md) maps
+these requirements to compiler, execution, metadata, and build tests. Remaining
+language requirements are tracked separately in [language gaps](../future/language-gaps.md).

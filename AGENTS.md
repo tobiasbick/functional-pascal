@@ -6,7 +6,7 @@ Read the [language reference](docs/pascal/README.md) for the language rules.
 
 ## Development build
 
-This branch contains a language design and a small executable compiler subset.
+This branch contains the CLR language specification and its executable compiler.
 Read the [compiler subset](docs/implementation/first-program.md) and
 [expressions/control flow](docs/implementation/expressions-and-control-flow.md), plus
 [multiple sources/units](docs/implementation/multiple-sources.md) and
@@ -35,8 +35,9 @@ dotnet test Fpas.slnx --no-build --no-restore --configuration Debug
 ```
 
 The tests cover the actual CLI, generated programs, compiler diagnostics/metadata,
-and mixed C#/FPAS MSBuild builds using a locally packaged SDK. They do not establish
-support for the complete language or [MSBuild plan](docs/build/msbuild.md).
+and mixed C#/FPAS MSBuild builds using a locally packaged SDK. See the
+[acceptance coverage](docs/implementation/comparisons-and-acceptance.md) for the
+verified language/build scope; the explicitly tracked language gaps remain open.
 Use Debug for development and Release for release builds and controlled
 performance measurements.
 Use the .NET SDK's default build parallelism unless the user requests a limit.

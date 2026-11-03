@@ -14,6 +14,14 @@ workflows, rather than reproducing Rust-specific manuals or implementation histo
 | D1 | Reproducible CLR benchmarks | [Profiling overview](../pascal/tools/profiling.md) | Open |
 | D3 | Concrete debugging/profiling walkthroughs | [Debugging](../pascal/tools/debugging.md), [profiling](../pascal/tools/profiling.md) | Open |
 
+Deliver D1 with the corresponding CLI profiling/diagnostic work and D3 with the
+debugger/diagnostic implementation, as recorded in the
+[CLI inventory](cli-gap.md#documentation-and-acceptance-with-cli-work). Both remain
+separate, open acceptance items until their respective documented workflows have
+passed acceptance on **both Windows and Linux**. CLI implementation alone does
+not close them. D1 uses .NET measurement tools; `fpas-bench` and a replacement
+benchmark command remain outside this work.
+
 ## D1: Reproducible benchmarks
 
 The profiling guide explains measurement boundaries and available .NET tool

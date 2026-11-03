@@ -11,7 +11,9 @@ for the task.
 
 - Follow the repository layout and compiler boundaries described by the reference.
 - Keep files focused on one concern and usually below 500 lines.
-- Group related files in directories by topic.
+- Group related files by topic in subdirectories and matching namespaces.
+- On every code change, review affected files for size, cohesion, directory
+  placement, and namespaces. Split or reorganize them as needed in the same change.
 - Write all code comments in English.
 - Before changing public CLR names, namespaces, signatures, or representations,
   follow the owning interop and CLR mapping specifications. Update them in the
@@ -32,7 +34,8 @@ for the task.
 - Finish the agreed language/build baseline before adding extensions. Distinguish
   missing baseline work from deferred proposals in the language-gaps document.
   Source interface declarations remain deferred until the original plan is complete.
-- Fix errors when you encounter them. Do not dismiss errors as pre-existing.
+- Fix errors and code organization issues when you encounter them. Do not
+  dismiss them as pre-existing.
 - Keep the agent reference aligned with implemented language and toolchain behavior.
 
 ## Before every commit

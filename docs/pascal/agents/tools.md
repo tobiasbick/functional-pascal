@@ -32,7 +32,8 @@ names, generic arity, accessibility, parameter names/modes, overloads, and nulla
 annotations. Use static extension-method calls. An unsupported signature must
 produce a useful diagnostic rather than trigger reflection/dynamic invocation.
 
-The current CLI command is compile. Its help documents explicit references,
+The CLI uses System.CommandLine; root help/version and compile help are available.
+The current command is compile. Its help documents explicit references,
 multiple sources, stdin, executable/library output, portable symbols, XML docs,
 and JSON diagnostics. The [CLI contract](../program-structure/cli.md)
 defines exit codes and publication behavior. Compile JSON reports are appropriate

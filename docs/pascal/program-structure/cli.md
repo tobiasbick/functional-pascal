@@ -2,6 +2,7 @@
 
 The current CLI compiles FPAS sources into ordinary CLR libraries or executable
 DLLs. Project builds invoke the same compiler through the SDK.
+The CLI uses System.CommandLine for argument binding and generated help.
 
 ## Inspect and invoke the compiler
 
@@ -10,6 +11,9 @@ After building the toolchain, inspect the actual supported arguments:
 ```sh
 dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile --help
 ```
+
+No arguments show root help. Root and compile help accept `--help`, `-h`, and
+`-?`. Root `--version` prints the CLI's assembly informational version.
 
 For standalone compilation, set FPAS_REFERENCE_DIR to the installed net10.0
 reference assembly directory as described by the
@@ -23,6 +27,9 @@ dotnet .temp-data/hello/Hello.dll
 Supply multiple source paths for a program with units, or select --target library
 for units-only output. One source path may be - to read strict UTF-8 from stdin.
 Repeat --reference for assemblies or --reference-dir for a directory's DLLs.
+Each occurrence takes one value. Options accept both `--output path.dll` and
+`--output=path.dll`. Place source paths starting with `-` after `--`, following
+all options. A lone `-` remains the stdin source.
 The compiler receives explicit metadata inputs, including System.Runtime; it
 does not bind whichever assemblies happen to be loaded in its process.
 
@@ -40,9 +47,14 @@ does not bind whichever assemblies happen to be loaded in its process.
 | Warning policy options | Promote, exclude, or suppress documentation warnings |
 
 Response files replace inline compile arguments; nesting is unsupported. Paths
-are structured arguments, not shell-expanded command text. Default diagnostics
+are structured arguments, not shell-expanded command text. The parser's `@file`
+response syntax is disabled; `@` is a literal character in source paths.
+Default diagnostics
 go to stderr; successful output paths go to stdout. JSON mode emits one result
 object with diagnostic codes and source locations. See [diagnostics](../tools/diagnostics.md).
+Argument errors use `FP0001` and exit code 2, compilation/I/O failures use exit
+code 1, and success/help/version use exit code 0. JSON argument errors contain
+one result object without additional parser output.
 
 Failed compilation preserves existing outputs. Publication stages the assembly,
 symbols, runtime configuration, and requested XML together and restores previous

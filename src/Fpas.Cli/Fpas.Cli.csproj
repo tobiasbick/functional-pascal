@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
     <ProjectReference Include="../Fpas.Compiler/Fpas.Compiler.csproj" />
     <ProjectReference Include="../Fpas.Core/Fpas.Core.csproj" />
   </ItemGroup>

@@ -102,6 +102,8 @@ public sealed class MultiSourceCliTests
     [Theory]
     [InlineData("[null]")]
     [InlineData("{bad json}")]
+    [InlineData("null")]
+    [InlineData("[]")]
     public async Task Malformed_response_files_are_argument_errors(string contents)
     {
         using var directory = new TemporaryDirectory();

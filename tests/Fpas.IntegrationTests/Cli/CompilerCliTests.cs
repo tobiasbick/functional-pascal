@@ -105,13 +105,26 @@ public sealed class CompilerCliTests
 
     [Theory]
     [InlineData("--help")]
+    [InlineData("-h")]
+    [InlineData("-?")]
     [InlineData("compile", "--help")]
+    [InlineData("compile", "-h")]
+    [InlineData("compile", "-?")]
     public async Task Help_is_noninteractive_and_includes_examples(params string[] arguments)
     {
         var result = await ProcessRunner.RunAsync(new[] { Cli }.Concat(arguments));
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("Example", result.Output);
         Assert.Contains("--output", result.Output);
+        Assert.Equal("", result.Error);
+    }
+
+    [Fact]
+    public async Task Version_is_noninteractive_and_writes_only_the_version()
+    {
+        var result = await ProcessRunner.RunAsync([Cli, "--version"]);
+        Assert.Equal(0, result.ExitCode);
+        Assert.Matches(@"^\d+\.\d+\.\d+[^\r\n]*\r?\n$", result.Output);
         Assert.Equal("", result.Error);
     }
 

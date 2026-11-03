@@ -48,6 +48,35 @@ coverage for compiler, metadata, interop, async, or build changes.
 Store local logs, scratch work, and performance data under `.temp-data/`.
 Check whitespace with `git diff --check`. Keep generated bin/obj output out of Git.
 
+## Deploy the local Release compiler
+
+Run [dist.ps1](../../dist.ps1) on Windows or [dist.sh](../../dist.sh) on Unix:
+
+```powershell
+.\dist.ps1
+```
+
+```sh
+./dist.sh
+```
+
+Both scripts restore/build/publish the CLI in Release and deploy the launcher,
+compiler assemblies, dependency/runtime configuration, and package dependencies
+to the repository's ignored `bin/` directory. They resolve paths relative to the
+script, so invocation also works from another working directory. Build artifacts
+stay under `.temp-data/dist/`, separate from ordinary toolchain/test builds.
+
+Add that `bin/` directory to PATH once, then use `fpas --version`, `fpas --help`,
+or `fpas compile --help` from any directory. The scripts do not change PATH.
+Windows uses `bin/fpas.exe`; Unix uses `bin/fpas`. `dist.sh` is executable in Git
+and makes the deployed launcher executable. Repeated deployment updates the
+published files and preserves unrelated files in `bin/`.
+
+Building requires the .NET 10 SDK; running the deployed compiler requires the
+.NET 10 runtime. Keep the published files together. This local managed deployment
+does not close the [single-file/Native AOT distribution gaps](../future/dist-gap.md).
+Project SDK packaging remains the separate workflow below.
+
 ## Build an FPAS application
 
 The local SDK package must exist before a consumer can restore its SDK:

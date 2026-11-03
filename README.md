@@ -4,6 +4,12 @@ A function-first Pascal language with selected Ada conventions. Compiles `.fpas`
 sources directly to CIL and CLR assemblies, running through the .NET host.
 
 > **⚠️ Disclaimer:** This is a small hobby project, entirely vibe-coded. It started as an experiment in learning how to effectively communicate and collaborate with LLMs. The future is uncertain — no idea where this will end up, or if it will.
+>
+> I switched the implementation from Rust to C# partly because Rust's build times were getting on my nerves. The biggest reason, though, was the .NET ecosystem. We can use .NET libraries through NuGet instead of writing and maintaining wrappers ourselves.
+>
+> I'm still surprised by how much the models have improved in just a year, and by how far they managed to take the Rust version. Maybe we'll switch back to Rust in a year or two if the models improve enough. That also depends on whether I'm still interested in the project by then.
+>
+> What happens next with the game, Into the Dungeon, is uncertain too.
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE)
 
@@ -56,6 +62,12 @@ dotnet examples/hello/bin/Debug/net10.0/Hello.dll
 It prints `Hello from FPAS`. The
 [development workflow](docs/build/development.md) describes Release builds,
 tests, direct compilation, and SDK version/cache handling after toolchain changes.
+
+For a local Release compiler on PATH, run `./dist.ps1` on Windows or `./dist.sh`
+on Unix, then add the repository's `bin/` directory to PATH. The scripts deploy
+`fpas.exe` or `fpas` together with its required files. Keep those files together;
+the compiler uses the installed .NET 10 runtime. See
+[local deployment](docs/build/development.md#deploy-the-local-release-compiler).
 
 ### Hello World
 

@@ -26,6 +26,8 @@
     <ItemGroup>
       <None Include="%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Cli.dll;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Cli.deps.json;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Cli.runtimeconfig.json;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Compiler.dll;%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)Fpas.Core.dll" Pack="true" PackagePath="tools/compiler/" />
       <None Include="@(_FpasTaskAssembly)" Pack="true" PackagePath="tools/tasks/" />
+      <None Include="%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)System.CommandLine.dll" Pack="true" PackagePath="tools/compiler/" />
+      <None Include="%(_FpasCompilerAssembly.RootDir)%(_FpasCompilerAssembly.Directory)**/System.CommandLine.resources.dll" Pack="true" PackagePath="tools/compiler/%(RecursiveDir)" />
     </ItemGroup>
   </Target>
 </Project>

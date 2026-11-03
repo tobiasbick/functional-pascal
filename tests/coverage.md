@@ -49,6 +49,12 @@ in each project's Support directory.
 
 ## Behavioral checks
 
+CompilerCliTests and ArgumentParsingTests cover generated help/aliases, version
+output, required/allowed/duplicate options, repeatable references, literal source
+paths after `--`, stdin, JSON response files, and structured argument errors.
+StandaloneSdkGuideTests executes consumers using only the packaged compiler and
+its dependencies in Debug and Release.
+
 Arithmetic checks include signed/unsigned extremes, IEEE NaN, checked overflow,
 division failures, decimal behavior, and short-circuit/evaluation order. Loop
 checks cover empty/reversed ranges, every primitive width, native endpoints,

@@ -23,8 +23,12 @@ under `bin/lib`. They do not build or copy the benchmark tool.
 
 The CLR [CLI project](../../src/Fpas.Cli/Fpas.Cli.csproj) currently builds a managed
 executable referencing the compiler and Fpas.Core projects. No Native AOT or
-single-file publish configuration is present. Equivalent distribution entry
-points for Windows and Linux are missing.
+single-file publish configuration is present. [dist.ps1](../../dist.ps1) and
+[dist.sh](../../dist.sh) publish the managed Release compiler and its dependencies
+to `bin/`, with a `fpas.exe` or executable `fpas` launcher for local PATH use.
+The scripts require the .NET SDK to build and the .NET runtime to run the result.
+This [local deployment](../build/development.md#deploy-the-local-release-compiler)
+does not yet produce the single-file release artifact described above.
 
 The existing [FPAS SDK package](../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj) contains
 the managed compiler, its host/dependency files, Fpas.Core, MSBuild tasks, and SDK
@@ -43,8 +47,8 @@ blocker in that design. A successful native publish has not been demonstrated.
 
 | Capability | CLR gap |
 | --- | --- |
-| Distribution entry points | No equivalent workflow producing the intended Windows or Linux release artifact from the current CLR sources. Script/helper implementation and naming remain open under repository dogfooding rules. |
-| Executable identity | No distribution setting establishing `fpas.exe` or `fpas` as the published tool name. |
+| Distribution entry points | `dist.ps1` and `dist.sh` provide local managed Release deployment. A workflow producing the intended single-file Windows or Unix release artifact remains missing. |
+| Executable identity | Local deployment supplies `fpas.exe` or `fpas`. The future single-file publish path must retain this tool name. |
 | Native AOT publication | No configured or verified Native AOT publish path for the CLI and compiler dependencies. Trimming, AOT warnings, and native build prerequisites still need evaluation. |
 | Platform artifacts | No defined supported OS/architecture set or verified per-target outputs. Native AOT produces target-specific binaries, not one universal executable. |
 | Single-file contents | No packaging contract that includes required FPAS assets while leaving only the executable in the delivered tool directory. Optional debug symbols need separate handling rather than becoming mandatory adjacent files. |
@@ -53,7 +57,7 @@ blocker in that design. A successful native publish has not been demonstrated.
 ## Concrete AOT and single-file obstacles
 
 The current [CLI implementation](../../src/Fpas.Cli/Compilation/CompilerCommand.cs)
-and [response-file reader](../../src/Fpas.Cli/Compilation/CompileArguments.cs)
+and [response-file reader](../../src/Fpas.Cli/Compilation/CompileResponseFile.cs)
 contain specific compatibility gaps:
 
 - JSON diagnostics use reflection-based serialization of an anonymous report,

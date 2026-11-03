@@ -24,10 +24,11 @@ separate in the [baseline comparison](../baseline-comparison.md).
 ## Current CLR support
 
 The [CLI](../../src/Fpas.Cli/Compilation/CompilerCommand.cs) exposes only `compile`, plus root
-and compile help. It accepts explicit sources, stdin, assembly references,
+and compile help and root `--version`. It accepts explicit sources, stdin, assembly references,
 executable/library output, portable symbols, optional XML API documentation,
-warning policy, JSON diagnostics, and JSON response files. Argument parsing is
-hand-written in [CompileArguments](../../src/Fpas.Cli/Compilation/CompileArguments.cs).
+warning policy, JSON diagnostics, and JSON response files. Argument parsing and
+generated help use `System.CommandLine` with the command definition in
+[CompileCommand](../../src/Fpas.Cli/Compilation/CompileCommand.cs).
 
 The project SDK already resolves dependencies and builds `.fpasproj` projects
 and mixed `.slnx` solutions through MSBuild. Generated executable DLLs run through
@@ -64,8 +65,9 @@ define the comparison scope.
 | `env --json` | Missing installation report covering compiler, FPAS SDK, .NET, and any available language-server/debugger tools. The old adjacent source-standard-library field has no direct CLR equivalent. |
 | `stdlib stage` | Its VM-specific purpose does not carry over. CLR distribution uses SDK/support packages, assemblies, and NuGet dependencies. Reintroducing a `Std.*` catalog is outside the CLR design. |
 
-Root and command-specific help, short aliases, and version output also lack
-complete equivalents. Current help covers the small `compile` command only.
+Root and compile help support `--help`, `-h`, and `-?`; root `--version` reports
+the compiler CLI version. Future commands need their own help and examples.
+Command and ordinary option short aliases remain unselected.
 
 ## Project and solution inputs
 
@@ -211,7 +213,7 @@ For completeness, the Rust benchmark tool's native drivers were
 | Debug `--trace`, `--trace-limit`, `--task`, `--frame`, `--print`, `--break` | Missing commands; inspection selectors and trace coverage depend on the chosen CLR debugger integration. |
 | Debug `--protocol dap/jsonl`, `--commands`, `--source-root`, `--timeout`, `--output-limit` | Missing protocol/session frontends, scripted JSONL input, symbol/source matching policy, and bounded lifecycle. Old `.fpascp` source-root validation is not the CLR assembly/PDB contract. |
 | JSON diagnostics and reports | `compile --diagnostics json` already returns one structured result. Other command reports, consistent failure output, and coverage/truncation fields are missing. Rust JSONL diagnostics and schemas are not automatically supported. |
-| Help, version, response files, and program arguments after `--` | Help and JSON compile response files exist. Complete command-level help/version aliases, forwarding, and parser behavior across a larger command tree are missing. |
+| Help, version, response files, and program arguments after `--` | Generated root/compile help, help aliases, root version output, JSON compile response files, and literal compile source paths after `--` exist. Program-argument forwarding and behavior for future commands remain missing. |
 
 .NET provides [single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)
 and [diagnostic tools](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/tools-overview).
@@ -220,30 +222,27 @@ bounded JSON report behavior. See the current
 [debugging](../pascal/tools/debugging.md) and
 [profiling](../pascal/tools/profiling.md) guides for implemented scope.
 
-## CLI argument library as an open option
+## CLI argument library
 
-The growing command tree and option set may justify using an existing .NET CLI
-library instead of expanding the hand-written parser. This is an option to
-evaluate, not a selected dependency or an instruction to replace current code.
 [System.CommandLine](https://learn.microsoft.com/en-us/dotnet/standard/commandline/)
-is one candidate. No package or version is selected by this document.
+2.0.14 is the CLI's argument library, pinned in the central package versions.
+It supplies the command tree, typed argument/option binding, defaults, allowed
+values, generated help, help aliases, and version output. Compile-specific
+validation and output-path protection remain in the CLI. Parsed compile requests
+are separate from source loading and compilation.
 
-Questions for a later library evaluation include:
+JSON-array response files retain their existing contract: they replace all
+inline compile arguments and cannot nest. The library's `@file` response syntax
+is disabled. Literal sources after `--`, stdin, spaces in paths, and repeatable
+references are covered by CLI execution tests. Argument errors retain exit code
+2 and `FP0001`; JSON diagnostics emit one result without parser/help text.
+The project SDK packages the parser assembly and its localized resources with
+the compiler.
 
-- Nested commands, typed arguments/options, repeatable values, defaults, aliases,
-  and validation of required, conflicting, or command-specific options.
-- Focused help with examples, predictable errors and exit status, and a fully
-  non-interactive path for agents.
-- Argument forwarding after `--`, stdin inputs, paths with spaces, and the
-  existing JSON-array response-file contract. A library's response-file syntax
-  may differ from that contract.
-- Control over stdout/stderr so parsing/help output cannot corrupt DAP, JSONL,
-  or JSON result streams.
-- Cancellation, completion support, dependency size, maintenance, and compatibility
-  with any future CLI packaging model.
-- Separation of parsed requests from project loading and command execution.
-  A parsing library would not supply MSBuild integration, semantic analysis,
-  debugging, or report schemas.
+This integration does not supply the missing MSBuild commands, semantic analysis,
+debugger, or report schemas. Future commands still need explicit forwarding,
+cancellation, completion, and protocol-stream behavior; distribution/AOT
+acceptance remains in [distribution gaps](dist-gap.md).
 
 ## Related executable tools
 

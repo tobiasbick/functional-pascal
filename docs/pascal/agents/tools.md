@@ -11,11 +11,11 @@ CLI invocation. AGENTS.md contains repository policy; commands live in docs.
 | --- | --- |
 | Build the C# compiler/tests, package the SDK, or select tests | [Development workflow](../../build/development.md) |
 | Change project boundaries, fixtures, examples, or SDK packaging | [Repository layout](../../architecture/project-layout.md) |
-| Bind/parser/type-check/lower a language feature | Its [handbook topic](../README.md#reading-order), [grammar](../../specs/syntax.md), and milestone from the [documentation hub](../../README.md) |
+| Bind/parser/type-check/lower a language feature | Its [handbook topic](../README.md#start-here), [grammar](../../specs/syntax.md), and milestone from the [documentation hub](../../README.md) |
 | Change public types, signatures, dispatch, or emitted metadata | [Interop](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md) |
 | Change project/reference/restore/incremental/output behavior | [MSBuild contract](../../build/msbuild.md) and [implemented SDK](../../implementation/msbuild.md) |
 | Decide which tests prove a behavior | [Test overview](../../../tests/README.md) and [acceptance map](../../implementation/comparisons-and-acceptance.md) |
-| Distinguish implemented work, missing baseline work, and proposals | [Language scope](../README.md#initial-language-scope) and [language gaps](../../future/language-gaps.md) |
+| Distinguish implemented work, missing baseline work, and proposals | [Language scope](../getting-started/overview.md#initial-language-scope) and [language gaps](../../future/language-gaps.md) |
 | Update this reference or add examples | [Maintenance](maintenance.md) |
 
 Read the relevant implementation milestone before claiming support; the grammar

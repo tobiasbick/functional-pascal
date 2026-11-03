@@ -118,7 +118,7 @@ Distinct/subrange metadata records nominal identity and the primitive base. Emit
 checked construction/conversion methods and read-only Value. Subranges also emit
 base-typed LowerBound/UpperBound constants. A zero-initialized subrange must decode
 to LowerBound, not an invalid zero; use a private offset encoding as specified in
-[data domains](../pascal/language/data-domains.md). This is required for array and
+[subrange defaults](../pascal/language/types/subranges.md#clr-default-value-invariant). This is required for array and
 generic defaults as well as explicit construction.
 The version 1 contract uses Fpas.Core.DomainAttribute(int version,
 string primitiveType, string? lowerBound, string? upperBound), where primitiveType
@@ -312,7 +312,7 @@ on normal completion, return, break/continue, and exceptions leaving the scope.
 Try-body resources are disposed before that try's catch/finally bodies run.
 Exception filters retain ordinary CLR ordering and may run before cleanup.
 An async scope cannot complete its exit before asynchronous cleanup finishes.
-See [resource rules](../pascal/language/errors-and-resources.md).
+See [resource rules](../pascal/language/error-handling/README.md).
 
 ## Contract lowering
 
@@ -326,7 +326,7 @@ Checks are present in debug and release and live in the callee, including for
 delegate, interface, and cross-language calls. They do not depend on a runtime
 contract rewriter, Debug.Assert, a second error wrapper, or a custom contract
 exception hierarchy. Contract expressions are restricted as specified in
-[contracts](../pascal/language/contracts.md).
+[contracts](../pascal/language/functions/contracts.md).
 
 For async Task<T> methods, emit entry/exit checks inside the state machine.
 Ensures binds T and runs after successful async cleanup, before successful Task
@@ -357,7 +357,7 @@ plan supplies compile-time references through standard dependency resolution.
 Preserve attached source comments and their locations through declaration binding.
 The optional XML documentation pass uses resolved emitted symbol identities and
 parameter names; it must not guess IDs from source display text. Apply the
-Markdown/section/export rules in [comments and API documentation](../pascal/language/comments.md).
+Markdown/section/export rules in [comments and API documentation](../pascal/language/basics/comments.md).
 Generate a separate standard .NET XML sidecar with assembly identity, member IDs,
 summary, param, typeparam, returns, and remarks elements as applicable. Do not
 embed comments into CIL, introduce runtime documentation attributes/helpers, or
@@ -375,7 +375,7 @@ defines generation switches, paths, related output files, and incremental inputs
 
 ## Acceptance requirements
 
-1. Build and execute the complete applicable [examples](../pascal/examples.md)
+1. Build and execute the complete applicable [examples](../pascal/examples/README.md)
    as separate compilations, including expected error paths.
 2. Inspect emitted IL/metadata to establish actual CLR signatures, accessibility,
    generic constraints, nullable annotations, and direct external calls.

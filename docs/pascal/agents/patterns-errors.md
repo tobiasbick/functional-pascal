@@ -102,6 +102,6 @@ end;
 end program;
 ```
 
-Read [control flow](../language/control-flow.md) for matching/coverage,
-[nullable types](../language/types.md#nullable-types) for flow restrictions, and
-[errors/resources](../language/errors-and-resources.md) for cleanup ordering.
+Read [control flow](../language/control-flow/README.md) for matching/coverage,
+[nullable types](../language/types/nullable-types.md) for flow restrictions, and
+[errors/resources](../language/error-handling/README.md) for cleanup ordering.

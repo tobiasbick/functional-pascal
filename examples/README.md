@@ -12,4 +12,4 @@ compiled together through default source globs.
 StreamReader instance calls, synchronous disposal, and try/catch/finally.
 
 See the [layout plan](../docs/architecture/project-layout.md#examples-and-applications)
-and the existing [Markdown design examples](../docs/pascal/examples.md).
+and the existing [Markdown design examples](../docs/pascal/examples/README.md).

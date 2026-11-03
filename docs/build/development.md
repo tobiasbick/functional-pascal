@@ -28,15 +28,18 @@ inputs. Integration tests package the already built SDK with a unique version
 and execute isolated FPAS/C# consumers. They also build their own fixture projects;
 this is part of the test, not a second toolchain build.
 
-Choose relevant tests through the checked-in runner. For agent documentation:
+Choose relevant tests through the checked-in runner. For the handbook and agent
+reference:
 
 ```sh
-dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~AgentReferenceTests|FullyQualifiedName~LanguageSpecificationTests' --logger 'console;verbosity=normal'
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~HandbookTests|FullyQualifiedName~AgentReferenceTests|FullyQualifiedName~LanguageSpecificationTests' --logger 'console;verbosity=normal'
 ```
 
 AgentReferenceTests checks links, the entrypoint policy, and exact o200k_base
 token counts. LanguageSpecificationTests compiles complete Markdown programs/
 units and executes programs. Its assertions cover each example's behavior.
+HandbookTests checks topic hubs, related navigation, repository documentation
+links/anchors, explicit syntax fragments, and current copied inputs.
 Read [tests](../../tests/README.md) and the
 [acceptance map](../implementation/comparisons-and-acceptance.md) when selecting
 coverage for compiler, metadata, interop, async, or build changes.

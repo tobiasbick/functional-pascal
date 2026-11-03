@@ -48,7 +48,7 @@ public sealed class LanguageSpecificationTests
         var lines = result.Output.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd('\n').Split('\n');
         string[]? expected = name switch
         {
-            "Hello" when document == "examples.md" => ["Hello, Mara", "20", "4000000000", "1.5", "12.50", "M", "True"],
+            "PrimitiveValues" => ["Hello, Mara", "20", "4000000000", "1.5", "12.50", "M", "True"],
             "Hello" => ["Hello, CLR"],
             "Functions" => ["Functions first", "42", "1", "2"],
             "Shapes" => ["1", "4", "12"],
@@ -71,6 +71,10 @@ public sealed class LanguageSpecificationTests
             "AgentInterop" => ["Interop verified"],
             "AgentEvents" => ["Events verified"],
             "AgentAsync" => ["Async verified"],
+            "HelloWorld" => ["Hello, world!"],
+            "TextAndRegex" => ["room#", "3"],
+            "LoopValues" => ["7"],
+            "ResourceLifetime" => ["Resource released"],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);

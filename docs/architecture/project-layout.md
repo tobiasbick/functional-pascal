@@ -150,7 +150,7 @@ belong under tests, including application workflow coverage driven by xUnit.
 Automated runs select bounded noninteractive scenarios explicitly; interactive
 examples/apps can be compiled without launching their UI.
 
-Complete [Markdown programs](../pascal/examples.md) and the compact
+Complete [Markdown programs](../pascal/examples/README.md) and the compact
 [agent reference](../pascal/agents/README.md) are compiled directly from their
 documentation and executed by integration tests. Companion units use explicit
 project labels. Hello builds through its `.fpasproj` or the direct compiler.

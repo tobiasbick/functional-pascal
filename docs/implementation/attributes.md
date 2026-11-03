@@ -1,6 +1,6 @@
 # Source CLR attributes
 
-The compiler implements the existing [attribute syntax](../pascal/interop/README.md#attributes)
+The compiler implements the existing [attribute syntax](../pascal/interop/attributes.md)
 with imported CLR attribute classes and direct metadata output. The
 [JSON example](../../examples/attributes/README.md) annotates a record property
 with JsonPropertyNameAttribute and serializes it through the real .NET API.

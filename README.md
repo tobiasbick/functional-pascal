@@ -102,7 +102,7 @@ output/reference copying.
 
 Start with the [documentation hub](docs/README.md), the
 [language overview](docs/pascal/README.md), and the
-[complete syntax examples](docs/pascal/examples.md).
+[complete syntax examples](docs/pascal/examples/README.md).
 Agents can use the compact [task-oriented reference](docs/pascal/agents/README.md);
 repository commands are collected in the [development workflow](docs/build/development.md).
 

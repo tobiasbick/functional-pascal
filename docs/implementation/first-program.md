@@ -156,28 +156,8 @@ length. Normal mode writes diagnostics to stderr and the output path to stdout.
 Exit codes are 0 for success/help, 1 for compilation/input/output failure, and 2
 for invalid arguments.
 
-| Codes | Meaning |
-| --- | --- |
-| FP0001 / FP0002 | Invalid CLI arguments / input-output failure |
-| FP1001–FP1004 | Invalid character, string, separator, or unsupported numeric form |
-| FP2001–FP2005 | Syntax/terminator error, missing type annotation, unsupported form, source/output-kind mismatch, or duplicate container |
-| FP3001–FP3008 | Name, type, overload, binding, unsupported type, unused result, missing return, or unreachable statement |
-| FP3009 / FP3010 | Non-writable assignment target / loop exit outside a loop |
-| FP3011 / FP3012 | Private routine/member/constructor access / importing a program |
-| FP3013 / FP3015–FP3017 | Nullable safety / property accessors, disposal, or exception-flow errors |
-| FP3018 / FP3019 | Generic constraint failure / unsupported or unresolved callable signature |
-| FP3021 / FP3022 | Invalid record declaration or visibility / invalid record construction or update |
-| FP3023–FP3025 | Invalid union declaration, pattern, or coverage/unreachable case arm |
-| FP3026 | Invalid/unsupported source generic declaration or explicit type-argument arity |
-| FP3027 / FP3028 | Invalid contract / parameter modes, defaults, storage, or out flow |
-| FP3029 / FP3030 | Invalid record interface implementation / async or await reference-lifetime error |
-| FP3031 | Invalid alias, enum, distinct declaration, subrange bounds, or domain construction |
-| FP3032 | Invalid global name or public global exposing private types |
-| FP3033 | Nested routine environment created before captured bindings initialize |
-| FP3034 | Invalid or ambiguous event selection/access, or event used as a delegate value |
-| FP3035 | Invalid attribute class, target, duplicate, constant value, named member, or structural metadata |
-| FP6001 | Documentation warning; severity follows the configured warning policy |
-| FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
+The handbook owns the [diagnostic code reference](../pascal/tools/diagnostics.md),
+including warning policy and build-adapter failures.
 
 ## Verification
 

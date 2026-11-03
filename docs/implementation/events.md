@@ -1,6 +1,6 @@
 # Imported CLR events
 
-The compiler implements the existing [event syntax](../pascal/interop/README.md#events)
+The compiler implements the existing [event syntax](../pascal/interop/events.md)
 for events declared by referenced .NET assemblies. The
 [collection-events example](../../examples/events/README.md) subscribes a capturing
 delegate to BindingList<int>.ListChanged and removes it before a second change.

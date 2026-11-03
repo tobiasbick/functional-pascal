@@ -1,7 +1,7 @@
 # Functions, closures, and generic CLR methods
 
 This milestone extends [arrays and collections](arrays-and-collections.md) using
-the existing [function syntax](../pascal/language/functions.md). Values are actual
+the existing [function syntax](../pascal/language/functions/README.md). Values are actual
 CLR delegates. Calls and closures compile directly to CIL, with no reflection
 invocation, generated C#, or Fpas.Core runtime dependency.
 

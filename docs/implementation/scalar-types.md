@@ -1,8 +1,8 @@
 # Primitive types, aliases, enums, and data domains
 
-The compiler implements the existing [primitive type](../pascal/language/types.md),
-[literal/arithmetic](../pascal/language/basics.md), and
-[data domain](../pascal/language/data-domains.md) rules directly in CLR metadata
+The compiler implements the existing [primitive type](../pascal/language/types/README.md),
+[literal/arithmetic](../pascal/language/basics/README.md), and
+[data domain](../pascal/language/types/data-domains.md) rules directly in CLR metadata
 and CIL. The [data-domains example](../../examples/data-domains/README.md) builds
 through the SDK; no C# source or FPAS runtime VM is generated.
 

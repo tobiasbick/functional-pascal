@@ -137,7 +137,7 @@ synchronous contracts and ref/out/in/params/optional arguments.
 [XML documentation](xml-documentation.md) is implemented.
 [Source overloads, record CLR interfaces, async, and portable PDBs](overloads-interfaces-debugging-and-async.md)
 are implemented.
-The [complete generic syntax](../pascal/language/functions.md#generic-routines-and-constraints)
+The [complete generic syntax](../pascal/language/functions/generic-routines.md)
 continues to specify the wider language goal. FP3026 diagnoses unsupported or
 invalid source generic declarations/explicit argument arity; constraint failures
 continue to use FP3018.

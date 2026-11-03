@@ -30,6 +30,9 @@ explicit project labels for companion units. AgentReferenceTests checks its
 entrypoint policy, complete/unique examples, local links/fragments, and exact
 o200k_base token budgets using test-only Microsoft.ML.Tokenizers packages with
 the packaged O200kBase vocabulary.
+HandbookTests checks topic hubs, related navigation, local documentation links
+and anchors, explicit syntax fragments, and exact copied documentation inputs
+so moved or deleted articles cannot survive as stale test fixtures.
 Additional mixed builds check parallel project/configuration isolation, framework/
 target-path negotiation, compiler asset/reference-list invalidation, and clean
 assembly/PDB/XML equivalence.

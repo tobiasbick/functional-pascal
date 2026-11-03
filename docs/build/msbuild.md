@@ -182,7 +182,7 @@ Resolve an explicit relative path against the project directory. Compile tasks
 must receive a normalized output path, independent of their working directory.
 
 The compiler emits the standard XML described in
-[comments and API documentation](../pascal/language/comments.md#xml-export-contract).
+[comments and API documentation](../pascal/language/basics/comments.md#xml-export-contract).
 Retain the SDK's ordinary separation of intermediate compiler output and final
 output copying, and track every generated file. For a custom DocumentationFile,
 also publish a conventionally named `$(TargetName).xml` beside TargetPath so

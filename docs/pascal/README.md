@@ -1,129 +1,57 @@
 # Functional Pascal for .NET
 
-Functional Pascal is a function-first language using Pascal's statement and block
-structure. It compiles directly to Common Intermediate Language (CIL), CLR
-metadata, and portable debug information. It does not generate C# as an
-intermediate source language.
+A function-first Pascal language with selected Ada conventions, compiling
+directly to CLR assemblies, portable debug information, and .NET metadata.
+Functions, immutable records, and discriminated unions are its primary
+abstractions. The CLR provides managed memory and task infrastructure.
 
-**Status: implemented language features with known baseline gaps.** The
-[compiler overview](../implementation/first-program.md) and topic milestones
-describe support; [language gaps](../future/language-gaps.md) lists remaining
-baseline work and deferred proposals. Complete handbook examples are compiled
-and executed by the [acceptance tests](../implementation/comparisons-and-acceptance.md).
-The [MSBuild milestone](../implementation/msbuild.md) describes project builds.
+This handbook describes the language and its supported .NET workflows. Known
+baseline omissions and deferred extensions are tracked in
+[language gaps](../future/language-gaps.md). The
+[implementation reference](../implementation/README.md) records verified compiler support.
 
-For task-oriented authoring rules and executable examples, start with the
-[agent reference](agents/README.md). Repository build/test commands are in the
-[development workflow](../build/development.md).
+## Design principles
 
-## Design decisions
+- Explicit binding mutability: const prevents rebinding; var permits assignment.
+- Explicit types on every binding, parameter, result, field, and pattern binding.
+- Case-sensitive names and lowercase keywords, preserving actual CLR identities.
+- Pascal blocks and named terminators, with ordinary .NET APIs and reference behavior.
+- Executable contracts, exhaustive union matching, and explicit resource cleanup.
 
-- Free functions, procedures, immutable records, and discriminated unions are the
-  primary abstractions. Effects are allowed; functions are not implicitly pure.
-- Distinct scalars and checked integral subranges express named data domains.
-  Records support defaults, private members, and static factories/methods.
-  Explicitly typed globals may be const or var.
-- Keep `begin`, `end function`, `end if`, `:=`, `uses`, and `case ... when`.
-  Program entry blocks close with `end;`, followed by `end program;` for the
-  program declaration. Units close with `end unit;`.
-- Use C# primitive aliases and ordinary CLR generic types: `int`, `double`,
-  `List<int>`, `Task<string>`. `integer` and `real` are not predefined aliases.
-- The language is case-sensitive, including keywords. This preserves CLR names
-  without case-folding collisions. Keywords use lowercase spelling.
-- Source comments use `//`. Attached Markdown documents declarations, with
-  optional .NET XML documentation output for referenced APIs.
-- `const` prevents rebinding; `var` permits it. Neither makes a referenced .NET
-  object deeply immutable.
-- Every user-declared value binding has an explicit type, including local
-  values, loop variables, resources, and pattern bindings. Initializers do not
-  substitute for type annotations.
-- Arrays and imported collections have their CLR reference behavior. No implicit
-  copy-on-write collection layer is inserted.
-- Asynchronous code uses `async`, `await`, .NET tasks, and cooperative cancellation.
-  There is no `go`, language scheduler, or implicit task-ownership scope.
-- Consume CLR classes, structs, interfaces, properties, delegates, and events
-  directly from referenced assemblies; namespaces are imported explicitly.
-- Preserve precise static typing, checked integral arithmetic by default, and
-  exhaustive matching of language-defined unions.
-- `requires` and `ensures` express preconditions and postconditions, checked in
-  every build and enforced through ordinary CLR exceptions.
-- Use CLR exceptions for failures and CLR nullability for absent values.
-  Application-specific unions describe domain outcomes. There is no implicit
-  Option/Result prelude or failure-propagation operator.
-- Declare resources with `using const` or `await using const`, without a separate
-  block closer; cleanup runs at the end of the enclosing lexical scope.
-- Use a small `Fpas.Core` for language-specific support. Do not mirror the .NET
-  class library in a separate `Std.*` API catalog.
+## Documentation areas
 
-## Source shape
+| Area | Hub | Topics |
+| --- | --- | --- |
+| Agent reference | [agents](agents/README.md) | Compact authoring rules and verified examples |
+| Getting started | [getting-started](getting-started/README.md) | Overview, hello world, first program, keywords |
+| Language | [language](language/README.md) | Basics, types, routines, control flow, patterns, errors, async |
+| Program structure | [program-structure](program-structure/README.md) | Programs, units, imports, projects, compiled output, CLI |
+| .NET interoperability | [interop](interop/README.md) | CLR members, delegates, interfaces, events, attributes, limits |
+| .NET libraries | [libraries](libraries/README.md) | Collections, text/regex, files, JSON, and library selection |
+| Tools | [tools](tools/README.md) | Diagnostics, documentation checks, debugging, and profiling |
+| Examples | [examples](examples/README.md) | Complete programs grouped by task |
+| Formal syntax | [syntax grammar](../specs/syntax.md) | Parser-facing syntax and semantic boundaries |
+| CLR representation | [CLR mapping](../specs/clr-mapping.md) | Emitted identities, signatures, and runtime boundary |
 
-```pascal
-program Hello;
+## Start here
 
-uses System.Console as Console;
+Agents can start with the [compact reference](agents/README.md) and load only the
+topics relevant to their task. For a progressive introduction:
 
-function Greeting(Name: string): string;
-begin
-  return 'Hello, ' + Name;
-end function;
+1. [Getting started](getting-started/README.md): language goals and a runnable project.
+2. [Basics](language/basics/README.md): values, bindings, operators, and conversions.
+3. [Control flow](language/control-flow/README.md): branches and typed loops.
+4. [Functions](language/functions/README.md): calls, delegates, generics, and contracts.
+5. [Types](language/types/README.md): records, unions, domains, arrays, and nullability.
+6. [Pattern matching](language/pattern-matching/README.md): payloads, guards, and coverage.
+7. [Errors and resources](language/error-handling/README.md): exceptions and disposal.
+8. [Concurrency](language/concurrency/README.md): tasks, await, and cancellation.
+9. [Program structure](program-structure/README.md): units, imports, and project builds.
+10. [Interop](interop/README.md) and [libraries](libraries/README.md): consume .NET APIs.
+11. [Tools](tools/README.md): validate, debug, and inspect actual programs.
 
-begin
-  Console.WriteLine(Greeting('CLR'));
-end;
-end program;
-```
-
-Public declarations belong in units. Values, parameters, function results, and
-record fields have explicit types. Generic argument inference does not permit
-omitting a value binding's type. See
-[program structure](program-structure/README.md).
-
-## Initial language scope
-
-The baseline includes functions and closures, contracts, CLR generics, records,
-distinct types, subranges, unions, global values, exceptions, disposal, delegates,
-events, method-based interface implementation, and asynchronous methods.
-It supports ordinary managed .NET APIs.
-
-It does not initially include user-authored class hierarchies, user-authored
-interface declarations, unsafe pointers, `ref struct` values, spans, ref returns,
-byref locals, expression-tree conversion, custom awaiter patterns, async iterators,
-dynamic binding, operator declarations, or compiler plug-ins. An unsupported
-metadata signature produces a diagnostic identifying the unsupported feature.
-This scope does not promise access to every possible .NET API.
-
-Finish this baseline before adding language extensions. The
-[language gaps](../future/language-gaps.md) track confirmed missing baseline work
-and the separate, deferred proposal for source interface declarations.
-
-The [MSBuild specification](../build/msbuild.md) defines `.fpasproj` projects,
-`.slnx` solutions, standard dependency restore, and cross-language project
-references as the initial build scope. The local SDK supports and tests this
-contract for net10.0 and AnyCPU; see the
-[acceptance coverage](../implementation/comparisons-and-acceptance.md#build-acceptance).
-Publishing and deployment profiles remain later work.
-
-The [repository layout](../architecture/project-layout.md) defines the C#
-compiler/toolchain projects, xUnit tests, and examples/apps directories.
-
-Visual Studio project-system integration, LSP, VS Code integration, query tools,
-formatter integration, and debugger tooling remain outside this step. Their
-omission is not a decision to remove those tools.
-
-## Reading order
-
-1. [Basics](language/basics.md)
-   and [comments/API documentation](language/comments.md)
-2. [Types](language/types.md)
-   and [data domains](language/data-domains.md)
-3. [Functions](language/functions.md)
-4. [Contracts](language/contracts.md)
-5. [Control flow](language/control-flow.md)
-6. [Errors and resources](language/errors-and-resources.md)
-7. [Concurrency](language/concurrency.md)
-8. [.NET interoperability](interop/README.md)
-9. [Complete examples](examples.md)
-
-The [grammar](../specs/syntax.md) and [CLR mapping](../specs/clr-mapping.md)
-are implementation references. Syntax choices in this baseline are decisions;
-features outside its scope require a separate specification.
+Repository restore/build/test commands belong in the
+[development workflow](../build/development.md). Complete Pascal programs and
+units in this handbook are checked directly by the documentation tests;
+[example conventions](tools/documentation-examples.md) distinguish complete
+sources from explicitly marked syntax fragments.

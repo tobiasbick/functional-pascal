@@ -6,10 +6,10 @@ interface proposal. It does not expand the baseline or claim that its remaining
 requirements have all been verified.
 
 The scope is defined by the [language overview](../pascal/README.md),
-[language topics](../pascal/README.md#reading-order),
+[language topics](../pascal/README.md#start-here),
 [syntax grammar](../specs/syntax.md), [CLR mapping](../specs/clr-mapping.md), and
 [MSBuild plan](../build/msbuild.md). The
-[implementation documents](../README.md) describe current support;
+[implementation documents](../implementation/README.md) describe current support;
 [dogfooding gaps](dogfooding-gaps.md) describe practical maintenance limits.
 
 ## Finish the existing baseline first
@@ -29,8 +29,8 @@ syntax beyond the existing specification.
 
 | Order | Required behavior | Current gap and specification |
 | --- | --- | --- |
-| 1 | Fully qualified nested CLR generic type paths | Types returned by CLR APIs retain their identity, but source annotations cannot put generic arguments on every enclosing/nested name segment. Follow [generic type syntax](../pascal/language/functions.md#generic-routines-and-constraints) and the [grammar](../specs/syntax.md). |
-| 2 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions.md#generic-routines-and-constraints). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
+| 1 | Fully qualified nested CLR generic type paths | Types returned by CLR APIs retain their identity, but source annotations cannot put generic arguments on every enclosing/nested name segment. Follow [generic type syntax](../pascal/language/functions/generic-routines.md) and the [grammar](../specs/syntax.md). |
+| 2 | Operators through constrained imported generic interfaces | Instance constraints work, but generic-math/static-interface dispatch is not implemented. Follow [generic constraints](../pascal/language/functions/generic-routines.md). This consumes existing CLR contracts; it does not add source interfaces, source operators, or static interface implementations on records. |
 
 After these known gaps, compare every baseline rule and complete language example
 with compiler behavior. Record any additional demonstrated omissions here before

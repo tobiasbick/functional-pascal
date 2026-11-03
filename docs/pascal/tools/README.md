@@ -1,0 +1,22 @@
+# Tools
+
+Compile, validate documentation, and inspect generated CLR programs with the
+tools supported by the current compiler and .NET environment.
+
+| Tool or workflow | Description |
+| --- | --- |
+| [Compiler CLI](../program-structure/cli.md) | Inputs, references, direct CIL output, and structured diagnostics |
+| [Diagnostics](diagnostics.md) | Stable codes, source positions, warnings, and exit behavior |
+| [Documentation examples](documentation-examples.md) | Complete sources, companion projects, fragments, and checks |
+| [Debugging](debugging.md) | Source files, portable PDBs, closures, and async state machines |
+| [Profiling](profiling.md) | Actual CLR execution, suitable .NET tools, and controlled measurements |
+| [Development workflow](../../build/development.md) | Build/test commands and local SDK bootstrap |
+
+Editor/LSP/query/formatter integration has its separately documented scope.
+Do not infer a compiler command from an IDE or another language toolchain.
+
+## See also
+
+- [Compiled programs](../program-structure/compiled-programs.md)
+- [API discovery and agent workflows](../agents/tools.md)
+- [Language scope](../getting-started/overview.md#initial-language-scope)

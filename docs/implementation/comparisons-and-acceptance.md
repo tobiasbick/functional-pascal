@@ -43,6 +43,8 @@ explicit project label; each program compiles with its labeled units. This cover
 the Geometry example and the compact [agent reference](../pascal/agents/README.md).
 New complete examples require an execution assertion. AgentReferenceTests also
 checks that reference's links, structure, entrypoint policy, and token budgets.
+HandbookTests checks topic navigation, local repository documentation links and
+anchors, explicit syntax fragments, and exact current copied Markdown inputs.
 
 The file example exercises success and missing-file cleanup; domains/contracts
 exercise their specified failures. The unchanged HTTP example uses a local

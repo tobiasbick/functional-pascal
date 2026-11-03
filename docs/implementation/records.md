@@ -1,7 +1,7 @@
 # Records
 
 This milestone implements nongeneric records from the
-[type reference](../pascal/language/types.md#records). They compile directly to
+[type reference](../pascal/language/types/records.md). They compile directly to
 sealed CLR reference classes nested in the program/unit container. No generated
 C# or VM is involved. The [inventory model](../../examples/inventory-model/README.md)
 is a complete executable example.
@@ -115,5 +115,5 @@ are implemented, as is [XML documentation](xml-documentation.md).
 [Primitive numbers and scalar domains](scalar-types.md) are implemented.
 [Global fields](global-values.md) are implemented. Authored interfaces are a
 [deferred extension](../future/language-gaps.md#deferred-declare-fpas-interfaces). The broader
-[record-members example](../pascal/examples/record-members.md) is compiled and
+[record-members example](../pascal/language/types/record-members.md) is compiled and
 executed directly from the documentation by LanguageSpecificationTests.

@@ -78,7 +78,7 @@ end;
 end program;
 ```
 
-Read [concurrency](../language/concurrency.md) for supported task families and
-contexts, [resources](../language/errors-and-resources.md#asynchronous-disposal)
+Read [concurrency](../language/concurrency/README.md) for supported task families and
+contexts, [resources](../language/error-handling/async-disposal.md)
 for disposal, and [async implementation](../../implementation/overloads-interfaces-debugging-and-async.md)
 when changing state-machine lowering or portable symbols.

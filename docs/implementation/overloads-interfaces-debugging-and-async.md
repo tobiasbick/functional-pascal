@@ -1,8 +1,8 @@
 # Source overloads, CLR interfaces, debugging, and async
 
-These four compiler steps implement the existing [routine](../pascal/language/functions.md),
+These four compiler steps implement the existing [routine](../pascal/language/functions/README.md),
 [interop](../pascal/interop/README.md), [CLR mapping](../specs/clr-mapping.md), and
-[concurrency](../pascal/language/concurrency.md) specifications.
+[concurrency](../pascal/language/concurrency/README.md) specifications.
 
 ## Source overloads
 

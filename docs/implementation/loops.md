@@ -1,6 +1,6 @@
 # Repeat and typed counting loops
 
-The compiler implements the [planned loop syntax](../pascal/language/control-flow.md)
+The compiler implements the [planned loop syntax](../pascal/language/control-flow/README.md)
 with direct CIL branches and the existing async state-machine lowering. The
 [loops example](../../examples/loops/README.md) executes an async subrange counter,
 a repeat/until loop, and an unsigned counter ending at ulong.MaxValue.

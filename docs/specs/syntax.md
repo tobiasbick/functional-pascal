@@ -9,10 +9,10 @@ requirements; the grammar does not replace the semantic rules.
 
 Notation: quoted words are terminals; `[...]` is optional, `{...}` repeats,
 and `|` selects alternatives. `identifier` includes escaped `@identifier` names.
-`literal`, `integral_literal`, and comments follow [basics](../pascal/language/basics.md).
+`literal`, `integral_literal`, and comments follow [basics](../pascal/language/basics/README.md).
 Only `//` comments are recognized, ending at a line ending or EOF. Comments are
 lexical trivia rather than statements. Preserve their text and source locations
-for [declaration documentation](../pascal/language/comments.md); Markdown sections
+for [declaration documentation](../pascal/language/basics/comments.md); Markdown sections
 do not add language tokens or change the grammar below.
 Keywords are lowercase and case-sensitive. `>>` is two generic closers, not a
 shift operator; shifts use `shr`/`shl`. `??` is one token for null coalescing.
@@ -96,7 +96,7 @@ every scope; no local-binding annotation is optional.
 Programs terminate with `end program;`; units terminate with `end unit;`.
 The program entry body's `begin` has its own `end;`. A separate `end program;`
 then closes the program declaration. Both are required; a terminal period is invalid.
-Distinct bases and subrange bases/bounds obey [data-domain rules](../pascal/language/data-domains.md).
+Distinct bases and subrange bases/bounds obey [data-domain rules](../pascal/language/types/data-domains.md).
 They cannot have generic parameters or where constraints. A field default is a
 runtime initializer, not necessarily a compile-time constant. Static is restricted
 to record methods; it cannot modify a field or a local/free routine. A private
@@ -105,7 +105,7 @@ Public/private modifiers are not available on local declarations.
 Ensures result bindings also require a type. A parenthesized Boolean expression
 without the typed-binding-and-colon prefix is an ordinary result-free condition.
 Contracts are ordered requires clauses followed by ensures clauses; the rules in
-[contracts](../pascal/language/contracts.md) define allowed expressions and exits.
+[contracts](../pascal/language/functions/contracts.md) define allowed expressions and exits.
 
 ## Statements
 
@@ -152,7 +152,7 @@ event; it excludes a record-update suffix so `with` is unambiguous here.
 Using declarations require `const` and its explicit type. They are local
 statements, not block openers; cleanup occurs on leaving the enclosing lexical
 scope. `await using const` additionally requires an async body. See
-[resource rules](../pascal/language/errors-and-resources.md) for scope, lifetime,
+[resource rules](../pascal/language/error-handling/README.md) for scope, lifetime,
 and disposal requirements.
 
 ## Expressions and patterns

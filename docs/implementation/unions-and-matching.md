@@ -1,8 +1,8 @@
 # Unions and case matching
 
 This milestone adds nongeneric unions and case matching to
-[records](records.md), following the approved [union types](../pascal/language/types.md#unions)
-and [control-flow rules](../pascal/language/control-flow.md#case-statements-and-expressions).
+[records](records.md), following the approved [union types](../pascal/language/types/unions.md)
+and [control-flow rules](../pascal/language/pattern-matching/syntax.md).
 The [game-actions example](../../examples/game-actions/README.md) compiles and runs
 through its project and uses records as union payloads.
 

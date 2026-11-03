@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 namespace Fpas.IntegrationTests;
 
 internal sealed record MarkdownExample(string Document, int Fence, string Name, bool Library, string? Project, string Source);
+internal sealed record MarkdownFence(string Document, int Index, string Attributes, string Source);
 
 internal static class MarkdownExamples
 {
@@ -10,19 +11,24 @@ internal static class MarkdownExamples
     private static readonly Regex Header = new(@"(?m)^(?:async )?(program|unit) ([A-Za-z_][A-Za-z_0-9.]*)\s*;", RegexOptions.CultureInvariant);
     private static readonly Regex Project = new(@"(?:^|\s)project=([A-Za-z0-9_-]+)(?:\s|$)", RegexOptions.CultureInvariant);
 
+    internal static IEnumerable<MarkdownFence> ReadFences(string root)
+    {
+        foreach (var path in Directory.GetFiles(root, "*.md", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+            foreach (var (match, index) in Fences.Matches(File.ReadAllText(path)).Cast<Match>().Select((match, index) => (match, index)))
+                yield return new(Path.GetRelativePath(root, path), index, match.Groups["attributes"].Value, match.Groups["source"].Value);
+    }
+
     internal static IReadOnlyList<MarkdownExample> Read(string root)
     {
         var examples = new List<MarkdownExample>();
-        foreach (var path in Directory.GetFiles(root, "*.md", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
-            foreach (var (match, index) in Fences.Matches(File.ReadAllText(path)).Cast<Match>().Select((match, index) => (match, index)))
-            {
-                var source = match.Groups["source"].Value;
-                var header = Header.Match(source.Trim());
-                if (!header.Success) continue;
-                var project = Project.Match(match.Groups["attributes"].Value);
-                examples.Add(new(Path.GetRelativePath(root, path), index, header.Groups[2].Value,
-                    header.Groups[1].Value == "unit", project.Success ? project.Groups[1].Value : null, source));
-            }
+        foreach (var fence in ReadFences(root))
+        {
+            var header = Header.Match(fence.Source.Trim());
+            if (!header.Success) continue;
+            var project = Project.Match(fence.Attributes);
+            examples.Add(new(fence.Document, fence.Index, header.Groups[2].Value,
+                header.Groups[1].Value == "unit", project.Success ? project.Groups[1].Value : null, fence.Source));
+        }
         return examples;
     }
 

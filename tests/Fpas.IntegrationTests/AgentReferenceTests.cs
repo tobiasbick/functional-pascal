@@ -7,7 +7,7 @@ namespace Fpas.IntegrationTests;
 
 public sealed class AgentReferenceTests(ITestOutputHelper output)
 {
-    private static string Repository => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
+    private static string Repository => DocumentationLinks.Repository;
     private static string Root => Path.Combine(Repository, "docs", "pascal", "agents");
     private static readonly Regex Links = new(@"\[[^\]]+\]\(([^)\s]+)\)", RegexOptions.CultureInvariant);
 
@@ -42,22 +42,7 @@ public sealed class AgentReferenceTests(ITestOutputHelper output)
 
     [Fact]
     public void Local_links_and_fragments_resolve_in_the_checkout()
-    {
-        var paths = Directory.GetFiles(Root, "*.md").Append(Path.Combine(Repository, "docs", "build", "development.md"));
-        foreach (var path in paths)
-            foreach (Match link in Links.Matches(File.ReadAllText(path)))
-            {
-                var href = link.Groups[1].Value;
-                if (Uri.TryCreate(href, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https") continue;
-                var pieces = href.Split('#', 2);
-                var target = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, Uri.UnescapeDataString(pieces[0])));
-                Assert.True(File.Exists(target), Path.GetFileName(path) + ": missing target " + href);
-                if (pieces.Length == 1) continue;
-                var headings = Regex.Matches(File.ReadAllText(target), @"(?m)^#{1,6} (.+?)\r?$").Cast<Match>()
-                    .Select(heading => Regex.Replace(Regex.Replace(heading.Groups[1].Value.ToLowerInvariant(), @"[^\p{L}\p{N}_\s-]", ""), @"\s", "-"));
-                Assert.Contains(Uri.UnescapeDataString(pieces[1]), headings);
-            }
-    }
+        => DocumentationLinks.Validate(Directory.GetFiles(Root, "*.md").Append(Path.Combine(Repository, "docs", "build", "development.md")));
 
     [Fact]
     public void Every_agent_fence_is_a_complete_unique_example_with_explicit_companions()

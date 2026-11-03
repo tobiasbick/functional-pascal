@@ -1,6 +1,6 @@
 # XML API documentation
 
-The compiler implements the existing [comment and Markdown rules](../pascal/language/comments.md)
+The compiler implements the existing [comment and Markdown rules](../pascal/language/basics/comments.md)
 and [MSBuild documentation output](../build/msbuild.md#documentation-output)
 for its supported declarations. No additional comment syntax is introduced.
 

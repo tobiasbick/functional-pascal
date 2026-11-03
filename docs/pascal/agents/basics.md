@@ -91,8 +91,8 @@ end;
 end program;
 ```
 
-Read [basics](../language/basics.md) for literal/conversion/operator details,
-[control flow](../language/control-flow.md) for scopes and exit rules, and
-[types](../language/types.md#arrays-and-collections) for CLR array contracts.
+Read [basics](../language/basics/README.md) for literal/conversion/operator details,
+[control flow](../language/control-flow/README.md) for scopes and exit rules, and
+[types](../language/types/arrays.md) for CLR array contracts.
 For collection APIs, read [interop](interop.md); dictionaries/lists are ordinary
 .NET objects rather than built-in language collection wrappers.

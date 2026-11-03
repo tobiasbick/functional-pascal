@@ -125,7 +125,7 @@ eager unit order. Forward/cyclic reads can observe CLR default storage. A global
 const is a runtime readonly field, not a constant pattern/default/bound expression.
 Shared state needs ordinary .NET synchronization.
 
-Read [types](../language/types.md), [data domains](../language/data-domains.md),
+Read [types](../language/types/README.md), [data domains](../language/types/data-domains.md),
 and [program structure](../program-structure/README.md) for full semantics.
 For exported metadata and cross-language identities, use
 [CLR mapping](../../specs/clr-mapping.md).

@@ -1,7 +1,7 @@
 # Runtime type expressions
 
 The compiler implements the specified typeof(T) expression from
-[casts and runtime types](../pascal/language/basics.md#casts-and-runtime-types).
+[casts and runtime types](../pascal/language/basics/conversions.md).
 It produces a non-null System.Type for a statically resolved source type. The
 [type-inspection example](../../examples/type-inspection/README.md) exercises
 primitive, nullable, array, record, and generic parameter types.

@@ -17,6 +17,7 @@ sources and invokes the direct CIL compiler. Follow
 | Units, source identity, aliases, and visibility | [Program structure](../../../docs/pascal/program-structure/README.md) |
 | Restore/build, warning policy, incremental state, and cleanup | [MSBuild contract](../../../docs/build/msbuild.md) |
 | Bootstrap, toolchain configuration, SDK package versions/cache | [Development workflow](../../../docs/build/development.md) |
+| Outside-checkout consumer, isolated feed/cache, and runnable deployment | [Standalone SDK walkthrough](../../../docs/build/standalone-sdk.md) |
 | Assemblies, symbols, and runtime dependencies | [Compiled output](../../../docs/pascal/program-structure/compiled-programs.md) |
 | Build and cross-language verification | [Build acceptance](../../../tests/coverage.md#build-acceptance) |
 
@@ -53,5 +54,5 @@ are separate steps; do not replace running toolchain binaries.
 
 Publishing, AOT, signing, native apphosts, and IDE project loading have separate
 scope. Do not silently claim unsupported outputs. The
-[documentation gaps](../../../docs/future/documentation-gaps.md#d4-sdk-use-outside-the-checkout)
-track the missing independent-consumer walkthrough.
+[standalone SDK walkthrough](../../../docs/build/standalone-sdk.md) is checked
+directly by StandaloneSdkGuideTests in Debug and Release.

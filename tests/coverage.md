@@ -108,6 +108,14 @@ Deleted articles cannot remain as stale fixtures. See
 
 ## Build acceptance
 
+StandaloneSdkGuideTests materializes the exact project/configuration/source blocks
+from the [standalone SDK walkthrough](../docs/build/standalone-sdk.md) outside the
+checkout. Debug/Release cases first reject a missing local SDK package, then
+restore it into a fresh explicit cache and build C# Shared → FPAS Messages →
+FPAS App/C# Host. They execute both consumers, copy complete outputs, rename the
+source/feed/cache directory, and execute the deployed DLLs again. Assertions cover
+the expected text and required Core/project/runtime/symbol/documentation files.
+
 MsBuildTests exercises the net10.0/AnyCPU contract using the current locally
 packaged SDK. Each test uses an isolated feed/cache identity and fixture directory;
 it does not depend on a previously installed development package.

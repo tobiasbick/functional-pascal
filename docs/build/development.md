@@ -70,6 +70,9 @@ the consumer's SDK version to match. To locate the cache, use
 `dotnet nuget locals global-packages --list`; remove only the selected
 `fpas.net.sdk/<version>` directory when intentionally reusing that version.
 Do not clear unrelated packages. See [MSBuild](msbuild.md) for the project contract.
+For a consumer outside this checkout, follow the complete
+[standalone SDK walkthrough](standalone-sdk.md). It includes an isolated local
+feed/cache, FPAS and C# projects, and copying runnable output.
 
 ## Direct compiler invocation
 

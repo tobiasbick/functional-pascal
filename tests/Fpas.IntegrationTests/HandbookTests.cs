@@ -61,5 +61,7 @@ public sealed class HandbookTests
         foreach (var path in expected) Assert.Equal(File.ReadAllText(Path.Combine(Root, path)), File.ReadAllText(Path.Combine(copied, path)));
         Assert.Equal(File.ReadAllText(Path.Combine(DocumentationLinks.Repository, "README.md")),
             File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "repository", "README.md")));
+        Assert.Equal(File.ReadAllText(Path.Combine(DocumentationLinks.Repository, "docs", "build", "standalone-sdk.md")),
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "standalone-sdk.md")));
     }
 }

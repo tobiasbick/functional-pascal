@@ -17,6 +17,9 @@ CIL compiler with selected sources and resolved reference assemblies.
 
 The local SDK must be packaged before this project can restore. Follow the
 [application workflow](../../build/development.md#build-an-fpas-application).
+For projects outside the checkout, use the
+[standalone SDK walkthrough](../../build/standalone-sdk.md) with an explicit
+package source, SDK version, and independent cache.
 The current build scope is one net10.0 target, AnyCPU, Debug/Release, and Exe
 or Library output. A library contains units and no program; an executable has
 exactly one program plus optional units. The program/unit header determines

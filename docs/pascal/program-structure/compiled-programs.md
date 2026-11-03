@@ -33,6 +33,9 @@ aliases; it is not an implicit source namespace. The SDK supplies and deploys it
 matching support assembly. Standalone deployment must include required external
 assemblies, including Core when its metadata is inspected. Source imports do not
 replace runtime dependency resolution.
+The [standalone SDK walkthrough](../../build/standalone-sdk.md#copy-runnable-output)
+demonstrates copying complete FPAS and C# application outputs and running them
+without the consumer sources, package feed, or compiler tools.
 
 Keep source files and matching symbols for source debugging. Generated closure/
 async methods carry the corresponding portable metadata. CLR execution does not

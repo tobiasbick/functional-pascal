@@ -10,6 +10,7 @@ workflow to work on the compiler/toolchain.
 | Compact authoring guidance and verified examples | [FPAS for agents](pascal/agents/README.md) |
 | Repository task skills | [Authoring](../.agents/skills/fpas-authoring/SKILL.md), [projects](../.agents/skills/fpas-projects/SKILL.md), [performance](../.agents/skills/fpas-bench/SKILL.md) |
 | Repository commands and application SDK bootstrap | [Development workflow](build/development.md) |
+| Independent FPAS/C# consumer, local SDK package, and deployment files | [Standalone SDK walkthrough](build/standalone-sdk.md) |
 | Project boundaries, compilation, closures, async, and symbols | [Compiler architecture](architecture/README.md) |
 | Test organization and verified behavior | [Tests](../tests/README.md) and [coverage map](../tests/coverage.md) |
 | Language/CLR/CLI/MSBuild requirements compared with implementation and proof | [Baseline comparison](baseline-comparison.md) |

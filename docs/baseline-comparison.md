@@ -102,9 +102,10 @@ unsafe/byref-like features, custom awaiters, async iterators, extension discover
 publishing/AOT/signing and IDE integration retain their documented separate scope.
 
 Practical documentation work remains in [documentation gaps](future/documentation-gaps.md).
-The next useful item is [D4: SDK use outside the checkout](future/documentation-gaps.md#d4-sdk-use-outside-the-checkout):
-turn the verified package/project behavior into a complete independent-consumer
-walkthrough with explicit package sources, versions and deployment files.
+The [standalone SDK walkthrough](build/standalone-sdk.md) covers an independent
+FPAS/C# consumer with explicit package sources, versions, and deployment files.
+The next useful item is [D2: practical .NET API recipes](future/documentation-gaps.md#d2-practical-net-api-recipes),
+starting with controlled process execution and resource lifetime.
 
 ## See also
 

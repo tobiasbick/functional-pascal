@@ -14,7 +14,6 @@ workflows, rather than reproducing Rust-specific manuals or implementation histo
 | D1 | Reproducible CLR benchmarks | [Profiling overview](../pascal/tools/profiling.md) | Open |
 | D2 | Practical .NET API recipes | [Library guides](../pascal/libraries/README.md) | Open |
 | D3 | Concrete debugging/profiling walkthroughs | [Debugging](../pascal/tools/debugging.md), [profiling](../pascal/tools/profiling.md) | Open |
-| D4 | SDK use outside the checkout | [Development workflow](../build/development.md), [projects](../pascal/program-structure/projects.md) | Open |
 
 ## D1: Reproducible benchmarks
 
@@ -85,29 +84,6 @@ Close D3 after the exact documented procedure has been exercised with the stated
 tool/platform configuration. Record practical limits. The Rust DAP/JSONL debugger,
 tracepoints, seeded scheduler, and native failure-report commands are not CLR
 features and must not be copied as working instructions.
-
-## D4: SDK use outside the checkout
-
-The local bootstrap and examples inherit the repository's NuGet.Config. The
-project/build contract describes dependency resolution and output files, but an
-independent consumer still needs a complete walkthrough.
-
-Document a consumer outside the source tree that:
-
-- Resolves an explicitly versioned local Fpas.NET.Sdk package through an explicit
-  NuGet source/configuration. Does not depend on an accidental prior cache entry.
-- Builds an executable and a library with public units, plus an ordinary C#
-  consumer or dependency through ProjectReference and a mixed solution.
-- Runs with the needed .NET runtime, Core support assembly, and non-framework
-  dependencies. Identifies the files to copy without requiring source/toolchain
-  directories at runtime.
-- Explains package-version/cache updates after compiler changes and the current
-  net10.0/AnyCPU and symbol/documentation-output boundaries.
-
-Close D4 after an isolated consumer with its own package configuration can restore,
-build, and execute the examples using the packaged toolchain. Public package
-publication, dotnet publish, AOT, signing, native apphosts, and IDE loaders remain
-separate feature scope. This gap does not authorize implementing them.
 
 ## Scope and maintenance
 

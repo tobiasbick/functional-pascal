@@ -21,4 +21,6 @@ version/cache entry after changing packaged tools. No public package is publishe
 
 See the [development workflow](../../docs/build/development.md#build-an-fpas-application)
 for commands, the [MSBuild contract](../../docs/build/msbuild.md) for configuration,
-and [build acceptance](../../tests/coverage.md#build-acceptance) for verification.
+the [standalone SDK walkthrough](../../docs/build/standalone-sdk.md) for an
+independent FPAS/C# consumer, and
+[build acceptance](../../tests/coverage.md#build-acceptance) for verification.

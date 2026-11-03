@@ -44,7 +44,7 @@ public sealed class LanguageSpecificationTests
         File.WriteAllText(directory.File("world.json"), "{\"world\":\"test\"}");
         var environment = new Dictionary<string, string?> { ["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1", ["FPAS_PLAYER"] = "Explorer",
             ["FPAS_RECIPE_ATTEMPTS"] = "5" };
-        var result = name == "DownloadPage" ? await RunWithRejectedProxy(output, directory.Path, environment)
+        var result = name is "DownloadPage" or "FetchUtf8" ? await RunWithRejectedProxy(output, directory.Path, environment)
             : await ProcessRunner.RunAsync([output], workingDirectory: directory.Path, environment: environment);
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
         Assert.Empty(result.Error);
@@ -88,6 +88,7 @@ public sealed class LanguageSpecificationTests
             "EnvironmentConfiguration" => ["5"],
             "TimeAndDuration" => ["2030-04-05T10:30:00.0000000+00:00", "01:30:00"],
             "NumericUtilities" => ["12.34", "12.35", "43"],
+            "FetchUtf8" => ["HTTP request failed"],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);

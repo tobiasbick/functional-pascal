@@ -62,6 +62,8 @@ test uses a local rejecting proxy to exercise the HTTP failure path. Starting Do
 does not imply a new thread. Its Task and CancellationToken are real .NET types.
 Client is disposed before Download completes; Cancellation remains alive through
 the try/catch and is disposed when the program entry body exits.
+For reusable clients, per-request messages, streamed body limits, and cancellation
+after headers arrive, follow the [HTTP recipe](../../libraries/http.md).
 
 ## See also
 

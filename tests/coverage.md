@@ -107,6 +107,11 @@ whitespace/signs, invalid text, and overflow in isolated child environments. Fix
 offsets and invariant formats make time/numeric output deterministic; elapsed time
 has no exact timing assertion. Seeded rolls are compared with a C# Random on the
 current runtime, while unseeded generators have range/size checks.
+The [HTTP recipe](../docs/pascal/libraries/http.md) has a local rejecting-proxy
+Markdown check and Debug/Release SDK cases. A real loopback exchange verifies
+GET headers and UTF-8 text; controlled handlers/streams check exact/oversized
+limits, invalid UTF-8, status errors, cancellation while sending/reading, disposal
+of request/content/body, and continued use of the caller's client.
 
 AgentReferenceTests checks the compact reference's policy, complete/unique
 examples, local links, and exact o200k_base budgets using packaged vocabulary.

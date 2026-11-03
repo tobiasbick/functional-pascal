@@ -13,7 +13,8 @@ the referenced package version determine which overloads are available.
 | Environment configuration, instants, deadlines, and elapsed time | [Environment and time](environment-and-time.md) |
 | Parsing, rounding, bounds, and random generators | [Numbers and random values](numbers-and-random.md) |
 | Typed JSON and source attributes | [JSON serialization](json.md) |
-| HTTP, cancellation, and parallel coordination | [Async APIs](../language/concurrency/cancellation-and-coordination.md) |
+| HTTP request/response lifetime, bounded text, and cancellation | [HTTP](http.md) |
+| Cancellation and Task coordination | [Async APIs](../language/concurrency/cancellation-and-coordination.md) |
 | Delegates, events, and interface adapters | [CLR interop](../interop/README.md) |
 
 These are task guides, not a replacement API catalog. Consult the selected .NET

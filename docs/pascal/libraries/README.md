@@ -14,7 +14,8 @@ the referenced package version determine which overloads are available.
 | Parsing, rounding, bounds, and random generators | [Numbers and random values](numbers-and-random.md) |
 | Typed JSON and source attributes | [JSON serialization](json.md) |
 | HTTP request/response lifetime, bounded text, and cancellation | [HTTP](http.md) |
-| Cancellation and Task coordination | [Async APIs](../language/concurrency/cancellation-and-coordination.md) |
+| Semaphore ownership and Task success/fault/cancellation | [Task coordination](task-coordination.md) |
+| Bounded queues, backpressure, completion, and joined workers | [Channels](channels.md) |
 | Delegates, events, and interface adapters | [CLR interop](../interop/README.md) |
 
 These are task guides, not a replacement API catalog. Consult the selected .NET

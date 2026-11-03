@@ -8,6 +8,9 @@ Use Task.Run for appropriate CPU-bound work, Task.WhenAll/WhenAny for coordinati
 and System.Threading.Channels for bounded or unbounded channels. These are normal
 .NET APIs, not syntax or FPAS wrappers. Task.Run overload resolution uses the
 ordinary delegate rules and .NET's task-unwrapping overloads.
+For complete semaphore, task-outcome, and producer/consumer workflows, read
+[task coordination](../../libraries/task-coordination.md) and
+[channels](../../libraries/channels.md).
 
 There is no `go`, special task type, task ownership scope, transferability check,
 or implicit cancellation/join at a function boundary. Explicitly await work whose

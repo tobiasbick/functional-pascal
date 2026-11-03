@@ -12,7 +12,6 @@ workflows, rather than reproducing Rust-specific manuals or implementation histo
 | ID | Follow-up | Current documentation | Status |
 | --- | --- | --- | --- |
 | D1 | Reproducible CLR benchmarks | [Profiling overview](../pascal/tools/profiling.md) | Open |
-| D2 | Practical .NET API recipes | [Library guides](../pascal/libraries/README.md) | Open |
 | D3 | Concrete debugging/profiling walkthroughs | [Debugging](../pascal/tools/debugging.md), [profiling](../pascal/tools/profiling.md) | Open |
 
 ## D1: Reproducible benchmarks
@@ -38,23 +37,6 @@ Close D1 when the documented commands and actual selected workloads can be run
 from a clean prepared environment and the result checks pass. If additional tools
 are needed, identify them explicitly; do not document an imaginary CLI command.
 Historical timing reports and the Rust VM harness are not CLR documentation.
-
-## D2: Practical .NET API recipes
-
-Existing guides cover collections, text/regex, files/streams, and JSON. An async
-HTTP example exists under concurrency. Missing task-oriented guidance includes:
-
-- Synchronization, Task coordination, and channels with explicit completion,
-  fault/cancellation handling, and shared-state rules.
-
-Write short recipes with explicit imports, actual CLR signatures, and meaningful
-execution assertions. Prefer representative workflows over a copied API catalog.
-Link full .NET references for overloads; select supported signatures rather than
-claiming Span/ref-like or other excluded APIs work.
-
-Close each recipe when its complete source is checked by the Markdown runner or
-a linked SDK test, with controlled inputs and cleanup. Record a newly encountered
-compiler limitation separately. Do not introduce a parallel Std wrapper library.
 
 ## D3: Concrete debugging/profiling walkthroughs
 

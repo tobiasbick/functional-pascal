@@ -112,6 +112,13 @@ Markdown check and Debug/Release SDK cases. A real loopback exchange verifies
 GET headers and UTF-8 text; controlled handlers/streams check exact/oversized
 limits, invalid UTF-8, status errors, cancellation while sending/reading, disposal
 of request/content/body, and continued use of the caller's client.
+The [task coordination](../docs/pascal/libraries/task-coordination.md) and
+[channel](../docs/pascal/libraries/channels.md) recipes execute from Markdown,
+including shared updates, WhenAny/WhenAll outcomes, bounded writer backpressure,
+and drained completion. MsBuildTests.CoordinationRecipes calls the exact units
+in Debug/Release, checking permit ownership, awaited/faulted/canceled work,
+producer and consumer failures, overflow, active cancellation, and enumerator
+disposal before a pipeline completes. Controlled signals replace timing races.
 
 AgentReferenceTests checks the compact reference's policy, complete/unique
 examples, local links, and exact o200k_base budgets using packaged vocabulary.

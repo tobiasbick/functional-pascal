@@ -104,8 +104,10 @@ publishing/AOT/signing and IDE integration retain their documented separate scop
 Practical documentation work remains in [documentation gaps](future/documentation-gaps.md).
 The [standalone SDK walkthrough](build/standalone-sdk.md) covers an independent
 FPAS/C# consumer with explicit package sources, versions, and deployment files.
-The next useful item is [D2: practical .NET API recipes](future/documentation-gaps.md#d2-practical-net-api-recipes),
-continuing with synchronization, Task coordination, and channels with explicit completion and failure handling.
+The [library guides](pascal/libraries/README.md) cover practical .NET workflows,
+including task synchronization and joined channel pipelines. The next useful
+item is [D3: concrete debugging/profiling walkthroughs](future/documentation-gaps.md#d3-concrete-debuggingprofiling-walkthroughs),
+starting with source breakpoints, parameters, and locals in a synchronous program.
 
 ## See also
 

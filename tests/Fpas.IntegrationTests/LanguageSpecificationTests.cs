@@ -89,6 +89,10 @@ public sealed class LanguageSpecificationTests
             "TimeAndDuration" => ["2030-04-05T10:30:00.0000000+00:00", "01:30:00"],
             "NumericUtilities" => ["12.34", "12.35", "43"],
             "FetchUtf8" => ["HTTP request failed"],
+            "SerializedJobs" => ["6"],
+            "TaskOutcomes" => ["First failure observed", "2", "Canceled batch observed"],
+            "ChannelBackpressure" => ["10", "20"],
+            "ChannelSum" => ["60"],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);

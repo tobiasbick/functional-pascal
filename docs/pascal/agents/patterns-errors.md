@@ -38,6 +38,14 @@ equality call does not prove nullness; a runtime is T test can validate the valu
 Coalescing ?? evaluates its fallback only for null. Nullable<T>.Value can throw
 when absent. There is no null-forgiving suffix.
 
+Nullable value arithmetic and integral bitwise/shift operations propagate absence
+and retain ordinary promotion. Evaluate both operands once, left to right, even
+when one is absent; only the underlying operation is skipped. Equality returns
+bool, with two absent values equal. Ordering returns false if either value is
+absent. Nullable Boolean logical and/or/xor/not are unsupported; use Flag = true
+or Flag ?? false. A lifted result still needs explicit handling before use as T.
+See [nullable operator rules](../language/types/nullable-types.md#lifted-value-operators).
+
 Use ordinary CLR exceptions and existing Try-pattern APIs for failures.
 Raise Expression throws a non-null exception; raise; rethrows only inside the
 lexical catch body, preserving the original stack. Catch clauses are ordered,

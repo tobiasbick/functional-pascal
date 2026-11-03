@@ -55,7 +55,7 @@ This scope does not promise access to every possible .NET API.
 
 Finish this baseline before adding language extensions. The
 [language gaps](../../future/language-gaps.md) track confirmed missing work and
-the open decision on lifted nullable numeric operators.
+deferred proposals for compiler-checked purity and deep immutability.
 
 The [MSBuild specification](../../build/msbuild.md) defines `.fpasproj` projects,
 `.slnx` solutions, standard dependency restore, and cross-language project

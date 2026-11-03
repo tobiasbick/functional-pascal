@@ -42,8 +42,9 @@ without an applicable equality operator use reference identity, not an implicit
 call to virtual `Equals`. Ordering requires an applicable primitive/operator rule.
 Applicable CLR comparison operators are resolved from both operand types using
 ordinary overload rules, including for value types such as DateTime and TimeSpan.
-Ambiguous operators are errors. This does not introduce lifted nullable-value
-operators or source operator declarations. See
+Ambiguous operators are errors. Supported value operators have
+[lifted nullable forms](../types/nullable-types.md#lifted-value-operators);
+source operator declarations remain unsupported. See
 [comparisons and acceptance](../../../../tests/coverage.md).
 
 ## Operators from generic constraints
@@ -53,7 +54,8 @@ constraints, including inherited contracts such as INumber<T>. Binary lookup
 uses both operands' type parameters and normal overload applicability; it retains
 the selected interface, implementing parameter, argument types, and result type.
 There is no implicit numeric promotion of an unknown T. Missing and ambiguous
-contracts are errors. Nullable value operators are not lifted.
+contracts are errors. Struct-constrained nullable parameters support lifting when
+the selected operator has non-nullable value parameter and result types.
 
 The existing symbols map to CLR operator members: +, -, *, / and div, mod,
 and/or/xor, shl/shr, unary +/-, not, and comparisons. Both / and div select

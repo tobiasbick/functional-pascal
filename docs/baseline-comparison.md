@@ -96,14 +96,18 @@ graph regression is additionally checked against the unchanged compiler.
 
 Within these contracts, the comparison leaves no confirmed baseline compiler or
 MSBuild omission open. This is bounded acceptance, not a claim that all possible
-.NET metadata combinations or external tools are supported. Lifted nullable
-numeric operators remain unspecified; source events, class hierarchies,
+.NET metadata combinations or external tools are supported. Source events, class hierarchies,
 unsafe/byref-like features, custom awaiters, async iterators, extension discovery,
 publishing/AOT/signing and IDE integration retain their documented separate scope.
 
 Source interface declarations are now implemented as an approved extension;
 see [interfaces](pascal/interop/interfaces.md) and SourceInterfaceTests/
 MsBuildTests.SourceInterfaces for metadata, diagnostics, and cross-language acceptance.
+
+[Lifted nullable operators](pascal/language/types/nullable-types.md#lifted-value-operators)
+are specified and implemented, with NullableOperatorDiagnosticsTests and
+MsBuildTests.NullableOperators covering safety, C# results/exceptions, generic
+dispatch, and operand ordering across suspension in Debug/Release consumers.
 
 Practical documentation work remains in [documentation gaps](future/documentation-gaps.md).
 The [standalone SDK walkthrough](build/standalone-sdk.md) covers an independent

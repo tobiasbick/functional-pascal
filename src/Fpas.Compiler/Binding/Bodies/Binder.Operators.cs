@@ -8,7 +8,7 @@ internal sealed partial class Binder
 {
     private readonly Dictionary<ExpressionSyntax, bool> operatorCalls = new(ReferenceEqualityComparer.Instance);
 
-    private BoundCall? BindConstrainedOperator(string op, IReadOnlyList<BoundExpression> arguments, int position, bool check)
+    private BoundCall? BindConstrainedOperator(string op, IReadOnlyList<BoundExpression> arguments, int position, bool check, bool lifted = false)
     {
         if (arguments.Any(argument => argument.Type.NullableValue)) return null;
         var owners = arguments.Select(argument => argument.Type.NonNullable).Where(type => type.IsParameter).Distinct().ToArray();
@@ -31,7 +31,7 @@ internal sealed partial class Binder
             {
                 var methods = owners.SelectMany(owner => references.Methods(owner, candidateName, true))
                     .Where(method => method.ConstrainedType is not null && method.MethodArguments is null && method.Parameters.Count == arguments.Count &&
-                        method.Result != TypeSymbol.Void && !method.ParameterInfo!.Any(parameter => parameter.ByRef) &&
+                        method.Result != TypeSymbol.Void && !method.ParameterInfo!.Any(parameter => parameter.ByRef) && (!lifted || LiftableSignature(method)) &&
                         (op is not ("=" or "<>" or "<" or ">" or "<=" or ">=") || method.Result == TypeSymbol.Boolean))
                     .DistinctBy(method => (method.Owner, method.DefinitionHandle, method.ConstrainedType)).ToArray();
                 var selected = references.FindMethod(owners[0], candidateName, arguments.Select(argument => argument.Type).ToArray(), position, source,
@@ -44,7 +44,7 @@ internal sealed partial class Binder
         return null;
     }
 
-    private BoundExpression? BindComparisonOperator(BoundExpression left, string op, BoundExpression right, int position)
+    private BoundExpression? BindComparisonOperator(BoundExpression left, string op, BoundExpression right, int position, bool lifted = false)
     {
         var name = op switch
         {
@@ -55,7 +55,7 @@ internal sealed partial class Binder
         var owners = new[] { left.Type.NonNullable, right.Type.NonNullable }
             .Where(type => type.Kind is TypeKind.Named or TypeKind.Record or TypeKind.Union).Distinct().ToArray();
         var methods = owners.SelectMany(owner => references.Methods(owner, name, true))
-            .Where(method => method.Result == TypeSymbol.Boolean && method.Parameters.Count == 2)
+            .Where(method => method.Result == TypeSymbol.Boolean && method.Parameters.Count == 2 && (!lifted || LiftableSignature(method)))
             .DistinctBy(method => (method.Owner, method.DefinitionHandle, method.SourceMethod)).ToArray();
         if (methods.Length == 0) return null;
         var selected = references.FindMethod(owners[0], name, [left.Type, right.Type], position, source,
@@ -64,4 +64,7 @@ internal sealed partial class Binder
         ForgetCapturedFacts();
         return new BoundCall(selected, ConvertArguments([left, right], selected.Parameters, position));
     }
+
+    private static bool LiftableSignature(Fpas.Compiler.Binding.References.ImportedMethod method)
+        => method.Result.IsValue && !method.Result.IsNullable && method.Parameters.All(type => type.IsValue && !type.IsNullable);
 }

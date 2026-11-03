@@ -71,27 +71,9 @@ internal sealed partial class Binder
                 if (unary.Operator.Text == "-" && unary.Operand is LiteralSyntax { Token.Kind: TokenKind.Integer } number && !number.Token.Text.EndsWith('U') && !number.Token.Text.EndsWith('u'))
                     return NumberLiteral(number.Token, negative: true);
                 var operand = BindExpression(unary.Operand, check);
-                if (BindConstrainedOperator(unary.Operator.Text, [operand], unary.Position, check) is { } unaryCall)
-                {
-                    operatorCalls[unary] = false;
-                    return unaryCall;
-                }
-                if (unary.Operator.Text == "not" && references.ScalarInfo(operand.Type) is { Category: ScalarCategory.Enum } enumType)
-                {
-                    var promotedEnum = NumericFacts.Unary(enumType.Base, "not");
-                    return new BoundConversion(new BoundUnary("not", new BoundConversion(operand, promotedEnum, false), promotedEnum, false), operand.Type, false);
-                }
-                if (TypeFacts.Numeric(operand.Type))
-                {
-                    var promoted = NumericFacts.Unary(operand.Type, unary.Operator.Text);
-                    if (promoted == TypeSymbol.Unsupported || unary.Operator.Text == "not" && !NumericFacts.Integral(promoted))
-                        throw source.Error("FP3002", "Invalid numeric unary operator.", unary.Position);
-                    operand = Convert(operand, promoted, unary.Position);
-                }
-                if ((unary.Operator.Text is "+" or "-" && TypeFacts.Numeric(operand.Type)) ||
-                    (unary.Operator.Text == "not" && (operand.Type == TypeSymbol.Boolean || NumericFacts.Integral(operand.Type))))
-                    return new BoundUnary(unary.Operator.Text, operand, operand.Type, check);
-                throw source.Error("FP3002", "The unary operator does not accept this operand type.", unary.Position);
+                operatorCalls[unary] = false;
+                return operand.Type.NullableValue ? BindLiftedUnary(operand, unary.Operator.Text, unary.Position, check)
+                    : BindUnaryOperation(operand, unary.Operator.Text, unary.Position, check);
             case BinarySyntax binary:
                 return BindBinary(binary, check);
             case ConditionalSyntax conditional:
@@ -127,16 +109,26 @@ internal sealed partial class Binder
         if (left.Type == TypeSymbol.Boolean && syntax.Operator.Text is "and" or "or" || syntax.Operator.Text == "??")
             SetFacts(Merge([incoming, nonNull.ToHashSet()]));
         var op = syntax.Operator.Text;
+        if (op != "??" && (left.Type.NullableValue || right.Type.NullableValue ||
+            left.Type == TypeSymbol.Null && right.Type.IsValue || right.Type == TypeSymbol.Null && left.Type.IsValue) &&
+            (left.Type.IsValue || left.Type == TypeSymbol.Null) && (right.Type.IsValue || right.Type == TypeSymbol.Null) &&
+            !(op is "=" or "<>" && (left.Type == TypeSymbol.Null || right.Type == TypeSymbol.Null)))
+            return BindLiftedBinary(left, op, right, syntax, check);
+        return BindBinaryOperation(left, op, right, syntax, check);
+    }
+
+    private BoundExpression BindBinaryOperation(BoundExpression left, string op, BoundExpression right, BinarySyntax syntax, bool check, bool lifted = false)
+    {
         if (ScalarBinary(left, op, right, syntax.Position, check) is { } scalar) return scalar;
         if (references.ScalarInfo(right.Type) is { Category: ScalarCategory.Range } rightRange && TypeFacts.Numeric(left.Type))
             right = new BoundCall(ReferenceCatalog.DomainGetter(rightRange), [], right);
         if (TypeFacts.Numeric(left.Type) && TypeFacts.Numeric(right.Type)) return NumericBinary(left, op, right, syntax.Position, check);
-        if (BindConstrainedOperator(op, [left, right], syntax.Position, check) is { } operatorCall)
+        if (BindConstrainedOperator(op, [left, right], syntax.Position, check, lifted) is { } operatorCall)
         {
             operatorCalls[syntax] = false;
             return operatorCall;
         }
-        if (BindComparisonOperator(left, op, right, syntax.Position) is BoundCall comparison)
+        if (BindComparisonOperator(left, op, right, syntax.Position, lifted) is BoundCall comparison)
         {
             operatorCalls[syntax] = references.RecordInfo(comparison.Method.Owner) is not null || references.UnionInfo(comparison.Method.Owner) is not null;
             return comparison;

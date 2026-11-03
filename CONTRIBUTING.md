@@ -17,8 +17,8 @@ simplifying tangled code, and keeping documentation aligned with what runs.
   logic, and remove dead code rather than accumulating layers or alternate paths.
 - Backward compatibility and implementation history are not goals. Internal
   designs may change; FPAS syntax changes need the user's explicit approval.
-- Finish the agreed baseline before adding extensions. Source interfaces remain
-  a deferred proposal, not an invitation to extend the grammar.
+- Finish the agreed baseline before adding extensions. Deferred proposals do not
+  authorize syntax changes.
 - Consume actual .NET APIs. Keep Fpas.Core focused on required language metadata
   and support; do not recreate a parallel standard-library wrapper catalog.
 - Use English for code, comments, documentation, identifiers, and commit messages.

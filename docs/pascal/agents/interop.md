@@ -26,7 +26,8 @@ the actual Type without constructing an instance or running its type initializer
 CLR comparison operators are resolved from both operand types and invoked
 directly, including DateTime/TimeSpan/Guid comparisons. Arrays compare by
 identity. Other references without an applicable equality operator use identity,
-not a virtual Equals call. Nullable-value operators are not implicitly lifted.
+not a virtual Equals call. Supported value-type operators have
+[lifted nullable forms](../language/types/nullable-types.md#lifted-value-operators).
 
 ## Implementing interfaces and using attributes
 

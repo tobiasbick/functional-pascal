@@ -47,9 +47,8 @@ public sealed class ComparisonOperatorTests
     [InlineData("Sys.DateTime", "=", "FP3027")]
     [InlineData("Sys.TimeSpan", "<", "FP3027")]
     [InlineData("Sys.Random", "<", "FP3002")]
-    [InlineData("Sys.DateTime?", "=", "FP3002")]
-    [InlineData("int?", "=", "FP3002")]
-    public void Comparisons_preserve_contract_restrictions_and_do_not_add_lifted_operators(string type, string op, string code)
+    [InlineData("Sys.DateTime?", "=", "FP3027")]
+    public void Comparisons_preserve_contract_restrictions_and_reject_unsupported_operands(string type, string op, string code)
     {
         var contract = code == "FP3027";
         var result = DiagnosticsTests.Compile($$"""

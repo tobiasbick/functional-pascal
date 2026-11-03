@@ -22,8 +22,78 @@
 `null` cannot initialize a non-null reference or non-nullable value type.
 Unconstrained generic parameters cannot be suffixed with `?`; use an appropriate
 reference/value constraint. Repeated nullable suffixes are invalid.
-Numeric nullable arithmetic and comparison operators are not generally lifted;
-validate and unwrap the contained value before applying those operations.
+Supported value-type operators also accept nullable operands through the lifted
+rules below. This does not permit unchecked use of a nullable reference or an
+implicit conversion from T? to T.
+
+## Lifted value operators
+
+Select the existing operator for the contained non-nullable types, retaining
+ordinary numeric promotion, constant-expression conversions, and domain rules.
+At least one nullable operand lifts that operation. Non-nullable operands may be
+mixed with nullable operands. For example, int? + long produces long?, and
+short? + byte? produces int?. Decimal still cannot implicitly mix with float or
+double; integral division still uses div. Unary numeric promotion also applies.
+
+| Operator | Result type | Behavior when an operand is absent |
+| --- | --- | --- |
+| Binary +, -, *, /, div, mod | Nullable form of the ordinary result | null |
+| Unary +, - | Nullable form of the ordinary result | null |
+| Integral and/or/xor/not, shl/shr | Nullable form of the ordinary result | null |
+| Supported enum bitwise operations | Same nullable enum | null |
+| = | bool | true only when both operands are absent |
+| <> | bool | true only when exactly one operand is absent |
+| <, <=, >, >= | bool | false |
+| Logical and/or/xor/not on bool? | Unsupported | Handle absence explicitly |
+
+When all operands are present, the ordinary operator determines the result,
+including NaN behavior and exceptions. A relational comparison returning false
+does not establish the opposite relation: both A < B and A >= B are false if
+either operand is absent. Equality is available for bool?; conditions still
+require bool. Use Flag = true or Flag ?? false to make that decision explicitly.
+
+Evaluate both binary operands once, left to right, before checking presence.
+Only the underlying operation is skipped. Thus an absent dividend divided by
+zero produces null, but an exception while calculating the divisor still
+propagates. Ordinary checked/unchecked integral, decimal, and floating behavior
+applies whenever the operation runs. Suspensions in operands preserve this order.
+
+An untyped null operand takes the known value type of the other operand for an
+otherwise valid lifted operation. A null shift count uses int?. An arithmetic
+expression with two untyped null operands has no underlying type and is rejected.
+Existing direct null tests remain available on references and nullable values.
+
+The same lifting rules apply to already supported CLR value-type comparison
+operators and constrained generic operators when their parameter and result
+types are non-nullable value types. Generic lifting requires a struct constraint
+and the appropriate operator interface; struct alone does not supply arithmetic
+or equality. Imported default/checked implementations keep their ordinary
+dispatch rules. Lifting neither introduces new underlying operators nor erases
+distinct domain identity. Reference-type operators retain their existing rules.
+
+Built-in lifted operations are permitted in contracts under the existing
+read-only expression rules. Lifting an imported or constrained operator call
+does not make that call contract-safe. General lifted comparisons do not prove
+that a nullable reference is non-null; ordinary null tests retain their flow rules.
+
+```pascal
+program NullableArithmetic;
+
+uses System as Sys, System.Console as Console;
+
+begin
+  const Price: decimal? := 12.50M;
+  const Missing: decimal? := null;
+  const Total: decimal? := Price + 2.50M;
+  const Unknown: decimal? := Price + Missing;
+  if Total <> 15.00M or Unknown <> null or Missing < Price or Missing >= Price then
+    raise new Sys.InvalidOperationException('Incorrect nullable calculation');
+  end if;
+  Console.WriteLine(Total ?? 0.00M);
+  Console.WriteLine(Missing = cast<decimal?>(null));
+end;
+end program;
+```
 
 ## Example
 

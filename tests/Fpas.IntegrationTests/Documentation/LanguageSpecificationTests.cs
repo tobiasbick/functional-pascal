@@ -65,6 +65,7 @@ public sealed class LanguageSpecificationTests
             "Shapes" => ["1", "4", "12"],
             "Collections" => ["9", "Mara", "Keeper", "10", "42"],
             "NullableText" => ["Explorer", "8", "3", "A"],
+            "NullableArithmetic" => ["15.00", "True"],
             "MoveOutcomes" => ["The edge of the map"],
             "ReadWorld" => ["{\"world\":\"test\"}", "Read attempt finished"],
             "Interop" => ["3", "{\"player_name\":\"Mara\",\"Score\":10}"],

@@ -240,6 +240,23 @@ property/helper/factory signatures and case bases, retaining nullable annotation
 They verify matching generic arity and all existing readonly/accessibility rules.
 See [implemented generic data types](../pascal/language/types/generics.md).
 
+## Lifted nullable operators
+
+Lift supported non-nullable value operators through Nullable<T>, retaining their
+ordinary result types, numeric promotion, checked behavior, and CLR dispatch.
+Bind each operand to a compiler-generated local in written order before testing
+HasValue. Execute the underlying operation only when all operands are present.
+Wrap value results in Nullable<Result>, or produce its empty value. Equality
+compares presence when an operand is absent; relational comparisons then return
+false. Comparisons always return bool. No nullable Boolean logical operators or
+new reference-type operator rules are introduced.
+
+Reuse ordinary bound sequences, conversions, null tests, and conditional
+expressions. The same lowering preserves order and operand storage across await,
+and exposes operand effects to definite-assignment and contract validation.
+No runtime operator wrapper or reflection dispatch is needed. See the complete
+[nullable operator contract](../pascal/language/types/nullable-types.md#lifted-value-operators).
+
 ## Loop lowering
 
 Repeat/until uses an iteration body followed by a Boolean test, with continue

@@ -95,8 +95,10 @@ starting a process in a shell does not register tools with an agent.
 
 On Linux install `setsid` from util-linux. The wrapper establishes an owned
 process group; on Windows it uses a kill-on-close Job Object. NetCoreDbg
-3.2.0-1092 with .NET 10 is covered by Linux integration tests using the official
-MCP client. Windows and a real agent-host registration require separate acceptance.
+3.2.0-1092 with .NET 10 is covered by Windows and Linux/WSL integration tests
+using the official MCP client. Native tests verify early parent exit, adapter
+crash and client-disconnect cleanup. Actual agent-host registration remains an
+[open acceptance](../../future/debug-gap.md).
 
 Use the tools in this order:
 
@@ -130,10 +132,22 @@ rebuild matching portable symbols for `missing_symbols`, or restore the exact
 source for `missing_source`. Backend timeout/failure ends the affected session.
 Request cancellation cannot undo target side effects. Idle stops do not expire.
 
+Each response also contains the same JSON in a text block for clients that do
+not expose structured results. Discovery supplies parameter descriptions,
+limits, output schemas for success/errors and hints about side effects.
+Status, threads, stack and retained output are read-only; value expansion and
+evaluation can execute target code.
+
+For a reproducible agent inspection exercise, use the
+[debugger evaluation](../../../tests/Fixtures/debugging/README.md). It provides a
+prepared stop, paged arrays, two source frames and categorized output with ten
+fixed answers. The regression checks those answers through MCP on both platforms;
+it does not replace actual agent-host registration acceptance.
+
 MCP traffic owns
 stdin/stdout; logs use stderr and program output comes through debug_output.
 Target stdin is not available in the initial scope. See the
-[tool contract](../../future/debugger/mcp-debug.md) for state, errors and limits.
+[tool contract](../../architecture/mcp-debugging.md) for state, errors and limits.
 Batch reports and a human CLI debugger are outside this command's scope.
 
 ## See also

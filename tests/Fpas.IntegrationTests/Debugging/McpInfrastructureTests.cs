@@ -1,8 +1,6 @@
-using Fpas.Debugging.Processes;
 using Fpas.Debugging.Protocol;
 using Fpas.Debugging.Sessions;
 using Fpas.Tests.Support;
-using System.Diagnostics;
 using System.Text;
 
 namespace Fpas.IntegrationTests.Debugging;
@@ -32,27 +30,6 @@ public sealed class McpInfrastructureTests
         Assert.Empty(output.Read(cursor, 32768).Items);
         Assert.Equal("invalid_argument", Assert.Throws<DebugFailure>(() => output.Read(cursor + 1, 32768)).Code);
         Assert.Equal("limit_too_small", Assert.Throws<DebugFailure>(() => output.Read(0, 1)).Code);
-    }
-
-    [LinuxFact]
-    public async Task Owned_group_reaps_a_child_even_when_the_adapter_exits_before_reporting_it()
-    {
-        using var fixture = new TemporaryDirectory();
-        var path = fixture.File("backend");
-        File.WriteAllText(path, "#!/bin/sh\nsleep 60 &\necho $! > child.pid\nexit 0\n");
-        if (OperatingSystem.IsLinux()) File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-        var backend = OwnedBackend.Start(path, fixture.Path);
-        var parent = backend.Id;
-        int child;
-        try
-        {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            await backend.WaitForExit(timeout.Token);
-            child = int.Parse(File.ReadAllText(fixture.File("child.pid")), System.Globalization.CultureInfo.InvariantCulture);
-        }
-        finally { await backend.DisposeAsync(); }
-        Assert.False(Directory.Exists("/proc/" + parent));
-        Assert.False(Directory.Exists("/proc/" + child));
     }
 
     [LinuxFact]

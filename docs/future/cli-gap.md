@@ -21,15 +21,14 @@ The current CLR owners are the [compiler CLI](../pascal/program-structure/cli.md
 an entry's status. The initial language/build baseline and its acceptance remain
 separate in the [baseline comparison](../baseline-comparison.md).
 
-IDE debugging is complete. The [MCP agent debugger](debugger/README.md) is
-implemented; Windows/agent-host acceptance remains in
+IDE debugging and the [MCP agent debugger](../architecture/mcp-debugging.md) are
+implemented and tested on Windows and Linux. Actual agent-host setup remains in
 [debugger gaps](debug-gap.md).
 
-Implementation of the shared analysis basis, project-aware `check`, and
-`query definition`, `query type`, and `query refs` is selected in the
-[source-analysis plan](source-analysis/README.md). Project contexts, check and the
-three source queries are implemented on Linux; Windows acceptance remains.
-Other entries in this inventory are not selected by that plan.
+The shared analysis basis, project-aware `check`, and `query definition`,
+`query type` and `query refs` are implemented and accepted on Windows and
+Linux/WSL. Their current owner is [project analysis](../architecture/workspaces.md).
+Other entries in this inventory remain separate work.
 
 ## Current CLR support
 
@@ -67,8 +66,8 @@ define the comparison scope.
 | `init workspace` | Missing solution scaffold command. A `.slnx` containing an application and a referenced library could replace the old workspace manifest. These three variants form one command group. |
 | `build` | Missing FPAS frontend for the existing MSBuild build path. Old `.fpascu` and `.fpascp` outputs have CLR assembly equivalents. Native application packaging is a separate gap below. |
 | `run` | Missing source/project/solution discovery, build-and-launch handling, and direct assembly execution. Arguments, standard streams, cancellation, working directory, and child exit status need a command contract. |
-| `check` | Implemented for explicit project/solution contexts, including text/JSON diagnostics and preparation/coverage reporting. Windows acceptance remains open. `--fix` has additional gaps below. |
-| `debug` | Implemented MCP stdio server with official SDK and external NetCoreDbg. Remaining Windows/agent-host acceptance: [debugger gaps](debug-gap.md). |
+| `check` | Implemented for explicit project/solution contexts, including text/JSON diagnostics and preparation/coverage reporting; accepted on Windows and Linux/WSL. `--fix` has additional gaps below. |
+| `debug` | Implemented MCP stdio server with official SDK and external NetCoreDbg; tested on Windows and Linux/WSL. Remaining agent-host setup: [debugger gaps](debug-gap.md). |
 | `test` | Missing FPAS test-program discovery and runner. Existing C# toolchain tests run with `dotnet test`; this does not provide the old FPAS test-program workflow. |
 | `fmt` | Missing formatter for the current CLR language. Its parser/formatter needs to preserve comments and source meaning. Old Rust formatting rules cannot establish correctness for the new syntax. |
 | `doc` | Missing declaration lookup and signature/documentation output. Source documentation and CLR metadata are available inputs; consuming referenced assemblies' XML documentation needs tooling. Existing XML generation is not a `doc` lookup command. |
@@ -150,7 +149,7 @@ are implemented.
 `fpas debug --netcoredbg <executable>` is an MCP stdio server for
 agents. The official C# MCP SDK supplies the server protocol; a thin internal
 DAP client controls the user-installed NetCoreDbg backend. The
-[contract](debugger/mcp-debug.md) defines source/execution tools, structured
+[contract](../architecture/mcp-debugging.md) defines source/execution tools, structured
 results, session/stop state, deadlines, output bounds and process cleanup.
 
 No human terminal client, custom debugger engine or alternate HTTP/raw-DAP
@@ -270,7 +269,7 @@ capability alone does not close either item. Their detailed criteria remain in
 the [documentation gaps](documentation-gaps.md). This coordination does not select
 additional commands, dependencies, or an implementation order.
 
-The debugging portion of D3 follows the [MCP agent plan](debugger/README.md).
+The debugging portion of D3 follows the [remaining MCP acceptance](debug-gap.md).
 Agent setup includes a separate NetCoreDbg download. Profiling,
 dump guidance and D1 retain their own open scope.
 

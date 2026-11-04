@@ -70,6 +70,18 @@ internal static class WindowsProcess
         return Marshal.StringToHGlobalUni(string.Concat(variables.Select(pair => pair.Key + "=" + pair.Value + '\0')) + '\0');
     }
 
+    internal static async Task TerminateAndWait(SafeFileHandle job, CancellationToken token)
+    {
+        Check(TerminateJobObject(job, 1));
+        var accounting = new BasicAccounting();
+        while (true)
+        {
+            Check(QueryInformationJobObject(job, 1, ref accounting, Marshal.SizeOf<BasicAccounting>(), IntPtr.Zero));
+            if (accounting.ActiveProcesses == 0) return;
+            await Task.Delay(10, token);
+        }
+    }
+
     private static string Quote(string value)
     {
         var result = new StringBuilder("\""); var slashes = 0;
@@ -97,6 +109,11 @@ internal static class WindowsProcess
         internal BasicLimits Basic; internal ulong ReadOps, WriteOps, OtherOps, ReadBytes, WriteBytes, OtherBytes;
         internal nuint ProcessMemory, JobMemory, PeakProcessMemory, PeakJobMemory;
     }
+    [StructLayout(LayoutKind.Sequential)] private struct BasicAccounting
+    {
+        internal long UserTime, KernelTime, PeriodUserTime, PeriodKernelTime;
+        internal uint PageFaultCount, TotalProcesses, ActiveProcesses, TotalTerminatedProcesses;
+    }
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct StartupInfo
     {
         internal int Size; internal string? Reserved, Desktop, Title;
@@ -107,6 +124,8 @@ internal static class WindowsProcess
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern SafeFileHandle CreateJobObject(IntPtr attributes, string? name);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetInformationJobObject(SafeFileHandle job, int kind, ref ExtendedLimits limits, int size);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool AssignProcessToJobObject(SafeFileHandle job, SafeFileHandle process);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool TerminateJobObject(SafeFileHandle job, uint exitCode);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool QueryInformationJobObject(SafeFileHandle job, int type, ref BasicAccounting value, int length, IntPtr returned);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CreatePipe(out SafeFileHandle read, out SafeFileHandle write, ref SecurityAttributes attributes, int size);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetHandleInformation(SafeFileHandle handle, uint mask, uint flags);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CreateProcess(string application, StringBuilder command, IntPtr processAttributes, IntPtr threadAttributes, bool inherit, uint flags, IntPtr environment, string cwd, ref StartupInfo startup, out ProcessInfo process);

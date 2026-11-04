@@ -12,6 +12,7 @@ the CLR provides execution, garbage collection, exceptions, and tasks.
 | [Closures](closures.md) | Captured values/cells, lexical environments, and generic parameter translation |
 | [Async and cleanup](async-and-cleanup.md) | Resumable control flow, reference lifetimes, contracts, and disposal |
 | [Debug information](debug-information.md) | Portable symbols, source scopes, generated methods, and async stepping |
+| [MCP debugging](mcp-debugging.md) | Agent tools, NetCoreDbg sessions, protocol limits and process lifetime |
 
 Language behavior belongs in the [handbook](../pascal/README.md) and
 [grammar](../specs/syntax.md). The [CLR mapping](../specs/clr-mapping.md) owns public

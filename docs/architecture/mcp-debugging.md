@@ -1,7 +1,8 @@
 # fpas debug: command and MCP contract
 
-Status: **Implemented; Windows/agent-host acceptance pending**. Delivery is tracked in the [implementation checklist](implementation.md).
-No FPAS syntax change or new debugger engine is required.
+The debugger is implemented and tested on Windows and Linux with .NET 10 and
+NetCoreDbg 3.2.0-1092. Remaining agent-host acceptance is tracked in
+[debugger gaps](../future/debug-gap.md).
 
 ## Components and dependencies
 
@@ -70,9 +71,25 @@ Subsequent interaction is through MCP tools:
 | `debug_output` | sessionId, afterSequence, page limit; returns categorized stdout/stderr and truncation/cursor information |
 | `debug_stop` | sessionId; ends the session and waits for owned target/backend cleanup; repeated stop is harmless |
 
-Use SDK-generated input/output schemas and structured content. Every tool has a
-short purpose, legal states and a usage description. Reuse typed result objects;
-do not make agents parse terminal transcripts or a JSON string inside a result.
+The server identifies itself as `fpas-debug` and supplies session-workflow
+instructions during initialization. SDK-generated input schemas describe every
+parameter, defaults, numeric/page bounds, array limits and step-kind choices.
+Runtime validation remains authoritative.
+Nullable alternatives use `anyOf` branches with individual types for client
+portability; optional/null inputs keep their existing meaning. Target argument
+array elements are non-null strings.
+
+Output schemas accept either the tool's typed success result or
+`{ "error": { "code": "...", "message": "..." } }`. Both success and tool errors
+return `structuredContent` plus identical serialized JSON in a text block, so
+text-only clients retain the same usable result and recovery code. This follows
+the [MCP tool result contract](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content).
+
+Annotations mark status, threads, stack and captured output as read-only. Value
+inspection and evaluation remain potentially destructive because display code,
+getters and expressions can execute in the target. Launch/resume/step execute
+user code; stop terminates owned processes. Annotations describe these effects;
+they do not authorize tool calls. Breakpoint replacement and stop are idempotent.
 
 States are starting, running, stopped, exited and failed. A stopped state includes
 stopId, reason, thread and available source location. Results report the actual
@@ -137,6 +154,10 @@ output, invalid/stale references, cancellation and every shutdown path.
 
 Verify the documented agent-host setup on Linux and Windows, with explicit
 backend/runtime versions. IDE debugging does not need to be reopened.
+The [evaluation fixture](../../tests/Fixtures/debugging/README.md) supplies ten
+independent inspection questions with fixed answers, verified through the real
+MCP tools. Protocol, schema and text-client regressions exercise discovery and
+the product stdio transport. They do not claim an LLM-agent-host evaluation.
 Agent-driven sequences of session tools are normal debugging. One-shot batch
 reports, command-file runners, custom debugger/evaluation engines, backend forks,
 HTTP APIs, MCP Tasks extensions and new editor integrations are outside this scope.
@@ -144,4 +165,4 @@ HTTP APIs, MCP Tasks extensions and new editor integrations are outside this sco
 References: [SDK hosting example](https://github.com/modelcontextprotocol/csharp-sdk/blob/main/docs/concepts/getting-started.md),
 [SDK tools](https://github.com/modelcontextprotocol/csharp-sdk/blob/main/docs/concepts/tools/tools.md),
 [NetCoreDbg](https://github.com/Samsung/netcoredbg),
-[compiler debug information](../../architecture/debug-information.md).
+[compiler debug information](debug-information.md).

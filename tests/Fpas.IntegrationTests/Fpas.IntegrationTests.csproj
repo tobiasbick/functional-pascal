@@ -19,6 +19,7 @@
     <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
     <None Include="../../examples/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/debugging/*" Link="Fixtures/debugging/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/mandelbrot/main.fpas;../../examples/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/units/**/*.fpas;../../examples/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/read-file/*.fpas;../../examples/read-file/*.fpasproj;../../examples/read-file/*.txt" Link="Fixtures/read-file/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

@@ -60,8 +60,9 @@ Linux sessions/groups and subreaper cleanup, or suspended Windows process
 creation and a kill-on-close job. Build workers and compiler servers are disabled
 for analysis preparation. Cancellation stops and joins owned processes; retained
 stdout/stderr is bounded to 1 MiB and manifests to 16 MiB. Normal build artifacts
-are not deleted as scratch. Windows runtime acceptance remains
-[open](../future/source-analysis/README.md).
+are not deleted as scratch. Windows cleanup explicitly terminates the job and
+waits for all its processes before releasing handles. Native Windows and
+Linux/WSL acceptance covers packaged check/query, cancellation and process cleanup.
 
 ## Source queries
 

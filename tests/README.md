@@ -16,7 +16,7 @@ in the [development workflow](../docs/build/development.md).
 
 Compiler tests use Analysis, Types, Routines, ControlFlow, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
-Debugging and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
+Debugging, Processes and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
 Build the toolchain and tests before executing them. Do not rebuild toolchain
@@ -84,15 +84,25 @@ These are regression tests, not a product frontend or batch debugger.
 all step kinds, live captures/generics/async values, evaluation, exceptions,
 paging, stale/invalid inputs, failed launch/relaunch and concurrent status/control.
 An observed server verifies actual stdin EOF, clean server exit and target removal.
-An additional Linux/backend test verifies the actual target's process group
-before killing NetCoreDbg alone, then checks the failed state and orphan removal.
+An additional backend test verifies native target ownership before killing
+NetCoreDbg alone, then checks the failed state and orphan removal on Windows and Linux.
 
 `McpInfrastructureTests` verifies UTF-8 output retention/cursors without an external
-debugger. Linux-only disposable adapter fixtures verify orphan reaping before PID
-reporting, malformed frames, deadlines and concurrent cleanup of pending requests.
-They are skipped on other operating systems. SDK packaging tests verify managed
-debugger dependencies without bundling NetCoreDbg. Windows native ownership and
-real agent-host configuration remain separate [acceptance](../docs/future/debug-gap.md).
+debugger. Linux-only disposable adapter fixtures verify malformed frames,
+deadlines and concurrent cleanup of pending requests. `OwnedProcessTests` uses
+an FPAS parent/child fixture on both platforms to verify cleanup after early
+parent exit, Unicode/quoted arguments and environment overrides. Windows tests
+verify that job termination joins every process; temporary-directory cleanup
+allows a bounded delay for image-file locks after process exit. SDK packaging
+tests verify managed dependencies without bundling NetCoreDbg. Real agent-host
+configuration remains separate [acceptance](../docs/future/debug-gap.md).
+
+`McpContractTests` checks live discovery, parameter constraints, effect hints,
+initialization instructions and machine-readable text fallback without launching
+a backend. A live-target regression checks success fallback as well.
+[McpEvaluationTests](Fpas.IntegrationTests/Debugging/McpEvaluationTests.cs) verifies
+the ten fixed [inspection questions](Fixtures/debugging/README.md) through paged
+MCP values, two source frames and categorized target output.
 
 ```sh
 dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~McpDebugTests|FullyQualifiedName~McpInfrastructureTests' --logger 'trx;LogFileName=mcp.trx' --results-directory .temp-data/debugger/test-results

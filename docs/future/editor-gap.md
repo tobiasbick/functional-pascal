@@ -29,9 +29,9 @@ and semantic validation without emission, including a detached navigation index.
 Fpas.Workspaces supplies evaluated contexts and definition/type/refs queries.
 An interactive editor session and unsaved-buffer analysis remain missing.
 
-The [source-analysis plan](source-analysis/README.md) selects a shared compiler
-analysis and project-context foundation for check and three CLI queries. It
-does not implement an editor session, unsaved-buffer recovery or an LSP.
+The [workspace service](../architecture/workspaces.md) implements the shared
+analysis/project-context foundation for check and three CLI queries. Editor
+sessions, unsaved-buffer recovery and an LSP remain separate work.
 
 ## Language services
 
@@ -103,7 +103,7 @@ Emitted XML documentation alone does not provide either view.
 
 IDE debugging is complete through the
 [Microsoft VS Code route](../pascal/tools/debugging.md). It is not an open editor
-gap. The [MCP debugger](debugger/README.md) serves agents independently.
+gap. The [MCP debugger](../architecture/mcp-debugging.md) serves agents independently.
 Automatic project/language services are
 separate editor features.
 

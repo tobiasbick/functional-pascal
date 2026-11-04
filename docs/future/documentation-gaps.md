@@ -7,7 +7,7 @@ CLR toolchain. IDE debugging is complete and documented in the
 | ID | Open follow-up | Owner |
 | --- | --- | --- |
 | D1 | Reproducible CLR benchmarks | [Profiling](../pascal/tools/profiling.md), [CLI inventory](cli-gap.md) |
-| D3 | MCP agent debugging, profiling and dump walkthroughs | [MCP plan](debugger/README.md), [profiling](../pascal/tools/profiling.md) |
+| D3 | MCP agent-host setup, profiling and dump walkthroughs | [MCP acceptance](debug-gap.md), [profiling](../pascal/tools/profiling.md) |
 
 ## D1: Reproducible benchmarks
 
@@ -30,7 +30,7 @@ Remaining guidance covers:
 
 - Agent-host MCP registration, NetCoreDbg installation and a real launch,
   breakpoint, value inspection, step and stop through the
-  [MCP tools](debugger/mcp-debug.md), including cancellation and cleanup.
+  [MCP tools](../architecture/mcp-debugging.md), including cancellation and cleanup.
 - CPU stacks, allocation/GC observations and controlled failure dumps with
   selected .NET tools; keep profiled and unprofiled measurements separate.
 - Tool installation, platform limits, output locations and cleanup.

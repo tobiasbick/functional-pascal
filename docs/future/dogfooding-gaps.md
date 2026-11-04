@@ -34,9 +34,10 @@ different Pascal dialect cannot validate them.
   conversion, and async enumeration are outside the supported interoperability
   contract. Choose supported .NET overloads/types where available; record a
   concrete blocked maintenance task before introducing a fallback or extension.
-- The CLI provides compilation. Automatic IDE/project loading, LSP/source-query,
-  and formatter tooling have separate scope. Portable symbols and XML API
-  documentation are available; use compatible .NET tools for debugging/profiling.
+- The CLI provides compilation, evaluated project/solution checks, definition,
+  type and reference queries, and MCP debugging. Automatic editor sessions, LSP
+  and formatter tooling remain separate work. Portable symbols and XML API
+  documentation support ordinary .NET debugging/profiling tools.
 
 Keep scratch sources and reports under .temp-data. A newly demonstrated blocker
 needs a small reproducer, the required API/behavior, and its effect on maintenance.

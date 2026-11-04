@@ -43,7 +43,9 @@ internal sealed partial class DebugSession
 
     internal async Task<Reply<StackPage>> Stack(string id, long expected, int? thread, int start, int count, CancellationToken token)
     {
-        Page(start, count); int selected; DapConnection current;
+        Page(start, count);
+        if (thread is <= 0) throw new DebugFailure("invalid_argument", "Use a positive threadId from debug_threads, or omit it for the stopping thread.");
+        int selected; DapConnection current;
         lock (gate) { Stop(id, expected); current = connection!; selected = thread ?? threadId ?? throw new DebugFailure("invalid_state", "No stopped thread."); }
         var body = await Request("stackTrace", new { threadId = selected, startFrame = start, levels = count }, token, current);
         lock (gate)

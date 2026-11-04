@@ -1,20 +1,21 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace Fpas.Processes;
 
 public sealed class OwnedProcess : IAsyncDisposable
 {
     private readonly Process process;
-    private readonly IDisposable? job;
+    private readonly SafeFileHandle? job;
     private readonly object gate = new();
     private Task? disposal;
     public Stream Input { get; }
     public Stream Output { get; }
     public Stream Error { get; }
 
-    private OwnedProcess(Process process, Stream input, Stream output, Stream error, IDisposable? job = null)
+    private OwnedProcess(Process process, Stream input, Stream output, Stream error, SafeFileHandle? job = null)
     {
         this.process = process; Input = input; Output = output; Error = error; this.job = job;
     }
@@ -72,7 +73,8 @@ public sealed class OwnedProcess : IAsyncDisposable
     {
         try
         {
-            if (OperatingSystem.IsWindows()) job!.Dispose();
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            if (OperatingSystem.IsWindows()) await WindowsProcess.TerminateAndWait(job!, deadline.Token);
             else
             {
                 // The setsid launcher establishes this group before executing any target code.
@@ -81,8 +83,6 @@ public sealed class OwnedProcess : IAsyncDisposable
                 try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
                 catch (InvalidOperationException) when (process.HasExited) { }
             }
-            Input.Dispose(); Output.Dispose(); Error.Dispose();
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             await process.WaitForExitAsync(deadline.Token);
             if (OperatingSystem.IsLinux())
             {
@@ -97,7 +97,12 @@ public sealed class OwnedProcess : IAsyncDisposable
                 }
             }
         }
-        finally { job?.Dispose(); process.Dispose(); }
+        finally
+        {
+            job?.Dispose();
+            Input.Dispose(); Output.Dispose(); Error.Dispose();
+            process.Dispose();
+        }
     }
 
     [DllImport("libc", EntryPoint = "kill", SetLastError = true)]

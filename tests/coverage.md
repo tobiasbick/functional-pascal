@@ -52,7 +52,7 @@ Files live in [compiler tests](Fpas.Compiler.Tests/) and
 files; the shared fixture owns packaging and process setup.
 
 Compiler files are grouped in Analysis, Types, Routines, ControlFlow, and Metadata;
-integration files in Cli, Execution, Documentation, Debugging, Build and Workspaces.
+integration files in Cli, Execution, Documentation, Debugging, Processes, Build and Workspaces.
 Shared setup lives in each topic's Support directory.
 
 ## Behavioral checks
@@ -93,9 +93,18 @@ Launch checks include pending breakpoint events without an entry stop, relative
 CLI paths with a separate working directory, UTF-8 arguments, separate output
 categories, source step-out, pause and failed-launch shutdown. CLI symbol tests
 also verify absolute source documents and runtime exception paths independently.
-It does not supply a product frontend or establish crash/hang recovery. Backend
+MCP tests also kill the real adapter and verify owned target removal on both
+platforms. Shared process tests cover a child outliving its original parent,
+argument/environment fidelity and joined cleanup. Linux fixtures independently
+cover malformed/hung adapters and concurrent disposal. Backend
 selection and explicit skips are documented in the
 [test instructions](README.md#netcoredbg-integration-tests).
+
+MCP discovery checks parameter descriptions/bounds, effect annotations, session
+instructions and success/error schemas. Text-only clients receive the same JSON
+as structured clients. The [debugger evaluation](Fixtures/debugging/README.md)
+verifies ten stable answers from a real paused FPAS order-processing fixture
+using paged arrays, caller/callee locals and stdout/stderr categories.
 
 Aggregate checks cover constructor/default order, private state, copy helpers,
 equality/hash behavior, recursive generic unions, and corrupted versioned
@@ -175,7 +184,7 @@ SDK packaging also verifies the MCP debugger and all managed tool dependencies
 are present, packaged debug help runs, and NetCoreDbg is not bundled. The MCP
 regression suite uses the official SDK client against real FPAS targets; see
 [debugger tests](README.md#mcp-agent-debugger-tests) for source, value, async,
-error and process-lifetime coverage and remaining platform acceptance.
+error and process-lifetime coverage and remaining agent-host acceptance.
 
 StandaloneSdkGuideTests materializes the exact project/configuration/source blocks
 from the [standalone SDK walkthrough](../docs/build/standalone-sdk.md) outside the

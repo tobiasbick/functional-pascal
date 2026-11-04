@@ -1,0 +1,42 @@
+<evaluation>
+  <qa_pair id="largest_shortage">
+    <question>At the prepared order stop, compare every requested quantity with stock, paging the catalogue as needed. Which product has the largest unmet demand? Return its catalogue name.</question>
+    <answer>arrows</answer>
+  </qa_pair>
+  <qa_pair id="unfilled_total">
+    <question>At the prepared order stop, compare requested and actually filled quantities across the whole catalogue. How many requested units remain unfilled? Return an integer.</question>
+    <answer>3</answer>
+  </qa_pair>
+  <qa_pair id="third_line">
+    <question>At the prepared order stop, identify the catalogue's third product, inspect its requested and available quantities, then confirm the actual filled quantity. How many units were filled? Return an integer.</question>
+    <answer>8</answer>
+  </qa_pair>
+  <qa_pair id="largest_remainder">
+    <question>At the prepared order stop, subtract filled quantities from stock for every product. Which product retains the largest stock after this order? Return its catalogue name.</question>
+    <answer>oil</answer>
+  </qa_pair>
+  <qa_pair id="line_revenue">
+    <question>At the prepared order stop, combine filled quantities with their corresponding unit prices for the entire catalogue. What is the total line revenue before discounts and tax? Return an integer.</question>
+    <answer>301</answer>
+  </qa_pair>
+  <qa_pair id="net_subtotal">
+    <question>At the prepared order stop, reconcile line revenue with the stored subtotal and discount. What amount remains before tax? Return an integer.</question>
+    <answer>270</answer>
+  </qa_pair>
+  <qa_pair id="charged_total">
+    <question>At the prepared order stop, reconcile the stored subtotal, discount and tax with the pending charge. What amount will the order charge? Return an integer.</question>
+    <answer>324</answer>
+  </qa_pair>
+  <qa_pair id="largest_line">
+    <question>At the prepared order stop, calculate each product's line charge from actual filled quantities and prices. Which product contributes the largest charge? Return its catalogue name.</question>
+    <answer>rope</answer>
+  </qa_pair>
+  <qa_pair id="audit_category">
+    <question>The prepared order has already printed a batch notice and a separate audit warning. Read retained output, preserving categories. Which output category carries the audit warning? Return stdout or stderr.</question>
+    <answer>stderr</answer>
+  </qa_pair>
+  <qa_pair id="region_consistency">
+    <question>At the prepared order stop, compare the fulfilment routine's region with the calling entry frame's region and the batch notice in retained output. Are all three regions equal? Return True or False.</question>
+    <answer>True</answer>
+  </qa_pair>
+</evaluation>

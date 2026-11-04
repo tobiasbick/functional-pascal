@@ -87,8 +87,10 @@ tests/
     Fpas.IntegrationTests.csproj
     Build/
     Cli/
+    Debugging/
     Documentation/
     Execution/
+    Processes/
     Workspaces/
     Support/
   Fixtures/

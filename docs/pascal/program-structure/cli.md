@@ -30,7 +30,8 @@ Default diagnostics and the completion summary go to stderr. Check exits with
 ambiguous project contexts, and 130 for cancellation. `--timeout` covers the
 whole operation, defaults to 120 seconds, and accepts 1..3600. Cancellation stops
 owned build processes. Changed inputs invalidate the result before publication.
-Linux is integration-tested; Windows acceptance remains open.
+Native Windows and Linux/WSL acceptance covers deployment, fresh SDK consumers,
+configuration, Unicode/space paths, no-restore, changed inputs, limits and cleanup.
 
 ## Query checked sources
 

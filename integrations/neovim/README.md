@@ -1,7 +1,7 @@
 # Neovim DAP prototype
 
 Status: **Incomplete** external-client configuration. The
-[MCP agent debugger](../../docs/future/debugger/README.md) has independent scope.
+[MCP agent debugger](../../docs/architecture/mcp-debugging.md) has independent scope.
 [fpas_debug.lua](lua/fpas_debug.lua) configures nvim-dap to launch unmodified
 NetCoreDbg directly. It provides preflight checks and a stopped-state scope view;
 loading the module does not launch, build or download anything.

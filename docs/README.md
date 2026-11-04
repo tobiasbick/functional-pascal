@@ -20,7 +20,7 @@ workflow to work on the compiler/toolchain.
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
 | Missing practical guides and verified walkthroughs | [Documentation gaps](future/documentation-gaps.md) |
-| IDE debugging and planned agent tools | [Debug guide](pascal/tools/debugging.md), [MCP debugger plan](future/debugger/README.md) |
+| IDE and agent debugging | [Debug guide](pascal/tools/debugging.md), [MCP contract](architecture/mcp-debugging.md) |
 
 Each rule has an owner: the handbook describes language behavior, the grammar
 defines syntax, and the CLR/MSBuild specifications define emitted and build

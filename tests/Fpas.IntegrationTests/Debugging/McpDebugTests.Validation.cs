@@ -32,6 +32,7 @@ public sealed partial class McpDebugTests
         Assert.Equal("[1]", value.GetProperty("name").GetString()); Assert.Equal("20", value.GetProperty("value").GetString());
         await probe.Call("debug_variables", new { sessionId = id, stopId, variablesHandle = "v:999999" }, "stale_reference");
         await probe.Call("debug_stack", new { sessionId = id, stopId, count = 129 }, "invalid_argument");
+        await probe.Call("debug_stack", new { sessionId = id, stopId, threadId = 0 }, "invalid_argument");
         await probe.Call("debug_variables", new { sessionId = id, stopId }, "invalid_argument");
         await probe.Call("debug_step", new { sessionId = id, stopId, kind = "invalid" }, "invalid_argument");
         await probe.Call("debug_output", new { sessionId = id, afterSequence = long.MaxValue }, "invalid_argument");

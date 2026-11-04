@@ -25,10 +25,10 @@ internal sealed class McpProbe : IAsyncDisposable
         return new(await McpClient.CreateAsync(transport, cancellationToken: startup.Token));
     }
 
-    internal static async Task<McpProbe> ObservedServer()
+    internal static async Task<McpProbe> ObservedServer(string? backend = null)
     {
         var start = new ProcessStartInfo(TestEnvironment.DotnetHost) { UseShellExecute = false, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
-        foreach (var argument in new[] { TestEnvironment.Metadata("FpasCliPath"), "debug", "--netcoredbg", Environment.GetEnvironmentVariable("FPAS_NETCOREDBG_PATH")! }) start.ArgumentList.Add(argument);
+        foreach (var argument in new[] { TestEnvironment.Metadata("FpasCliPath"), "debug", "--netcoredbg", backend ?? Environment.GetEnvironmentVariable("FPAS_NETCOREDBG_PATH")! }) start.ArgumentList.Add(argument);
         var process = Process.Start(start)!;
         try
         {

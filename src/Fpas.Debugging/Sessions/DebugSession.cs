@@ -30,7 +30,7 @@ internal sealed partial class DebugSession : IAsyncDisposable
     private SessionSnapshot Snapshot() => new(sessionId, state, revision, stopId, reason, threadId, location, exitCode, error, breakpoints.ToArray(), exceptionInfo);
     private void Session(string id)
     {
-        if (string.IsNullOrEmpty(id) || id != sessionId) throw new DebugFailure("invalid_session", "The session does not exist in this server.");
+        if (string.IsNullOrEmpty(id) || id != sessionId) throw new DebugFailure("invalid_session", "Use the sessionId returned by debug_launch in this server. Launch again if the server restarted.");
     }
     private void Stop(string id, long expected)
     {

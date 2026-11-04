@@ -1,4 +1,6 @@
 using Fpas.Tests.Support;
+using ModelContextProtocol.Protocol;
+using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -35,10 +37,13 @@ public sealed partial class McpDebugTests
         Assert.Contains(tools, tool => tool.Name == "debug_launch");
         var schema = tools.Single(tool => tool.Name == "debug_launch").ProtocolTool.OutputSchema;
         Assert.True(schema.HasValue);
-        Assert.True(schema.Value.GetProperty("properties").TryGetProperty("sessionId", out _));
+        Assert.True(schema.Value.GetProperty("anyOf")[0].GetProperty("properties").TryGetProperty("sessionId", out _));
         var entry = await probe.Call("debug_launch", new { program = program.Assembly, cwd = program.DirectoryPath });
         Assert.Equal("stopped", entry.GetProperty("state").GetString());
         var id = entry.GetProperty("sessionId").GetString()!;
+        var textOnly = await probe.Client.CallToolAsync("debug_status", new Dictionary<string, object?> { ["sessionId"] = id }, cancellationToken: probe.Token);
+        using var textResult = JsonDocument.Parse(Assert.Single(textOnly.Content.OfType<TextContentBlock>()).Text);
+        Assert.True(JsonElement.DeepEquals(textResult.RootElement, textOnly.StructuredContent!.Value));
         await probe.Call("debug_set_breakpoints", new { sessionId = id, source = program.Source, lines = new[] { 6 } });
         await probe.Call("debug_continue", new { sessionId = id, stopId = entry.GetProperty("stopId").GetInt64() });
         var stop = await probe.Stopped(id, entry.GetProperty("stopId").GetInt64());

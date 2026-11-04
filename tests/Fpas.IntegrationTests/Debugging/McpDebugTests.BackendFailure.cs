@@ -1,3 +1,4 @@
+using Fpas.IntegrationTests.Processes.Support;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -5,7 +6,7 @@ namespace Fpas.IntegrationTests.Debugging;
 
 public sealed partial class McpDebugTests
 {
-    [LinuxNetCoreDbgFact]
+    [NetCoreDbgFact]
     public async Task Actual_adapter_crash_cleans_up_the_running_target_without_a_live_parent()
     {
         using var program = new Debuggee("mcp-crash");
@@ -26,28 +27,16 @@ public sealed partial class McpDebugTests
         await probe.Continue(id, entry);
         while (!File.Exists(pidFile) || new FileInfo(pidFile).Length == 0) await Task.Delay(10, probe.Token);
         var pid = int.Parse(await File.ReadAllTextAsync(pidFile, probe.Token), CultureInfo.InvariantCulture);
-        var stat = await File.ReadAllTextAsync("/proc/" + pid + "/stat", probe.Token);
-        var fields = stat[(stat.LastIndexOf(')') + 2)..].Split(' ');
-        var parent = int.Parse(fields[1], CultureInfo.InvariantCulture);
-        var group = int.Parse(fields[2], CultureInfo.InvariantCulture);
-        using var adapter = Process.GetProcessById(parent);
+        using var target = Process.GetProcessById(pid);
+        using var adapter = Process.GetProcessById(ProcessIdentity.Parent(pid));
         // Verify actual containment before deliberately killing the owned adapter alone.
         Assert.Equal("netcoredbg", adapter.ProcessName);
-        Assert.Equal(parent, group);
+        ProcessIdentity.AssertOwned(target, adapter.Id);
         adapter.Kill();
         var failed = await probe.State(id, "failed");
         Assert.Equal("backend_exited", failed.GetProperty("error").GetProperty("code").GetString());
         await probe.Call("debug_stop", new { sessionId = id });
-        Assert.False(Directory.Exists("/proc/" + pid));
-    }
-}
-
-internal sealed class LinuxNetCoreDbgFactAttribute : FactAttribute
-{
-    public LinuxNetCoreDbgFactAttribute()
-    {
-        if (!OperatingSystem.IsLinux()) Skip = "Linux process-group crash recovery acceptance.";
-        else if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FPAS_NETCOREDBG_PATH")))
-            Skip = "Set FPAS_NETCOREDBG_PATH to the tested NetCoreDbg executable.";
+        Assert.True(target.HasExited);
+        if (OperatingSystem.IsLinux()) Assert.False(Directory.Exists("/proc/" + pid));
     }
 }

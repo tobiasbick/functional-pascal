@@ -115,6 +115,18 @@ snapshot-scoped; a different input snapshot invalidates those handles. The
 fingerprint includes source contents, the actual copied reference bytes, compiler
 module identity and semantic policy. Failed analysis publishes no complete index.
 
+SourceBody records executable regions and lexical ownership for routines,
+lambdas, program entry, global initializers and field defaults. Binding scopes
+assign each SourceOperation to one body and contract phase before closure/async
+lowering. Sites retain logical source targets separately from exact CLR
+operations, checked signatures/owner/result types, dispatch and delegate receiver
+provenance. Method-group retargeting updates the original site's selected
+overload. Anonymous bodies have no fabricated declaration or generated method name.
+ExcludedOperation counts implicit using/foreach/await protocol sites. Expression
+policies explicitly distinguish source operations, child expressions, protocols,
+ordinary values and generated infrastructure. These facts are detached and
+read-only like the rest of the snapshot; compilation/emitted behavior is unchanged.
+
 The [query layer](workspaces.md#source-queries) bridges prepared FPAS dependencies
 and supplies explicit project/solution coverage without executing user code.
 

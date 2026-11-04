@@ -2,6 +2,7 @@ using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;
 using System.Text.Json;
 using Fpas.IntegrationTests.Workspaces.Support;
+using System.IO.Compression;
 
 namespace Fpas.IntegrationTests.Workspaces;
 
@@ -38,6 +39,8 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
     [InlineData("find", "--name", "", "--offset", "0")]
     [InlineData("find", "--name", "X", "--offset", "-1")]
     [InlineData("inspect", "--file", "X.fpas", "--limit", "101")]
+    [InlineData("callees", "--file", "X.fpas", "--offset", "-1")]
+    [InlineData("callers", "--file", "X.fpas", "--limit", "1001")]
     public async Task Discovery_argument_errors_are_one_JSON_document_without_preparing_a_context(string operation, string flag, string value, string other, string setting)
     {
         using var project = sdk.CreateProject();
@@ -105,6 +108,8 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
     [InlineData("refs")]
     [InlineData("find")]
     [InlineData("inspect")]
+    [InlineData("callees")]
+    [InlineData("callers")]
     public async Task Invalid_source_never_returns_apparently_complete_empty_results(string operation)
     {
         using var project = sdk.CreateProject();
@@ -146,10 +151,14 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             """;
         File.WriteAllText(project.File("Game/Bridge.fpas"), source);
         var selection = SourcePosition.Select(project, "Game/Bridge.fpas", source, "Value;");
-        var result = await Query(project, "inspect", "Game/Game.fpasproj", "--file", selection.File, "--line", selection.Line.ToString(), "--column", selection.Column.ToString());
-        Assert.True(result.ExitCode == 0, result.Output + result.Error);
-        using var json = JsonDocument.Parse(result.Output);
-        Assert.Equal("Value", json.RootElement.GetProperty("result").GetProperty("inspect").GetProperty("definition").GetProperty("symbol").GetProperty("name").GetString());
+        foreach (var operation in new[] { "inspect", "callees", "callers" })
+        {
+            var result = await Query(project, operation, "Game/Game.fpasproj", "--file", selection.File, "--line", selection.Line.ToString(), "--column", selection.Column.ToString());
+            Assert.True(result.ExitCode == 0, result.Output + result.Error);
+            using var json = JsonDocument.Parse(result.Output);
+            var data = json.RootElement.GetProperty("result").GetProperty(operation);
+            Assert.Equal("Value", data.GetProperty(operation == "inspect" ? "definition" : "target").GetProperty("symbol").GetProperty("name").GetString());
+        }
         Assert.Empty(Directory.GetFiles(project.Path, "*-executed", SearchOption.AllDirectories));
         Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
     }
@@ -167,6 +176,44 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         using var json = JsonDocument.Parse(result.Output);
         Assert.Equal("result_limit", json.RootElement.GetProperty("error").GetProperty("code").GetString());
         Assert.False(json.RootElement.TryGetProperty("result", out _));
+    }
+
+    [Fact]
+    public async Task Extracted_SDK_call_commands_publish_typed_pages_and_retain_reference_relationships()
+    {
+        using var project = sdk.CreateProject();
+        const string source = """
+            unit Numbers;
+            public function Seed(): int; begin return 1; end function;
+            public function Work(): int;
+            begin
+              const Callback: function(): int := Seed;
+              return Seed() + Seed() + Callback();
+            end function;
+            end unit;
+            """;
+        File.WriteAllText(project.File("Game/Bridge.fpas"), source);
+        var tools = project.File("ExtractedSdk");
+        ZipFile.ExtractToDirectory(Path.Combine(sdk.Feed, "Fpas.NET.Sdk." + sdk.Version + ".nupkg"), tools);
+        var compiler = Assert.Single(Directory.GetFiles(tools, "Fpas.Cli.dll", SearchOption.AllDirectories));
+        foreach (var operation in new[] { "callees", "callers" })
+        {
+            var selection = SourcePosition.Select(project, "Game/Bridge.fpas", source, operation == "callees" ? "Work():" : "Seed():");
+            var result = await ProcessRunner.RunAsync([compiler, "query", operation, "Game/Game.fpasproj", "--file", selection.File,
+                "--line", selection.Line.ToString(), "--column", selection.Column.ToString(), "--limit", "1", "--offset", "1"], workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(3));
+            Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Equal("", result.Error);
+            using var json = JsonDocument.Parse(result.Output);
+            Assert.Equal("ok", json.RootElement.GetProperty("status").GetString());
+            Assert.True(json.RootElement.GetProperty("coverage").GetProperty("complete").GetBoolean());
+            var data = json.RootElement.GetProperty("result").GetProperty(operation);
+            var page = data.GetProperty("page");
+            Assert.Equal(operation == "callees" ? 4 : 3, page.GetProperty("totalCount").GetInt32());
+            Assert.Equal(1, page.GetProperty("returnedCount").GetInt32()); Assert.Equal(2, page.GetProperty("nextOffset").GetInt32());
+            Assert.True(json.RootElement.GetProperty("truncated").GetBoolean());
+            Assert.Equal("invocation", Assert.Single(page.GetProperty("sites").EnumerateArray()).GetProperty("relationship").GetString());
+            Assert.Equal(1, page.GetProperty("callableReferenceCount").GetInt32());
+        }
+        Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
     }
 
     private static Task<ProcessResult> Query(TemporaryDirectory project, params string[] arguments)

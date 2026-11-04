@@ -136,6 +136,106 @@ and metadata-only results are availability facts. Budget/related-limit omissions
 set `truncated` and counts independently of complete analysis coverage. The
 outer 4 MiB response limit still applies.
 
+## Callers and callees
+
+Use `query callees` for outgoing operations from a selected callable and
+`query callers` for incoming source sites in the explicit checked context.
+Run these examples from `examples/mandelbrot`:
+
+```sh
+fpas query callees Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+
+fpas query callers Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+
+fpas query callees Mandelbrot.fpasproj --file main.fpas --line 13 --column 5 --body --limit 20 --offset 0
+```
+
+Default selection uses a callable declaration or an exact bound target at its
+navigation anchor. Selecting a call requests that target's operations, not the
+enclosing routine's operations. Constructor anchors are the constructed type's
+name; property/event anchors are their names; indexer anchors are the opening
+bracket. A use selects its exact constructor/accessor overload. A logical
+property declaration selects its supported accessors. Callable storage is not a
+routine target; use refs for its storage uses. Whitespace/comments return
+`not_found/no_symbol`; a non-callable declaration returns `not_callable_target`.
+
+`--body` selects the innermost executable source region, including whitespace
+inside it. Bodies have kinds `routine`, `lambda`, `program_entry`,
+`global_initializer` and `field_default`, with exact regions and an optional
+source declaration/enclosing body. A routine's regions include its contract
+conditions. Endpoints are half-open. Outside all regions the result is
+`not_found/no_body`. For callers, only routine/lambda bodies are callable targets;
+an entry or initializer returns `not_callable_target`. Anonymous bodies have
+locations and snapshot-local IDs, without invented declaration names.
+
+### Indexed operations
+
+| Kind | Meaning |
+| --- | --- |
+| `invoke` | Explicit call with its selected overload and checked signature. |
+| `construct` | Explicit construction or union case creation, retaining the logical type/case and actual operation where available. |
+| `property_get`, `property_set` | CLR property/indexer accessor, retaining its exact method identity. |
+| `event_add`, `event_remove` | Selected subscription accessor. |
+| `operator` | Bound imported operator, including constrained calls. |
+| `callable_reference` | A named function/method or lambda used as a callable value; this does not establish an invocation. |
+| `delegate_invoke` | Delegate invocation with checked receiver provenance/signature and an unknown runtime function target. |
+
+Nested routines/lambdas own their operations. Initializer operations belong to
+their own bodies, rather than every constructor or use. Contract operations
+carry `requires`/`ensures`; ordinary operations carry `body`. Repeated calls and
+self-recursion remain separate sites. Neither command expands a call graph.
+
+Virtual, interface and constrained operations retain their bound static contract
+and dispatch classification. They do not guess a runtime implementation, even
+when only one candidate is visible. Unknown delegate invocations do not become
+incoming edges to compatible routines or earlier assignments. Their context-wide
+counts remain explicit in callers results.
+
+`operationPolicy` names the indexed and excluded categories. Source storage,
+array allocation, built-in operations without a bound imported method, attribute
+construction and generated representation/closure/async/copy helpers do not
+create call sites. Implicit using, async-using, foreach and await protocols are
+excluded with source-site counts. Explicit calls inside those constructs remain
+indexed. Crossing a verified FPAS DLL does not turn a storage read into a getter
+call. The commands never execute target code.
+
+### Results, scope and paging
+
+`result.callees` includes selection mode, target, optional selected CLR operation,
+body, availability and policy. An available body has a summary and site page;
+a complete empty page means no indexed outgoing operations. A bodyless contract
+returns `no_body`; an external implementation returns `metadata_only`. Both
+omit the page/summary instead of claiming a complete zero-call body.
+
+`result.callers` includes the selected target/body, optional exact operation,
+policy, context-wide summary and matching site page. It searches all analyzed
+FPAS projects, including checked dependencies. `--project` disambiguates target
+ownership and does not narrow incoming coverage. Source/DLL matches use verified
+exports and exact overload identities; generic incoming matches use the generic
+definition while each site retains its checked instantiation. Metadata-only
+targets can have known incoming FPAS sites.
+
+Each page item includes project, owning body, source site, relationship, optional
+canonical target and type descriptors. The site keeps its exact extent/anchor,
+kind/phase, operation identity, dispatch/unknown reason, checked signature,
+owner/result types and delegate receiver when available. Receiver provenance
+identifies source storage/expression, not the runtime function. IDs are local to
+the snapshot. Summaries count indexed kinds, excluded protocol/generated-helper sites and
+unresolved reasons before paging. Missing count categories mean zero.
+
+`--limit` defaults to 100 (1..1000); `--offset` defaults to zero (nonnegative
+Int32). Sites sort by project, path, source offset, kind and exact target key.
+This is lexical order, not execution order. Pages contain `totalCount`,
+`returnedCount`, `offset`, optional `nextOffset`, `invocationCount` and
+`callableReferenceCount`. Counts cover all matches, not only the current page.
+`truncated` means sites exist outside it, including previous pages. Past-end pages
+are `ok` and empty. Combine pages only with equal snapshot IDs.
+
+Complete analysis does not prove runtime reachability or the absence of callers
+outside the context. C#/F# bodies, unknown consumers, reflection and metadata-only
+implementations are outside the source search. Configuration, input verification,
+timeouts, cancellation, JSON size limits and exits follow the other queries.
+
 ## Inspect and invoke the compiler
 
 After building the toolchain, inspect the actual supported arguments:

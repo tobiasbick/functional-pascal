@@ -29,13 +29,19 @@ public sealed class SemanticSnapshot
     public IReadOnlyList<SymbolOccurrence> Occurrences { get; }
     public IReadOnlyList<ExpressionType> Expressions { get; }
     public IReadOnlyList<SymbolExport> Exports { get; }
+    public IReadOnlyList<SourceBody> Bodies { get; }
+    public IReadOnlyList<SourceOperation> Operations { get; }
+    public IReadOnlyList<ExcludedOperation> ExcludedOperations { get; }
 
     internal SemanticSnapshot(string id, string assemblyName, IEnumerable<SourceDocument> documents, IEnumerable<SemanticSymbol> symbols,
-        IEnumerable<SemanticType> types, IEnumerable<SymbolOccurrence> occurrences, IEnumerable<ExpressionType> expressions, IEnumerable<SymbolExport> exports)
+        IEnumerable<SemanticType> types, IEnumerable<SymbolOccurrence> occurrences, IEnumerable<ExpressionType> expressions, IEnumerable<SymbolExport> exports,
+        IEnumerable<SourceBody> bodies, IEnumerable<SourceOperation> operations, IEnumerable<ExcludedOperation> excludedOperations)
     {
         Id = id; AssemblyName = assemblyName; Documents = Array.AsReadOnly(documents.ToArray()); Symbols = Array.AsReadOnly(symbols.ToArray());
         Types = Array.AsReadOnly(types.ToArray()); Occurrences = Array.AsReadOnly(occurrences.ToArray()); Expressions = Array.AsReadOnly(expressions.ToArray());
         Exports = Array.AsReadOnly(exports.ToArray());
+        Bodies = Array.AsReadOnly(bodies.ToArray()); Operations = Array.AsReadOnly(operations.ToArray());
+        ExcludedOperations = Array.AsReadOnly(excludedOperations.ToArray());
     }
 
     public SemanticSymbol Symbol(string id) => Symbols.FirstOrDefault(symbol => symbol.Id == id)

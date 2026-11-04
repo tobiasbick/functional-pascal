@@ -20,6 +20,7 @@ internal sealed class QueryCommand
         internal Option<string> Match { get; } = new("--match") { Description = "Name comparison: exact, prefix or contains.", DefaultValueFactory = _ => "contains" };
         internal Option<string[]> Kinds { get; } = new("--kind") { HelpName = "kind", Description = "Declaration kinds (repeatable); record fields use property.\nValues: " + string.Join(", ", SourceQuery.DeclarationKinds), Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
         internal Option<int> Offset { get; } = new("--offset") { Description = "Skip this many sorted matches; combine pages only with the same snapshotId.", DefaultValueFactory = _ => 0 };
+        internal Option<bool> Body { get; } = new("--body") { Description = "Select the innermost executable source region instead of a callable target." };
         internal Command Command { get; } = new(name, $"""
             {Summary(name)}
 
@@ -38,6 +39,8 @@ internal sealed class QueryCommand
             "refs" => "Find checked references to a symbol.",
             "find" => "Search checked FPAS declarations by name.",
             "inspect" => "Show a declaration, its documentation and directly relevant types.",
+            "callees" => "List outgoing source operations owned by a callable or executable body.",
+            "callers" => "Find incoming checked calls and callable references in the context.",
             _ => throw new ArgumentException("Unknown source query.", nameof(operation))
         };
 
@@ -57,6 +60,12 @@ internal sealed class QueryCommand
             }
             ContextCommandOptions.Range(Line, 1, int.MaxValue); ContextCommandOptions.Range(Column, 1, int.MaxValue);
             foreach (var option in new Option[] { File, Line, Column, Project }) Command.Options.Add(option);
+            if (name is "callees" or "callers")
+            {
+                Limit.Description = "Maximum returned source sites (1..1000).";
+                ContextCommandOptions.Range(Limit, 1, 1000); ContextCommandOptions.Range(Offset, 0, int.MaxValue);
+                foreach (var option in new Option[] { Body, Limit, Offset }) Command.Options.Add(option);
+            }
             if (name is "refs" or "inspect")
             {
                 if (name == "inspect")
@@ -85,8 +94,12 @@ internal sealed class QueryCommand
           fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine
 
           fpas query inspect Mandelbrot.fpasproj --file main.fpas --line 5 --column 10 --limit 20
+
+          fpas query callees Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+
+          fpas query callers Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
         """);
-    private readonly Operation[] operations = [new("definition"), new("type"), new("refs"), new("find"), new("inspect")];
+    private readonly Operation[] operations = [new("definition"), new("type"), new("refs"), new("find"), new("inspect"), new("callees"), new("callers")];
 
     internal QueryCommand()
     {
@@ -121,8 +134,12 @@ internal sealed class QueryCommand
             else
             {
                 var selection = new SourceSelection(result.GetValue(operation.File)!, result.GetValue(operation.Line), result.GetValue(operation.Column), result.GetValue(operation.Project));
-                query = operation.Command.Name == "inspect" ? module.Inspect(selection, result.GetValue(operation.Limit), combined.Token)
-                    : module.Execute(operation.Command.Name, selection, operation.Command.Name == "refs" ? result.GetValue(operation.Limit) : 100, combined.Token);
+                query = operation.Command.Name switch
+                {
+                    "inspect" => module.Inspect(selection, result.GetValue(operation.Limit), combined.Token),
+                    "callees" or "callers" => module.Calls(operation.Command.Name, selection, result.GetValue(operation.Body), result.GetValue(operation.Limit), result.GetValue(operation.Offset), combined.Token),
+                    _ => module.Execute(operation.Command.Name, selection, operation.Command.Name == "refs" ? result.GetValue(operation.Limit) : 100, combined.Token)
+                };
             }
             await workspace.VerifyInputsAsync(combined.Token); combined.Token.ThrowIfCancellationRequested();
             report = QueryResult.From(check, query); exit = 0;

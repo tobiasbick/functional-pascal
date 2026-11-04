@@ -25,7 +25,9 @@ dotnet test Fpas.slnx --no-build --no-restore --configuration Release
 Do not rebuild toolchain binaries while tests are using them. Test projects copy
 examples and documentation during their build; rebuild after changing those
 inputs. Integration tests package the already built SDK with a unique version
-and execute isolated FPAS/C# consumers. They also build their own fixture projects;
+and execute isolated FPAS/C# consumers. Project preparation and design-time
+builds preserve staged documentation; stale-fixture cleanup runs with actual
+output copying. Integration tests also build their own fixture projects;
 this is part of the test, not a second toolchain build.
 
 Choose relevant tests through the checked-in runner. For the handbook and agent

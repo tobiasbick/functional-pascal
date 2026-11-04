@@ -2,7 +2,7 @@
 
 Only open CLI work is listed here. The [CLI reference](../pascal/program-structure/cli.md)
 owns usable commands. Proposed names below do not select an implementation or
-change FPAS syntax. The next selected work is [callees, then callers](call-queries/README.md).
+change FPAS syntax.
 
 ## Command inventory
 
@@ -36,16 +36,7 @@ Application apphosts, self-contained/single-file publishing, AOT and signing nee
 separate SDK/CLI contracts. Compiler distribution belongs in
 [distribution gaps](dist-gap.md).
 
-## Source queries and refactorings
-
-| Planned query | Open work |
-| --- | --- |
-| [`query callees`](call-queries/callees.md) | Outgoing operations owned by one selected source body, exact targets and explicit availability. Deliver first. |
-| [`query callers`](call-queries/callers.md) | Incoming checked calls and callable references, with explicit dispatch uncertainty. |
-
-Follow the [shared plan](call-queries/README.md) for body/operation facts, the
-planned `--body` selector and Windows/WSL acceptance. Durable symbol handles and
-additional selectors remain unselected.
+## Refactorings
 
 | Proposed refactoring | Open work |
 | --- | --- |

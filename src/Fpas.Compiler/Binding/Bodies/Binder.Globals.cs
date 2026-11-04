@@ -13,6 +13,7 @@ internal sealed partial class Binder
             foreach (var global in unit.Globals.Values)
             {
                 var syntax = global.Syntax.Binding;
+                using var sourceBody = catalog.Analysis?.Initializer(source, global, syntax.Initializer, "global_initializer");
                 var value = Convert(BindExpression(syntax.Initializer, expected: global.Type), global.Type, syntax.Initializer.Position);
                 statements.Add(new BoundSequencePoint(source.StatementLocation(syntax.Position), new BoundAssignment(new BoundField(global.Field, null), value)));
             }

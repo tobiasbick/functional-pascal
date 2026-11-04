@@ -18,6 +18,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Evaluated contexts, mapped/mixed graphs, generators, stale binaries and snapshots | | AnalysisContextTests, AnalysisPreparationTests, AnalysisCompatibilityTests, AnalysisBoundsTests, SourceQueryTests |
 | Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |
 | Literal declaration search/paging and exact bounded inspection with direct types | DeclarationContextTests | SourceQueryTests, QueryCliTests |
+| Source-body ownership, checked call/reference sites, dispatch and protocol exclusions | SourceOperationTests, SemanticPolicyTests | CallQueryTests, QueryCliTests, SourceQueryTests |
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |
 | Numeric widths, promotions, checked/unchecked, native/decimal | ScalarDiagnosticsTests, ScalarMetadataTests | NumericExecutionTests, ScalarExecutionTests, MsBuildTests.Scalars |
 | Lifted nullable operators, explicit null safety and CLR eligibility | NullableOperatorDiagnosticsTests | MsBuildTests.NullableOperators (C# result/exception matrix, numeric widths, domains, generic calls, evaluation order and await), LanguageSpecificationTests (NullableArithmetic) |

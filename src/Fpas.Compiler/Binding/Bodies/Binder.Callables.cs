@@ -64,7 +64,7 @@ internal sealed partial class Binder
         var routine = new RoutineSymbol("<Invoke>", result, signature, false, false, -1, IsInstance: true, IsAsync: syntax.IsAsync);
         catalog.Analysis?.Parameters(signature, syntax.Parameters, source);
         var body = syntax.Body ?? [new ReturnSyntax(syntax.Expression!.Position, syntax.Expression)];
-        symbol.Body = nested.BindRoutine(routine, body, syntax.Position, syntax.Contracts);
+        symbol.Body = nested.BindRoutine(routine, body, syntax.Position, syntax.Contracts, syntax);
         var value = new BoundLambda(symbol, NaturalDelegate(expected, signature.Select(parameter => parameter.SignatureType).ToArray(), result, syntax.Position, signature));
         return expected is null ? value : Retarget(value, expected) ?? value;
     }

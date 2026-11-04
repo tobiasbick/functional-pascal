@@ -9,6 +9,7 @@ internal sealed partial class Binder
 {
     private BoundUsing BindUsing(UsingSyntax syntax, IReadOnlyList<StatementSyntax> remainder)
     {
+        catalog.Analysis?.Exclude(source, syntax.IsAsync ? "async_using_protocol" : "using_protocol", syntax.Position);
         var type = BindType(syntax.Binding.Type);
         var value = BindExpression(syntax.Binding.Initializer);
         var initializer = Convert(value, type, syntax.Position);

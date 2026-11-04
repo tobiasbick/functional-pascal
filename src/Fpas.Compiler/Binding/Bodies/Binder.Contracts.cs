@@ -16,6 +16,7 @@ internal sealed partial class Binder
         foreach (var clause in syntax ?? [])
         {
             if ((clause.Keyword.Text == "ensures") != ensures) continue;
+            using var phase = catalog.Analysis?.Phase(ensures ? "ensures" : "requires");
             scopes.Push(new(StringComparer.Ordinal));
             try
             {

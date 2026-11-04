@@ -55,11 +55,12 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         }
     }
 
-    private BoundRoutine BindRoutine(RoutineSymbol symbol, IReadOnlyList<StatementSyntax> body, int position, IReadOnlyList<ContractSyntax>? contracts = null)
+    private BoundRoutine BindRoutine(RoutineSymbol symbol, IReadOnlyList<StatementSyntax> body, int position, IReadOnlyList<ContractSyntax>? contracts = null, LambdaSyntax? lambda = null)
     {
         source.CheckCancellation();
         currentRoutine = symbol;
         catalog.Analysis?.Routine(symbol, source);
+        using var sourceBody = catalog.Analysis?.Body(source, symbol, unit.Syntax, lambda);
         if (symbol.IsAsync && (symbol.Result.IsNullable || symbol.Result.Definition?.FullName is not ("System.Threading.Tasks.Task" or "System.Threading.Tasks.Task`1") || symbol.Parameters.Any(parameter => parameter.ByRef)))
             throw source.Error("FP3030", "Async functions return non-null Task or Task<T> and cannot have ref/out/in parameters.", position);
         locals.Clear();

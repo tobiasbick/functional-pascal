@@ -37,8 +37,8 @@ No language server, extension library or new FPAS syntax is selected here.
 - Share symbol identities and analysis facts across queries, LSP, refactorings
   and read-only views; define an editor-snapshot service and transport.
 
-The [call-query plan](call-queries/README.md) covers saved-source body/operation
-facts. Editor snapshots and call-hierarchy transport require separate work.
+Integrate [call-query facts](../pascal/program-structure/cli.md#callers-and-callees)
+with editor snapshots and call-hierarchy transport.
 
 ## Read-only source views
 

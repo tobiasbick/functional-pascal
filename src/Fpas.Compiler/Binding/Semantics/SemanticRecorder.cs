@@ -122,7 +122,9 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
             occurrences.Select(item => new SymbolOccurrence(item.Value.Symbol.Id, item.Value.Span, item.Key.Role)).Distinct()
                 .OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Role, StringComparer.Ordinal),
             expressions.Values.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Span.Length),
-            metadataIdentities.OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)));
+            metadataIdentities.OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)),
+            bodies.Values.Select(entry => entry.Body with { Symbol = entry.Declaration?.Id }).OrderBy(body => body.Id, StringComparer.Ordinal),
+            OperationFacts(), excludedOperations.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset));
     }
 
     private void Export(MetadataIdentity identity, SymbolEntry entry)

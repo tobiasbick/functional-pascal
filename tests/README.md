@@ -39,16 +39,15 @@ complete handbook/agent examples and checks detached index consistency alongside
 their existing compilation/execution assertions. Compiler Analysis tests cover
 exact spans, symbol/flow identity and policies for every expression form.
 
-Find/inspect acceptance covers literal name/kind/owner filtering, deterministic
-pages, linked ownership, exact declaration/body/documentation spans, transparent
-aliases, recursive/direct type context, metadata-only availability and whole-slice
-UTF-8 limits. The complete Debug suite passed on native Windows (1,215 passed,
-four Linux-only skips) and Linux/WSL (1,219 passed, no skips), with the actual
-NetCoreDbg backend configured on both platforms.
-Release verification adds 142 focused analysis/query/documentation and fresh SDK
-consumer tests per platform. Both published managed launchers also pass find and
-inspect against a fresh consumer with an SDK from the matching artifacts build;
-see the [deployment workflow](../docs/build/development.md#deploy-the-local-release-compiler).
+SourceOperationTests verifies body ownership, exact operations, callable
+references, dispatch uncertainty, contract phases and protocol exclusions.
+CallQueryTests verifies source/DLL identities, anonymous regions, constructor/
+accessor selection, incoming scope, availability and paging. QueryCliTests also
+executes the CLI extracted from the SDK package. Full Debug and focused Release
+acceptance runs on Windows and Linux/WSL, with actual NetCoreDbg for Debug.
+Both published launchers pass callees/callers against a fresh matching SDK
+consumer after dist; an FPAS verifier checks the JSON reports. See the
+[deployment workflow](../docs/build/development.md#deploy-the-local-release-compiler).
 
 ## NetCoreDbg integration tests
 
@@ -132,7 +131,8 @@ ordinary test prerequisites.
 AgentReferenceTests checks policy, unique complete examples, local links, and
 exact o200k_base token budgets using test-only packaged vocabulary. HandbookTests
 checks navigation, repository documentation and hidden skill links/anchors, explicit fragments,
-and current copied inputs. See
+and current copied inputs. Its preparation regression verifies that normal and
+design-time metadata preparation retain staged documentation before copying. See
 [documentation acceptance](coverage.md#documentation-acceptance) and
 [example conventions](../docs/pascal/tools/documentation-examples.md).
 

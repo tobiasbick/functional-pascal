@@ -182,8 +182,12 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         Assert.Equal(2, query.Find(new("Linked.Read", "exact")).Find!.TotalCount);
         Assert.Equal("ambiguous_project", Assert.Throws<ContextFailure>(() => query.Inspect(selection)).Code);
         Assert.Equal("ambiguous_project", Assert.Throws<ContextFailure>(() => query.Execute("refs", selection)).Code);
+        Assert.Equal("ambiguous_project", Assert.Throws<ContextFailure>(() => query.Calls("callees", selection)).Code);
+        Assert.Equal("ambiguous_project", Assert.Throws<ContextFailure>(() => query.Calls("callers", selection)).Code);
         var result = query.Execute("refs", selection with { Project = project.File("First/First.fpasproj") }, cancellationToken: deadline.Token);
         Assert.Equal(project.File("First/First.fpasproj"), Assert.Single(result.Refs!.References).Project);
+        var calls = query.Calls("callers", selection with { Project = project.File("First/First.fpasproj") }, cancellationToken: deadline.Token);
+        Assert.Equal(project.File("First/First.fpasproj"), Assert.Single(calls.Callers!.Page.Sites).Project);
     }
 
     [Fact]
@@ -236,6 +240,9 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         var result = new SourceQuery(analysis).Execute("refs", Select(project, "First/Program.fpas", source, "Read()"), cancellationToken: deadline.Token);
         Assert.Equal("metadata", result.Refs!.Definition.Origin);
         Assert.Equal(project.File("First/First.fpasproj"), Assert.Single(result.Refs.References).Project);
+        var callers = new SourceQuery(analysis).Calls("callers", Select(project, "First/Program.fpas", source, "Read()"), cancellationToken: deadline.Token);
+        Assert.Equal("metadata", callers.Callers!.Target!.Origin);
+        Assert.Equal(project.File("First/First.fpasproj"), Assert.Single(callers.Callers.Page.Sites).Project);
     }
 
     private TemporaryDirectory CreateGraph()

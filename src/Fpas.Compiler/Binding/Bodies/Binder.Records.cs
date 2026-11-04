@@ -71,6 +71,7 @@ internal sealed partial class Binder
         }
         foreach (var field in record.Fields.Where(field => field.Default is not null))
         {
+            using var sourceBody = catalog.Analysis?.Initializer(source, field, field.Syntax.Default!, "field_default");
             var binder = Context();
             binder.currentRoutine = field.Default!;
             binder.scopes.Push(new(StringComparer.Ordinal));

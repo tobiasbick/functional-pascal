@@ -6,6 +6,22 @@ public sealed class HandbookTests
 {
     private static string Root => Path.Combine(DocumentationLinks.Repository, "docs", "pascal");
 
+    [Theory]
+    [InlineData("true")]
+    [InlineData("false")]
+    public async Task Project_preparation_does_not_delete_staged_documentation(string designTime)
+    {
+        using var directory = new TemporaryDirectory();
+        var fixture = directory.File("Fixtures/specification/probe.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(fixture)!); File.WriteAllText(fixture, "staged documentation");
+        var project = Path.Combine(DocumentationLinks.Repository, "tests", "Fpas.IntegrationTests", "Fpas.IntegrationTests.csproj");
+        var result = await ProcessRunner.RunAsync(["msbuild", project, "-nologo", "-target:PrepareForBuild", "-property:Configuration=Debug",
+            "-property:DesignTimeBuild=" + designTime, "-property:OutputPath=" + directory.Path.Replace('\\', '/') + "/"], timeLimit: TimeSpan.FromSeconds(30));
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        Assert.True(File.Exists(fixture), "Project preparation removed staged documentation before any copy target ran.");
+        Assert.Equal("staged documentation", File.ReadAllText(fixture));
+    }
+
     [Fact]
     public void Every_topic_directory_has_a_hub_and_articles_have_related_navigation()
     {

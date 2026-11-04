@@ -119,6 +119,8 @@ public sealed class CompilerCliTests
     [InlineData("query", "refs", "--help")]
     [InlineData("query", "find", "--help")]
     [InlineData("query", "inspect", "--help")]
+    [InlineData("query", "callees", "--help")]
+    [InlineData("query", "callers", "--help")]
     public async Task Help_is_English_layered_and_spaced_under_a_nonEnglish_locale(params string[] arguments)
     {
         var locale = new Dictionary<string, string?> { ["LANG"] = "de_DE.UTF-8", ["LC_ALL"] = "de_DE.UTF-8", ["DOTNET_CLI_UI_LANGUAGE"] = "de" };

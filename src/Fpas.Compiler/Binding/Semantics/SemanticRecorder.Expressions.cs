@@ -78,8 +78,9 @@ internal sealed partial class SemanticRecorder
     internal void Expression(SourceText source, ExpressionSyntax syntax, BoundExpression bound, string role = "read")
     {
         token.ThrowIfCancellationRequested();
-        if (!SemanticPolicy.Expressions.ContainsKey(bound.GetType()) || !SemanticPolicy.Syntax.Contains(syntax.GetType()))
+        if (!SemanticPolicy.Expressions.TryGetValue(bound.GetType(), out var policy) || !SemanticPolicy.Syntax.Contains(syntax.GetType()))
             throw new InvalidOperationException("Missing semantic indexing policy for " + syntax.GetType().Name + "/" + bound.GetType().Name + ".");
+        if (policy.Operations is SemanticPolicy.OperationIndexing.Source or SemanticPolicy.OperationIndexing.Protocol) Operations(source, syntax, bound, role);
         var value = Unwrap(bound);
         var written = syntax is ArgumentModeSyntax argument ? argument.Value : syntax;
         if (value is BoundMethodGroup group)
@@ -132,6 +133,7 @@ internal sealed partial class SemanticRecorder
 
     internal void Retarget(BoundMethodGroup group, ImportedMethod method)
     {
+        RetargetOperation(group, method);
         if (!methodGroups.TryGetValue(group, out var selections)) return;
         foreach (var (source, syntax) in selections) UseMethod(source, syntax, method);
     }
@@ -160,10 +162,11 @@ internal sealed partial class SemanticRecorder
         Typed(source, name.Position, name.Length, Type(getter.Result));
     }
 
-    internal void Event(SourceText source, Token name, ImportedMethod accessor, TypeSymbol type)
+    internal void Event(SourceText source, Token name, ImportedMethod accessor, TypeSymbol type, int start, int end)
     {
         var symbol = External(Metadata(accessor.Owner, "event", name.Text), "event", name.Text);
         Occurrence(source, name, symbol, "write"); Typed(source, name.Position, name.Length, Type(type));
+        EventOperation(source, name, accessor, symbol, start, end);
     }
 
     internal void AttributeMember(SourceText source, Token name, TypeSymbol owner, TypeSymbol type, bool field)

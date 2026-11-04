@@ -39,7 +39,7 @@
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
   </ItemGroup>
-  <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="PrepareForBuild">
+  <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
     <RemoveDir Directories="$(OutputPath)Fixtures/specification" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">

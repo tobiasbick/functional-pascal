@@ -67,6 +67,16 @@ Use returned navigation spans with inspect for exact declaration text, attached
 documentation and direct type context. Inspect's --limit bounds related source
 declarations; copied text shares a 64 KiB budget with explicit omissions. Neither
 query searches C#/F# source or guesses source for external metadata.
+`query callees|callers <context> --file <source> --line <n> --column <n>`
+returns outgoing body operations or incoming sites across the checked FPAS scope.
+Default selection follows the exact callable target; `--body` selects the
+innermost routine/lambda/entry/initializer region. Callers accepts routine/lambda
+bodies only. Use --limit/--offset and equal snapshotId when paging. Sites separate
+invocations from callable references and retain static dispatch uncertainty;
+unknown delegate calls are not attributed to guessed functions. Metadata-only
+and bodyless outgoing targets omit site counts. See the
+[call-query contract](../program-structure/cli.md#callers-and-callees) for scope,
+exact constructor/accessor anchors and excluded runtime protocols.
 
 ## Debug and profile
 

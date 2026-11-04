@@ -9,6 +9,7 @@ internal sealed partial class Binder
 {
     private BoundStatement BindForEach(ForEachSyntax syntax)
     {
+        catalog.Analysis?.Exclude(source, "foreach_protocol", syntax.Position);
         var type = BindType(syntax.Type);
         var value = Receiver(syntax.Source);
         if (!value.Type.IsReference && !value.Type.IsValue && !value.Type.IsParameter) throw source.Error("FP3002", "The source is not a supported enumerable.", syntax.Source.Position);

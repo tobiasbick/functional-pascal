@@ -12,7 +12,8 @@ public sealed record ReferenceResult(string Project, SourceSpan Span, string Rol
 public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList<ReferenceResult> References, int ReturnedCount);
 public sealed record SourceQueryResult(string Status, string? Reason, QuerySelection? Selection, DefinitionResult? Definition,
     TypeResult? Type, ReferencesResult? Refs, bool Truncated, IReadOnlyList<string> BinaryBoundaries,
-    FindResult? Find = null, InspectResult? Inspect = null, IReadOnlyList<string>? Searched = null);
+    FindResult? Find = null, InspectResult? Inspect = null, IReadOnlyList<string>? Searched = null,
+    CalleesResult? Callees = null, CallersResult? Callers = null);
 
 public sealed partial class SourceQuery
 {
@@ -34,18 +35,11 @@ public sealed partial class SourceQuery
         if (operation is not ("definition" or "type" or "refs")) throw new ContextFailure("invalid_argument", "Unknown source-query operation.");
         if (limit is < 1 or > 1000) throw new ContextFailure("invalid_argument", "Reference limit must be 1..1000.");
         cancellationToken.ThrowIfCancellationRequested();
-        var file = Path.GetFullPath(selection.File);
-        var owners = projects.Values.Where(project => project.Snapshot.Documents.Any(document => Paths.Equals(document.Path, file))).ToArray();
-        if (selection.Project is not null) owners = owners.Where(project => Paths.Equals(project.Input.Path, Path.GetFullPath(selection.Project))).ToArray();
-        if (owners.Length == 0) throw new ContextFailure("invalid_argument", "The file does not belong to the selected context/project: " + file);
-        if (owners.Length > 1) throw new ContextFailure("ambiguous_project", "Select the file's owning compilation with --project.",
-            candidates: owners.Select(owner => owner.Input.Path).Order(StringComparer.Ordinal).ToArray());
-        var owner = owners[0]; var document = owner.Snapshot.Documents.Single(document => Paths.Equals(document.Path, file));
-        int offset;
-        try { offset = document.Offset(selection.Line, selection.Column); }
-        catch (ArgumentOutOfRangeException exception) { throw new ContextFailure("invalid_argument", exception.Message); }
-        var occurrence = owner.Snapshot.OccurrenceAt(file, offset);
-        var position = new QuerySelection(owner.Input.Path, new(file, offset, 0, selection.Line, selection.Column));
+        var (selectedProject, selectedSnapshot, offset, selectedPosition) = SelectPosition(selection);
+        var owner = projects[selectedProject];
+        var occurrence = selectedSnapshot.OccurrenceAt(selectedPosition.Span.Path, offset);
+        var file = selectedPosition.Span.Path;
+        var position = selectedPosition;
         var boundaries = BinaryBoundaries();
         if (operation == "type")
         {

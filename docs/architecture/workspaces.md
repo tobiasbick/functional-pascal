@@ -100,6 +100,22 @@ and a 64 KiB aggregate UTF-8 text budget omit whole slices with explicit counts;
 these bounds do not weaken analysis coverage. Neither operation executes user
 code or retains compiler objects. Both verify inputs before publishing.
 
+Callees and callers share one lazily built body/site index and the existing
+canonical export mapping. Outgoing lookup uses the selected body; incoming
+lookup uses the statically selected target. Linked compilations stay separate,
+and generic matches preserve each site's actual substitutions. Constructor and
+accessor selections can additionally restrict the exact CLR operation. Explicit
+body selection supports anonymous functions and initializer regions without
+creating persistent selectors or resolving source names again.
+
+Call pages resolve descriptors only for returned sites. Whole-body/context
+summaries keep unresolved dispatch and excluded protocol counts separate from
+page truncation. Metadata-only and bodyless outgoing targets have explicit
+availability without empty-body claims. Incoming results distinguish invocations
+from callable references and never infer runtime delegate/virtual targets.
+Source operations, not emitted helpers, define the index on both sides of an
+FPAS DLL boundary.
+
 The [CLI reference](../pascal/program-structure/cli.md) owns selectors, JSON
 envelopes, exit codes, limits and examples. These services do not implement an
 editor session, unsaved buffers, a formatter, refactoring, LSP or query MCP tools.

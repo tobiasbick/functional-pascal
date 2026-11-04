@@ -4,14 +4,15 @@ using System.Text.Json.Serialization;
 
 namespace Fpas.Cli.Analysis;
 
-internal sealed record QueryPayload(DefinitionResult? Definition, TypeResult? Type, ReferencesResult? Refs, FindResult? Find, InspectResult? Inspect);
+internal sealed record QueryPayload(DefinitionResult? Definition, TypeResult? Type, ReferencesResult? Refs, FindResult? Find, InspectResult? Inspect,
+    CalleesResult? Callees, CallersResult? Callers);
 internal sealed record QueryResult(string Status, string? Reason, string? Context, string Configuration, string? SnapshotId, QuerySelection? Selection,
     IReadOnlyList<AnalysisDiagnostic> Diagnostics, AnalysisCoverage Coverage, Preparation? Preparation, bool Truncated,
     IReadOnlyList<string> BinaryBoundaries, QueryPayload? Result, AnalysisError? Error)
 {
     internal static QueryResult From(CheckResult check, SourceQueryResult result)
         => new(result.Status, result.Reason, check.Context, check.Configuration, check.SnapshotId, result.Selection, check.Diagnostics, check.Coverage with { Searched = result.Searched ?? check.Coverage.Analyzed }, check.Preparation,
-            result.Truncated, result.BinaryBoundaries, result.Status == "ok" ? new(result.Definition, result.Type, result.Refs, result.Find, result.Inspect) : null, null);
+            result.Truncated, result.BinaryBoundaries, result.Status == "ok" ? new(result.Definition, result.Type, result.Refs, result.Find, result.Inspect, result.Callees, result.Callers) : null, null);
 
     internal static QueryResult Failure(string? context, string configuration, string code, string message, CheckResult? check = null, bool truncated = false, IReadOnlyList<string>? candidates = null)
         => new(code == "cancelled" ? "cancelled" : "failed", null, context, configuration, null, null,

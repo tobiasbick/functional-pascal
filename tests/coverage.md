@@ -167,6 +167,12 @@ Deleted articles cannot remain as stale fixtures. See
 
 ## Build acceptance
 
+SDK packaging also verifies the MCP debugger and all managed tool dependencies
+are present, packaged debug help runs, and NetCoreDbg is not bundled. The MCP
+regression suite uses the official SDK client against real FPAS targets; see
+[debugger tests](README.md#mcp-agent-debugger-tests) for source, value, async,
+error and process-lifetime coverage and remaining platform acceptance.
+
 StandaloneSdkGuideTests materializes the exact project/configuration/source blocks
 from the [standalone SDK walkthrough](../docs/build/standalone-sdk.md) outside the
 checkout. Debug/Release cases first reject a missing local SDK package, then

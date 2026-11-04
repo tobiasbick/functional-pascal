@@ -4,6 +4,7 @@
     <Project Path="src/Fpas.Cli/Fpas.Cli.csproj" />
     <Project Path="src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" />
     <Project Path="src/Fpas.Core/Fpas.Core.csproj" />
+    <Project Path="src/Fpas.Debugging/Fpas.Debugging.csproj" />
   </Folder>
   <Folder Name="/sdk/">
     <Project Path="sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />

@@ -1,9 +1,10 @@
 # Agent debugging with MCP
 
-Status: **Planned**. `fpas debug` is an MCP server for agents, using the official
+Status: **Implemented; platform/agent-host acceptance remains open**.
+`fpas debug` is an MCP server for agents, using the official
 [C# MCP SDK](https://github.com/modelcontextprotocol/csharp-sdk) and unmodified
 [NetCoreDbg](https://github.com/Samsung/netcoredbg) over internal DAP.
-The current CLI does not implement this command.
+Linux SDK-client integration tests exercise the command and real FPAS targets.
 
 ```text
 Agent MCP client -> fpas debug -> DAP client -> NetCoreDbg -> FPAS program
@@ -23,5 +24,5 @@ IDE debugging is complete and documented in the
 Neovim, a custom debugger engine, HTTP/REST endpoints, raw DAP/JSONL frontends
 and one-shot batch reports are outside this implementation.
 
-Related: [agent setup](../../pascal/tools/debugging.md#agent-debugging-with-mcp-planned),
+Related: [agent setup](../../pascal/tools/debugging.md#agent-debugging-with-mcp),
 [debugger gaps](../debug-gap.md), [CLI inventory](../cli-gap.md#debugger-and-agent-inspection).

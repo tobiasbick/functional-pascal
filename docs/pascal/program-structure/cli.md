@@ -1,7 +1,9 @@
 # Compiler CLI
 
 The current CLI compiles FPAS sources into ordinary CLR libraries or executable
-DLLs. Project builds invoke the same compiler through the SDK.
+DLLs. Project builds invoke the same compiler through the SDK. The `debug`
+command hosts [MCP agent debugging](../tools/debugging.md#agent-debugging-with-mcp)
+using a separately installed NetCoreDbg; inspect it with `fpas debug --help`.
 The CLI uses System.CommandLine for argument binding and generated help.
 
 ## Inspect and invoke the compiler

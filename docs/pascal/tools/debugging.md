@@ -55,10 +55,9 @@ Inspection may execute getters, display code or evaluated methods. See
 [debug metadata](../../architecture/debug-information.md#debugger-attributes-and-value-views)
 for representation and scope limits.
 
-## Agent debugging with MCP (planned)
+## Agent debugging with MCP
 
-`fpas debug` is a planned MCP server for agents. The command is not implemented
-yet; the [plan](../../future/debugger/README.md) defines its tools and delivery.
+`fpas debug --netcoredbg <absolute-executable-path>` hosts a stdio MCP server for agents.
 It uses the official [C# MCP SDK](https://github.com/modelcontextprotocol/csharp-sdk)
 and NetCoreDbg. The VS Code workflow above does not require NetCoreDbg.
 
@@ -75,8 +74,8 @@ Prepare the external debugger:
 4. Build the FPAS program in Debug and retain the matching DLL, PDB,
    runtimeconfig.json, dependencies and source files.
 
-After implementation, register the command as a **stdio MCP server** in the
-agent host. For clients using an mcpServers configuration, the planned entry is:
+Register the command as a **stdio MCP server** in the
+agent host. For clients using an mcpServers configuration, the entry is:
 
 ```json
 {
@@ -94,9 +93,44 @@ Replace the placeholder path; use the host's configuration syntax and ensure
 The host starts the server and discovers its tools;
 starting a process in a shell does not register tools with an agent.
 
-The planned sequence is debug_launch with absolute program/cwd paths and an
-argument array, set breakpoints using returned source paths, continue/step, inspect stack/variables,
-then debug_stop. Use the returned sessionId and current stopId. MCP traffic owns
+On Linux install `setsid` from util-linux. The wrapper establishes an owned
+process group; on Windows it uses a kill-on-close Job Object. NetCoreDbg
+3.2.0-1092 with .NET 10 is covered by Linux integration tests using the official
+MCP client. Windows and a real agent-host registration require separate acceptance.
+
+Use the tools in this order:
+
+1. `debug_launch` with absolute `program` DLL and `cwd` paths, plus optional
+   `args` as individual strings. It stops at entry and returns `sessionId` and
+   `stopId`. It does not build the program. Keep the original sources unchanged;
+   DLL/PDB identity and source checksums are checked before launch.
+2. `debug_set_breakpoints` with `sessionId`, absolute `source` and positive
+   `lines`. An empty array removes that source's breakpoints.
+3. `debug_continue` or `debug_step` with the current IDs. Step kinds are `over`,
+   `into` and `out`. These acknowledge execution; use `debug_status` to observe
+   the next stop. Set `afterEvent` to the returned `event` cursor to wait for
+   changes, up to `waitMilliseconds=30000`. A running result is normal.
+4. At a stop, `debug_threads` and `debug_stack` expose threads and source frames.
+   Pass a returned `frameHandle` to `debug_variables` for scopes, then a returned
+   `variablesHandle` to expand values. Pages use `start` and `count` (default 32,
+   maximum 128). Every resume invalidates old handles and `stopId`.
+5. `debug_evaluate` accepts a current frame and NetCoreDbg expressions. It does
+   not implement Pascal expressions; getters/evaluation can execute target code.
+   User-unhandled exception stops include available backend exception details.
+6. `debug_output` returns stdout/stderr chunks with `sequence` numbers. Pass
+   `nextSequence` as `afterSequence` for the next page. The 1 MiB ring reports
+   expired cursors through `truncated`; pages contain at most 32768 UTF-8 bytes.
+7. `debug_pause` suspends a running program. `debug_stop` terminates the owned
+   target/backend and waits for cleanup; repeating it is safe. An ended session
+   retains output/status until the next launch, which creates a new `sessionId`.
+
+Results use MCP `structuredContent`; tool errors set `isError` with an `error`
+object containing `code` and `message`. Use current IDs after `stale_reference`;
+rebuild matching portable symbols for `missing_symbols`, or restore the exact
+source for `missing_source`. Backend timeout/failure ends the affected session.
+Request cancellation cannot undo target side effects. Idle stops do not expire.
+
+MCP traffic owns
 stdin/stdout; logs use stderr and program output comes through debug_output.
 Target stdin is not available in the initial scope. See the
 [tool contract](../../future/debugger/mcp-debug.md) for state, errors and limits.

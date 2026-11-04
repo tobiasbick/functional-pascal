@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Fpas.Cli/Fpas.Cli.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../src/Fpas.Debugging/Fpas.Debugging.csproj" />
     <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
     <None Include="../../examples/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />

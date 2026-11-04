@@ -67,8 +67,29 @@ messages/output and a 45-second scenario deadline. It tracks the launch-owned
 target using the DAP process event and verifies normal disconnect/exit. It does
 not establish crash/hang recovery for an interactive product session.
 
-These are regression tests, not a product frontend or batch debugger. Batch
-debugging remains blocked in the [debugger plan](../docs/future/debugger/README.md).
+These are regression tests, not a product frontend or batch debugger.
+
+## MCP agent debugger tests
+
+`McpDebugTests` uses the official MCP client over real pipes to exercise
+`fpas debug --netcoredbg <path>` against the same external backend. Set
+`FPAS_NETCOREDBG_PATH` as above. It covers discovery/schemas, source controls,
+all step kinds, live captures/generics/async values, evaluation, exceptions,
+paging, stale/invalid inputs, failed launch/relaunch and concurrent status/control.
+An observed server verifies actual stdin EOF, clean server exit and target removal.
+An additional Linux/backend test verifies the actual target's process group
+before killing NetCoreDbg alone, then checks the failed state and orphan removal.
+
+`McpInfrastructureTests` verifies UTF-8 output retention/cursors without an external
+debugger. Linux-only disposable adapter fixtures verify orphan reaping before PID
+reporting, malformed frames, deadlines and concurrent cleanup of pending requests.
+They are skipped on other operating systems. SDK packaging tests verify managed
+debugger dependencies without bundling NetCoreDbg. Windows native ownership and
+real agent-host configuration remain separate [acceptance](../docs/future/debug-gap.md).
+
+```sh
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~McpDebugTests|FullyQualifiedName~McpInfrastructureTests' --logger 'trx;LogFileName=mcp.trx' --results-directory .temp-data/debugger/test-results
+```
 
 ## Documentation examples
 

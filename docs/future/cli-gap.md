@@ -22,13 +22,13 @@ an entry's status. The initial language/build baseline and its acceptance remain
 separate in the [baseline comparison](../baseline-comparison.md).
 
 IDE debugging is complete. The [MCP agent debugger](debugger/README.md) is
-planned; FPAS supplies no debug command yet. Product gaps are in
+implemented; Windows/agent-host acceptance remains in
 [debugger gaps](debug-gap.md).
 
 ## Current CLR support
 
-The [CLI](../../src/Fpas.Cli/Compilation/CompilerCommand.cs) exposes only `compile`, plus root
-and compile help and root `--version`. It accepts explicit sources, stdin, assembly references,
+The [CLI](../../src/Fpas.Cli/CliApplication.cs) exposes `compile` and stdio MCP
+`debug`, generated command help and root `--version`. Compilation accepts explicit sources, stdin, assembly references,
 executable/library output, portable symbols, optional XML API documentation,
 warning policy, JSON diagnostics, and JSON response files. Argument parsing and
 generated help use `System.CommandLine` with the command definition in
@@ -60,7 +60,7 @@ define the comparison scope.
 | `build` | Missing FPAS frontend for the existing MSBuild build path. Old `.fpascu` and `.fpascp` outputs have CLR assembly equivalents. Native application packaging is a separate gap below. |
 | `run` | Missing source/project/solution discovery, build-and-launch handling, and direct assembly execution. Arguments, standard streams, cancellation, working directory, and child exit status need a command contract. |
 | `check` | Missing analysis-only command and compiler API mode. Project references may still need restore or dependency compilation to supply metadata. `--fix` has additional gaps below. |
-| `debug` | Planned MCP stdio server for agents, using the official C# MCP SDK and separately installed NetCoreDbg over internal DAP. See the [contract](debugger/mcp-debug.md). |
+| `debug` | Implemented MCP stdio server with official SDK and external NetCoreDbg. Remaining Windows/agent-host acceptance: [debugger gaps](debug-gap.md). |
 | `test` | Missing FPAS test-program discovery and runner. Existing C# toolchain tests run with `dotnet test`; this does not provide the old FPAS test-program workflow. |
 | `fmt` | Missing formatter for the current CLR language. Its parser/formatter needs to preserve comments and source meaning. Old Rust formatting rules cannot establish correctness for the new syntax. |
 | `doc` | Missing declaration lookup and signature/documentation output. Source documentation and CLR metadata are available inputs; consuming referenced assemblies' XML documentation needs tooling. Existing XML generation is not a `doc` lookup command. |
@@ -142,7 +142,7 @@ IDE debugging is complete through Microsoft's C# extension in official VS Code;
 see the [guide](../pascal/tools/debugging.md). Compiler symbols and value views
 are implemented.
 
-The planned `fpas debug --netcoredbg <executable>` is an MCP stdio server for
+`fpas debug --netcoredbg <executable>` is an MCP stdio server for
 agents. The official C# MCP SDK supplies the server protocol; a thin internal
 DAP client controls the user-installed NetCoreDbg backend. The
 [contract](debugger/mcp-debug.md) defines source/execution tools, structured
@@ -190,7 +190,7 @@ For completeness, the Rust benchmark tool's native drivers were
 | `--gc-cell-threshold`, `--gc-mutation-threshold`, `--gc-poll-interval` | VM collection tuning has no matching CLR GC flags. |
 | Debug `--schedule-seed` and `--instruction-limit` | Seeded VM scheduling, virtual time, and exact dispatched-bytecode limits do not apply to ordinary CLR execution. Process deadlines are a different guarantee. |
 | Debug `--break`, `--print`, `--frame`, `--timeout`, `--output-limit` | MCP tools provide session controls and bounded structured results; these CLI flags are not selected. |
-| Debug `--protocol dap` | DAP is internal to the NetCoreDbg client. The only planned public transport is stdio MCP; no protocol-selection flag is needed. |
+| Debug `--protocol dap` | DAP is internal to the NetCoreDbg client. The public transport is stdio MCP; no protocol-selection flag is needed. |
 | Debug `--protocol jsonl`, `--commands` | JSONL sessions are not selected; command-file/batch execution is blocked. |
 | Debug `--trace`, `--trace-limit`, `--task`, `--source-root` | Old trace/task/source-image contracts are not automatically CLR capabilities. Tracepoints, assembly/PDB/source matching, and CLR thread contexts remain backend-dependent gaps. |
 | JSON diagnostics and reports | `compile --diagnostics json` already returns one structured result. Other command reports, consistent failure output, and coverage/truncation fields are missing. Rust JSONL diagnostics and schemas are not automatically supported. |
@@ -220,8 +220,8 @@ references are covered by CLI execution tests. Argument errors retain exit code
 The project SDK packages the parser assembly and its localized resources with
 the compiler.
 
-This integration does not supply the missing MSBuild commands, semantic analysis,
-debugger, or report schemas. Future commands still need explicit forwarding,
+This integration does not supply the missing MSBuild commands, semantic query
+services or general report schemas. Future commands still need explicit forwarding,
 cancellation, completion, and protocol-stream behavior; distribution/AOT
 acceptance remains in [distribution gaps](dist-gap.md).
 

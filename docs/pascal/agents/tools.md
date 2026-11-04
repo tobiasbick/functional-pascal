@@ -33,7 +33,7 @@ annotations. Use static extension-method calls. An unsupported signature must
 produce a useful diagnostic rather than trigger reflection/dynamic invocation.
 
 The CLI uses System.CommandLine; root help/version and compile help are available.
-The current command is compile. Its help documents explicit references,
+The compile command's help documents explicit references,
 multiple sources, stdin, executable/library output, portable symbols, XML docs,
 and JSON diagnostics. The [CLI contract](../program-structure/cli.md)
 defines exit codes and publication behavior. Compile JSON reports are appropriate
@@ -54,7 +54,12 @@ metadata. Preserve assembly/PDB pairs and source files when debugging generated
 assemblies. The [debug information reference](../../architecture/debug-information.md)
 describes supported symbols and stepping metadata.
 The [debugging guide](../tools/debugging.md) describes IDE debugging, CLR value
-views and external debugger prerequisites. The current CLI has no debug command.
+views and external debugger prerequisites. `fpas debug --netcoredbg <absolute-path>`
+hosts agent tools over stdio MCP using the official C# SDK and the separately
+installed NetCoreDbg. Register it in the MCP host; a shell invocation alone does
+not add tools. Launch an already built DLL, use current sessionId/stopId for
+inspection and stepping, read target output through debug_output, and stop with
+debug_stop. Follow the guide for tool order, output cursors and platform acceptance.
 
 Investigate an actual program with a suitable .NET debugger/profiler before
 writing external samplers or benchmark variants. Keep execution bounded and

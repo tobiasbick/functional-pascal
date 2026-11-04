@@ -1,6 +1,6 @@
 # fpas debug: command and MCP contract
 
-Status: **Planned**. Delivery is tracked in the [implementation checklist](implementation.md).
+Status: **Implemented; Windows/agent-host acceptance pending**. Delivery is tracked in the [implementation checklist](implementation.md).
 No FPAS syntax change or new debugger engine is required.
 
 ## Components and dependencies
@@ -92,8 +92,10 @@ hold a global tool lock while waiting for execution to stop.
   to 1 second, and returns running when that wait expires. No whole-session or
   breakpoint-idle deadline is imposed.
 - Stack and variable pages default to 32, maximum 128 items. Target output uses
-  a bounded 1 MiB ring buffer and pages of at most 32 KiB UTF-8. DAP framing and
-  pending events also have explicit bounded capacities. Report truncation or
+  a bounded 1 MiB ring buffer and pages of at most 32 KiB UTF-8. There are at most
+  64 concurrent DAP requests, with 1 MiB messages and 8 KiB
+  headers. Status returns the complete current breakpoint set (up to 4096) and a
+  monotonic change cursor, rather than an event backlog. Report truncation or
   expired cursors; never silently omit data or reuse invalid references.
 - Return meaningful MCP tool errors with stable codes such as invalid_state,
   stale_reference, missing_symbols, backend_timeout, backend_exited and

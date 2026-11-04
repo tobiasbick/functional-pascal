@@ -40,7 +40,15 @@ src/
   Fpas.Cli/
     Fpas.Cli.csproj
     Program.cs
+    CliApplication.cs
     Compilation/
+    Debugging/
+  Fpas.Debugging/
+    Fpas.Debugging.csproj
+    Processes/
+    Protocol/
+    Sessions/
+    Tools/
   Fpas.Build.Tasks/
     Fpas.Build.Tasks.csproj
     Documentation/
@@ -99,7 +107,8 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | Project | Responsibility |
 | --- | --- |
 | `Fpas.Compiler` | C# library for source handling, lexing/parsing, name binding, type checking, lowering, and direct CIL/metadata/PDB generation; optional XML API documentation |
-| `Fpas.Cli` | C# executable for arguments, compiler invocation, diagnostics, and exit status |
+| `Fpas.Cli` | Command binding, compiler invocation, diagnostics, MCP debugger startup and exit status |
+| `Fpas.Debugging` | Official SDK MCP hosting/tools, thin DAP session client and owned external NetCoreDbg processes |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
@@ -133,7 +142,9 @@ Fpas.slnx groups the C# implementation projects, SDK packaging, and xUnit projec
 ProjectReference edges define their build dependencies; solution folders may group
 src, sdk, and tests without introducing separate solutions for each component.
 
-- Fpas.Cli references Fpas.Compiler as a C# library.
+- Fpas.Cli references Fpas.Compiler and Fpas.Debugging as C# libraries.
+- Fpas.Debugging uses the official MCP SDK and hosting packages; it has no
+  dependency on Fpas.Compiler or Fpas.Core. NetCoreDbg is installed separately.
 - Fpas.Build.Tasks launches the matching Fpas.Cli in a separate process. Compiler
   dependencies stay outside the MSBuild host process. Resolve the compiler from
   the selected SDK's assets, with normal .NET host invocation where needed.

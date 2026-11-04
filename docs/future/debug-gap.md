@@ -1,23 +1,19 @@
-# MCP agent debugger gaps
+# MCP agent debugger acceptance
 
-IDE debugging and compiler debug metadata are complete; see the
-[debugging guide](../pascal/tools/debugging.md). `fpas debug` is a planned agent
-interface using the official C# MCP SDK and external NetCoreDbg.
+The stdio MCP command, official C# SDK integration, NetCoreDbg session client,
+agent tools, limits and cleanup are implemented. Linux tests use the official
+MCP client against real FPAS programs and NetCoreDbg 3.2.0-1092 on .NET 10.
+See the [debugging guide](../pascal/tools/debugging.md).
 
-| Open capability | Plan |
+| Open acceptance | Required evidence |
 | --- | --- |
-| MCP command/server | Bind fpas debug, host stdio MCP and discover typed tools through the official SDK. |
-| External debugger setup | Require the user's separately downloaded NetCoreDbg executable; no bundling or automatic acquisition. |
-| DAP session client | Launch/initialize the backend, correlate responses/events and track current session/stop state. |
-| Agent controls and inspection | Source breakpoints, execution controls, threads, frames, variables, evaluation and categorized output through MCP tools. |
-| Bounds and lifetime | Request deadlines, stale-handle errors, paging/truncation, cancellation and owned-process cleanup on every exit/failure path. |
-| Agent-host acceptance | Actual MCP client/agent workflow on Linux and Windows with documented backend/runtime requirements. |
+| Windows process ownership | Run Job Object startup/cleanup, adapter failure and client-disconnect tests on Windows. Compilation alone does not verify native process behavior. |
+| Agent-host setup | Register the documented stdio server in an actual MCP-capable agent host on Linux and Windows; discover tools, launch, inspect, step, stop and disconnect with a live target. SDK client tests do not establish host configuration. |
 
-The [contract](debugger/mcp-debug.md) and
-[implementation checklist](debugger/implementation.md) own this work. Existing
-[NetCoreDbg tests](../../tests/Fpas.IntegrationTests/Debugging/NetCoreDbgTests.cs)
-cover compiler/backend compatibility; they do not implement the MCP product.
+The [implementation checklist](debugger/implementation.md) tracks these checks;
+the [contract](debugger/mcp-debug.md) defines implemented behavior. The cloud chat
+cannot dynamically register this repository's local MCP server as conversation
+tools; use the configured local agent host for that acceptance.
 
-Initial scope excludes target stdin, arbitrary attach, full Pascal expression
-evaluation, HTTP/REST endpoints, raw DAP/JSONL frontends and one-shot batch reports.
-The Neovim configuration is not a dependency or acceptance target for this command.
+Target stdin, arbitrary attach, a Pascal evaluator, editor integrations, HTTP/raw
+DAP frontends and one-shot batch reports are outside the selected scope.

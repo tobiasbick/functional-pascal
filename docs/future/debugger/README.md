@@ -1,22 +1,27 @@
-# Debugging status
+# Agent debugging with MCP
 
-IDE debugging is complete. Official VS Code with Microsoft's C# extension uses
-FPAS assemblies, portable PDBs and standard CLR debug metadata. Setup and supported
-value views belong in the [debugging guide](../../pascal/tools/debugging.md);
-implementation details belong in [debug information](../../architecture/debug-information.md).
+Status: **Planned**. `fpas debug` is an MCP server for agents, using the official
+[C# MCP SDK](https://github.com/modelcontextprotocol/csharp-sdk) and unmodified
+[NetCoreDbg](https://github.com/Samsung/netcoredbg) over internal DAP.
+The current CLI does not implement this command.
 
-## Open: CLI/DAP
+```text
+Agent MCP client -> fpas debug -> DAP client -> NetCoreDbg -> FPAS program
+```
 
-[CLI/DAP completion](cli-dap.md) covers program input, request deadlines,
-adapter failure recovery, target ownership and terminal-client acceptance.
-NetCoreDbg is the external backend. The
-[Neovim configuration](../../../integrations/neovim/README.md) is an incomplete
-terminal integration, not a completed FPAS CLI debugger.
+| Document | Purpose |
+| --- | --- |
+| [Command and tool contract](mcp-debug.md) | Dependencies, launch, tools, state, output and lifetime |
+| [Implementation checklist](implementation.md) | Ordered, testable delivery steps |
 
-**Batch debugging is blocked.** No one-shot snapshots/reports, command-file
-runners, hidden batch workers, MI bridge or JSONL session frontend are selected.
-Ordinary debugger evaluation may execute getters, display code and methods.
+The user downloads NetCoreDbg separately and supplies its executable path.
+FPAS does not bundle or automatically acquire it. The MCP SDK is a normal NuGet
+dependency. FPAS owns the protocol/process integration; NetCoreDbg owns debugging.
 
-Related inventories: [debugger gaps](../debug-gap.md),
-[CLI gaps](../cli-gap.md#debugger-and-agent-inspection),
-[documentation gaps](../documentation-gaps.md#d3-concrete-debuggingprofiling-walkthroughs).
+IDE debugging is complete and documented in the
+[VS Code guide](../../pascal/tools/debugging.md). IDE/editor integrations,
+Neovim, a custom debugger engine, HTTP/REST endpoints, raw DAP/JSONL frontends
+and one-shot batch reports are outside this implementation.
+
+Related: [agent setup](../../pascal/tools/debugging.md#agent-debugging-with-mcp-planned),
+[debugger gaps](../debug-gap.md), [CLI inventory](../cli-gap.md#debugger-and-agent-inspection).

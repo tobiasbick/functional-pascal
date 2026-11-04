@@ -55,8 +55,52 @@ Inspection may execute getters, display code or evaluated methods. See
 [debug metadata](../../architecture/debug-information.md#debugger-attributes-and-value-views)
 for representation and scope limits.
 
-CLI/DAP remains [open](../../future/debugger/cli-dap.md); no FPAS debug command is
-supplied. Batch debugging is blocked.
+## Agent debugging with MCP (planned)
+
+`fpas debug` is a planned MCP server for agents. The command is not implemented
+yet; the [plan](../../future/debugger/README.md) defines its tools and delivery.
+It uses the official [C# MCP SDK](https://github.com/modelcontextprotocol/csharp-sdk)
+and NetCoreDbg. The VS Code workflow above does not require NetCoreDbg.
+
+Prepare the external debugger:
+
+1. Download a matching OS/architecture archive from the
+   [official NetCoreDbg releases](https://github.com/Samsung/netcoredbg/releases).
+   Extract the complete archive, keeping its dependencies and license files.
+2. Locate `netcoredbg` on Unix or `netcoredbg.exe` on Windows. On Unix, ensure
+   it is executable. Use its absolute path; FPAS neither bundles NetCoreDbg as a
+   NuGet package nor downloads it automatically.
+3. Make the program's .NET runtime available to the agent-host process and its
+   children. A nonstandard .NET installation may require PATH and DOTNET_ROOT.
+4. Build the FPAS program in Debug and retain the matching DLL, PDB,
+   runtimeconfig.json, dependencies and source files.
+
+After implementation, register the command as a **stdio MCP server** in the
+agent host. For clients using an mcpServers configuration, the planned entry is:
+
+```json
+{
+  "mcpServers": {
+    "fpas-debug": {
+      "command": "fpas",
+      "args": ["debug", "--netcoredbg", "/path/to/netcoredbg/netcoredbg"]
+    }
+  }
+}
+```
+
+Replace the placeholder path; use the host's configuration syntax and ensure
+`fpas` is discoverable there (see [local deployment](../../build/development.md#deploy-the-local-release-compiler)).
+The host starts the server and discovers its tools;
+starting a process in a shell does not register tools with an agent.
+
+The planned sequence is debug_launch with absolute program/cwd paths and an
+argument array, set breakpoints using returned source paths, continue/step, inspect stack/variables,
+then debug_stop. Use the returned sessionId and current stopId. MCP traffic owns
+stdin/stdout; logs use stderr and program output comes through debug_output.
+Target stdin is not available in the initial scope. See the
+[tool contract](../../future/debugger/mcp-debug.md) for state, errors and limits.
+Batch reports and a human CLI debugger are outside this command's scope.
 
 ## See also
 

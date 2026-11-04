@@ -97,8 +97,8 @@ Emitted XML documentation alone does not provide either view.
 
 IDE debugging is complete through the
 [Microsoft VS Code route](../pascal/tools/debugging.md). It is not an open editor
-gap. CLI/DAP input, recovery and terminal acceptance remain in the
-[CLI/DAP plan](debugger/cli-dap.md). Automatic project/language services are
+gap. The planned [MCP debugger](debugger/README.md) serves agents independently.
+Automatic project/language services are
 separate editor features.
 
 | Rust editor capability | CLR editor gap or boundary |

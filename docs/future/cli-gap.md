@@ -21,9 +21,9 @@ The current CLR owners are the [compiler CLI](../pascal/program-structure/cli.md
 an entry's status. The initial language/build baseline and its acceptance remain
 separate in the [baseline comparison](../baseline-comparison.md).
 
-IDE debugging is complete. [CLI/DAP completion](debugger/cli-dap.md) remains
-open; FPAS supplies no debug command. Batch debugging is blocked. Current
-terminal limitations are in [debugger gaps](debug-gap.md).
+IDE debugging is complete. The [MCP agent debugger](debugger/README.md) is
+planned; FPAS supplies no debug command yet. Product gaps are in
+[debugger gaps](debug-gap.md).
 
 ## Current CLR support
 
@@ -60,7 +60,7 @@ define the comparison scope.
 | `build` | Missing FPAS frontend for the existing MSBuild build path. Old `.fpascu` and `.fpascp` outputs have CLR assembly equivalents. Native application packaging is a separate gap below. |
 | `run` | Missing source/project/solution discovery, build-and-launch handling, and direct assembly execution. Arguments, standard streams, cancellation, working directory, and child exit status need a command contract. |
 | `check` | Missing analysis-only command and compiler API mode. Project references may still need restore or dependency compilation to supply metadata. `--fix` has additional gaps below. |
-| `debug` | No FPAS command exists. The [plan](debugger/README.md) selects stock NetCoreDbg/DAP and compiler compatibility, with an interactive terminal-client route to verify. Batch mode is explicitly blocked. |
+| `debug` | Planned MCP stdio server for agents, using the official C# MCP SDK and separately installed NetCoreDbg over internal DAP. See the [contract](debugger/mcp-debug.md). |
 | `test` | Missing FPAS test-program discovery and runner. Existing C# toolchain tests run with `dotnet test`; this does not provide the old FPAS test-program workflow. |
 | `fmt` | Missing formatter for the current CLR language. Its parser/formatter needs to preserve comments and source meaning. Old Rust formatting rules cannot establish correctness for the new syntax. |
 | `doc` | Missing declaration lookup and signature/documentation output. Source documentation and CLR metadata are available inputs; consuming referenced assemblies' XML documentation needs tooling. Existing XML generation is not a `doc` lookup command. |
@@ -142,15 +142,16 @@ IDE debugging is complete through Microsoft's C# extension in official VS Code;
 see the [guide](../pascal/tools/debugging.md). Compiler symbols and value views
 are implemented.
 
-CLI/DAP remains open: FPAS has no debug command, the NetCoreDbg DAP path lacks
-program stdin, and request cancellation, adapter-failure cleanup and terminal
-platform acceptance need completion. The
-[Neovim prototype](../../integrations/neovim/README.md) provides normal controls,
-but does not close these gaps. Follow the [CLI/DAP plan](debugger/cli-dap.md).
+The planned `fpas debug --netcoredbg <executable>` is an MCP stdio server for
+agents. The official C# MCP SDK supplies the server protocol; a thin internal
+DAP client controls the user-installed NetCoreDbg backend. The
+[contract](debugger/mcp-debug.md) defines source/execution tools, structured
+results, session/stop state, deadlines, output bounds and process cleanup.
 
-Evaluation uses backend expression syntax and may execute program code. Full
-Pascal expressions and arbitrary attach are outside the current scope.
-Batch debugging, MI/JSONL frontends and a new FPAS debug engine are not selected.
+No human terminal client, custom debugger engine or alternate HTTP/raw-DAP
+interface is selected. Target stdin, full Pascal expressions and arbitrary
+attach are outside the initial scope. Evaluation follows backend semantics and
+may execute code. One-shot batch reports and command-file runners are excluded.
 
 ## Intentionally omitted capabilities
 
@@ -188,8 +189,8 @@ For completeness, the Rust benchmark tool's native drivers were
 | `--no-contracts` | No disable switch exists. Contracts execute in Debug and Release. Optional omission would require an explicit policy decision, not merely parsing a flag. |
 | `--gc-cell-threshold`, `--gc-mutation-threshold`, `--gc-poll-interval` | VM collection tuning has no matching CLR GC flags. |
 | Debug `--schedule-seed` and `--instruction-limit` | Seeded VM scheduling, virtual time, and exact dispatched-bytecode limits do not apply to ordinary CLR execution. Process deadlines are a different guarantee. |
-| Debug `--break`, `--print`, `--frame`, `--timeout`, `--output-limit` | Existing clients/backends have their own controls; no FPAS flag contract is implemented. Batch run/report options are blocked. |
-| Debug `--protocol dap` | NetCoreDbg DAP is the selected backend protocol. An FPAS command/proxy is not assumed; use a suitable existing client or minimal justified integration. |
+| Debug `--break`, `--print`, `--frame`, `--timeout`, `--output-limit` | MCP tools provide session controls and bounded structured results; these CLI flags are not selected. |
+| Debug `--protocol dap` | DAP is internal to the NetCoreDbg client. The only planned public transport is stdio MCP; no protocol-selection flag is needed. |
 | Debug `--protocol jsonl`, `--commands` | JSONL sessions are not selected; command-file/batch execution is blocked. |
 | Debug `--trace`, `--trace-limit`, `--task`, `--source-root` | Old trace/task/source-image contracts are not automatically CLR capabilities. Tracepoints, assembly/PDB/source matching, and CLR thread contexts remain backend-dependent gaps. |
 | JSON diagnostics and reports | `compile --diagnostics json` already returns one structured result. Other command reports, consistent failure output, and coverage/truncation fields are missing. Rust JSONL diagnostics and schemas are not automatically supported. |
@@ -264,8 +265,8 @@ capability alone does not close either item. Their detailed criteria remain in
 the [documentation gaps](documentation-gaps.md). This coordination does not select
 additional commands, dependencies, or an implementation order.
 
-The debugging portion of D3 follows the [NetCoreDbg/DAP plan](debugger/README.md).
-Its batch block applies throughout implementation and documentation. Profiling,
+The debugging portion of D3 follows the [MCP agent plan](debugger/README.md).
+Agent setup includes a separate NetCoreDbg download. Profiling,
 dump guidance and D1 retain their own open scope.
 
 ## Keeping the inventory current

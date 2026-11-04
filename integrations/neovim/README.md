@@ -1,7 +1,7 @@
 # Neovim DAP prototype
 
-Status: **Incomplete**; [CLI/DAP completion](../../docs/future/debugger/cli-dap.md)
-owns remaining input, timeout, recovery and platform acceptance work.
+Status: **Incomplete** external-client configuration. The
+[MCP agent debugger](../../docs/future/debugger/README.md) has independent scope.
 [fpas_debug.lua](lua/fpas_debug.lua) configures nvim-dap to launch unmodified
 NetCoreDbg directly. It provides preflight checks and a stopped-state scope view;
 loading the module does not launch, build or download anything.

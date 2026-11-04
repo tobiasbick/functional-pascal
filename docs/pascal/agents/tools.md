@@ -53,8 +53,8 @@ documents, statement positions, lexical locals, closures, and async yield/resume
 metadata. Preserve assembly/PDB pairs and source files when debugging generated
 assemblies. The [debug information reference](../../architecture/debug-information.md)
 describes supported symbols and stepping metadata.
-The [debugging guide](../tools/debugging.md) describes tested CLR value views
-and remaining client/evaluation limits.
+The [debugging guide](../tools/debugging.md) describes IDE debugging, CLR value
+views and external debugger prerequisites. The current CLI has no debug command.
 
 Investigate an actual program with a suitable .NET debugger/profiler before
 writing external samplers or benchmark variants. Keep execution bounded and

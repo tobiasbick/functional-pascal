@@ -7,7 +7,7 @@ CLR toolchain. IDE debugging is complete and documented in the
 | ID | Open follow-up | Owner |
 | --- | --- | --- |
 | D1 | Reproducible CLR benchmarks | [Profiling](../pascal/tools/profiling.md), [CLI inventory](cli-gap.md) |
-| D3 | CLI/DAP, profiling and dump walkthroughs | [CLI/DAP plan](debugger/cli-dap.md), [profiling](../pascal/tools/profiling.md) |
+| D3 | MCP agent debugging, profiling and dump walkthroughs | [MCP plan](debugger/README.md), [profiling](../pascal/tools/profiling.md) |
 
 ## D1: Reproducible benchmarks
 
@@ -28,8 +28,9 @@ prepared environment. No separate FPAS benchmark command is selected.
 
 Remaining guidance covers:
 
-- CLI/DAP program input, request cancellation, adapter failure and owned-process
-  cleanup after the [implementation](debugger/cli-dap.md) supports them.
+- Agent-host MCP registration, NetCoreDbg installation and a real launch,
+  breakpoint, value inspection, step and stop through the planned
+  [MCP tools](debugger/mcp-debug.md), including cancellation and cleanup.
 - CPU stacks, allocation/GC observations and controlled failure dumps with
   selected .NET tools; keep profiled and unprofiled measurements separate.
 - Tool installation, platform limits, output locations and cleanup.
@@ -40,6 +41,6 @@ debugging. Batch debugging is blocked and is not a documentation requirement.
 ## See also
 
 - [Documentation hub](../README.md)
-- [CLI/DAP gaps](debug-gap.md)
+- [MCP debugger gaps](debug-gap.md)
 - [Verification coverage](../../tests/coverage.md)
 - [Development workflow](../build/development.md)

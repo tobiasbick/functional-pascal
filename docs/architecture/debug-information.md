@@ -40,8 +40,8 @@ and enclosing-interval limits.
 
 IDE debugging uses [Microsoft's VS Code C# debugger](../pascal/tools/debugging.md).
 The [coverage map](../../tests/coverage.md#language-and-metadata) owns symbol,
-interop and runtime regression coverage. [CLI/DAP](../future/debugger/cli-dap.md)
-input and lifecycle work remains separate. Batch debugging is blocked.
+interop and runtime regression coverage. The planned
+[MCP agent interface](../future/debugger/README.md) consumes the same symbols.
 
 ## Output lifetime
 

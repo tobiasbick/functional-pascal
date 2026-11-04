@@ -14,9 +14,9 @@ in the [development workflow](../docs/build/development.md).
 | [Fixtures/msbuild](Fixtures/msbuild/) | Shared.csproj → Game.fpasproj → Host.csproj and a mixed .slnx solution |
 | [TestSupport](TestSupport/) and [Directory.Build.targets](Directory.Build.targets) | Shared bounded-process and temporary-directory helpers plus resolved framework reference inputs |
 
-Compiler tests use Types, Routines, ControlFlow, and Metadata directories with
+Compiler tests use Analysis, Types, Routines, ControlFlow, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
-and Debugging. Each project's Support directory owns its shared setup; compiler tests
+Debugging and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
 Build the toolchain and tests before executing them. Do not rebuild toolchain
@@ -30,6 +30,13 @@ consumers. Those fixture builds are part of the test, not a second toolchain bui
 They verify dependency copying, exported signatures, incremental inputs/outputs,
 configuration isolation, diagnostics, and cleanup. Do not rely on a cached local
 development SDK version.
+
+Workspaces tests exercise evaluated project/solution contexts, check/query JSON,
+exact definitions/types/references, linked-source ownership, stale metadata,
+bounded output and owned cancellation. SemanticDocumentationTests analyzes the
+complete handbook/agent examples and checks detached index consistency alongside
+their existing compilation/execution assertions. Compiler Analysis tests cover
+exact spans, symbol/flow identity and policies for every expression form.
 
 ## NetCoreDbg integration tests
 

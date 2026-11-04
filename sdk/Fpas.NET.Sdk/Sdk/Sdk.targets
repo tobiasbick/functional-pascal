@@ -22,13 +22,32 @@
   </ItemGroup>
   <UsingTask TaskName="Fpas.Build.Tasks.FpasCompile" AssemblyFile="$(FpasTasksPath)" />
   <UsingTask TaskName="Fpas.Build.Tasks.FpasCleanDocumentation" AssemblyFile="$(FpasTasksPath)" />
+  <UsingTask TaskName="Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext" AssemblyFile="$(FpasTasksPath)" />
+  <Target Name="FpasPrepareCompilation" DependsOnTargets="$(FpasPrepareCompilationDependsOn);ResolveReferences" />
+  <Target Name="FpasDescribeAnalysisContext" DependsOnTargets="AssignProjectConfiguration">
+    <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="description"
+        ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" Configuration="$(Configuration)"
+        Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
+        Sources="@(Compile)" Projects="@(ProjectReferenceWithConfiguration)" BuildCache="$(IntermediateOutputPath)fpas.compile.json" />
+  </Target>
+  <Target Name="FpasExportAnalysisContext" DependsOnTargets="FpasPrepareCompilation">
+    <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="resolved"
+        ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" Configuration="$(Configuration)"
+        Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
+        Sources="@(Compile)" References="@(ReferencePath)" Projects="@(_MSBuildProjectReferenceExistent)"
+        ProjectAssetsFile="$(ProjectAssetsFile)" GenerateDocumentationFile="$(GenerateDocumentationFile)"
+        TreatWarningsAsErrors="$(TreatWarningsAsErrors)" WarningsAsErrors="$(WarningsAsErrors)"
+        WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)" OutputAssembly="@(IntermediateAssembly)" BuildCache="$(IntermediateOutputPath)fpas.compile.json"
+        DebugType="$(DebugType)" Optimize="$(Optimize)" DocumentationFile="$(_FpasDocumentationIntermediate)"
+        DocumentationDestination="$(_FpasRequestedDocumentationFile)" DocumentationOutput="$(_FpasDocumentationOutput)" />
+  </Target>
   <Target Name="FpasCleanDocumentation" BeforeTargets="CoreClean">
     <FpasCleanDocumentation CacheFile="$(IntermediateOutputPath)fpas.compile.json" />
   </Target>
   <Target Name="CreateManifestResourceNames">
     <Error Condition="'@(EmbeddedResource)' != ''" Code="FP5001" Text="FPAS embedded resources are not implemented yet." />
   </Target>
-  <Target Name="CoreCompile" DependsOnTargets="ResolveReferences" Returns="@(IntermediateAssembly)">
+  <Target Name="CoreCompile" DependsOnTargets="FpasPrepareCompilation" Returns="@(IntermediateAssembly)">
     <Error Condition="'$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCPU'" Code="FP5001" Text="The initial FPAS compiler supports AnyCPU only." />
     <Error Condition="'$(DebugType)' != 'none' and '$(DebugType)' != 'portable'" Code="FP5001" Text="FPAS DebugType must be portable or none." />
     <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" CompilerPath="$(FpasCompilerPath)"

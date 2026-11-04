@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52" />
     <PackageVersion Include="ModelContextProtocol" Version="2.3.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

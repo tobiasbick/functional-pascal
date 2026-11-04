@@ -4,6 +4,7 @@ using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Bound;
+using Fpas.Compiler.Analysis;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -28,14 +29,16 @@ internal sealed partial class AssemblyEmitter
     private readonly Dictionary<string, MemberReferenceHandle> fields = [];
     private PortableDebugInfo? debug;
 
-    internal static CompiledProgram Emit(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog catalog, bool emitDebug, bool optimize)
-        => new AssemblyEmitter().Build(program, assemblyName, sources, catalog, emitDebug, optimize);
+    internal static CompiledProgram Emit(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize)
+        => new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize);
 
-    private CompiledProgram Build(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog references, bool emitDebug, bool optimize)
+    private CompiledProgram Build(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize)
     {
-        catalog = references;
+        var program = prepared.Program;
+        var sources = prepared.Catalog.Units.Select(unit => unit.Source);
+        catalog = prepared.References;
         sourceAssemblyName = assemblyName;
-        layout = new(program, references);
+        layout = new(program, prepared.AsyncPlans);
         if (emitDebug) debug = new(sources);
         using var sourceHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         sourceHash.AppendData(Encoding.UTF8.GetBytes(assemblyName));

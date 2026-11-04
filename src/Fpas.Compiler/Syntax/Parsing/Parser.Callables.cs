@@ -15,7 +15,7 @@ internal sealed partial class Parser
         Expect(")");
         TypeSyntax? result = null;
         if (token.Text == "function") { Expect(":"); result = ReadType(); }
-        return new([new(token)], CallableParameters: parameters, CallableResult: result);
+        return new([new(token)], CallableParameters: parameters, CallableResult: result) { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
     }
 
     private LambdaSyntax ReadLambda()

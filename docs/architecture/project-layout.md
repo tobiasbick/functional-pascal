@@ -20,6 +20,7 @@ NuGet.Config
 src/
   Fpas.Compiler/
     Fpas.Compiler.csproj
+    Analysis/
     Syntax/
       Parsing/
     Binding/
@@ -28,6 +29,7 @@ src/
       Declarations/
       Flow/
       References/
+      Semantics/
       Symbols/
       Types/
     Lowering/
@@ -42,7 +44,15 @@ src/
     Program.cs
     CliApplication.cs
     Compilation/
+    Analysis/
     Debugging/
+  Fpas.Workspaces/
+    Analysis/
+    Loading/
+    Processes/
+    Queries/
+    Solutions/
+  Fpas.Processes/
   Fpas.Debugging/
     Fpas.Debugging.csproj
     Processes/
@@ -51,6 +61,7 @@ src/
     Tools/
   Fpas.Build.Tasks/
     Fpas.Build.Tasks.csproj
+    Analysis/
     Documentation/
     Debugging/
     Incremental/
@@ -78,6 +89,7 @@ tests/
     Cli/
     Documentation/
     Execution/
+    Workspaces/
     Support/
   Fixtures/
 examples/
@@ -109,6 +121,8 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Compiler` | C# library for source handling, lexing/parsing, name binding, type checking, lowering, and direct CIL/metadata/PDB generation; optional XML API documentation |
 | `Fpas.Cli` | Command binding, compiler invocation, diagnostics, MCP debugger startup and exit status |
 | `Fpas.Debugging` | Official SDK MCP hosting/tools, thin DAP session client and owned external NetCoreDbg processes |
+| `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, immutable input capture, dependency preparation and compiler-backed project analysis |
+| `Fpas.Processes` | Shared Linux process-group/subreaper and Windows job ownership for debugger/build processes |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
@@ -142,7 +156,9 @@ Fpas.slnx groups the C# implementation projects, SDK packaging, and xUnit projec
 ProjectReference edges define their build dependencies; solution folders may group
 src, sdk, and tests without introducing separate solutions for each component.
 
-- Fpas.Cli references Fpas.Compiler and Fpas.Debugging as C# libraries.
+- Fpas.Cli references Fpas.Compiler, Fpas.Workspaces and Fpas.Debugging as C# libraries.
+- Fpas.Workspaces references the compiler, process ownership and official
+  SolutionPersistence library; MSBuild remains in owned SDK processes.
 - Fpas.Debugging uses the official MCP SDK and hosting packages; it has no
   dependency on Fpas.Compiler or Fpas.Core. NetCoreDbg is installed separately.
 - Fpas.Build.Tasks launches the matching Fpas.Cli in a separate process. Compiler

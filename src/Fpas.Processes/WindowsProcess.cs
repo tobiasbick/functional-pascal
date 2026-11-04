@@ -4,19 +4,27 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Fpas.Debugging.Processes;
+namespace Fpas.Processes;
 
-internal static class WindowsBackend
+internal static class WindowsProcess
 {
+    private static readonly object launchGate = new();
     internal sealed record Backend(Process Process, Stream Input, Stream Output, Stream Error, SafeFileHandle Job);
 
-    internal static Backend Start(string path, string cwd)
+    internal static Backend Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment)
+    {
+        // Child pipe endpoints must be closed before another owned launch can inherit handles.
+        lock (launchGate) return StartCore(path, arguments, cwd, environment);
+    }
+
+    private static Backend StartCore(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment)
     {
         var security = new SecurityAttributes { Length = Marshal.SizeOf<SecurityAttributes>(), Inherit = true };
         SafeFileHandle? inputRead = null, inputWrite = null, outputRead = null, outputWrite = null, errorRead = null, errorWrite = null;
         var job = CreateJobObject(IntPtr.Zero, null);
         ProcessInfo process = default;
         SafeFileHandle? processHandle = null, thread = null;
+        var environmentBlock = EnvironmentBlock(environment);
         try
         {
             Check(!job.IsInvalid);
@@ -33,8 +41,9 @@ internal static class WindowsBackend
                 Size = Marshal.SizeOf<StartupInfo>(), Flags = 0x100,
                 Input = inputRead.DangerousGetHandle(), Output = outputWrite.DangerousGetHandle(), Error = errorWrite.DangerousGetHandle()
             };
-            Check(CreateProcess(path, new StringBuilder('"' + path + "\" --interpreter=vscode"), IntPtr.Zero, IntPtr.Zero,
-                true, 0x08000004, IntPtr.Zero, cwd, ref startup, out process)); // suspended, no console
+            var commandLine = Quote(path) + " " + string.Join(' ', arguments.Select(Quote));
+            Check(CreateProcess(path, new StringBuilder(commandLine), IntPtr.Zero, IntPtr.Zero,
+                true, 0x08000404, environmentBlock, cwd, ref startup, out process)); // suspended, Unicode environment, no console
             processHandle = new SafeFileHandle(process.Process, ownsHandle: true);
             thread = new SafeFileHandle(process.Thread, ownsHandle: true);
             Check(AssignProcessToJobObject(job, processHandle));
@@ -49,7 +58,27 @@ internal static class WindowsBackend
             inputRead?.Dispose(); inputWrite?.Dispose(); outputRead?.Dispose(); outputWrite?.Dispose(); errorRead?.Dispose(); errorWrite?.Dispose();
             job.Dispose(); throw;
         }
-        finally { thread?.Dispose(); processHandle?.Dispose(); }
+        finally { thread?.Dispose(); processHandle?.Dispose(); if (environmentBlock != IntPtr.Zero) Marshal.FreeHGlobal(environmentBlock); }
+    }
+
+    private static IntPtr EnvironmentBlock(IReadOnlyDictionary<string, string>? overrides)
+    {
+        if (overrides is null) return IntPtr.Zero;
+        var variables = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (System.Collections.DictionaryEntry item in Environment.GetEnvironmentVariables()) variables[(string)item.Key] = (string)item.Value!;
+        foreach (var (key, value) in overrides) variables[key] = value;
+        return Marshal.StringToHGlobalUni(string.Concat(variables.Select(pair => pair.Key + "=" + pair.Value + '\0')) + '\0');
+    }
+
+    private static string Quote(string value)
+    {
+        var result = new StringBuilder("\""); var slashes = 0;
+        foreach (var c in value)
+        {
+            if (c == '\\') { slashes++; continue; }
+            result.Append('\\', c == '"' ? slashes * 2 + 1 : slashes).Append(c); slashes = 0;
+        }
+        return result.Append('\\', slashes * 2).Append('"').ToString();
     }
 
     private static void Check(bool success)

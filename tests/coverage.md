@@ -13,6 +13,10 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 
 | Area | Compiler/metadata tests | Execution and mixed-build tests |
 | --- | --- | --- |
+| Analysis without output, completion, cancellation and compile diagnostic parity | AnalysisTests, AnalysisDocumentationTests, AnalysisCancellationTests | Existing CLI/execution/SDK regressions exercise shared preparation |
+| Detached spans, symbols, flow/callable/generic identities and expression policies | SemanticSnapshotTests, SemanticConstructTests, SemanticPolicyTests | SemanticDocumentationTests |
+| Evaluated contexts, mapped/mixed graphs, generators, stale binaries and snapshots | | AnalysisContextTests, AnalysisPreparationTests, AnalysisCompatibilityTests, AnalysisBoundsTests, SourceQueryTests |
+| Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |
 | Numeric widths, promotions, checked/unchecked, native/decimal | ScalarDiagnosticsTests, ScalarMetadataTests | NumericExecutionTests, ScalarExecutionTests, MsBuildTests.Scalars |
 | Lifted nullable operators, explicit null safety and CLR eligibility | NullableOperatorDiagnosticsTests | MsBuildTests.NullableOperators (C# result/exception matrix, numeric widths, domains, generic calls, evaluation order and await), LanguageSpecificationTests (NullableArithmetic) |
@@ -47,9 +51,9 @@ Files live in [compiler tests](Fpas.Compiler.Tests/) and
 [integration tests](Fpas.IntegrationTests/). MsBuildTests uses topic-based partial
 files; the shared fixture owns packaging and process setup.
 
-Compiler files are grouped in Types, Routines, ControlFlow, and Metadata;
-integration files in Cli, Execution, Documentation, Debugging, and Build. Shared setup lives
-in each project's Support directory.
+Compiler files are grouped in Analysis, Types, Routines, ControlFlow, and Metadata;
+integration files in Cli, Execution, Documentation, Debugging, Build and Workspaces.
+Shared setup lives in each topic's Support directory.
 
 ## Behavioral checks
 

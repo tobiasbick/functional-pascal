@@ -8,6 +8,7 @@ the CLR provides execution, garbage collection, exceptions, and tasks.
 | --- | --- |
 | [Repository layout](project-layout.md) | Projects, dependencies, SDK packaging, fixtures, and applications |
 | [Compiler pipeline](compiler.md) | Source/reference inputs, binding, emission, compiler API, and output publication |
+| [Project analysis](workspaces.md) | Evaluated contexts, dependency preparation, immutable snapshots and source queries |
 | [Closures](closures.md) | Captured values/cells, lexical environments, and generic parameter translation |
 | [Async and cleanup](async-and-cleanup.md) | Resumable control flow, reference lifetimes, contracts, and disposal |
 | [Debug information](debug-information.md) | Portable symbols, source scopes, generated methods, and async stepping |

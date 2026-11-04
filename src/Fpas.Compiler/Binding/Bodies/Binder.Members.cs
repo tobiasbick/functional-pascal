@@ -20,7 +20,11 @@ internal sealed partial class Binder
         var path = TypePath(expression);
         if (path is null || HasValue(path[0].Name.Text)) return null;
         if (path.Count == 1 && path[0].Arguments is null && TypeParameters.TryGetValue(path[0].Name.Text, out var parameter))
-            return new ClrTypeImport(parameter.Type);
+        {
+            var target = new ClrTypeImport(parameter.Type);
+            catalog.Analysis?.TypePart(unit, path[0].Name, target, first: true);
+            return target;
+        }
         if (expression is MemberSyntax member)
         {
             var prefix = StaticTarget(member.Receiver, allowOpenGeneric: true);

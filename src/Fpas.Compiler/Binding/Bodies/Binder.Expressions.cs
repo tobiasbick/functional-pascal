@@ -11,6 +11,14 @@ internal sealed partial class Binder
 {
     private BoundExpression BindExpression(ExpressionSyntax expression, bool check = true, TypeSymbol? expected = null)
     {
+        var result = BindExpressionCore(expression, check, expected);
+        catalog.Analysis?.Expression(source, expression, result);
+        return result;
+    }
+
+    private BoundExpression BindExpressionCore(ExpressionSyntax expression, bool check, TypeSymbol? expected)
+    {
+        source.CheckCancellation();
         check &= arithmeticChecked;
         if (bindingContract && expression is CallSyntax or NewSyntax or NewArraySyntax or ArrayLiteralSyntax or LambdaSyntax or WithSyntax or ArgumentModeSyntax or AwaitSyntax)
             throw source.Error("FP3027", "Calls, construction, and lambdas are forbidden in contract conditions.", expression.Position);

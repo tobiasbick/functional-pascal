@@ -1,6 +1,5 @@
 using Fpas.Compiler.Lowering.Async;
 using Fpas.Compiler.Binding.Symbols;
-using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Bound;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -37,7 +36,7 @@ internal sealed class AssemblyLayout
     internal Dictionary<ScalarSymbol, TypeDefinitionHandle> ScalarOwners { get; } = [];
     internal Dictionary<string, TypeDefinitionHandle> Containers { get; } = new(StringComparer.Ordinal);
 
-    internal AssemblyLayout(BoundCompilation program, ReferenceCatalog references)
+    internal AssemblyLayout(BoundCompilation program, IReadOnlyDictionary<BoundRoutine, AsyncPlan> asyncPlans)
     {
         Closures = program.Units.SelectMany(unit => unit.Closures).OrderBy(closure => closure.Id).ToArray();
         Unions = program.Units.SelectMany(unit => unit.Unions).ToArray();
@@ -93,7 +92,7 @@ internal sealed class AssemblyLayout
             {
                 if (!routine.Symbol.IsAsync) return;
                 var machine = new AsyncMachineSymbol(routine, closure, Machines.Count, parentName);
-                AsyncPlans.Add(machine, AsyncLowering.Lower(routine, references));
+                AsyncPlans.Add(machine, asyncPlans[routine]);
                 Machines.Add(machine); AsyncRoutines.Add(routine, machine); AsyncOwners.Add(machine, parent);
                 AsyncTypes.Add(machine, MetadataTokens.TypeDefinitionHandle(type++));
                 AsyncConstructors.Add(machine, MetadataTokens.MethodDefinitionHandle(method++));

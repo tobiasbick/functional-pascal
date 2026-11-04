@@ -25,10 +25,17 @@ IDE debugging is complete. The [MCP agent debugger](debugger/README.md) is
 implemented; Windows/agent-host acceptance remains in
 [debugger gaps](debug-gap.md).
 
+Implementation of the shared analysis basis, project-aware `check`, and
+`query definition`, `query type`, and `query refs` is selected in the
+[source-analysis plan](source-analysis/README.md). Project contexts, check and the
+three source queries are implemented on Linux; Windows acceptance remains.
+Other entries in this inventory are not selected by that plan.
+
 ## Current CLR support
 
-The [CLI](../../src/Fpas.Cli/CliApplication.cs) exposes `compile` and stdio MCP
-`debug`, generated command help and root `--version`. Compilation accepts explicit sources, stdin, assembly references,
+The [CLI](../../src/Fpas.Cli/CliApplication.cs) exposes `compile`, project-aware
+`check`, source `query` and stdio MCP `debug`, generated command help and root
+`--version`. Compilation accepts explicit sources, stdin, assembly references,
 executable/library output, portable symbols, optional XML API documentation,
 warning policy, JSON diagnostics, and JSON response files. Argument parsing and
 generated help use `System.CommandLine` with the command definition in
@@ -40,10 +47,11 @@ and mixed `.slnx` solutions through MSBuild. Generated executable DLLs run throu
 have existing implementation and coverage. FPAS commands wrapping those
 operations are missing.
 
-The compiler API performs parsing, binding, and emission in one public operation.
-It returns program bytes and diagnostics. A public analysis result suitable for
-source queries, editor services, and refactorings is missing. A successful
-check-only operation cannot currently return without assembly emission.
+The compiler API exposes Compile and Analyze over shared semantic preparation.
+Analyze returns completion, diagnostics and a detached semantic snapshot without
+assembly emission. Workspaces loads evaluated project/solution contexts through
+the SDK. Definition/type/refs consume the shared index; editor sessions and
+refactoring remain missing.
 
 ## Command inventory
 
@@ -59,12 +67,12 @@ define the comparison scope.
 | `init workspace` | Missing solution scaffold command. A `.slnx` containing an application and a referenced library could replace the old workspace manifest. These three variants form one command group. |
 | `build` | Missing FPAS frontend for the existing MSBuild build path. Old `.fpascu` and `.fpascp` outputs have CLR assembly equivalents. Native application packaging is a separate gap below. |
 | `run` | Missing source/project/solution discovery, build-and-launch handling, and direct assembly execution. Arguments, standard streams, cancellation, working directory, and child exit status need a command contract. |
-| `check` | Missing analysis-only command and compiler API mode. Project references may still need restore or dependency compilation to supply metadata. `--fix` has additional gaps below. |
+| `check` | Implemented for explicit project/solution contexts, including text/JSON diagnostics and preparation/coverage reporting. Windows acceptance remains open. `--fix` has additional gaps below. |
 | `debug` | Implemented MCP stdio server with official SDK and external NetCoreDbg. Remaining Windows/agent-host acceptance: [debugger gaps](debug-gap.md). |
 | `test` | Missing FPAS test-program discovery and runner. Existing C# toolchain tests run with `dotnet test`; this does not provide the old FPAS test-program workflow. |
 | `fmt` | Missing formatter for the current CLR language. Its parser/formatter needs to preserve comments and source meaning. Old Rust formatting rules cannot establish correctness for the new syntax. |
 | `doc` | Missing declaration lookup and signature/documentation output. Source documentation and CLR metadata are available inputs; consuming referenced assemblies' XML documentation needs tooling. Existing XML generation is not a `doc` lookup command. |
-| `query` | Missing semantic source-query frontend and common analysis service. All seven Rust subcommands are listed below. |
+| `query` | Definition/type/refs are implemented over complete evaluated contexts. Find/inspect/callers/callees remain missing; all seven subcommands are listed below. |
 | `refactor` | Missing checked source-edit preparation and application. All five Rust subcommands are listed below. |
 | `env --json` | Missing installation report covering compiler, FPAS SDK, .NET, and any available language-server/debugger tools. The old adjacent source-standard-library field has no direct CLR equivalent. |
 | `stdlib stage` | Its VM-specific purpose does not carry over. CLR distribution uses SDK/support packages, assemblies, and NuGet dependencies. Reintroducing a `Std.*` catalog is outside the CLR design. |
@@ -77,8 +85,8 @@ Command and ordinary option short aliases remain unselected.
 
 The Rust project/workspace formats were `.fpasprj` and `.fpasworkspace`. CLR
 projects use `.fpasproj` and `.slnx`. A common way to load evaluated project
-sources, references, configurations, and output paths is missing from the CLI.
-MSBuild already owns that information and dependency graph.
+sources, references and configurations is implemented through Fpas.Workspaces
+and SDK export targets. MSBuild owns that information and dependency graph.
 
 Possible inputs discussed for the CLI include a source file, project, solution,
 and built assembly. For example, `fpas build App.slnx` and `fpas run App.slnx`
@@ -101,23 +109,22 @@ selection rule would be additional tooling.
 ## Source queries and refactorings
 
 The Rust [query parser and help](https://github.com/tobiasbick/functional-pascal/blob/0a4bc134ee71b5f922ebd0b1157ab55244bef657/crates/fpas-cli/src/cli_input/query.rs)
-expose these seven operations. Every CLR command is missing.
+expose these seven operations. Three CLR operations are implemented.
 
 | Subcommand | Missing capability |
 | --- | --- |
 | `query find` | Search checked declarations in an explicit project/solution context. |
 | `query inspect` | Return a declaration's signature, source implementation, and directly relevant types. |
-| `query refs` | Find resolved uses and distinguish them from the declaration. |
-| `query definition` | Resolve a use to its defining source identifier or external metadata identity. |
-| `query type` | Report a checked expression or declaration's static type. |
+| `query refs` | Implemented with explicit FPAS scope, roles, deterministic ordering and bounded results. |
+| `query definition` | Implemented with source declarations and exact external metadata identities. |
+| `query type` | Implemented with exact extents, checked/declared types and structured descriptors. |
 | `query callers` | Describe incoming direct calls, callable-value uses, and unresolved dynamic targets. |
 | `query callees` | Describe outgoing calls owned by one selected source body. |
 
-These queries need reusable symbol identities, source ranges, reference indexes,
-and accessible binding results. Analysis coverage, ambiguous names, coordinate
-conventions, incomplete input, and dynamic-call limitations need explicit
-results. Static inspection cannot promise every runtime target of a delegate,
-interface, or virtual call.
+The implemented queries share semantic snapshots, exact ranges, project ownership
+and explicit completeness/truncation results. Static inspection identifies the
+checked declaration; it does not predict runtime delegate/interface dispatch.
+Additional query operations remain separate work.
 
 The Rust [refactoring commands](https://github.com/tobiasbick/functional-pascal/blob/0a4bc134ee71b5f922ebd0b1157ab55244bef657/crates/fpas-cli/src/cli_input/refactor/help.rs)
 expose these five operations. Every CLR command is missing.
@@ -130,11 +137,9 @@ expose these five operations. Every CLR command is missing.
 | `refactor organize-imports` | Remove safe unused imports and organize them while preserving aliases, comments, and initialization effects. |
 | `refactor apply` | Revalidate a prepared plan against current inputs and apply its exact changes, with stale-plan and publication results. |
 
-A shared analysis service is a possible common dependency for `check`, `doc`,
-`query`, refactoring preparation, and a language server. That service is missing;
-this inventory does not select its API or implementation. Source-edit plans and
-revalidation are also absent. Adding these tools does not require inventing new
-FPAS language syntax.
+The shared compiler/workspace analysis service is implemented for check and the
+three selected queries. Doc lookup, source-edit planning/application and a language
+server remain missing. These tools do not require new FPAS syntax.
 
 ## Debugger and agent inspection
 
@@ -177,7 +182,7 @@ For completeness, the Rust benchmark tool's native drivers were
 | `init --path`, library `--unit`, `--dry-run`, `--report json` | Missing scaffold path/name selection, file-plan preview, and structured results. The old command preserved existing files and accepted an unchanged repeated invocation. CLR scaffold behavior has no contract yet. |
 | `build --executable`, `--name` | Publishing/apphost support is outside the current FPAS SDK scope. .NET self-contained and single-file publishing are possible equivalents. NativeAOT is a separate compatibility question. |
 | `check --fix` | Diagnostics currently carry code, message, location, and severity, without machine-applicable edit data. Fix production, edit ownership, bounded rechecking, and publication are missing. |
-| Query selectors, `--symbol`, `--target-ref`, `--context`, `--limit`, `--timeout` | Missing project-aware symbol selection, bounded analysis, durable target references, and completeness results. |
+| Query selectors, `--symbol`, `--target-ref`, `--context`, `--limit`, `--timeout` | Explicit project/solution context plus file/line/column and optional owning project are implemented, with timeout/refs limits and coverage. Durable symbol handles and additional selectors are not selected. |
 | Refactor `--name`, `--type`, `--mode`, `--argument`, `--range`, `--out`, `--plan` | Missing typed fragment/range validation, source-edit plan output, and explicit plan application. Context selection and analysis deadlines are also absent. |
 | `run --profile`, `debug --profile` | .NET tracing/profiling can supply observations, but there is no FPAS collection/summary command. VM instruction, scheduler, and runtime-phase counters do not carry over unchanged. |
 | `run --failure-dump` | No structured FPAS runtime-failure report command. Exception/source stacks are a starting point; local values from arbitrary frames need debugger or dump analysis. A generic process launcher cannot recover them from stderr. |
@@ -193,7 +198,7 @@ For completeness, the Rust benchmark tool's native drivers were
 | Debug `--protocol dap` | DAP is internal to the NetCoreDbg client. The public transport is stdio MCP; no protocol-selection flag is needed. |
 | Debug `--protocol jsonl`, `--commands` | JSONL sessions are not selected; command-file/batch execution is blocked. |
 | Debug `--trace`, `--trace-limit`, `--task`, `--source-root` | Old trace/task/source-image contracts are not automatically CLR capabilities. Tracepoints, assembly/PDB/source matching, and CLR thread contexts remain backend-dependent gaps. |
-| JSON diagnostics and reports | `compile --diagnostics json` already returns one structured result. Other command reports, consistent failure output, and coverage/truncation fields are missing. Rust JSONL diagnostics and schemas are not automatically supported. |
+| JSON diagnostics and reports | Compile/check JSON and JSON-only source-query envelopes are implemented, including failures, coverage and query truncation. General reports and Rust JSONL schemas are not automatically supported. |
 | Help, version, response files, and program arguments after `--` | Generated root/compile help, help aliases, root version output, JSON compile response files, and literal compile source paths after `--` exist. Program-argument forwarding and behavior for future commands remain missing. |
 
 .NET provides [single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)
@@ -220,8 +225,8 @@ references are covered by CLI execution tests. Argument errors retain exit code
 The project SDK packages the parser assembly and its localized resources with
 the compiler.
 
-This integration does not supply the missing MSBuild commands, semantic query
-services or general report schemas. Future commands still need explicit forwarding,
+This integration does not supply the remaining MSBuild frontend commands or general
+report schemas. Future commands still need explicit forwarding,
 cancellation, completion, and protocol-stream behavior; distribution/AOT
 acceptance remains in [distribution gaps](dist-gap.md).
 

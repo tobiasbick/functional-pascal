@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Xml.Linq;
 using Fpas.Tests.Support;
 
@@ -17,6 +18,10 @@ public sealed class SdkPackageFixture : IAsyncLifetime
             "-p:PackageVersion=" + Version], timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
         Assert.True(File.Exists(Path.Combine(Feed, $"Fpas.NET.Sdk.{Version}.nupkg")));
+        using var archive = ZipFile.OpenRead(Path.Combine(Feed, $"Fpas.NET.Sdk.{Version}.nupkg"));
+        foreach (var name in new[] { "Fpas.Cli.dll", "Fpas.Workspaces.dll", "Fpas.Processes.dll", "Microsoft.VisualStudio.SolutionPersistence.dll" })
+            Assert.Single(archive.Entries, entry => Path.GetFileName(entry.FullName) == name);
+        Assert.DoesNotContain(archive.Entries, entry => Path.GetFileName(entry.FullName) is "Microsoft.Build.dll" or "Microsoft.Build.Framework.dll" or "Microsoft.Build.Utilities.Core.dll");
     }
 
     internal TemporaryDirectory CreateProject()

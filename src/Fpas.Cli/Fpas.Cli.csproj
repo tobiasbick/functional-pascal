@@ -5,6 +5,7 @@
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
     <ProjectReference Include="../Fpas.Compiler/Fpas.Compiler.csproj" />
+    <ProjectReference Include="../Fpas.Workspaces/Fpas.Workspaces.csproj" />
     <ProjectReference Include="../Fpas.Core/Fpas.Core.csproj" />
     <ProjectReference Include="../Fpas.Debugging/Fpas.Debugging.csproj" />
   </ItemGroup>

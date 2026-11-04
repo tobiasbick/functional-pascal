@@ -41,6 +41,7 @@ internal sealed partial class Binder
 
     private BoundStatement BindStatement(StatementSyntax statement)
     {
+        source.CheckCancellation();
         switch (statement)
         {
             case SubscriptionSyntax subscription: return BindSubscription(subscription);
@@ -68,6 +69,7 @@ internal sealed partial class Binder
                 else if (assignment.Target is MemberSyntax member) target = BindMember(member, writing: true);
                 else if (assignment.Target is IndexSyntax index) target = BindIndex(index, check: true, writing: true);
                 else throw source.Error("FP3009", "Assignment requires writable storage.", assignment.Position);
+                catalog.Analysis?.Expression(source, assignment.Target, target, "write");
                 var assigned = BindExpression(assignment.Value, expected: target.Type);
                 var converted = Convert(assigned, target.Type, assignment.Value.Position);
                 if (target is BoundLocal assignedLocal) UpdateFact(assignedLocal.Local, assigned);

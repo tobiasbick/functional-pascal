@@ -42,6 +42,7 @@ internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatal
 
     private int Block(Context context, AsyncExit exit, params BoundStatement[] statements)
     {
+        source.CheckCancellation();
         var id = plan.Blocks.Count;
         plan.Blocks.Add(new(id, context.Exception, exit, statements));
         return id;
@@ -61,6 +62,7 @@ internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatal
 
     private int Statement(BoundStatement statement, int next, Context context)
     {
+        source.CheckCancellation();
         switch (statement)
         {
             case BoundSequencePoint point:

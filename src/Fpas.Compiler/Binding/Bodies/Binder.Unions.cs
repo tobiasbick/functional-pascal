@@ -13,6 +13,8 @@ internal sealed partial class Binder
     {
         if (member.Fields.Count == 0) throw source.Error("FP3023", "A fieldless union case is a value property and has no parentheses.", position);
         var (bindings, values) = BindDataArguments(arguments, member.Fields.Select(field => (field.Name, field.Type, (ImportedMethod?)null)).ToArray(), check, position, bound);
+        foreach (var argument in arguments.OfType<NamedArgumentSyntax>())
+            catalog.Analysis?.NamedProperty(source, argument.Name, member.Fields.Single(field => field.Name == argument.Name.Text).Getter, "argument");
         ForgetCapturedFacts();
         return new BoundSequence(bindings, new BoundCall(member.Factory, values));
     }

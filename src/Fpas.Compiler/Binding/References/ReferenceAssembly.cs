@@ -10,10 +10,15 @@ internal sealed class ReferenceAssembly : IDisposable
     private readonly PEReader image;
     internal MetadataReader Reader { get; }
     internal AssemblyIdentity Identity { get; }
+    internal string Path { get; }
+    internal string? ContentHash { get; }
 
-    internal ReferenceAssembly(string path)
+    internal ReferenceAssembly(string path, bool captureFingerprint = false)
     {
-        image = new PEReader(new MemoryStream(File.ReadAllBytes(path), writable: false));
+        var bytes = File.ReadAllBytes(path);
+        Path = System.IO.Path.GetFullPath(path);
+        ContentHash = captureFingerprint ? Convert.ToHexString(SHA256.HashData(bytes)) : null;
+        image = new PEReader(new MemoryStream(bytes, writable: false));
         try
         {
             if (!image.HasMetadata)

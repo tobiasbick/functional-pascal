@@ -17,6 +17,7 @@ internal static class AsyncLiveness
             changed = false;
             foreach (var block in plan.Blocks.AsEnumerable().Reverse())
             {
+                source.CheckCancellation();
                 var live = Successors(block).Where(target => target >= 0).SelectMany(target => incoming[target]).ToHashSet();
                 outgoing[block.Id] = live.ToHashSet();
                 switch (block.Exit)

@@ -16,7 +16,18 @@ internal sealed class Lexer(SourceText source)
          "when where while with and xor as uses class struct cast typeof unchecked").Split(' '), StringComparer.Ordinal);
 
     private int position;
-    private char Current => position < source.Text.Length ? source.Text[position] : '\0';
+    private int nextCancellationCheck;
+    private char Current
+    {
+        get
+        {
+            if (position >= nextCancellationCheck)
+            {
+                source.CheckCancellation(); nextCancellationCheck = position + 1024;
+            }
+            return position < source.Text.Length ? source.Text[position] : '\0';
+        }
+    }
     private char Peek => position + 1 < source.Text.Length ? source.Text[position + 1] : '\0';
 
     internal IReadOnlyList<Token> ReadTokens()

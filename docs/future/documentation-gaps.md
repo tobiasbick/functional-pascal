@@ -29,7 +29,7 @@ prepared environment. No separate FPAS benchmark command is selected.
 Remaining guidance covers:
 
 - Agent-host MCP registration, NetCoreDbg installation and a real launch,
-  breakpoint, value inspection, step and stop through the planned
+  breakpoint, value inspection, step and stop through the
   [MCP tools](debugger/mcp-debug.md), including cancellation and cleanup.
 - CPU stacks, allocation/GC observations and controlled failure dumps with
   selected .NET tools; keep profiled and unprofiled measurements separate.

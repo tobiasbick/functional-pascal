@@ -1,8 +1,6 @@
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Declarations;
 using Fpas.Compiler.Binding.Bound;
-using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 using Fpas.Compiler.Syntax;
 
@@ -13,7 +11,7 @@ internal sealed class DocumentationWriter
     private readonly List<XElement> members = [];
     private readonly List<CompilerDiagnostic> diagnostics = [];
 
-    internal static (byte[] Image, IReadOnlyList<CompilerDiagnostic> Diagnostics) Write(SourceCatalog catalog, BoundCompilation compilation, string assemblyName)
+    internal static DocumentationModel Analyze(SourceCatalog catalog, BoundCompilation compilation)
     {
         var writer = new DocumentationWriter();
         foreach (var unit in catalog.Units) writer.Unit(unit);
@@ -24,16 +22,12 @@ internal sealed class DocumentationWriter
         foreach (var unit in compilation.Units)
             foreach (var routine in unit.Closures.SelectMany(closure => closure.NestedBodies))
                 writer.Routine(catalog.Units.Single(source => source.Syntax.Name.Text == unit.Name), routine.Symbol, false);
-        var document = new XDocument(new XDeclaration("1.0", "utf-8", null), new XElement("doc",
-            new XElement("assembly", new XElement("name", assemblyName)),
-            new XElement("members", writer.members.OrderBy(member => (string)member.Attribute("name")!, StringComparer.Ordinal))));
-        using var stream = new MemoryStream();
-        using (var xml = XmlWriter.Create(stream, new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = true, NewLineChars = "\n", NewLineHandling = NewLineHandling.None })) document.Save(xml);
-        return (stream.ToArray(), writer.diagnostics);
+        return new(writer.members, writer.diagnostics);
     }
 
     private void Unit(SourceUnit unit)
     {
+        unit.Source.CheckCancellation();
         var name = unit.Syntax.Name.Text;
         Add(unit.Source, unit.Syntax.Documentation, "T:" + name, [], [], false);
         foreach (var method in unit.Routines.Values.SelectMany(group => group)) Routine(unit, method, method.IsPublic);
@@ -84,9 +78,10 @@ internal sealed class DocumentationWriter
         bool returnsAllowed, bool parametersAllowed = false)
     {
         if (documentation is null) return;
+        source.CheckCancellation();
         Dictionary<string, string> Names(IReadOnlyList<Token> tokens) => tokens.ToDictionary(token => source.Text.Substring(token.Position, token.Length), token => token.Text, StringComparer.Ordinal);
         var content = StructuredDocumentation.Parse(documentation, Names(parameters), Names(typeParameters), parametersAllowed, typeParameters.Count != 0, returnsAllowed,
-            (message, position) => diagnostics.Add(new("FP6001", message, source.Location(position), DiagnosticSeverity.Warning)));
+            (message, position) => diagnostics.Add(new("FP6001", message, source.Location(position), DiagnosticSeverity.Warning)), source.CancellationToken);
         if (id is not null) members.Add(new("member", new XAttribute("name", id), content));
     }
 }

@@ -60,6 +60,7 @@ internal sealed partial class SourceCatalog
         {
             if (!scope.TryGetValue(clause.Parameter.Text, out var parameter) || !parameters.Contains(parameter) || !clauses.TryAdd(clause.Parameter.Text, clause))
                 throw unit.Source.Error("FP3026", "A where clause requires a declared type parameter and may appear only once per parameter.", clause.Parameter.Position);
+            Analysis?.TypePart(unit, clause.Parameter, new ClrTypeImport(parameter.Type), first: false);
             for (var index = 0; index < clause.Constraints.Count; index++)
             {
                 var constraint = clause.Constraints[index];

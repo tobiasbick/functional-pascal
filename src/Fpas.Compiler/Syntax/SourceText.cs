@@ -1,16 +1,20 @@
 namespace Fpas.Compiler.Syntax;
 
-internal sealed class SourceText(string path, string text)
+internal sealed class SourceText(string path, string text, CancellationToken cancellationToken = default)
 {
     internal string Path { get; } = path;
     internal string Text { get; } = text;
+    internal CancellationToken CancellationToken => cancellationToken;
+    internal void CheckCancellation() => cancellationToken.ThrowIfCancellationRequested();
 
     internal SourceLocation Location(int position, int length = 1)
     {
         var line = 1;
         var column = 1;
+        var nextCancellationCheck = 0;
         for (var index = 0; index < Math.Min(position, Text.Length); index++)
         {
+            if (index >= nextCancellationCheck) { CheckCancellation(); nextCancellationCheck = index + 1024; }
             if (Text[index] == '\r')
             {
                 if (index + 1 < position && Text[index + 1] == '\n')

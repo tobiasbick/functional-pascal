@@ -137,6 +137,8 @@ MSBuild resolves references first; the compiler binds the resulting metadata.
 | Restore | Resolve framework, PackageReference, ProjectReference, and compiler-support assets through standard restore infrastructure |
 | Build | Resolve dependencies and compile changed FPAS inputs to the selected output |
 | CoreCompile | Invoke the FPAS compiler with all selected sources, resolved references, and options; emit direct CIL/metadata/PDB and XML documentation when enabled |
+| FpasPrepareCompilation | Shared compiler-input preparation for CoreCompile and analysis; generators use BeforeTargets or FpasPrepareCompilationDependsOn |
+| FpasDescribeAnalysisContext / FpasExportAnalysisContext | Export versioned graph/evaluated source and resolved reference inputs for project analysis, without compiling the selected root |
 | Clean / Rebuild | Remove this project's generated artifacts; rebuild without stale compiler results |
 | GetTargetFrameworks | Expose framework information for standard project-reference negotiation, even for one target |
 | GetTargetPath | Return the actual produced assembly with metadata expected by reference-resolution targets |

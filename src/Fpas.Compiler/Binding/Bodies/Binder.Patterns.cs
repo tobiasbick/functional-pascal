@@ -55,6 +55,7 @@ internal sealed partial class Binder
                 if (!references.CanAssign(item.Type, type.NonNullable)) throw source.Error("FP3024", "The union case cannot match this selector type.", named.Position);
                 if (item.Fields.Count == 0 ? named.Fields is not null : named.Fields is null || named.Fields.Count != item.Fields.Count)
                     throw source.Error("FP3024", "A pattern must name every payload, using _ for ignored values; fieldless cases have no parentheses.", named.Position);
+                catalog.Analysis?.ResolvedMethod(source, named.Name.Parts[^1], item.Factory);
                 var fields = new MatchPattern?[item.Fields.Count];
                 var isNamed = named.Fields?.FirstOrDefault()?.Name is not null;
                 for (var index = 0; index < (named.Fields?.Count ?? 0); index++)
@@ -63,6 +64,7 @@ internal sealed partial class Binder
                     if ((field.Name is not null) != isNamed) throw source.Error("FP3024", "Do not mix named and positional payload patterns.", field.Pattern.Position);
                     var slot = field.Name is null ? index : item.Fields.ToList().FindIndex(candidate => candidate.Name == field.Name.Text);
                     if (slot < 0 || fields[slot] is not null) throw source.Error("FP3024", "Unknown or duplicate payload name.", field.Pattern.Position);
+                    if (field.Name is { } label) catalog.Analysis?.NamedProperty(source, label, item.Fields[slot].Getter, "argument");
                     fields[slot] = BindPattern(field.Pattern, item.Fields[slot].Type, bindings, names);
                 }
                 return new CaseMatch(item, fields.Select(field => field!).ToArray());

@@ -19,6 +19,7 @@ internal sealed partial class Binder
         var accessor = syntax.Subscribe ? contract?.Add : contract?.Remove;
         if (accessor is null || accessor.IsStatic != (receiver is null))
             throw source.Error("FP3034", "The selected event accessor is missing, inaccessible, unsupported, or requires a different receiver kind.", member.Name.Position);
+        catalog.Analysis?.Event(source, member.Name, accessor, accessor.Parameters[0]);
         return new BoundExpressionStatement(BindInvocation([accessor], [syntax.Handler], receiver, true, syntax.Position), false);
     }
 

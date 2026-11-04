@@ -22,7 +22,10 @@ internal sealed partial class Binder
     private BoundExpression Value(string name, int position, TypeSymbol? expected = null)
     {
         if (enumInitializer?.Members.FirstOrDefault(member => member.Name.Text == name) is { } enumMember)
+        {
+            catalog.Analysis?.EnumMemberUse(source, position, enumMember);
             return BoundNumber.Create(enumInitializer.Base, enumMember.Value);
+        }
         if (FindLocal(name) is { } local) return new BoundLocal(local, nonNull.Contains(local) ? local.Type.NonNullable : null);
         if (FindNested(name) is { } nested) return NestedDelegate(nested, expected, position);
         if (parameters.TryGetValue(name, out var parameter)) return new BoundParameter(parameter, nonNull.Contains(parameter) ? parameter.Type.NonNullable : null);
@@ -59,6 +62,7 @@ internal sealed partial class Binder
         var nested = new Binder(unit, catalog, references, this, symbol, recordContext) { arithmeticChecked = check };
         foreach (var import in imports) nested.imports.Add(import.Key, import.Value);
         var routine = new RoutineSymbol("<Invoke>", result, signature, false, false, -1, IsInstance: true, IsAsync: syntax.IsAsync);
+        catalog.Analysis?.Parameters(signature, syntax.Parameters, source);
         var body = syntax.Body ?? [new ReturnSyntax(syntax.Expression!.Position, syntax.Expression)];
         symbol.Body = nested.BindRoutine(routine, body, syntax.Position, syntax.Contracts);
         var value = new BoundLambda(symbol, NaturalDelegate(expected, signature.Select(parameter => parameter.SignatureType).ToArray(), result, syntax.Position, signature));
@@ -78,6 +82,7 @@ internal sealed partial class Binder
         if (value is BoundMethodGroup group)
         {
             var method = references.DelegateMethod(target, group.Methods);
+            if (method is not null) catalog.Analysis?.Retarget(group, method);
             return method is null ? null : new BoundMethodDelegate(method, method.IsStatic ? null : group.Receiver, target.NonNullable);
         }
         var (parameters, result) = DelegateShape(value);

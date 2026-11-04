@@ -43,12 +43,17 @@ internal sealed partial class SourceCatalog
                 }
                 else if (owner.Definition is not null)
                 {
-                    if (arguments is null && references.Alias(owner, segment.Name.Text) is { } alias) target = new ClrTypeImport(alias);
+                    if (arguments is null && references.Alias(owner, segment.Name.Text) is { } alias)
+                    {
+                        Analysis?.MetadataAliasUse(unit.Source, segment.Name, owner, alias);
+                        target = new ClrTypeImport(alias);
+                    }
                     else target = references.NestedType(owner, segment.Name, arguments, unit.Source, validate,
                         last ? inferredArity : 0, last && allowOpenGeneric);
                 }
                 else throw unit.Source.Error("FP3005", $"Type '{owner}' has no nested type '{segment.Name.Text}'.", segment.Name.Position);
             }
+            Analysis?.TypePart(unit, segment.Name, target, index == 0);
         }
         return target!;
 

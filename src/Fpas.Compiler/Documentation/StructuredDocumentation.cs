@@ -11,7 +11,8 @@ internal static class StructuredDocumentation
     private static readonly Regex ParameterItem = new("^- `([^`]+)`: *(.*)$", RegexOptions.CultureInvariant);
 
     internal static IReadOnlyList<XElement> Parse(DocumentationComment comment, IReadOnlyDictionary<string, string> parameters,
-        IReadOnlyDictionary<string, string> typeParameters, bool parametersAllowed, bool typeParametersAllowed, bool returnsAllowed, Action<string, int> warn)
+        IReadOnlyDictionary<string, string> typeParameters, bool parametersAllowed, bool typeParametersAllowed, bool returnsAllowed, Action<string, int> warn,
+        CancellationToken cancellationToken = default)
     {
         var sections = new List<Section>();
         var summary = new Section("summary", comment.Lines[0], [], true); sections.Add(summary);
@@ -19,6 +20,7 @@ internal static class StructuredDocumentation
         char fence = '\0'; var fenceLength = 0;
         foreach (var line in comment.Lines)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var fenced = fence != '\0';
             MarkdownXml.Fence(line.Text, ref fence, ref fenceLength);
             var heading = line.Text.TrimEnd();
@@ -35,6 +37,7 @@ internal static class StructuredDocumentation
         var result = new List<XElement>(); var remarks = new List<DocumentationLine>();
         foreach (var section in sections)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!section.Valid)
             {
                 Remarks(remarks, [section.Header, .. section.Lines]); continue;
@@ -53,13 +56,14 @@ internal static class StructuredDocumentation
 
         void Add(string element, IReadOnlyList<DocumentationLine> lines)
         {
-            if (lines.Any(line => !string.IsNullOrWhiteSpace(line.Text))) result.Add(new(element, MarkdownXml.Render(lines.Select(line => line.Text).ToArray())));
+            if (lines.Any(line => !string.IsNullOrWhiteSpace(line.Text))) result.Add(new(element, MarkdownXml.Render(lines.Select(line => line.Text).ToArray(), cancellationToken)));
         }
         void Items(Section section, IReadOnlyDictionary<string, string> names, string element)
         {
             var documented = new HashSet<string>(StringComparer.Ordinal);
             for (var index = 0; index < section.Lines.Count;)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (string.IsNullOrWhiteSpace(section.Lines[index].Text)) { index++; continue; }
                 var first = section.Lines[index++]; var match = ParameterItem.Match(first.Text);
                 var original = new List<DocumentationLine> { first };
@@ -82,7 +86,7 @@ internal static class StructuredDocumentation
                     Remarks(remarks, original); continue;
                 }
                 documented.Add(name);
-                result.Add(new(element, new XAttribute("name", names[name]), MarkdownXml.Render(description)));
+                result.Add(new(element, new XAttribute("name", names[name]), MarkdownXml.Render(description, cancellationToken)));
             }
         }
     }

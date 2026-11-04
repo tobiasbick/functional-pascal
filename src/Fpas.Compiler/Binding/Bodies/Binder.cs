@@ -27,6 +27,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
 
     internal BoundUnit Bind()
     {
+        source.CheckCancellation();
         var program = unit.Syntax;
         InitializeImports();
         var methods = new List<BoundRoutine>();
@@ -48,13 +49,17 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         {
             if (imports.ContainsKey(import.Alias.Text) || !targets.Add(import.Target.Text) || import.Alias.Text == "args")
                 throw source.Error("FP3004", "Import aliases must be unique; a type may be imported only once and 'args' is reserved.", import.Alias.Position);
-            imports.Add(import.Alias.Text, catalog.Resolve(import.Target.Text, import.Target.Position, source, references));
+            var target = catalog.Resolve(import.Target.Text, import.Target.Position, source, references);
+            imports.Add(import.Alias.Text, target);
+            catalog.Analysis?.Import(unit, import, target);
         }
     }
 
     private BoundRoutine BindRoutine(RoutineSymbol symbol, IReadOnlyList<StatementSyntax> body, int position, IReadOnlyList<ContractSyntax>? contracts = null)
     {
+        source.CheckCancellation();
         currentRoutine = symbol;
+        catalog.Analysis?.Routine(symbol, source);
         if (symbol.IsAsync && (symbol.Result.IsNullable || symbol.Result.Definition?.FullName is not ("System.Threading.Tasks.Task" or "System.Threading.Tasks.Task`1") || symbol.Parameters.Any(parameter => parameter.ByRef)))
             throw source.Error("FP3030", "Async functions return non-null Task or Task<T> and cannot have ref/out/in parameters.", position);
         locals.Clear();
@@ -94,6 +99,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             scopes.Count == 1 && parameters.ContainsKey(local.Name) || currentRoutine.IsEntryPoint && local.Name == "args" || recordContext is not null && local.Name == "self")
             throw source.Error("FP3004", $"Name '{local.Name}' is already bound or reserved.", position);
         scopes.Peek().Add(local.Name, local);
+        catalog.Analysis?.Local(local, source, position);
     }
 
     private BoundLocal Save(BoundExpression value, List<BoundBinding> bindings)

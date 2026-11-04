@@ -45,6 +45,7 @@ internal sealed partial class Binder
             {
                 if (!names.Add(assignment.Name.Text)) throw source.Error("FP3035", "Duplicate named attribute member.", assignment.Name.Position);
                 var member = references.AttributeMember(type, assignment.Name.Text, source, assignment.Name.Position);
+                catalog.Analysis?.AttributeMember(source, assignment.Name, member.Owner, member.Type, member.Field);
                 var value = BindExpression(assignment.Value, expected: member.Type);
                 assignments.Add(new(assignment.Name.Text, member.Type, AttributeConstant(value, member.Type, assignment.Value.Position), member.Field));
             }

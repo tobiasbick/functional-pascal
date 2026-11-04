@@ -2,6 +2,9 @@ namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser
 {
+    private ExpressionSyntax Extent(ExpressionSyntax expression, int start)
+        => expression with { SpanStart = start, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
+
     private static int Precedence(Token token) => token.Kind is not (TokenKind.Symbol or TokenKind.Keyword) ? 0 : token.Text switch
     {
         "??" => 1, "or" => 2, "xor" => 3, "and" => 4,
@@ -17,20 +20,22 @@ internal sealed partial class Parser
         {
             var op = tokens[position++];
             var precedence = Precedence(op);
-            if (op.Text == "is") { left = new TypeTestSyntax(left, ReadType()); continue; }
+            if (op.Text == "is") { left = Extent(new TypeTestSyntax(left, ReadType()), left.SpanStart); continue; }
             var right = ReadExpression(op.Text == "??" ? precedence : precedence + 1);
             if (precedence is 5 or 6 && (IsComparison(left) || IsComparison(right)))
                 throw source.Error("FP2003", "Comparisons cannot be chained; use parentheses or Boolean operators.", op.Position);
-            left = new BinarySyntax(left, op, right);
+            left = Extent(new BinarySyntax(left, op, right), left.SpanStart);
         }
         return left;
     }
 
     private ExpressionSyntax ReadUnary()
     {
-        if (At("await")) { var token = tokens[position++]; return new AwaitSyntax(token.Position, ReadUnary()); }
+        if (At("await")) { var token = tokens[position++]; return Extent(new AwaitSyntax(token.Position, ReadUnary()), token.Position); }
         if (At("+") || At("-") || At("not"))
-            return new UnarySyntax(tokens[position++], ReadUnary());
+        {
+            var token = tokens[position++]; return Extent(new UnarySyntax(token, ReadUnary()), token.Position);
+        }
         var start = Current.Position;
         if (At("unchecked"))
         {
@@ -38,7 +43,7 @@ internal sealed partial class Parser
             Expect("(");
             var operand = ReadExpression();
             Expect(")");
-            return ReadSuffix(new UncheckedSyntax(start, operand));
+            return ReadSuffix(Extent(new UncheckedSyntax(start, operand), start));
         }
         if (At("cast"))
         {
@@ -49,7 +54,7 @@ internal sealed partial class Parser
             Expect("(");
             var operand = ReadExpression();
             Expect(")");
-            return ReadSuffix(new CastSyntax(start, type, operand));
+            return ReadSuffix(Extent(new CastSyntax(start, type, operand), start));
         }
         return ReadPostfix();
     }
@@ -84,13 +89,14 @@ internal sealed partial class Parser
         }
         else if (Current.Kind == TokenKind.Identifier) expression = new NameExpressionSyntax(tokens[position++]);
         else throw source.Error("FP2003", $"Expected an expression; '{Current.Text}' is not supported here.", Current.Position, Current.Length);
-        return ReadSuffix(expression, allowWith);
+        return ReadSuffix(Extent(expression, start), allowWith);
     }
 
     private ExpressionSyntax ReadSuffix(ExpressionSyntax expression, bool allowWith = true)
     {
         while (At(".") || At("(") || At("[") || At("<") || allowWith && At("with"))
         {
+            var start = expression.SpanStart;
             if (At("with")) expression = ReadWith(expression);
             else if (At("."))
             {
@@ -108,6 +114,7 @@ internal sealed partial class Parser
                 expression = new GenericNameSyntax(expression, arguments);
             }
             else expression = new CallSyntax(expression, ReadArguments());
+            expression = Extent(expression, start);
         }
         return expression;
     }
@@ -136,7 +143,7 @@ internal sealed partial class Parser
                 if (Current.Kind == TokenKind.Identifier && position + 1 < tokens.Count && tokens[position + 1].Text == ":=")
                 {
                     var name = tokens[position++]; position++;
-                    arguments.Add(new NamedArgumentSyntax(name, ReadArgumentValue()));
+                    arguments.Add(Extent(new NamedArgumentSyntax(name, ReadArgumentValue()), name.Position));
                 }
                 else arguments.Add(ReadArgumentValue());
                 if (!At(",")) break;

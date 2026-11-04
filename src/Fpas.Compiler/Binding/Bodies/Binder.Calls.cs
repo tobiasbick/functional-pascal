@@ -27,7 +27,9 @@ internal sealed partial class Binder
                 if (imported.Unit.Globals.TryGetValue(member.Name.Text, out var global))
                 {
                     if (typeArguments is not null) throw source.Error("FP3003", "A delegate field does not take explicit method type arguments.", call.Position);
-                    return InvokeDelegate(GlobalValue(global, member.Position), call.Arguments, call.Position, check);
+                    var value = GlobalValue(global, member.Position);
+                    catalog.Analysis?.Expression(source, member, value);
+                    return InvokeDelegate(value, call.Arguments, call.Position, check);
                 }
                 return CallRoutine(AccessibleSource(imported.Unit, member.Name.Text, member.Position), call.Arguments, typeArguments, check, call.Position);
             }
@@ -47,7 +49,11 @@ internal sealed partial class Binder
             CheckRecordMember(owner, member.Name.Text, false, member.Position);
             RejectEventValue(owner, member.Name.Text, member.Name.Position);
             if (typeArguments is null && (references.Property(owner, member.Name.Text, receiver is null, recordContext, source, member.Name.Position) is not null || references.Field(owner, member.Name.Text, receiver is null) is not null))
-                return InvokeDelegate(BindClrMember(owner, receiver, member), call.Arguments, call.Position, check);
+            {
+                var value = BindClrMember(owner, receiver, member);
+                catalog.Analysis?.Expression(source, member, value);
+                return InvokeDelegate(value, call.Arguments, call.Position, check);
+            }
             var methods = references.Methods(owner, member.Name.Text, receiver is null, typeArguments, recordContext, includeOpen: typeArguments is null);
             if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, member.Name.Text, receiver is null, source, member.Name.Position);
             return BindInvocation(methods, call.Arguments, receiver, check, call.Position, inferGenerics: typeArguments is null,

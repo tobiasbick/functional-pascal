@@ -54,7 +54,7 @@ internal sealed partial class ReferenceCatalog
         return (AttributeTargets.All, false);
     }
 
-    internal (TypeSymbol Type, bool Field) AttributeMember(TypeSymbol owner, string name, SourceText source, int position)
+    internal (TypeSymbol Type, bool Field, TypeSymbol Owner) AttributeMember(TypeSymbol owner, string name, SourceText source, int position)
     {
         foreach (var type in Hierarchy(owner))
         {
@@ -65,7 +65,7 @@ internal sealed partial class ReferenceCatalog
                 if (reader.GetString(field.Name) != name) continue;
                 if ((field.Attributes & FieldAttributes.FieldAccessMask) == FieldAttributes.Public &&
                     !field.Attributes.HasFlag(FieldAttributes.Static) && !field.Attributes.HasFlag(FieldAttributes.InitOnly) && !field.Attributes.HasFlag(FieldAttributes.Literal) &&
-                    Field(type, name, false) is { } imported && AttributeType(imported.Type)) return (imported.Type, true);
+                    Field(type, name, false) is { } imported && AttributeType(imported.Type)) return (imported.Type, true, type);
                 throw source.Error("FP3035", "A named attribute field must be public, writable, instance, and have a legal attribute type.", position);
             }
             foreach (var handle in definition.Definition.GetProperties())
@@ -75,7 +75,7 @@ internal sealed partial class ReferenceCatalog
                 var setter = property.GetAccessors().Setter;
                 if (!setter.IsNil && (reader.GetMethodDefinition(setter).Attributes & MethodAttributes.MemberAccessMask) == MethodAttributes.Public &&
                     ReadMethod(type, setter) is { IsStatic: false, Result.Kind: TypeKind.Void, Parameters.Count: 1 } method &&
-                    !method.Parameter(0).ByRef && AttributeType(method.Parameters[0])) return (method.Parameters[0], false);
+                    !method.Parameter(0).ByRef && AttributeType(method.Parameters[0])) return (method.Parameters[0], false, type);
                 throw source.Error("FP3035", "A named attribute property requires a public instance setter, no indexes, and a legal attribute type.", position);
             }
         }

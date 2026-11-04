@@ -36,6 +36,7 @@ internal sealed class ParameterFlow(SourceText source, int position)
 
     private Paths Statement(BoundStatement statement, HashSet<ParameterSymbol> input)
     {
+        source.CheckCancellation();
         var state = input.ToHashSet();
         var result = new Paths();
         switch (statement)
@@ -153,6 +154,7 @@ internal sealed class ParameterFlow(SourceText source, int position)
 
     private void Expression(BoundExpression expression, HashSet<ParameterSymbol> state)
     {
+        source.CheckCancellation();
         switch (expression)
         {
             case BoundAwait awaited: Expression(awaited.Operand, state); break;

@@ -13,7 +13,7 @@ and ManagedPEBuilder from .NET.
 | Reference metadata | ReferenceCatalog uses PEReader/MetadataReader for identities, signatures, nullable annotations, forwarding, and accessibility |
 | Source declarations | SourceCatalog collects containers, types, and routine signatures before binding bodies |
 | Binding | Binder resolves names, overloads, constraints, inference, storage, nullable flow, coverage, and contracts; bound nodes and BoundTree provide the shared typed representation and traversal |
-| Lowering | Async plans retain typed operations, captured environments, protected regions, and resumable exits |
+| Preparation/lowering | PreparedCompilation owns validated source, reference metadata, bound operations and async plans, including liveness validation before emission |
 | Emission | AssemblyEmitter and BodyEmitter create CIL, metadata, optional portable symbols, and CLR entry points |
 | Documentation | DocumentationWriter derives optional XML from resolved declarations and emitted identities |
 
@@ -48,6 +48,60 @@ domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapp
 - CompiledProgram contains AssemblyImage, RuntimeConfiguration, optional
   PortablePdb, and optional XmlDocumentation. The API returns data; it does not
   publish files or deploy dependencies.
+- FpasCompiler.Analyze accepts an AnalysisRequest from Fpas.Compiler.Analysis
+  and returns AnalysisResult with IsComplete, Success, diagnostics and a detached
+  SemanticSnapshot on success. Its
+  success does not require a program image. It validates explicit sources and
+  references without producing assembly, PDB, runtime configuration or XML bytes.
+
+Compile and Analyze share PreparedCompilation: parsing, target/reference checks,
+declarations, binding, optional documentation validation and async lowering.
+The emitter consumes those prepared plans without rebinding or lowering again.
+Required support metadata, including generated domain helpers, is checked in
+preparation. Analysis preserves fail-fast diagnostics and warning policy. Project
+discovery belongs to [Fpas.Workspaces](workspaces.md).
+
+Analyze accepts a CancellationToken, observed during syntax, metadata, binding,
+flow, documentation and lowering work. Cancellation throws OperationCanceledException
+without publishing a successful result. Prepared metadata is disposed on all
+paths; returned diagnostics do not depend on live reference readers. Validation
+of documentation is separate from its XML serialization during compilation.
+
+## Semantic snapshots
+
+Parsing retains complete expression/type extents alongside diagnostic positions.
+Binding records actual declarations, overloads, types and explicit occurrences
+through Binding.Semantics. Analysis never resolves identifiers again from strings
+or indexes generated closure/async storage as source references. SemanticPolicy
+and its coverage test require an explicit policy for every expression form.
+
+SemanticSnapshot owns copied SourceDocument texts, source-local symbol IDs,
+SemanticSymbol/Type descriptors, SymbolOccurrence roles, ExpressionType facts and
+exact CLR exports. Collections are read-only and contain no bound symbols,
+metadata readers or open files. Metadata identities include assembly version,
+culture/token, actual reference content hash, declaring type, member kind, arity
+and signature. Extra export
+identities map generated public representations back to their source declarations.
+External definitions retain original CLR identities/signatures; their checked
+generic substitutions belong to expression/type facts, independently of use order.
+
+SourceSpan uses absolute project-input paths, UTF-16 offsets/lengths and one-based
+line/column positions. Direct API inputs retain the paths supplied by the caller.
+Spans are half-open; escaped identifiers include their source @. Original line
+endings and surrogate pairs are preserved. OccurrenceAt selects an identifier
+token; TypeAt selects the smallest indexed expression/type extent. Namespace
+selections have no fabricated value type.
+
+Types retain generic identity/substitutions, array rank, callable signatures,
+domain/enum distinctions, reference/value classification and nullability.
+ExpressionType separately identifies declared types when flow changes the checked
+type. Captures share the original binding identity. Symbols and type IDs are
+snapshot-scoped; a different input snapshot invalidates those handles. The
+fingerprint includes source contents, the actual copied reference bytes, compiler
+module identity and semantic policy. Failed analysis publishes no complete index.
+
+The [query layer](workspaces.md#source-queries) bridges prepared FPAS dependencies
+and supplies explicit project/solution coverage without executing user code.
 
 The API's debug/documentation switches default off. The CLI defaults to portable
 symbols and adds its matching Fpas.Core reference unless one is supplied. Direct

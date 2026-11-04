@@ -11,6 +11,7 @@ internal sealed record TypeSyntax(IReadOnlyList<TypeSegmentSyntax> Segments, boo
 {
     internal int Position => Segments[0].Name.Position;
     internal string Text => string.Join('.', Segments.Select(segment => segment.Name.Text));
+    internal int SpanEnd { get; init; }
 }
 
 internal sealed record CompilationUnitSyntax(NameSyntax Name, bool IsProgram, IReadOnlyList<ImportSyntax> Imports,
@@ -38,7 +39,11 @@ internal sealed record RepeatSyntax(int Start, Token Until, IReadOnlyList<Statem
 internal sealed record ForSyntax(int Start, Token Name, TypeSyntax Type, ExpressionSyntax Lower, ExpressionSyntax Upper,
     bool Descending, IReadOnlyList<StatementSyntax> Body) : StatementSyntax(Start);
 internal sealed record LoopExitSyntax(int Start, bool IsBreak) : StatementSyntax(Start);
-internal abstract record ExpressionSyntax(int Position);
+internal abstract record ExpressionSyntax(int Position)
+{
+    internal int SpanStart { get; init; } = Position;
+    internal int SpanEnd { get; init; }
+}
 internal sealed record LiteralSyntax(Token Token) : ExpressionSyntax(Token.Position);
 internal sealed record ParenthesizedSyntax(int Start, ExpressionSyntax Expression) : ExpressionSyntax(Start);
 internal sealed record NameExpressionSyntax(Token Name) : ExpressionSyntax(Name.Position);

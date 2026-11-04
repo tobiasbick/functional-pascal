@@ -1,10 +1,78 @@
-# Compiler CLI
+# Compiler and source analysis CLI
 
 The current CLI compiles FPAS sources into ordinary CLR libraries or executable
 DLLs. Project builds invoke the same compiler through the SDK. The `debug`
 command hosts [MCP agent debugging](../tools/debugging.md#agent-debugging-with-mcp)
 using a separately installed NetCoreDbg; inspect it with `fpas debug --help`.
 The CLI uses System.CommandLine for argument binding and generated help.
+
+## Check a project or solution
+
+`fpas check Game/Game.fpasproj` validates evaluated on-disk sources without
+publishing its own DLL, PDB, runtime configuration or XML documentation.
+Use an explicit `.fpasproj` or `.slnx`; source-level imports do not select projects.
+The selected SDK/compiler must match the CLI, and support the analysis targets.
+
+`fpas check Game.slnx --configuration Release --diagnostics json` produces one
+JSON document with project states (`checked`, `invalid`, `blocked`), diagnostics,
+coverage, snapshot identity and preparation side effects. Independent projects
+are checked even if another project fails.
+
+Preparation permits ordinary restore and dependency builds; those can write
+bin/obj artifacts and execute MSBuild tasks. `--no-restore` skips only restore.
+The checked root's existing outputs and successful-build fingerprint are
+preserved. Documentation/warning policy comes from the evaluated project.
+Custom source generation uses the SDK's shared
+[FpasPrepareCompilation target](../../build/msbuild.md#compiler-and-build-contract).
+
+Default diagnostics and the completion summary go to stderr. Check exits with
+0 for success, 1 for source/setup/timeout errors, 2 for invalid arguments or
+ambiguous project contexts, and 130 for cancellation. `--timeout` covers the
+whole operation, defaults to 120 seconds, and accepts 1..3600. Cancellation stops
+owned build processes. Changed inputs invalidate the result before publication.
+Linux is integration-tested; Windows acceptance remains open.
+
+## Query checked sources
+
+Use an explicit context and source position:
+
+```sh
+fpas check examples/units/Units.fpasproj
+fpas query definition examples/units/Units.fpasproj --file examples/units/main.fpas --line 6 --column 29
+fpas query type examples/units/Units.fpasproj --file examples/units/main.fpas --line 7 --column 21
+fpas query refs examples/units/Units.fpasproj --file examples/units/lib/calculations.fpas --line 8 --column 17 --limit 100
+```
+
+Query output is one JSON document, including argument/setup failures. Its status
+is ok, not_found, failed or cancelled. It contains context/configuration, snapshot
+identity, selected project/span, diagnostics, analyzed/searched/blocked coverage,
+preparation artifacts, binary boundaries and the typed result. No query executes
+the application, its initialization, imported attributes or getters.
+
+Paths resolve against the invocation directory. Lines/columns count original
+UTF-16 code units from one; tabs count as one and CR/LF/CRLF remain intact.
+Definition and refs select the containing identifier token, excluding its end
+position, whitespace and comments. Type selects the smallest indexed expression
+or type extent and returns checked/declared types, generic substitutions,
+nullability and callable signatures. Namespaces return not_found/not_typed.
+
+Definition follows the bound overload or static interface contract. Referenced
+FPAS declarations map through verified dependency builds; other .NET definitions
+carry exact metadata identities without a source path. Implicit args/self have
+no explicit declaration and return not_found/implicit_declaration.
+
+Refs excludes the declaration, comments, strings and generated storage. Results
+are deterministic and identify read, write, read_write, argument, type or namespace
+roles. The search covers analyzed FPAS projects in the explicit context; it does
+not promise unknown consumers, C#/F# source uses or runtime dispatch targets.
+Complete zero references differs from failed/incomplete analysis. The default
+limit is 100, range 1..1000; omitted results set truncated independently of coverage.
+
+Use `--project <owning.fpasproj>` when a source is included in several compilations.
+An ambiguous selection returns candidate project paths. Selection does not narrow
+the refs search scope. Configuration, no-restore, timeout and exit codes match
+check. Query responses are bounded to 4 MiB; oversized output returns result_limit
+as complete JSON. Source/input changes invalidate results before publication.
 
 ## Inspect and invoke the compiler
 

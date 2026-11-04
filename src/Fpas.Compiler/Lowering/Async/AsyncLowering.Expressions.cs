@@ -8,6 +8,7 @@ internal sealed partial class AsyncLowering
 {
     private int Expression(BoundExpression expression, Func<BoundExpression, int> next, Context context)
     {
+        source.CheckCancellation();
         if (!BoundTree.HasAwait(expression)) return next(expression);
         switch (expression)
         {

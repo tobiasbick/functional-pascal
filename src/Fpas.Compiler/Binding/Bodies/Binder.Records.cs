@@ -27,6 +27,8 @@ internal sealed partial class Binder
         if (!info.CanConstruct && (info.Type.Record is null || info.Type.Record != recordContext))
             throw source.Error("FP3011", "The record constructor is private; use a public factory.", syntax.Position);
         var (bindings, values) = BindDataArguments(syntax.Arguments, info.Fields.Select(field => (field.Name, field.Type, field.Default)).ToArray(), check, syntax.Position);
+        foreach (var argument in syntax.Arguments.OfType<NamedArgumentSyntax>())
+            catalog.Analysis?.NamedProperty(source, argument.Name, info.Fields.Single(field => field.Name == argument.Name.Text).Getter, "argument");
         ForgetCapturedFacts();
         return new BoundSequence(bindings, new BoundNew(info.Type, info.Constructor, values));
     }
@@ -45,6 +47,7 @@ internal sealed partial class Binder
             if (field is null || !names.Add(update.Name.Text)) throw source.Error("FP3022", "Unknown or duplicate record update.", update.Name.Position);
             if (!field.IsPublic && (info.Type.Record is null || info.Type.Record != recordContext))
                 throw source.Error("FP3011", $"Record field '{field.Name}' is private.", update.Name.Position);
+            catalog.Analysis?.NamedProperty(source, update.Name, field.Getter, "write");
             var value = Convert(BindExpression(update.Value, check, field.Type), field.Type, update.Value.Position);
             updates.Add((field, Save(value, bindings)));
         }

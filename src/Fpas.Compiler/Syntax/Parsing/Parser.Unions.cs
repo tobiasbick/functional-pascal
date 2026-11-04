@@ -97,8 +97,8 @@ internal sealed partial class Parser
             if (fields is null && At(".."))
             {
                 position++;
-                ExpressionSyntax lowerName = new NameExpressionSyntax(name.Parts[0]);
-                foreach (var part in name.Parts.Skip(1)) lowerName = new MemberSyntax(lowerName, part);
+                ExpressionSyntax lowerName = new NameExpressionSyntax(name.Parts[0]) { SpanEnd = name.Parts[0].Position + name.Parts[0].Length };
+                foreach (var part in name.Parts.Skip(1)) lowerName = new MemberSyntax(lowerName, part) { SpanStart = lowerName.SpanStart, SpanEnd = part.Position + part.Length };
                 return new RangePatternSyntax(lowerName, ReadUnary());
             }
             return new NamedPatternSyntax(name, fields);

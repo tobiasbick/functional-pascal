@@ -1,11 +1,5 @@
-using Fpas.Compiler.Syntax.Parsing;
+using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Emission.Metadata;
-using Fpas.Compiler.Binding.References;
-using Fpas.Compiler.Binding.Declarations;
-using Fpas.Compiler.Binding.Bound;
-using Fpas.Compiler.Binding.Bodies;
-using Fpas.Compiler.Syntax;
-using Fpas.Compiler.Documentation;
 
 namespace Fpas.Compiler;
 
@@ -35,32 +29,14 @@ public static class FpasCompiler
     public static CompilationResult Compile(CompilationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.AssemblyName);
-        ArgumentNullException.ThrowIfNull(request.Sources);
-        ArgumentNullException.ThrowIfNull(request.References);
         try
         {
-            var sources = request.Sources.OrderBy(input => input.Path, StringComparer.Ordinal).Select(input =>
-            {
-                var text = new SourceText(input.Path, input.Text);
-                return new SourceUnit(text, new Parser(text, new Lexer(text).ReadTokens()).ParseCompilationUnit());
-            }).ToArray();
-            ValidateTarget(sources, request.Target);
-            using var references = ReferenceCatalog.Open(request.References, sources[0].Source);
-            var catalog = SourceCatalog.Declare(sources, references);
-            var compilation = new BoundCompilation(references.Runtime, request.Target == CompilationTarget.Exe,
-                catalog.Units.Select(unit => new Binder(unit, catalog, references).Bind()).ToArray());
-            byte[]? documentation = null;
-            IReadOnlyList<CompilerDiagnostic> diagnostics = [];
-            if (request.EmitDocumentation)
-            {
-                var result = DocumentationWriter.Write(catalog, compilation, request.AssemblyName);
-                documentation = result.Image;
-                diagnostics = (request.DiagnosticOptions ?? new()).Apply(result.Diagnostics);
-                if (diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)) return new(null, diagnostics);
-            }
-            var output = AssemblyEmitter.Emit(compilation, request.AssemblyName, catalog.Units.Select(unit => unit.Source), references, request.EmitDebugInformation, request.Optimize);
-            return new(output with { XmlDocumentation = documentation }, diagnostics);
+            using var prepared = PreparedCompilation.Create(new(request.Sources, request.AssemblyName, request.References,
+                request.Target, request.EmitDocumentation, request.DiagnosticOptions), CancellationToken.None);
+            if (!prepared.Success) return new(null, prepared.Diagnostics);
+            var documentation = prepared.Documentation?.Serialize(request.AssemblyName);
+            var output = AssemblyEmitter.Emit(prepared, request.AssemblyName, request.EmitDebugInformation, request.Optimize);
+            return new(output with { XmlDocumentation = documentation }, prepared.Diagnostics);
         }
         catch (CompilationFailure failure)
         {
@@ -68,19 +44,26 @@ public static class FpasCompiler
         }
         catch (BadImageFormatException exception)
         {
-            return new(null, [new("FP4001", exception.Message, new(request.Sources.FirstOrDefault()?.Path ?? "<references>", 1, 1, 0))]);
+            return new(null, [InvalidReference(exception, request.Sources)]);
         }
     }
 
-    private static void ValidateTarget(IReadOnlyList<SourceUnit> sources, CompilationTarget target)
+    /// <summary>Validates explicit source/metadata inputs without generating PE, PDB or XML output.</summary>
+    public static AnalysisResult Analyze(AnalysisRequest request, CancellationToken cancellationToken = default)
     {
-        var programs = sources.Where(unit => unit.Syntax.IsProgram).ToArray();
-        if (sources.Count != 0 && (target == CompilationTarget.Exe && programs.Length == 1 || target == CompilationTarget.Library && programs.Length == 0))
-            return;
-        var invalid = programs.Skip(target == CompilationTarget.Exe ? 1 : 0).FirstOrDefault() ?? sources.FirstOrDefault();
-        throw (invalid?.Source ?? new SourceText("<compilation>", "")).Error("FP2004",
-            "Executable output requires exactly one program; library output requires one or more units and no program.", invalid?.Syntax.Name.Position ?? 0);
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            using var prepared = PreparedCompilation.Create(request, cancellationToken, collectSemantics: true);
+            cancellationToken.ThrowIfCancellationRequested();
+            return new(prepared.Success, prepared.Diagnostics, prepared.Success ? prepared.Analysis!.Finish() : null);
+        }
+        catch (CompilationFailure failure) { cancellationToken.ThrowIfCancellationRequested(); return new(false, [failure.Diagnostic]); }
+        catch (BadImageFormatException exception) { cancellationToken.ThrowIfCancellationRequested(); return new(false, [InvalidReference(exception, request.Sources)]); }
     }
+
+    private static CompilerDiagnostic InvalidReference(BadImageFormatException exception, IReadOnlyList<CompilationSource> sources)
+        => new("FP4001", exception.Message, new(sources.FirstOrDefault()?.Path ?? "<references>", 1, 1, 0));
 }
 
 internal sealed class CompilationFailure(CompilerDiagnostic diagnostic) : Exception(diagnostic.Message)

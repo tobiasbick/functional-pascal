@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>

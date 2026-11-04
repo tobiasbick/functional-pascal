@@ -9,8 +9,10 @@ internal sealed partial class ReferenceCatalog : IDisposable
     private readonly List<ReferenceAssembly> assemblies = [];
     private readonly Dictionary<string, List<ImportedType>> types = new(StringComparer.Ordinal);
     internal AssemblyIdentity Runtime { get; private set; } = null!;
+    internal IEnumerable<KeyValuePair<string, string>> InputFingerprints => assemblies.Select(assembly =>
+        new KeyValuePair<string, string>(assembly.Path, assembly.ContentHash ?? throw new InvalidOperationException("Reference fingerprints were not captured.")));
 
-    internal static ReferenceCatalog Open(IReadOnlyList<string> paths, SourceText source)
+    internal static ReferenceCatalog Open(IReadOnlyList<string> paths, SourceText source, bool captureFingerprints = false)
     {
         var catalog = new ReferenceCatalog();
         try
@@ -18,8 +20,9 @@ internal sealed partial class ReferenceCatalog : IDisposable
             var names = new HashSet<string>(StringComparer.Ordinal);
             foreach (var path in paths.Select(Path.GetFullPath).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
             {
+                source.CheckCancellation();
                 ReferenceAssembly assembly;
-                try { assembly = new(path); }
+                try { assembly = new(path, captureFingerprints); }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or BadImageFormatException)
                 {
                     throw source.Error("FP4001", $"Cannot read reference '{path}': {exception.Message}", 0);
@@ -29,6 +32,7 @@ internal sealed partial class ReferenceCatalog : IDisposable
                     throw source.Error("FP4002", $"Multiple references declare assembly '{assembly.Identity.Name}'.", 0);
                 foreach (var handle in assembly.Reader.TypeDefinitions)
                 {
+                    source.CheckCancellation();
                     var type = assembly.Reader.GetTypeDefinition(handle);
                     var ns = assembly.Reader.GetString(type.Namespace);
                     var name = assembly.Reader.GetString(type.Name);

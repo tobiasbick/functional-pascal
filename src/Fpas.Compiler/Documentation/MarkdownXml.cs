@@ -8,11 +8,12 @@ internal static class MarkdownXml
 {
     private static readonly Regex ListItem = new("^( *)([-+*] |[0-9]+[.)] )(.*)$", RegexOptions.CultureInvariant);
 
-    internal static IReadOnlyList<XNode> Render(IReadOnlyList<string> lines)
+    internal static IReadOnlyList<XNode> Render(IReadOnlyList<string> lines, CancellationToken cancellationToken = default)
     {
         var result = new List<XNode>();
         for (var index = 0; index < lines.Count;)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(lines[index])) { index++; continue; }
             char fence = '\0'; var length = 0;
             if (Fence(lines[index], ref fence, ref length))
@@ -24,7 +25,7 @@ internal static class MarkdownXml
                     if (Fence(line, ref fence, ref length) && fence == '\0') break;
                     code.Add(line);
                 }
-                result.Add(new XElement("code", Clean(string.Join('\n', code)))); continue;
+                result.Add(new XElement("code", Clean(string.Join('\n', code), cancellationToken))); continue;
             }
             var list = ListItem.Match(lines[index]);
             if (list.Success)
@@ -49,7 +50,7 @@ internal static class MarkdownXml
                         if (!line.StartsWith(new string(' ', indent), StringComparison.Ordinal)) break;
                         body.Add(line[indent..]); index++;
                     }
-                    element.Add(new XElement("item", new XElement("description", Render(body))));
+                    element.Add(new XElement("item", new XElement("description", Render(body, cancellationToken))));
                 }
                 result.Add(element); continue;
             }
@@ -60,7 +61,7 @@ internal static class MarkdownXml
                 if (Fence(lines[index], ref nextFence, ref nextLength)) break;
                 paragraph.Add(lines[index++].Trim());
             }
-            result.Add(new XElement("para", Inline(string.Join(' ', paragraph))));
+            result.Add(new XElement("para", Inline(string.Join(' ', paragraph), cancellationToken)));
         }
         if (result.Count == 1 && result[0] is XElement { Name.LocalName: "para" } only) return only.Nodes().ToArray();
         return result;
@@ -82,20 +83,22 @@ internal static class MarkdownXml
         fence = '\0'; length = 0; return true;
     }
 
-    private static IEnumerable<XNode> Inline(string text)
+    private static IEnumerable<XNode> Inline(string text, CancellationToken cancellationToken)
     {
         var plain = new StringBuilder();
         var nodes = new List<XNode>();
-        void Flush() { if (plain.Length != 0) { nodes.Add(new XText(Clean(plain.ToString()))); plain.Clear(); } }
+        var nextCancellationCheck = 0;
+        void Flush() { if (plain.Length != 0) { nodes.Add(new XText(Clean(plain.ToString(), cancellationToken))); plain.Clear(); } }
         for (var index = 0; index < text.Length;)
         {
+            if (index >= nextCancellationCheck) { cancellationToken.ThrowIfCancellationRequested(); nextCancellationCheck = index + 1024; }
             if (text[index] == '`')
             {
                 var count = 1; while (index + count < text.Length && text[index + count] == '`') count++;
                 var end = text.IndexOf(new string('`', count), index + count, StringComparison.Ordinal);
                 if (end >= 0)
                 {
-                    Flush(); nodes.Add(new XElement("c", Clean(text[(index + count)..end]))); index = end + count; continue;
+                    Flush(); nodes.Add(new XElement("c", Clean(text[(index + count)..end], cancellationToken))); index = end + count; continue;
                 }
             }
             if (text[index] == '[')
@@ -111,7 +114,7 @@ internal static class MarkdownXml
                     }
                     if (depth == 0)
                     {
-                        Flush(); nodes.Add(new XElement("see", new XAttribute("href", Clean(text[(labelEnd + 2)..end])), Inline(text[(index + 1)..labelEnd])));
+                        Flush(); nodes.Add(new XElement("see", new XAttribute("href", Clean(text[(labelEnd + 2)..end], cancellationToken)), Inline(text[(index + 1)..labelEnd], cancellationToken)));
                         index = end + 1; continue;
                     }
                 }
@@ -121,11 +124,15 @@ internal static class MarkdownXml
         Flush(); return nodes;
     }
 
-    private static string Clean(string text)
+    private static string Clean(string text, CancellationToken cancellationToken)
     {
         var result = new StringBuilder();
+        var remaining = 0;
         foreach (var rune in text.EnumerateRunes())
+        {
+            if (--remaining <= 0) { cancellationToken.ThrowIfCancellationRequested(); remaining = 1024; }
             result.Append(rune.Value is 9 or 10 or 13 or >= 0x20 and <= 0xD7FF or >= 0xE000 and <= 0xFFFD or >= 0x10000 and <= 0x10FFFF ? rune.ToString() : "\uFFFD");
+        }
         return result.ToString();
     }
 }

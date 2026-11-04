@@ -1,0 +1,87 @@
+# Evaluated project analysis
+
+Fpas.Workspaces supplies explicit project/solution contexts to check and source
+queries. It references Fpas.Compiler, Fpas.Processes and the official
+Microsoft.VisualStudio.SolutionPersistence library. The CLI does not load a
+private MSBuild runtime or another type checker. The compiler does not discover
+projects or depend on the workspace layer.
+
+## Context preparation
+
+WorkspaceLoader.LoadAsync accepts ContextOptions for an existing `.fpasproj` or
+`.slnx`, configuration and restore policy. SolutionPersistence reads solution
+structure, build inclusion and configuration mappings. Owned dotnet/MSBuild
+processes evaluate project references, imported settings and actual compiler
+inputs. The supported FPAS baseline is net10.0/AnyCPU with Exe or Library output.
+Foreign C#/F# edges may lead to other checked FPAS projects and supply metadata.
+
+The SDK exports a versioned typed JSON manifest through caller-owned scratch
+files. Its task uses the host SDK's MSBuild assemblies without loading the
+compiler into MSBuild. Missing targets, malformed data, incompatible compiler
+hashes and unsupported settings produce setup errors. The CLI and SDK must
+contain the same compiler; repack a development SDK after compiler changes.
+
+FpasPrepareCompilation shares reference resolution and generated-source hooks
+between CoreCompile and analysis. Use BeforeTargets=FpasPrepareCompilation or
+FpasPrepareCompilationDependsOn. Arbitrary Build/CoreCompile preparation hooks,
+ProjectReference AdditionalProperties, removal of solution context globals and
+multiple required configurations for one project are diagnosed explicitly.
+Configuration/platform mappings and standard property removal are evaluated by
+MSBuild, including mixed F# references.
+
+Default preparation restores and builds required dependencies. NoRestore skips
+restore only. It does not allow stale dependency metadata. Analysis does not
+build the selected root as a substitute for checking, publish its own assembly
+or modify its successful-build cache. A checked library may also be built as
+another project's dependency; those outputs are declared separately.
+Ordinary bin/obj files and MSBuild task execution are preparation side effects.
+
+## Input consistency and ownership
+
+WorkspaceContext contains immutable source/reference requests, graph edges,
+requested FPAS projects, preparation issues and dependency outputs. Sources are
+captured once. Content hashes cover sources, references, projects/imports,
+compiler/task assets and relevant restore/build proofs. Snapshot identity also
+includes target and semantic policies.
+
+Before a FPAS DLL is linked to checked source, its hash must match the successful
+build fingerprint for that dependency's current inputs. The same fingerprint
+calculation is used by compilation and export. Matching names/signatures alone
+cannot attach unrelated or stale binaries to source.
+
+Call VerifyInputsAsync before publishing answers. It checks captured content and
+reevaluates preparation to catch changed globs, imports and references. Changes
+produce inputs_changed; results are not silently retried or combined across
+snapshots. WorkspaceAnalysis analyzes dependencies in deterministic order,
+collects independent diagnostics and marks blocked projects explicitly.
+
+Each operation owns its processes and scratch directory. Fpas.Processes supplies
+Linux sessions/groups and subreaper cleanup, or suspended Windows process
+creation and a kill-on-close job. Build workers and compiler servers are disabled
+for analysis preparation. Cancellation stops and joins owned processes; retained
+stdout/stderr is bounded to 1 MiB and manifests to 16 MiB. Normal build artifacts
+are not deleted as scratch. Windows runtime acceptance remains
+[open](../future/source-analysis/README.md).
+
+## Source queries
+
+SourceQuery consumes a complete successful WorkspaceAnalysis. Explicit source
+positions select compiler facts from [semantic snapshots](compiler.md#semantic-snapshots).
+Linked files require an owning project when ambiguous. Definition/type return
+self-contained structured descriptors; refs searches all analyzed FPAS projects
+within the declared context, excluding declarations and generated occurrences.
+
+Public FPAS uses imported through DLLs map back through validated dependency
+outputs and exact CLR export identities. External .NET members retain metadata
+definitions without guessed source locations. Interface calls select their
+static contract. Implicit bindings such as args/self have types and references
+but no fabricated declaration; definition reports not_found for them.
+
+Reference results sort by project, path, offset and role. Output truncation is
+independent of successful scope analysis. Binary-only reference paths state the
+search boundary. A project context cannot claim callers in unknown consumers,
+and C#/F# sources are not part of the FPAS reference index.
+
+The [CLI reference](../pascal/program-structure/cli.md) owns selectors, JSON
+envelopes, exit codes, limits and examples. These services do not implement an
+editor session, unsaved buffers, a formatter, refactoring, LSP or query MCP tools.

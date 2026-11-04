@@ -39,7 +39,9 @@ internal sealed partial class SourceCatalog
         }
         if (!owner.Aliases.TryGetValue(name, out var alias)) return null;
         if (!alias.Syntax.IsPublic && access != owner) throw source.Error("FP3011", "The alias is private to its unit.", position);
-        return new ClrTypeImport(ResolveAlias(alias, references));
+        var target = ResolveAlias(alias, references);
+        Analysis?.AliasUse(source, position, alias);
+        return new ClrTypeImport(target);
     }
 
     private TypeSymbol ResolveAlias(AliasSymbol alias, ReferenceCatalog references)

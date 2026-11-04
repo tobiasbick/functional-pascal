@@ -87,6 +87,8 @@ internal sealed partial class Binder
         BoundExpression? receiver, bool check, int position, TypeSymbol? constructed = null, bool inferGenerics = false, Action? noApplicable = null)
     {
         var (selected, bound) = SelectInvocation(templates, syntax, check, position, inferGenerics, noApplicable);
+        for (var index = 0; index < syntax.Count; index++)
+            if (syntax[index] is NamedArgumentSyntax named) catalog.Analysis?.NamedParameter(source, named.Name, selected.Method, selected.Slots[index]);
         var arguments = syntax.Select(argument => argument is NamedArgumentSyntax named ? named.Value : argument).ToArray();
         if (selected.Method.IsStatic) receiver = null;
         var bindings = new List<BoundBinding>();
@@ -177,6 +179,7 @@ internal sealed partial class Binder
             _ => throw source.Error("FP3028", "A managed argument requires addressable storage.", syntax.Position)
         };
         value = value switch { BoundLocal local => new BoundLocal(local.Local), BoundParameter parameter => new BoundParameter(parameter.Parameter), BoundCapture capture => new BoundCapture(capture.Capture), _ => value };
+        catalog.Analysis?.Expression(source, syntax.Value, value, syntax.Mode == "out" ? "write" : syntax.Mode == "ref" ? "read_write" : "read");
         var addressable = value is BoundLocal or BoundParameter or BoundCapture or BoundArrayIndex or BoundField;
         if (!addressable || syntax.Mode != "in" && !Writable(value))
             throw source.Error("FP3028", "ref/out arguments require writable storage; ordinary properties are not addressable.", syntax.Position);

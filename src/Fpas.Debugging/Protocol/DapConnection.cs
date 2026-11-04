@@ -1,4 +1,5 @@
 using Fpas.Debugging.Processes;
+using Fpas.Processes;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
@@ -8,7 +9,7 @@ namespace Fpas.Debugging.Protocol;
 
 internal sealed class DapConnection : IAsyncDisposable
 {
-    private readonly OwnedBackend backend;
+    private readonly OwnedProcess backend;
     private readonly Action<JsonElement> onEvent;
     private readonly Action<Exception> onFailure;
     private readonly CancellationTokenSource lifetime = new();

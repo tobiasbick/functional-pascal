@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Fpas.Compiler/Fpas.Compiler.csproj" />
+    <Project Path="src/Fpas.Workspaces/Fpas.Workspaces.csproj" />
+    <Project Path="src/Fpas.Processes/Fpas.Processes.csproj" />
     <Project Path="src/Fpas.Cli/Fpas.Cli.csproj" />
     <Project Path="src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" />
     <Project Path="src/Fpas.Core/Fpas.Core.csproj" />

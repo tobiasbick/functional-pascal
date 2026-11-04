@@ -3,6 +3,7 @@ using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Bodies;
 using Fpas.Compiler.Syntax;
+using Fpas.Compiler.Binding.Semantics;
 
 namespace Fpas.Compiler.Binding.Declarations;
 
@@ -26,16 +27,18 @@ internal sealed class SourceUnit(SourceText source, CompilationUnitSyntax syntax
 
 internal sealed partial class SourceCatalog
 {
+    internal SemanticRecorder? Analysis { get; private init; }
     internal int ClosureCount { get; set; }
     private readonly Dictionary<string, SourceUnit> names = new(StringComparer.Ordinal);
     internal IReadOnlyList<SourceUnit> Units { get; private init; } = [];
 
-    internal static SourceCatalog Declare(IEnumerable<SourceUnit> sources, ReferenceCatalog references)
+    internal static SourceCatalog Declare(IEnumerable<SourceUnit> sources, ReferenceCatalog references, SemanticRecorder? analysis = null)
     {
-        var catalog = new SourceCatalog { Units = sources.OrderBy(unit => unit.Syntax.Name.Text, StringComparer.Ordinal).ToArray() };
+        var catalog = new SourceCatalog { Units = sources.OrderBy(unit => unit.Syntax.Name.Text, StringComparer.Ordinal).ToArray(), Analysis = analysis };
         var index = 0;
         foreach (var unit in catalog.Units)
         {
+            unit.Source.CheckCancellation();
             var name = unit.Syntax.Name;
             if (!catalog.names.TryAdd(name.Text, unit))
                 throw unit.Source.Error("FP2005", $"Source container '{name.Text}' is declared more than once.", name.Position);
@@ -72,6 +75,7 @@ internal sealed partial class SourceCatalog
 
     internal ImportTarget Resolve(string name, int position, SourceText source, ReferenceCatalog references)
     {
+        source.CheckCancellation();
         var isNamespace = references.HasNamespace(name) || names.Keys.Any(key => key.StartsWith(name + ".", StringComparison.Ordinal));
         if (isNamespace && (names.ContainsKey(name) || references.HasType(name)))
             throw source.Error("FP4002", $"Import '{name}' is ambiguous between a namespace and a type.", position);
@@ -145,7 +149,11 @@ internal sealed partial class SourceCatalog
         if (target is UnionImport unionType && parts.Count == 2) return SourceCaseType(unionType.Union, parts[1], position, unit.Source);
         if (target is ClrImport clr)
         {
-            if (parts.Count == 2 && arity == 0 && references.Alias(references.Symbol(clr.Type), parts[1]) is { } alias) return new ClrTypeImport(alias);
+            if (parts.Count == 2 && arity == 0 && references.Alias(references.Symbol(clr.Type), parts[1]) is { } alias)
+            {
+                Analysis?.MetadataAliasUse(unit.Source, position, references.Symbol(clr.Type), alias);
+                return new ClrTypeImport(alias);
+            }
             var name = clr.Type.FullName + "+" + string.Join('+', parts.Skip(1)) + (arity == 0 ? "" : "`" + arity);
             return new ClrImport(allowOpenGeneric && arity == 0 && !references.HasType(name) ? references.FindOpenType(name, position, unit.Source) : references.FindType(name, position, unit.Source));
         }
@@ -167,6 +175,14 @@ internal sealed partial class SourceCatalog
 
     internal TypeSymbol ResolveType(TypeSyntax syntax, SourceUnit unit, ReferenceCatalog references, IReadOnlyDictionary<string, GenericParameterSymbol>? generic = null, bool validate = true)
     {
+        var type = ResolveTypeCore(syntax, unit, references, generic, validate);
+        Analysis?.TypeSyntax(unit, syntax, type);
+        return type;
+    }
+
+    private TypeSymbol ResolveTypeCore(TypeSyntax syntax, SourceUnit unit, ReferenceCatalog references, IReadOnlyDictionary<string, GenericParameterSymbol>? generic, bool validate)
+    {
+        unit.Source.CheckCancellation();
         TypeSymbol type;
         if (syntax.CallableParameters is not null)
             return references.Callable(syntax.CallableParameters.Select(parameter => ResolveType(parameter, unit, references, generic, validate)).ToArray(),

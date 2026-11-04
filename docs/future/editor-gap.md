@@ -24,8 +24,14 @@ PDBs and optional XML API documentation are available outputs.
 
 These capabilities do not provide an editor session, analysis of unsaved buffers,
 LSP requests, project discovery in an editor, or a VS Code extension. The
-[compiler API](../../src/Fpas.Compiler/Compilation.cs) returns compilation output
-and diagnostics, without a reusable public editor-analysis result.
+[compiler API](../../src/Fpas.Compiler/Compilation.cs) provides both compilation
+and semantic validation without emission, including a detached navigation index.
+Fpas.Workspaces supplies evaluated contexts and definition/type/refs queries.
+An interactive editor session and unsaved-buffer analysis remain missing.
+
+The [source-analysis plan](source-analysis/README.md) selects a shared compiler
+analysis and project-context foundation for check and three CLI queries. It
+does not implement an editor session, unsaved-buffer recovery or an LSP.
 
 ## Language services
 
@@ -76,8 +82,8 @@ The CLR editor toolchain lacks corresponding support for:
 
 The Rust source-query interface also serves checked `find`, `inspect`,
 `definition`, `refs`, `type`, `callers`, and `callees` operations over editor
-snapshots. The CLR service and its editor transport are missing. The wire
-schema and implementation remain open.
+snapshots. A CLR editor-snapshot service and its transport remain missing. Their
+wire schema and implementation remain open.
 
 ## Read-only source views
 
@@ -97,7 +103,7 @@ Emitted XML documentation alone does not provide either view.
 
 IDE debugging is complete through the
 [Microsoft VS Code route](../pascal/tools/debugging.md). It is not an open editor
-gap. The planned [MCP debugger](debugger/README.md) serves agents independently.
+gap. The [MCP debugger](debugger/README.md) serves agents independently.
 Automatic project/language services are
 separate editor features.
 

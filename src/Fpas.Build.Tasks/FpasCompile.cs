@@ -55,7 +55,8 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             }
             var previous = CompileFingerprint.Read(cache);
             var fingerprint = CompileFingerprint.Compute(sources, references, CompilerPath,
-                $"{OutputType}\0{Configuration}\0{TargetFramework}\0{output}\0{DebugType}\0{Optimize}\0{string.Join('\0', documents)}\0{TreatWarningsAsErrors}\0{WarningsAsErrors}\0{WarningsNotAsErrors}\0{NoWarn}");
+                CompileFingerprint.Options(OutputType, Configuration, TargetFramework, output, DebugType, Optimize, documents,
+                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn));
             if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
                 (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
             {

@@ -17,7 +17,7 @@ internal sealed partial class Parser
         if (At("ref") || At("out") || At("in"))
         {
             var mode = tokens[position++];
-            return new ArgumentModeSyntax(mode.Position, mode.Text, ReadExpression());
+            return Extent(new ArgumentModeSyntax(mode.Position, mode.Text, ReadExpression()), mode.Position);
         }
         return ReadExpression();
     }

@@ -27,6 +27,7 @@ internal sealed partial class Binder
                     if (parameters.ContainsKey(binding.Name.Text) || binding.Name.Text == "self" || imports.ContainsKey(binding.Name.Text))
                         throw source.Error("FP3004", "An ensures result cannot shadow a parameter, self, or an import alias.", binding.Name.Position);
                     result ??= Allocate("<contract-result>", currentRoutine.BodyResult);
+                    catalog.Analysis?.Local(result, source, binding.Name.Position);
                     scopes.Peek().Add(binding.Name.Text, result);
                 }
                 var condition = Condition(clause.Condition);

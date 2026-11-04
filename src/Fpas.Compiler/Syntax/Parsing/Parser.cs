@@ -3,7 +3,7 @@ namespace Fpas.Compiler.Syntax.Parsing;
 internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens)
 {
     private int position;
-    private Token Current => tokens[position];
+    private Token Current { get { source.CheckCancellation(); return tokens[position]; } }
     private bool At(string text) => Current.Text == text && Current.Kind is TokenKind.Keyword or TokenKind.Symbol;
 
     internal CompilationUnitSyntax ParseCompilationUnit()
@@ -143,13 +143,13 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             if (!At(".")) break;
             position++;
         } while (true);
-        var type = new TypeSyntax(segments);
+        var type = new TypeSyntax(segments) { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
         while (At("?") || arrays && At("[") && position + 1 < tokens.Count && tokens[position + 1].Text is "]" or ",")
         {
             if (At("?"))
             {
                 if (type.Nullable) throw source.Error("FP2003", "Repeated nullable suffixes are invalid.", Current.Position);
-                position++; type = type with { Nullable = true };
+                position++; type = type with { Nullable = true, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
             }
             else
             {
@@ -157,10 +157,10 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var rank = 1;
                 while (At(",")) { rank++; position++; }
                 Expect("]");
-                type = new(segments, Element: type, Rank: rank);
+                type = new(segments, Element: type, Rank: rank) { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
             }
         }
-        return type;
+        return type with { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
     }
 
     private IReadOnlyList<TypeSyntax> ReadTypeArguments()

@@ -40,11 +40,26 @@ defines exit codes and publication behavior. Compile JSON reports are appropriat
 for checking the diagnostic code and source location; test actual generated
 programs when runtime behavior matters.
 
+The C# compiler API also provides FpasCompiler.Analyze for semantic validation
+of explicit source/reference inputs without emitted output, including async
+liveness and optional documentation warnings. See the
+[compiler API](../../architecture/compiler.md#compiler-api-and-output).
+
 Project builds resolve framework, project, package, and Core dependencies through
 MSBuild. Source uses statements never acquire them. Bootstrap the local SDK first
 and handle its package-version cache as described by the development workflow.
 Keep scratch programs and reports under .temp-data. Use the current CLR compiler
 to validate these sources; another Pascal dialect cannot establish their behavior.
+
+Use `fpas check <project.fpasproj|solution.slnx> --diagnostics json` for project
+validation without analysis-owned assembly output. The selected SDK must match
+the CLI. Preparation can restore/build dependencies; `--no-restore` skips only
+restore. Project states and coverage distinguish invalid/blocked projects.
+Input changes invalidate results. See the CLI reference for timeout and exit codes.
+`fpas query definition|type|refs <context> --file <source> --line <n> --column <n>`
+returns JSON from checked source positions (one-based UTF-16). Refs uses the whole
+declared FPAS scope, with --limit and explicit truncation; linked files may require
+--project. Prefer these queries for resolved identity/type facts over text search.
 
 ## Debug and profile
 
@@ -66,8 +81,8 @@ writing external samplers or benchmark variants. Keep execution bounded and
 assert outcomes; avoid depending on timer counts, network availability, or an
 interactive terminal for ordinary regression tests. Isolate test files/processes.
 Store performance output under .temp-data and distinguish measurements from
-language guarantees. LSP/query/formatter and IDE project-system integration are
-separate work, not assumed compiler commands.
+language guarantees. LSP, formatter and IDE project-system integration remain
+separate work.
 
 Write repository maintenance helpers in FPAS when the supported CLR APIs suffice.
 If a concrete missing feature prevents this, document the practical limitation

@@ -114,8 +114,8 @@ The [standalone SDK walkthrough](build/standalone-sdk.md) covers an independent
 FPAS/C# consumer with explicit package sources, versions, and deployment files.
 The [library guides](pascal/libraries/README.md) cover practical .NET workflows,
 including task synchronization and joined channel pipelines. The next useful
-item is [D3: concrete debugging/profiling walkthroughs](future/documentation-gaps.md#d3-concrete-debuggingprofiling-walkthroughs),
-starting with source breakpoints, parameters, and locals in a synchronous program.
+items are [D1: reproducible benchmarks](future/documentation-gaps.md#d1-reproducible-benchmarks)
+and [D3: profiling and dump walkthroughs](future/documentation-gaps.md#d3-profiling-and-dump-walkthroughs).
 
 ## See also
 

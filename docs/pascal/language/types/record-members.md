@@ -56,12 +56,12 @@ end record;
 begin
   Counter.ResetStatistics();
   const First: Counter := Counter.Create(2);
-  const Renamed: Counter := First with Label := 'Mara'; end with;
+  const Renamed: Counter := First with Label := 'Alpha'; end with;
   const Next: Counter := Renamed.Increment();
 
   Console.WriteLine(First.Current()); // 2
   Console.WriteLine(Next.Current());  // 3
-  Console.WriteLine(Next.Label);     // Mara
+  Console.WriteLine(Next.Label);     // Alpha
   Console.WriteLine(DefaultsEvaluated); // 1: with does not rerun defaults
   Console.WriteLine(TotalCreated);     // 1: the factory was called once
 end;

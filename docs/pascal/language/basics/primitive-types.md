@@ -31,17 +31,17 @@ program PrimitiveValues;
 uses System.Console as Console;
 
 begin
-  const Name: string := 'Mara';
-  const Health: int := 20;
-  const WorldSeed: long := 4_000_000_000L;
+  const Name: string := 'Alpha';
+  const SampleSize: int := 20;
+  const SampleCount: long := 4_000_000_000L;
   const Zoom: double := 1.5;
   const Price: decimal := 12.50M;
   const Initial: char := #77;
   const Ready: bool := true;
 
   Console.WriteLine('Hello, ' + Name);
-  Console.WriteLine(Health);
-  Console.WriteLine(WorldSeed);
+  Console.WriteLine(SampleSize);
+  Console.WriteLine(SampleCount);
   Console.WriteLine(Zoom);
   Console.WriteLine(Price);
   Console.WriteLine(Initial);

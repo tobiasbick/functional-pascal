@@ -106,8 +106,9 @@ an FPAS parent/child fixture on both platforms to verify cleanup after early
 parent exit, Unicode/quoted arguments and environment overrides. Windows tests
 verify that job termination joins every process; temporary-directory cleanup
 allows a bounded delay for image-file locks after process exit. SDK packaging
-tests verify managed dependencies without bundling NetCoreDbg. Real agent-host
-configuration remains separate [acceptance](../docs/future/debug-gap.md).
+tests verify managed dependencies without bundling NetCoreDbg. Native Windows
+Codex CLI [agent-host acceptance](../docs/pascal/tools/debugging.md#agent-host-acceptance)
+also verifies actual agent tool calls through the deployed launcher.
 
 `McpContractTests` checks live discovery, parameter constraints, effect hints,
 initialization instructions and machine-readable text fallback without launching

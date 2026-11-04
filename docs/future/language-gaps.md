@@ -1,10 +1,9 @@
 # Language gaps and deferred extensions
 
-The [baseline comparison](../baseline-comparison.md) leaves no confirmed baseline
-compiler or MSBuild omission open for net10.0/AnyCPU on Windows and Ubuntu/WSL.
-Record newly demonstrated omissions here with their owning rule and reproducer.
-Practical maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md);
-guides remain tracked in [documentation gaps](documentation-gaps.md).
+Record confirmed omissions from the [baseline](../baseline-comparison.md) with
+their owning rule and reproducer. The proposals below are deferred extensions.
+Maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md); missing guides
+belong in [documentation gaps](documentation-gaps.md).
 
 ## Deferred proposal: compiler-checked pure functions
 
@@ -71,5 +70,5 @@ Source event declarations, expression-tree conversion, user-authored class
 hierarchies, custom awaiters, async iterators, unsafe/byref-like features,
 operator declarations, automatic extension-method discovery, and interface
 variance/default bodies remain outside the agreed scope. Publishing/AOT/signing,
-native apphosts, additional platform/framework coverage, LSP, queries and IDE
+native apphosts, additional platform/framework coverage, LSP and IDE
 project-system integration are separate toolchain proposals.

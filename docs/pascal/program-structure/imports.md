@@ -4,7 +4,7 @@
 uses System as Sys,
   System.Console as Console,
   System.Collections.Generic as Collections,
-  Game.Geometry as Geometry;
+  Numerics.Geometry as Geometry;
 ```
 
 Each import has an explicit alias. Its target may be a CLR namespace, a CLR
@@ -32,7 +32,7 @@ and supply both sources to one compilation:
 ```pascal project=geometry
 program MovePoint;
 
-uses Game.Geometry as Geometry, System.Console as Console;
+uses Numerics.Geometry as Geometry, System.Console as Console;
 
 begin
   const Start: Geometry.Point := new Geometry.Point(X := 1.0, Y := 2.0);

@@ -29,9 +29,9 @@ Use actual .NET collections:
 
 ```pascal fragment
 const Names: Collections.List<string> := new Collections.List<string>();
-Names.Add('Mara');
-const Scores: Collections.Dictionary<string, int> := new Collections.Dictionary<string, int>();
-Scores['Mara'] := 10;
+Names.Add('Alpha');
+const Counts: Collections.Dictionary<string, int> := new Collections.Dictionary<string, int>();
+Counts['Alpha'] := 10;
 ```
 
 Members retain CLR meanings: `Length`, `Count`, `Add`, `TryGetValue`, `GetLength`,
@@ -52,17 +52,17 @@ begin
   Console.WriteLine(Values[0]); // 9: both bindings reference the same array
 
   const Names: Generic.List<string> := new Generic.List<string>();
-  Names.Add('Mara');
-  Names.Add('Keeper');
+  Names.Add('Alpha');
+  Names.Add('Beta');
   for Name: string in Names do
     Console.WriteLine(Name);
   end for;
 
-  const Scores: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
-  Scores['Mara'] := 10;
-  var Score: int := 0;
-  if Scores.TryGetValue('Mara', out Score) then
-    Console.WriteLine(Score);
+  const Counts: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  Counts['Alpha'] := 10;
+  var Count: int := 0;
+  if Counts.TryGetValue('Alpha', out Count) then
+    Console.WriteLine(Count);
   end if;
 
   var Parsed: int := 0;

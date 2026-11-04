@@ -10,13 +10,15 @@ internal sealed class CheckCommand
     private readonly ContextCommandOptions options = new();
     private readonly Option<string> diagnostics = new("--diagnostics") { Description = "Write one JSON result to stdout." };
     internal Command Command { get; } = new("check", """
-        Validate an evaluated FPAS project or solution without publishing analysis-owned outputs.
-        Preparation may restore packages and build dependencies. Existing root outputs are preserved.
+        Check an FPAS project or solution without emitting its own outputs.
+        Uses evaluated project inputs. Preparation may restore packages and build dependencies.
+        Existing root outputs are preserved.
         Exit codes: 0 success/help, 1 analysis/setup failure, 2 invalid arguments, 130 cancellation.
 
         Examples:
-          fpas check Game/Game.fpasproj
-          fpas check Game.slnx --configuration Release --diagnostics json
+          fpas check examples/mandelbrot/Mandelbrot.fpasproj
+
+          fpas check examples/mandelbrot/Mandelbrot.fpasproj --configuration Release --diagnostics json
         """);
 
     internal CheckCommand()

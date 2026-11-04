@@ -1,8 +1,8 @@
 # fpas debug: command and MCP contract
 
-The debugger is implemented and tested on Windows and Linux with .NET 10 and
-NetCoreDbg 3.2.0-1092. Remaining agent-host acceptance is tracked in
-[debugger gaps](../future/debug-gap.md).
+The debugger is tested on Windows and Linux with .NET 10 and NetCoreDbg
+3.2.0-1092. The [debugging guide](../pascal/tools/debugging.md#agent-host-acceptance)
+records native Windows Codex CLI agent-host acceptance.
 
 ## Components and dependencies
 
@@ -152,8 +152,8 @@ actual FPAS programs through unmodified NetCoreDbg. Tests cover source controls,
 updated locals, captures, real async suspension, ordinary exceptions, bounded
 output, invalid/stale references, cancellation and every shutdown path.
 
-Verify the documented agent-host setup on Linux and Windows, with explicit
-backend/runtime versions. IDE debugging does not need to be reopened.
+Agent-host registration and the launch/inspect/step/stop sequence passed in
+native Windows Codex CLI. Integration tests retain Windows and Linux coverage.
 The [evaluation fixture](../../tests/Fixtures/debugging/README.md) supplies ten
 independent inspection questions with fixed answers, verified through the real
 MCP tools. Protocol, schema and text-client regressions exercise discovery and

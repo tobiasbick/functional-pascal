@@ -1,119 +1,51 @@
 # CLR distribution gaps
 
-This document records the missing CLR distribution workflow. It is a gap
-inventory, not an implementation plan. It does not authorize implementation,
-schedule work, select a packaging mechanism, or change FPAS syntax.
+The release goal is one delivered `fpas.exe` on Windows and one `fpas` per
+supported Unix platform/architecture, preferably Native AOT. Required compiler
+DLLs, support files or helper executables beside it would not meet this goal.
+This concerns the compiler tool; application outputs and .NET/MSBuild build
+inputs retain their own requirements. No publish mechanism is selected yet.
 
-The distribution goal is one delivered `fpas.exe` on Windows, preferably built
-with Native AOT. The corresponding Unix artifact is one `fpas` executable per
-supported platform and architecture. Separate compiler DLLs, runtime configuration
-files, support DLLs, or helper executables beside it would not meet this goal.
+## Open work
 
-This goal concerns the distributed FPAS tool. It does not restrict the files in
-compiled application outputs or remove the build dependencies described below.
-Native AOT is preferred; the single-file goal remains if an AOT limitation requires
-evaluating another deployment mode.
-
-## Rust comparison and current CLR support
-
-The Rust [Windows script](https://github.com/tobiasbick/functional-pascal/blob/0a4bc134ee71b5f922ebd0b1157ab55244bef657/dist.ps1)
-and [Linux script](https://github.com/tobiasbick/functional-pascal/blob/0a4bc134ee71b5f922ebd0b1157ab55244bef657/dist.sh)
-build `fpas`, `fpas-runner`, and `fpas-lsp`, and stage standard-library sources
-under `bin/lib`. They do not build or copy the benchmark tool.
-
-The CLR [CLI project](../../src/Fpas.Cli/Fpas.Cli.csproj) currently builds a managed
-executable referencing the compiler and Fpas.Core projects. No Native AOT or
-single-file publish configuration is present. [dist.ps1](../../dist.ps1) and
-[dist.sh](../../dist.sh) publish the managed Release compiler and its dependencies
-to `bin/`, with a `fpas.exe` or executable `fpas` launcher for local PATH use.
-They also pack the matching SDK into `sdk/feed/` and refresh only its active
-NuGet cache version so project analysis uses the same compiler.
-The scripts require the .NET SDK to build and the .NET runtime to run the result.
-This [local deployment](../build/development.md#deploy-the-local-release-compiler)
-does not yet produce the single-file release artifact described above.
-
-The existing [FPAS SDK package](../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj) contains
-the managed compiler, its host/dependency files, Fpas.Core, MSBuild tasks, and SDK
-props/targets. The [standalone SDK walkthrough](../build/standalone-sdk.md) verifies
-managed deployment, not the proposed single-executable distribution.
-
-The compiler reads reference assemblies with
-[PEReader](../../src/Fpas.Compiler/Binding/References/ReferenceAssembly.cs)
-and emits CIL/metadata through
-[ManagedPEBuilder](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.cs).
-Writing a managed assembly to disk does not require executing newly generated
-code inside the compiler. Source inspection found no fundamental Native AOT
-blocker in that design. A successful native publish has not been demonstrated.
-
-## Missing distribution capabilities
-
-| Capability | CLR gap |
+| Capability | Required work |
 | --- | --- |
-| Distribution entry points | `dist.ps1` and `dist.sh` provide local managed Release deployment. A workflow producing the intended single-file Windows or Unix release artifact remains missing. |
-| Executable identity | Local deployment supplies `fpas.exe` or `fpas`. The future single-file publish path must retain this tool name. |
-| Native AOT publication | No configured or verified Native AOT publish path for the CLI and compiler dependencies. Trimming, AOT warnings, and native build prerequisites still need evaluation. |
-| Platform artifacts | No defined supported OS/architecture set or verified per-target outputs. Native AOT produces target-specific binaries, not one universal executable. |
-| Single-file contents | No packaging contract that includes required FPAS assets while leaving only the executable in the delivered tool directory. Optional debug symbols need separate handling rather than becoming mandatory adjacent files. |
-| Release verification | No evidence that an isolated distributed executable can compile sources, emit valid diagnostics, and work with the project SDK without relying on the compiler checkout or adjacent compiler DLLs. |
+| Release workflow | Produce the single-executable artifact beyond the managed [local deployment](../build/development.md#deploy-the-local-release-compiler). Retain the `fpas` tool name. |
+| Native AOT | Configure and verify publication; evaluate trimming, warnings, dependency compatibility and native build prerequisites. If AOT is unsuitable, evaluate another single-file deployment mode. |
+| Platforms | Select supported OS/architecture targets and verify each target-specific artifact. |
+| Assets | Define embedded/provisioned compiler, Core metadata and SDK assets, separate optional symbols, version selection, offline availability and cache ownership. |
+| SDK invocation | Let the [SDK](../../sdk/Fpas.NET.Sdk/Sdk/Sdk.props) and [build task](../../src/Fpas.Build.Tasks/FpasCompile.cs) select/invoke the distributed compiler with a matching version. |
+| Release verification | Compile, report diagnostics and use the matching project SDK from an isolated delivered executable, without a compiler checkout or adjacent compiler DLLs. |
 
-## Concrete AOT and single-file obstacles
+## Concrete compatibility obstacles
 
-The current [CLI implementation](../../src/Fpas.Cli/Compilation/CompilerCommand.cs)
-and [response-file reader](../../src/Fpas.Cli/Compilation/CompileResponseFile.cs)
-contain specific compatibility gaps:
+- [Compile diagnostics](../../src/Fpas.Cli/Compilation/CompilerCommand.cs) use
+  reflection-based anonymous JSON serialization and the non-generic
+  `JsonStringEnumConverter`. The [response reader](../../src/Fpas.Cli/Compilation/CompileResponseFile.cs)
+  uses reflection-based deserialization. Supply AOT-compatible JSON contracts.
+- The compiler locates Core metadata with
+  `typeof(Core.RecordAttribute).Assembly.Location`. A bundled/native executable
+  needs another way to supply that managed metadata. Native-linking Core does
+  not provide a reference assembly for compiling FPAS sources.
+- Evaluate the complete CLI dependency graph, including workspace/MSBuild and MCP
+  hosting dependencies, under the selected publish mode. Inspecting CIL emission
+  alone cannot establish AOT compatibility.
 
-- JSON diagnostics use reflection-based serialization of an anonymous report,
-  and response files use reflection-based deserialization. An AOT-compatible
-  JSON contract is missing. Source-generated metadata is a supported option.
-- The CLI uses the non-generic `JsonStringEnumConverter`, which Native AOT does
-  not support. An AOT-compatible representation/converter remains to be selected.
-- The CLI obtains the compiler's Fpas.Core reference from
-  `typeof(Core.RecordAttribute).Assembly.Location`. A bundled/native tool cannot
-  assume that a separate managed assembly exists at that location.
+Embedding managed assets and reading them from memory or materializing them in a
+cache are options. The SDK's compiler launch and matching support/package assets
+must work without requiring loose files beside the tool. Generated applications
+may still need their own managed support assembly.
 
-Microsoft documents [Native AOT restrictions](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/),
-[JSON source generation](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/source-generation),
-and [single-file API limitations](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview).
-These provide available mechanisms, not proof that the current FPAS executable
-already works in either publish mode.
+Project/solution builds still need the .NET SDK, framework references, package and
+project dependencies, SDK props/targets and build tasks. Native AOT removes only
+the compiler process's .NET runtime requirement.
 
-Fpas.Core is a small metadata-contract assembly, not the former standard-library
-catalog. Its managed metadata must remain available when compiling FPAS sources;
-native-linking its implementation into the compiler does not supply that input.
-Embedding the managed assembly and reading it from memory or materializing it
-into a cache are possible approaches. Generated applications may also need the
-matching managed support assembly in their own outputs. The single-file tool
-goal does not remove those requirements.
+## Scope and references
 
-## Project SDK and external build dependencies
+Application publishing belongs in [CLI gaps](cli-gap.md); language-server
+functionality belongs in [editor gaps](editor-gap.md). No additional runner,
+benchmark executable or source-standard-library distribution is required.
 
-The [SDK props](../../sdk/Fpas.NET.Sdk/Sdk/Sdk.props) select `Fpas.Cli.dll`, and the
-[build task](../../src/Fpas.Build.Tasks/FpasCompile.cs) starts it through `dotnet`.
-Support for invoking the native executable is missing. SDK packaging and compiler
-selection also need to remain consistent with the distributed compiler version.
-
-Building `.fpasproj` projects and mixed `.slnx` solutions still requires the .NET
-SDK, framework reference assemblies, package/project references, and FPAS SDK
-props/targets and build tasks. Native AOT can remove the compiler process's need
-for an installed .NET runtime; it does not replace MSBuild or those build inputs.
-
-The single-file distribution needs a way to make matching FPAS SDK/support assets
-available without requiring users to copy loose files beside `fpas.exe`. Embedded
-assets and package/cache provisioning are possible building blocks. Acquisition,
-version selection, offline availability, and cache location remain open questions.
-
-## Intentionally omitted and separate work
-
-- `fpas-bench` and `--std-lib` remain intentionally omitted, as recorded in
-  [CLI gaps](cli-gap.md). They are not distribution gaps.
-- The old `lib` source tree and a replacement `Std.*` wrapper catalog are not
-  distribution requirements. Fpas.Core remains relevant as described above.
-- A separate `fpas-runner` is unnecessary because the compiler emits ordinary
-  CLR programs. This follows from CLR output, independently of compiler AOT.
-- A separate `fpas-lsp` executable is not the distribution goal. A future language
-  server could run in another mode of the same executable. Its functionality is
-  still missing and tracked in [editor gaps](editor-gap.md); no mode syntax is
-  selected here.
-- Native AOT for the compiler does not make generated programs native. Publishing
-  user applications, including their own AOT compatibility, remains separate work
-  in [CLI gaps](cli-gap.md) and outside the current [MSBuild scope](../build/msbuild.md).
+- [Native AOT restrictions](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
+- [JSON source generation](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/source-generation)
+- [Single-file API limitations](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)

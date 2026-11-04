@@ -3,6 +3,7 @@ using Fpas.Cli.Debugging;
 using Fpas.Cli.Analysis;
 using System.CommandLine;
 using System.CommandLine.Help;
+using System.Globalization;
 using System.Text;
 
 namespace Fpas.Cli;
@@ -11,6 +12,8 @@ internal static class CliApplication
 {
     internal static async Task<int> RunAsync(string[] args)
     {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
         Console.OutputEncoding = new UTF8Encoding(false);
         var configuration = new ParserConfiguration { ResponseFileTokenReplacer = null };
         var compile = CompilerCommand.Create();
@@ -22,9 +25,11 @@ internal static class CliApplication
 
             Examples:
               fpas compile --help
-              fpas compile examples/hello/main.fpas --output artifacts/Hello.dll --reference-dir <net10.0-reference-directory>
+
               fpas debug --help
-              fpas check --help
+
+              fpas check examples/mandelbrot/Mandelbrot.fpasproj
+
               fpas query --help
             """);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
@@ -51,6 +56,7 @@ internal static class CliApplication
             else if (parsed.CommandResult.Command == check.Command) { help = "fpas check --help"; checkResult = parsed; }
             else if (query.Owns(parsed.CommandResult.Command)) { help = "fpas query --help"; queryResult = parsed; }
             if (parsed.Errors.Count > 0) throw new ArgumentException(string.Join(" ", parsed.Errors.Select(error => error.Message)));
+            if (parsed.Action is HelpAction helpAction) return await CliHelp.WriteAsync(parsed, helpAction);
             return await parsed.InvokeAsync(new InvocationConfiguration { EnableDefaultExceptionHandler = false });
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)

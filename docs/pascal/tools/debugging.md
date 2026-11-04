@@ -97,8 +97,7 @@ On Linux install `setsid` from util-linux. The wrapper establishes an owned
 process group; on Windows it uses a kill-on-close Job Object. NetCoreDbg
 3.2.0-1092 with .NET 10 is covered by Windows and Linux/WSL integration tests
 using the official MCP client. Native tests verify early parent exit, adapter
-crash and client-disconnect cleanup. Actual agent-host registration remains an
-[open acceptance](../../future/debug-gap.md).
+crash and client-disconnect cleanup.
 
 Use the tools in this order:
 
@@ -141,14 +140,22 @@ evaluation can execute target code.
 For a reproducible agent inspection exercise, use the
 [debugger evaluation](../../../tests/Fixtures/debugging/README.md). It provides a
 prepared stop, paged arrays, two source frames and categorized output with ten
-fixed answers. The regression checks those answers through MCP on both platforms;
-it does not replace actual agent-host registration acceptance.
+fixed answers. The regression checks those answers through MCP on both platforms.
 
 MCP traffic owns
 stdin/stdout; logs use stderr and program output comes through debug_output.
 Target stdin is not available in the initial scope. See the
 [tool contract](../../architecture/mcp-debugging.md) for state, errors and limits.
 Batch reports and a human CLI debugger are outside this command's scope.
+
+### Agent-host acceptance
+
+Native Windows acceptance with Codex CLI 0.166.0, .NET 10 and NetCoreDbg
+3.2.0-1092 verified the deployed launcher through actual agent tool calls:
+discovery, launch, source breakpoint, threads/stack, locals, expression evaluation,
+step over/out, captured stdout and stop. The final status was `exited`, with no
+remaining NetCoreDbg process. This verifies the CLI host, not the desktop app.
+Restart or reload an existing host session to discover newly registered tools.
 
 ## See also
 

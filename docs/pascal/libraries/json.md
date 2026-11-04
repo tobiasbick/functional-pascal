@@ -1,7 +1,7 @@
 # JSON serialization
 
 Use `System.Text.Json.JsonSerializer` directly. Supply the source type explicitly
-to generic calls such as `Serialize<Player>(Value)`. FPAS records expose public
+to generic calls such as `Serialize<Measurement>(Sample)`. FPAS records expose public
 properties that the serializer can inspect; .NET serialization attributes control
 their JSON names.
 
@@ -18,10 +18,10 @@ uses System.Console as Console,
   System.Text.Json as Json,
   System.Text.Json.Serialization as Serialization;
 
-type Player = record
-  [Serialization.JsonPropertyNameAttribute('player_name')]
+type Measurement = record
+  [Serialization.JsonPropertyNameAttribute('sample_name')]
   Name: string;
-  Score: int;
+  Value: int;
 end record;
 
 type Descending = record implements Generic.IComparer<int>
@@ -39,8 +39,8 @@ begin
   Numbers.Sort(new Descending());
   Console.WriteLine(Numbers[0]); // 3
 
-  const Value: Player := new Player(Name := 'Mara', Score := 10);
-  Console.WriteLine(Json.JsonSerializer.Serialize<Player>(Value));
+  const Sample: Measurement := new Measurement(Name := 'Alpha', Value := 10);
+  Console.WriteLine(Json.JsonSerializer.Serialize<Measurement>(Sample));
 end;
 end program;
 ```

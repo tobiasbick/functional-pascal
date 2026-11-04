@@ -16,7 +16,7 @@ occupy a whole line or follow code. Prefix each line of a multiline comment with
 ```pascal fragment
 // Time remaining in the current turn.
 // Measured in seconds.
-const Remaining: int := 30; // Updated by the game loop.
+const Remaining: int := 30; // Updated by the sampling loop.
 const Address: string := 'https://example.com/';
 ```
 
@@ -91,10 +91,10 @@ or omitted parameter sections do not warn by default.
 ## Complete source example
 
 This is one library source, independent of the other examples. Assume the output
-assembly is named Game:
+assembly is named Numerics:
 
 ```pascal
-unit Game.Numbers;
+unit Numerics.Numbers;
 
 // Returns the larger value.
 //
@@ -116,16 +116,16 @@ end function;
 end unit;
 ```
 
-With XML documentation enabled, the relevant Game.xml output is:
+With XML documentation enabled, the relevant Numerics.xml output is:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <doc>
   <assembly>
-    <name>Game</name>
+    <name>Numerics</name>
   </assembly>
   <members>
-    <member name="M:Game.Numbers.Max(System.Int32,System.Int32)">
+    <member name="M:Numerics.Numbers.Max(System.Int32,System.Int32)">
       <summary>Returns the larger value.</summary>
       <param name="Left">First candidate.</param>
       <param name="Right">Second candidate.</param>

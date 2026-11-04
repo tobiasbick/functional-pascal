@@ -2,7 +2,7 @@
 
 ```pascal fragment
 type UserId = distinct long;
-type PlayerName = distinct string;
+type SampleName = distinct string;
 
 const Id: UserId := new UserId(42L);
 const Raw: long := cast<long>(Id);
@@ -36,7 +36,7 @@ represents the primitive's default; no additional predicate is imposed.
 A distinct string emits a sealed immutable reference wrapper. Its value constructor
 rejects null with ArgumentNullException; there is no parameterless constructor.
 This avoids a default struct containing null while promising a non-null string.
-`PlayerName?` is nullable-reference annotation; `UserId?` uses Nullable<UserId>.
+`SampleName?` is nullable-reference annotation; `UserId?` uses Nullable<UserId>.
 Nullable value-domain casts lift their conversions. Nullable string payloads and
 domain receivers require normal validation before wrapping, unwrapping, or ordered
 comparison; equality still permits null reference operands.
@@ -49,14 +49,14 @@ program Identities;
 uses System.Console as Console;
 
 type UserId = distinct long;
-type PlayerName = distinct string;
+type SampleName = distinct string;
 
 begin
   const Id: UserId := new UserId(42L);
-  const Name: PlayerName := new PlayerName('Mara');
+  const Name: SampleName := new SampleName('Alpha');
   const Raw: long := cast<long>(Id);
   Console.WriteLine(Raw); // 42
-  Console.WriteLine(cast<string>(Name)); // Mara
+  Console.WriteLine(cast<string>(Name)); // Alpha
 
   const Missing: UserId? := null;
   Console.WriteLine(Missing.HasValue); // false

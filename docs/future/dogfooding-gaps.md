@@ -1,44 +1,20 @@
 # Dogfooding gaps
 
-This document records practical limits encountered when using FPAS for repository
-maintenance. Required baseline work and deferred proposals belong in
-[language gaps](language-gaps.md). Supported language/library usage belongs in the
-[handbook](../pascal/README.md), rather than a list of completed milestones here.
-
-## Maintenance workflow
-
-Write filesystem, text, and data-maintenance helpers in FPAS using actual .NET
-APIs. Directory traversal, collections, regex, delegates, generic routines/data,
-contracts, nested routines, and Task-based async are available. The
-[directory inventory](../../examples/directory-inventory/README.md) demonstrates
-static LINQ calls and captured state; [local functions](../../examples/local-functions/README.md)
-demonstrates lexical recursion and an escaping delegate.
-
-Use the [development workflow](../build/development.md) for compiler/application
-bootstrap and explicit references. Source imports do not acquire dependencies.
-Helpers use the current CLR compiler and language; the former VM/compiler or a
-different Pascal dialect cannot validate them.
+Record concrete maintenance blockers here with a small reproducer, the required
+API/behavior and its effect on the task. Use the [development workflow](../build/development.md)
+for FPAS helpers; general library usage belongs in the [handbook](../pascal/README.md).
+Language proposals belong in [language gaps](language-gaps.md).
 
 ## Current boundaries
 
-- Nested CLR type annotations support arguments on every enclosing/nested
-  segment. Generic arithmetic and static abstract/virtual calls use imported
-  interface constraints; see [generic types](../pascal/language/functions/generic-routines.md).
-- The [time recipe](../pascal/libraries/environment-and-time.md) cannot subtract
-  two concrete DateTimeOffset values with `Deadline - Stamp`: binding
-  `const Duration: Sys.TimeSpan := Deadline - Stamp;` reports FP3002. Concrete
-  imported arithmetic operators are outside the current lookup; use the actual
-  instance `Deadline.Subtract(Stamp)` API. CLR comparison operators and operators
-  through generic interface constraints retain their documented support.
-- Byref-like/span APIs, pointers, ref returns, custom awaiters, expression-tree
-  conversion, and async enumeration are outside the supported interoperability
-  contract. Choose supported .NET overloads/types where available; record a
-  concrete blocked maintenance task before introducing a fallback or extension.
-- The CLI provides compilation, evaluated project/solution checks, declaration
-  find/inspect, definition/type/reference queries, and MCP debugging. Automatic editor sessions, LSP
-  and formatter tooling remain separate work. Portable symbols and XML API
-  documentation support ordinary .NET debugging/profiling tools.
+The [time recipe](../pascal/libraries/environment-and-time.md) cannot subtract
+concrete DateTimeOffset values with `Deadline - Stamp`:
+`const Duration: Sys.TimeSpan := Deadline - Stamp;` reports FP3002.
+Use the actual instance API `Deadline.Subtract(Stamp)`. Concrete imported arithmetic
+operator lookup is outside the selected interoperability scope; extending it
+needs a separate decision.
 
-Keep scratch sources and reports under .temp-data. A newly demonstrated blocker
-needs a small reproducer, the required API/behavior, and its effect on maintenance.
-Source-syntax changes still need the user's approval.
+If a maintenance task requires byref-like/span APIs, pointers, ref returns,
+custom awaiters, expression trees or async enumeration, record the blocked task
+and a reproducer before selecting a fallback or extension. Editor sessions, LSP
+and formatting are tracked in [editor gaps](editor-gap.md) and [CLI gaps](cli-gap.md).

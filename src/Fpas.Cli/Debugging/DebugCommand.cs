@@ -11,7 +11,15 @@ internal static class DebugCommand
         {
             Required = true, Description = "Absolute path to separately installed NetCoreDbg. No automatic download."
         };
-        var command = new Command("debug", "Host stdio MCP debugging tools for an agent. Program selection uses debug_launch; target stdin is unsupported.");
+        var command = new Command("debug", """
+            Host stdio MCP debugging tools for an agent.
+
+            Register this command in the agent host. Select a compiled program with debug_launch.
+            Target stdin is unsupported. NetCoreDbg is installed separately.
+
+            Examples:
+              fpas debug --netcoredbg <absolute-netcoredbg-path>
+            """);
         command.Options.Add(backend);
         command.SetAction(async (result, token) =>
         {

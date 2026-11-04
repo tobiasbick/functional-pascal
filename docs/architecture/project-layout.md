@@ -178,7 +178,7 @@ Compiler logic and language diagnostics belong in Fpas.Compiler. The CLI handles
 its invocation interface; the task translates structured results into MSBuild
 diagnostics. Neither adapter implements a second binder, emitter, or error model.
 
-The Game.slnx used in the MSBuild plan is a mixed-language consumer fixture,
+The solution used in the MSBuild tests is a mixed-language consumer fixture,
 distinct from the repository's Fpas.slnx. FPAS consumer projects require the built
 SDK to be resolvable before restore/build. Establish that bootstrap before adding
 selected consumer projects to the main solution.

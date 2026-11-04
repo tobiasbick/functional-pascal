@@ -14,7 +14,7 @@ public sealed partial class MsBuildTests
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var run = await sdk.Run(project, "Attributes/bin/Debug/net10.0/Attributes.dll");
         Assert.True(run.ExitCode == 0, run.Output + run.Error);
-        Assert.Equal("{\"player_name\":\"Mara\",\"Score\":42}" + Environment.NewLine, run.Output);
+        Assert.Equal("{\"sample_name\":\"Alpha\",\"Value\":42}" + Environment.NewLine, run.Output);
     }
 
     [Theory]

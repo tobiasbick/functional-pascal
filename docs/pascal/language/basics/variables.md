@@ -4,10 +4,10 @@ Declare one explicitly typed, initialized binding at a time. Const prevents
 rebinding; var permits assignment to writable storage.
 
 ```pascal fragment
-const Name: string := 'Mara';
-var Health: int := 10;
+const Name: string := 'Alpha';
+var Remaining: int := 10;
 const Limit: int := 100;
-Health := Health - 1;
+Remaining := Remaining - 1;
 ```
 
 Every `const` or `var` declaration introduces one name and requires both an

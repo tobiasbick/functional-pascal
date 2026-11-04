@@ -3,15 +3,15 @@ program JsonAttributes;
 uses System.Console as Console, System.Text.Json as Json,
   System.Text.Json.Serialization as Serialization;
 
-// A player with an explicit JSON property name.
-type Player = record
-  [Serialization.JsonPropertyNameAttribute('player_name')]
+// A measurement with an explicit JSON property name.
+type Measurement = record
+  [Serialization.JsonPropertyNameAttribute('sample_name')]
   Name: string;
-  Score: int;
+  Value: int;
 end record;
 
 begin
-  const Value: Player := new Player('Mara', 42);
-  Console.WriteLine(Json.JsonSerializer.Serialize<Player>(Value));
+  const Sample: Measurement := new Measurement('Alpha', 42);
+  Console.WriteLine(Json.JsonSerializer.Serialize<Measurement>(Sample));
 end;
 end program;

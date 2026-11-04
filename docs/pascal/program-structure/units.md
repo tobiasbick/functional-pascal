@@ -1,7 +1,7 @@
 # Units and global values
 
 ```pascal project=geometry
-unit Game.Geometry;
+unit Numerics.Geometry;
 
 public type Point = record
   X: double;
@@ -35,19 +35,19 @@ behavior; there is no source initialization scheduler.
 ### Global values
 
 ```pascal
-unit Game.Statistics;
+unit Numerics.Statistics;
 
-public const MaximumScore: int := 1_000;
-var TotalMoves: long := 0L;
+public const MaximumSamples: int := 1_000;
+var TotalSamples: long := 0L;
 
-public procedure RecordMove();
+public procedure RecordSample();
 begin
-  TotalMoves := TotalMoves + 1L;
+  TotalSamples := TotalSamples + 1L;
 end procedure;
 
-public function Moves(): long;
+public function SampleCount(): long;
 begin
-  return TotalMoves;
+  return TotalSamples;
 end function;
 
 end unit;

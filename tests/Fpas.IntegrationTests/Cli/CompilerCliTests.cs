@@ -111,14 +111,40 @@ public sealed class CompilerCliTests
     [InlineData("compile", "--help")]
     [InlineData("compile", "-h")]
     [InlineData("compile", "-?")]
-    public async Task Help_is_noninteractive_and_includes_examples(params string[] arguments)
+    [InlineData("debug", "--help")]
+    [InlineData("check", "--help")]
+    [InlineData("query", "--help")]
+    [InlineData("query", "definition", "--help")]
+    [InlineData("query", "type", "--help")]
+    [InlineData("query", "refs", "--help")]
+    [InlineData("query", "find", "--help")]
+    [InlineData("query", "inspect", "--help")]
+    public async Task Help_is_English_layered_and_spaced_under_a_nonEnglish_locale(params string[] arguments)
     {
-        var result = await ProcessRunner.RunAsync(new[] { Cli }.Concat(arguments));
+        var locale = new Dictionary<string, string?> { ["LANG"] = "de_DE.UTF-8", ["LC_ALL"] = "de_DE.UTF-8", ["DOTNET_CLI_UI_LANGUAGE"] = "de" };
+        var result = await ProcessRunner.RunAsync(new[] { Cli }.Concat(arguments), environment: locale);
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Example", result.Output);
-        Assert.Contains("--output", result.Output);
+        Assert.Contains("Examples:", result.Output); Assert.Contains("Usage:", result.Output); Assert.Contains("Options:", result.Output);
+        Assert.Contains("Show help and usage information", result.Output);
         Assert.DoesNotContain("Fpas.Cli", result.Output, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("fpas compile", result.Output);
+        Assert.DoesNotContain("Game", result.Output); Assert.DoesNotContain("Mara", result.Output);
+        if (arguments.FirstOrDefault() == "compile") Assert.Contains("--output", result.Output);
+        if (arguments.FirstOrDefault() is "check" or "query") Assert.Contains("Mandelbrot", result.Output);
+        var help = result.Output.Replace("\r\n", "\n", StringComparison.Ordinal);
+        Assert.DoesNotContain("Nutzung:", help); Assert.DoesNotContain("Befehle:", help); Assert.DoesNotContain("Optionen:", help);
+        if (help.IndexOf("Commands:\n", StringComparison.Ordinal) is var commandStart && commandStart >= 0)
+        {
+            var lines = help[commandStart..].Split('\n');
+            var entries = Enumerable.Range(0, lines.Length).Where(index => lines[index].StartsWith("  ", StringComparison.Ordinal)
+                && lines[index].Length > 2 && !char.IsWhiteSpace(lines[index][2])).ToArray();
+            Assert.True(entries.Length >= 2);
+            foreach (var index in entries.Skip(1)) Assert.True(string.IsNullOrWhiteSpace(lines[index - 1]), help);
+            Assert.DoesNotContain("Requires net10.0 references", help[commandStart..]);
+            Assert.DoesNotContain("Examples:", help[commandStart..]);
+        }
+        var examples = help[(help.IndexOf("Examples:", StringComparison.Ordinal) + "Examples:".Length)..help.IndexOf("Usage:", StringComparison.Ordinal)].Split('\n');
+        var invocations = Enumerable.Range(0, examples.Length).Where(index => examples[index].TrimStart().StartsWith("fpas ", StringComparison.Ordinal)).ToArray();
+        foreach (var index in invocations.Skip(1)) Assert.True(string.IsNullOrWhiteSpace(examples[index - 1]), help);
         Assert.Equal("", result.Error);
     }
 

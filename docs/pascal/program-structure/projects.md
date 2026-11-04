@@ -37,7 +37,7 @@ reference assemblies and its matching Fpas.Core dependency. Uses statements
 resolve names after these references exist; they do not acquire libraries.
 
 The mixed example in the [MSBuild specification](../../build/msbuild.md) declares
-the FPAS solution type and builds C# Shared, FPAS Game, and C# Host projects in
+the FPAS solution type and builds a C# library, an FPAS library and a C# host in
 dependency order. ProjectReference edges define the graph; solution ordering
 does not replace those edges. No IDE extension is required for command-line builds.
 

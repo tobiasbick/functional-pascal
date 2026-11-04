@@ -5,8 +5,8 @@ retain their CLR target and constant representation; they do not introduce a
 separate FPAS annotation runtime.
 
 ```pascal fragment
-type Player = record
-  [Serialization.JsonPropertyNameAttribute('player_name')]
+type Measurement = record
+  [Serialization.JsonPropertyNameAttribute('sample_name')]
   Name: string;
 end record;
 ```

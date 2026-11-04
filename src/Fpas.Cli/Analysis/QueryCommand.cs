@@ -18,14 +18,28 @@ internal sealed class QueryCommand
         internal Option<int> Limit { get; } = new("--limit") { Description = "Maximum returned references (1..1000).", DefaultValueFactory = _ => 100 };
         internal Option<string> Name { get; } = new("--name") { Required = true, Description = "Literal semantic simple or source-qualified name, case-sensitive; escaped names omit @." };
         internal Option<string> Match { get; } = new("--match") { Description = "Name comparison: exact, prefix or contains.", DefaultValueFactory = _ => "contains" };
-        internal Option<string[]> Kinds { get; } = new("--kind") { Description = "Declaration kinds (repeatable); record fields are property. Values: " + string.Join(", ", SourceQuery.DeclarationKinds), Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
+        internal Option<string[]> Kinds { get; } = new("--kind") { HelpName = "kind", Description = "Declaration kinds (repeatable); record fields use property.\nValues: " + string.Join(", ", SourceQuery.DeclarationKinds), Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
         internal Option<int> Offset { get; } = new("--offset") { Description = "Skip this many sorted matches; combine pages only with the same snapshotId.", DefaultValueFactory = _ => 0 };
         internal Command Command { get; } = new(name, $"""
-            Query checked source {name}; returns one JSON document. Preparation may restore/build dependencies.
+            {Summary(name)}
+
+            Return one JSON document. Preparation may restore packages and build dependencies.
+
+            Run these examples from examples/mandelbrot.
 
             Examples:
-              {(name == "find" ? "fpas query find Game.slnx --name Message --kind routine --limit 20" : $"fpas query {name} Game.slnx --file Game/Program.fpas --line 12 --column 9")}
+              {(name == "find" ? "fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine --limit 20" : $"fpas query {name} Mandelbrot.fpasproj --file main.fpas --line 5 --column 10")}
             """);
+
+        private static string Summary(string operation) => operation switch
+        {
+            "definition" => "Locate a symbol's checked declaration.",
+            "type" => "Describe the checked type at a source position.",
+            "refs" => "Find checked references to a symbol.",
+            "find" => "Search checked FPAS declarations by name.",
+            "inspect" => "Show a declaration, its documentation and directly relevant types.",
+            _ => throw new ArgumentException("Unknown source query.", nameof(operation))
+        };
 
         internal void Bind()
         {
@@ -57,15 +71,20 @@ internal sealed class QueryCommand
     }
 
     internal Command Command { get; } = new("query", """
-        Inspect fully checked project/solution sources without executing the application.
+        Query checked FPAS declarations, types, references and source.
         Uses explicit on-disk context and exact source positions; queries return JSON only.
+        Run these examples from examples/mandelbrot.
 
         Examples:
-          fpas query definition Game.slnx --file Game/Program.fpas --line 12 --column 9
-          fpas query type Game/Game.fpasproj --file Game/Program.fpas --line 12 --column 9
-          fpas query refs Game.slnx --file Library/Math.fpas --line 4 --column 17 --limit 100
-          fpas query find Game.slnx --name Message --match contains --kind routine
-          fpas query inspect Game.slnx --file Game/Program.fpas --line 12 --column 9 --limit 20
+          fpas query definition Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+
+          fpas query type Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+
+          fpas query refs Mandelbrot.fpasproj --file main.fpas --line 5 --column 10 --limit 100
+
+          fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine
+
+          fpas query inspect Mandelbrot.fpasproj --file main.fpas --line 5 --column 10 --limit 20
         """);
     private readonly Operation[] operations = [new("definition"), new("type"), new("refs"), new("find"), new("inspect")];
 

@@ -15,5 +15,5 @@ dotnet examples/attributes/bin/Debug/net10.0/Attributes.dll
 Expected output:
 
 ```json
-{"player_name":"Mara","Score":42}
+{"sample_name":"Alpha","Value":42}
 ```

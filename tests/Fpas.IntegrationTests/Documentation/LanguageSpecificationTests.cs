@@ -51,7 +51,7 @@ public sealed class LanguageSpecificationTests
         var lines = result.Output.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd('\n').Split('\n');
         string[]? expected = name switch
         {
-            "PrimitiveValues" => ["Hello, Mara", "20", "4000000000", "1.5", "12.50", "M", "True"],
+            "PrimitiveValues" => ["Hello, Alpha", "20", "4000000000", "1.5", "12.50", "M", "True"],
             "Hello" when document == "repository/README.md" => ["Hello, World!"],
             "Hello" => ["Hello, CLR"],
             "Fibonacci" => ["Fibonacci sequence:", "0", "1", "1", "2", "3", "5", "8", "13", "21", "34"],
@@ -63,15 +63,15 @@ public sealed class LanguageSpecificationTests
             "ParseExample" => ["Doubled: 42", "Input error"],
             "Functions" => ["Functions first", "42", "1", "2"],
             "Shapes" => ["1", "4", "12"],
-            "Collections" => ["9", "Mara", "Keeper", "10", "42"],
+            "Collections" => ["9", "Alpha", "Beta", "10", "42"],
             "NullableText" => ["Explorer", "8", "3", "A"],
             "NullableArithmetic" => ["15.00", "True"],
             "MoveOutcomes" => ["The edge of the map"],
             "ReadWorld" => ["{\"world\":\"test\"}", "Read attempt finished"],
-            "Interop" => ["3", "{\"player_name\":\"Mara\",\"Score\":10}"],
+            "Interop" => ["3", "{\"sample_name\":\"Alpha\",\"Value\":10}"],
             "TypeRules" => ["8080", "Branch", "-1", "An unnamed CLR enum value"],
-            "Identities" => ["42", "Mara", "False"],
-            "RecordMembers" => ["2", "3", "Mara", "1", "1"],
+            "Identities" => ["42", "Alpha", "False"],
+            "RecordMembers" => ["2", "3", "Alpha", "1", "1"],
             "MovePoint" => ["4"],
             "AsyncHello" => ["Ready"],
             "AgentStart" => ["42"],

@@ -8,12 +8,12 @@ The CLI uses System.CommandLine for argument binding and generated help.
 
 ## Check a project or solution
 
-`fpas check Game/Game.fpasproj` validates evaluated on-disk sources without
+`fpas check examples/mandelbrot/Mandelbrot.fpasproj` validates evaluated on-disk sources without
 publishing its own DLL, PDB, runtime configuration or XML documentation.
 Use an explicit `.fpasproj` or `.slnx`; source-level imports do not select projects.
 The selected SDK/compiler must match the CLI, and support the analysis targets.
 
-`fpas check Game.slnx --configuration Release --diagnostics json` produces one
+`fpas check examples/units/Units.fpasproj --configuration Release --diagnostics json` produces one
 JSON document with project states (`checked`, `invalid`, `blocked`), diagnostics,
 coverage, snapshot identity and preparation side effects. Independent projects
 are checked even if another project fails.
@@ -148,6 +148,10 @@ No arguments show root help. Root and compile help accept `--help`, `-h`, and
 `-?`. Root `--version` prints the CLI's assembly informational version.
 Help usage and examples always use the public command name `fpas`, including
 when the compiler is invoked directly through `dotnet`.
+Help and parser messages use English independently of the host locale. Parent
+help lists short command summaries, separated by blank lines; each command owns
+its detailed help and examples. Example invocations also have a blank line
+between them. The Mandelbrot query examples run from `examples/mandelbrot`.
 
 For standalone compilation, set FPAS_REFERENCE_DIR to the installed net10.0
 reference assembly directory as described by the

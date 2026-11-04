@@ -71,7 +71,10 @@ internal sealed partial class AsyncLowering(BoundRoutine routine, ReferenceCatal
                 plan.Blocks[marked].Location = point.Location;
                 return marked;
             case BoundBlock block:
+                var firstScopedBlock = plan.Blocks.Count;
                 foreach (var child in block.Statements.Reverse()) next = Statement(child, next, context);
+                if (block.ScopeLocals is { Count: > 0 } && plan.Blocks.Count > firstScopedBlock)
+                    plan.LocalScopes.Add((firstScopedBlock, plan.Blocks.Count - firstScopedBlock, block.ScopeLocals));
                 return next;
             case BoundBinding binding:
                 return Expression(binding.Initializer, value => Block(context, new AsyncGoto(next), new BoundBinding(binding.Local, value)), context);

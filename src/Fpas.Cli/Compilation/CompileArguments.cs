@@ -3,7 +3,7 @@ using Fpas.Compiler;
 namespace Fpas.Cli.Compilation;
 
 internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Output, IReadOnlyList<string> References, bool Json, CompilationTarget Target, bool EmitDebug,
-    string? Documentation, DiagnosticOptions DiagnosticOptions)
+    string? Documentation, DiagnosticOptions DiagnosticOptions, bool Optimize)
 {
     internal CompileArguments Validate()
     {

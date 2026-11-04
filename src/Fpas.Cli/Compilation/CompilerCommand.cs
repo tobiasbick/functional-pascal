@@ -66,16 +66,16 @@ internal static class CompilerCommand
             var sources = new List<CompilationSource>();
             foreach (var path in options.Sources)
             {
-                inputPath = path == "-" ? "<stdin>" : path;
+                inputPath = path == "-" ? "<stdin>" : Path.GetFullPath(path);
                 var text = path == "-" ? ReadStandardInput()
-                    : new UTF8Encoding(false, true).GetString(File.ReadAllBytes(path));
+                    : new UTF8Encoding(false, true).GetString(File.ReadAllBytes(inputPath));
                 sources.Add(new(inputPath, text));
             }
             var references = options.References.ToList();
             var core = typeof(Core.RecordAttribute).Assembly.Location;
             if (!references.Any(path => Path.GetFileName(path).Equals("Fpas.Core.dll", StringComparison.OrdinalIgnoreCase))) references.Add(core);
             var result = FpasCompiler.Compile(new(sources,
-                Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions));
+                Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions, options.Optimize));
             if (!result.Success)
             {
                 Report(options.Json, false, null, result.Diagnostics);

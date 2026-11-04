@@ -8,6 +8,7 @@ internal sealed class AsyncPlan(BoundRoutine routine)
 {
     internal List<LocalSymbol> Locals { get; } = routine.Locals.ToList();
     internal List<AsyncBlock> Blocks { get; } = [];
+    internal List<(int FirstBlock, int BlockCount, IReadOnlyList<LocalSymbol> Locals)> LocalScopes { get; } = [];
     internal int Entry { get; set; }
     internal LocalSymbol? Result { get; set; } = routine.Result;
 }

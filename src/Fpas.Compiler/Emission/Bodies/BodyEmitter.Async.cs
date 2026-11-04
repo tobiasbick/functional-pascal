@@ -31,6 +31,7 @@ internal sealed partial class BodyEmitter
         var finished = il.DefineLabel(); var failed = il.DefineLabel(); var returnedAsync = il.DefineLabel();
         var labels = plan.Blocks.Select(_ => il.DefineLabel()).ToArray();
         var offsets = new int[labels.Length];
+        var endOffsets = new int[labels.Length];
         var yields = new List<(int Offset, int Resume)>();
         void State(int target) { DebugPoint(null); il.LoadArgument(0); il.LoadConstantI4(target); il.OpCode(ILOpCode.Stfld); il.Token(fieldReference(stateField)); }
         void Go(int target) { State(target); il.Branch(ILOpCode.Leave, loop); }
@@ -71,6 +72,12 @@ internal sealed partial class BodyEmitter
                     il.Branch(ILOpCode.Leave, returnedAsync);
                     break;
             }
+            endOffsets[block.Id] = il.Offset;
+        }
+        foreach (var scope in plan.LocalScopes)
+        {
+            var scopeStart = offsets[scope.FirstBlock + scope.BlockCount - 1];
+            LocalScopes.Add((scopeStart, endOffsets[scope.FirstBlock] - scopeStart, scope.Locals));
         }
         il.MarkLabel(end); il.MarkLabel(handler);
         il.StoreLocal(exception); il.LoadArgument(0); il.LoadLocal(exception); il.OpCode(ILOpCode.Stfld); il.Token(fieldReference(exceptionField));

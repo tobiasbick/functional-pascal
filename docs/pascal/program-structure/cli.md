@@ -32,6 +32,10 @@ Repeat --reference for assemblies or --reference-dir for a directory's DLLs.
 Each occurrence takes one value. Options accept both `--output path.dll` and
 `--output=path.dll`. Place source paths starting with `-` after `--`, following
 all options. A lone `-` remains the stdin source.
+File inputs are resolved to absolute paths before compilation, so diagnostics
+and portable PDB documents identify the source independently of the program's
+runtime working directory. Stdin retains the virtual source name `<stdin>`;
+the CLI does not create a saved source file for it.
 The compiler receives explicit metadata inputs, including System.Runtime; it
 does not bind whichever assemblies happen to be loaded in its process.
 
@@ -42,6 +46,7 @@ does not bind whichever assemblies happen to be loaded in its process.
 | --target exe or library | Validate program/unit count and choose output kind |
 | --output path.dll | Name the managed assembly |
 | --debug portable or none | Emit matching portable symbols or disable them |
+| --optimize | Allow JIT optimization, independently of portable symbols |
 | --generate-documentation | Emit a conventional XML sidecar |
 | --documentation path.xml | Select an explicit XML documentation output |
 | --diagnostics json | Emit a structured success/output/diagnostics result |

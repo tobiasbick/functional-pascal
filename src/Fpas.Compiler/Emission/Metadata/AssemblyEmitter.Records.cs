@@ -24,6 +24,7 @@ internal sealed partial class AssemblyEmitter
             metadata.AddNestedType(type, layout.RecordOwners[record]);
             AddNullabilityContext(type, program.Runtime);
             AddSourceAttributes(type, record.Attributes);
+            AddRecordDebugDisplay(type, record);
             var equatable = catalog.Symbol(catalog.Required("System.IEquatable`1")) with { Arguments = new([record.Type]) };
             metadata.AddInterfaceImplementation(type, TypeHandle(equatable));
             foreach (var contract in record.Interfaces.Where(contract => contract.Erased != equatable.Erased))
@@ -37,6 +38,7 @@ internal sealed partial class AssemblyEmitter
                 var handle = metadata.AddFieldDefinition(FieldAttributes.Private | FieldAttributes.InitOnly,
                     metadata.GetOrAddString("<" + field.Name + ">k__BackingField"), metadata.GetOrAddBlob(signature));
                 fieldCount++;
+                AddGeneratedField(handle);
                 if (NullableFlags(field.Type).Contains((byte)2)) AddNullableAnnotation(handle, program.Runtime, field.Type);
             }
             foreach (var method in record.Methods)
@@ -56,8 +58,9 @@ internal sealed partial class AssemblyEmitter
                 var methodHandle = metadata.AddMethodDefinition(attributes, SourceMethodFlags(record.Bodies.GetValueOrDefault(method)?.Attributes), metadata.GetOrAddString(method.Name),
                     MethodSignature(method.Result, SourceSignatureParameters(method), method.IsInstance, genericArity: method.GenericParameters.Count), offset, firstParameter);
                 RegisterGenerics(methodHandle, method.GenericParameters, genericTypeContext);
-                if (method.IsAsync) AddAsyncAttribute(methodHandle, layout.AsyncRoutines[record.Bodies[method]]);
+                if (method.IsAsync) AddAsyncAttribute(methodHandle, layout.AsyncRoutines[record.Bodies[method]], record.Bodies[method].Attributes);
                 AddSourceAttributes(methodHandle, record.Bodies.GetValueOrDefault(method)?.Attributes);
+                if (method.Generated is not (GeneratedMethodKind.None or GeneratedMethodKind.Default)) AddGeneratedMethod(methodHandle);
             }
             foreach (var implementation in record.InterfaceMethods.DistinctBy(implementation => (implementation.Contract.Owner, implementation.Contract.DefinitionHandle, implementation.Contract.SourceMethod)))
             {

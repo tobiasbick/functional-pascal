@@ -21,4 +21,20 @@ internal sealed class CaptureSymbol(object original, TypeSymbol type, BoundExpre
     internal TypeSymbol Type { get; } = type;
     internal BoundExpression Value { get; } = value;
     internal bool Mutable { get; } = mutable;
+    internal string FieldName { get; } = ChooseFieldName(original, owner);
+
+    private static string ChooseFieldName(object original, ClosureSymbol owner)
+    {
+        var sourceName = original switch
+        {
+            LocalSymbol local => local.Name,
+            ParameterSymbol parameter => parameter.Name,
+            _ => throw new InvalidOperationException("A capture must refer to a source local or parameter.")
+        };
+        var used = owner.Captures.Select(capture => capture.FieldName).ToHashSet(StringComparer.Ordinal);
+        var name = sourceName;
+        for (var suffix = 1; used.Contains(name); suffix++)
+            name = sourceName + "_" + suffix.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return name;
+    }
 }

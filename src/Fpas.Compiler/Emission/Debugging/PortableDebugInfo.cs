@@ -15,10 +15,12 @@ internal sealed class PortableDebugInfo
     private readonly Dictionary<string, DocumentHandle> documents = new(StringComparer.Ordinal);
     private readonly Dictionary<MethodDefinitionHandle, (DocumentHandle Document, BlobHandle Points)> methods = [];
     private readonly List<(MethodDefinitionHandle Method, IReadOnlyList<LocalSymbol> Locals, int Start, int Length)> scopes = [];
-    private readonly List<(MethodDefinitionHandle Move, MethodDefinitionHandle Kickoff, IReadOnlyList<(int Yield, int Resume)> Points, IReadOnlyList<LocalSymbol> Locals, int Length)> asyncMethods = [];
+    private readonly List<(MethodDefinitionHandle Move, MethodDefinitionHandle Kickoff, IReadOnlyList<(int Yield, int Resume)> Points,
+        IReadOnlyList<LocalSymbol> Locals, int Length, IReadOnlyList<(int Start, int Length, IReadOnlyList<LocalSymbol> Locals)> Scopes)> asyncMethods = [];
 
-    internal void AddAsync(MethodDefinitionHandle move, MethodDefinitionHandle kickoff, IReadOnlyList<(int Yield, int Resume)> points, IReadOnlyList<LocalSymbol> locals, int length)
-        => asyncMethods.Add((move, kickoff, points, locals, length));
+    internal void AddAsync(MethodDefinitionHandle move, MethodDefinitionHandle kickoff, IReadOnlyList<(int Yield, int Resume)> points,
+        IReadOnlyList<LocalSymbol> locals, int length, IReadOnlyList<(int Start, int Length, IReadOnlyList<LocalSymbol> Locals)> lexicalScopes)
+        => asyncMethods.Add((move, kickoff, points, locals, length, lexicalScopes));
 
     internal PortableDebugInfo(IEnumerable<SourceText> sources)
     {
@@ -93,7 +95,11 @@ internal sealed class PortableDebugInfo
             var hoisted = new BlobBuilder();
             foreach (var local in method.Locals)
             {
-                hoisted.WriteUInt32(0); hoisted.WriteUInt32(local.Type.Kind == TypeKind.ByRef ? 0 : (uint)method.Length);
+                var localScopes = method.Scopes.Where(scope => scope.Locals.Contains(local)).ToArray();
+                var start = localScopes.Length == 0 ? 0 : localScopes.Min(scope => scope.Start);
+                var end = localScopes.Length == 0 ? method.Length : localScopes.Max(scope => scope.Start + scope.Length);
+                if (local.Type.Kind == TypeKind.ByRef || local.Name.StartsWith('<')) start = end = 0;
+                hoisted.WriteUInt32((uint)start); hoisted.WriteUInt32((uint)(end - start));
             }
             metadata.AddCustomDebugInformation(method.Move, metadata.GetOrAddGuid(new("6DA9A61E-F8C7-4874-BE62-68BC5630DF71")), metadata.GetOrAddBlob(hoisted));
         }

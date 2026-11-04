@@ -149,7 +149,11 @@ the base SDK can otherwise select language-specific targets by project extension
 Compiler inputs include the selected source list, resolved compile-time reference
 assemblies, package/project references, compiler-support identity, configuration,
 target framework, nullable settings defined by the language, and output/debug
-options. Bind reference metadata, not whichever implementation assemblies happen
+options. Optimize defaults to false for Debug and true for Release; it is
+forwarded to the compiler and included in the compilation fingerprint. Portable
+symbols remain available in either configuration. This controls the emitted
+DebuggableAttribute/JIT policy, not a separate FPAS CIL optimization pass.
+Bind reference metadata, not whichever implementation assemblies happen
 to be loaded into the MSBuild task process. Response files or structured task
 arguments must preserve paths and arguments without shell interpretation.
 

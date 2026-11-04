@@ -50,21 +50,25 @@ internal sealed partial class AssemblyEmitter
             RegisterGenerics(type, closure.GenericParameters, genericTypeContext);
             metadata.AddNestedType(type, layout.ClosureOwners[closure]);
             AddNullabilityContext(type, program.Runtime);
+            AddDebugAttribute(type, GeneratedAttribute);
+            AddDebuggerDisplay(type, "function(" + string.Join(", ", closure.Captures.Select(capture => capture.FieldName + " = {" + capture.FieldName + (capture.Mutable ? ".Value" : "") + "}")) + ")");
             foreach (var capture in closure.Captures)
             {
                 var signature = new BlobBuilder();
                 EncodeType(new BlobEncoder(signature).FieldSignature(), CaptureStorage(capture));
-                metadata.AddFieldDefinition(FieldAttributes.Assembly | FieldAttributes.InitOnly,
-                    metadata.GetOrAddString("<Capture" + closure.Captures.IndexOf(capture) + ">"), metadata.GetOrAddBlob(signature));
+                var captureField = metadata.AddFieldDefinition(FieldAttributes.Assembly | FieldAttributes.InitOnly,
+                    metadata.GetOrAddString(capture.FieldName), metadata.GetOrAddBlob(signature));
+                AddGeneratedField(captureField, hidden: false);
                 fieldCount++;
             }
             var constructor = new RoutineSymbol(".ctor", TypeSymbol.Void,
                 closure.Captures.Select((capture, index) => new ParameterSymbol("capture" + index, CaptureStorage(capture), index)).ToArray(),
                 false, false, -1, IsInstance: true);
             var firstParameter = AddParameters(constructor, ref parameterCount, program.Runtime);
-            metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+            var constructorHandle = metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
                 MethodImplAttributes.IL, metadata.GetOrAddString(".ctor"), MethodSignature(TypeSymbol.Void, constructor.Parameters.Select(parameter => parameter.Type).ToArray(), instance: true),
                 EmitClosureConstructor(closure, bodies), firstParameter);
+            AddGeneratedMethod(constructorHandle, hidden: true);
             foreach (var routine in closure.Bodies)
             {
                 firstParameter = AddParameters(routine.Symbol, ref parameterCount, program.Runtime);
@@ -73,7 +77,7 @@ internal sealed partial class AssemblyEmitter
                         routine.Symbol.Parameters.Select(parameter => parameter.SignatureType).ToArray(), instance: true, genericArity: routine.Symbol.GenericParameters.Count),
                     EmitBody(routine, bodies), firstParameter);
                 RegisterGenerics(invocation, routine.Symbol.GenericParameters, genericTypeContext);
-                if (routine.Symbol.IsAsync) AddAsyncAttribute(invocation, layout.AsyncRoutines[routine]);
+                if (routine.Symbol.IsAsync) AddAsyncAttribute(invocation, layout.AsyncRoutines[routine], routine.Attributes);
                 AddSourceAttributes(invocation, routine.Attributes);
             }
         }

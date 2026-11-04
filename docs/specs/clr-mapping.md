@@ -303,6 +303,20 @@ replace uninitialized values with defaults. Local declarations emit no executing
 statement, public API, or public XML entry. See
 [nested routines](../pascal/language/functions/nested-routines.md) for the implemented scope.
 
+Private closure environments use source-derived capture field names, with
+deterministic numeric suffixes for collisions in the same environment. All
+generated references use the same selected field identity. This supports
+ordinary debugger expansion without changing capture types, shared-cell
+identity, normal execution, or public source declarations. Mutable debug views
+read the shared cell's current value rather than a copied local snapshot.
+
+Private async state machines distinguish source-hoisted fields from synthesized
+temporaries. Source display names are unique within the machine, including
+parameter/local collisions; numeric suffixes disambiguate bindings without
+changing their storage or public names. Portable PDB hoisted scopes use emitted
+lexical block intervals and preserve slot indexing for unavailable/internal
+entries. Generated frame/type names remain CLR details, not new FPAS syntax.
+
 Nullable<T> contributes its underlying value type's nullability slot rather than
 an additional wrapper slot, including when substitution has not yet resolved a
 generic argument. Keep later reference annotations aligned in nested signatures.
@@ -310,6 +324,19 @@ See [implemented generic routines](../pascal/language/functions/generic-routines
 [Type argument inference](../pascal/language/functions/type-inference.md) resolves
 the same concrete instantiations before emission. It does not alter generic
 signatures, introduce object erasure, or add a runtime dispatch mechanism.
+
+## Debugger metadata
+
+Generated debug presentation uses standard .NET DebuggerDisplay,
+DebuggerTypeProxy, DebuggerBrowsable and generated-code/stepping attributes.
+Record/case proxies are private nested `<DebugView>` types with typed getters;
+they preserve generic arguments and do not change the record/union metadata ABI.
+Private backing fields are hidden from ordinary debugger expansion. Domains
+display their decoded Value. Source-authored debugger display/proxy annotations
+override the generated defaults. These attributes are not FPAS reflection
+markers and do not require an F# runtime. See
+[debug information](../architecture/debug-information.md#debugger-attributes-and-value-views)
+for the emitted attributes and stepping boundaries.
 
 ## Small language support library
 

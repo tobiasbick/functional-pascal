@@ -17,7 +17,8 @@ internal static class AsyncMachineFields
         => new(machine.Type, name, type, false, false, SignatureType: catalog.SourceSignature(type, machine.GenericParameters));
 
     internal static ImportedField MachineLocal(this ReferenceCatalog catalog, AsyncMachineSymbol machine, LocalSymbol local)
-        => catalog.MachineField(machine, "<" + local.Name + ">5__" + (local.Slot + 1), local.Captured && local.Mutable ? catalog.CellType(local.Type) : local.Type);
+        => catalog.MachineField(machine, (local.Name.StartsWith('<') ? "<>s__" : "<" + machine.LocalNames[local] + ">5__") + (local.Slot + 1),
+            local.Captured && local.Mutable ? catalog.CellType(local.Type) : local.Type);
 
     internal static ImportedField MachineParameter(this ReferenceCatalog catalog, AsyncMachineSymbol machine, ParameterSymbol parameter)
         => parameter.Index < 0 ? catalog.MachineField(machine, "<>4__this", machine.HostType!) : catalog.MachineField(machine, parameter.Name, parameter.Type);

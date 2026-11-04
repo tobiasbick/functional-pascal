@@ -25,12 +25,12 @@ internal sealed partial class AssemblyEmitter
             metadata.AddInterfaceImplementation(type, TypeHandle(stateMachine));
             RegisterGenerics(type, machine.GenericParameters, genericTypeContext);
             AddNullabilityContext(type, runtime);
-            var generated = catalog.Symbol(catalog.Required("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
-            metadata.AddCustomAttribute(type, Reference(new ImportedMethod(generated, ".ctor", TypeSymbol.Void, [], false)), metadata.GetOrAddBlob(new byte[] { 1, 0, 0, 0 }));
+            AddDebugAttribute(type, GeneratedAttribute);
             void Field(ImportedField field)
             {
                 var blob = new BlobBuilder(); EncodeType(new BlobEncoder(blob).FieldSignature(), field.Type);
-                metadata.AddFieldDefinition(FieldAttributes.Assembly, metadata.GetOrAddString(field.Name), metadata.GetOrAddBlob(blob)); fieldCount++;
+                var handle = metadata.AddFieldDefinition(FieldAttributes.Assembly, metadata.GetOrAddString(field.Name), metadata.GetOrAddBlob(blob)); fieldCount++;
+                if (field.Name.StartsWith("<>", StringComparison.Ordinal)) AddGeneratedField(handle);
             }
             var builder = catalog.AsyncBuilder(machine);
             var builderField = catalog.MachineField(machine, "<>t__builder", builder);
@@ -42,9 +42,10 @@ internal sealed partial class AssemblyEmitter
 
             var il = new InstructionEncoder(new BlobBuilder());
             il.LoadArgument(0); il.Call(Reference(new ImportedMethod(TypeSymbol.Object, ".ctor", TypeSymbol.Void, [], false))); il.OpCode(ILOpCode.Ret);
-            metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+            var constructor = metadata.AddMethodDefinition(MethodAttributes.Assembly | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
                 MethodImplAttributes.IL, metadata.GetOrAddString(".ctor"), MethodSignature(TypeSymbol.Void, [], instance: true),
                 bodies.AddMethodBody(il, 1), MetadataTokens.ParameterHandle(parameterCount + 1));
+            AddGeneratedMethod(constructor, hidden: true);
 
             var emitter = new BodyEmitter(Reference, FieldReference, TypeHandle, catalog, metadata.GetOrAddUserString, debug is not null);
             var body = emitter.BuildAsync(machine, layout.AsyncPlans[machine]);
@@ -54,14 +55,15 @@ internal sealed partial class AssemblyEmitter
                 MethodSignature(TypeSymbol.Void, [], instance: true), bodies.AddMethodBody(body.Code, body.MaxStack, signature), MetadataTokens.ParameterHandle(parameterCount + 1));
             debug?.AddMethod(move, emitter.SequencePoints, [], signature, body.Code.Offset);
             var kickoff = machine.Closure is { } closure ? layout.ClosureInvocations[closure] : layout.SourceMethods[machine.Routine.Symbol];
-            debug?.AddAsync(move, kickoff, emitter.AwaitPoints, layout.AsyncPlans[machine].Locals, body.Code.Offset);
+            debug?.AddAsync(move, kickoff, emitter.AwaitPoints, layout.AsyncPlans[machine].Locals, body.Code.Offset, emitter.LocalScopes);
 
             il = new(new BlobBuilder());
             il.LoadArgument(0); il.OpCode(ILOpCode.Ldflda); il.Token(FieldReference(builderField)); il.LoadArgument(1);
             il.Call(Reference(catalog.FindMethod(builder, "SetStateMachine", [stateMachine], 0, machine.Routine.Source!, false))); il.OpCode(ILOpCode.Ret);
             var setter = new RoutineSymbol("SetStateMachine", TypeSymbol.Void, [new("stateMachine", stateMachine, 0)], false, false, -1, IsInstance: true);
-            metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL, metadata.GetOrAddString(setter.Name), MethodSignature(TypeSymbol.Void, [stateMachine], instance: true),
+            var set = metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL, metadata.GetOrAddString(setter.Name), MethodSignature(TypeSymbol.Void, [stateMachine], instance: true),
                 bodies.AddMethodBody(il, 2), AddParameters(setter, ref parameterCount, runtime));
+            AddGeneratedMethod(set, hidden: true);
         }
         genericTypeContext = null;
     }

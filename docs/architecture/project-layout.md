@@ -44,6 +44,7 @@ src/
   Fpas.Build.Tasks/
     Fpas.Build.Tasks.csproj
     Documentation/
+    Debugging/
     Incremental/
   Fpas.Core/
     Fpas.Core.csproj
@@ -75,6 +76,10 @@ examples/
   README.md
 apps/
   README.md
+integrations/
+  neovim/
+    lua/
+      fpas_debug.lua
 docs/
 ```
 
@@ -150,6 +155,10 @@ SDK to be resolvable before restore/build. Establish that bootstrap before addin
 selected consumer projects to the main solution.
 
 ## Tests and fixtures
+
+The [Neovim integration](../../integrations/neovim/README.md) is configuration for
+an existing external DAP client. It is separate from the C# toolchain and emitted
+programs; no editor/debugger binary or DAP proxy is packaged with FPAS.
 
 Keep C# xUnit tests under tests, separate from production source. Unit tests cover
 focused behavior such as tokenization, parsing, binding, type diagnostics, and

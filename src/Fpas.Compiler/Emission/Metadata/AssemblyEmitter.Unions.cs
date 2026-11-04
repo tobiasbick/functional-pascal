@@ -48,8 +48,9 @@ internal sealed partial class AssemblyEmitter
                     }
                     else offset = EmitBody(union.Bodies[method], bodies);
                 }
-                metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL, metadata.GetOrAddString(method.Name),
+                var methodHandle = metadata.AddMethodDefinition(attributes, MethodImplAttributes.IL, metadata.GetOrAddString(method.Name),
                     MethodSignature(method.Result, method.Parameters.Select(parameter => parameter.Type).ToArray(), method.IsInstance), offset, firstParameter);
+                AddGeneratedMethod(methodHandle);
             }
             var firstProperty = AddReadOnlyProperty("Tag", TypeSymbol.Int32, true, layout.SourceMethods[union.Method(GeneratedMethodKind.Tag)], program.Runtime);
             foreach (var member in union.Cases.Where(member => member.Syntax.Fields.Count == 0))

@@ -95,22 +95,22 @@ Emitted XML documentation alone does not provide either view.
 
 ## Editor workflows and debugging
 
+IDE debugging is complete through the
+[Microsoft VS Code route](../pascal/tools/debugging.md). It is not an open editor
+gap. CLI/DAP input, recovery and terminal acceptance remain in the
+[CLI/DAP plan](debugger/cli-dap.md). Automatic project/language services are
+separate editor features.
+
 | Rust editor capability | CLR editor gap or boundary |
 | --- | --- |
 | Project check/build/run/test/format workflows | Extension commands and task integration using the selected CLR toolchain. Their command backends are tracked in CLI gaps. |
 | Problems integration | Consistent association of diagnostics with source documents and project context. |
 | Testing view | Test discovery, source locations, selection, cancellation, results, and output, once a CLR FPAS test workflow exists. |
 | Active project and terminal runs | Explicit project selection/status, application arguments and working directory, terminal launch, and process lifecycle handling. A mixed solution can launch a non-FPAS host. |
-| Debug configuration and launch | Editor launch/configuration integration for a selected CLR DAP backend and matching assembly/PDB/source inputs. Backend capabilities are tracked in CLI gaps. |
-| Source debugging UI | Breakpoints, stepping, stack/scopes/values, watches, exceptions, and output connected to the actual CLR adapter's supported operations. |
 | Server restart and diagnostics | Language-server restart, output channels, and actionable toolchain/protocol errors. |
 
-There is no assumption that a .NET adapter accepts FPAS watch expressions or
-all old custom debug requests. CLR OS threads and async tasks do not have the
-Rust VM's task identity or scheduler contract. VM task controls, forced return,
-detached expression evaluation, image rollback, and virtual TUI-terminal bridges
-are not additional editor gaps in this inventory. The selected debugger backend
-defines which supported operations an editor can expose.
+Debugger evaluation follows the selected backend's expression syntax. A complete
+Pascal evaluator is outside the current scope.
 
 ## Extension and toolchain distribution
 

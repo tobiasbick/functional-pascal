@@ -30,7 +30,7 @@ public sealed class MultiSourceTests
             Assert.Equal("Value", reader.GetString(method.Name));
             Assert.Single(type.GetCustomAttributes());
         }
-        Assert.Single(reader.MemberReferences);
+        Assert.Equal(2, reader.MemberReferences.Count);
     }
 
     [Fact]

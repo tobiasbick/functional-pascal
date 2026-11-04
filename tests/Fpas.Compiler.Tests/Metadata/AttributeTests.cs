@@ -82,9 +82,14 @@ public sealed class AttributeTests
         var members = XDocument.Parse(Encoding.UTF8.GetString(first.Program.XmlDocumentation!)).Descendants("member").ToArray();
         Assert.Equal(3, members.Length); Assert.Contains(members, member => (string?)member.Attribute("name") == "P:Marked.R.Value");
         using var pe = new PEReader(new MemoryStream(first.Program.AssemblyImage)); var metadata = pe.GetMetadataReader();
-        var property = metadata.PropertyDefinitions.Select(metadata.GetPropertyDefinition).Single(property => metadata.GetString(property.Name) == "Value");
+        var record = metadata.TypeDefinitions.Select(metadata.GetTypeDefinition).Single(type => metadata.GetString(type.Name) == "R");
+        var property = record.GetProperties().Select(metadata.GetPropertyDefinition).Single(property => metadata.GetString(property.Name) == "Value");
         Assert.Equal(2, property.GetCustomAttributes().Count);
-        Assert.DoesNotContain(metadata.FieldDefinitions.Select(metadata.GetFieldDefinition), field => field.GetCustomAttributes().Count != 0);
+        Assert.All(metadata.FieldDefinitions.Select(metadata.GetFieldDefinition), field =>
+        {
+            MetadataAttributes.Named(metadata, field.GetCustomAttributes(), "CompilerGeneratedAttribute");
+            MetadataAttributes.Named(metadata, field.GetCustomAttributes(), "DebuggerBrowsableAttribute");
+        });
     }
 
     private static CompilationResult Compile(string declarations) => TestCompilation.Compile($$"""

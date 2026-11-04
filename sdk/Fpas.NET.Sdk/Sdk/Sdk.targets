@@ -34,7 +34,7 @@
     <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" CompilerPath="$(FpasCompilerPath)"
                  OutputAssembly="@(IntermediateAssembly)" CacheFile="$(IntermediateOutputPath)fpas.compile.json"
                  DotnetHostPath="$(DotNetHostPath)" OutputType="$(OutputType)"
-                 Configuration="$(Configuration)" TargetFramework="$(TargetFramework)" DebugType="$(DebugType)"
+                 Configuration="$(Configuration)" TargetFramework="$(TargetFramework)" DebugType="$(DebugType)" Optimize="$(Optimize)"
                  DocumentationFile="$(_FpasDocumentationIntermediate)" DocumentationDestination="$(_FpasRequestedDocumentationFile)"
                  DocumentationOutput="$(_FpasDocumentationOutput)" TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
                  WarningsAsErrors="$(WarningsAsErrors)" WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)">

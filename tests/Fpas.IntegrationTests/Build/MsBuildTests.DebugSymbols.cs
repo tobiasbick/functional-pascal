@@ -1,9 +1,28 @@
 using Fpas.Tests.Support;
+using System.Diagnostics;
 
 namespace Fpas.IntegrationTests.Build;
 
 public sealed partial class MsBuildTests
 {
+    [Fact]
+    public async Task SDK_preserves_Release_JIT_optimization_and_tracks_changes_to_Optimize()
+    {
+        using var project = sdk.CreateProject();
+        async Task Build(string configuration, params string[] options)
+        {
+            var result = await sdk.Run(project, ["build", "Game.slnx", "--configuration", configuration, .. options]);
+            Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        }
+        bool Disabled(string configuration) => AssemblyInspection.DebuggingModes(project.File($"Game/bin/{configuration}/net10.0/Game.dll"))
+            .HasFlag(DebuggableAttribute.DebuggingModes.DisableOptimizations);
+        await Build("Debug"); Assert.True(Disabled("Debug"));
+        await Build("Release"); Assert.False(Disabled("Release"));
+        Assert.True(File.Exists(project.File("Game/bin/Release/net10.0/Game.pdb")));
+        await Build("Release", "--no-restore", "-p:Optimize=false"); Assert.True(Disabled("Release"));
+        await Build("Release", "--no-restore"); Assert.False(Disabled("Release"));
+    }
+
     [Fact]
     public async Task SDK_copies_tracks_repairs_disables_and_cleans_portable_symbols()
     {

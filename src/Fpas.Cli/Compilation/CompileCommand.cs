@@ -16,6 +16,7 @@ internal sealed class CompileCommand
     private readonly Option<string[]> referenceDirectories = Repeated("--reference-dir", "Supply all DLLs in a directory; repeatable.");
     private readonly Option<string> target = Choice("--target", "Output kind.", "exe", "library");
     private readonly Option<string> debug = Choice("--debug", "Debug symbol format.", "portable", "none");
+    private readonly Option<bool> optimize = new("--optimize") { Description = "Allow JIT optimization while retaining the selected debug symbols." };
     private readonly Option<bool> generateDocumentation = new("--generate-documentation") { Description = "Write XML documentation beside the DLL." };
     private readonly Option<string> documentation = new("--documentation") { Description = "Write XML documentation to this path (.xml)." };
     private readonly Option<bool> warnAsError = new("--warn-as-error") { Description = "Treat warnings as errors." };
@@ -42,7 +43,7 @@ internal sealed class CompileCommand
     {
         diagnostics.AcceptOnlyFromAmong("json");
         Command.Arguments.Add(sources);
-        foreach (var option in new Option[] { output, references, referenceDirectories, target, debug, generateDocumentation,
+        foreach (var option in new Option[] { output, references, referenceDirectories, target, debug, optimize, generateDocumentation,
             documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, ResponseFile })
             Command.Options.Add(option);
         Command.Validators.Add(result =>
@@ -78,7 +79,7 @@ internal sealed class CompileCommand
             result.GetValue(target) == "library" ? CompilationTarget.Library : CompilationTarget.Exe,
             result.GetValue(debug) == "portable", documentationPath,
             new(result.GetValue(warnAsError), Codes(result.GetValue(warningsAsErrors)!),
-                Codes(result.GetValue(warningsNotAsErrors)!), Codes(result.GetValue(noWarn)!))).Validate();
+                Codes(result.GetValue(warningsNotAsErrors)!), Codes(result.GetValue(noWarn)!)), result.GetValue(optimize)).Validate();
     }
 
     private static string[] Codes(string[] values) => values.SelectMany(value =>

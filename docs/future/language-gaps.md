@@ -71,6 +71,5 @@ Source event declarations, expression-tree conversion, user-authored class
 hierarchies, custom awaiters, async iterators, unsafe/byref-like features,
 operator declarations, automatic extension-method discovery, and interface
 variance/default bodies remain outside the agreed scope. Publishing/AOT/signing,
-native apphosts, additional platform/framework coverage, LSP, queries, VS Code,
-and Visual Studio project-system integration are separate toolchain proposals.
-An unsupported item mentioned in an old milestone does not create a new task.
+native apphosts, additional platform/framework coverage, LSP, queries and IDE
+project-system integration are separate toolchain proposals.

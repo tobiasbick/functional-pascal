@@ -24,7 +24,7 @@ public sealed class RecordMetadataTests
             var type = reader.TypeDefinitions.Select(reader.GetTypeDefinition).Single(type => reader.GetString(type.Name) == "Item");
             if (corruption == "version")
             {
-                var attribute = reader.GetCustomAttribute(type.GetCustomAttributes().Last());
+                var attribute = MetadataAttributes.Named(reader, type.GetCustomAttributes(), "RecordAttribute");
                 var offset = pe.PEHeaders.MetadataStartOffset + reader.GetHeapMetadataOffset(HeapIndex.Blob) + MetadataTokens.GetHeapOffset(attribute.Value);
                 // The small blob has a one-byte length prefix followed by the two-byte attribute prolog.
                 bytes[offset + 3] = 2;

@@ -17,6 +17,21 @@ storage, exception handlers, and pending exits across suspension. Await consumes
 the supported Task/ValueTask families and their ConfigureAwait forms. Context
 capture, cancellation, and faults retain ordinary .NET behavior.
 
+Source locals use hoisted fields with source-derived names. Bindings sharing a
+name receive deterministic numeric suffixes, also avoiding parameter names.
+Compiler temporaries use synthesized field names that ordinary CLR debuggers
+filter instead of mistaking them for source locals. Definitions and accesses
+use the same selected names; storage types, shared capture cells and execution
+are unchanged.
+
+Lowering retains each lexical block's local set and emitted block interval.
+The emitter translates those intervals into hoisted-local PDB scopes by slot,
+including zero-length entries for compiler temporaries and non-hoisted byrefs.
+Scopes describe an enclosing IL interval, not exact initialization/dataflow
+liveness. Repeatedly lowered cleanup uses the enclosing interval of its copies.
+Source next and step-in follow user sequence points; CLR stack-frame names may
+still include the generated state-machine type and MoveNext.
+
 Requires checks run inside the state machine before the user body. A successful
 return retains its result, completes cleanup, then executes ensures on the inner
 value before completing the task. Fault, cancellation, failed cleanup, or a

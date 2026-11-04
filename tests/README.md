@@ -15,8 +15,8 @@ in the [development workflow](../docs/build/development.md).
 | [TestSupport](TestSupport/) and [Directory.Build.targets](Directory.Build.targets) | Shared bounded-process and temporary-directory helpers plus resolved framework reference inputs |
 
 Compiler tests use Types, Routines, ControlFlow, and Metadata directories with
-matching namespaces. Integration tests use Cli, Execution, Documentation, and
-Build. Each project's Support directory owns its shared setup; compiler tests
+matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
+and Debugging. Each project's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
 Build the toolchain and tests before executing them. Do not rebuild toolchain
@@ -30,6 +30,45 @@ consumers. Those fixture builds are part of the test, not a second toolchain bui
 They verify dependency copying, exported signatures, incremental inputs/outputs,
 configuration isolation, diagnostics, and cleanup. Do not rely on a cached local
 development SDK version.
+
+## NetCoreDbg integration tests
+
+[NetCoreDbgTests](Fpas.IntegrationTests/Debugging/NetCoreDbgTests.cs) drive a real,
+unmodified NetCoreDbg process over stdio DAP against newly compiled FPAS/PDB
+fixtures. They cover source breakpoints, parameters/locals, next, true async
+suspension, handled/user-unhandled exceptions and normal disconnect. Named and
+lambda captures in a generic referenced library verify live mutable cells;
+another fixture checks shadowed captures with distinct stored names.
+Further fixtures check record/union/domain/nullable/array/generic values,
+escaped generic async routines across two incomplete awaits, shared sibling
+captures, source step-in, hidden compiler temporaries, and hoisted block scopes
+with colliding source names.
+Launch/lifecycle fixtures also verify pending-to-bound breakpoints without an
+entry stop, relative CLI sources with a separate runtime cwd, UTF-8 arguments,
+categorized stdout/stderr, source step-out, pause of running user code and a
+failed launch followed by disconnect.
+
+Set `FPAS_NETCOREDBG_PATH` to the executable from the tested NetCoreDbg release
+3.2.0-1092. No debugger is downloaded by the tests. Without the variable, xUnit
+reports these external-backend tests as skipped, not passed; an invalid supplied
+path or failed protocol assertion fails the test. Both platform acceptances need
+an actual configured-backend run.
+
+After building the tests:
+
+```sh
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~NetCoreDbgTests' --logger 'console;verbosity=normal' --logger 'trx;LogFileName=netcoredbg.trx' --results-directory .temp-data/debugger/test-results
+```
+
+Optionally set `FPAS_DEBUGGER_TEST_OUTPUT` to an absolute directory under
+`.temp-data/debugger/` to retain isolated fixture sources, assemblies, PDBs and
+DAP traces. Otherwise fixtures are deleted. The serial test client has bounded
+messages/output and a 45-second scenario deadline. It tracks the launch-owned
+target using the DAP process event and verifies normal disconnect/exit. It does
+not establish crash/hang recovery for an interactive product session.
+
+These are regression tests, not a product frontend or batch debugger. Batch
+debugging remains blocked in the [debugger plan](../docs/future/debugger/README.md).
 
 ## Documentation examples
 

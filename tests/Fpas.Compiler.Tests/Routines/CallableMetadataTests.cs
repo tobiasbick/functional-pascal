@@ -45,6 +45,7 @@ public sealed class CallableMetadataTests
         Assert.Equal("Metadata", reader.GetString(reader.GetTypeDefinition(closure.GetDeclaringType()).Name));
         Assert.Equal(2, closure.GetMethods().Count);
         Assert.Equal(2, closure.GetFields().Count);
+        Assert.Equal(["Calls", "Offset"], closure.GetFields().Select(handle => reader.GetString(reader.GetFieldDefinition(handle).Name)).Order(StringComparer.Ordinal));
         Assert.All(closure.GetFields(), handle => Assert.True(reader.GetFieldDefinition(handle).Attributes.HasFlag(FieldAttributes.InitOnly)));
         Assert.Contains(reader.TypeReferences, handle => reader.GetString(reader.GetTypeReference(handle).Name) == "StrongBox`1");
         Assert.DoesNotContain(reader.AssemblyReferences, handle => reader.GetString(reader.GetAssemblyReference(handle).Name) == "Fpas.Core");

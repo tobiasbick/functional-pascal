@@ -22,5 +22,6 @@ internal sealed partial class AssemblyEmitter
         var constructor = new ImportedMethod(attribute, ".ctor", TypeSymbol.Void, [TypeSymbol.Int32, TypeSymbol.String], false);
         var blob = new BlobBuilder(); blob.WriteUInt16(1); blob.WriteInt32(1); blob.WriteSerializedString(alias.Syntax.Name.Text); blob.WriteUInt16(0);
         metadata.AddCustomAttribute(handle, Reference(constructor), metadata.GetOrAddBlob(blob));
+        AddGeneratedMethod(handle, hidden: true);
     }
 }

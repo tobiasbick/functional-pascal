@@ -14,6 +14,14 @@ Mutable captured locals share System.Runtime.CompilerServices.StrongBox<T> cells
 with the declaring routine and sibling/nested closures. Struct mutation addresses
 the cell's actual value, rather than a boxed replacement.
 
+Capture fields use source-derived names so ordinary CLR debuggers can expand
+them. Duplicate names within one environment receive stable numeric suffixes
+such as Value_1. Field definitions and references use the same bound capture
+name. The storage remains the actual captured value or shared cell; no detached
+debug-only copy is created. Stock NetCoreDbg exposes these through the closure
+receiver, with mutable values under the cell's Value field, rather than
+automatically flattening all captures into source locals.
+
 Separate routine calls own separate cells. Cells declared inside a loop are
 allocated per iteration; read-only loop counters are copied into each environment.
 Captured references share their object. Globals remain static field reads and

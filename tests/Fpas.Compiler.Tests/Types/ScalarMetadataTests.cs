@@ -30,7 +30,7 @@ public sealed class ScalarMetadataTests
             {
                 var attributes = corruption.StartsWith("domain", StringComparison.Ordinal) ? type.GetCustomAttributes()
                     : reader.GetMethodDefinition(reader.MethodDefinitions.Single(handle => reader.GetString(reader.GetMethodDefinition(handle).Name) == "<Alias:Count>")).GetCustomAttributes();
-                var attribute = reader.GetCustomAttribute(attributes.Last());
+                var attribute = MetadataAttributes.Named(reader, attributes, corruption.StartsWith("domain", StringComparison.Ordinal) ? "DomainAttribute" : "AliasAttribute");
                 var offset = pe.PEHeaders.MetadataStartOffset + reader.GetHeapMetadataOffset(HeapIndex.Blob) + MetadataTokens.GetHeapOffset(attribute.Value);
                 // A one-byte blob length precedes the two-byte attribute prolog.
                 bytes[offset + 3] = 2;

@@ -22,10 +22,11 @@ public sealed class PortableDebugInfoTests
               const Read: function(): int := function(): int => Local;
               return Read();
             end function;
-            public async function Wait(Value: Tasks.Task<int>): Tasks.Task<int>;
+            public async function Wait(Value: Tasks.Task<int>; Other: Tasks.Task<int>): Tasks.Task<int>;
             begin
               const Answer: int := await Value;
-              return Answer;
+              const Final: int := await Other;
+              return Answer + Final;
             end function;
             end unit;
             """;
@@ -65,15 +66,22 @@ public sealed class PortableDebugInfoTests
         var fields = machine.GetFields().Select(handle => reader.GetString(reader.GetFieldDefinition(handle).Name)).ToArray();
         Assert.Contains("Value", fields);
         Assert.Contains(fields, name => name.StartsWith("<Answer>5__", StringComparison.Ordinal));
+        Assert.Contains(fields, name => name.StartsWith("<Final>5__", StringComparison.Ordinal));
+        Assert.Contains(fields, name => name.StartsWith("<>s__", StringComparison.Ordinal));
+        Assert.DoesNotContain(fields, name => name.StartsWith("<<", StringComparison.Ordinal));
         Assert.Equal(methods["Wait"], symbols.GetMethodDebugInformation(move).GetStateMachineKickoffMethod());
         var info = symbols.GetCustomDebugInformation(move).Select(symbols.GetCustomDebugInformation).ToArray();
         var stepping = Assert.Single(info, item => symbols.GetGuid(item.Kind) == new Guid("54fd2ac5-e925-401a-9c2a-f94f171072f8"));
         var blob = symbols.GetBlobReader(stepping.Value);
         Assert.Equal(0, blob.ReadInt32());
         var length = pe.GetMethodBody(reader.GetMethodDefinition(move).RelativeVirtualAddress).GetILContent().Length;
-        var yield = blob.ReadInt32(); var resume = blob.ReadInt32();
-        Assert.InRange(yield, 0, length - 1); Assert.InRange(resume, yield + 1, length - 1);
-        Assert.Equal(MetadataTokens.GetRowNumber(move), blob.ReadCompressedInteger()); Assert.Equal(0, blob.RemainingBytes);
+        for (var awaitIndex = 0; awaitIndex < 2; awaitIndex++)
+        {
+            var yield = blob.ReadInt32(); var resume = blob.ReadInt32();
+            Assert.InRange(yield, 0, length - 1); Assert.InRange(resume, yield + 1, length - 1);
+            Assert.Equal(MetadataTokens.GetRowNumber(move), blob.ReadCompressedInteger());
+        }
+        Assert.Equal(0, blob.RemainingBytes);
         var repeated = FpasCompiler.Compile(request with { References = request.References.Reverse().ToArray() }).Program!;
         Assert.Equal(program.AssemblyImage, repeated.AssemblyImage); Assert.Equal(program.PortablePdb, repeated.PortablePdb);
         Assert.Null(FpasCompiler.Compile(request with { EmitDebugInformation = false }).Program!.PortablePdb);

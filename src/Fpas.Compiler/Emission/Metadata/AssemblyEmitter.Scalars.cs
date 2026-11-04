@@ -33,6 +33,8 @@ internal sealed partial class AssemblyEmitter
                 continue;
             }
             var storage = ScalarField("<Value>", info.Category == ScalarCategory.Range ? TypeSymbol.UInt64 : info.Base, FieldAttributes.Private | FieldAttributes.InitOnly);
+            AddGeneratedField(storage);
+            AddDebuggerDisplay(handle, scalar.Name + "({Value})", scalar.Attributes);
             if (info.Category == ScalarCategory.Range)
             {
                 metadata.AddConstant(ScalarField("LowerBound", info.Base, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault), NumericValue.ConvertTo(info.Lower!.Value, info.Base, true));
@@ -70,8 +72,10 @@ internal sealed partial class AssemblyEmitter
             if (NullableFlags(parameter.Type).Contains((byte)2)) AddNullableAnnotation(handle, runtime, parameter.Type);
         }
         var il = new InstructionEncoder(new BlobBuilder(), new ControlFlowBuilder()); emit(il);
-        return metadata.AddMethodDefinition(MethodAttributes.Public | MethodAttributes.HideBySig | attributes | (isStatic ? MethodAttributes.Static : 0), MethodImplAttributes.IL,
+        var method = metadata.AddMethodDefinition(MethodAttributes.Public | MethodAttributes.HideBySig | attributes | (isStatic ? MethodAttributes.Static : 0), MethodImplAttributes.IL,
             metadata.GetOrAddString(name), MethodSignature(result, parameters.Select(parameter => parameter.Type).ToArray(), !isStatic), bodies.AddMethodBody(il, maxStack: 8), first);
+        AddGeneratedMethod(method);
+        return method;
     }
 
     private void AddDomainAttribute(TypeDefinitionHandle handle, ScalarInfo info)

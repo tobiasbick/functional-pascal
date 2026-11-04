@@ -21,6 +21,10 @@ The current CLR owners are the [compiler CLI](../pascal/program-structure/cli.md
 an entry's status. The initial language/build baseline and its acceptance remain
 separate in the [baseline comparison](../baseline-comparison.md).
 
+IDE debugging is complete. [CLI/DAP completion](debugger/cli-dap.md) remains
+open; FPAS supplies no debug command. Batch debugging is blocked. Current
+terminal limitations are in [debugger gaps](debug-gap.md).
+
 ## Current CLR support
 
 The [CLI](../../src/Fpas.Cli/Compilation/CompilerCommand.cs) exposes only `compile`, plus root
@@ -56,7 +60,7 @@ define the comparison scope.
 | `build` | Missing FPAS frontend for the existing MSBuild build path. Old `.fpascu` and `.fpascp` outputs have CLR assembly equivalents. Native application packaging is a separate gap below. |
 | `run` | Missing source/project/solution discovery, build-and-launch handling, and direct assembly execution. Arguments, standard streams, cancellation, working directory, and child exit status need a command contract. |
 | `check` | Missing analysis-only command and compiler API mode. Project references may still need restore or dependency compilation to supply metadata. `--fix` has additional gaps below. |
-| `debug` | Missing debug-session layer and DAP, JSONL, and one-shot batch frontends. Portable symbols already exist. See the debugger gaps below. |
+| `debug` | No FPAS command exists. The [plan](debugger/README.md) selects stock NetCoreDbg/DAP and compiler compatibility, with an interactive terminal-client route to verify. Batch mode is explicitly blocked. |
 | `test` | Missing FPAS test-program discovery and runner. Existing C# toolchain tests run with `dotnet test`; this does not provide the old FPAS test-program workflow. |
 | `fmt` | Missing formatter for the current CLR language. Its parser/formatter needs to preserve comments and source meaning. Old Rust formatting rules cannot establish correctness for the new syntax. |
 | `doc` | Missing declaration lookup and signature/documentation output. Source documentation and CLR metadata are available inputs; consuming referenced assemblies' XML documentation needs tooling. Existing XML generation is not a `doc` lookup command. |
@@ -134,46 +138,19 @@ FPAS language syntax.
 
 ## Debugger and agent inspection
 
-The Rust debugger has VM debug operations, a protocol-neutral engine, and DAP,
-JSONL, and batch frontends. The agent-facing batch mode runs to a requested
-breakpoint, runtime failure, or completion and emits one bounded JSON snapshot.
-It includes stacks, bindings, globals, requested values, program output, and
-explicit capture limits. The debugger itself does not need an LLM.
+IDE debugging is complete through Microsoft's C# extension in official VS Code;
+see the [guide](../pascal/tools/debugging.md). Compiler symbols and value views
+are implemented.
 
-The CLR emitter already produces [portable debug information](../architecture/debug-information.md)
-with source identities, statement sequence points, hidden generated code,
-lexical locals, closure-associated locations, and async state-machine/yield/resume
-metadata. Existing tests inspect symbols and source stack traces. They do not
-establish a complete interactive FPAS debugging workflow with a selected CLR
-debugger. Practical verification remains open in
-[documentation gap D3](documentation-gaps.md#d3-concrete-debuggingprofiling-walkthroughs).
+CLI/DAP remains open: FPAS has no debug command, the NetCoreDbg DAP path lacks
+program stdin, and request cancellation, adapter-failure cleanup and terminal
+platform acceptance need completion. The
+[Neovim prototype](../../integrations/neovim/README.md) provides normal controls,
+but does not close these gaps. Follow the [CLI/DAP plan](debugger/cli-dap.md).
 
-Missing capabilities include:
-
-- A CLR debugger backend integration and common session state for launch,
-  pause/resume, stepping, breakpoints, frames, scopes, values, and exceptions.
-- A DAP frontend or integration suitable for FPAS editors. An existing CoreCLR
-  adapter such as [NetCoreDbg](https://github.com/Samsung/netcoredbg) is a
-  candidate to evaluate. Compatibility with generated FPAS assemblies, .NET 10,
-  synchronous stepping, and real async suspension has not been established here.
-- A JSONL session interface and a bounded one-shot JSON snapshot command for
-  agents. Output separation, deadlines, value limits, unavailable data, and
-  inspection-handle lifetimes lack a CLR FPAS contract.
-- FPAS watch-expression and conditional-breakpoint semantics. A debugger's C#
-  evaluator does not implement Pascal operators, aliases, or FPAS name lookup.
-- Source-oriented presentation of captures, domains, unions, and generated
-  async storage. PDB emission alone does not supply every frontend convention.
-- A defined policy for expression evaluation and mutation. The Rust VM's
-  detached-value evaluation cannot simply be assumed for arbitrary .NET calls
-  or property getters, which can execute code and change live state.
-- A distinction between OS threads, CLR tasks/async continuations, and the old
-  VM's stable task identities and all-stop scheduler.
-
-VM task controls, forced return, selected-frame restart, data/assignment
-tracepoints, recording, and compatible image reload/rollback have no established
-CLR equivalents in this port. Each depends on backend capabilities or additional
-compiler/runtime tooling. Reverse execution and replay were not supported by the
-old debugger either.
+Evaluation uses backend expression syntax and may execute program code. Full
+Pascal expressions and arbitrary attach are outside the current scope.
+Batch debugging, MI/JSONL frontends and a new FPAS debug engine are not selected.
 
 ## Intentionally omitted capabilities
 
@@ -205,13 +182,16 @@ For completeness, the Rust benchmark tool's native drivers were
 | `run --failure-dump` | No structured FPAS runtime-failure report command. Exception/source stacks are a starting point; local values from arbitrary frames need debugger or dump analysis. A generic process launcher cannot recover them from stderr. |
 | `test --list`, `--filter`, `--file`, `--jobs`, `--timeout`, `--fail-fast`, `--show-output`, `--report json` | Missing discovery/selection and isolated CLR test-program execution with structured results, output capture, deadlines, and process cleanup. |
 | Test hooks, assertions, skip/`--strict`, scratch directories, and golden output | The old `*_test.fpas` program convention and `Std.Test` behavior need an explicit CLR counterpart or test-framework integration. A source test suite cannot simply put multiple program entries in one ordinary executable project. |
-| Test/debug `--script` and interactive terminal input | Redirected standard input/output is available to CLR processes. The old hosted-console events, virtual screen, and terminal assertions have no equivalent in this port. |
+| Test `--script` and interactive terminal input | Redirected standard input/output is available to CLR processes. The old hosted-console events, virtual screen, and terminal assertions have no equivalent in this port. |
+| Debug `--script` and command-file execution | Blocked with batch debugging; do not add a script runner or forward vendor batch flags as an FPAS feature. |
 | `fmt --check`, `--list`, `--stdout` | Missing formatter modes for validation, changed-file listing, and output without source replacement. |
 | `--no-contracts` | No disable switch exists. Contracts execute in Debug and Release. Optional omission would require an explicit policy decision, not merely parsing a flag. |
 | `--gc-cell-threshold`, `--gc-mutation-threshold`, `--gc-poll-interval` | VM collection tuning has no matching CLR GC flags. |
 | Debug `--schedule-seed` and `--instruction-limit` | Seeded VM scheduling, virtual time, and exact dispatched-bytecode limits do not apply to ordinary CLR execution. Process deadlines are a different guarantee. |
-| Debug `--trace`, `--trace-limit`, `--task`, `--frame`, `--print`, `--break` | Missing commands; inspection selectors and trace coverage depend on the chosen CLR debugger integration. |
-| Debug `--protocol dap/jsonl`, `--commands`, `--source-root`, `--timeout`, `--output-limit` | Missing protocol/session frontends, scripted JSONL input, symbol/source matching policy, and bounded lifecycle. Old `.fpascp` source-root validation is not the CLR assembly/PDB contract. |
+| Debug `--break`, `--print`, `--frame`, `--timeout`, `--output-limit` | Existing clients/backends have their own controls; no FPAS flag contract is implemented. Batch run/report options are blocked. |
+| Debug `--protocol dap` | NetCoreDbg DAP is the selected backend protocol. An FPAS command/proxy is not assumed; use a suitable existing client or minimal justified integration. |
+| Debug `--protocol jsonl`, `--commands` | JSONL sessions are not selected; command-file/batch execution is blocked. |
+| Debug `--trace`, `--trace-limit`, `--task`, `--source-root` | Old trace/task/source-image contracts are not automatically CLR capabilities. Tracepoints, assembly/PDB/source matching, and CLR thread contexts remain backend-dependent gaps. |
 | JSON diagnostics and reports | `compile --diagnostics json` already returns one structured result. Other command reports, consistent failure output, and coverage/truncation fields are missing. Rust JSONL diagnostics and schemas are not automatically supported. |
 | Help, version, response files, and program arguments after `--` | Generated root/compile help, help aliases, root version output, JSON compile response files, and literal compile source paths after `--` exist. Program-argument forwarding and behavior for future commands remain missing. |
 
@@ -283,6 +263,10 @@ workflows have passed acceptance on both Windows and Linux. Implementing a CLI
 capability alone does not close either item. Their detailed criteria remain in
 the [documentation gaps](documentation-gaps.md). This coordination does not select
 additional commands, dependencies, or an implementation order.
+
+The debugging portion of D3 follows the [NetCoreDbg/DAP plan](debugger/README.md).
+Its batch block applies throughout implementation and documentation. Profiling,
+dump guidance and D1 retain their own open scope.
 
 ## Keeping the inventory current
 

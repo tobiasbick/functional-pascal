@@ -18,6 +18,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     public string Configuration { get; set; } = "Debug";
     public string TargetFramework { get; set; } = "net10.0";
     public string DebugType { get; set; } = "portable";
+    public bool Optimize { get; set; }
     public string DocumentationFile { get; set; } = "";
     public string DocumentationDestination { get; set; } = "";
     public string DocumentationOutput { get; set; } = "";
@@ -54,7 +55,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             }
             var previous = CompileFingerprint.Read(cache);
             var fingerprint = CompileFingerprint.Compute(sources, references, CompilerPath,
-                $"{OutputType}\0{Configuration}\0{TargetFramework}\0{output}\0{DebugType}\0{string.Join('\0', documents)}\0{TreatWarningsAsErrors}\0{WarningsAsErrors}\0{WarningsNotAsErrors}\0{NoWarn}");
+                $"{OutputType}\0{Configuration}\0{TargetFramework}\0{output}\0{DebugType}\0{Optimize}\0{string.Join('\0', documents)}\0{TreatWarningsAsErrors}\0{WarningsAsErrors}\0{WarningsNotAsErrors}\0{NoWarn}");
             if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
                 (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
             {
@@ -67,6 +68,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var arguments = new List<string>(sources);
             arguments.AddRange(["--output", output, "--target", OutputType == "Library" ? "library" : "exe", "--diagnostics", "json"]);
             arguments.AddRange(["--debug", DebugType]);
+            if (Optimize) arguments.Add("--optimize");
             if (documents.Length != 0) arguments.AddRange(["--documentation", documents[0]]);
             if (TreatWarningsAsErrors) arguments.Add("--warn-as-error");
             if (!string.IsNullOrWhiteSpace(WarningsAsErrors)) arguments.AddRange(["--warnings-as-errors", WarningsAsErrors]);

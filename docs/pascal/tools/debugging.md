@@ -1,31 +1,62 @@
 # Debugging CLR programs
 
-Use a .NET debugger supported by the current environment. FPAS emits matching
-portable PDBs with source documents, statement sequence points, lexical locals,
-closure locations, and async yield/resume metadata.
+FPAS emits portable PDBs, source positions, local scopes, closure names and async
+metadata for ordinary CLR debuggers. IDE debugging uses official VS Code with
+Microsoft's C# extension (`ms-dotnettools.csharp`).
 
-## Prepare an executable
+## Launch in VS Code
 
-Build through the [project SDK](../program-structure/projects.md) or
-[compiler CLI](../program-structure/cli.md), retaining portable symbols. Keep
-the generated assembly/PDB pair together and make its source files available.
-Use a bounded, reproducible input that reaches the breakpoint or failure.
+Build through the [project SDK](../../build/development.md#build-an-fpas-application)
+or [compiler CLI](../program-structure/cli.md), retaining matching DLL, PDB,
+runtime configuration, dependencies and source files. Use a Debug build for
+source stepping.
 
-The generated program has a normal CLR entry point; an async program has a bridge
-to its task-returning body. Free routines live on their program/unit container.
-Captured variables and async locals use generated CLR storage with debug metadata.
-Hidden compiler plumbing should not appear as ordinary source statements.
+Allow breakpoints in FPAS files in workspace settings:
 
-Inspect the actual exception and source stack before changing code. Distinguish
-a contract violation, a nullable/array failure, a library exception, and a failed
-cleanup operation. For rethrow, use raise; inside its catch to preserve the stack.
+```json
+{ "debug.allowBreakpointsEverywhere": true }
+```
 
-## Scope
+Add `.vscode/launch.json`, replacing Program.dll with the assembly name:
 
-Portable symbol emission is implemented. Automatic FPAS IDE project loading,
-language-service integration, and debugger front ends have separate scope.
-Select an installed compatible .NET debugger rather than assuming a language-
-specific debug command exists.
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FPAS",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/Debug/net10.0/Program.dll",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
+```
+
+Use the normal breakpoint, step, stack and variable controls. Program input
+belongs in the integrated terminal. Debug output supports Microsoft's default
+Just My Code/JIT settings; no custom debugger extension or C# file association is
+required. Automatic project discovery and a Pascal expression evaluator are
+separate features. Watch/evaluate uses the debugger's expression syntax.
+
+## Values and stepping
+
+Records and union cases have source-oriented displays and typed property views
+with a Raw View. Distinct/subrange domains display their decoded Value. Nullable
+values and arrays use standard CLR views. Captured mutable values are reachable
+through `this` -> capture field -> Value; captures are not flat locals.
+
+Async source stepping follows the continuation and exposes parameters/hoisted
+locals after suspension. Generated helpers and technical storage are hidden from
+ordinary stepping/expansion. Source display/proxy attributes take precedence.
+Inspection may execute getters, display code or evaluated methods. See
+[debug metadata](../../architecture/debug-information.md#debugger-attributes-and-value-views)
+for representation and scope limits.
+
+CLI/DAP remains [open](../../future/debugger/cli-dap.md); no FPAS debug command is
+supplied. Batch debugging is blocked.
 
 ## See also
 

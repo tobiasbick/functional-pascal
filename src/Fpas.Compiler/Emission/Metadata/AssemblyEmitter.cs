@@ -28,10 +28,10 @@ internal sealed partial class AssemblyEmitter
     private readonly Dictionary<string, MemberReferenceHandle> fields = [];
     private PortableDebugInfo? debug;
 
-    internal static CompiledProgram Emit(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog catalog, bool emitDebug)
-        => new AssemblyEmitter().Build(program, assemblyName, sources, catalog, emitDebug);
+    internal static CompiledProgram Emit(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog catalog, bool emitDebug, bool optimize)
+        => new AssemblyEmitter().Build(program, assemblyName, sources, catalog, emitDebug, optimize);
 
-    private CompiledProgram Build(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog references, bool emitDebug)
+    private CompiledProgram Build(BoundCompilation program, string assemblyName, IEnumerable<Syntax.SourceText> sources, ReferenceCatalog references, bool emitDebug, bool optimize)
     {
         catalog = references;
         sourceAssemblyName = assemblyName;
@@ -39,11 +39,13 @@ internal sealed partial class AssemblyEmitter
         if (emitDebug) debug = new(sources);
         using var sourceHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         sourceHash.AppendData(Encoding.UTF8.GetBytes(assemblyName));
+        sourceHash.AppendData([(byte)(emitDebug ? 1 : 0), (byte)(optimize ? 1 : 0)]);
         foreach (var text in sources)
             sourceHash.AppendData(SHA256.HashData(Encoding.UTF8.GetBytes(text.Text)));
         var mvid = new Guid(sourceHash.GetHashAndReset()[..16]);
         metadata.AddModule(0, metadata.GetOrAddString(assemblyName + ".dll"), metadata.GetOrAddGuid(mvid), default, default);
         metadata.AddAssembly(metadata.GetOrAddString(assemblyName), new Version(1, 0, 0, 0), default, default, 0, AssemblyHashAlgorithm.None);
+        AddDebuggableAttribute(optimize);
         var objectType = metadata.AddTypeReference(Reference(program.Runtime), metadata.GetOrAddString("System"), metadata.GetOrAddString("Object"));
         var bodies = new BlobBuilder();
         var bodyEncoder = new MethodBodyStreamEncoder(bodies);
@@ -71,7 +73,7 @@ internal sealed partial class AssemblyEmitter
                 if (routine.Symbol.Name == ".cctor") attributes |= MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
                 var handle = metadata.AddMethodDefinition(attributes, SourceMethodFlags(routine.Attributes),
                     metadata.GetOrAddString(routine.Symbol.Name), signature, EmitBody(routine, bodyEncoder), firstParameter);
-                if (routine.Symbol.IsAsync) AddAsyncAttribute(handle, layout.AsyncRoutines[routine]);
+                if (routine.Symbol.IsAsync) AddAsyncAttribute(handle, layout.AsyncRoutines[routine], routine.Attributes);
                 AddSourceAttributes(handle, routine.Attributes);
                 RegisterGenerics(handle, routine.Symbol.GenericParameters);
                 methodCount++;
@@ -95,6 +97,7 @@ internal sealed partial class AssemblyEmitter
         EmitClosures(program, bodyEncoder, ref parameterCount, objectType);
         EmitAsyncMachines(bodyEncoder, ref parameterCount, objectType, program.Runtime);
         EmitScalars(bodyEncoder, ref parameterCount, program.Runtime);
+        EmitDebuggerProxies(bodyEncoder, ref parameterCount, objectType, program.Runtime);
         EmitGenericParameters(program.Runtime);
         var symbols = debug?.Build(metadata, entry);
         DebugDirectoryBuilder? directory = null;

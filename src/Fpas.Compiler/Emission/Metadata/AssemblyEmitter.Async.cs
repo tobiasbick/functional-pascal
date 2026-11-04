@@ -56,6 +56,7 @@ internal sealed partial class AssemblyEmitter
             MethodSignature(TypeSymbol.Void, routine.Symbol.Parameters.Select(parameter => parameter.Type).ToArray()),
             bodies.AddMethodBody(il, 2, LocalSignature([awaitable.GetAwaiter.Result])),
             AddParameters(routine.Symbol with { Name = "<Main>", Result = TypeSymbol.Void }, ref parameterCount, runtime));
+        AddGeneratedMethod(handle, hidden: true);
     }
 
     private StandaloneSignatureHandle LocalSignature(IReadOnlyList<TypeSymbol> locals)
@@ -68,12 +69,14 @@ internal sealed partial class AssemblyEmitter
         return metadata.AddStandaloneSignature(metadata.GetOrAddBlob(blob));
     }
 
-    private void AddAsyncAttribute(MethodDefinitionHandle method, AsyncMachineSymbol machine)
+    private void AddAsyncAttribute(MethodDefinitionHandle method, AsyncMachineSymbol machine, IReadOnlyList<BoundAttribute>? attributes = null)
     {
         var attribute = catalog.Symbol(catalog.Required("System.Runtime.CompilerServices.AsyncStateMachineAttribute"));
         var constructor = Reference(new ImportedMethod(attribute, ".ctor", TypeSymbol.Void, [catalog.Symbol(catalog.Required("System.Type"))], false));
         var blob = new BlobBuilder(); blob.WriteUInt16(1);
         blob.WriteSerializedString(machine.OwnerName + "+" + machine.MetadataName); blob.WriteUInt16(0);
         metadata.AddCustomAttribute(method, constructor, metadata.GetOrAddBlob(blob));
+        if (attributes?.Any(attribute => AttributeIs(attribute, "System.Diagnostics.DebuggerStepThroughAttribute")) != true)
+            AddDebugAttribute(method, "System.Diagnostics.DebuggerStepThroughAttribute");
     }
 }

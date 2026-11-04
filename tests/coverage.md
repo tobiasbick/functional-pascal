@@ -31,7 +31,9 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Source overloads and CLR interface implementation/defaults | OverloadAndInterfaceDiagnosticsTests | OverloadExecutionTests, MsBuildTests.Overloads/Interfaces |
 | Source interface declarations, inheritance, constraints, metadata and XML IDs | SourceInterfaceTests | MsBuildTests.SourceInterfaces, LanguageSpecificationTests (InterfaceSources) |
 | Async faults, cancellation, references, contexts, disposal | AsyncDiagnosticsTests | AsyncExecutionTests, MsBuildTests.Async |
-| Portable PDBs, sequence points, scopes, closures, async metadata | PortableDebugInfoTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
+| Portable PDBs, sequence points, scopes, closures, async metadata | PortableDebugInfoTests, AsyncDebugInfoTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
+| Standard debugger attributes, typed views and symbol/JIT policy | DebuggerAttributeTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
+| Real NetCoreDbg source next/step-in, values, captures, resumed async, exceptions and disconnect | CallableMetadataTests, AsyncDebugInfoTests | NetCoreDbgTests (explicit external backend; see tests README) |
 | Comments, XML IDs, public boundaries, warning policy | DocumentationTests | DocumentationCliTests, MsBuildTests.Documentation/DocumentationIds |
 | Global fields, visibility, initialization, nullable metadata | GlobalTests | GlobalExecutionTests, MsBuildTests.Globals |
 | Local recursion, capture initialization, generic/async environments | NestedRoutineTests | NestedRoutineExecutionTests, MsBuildTests.NestedRoutines |
@@ -46,7 +48,7 @@ Files live in [compiler tests](Fpas.Compiler.Tests/) and
 files; the shared fixture owns packaging and process setup.
 
 Compiler files are grouped in Types, Routines, ControlFlow, and Metadata;
-integration files in Cli, Execution, Documentation, and Build. Shared setup lives
+integration files in Cli, Execution, Documentation, Debugging, and Build. Shared setup lives
 in each project's Support directory.
 
 ## Behavioral checks
@@ -74,6 +76,22 @@ Capture checks cover escaping delegates, sibling mutable cells, per-iteration
 values, struct method-group snapshots, conservative nullable facts, and premature
 lexical environment construction. Generic checks inspect TypeSpec/MethodSpec and
 !n/!!n signatures, constraints, nullable annotations, and cross-assembly consumers.
+
+The optional real-backend debugger suite additionally checks source stops before
+execution, updated locals after next, live captured cells, generic library
+captures, shadowed names and an actually suspended async continuation. It checks
+ordinary aggregate/domain/nullable/array values, two incomplete awaits with
+shared generic captures, hidden compiler temporaries and lexical hoisted scopes.
+Metadata checks independently compare hoisted ranges with inside/outside source
+sequence points and retain deterministic assembly/PDB identity. It checks
+ordinary exceptions/output and graceful disconnect of the launch-owned target.
+Launch checks include pending breakpoint events without an entry stop, relative
+CLI paths with a separate working directory, UTF-8 arguments, separate output
+categories, source step-out, pause and failed-launch shutdown. CLI symbol tests
+also verify absolute source documents and runtime exception paths independently.
+It does not supply a product frontend or establish crash/hang recovery. Backend
+selection and explicit skips are documented in the
+[test instructions](README.md#netcoredbg-integration-tests).
 
 Aggregate checks cover constructor/default order, private state, copy helpers,
 equality/hash behavior, recursive generic unions, and corrupted versioned

@@ -19,7 +19,8 @@ public sealed record CompilationSource(string Path, string Text);
 
 public sealed record CompilationRequest(
     IReadOnlyList<CompilationSource> Sources, string AssemblyName, IReadOnlyList<string> References,
-    CompilationTarget Target = CompilationTarget.Exe, bool EmitDebugInformation = false, bool EmitDocumentation = false, DiagnosticOptions? DiagnosticOptions = null);
+    CompilationTarget Target = CompilationTarget.Exe, bool EmitDebugInformation = false, bool EmitDocumentation = false, DiagnosticOptions? DiagnosticOptions = null,
+    bool Optimize = false);
 
 public sealed record CompiledProgram(byte[] AssemblyImage, string? RuntimeConfiguration, byte[]? PortablePdb = null, byte[]? XmlDocumentation = null);
 
@@ -58,7 +59,7 @@ public static class FpasCompiler
                 diagnostics = (request.DiagnosticOptions ?? new()).Apply(result.Diagnostics);
                 if (diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)) return new(null, diagnostics);
             }
-            var output = AssemblyEmitter.Emit(compilation, request.AssemblyName, catalog.Units.Select(unit => unit.Source), references, request.EmitDebugInformation);
+            var output = AssemblyEmitter.Emit(compilation, request.AssemblyName, catalog.Units.Select(unit => unit.Source), references, request.EmitDebugInformation, request.Optimize);
             return new(output with { XmlDocumentation = documentation }, diagnostics);
         }
         catch (CompilationFailure failure)

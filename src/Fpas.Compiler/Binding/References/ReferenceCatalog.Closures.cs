@@ -7,7 +7,7 @@ internal sealed partial class ReferenceCatalog
     internal TypeSymbol CaptureStorage(CaptureSymbol capture) => capture.Mutable ? CellType(capture.Type) : capture.Type;
 
     internal ImportedField CaptureField(CaptureSymbol capture)
-        => new(capture.Owner.Type, "<Capture" + capture.Owner.Captures.IndexOf(capture) + ">", CaptureStorage(capture), false, true,
+        => new(capture.Owner.Type, capture.FieldName, CaptureStorage(capture), false, true,
             SignatureType: ClosureSignature(CaptureStorage(capture), capture.Owner));
 
     internal ImportedMethod ClosureMethod(ClosureSymbol closure, bool constructor)

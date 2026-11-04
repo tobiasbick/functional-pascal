@@ -42,6 +42,8 @@ fpas check examples/units/Units.fpasproj
 fpas query definition examples/units/Units.fpasproj --file examples/units/main.fpas --line 6 --column 29
 fpas query type examples/units/Units.fpasproj --file examples/units/main.fpas --line 7 --column 21
 fpas query refs examples/units/Units.fpasproj --file examples/units/lib/calculations.fpas --line 8 --column 17 --limit 100
+fpas query find examples/units/Units.fpasproj --name SumTo --match exact --kind routine
+fpas query inspect examples/units/Units.fpasproj --file examples/units/lib/calculations.fpas --line 8 --column 17 --limit 20
 ```
 
 Query output is one JSON document, including argument/setup failures. Its status
@@ -74,6 +76,65 @@ An ambiguous selection returns candidate project paths. Selection does not narro
 the refs search scope. Configuration, no-restore, timeout and exit codes match
 check. Query responses are bounded to 4 MiB; oversized output returns result_limit
 as complete JSON. Source/input changes invalidate results before publication.
+
+### Find declarations
+
+`query find <context> --name <text>` searches explicit checked FPAS declarations,
+including private declarations, imports, parameters and local bindings. It
+matches semantic simple or source-qualified names, case-sensitively and ordinally.
+Escaped names omit `@` for matching; navigation spans retain it. `--match` accepts
+`exact`, `prefix` or `contains` (default); text is literal, with no regex/globs.
+
+Repeat `--kind` to combine declaration kinds with OR. Help lists supported kinds;
+record fields use `property`. `--project` restricts the searched FPAS owners,
+while analysis still checks the complete context. Find excludes generated or
+implicit declarations, metadata-only symbols and C#/F# sources. It does not
+provide exhaustive external assembly search.
+
+`result.find` contains compact `matches` with project, symbol ID, kind, name,
+qualified name, semantic signature, accessibility when applicable and navigation
+span. Overloads/shadowed declarations stay separate, as do linked files' owning
+compilations. Results sort by project, source path, offset, kind and signature.
+There is no position `selection` in a find response.
+
+`--limit` defaults to 100 (1..1000); `--offset` defaults to 0 (nonnegative Int32).
+`totalCount` counts filtered matches before paging; `returnedCount`, `offset`
+and optional `nextOffset` describe the page. Empty/past-end pages are `ok`.
+`truncated` means matches exist outside this page, including earlier pages.
+Combine pages only with equal `snapshotId`; restart when inputs change. Symbol
+IDs are snapshot-local and are not persistent selectors. Use a match's
+file/line/column with the position queries.
+
+### Inspect a declaration
+
+`query inspect <context> --file <source> --line <n> --column <n>` uses definition's
+bound identifier selection, overload/static-contract rules and linked-owner
+disambiguation. Whitespace, comments, implicit bindings and namespaces retain
+definition's `not_found` reasons. Inspection does not predict runtime dispatch.
+
+`result.inspect` includes the canonical `definition`, `containingDeclarations`,
+structured `types`, `source`, `related` declarations, related-source counts and
+`omissions`. Source includes owning project plus declaration/body/documentation
+availability and exact spans. Declaration text includes attributes and its body
+once; body is a location, without a duplicate text copy. Documentation contains
+only attached source comments. Bodyless declarations say `no_body`; absent
+documentation says `no_documentation`. External metadata says `metadata_only`
+without a guessed source span. Inspect never decompiles or executes user code.
+
+Related declarations cover one hop of the declared surface (parameters/results,
+constraints, alias/domain targets, interfaces, fields, union payloads and member
+signatures for selected types/containers). Generic substitutions remain in type
+descriptors. Types found only in implementation locals/calls and recursive
+expansion of related members are excluded.
+
+`--limit` defaults to 20 related source declarations (1..100). Metadata descriptors
+remain available. Exact declaration/documentation slices share a 64 KiB UTF-8
+budget: selected declaration first, attached documentation next, then related
+declarations in deterministic project/path/offset order. A slice that will not
+fit is omitted whole with `source_budget`; its identity/span remain. Bodyless
+and metadata-only results are availability facts. Budget/related-limit omissions
+set `truncated` and counts independently of complete analysis coverage. The
+outer 4 MiB response limit still applies.
 
 ## Inspect and invoke the compiler
 

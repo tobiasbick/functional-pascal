@@ -6,8 +6,14 @@ internal sealed partial class Parser
     {
         if (!At("<")) return [];
         position++;
-        var names = new List<Token> { Identifier() };
-        while (At(",")) { position++; names.Add(Identifier()); }
+        var names = new List<Token>();
+        do
+        {
+            var name = Identifier(); names.Add(name);
+            using (Declaration(name, name.Position)) { }
+            if (!At(",")) break;
+            position++;
+        } while (true);
         Expect(">"); return names;
     }
 
@@ -28,7 +34,7 @@ internal sealed partial class Parser
                 }
                 else if (At("struct")) { position++; constraints.Add(new(start, "struct", null)); }
                 else if (At("new")) { position++; Expect("("); Expect(")"); constraints.Add(new(start, "new", null)); }
-                else constraints.Add(new(start, null, ReadType()));
+                else constraints.Add(new(start, null, SurfaceType()));
                 if (!At(",")) break;
                 position++;
             } while (true);

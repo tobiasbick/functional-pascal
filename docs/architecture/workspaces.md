@@ -68,6 +68,8 @@ Linux/WSL acceptance covers packaged check/query, cancellation and process clean
 
 SourceQuery consumes a complete successful WorkspaceAnalysis. Explicit source
 positions select compiler facts from [semantic snapshots](compiler.md#semantic-snapshots).
+Find accepts a typed name search without a manufactured source position; inspect
+reuses definition's canonical selection and exact source/metadata mapping.
 Linked files require an owning project when ambiguous. Definition/type return
 self-contained structured descriptors; refs searches all analyzed FPAS projects
 within the declared context, excluding declarations and generated occurrences.
@@ -82,6 +84,21 @@ Reference results sort by project, path, offset and role. Output truncation is
 independent of successful scope analysis. Binary-only reference paths state the
 search boundary. A project context cannot claim callers in unknown consumers,
 and C#/F# sources are not part of the FPAS reference index.
+
+Find searches explicit declarations in checked FPAS sources, including private
+and local declarations. Owner filtering narrows searched coverage without
+weakening complete-context analysis. Literal ordinal name/kind filters precede
+deterministic paging. Linked sources remain separate per project; metadata-only
+and generated symbols are excluded. Pages are compatible only within the same
+snapshot identity.
+
+Inspect slices immutable captured source by compiler-recorded extents. It keeps
+declaration, body and attached documentation availability explicit, and adds one
+hop of declared surface types through existing canonical identities. Body-local
+types and recursive related-member expansion are excluded. Related source limits
+and a 64 KiB aggregate UTF-8 text budget omit whole slices with explicit counts;
+these bounds do not weaken analysis coverage. Neither operation executes user
+code or retains compiler objects. Both verify inputs before publishing.
 
 The [CLI reference](../pascal/program-structure/cli.md) owns selectors, JSON
 envelopes, exit codes, limits and examples. These services do not implement an

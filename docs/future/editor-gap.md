@@ -26,11 +26,12 @@ These capabilities do not provide an editor session, analysis of unsaved buffers
 LSP requests, project discovery in an editor, or a VS Code extension. The
 [compiler API](../../src/Fpas.Compiler/Compilation.cs) provides both compilation
 and semantic validation without emission, including a detached navigation index.
-Fpas.Workspaces supplies evaluated contexts and definition/type/refs queries.
+Fpas.Workspaces supplies evaluated contexts and find/inspect/definition/type/refs
+queries.
 An interactive editor session and unsaved-buffer analysis remain missing.
 
 The [workspace service](../architecture/workspaces.md) implements the shared
-analysis/project-context foundation for check and three CLI queries. Editor
+analysis/project-context foundation for check and five CLI queries. Editor
 sessions, unsaved-buffer recovery and an LSP remain separate work.
 
 ## Language services
@@ -84,6 +85,10 @@ The Rust source-query interface also serves checked `find`, `inspect`,
 `definition`, `refs`, `type`, `callers`, and `callees` operations over editor
 snapshots. A CLR editor-snapshot service and its transport remain missing. Their
 wire schema and implementation remain open.
+
+The CLR [find/inspect commands](../pascal/program-structure/cli.md#find-declarations)
+cover saved-source queries over the existing workspace analysis. Editor snapshots,
+unsaved buffers and an editor transport remain separate work.
 
 ## Read-only source views
 

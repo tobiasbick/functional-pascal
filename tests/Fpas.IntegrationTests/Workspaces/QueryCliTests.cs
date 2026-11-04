@@ -8,6 +8,47 @@ namespace Fpas.IntegrationTests.Workspaces;
 public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
     [Fact]
+    public async Task Packaged_find_and_inspect_publish_distinct_typed_results_and_discoverable_help()
+    {
+        using var project = sdk.CreateProject();
+        foreach (var operation in new[] { "find", "inspect" })
+        {
+            var result = operation == "find"
+                ? await Query(project, operation, "Game/Game.fpasproj", "--name", "Message", "--kind", "routine", "--kind", "global", "--match", "prefix")
+                : await Query(project, operation, "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "8", "--column", "26");
+            Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Equal("", result.Error);
+            using var json = JsonDocument.Parse(result.Output);
+            Assert.Equal("ok", json.RootElement.GetProperty("status").GetString());
+            var data = json.RootElement.GetProperty("result").GetProperty(operation);
+            if (operation == "find")
+            {
+                Assert.False(json.RootElement.TryGetProperty("selection", out _));
+                Assert.Equal("Message", Assert.Single(data.GetProperty("matches").EnumerateArray()).GetProperty("name").GetString());
+            }
+            else Assert.Equal("available", data.GetProperty("source").GetProperty("declaration").GetProperty("availability").GetString());
+            var help = await Query(project, operation, "--help");
+            Assert.Equal(0, help.ExitCode); Assert.Contains("Examples:", help.Output); Assert.Contains("fpas query " + operation, help.Output);
+        }
+        Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
+    }
+
+    [Theory]
+    [InlineData("find", "--name", "X", "--match", "regex")]
+    [InlineData("find", "--name", "X", "--kind", "missing")]
+    [InlineData("find", "--name", "", "--offset", "0")]
+    [InlineData("find", "--name", "X", "--offset", "-1")]
+    [InlineData("inspect", "--file", "X.fpas", "--limit", "101")]
+    public async Task Discovery_argument_errors_are_one_JSON_document_without_preparing_a_context(string operation, string flag, string value, string other, string setting)
+    {
+        using var project = sdk.CreateProject();
+        var result = await Query(project, operation, "Missing.fpasproj", flag, value, other, setting);
+        Assert.Equal(2, result.ExitCode); Assert.Equal("", result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        Assert.Equal("invalid_argument", json.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.False(Directory.Exists(project.File("Game/obj")));
+    }
+
+    [Fact]
     public async Task Packaged_context_queries_return_typed_JSON_for_source_metadata_types_and_references()
     {
         using var project = sdk.CreateProject();
@@ -60,12 +101,16 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         using var json = JsonDocument.Parse(result.Output); Assert.Equal("invalid_argument", json.RootElement.GetProperty("error").GetProperty("code").GetString());
     }
 
-    [Fact]
-    public async Task Invalid_source_never_returns_apparently_complete_empty_references()
+    [Theory]
+    [InlineData("refs")]
+    [InlineData("find")]
+    [InlineData("inspect")]
+    public async Task Invalid_source_never_returns_apparently_complete_empty_results(string operation)
     {
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Game/Bridge.fpas"), "unit Invalid; function Read(): int; begin return Missing; end function; end unit;");
-        var result = await Query(project, "refs", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "1", "--column", "24");
+        var result = operation == "find" ? await Query(project, operation, "Game/Game.fpasproj", "--name", "Absent")
+            : await Query(project, operation, "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "1", "--column", "24");
         Assert.Equal(1, result.ExitCode); Assert.Equal("", result.Error);
         using var json = JsonDocument.Parse(result.Output);
         Assert.Equal("analysis_failed", json.RootElement.GetProperty("error").GetProperty("code").GetString());
@@ -101,10 +146,10 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             """;
         File.WriteAllText(project.File("Game/Bridge.fpas"), source);
         var selection = SourcePosition.Select(project, "Game/Bridge.fpas", source, "Value;");
-        var result = await Query(project, "definition", "Game/Game.fpasproj", "--file", selection.File, "--line", selection.Line.ToString(), "--column", selection.Column.ToString());
+        var result = await Query(project, "inspect", "Game/Game.fpasproj", "--file", selection.File, "--line", selection.Line.ToString(), "--column", selection.Column.ToString());
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
         using var json = JsonDocument.Parse(result.Output);
-        Assert.Equal("Value", json.RootElement.GetProperty("result").GetProperty("definition").GetProperty("symbol").GetProperty("name").GetString());
+        Assert.Equal("Value", json.RootElement.GetProperty("result").GetProperty("inspect").GetProperty("definition").GetProperty("symbol").GetProperty("name").GetString());
         Assert.Empty(Directory.GetFiles(project.Path, "*-executed", SearchOption.AllDirectories));
         Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
     }

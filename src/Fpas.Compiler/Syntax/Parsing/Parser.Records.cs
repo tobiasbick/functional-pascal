@@ -4,12 +4,14 @@ internal sealed partial class Parser
 {
     private RecordSyntax ReadRecord(bool isProgram)
     {
+        var start = Current.Position;
         var documentation = Current.Documentation;
         var isPublic = At("public");
         if (isProgram && isPublic) throw source.Error("FP2003", "Public type declarations belong in units.", Current.Position);
         if (At("public") || At("private")) position++;
         Expect("type");
         var name = Identifier();
+        using var declaration = Declaration(name, start, isPublic ? "public" : "private", documentation);
         var parameters = ReadTypeParameters();
         Expect("=");
         var constraints = ReadConstraints();
@@ -19,24 +21,30 @@ internal sealed partial class Parser
         if (At("implements"))
         {
             position++;
-            interfaces.Add(ReadType());
-            while (At(",")) { position++; interfaces.Add(ReadType()); }
+            interfaces.Add(SurfaceType());
+            while (At(",")) { position++; interfaces.Add(SurfaceType()); }
         }
         var fields = new List<RecordFieldSyntax>();
         var methods = new List<RoutineSyntax>();
+        var bodyStart = Current.Position;
         while (!At("end"))
         {
+            var memberStart = Current.Position;
             var memberDocumentation = Current.Documentation;
             var attributes = ReadAttributes();
             var member = position;
             if (At("public") || At("private")) member++;
             if (tokens[member].Text is "static" or "async" or "function" or "procedure")
-                methods.Add(ReadRoutine(isProgram, inRecord: true) with { Attributes = attributes, Documentation = memberDocumentation });
+            {
+                var method = ReadRoutine(isProgram, inRecord: true) with { Attributes = attributes, Documentation = memberDocumentation };
+                methods.Add(method); Decorate(method.Name, memberStart, memberDocumentation);
+            }
             else
             {
                 var visible = !At("private");
                 if (At("public") || At("private")) position++;
                 var field = Identifier();
+                using var fieldDeclaration = Declaration(field, memberStart, visible ? "public" : "private", memberDocumentation);
                 var type = ReadBindingType(field);
                 ExpressionSyntax? value = null;
                 if (At(":=")) { position++; value = ReadExpression(); }
@@ -44,6 +52,7 @@ internal sealed partial class Parser
                 fields.Add(new(field, type, value, visible, memberDocumentation, attributes));
             }
         }
+        declaration.Body(bodyStart, Current.Position);
         Expect("end"); Expect("record"); Expect(";");
         return new(name, isPublic, fields, methods, parameters, constraints, interfaces, documentation);
     }

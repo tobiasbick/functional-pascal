@@ -19,8 +19,10 @@ internal sealed partial class Parser
             {
                 position++;
                 var name = Identifier();
+                using var declaration = Declaration(name, name.Position);
                 Expect(":");
-                result = new(name, ReadType());
+                result = new(name, SurfaceType());
+                declaration.Info.End = LastEnd;
                 Expect(")");
                 Expect(":");
             }

@@ -4,24 +4,29 @@ internal sealed partial class Parser
 {
     private UnionSyntax ReadUnion(bool isProgram)
     {
+        var start = Current.Position;
         var documentation = Current.Documentation;
         var visible = At("public");
         if (isProgram && visible) throw source.Error("FP2003", "Public types belong in units.", Current.Position);
         if (At("public") || At("private")) position++;
         Expect("type"); var name = Identifier();
+        using var declaration = Declaration(name, start, visible ? "public" : "private", documentation);
         var parameters = ReadTypeParameters();
         Expect("="); var constraints = ReadConstraints(); Expect("union");
         var cases = new List<UnionCaseSyntax>();
+        var bodyStart = Current.Position;
         while (!At("end"))
         {
             var caseDocumentation = Current.Documentation;
             var label = Identifier(); var fields = new List<ParameterSyntax>();
+            using var caseDeclaration = Declaration(label, label.Position, "public", caseDocumentation);
             if (At("("))
             {
                 position++;
                 do
                 {
-                    var field = Identifier(); fields.Add(new(field, ReadBindingType(field)));
+                    var field = Identifier();
+                    using (Declaration(field, field.Position, "public")) fields.Add(new(field, ReadBindingType(field)));
                     if (!At(";")) break;
                     position++;
                 } while (true);
@@ -29,6 +34,7 @@ internal sealed partial class Parser
             }
             Expect(";"); cases.Add(new(label, fields, caseDocumentation));
         }
+        declaration.Body(bodyStart, Current.Position);
         Expect("end"); Expect("union"); Expect(";");
         return new(name, visible, cases, parameters, constraints, documentation);
     }
@@ -75,8 +81,18 @@ internal sealed partial class Parser
     {
         var start = Current.Position;
         if (At("_")) { position++; return new AnyPatternSyntax(start); }
-        if (At("const")) { position++; var name = Identifier(); return new BindingPatternSyntax(name, ReadBindingType(name)); }
-        if (At("is")) { position++; var type = ReadType(); Expect("as"); return new TypePatternSyntax(start, type, Identifier()); }
+        if (At("const"))
+        {
+            position++; var name = Identifier();
+            using var declaration = Declaration(name, start);
+            return new BindingPatternSyntax(name, ReadBindingType(name));
+        }
+        if (At("is"))
+        {
+            position++; var type = ReadType(); Expect("as"); var name = Identifier();
+            using var declaration = Declaration(name, start); declaration.Type(type);
+            return new TypePatternSyntax(start, type, name);
+        }
         if (Current.Kind == TokenKind.Identifier)
         {
             var name = ReadName();

@@ -19,6 +19,7 @@ internal sealed partial class Parser
                 name = Identifier();
                 Expect(":");
                 type = ReadType();
+                using var declaration = Declaration(name, name.Position); declaration.Type(type);
             }
             ExpressionSyntax? filter = null;
             if (At("when"))

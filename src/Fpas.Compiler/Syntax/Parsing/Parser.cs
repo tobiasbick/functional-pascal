@@ -8,6 +8,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
 
     internal CompilationUnitSyntax ParseCompilationUnit()
     {
+        var start = Current.Position;
         var documentation = Current.Documentation;
         var isAsync = At("async");
         if (isAsync) position++;
@@ -17,6 +18,8 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         if (isAsync && !isProgram) throw source.Error("FP2003", "Only program entry bodies and functions may be async.", Current.Position);
         position++;
         var name = ReadName();
+        using var container = Declaration(name.Parts[^1], start, documentation: documentation);
+        container.Info.SourceName = name.Text;
         Expect(";");
         var imports = new List<ImportSyntax>();
         if (At("uses"))
@@ -24,9 +27,12 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             position++;
             do
             {
+                var importStart = Current.Position;
                 var target = ReadName();
                 Expect("as");
-                imports.Add(new(target, Identifier()));
+                var alias = Identifier();
+                using (Declaration(alias, importStart)) { }
+                imports.Add(new(target, alias));
                 if (!At(","))
                     break;
                 position++;
@@ -41,6 +47,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var globals = new List<GlobalSyntax>();
         while (At("[") || At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type") || At("const") || At("var"))
         {
+            var declarationStart = Current.Position;
             var declarationDocumentation = Current.Documentation;
             var attributes = ReadAttributes();
             var declaration = position;
@@ -53,38 +60,51 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 position = declaration;
                 globals.Add(new((BindingSyntax)ReadStatement() with { Documentation = doc }, visible));
                 Expect(";");
+                var global = globals[^1].Binding.Name;
+                Decorate(global, declarationStart, declarationDocumentation);
+                declarations[global.Position].Accessibility = visible ? "public" : "private";
+                declarations[global.Position].End = LastEnd;
             }
             else if (tokens[declaration].Text == "type")
             {
-                var saved = position;
-                position = declaration + 2;
-                ReadTypeParameters(); Expect("="); ReadConstraints();
-                var union = At("union"); var record = At("record"); var contract = At("interface"); position = saved;
+                var probe = new Parser(source, tokens) { position = declaration + 2 };
+                probe.ReadTypeParameters(); probe.Expect("="); probe.ReadConstraints();
+                var union = probe.At("union"); var record = probe.At("record"); var contract = probe.At("interface");
                 if (union) unions.Add(ReadUnion(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else if (record) records.Add(ReadRecord(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else if (contract) interfaces.Add(ReadInterface(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else ReadScalarDeclaration(isProgram, aliases, scalars, attributes, declarationDocumentation);
+                Decorate(tokens[declaration + 1], declarationStart, declarationDocumentation);
             }
-            else routines.Add(ReadRoutine(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
+            else
+            {
+                var routine = ReadRoutine(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation };
+                routines.Add(routine); Decorate(routine.Name, declarationStart, declarationDocumentation);
+            }
         }
         IReadOnlyList<StatementSyntax> statements = [];
         if (isProgram)
         {
+            var bodyStart = Current.Position;
             Expect("begin");
             statements = ReadStatements();
             Expect("end");
             Expect(";");
+            container.Body(bodyStart, LastEnd);
         }
         Expect("end");
         Expect(isProgram ? "program" : "unit");
         Expect(";");
         if (Current.Kind != TokenKind.End)
             throw source.Error("FP2001", "Unexpected content after the source terminator.", Current.Position, Current.Length);
-        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals, interfaces);
+        container.Info.End = LastEnd;
+        return new(name, isProgram, imports, routines, statements, records, unions, isAsync, documentation, aliases, scalars, globals, interfaces)
+            { Declarations = declarations };
     }
 
     private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false, bool nested = false, bool abstractMember = false)
     {
+        var start = Current.Position;
         var documentation = Current.Documentation;
         var isPublic = At("public") || inRecord && !At("private");
         if (isProgram && isPublic && !inRecord)
@@ -99,6 +119,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         if (isAsync && !function) throw source.Error("FP2003", "Async routines must be functions returning Task or Task<T>.", Current.Position);
         Expect(function ? "function" : "procedure");
         var name = Identifier();
+        using var declaration = Declaration(name, start, nested ? null : isPublic ? "public" : "private", documentation);
         var typeParameters = ReadTypeParameters();
         Expect("(");
         var parameters = new List<ParameterSyntax>();
@@ -117,17 +138,19 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         if (function)
         {
             Expect(":");
-            result = ReadType();
+            result = SurfaceType();
         }
         Expect(";");
         var constraints = ReadConstraints();
         if (abstractMember)
             return new(name, true, parameters, result, [], false, typeParameters, constraints, Documentation: documentation);
         var contracts = ReadContracts();
+        var bodyStart = Current.Position;
         Expect("begin");
         var body = ReadStatements();
         Expect("end");
         Expect(function ? "function" : "procedure");
+        declaration.Body(bodyStart, LastEnd);
         if (!nested) Expect(";");
         return new(name, isPublic, parameters, result, body, isStatic, typeParameters, constraints, contracts, isAsync, documentation);
     }

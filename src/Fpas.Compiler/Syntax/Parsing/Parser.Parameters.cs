@@ -4,8 +4,10 @@ internal sealed partial class Parser
 {
     private ParameterSyntax ReadParameter()
     {
+        var start = Current.Position;
         var mode = At("ref") || At("out") || At("in") || At("params") ? tokens[position++].Text : "";
         var name = Identifier();
+        using var declaration = Declaration(name, start);
         var type = ReadBindingType(name);
         ExpressionSyntax? value = null;
         if (At(":=")) { position++; value = ReadExpression(); }

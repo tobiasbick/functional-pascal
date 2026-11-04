@@ -60,11 +60,11 @@ Run [dist.ps1](../../dist.ps1) on Windows or [dist.sh](../../dist.sh) on Unix:
 ./dist.sh
 ```
 
-Both scripts restore/build/publish the CLI in Release and deploy the launcher,
-compiler assemblies, dependency/runtime configuration, and package dependencies
-to the repository's ignored `bin/` directory. They resolve paths relative to the
-script, so invocation also works from another working directory. Build artifacts
-stay under `.temp-data/dist/`, separate from ordinary toolchain/test builds.
+Both scripts restore/build the CLI and project SDK together in Release, publish
+the launcher and its dependencies to the ignored `bin/` directory, and pack the
+matching SDK into `sdk/feed/`. They resolve paths relative to the script, so
+invocation also works from another working directory. Build artifacts stay under
+`.temp-data/dist/`, separate from ordinary toolchain/test builds.
 
 Add that `bin/` directory to PATH once, then use `fpas --version`, `fpas --help`,
 or `fpas compile --help` from any directory. The scripts do not change PATH.
@@ -75,14 +75,21 @@ published files and preserves unrelated files in `bin/`.
 Building requires the .NET 10 SDK; running the deployed compiler requires the
 .NET 10 runtime. Keep the published files together. This local managed deployment
 does not close the [single-file/Native AOT distribution gaps](../future/dist-gap.md).
-Project SDK packaging remains the separate workflow below.
+
+Check/query require the CLI and the project's SDK to contain the same compiler
+binary. Dist builds both from the same artifacts directory and reads the package
+version from the SDK project (currently `0.1.0-dev`). It removes only that version's
+`fpas.net.sdk` entry from the active NuGet global-packages cache, so the next
+consumer restore/SDK resolution selects the new package. Other versions/packages
+remain cached. No separate SDK build, pack or cache-clear command is needed after
+dist. Consumers must select this SDK version and have the local feed configured;
+the checkout's examples already do.
 
 ## Build an FPAS application
 
-The local SDK package must exist before a consumer can restore its SDK:
+After running dist, restore/build an application:
 
 ```sh
-dotnet pack sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj --no-build --configuration Debug --output sdk/feed
 dotnet restore examples/hello/Hello.fpasproj
 dotnet build examples/hello/Hello.fpasproj --no-restore
 dotnet examples/hello/bin/Debug/net10.0/Hello.dll
@@ -92,10 +99,10 @@ The current SDK supports net10.0/AnyCPU and managed libraries/executables. It
 resolves framework, project, package, and Core support references. Executables
 run through dotnet; no native apphost or IDE extension is required.
 
-NuGet caches SDK packages by identity/version. After changing packaged tools,
-use a new development package version or remove only that SDK version from the
-local cache. For example, pack with `-p:PackageVersion=0.1.0-dev.2` and update
-the consumer's SDK version to match. To locate the cache, use
+For manual SDK packaging outside dist, NuGet caches packages by identity/version.
+After changing packaged tools, use a new version or remove only that SDK version
+from the local cache. For example, pack with `-p:PackageVersion=0.1.0-dev.2` and
+update the consumer's SDK version to match. To locate the cache, use
 `dotnet nuget locals global-packages --list`; remove only the selected
 `fpas.net.sdk/<version>` directory when intentionally reusing that version.
 Do not clear unrelated packages. See [MSBuild](msbuild.md) for the project contract.

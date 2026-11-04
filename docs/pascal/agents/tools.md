@@ -56,10 +56,17 @@ validation without analysis-owned assembly output. The selected SDK must match
 the CLI. Preparation can restore/build dependencies; `--no-restore` skips only
 restore. Project states and coverage distinguish invalid/blocked projects.
 Input changes invalidate results. See the CLI reference for timeout and exit codes.
-`fpas query definition|type|refs <context> --file <source> --line <n> --column <n>`
+`fpas query definition|type|refs|inspect <context> --file <source> --line <n> --column <n>`
 returns JSON from checked source positions (one-based UTF-16). Refs uses the whole
 declared FPAS scope, with --limit and explicit truncation; linked files may require
 --project. Prefer these queries for resolved identity/type facts over text search.
+`query find <context> --name <text>` searches explicit checked FPAS declarations;
+use --match exact|prefix|contains, repeat --kind, and page with --limit/--offset.
+Find's --project narrows searched owners. Combine pages only with equal snapshotId.
+Use returned navigation spans with inspect for exact declaration text, attached
+documentation and direct type context. Inspect's --limit bounds related source
+declarations; copied text shares a 64 KiB budget with explicit omissions. Neither
+query searches C#/F# source or guesses source for external metadata.
 
 ## Debug and profile
 

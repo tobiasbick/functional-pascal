@@ -10,10 +10,11 @@ public sealed record DefinitionResult(string? Project, string Origin, SemanticSy
 public sealed record TypeResult(SemanticType Type, SemanticType? DeclaredType, SemanticSymbol? Symbol, IReadOnlyList<SemanticType> Types);
 public sealed record ReferenceResult(string Project, SourceSpan Span, string Role);
 public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList<ReferenceResult> References, int ReturnedCount);
-public sealed record SourceQueryResult(string Status, string? Reason, QuerySelection Selection, DefinitionResult? Definition,
-    TypeResult? Type, ReferencesResult? Refs, bool Truncated, IReadOnlyList<string> BinaryBoundaries);
+public sealed record SourceQueryResult(string Status, string? Reason, QuerySelection? Selection, DefinitionResult? Definition,
+    TypeResult? Type, ReferencesResult? Refs, bool Truncated, IReadOnlyList<string> BinaryBoundaries,
+    FindResult? Find = null, InspectResult? Inspect = null, IReadOnlyList<string>? Searched = null);
 
-public sealed class SourceQuery
+public sealed partial class SourceQuery
 {
     private readonly WorkspaceAnalysis analysis;
     private readonly Dictionary<string, (ContextProject Input, SemanticSnapshot Snapshot)> projects;
@@ -45,9 +46,7 @@ public sealed class SourceQuery
         catch (ArgumentOutOfRangeException exception) { throw new ContextFailure("invalid_argument", exception.Message); }
         var occurrence = owner.Snapshot.OccurrenceAt(file, offset);
         var position = new QuerySelection(owner.Input.Path, new(file, offset, 0, selection.Line, selection.Column));
-        var boundaries = analysis.Context.Projects.SelectMany(project => project.Request.References).Distinct(Paths)
-            .Where(path => !analysis.Context.DependencyOutputs.Any(output => Paths.Equals(output.Path, path) && projects.ContainsKey(output.Project)))
-            .Order(StringComparer.Ordinal).ToArray();
+        var boundaries = BinaryBoundaries();
         if (operation == "type")
         {
             var expression = owner.Snapshot.TypeAt(file, offset);
@@ -56,7 +55,8 @@ public sealed class SourceQuery
             var selected = occurrence is null ? null : owner.Snapshot.Symbol(occurrence.Symbol);
             var type = owner.Snapshot.Types.Single(type => type.Id == expression.Type);
             var declared = expression.DeclaredType is null ? null : owner.Snapshot.Types.Single(type => type.Id == expression.DeclaredType);
-            return new("ok", null, position, null, new(type, declared, selected, Types(owner.Snapshot, [type.Id, declared?.Id, selected?.Type])), null, false, boundaries);
+            return new("ok", null, position, null, new(type, declared, selected, Types(owner.Snapshot,
+                (selected?.Context?.SurfaceTypes ?? []).Concat([type.Id, declared?.Id, selected?.Type]))), null, false, boundaries);
         }
         if (occurrence is null) return Missing("no_symbol");
         position = position with { Span = occurrence.Span };
@@ -122,7 +122,7 @@ public sealed class SourceQuery
         return Save(project, source.Snapshot, symbol, "implicit");
 
         DefinitionResult Save(string? targetProject, SemanticSnapshot snapshot, SemanticSymbol target, string origin)
-            => definitions[(project, symbol.Id)] = new(targetProject, origin, target, Types(snapshot, [target.Type]));
+            => definitions[(project, symbol.Id)] = new(targetProject, origin, target, Types(snapshot, (target.Context?.SurfaceTypes ?? []).Append(target.Type)));
     }
 
     private static string MetadataKey(MetadataIdentity identity) => identity.GetKey(includeAssemblyHash: false);

@@ -70,6 +70,13 @@ of documentation is separate from its XML serialization during compilation.
 ## Semantic snapshots
 
 Parsing retains complete expression/type extents alongside diagnostic positions.
+It also records explicit declarations with named ownership, accessibility,
+complete declaration and optional body/documentation spans. Attribute/modifier
+tokens belong to the declaration; attached comments have a separate exact span.
+Parameters/imports/generic parameters own their fragments without separator
+punctuation; executable declarations own their statement terminator. Loop
+bindings own their name/type fragment, not the loop body. Body locations retain
+block tokens for routines/programs and the member/case region for types.
 Binding records actual declarations, overloads, types and explicit occurrences
 through Binding.Semantics. Analysis never resolves identifiers again from strings
 or indexes generated closure/async storage as source references. SemanticPolicy
@@ -77,13 +84,21 @@ and its coverage test require an explicit policy for every expression form.
 
 SemanticSnapshot owns copied SourceDocument texts, source-local symbol IDs,
 SemanticSymbol/Type descriptors, SymbolOccurrence roles, ExpressionType facts and
-exact CLR exports. Collections are read-only and contain no bound symbols,
-metadata readers or open files. Metadata identities include assembly version,
+exact CLR exports. Collections are read-only and contain no syntax nodes, bound
+symbols, metadata readers or open files. Metadata identities include assembly version,
 culture/token, actual reference content hash, declaring type, member kind, arity
 and signature. Extra export
 identities map generated public representations back to their source declarations.
 External definitions retain original CLR identities/signatures; their checked
 generic substitutions belong to expression/type facts, independently of use order.
+
+DeclarationContext keeps the identifier-token navigation span separate from
+complete source extents, source-qualified names and snapshot-local owner IDs.
+The binder records direct surface types/symbols, preserving transparent aliases
+and constraints. Container/type surfaces include declared member signatures;
+implementation-local types/calls are excluded. Source-qualified names describe
+named source owners, without generated CLR names; overloads/shadowing can share
+a name and remain distinct symbols.
 
 SourceSpan uses absolute project-input paths, UTF-16 offsets/lengths and one-based
 line/column positions. Direct API inputs retain the paths supplied by the caller.

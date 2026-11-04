@@ -13,7 +13,9 @@ public sealed record SemanticType(string Id, string Kind, string Display, bool N
     IReadOnlyList<string> Arguments, string? Parameter, MetadataIdentity? Metadata, CallableSignature? Callable,
     int? GenericIndex = null, string? GenericOwner = null, bool IsValue = false, bool IsReference = false, bool MayBeNull = false);
 public sealed record SemanticSymbol(string Id, string Kind, string Name, string Signature, SourceSpan? Declaration,
-    string? Type, MetadataIdentity? Metadata, CallableSignature? Callable);
+    string? Type, MetadataIdentity? Metadata, CallableSignature? Callable, DeclarationContext? Context = null);
+public sealed record DeclarationContext(string? Owner, string QualifiedName, string? Accessibility, SourceSpan Span,
+    SourceSpan? Body, SourceSpan? Documentation, IReadOnlyList<string> SurfaceTypes, IReadOnlyList<string> SurfaceSymbols);
 public sealed record SymbolOccurrence(string Symbol, SourceSpan Span, string Role);
 public sealed record ExpressionType(SourceSpan Span, string Type, string? DeclaredType);
 

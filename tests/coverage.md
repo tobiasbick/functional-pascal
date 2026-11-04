@@ -14,9 +14,10 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Area | Compiler/metadata tests | Execution and mixed-build tests |
 | --- | --- | --- |
 | Analysis without output, completion, cancellation and compile diagnostic parity | AnalysisTests, AnalysisDocumentationTests, AnalysisCancellationTests | Existing CLI/execution/SDK regressions exercise shared preparation |
-| Detached spans, symbols, flow/callable/generic identities and expression policies | SemanticSnapshotTests, SemanticConstructTests, SemanticPolicyTests | SemanticDocumentationTests |
+| Detached spans, declaration ownership/source slices, flow/callable/generic identities and expression policies | SemanticSnapshotTests, DeclarationContextTests, SemanticConstructTests, SemanticPolicyTests | SemanticDocumentationTests |
 | Evaluated contexts, mapped/mixed graphs, generators, stale binaries and snapshots | | AnalysisContextTests, AnalysisPreparationTests, AnalysisCompatibilityTests, AnalysisBoundsTests, SourceQueryTests |
 | Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |
+| Literal declaration search/paging and exact bounded inspection with direct types | DeclarationContextTests | SourceQueryTests, QueryCliTests |
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |
 | Numeric widths, promotions, checked/unchecked, native/decimal | ScalarDiagnosticsTests, ScalarMetadataTests | NumericExecutionTests, ScalarExecutionTests, MsBuildTests.Scalars |
 | Lifted nullable operators, explicit null safety and CLR eligibility | NullableOperatorDiagnosticsTests | MsBuildTests.NullableOperators (C# result/exception matrix, numeric widths, domains, generic calls, evaluation order and await), LanguageSpecificationTests (NullableArithmetic) |
@@ -179,6 +180,11 @@ Deleted articles cannot remain as stale fixtures. See
 [example conventions](../docs/pascal/tools/documentation-examples.md).
 
 ## Build acceptance
+
+LocalDeploymentTests runs the platform's actual dist script twice in an isolated
+checkout/cache, from a different working directory. It verifies a matching
+launcher/SDK through find/inspect, development-version cache refresh, preservation
+of other package versions and unrelated deployed files, and first-run bootstrap.
 
 SDK packaging also verifies the MCP debugger and all managed tool dependencies
 are present, packaged debug help runs, and NetCoreDbg is not bundled. The MCP

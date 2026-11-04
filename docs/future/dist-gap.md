@@ -26,6 +26,8 @@ executable referencing the compiler and Fpas.Core projects. No Native AOT or
 single-file publish configuration is present. [dist.ps1](../../dist.ps1) and
 [dist.sh](../../dist.sh) publish the managed Release compiler and its dependencies
 to `bin/`, with a `fpas.exe` or executable `fpas` launcher for local PATH use.
+They also pack the matching SDK into `sdk/feed/` and refresh only its active
+NuGet cache version so project analysis uses the same compiler.
 The scripts require the .NET SDK to build and the .NET runtime to run the result.
 This [local deployment](../build/development.md#deploy-the-local-release-compiler)
 does not yet produce the single-file release artifact described above.

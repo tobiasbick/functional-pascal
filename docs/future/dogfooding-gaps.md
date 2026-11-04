@@ -34,8 +34,8 @@ different Pascal dialect cannot validate them.
   conversion, and async enumeration are outside the supported interoperability
   contract. Choose supported .NET overloads/types where available; record a
   concrete blocked maintenance task before introducing a fallback or extension.
-- The CLI provides compilation, evaluated project/solution checks, definition,
-  type and reference queries, and MCP debugging. Automatic editor sessions, LSP
+- The CLI provides compilation, evaluated project/solution checks, declaration
+  find/inspect, definition/type/reference queries, and MCP debugging. Automatic editor sessions, LSP
   and formatter tooling remain separate work. Portable symbols and XML API
   documentation support ordinary .NET debugging/profiling tools.
 

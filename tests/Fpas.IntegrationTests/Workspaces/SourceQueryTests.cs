@@ -31,6 +31,91 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         """;
 
     [Fact]
+    public async Task Find_searches_checked_declarations_with_literal_names_project_filters_and_stable_pages()
+    {
+        using var project = CreateGraph();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        var context = await WorkspaceLoader.LoadAsync(new(project.File("Game.slnx")), deadline.Token);
+        var query = new SourceQuery(WorkspaceAnalysis.Analyze(context, deadline.Token));
+        var exact = query.Find(new("Read", "exact"), deadline.Token);
+        Assert.Equal("Read", Assert.Single(exact.Find!.Matches).Name);
+        Assert.Equal("Demo.Bridge.Read", exact.Find.Matches[0].QualifiedName);
+        Assert.Equal(project.File("Game/Game.fpasproj"), exact.Find.Matches[0].Project);
+        Assert.Null(exact.Selection); Assert.False(exact.Truncated);
+        Assert.Empty(query.Find(new("read", "exact")).Find!.Matches);
+        Assert.Empty(query.Find(new("Read", "exact", ["local"])).Find!.Matches);
+        Assert.Single(query.Find(new("Demo.Bridge.Re", "prefix", ["routine"])).Find!.Matches);
+        var all = query.Find(new("Value", "contains"));
+        Assert.True(all.Find!.TotalCount > 2);
+        var page = query.Find(new("Value", Limit: 1, Offset: 1));
+        Assert.Equal(all.Find.Matches[1], Assert.Single(page.Find!.Matches));
+        Assert.Equal(all.Find.TotalCount, page.Find.TotalCount); Assert.Equal(2, page.Find.NextOffset); Assert.True(page.Truncated);
+        var past = query.Find(new("Value", Offset: int.MaxValue));
+        Assert.Empty(past.Find!.Matches); Assert.Null(past.Find.NextOffset); Assert.True(past.Truncated);
+        var filtered = query.Find(new("Value", Project: project.File("First/First.fpasproj")));
+        Assert.Equal([project.File("First/First.fpasproj")], filtered.Searched);
+        Assert.All(filtered.Find!.Matches, match => Assert.Equal(project.File("First/First.fpasproj"), match.Project));
+        Assert.Equal("invalid_argument", Assert.Throws<ContextFailure>(() => query.Find(new("Value", Project: project.File("Missing.fpasproj")))).Code);
+        Assert.Equal("invalid_argument", Assert.Throws<ContextFailure>(() => query.Find(new("Value", Kinds: ["missing"])) ).Code);
+        await context.VerifyInputsAsync(deadline.Token);
+    }
+
+    [Fact]
+    public async Task Inspect_returns_exact_source_direct_types_metadata_and_explicit_omissions()
+    {
+        using var project = CreateGraph();
+        const string declaration = "public function Wrap(Value: Box<int>; Count: Number; Link: Node): Box<int>; begin const Temporary: string := 'body only'; return Value; end function;";
+        var library = Library.Replace("end unit;", "public type Node = record Next: Node?; end record;\r\n// Wrap documentation\r\n" + declaration + "\r\nend unit;", StringComparison.Ordinal);
+        File.WriteAllText(project.File("Game/Bridge.fpas"), library);
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        var context = await WorkspaceLoader.LoadAsync(new(project.File("Game.slnx")), deadline.Token);
+        var query = new SourceQuery(WorkspaceAnalysis.Analyze(context, deadline.Token));
+        var selection = Select(project, "Game/Bridge.fpas", library, "Wrap(Value:");
+        var result = query.Inspect(selection, cancellationToken: deadline.Token);
+        Assert.Equal("ok", result.Status); Assert.False(result.Truncated);
+        var inspection = result.Inspect!;
+        Assert.Equal(declaration, inspection.Source.Declaration.Text);
+        Assert.Equal("// Wrap documentation", inspection.Source.Documentation.Text);
+        Assert.Equal("location", inspection.Source.Body.Availability); Assert.Null(inspection.Source.Body.Text);
+        Assert.Equal("Demo.Bridge", Assert.Single(inspection.ContainingDeclarations).Name);
+        Assert.Contains(inspection.Related, item => item.Definition.Symbol.Name == "Box");
+        Assert.Contains(inspection.Related, item => item.Definition.Symbol.Name == "Number");
+        Assert.Contains(inspection.Related, item => item.Definition.Symbol.Name == "Node");
+        var recursive = query.Inspect(Select(project, "Game/Bridge.fpas", library, "Node = record"));
+        Assert.DoesNotContain(recursive.Inspect!.Related, item => item.Definition.Symbol.Name == "Node");
+        Assert.DoesNotContain(inspection.Types, type => type.Display == "string");
+        Assert.Contains(inspection.Types, type => type.Display == "int");
+        var limited = query.Inspect(selection, 1);
+        Assert.True(limited.Truncated); Assert.Equal(1, limited.Inspect!.ReturnedRelatedSourceCount);
+        Assert.True(limited.Inspect.Omissions.RelatedLimit > 0);
+        var field = query.Inspect(Select(project, "First/Program.fpas", Consumer, "Value;"));
+        Assert.Equal("Value: T;", field.Inspect!.Source.Declaration.Text);
+        Assert.Equal("no_body", field.Inspect.Source.Body.Availability);
+        var metadata = query.Inspect(Select(project, "First/Program.fpas", Consumer, "int>"));
+        Assert.Equal("metadata", metadata.Inspect!.Definition.Origin);
+        Assert.Equal("metadata_only", metadata.Inspect.Source.Declaration.Availability);
+        Assert.Null(metadata.Inspect.Source.Declaration.Span);
+        await context.VerifyInputsAsync(deadline.Token);
+    }
+
+    [Fact]
+    public async Task Inspect_omits_oversized_whole_source_slices_without_hiding_analysis_coverage()
+    {
+        using var project = sdk.CreateProject();
+        var source = "unit Large; public function Read(): int; begin // " + string.Concat(Enumerable.Repeat("🙂", 20_000)) + "\n return 42; end function; end unit;";
+        File.WriteAllText(project.File("Game/Bridge.fpas"), source);
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        var context = await WorkspaceLoader.LoadAsync(new(project.File("Game/Game.fpasproj")), deadline.Token);
+        var analysis = WorkspaceAnalysis.Analyze(context, deadline.Token);
+        var result = new SourceQuery(analysis).Inspect(Select(project, "Game/Bridge.fpas", source, "Read()"));
+        Assert.True(analysis.IsComplete); Assert.True(result.Truncated);
+        Assert.Equal("source_budget", result.Inspect!.Source.Declaration.Availability);
+        Assert.Null(result.Inspect.Source.Declaration.Text); Assert.NotNull(result.Inspect.Source.Declaration.Span);
+        Assert.Equal(1, result.Inspect.Omissions.SourceBudget);
+        Assert.Equal("Read", result.Inspect.Definition.Symbol.Name);
+    }
+
+    [Fact]
     public async Task Definitions_bridge_exact_generic_properties_aliases_and_named_parameters_to_prepared_FPAs_source()
     {
         using var project = CreateGraph();
@@ -94,6 +179,8 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         var context = await WorkspaceLoader.LoadAsync(new(project.File("Game.slnx")), deadline.Token);
         var analysis = WorkspaceAnalysis.Analyze(context, deadline.Token); Assert.True(analysis.Success, string.Join(';', analysis.Projects));
         var query = new SourceQuery(analysis); var selection = Select(project, "Linked.fpas", linked, "Read():");
+        Assert.Equal(2, query.Find(new("Linked.Read", "exact")).Find!.TotalCount);
+        Assert.Equal("ambiguous_project", Assert.Throws<ContextFailure>(() => query.Inspect(selection)).Code);
         Assert.Equal("ambiguous_project", Assert.Throws<ContextFailure>(() => query.Execute("refs", selection)).Code);
         var result = query.Execute("refs", selection with { Project = project.File("First/First.fpasproj") }, cancellationToken: deadline.Token);
         Assert.Equal(project.File("First/First.fpasproj"), Assert.Single(result.Refs!.References).Project);

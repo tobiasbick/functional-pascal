@@ -34,11 +34,14 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
     private readonly Dictionary<TypeSymbol, string> typeIds = [];
     private readonly Dictionary<string, SemanticType> types = new(StringComparer.Ordinal);
     private readonly Dictionary<GenericParameterSymbol, string> parameterKinds = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<string, IReadOnlyDictionary<int, DeclarationSyntax>> sourceDeclarations = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+    private readonly Dictionary<(string Path, int Position, int End), string> surfaceTypes = [];
 
-    internal void Source(SourceText source, IReadOnlyList<Token> sourceTokens)
+    internal void Source(SourceText source, IReadOnlyList<Token> sourceTokens, IReadOnlyDictionary<int, DeclarationSyntax> declarations)
     {
         documents.Add(source.Path, new(source.Path, source.Text, token));
         tokens.Add(source.Path, sourceTokens.Where(value => value.Kind != TokenKind.End).ToDictionary(value => value.Position));
+        sourceDeclarations.Add(source.Path, declarations);
     }
 
     internal static string Fingerprint(AnalysisRequest request, ReferenceCatalog references, CancellationToken token)
@@ -113,7 +116,7 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
     {
         token.ThrowIfCancellationRequested();
         var allSymbols = symbols.Values.Distinct().Select(entry => new SemanticSymbol(entry.Id, entry.Kind, entry.Name, entry.Signature, entry.Declaration,
-            entry.Type, entry.Metadata, entry.Callable)).OrderBy(symbol => symbol.Id, StringComparer.Ordinal).ToArray();
+            entry.Type, entry.Metadata, entry.Callable, Context(entry))).OrderBy(symbol => symbol.Id, StringComparer.Ordinal).ToArray();
         return new(snapshotId, assemblyName, documents.Values.OrderBy(document => document.Path, StringComparer.Ordinal), allSymbols,
             types.Values.OrderBy(type => type.Id, StringComparer.Ordinal),
             occurrences.Select(item => new SymbolOccurrence(item.Value.Symbol.Id, item.Value.Span, item.Key.Role)).Distinct()

@@ -93,7 +93,7 @@ internal static class StructuredDocumentation
 
     private static void Remarks(List<DocumentationLine> target, IEnumerable<DocumentationLine> lines)
     {
-        if (target.Count != 0) target.Add(new("", 0));
+        if (target.Count != 0) target.Add(new("", 0, 0, 0));
         target.AddRange(lines);
     }
 }

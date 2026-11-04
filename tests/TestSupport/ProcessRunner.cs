@@ -9,8 +9,12 @@ internal static class ProcessRunner
 {
     internal static async Task<ProcessResult> RunAsync(IEnumerable<string> arguments, string? input = null,
         string? workingDirectory = null, IReadOnlyDictionary<string, string?>? environment = null, TimeSpan? timeLimit = null)
+        => await RunExecutableAsync(TestEnvironment.DotnetHost, arguments, input, workingDirectory, environment, timeLimit);
+
+    internal static async Task<ProcessResult> RunExecutableAsync(string executable, IEnumerable<string> arguments, string? input = null,
+        string? workingDirectory = null, IReadOnlyDictionary<string, string?>? environment = null, TimeSpan? timeLimit = null)
     {
-        var start = new ProcessStartInfo(TestEnvironment.DotnetHost)
+        var start = new ProcessStartInfo(executable)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,

@@ -48,7 +48,7 @@ internal sealed class PreparedCompilation : IDisposable
         try
         {
             var analysis = collectSemantics ? new SemanticRecorder(request.AssemblyName, references, SemanticRecorder.Fingerprint(request, references, cancellationToken), cancellationToken) : null;
-            foreach (var (source, tokens) in sourceTokens) analysis?.Source(source, tokens);
+            foreach (var unit in sources) analysis?.Source(unit.Source, sourceTokens[unit.Source], unit.Syntax.Declarations);
             var catalog = SourceCatalog.Declare(sources, references, analysis);
             analysis?.Declarations(catalog);
             var program = new BoundCompilation(references.Runtime, request.Target == CompilationTarget.Exe,

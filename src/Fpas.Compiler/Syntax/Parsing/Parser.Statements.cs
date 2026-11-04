@@ -9,8 +9,10 @@ internal sealed partial class Parser
         var statements = new List<StatementSyntax>();
         while (!terminators.Any(At) && Current.Kind != TokenKind.End)
         {
-            statements.Add(ReadStatement());
+            var statement = ReadStatement(); statements.Add(statement);
             Expect(";");
+            var name = statement switch { BindingSyntax binding => binding.Name, UsingSyntax use => use.Binding.Name, NestedRoutineSyntax nested => nested.Routine.Name, _ => null };
+            if (name is not null) declarations[name.Position].End = LastEnd;
         }
         return statements;
     }
@@ -33,6 +35,7 @@ internal sealed partial class Parser
             var mutable = At("var");
             position++;
             var name = Identifier();
+            using var declaration = Declaration(name, start, documentation: documentation);
             var type = ReadBindingType(name);
             Expect(":=");
             return new BindingSyntax(name, type, ReadExpression(), mutable, documentation);
@@ -44,6 +47,7 @@ internal sealed partial class Parser
             position++;
             Expect("const");
             var name = Identifier();
+            using var declaration = Declaration(name, start, documentation: documentation);
             var type = ReadBindingType(name);
             Expect(":=");
             return new UsingSyntax(new(name, type, ReadExpression(), false, documentation), isAsync);
@@ -111,7 +115,7 @@ internal sealed partial class Parser
         if (!At(":"))
             throw source.Error("FP2002", $"Binding '{name.Text}' requires an explicit type annotation ': T'.", Current.Position, Current.Length);
         position++;
-        return ReadType();
+        return SurfaceType();
     }
 
     private IfSyntax ReadIfStatement()
@@ -141,7 +145,8 @@ internal sealed partial class Parser
         var start = Current.Position;
         position++;
         var name = Identifier();
-        var type = ReadBindingType(name);
+        TypeSyntax type;
+        using (Declaration(name, name.Position)) type = ReadBindingType(name);
         if (At("in"))
         {
             position++;

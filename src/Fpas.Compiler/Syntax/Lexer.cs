@@ -59,7 +59,7 @@ internal sealed class Lexer(SourceText source)
                 if (textStart < source.Text.Length && source.Text[textStart] == ' ') textStart++;
                 while (position < source.Text.Length && Current is not '\r' and not '\n')
                     position++;
-                if (standalone) documentation.Add(new(source.Text[textStart..position], textStart));
+                if (standalone) documentation.Add(new(source.Text[textStart..position], textStart, start, position));
                 else documentation.Clear();
                 newlines = 0;
                 continue;

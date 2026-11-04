@@ -66,6 +66,7 @@ internal sealed partial class SemanticRecorder
     internal void TypeSyntax(SourceUnit unit, TypeSyntax syntax, TypeSymbol type)
     {
         if (syntax.SpanEnd <= syntax.Position) return;
+        surfaceTypes[(unit.Source.Path, syntax.Position, syntax.SpanEnd)] = Type(type);
         Typed(unit.Source, syntax.Position, syntax.SpanEnd - syntax.Position, Type(type));
         if (syntax.Segments.Count == 1 && syntax.Element is null && syntax.CallableParameters is null &&
             !occurrences.Keys.Any(key => key.Path == unit.Source.Path && key.Offset == syntax.Position))

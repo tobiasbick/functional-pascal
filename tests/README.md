@@ -32,11 +32,23 @@ configuration isolation, diagnostics, and cleanup. Do not rely on a cached local
 development SDK version.
 
 Workspaces tests exercise evaluated project/solution contexts, check/query JSON,
-exact definitions/types/references, linked-source ownership, stale metadata,
+exact definitions/types/references, name-search paging, bounded declaration
+inspection, linked-source ownership, stale metadata,
 bounded output and owned cancellation. SemanticDocumentationTests analyzes the
 complete handbook/agent examples and checks detached index consistency alongside
 their existing compilation/execution assertions. Compiler Analysis tests cover
 exact spans, symbol/flow identity and policies for every expression form.
+
+Find/inspect acceptance covers literal name/kind/owner filtering, deterministic
+pages, linked ownership, exact declaration/body/documentation spans, transparent
+aliases, recursive/direct type context, metadata-only availability and whole-slice
+UTF-8 limits. The complete Debug suite passed on native Windows (1,215 passed,
+four Linux-only skips) and Linux/WSL (1,219 passed, no skips), with the actual
+NetCoreDbg backend configured on both platforms.
+Release verification adds 142 focused analysis/query/documentation and fresh SDK
+consumer tests per platform. Both published managed launchers also pass find and
+inspect against a fresh consumer with an SDK from the matching artifacts build;
+see the [deployment workflow](../docs/build/development.md#deploy-the-local-release-compiler).
 
 ## NetCoreDbg integration tests
 

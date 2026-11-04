@@ -26,8 +26,9 @@ implemented and tested on Windows and Linux. Actual agent-host setup remains in
 [debugger gaps](debug-gap.md).
 
 The shared analysis basis, project-aware `check`, and `query definition`,
-`query type` and `query refs` are implemented and accepted on Windows and
-Linux/WSL. Their current owner is [project analysis](../architecture/workspaces.md).
+`query type`, `query refs`, `query find` and `query inspect` are implemented.
+Their current owner is [project analysis](../architecture/workspaces.md).
+Native Windows and Linux/WSL acceptance includes all five queries.
 Other entries in this inventory remain separate work.
 
 ## Current CLR support
@@ -108,12 +109,12 @@ selection rule would be additional tooling.
 ## Source queries and refactorings
 
 The Rust [query parser and help](https://github.com/tobiasbick/functional-pascal/blob/0a4bc134ee71b5f922ebd0b1157ab55244bef657/crates/fpas-cli/src/cli_input/query.rs)
-expose these seven operations. Three CLR operations are implemented.
+expose these seven operations. Five CLR operations are implemented.
 
 | Subcommand | Missing capability |
 | --- | --- |
-| `query find` | Search checked declarations in an explicit project/solution context. |
-| `query inspect` | Return a declaration's signature, source implementation, and directly relevant types. |
+| `query find` | Implemented with literal name/kind/owner filters, deterministic paging and explicit checked-source scope. |
+| `query inspect` | Implemented with exact declaration/body/documentation spans, direct types, source availability and bounded text. |
 | `query refs` | Implemented with explicit FPAS scope, roles, deterministic ordering and bounded results. |
 | `query definition` | Implemented with source declarations and exact external metadata identities. |
 | `query type` | Implemented with exact extents, checked/declared types and structured descriptors. |
@@ -123,7 +124,9 @@ expose these seven operations. Three CLR operations are implemented.
 The implemented queries share semantic snapshots, exact ranges, project ownership
 and explicit completeness/truncation results. Static inspection identifies the
 checked declaration; it does not predict runtime delegate/interface dispatch.
-Additional query operations remain separate work.
+Find/inspect share these facts and project ownership; their
+[CLI contract](../pascal/program-structure/cli.md#find-declarations) defines the
+search and source-extraction bounds. Callers/callees remain separate work.
 
 The Rust [refactoring commands](https://github.com/tobiasbick/functional-pascal/blob/0a4bc134ee71b5f922ebd0b1157ab55244bef657/crates/fpas-cli/src/cli_input/refactor/help.rs)
 expose these five operations. Every CLR command is missing.
@@ -137,7 +140,7 @@ expose these five operations. Every CLR command is missing.
 | `refactor apply` | Revalidate a prepared plan against current inputs and apply its exact changes, with stale-plan and publication results. |
 
 The shared compiler/workspace analysis service is implemented for check and the
-three selected queries. Doc lookup, source-edit planning/application and a language
+five implemented queries. External API doc lookup, source-edit planning/application and a language
 server remain missing. These tools do not require new FPAS syntax.
 
 ## Debugger and agent inspection

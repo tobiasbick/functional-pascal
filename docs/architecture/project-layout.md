@@ -53,8 +53,11 @@ src/
     Formatting/
     Testing/
     Documentation/
+    Refactoring/
   Fpas.Workspaces/
     Analysis/
+    Editing/
+    Refactoring/
     Formatting/
     Loading/
     Processes/
@@ -109,6 +112,8 @@ tests/
     Support/
     Testing/
     ApiDocumentation/
+    Editing/
+    Refactoring/
   Fixtures/
 examples/
   README.md

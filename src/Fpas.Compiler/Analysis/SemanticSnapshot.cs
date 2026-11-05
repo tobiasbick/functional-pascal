@@ -17,6 +17,7 @@ public sealed record SemanticSymbol(string Id, string Kind, string Name, string 
 public sealed record DeclarationContext(string? Owner, string QualifiedName, string? Accessibility, SourceSpan Span,
     SourceSpan? Body, SourceSpan? Documentation, IReadOnlyList<string> SurfaceTypes, IReadOnlyList<string> SurfaceSymbols);
 public sealed record SymbolOccurrence(string Symbol, SourceSpan Span, string Role);
+public sealed record SymbolRelation(string Implementation, string Contract);
 public sealed record ExpressionType(SourceSpan Span, string Type, string? DeclaredType);
 
 public sealed class SemanticSnapshot
@@ -32,16 +33,19 @@ public sealed class SemanticSnapshot
     public IReadOnlyList<SourceBody> Bodies { get; }
     public IReadOnlyList<SourceOperation> Operations { get; }
     public IReadOnlyList<ExcludedOperation> ExcludedOperations { get; }
+    public IReadOnlyList<SymbolRelation> Relations { get; }
 
     internal SemanticSnapshot(string id, string assemblyName, IEnumerable<SourceDocument> documents, IEnumerable<SemanticSymbol> symbols,
         IEnumerable<SemanticType> types, IEnumerable<SymbolOccurrence> occurrences, IEnumerable<ExpressionType> expressions, IEnumerable<SymbolExport> exports,
-        IEnumerable<SourceBody> bodies, IEnumerable<SourceOperation> operations, IEnumerable<ExcludedOperation> excludedOperations)
+        IEnumerable<SourceBody> bodies, IEnumerable<SourceOperation> operations, IEnumerable<ExcludedOperation> excludedOperations,
+        IEnumerable<SymbolRelation>? relations = null)
     {
         Id = id; AssemblyName = assemblyName; Documents = Array.AsReadOnly(documents.ToArray()); Symbols = Array.AsReadOnly(symbols.ToArray());
         Types = Array.AsReadOnly(types.ToArray()); Occurrences = Array.AsReadOnly(occurrences.ToArray()); Expressions = Array.AsReadOnly(expressions.ToArray());
         Exports = Array.AsReadOnly(exports.ToArray());
         Bodies = Array.AsReadOnly(bodies.ToArray()); Operations = Array.AsReadOnly(operations.ToArray());
         ExcludedOperations = Array.AsReadOnly(excludedOperations.ToArray());
+        Relations = Array.AsReadOnly((relations ?? []).ToArray());
     }
 
     public SemanticSymbol Symbol(string id) => Symbols.FirstOrDefault(symbol => symbol.Id == id)

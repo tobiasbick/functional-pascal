@@ -36,6 +36,7 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
     private readonly Dictionary<GenericParameterSymbol, string> parameterKinds = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, IReadOnlyDictionary<int, DeclarationSyntax>> sourceDeclarations = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private readonly Dictionary<(string Path, int Position, int End), string> surfaceTypes = [];
+    private readonly List<(SymbolEntry Implementation, SymbolEntry Contract)> relations = [];
 
     internal void Source(SourceText source, IReadOnlyList<Token> sourceTokens, IReadOnlyDictionary<int, DeclarationSyntax> declarations)
     {
@@ -124,7 +125,8 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
             expressions.Values.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Span.Length),
             metadataIdentities.OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)),
             bodies.Values.Select(entry => entry.Body with { Symbol = entry.Declaration?.Id }).OrderBy(body => body.Id, StringComparer.Ordinal),
-            OperationFacts(), excludedOperations.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset));
+            OperationFacts(), excludedOperations.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset),
+            relations.Select(item => new SymbolRelation(item.Implementation.Id, item.Contract.Id)).Distinct());
     }
 
     private void Export(MetadataIdentity identity, SymbolEntry entry)

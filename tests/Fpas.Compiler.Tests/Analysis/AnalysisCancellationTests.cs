@@ -7,6 +7,15 @@ namespace Fpas.Compiler.Tests.Analysis;
 public sealed class AnalysisCancellationTests
 {
     [Fact]
+    public void Speculative_compilation_observes_cancellation_and_keeps_later_compilation_usable()
+    {
+        var request = new CompilationRequest([new("sample.fpas", "program Sample; begin end; end program;")], "Sample", TestEnvironment.References);
+        using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
+        Assert.ThrowsAny<OperationCanceledException>(() => FpasCompiler.Compile(request, cancellation.Token));
+        Assert.True(FpasCompiler.Compile(request).Success);
+    }
+
+    [Fact]
     public void Cancellation_after_binding_does_not_publish_success_or_poison_a_later_analysis()
     {
         const string text = """

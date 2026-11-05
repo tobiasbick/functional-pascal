@@ -23,15 +23,19 @@ public sealed record CompilationResult(CompiledProgram? Program, IReadOnlyList<C
 public static class FpasCompiler
 {
     public static CompilationResult Compile(CompilationRequest request)
+        => Compile(request, CancellationToken.None);
+
+    public static CompilationResult Compile(CompilationRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         try
         {
             using var prepared = PreparedCompilation.Create(new(request.Sources, request.AssemblyName, request.References,
-                request.Target, request.EmitDocumentation, request.DiagnosticOptions), CancellationToken.None);
+                request.Target, request.EmitDocumentation, request.DiagnosticOptions), cancellationToken);
             if (!prepared.Success) return new(null, prepared.Diagnostics);
             var documentation = prepared.Documentation?.Serialize(request.AssemblyName);
             var output = AssemblyEmitter.Emit(prepared, request.AssemblyName, request.EmitDebugInformation, request.Optimize);
+            cancellationToken.ThrowIfCancellationRequested();
             return new(output with { XmlDocumentation = documentation }, prepared.Diagnostics);
         }
         catch (CompilationFailure failure)

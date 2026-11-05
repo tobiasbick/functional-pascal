@@ -1,4 +1,5 @@
 using Fpas.Workspaces.Loading;
+using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Solutions;
 using Microsoft.VisualStudio.SolutionPersistence.Model;
@@ -34,11 +35,7 @@ public static class FormatSources
     }
 
     public static void ValidateRegularPath(string path)
-    {
-        for (var current = Path.GetFullPath(path); current is not null; current = Path.GetDirectoryName(current))
-            if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
-                throw new ContextFailure("invalid_argument", "Symbolic links and reparse points are not formatted: " + current);
-    }
+        => SourcePublication.ValidateRegularPath(path);
 
     private static void AddFile(string path, HashSet<string> files)
     {

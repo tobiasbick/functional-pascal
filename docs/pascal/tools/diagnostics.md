@@ -39,14 +39,65 @@ Each related note has a message and an optional location.
 Each fix contains `title`, `applicability` (`automatic` or `review`) and `edits`.
 An edit specifies its exact `location`, `expectedText` and `newText`; an empty
 range inserts text. Automatic identifies a direct local correction. Review
-identifies a proposal requiring judgment. Compilation/checking never applies
-either kind. An edit consumer must check the original text and context again
+identifies a proposal requiring judgment. Ordinary compilation/checking leaves
+sources untouched; `check --fix` explicitly applies automatic proposals. An edit consumer must check the original text and context again
 before applying a proposal; a successful replacement does not establish the
 correctness of the rest of the program.
 
 Hints cover common Pascal type names, keyword capitalization, `elseif`, `=` in
 initializers and `!=`. Console I/O and `exit` hints describe the supported API or
 statement without fabricating edits that require unknown imports or values.
+
+## Apply automatic corrections
+
+Use an explicit project or solution and the usual configuration/restore options:
+
+```sh
+fpas check Example.fpasproj --fix --dry-run --diagnostics json
+fpas check Example.fpasproj --fix --diagnostics json
+```
+
+`--fix --dry-run` previews one batch without source writes. `--dry-run` requires
+`--fix`. `--fix` applies only automatic proposals from the captured analysis;
+review proposals remain visible and untouched. No proposal is guessed from a
+diagnostic message. Each invocation prepares a fresh batch; previews are not
+persisted edit plans. New diagnostics exposed by a correction can need another
+invocation or a manual change.
+
+Only evaluated regular `.fpas` inputs are eligible, including linked sources
+explicitly owned by the project. Reparse points and read-only files are refused.
+Duplicate edits from shared source owners are applied once. Original UTF-8 BOM,
+line endings, unrelated text and Unix permission bits are preserved. Unchanged
+files retain their timestamps. Corrections do not format the source.
+
+Missing/blocked project inputs, the diagnostic error limit, invalid edit ranges,
+wrong original text, conflicting/overlapping edits and changed context inputs
+prevent publication. The batch is bounded to 1,000 proposed edits and 64 MiB of
+original/replacement bytes. JSON is bounded to 4 MiB; the preview is checked
+against that bound before any write.
+
+All replacements and rollback copies are staged beside their sources. Context
+and original bytes are reverified before per-file replacement. A failed batch
+attempts rollback without overwriting another writer's changes. If recovery
+cannot restore every file, the failure lists written paths and retained recovery
+files. Replacement is atomic per file; other applications can still change files
+during a batch.
+
+After application, the command reloads project inputs and dependency metadata,
+then analyzes and verifies them again within the same timeout. Remaining errors
+return exit 1 even when edits were applied; applied corrections stay on disk.
+Reload, timeout or cancellation failures also retain explicit publication status.
+Preparation can restore/build dependencies as with ordinary check; the selected
+root's own outputs are preserved under the existing check contract.
+
+JSON adds `fixes` with mode/state, original inputSnapshotId, proposals, file
+hashes, unique edit counts, written flags, rechecked, review counts and optional recovery
+paths. Top-level diagnostics/snapshot describe the final check after application,
+or the original check during preview. An interrupted/failed reload reports no
+stale pre-edit diagnostics; rechecked remains false. Human diagnostics, edit summaries and
+previews go to stderr. JSON owns stdout, including failures. Exit codes remain
+0 for a successful final check/help, 1 for remaining errors/setup/publication or
+deadline failures, 2 for arguments and 130 for cancellation.
 
 ## Recovery and limits
 

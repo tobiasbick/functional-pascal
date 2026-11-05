@@ -44,6 +44,8 @@ domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapp
   paths, target kind, debug/documentation switches, and diagnostic policy.
 - FpasCompiler.Compile returns a CompilationResult with diagnostics and, on
   success, a CompiledProgram. A successful compilation may still have warnings.
+  Its CancellationToken overload permits owned speculative dependency compilation;
+  cancellation throws without returning a successful image.
 - CompiledProgram contains AssemblyImage, RuntimeConfiguration, optional
   PortablePdb, and optional XmlDocumentation. The API returns data; it does not
   publish files or deploy dependencies.
@@ -79,7 +81,7 @@ and presentation contract. CLI text/check share one renderer; source-generated
 JSON carries the same facts. MSBuild consumes the JSON without loading the
 compiler into its host and logs explanatory notes as messages.
 
-Analyze accepts a CancellationToken, observed during syntax, metadata, binding,
+Analyze and the cancellable Compile overload accept a CancellationToken, observed during syntax, metadata, binding,
 flow, documentation and lowering work. Cancellation throws OperationCanceledException
 without publishing a successful result. Prepared metadata is disposed on all
 paths; returned diagnostics do not depend on live reference readers. Validation
@@ -103,7 +105,10 @@ and its coverage test require an explicit policy for every expression form.
 SemanticSnapshot owns copied SourceDocument texts, source-local symbol IDs,
 SemanticSymbol/Type descriptors, SymbolOccurrence roles, ExpressionType facts and
 exact CLR exports. Collections are read-only and contain no syntax nodes, bound
-symbols, metadata readers or open files. Metadata identities include assembly version,
+symbols, metadata readers or open files. SymbolRelation records resolved source
+implementation/contract pairs. Qualified import prefixes that name enclosing
+types/containers bind to those identities rather than fabricated namespaces.
+Metadata identities include assembly version,
 culture/token, actual reference content hash, declaring type, member kind, arity
 and signature. Extra export
 identities map generated public representations back to their source declarations.

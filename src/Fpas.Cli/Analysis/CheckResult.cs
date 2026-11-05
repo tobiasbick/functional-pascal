@@ -20,6 +20,7 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
     IReadOnlyList<CheckedProject> Projects, IReadOnlyList<AnalysisDiagnostic> Diagnostics, AnalysisCoverage Coverage, Preparation? Preparation, AnalysisError? Error)
 {
     [JsonIgnore] internal IReadOnlyList<CompilationSource> Sources { get; init; } = [];
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public CheckFixes? Fixes { get; init; }
     internal static CheckResult From(WorkspaceAnalysis analysis)
     {
         var context = analysis.Context;
@@ -37,13 +38,22 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
     internal static CheckResult Failure(string? context, string configuration, string code, string message, bool truncated = false, IReadOnlyList<string>? candidates = null)
         => new(false, code == "cancelled" ? "cancelled" : "failed", context, configuration, null, [], [], new(false, [], [], []), null, new(code, message, truncated, candidates));
 
-    internal void Report(bool json)
+    internal byte[] JsonBytes() => JsonSerializer.SerializeToUtf8Bytes(this, CheckJson.Default.CheckResult);
+    internal bool Report(bool json)
     {
-        if (json) { Console.WriteLine(JsonSerializer.Serialize(this, CheckJson.Default.CheckResult)); return; }
+        if (json)
+        {
+            var bytes = JsonBytes(); var limited = bytes.Length > 4_194_304;
+            if (limited) bytes = (Failure(Context, Configuration, "result_limit", "Check response exceeds 4 MiB; publication status is retained.", truncated: true)
+                with { Fixes = Fixes is null ? null : Fixes with { Suggestions = [] } }).JsonBytes();
+            using var output = Console.OpenStandardOutput(); output.Write(bytes); Console.WriteLine(); return !limited;
+        }
         DiagnosticRenderer.Write(Diagnostics, Sources);
         foreach (var issue in Preparation?.Issues ?? []) Console.Error.WriteLine($"{issue.Project}: {issue.Code}: {issue.Message}");
         if (Error is not null) Console.Error.WriteLine(Error.Code + ": " + Error.Message);
+        Fixes?.Write();
         Console.Error.WriteLine($"Checked {Coverage.Analyzed.Count}/{Coverage.Requested.Count} FPAS projects; {Coverage.Blocked.Count} blocked. {(Success ? "Success." : "Failed.")}");
+        return true;
     }
 }
 

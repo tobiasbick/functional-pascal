@@ -47,9 +47,19 @@ defines exit codes and publication behavior. Compile JSON reports are appropriat
 for checking the diagnostic code and source location; test actual generated
 programs when runtime behavior matters.
 Diagnostics also supply expected/found data, help, related notes and exact proposed
-edits where available. Use these fields rather than parsing messages. No command
-applies them automatically; revalidate original text/context before applying an
-edit. Non-source failures have no location. See [diagnostics](../tools/diagnostics.md).
+edits where available. Use these fields rather than parsing messages.
+Use `check --fix --dry-run` to preview automatic corrections; `check --fix`
+applies one batch with original-text/context validation and a fresh final check.
+Review proposals stay untouched. Remaining errors still exit 1; JSON fixes/file
+flags distinguish applied changes from check success. Non-source failures have
+no location. See [diagnostics](../tools/diagnostics.md).
+
+Use `refactor rename <context> --file <source> --line <n> --column <n> --new-name <name> --plan <path.json>`
+to prepare a checked rename. Inspect the plan, then use `refactor apply <context>
+--plan <path.json>`. --report json provides bounded reports. Binding changes and
+stale plans are refused; source interface implementations are grouped together.
+Only analyzed FPAS sources are edited; public API/foreign-consumer boundaries
+remain explicit. See [renaming](../tools/refactoring.md).
 
 The C# compiler API also provides FpasCompiler.Analyze for semantic validation
 of explicit source/reference inputs without emitted output, including async

@@ -59,6 +59,9 @@ internal sealed partial class SemanticRecorder
                 }
             }
         }
+        foreach (var record in catalog.Units.SelectMany(unit => unit.Records.Values))
+            foreach (var (contract, body) in record.InterfaceMethods)
+                if (symbols.TryGetValue(body, out var implementation)) relations.Add((implementation, Method(contract)));
     }
 
     private void RecordFields(RecordSymbol record, SourceText source)

@@ -10,6 +10,10 @@ Use [API documentation lookup](../tools/api-documentation.md) for `fpas doc`:
 name-based FPAS/.NET lookup, overloads, source Markdown, reference XML and bounded
 text/JSON reports.
 
+Use [checked renaming](../tools/refactoring.md) for `refactor rename` and
+`refactor apply`: explicit source selection, binding-preserving validation,
+reviewable plans and stale-checked source publication.
+
 Use [create/build/run](project-commands.md) for `init project`, `init library`,
 `init solution`, `build` and `run`, including project selection, streams and JSON
 reports. `compile` supplies explicit source/reference compilation; project builds
@@ -48,6 +52,12 @@ whole operation, defaults to 120 seconds, and accepts 1..3600. Cancellation stop
 owned build processes. Changed inputs invalidate the result before publication.
 Native Windows and Linux/WSL acceptance covers deployment, fresh SDK consumers,
 configuration, Unicode/space paths, no-restore, changed inputs, limits and cleanup.
+
+Use `check --fix --dry-run` to preview automatic diagnostic corrections and
+`check --fix` to apply one batch and check again. JSON includes proposal/publication
+status; remaining errors still exit 1. See [automatic corrections](../tools/diagnostics.md#apply-automatic-corrections)
+for ownership, conflicts, recovery and limits. Check JSON responses are bounded
+to 4 MiB.
 
 ## Query checked sources
 

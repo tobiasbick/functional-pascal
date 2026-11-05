@@ -48,7 +48,18 @@ internal sealed partial class SemanticRecorder
         var symbol = ImportTargetSymbol(target);
         Occurrence(unit.Source, syntax.Target.Parts[^1], symbol, type is null ? "namespace" : "type");
         for (var index = 0; index < syntax.Target.Parts.Count - 1; index++)
-            Occurrence(unit.Source, syntax.Target.Parts[index], Namespace(string.Join('.', syntax.Target.Parts.Take(index + 1).Select(part => part.Text))), "namespace");
+            Occurrence(unit.Source, syntax.Target.Parts[index], Prefix(string.Join('.', syntax.Target.Parts.Take(index + 1).Select(part => part.Text)), target), "namespace");
+    }
+
+    private SymbolEntry Prefix(string name, ImportTarget target)
+    {
+        var type = ImportedType(target);
+        var source = type?.Record?.Owner ?? type?.Union?.Owner ?? type?.Interface?.Owner ?? type?.Scalar?.Owner;
+        if (source is not null && source.Syntax.Name.Text == name) return TypeSymbolEntry(source.ContainerType);
+        for (var parent = type?.Definition?.DeclaringType; parent is not null; parent = parent.DeclaringType)
+            if (System.Text.RegularExpressions.Regex.Replace(parent.FullName.Replace('+', '.'), @"`\d+", "") == name)
+                return TypeSymbolEntry(references.Symbol(parent));
+        return Namespace(name);
     }
 
     internal void TypePart(SourceUnit unit, Token name, ImportTarget target, bool first)

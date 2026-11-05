@@ -20,6 +20,16 @@ Debugging, Processes, Projects, Formatting, Testing, ApiDocumentation and Worksp
 Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
+Editing tests exercise real check --fix previews/application, parser/type hints,
+fresh SDK invocation, rechecking, review-only diagnostics, encoding, no-op writes,
+conflicts, stale inputs, linked edits, cancellation, permissions and edit bounds.
+Formatting shares the source-publication service and retains its CLI regressions.
+
+Refactoring tests cover overload/callable selection, source interface families,
+generics, named arguments, identifier escaping, shadowing/capture, linked owners,
+plan consistency, stale inputs and actual cross-DLL execution after renaming.
+AnalysisSignalTests covers initial planning and post-publication cancellation.
+
 Testing contains packaged SDK/native VSTest acceptance for FPAS test libraries:
 xUnit, MSTest and NUnit templates, data/async/lifecycle behavior, native reports,
 mixed solutions, discovery/filtering, failure paths and owned host cleanup.

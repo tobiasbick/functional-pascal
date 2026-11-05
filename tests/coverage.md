@@ -86,6 +86,20 @@ Shared setup lives in each topic's Support directory.
 
 ## Behavioral checks
 
+Refactoring compares bindings before/after speculative source edits. Tests reject
+valid-but-captured names, group source interface implementations, retain overloads,
+preserve unrelated strings/comments, and cover types/fields/parameters, generic
+constraints, aliases, unit import prefixes and linked source owners. CLI cases
+validate reviewed plans, explicit apply, altered/stale inputs, output preservation
+and fresh final checks. Cross-DLL cases rebuild and execute the renamed program.
+
+Editing covers automatic diagnostic edit ownership, original UTF-16 ranges,
+overlap/duplicate handling, UTF-8 BOM/line endings, permissions, staging/cleanup,
+stale bytes/context and cancellation. CheckFixTests uses fresh packaged SDK
+consumers to verify preview/apply/recheck, parser and type hints, review-only
+proposals, incomplete contexts and idempotence. AnalysisSignalTests also sends
+SIGINT to check --fix during owned dependency preparation.
+
 ApiDocumentation exercises `fpas doc` through actual SDK consumers and the public
 workspace service. C#-generated XML is the oracle for constructors, overloads,
 nested generics, parameter modes, arrays, indexers, fields, events and conversions.

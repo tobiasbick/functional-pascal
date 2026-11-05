@@ -8,7 +8,6 @@ change FPAS syntax.
 
 | Proposed command | Open work |
 | --- | --- |
-| `refactor` | Prepare checked source edits and apply explicit plans. See the operations below. |
 | `env --json` | Report compiler, FPAS SDK, .NET and available language-server/debugger installations. |
 
 Future commands need concise help/examples, structured failures, bounded work,
@@ -29,6 +28,12 @@ and cancellation/deadline cleanup of a waiting test host.
 Verify [API documentation lookup](../pascal/tools/api-documentation.md) on Windows:
 source/metadata selection, adjacent XML, packaged CLI and cancellation cleanup.
 
+Verify `check --fix` on Windows: preview/application, encoding and permission
+preservation, conflicts, read-only inputs, rollback and cancellation cleanup.
+
+Verify [rename/application](../pascal/tools/refactoring.md) on Windows: source
+families, linked owners, DLL boundaries, plan consistency and owned cancellation.
+
 ## Publishing
 
 Application apphosts, self-contained/single-file publishing, AOT and signing need
@@ -39,20 +44,17 @@ separate SDK/CLI contracts. Compiler distribution belongs in
 
 | Proposed refactoring | Open work |
 | --- | --- |
-| `rename` | Resolve a symbol, check conflicts, and prepare declaration/use edits. |
 | `add-parameter` | Validate declarations and affected calls, parameter modes, argument binding and evaluation order. |
 | `extract-variable` | Preserve scope, evaluation order and execution frequency. |
 | `organize-imports` | Preserve aliases, comments and initialization effects while removing safe unused imports. |
-| `apply` | Revalidate exact planned edits against current inputs, reject stale plans and report publication results. |
 
-Refactorings need typed fragment/range validation, context/deadline selection,
-edit ownership, plan output and explicit application. Share compiler/workspace
-analysis rather than building separate resolvers.
+The remaining operations need their own typed fragment/range and behavior checks.
+Extend the [rename plan/application service](../pascal/tools/refactoring.md) with
+compiler-backed validation; retain context/deadline selection, edit ownership,
+plan review and explicit application.
 
 ## Diagnostics, tests and profiling
 
-- `check --fix` needs validation/application of [diagnostic proposals](../pascal/tools/diagnostics.md),
-  safe edit ownership, bounded rechecking and publication.
 - Interactive terminal tests need a separate controlled terminal contract.
   Test-framework extensions outside the documented VSTest baseline and
   Microsoft.Testing.Platform self-hosted applications need separate scope.

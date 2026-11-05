@@ -86,6 +86,23 @@ are not deleted as scratch. Windows cleanup explicitly terminates the job and
 waits for all its processes before releasing handles. Native Windows and
 Linux/WSL acceptance covers packaged check/query, cancellation and process cleanup.
 
+## Source edits
+
+Editing.DiagnosticFixPlan consumes compiler diagnostic edits against captured
+FPAS sources. It deduplicates shared owners, rejects conflicts/range mismatches
+and retains review-only suggestions without applying them. SourcePublication
+shares byte verification, staging, permission preservation and rollback between
+corrections and formatting. CLI correction batches reverify the original context
+before publication, then reload/prepare/analyze the changed context. See
+[automatic corrections](../pascal/tools/diagnostics.md#apply-automatic-corrections).
+
+Refactoring.RenameService follows canonical source/DLL identities and recorded
+interface implementation relationships. It checks changed source using temporary
+dependency images, then compares all indexed bindings and interface relations
+after mapping source offsets. CLI apply regenerates the plan against current
+inputs before using the common publisher and final project analysis. See
+[renaming](../pascal/tools/refactoring.md) for scope and limits.
+
 ## Source queries
 
 SourceQuery consumes a complete successful WorkspaceAnalysis. Explicit source
@@ -140,4 +157,4 @@ FPAS DLL boundary.
 
 The [CLI reference](../pascal/program-structure/cli.md) owns selectors, JSON
 envelopes, exit codes, limits and examples. These services do not implement an
-editor session, unsaved buffers, a formatter, refactoring, LSP or query MCP tools.
+editor session, unsaved buffers, LSP or query MCP tools.

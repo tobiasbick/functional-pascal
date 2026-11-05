@@ -104,6 +104,12 @@ library/solution templates, selection, arguments, streams and JSON reports.
 Use [fpas doc](docs/pascal/tools/api-documentation.md) to look up FPAS declarations
 and the actual .NET reference APIs, with signatures and Markdown/XML documentation.
 
+Use [check --fix](docs/pascal/tools/diagnostics.md#apply-automatic-corrections)
+for automatic diagnostic corrections; add --dry-run to preview the edit batch.
+
+Use [refactor rename/apply](docs/pascal/tools/refactoring.md) to prepare, inspect
+and explicitly apply checked symbol renames.
+
 Portable symbols retain source locations, local scopes, closure methods, and
 async yield/resume metadata. Use compatible .NET debuggers and profilers with
 the generated assembly/PDB pair. See [debugging](docs/pascal/tools/debugging.md)

@@ -7,6 +7,20 @@ Commands and configuration selection belong in the
 
 ## Language and metadata
 
+Syntax.TokenBoundaryTests varies every declared boundary individually and all
+boundaries together across complete programs: empty gaps where permitted,
+spaces/tabs, LF/CRLF/CR, Unicode whitespace, inline/standalone/detached comments.
+The independently listed language atoms cover generics next to `=`/`=>`, type
+suffixes, arrays/indexes, qualified/member dots, numeric ranges, call/formal lists,
+escaped names, literals and word/punctuation operators. Checks preserve raw token
+spellings, parsing, compilation, analysis and idempotent formatting.
+Syntax.AtomicBoundaryTests splits every internal boundary of compound operators,
+comment/quote escapes, numeric/character literals, escaped names and keywords;
+both compiler and formatter must reject those inputs. Explicit word-separator
+cases prevent merging named endings. TokenBoundaryExecutionTests verifies actual
+before/after execution, including `notValue` versus `not Value`, adjacent signs
+and division followed by a comment (`/ //` versus `///`).
+
 Formatting tests exercise the fixed source style, comment/documentation and
 literal preservation, display-width wrapping, parser diagnostics, cancellation,
 idempotence and unchanged method bodies. FormatCorpusTests covers every complete

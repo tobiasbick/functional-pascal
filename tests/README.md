@@ -14,7 +14,7 @@ in the [development workflow](../docs/build/development.md).
 | [Fixtures/msbuild](Fixtures/msbuild/) | Shared.csproj → Game.fpasproj → Host.csproj and a mixed .slnx solution |
 | [TestSupport](TestSupport/) and [Directory.Build.targets](Directory.Build.targets) | Shared bounded-process and temporary-directory helpers plus resolved framework reference inputs |
 
-Compiler tests use Analysis, Types, Routines, ControlFlow, Formatting, and Metadata directories with
+Compiler tests use Syntax, Analysis, Types, Routines, ControlFlow, Formatting, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
 Debugging, Processes, Projects, Formatting and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.

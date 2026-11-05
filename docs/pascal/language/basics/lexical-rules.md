@@ -1,7 +1,9 @@
 # Lexical rules and literals
 
 Sources are UTF-8 `.fpas` files. LF, CRLF, and bare CR terminate lines; an initial
-UTF-8 BOM is allowed. Whitespace is otherwise insignificant. Comments start with
+UTF-8 BOM is allowed. Whitespace between complete language elements is otherwise
+insignificant; identifiers, literals and compound operators keep their spelling.
+Comments start with
 `//` and end at the next line ending or EOF. Only line comments are supported;
 brace, parenthesis-star, and slash-star forms are not comments. Consecutive
 standalone comments immediately before a declaration supply its Markdown
@@ -24,6 +26,16 @@ closing delimiter and the declaration's `=` separately. Compound comparison
 operators retain their spelling: `X>=1` is valid; `X > = 1` is invalid. The
 [formatter](../../tools/fmt-style.md) produces `Box<T> = record`, `Value: T;`
 and `X >= 1`.
+
+Spaces, tabs, Unicode whitespace, line endings and line comments can separate
+language elements. For example, `Value : T ;`, `Call ( Value )` and
+`Box< Box<int> >` are valid. Separate adjacent words such as `end if`; `endif`
+is one identifier. `notValue` is also one identifier, distinct from `not Value`.
+Comments cannot split a compound operator, numeric literal or escaped name.
+A separator is necessary when adjacent elements would otherwise merge. Keep a
+space between division `/` and a following `//` comment, as in `/ // comment`.
+Without that space, `/// comment` starts a comment at the first slash and contains
+no division operator.
 
 ### Literals
 

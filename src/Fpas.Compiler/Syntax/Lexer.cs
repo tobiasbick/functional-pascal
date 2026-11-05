@@ -16,6 +16,7 @@ internal sealed class Lexer(SourceText source)
          "when where while with and xor as uses class struct cast typeof unchecked").Split(' '), StringComparer.Ordinal);
 
     private int position;
+    internal static bool IsKeyword(string text) => Keywords.Contains(text);
     private int nextCancellationCheck;
     private char Current
     {

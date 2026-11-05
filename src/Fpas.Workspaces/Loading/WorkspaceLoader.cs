@@ -4,6 +4,7 @@ using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Solutions;
 using System.Text;
 using System.Text.Json;
+using static Fpas.Workspaces.Processes.MsBuildSyntax;
 
 namespace Fpas.Workspaces.Loading;
 
@@ -215,10 +216,4 @@ public static class WorkspaceLoader
         return project with { Configuration = configuration, Platform = string.IsNullOrEmpty(platform) ? "AnyCPU" : platform };
     }
 
-    private static string Escape(string text)
-    {
-        var result = new StringBuilder();
-        foreach (var c in text) result.Append("%*?@$();,'\"".Contains(c) ? "%" + ((int)c).ToString("X2", System.Globalization.CultureInfo.InvariantCulture) : c);
-        return result.ToString();
-    }
 }

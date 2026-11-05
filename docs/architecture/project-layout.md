@@ -48,10 +48,12 @@ src/
     Analysis/
     Debugging/
     Diagnostics/
+    Projects/
   Fpas.Workspaces/
     Analysis/
     Loading/
     Processes/
+    Projects/
     Queries/
     Solutions/
   Fpas.Processes/
@@ -96,6 +98,7 @@ tests/
     Execution/
     Processes/
     Workspaces/
+    Projects/
     Support/
   Fixtures/
 examples/

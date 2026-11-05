@@ -93,13 +93,16 @@ After running dist, restore/build an application:
 
 ```sh
 dotnet restore examples/hello/Hello.fpasproj
-dotnet build examples/hello/Hello.fpasproj --no-restore
-dotnet examples/hello/bin/Debug/net10.0/Hello.dll
+fpas build examples/hello/Hello.fpasproj --no-restore
+fpas run examples/hello/Hello.fpasproj --no-build
 ```
 
 The current SDK supports net10.0/AnyCPU and managed libraries/executables. It
 resolves framework, project, package, and Core support references. Executables
 run through dotnet; no native apphost or IDE extension is required.
+The [project CLI](../pascal/program-structure/project-commands.md) defines templates,
+source/solution inputs, selection, streams and structured reports. Ordinary
+`dotnet build` remains the underlying MSBuild workflow for mixed .NET tools.
 
 For manual SDK packaging outside dist, NuGet caches packages by identity/version.
 After changing packaged tools, use a new version or remove only that SDK version

@@ -3,17 +3,17 @@ using System.Text;
 
 namespace Fpas.Workspaces.Processes;
 
-internal sealed record BuildResult(int ExitCode, string Output, string Error, bool Truncated);
+public sealed record BuildResult(int ExitCode, string Output, string Error, bool Truncated);
 
-internal static class BuildProcess
+public static class BuildProcess
 {
-    internal static async Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token)
+    public static async Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true)
     {
         token.ThrowIfCancellationRequested();
-        await using var process = OwnedProcess.Start(DotnetHost(), arguments, cwd, new Dictionary<string, string>
+        await using var process = OwnedProcess.Start(DotnetHost(), arguments, cwd, buildEnvironment ? new Dictionary<string, string>
         {
             ["MSBUILDDISABLENODEREUSE"] = "1", ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
-        });
+        } : null, inheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture);
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output, Encoding.UTF8);
         using var stderr = new StreamReader(process.Error, Encoding.UTF8);
@@ -33,7 +33,9 @@ internal static class BuildProcess
         try
         {
             await process.WaitForExit(token);
-            return new(process.ExitCode, await output, await error, truncated);
+            var exitCode = process.ExitCode;
+            await process.TerminateAsync();
+            return new(exitCode, await output, await error, truncated);
         }
         finally
         {
@@ -43,7 +45,7 @@ internal static class BuildProcess
         }
     }
 
-    private static string DotnetHost()
+    public static string DotnetHost()
     {
         if (Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is { Length: > 0 } host) return host;
         var root = Environment.GetEnvironmentVariable("DOTNET_ROOT");

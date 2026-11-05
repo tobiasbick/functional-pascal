@@ -1,7 +1,7 @@
 using Fpas.Tests.Support;
 using System.Xml.Linq;
 
-namespace Fpas.IntegrationTests.Workspaces.Support;
+namespace Fpas.IntegrationTests.Build.Support;
 
 internal sealed class WaitingBuild : IDisposable
 {

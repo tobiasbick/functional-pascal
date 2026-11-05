@@ -55,6 +55,14 @@ and handle its package-version cache as described by the development workflow.
 Keep scratch programs and reports under .temp-data. Use the current CLR compiler
 to validate these sources; another Pascal dialect cannot establish their behavior.
 
+Use [init/build/run](../program-structure/project-commands.md) for project workflows.
+Init has project/library/solution templates, --dry-run and an exact JSON file plan;
+--sdk-feed/--sdk-version configure project templates. Build invokes MSBuild;
+run selects an executable (use --project when a solution is ambiguous), forwards
+arguments after -- and preserves its exit code. --report json captures program
+output separately; stdin remains inherited. Run defaults to no deadline; select
+--timeout for bounded automation. No command overwrites conflicting init files.
+
 Use `fpas check <project.fpasproj|solution.slnx> --diagnostics json` for project
 validation without analysis-owned assembly output. The selected SDK must match
 the CLI. Preparation can restore/build dependencies; `--no-restore` skips only

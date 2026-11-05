@@ -1,4 +1,5 @@
 using Fpas.IntegrationTests.Build;
+using Fpas.IntegrationTests.Build.Support;
 using Fpas.IntegrationTests.Debugging;
 using Fpas.IntegrationTests.Workspaces.Support;
 using Fpas.Processes;

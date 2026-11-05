@@ -11,31 +11,40 @@ internal static class WindowsProcess
     private static readonly object launchGate = new();
     internal sealed record Backend(Process Process, Stream Input, Stream Output, Stream Error, SafeFileHandle Job);
 
-    internal static Backend Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment)
+    internal static Backend Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment, ProcessStdio stdio)
     {
         // Child pipe endpoints must be closed before another owned launch can inherit handles.
-        lock (launchGate) return StartCore(path, arguments, cwd, environment);
+        lock (launchGate) return StartCore(path, arguments, cwd, environment, stdio);
     }
 
-    private static Backend StartCore(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment)
+    private static Backend StartCore(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment, ProcessStdio stdio)
     {
         var security = new SecurityAttributes { Length = Marshal.SizeOf<SecurityAttributes>(), Inherit = true };
         SafeFileHandle? inputRead = null, inputWrite = null, outputRead = null, outputWrite = null, errorRead = null, errorWrite = null;
         var job = CreateJobObject(IntPtr.Zero, null);
         ProcessInfo process = default;
         SafeFileHandle? processHandle = null, thread = null;
+        Process? tracked = null;
         var environmentBlock = EnvironmentBlock(environment);
         try
         {
             Check(!job.IsInvalid);
             var limits = new ExtendedLimits(); limits.Basic.Flags = 0x2000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             Check(SetInformationJobObject(job, 9, ref limits, Marshal.SizeOf<ExtendedLimits>()));
-            Check(CreatePipe(out inputRead, out inputWrite, ref security, 0));
-            Check(CreatePipe(out outputRead, out outputWrite, ref security, 0));
-            Check(CreatePipe(out errorRead, out errorWrite, ref security, 0));
-            Check(SetHandleInformation(inputWrite, 1, 0));
-            Check(SetHandleInformation(outputRead, 1, 0));
-            Check(SetHandleInformation(errorRead, 1, 0));
+            if (stdio == ProcessStdio.Capture)
+            {
+                Check(CreatePipe(out inputRead, out inputWrite, ref security, 0));
+                Check(SetHandleInformation(inputWrite, 1, 0));
+            }
+            else inputRead = Inherit(-10);
+            if (stdio != ProcessStdio.Inherit)
+            {
+                Check(CreatePipe(out outputRead, out outputWrite, ref security, 0));
+                Check(CreatePipe(out errorRead, out errorWrite, ref security, 0));
+                Check(SetHandleInformation(outputRead, 1, 0));
+                Check(SetHandleInformation(errorRead, 1, 0));
+            }
+            else { outputWrite = Inherit(-11); errorWrite = Inherit(-12); }
             var startup = new StartupInfo
             {
                 Size = Marshal.SizeOf<StartupInfo>(), Flags = 0x100,
@@ -43,22 +52,34 @@ internal static class WindowsProcess
             };
             var commandLine = Quote(path) + " " + string.Join(' ', arguments.Select(Quote));
             Check(CreateProcess(path, new StringBuilder(commandLine), IntPtr.Zero, IntPtr.Zero,
-                true, 0x08000404, environmentBlock, cwd, ref startup, out process)); // suspended, Unicode environment, no console
+                true, stdio == ProcessStdio.Capture ? 0x08000404u : 0x00000404u, environmentBlock, cwd, ref startup, out process)); // suspended, Unicode environment
             processHandle = new SafeFileHandle(process.Process, ownsHandle: true);
             thread = new SafeFileHandle(process.Thread, ownsHandle: true);
             Check(AssignProcessToJobObject(job, processHandle));
+            tracked = Process.GetProcessById((int)process.Id);
+            _ = tracked.SafeHandle;
             Check(ResumeThread(thread) != uint.MaxValue);
             inputRead.Dispose(); outputWrite.Dispose(); errorWrite.Dispose();
-            return new(Process.GetProcessById((int)process.Id),
-                new FileStream(inputWrite, FileAccess.Write), new FileStream(outputRead, FileAccess.Read), new FileStream(errorRead, FileAccess.Read), job);
+            return new(tracked,
+                inputWrite is null ? Stream.Null : new FileStream(inputWrite, FileAccess.Write),
+                outputRead is null ? Stream.Null : new FileStream(outputRead, FileAccess.Read), errorRead is null ? Stream.Null : new FileStream(errorRead, FileAccess.Read), job);
         }
         catch
         {
+            tracked?.Dispose();
             if (process.Process != IntPtr.Zero) TerminateProcess(process.Process, 1);
             inputRead?.Dispose(); inputWrite?.Dispose(); outputRead?.Dispose(); outputWrite?.Dispose(); errorRead?.Dispose(); errorWrite?.Dispose();
             job.Dispose(); throw;
         }
         finally { thread?.Dispose(); processHandle?.Dispose(); if (environmentBlock != IntPtr.Zero) Marshal.FreeHGlobal(environmentBlock); }
+    }
+
+    private static SafeFileHandle Inherit(int standard)
+    {
+        var handle = GetStdHandle(standard);
+        if (handle == IntPtr.Zero || handle == new IntPtr(-1)) return new(IntPtr.Zero, ownsHandle: false);
+        Check(DuplicateHandle(GetCurrentProcess(), handle, GetCurrentProcess(), out var copy, 0, true, 2));
+        return copy;
     }
 
     private static IntPtr EnvironmentBlock(IReadOnlyDictionary<string, string>? overrides)
@@ -131,4 +152,7 @@ internal static class WindowsProcess
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CreateProcess(string application, StringBuilder command, IntPtr processAttributes, IntPtr threadAttributes, bool inherit, uint flags, IntPtr environment, string cwd, ref StartupInfo startup, out ProcessInfo process);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern uint ResumeThread(SafeFileHandle thread);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool TerminateProcess(IntPtr process, uint code);
+    [DllImport("kernel32.dll")] private static extern IntPtr GetCurrentProcess();
+    [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr GetStdHandle(int standard);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr source, IntPtr targetProcess, out SafeFileHandle target, uint access, bool inherit, uint options);
 }

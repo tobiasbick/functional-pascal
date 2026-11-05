@@ -8,7 +8,7 @@ internal sealed record SolutionScope(IReadOnlyList<ProjectSelection> Projects, s
 {
     internal static async Task<SolutionScope> Read(string context, string configuration, CancellationToken token)
     {
-        if (Path.GetExtension(context).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase))
+        if (!Path.GetExtension(context).Equals(".slnx", StringComparison.OrdinalIgnoreCase))
             return new([new(context, configuration, "AnyCPU")], null, null);
         var solution = await SolutionSerializers.SlnXml.OpenAsync(context, token);
         var platform = solution.Platforms.FirstOrDefault(value => value.Replace(" ", "", StringComparison.Ordinal) == "AnyCPU")

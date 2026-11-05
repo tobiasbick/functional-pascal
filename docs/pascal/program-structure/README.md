@@ -9,6 +9,7 @@ ordinary .NET projects and solutions.
 | [Units and global values](units.md) | Public/private declarations and CLR initialization |
 | [Imports and companion sources](imports.md) | Explicit aliases and a two-file example |
 | [Projects](projects.md) | .fpasproj, .slnx, references, and local SDK bootstrap |
+| [Create/build/run](project-commands.md) | Templates, executable selection, streams and structured reports |
 | [Compiler CLI](cli.md) | Explicit inputs, diagnostics, executable/library output |
 | [Compiled programs](compiled-programs.md) | Assemblies, host files, dependencies, and symbols |
 

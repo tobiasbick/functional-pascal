@@ -5,12 +5,15 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Fpas.Processes;
 
+public enum ProcessStdio { Capture, Inherit, CaptureOutput }
+
 public sealed class OwnedProcess : IAsyncDisposable
 {
     private readonly Process process;
     private readonly SafeFileHandle? job;
     private readonly object gate = new();
     private Task? disposal;
+    private Task? termination;
     public Stream Input { get; }
     public Stream Output { get; }
     public Stream Error { get; }
@@ -36,13 +39,14 @@ public sealed class OwnedProcess : IAsyncDisposable
         }
     }
 
-    public static OwnedProcess Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment = null)
+    public static OwnedProcess Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment = null, ProcessStdio stdio = ProcessStdio.Capture)
     {
         Validate(path);
+        if (stdio is not (ProcessStdio.Capture or ProcessStdio.Inherit or ProcessStdio.CaptureOutput)) throw new ArgumentOutOfRangeException(nameof(stdio));
         if (arguments.Any(argument => argument is null || argument.Contains('\0'))) throw new ArgumentException("Invalid process argument.");
         if (OperatingSystem.IsWindows())
         {
-            var backend = WindowsProcess.Start(path, arguments, cwd, environment);
+            var backend = WindowsProcess.Start(path, arguments, cwd, environment, stdio);
             return new(backend.Process, backend.Input, backend.Output, backend.Error, backend.Job);
         }
         if (Prctl(36, 1, 0, 0, 0) != 0)
@@ -50,13 +54,15 @@ public sealed class OwnedProcess : IAsyncDisposable
         var start = new ProcessStartInfo(File.Exists("/usr/bin/setsid") ? "/usr/bin/setsid" : "/bin/setsid")
         {
             UseShellExecute = false, WorkingDirectory = cwd,
-            RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true
+            RedirectStandardInput = stdio == ProcessStdio.Capture,
+            RedirectStandardOutput = stdio != ProcessStdio.Inherit, RedirectStandardError = stdio != ProcessStdio.Inherit
         };
         start.ArgumentList.Add("--"); start.ArgumentList.Add(path);
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         foreach (var (key, value) in environment ?? new Dictionary<string, string>()) start.Environment[key] = value;
         var process = Process.Start(start) ?? throw new IOException("Unable to start the owned process.");
-        return new(process, process.StandardInput.BaseStream, process.StandardOutput.BaseStream, process.StandardError.BaseStream);
+        return new(process, start.RedirectStandardInput ? process.StandardInput.BaseStream : Stream.Null,
+            start.RedirectStandardOutput ? process.StandardOutput.BaseStream : Stream.Null, start.RedirectStandardError ? process.StandardError.BaseStream : Stream.Null);
     }
 
     public bool HasExited => process.HasExited;
@@ -69,7 +75,23 @@ public sealed class OwnedProcess : IAsyncDisposable
         lock (gate) return new(disposal ??= DisposeCore());
     }
 
+    public Task TerminateAsync()
+    {
+        lock (gate) return termination ??= TerminateCore();
+    }
+
     private async Task DisposeCore()
+    {
+        try { await TerminateAsync(); }
+        finally
+        {
+            job?.Dispose();
+            Input.Dispose(); Output.Dispose(); Error.Dispose();
+            process.Dispose();
+        }
+    }
+
+    private async Task TerminateCore()
     {
         try
         {
@@ -97,12 +119,7 @@ public sealed class OwnedProcess : IAsyncDisposable
                 }
             }
         }
-        finally
-        {
-            job?.Dispose();
-            Input.Dispose(); Output.Dispose(); Error.Dispose();
-            process.Dispose();
-        }
+        finally { job?.Dispose(); }
     }
 
     [DllImport("libc", EntryPoint = "kill", SetLastError = true)]

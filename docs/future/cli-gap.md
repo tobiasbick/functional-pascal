@@ -8,9 +8,6 @@ change FPAS syntax.
 
 | Proposed command | Open work |
 | --- | --- |
-| `init project`, `init library`, `init workspace` | Create program/library `.fpasproj` scaffolds and mixed `.slnx` solutions, with path/name selection, preview, structured results and preservation of existing files. |
-| `build` | Provide an FPAS frontend for MSBuild with explicit source/project/solution selection and forwarding rules. Application publishing is separate work. |
-| `run` | Select, build and launch a source, project, solution or assembly. Define arguments, streams, cancellation, working directory and child exit status. |
 | `test` | Discover and execute FPAS test programs with filtering, listing, isolation, deadlines, cancellation, output and structured results. Select test conventions or a CLR test-framework integration. |
 | `fmt` | Format the current language while preserving comments and meaning; support validation, changed-file listing and stdout output. |
 | `doc` | Look up declarations, signatures and documentation, including referenced assemblies' XML documentation. |
@@ -20,17 +17,15 @@ change FPAS syntax.
 Future commands need concise help/examples, structured failures, bounded work,
 stream ownership and a cancellation contract. Short aliases remain unselected.
 
-## Project and solution inputs
+## Native Windows command acceptance
 
-Build/run selection rules remain open for standalone sources, `.fpasproj`, `.slnx`
-and built assemblies. Standalone sources need reference resolution and temporary
-output ownership beyond explicit `compile` inputs. Reuse evaluated
-[workspace contexts](../architecture/workspaces.md) and MSBuild dependency data.
+Verify the implemented [init/build/run contract](../pascal/program-structure/project-commands.md)
+on native Windows: inherited console and piped stdin/stdout/stderr, Unicode/space
+arguments and paths, job/descendant cleanup, cancellation/deadlines, fresh SDK
+consumers and solution configuration/start-project selection. Linux integration
+coverage and Windows compilation do not establish native console behavior.
 
-Solution execution needs an explicit startup rule and actionable ambiguity errors.
-A mixed solution may launch a C# or F# host consuming an FPAS library. Project
-selection must not assume that every FPAS project is executable. Define argument
-forwarding after `--` without consuming the application's own options.
+## Publishing
 
 Application apphosts, self-contained/single-file publishing, AOT and signing need
 separate SDK/CLI contracts. Compiler distribution belongs in

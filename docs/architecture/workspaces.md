@@ -6,6 +6,12 @@ Microsoft.VisualStudio.SolutionPersistence library. The CLI does not load a
 private MSBuild runtime or another type checker. The compiler does not discover
 projects or depend on the workspace layer.
 
+Projects.ProjectDriver supplies build invocation, evaluated target/output selection
+and executable disambiguation for the [project CLI](../pascal/program-structure/project-commands.md).
+It shares official solution mappings and owned dotnet/MSBuild processes with
+analysis. Execution does not require a successful FPAS semantic snapshot; a mixed
+solution can select a C#/F# host. Build and analysis retain their own output rules.
+
 ## Context preparation
 
 WorkspaceLoader.LoadAsync accepts ContextOptions for an existing `.fpasproj` or

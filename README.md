@@ -54,9 +54,8 @@ The compiler is `src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll`. Run it through
 is configured by [NuGet.Config](NuGet.Config). Build and run the checked-in example:
 
 ```sh
-dotnet restore examples/hello/Hello.fpasproj
-dotnet build examples/hello/Hello.fpasproj --no-restore
-dotnet examples/hello/bin/Debug/net10.0/Hello.dll
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll build examples/hello/Hello.fpasproj
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll run examples/hello/Hello.fpasproj --no-build
 ```
 
 It prints `Hello from FPAS`. The
@@ -71,7 +70,13 @@ the compiler uses the installed .NET 10 runtime. See
 
 ### Hello World
 
-Create `examples/my-hello/main.fpas`:
+With the deployed compiler on PATH, create the project and source:
+
+```sh
+fpas init project examples/my-hello --name Hello --sdk-feed sdk/feed
+```
+
+Replace its generated `main.fpas` with:
 
 ```pascal
 program Hello;
@@ -84,25 +89,15 @@ end;
 end program;
 ```
 
-Place `Hello.fpasproj` beside it:
-
-```xml
-<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-</Project>
-```
-
-The project inherits the checkout's local package source. After the SDK packaging
-step above, build and run it:
+Build and run the project:
 
 ```sh
-dotnet restore examples/my-hello/Hello.fpasproj
-dotnet build examples/my-hello/Hello.fpasproj --no-restore
-dotnet examples/my-hello/bin/Debug/net10.0/Hello.dll
+fpas build examples/my-hello/Hello.fpasproj
+fpas run examples/my-hello/Hello.fpasproj --no-build
 ```
+
+See [create/build/run](docs/pascal/program-structure/project-commands.md) for
+library/solution templates, selection, arguments, streams and JSON reports.
 
 ### Debugging and editor tools
 

@@ -4,6 +4,9 @@ FPAS applications use MSBuild .fpasproj files and can share a .slnx solution
 with C# projects. Restore resolves dependencies; the SDK invokes the direct
 CIL compiler with selected sources and resolved reference assemblies.
 
+Use [fpas init/build/run](project-commands.md) to create and execute projects and
+solutions. `init solution` creates `.slnx`; there is no separate workspace format.
+
 ## Project shape
 
 ```xml

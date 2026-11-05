@@ -18,6 +18,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Detached spans, declaration ownership/source slices, flow/callable/generic identities and expression policies | SemanticSnapshotTests, DeclarationContextTests, SemanticConstructTests, SemanticPolicyTests | SemanticDocumentationTests |
 | Evaluated contexts, mapped/mixed graphs, generators, stale binaries and snapshots | | AnalysisContextTests, AnalysisPreparationTests, AnalysisCompatibilityTests, AnalysisBoundsTests, SourceQueryTests |
 | Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |
+| Init preservation/preview, project/solution build and start selection, source/DLL execution, inherited streams, JSON and process/cancellation ownership | | InitTests, BuildRunTests, SourceRunTests, RunOwnershipTests, ProjectSignalTests |
 | Literal declaration search/paging and exact bounded inspection with direct types | DeclarationContextTests | SourceQueryTests, QueryCliTests |
 | Source-body ownership, checked call/reference sites, dispatch and protocol exclusions | SourceOperationTests, SemanticPolicyTests | CallQueryTests, QueryCliTests, SourceQueryTests |
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |

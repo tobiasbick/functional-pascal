@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyMetadata Include="FpasSdkVersion" Value="$(FpasSdkVersion)" />
     <PackageReference Include="System.CommandLine" />
     <ProjectReference Include="../Fpas.Compiler/Fpas.Compiler.csproj" />
     <ProjectReference Include="../Fpas.Workspaces/Fpas.Workspaces.csproj" />

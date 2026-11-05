@@ -1,4 +1,5 @@
 using Fpas.IntegrationTests.Build;
+using Fpas.IntegrationTests.Build.Support;
 using Fpas.Tests.Support;
 using Fpas.IntegrationTests.Workspaces.Support;
 using System.Security.Cryptography;

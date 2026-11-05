@@ -2,7 +2,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>Fpas.NET.Sdk</PackageId>
-    <Version>0.1.0-dev</Version>
+    <Version>$(FpasSdkVersion)</Version>
     <Description>Project SDK and direct CIL compiler for Functional Pascal for .NET.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeBuildOutput>false</IncludeBuildOutput>

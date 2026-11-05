@@ -16,7 +16,7 @@ in the [development workflow](../docs/build/development.md).
 
 Compiler tests use Analysis, Types, Routines, ControlFlow, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
-Debugging, Processes and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
+Debugging, Processes, Projects and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
 Build the toolchain and tests before executing them. Do not rebuild toolchain

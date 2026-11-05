@@ -50,8 +50,33 @@ public sealed class AnalysisPreparationTests(SdkPackageFixture sdk) : IClassFixt
         Assert.False(File.Exists(project.File("Game/obj/project.assets.json")));
     }
 
+    [Fact]
+    public async Task Explicit_transitive_preparation_dependencies_run_for_both_analysis_and_build()
+    {
+        using var project = sdk.CreateProject();
+        var path = project.File("Game/Game.fpasproj");
+        File.WriteAllText(path, File.ReadAllText(path).Replace("</Project>", """
+              <PropertyGroup><FpasPrepareCompilationDependsOn>SharedPreparation</FpasPrepareCompilationDependsOn></PropertyGroup>
+              <ItemGroup><Compile Include="$(IntermediateOutputPath)Generated.fpas" /></ItemGroup>
+              <Target Name="SharedPreparation" DependsOnTargets="GenerateSource" />
+              <Target Name="GenerateSource" BeforeTargets="CoreCompile">
+                <MakeDir Directories="$(IntermediateOutputPath)" />
+                <WriteLinesToFile File="$(IntermediateOutputPath)Generated.fpas" Lines="unit Generated%3B end unit%3B" Overwrite="true" WriteOnlyWhenDifferent="true" />
+              </Target>
+            </Project>
+            """, StringComparison.Ordinal));
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        var context = await WorkspaceLoader.LoadAsync(new(path), deadline.Token);
+        Assert.Empty(context.Issues);
+        Assert.Contains(Assert.Single(context.Projects).Request.Sources, source => source.Path.EndsWith("Generated.fpas", StringComparison.Ordinal));
+        var build = await sdk.Run(project, "build", "Game/Game.fpasproj", "--no-restore");
+        Assert.True(build.ExitCode == 0, build.Output + build.Error);
+    }
+
     [Theory]
     [InlineData("<Target Name=\"Unsupported\" BeforeTargets=\"CoreCompile\" />", "FpasPrepareCompilation")]
+    [InlineData("<Target Name=\"Unsupported\" BeforeTargets=\"corecompile\" />", "FpasPrepareCompilation")]
+    [InlineData("<PropertyGroup><CustomHook>CoreCompile</CustomHook></PropertyGroup><Target Name=\"Unsupported\" BeforeTargets=\"$(CustomHook)\" />", "FpasPrepareCompilation")]
     [InlineData("<ItemGroup><ProjectReference Update=\"../Shared/Shared.csproj\" AdditionalProperties=\"Custom=true\" /></ItemGroup>", "AdditionalProperties")]
     public async Task Unsupported_preparation_is_diagnosed(string content, string reason)
     {

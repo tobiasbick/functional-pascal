@@ -11,6 +11,9 @@ Use [create/build/run](project-commands.md) for `init project`, `init library`,
 reports. `compile` supplies explicit source/reference compilation; project builds
 use their SDK configuration.
 
+Use [native .NET testing](../tools/testing.md) for `init test` and `test`: framework
+attributes, VSTest discovery/execution, filters, deadlines and JSON/TRX results.
+
 Use [source formatting](../tools/fmt-style.md) for `fpas fmt`, its fixed style,
 explicit source/directory/project/solution inputs, check/list/stdout modes and
 JSON reports. Formatting is syntax-only and needs no assembly references.

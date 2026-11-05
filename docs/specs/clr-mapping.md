@@ -1,10 +1,10 @@
 # CLR mapping and compiler boundary
 
-**Status: language-to-CLR contract with implemented features and tracked gaps.** See
+This language-to-CLR contract describes implemented behavior. See
 the [compiler overview](../architecture/compiler.md) and
 [acceptance coverage](../../tests/coverage.md) for actual
 compiler/emitter support and verification.
-The separate [MSBuild plan](../build/msbuild.md)
+The [MSBuild contract](../build/msbuild.md)
 specifies project/solution integration, framework references, restore, and the
 compiler's build boundary. IDE and language-service integration are deferred.
 
@@ -24,7 +24,7 @@ UTF-8 FPAS sources + supplied assembly/reference metadata
 There is no generated C# stage. A library may write the PE/metadata/PDB containers;
 direct CIL generation does not require implementing those binary writers from
 scratch. The compiler implementation is C#, with the project boundaries defined
-in the [repository layout plan](../architecture/project-layout.md). The binary
+in the [repository layout](../architecture/project-layout.md). The binary
 writer currently uses the built-in System.Reflection.Metadata and ManagedPEBuilder;
 that engineering choice is separate from source syntax.
 
@@ -429,7 +429,7 @@ diagnostics. Closure/async-generated methods require appropriate debug metadata;
 having an IL emitter alone does not provide correct stepping. Hidden plumbing
 must not masquerade as a source statement. Bind supplied reference metadata
 deterministically rather than using runtime reflection enumeration. The MSBuild
-plan supplies compile-time references through standard dependency resolution.
+contract supplies compile-time references through standard dependency resolution.
 
 ## API documentation output
 
@@ -449,51 +449,12 @@ nested-type, property, factory, and byref IDs using the standard documentation I
 encoding. XML nested-type separators differ from reflection FullName notation.
 Export must be deterministic and correctly escaped. Documentation warnings retain
 source spans and follow normal build warning policy; an unwritable requested
-output fails the build. The [MSBuild plan](../build/msbuild.md#documentation-output)
+output fails the build. The [MSBuild contract](../build/msbuild.md#documentation-output)
 defines generation switches, paths, related output files, and incremental inputs.
 
-## Acceptance requirements
+## Verification
 
-1. Build and execute the complete applicable [examples](../pascal/examples/README.md)
-   as separate compilations, including expected error paths.
-2. Inspect emitted IL/metadata to establish actual CLR signatures, accessibility,
-   generic constraints, nullable annotations, and direct external calls.
-3. Reference an FPAS library from C# and an ordinary C# library from FPAS; cover
-   records, unions, delegates, overloaded methods, interfaces, and exceptions.
-4. Verify checked arithmetic, aliasing, UTF-16 indexing, record field equality,
-   enum unnamed values, and null-flow diagnostics with focused cases.
-   Reject missing type annotations on local/top-level const/var declarations,
-   loop variables, using resources, and const pattern bindings, even when their
-   types could be inferred. Named ensures results also require exact type
-   annotations. CLR type patterns already state a type before `as`.
-5. Exercise async success/failure/cancellation, closure captures, and disposal on
-   normal completion, return, exceptions, break, and continue. Verify reverse
-   acquisition order, per-iteration lifetimes, nested blocks, try/catch/finally
-   ordering, null resources, and later acquisition/cleanup failures. Acquired
-   non-null resources must be released once; asynchronous cleanup must finish
-   before scope exit completes. Reject resource declarations without const/types
-   and outside local statement scopes. Require matching end program/end unit
-   source terminators and reject terminal periods or bare program-closing end.
-   Confirm nullable values, Try-pattern calls, and user-defined union outcomes
-   remain ordinary .NET/data operations with no implicit failure conversion.
-6. Reject unsupported metadata/features deliberately and identify them in source
-   diagnostics. No dynamic/reflection fallback may hide missing compiler support.
-7. Use PDBs to verify source breakpoints and stepping in plain and async functions.
-8. Verify contract ordering and one-time execution in debug/release, including
-   all normal returns, cleanup ordering, body/cleanup failures, condition failures,
-   procedures with ref/out state, block lambdas, generic methods, async routines,
-   and calls through CLR interfaces/delegates or a C# consumer. Check rejected
-   expressions and mismatched/missing ensures result annotations.
-9. Check distinct identity, explicit conversions, subrange limits/extremes,
-   valid default-initialized domains, CLR consumer construction, and generic/array
-   use without erased validation. Test defaults in written order, skipped explicit
-   defaults, private constructors, static factories, with updates preserving private
-   state, and global initialization/mutation. Include cross-assembly metadata cases.
-10. Verify comment attachment/extraction and structured documentation diagnostics.
-    Parse XML output, compare documentation IDs and parameter names with emitted
-    signatures, and check escaping, generic/byref/nested symbols, deterministic
-    output, and C# reference-sidecar propagation with generation enabled/disabled.
-
-The [acceptance coverage](../../tests/coverage.md) maps
-these requirements to compiler, execution, metadata, and build tests. Remaining
-language requirements are tracked separately in [language gaps](../future/language-gaps.md).
+The [coverage map](../../tests/coverage.md) links this contract to compiler,
+metadata, CLR execution, mixed-project and debugger tests, including rejection
+cases. Complete [examples](../pascal/examples/README.md) are compiled and executed
+from Markdown. Only open work belongs in [language gaps](../future/language-gaps.md).

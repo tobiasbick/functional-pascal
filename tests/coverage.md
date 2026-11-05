@@ -208,6 +208,8 @@ Deleted articles cannot remain as stale fixtures. See
 
 ## Build acceptance
 
+See also [native test frameworks](#native-test-frameworks) for test-library SDK consumers.
+
 LocalDeploymentTests runs the platform's actual dist script twice in an isolated
 checkout/cache, from a different working directory. It verifies a matching
 launcher/SDK through find/inspect, development-version cache refresh, preservation
@@ -254,6 +256,30 @@ equivalence after a clean rebuild. Debug/Release and portable/none symbols are
 covered. Other frameworks/platforms, publishing, AOT, signing, native apphosts,
 and IDE integration are outside this verified scope. Remaining requirements stay
 in [language gaps](../docs/future/language-gaps.md).
+
+## Native test frameworks
+
+Integration Testing/ uses fresh packaged FPAS SDK consumers and the actual VSTest
+adapters for xUnit 2, MSTest and NUnit. NativeFrameworkTests runs generated
+templates through dotnet test and checks library/runtime/dependency outputs.
+TestCliTests executes real FPAS fixtures covering data rows, Task-returning tests,
+setup/cleanup, skips, failing assertions, user exceptions and captured output.
+xUnit adds MemberData, IAsyncLifetime/IClassFixture and a compiler formatter API
+test written in FPAS. Assertions remain the frameworks' own APIs.
+
+TestTemplateTests covers dry-run/idempotence/conflicts, framework arguments,
+library source validation and unsupported MTP mode. TestCommandErrors covers
+argument/build failures, non-test inputs and explicit reuse of previous artifacts.
+TestSolutionTests covers enabled test selection, configuration mappings, explicit
+project selection and a mixed FPAS/C# test solution. TestCliTests also verifies
+native discovery, filters, runsettings, zero matches and unique result directories.
+TrxReportTests protects skips, nested data results and invalid native reports.
+TestReportLimitTests checks a real native result above the JSON budget, preserving
+the TRX artifact and returning one bounded failure. Native TRX run messages retain
+framework warning/error semantics without parsing localized console diagnostics.
+TestLifetimeTests verifies deadline cleanup of an actual waiting test host, plus
+SIGINT cancellation on Linux. Native Windows console/process acceptance remains
+tracked separately in [CLI gaps](../docs/future/cli-gap.md).
 
 ## See also
 

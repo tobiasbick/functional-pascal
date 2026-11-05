@@ -4,7 +4,7 @@ namespace Fpas.Cli.Projects;
 
 internal static class Scaffolder
 {
-    internal static ProjectReport Create(string kind, string path, string? requestedName, string? sdkVersion, string? feed, string[] projects, bool dryRun)
+    internal static ProjectReport Create(string kind, string path, string? requestedName, string? sdkVersion, string? feed, string[] projects, bool dryRun, string framework = "xunit")
     {
         var directory = Path.GetFullPath(path);
         var name = requestedName ?? Path.GetFileName(Path.TrimEndingDirectorySeparator(directory));
@@ -24,8 +24,8 @@ internal static class Scaffolder
         }
         else
         {
-            files.Add((Path.Combine(directory, name + ".fpasproj"), ProjectFiles.Project(ToolSdk.ValidateVersion(sdkVersion), kind == "library")));
-            files.Add((Path.Combine(directory, kind == "library" ? name + ".fpas" : "main.fpas"), kind == "library" ?
+            files.Add((Path.Combine(directory, name + ".fpasproj"), kind == "test" ? TestTemplate.Project(ToolSdk.ValidateVersion(sdkVersion), framework) : ProjectFiles.Project(ToolSdk.ValidateVersion(sdkVersion), kind == "library")));
+            files.Add((Path.Combine(directory, kind is "library" or "test" ? name + ".fpas" : "main.fpas"), kind == "test" ? TestTemplate.Source(identifier, framework) : kind == "library" ?
                 $"unit {identifier};\n\nend unit;\n" :
                 $"program {identifier};\n\nuses System.Console as Console;\n\nbegin\n  Console.WriteLine('Hello from FPAS');\nend;\nend program;\n"));
             if (feed is not null) files.Add((Path.Combine(directory, "NuGet.Config"), ProjectFiles.Feed(feed, directory)));

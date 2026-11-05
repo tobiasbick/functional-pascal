@@ -24,7 +24,7 @@ body's `end;` and the declaration's `end program;` are required for synchronous
 and async programs. A terminal period cannot replace either terminator. Routines
 retain their own named terminators.
 `async program Name;` enables await in the entry body. Source selection and build
-configuration are specified separately in the [MSBuild plan](../../build/msbuild.md).
+configuration are specified in the [MSBuild contract](../../build/msbuild.md).
 
 The entry body receives an implicit immutable `args: string[]` binding, containing
 command-line arguments excluding the executable name. Free functions do not

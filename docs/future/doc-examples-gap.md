@@ -15,8 +15,8 @@ owns the usable verification workflow.
   inputs, not independently maintained copies.
 - Define which checks move from C# tests to the application without dropping
   existing execution or behavior assertions.
-- Select a verified path through the current CLR compiler/SDK and generated
-  programs. The proposed `fpas test` workflow remains a [CLI gap](cli-gap.md).
+- Integrate the checker with the current compiler/SDK and
+  [native test workflow](../pascal/tools/testing.md).
 
 ## Markdown instructions
 

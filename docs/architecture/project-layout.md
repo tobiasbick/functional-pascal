@@ -51,6 +51,7 @@ src/
     Diagnostics/
     Projects/
     Formatting/
+    Testing/
   Fpas.Workspaces/
     Analysis/
     Formatting/
@@ -59,6 +60,7 @@ src/
     Projects/
     Queries/
     Solutions/
+    Testing/
   Fpas.Processes/
   Fpas.Debugging/
     Fpas.Debugging.csproj
@@ -103,6 +105,7 @@ tests/
     Workspaces/
     Projects/
     Support/
+    Testing/
   Fixtures/
 examples/
   README.md
@@ -223,15 +226,15 @@ The test harness is xUnit; fixture FPAS sources are inputs to that harness.
 
 tests/Fixtures contains the required FPAS/C# sources, project files, and solutions,
 organized by scenario. Isolate generated outputs in test work directories and
-keep fixtures unchanged during tests. Planned implementation acceptance cases in
-the language topics and MSBuild plan guide coverage. Implemented xUnit cases cover
+keep fixtures unchanged during tests. The [coverage map](../../tests/coverage.md)
+links language and build contracts to their tests. xUnit cases cover
 the compiler and local SDK, including project/package reference execution,
 incremental builds, and Clean/Rebuild. Test build targets obtain actual reference
 paths; the checked-in Hello source is copied into the integration-test output.
 
 ## Examples and applications
 
-Both root directories follow the earlier FPAS repository's distinction:
+The two consumer directories have distinct purposes:
 
 - `examples/` contains small programs demonstrating a language feature, .NET API,
   or focused technique. Group them by topic. A standalone example may have its
@@ -260,6 +263,6 @@ units into one assembly. The apps directory contains its README placeholder.
 Preserve compile/execute integration coverage when extending the compiler or SDK.
 Add Fpas.Core contents only when emitted features need them. Follow the owning
 language/build contracts and their tracked gaps. Add executable examples/apps
-using implemented features. Publishing and IDE/LSP/query tooling retain their
+using implemented features. Publishing and IDE/LSP tooling retain their
 separately documented scope. Repository commands belong in the
 [development workflow](../build/development.md).

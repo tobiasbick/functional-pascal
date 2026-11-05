@@ -8,7 +8,6 @@ change FPAS syntax.
 
 | Proposed command | Open work |
 | --- | --- |
-| `test` | Discover and execute FPAS test programs with filtering, listing, isolation, deadlines, cancellation, output and structured results. Select test conventions or a CLR test-framework integration. |
 | `doc` | Look up declarations, signatures and documentation, including referenced assemblies' XML documentation. |
 | `refactor` | Prepare checked source edits and apply explicit plans. See the operations below. |
 | `env --json` | Report compiler, FPAS SDK, .NET and available language-server/debugger installations. |
@@ -23,6 +22,10 @@ on native Windows: inherited console and piped stdin/stdout/stderr, Unicode/spac
 arguments and paths, job/descendant cleanup, cancellation/deadlines, fresh SDK
 consumers and solution configuration/start-project selection. Linux integration
 coverage and Windows compilation do not establish native console behavior.
+
+Verify [native test commands](../pascal/tools/testing.md) on Windows too: fresh
+framework templates, native discovery/TRX reporting, mixed solutions, runsettings,
+and cancellation/deadline cleanup of a waiting test host.
 
 ## Publishing
 
@@ -48,10 +51,9 @@ analysis rather than building separate resolvers.
 
 - `check --fix` needs validation/application of [diagnostic proposals](../pascal/tools/diagnostics.md),
   safe edit ownership, bounded rechecking and publication.
-- Test programs need assertions, skip/strict semantics, scratch directories and
-  golden-output rules. Multiple program entries cannot share one ordinary CLR
-  executable project. Interactive terminal tests need a separate controlled
-  terminal contract.
+- Interactive terminal tests need a separate controlled terminal contract.
+  Test-framework extensions outside the documented VSTest baseline and
+  Microsoft.Testing.Platform self-hosted applications need separate scope.
 - A profiling frontend, if selected, needs .NET collection/summary behavior.
   Runtime-failure reports need exception/source stacks and debugger/dump data;
   arbitrary frame locals cannot be recovered from stderr alone.
@@ -68,8 +70,6 @@ Linux with the corresponding tooling work.
 
 ## Scope
 
-LSP and editor workflows belong in [editor gaps](editor-gap.md). `fpas-bench`,
-`--std-lib`, replacement `Std.*` wrappers and VM-specific execution/GC controls
-are excluded. Batch debugging, command-file runners and alternate public debugger
-transports are excluded. Clean/restore/publish wrappers and a profiling command
-remain unselected.
+LSP and editor workflows belong in [editor gaps](editor-gap.md). Batch debugging,
+command-file runners and alternate public debugger transports are excluded.
+Clean/restore/publish wrappers and a profiling command remain unselected.

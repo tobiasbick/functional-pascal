@@ -138,7 +138,7 @@ With XML documentation enabled, the relevant Numerics.xml output is:
 ## XML export contract
 
 Export a standard UTF-8 .NET XML documentation sidecar, normally named after the
-assembly and placed beside its DLL. See the [MSBuild plan](../../../build/msbuild.md)
+assembly and placed beside its DLL. See the [MSBuild contract](../../../build/msbuild.md)
 for GenerateDocumentationFile, DocumentationFile, output tracking, and reference
 propagation. Export does not embed documentation into CIL or require a runtime
 helper. Comments in source remain Markdown.

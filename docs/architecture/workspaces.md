@@ -12,6 +12,15 @@ It shares official solution mappings and owned dotnet/MSBuild processes with
 analysis. Execution does not require a successful FPAS semantic snapshot; a mixed
 solution can select a C#/F# host. Build and analysis retain their own output rules.
 
+Testing.TestDriver shares those solution mappings and owned processes. It
+evaluates IsTestProject/TargetFramework/TargetPath through MSBuild, discovers
+names through native VSTest artifacts and executes installed adapters through
+dotnet vstest on the evaluated assembly. TrxReport reads native XML cases,
+outcomes and run messages. Running that assembly directly preserves output paths
+that depend on the solution context. The CLI owns selection,
+deadlines and bounded reporting; it does not implement a test discovery engine,
+framework scheduler or assertion runtime. See [testing](../pascal/tools/testing.md).
+
 ## Context preparation
 
 WorkspaceLoader.LoadAsync accepts ContextOptions for an existing `.fpasproj` or

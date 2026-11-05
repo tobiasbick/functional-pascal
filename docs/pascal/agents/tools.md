@@ -63,6 +63,13 @@ arguments after -- and preserves its exit code. --report json captures program
 output separately; stdin remains inherited. Run defaults to no deadline; select
 --timeout for bounded automation. No command overwrites conflicting init files.
 
+Use `fpas init test Tests --framework xunit` to create a native test library;
+mstest/nunit are also supported. Use existing framework attributes and assertions.
+`fpas test <project|solution> --report json` builds and runs through VSTest/TRX;
+--list discovers method identities, --filter/--settings select native behavior,
+--no-build uses existing outputs. The default whole-operation deadline is 120s.
+See [testing](../tools/testing.md) for frameworks, result fields and limits.
+
 Use `fpas fmt --check <paths> --report json` to inspect fixed-style formatting,
 then `fpas fmt <paths>` to apply it. Sources, directories, evaluated projects and
 solutions are supported. --check --list prints changed paths; --stdout prints

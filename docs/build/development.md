@@ -162,3 +162,7 @@ queries and [MCP agent debugging](../pascal/tools/debugging.md#agent-debugging-w
 Use [fpas fmt](../pascal/tools/fmt-style.md) to format sources or check the fixed
 style without changes. LSP and automatic IDE project integration remain separate
 work.
+
+For FPAS-authored tests, use native framework attributes and assertions in a test
+library. [Native .NET testing](../pascal/tools/testing.md) describes `fpas init test`,
+`fpas test` and ordinary `dotnet test`, with filters and structured native results.

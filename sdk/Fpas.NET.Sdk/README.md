@@ -15,6 +15,11 @@ Records, unions, domains, and public aliases use Fpas.Core metadata attributes.
 The SDK supplies and copies its matching Core assembly. See the
 [CLR mapping](../../docs/specs/clr-mapping.md) for the metadata contracts.
 
+IsTestProject=true builds a unit-based library with dependency/runtimeconfig
+files for VSTest. Use native framework packages/attributes and `dotnet test` or
+`fpas test`; no generated C# test entry point is needed. See [native testing](../../docs/pascal/tools/testing.md).
+Microsoft.Testing.Platform self-hosted mode is outside this contract.
+
 Build the toolchain, pack this project to sdk/feed, and restore the example
 against that local source. NuGet package versions are immutable; use a fresh
 version/cache entry after changing packaged tools. No public package is published.

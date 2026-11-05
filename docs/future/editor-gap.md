@@ -53,7 +53,7 @@ Invalidate stale views. Inspection must not save files or invoke a build.
 | --- | --- |
 | Project workflows | Check/build/run/test/format commands and tasks using the selected toolchain. |
 | Problems | Associate diagnostics with source documents and project context. |
-| Testing view | Discovery, locations, selection, cancellation, results and output after a CLR FPAS test workflow exists. |
+| Testing view | Connect native FPAS test discovery, locations, selection, cancellation, results and output to the editor's testing UI. |
 | Active project/runs | Project selection/status, arguments, working directory, terminal launch and process ownership, including non-FPAS hosts in mixed solutions. |
 | Server diagnostics | Restart, output channels and actionable launch/protocol errors. |
 

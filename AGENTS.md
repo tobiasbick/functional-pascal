@@ -36,6 +36,9 @@ for the task.
 - Fix errors and code organization issues when you encounter them. Do not
   dismiss them as pre-existing.
 - Keep the agent reference aligned with implemented language and toolchain behavior.
+- Keep plans and gap inventories limited to open work. Remove completed entries
+  and delete fully completed documents; current contracts and usage belong in
+  their owning references.
 
 ## Before every commit
 

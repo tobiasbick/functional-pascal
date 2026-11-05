@@ -9,6 +9,7 @@ executable. FPAS source imports do not select projects or download dependencies.
 ```sh
 fpas init project Hello --name Hello --sdk-feed sdk/feed
 fpas init library Math --name Demo.Math --sdk-feed sdk/feed
+fpas init test Tests --framework xunit --sdk-feed sdk/feed
 fpas init solution Demo --project Hello/Hello.fpasproj --project Math/Demo.Math.fpasproj
 ```
 
@@ -18,6 +19,10 @@ net10.0 and explicitly select Exe or Library output. A solution creates
 `Name.slnx`, with FPAS project-type configuration and any repeated `--project`
 members. Members must already exist and can be FPAS, C# or F# projects. Without
 members the solution is an empty container; it does not create an application.
+
+The test template creates a unit-based test library with IsTestProject=true and
+native framework packages. `--framework` selects xunit (default), mstest or nunit.
+See [testing](../tools/testing.md) for attributes, native adapters and `fpas test`.
 
 The name defaults to the destination directory name. `--name` accepts a qualified
 Pascal identifier and avoids nonportable device filenames. Keyword components
@@ -122,7 +127,8 @@ separate fields. Build/program capture reports exit codes and truncation.
 
 A run report distinguishes a program exit from a host failure even when numeric
 codes overlap. Init file conflicts use exit 1 and `file_conflict`. These commands
-do not publish applications, choose AOT/apphosts, discover tests, or format sources.
+do not publish applications or choose AOT/apphosts. Test discovery/execution and
+formatting belong to `fpas test` and `fpas fmt`.
 Native Windows console/job acceptance remains in the [CLI gaps](../../future/cli-gap.md).
 
 ## See also

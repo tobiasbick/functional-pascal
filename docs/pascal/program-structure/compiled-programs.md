@@ -10,14 +10,15 @@ ordinary CLR types/methods to FPAS and other .NET languages.
 | --- | --- |
 | .dll | Implementation assembly with actual CLR signatures and bodies |
 | .pdb | Assembly-matching portable source/debug metadata, enabled by default |
-| .runtimeconfig.json | Executable host/runtime selection |
+| .runtimeconfig.json | Executable or test-host runtime selection |
 | .deps.json and copied dependencies | SDK-managed runtime asset resolution |
 | .xml | Optional API documentation associated with the assembly |
 
 Direct CLI compilation writes its documented assembly/PDB/runtime configuration
 and optional XML outputs. SDK projects additionally manage dependency/host files
-and transitive runtime copying. Libraries have no executable entry point or
-runtime configuration. Disabling a previously generated output removes stale
+and transitive runtime copying. Libraries have no executable entry point.
+Ordinary libraries need no runtime configuration; test libraries request one
+for the native host. Disabling a previously generated output removes stale
 compiler/project-owned sidecars according to the output contract.
 
 ## Runtime behavior

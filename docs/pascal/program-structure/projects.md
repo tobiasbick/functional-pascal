@@ -28,6 +28,11 @@ or Library output. A library contains units and no program; an executable has
 exactly one program plus optional units. The program/unit header determines
 source identity, not the source filename or Compile item order.
 
+For [native .NET tests](../tools/testing.md), set IsTestProject=true and reference
+the framework, VSTest adapter and Microsoft.NET.Test.Sdk packages. The SDK selects
+Library output and emits deps/runtimeconfig files for the native test host.
+Test libraries contain units and no program; `fpas init test` creates this shape.
+
 ## Sources and dependencies
 
 The SDK selects .fpas sources recursively, excluding normal build directories.

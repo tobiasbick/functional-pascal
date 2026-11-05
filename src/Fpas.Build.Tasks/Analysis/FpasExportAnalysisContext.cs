@@ -103,10 +103,21 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     private static void CheckPreparationHooks(Project project)
     {
         var sdk = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(typeof(Project).Assembly.Location)!, "..", "..")) + Path.DirectorySeparatorChar;
+        var preparation = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void Include(string name)
+        {
+            if (!preparation.Add(name) || !project.Targets.TryGetValue(name, out var target)) return;
+            foreach (var dependency in project.ExpandString(target.DependsOnTargets).Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                Include(dependency);
+        }
+        Include("FpasPrepareCompilation");
+        string[] compileTargets = ["CoreCompile", "BeforeCompile", "Compile", "Build", "BeforeBuild", "CoreBuild"];
         foreach (var target in project.Targets.Values)
         {
+            if (preparation.Contains(target.Name)) continue;
             if (target.FullPath.StartsWith(sdk, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) continue;
-            if (target.BeforeTargets.Split(';').Any(name => name.Trim() is "CoreCompile" or "BeforeCompile" or "Compile" or "Build" or "BeforeBuild" or "CoreBuild"))
+            if (project.ExpandString(target.BeforeTargets).Split(';', StringSplitOptions.TrimEntries)
+                .Any(name => compileTargets.Contains(name, StringComparer.OrdinalIgnoreCase)))
                 throw new InvalidOperationException("Custom pre-compile hooks must use FpasPrepareCompilation so check and build prepare the same inputs: " + target.Name);
         }
     }

@@ -8,7 +8,6 @@ change FPAS syntax.
 
 | Proposed command | Open work |
 | --- | --- |
-| `doc` | Look up declarations, signatures and documentation, including referenced assemblies' XML documentation. |
 | `refactor` | Prepare checked source edits and apply explicit plans. See the operations below. |
 | `env --json` | Report compiler, FPAS SDK, .NET and available language-server/debugger installations. |
 
@@ -26,6 +25,9 @@ coverage and Windows compilation do not establish native console behavior.
 Verify [native test commands](../pascal/tools/testing.md) on Windows too: fresh
 framework templates, native discovery/TRX reporting, mixed solutions, runsettings,
 and cancellation/deadline cleanup of a waiting test host.
+
+Verify [API documentation lookup](../pascal/tools/api-documentation.md) on Windows:
+source/metadata selection, adjacent XML, packaged CLI and cancellation cleanup.
 
 ## Publishing
 

@@ -52,6 +52,7 @@ src/
     Projects/
     Formatting/
     Testing/
+    Documentation/
   Fpas.Workspaces/
     Analysis/
     Formatting/
@@ -61,6 +62,7 @@ src/
     Queries/
     Solutions/
     Testing/
+    Documentation/
   Fpas.Processes/
   Fpas.Debugging/
     Fpas.Debugging.csproj
@@ -106,6 +108,7 @@ tests/
     Projects/
     Support/
     Testing/
+    ApiDocumentation/
   Fixtures/
 examples/
   README.md

@@ -99,7 +99,10 @@ fpas run examples/my-hello/Hello.fpasproj --no-build
 See [create/build/run](docs/pascal/program-structure/project-commands.md) for
 library/solution templates, selection, arguments, streams and JSON reports.
 
-### Debugging and editor tools
+### Development tools
+
+Use [fpas doc](docs/pascal/tools/api-documentation.md) to look up FPAS declarations
+and the actual .NET reference APIs, with signatures and Markdown/XML documentation.
 
 Portable symbols retain source locations, local scopes, closure methods, and
 async yield/resume metadata. Use compatible .NET debuggers and profilers with

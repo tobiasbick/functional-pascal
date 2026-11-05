@@ -7,6 +7,7 @@ tools supported by the current compiler and .NET environment.
 | --- | --- |
 | [Compiler CLI](../program-structure/cli.md) | Inputs, references, direct CIL output, and structured diagnostics |
 | [Diagnostics](diagnostics.md) | Stable codes, source positions, warnings, and exit behavior |
+| [API documentation lookup](api-documentation.md) | FPAS declarations, public .NET signatures and reference XML documentation |
 | [Source formatting](fmt-style.md) | Fixed style, comments, wrapping, check/list/stdout and structured reports |
 | [Native .NET tests](testing.md) | xUnit, MSTest, NUnit, test projects, discovery and structured results |
 | [Documentation examples](documentation-examples.md) | Complete sources, companion projects, fragments, and checks |

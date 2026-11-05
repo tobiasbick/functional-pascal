@@ -18,6 +18,7 @@ public sealed class AnalysisSignalTests(SdkPackageFixture sdk) : IClassFixture<S
         foreach (var arguments in new[]
         {
             new[] { "check", "Game/Game.fpasproj", "--diagnostics", "json" },
+            new[] { "doc", "Game/Game.fpasproj", "--name", "System.Console", "--report", "json" },
             new[] { "query", "refs", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "25" },
             new[] { "query", "callees", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "25" },
             new[] { "query", "callers", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "25" }

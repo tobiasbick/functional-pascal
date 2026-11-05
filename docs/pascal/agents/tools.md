@@ -32,6 +32,13 @@ names, generic arity, accessibility, parameter names/modes, overloads, and nulla
 annotations. Use static extension-method calls. An unsupported signature must
 produce a useful diagnostic rather than trigger reflection/dynamic invocation.
 
+Use `fpas doc <project|solution> --name System.Console.WriteLine --report json`
+to find actual FPAS/.NET declarations, overloads and source Markdown/reference XML.
+An exact type name includes direct members. Narrow with --project/--assembly;
+page with --limit/--offset and equal snapshotId. Metadata signatures are CLR
+descriptions, not a guarantee of FPAS call support. Missing text is explicit.
+See [API documentation lookup](../tools/api-documentation.md).
+
 The CLI uses System.CommandLine; root help/version and compile help are available.
 The compile command's help documents explicit references,
 multiple sources, stdin, executable/library output, portable symbols, XML docs,

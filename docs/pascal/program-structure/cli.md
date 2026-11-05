@@ -6,6 +6,10 @@ command hosts [MCP agent debugging](../tools/debugging.md#agent-debugging-with-m
 using a separately installed NetCoreDbg; inspect it with `fpas debug --help`.
 The CLI uses System.CommandLine for argument binding and generated help.
 
+Use [API documentation lookup](../tools/api-documentation.md) for `fpas doc`:
+name-based FPAS/.NET lookup, overloads, source Markdown, reference XML and bounded
+text/JSON reports.
+
 Use [create/build/run](project-commands.md) for `init project`, `init library`,
 `init solution`, `build` and `run`, including project selection, streams and JSON
 reports. `compile` supplies explicit source/reference compilation; project builds

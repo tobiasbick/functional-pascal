@@ -21,6 +21,13 @@ that depend on the solution context. The CLI owns selection,
 deadlines and bounded reporting; it does not implement a test discovery engine,
 framework scheduler or assertion runtime. See [testing](../pascal/tools/testing.md).
 
+Documentation.DocumentationQuery reuses Find/Inspect for source declarations and
+reads public CLR metadata with System.Reflection.Metadata. It neither loads
+reference code nor binds another language model. Adjacent XML files supply exact
+member documentation; their contents/absence join the result snapshot identity
+and input verification. Name/type/member selection, limits and presentation are
+defined by [API lookup](../pascal/tools/api-documentation.md).
+
 ## Context preparation
 
 WorkspaceLoader.LoadAsync accepts ContextOptions for an existing `.fpasproj` or

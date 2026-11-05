@@ -157,8 +157,9 @@ Use supported .NET debuggers/profilers for generated assemblies. Portable symbol
 provide source locations, locals, and closure/async metadata; see
 [debug information](../architecture/debug-information.md).
 Investigate actual program behavior before writing benchmark variants or external
-samplers. The FPAS CLI provides compilation, evaluated project checks/source
-queries and [MCP agent debugging](../pascal/tools/debugging.md#agent-debugging-with-mcp).
+samplers. The FPAS CLI provides compilation, evaluated project checks/source queries,
+[API documentation lookup](../pascal/tools/api-documentation.md) and
+[MCP agent debugging](../pascal/tools/debugging.md#agent-debugging-with-mcp).
 Use [fpas fmt](../pascal/tools/fmt-style.md) to format sources or check the fixed
 style without changes. LSP and automatic IDE project integration remain separate
 work.

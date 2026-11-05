@@ -80,10 +80,19 @@ Files live in [compiler tests](Fpas.Compiler.Tests/) and
 files; the shared fixture owns packaging and process setup.
 
 Compiler files are grouped in Analysis, Types, Routines, ControlFlow, and Metadata;
-integration files in Cli, Execution, Documentation, Debugging, Processes, Build and Workspaces.
+integration files in Cli, Execution, Documentation, ApiDocumentation, Debugging,
+Processes, Build and Workspaces.
 Shared setup lives in each topic's Support directory.
 
 ## Behavioral checks
+
+ApiDocumentation exercises `fpas doc` through actual SDK consumers and the public
+workspace service. C#-generated XML is the oracle for constructors, overloads,
+nested generics, parameter modes, arrays, indexers, fields, events and conversions.
+Source inspection supplies Markdown; project/reference scopes preserve origins.
+Tests cover framework APIs unused by source, XML budgets/identity/entities,
+changed XML snapshots, missing text, paging, diagnostics, deadlines and packaged
+CLI execution. AnalysisSignalTests verifies SIGINT and owned preparation cleanup.
 
 CompilerCliTests and ArgumentParsingTests cover generated help/aliases, version
 output, required/allowed/duplicate options, repeatable references, literal source

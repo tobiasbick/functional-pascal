@@ -7,27 +7,37 @@ namespace Fpas.IntegrationTests.Diagnostics;
 public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
     [Fact]
-    public async Task Check_and_query_preserve_the_same_compiler_diagnostic_payload()
+    public async Task Analysis_commands_preserve_the_same_compiler_diagnostic_payload()
     {
         using var project = sdk.CreateProject();
         File.WriteAllText(project.File("Game/Bridge.fpas"), "unit Demo.Bridge; public function Message(Value: string): string; begin const Count: integer := 1; return Value; end function; end unit;");
         var cli = TestEnvironment.Metadata("FpasCliPath");
-        var check = await ProcessRunner.RunAsync([cli, "check", project.File("Game/Game.fpasproj"), "--diagnostics", "json"]);
+        Task<ProcessResult> Run(params string[] arguments) => ProcessRunner.RunAsync([cli, .. arguments], timeLimit: TimeSpan.FromMinutes(3));
+        var check = await Run("check", project.File("Game/Game.fpasproj"), "--diagnostics", "json");
         Assert.Equal(1, check.ExitCode); Assert.Equal("", check.Error);
         using var checkedJson = JsonDocument.Parse(check.Output);
         var diagnostic = Assert.Single(checkedJson.RootElement.GetProperty("diagnostics").EnumerateArray());
         Assert.Equal("error", diagnostic.GetProperty("severity").GetString()); Assert.Equal("integer", diagnostic.GetProperty("expectation").GetProperty("found").GetString());
         Assert.Single(diagnostic.GetProperty("fixes").EnumerateArray());
         Assert.Equal(project.File("Game/Game.fpasproj"), diagnostic.GetProperty("project").GetString());
-        var query = await ProcessRunner.RunAsync([cli, "query", "type", project.File("Game/Game.fpasproj"), "--file", project.File("Game/Bridge.fpas"), "--line", "1", "--column", "1", "--no-restore"]);
+        var query = await Run("query", "type", project.File("Game/Game.fpasproj"), "--file", project.File("Game/Bridge.fpas"), "--line", "1", "--column", "1", "--no-restore");
         Assert.Equal(1, query.ExitCode); Assert.Equal("", query.Error);
         using var queriedJson = JsonDocument.Parse(query.Output);
         var queriedDiagnostic = Assert.Single(queriedJson.RootElement.GetProperty("diagnostics").EnumerateArray());
         Assert.Equal(diagnostic.GetProperty("expectation").GetRawText(), queriedDiagnostic.GetProperty("expectation").GetRawText());
         Assert.Equal(diagnostic.GetProperty("fixes").GetRawText(), queriedDiagnostic.GetProperty("fixes").GetRawText());
-        var text = await ProcessRunner.RunAsync([cli, "check", project.File("Game/Game.fpasproj"), "--no-restore"]);
+        var doc = await Run("doc", project.File("Game/Game.fpasproj"), "--name", "Message", "--report", "json", "--no-restore");
+        Assert.Equal(1, doc.ExitCode); Assert.Empty(doc.Error);
+        using var docJson = JsonDocument.Parse(doc.Output);
+        var docDiagnostic = Assert.Single(docJson.RootElement.GetProperty("diagnostics").EnumerateArray());
+        Assert.Equal(diagnostic.GetProperty("expectation").GetRawText(), docDiagnostic.GetProperty("expectation").GetRawText());
+        Assert.Equal(diagnostic.GetProperty("fixes").GetRawText(), docDiagnostic.GetProperty("fixes").GetRawText());
+        var text = await Run("check", project.File("Game/Game.fpasproj"), "--no-restore");
         Assert.Equal(1, text.ExitCode); Assert.Equal("", text.Output);
         Assert.Contains("|", text.Error); Assert.Contains("help:", text.Error); Assert.Contains("Use int", text.Error);
+        var docText = await Run("doc", project.File("Game/Game.fpasproj"), "--name", "Message", "--no-restore");
+        Assert.Equal(1, docText.ExitCode); Assert.Empty(docText.Output);
+        Assert.Contains("Bridge.fpas(1,", docText.Error); Assert.Contains("help:", docText.Error); Assert.Contains("Use int", docText.Error);
     }
 
     [Fact]

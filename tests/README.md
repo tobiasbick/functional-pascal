@@ -16,7 +16,8 @@ in the [development workflow](../docs/build/development.md).
 
 Compiler tests use Syntax, Analysis, Types, Routines, ControlFlow, Formatting, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
-Debugging, Processes, Projects, Formatting, Testing and Workspaces. Each topic's Support directory owns its shared setup; compiler tests
+Debugging, Processes, Projects, Formatting, Testing, ApiDocumentation and Workspaces.
+Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
 Testing contains packaged SDK/native VSTest acceptance for FPAS test libraries:
@@ -25,6 +26,12 @@ mixed solutions, discovery/filtering, failure paths and owned host cleanup.
 [Fixtures/testing](Fixtures/testing/) contains actual FPAS test methods, including
 a formatter API regression written in FPAS. C# only drives/asserts these consumers.
 See [writing tests](../docs/pascal/tools/testing.md) and [coverage](coverage.md#native-test-frameworks).
+
+ApiDocumentation verifies name-based source/metadata lookup, exact XML IDs against
+real C# output, unused framework APIs, public boundaries, generic/array/byref
+signatures, source preference, scoped/paged results, missing/invalid XML,
+documentation budgets, stale inputs and deadlines. The CLI also runs from a fresh
+SDK package; AnalysisSignalTests checks SIGINT and preparation cleanup.
 
 Build the toolchain and tests before executing them. Do not rebuild toolchain
 binaries while tests use them. Markdown and checked-in examples are copied during

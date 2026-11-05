@@ -18,6 +18,11 @@ Keywords are lowercase and case-sensitive. `>>` is two generic closers, not a
 shift operator; shifts use `shr`/`shl`. `??` is one token for null coalescing.
 `?` is used only in type syntax, including array element annotations and nullable
 reference constraints; it is not a postfix expression operator.
+Generic closing delimiters are recognized in their grammatical context: no
+whitespace is required between `<T>` and a declaration's `=`, or between a
+generic result type and `=>`. Thus `Box<T>=record` and `Box<T> = record` have the
+same meaning. In comparisons, compound operators require adjacent characters:
+`X>=1` and `X >= 1` are valid, while `X > = 1` is invalid.
 
 ## Sources and declarations
 

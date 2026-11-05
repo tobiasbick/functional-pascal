@@ -60,6 +60,13 @@ Required support metadata, including generated domain helpers, is checked in
 preparation. Analysis shares bounded diagnostic recovery and warning policy. Project
 discovery belongs to [Fpas.Workspaces](workspaces.md).
 
+[FpasFormatter.Format](../../src/Fpas.Compiler/Formatting/FpasFormatter.cs) accepts
+one CompilationSource and an optional CancellationToken. It returns formatted
+text or diagnostics without binding, metadata references or file writes. The
+parser collects optional concrete layout facts; the formatter preserves original
+tokens/comments and verifies the output by reparsing. The
+[formatting contract](../pascal/tools/fmt-style.md) owns the fixed style.
+
 [CompilerDiagnostic](../../src/Fpas.Compiler/CompilerDiagnostic.cs)
 owns nullable source locations with exclusive UTF-16 end positions, expectations,
 help, related notes and exact proposed edits. Parser recovery synchronizes at

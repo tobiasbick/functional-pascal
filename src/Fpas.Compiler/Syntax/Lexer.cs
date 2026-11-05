@@ -6,7 +6,9 @@ internal enum TokenKind { Identifier, Keyword, String, Integer, Real, Character,
 
 internal sealed record Token(TokenKind Kind, string Text, int Position, int Length, DocumentationComment? Documentation = null);
 
-internal sealed class Lexer(SourceText source)
+internal sealed record SourceComment(int Start, int End, bool Standalone);
+
+internal sealed class Lexer(SourceText source, List<SourceComment>? comments = null)
 {
     private static readonly HashSet<string> Keywords = new(
         ("async await begin break case catch const continue discard distinct div do downto else " +
@@ -60,6 +62,7 @@ internal sealed class Lexer(SourceText source)
                 if (textStart < source.Text.Length && source.Text[textStart] == ' ') textStart++;
                 while (position < source.Text.Length && Current is not '\r' and not '\n')
                     position++;
+                comments?.Add(new(start, position, standalone));
                 if (standalone) documentation.Add(new(source.Text[textStart..position], textStart, start, position));
                 else documentation.Clear();
                 newlines = 0;
@@ -82,7 +85,8 @@ internal sealed class Lexer(SourceText source)
             {
                 var start = position;
                 var symbol = Current.ToString();
-                if ((Current is ':' or '<' or '>') && Peek == '=' || Current == '<' && Peek == '>' || Current == '?' && Peek == '?' || Current == '=' && Peek == '>' || Current == '.' && Peek == '.')
+                // Keep generic closers separate from a following '=' or '=>'.
+                if ((Current is ':' or '<') && Peek == '=' || Current == '<' && Peek == '>' || Current == '?' && Peek == '?' || Current == '=' && Peek == '>' || Current == '.' && Peek == '.')
                 {
                     symbol += Peek;
                     position++;

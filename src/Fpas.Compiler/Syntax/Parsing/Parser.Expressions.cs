@@ -15,18 +15,40 @@ internal sealed partial class Parser
 
     private ExpressionSyntax ReadExpression(int minimum = 1)
     {
+        var start = position;
         var left = ReadUnary();
         while (Precedence(Current) >= minimum)
         {
-            var op = tokens[position++];
+            var operatorIndex = position;
+            var op = ReadBinaryOperator();
+            var rightIndex = position;
             var precedence = Precedence(op);
-            if (op.Text == "is") { left = Extent(new TypeTestSyntax(left, ReadType()), left.SpanStart); continue; }
+            if (op.Text == "is")
+            {
+                left = Extent(new TypeTestSyntax(left, ReadType()), left.SpanStart);
+                layout?.Binary.Add(new(start, position, operatorIndex, rightIndex));
+                continue;
+            }
             var right = ReadExpression(op.Text == "??" ? precedence : precedence + 1);
             if (precedence is 5 or 6 && (IsComparison(left) || IsComparison(right)))
                 throw source.Error("FP2003", "Comparisons cannot be chained; use parentheses or Boolean operators.", op.Position);
             left = Extent(new BinarySyntax(left, op, right), left.SpanStart);
+            layout?.Binary.Add(new(start, position, operatorIndex, rightIndex));
         }
         return left;
+    }
+
+    private Token ReadBinaryOperator()
+    {
+        var op = tokens[position++];
+        if (op.Text == ">" && At("=") && op.Position + op.Length == Current.Position)
+        {
+            // Comparisons require adjacent characters; '> =' remains invalid.
+            op = op with { Text = ">=", Length = op.Length + Current.Length };
+            layout?.Tight.Add(position);
+            position++;
+        }
+        return op;
     }
 
     private ExpressionSyntax ReadUnary()
@@ -34,6 +56,7 @@ internal sealed partial class Parser
         if (At("await")) { var token = tokens[position++]; return Extent(new AwaitSyntax(token.Position, ReadUnary()), token.Position); }
         if (At("+") || At("-") || At("not"))
         {
+            layout?.Unary.Add(position);
             var token = tokens[position++]; return Extent(new UnarySyntax(token, ReadUnary()), token.Position);
         }
         var start = Current.Position;
@@ -48,9 +71,11 @@ internal sealed partial class Parser
         if (At("cast"))
         {
             position++;
+            var angle = position;
             Expect("<");
             var type = ReadType();
             Expect(">");
+            if (layout is not null) { layout.Tight.Add(angle); layout.Tight.Add(position - 1); }
             Expect("(");
             var operand = ReadExpression();
             Expect(")");
@@ -108,10 +133,12 @@ internal sealed partial class Parser
             else if (At("<"))
             {
                 var saved = position;
+                var probe = layout is null ? this : new Parser(source, tokens) { position = position };
                 IReadOnlyList<TypeSyntax>? arguments = null;
-                try { arguments = ReadTypeArguments(); }
-                catch (CompilationFailure) { position = saved; }
-                if (arguments is null || !At(".") && !At("(") && !At(";") && !At(",") && !At(")") && !At("]") && !At("else") && !At("end")) { position = saved; break; }
+                try { arguments = probe.ReadTypeArguments(); }
+                catch (CompilationFailure) { probe.position = saved; }
+                if (arguments is null || !probe.At(".") && !probe.At("(") && !probe.At(";") && !probe.At(",") && !probe.At(")") && !probe.At("]") && !probe.At("else") && !probe.At("end")) { position = saved; break; }
+                if (layout is not null) arguments = ReadTypeArguments();
                 expression = new GenericNameSyntax(expression, arguments);
             }
             else expression = new CallSyntax(expression, ReadArguments());
@@ -121,38 +148,19 @@ internal sealed partial class Parser
     }
 
     private IReadOnlyList<ExpressionSyntax> ReadIndices()
-    {
-        Expect("[");
-        var values = new List<ExpressionSyntax>();
-        if (!At("]"))
-        {
-            values.Add(ReadExpression());
-            while (At(",")) { position++; values.Add(ReadExpression()); }
-        }
-        Expect("]");
-        return values;
-    }
+        => ReadList("[", "]", ",", () => ReadExpression());
 
     private IReadOnlyList<ExpressionSyntax> ReadArguments()
+        => ReadList("(", ")", ",", ReadCallArgument);
+
+    private ExpressionSyntax ReadCallArgument()
     {
-        Expect("(");
-        var arguments = new List<ExpressionSyntax>();
-        if (!At(")"))
+        if (Current.Kind == TokenKind.Identifier && position + 1 < tokens.Count && tokens[position + 1].Text == ":=")
         {
-            do
-            {
-                if (Current.Kind == TokenKind.Identifier && position + 1 < tokens.Count && tokens[position + 1].Text == ":=")
-                {
-                    var name = tokens[position++]; position++;
-                    arguments.Add(Extent(new NamedArgumentSyntax(name, ReadArgumentValue()), name.Position));
-                }
-                else arguments.Add(ReadArgumentValue());
-                if (!At(",")) break;
-                position++;
-            } while (true);
+            var name = tokens[position++]; position++;
+            return Extent(new NamedArgumentSyntax(name, ReadArgumentValue()), name.Position);
         }
-        Expect(")");
-        return arguments;
+        return ReadArgumentValue();
     }
 
     private static bool IsComparison(ExpressionSyntax expression)
@@ -160,19 +168,25 @@ internal sealed partial class Parser
 
     private ConditionalSyntax ReadConditional()
     {
+        var layoutStart = position;
+        var branches = layout is null ? null : new List<int>();
         var start = Current.Position;
         var arms = new List<ConditionalArmSyntax>();
         do
         {
+            if (arms.Count != 0) branches?.Add(position);
             position++;
             var condition = ReadExpression();
             Expect("then");
             arms.Add(new(condition, ReadExpression()));
         } while (At("elsif"));
+        branches?.Add(position);
         Expect("else");
         var otherwise = ReadExpression();
+        branches?.Add(position);
         Expect("end");
         Expect("if");
+        if (branches is not null) layout!.Conditionals.Add(new(layoutStart, position, branches));
         return new(start, arms, otherwise);
     }
 }

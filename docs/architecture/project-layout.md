@@ -20,6 +20,7 @@ NuGet.Config
 src/
   Fpas.Compiler/
     Fpas.Compiler.csproj
+    Formatting/
     Analysis/
     Syntax/
       Parsing/
@@ -49,8 +50,10 @@ src/
     Debugging/
     Diagnostics/
     Projects/
+    Formatting/
   Fpas.Workspaces/
     Analysis/
+    Formatting/
     Loading/
     Processes/
     Projects/
@@ -180,6 +183,12 @@ src, sdk, and tests without introducing separate solutions for each component.
   they need. Fpas.Core has no dependency on compiler or MSBuild implementation.
 - Tests reference the component under test or invoke the actual built toolchain.
   Compiler components do not depend on tests, examples, or applications.
+
+Formatting owns the token-preserving, parser-driven layout engine in
+Fpas.Compiler. Its optional syntax layout facts are collected only for formatting;
+normal compilation does not build a layout. Fpas.Workspaces.Formatting evaluates
+source selection without analysis preparation, and Fpas.Cli.Formatting owns
+options, reports and stale-checked source publication.
 
 Compiler logic and language diagnostics belong in Fpas.Compiler. The CLI handles
 its invocation interface; the task translates structured results into MSBuild

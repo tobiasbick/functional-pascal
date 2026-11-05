@@ -20,10 +20,12 @@ internal sealed partial class Parser
         var attributes = new List<AttributeSyntax>();
         while (At("["))
         {
+            layout?.Line(position);
             position++;
             var type = ReadType(arrays: false);
             var arguments = At("(") ? ReadArguments() : [];
             Expect("]");
+            layout?.Line(position);
             attributes.Add(new(type, arguments));
         }
         return attributes;

@@ -19,13 +19,16 @@ internal sealed partial class Parser
             if (At(":")) { position++; type = SurfaceType(); }
             var members = new List<EnumMemberSyntax>();
             var bodyStart = Current.Position;
+            var bodyIndex = position;
             while (!At("end"))
             {
+                layout?.Line(position);
                 var doc = Current.Documentation; var label = Identifier(); ExpressionSyntax? value = null;
                 using var memberDeclaration = Declaration(label, label.Position, "public", doc);
                 if (At("=")) { position++; value = ReadExpression(); }
                 Expect(";"); members.Add(new(label, value, doc));
             }
+            layout?.Body(bodyIndex, position);
             declaration.Body(bodyStart, Current.Position);
             Expect("end"); Expect("enum"); Expect(";");
             scalars.Add(new(name, visible, ScalarCategory.Enum, type, null, null, members, documentation, attributes)); return;

@@ -97,6 +97,7 @@ reported problems and check again to reach later phases.
 | FP5002 | Build-adapter input/output or cleanup failure |
 | FP5003 | Compiler process failure or missing requested assembly |
 | FP5004 | Compilation canceled or timed out through the build adapter |
+| FP7001 | Formatter preservation check failed; the source is not rewritten |
 
 ## Warning policy
 

@@ -9,7 +9,6 @@ change FPAS syntax.
 | Proposed command | Open work |
 | --- | --- |
 | `test` | Discover and execute FPAS test programs with filtering, listing, isolation, deadlines, cancellation, output and structured results. Select test conventions or a CLR test-framework integration. |
-| `fmt` | Format the current language while preserving comments and meaning; support validation, changed-file listing and stdout output. |
 | `doc` | Look up declarations, signatures and documentation, including referenced assemblies' XML documentation. |
 | `refactor` | Prepare checked source edits and apply explicit plans. See the operations below. |
 | `env --json` | Report compiler, FPAS SDK, .NET and available language-server/debugger installations. |

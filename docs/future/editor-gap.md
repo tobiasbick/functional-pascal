@@ -1,8 +1,9 @@
 # CLR editor gaps
 
 Open editor work builds on [workspace analysis](../architecture/workspaces.md).
-Usable commands belong in the [CLI reference](../pascal/program-structure/cli.md);
-command/formatter/refactoring backends remain in [CLI gaps](cli-gap.md).
+Usable commands belong in the [CLI reference](../pascal/program-structure/cli.md).
+The common [formatter](../pascal/tools/fmt-style.md) supplies complete-source
+formatting. Open command/refactoring backends remain in [CLI gaps](cli-gap.md).
 No language server, extension library or new FPAS syntax is selected here.
 
 ## Language services

@@ -118,6 +118,7 @@ public sealed class CompilerCliTests
     [InlineData("init", "solution", "--help")]
     [InlineData("build", "--help")]
     [InlineData("run", "--help")]
+    [InlineData("fmt", "--help")]
     [InlineData("check", "--help")]
     [InlineData("query", "--help")]
     [InlineData("query", "definition", "--help")]

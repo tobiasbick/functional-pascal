@@ -5,16 +5,12 @@ internal sealed partial class Parser
     private IReadOnlyList<Token> ReadTypeParameters()
     {
         if (!At("<")) return [];
-        position++;
-        var names = new List<Token>();
-        do
+        return ReadList("<", ">", ",", () =>
         {
-            var name = Identifier(); names.Add(name);
+            var name = Identifier();
             using (Declaration(name, name.Position)) { }
-            if (!At(",")) break;
-            position++;
-        } while (true);
-        Expect(">"); return names;
+            return name;
+        }, empty: false, wrap: false, tight: true);
     }
 
     private IReadOnlyList<WhereSyntax> ReadConstraints()
@@ -22,6 +18,7 @@ internal sealed partial class Parser
         var clauses = new List<WhereSyntax>();
         while (At("where"))
         {
+            layout?.Line(position);
             position++; var name = Identifier(); Expect(":");
             var constraints = new List<ConstraintSyntax>();
             do
@@ -40,6 +37,7 @@ internal sealed partial class Parser
             } while (true);
             Expect(";"); clauses.Add(new(name, constraints));
         }
+        if (clauses.Count != 0) layout?.Line(position);
         return clauses;
     }
 }

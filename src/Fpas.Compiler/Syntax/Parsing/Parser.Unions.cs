@@ -15,25 +15,25 @@ internal sealed partial class Parser
         Expect("="); var constraints = ReadConstraints(); Expect("union");
         var cases = new List<UnionCaseSyntax>();
         var bodyStart = Current.Position;
+        var bodyIndex = position;
         while (!At("end"))
         {
+            layout?.Line(position);
             var caseDocumentation = Current.Documentation;
-            var label = Identifier(); var fields = new List<ParameterSyntax>();
+            var label = Identifier(); IReadOnlyList<ParameterSyntax> fields = [];
             using var caseDeclaration = Declaration(label, label.Position, "public", caseDocumentation);
             if (At("("))
             {
-                position++;
-                do
+                fields = ReadList("(", ")", ";", () =>
                 {
                     var field = Identifier();
-                    using (Declaration(field, field.Position, "public")) fields.Add(new(field, ReadBindingType(field)));
-                    if (!At(";")) break;
-                    position++;
-                } while (true);
-                Expect(")");
+                    using var fieldDeclaration = Declaration(field, field.Position, "public");
+                    return new ParameterSyntax(field, ReadBindingType(field));
+                }, empty: false, wrap: false);
             }
             Expect(";"); cases.Add(new(label, fields, caseDocumentation));
         }
+        layout?.Body(bodyIndex, position);
         declaration.Body(bodyStart, Current.Position);
         Expect("end"); Expect("union"); Expect(";");
         return new(name, visible, cases, parameters, constraints, documentation);
@@ -43,9 +43,11 @@ internal sealed partial class Parser
     {
         var start = Current.Position; Expect("case");
         var selector = ReadExpression(); Expect("of");
+        var bodyIndex = position;
         var arms = new List<CaseArmSyntax>();
         while (At("when") || At("else"))
         {
+            layout?.Line(position);
             var armPosition = Current.Position;
             var fallback = At("else"); position++;
             var patterns = new List<PatternSyntax>();
@@ -73,6 +75,7 @@ internal sealed partial class Parser
             else arms.Add(new(armPosition, patterns, guard, ReadStatements("when", "else", "end"), null));
             if (fallback) break;
         }
+        layout?.Body(bodyIndex, position);
         Expect("end"); Expect("case");
         return (start, selector, arms);
     }
@@ -99,16 +102,12 @@ internal sealed partial class Parser
             IReadOnlyList<PayloadPatternSyntax>? fields = null;
             if (At("("))
             {
-                position++; var payload = new List<PayloadPatternSyntax>();
-                if (!At(")")) do
+                fields = ReadList("(", ")", ",", () =>
                 {
                     Token? label = null;
                     if (Current.Kind == TokenKind.Identifier && tokens[position + 1].Text == ":=") { label = tokens[position++]; position++; }
-                    payload.Add(new(label, ReadPattern()));
-                    if (!At(",")) break;
-                    position++;
-                } while (true);
-                Expect(")"); fields = payload;
+                    return new PayloadPatternSyntax(label, ReadPattern());
+                });
             }
             if (fields is null && At(".."))
             {

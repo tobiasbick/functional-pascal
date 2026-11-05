@@ -11,6 +11,10 @@ Use [create/build/run](project-commands.md) for `init project`, `init library`,
 reports. `compile` supplies explicit source/reference compilation; project builds
 use their SDK configuration.
 
+Use [source formatting](../tools/fmt-style.md) for `fpas fmt`, its fixed style,
+explicit source/directory/project/solution inputs, check/list/stdout modes and
+JSON reports. Formatting is syntax-only and needs no assembly references.
+
 ## Check a project or solution
 
 `fpas check examples/mandelbrot/Mandelbrot.fpasproj` validates evaluated on-disk sources without

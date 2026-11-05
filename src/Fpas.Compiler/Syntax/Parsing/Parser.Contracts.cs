@@ -8,6 +8,7 @@ internal sealed partial class Parser
         var postconditions = false;
         while (At("requires") || At("ensures"))
         {
+            layout?.Line(position);
             var keyword = tokens[position++];
             var ensures = keyword.Text == "ensures";
             if (!ensures && postconditions)

@@ -7,6 +7,16 @@ Commands and configuration selection belong in the
 
 ## Language and metadata
 
+Formatting tests exercise the fixed source style, comment/documentation and
+literal preservation, display-width wrapping, parser diagnostics, cancellation,
+idempotence and unchanged method bodies. FormatCorpusTests covers every complete
+handbook source and copied FPAS fixture, plus actual before/after execution with
+mutable captures, exceptions/cleanup, case expressions and numeric literals.
+FormatCliTests covers check/list/stdout/JSON, exact-byte UTF-8 publication,
+unchanged timestamps/permissions, recursive exclusions, links, argument errors
+and parsing all sources before writing. FormatProjectTests verifies evaluated
+Compile conditions/exclusions/links and solution selection without building.
+
 Compiler tests bind through FpasCompiler and inspect diagnostics/metadata.
 Execution tests invoke the actual CLI and .NET host. Topic-specific MsBuildTests
 build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.

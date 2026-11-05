@@ -1,6 +1,6 @@
 namespace Fpas.Compiler.Syntax.Parsing;
 
-internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens)
+internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens, SyntaxLayout? layout = null)
 {
     private int position;
     private Token Current { get { source.CheckCancellation(); return tokens[position]; } }
@@ -21,12 +21,15 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         using var container = Declaration(name.Parts[^1], start, documentation: documentation);
         container.Info.SourceName = name.Text;
         Expect(";");
+        layout?.Section(position);
         var imports = new List<ImportSyntax>();
         if (At("uses"))
         {
+            var list = layout?.List(position, wrap: false, closeLine: false);
             position++;
             do
             {
+                list?.Item(position);
                 var importStart = Current.Position;
                 var target = ReadName();
                 Expect("as");
@@ -38,6 +41,8 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 position++;
             } while (true);
             Expect(";");
+            list?.End(position - 1);
+            layout?.Section(position);
         }
         var routines = new List<RoutineSyntax>();
         var records = new List<RecordSyntax>();
@@ -45,13 +50,22 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var unions = new List<UnionSyntax>();
         var aliases = new List<AliasSyntax>(); var scalars = new List<ScalarSyntax>();
         var globals = new List<GlobalSyntax>();
+        string? previousGroup = null;
         while (At("[") || At("public") || At("private") || At("function") || At("procedure") || At("async") || At("type") || At("const") || At("var"))
         {
+            var first = position;
             var declarationStart = Current.Position;
             var declarationDocumentation = Current.Documentation;
             var attributes = ReadAttributes();
             var declaration = position;
             if (At("public") || At("private")) declaration++;
+            if (layout is not null)
+            {
+                var group = tokens[declaration].Text is "const" or "var" ?
+                    string.Join(' ', tokens.Skip(first).Take(declaration - first + 1).Select(token => token.Text)) : null;
+                if (group is not null && group == previousGroup) layout.Line(first); else layout.Section(first);
+                previousGroup = group;
+            }
             if (tokens[declaration].Text is "const" or "var")
             {
                 if (attributes.Count != 0) throw source.Error("FP3035", "Source attributes target types, routines, or record properties.", Current.Position);
@@ -85,6 +99,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         IReadOnlyList<StatementSyntax> statements = [];
         if (isProgram)
         {
+            layout?.Section(position);
             var bodyStart = Current.Position;
             Expect("begin");
             statements = ReadStatements();
@@ -92,6 +107,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             Expect(";");
             container.Body(bodyStart, LastEnd);
         }
+        layout?.Line(position);
         Expect("end");
         Expect(isProgram ? "program" : "unit");
         Expect(";");
@@ -121,19 +137,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var name = Identifier();
         using var declaration = Declaration(name, start, nested ? null : isPublic ? "public" : "private", documentation);
         var typeParameters = ReadTypeParameters();
-        Expect("(");
-        var parameters = new List<ParameterSyntax>();
-        if (!At(")"))
-        {
-            do
-            {
-                parameters.Add(ReadParameter());
-                if (!At(";"))
-                    break;
-                position++;
-            } while (true);
-        }
-        Expect(")");
+        var parameters = ReadList("(", ")", ";", ReadParameter, wrap: false);
         TypeSyntax? result = null;
         if (function)
         {
@@ -146,6 +150,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             return new(name, true, parameters, result, [], false, typeParameters, constraints, Documentation: documentation);
         var contracts = ReadContracts();
         var bodyStart = Current.Position;
+        layout?.Line(position);
         Expect("begin");
         var body = ReadStatements();
         Expect("end");
@@ -172,6 +177,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             if (At("?"))
             {
                 if (type.Nullable) throw source.Error("FP2003", "Repeated nullable suffixes are invalid.", Current.Position);
+                layout?.Tight.Add(position);
                 position++; type = type with { Nullable = true, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
             }
             else
@@ -187,13 +193,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
     }
 
     private IReadOnlyList<TypeSyntax> ReadTypeArguments()
-    {
-        Expect("<");
-        var arguments = new List<TypeSyntax> { ReadType() };
-        while (At(",")) { position++; arguments.Add(ReadType()); }
-        Expect(">");
-        return arguments;
-    }
+        => ReadList("<", ">", ",", () => ReadType(), empty: false, wrap: false, tight: true);
 
     private NameSyntax ReadName()
     {

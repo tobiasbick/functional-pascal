@@ -2,6 +2,7 @@ using Fpas.Cli.Compilation;
 using Fpas.Cli.Debugging;
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Projects;
+using Fpas.Cli.Formatting;
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.Globalization;
@@ -22,6 +23,7 @@ internal static class CliApplication
         var check = new CheckCommand();
         var query = new QueryCommand();
         var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true);
+        var fmt = new FormatCommand();
         var root = new Command("fpas", """
             FPAS compiler, project analysis and agent debugger for .NET
 
@@ -39,15 +41,19 @@ internal static class CliApplication
               fpas build examples/hello/Hello.fpasproj
 
               fpas run examples/hello/Hello.fpasproj
+
+              fpas fmt --check examples
             """);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
         root.Subcommands.Add(compile.Command); root.Subcommands.Add(debug); root.Subcommands.Add(check.Command);
         root.Subcommands.Add(query.Command);
         root.Subcommands.Add(init.Command); root.Subcommands.Add(build.Command); root.Subcommands.Add(run.Command);
+        root.Subcommands.Add(fmt.Command);
         var jsonRequested = false; var help = "fpas --help";
         ParseResult? checkResult = null;
         ParseResult? queryResult = null;
         ParseResult? projectResult = null;
+        ParseResult? formatResult = null;
         ExecutionCommand? execution = null;
         try
         {
@@ -64,6 +70,7 @@ internal static class CliApplication
                 compile.Validate(parsed);
             }
             else if (parsed.CommandResult.Command == debug) help = "fpas debug --help";
+            else if (parsed.CommandResult.Command == fmt.Command) { help = "fpas fmt --help"; formatResult = parsed; fmt.Validate(parsed); }
             else if (parsed.CommandResult.Command == check.Command) { help = "fpas check --help"; checkResult = parsed; }
             else if (query.Owns(parsed.CommandResult.Command)) { help = "fpas query --help"; queryResult = parsed; }
             else if (init.Owns(parsed.CommandResult.Command)) { help = "fpas init --help"; projectResult = parsed; }
@@ -79,6 +86,7 @@ internal static class CliApplication
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)
         {
+            if (formatResult is not null) { fmt.ReportArgumentError(formatResult, exception.Message); return 2; }
             if (checkResult is not null) { check.ReportArgumentError(checkResult, exception.Message); return 2; }
             if (queryResult is not null) return await query.ReportArgumentError(queryResult, exception.Message);
             if (projectResult is not null)

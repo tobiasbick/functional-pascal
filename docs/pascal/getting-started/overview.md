@@ -67,9 +67,10 @@ Publishing and deployment profiles remain later work.
 The [repository layout](../../architecture/project-layout.md) defines the C#
 compiler/toolchain projects, xUnit tests, and examples/apps directories.
 
-Visual Studio project-system integration, LSP, VS Code integration, query tools,
-formatter integration, and debugger tooling remain outside this step. Their
-omission is not a decision to remove those tools.
+The CLI supplies [source queries](../program-structure/cli.md),
+[formatting](../tools/fmt-style.md) and [agent debugging](../tools/debugging.md).
+Visual Studio project-system integration, LSP and editor extensions remain
+separate work.
 
 ## See also
 

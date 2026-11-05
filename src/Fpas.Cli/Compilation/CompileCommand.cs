@@ -1,5 +1,4 @@
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Fpas.Compiler;
 
 namespace Fpas.Cli.Compilation;
@@ -58,15 +57,7 @@ internal sealed class CompileCommand
     internal bool JsonRequested(ParseResult result) => result.GetResult(diagnostics)?.Tokens.Any(token => token.Value == "json") == true;
 
     internal void Validate(ParseResult result)
-    {
-        var sourceTokens = result.GetResult(sources)?.Tokens;
-        foreach (var token in result.Tokens.TakeWhile(token => token.Type != TokenType.DoubleDash))
-            if (sourceTokens?.Any(source => ReferenceEquals(source, token)) == true && token.Value.StartsWith('-') && token.Value != "-")
-                throw new ArgumentException($"Unknown option '{token.Value}'. Use '--' before source paths starting with '-'.");
-        foreach (var option in Command.Options.Where(option => option.ValueType != typeof(bool)))
-            if (result.GetResult(option) is { } parsed && parsed.Tokens.Count < parsed.IdentifierTokenCount)
-                throw new ArgumentException($"Each occurrence of '{option.Name}' requires a value.");
-    }
+        => CommandArguments.Validate(result, sources, standardInput: true);
 
     internal CompileArguments Read(ParseResult result)
     {

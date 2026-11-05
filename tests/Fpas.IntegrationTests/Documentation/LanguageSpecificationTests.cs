@@ -95,6 +95,7 @@ public sealed class LanguageSpecificationTests
             "TaskOutcomes" => ["First failure observed", "2", "Canceled batch observed"],
             "ChannelBackpressure" => ["10", "20"],
             "ChannelSum" => ["60"],
+            "FormatExample" => ["7"],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);

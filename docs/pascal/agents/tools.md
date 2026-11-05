@@ -63,6 +63,13 @@ arguments after -- and preserves its exit code. --report json captures program
 output separately; stdin remains inherited. Run defaults to no deadline; select
 --timeout for bounded automation. No command overwrites conflicting init files.
 
+Use `fpas fmt --check <paths> --report json` to inspect fixed-style formatting,
+then `fpas fmt <paths>` to apply it. Sources, directories, evaluated projects and
+solutions are supported. --check --list prints changed paths; --stdout prints
+one formatted source without writes. Formatting preserves tokens/comments and
+requires complete syntax. See [formatting](../tools/fmt-style.md) for scope,
+publication and exit codes.
+
 Use `fpas check <project.fpasproj|solution.slnx> --diagnostics json` for project
 validation without analysis-owned assembly output. The selected SDK must match
 the CLI. Preparation can restore/build dependencies; `--no-restore` skips only
@@ -110,8 +117,7 @@ writing external samplers or benchmark variants. Keep execution bounded and
 assert outcomes; avoid depending on timer counts, network availability, or an
 interactive terminal for ordinary regression tests. Isolate test files/processes.
 Store performance output under .temp-data and distinguish measurements from
-language guarantees. LSP, formatter and IDE project-system integration remain
-separate work.
+language guarantees. LSP and IDE project-system integration remain separate work.
 
 Write repository maintenance helpers in FPAS when the supported CLR APIs suffice.
 If a concrete missing feature prevents this, document the practical limitation

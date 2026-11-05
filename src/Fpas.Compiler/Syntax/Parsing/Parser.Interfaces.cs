@@ -26,8 +26,10 @@ internal sealed partial class Parser
         var properties = new List<InterfacePropertySyntax>();
         var methods = new List<RoutineSyntax>();
         var bodyStart = Current.Position;
+        var bodyIndex = position;
         while (!At("end"))
         {
+            layout?.Line(position);
             var memberStart = Current.Position;
             var memberDocumentation = Current.Documentation;
             var attributes = ReadAttributes();
@@ -49,6 +51,7 @@ internal sealed partial class Parser
                 properties.Add(new(member, type, memberDocumentation, attributes));
             }
         }
+        layout?.Body(bodyIndex, position);
         declaration.Body(bodyStart, Current.Position);
         Expect("end"); Expect("interface"); Expect(";");
         return new(name, isPublic, properties, methods, parameters, constraints, bases);

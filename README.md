@@ -106,8 +106,9 @@ async yield/resume metadata. Use compatible .NET debuggers and profilers with
 the generated assembly/PDB pair. See [debugging](docs/pascal/tools/debugging.md)
 and [profiling](docs/pascal/tools/profiling.md).
 
-FPAS formatter, LSP, automatic IDE/project loading, and editor extensions have
-separate scope; they are not supplied by the current CLR toolchain.
+Use [fpas fmt](docs/pascal/tools/fmt-style.md) for the fixed source style and
+check/list/stdout modes. LSP, automatic IDE/project loading and editor extensions
+have separate scope.
 
 ## Applications
 

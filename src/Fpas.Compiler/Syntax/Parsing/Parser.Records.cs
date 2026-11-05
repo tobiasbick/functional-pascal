@@ -27,8 +27,12 @@ internal sealed partial class Parser
         var fields = new List<RecordFieldSyntax>();
         var methods = new List<RoutineSyntax>();
         var bodyStart = Current.Position;
+        var bodyIndex = position;
+        var previousMethod = false;
         while (!At("end"))
         {
+            var memberIndex = position;
+            layout?.Line(position);
             var memberStart = Current.Position;
             var memberDocumentation = Current.Documentation;
             var attributes = ReadAttributes();
@@ -36,11 +40,15 @@ internal sealed partial class Parser
             if (At("public") || At("private")) member++;
             if (tokens[member].Text is "static" or "async" or "function" or "procedure")
             {
+                if (fields.Count != 0 || methods.Count != 0) layout?.Section(memberIndex);
+                previousMethod = true;
                 var method = ReadRoutine(isProgram, inRecord: true) with { Attributes = attributes, Documentation = memberDocumentation };
                 methods.Add(method); Decorate(method.Name, memberStart, memberDocumentation);
             }
             else
             {
+                if (previousMethod) layout?.Section(memberIndex);
+                previousMethod = false;
                 var visible = !At("private");
                 if (At("public") || At("private")) position++;
                 var field = Identifier();
@@ -52,6 +60,7 @@ internal sealed partial class Parser
                 fields.Add(new(field, type, value, visible, memberDocumentation, attributes));
             }
         }
+        layout?.Body(bodyIndex, position);
         declaration.Body(bodyStart, Current.Position);
         Expect("end"); Expect("record"); Expect(";");
         return new(name, isPublic, fields, methods, parameters, constraints, interfaces, documentation);
@@ -59,15 +68,18 @@ internal sealed partial class Parser
 
     private WithSyntax ReadWith(ExpressionSyntax receiver)
     {
+        var list = layout?.List(position, wrap: false);
         Expect("with");
         var updates = new List<RecordUpdateSyntax>();
         do
         {
+            list?.Item(position);
             var name = Identifier();
             Expect(":=");
             updates.Add(new(name, ReadExpression()));
             Expect(";");
         } while (!At("end"));
+        list?.End(position);
         Expect("end"); Expect("with");
         return new(receiver, updates);
     }

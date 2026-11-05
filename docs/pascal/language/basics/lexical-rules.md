@@ -18,6 +18,13 @@ in an imported CLR name: `Value.@event`. The `@` is not part of its metadata nam
 Primitive aliases are predefined type names, not keywords. They cannot be
 redeclared in a type namespace. See [types](../types/README.md).
 
+Generic closing `>` delimiters do not require surrounding whitespace:
+`type Box<T>=record Value:T;end record;` is valid. Parsing identifies the generic
+closing delimiter and the declaration's `=` separately. Compound comparison
+operators retain their spelling: `X>=1` is valid; `X > = 1` is invalid. The
+[formatter](../../tools/fmt-style.md) produces `Box<T> = record`, `Value: T;`
+and `X >= 1`.
+
 ### Literals
 
 | Form | Meaning |

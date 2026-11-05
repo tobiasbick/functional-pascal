@@ -4,12 +4,16 @@ internal sealed partial class Parser
 {
     private IReadOnlyList<StatementSyntax> ReadStatements(params string[] terminators)
     {
+        var bodyStart = position;
         if (terminators.Length == 0)
             terminators = ["end"];
         var statements = new List<StatementSyntax>();
         while (!terminators.Any(At) && Current.Kind != TokenKind.End)
         {
             var start = position;
+            layout?.Line(start);
+            if (layout is not null && statements.LastOrDefault() is BlockSyntax or IfSyntax or WhileSyntax or ForSyntax or ForEachSyntax or CaseStatementSyntax or TrySyntax or RepeatSyntax or NestedRoutineSyntax && !At("const") && !At("var"))
+                layout.Section(start);
             StatementSyntax? statement = null;
             try
             {
@@ -27,6 +31,7 @@ internal sealed partial class Parser
                 SynchronizeStatement(start, terminators);
             }
         }
+        layout?.Body(bodyStart, position);
         return statements;
     }
 
@@ -139,8 +144,10 @@ internal sealed partial class Parser
         var arms = new List<IfArmSyntax>();
         do
         {
+            var clause = position;
             position++;
             var condition = ReadExpression();
+            layout?.Conditions.Add((clause, position));
             Expect("then");
             arms.Add(new(condition, ReadStatements("elsif", "else", "end")));
         } while (At("elsif"));

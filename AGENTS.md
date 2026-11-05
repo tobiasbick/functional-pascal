@@ -39,6 +39,8 @@ for the task.
 - Keep plans and gap inventories limited to open work. Remove completed entries
   and delete fully completed documents; current contracts and usage belong in
   their owning references.
+- Remove obsolete `Fpas.NET.Sdk` versions from the target NuGet cache before
+  caching a new build; use isolated caches for concurrent tests.
 
 ## Before every commit
 

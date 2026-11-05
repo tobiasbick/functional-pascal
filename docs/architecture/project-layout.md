@@ -54,6 +54,7 @@ src/
     Testing/
     Documentation/
     Refactoring/
+    Toolchain/
   Fpas.Workspaces/
     Analysis/
     Editing/
@@ -114,6 +115,7 @@ tests/
     ApiDocumentation/
     Editing/
     Refactoring/
+    Toolchain/
   Fixtures/
 examples/
   README.md

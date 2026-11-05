@@ -340,6 +340,7 @@ project SDK for normal applications.
 
 ## See also
 
+- [Toolchain environment](../tools/environment.md)
 - [Projects](projects.md)
 - [Compiled programs](compiled-programs.md)
 - [Compiler API and output publication](../../architecture/compiler.md#compiler-api-and-output)

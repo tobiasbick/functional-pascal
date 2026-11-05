@@ -4,12 +4,6 @@ Only open CLI work is listed here. The [CLI reference](../pascal/program-structu
 owns usable commands. Proposed names below do not select an implementation or
 change FPAS syntax.
 
-## Command inventory
-
-| Proposed command | Open work |
-| --- | --- |
-| `env --json` | Report compiler, FPAS SDK, .NET and available language-server/debugger installations. |
-
 Future commands need concise help/examples, structured failures, bounded work,
 stream ownership and a cancellation contract. Short aliases remain unselected.
 

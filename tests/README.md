@@ -16,7 +16,8 @@ in the [development workflow](../docs/build/development.md).
 
 Compiler tests use Syntax, Analysis, Types, Routines, ControlFlow, Formatting, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
-Debugging, Processes, Projects, Formatting, Testing, ApiDocumentation and Workspaces.
+Debugging, Processes, Projects, Formatting, Testing, ApiDocumentation, Editing,
+Refactoring, Toolchain and Workspaces.
 Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
@@ -48,6 +49,12 @@ Build the toolchain and tests before executing them. Do not rebuild toolchain
 binaries while tests use them. Markdown and checked-in examples are copied during
 the test build; rebuild after changing those inputs. HandbookTests checks that
 the copied Markdown tree exactly matches the sources, including deleted pages.
+
+Toolchain.EnvironmentCommandTests exercises actual .NET selection and a packaged
+CLI, expected SDK hashes in a large cache, stale/missing files, broken hosts and
+global.json, bounded argument errors and actual NetCoreDbg discovery. An FPAS
+version-probe fixture verifies deadline and console-cancellation cleanup on
+Windows and Linux before test-harness cleanup.
 
 SDK tests package the already built tools with a unique version into an isolated
 local feed, copy the fixture into a temporary directory, and build actual

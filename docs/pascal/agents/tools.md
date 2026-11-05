@@ -26,6 +26,11 @@ task infrastructure, collections, and library behavior belong to .NET.
 
 ## Discover APIs and compile sources
 
+Use `fpas env --json` to inspect compiler/SDK hashes, the selected .NET SDK and
+debugger availability. `--directory` applies .NET SDK selection for another working
+directory; cache inspection does not evaluate projects. See
+[toolchain environment](../tools/environment.md) for limits and issue/exit codes.
+
 Use the selected package/framework version's .NET documentation, reference
 metadata, and existing executable examples to establish signatures. Check CLR
 names, generic arity, accessibility, parameter names/modes, overloads, and nullable

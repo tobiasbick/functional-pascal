@@ -5,6 +5,12 @@ contracts, not support for every .NET signature or deferred language feature.
 Commands and configuration selection belong in the
 [development workflow](../docs/build/development.md).
 
+## Toolchain environment
+
+EnvironmentCommandTests owns the [environment inspection](../docs/pascal/tools/environment.md)
+CLI contract: actual SDK selection, package/cache identity and bounds, unavailable
+components, argument JSON, external version probes and owned interruption.
+
 ## Language and metadata
 
 Syntax.TokenBoundaryTests varies every declared boundary individually and all

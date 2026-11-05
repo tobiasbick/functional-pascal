@@ -6,6 +6,7 @@ tools supported by the current compiler and .NET environment.
 | Tool or workflow | Description |
 | --- | --- |
 | [Compiler CLI](../program-structure/cli.md) | Inputs, references, direct CIL output, and structured diagnostics |
+| [Toolchain environment](environment.md) | Compiler/SDK identity, selected .NET installation, debugger availability and version conflicts |
 | [Diagnostics](diagnostics.md) | Stable codes, source positions, warnings, and exit behavior |
 | [API documentation lookup](api-documentation.md) | FPAS declarations, public .NET signatures and reference XML documentation |
 | [Checked renaming](refactoring.md) | Source symbols, reviewed JSON plans and explicit validated application |

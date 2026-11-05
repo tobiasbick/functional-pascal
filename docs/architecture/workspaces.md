@@ -86,6 +86,10 @@ are not deleted as scratch. Windows cleanup explicitly terminates the job and
 waits for all its processes before releasing handles. Native Windows and
 Linux/WSL acceptance covers packaged check/query, cancellation and process cleanup.
 
+BuildProcess.RunTool uses the same bounded capture and process ownership as
+dotnet/MSBuild execution for explicit executable probes. The CLI's Toolchain
+topic uses it for environment inspection without loading a workspace context.
+
 ## Source edits
 
 Editing.DiagnosticFixPlan consumes compiler diagnostic edits against captured

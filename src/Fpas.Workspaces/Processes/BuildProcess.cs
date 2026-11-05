@@ -7,10 +7,19 @@ public sealed record BuildResult(int ExitCode, string Output, string Error, bool
 
 public static class BuildProcess
 {
-    public static async Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true)
+    public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true)
     {
         token.ThrowIfCancellationRequested();
-        await using var process = OwnedProcess.Start(DotnetHost(), arguments, cwd, buildEnvironment ? new Dictionary<string, string>
+        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment);
+    }
+
+    public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token)
+        => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false);
+
+    private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment)
+    {
+        token.ThrowIfCancellationRequested();
+        await using var process = OwnedProcess.Start(path, arguments, cwd, buildEnvironment ? new Dictionary<string, string>
         {
             ["MSBUILDDISABLENODEREUSE"] = "1", ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
         } : null, inheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture);

@@ -4,11 +4,20 @@ uses Trees as Model, System.Console as Console;
 
 begin
   const Input: Model.Tree<int> := Model.Tree.Branch(
-    Model.Tree.Leaf(21), Model.Tree.Leaf(34));
-  const Text: Model.Tree<string> := Model.Map(Input,
-    function(Value: int): string => Value.ToString());
-  const Result: Model.Summary<string> := new Model.Summary<string>(Model.Render(Text), Model.Count(Text));
+    Model.Tree.Leaf(21), Model.Tree.Leaf(34)
+  );
+
+  const Text: Model.Tree<string> := Model.Map(
+    Input,
+    function(Value: int): string => Value.ToString()
+  );
+
+  const Result: Model.Summary<string> := new Model.Summary<string>(
+    Model.Render(Text),
+    Model.Count(Text)
+  );
   const Updated: Model.Summary<string> := Result with Label := 'leaves'; end with;
+
   Console.WriteLine(Updated.Reader()());
   Console.WriteLine(Updated.Label + ': ' + Updated.Count.ToString());
   Console.WriteLine(Input = Model.Tree.Branch(Model.Tree.Leaf(21), Model.Tree.Leaf(34)));

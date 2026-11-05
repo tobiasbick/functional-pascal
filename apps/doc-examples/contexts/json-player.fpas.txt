@@ -1,8 +1,14 @@
 program Example;
+
 uses System.Text.Json as Json;
-type Player = record Name: string; end record;
+
+type Player = record
+  Name: string;
+end record;
+
 begin
-const PlayerValue: Player := new Player('Alpha');
-// @example
+  const PlayerValue: Player := new Player('Alpha');
+
+  // @example
 end;
 end program;

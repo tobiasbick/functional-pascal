@@ -1,6 +1,7 @@
 program JsonAttributes;
 
-uses System.Console as Console, System.Text.Json as Json,
+uses
+  System.Console as Console, System.Text.Json as Json,
   System.Text.Json.Serialization as Serialization;
 
 // A measurement with an explicit JSON property name.

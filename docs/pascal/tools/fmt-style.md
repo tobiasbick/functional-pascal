@@ -83,14 +83,22 @@ diagnostics go to stderr.
   one another. A unit's final ending follows its last declaration directly.
 - Separate a completed block/control statement from the next sibling with one
   blank line unless the next sibling is `const`/`var`. No blank is inserted before
-  structural continuations or closers. Authored sections between siblings are
-  retained with at most one blank line.
+  structural continuations or closers.
+- Preserve authored sections between sibling statements and adjacent bindings,
+  including before `const` and `var`; normalize repeated blank lines to one.
+  Comments alone do not create a section. A blank after a comment still keeps
+  that comment detached from the following declaration.
 - One space around binary operators and after commas/semicolons within lists.
   No spaces around member dots, ranges, generic angle delimiters or nullable
   suffixes. Type annotations use `Name: Type`; prefix signs attach to operands,
   and `not`/`await` use a space. Calls and indexes attach to their receivers.
 
 ## Wrapping and comments
+
+Use one blank line between groups that perform different jobs, such as input
+collection, validation, processing and reporting. Keep related bindings and
+operations together. The formatter preserves these authored sections rather
+than inferring their meaning.
 
 Import and formal parameter lists retain authored line groups. Expanded lists
 start their contents on a new line indented two spaces from the owning line.

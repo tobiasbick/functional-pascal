@@ -1,7 +1,10 @@
 program Example;
+
 uses System.Console as Console;
+
 begin
-const Health: int := 5;
-// @example
+  const Health: int := 5;
+
+  // @example
 end;
 end program;

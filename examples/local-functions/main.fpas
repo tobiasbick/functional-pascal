@@ -1,4 +1,5 @@
 program LocalFunctions;
+
 uses System.Console as Console;
 
 function Factorial(Value: int): int;
@@ -7,7 +8,10 @@ begin
 
   function Multiply(N: int): int;
   begin
-    if N = 0 then return 1; end if;
+    if N = 0 then
+      return 1;
+    end if;
+
     return N * Multiply(N - 1);
   end function;
 end function;
@@ -27,6 +31,7 @@ end function;
 
 begin
   Console.WriteLine(Factorial(5));
+
   const Counter: function(): int := MakeCounter(10);
   Console.WriteLine(Counter());
   Console.WriteLine(Counter());

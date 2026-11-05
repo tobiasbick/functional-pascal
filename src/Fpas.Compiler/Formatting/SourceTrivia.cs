@@ -26,6 +26,11 @@ internal sealed class SourceTrivia
     internal bool BlankBefore(int index)
     {
         var start = index == 0 ? 0 : tokens[index - 1].Position + tokens[index - 1].Length;
+        foreach (var comment in Comments[index])
+        {
+            if (comment.Standalone) return Newlines(start, comment.Start) > 1;
+            start = comment.End;
+        }
         return Newlines(start, tokens[index].Position) > 1;
     }
     internal int Newlines(int start, int end)

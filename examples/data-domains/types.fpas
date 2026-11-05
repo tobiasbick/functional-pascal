@@ -2,13 +2,15 @@ unit Example.Domains;
 
 // An account identity, separate from ordinary numeric values.
 public type AccountId = distinct long;
+
 public type PlayerName = distinct string;
+
 public type Amount = decimal;
 
 // Even default-initialized storage represents a valid port.
 public type Port = ushort range 1..65535;
 
-public type Status = enum : byte
+public type Status = enum: byte
   Offline;
   Online;
   Maintenance;
@@ -21,5 +23,4 @@ begin
     when 1024..65535: 'application';
   end case;
 end function;
-
 end unit;

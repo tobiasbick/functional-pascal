@@ -24,8 +24,10 @@ public type Options = record
   References: string;
   Dotnet: string;
   Contexts: string;
+
   Documents: string[];
   ExtraReferences: string[];
+
   Timeout: int := 10;
   Jobs: int := 4;
   Json: bool := false;
@@ -81,6 +83,7 @@ public type Report = record
   SdkCompiler: string;
   SdkCompilerHash: string;
   Output: string;
+
   Total: int;
   Failed: int;
   Results: Outcome[];

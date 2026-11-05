@@ -37,6 +37,7 @@ begin
   const Words: string[] := R.Regex.Split(Info.Trim(), '\s+');
   var Item: M.Example := new M.Example(Document, Line, Words[0], Source, 'line-' + Line.ToString());
   const Seen: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
+
   for Index: int := 1 to Words.Length - 1 do
     const Word: string := Words[Index];
     const Parts: string[] := Word.Split(#61, 2);
@@ -53,7 +54,9 @@ begin
       if Parts.Length <> 2 or Parts[1].Length = 0 then
         Invalid(Document, Line, 'Unknown fence option ' + Word);
       end if;
+
       const Value: string := Parts[1];
+
       case Key of
         when 'id':
           Item := Item with Id := Value; end with;
@@ -149,11 +152,13 @@ begin
     #13 + '' + #10,
     #10 + ''
   ).Replace(#13, #10).Split(#10);
+
   var Delimiter: char := #0;
   var Width: int := 0;
   var Start: int := 0;
   var Info: string := '';
   const Source: Text.StringBuilder := new Text.StringBuilder();
+
   for Index: int := 0 to Lines.Length - 1 do
     const Line: string := Lines[Index];
     const Trimmed: string := Line.Trim();
@@ -201,6 +206,7 @@ begin
     elsif Trimmed.StartsWith('```') or Trimmed.StartsWith('~~~') then
       Delimiter := Trimmed[0];
       Width := 0;
+
       while Width < Trimmed.Length and Trimmed[Width] = Delimiter do
         Width := Width + 1;
       end while;

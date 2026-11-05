@@ -1,6 +1,10 @@
 unit Example;
+
 uses System.Math as Math;
+
 // @include docs/pascal/language/types/unions.md#shape
+
 const ShapeValue: Shape := Shape.Circle(2.0);
+
 // @example
 end unit;

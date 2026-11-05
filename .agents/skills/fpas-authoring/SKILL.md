@@ -35,11 +35,19 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
    exceptions; define application unions for domain outcomes.
 4. Compile through the current CLR toolchain using the
    [development workflow](../../../docs/build/development.md). The CLI provides
-   compile; project builds use the SDK. Formatter and language-service commands
-   are not part of the current toolchain.
+   compile; project builds use the SDK. Use `fpas fmt` for the
+   [fixed source style](../../../docs/pascal/tools/fmt-style.md).
 5. Select meaningful xUnit compiler, execution, or mixed-project tests. Rebuild
    copied inputs before execution and keep fixture/toolchain builds separate.
    Interactive programs need explicit bounded scenarios.
+
+## Readable logical sections
+
+Use one blank line between groups that perform different jobs: collecting inputs,
+validating them, preparing data, performing work and returning or reporting the
+result. Keep related bindings and operations together, including in tests.
+`fpas fmt` preserves authored sections before `const` and `var`; inspect the result
+for readability.
 
 Complete README/handbook programs have execution assertions in the Markdown
 runner. Follow [example conventions](../../../docs/pascal/tools/documentation-examples.md)

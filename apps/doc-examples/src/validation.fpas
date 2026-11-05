@@ -35,9 +35,11 @@ end function;
 public async function Check(Item: M.Example; Options: M.Options; Items: M.Example[]; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Outcome>;
 begin
   var Outcome: M.Outcome := new M.Outcome(Item.Document, Item.Line, Item.Id, false, 'prepare', '');
+
   try
     const Prepared: M.Prepared := Preparation.Prepare(Item, Options, Items, Directory);
     Outcome := Outcome with Assembly := Prepared.Assembly; Library := Prepared.Library; Manifest := Prepared.Manifest; Stage := 'compile'; end with;
+
     const Arguments: C.List<string> := new C.List<string>();
     Arguments.Add(Options.Compiler);
     Arguments.Add('compile');
@@ -62,6 +64,7 @@ begin
         'json'
       ]
     );
+
     const Compiled: M.Captured := await Processes.Run(
       Options,
       Arguments.ToArray(),
@@ -69,6 +72,7 @@ begin
       Cancellation
     );
     Save(Directory, 'compile', Compiled);
+
     const Errors: Diagnostics.Checked := Diagnostics.Read(Compiled.Output, Item, Prepared);
     Outcome := Outcome with Document := Errors.Document; Line := Errors.Line; end with;
     if Item.ExpectedError.Length > 0 then
@@ -125,6 +129,7 @@ begin
       )
       else ''
       end if;
+
     var Target: string := Prepared.Assembly;
     if Prepared.Manifest.Length > 0 then
       const Located: M.Captured := await Processes.Run(
@@ -157,6 +162,7 @@ begin
         IO.File.Copy(Reference, IO.Path.Combine(Directory, IO.Path.GetFileName(Reference) ?? ''));
       end for;
     end if;
+
     const Executed: M.Captured := await Processes.Run(
       Options,
       [Target],
@@ -167,6 +173,7 @@ begin
       IO.Path.Combine(Directory, 'run.json'),
       J.JsonSerializer.Serialize<M.Captured>(Executed)
     );
+
     var Passed: bool := false;
     if Item.ExpectedException.Length > 0 then
       Passed := Executed.ExitCode <> 0 and Executed.Error.StartsWith(

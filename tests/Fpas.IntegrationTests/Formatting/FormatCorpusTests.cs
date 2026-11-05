@@ -16,9 +16,12 @@ public sealed class FormatCorpusTests
         => Check(name, input);
 
     [Fact]
-    public void All_copied_source_fixtures_are_formattable_and_idempotent()
+    public void All_copied_complete_source_fixtures_are_formattable_and_idempotent()
     {
-        var files = Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "Fixtures"), "*.fpas", SearchOption.AllDirectories);
+        var root = Path.Combine(AppContext.BaseDirectory, "Fixtures");
+        var contexts = Path.Combine(root, "doc-examples", "contexts") + Path.DirectorySeparatorChar;
+        var files = Directory.GetFiles(root, "*.fpas", SearchOption.AllDirectories)
+            .Where(file => !file.StartsWith(contexts, StringComparison.Ordinal)).ToArray();
         Assert.True(files.Length > 20);
         foreach (var file in files) Check(file, File.ReadAllText(file));
     }

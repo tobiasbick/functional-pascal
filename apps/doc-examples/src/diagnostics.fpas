@@ -18,13 +18,16 @@ begin
   var Document: string := Item.Document;
   var Line: int := Item.Line;
   var Message: string := '';
+
   for Diagnostic: J.JsonElement in Json.RootElement.GetProperty('diagnostics').EnumerateArray() do
     if Diagnostic.GetProperty('severity').GetString() = 'error' then
       Count := Count + 1;
       const Code: string := Diagnostic.GetProperty('code').GetString() ?? '';
+
       if Message.Length = 0 then
         Message := Code + ': ' + (Diagnostic.GetProperty('message').GetString() ?? '');
       end if;
+
       var Primary: bool := false;
       const Location: J.JsonElement := Diagnostic.GetProperty('location');
       if Location.ValueKind = J.JsonValueKind.Object then

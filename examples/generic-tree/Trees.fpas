@@ -22,8 +22,10 @@ begin
   return case Value of
     when Tree.Empty: Tree.Empty;
     when Tree.Leaf(const Item: T): Tree.Leaf(Transform(Item));
-    when Tree.Branch(const Left: Tree<T>, const Right: Tree<T>):
-      Tree.Branch(Map(Left, Transform), Map(Right, Transform));
+    when Tree.Branch(
+      const Left: Tree<T>,
+      const Right: Tree<T>
+    ): Tree.Branch(Map(Left, Transform), Map(Right, Transform));
   end case;
 end function;
 
@@ -41,9 +43,10 @@ begin
   return case Value of
     when Tree.Empty: '.';
     when Tree.Leaf(const Item: string): Item;
-    when Tree.Branch(const Left: Tree<string>, const Right: Tree<string>):
-      '(' + Render(Left) + ', ' + Render(Right) + ')';
+    when Tree.Branch(
+      const Left: Tree<string>,
+      const Right: Tree<string>
+    ): '(' + Render(Left) + ', ' + Render(Right) + ')';
   end case;
 end function;
-
 end unit;

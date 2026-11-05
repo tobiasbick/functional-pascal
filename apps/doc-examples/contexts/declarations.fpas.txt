@@ -1,6 +1,9 @@
 unit Example;
-uses System as Sys, System.Console as Console, System.IO as IO, System.Math as Math,
+
+uses
+  System as Sys, System.Console as Console, System.IO as IO, System.Math as Math,
   System.Threading as Threading, System.Threading.Tasks as Tasks,
   System.Collections.Generic as Collections, System.Text.Json.Serialization as Serialization;
+
 // @example
 end unit;

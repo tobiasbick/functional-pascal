@@ -1,12 +1,18 @@
 program Example;
+
 uses System.Console as Console;
+
 procedure Work();
-begin end procedure;
 begin
-const Values: int[] := [1, 2];
-const Items: string[] := ['Alpha'];
-const Ready: bool := false;
-const Done: bool := true;
-// @example
+end procedure;
+
+begin
+  const Values: int[] := [1, 2];
+  const Items: string[] := ['Alpha'];
+
+  const Ready: bool := false;
+  const Done: bool := true;
+
+  // @example
 end;
 end program;

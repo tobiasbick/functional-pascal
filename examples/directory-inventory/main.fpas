@@ -1,15 +1,18 @@
 program DirectoryInventory;
 
-uses System as Sys, System.IO as IO, System.Collections.Generic as Collections,
+uses
+  System as Sys, System.IO as IO, System.Collections.Generic as Collections,
   System.Linq.Enumerable as Seq, System.Console as Console;
 
 function CountLines(Path: string): int;
 begin
   using const Reader: IO.StreamReader := new IO.StreamReader(Path);
   var Count: int := 0;
+
   while Reader.ReadLine() <> null do
     Count := Count + 1;
   end while;
+
   return Count;
 end function;
 
@@ -19,22 +22,33 @@ begin
     Sys.Environment.ExitCode := 2;
     return;
   end if;
+
   const Root: string := IO.Path.GetFullPath(args[0]);
   const Pattern: string := if args.Length = 2 then args[1] else '*' end if;
+
   try
     const Visible: Collections.IEnumerable<string> := Seq.Where<string>(
       IO.Directory.EnumerateFiles(Root, Pattern, IO.SearchOption.AllDirectories),
-      function(Path: string): bool => not (IO.Path.GetFileName(Path) ?? '').StartsWith('.'));
+      function(Path: string): bool => not (IO.Path.GetFileName(Path) ?? '').StartsWith('.')
+    );
     const Paths: Collections.List<string> := Seq.ToList<string>(Visible);
     Paths.Sort();
+
     var Total: int := 0;
-    const Rows: Collections.IEnumerable<string> := Seq.Select<string, string>(Paths,
+    const Rows: Collections.IEnumerable<string> := Seq.Select<string, string>(
+      Paths,
       function(Path: string): string begin
         const Lines: int := CountLines(Path);
         Total := Total + Lines;
+
         return IO.Path.GetRelativePath(Root, Path) + ': ' + Lines.ToString();
-      end function);
-    for Row: string in Rows do Console.WriteLine(Row); end for;
+      end function
+    );
+
+    for Row: string in Rows do
+      Console.WriteLine(Row);
+    end for;
+
     Console.Write('Files: ');
     Console.WriteLine(Paths.Count);
     Console.Write('Lines: ');

@@ -8,17 +8,25 @@ begin
   const Stock: int[] := [4, 7, 9, 11, 13, 17];
   const Demand: int[] := [3, 8, 8, 2, 15, 6];
   const Prices: int[] := [10, 20, 5, 15, 1, 8];
+
   const Filled: int[] := [0, 0, 0, 0, 0, 0];
   var Subtotal: int := 0;
+
   for Index: int := 0 to Demand.Length - 1 do
     var Taken: int := Demand[Index];
-    if Taken > Stock[Index] then Taken := Stock[Index]; end if;
+    if Taken > Stock[Index] then
+      Taken := Stock[Index];
+    end if;
+
     Filled[Index] := Taken;
     Subtotal := Subtotal + Taken * Prices[Index];
   end for;
+
   const Discount: int := 31;
   const Tax: int := 54;
+
   const Total: int := Subtotal - Discount + Tax;
+
   Console.WriteLine('batch: autumn-42 / ' + Region + ' / ' + Names[0]);
   Console.Error.WriteLine('audit: check unfilled demand');
   Console.WriteLine(Total);

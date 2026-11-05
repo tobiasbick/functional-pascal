@@ -10,6 +10,7 @@ begin
   const Buffer: char[] := new char[4096];
   const Result: Text.StringBuilder := new Text.StringBuilder();
   var Bytes: int := 0;
+
   while true do
     const Count: int := await Reader.ReadAsync(Buffer, 0, Buffer.Length).WaitAsync(Cancellation);
     if Count = 0 then
@@ -36,9 +37,11 @@ begin
     Cancellation,
     Deadline.Token
   );
+
   const Environment: C.Dictionary<string, string> := new C.Dictionary<string, string>();
   Environment['MSBUILDDISABLENODEREUSE'] := '1';
   Environment['DOTNET_CLI_USE_MSBUILD_SERVER'] := '0';
+
   await using const Process: P.OwnedProcess := P.OwnedProcess.Start(
     Options.Dotnet,
     Arguments,
@@ -50,12 +53,14 @@ begin
   using const Error: IO.StreamReader := new IO.StreamReader(Process.Error, Text.Encoding.UTF8);
   const OutTask: Tasks.Task<string> := Drain(Output, Combined.Token);
   const ErrTask: Tasks.Task<string> := Drain(Error, Combined.Token);
+
   try
     const Exited: Tasks.Task := Process.WaitForExit(Combined.Token);
     const Pending: C.List<Tasks.Task> := new C.List<Tasks.Task>();
     Pending.Add(Exited);
     Pending.Add(OutTask);
     Pending.Add(ErrTask);
+
     while Pending.Count > 0 do
       const Finished: Tasks.Task := await Tasks.Task.WhenAny(Pending);
       await Finished;
@@ -64,6 +69,7 @@ begin
         await Process.TerminateAsync();
       end if;
     end while;
+
     const ExitCode: int := Process.ExitCode;
     await Process.TerminateAsync();
     return new M.Captured(ExitCode, await OutTask, await ErrTask);

@@ -1,4 +1,5 @@
 program DomainDemo;
+
 uses Example.Domains as D, System.Console as Console;
 
 begin

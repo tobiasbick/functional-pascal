@@ -15,9 +15,11 @@ end function;
 begin
   const Format: function(int): string := Pipeline.Compose(Double, Label);
   const Rows: string[] := Pipeline.Map([1, 2, 3], Format);
+
   for Row: string in Rows do
     Console.WriteLine(Row);
   end for;
+
   const Copy: function(string): string := Pipeline.Identity<string>;
   Console.WriteLine(Copy('identity'));
 end;

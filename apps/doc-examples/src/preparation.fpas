@@ -9,6 +9,7 @@ function Raw(Item: M.Example; Path: string; Primary: bool): M.Source;
 begin
   const Lines: C.List<M.Origin> := new C.List<M.Origin>();
   const Count: int := Item.Source.Split(#10).Length - 1;
+
   for Index: int := 0 to Count - 1 do
     Lines.Add(new M.Origin(Item.Document, Item.Line + 1 + Index, Primary));
   end for;
@@ -37,10 +38,12 @@ begin
   if Item.Context.Length = 0 then
     return Raw(Item, Path, Primary);
   end if;
+
   const Template: string := IO.Path.Combine(Options.Contexts, Item.Context + '.fpas.txt');
   if not IO.File.Exists(Template) then
     raise new IO.InvalidDataException('Missing context ' + Item.Context);
   end if;
+
   const Source: Text.StringBuilder := new Text.StringBuilder();
   const Origins: C.List<M.Origin> := new C.List<M.Origin>();
   const Lines: string[] := IO.File.ReadAllText(Template).Replace(
@@ -48,6 +51,7 @@ begin
     #10 + ''
   ).Replace(#13, #10).TrimEnd(#10).Split(#10);
   var Slots: int := 0;
+
   for Index: int := 0 to Lines.Length - 1 do
     const Line: string := Lines[Index];
     if Line.Trim() = '// @example' then
@@ -83,6 +87,7 @@ begin
     #13 + '' + #10,
     #10 + ''
   ).Replace(#13, #10).TrimEnd(#10).Split(#10);
+
   for Index: int := 0 to Lines.Length - 1 do
     if Lines[Index].Trim().StartsWith('// @include ') then
       const Included: M.Example := Include(Options, Lines[Index].Trim().Substring(12));
@@ -123,15 +128,18 @@ begin
       'Expected a complete program/unit or an explicit fragment context'
     );
   end if;
+
   const Library: bool := Declaration.Groups[1].Value = 'unit';
   if Library and Item.Execute then
     raise new IO.InvalidDataException('A unit cannot have the run fence option');
   end if;
+
   const Sources: C.List<M.Source> := new C.List<M.Source>();
   Sources.Add(Primary);
   const Written: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.OrdinalIgnoreCase);
   discard Written.Add(Name);
   Write(Primary.Path, Primary.Text);
+
   for Companion: M.Example in Items do
     if Companion.Document = Item.Document and Companion.Project = Item.Project
       and Item.Project.Length > 0 and Companion.Id <> Item.Id
@@ -151,6 +159,7 @@ begin
       if not Written.Add(FileName) then
         raise new IO.InvalidDataException('Duplicate project output file ' + FileName);
       end if;
+
       const Other: M.Source := Wrap(
         Companion,
         Options,
@@ -173,6 +182,7 @@ begin
       Write(Other.Path, Other.Text);
     end if;
   end for;
+
   const Companions: string := IO.Path.Combine(Options.Contexts, Item.Context);
   if Item.Context.Length > 0 and IO.Directory.Exists(Companions) then
     for FileName: string in IO.Directory.GetFiles(Companions, '*.fpas') do
@@ -180,6 +190,7 @@ begin
       if not Written.Add(Short) then
         raise new IO.InvalidDataException('Duplicate context output file ' + Short);
       end if;
+
       const Extra: M.Source := CompanionSource(
         FileName,
         IO.Path.Combine(Directory, Short),
@@ -193,6 +204,7 @@ begin
       Write(Extra.Path, Extra.Text);
     end for;
   end if;
+
   var Manifest: string := '';
   if Item.Manifest.Length > 0 then
     Manifest := IO.Path.Combine(Directory, Item.Manifest);

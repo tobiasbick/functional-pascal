@@ -17,9 +17,12 @@ begin
   var Timeout: int := 10;
   var Jobs: int := 4;
   var Json: bool := false;
+
   const Documents: C.List<string> := new C.List<string>();
   const ExtraReferences: C.List<string> := new C.List<string>();
+
   var Index: int := 0;
+
   while Index < args.Length do
     const Name: string := args[Index];
     if Name = '--help' then
@@ -46,6 +49,7 @@ begin
 
       Index := Index + 1;
       const Value: string := args[Index];
+
       case Name of
         when '--root':
           Root := IO.Path.GetFullPath(Value);
@@ -101,6 +105,7 @@ begin
     const HostName: string := if S.OperatingSystem.IsWindows() then 'dotnet.exe'
       else 'dotnet'
       end if;
+
     if DotnetRoot.Length > 0 then
       Dotnet := IO.Path.Combine(DotnetRoot, HostName);
     end if;
@@ -149,11 +154,15 @@ begin
     );
     Documents.Add(IO.Path.Combine(Root, 'README.md'));
   end if;
+
   const Selected: C.SortedSet<string> := new C.SortedSet<string>(S.StringComparer.Ordinal);
+
   for Document: string in Documents do
     discard Selected.Add(IO.Path.GetFullPath(Document, Root));
   end for;
+
   const Paths: C.List<string> := new C.List<string>(Selected);
+
   return new M.Options(
     Root,
     Output,
@@ -174,6 +183,7 @@ begin
   if Json then
     const Settings: J.JsonSerializerOptions := new J.JsonSerializerOptions();
     Settings.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
+
     Console.WriteLine(
       J.JsonSerializer.Serialize<M.FailureReport>(
         new M.FailureReport(1, 0, 1, [], Message),
@@ -189,6 +199,7 @@ begin
   Console.OutputEncoding := new Text.UTF8Encoding(false);
   S.Globalization.CultureInfo.CurrentCulture := S.Globalization.CultureInfo.InvariantCulture;
   S.Globalization.CultureInfo.CurrentUICulture := S.Globalization.CultureInfo.InvariantCulture;
+
   using const Cancellation: T.CancellationTokenSource := new T.CancellationTokenSource();
   const Handler: S.ConsoleCancelEventHandler := procedure(Sender: object?; Event: S.ConsoleCancelEventArgs) begin
     Event.Cancel := true;
@@ -197,11 +208,15 @@ begin
   subscribe Console.CancelKeyPress with Handler;
   try
     const Options: M.Options := Arguments(args);
+
     const Items: C.List<M.Example> := new C.List<M.Example>();
+
     for Document: string in Options.Documents do
       Items.AddRange(Markdown.Read(Document));
     end for;
+
     const Examples: C.List<M.Example> := new C.List<M.Example>();
+
     for Item: M.Example in Items do
       if Item.Language = 'pascal' then
         Examples.Add(Item);
@@ -213,10 +228,13 @@ begin
     end if;
 
     discard IO.Directory.CreateDirectory(Options.Output);
+
     const Outcomes: C.List<M.Outcome> := new C.List<M.Outcome>();
     var Index: int := 0;
+
     while Index < Examples.Count do
       const Pending: C.List<Tasks.Task<M.Outcome>> := new C.List<Tasks.Task<M.Outcome>>();
+
       for Offset: int := 0 to Options.Jobs - 1 do
         if Index + Offset < Examples.Count then
           Pending.Add(
@@ -234,7 +252,9 @@ begin
       Outcomes.AddRange(await Tasks.Task.WhenAll<M.Outcome>(Pending.ToArray()));
       Index := Index + Options.Jobs;
     end while;
+
     var Failed: int := 0;
+
     for Item: M.Outcome in Outcomes do
       if not Item.Passed then
         Failed := Failed + 1;
@@ -248,13 +268,19 @@ begin
     end for;
 
     Cancellation.Token.ThrowIfCancellationRequested();
+
     const Identity: string := IO.Path.Combine(S.AppContext.BaseDirectory, 'DocExamples.sdk.txt');
     const SdkCompiler: string := if IO.File.Exists(
-      Identity
-    ) then IO.File.ReadAllText(Identity).Trim() else '' end if;
+        Identity
+      ) then IO.File.ReadAllText(Identity).Trim()
+      else ''
+      end if;
     const SdkHash: string := if IO.File.Exists(SdkCompiler) then S.Convert.ToHexString(
-      Crypto.SHA256.HashData(IO.File.ReadAllBytes(SdkCompiler))
-    ) else '' end if;
+        Crypto.SHA256.HashData(IO.File.ReadAllBytes(SdkCompiler))
+      )
+      else ''
+      end if;
+
     const Report: M.Report := new M.Report(
       1,
       Options.Root,
@@ -269,10 +295,12 @@ begin
       Failed,
       Outcomes.ToArray()
     );
+
     const Settings: J.JsonSerializerOptions := new J.JsonSerializerOptions();
     Settings.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
     const Json: string := J.JsonSerializer.Serialize<M.Report>(Report, Settings);
     IO.File.WriteAllText(IO.Path.Combine(Options.Output, 'report.json'), Json + #10);
+
     if Options.Json then
       Console.WriteLine(Json);
     else

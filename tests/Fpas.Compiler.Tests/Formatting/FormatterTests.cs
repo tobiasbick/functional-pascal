@@ -33,7 +33,7 @@ public sealed class FormatterTests
             end;
             end program;
             """;
-        Assert.Equal(expected + "\n", Format(input));
+        Assert.Equal(expected.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n", Format(input));
     }
 
     [Fact]

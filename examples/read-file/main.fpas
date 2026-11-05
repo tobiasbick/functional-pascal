@@ -4,6 +4,7 @@ uses System as Sys, System.IO as IO, System.Console as Console;
 
 begin
   const Path: string := IO.Path.Combine(Sys.AppContext.BaseDirectory, 'sample.txt');
+
   try
     using const Reader: IO.StreamReader := new IO.StreamReader(Path);
     Console.Write(Reader.ReadToEnd());

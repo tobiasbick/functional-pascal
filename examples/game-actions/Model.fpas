@@ -23,5 +23,4 @@ begin
     return ActionOutcome.Moved(Next);
   end if;
 end function;
-
 end unit;

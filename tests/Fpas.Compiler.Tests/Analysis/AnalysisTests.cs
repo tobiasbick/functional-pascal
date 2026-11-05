@@ -48,7 +48,7 @@ public sealed class AnalysisTests
         var result = FpasCompiler.Analyze(new([new("input.fpas", text)], "Input", References));
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("FP2002", diagnostic.Code);
-        Assert.Equal(new SourceLocation("input.fpas", 4, 13, 2), diagnostic.Location);
+        Assert.Equal(new SourceLocation("input.fpas", 4, 13, 2, 4, 15, text.IndexOf(":=", StringComparison.Ordinal)), diagnostic.Location);
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed class AnalysisTests
         var diagnostic = Assert.Single(analyzed.Diagnostics);
         Assert.False(analyzed.Success); Assert.Equal("FP3030", diagnostic.Code);
         Assert.Contains("cannot remain live across await", diagnostic.Message);
-        Assert.Equal(7, diagnostic.Location.Line);
+        Assert.Equal(7, diagnostic.Location!.Line);
         Assert.Equal(FpasCompiler.Compile(new([new("async.fpas", source)], "Invalid", References)).Diagnostics, analyzed.Diagnostics);
     }
 

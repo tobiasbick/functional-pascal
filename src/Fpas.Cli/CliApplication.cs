@@ -63,12 +63,12 @@ internal static class CliApplication
         {
             if (checkResult is not null) { check.ReportArgumentError(checkResult, exception.Message); return 2; }
             if (queryResult is not null) return await query.ReportArgumentError(queryResult, exception.Message);
-            CompilerCommand.Report(jsonRequested, false, null, [new("FP0001", exception.Message + " See " + help + ".", new("<command line>", 1, 1, 0))]);
+            CompilerCommand.Report(jsonRequested, false, null, [new("FP0001", exception.Message, null) { Help = "See " + help + "." }]);
             return 2;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException)
         {
-            CompilerCommand.Report(jsonRequested, false, null, [new("FP0002", exception.Message, new("<command line>", 1, 1, 0))]);
+            CompilerCommand.Report(jsonRequested, false, null, [new("FP0002", exception.Message, null)]);
             return 1;
         }
     }

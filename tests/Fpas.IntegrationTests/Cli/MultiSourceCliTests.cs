@@ -71,7 +71,8 @@ public sealed class MultiSourceCliTests
         using var json = JsonDocument.Parse(result.Output);
         var diagnostic = Assert.Single(json.RootElement.GetProperty("diagnostics").EnumerateArray());
         Assert.Equal("FP0002", diagnostic.GetProperty("code").GetString());
-        Assert.Equal(helper, diagnostic.GetProperty("location").GetProperty("path").GetString());
+        Assert.Equal(JsonValueKind.Null, diagnostic.GetProperty("location").ValueKind);
+        Assert.Equal(helper, diagnostic.GetProperty("inputPath").GetString());
     }
 
     [Theory]

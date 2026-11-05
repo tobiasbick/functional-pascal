@@ -23,6 +23,7 @@ src/
     Analysis/
     Syntax/
       Parsing/
+    Diagnostics/
     Binding/
       Bodies/
       Bound/
@@ -46,6 +47,7 @@ src/
     Compilation/
     Analysis/
     Debugging/
+    Diagnostics/
   Fpas.Workspaces/
     Analysis/
     Loading/
@@ -63,7 +65,7 @@ src/
     Fpas.Build.Tasks.csproj
     Analysis/
     Documentation/
-    Debugging/
+    Diagnostics/
     Incremental/
   Fpas.Core/
     Fpas.Core.csproj
@@ -79,6 +81,7 @@ tests/
   Fpas.Compiler.Tests/
     Fpas.Compiler.Tests.csproj
     ControlFlow/
+    Diagnostics/
     Metadata/
     Routines/
     Support/
@@ -89,6 +92,7 @@ tests/
     Cli/
     Debugging/
     Documentation/
+    Diagnostics/
     Execution/
     Processes/
     Workspaces/

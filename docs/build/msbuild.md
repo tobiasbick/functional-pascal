@@ -230,7 +230,10 @@ SDK explicitly removes manifest-owned custom paths which standard cleanup exclud
 ## Diagnostics, incremental work, and failure
 
 Report compiler diagnostics as MSBuild errors/warnings with stable codes, source
-paths, and line/column information. Preserve structured compiler information;
+paths, and start/exclusive-end UTF-16 line/column information. Non-source errors
+have no file or fabricated source position. Log explanation, help, related notes
+and fix titles as messages instead of additional warning/error entries. Preserve
+the full JSON payload when caching/replaying warnings. Preserve structured compiler information;
 do not guess severity by searching human-readable text. Errors make Build fail
 and `dotnet build` return nonzero. A failed compile must not publish partial new
 assemblies or present stale output as the successful result of this invocation.

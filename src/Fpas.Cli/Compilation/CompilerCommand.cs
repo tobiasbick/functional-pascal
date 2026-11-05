@@ -1,17 +1,12 @@
 using System.Text;
 using System.Text.Json;
 using Fpas.Compiler;
+using Fpas.Cli.Diagnostics;
 
 namespace Fpas.Cli.Compilation;
 
 internal static class CompilerCommand
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
-
     internal static CompileCommand Create()
     {
         var compile = new CompileCommand();
@@ -21,16 +16,16 @@ internal static class CompilerCommand
 
     private static int Execute(CompileArguments options)
     {
-        var inputPath = "<command line>";
+        string? affectedPath = null;
+        var sources = new List<CompilationSource>();
         try
         {
-            var sources = new List<CompilationSource>();
             foreach (var path in options.Sources)
             {
-                inputPath = path == "-" ? "<stdin>" : Path.GetFullPath(path);
+                affectedPath = path == "-" ? "<stdin>" : Path.GetFullPath(path);
                 var text = path == "-" ? ReadStandardInput()
-                    : new UTF8Encoding(false, true).GetString(File.ReadAllBytes(inputPath));
-                sources.Add(new(inputPath, text));
+                    : new UTF8Encoding(false, true).GetString(File.ReadAllBytes(affectedPath));
+                sources.Add(new(affectedPath, text));
             }
             var references = options.References.ToList();
             var core = typeof(Core.RecordAttribute).Assembly.Location;
@@ -39,16 +34,17 @@ internal static class CompilerCommand
                 Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions, options.Optimize));
             if (!result.Success)
             {
-                Report(options.Json, false, null, result.Diagnostics);
+                Report(options.Json, false, null, result.Diagnostics, sources);
                 return 1;
             }
+            affectedPath = options.Output;
             OutputFiles.Publish(options.Output, result.Program!, options.Documentation);
-            Report(options.Json, true, options.Output, result.Diagnostics);
+            Report(options.Json, true, options.Output, result.Diagnostics, sources);
             return 0;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException)
         {
-            Report(options.Json, false, null, [new("FP0002", exception.Message, new(inputPath, 1, 1, 0))]);
+            Report(options.Json, false, null, [new("FP0002", exception.Message, null) { InputPath = affectedPath }]);
             return 1;
         }
     }
@@ -59,15 +55,14 @@ internal static class CompilerCommand
         return reader.ReadToEnd();
     }
 
-    internal static void Report(bool json, bool success, string? output, IReadOnlyList<CompilerDiagnostic> diagnostics)
+    internal static void Report(bool json, bool success, string? output, IReadOnlyList<CompilerDiagnostic> diagnostics, IReadOnlyList<CompilationSource>? sources = null)
     {
         if (json)
         {
-            Console.WriteLine(JsonSerializer.Serialize(new { success, output, diagnostics }, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(new(success, output, diagnostics), CompileJson.Default.CompileReport));
             return;
         }
-        foreach (var diagnostic in diagnostics)
-            Console.Error.WriteLine($"{diagnostic.Location.Path}({diagnostic.Location.Line},{diagnostic.Location.Column}): {(diagnostic.Severity == DiagnosticSeverity.Warning ? "warning" : "error")} {diagnostic.Code}: {diagnostic.Message}");
+        DiagnosticRenderer.Write(diagnostics, sources);
         if (success)
             Console.WriteLine($"Wrote {output}");
     }

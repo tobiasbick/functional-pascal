@@ -9,10 +9,23 @@ internal sealed partial class Parser
         var statements = new List<StatementSyntax>();
         while (!terminators.Any(At) && Current.Kind != TokenKind.End)
         {
-            var statement = ReadStatement(); statements.Add(statement);
-            Expect(";");
-            var name = statement switch { BindingSyntax binding => binding.Name, UsingSyntax use => use.Binding.Name, NestedRoutineSyntax nested => nested.Routine.Name, _ => null };
-            if (name is not null) declarations[name.Position].End = LastEnd;
+            var start = position;
+            StatementSyntax? statement = null;
+            try
+            {
+                statement = ReadStatement(); statements.Add(statement);
+                Expect(";");
+                var name = statement switch { BindingSyntax binding => binding.Name, UsingSyntax use => use.Binding.Name, NestedRoutineSyntax nested => nested.Routine.Name, _ => null };
+                if (name is not null) declarations[name.Position].End = LastEnd;
+            }
+            catch (CompilationFailure failure)
+            {
+                var diagnostic = failure.Diagnostic;
+                if (terminators.Contains("elsif") && statement is ExpressionStatementSyntax { Expression: NameExpressionSyntax foreign } && foreign.Name.Text == "elseif")
+                    diagnostic = ExpectedAt(tokens[start], ["elsif"], "Use 'elsif' to continue an if statement.").Diagnostic;
+                source.Diagnostics.Add(diagnostic);
+                SynchronizeStatement(start, terminators);
+            }
         }
         return statements;
     }
@@ -113,7 +126,9 @@ internal sealed partial class Parser
     private TypeSyntax ReadBindingType(Token name)
     {
         if (!At(":"))
-            throw source.Error("FP2002", $"Binding '{name.Text}' requires an explicit type annotation ': T'.", Current.Position, Current.Length);
+            throw source.Error("FP2002", $"Binding '{name.Text}' requires an explicit type annotation ': T'.", Current.Position, Current.Length,
+                help: "Write an explicit type between the name and initializer, for example const Count: int := 1;.",
+                expectation: new("annotation", [": Type"], Current.Text));
         position++;
         return SurfaceType();
     }

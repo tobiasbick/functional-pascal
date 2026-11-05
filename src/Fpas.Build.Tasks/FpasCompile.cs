@@ -137,14 +137,6 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     }
 
     public void Cancel() => cancellation.Cancel();
-    private void ReportDiagnostic(JsonElement diagnostic)
-    {
-        var location = diagnostic.GetProperty("location");
-        if (diagnostic.TryGetProperty("severity", out var severity) && severity.GetString() == "warning")
-            Log.LogWarning(null, diagnostic.GetProperty("code").GetString(), null, location.GetProperty("path").GetString(),
-                location.GetProperty("line").GetInt32(), location.GetProperty("column").GetInt32(), 0, 0, diagnostic.GetProperty("message").GetString());
-        else Log.LogError(null, diagnostic.GetProperty("code").GetString(), null, location.GetProperty("path").GetString(),
-            location.GetProperty("line").GetInt32(), location.GetProperty("column").GetInt32(), 0, 0, diagnostic.GetProperty("message").GetString() ?? "FPAS compilation failed.");
-    }
+    private void ReportDiagnostic(JsonElement diagnostic) => Diagnostics.BuildDiagnostics.Report(Log, diagnostic);
     private void Error(string code, string message) => Log.LogError(null, code, null, null, 0, 0, 0, 0, message);
 }

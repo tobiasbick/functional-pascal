@@ -98,7 +98,8 @@ internal sealed partial class Binder
         {
             if (int.TryParse(token.Text.Replace("_", "", StringComparison.Ordinal), out var character) && character is >= 0 and <= 65535)
                 return new BoundCharacter((char)character);
-            throw source.Error("FP3002", "A character literal must fit one UTF-16 code unit.", token.Position, token.Length);
+            throw source.Error("FP3002", "A character literal must fit one UTF-16 code unit.", token.Position, token.Length,
+                expectation: new("value", ["0..65535"], token.Text));
         }
         if (token.Kind == TokenKind.String)
             return new BoundString(token.Text);

@@ -19,10 +19,10 @@ inputs retain their own requirements. No publish mechanism is selected yet.
 
 ## Concrete compatibility obstacles
 
-- [Compile diagnostics](../../src/Fpas.Cli/Compilation/CompilerCommand.cs) use
-  reflection-based anonymous JSON serialization and the non-generic
-  `JsonStringEnumConverter`. The [response reader](../../src/Fpas.Cli/Compilation/CompileResponseFile.cs)
-  uses reflection-based deserialization. Supply AOT-compatible JSON contracts.
+- The [response reader](../../src/Fpas.Cli/Compilation/CompileResponseFile.cs)
+  uses reflection-based deserialization. Supply an AOT-compatible contract.
+  Compile/check/query diagnostics already use source-generated JSON contracts;
+  evaluate the remaining serialization and dependency graph during publication.
 - The compiler locates Core metadata with
   `typeof(Core.RecordAttribute).Assembly.Location`. A bundled/native executable
   needs another way to supply that managed metadata. Native-linking Core does

@@ -39,6 +39,10 @@ and JSON diagnostics. The [CLI contract](../program-structure/cli.md)
 defines exit codes and publication behavior. Compile JSON reports are appropriate
 for checking the diagnostic code and source location; test actual generated
 programs when runtime behavior matters.
+Diagnostics also supply expected/found data, help, related notes and exact proposed
+edits where available. Use these fields rather than parsing messages. No command
+applies them automatically; revalidate original text/context before applying an
+edit. Non-source failures have no location. See [diagnostics](../tools/diagnostics.md).
 
 The C# compiler API also provides FpasCompiler.Analyze for semantic validation
 of explicit source/reference inputs without emitted output, including async

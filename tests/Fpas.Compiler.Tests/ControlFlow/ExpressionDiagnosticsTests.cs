@@ -57,7 +57,7 @@ public sealed class ExpressionDiagnosticsTests
         var result = DiagnosticsTests.Compile("program Bad;\nbegin\nreturn;\nConsole.WriteLine(1);\nend; end program;");
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("FP3008", diagnostic.Code);
-        Assert.Equal(4, diagnostic.Location.Line);
+        Assert.Equal(4, diagnostic.Location!.Line);
         Assert.Equal(1, diagnostic.Location.Column);
     }
 }

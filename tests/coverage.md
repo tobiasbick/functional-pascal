@@ -14,6 +14,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Area | Compiler/metadata tests | Execution and mixed-build tests |
 | --- | --- | --- |
 | Analysis without output, completion, cancellation and compile diagnostic parity | AnalysisTests, AnalysisDocumentationTests, AnalysisCancellationTests | Existing CLI/execution/SDK regressions exercise shared preparation |
+| Structured expectations/fixes/related locations, UTF-16 ends, bounded recovery and absent setup locations | RichDiagnosticsTests | DiagnosticCliTests, DiagnosticWorkspaceTests (including actual MSBuild error events) |
 | Detached spans, declaration ownership/source slices, flow/callable/generic identities and expression policies | SemanticSnapshotTests, DeclarationContextTests, SemanticConstructTests, SemanticPolicyTests | SemanticDocumentationTests |
 | Evaluated contexts, mapped/mixed graphs, generators, stale binaries and snapshots | | AnalysisContextTests, AnalysisPreparationTests, AnalysisCompatibilityTests, AnalysisBoundsTests, SourceQueryTests |
 | Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |

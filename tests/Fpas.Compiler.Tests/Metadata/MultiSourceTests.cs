@@ -90,7 +90,7 @@ public sealed class MultiSourceTests
             "Location", TestEnvironment.References));
         var diagnostic = Assert.Single(result.Diagnostics);
         Assert.Equal("FP3001", diagnostic.Code);
-        Assert.Equal(new SourceLocation("helper.fpas", 2, 6, 1), diagnostic.Location);
+        Assert.Equal(new SourceLocation("helper.fpas", 2, 6, 1, 2, 7, 18), diagnostic.Location);
     }
 
     private static CompilationResult Compile(CompilationTarget target, params string[] sources)

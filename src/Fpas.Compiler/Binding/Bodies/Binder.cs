@@ -18,6 +18,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
     private readonly List<LocalSymbol> locals = [];
     private readonly List<ClosureSymbol> closures = parent?.closures ?? unitClosures ?? [];
     private readonly Dictionary<object, CaptureSymbol> captures = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<LocalSymbol, int> declarationPositions = new(ReferenceEqualityComparer.Instance);
     private RoutineSymbol currentRoutine = null!;
     private int loopDepth;
     private bool arithmeticChecked = true;
@@ -31,15 +32,23 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
         var program = unit.Syntax;
         InitializeImports();
         var methods = new List<BoundRoutine>();
-        if (unit.Initializer is { } initializer) methods.Add(BindRoutine(initializer, [], program.Name.Position));
+        if (unit.Initializer is { } initializer) BindIndependent(initializer, [], program.Name.Position);
         foreach (var routine in program.Routines)
-            methods.Add(BindRoutine(routines[routine.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, routine)), routine.Statements, routine.Name.Position, routine.Contracts));
+            BindIndependent(routines[routine.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, routine)), routine.Statements, routine.Name.Position, routine.Contracts);
         if (unit.EntryPoint is { } entry)
-            methods.Add(BindRoutine(entry, program.Statements, program.Name.Position));
+            BindIndependent(entry, program.Statements, program.Name.Position);
         foreach (var union in unit.Unions.Values) BindUnion(union);
         foreach (var record in unit.RecordTypes) BindRecord(record);
         BindTypeAttributes();
         return new(program.Name.Text, methods, closures.ToArray(), unit.RecordTypes.ToArray(), unit.Unions.Values.ToArray(), unit.Scalars.Values.ToArray(), unit.Aliases.Values.Where(alias => alias.Syntax.IsPublic).ToArray(), unit.Globals.Values.ToArray(), unit.Interfaces.Values.ToArray());
+
+        void BindIndependent(RoutineSymbol symbol, IReadOnlyList<StatementSyntax> body, int position, IReadOnlyList<ContractSyntax>? contracts = null)
+        {
+            var binder = new Binder(unit, catalog, references, unitClosures: closures);
+            foreach (var import in imports) binder.imports.Add(import.Key, import.Value);
+            try { methods.Add(binder.BindRoutine(symbol, body, position, contracts)); }
+            catch (CompilationFailure failure) { source.Diagnostics.Add(failure.Diagnostic); }
+        }
     }
 
     private void InitializeImports()
@@ -98,8 +107,11 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
     {
         if (scopes.Peek().ContainsKey(local.Name) || ScopeRoutines(scopes.Peek())?.Methods.ContainsKey(local.Name) == true || imports.ContainsKey(local.Name) ||
             scopes.Count == 1 && parameters.ContainsKey(local.Name) || currentRoutine.IsEntryPoint && local.Name == "args" || recordContext is not null && local.Name == "self")
-            throw source.Error("FP3004", $"Name '{local.Name}' is already bound or reserved.", position);
+            throw source.Error("FP3004", $"Name '{local.Name}' is already bound or reserved.", position, local.Name.Length,
+                related: scopes.Peek().TryGetValue(local.Name, out var previous) && declarationPositions.TryGetValue(previous, out var original)
+                    ? [new("The earlier binding is here.", source.Location(original, local.Name.Length))] : []);
         scopes.Peek().Add(local.Name, local);
+        declarationPositions[local] = position;
         catalog.Analysis?.Local(local, source, position);
     }
 
@@ -135,7 +147,9 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             return value;
         if (ScalarConversion(value, target, position, explicitCast, check) is { } scalar) return scalar;
         if (value.Type.CanHaveNull && value.Type.NeedsNullCheck && target.IsReference && !target.IsNullable && !(value.Type.IsParameter && target.IsParameter && value.Type.Parameter == target.Parameter))
-            throw source.Error("FP3013", "A nullable reference needs validation before conversion to a non-null reference.", position);
+            throw source.Error("FP3013", "A nullable reference needs validation before conversion to a non-null reference.", position,
+                help: "Validate a stable binding against null, or supply a non-null fallback before conversion.",
+                expectation: new("type", [TypeFacts.Display(target)], TypeFacts.Display(value.Type)));
         if (target != TypeSymbol.Void && (references.CanAssign(value.Type, target) || !explicitCast && ConstantFits(value, target) || explicitCast &&
             (TypeFacts.Numeric(value.Type.NonNullable) && TypeFacts.Numeric(target.NonNullable) ||
              value.Type.IsReference && target.IsReference || value.Type == TypeSymbol.Object && (target.IsValue || target.IsParameter) ||
@@ -143,7 +157,9 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
              value.Type.NullableValue && value.Type.NonNullable == target)))
             return new BoundConversion(value, target, check);
         var code = value.Type.IsNullable && !target.IsNullable || value.Type == TypeSymbol.Null ? "FP3013" : "FP3002";
-        throw source.Error(code, $"Cannot convert {TypeFacts.Display(value.Type)} to {TypeFacts.Display(target)}.", position);
+        throw source.Error(code, $"Cannot convert {TypeFacts.Display(value.Type)} to {TypeFacts.Display(target)}.", position,
+            help: "Use a value assignable to the declared type, or an explicit cast when the language permits it.",
+            expectation: new("type", [TypeFacts.Display(target)], TypeFacts.Display(value.Type)));
     }
 
     private BoundExpression Condition(ExpressionSyntax syntax, bool check = true)

@@ -52,8 +52,8 @@ analysis rather than building separate resolvers.
 
 ## Diagnostics, tests and profiling
 
-- `check --fix` needs [diagnostic edit data](diagnostics-gap.md), safe edit
-  ownership, bounded rechecking and publication.
+- `check --fix` needs validation/application of [diagnostic proposals](../pascal/tools/diagnostics.md),
+  safe edit ownership, bounded rechecking and publication.
 - Test programs need assertions, skip/strict semantics, scratch directories and
   golden-output rules. Multiple program entries cannot share one ordinary CLR
   executable project. Interactive terminal tests need a separate controlled

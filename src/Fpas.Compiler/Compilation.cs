@@ -3,10 +3,6 @@ using Fpas.Compiler.Emission.Metadata;
 
 namespace Fpas.Compiler;
 
-public sealed record SourceLocation(string Path, int Line, int Column, int Length);
-
-public sealed record CompilerDiagnostic(string Code, string Message, SourceLocation Location, DiagnosticSeverity Severity = DiagnosticSeverity.Error);
-
 public enum CompilationTarget { Exe, Library }
 
 public sealed record CompilationSource(string Path, string Text);
@@ -40,11 +36,11 @@ public static class FpasCompiler
         }
         catch (CompilationFailure failure)
         {
-            return new(null, [failure.Diagnostic]);
+            return new(null, failure.Diagnostics);
         }
         catch (BadImageFormatException exception)
         {
-            return new(null, [InvalidReference(exception, request.Sources)]);
+            return new(null, [InvalidReference(exception)]);
         }
     }
 
@@ -58,15 +54,20 @@ public static class FpasCompiler
             cancellationToken.ThrowIfCancellationRequested();
             return new(prepared.Success, prepared.Diagnostics, prepared.Success ? prepared.Analysis!.Finish() : null);
         }
-        catch (CompilationFailure failure) { cancellationToken.ThrowIfCancellationRequested(); return new(false, [failure.Diagnostic]); }
-        catch (BadImageFormatException exception) { cancellationToken.ThrowIfCancellationRequested(); return new(false, [InvalidReference(exception, request.Sources)]); }
+        catch (CompilationFailure failure) { cancellationToken.ThrowIfCancellationRequested(); return new(false, failure.Diagnostics); }
+        catch (BadImageFormatException exception) { cancellationToken.ThrowIfCancellationRequested(); return new(false, [InvalidReference(exception)]); }
     }
 
-    private static CompilerDiagnostic InvalidReference(BadImageFormatException exception, IReadOnlyList<CompilationSource> sources)
-        => new("FP4001", exception.Message, new(sources.FirstOrDefault()?.Path ?? "<references>", 1, 1, 0));
+    private static CompilerDiagnostic InvalidReference(BadImageFormatException exception)
+        => new("FP4001", exception.Message, null);
 }
 
-internal sealed class CompilationFailure(CompilerDiagnostic diagnostic) : Exception(diagnostic.Message)
+internal sealed class CompilationFailure : Exception
 {
-    internal CompilerDiagnostic Diagnostic { get; } = diagnostic;
+    internal IReadOnlyList<CompilerDiagnostic> Diagnostics { get; }
+    internal CompilerDiagnostic Diagnostic => Diagnostics[0];
+    internal CompilationFailure(CompilerDiagnostic diagnostic) : this([diagnostic]) { }
+    internal static CompilationFailure Many(IReadOnlyList<CompilerDiagnostic> diagnostics) => new(diagnostics);
+    private CompilationFailure(IReadOnlyList<CompilerDiagnostic> diagnostics) : base(diagnostics[0].Message)
+        => Diagnostics = Array.AsReadOnly(diagnostics.ToArray());
 }

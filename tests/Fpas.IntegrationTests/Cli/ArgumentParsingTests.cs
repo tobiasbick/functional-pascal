@@ -27,7 +27,8 @@ public sealed class ArgumentParsingTests
         Assert.False(report.RootElement.GetProperty("success").GetBoolean());
         var diagnostic = Assert.Single(report.RootElement.GetProperty("diagnostics").EnumerateArray());
         Assert.Equal("FP0001", diagnostic.GetProperty("code").GetString());
-        Assert.Contains("compile --help", diagnostic.GetProperty("message").GetString());
+        Assert.Contains("compile --help", diagnostic.GetProperty("help").GetString());
+        Assert.Equal(JsonValueKind.Null, diagnostic.GetProperty("location").ValueKind);
         Assert.Empty(Directory.GetFiles(directory.Path));
     }
 

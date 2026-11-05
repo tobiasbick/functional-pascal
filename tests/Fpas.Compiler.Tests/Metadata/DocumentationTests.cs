@@ -200,8 +200,8 @@ public sealed class DocumentationTests
             end unit;
             """);
         Assert.True(result.Success); Assert.Equal(6, result.Diagnostics.Count);
-        Assert.All(result.Diagnostics, diagnostic => { Assert.Equal("FP6001", diagnostic.Code); Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity); Assert.Equal("docs.fpas", diagnostic.Location.Path); });
-        Assert.Equal(new[] { 5, 6, 7, 10, 13, 17 }, result.Diagnostics.Select(diagnostic => diagnostic.Location.Line).Order());
+        Assert.All(result.Diagnostics, diagnostic => { Assert.Equal("FP6001", diagnostic.Code); Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity); Assert.Equal("docs.fpas", diagnostic.Location!.Path); });
+        Assert.Equal(new[] { 5, 6, 7, 10, 13, 17 }, result.Diagnostics.Select(diagnostic => diagnostic.Location!.Line).Order());
         var member = XDocument.Parse(System.Text.Encoding.UTF8.GetString(result.Program!.XmlDocumentation!)).Descendants("member").Single();
         Assert.Equal("Valid first.", member.Element("param")!.Value); Assert.Equal("Valid return.", member.Element("returns")!.Value);
         Assert.Contains("Duplicate.", member.Element("remarks")!.Value); Assert.Contains("Wrong case.", member.Element("remarks")!.Value);

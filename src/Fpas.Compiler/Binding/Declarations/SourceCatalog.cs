@@ -41,7 +41,8 @@ internal sealed partial class SourceCatalog
             unit.Source.CheckCancellation();
             var name = unit.Syntax.Name;
             if (!catalog.names.TryAdd(name.Text, unit))
-                throw unit.Source.Error("FP2005", $"Source container '{name.Text}' is declared more than once.", name.Position);
+                throw unit.Source.Error("FP2005", $"Source container '{name.Text}' is declared more than once.", name.Position, name.Text.Length,
+                    related: [new("The earlier source container is here.", catalog.names[name.Text].Source.Location(catalog.names[name.Text].Syntax.Name.Position, name.Text.Length))]);
             if (references.HasType(name.Text))
                 throw unit.Source.Error("FP4002", $"Source container '{name.Text}' conflicts with a referenced CLR type.", name.Position);
         }

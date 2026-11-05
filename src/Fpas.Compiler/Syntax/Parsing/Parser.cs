@@ -14,7 +14,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         if (isAsync) position++;
         var isProgram = At("program");
         if (!isProgram && !At("unit"))
-            throw source.Error("FP2001", "Expected a program or unit.", Current.Position, Current.Length);
+            throw Expected(["program", "unit"], "Expected a program or unit.");
         if (isAsync && !isProgram) throw source.Error("FP2003", "Only program entry bodies and functions may be async.", Current.Position);
         position++;
         var name = ReadName();
@@ -209,14 +209,14 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
     private Token Identifier()
     {
         if (Current.Kind != TokenKind.Identifier)
-            throw source.Error("FP2001", $"Expected an identifier, found '{Current.Text}'.", Current.Position, Current.Length);
+            throw Expected(["identifier"], $"Expected an identifier, found '{Current.Text}'.", kind: "identifier");
         return tokens[position++];
     }
 
     private void Expect(string text)
     {
         if (!At(text))
-            throw source.Error("FP2001", $"Expected '{text}', found '{Current.Text}'.", Current.Position, Current.Length);
+            throw Expected([text], $"Expected '{text}', found '{Current.Text}'.");
         position++;
     }
 }

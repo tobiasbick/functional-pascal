@@ -10,8 +10,9 @@ internal sealed partial class SourceCatalog
     {
         if (!groups.TryGetValue(method.Name, out var overloads)) groups.Add(method.Name, overloads = []);
         var key = OverloadKey(method);
-        if (overloads.Any(other => OverloadKey(other) == key))
-            throw source.Error("FP3004", $"Duplicate CLR signature for '{method.Name}'. Result types, labels, nullability, static/instance, and ref/out/in alone cannot distinguish overloads.", position);
+        if (overloads.FirstOrDefault(other => OverloadKey(other) == key) is { } previous)
+            throw source.Error("FP3004", $"Duplicate CLR signature for '{method.Name}'. Result types, labels, nullability, static/instance, and ref/out/in alone cannot distinguish overloads.", position,
+                related: previous.Declaration is { } declaration ? [new("The earlier routine with this CLR signature is here.", source.Location(declaration.Name.Position, declaration.Name.Length))] : []);
         overloads.Add(method);
     }
 

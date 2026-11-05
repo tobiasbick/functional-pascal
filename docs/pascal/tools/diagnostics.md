@@ -1,20 +1,66 @@
 # Diagnostics
 
-Compiler diagnostics identify a problem by code, severity, and source
-path/line/column/length. Correct the reported problem and compile again; a failed
-compilation can stop before later problems are reported.
+Compiler diagnostics identify a problem by code and severity, with a source range
+when one exists. They can also carry explanation, help, expected/found data,
+related locations and proposed corrections. Compilation and project checking use
+the same diagnostic model.
 
 ## Output and exit status
 
-Normal CLI output writes diagnostics to stderr as
-`path(line,column): error FPnnnn: message` or the corresponding warning form.
+Normal CLI output writes diagnostics to stderr with the header
+`path(line,column): error FPnnnn: message` or the corresponding warning form,
+followed by a numbered source excerpt, caret/range marker and available help,
+notes and correction titles. Long lines are cropped around the selected range.
+Tabs use four-column stops; grapheme clusters, combining marks and wide characters
+are accounted for when aligning markers. Terminal-specific glyph widths may vary.
+Control characters are escaped. Color is automatic for an interactive stderr;
+redirected output, `NO_COLOR` and `TERM=dumb` disable it.
 Successful compilation writes `Wrote path.dll` to stdout.
 
 Use `--diagnostics json` for automation. It writes one stdout object containing
 `success`, `output`, and `diagnostics`; each diagnostic contains `code`, `message`,
-`severity`, and `location`. The output path is null when compilation fails.
-Locations are one-based; command-line and input failures use a synthetic source
-location when there is no source token to identify.
+`severity`, `location`, `explanation`, `help`, `helpLink`, `expectation`, `related`
+and `fixes`. The output path is null when compilation fails. Optional data is null
+or omitted when unavailable; related locations and fixes are arrays. Check/query
+diagnostics retain these fields and additionally identify the owning project.
+
+Source locations contain `path`, one-based UTF-16 `line`/`column`, UTF-16 `length`,
+exclusive `endLine`/`endColumn` and zero-based UTF-16 `offset`. Tabs count as one
+UTF-16 code unit in the data. Input line endings and offsets are preserved.
+EOF ranges may be empty. Non-source failures have no location; command-line,
+I/O and reference setup failures do not invent a source token. `inputPath` can
+identify an affected input/output file without claiming source coordinates.
+
+`expectation` contains a `kind`, an `expected` string array and a `found` string.
+It is supplied for parser expectations, type conversions, invalid numeric values
+and supported correction hints. Consumers must not parse the primary message to recover that data.
+Each related note has a message and an optional location.
+
+Each fix contains `title`, `applicability` (`automatic` or `review`) and `edits`.
+An edit specifies its exact `location`, `expectedText` and `newText`; an empty
+range inserts text. Automatic identifies a direct local correction. Review
+identifies a proposal requiring judgment. Compilation/checking never applies
+either kind. An edit consumer must check the original text and context again
+before applying a proposal; a successful replacement does not establish the
+correctness of the rest of the program.
+
+Hints cover common Pascal type names, keyword capitalization, `elseif`, `=` in
+initializers and `!=`. Console I/O and `exit` hints describe the supported API or
+statement without fabricating edits that require unknown imports or values.
+
+## Recovery and limits
+
+The parser continues at safe statement boundaries and checks other source files.
+The binder isolates routine bodies, record methods and source units, so a failed
+routine does not contaminate another routine's flow state. It abandons the rest
+of a failed local body to avoid dependent name/type errors. Invalid declarations,
+imports or lexical structure can stop their owning file or compilation phase.
+Metadata/emission checks are reached only after the preceding phase succeeds.
+
+At most 50 errors are returned; the final `FP0003` diagnostic reports when that
+limit prevents further analysis. Any error prevents output publication and a
+successful semantic snapshot. Existing outputs remain intact. Correct the
+reported problems and check again to reach later phases.
 
 | Exit code | Meaning |
 | --- | --- |
@@ -27,6 +73,7 @@ location when there is no source token to identify.
 | Codes | Meaning |
 | --- | --- |
 | FP0001 / FP0002 | Invalid CLI arguments / input-output failure |
+| FP0003 | Diagnostic error limit reached; further errors were not analyzed |
 | FP1001–FP1004 | Invalid character, string, separator, or unsupported numeric form |
 | FP2001–FP2005 | Syntax/terminator error, missing type annotation, unsupported form, source/output-kind mismatch, or duplicate container |
 | FP3001–FP3008 | Name, type, overload, binding, unsupported type, unused result, missing return, or unreachable statement |
@@ -60,7 +107,11 @@ codes. Code lists accept commas or semicolons and either FP6001 or 6001 notation
 Promoted warnings fail compilation
 and prevent publication of new outputs.
 
-The project SDK reports diagnostics through MSBuild with their source locations.
+The project SDK reports diagnostics through MSBuild with start/end coordinates
+and warning severity. Help, explanations and related locations are logged as
+messages, so they do not create extra error-list entries. Structured payloads
+remain in compiler JSON and cached warning reports. IDE presentation is subject
+to the IDE's MSBuild support.
 See the [SDK configuration](../../build/msbuild.md) for project warning properties
 and the [compiler CLI](../program-structure/cli.md) for direct invocation.
 

@@ -22,8 +22,7 @@ and optional units; a library contains units and no program. Container identity
 comes from the source header. Declarations precede body binding, so source-list
 order does not choose dependencies or prohibit mutually recursive unit calls.
 Binding/emission order is canonicalized by qualified container name. Diagnostics
-retain the source containing the error; reference-input diagnostics use a stable
-source location.
+retain the source containing the error; non-source setup failures have no location.
 
 Source records declare their interface graph before constructed field and method
 types are validated. Transparent aliases retain resolved targets and receive
@@ -58,8 +57,20 @@ Compile and Analyze share PreparedCompilation: parsing, target/reference checks,
 declarations, binding, optional documentation validation and async lowering.
 The emitter consumes those prepared plans without rebinding or lowering again.
 Required support metadata, including generated domain helpers, is checked in
-preparation. Analysis preserves fail-fast diagnostics and warning policy. Project
+preparation. Analysis shares bounded diagnostic recovery and warning policy. Project
 discovery belongs to [Fpas.Workspaces](workspaces.md).
+
+[CompilerDiagnostic](../../src/Fpas.Compiler/CompilerDiagnostic.cs)
+owns nullable source locations with exclusive UTF-16 end positions, expectations,
+help, related notes and exact proposed edits. Parser recovery synchronizes at
+statement boundaries; body binding isolates independent routines and units.
+DiagnosticBag stops after 50 errors with FP0003. A failed phase never reaches
+emission or publishes a semantic snapshot. Invalid declarations/imports can
+still stop their phase; failed local bodies are abandoned to limit cascades.
+The [diagnostic reference](../pascal/tools/diagnostics.md) owns the public payload
+and presentation contract. CLI text/check share one renderer; source-generated
+JSON carries the same facts. MSBuild consumes the JSON without loading the
+compiler into its host and logs explanatory notes as messages.
 
 Analyze accepts a CancellationToken, observed during syntax, metadata, binding,
 flow, documentation and lowering work. Cancellation throws OperationCanceledException

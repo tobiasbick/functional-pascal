@@ -1,4 +1,5 @@
 using Fpas.Workspaces.Queries;
+using Fpas.Cli.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -32,6 +33,7 @@ internal sealed record QueryResult(string Status, string? Reason, string? Contex
     }
 }
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    Converters = [typeof(SeverityConverter), typeof(ApplicabilityConverter)])]
 [JsonSerializable(typeof(QueryResult))]
 internal partial class QueryJson : JsonSerializerContext;

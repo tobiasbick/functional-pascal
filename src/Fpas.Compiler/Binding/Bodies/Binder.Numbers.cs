@@ -19,7 +19,9 @@ internal sealed partial class Binder
             var type = suffix switch { "l" => TypeSymbol.Int64, "u" => TypeSymbol.UInt32, "ul" or "lu" => TypeSymbol.UInt64, _ => TypeSymbol.Int32 };
             var value = BigInteger.Parse(hex ? "0" + digits : digits, hex ? NumberStyles.AllowHexSpecifier : NumberStyles.None, CultureInfo.InvariantCulture);
             if (negative) value = -value;
-            if (!NumericFacts.Fits(value, type)) throw source.Error("FP3002", "The integral literal is outside its selected type's range; use an appropriate suffix.", token.Position, token.Length);
+            if (!NumericFacts.Fits(value, type)) throw source.Error("FP3002", "The integral literal is outside its selected type's range; use an appropriate suffix.", token.Position, token.Length,
+                help: "A literal's suffix selects its type before assignment conversion. Use a suffix whose range contains the value.",
+                expectation: new("value", [$"{NumericFacts.Min(type).ToString(CultureInfo.InvariantCulture)}..{NumericFacts.Max(type).ToString(CultureInfo.InvariantCulture)}"], value.ToString(CultureInfo.InvariantCulture)));
             return BoundNumber.Create(type, NumericValue.ConvertTo(value, type, true));
         }
         var suffixReal = char.ToLowerInvariant(text[^1]);
@@ -28,7 +30,8 @@ internal sealed partial class Binder
         if (suffixReal == 'm' && decimal.TryParse(content, NumberStyles.Float, CultureInfo.InvariantCulture, out var money)) return new BoundNumber(TypeSymbol.Decimal, money);
         if (suffixReal == 'f' && float.TryParse(content, NumberStyles.Float, CultureInfo.InvariantCulture, out var single) && float.IsFinite(single)) return new BoundNumber(TypeSymbol.Single, single);
         if (suffixReal is not ('m' or 'f') && double.TryParse(content, NumberStyles.Float, CultureInfo.InvariantCulture, out var real) && double.IsFinite(real)) return new BoundDouble(real);
-        throw source.Error("FP3002", "The floating/decimal literal is outside its finite representation.", token.Position, token.Length);
+        throw source.Error("FP3002", "The floating/decimal literal is outside its finite representation.", token.Position, token.Length,
+            expectation: new("value", ["finite " + (suffixReal == 'm' ? "decimal" : suffixReal == 'f' ? "float" : "double")], negative ? "-" + token.Text : token.Text));
     }
 
     private static bool ConstantFits(BoundExpression value, TypeSymbol target)

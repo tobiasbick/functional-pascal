@@ -294,7 +294,9 @@ are structured arguments, not shell-expanded command text. The parser's `@file`
 response syntax is disabled; `@` is a literal character in source paths.
 Default diagnostics
 go to stderr; successful output paths go to stdout. JSON mode emits one result
-object with diagnostic codes and source locations. See [diagnostics](../tools/diagnostics.md).
+object with codes, nullable source ranges, expected/found data, help, related notes
+and proposed edits. Text output includes bounded source excerpts and markers.
+See [diagnostics](../tools/diagnostics.md) for coordinates, recovery and limits.
 Argument errors use `FP0001` and exit code 2, compilation/I/O failures use exit
 code 1, and success/help/version use exit code 0. JSON argument errors contain
 one result object without additional parser output.

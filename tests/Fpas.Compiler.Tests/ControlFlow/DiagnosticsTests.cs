@@ -41,7 +41,7 @@ public sealed class DiagnosticsTests
         var source = string.Join(newline, "// comment", "program Example;", "begin", "const Value := 'x';", "end;", "end program;");
         var diagnostic = Assert.Single(Compile(source).Diagnostics);
         Assert.Equal("FP2002", diagnostic.Code);
-        Assert.Equal(new SourceLocation("example.fpas", 4, 13, 2), diagnostic.Location);
+        Assert.Equal(new SourceLocation("example.fpas", 4, 13, 2, 4, 15, source.IndexOf(":=", StringComparison.Ordinal)), diagnostic.Location);
     }
 
     [Theory]

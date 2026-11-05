@@ -88,7 +88,8 @@ internal sealed partial class Parser
             Expect(")");
         }
         else if (Current.Kind == TokenKind.Identifier) expression = new NameExpressionSyntax(tokens[position++]);
-        else throw source.Error("FP2003", $"Expected an expression; '{Current.Text}' is not supported here.", Current.Position, Current.Length);
+        else throw source.Error("FP2003", $"Expected an expression; '{Current.Text}' is not supported here.", Current.Position, Current.Length,
+            expectation: new("expression", ["expression"], Current.Kind == TokenKind.End ? "end of file" : Current.Text));
         return ReadSuffix(Extent(expression, start), allowWith);
     }
 

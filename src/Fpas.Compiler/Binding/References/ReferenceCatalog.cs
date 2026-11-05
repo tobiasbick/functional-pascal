@@ -25,11 +25,11 @@ internal sealed partial class ReferenceCatalog : IDisposable
                 try { assembly = new(path, captureFingerprints); }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or BadImageFormatException)
                 {
-                    throw source.Error("FP4001", $"Cannot read reference '{path}': {exception.Message}", 0);
+                    throw new CompilationFailure(new("FP4001", $"Cannot read reference '{path}': {exception.Message}", null) { InputPath = path });
                 }
                 catalog.assemblies.Add(assembly);
                 if (!names.Add(assembly.Identity.Name))
-                    throw source.Error("FP4002", $"Multiple references declare assembly '{assembly.Identity.Name}'.", 0);
+                    throw new CompilationFailure(new("FP4002", $"Multiple references declare assembly '{assembly.Identity.Name}'.", null));
                 foreach (var handle in assembly.Reader.TypeDefinitions)
                 {
                     source.CheckCancellation();
@@ -45,9 +45,9 @@ internal sealed partial class ReferenceCatalog : IDisposable
                 }
             }
             catalog.Runtime = catalog.assemblies.SingleOrDefault(a => a.Identity.Name == "System.Runtime")?.Identity
-                ?? throw source.Error("FP4001", "Supply the net10.0 System.Runtime reference assembly.", 0);
+                ?? throw new CompilationFailure(new("FP4001", "Supply the net10.0 System.Runtime reference assembly.", null));
             if (catalog.Runtime.Version.Major != 10)
-                throw source.Error("FP4001", "This compiler currently requires net10.0 reference assemblies.", 0);
+                throw new CompilationFailure(new("FP4001", "This compiler currently requires net10.0 reference assemblies.", null));
             return catalog;
         }
         catch

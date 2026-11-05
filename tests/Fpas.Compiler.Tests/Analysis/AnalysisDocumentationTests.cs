@@ -34,7 +34,7 @@ public sealed class AnalysisDocumentationTests
         {
             Assert.Equal("FP6001", diagnostic.Code);
             Assert.Equal(promote ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning, diagnostic.Severity);
-            Assert.Equal("docs.fpas", diagnostic.Location.Path); Assert.Equal(4, diagnostic.Location.Line);
+            Assert.Equal("docs.fpas", diagnostic.Location!.Path); Assert.Equal(4, diagnostic.Location.Line);
         }
     }
 }

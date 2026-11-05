@@ -67,7 +67,8 @@ internal sealed partial class Binder
         foreach (var syntax in record.Syntax.Methods)
         {
             var symbol = record.UserMethods[syntax.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, syntax));
-            record.Bodies.Add(symbol, Context().BindRoutine(symbol, syntax.Statements, syntax.Name.Position, syntax.Contracts));
+            try { record.Bodies.Add(symbol, Context().BindRoutine(symbol, syntax.Statements, syntax.Name.Position, syntax.Contracts)); }
+            catch (CompilationFailure failure) { source.Diagnostics.Add(failure.Diagnostic); }
         }
         foreach (var field in record.Fields.Where(field => field.Default is not null))
         {

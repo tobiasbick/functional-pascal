@@ -36,6 +36,8 @@ Companion sources share an explicit fence label, for example
 Sources are compiled together by the same documentation runner used for handbook
 examples. A unit also compiles independently with its unit companions. Do not
 depend on snippets from unrelated projects or introduce per-example source rewrites.
+The [FPAS checker](../tools/documentation-examples.md) owns extraction and explicit
+contexts; C# regression tests retain complete-example execution assertions.
 
 After changing language behavior or an authoring workflow:
 

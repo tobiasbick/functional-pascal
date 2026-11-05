@@ -1,0 +1,298 @@
+async program DocExamples;
+
+uses
+  DocExamples.Model as M, DocExamples.Markdown as Markdown, DocExamples.Validation as Validation,
+  System as S, System.IO as IO, System.Console as Console, System.Text as Text,
+  System.Text.Json as J, System.Security.Cryptography as Crypto,
+  System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Arguments(args: string[]): M.Options;
+begin
+  var Root: string := S.Environment.CurrentDirectory;
+  var Output: string := '';
+  var Compiler: string := '';
+  var References: string := S.Environment.GetEnvironmentVariable('FPAS_REFERENCE_DIR') ?? '';
+  var Dotnet: string := S.Environment.GetEnvironmentVariable('DOTNET_HOST_PATH') ?? '';
+  var Contexts: string := '';
+  var Timeout: int := 10;
+  var Jobs: int := 4;
+  var Json: bool := false;
+  const Documents: C.List<string> := new C.List<string>();
+  const ExtraReferences: C.List<string> := new C.List<string>();
+  var Index: int := 0;
+  while Index < args.Length do
+    const Name: string := args[Index];
+    if Name = '--help' then
+      Console.WriteLine(
+        'Check Markdown FPAS examples with explicit contexts and runtime expectations.'
+      );
+      Console.WriteLine(
+        'Options: --root PATH --document PATH (repeatable) --output NEW_PATH --compiler CLI_DLL --reference-dir PATH --reference DLL (repeatable) --dotnet HOST --contexts PATH --timeout SECONDS --jobs COUNT --json'
+      );
+      Console.WriteLine('Examples:');
+      Console.WriteLine(
+        '  dotnet DocExamples.dll --root . --compiler bin/Fpas.Cli.dll --reference-dir PATH'
+      );
+      Console.WriteLine(
+        '  dotnet DocExamples.dll --document docs/pascal/language/types/records.md --json'
+      );
+      S.Environment.Exit(0);
+    elsif Name = '--json' then
+      Json := true;
+    else
+      if Index + 1 >= args.Length then
+        raise new S.ArgumentException('Missing value after ' + Name);
+      end if;
+
+      Index := Index + 1;
+      const Value: string := args[Index];
+      case Name of
+        when '--root':
+          Root := IO.Path.GetFullPath(Value);
+        when '--output':
+          Output := IO.Path.GetFullPath(Value);
+        when '--compiler':
+          Compiler := IO.Path.GetFullPath(Value);
+        when '--reference-dir':
+          References := IO.Path.GetFullPath(Value);
+        when '--dotnet':
+          Dotnet := IO.Path.GetFullPath(Value);
+        when '--contexts':
+          Contexts := IO.Path.GetFullPath(Value);
+        when '--document':
+          Documents.Add(Value);
+        when '--reference':
+          ExtraReferences.Add(IO.Path.GetFullPath(Value));
+        when '--timeout':
+          Timeout := int.Parse(Value, S.Globalization.CultureInfo.InvariantCulture);
+        when '--jobs':
+          Jobs := int.Parse(Value, S.Globalization.CultureInfo.InvariantCulture);
+        else
+          raise new S.ArgumentException('Unknown option ' + Name);
+      end case;
+    end if;
+
+    Index := Index + 1;
+  end while;
+
+  if Timeout < 1 or Timeout > 3600 or Jobs < 1 or Jobs > 8 then
+    raise new S.ArgumentException('Use --timeout 1..3600 and --jobs 1..8');
+  end if;
+
+  if Compiler.Length = 0 then
+    Compiler := IO.Path.Combine(Root, 'bin', 'Fpas.Cli.dll');
+  end if;
+
+  if not IO.File.Exists(Compiler) then
+    raise new S.ArgumentException('Select an existing CLR compiler with --compiler CLI_DLL');
+  end if;
+
+  if not IO.Directory.Exists(References) or not IO.File.Exists(
+    IO.Path.Combine(References, 'System.Runtime.dll')
+  )
+  then
+    raise new S.ArgumentException(
+      'Select net10.0 reference assemblies with --reference-dir PATH or FPAS_REFERENCE_DIR'
+    );
+  end if;
+
+  if Dotnet.Length = 0 then
+    const DotnetRoot: string := S.Environment.GetEnvironmentVariable('DOTNET_ROOT') ?? '';
+    const HostName: string := if S.OperatingSystem.IsWindows() then 'dotnet.exe'
+      else 'dotnet'
+      end if;
+    if DotnetRoot.Length > 0 then
+      Dotnet := IO.Path.Combine(DotnetRoot, HostName);
+    end if;
+
+    if not IO.File.Exists(Dotnet) then
+      for Directory: string in (S.Environment.GetEnvironmentVariable('PATH') ?? '').Split(
+        IO.Path.PathSeparator
+      ) do
+        const Candidate: string := IO.Path.Combine(Directory, HostName);
+        if IO.File.Exists(Candidate) then
+          Dotnet := IO.Path.GetFullPath(Candidate);
+          break;
+        end if;
+      end for;
+    end if;
+  end if;
+
+  if not IO.File.Exists(Dotnet) then
+    raise new S.ArgumentException('Select an existing .NET host with --dotnet PATH');
+  end if;
+
+  if Contexts.Length = 0 then
+    Contexts := IO.Path.Combine(Root, 'apps', 'doc-examples', 'contexts');
+  end if;
+
+  if Output.Length = 0 then
+    Output := IO.Path.Combine(
+      Root,
+      '.temp-data',
+      'doc-examples',
+      'run-' + S.Guid.NewGuid().ToString('N')
+    );
+  end if;
+
+  if IO.Directory.Exists(Output) or IO.File.Exists(Output) then
+    raise new S.ArgumentException('Output directory must be new: ' + Output);
+  end if;
+
+  if Documents.Count = 0 then
+    Documents.AddRange(
+      IO.Directory.GetFiles(
+        IO.Path.Combine(Root, 'docs', 'pascal'),
+        '*.md',
+        IO.SearchOption.AllDirectories
+      )
+    );
+    Documents.Add(IO.Path.Combine(Root, 'README.md'));
+  end if;
+  const Selected: C.SortedSet<string> := new C.SortedSet<string>(S.StringComparer.Ordinal);
+  for Document: string in Documents do
+    discard Selected.Add(IO.Path.GetFullPath(Document, Root));
+  end for;
+  const Paths: C.List<string> := new C.List<string>(Selected);
+  return new M.Options(
+    Root,
+    Output,
+    Compiler,
+    References,
+    Dotnet,
+    Contexts,
+    Paths.ToArray(),
+    ExtraReferences.ToArray(),
+    Timeout,
+    Jobs,
+    Json
+  );
+end function;
+
+procedure Failure(Message: string; Json: bool);
+begin
+  if Json then
+    const Settings: J.JsonSerializerOptions := new J.JsonSerializerOptions();
+    Settings.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
+    Console.WriteLine(
+      J.JsonSerializer.Serialize<M.FailureReport>(
+        new M.FailureReport(1, 0, 1, [], Message),
+        Settings
+      )
+    );
+  else
+    Console.Error.WriteLine(Message);
+  end if;
+end procedure;
+
+begin
+  Console.OutputEncoding := new Text.UTF8Encoding(false);
+  S.Globalization.CultureInfo.CurrentCulture := S.Globalization.CultureInfo.InvariantCulture;
+  S.Globalization.CultureInfo.CurrentUICulture := S.Globalization.CultureInfo.InvariantCulture;
+  using const Cancellation: T.CancellationTokenSource := new T.CancellationTokenSource();
+  const Handler: S.ConsoleCancelEventHandler := procedure(Sender: object?; Event: S.ConsoleCancelEventArgs) begin
+    Event.Cancel := true;
+    Cancellation.Cancel();
+  end procedure;
+  subscribe Console.CancelKeyPress with Handler;
+  try
+    const Options: M.Options := Arguments(args);
+    const Items: C.List<M.Example> := new C.List<M.Example>();
+    for Document: string in Options.Documents do
+      Items.AddRange(Markdown.Read(Document));
+    end for;
+    const Examples: C.List<M.Example> := new C.List<M.Example>();
+    for Item: M.Example in Items do
+      if Item.Language = 'pascal' then
+        Examples.Add(Item);
+      end if;
+    end for;
+
+    if Examples.Count = 0 then
+      raise new IO.InvalidDataException('No Pascal examples found');
+    end if;
+
+    discard IO.Directory.CreateDirectory(Options.Output);
+    const Outcomes: C.List<M.Outcome> := new C.List<M.Outcome>();
+    var Index: int := 0;
+    while Index < Examples.Count do
+      const Pending: C.List<Tasks.Task<M.Outcome>> := new C.List<Tasks.Task<M.Outcome>>();
+      for Offset: int := 0 to Options.Jobs - 1 do
+        if Index + Offset < Examples.Count then
+          Pending.Add(
+            Validation.Check(
+              Examples[Index + Offset],
+              Options,
+              Items.ToArray(),
+              IO.Path.Combine(Options.Output, 'example-' + (Index + Offset + 1).ToString()),
+              Cancellation.Token
+            )
+          );
+        end if;
+      end for;
+
+      Outcomes.AddRange(await Tasks.Task.WhenAll<M.Outcome>(Pending.ToArray()));
+      Index := Index + Options.Jobs;
+    end while;
+    var Failed: int := 0;
+    for Item: M.Outcome in Outcomes do
+      if not Item.Passed then
+        Failed := Failed + 1;
+        if not Options.Json then
+          Console.Error.WriteLine(
+            Item.Document + ':' + Item.Line.ToString() + ' [' + Item.Id + '] ' + Item.Stage + ': ' +
+            Item.Message
+          );
+        end if;
+      end if;
+    end for;
+
+    Cancellation.Token.ThrowIfCancellationRequested();
+    const Identity: string := IO.Path.Combine(S.AppContext.BaseDirectory, 'DocExamples.sdk.txt');
+    const SdkCompiler: string := if IO.File.Exists(
+      Identity
+    ) then IO.File.ReadAllText(Identity).Trim() else '' end if;
+    const SdkHash: string := if IO.File.Exists(SdkCompiler) then S.Convert.ToHexString(
+      Crypto.SHA256.HashData(IO.File.ReadAllBytes(SdkCompiler))
+    ) else '' end if;
+    const Report: M.Report := new M.Report(
+      1,
+      Options.Root,
+      Options.Compiler,
+      S.Convert.ToHexString(Crypto.SHA256.HashData(IO.File.ReadAllBytes(Options.Compiler))),
+      Options.References,
+      Options.ExtraReferences,
+      SdkCompiler,
+      SdkHash,
+      Options.Output,
+      Outcomes.Count,
+      Failed,
+      Outcomes.ToArray()
+    );
+    const Settings: J.JsonSerializerOptions := new J.JsonSerializerOptions();
+    Settings.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
+    const Json: string := J.JsonSerializer.Serialize<M.Report>(Report, Settings);
+    IO.File.WriteAllText(IO.Path.Combine(Options.Output, 'report.json'), Json + #10);
+    if Options.Json then
+      Console.WriteLine(Json);
+    else
+      Console.WriteLine(
+        'Documentation examples: ' + (Outcomes.Count - Failed).ToString() + ' passed, ' +
+        Failed.ToString() + ' failed (' + Outcomes.Count.ToString() + ' total)'
+      );
+    end if;
+
+    if Failed > 0 then
+      S.Environment.ExitCode := 1;
+    end if;
+  catch Error: S.OperationCanceledException do
+    Failure('Documentation check cancelled', S.Array.IndexOf<string>(args, '--json') >= 0);
+    S.Environment.ExitCode := 130;
+  catch Error: S.Exception do
+    Failure(Error.Message, S.Array.IndexOf<string>(args, '--json') >= 0);
+    S.Environment.ExitCode := 1;
+  finally
+    unsubscribe Console.CancelKeyPress with Handler;
+  end try;
+end;
+end program;

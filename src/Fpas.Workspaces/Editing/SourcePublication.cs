@@ -60,7 +60,7 @@ public static class SourcePublication
             foreach (var item in staged)
             {
                 await VerifyAsync([item.Change], token);
-                File.Move(item.Temporary, item.Change.Path, overwrite: true);
+                Replace(item.Temporary, item.Change.Path);
                 written.Add(item.Change);
             }
         }
@@ -74,7 +74,7 @@ public static class SourcePublication
                 {
                     // Do not overwrite another writer's changes during rollback.
                     await VerifyAsync([change with { Original = change.Replacement }], CancellationToken.None);
-                    File.Move(backup, change.Path, overwrite: true);
+                    Replace(backup, change.Path);
                     written.Remove(change);
                 }
                 catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or ContextFailure)
@@ -106,5 +106,12 @@ public static class SourcePublication
         await using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             await stream.WriteAsync(bytes, token);
         if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(path, File.GetUnixFileMode(source));
+    }
+
+    private static void Replace(string replacement, string source)
+    {
+        // ReplaceFile preserves the destination's Windows access rules and file identity.
+        if (OperatingSystem.IsWindows()) File.Replace(replacement, source, destinationBackupFileName: null);
+        else File.Move(replacement, source, overwrite: true);
     }
 }

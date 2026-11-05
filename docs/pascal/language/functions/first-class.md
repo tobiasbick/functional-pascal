@@ -2,7 +2,7 @@
 
 Pass behavior using ordinary CLR delegate values and typed lambdas.
 
-```pascal fragment
+```pascal fragment context=body
 const Double: function(int): int :=
   function(Value: int): int => Value * 2;
 

@@ -28,7 +28,8 @@ Formatting shares the source-publication service and retains its CLI regressions
 Refactoring tests cover overload/callable selection, source interface families,
 generics, named arguments, identifier escaping, shadowing/capture, linked owners,
 plan consistency, stale inputs and actual cross-DLL execution after renaming.
-AnalysisSignalTests covers initial planning and post-publication cancellation.
+AnalysisSignalTests covers initial planning and post-publication cancellation
+with Linux SIGINT and native Windows console control events.
 
 Testing contains packaged SDK/native VSTest acceptance for FPAS test libraries:
 xUnit, MSTest and NUnit templates, data/async/lifecycle behavior, native reports,
@@ -41,7 +42,7 @@ ApiDocumentation verifies name-based source/metadata lookup, exact XML IDs again
 real C# output, unused framework APIs, public boundaries, generic/array/byref
 signatures, source preference, scoped/paged results, missing/invalid XML,
 documentation budgets, stale inputs and deadlines. The CLI also runs from a fresh
-SDK package; AnalysisSignalTests checks SIGINT and preparation cleanup.
+SDK package; AnalysisSignalTests checks console interruption and preparation cleanup.
 
 Build the toolchain and tests before executing them. Do not rebuild toolchain
 binaries while tests use them. Markdown and checked-in examples are copied during
@@ -146,11 +147,17 @@ dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build 
 
 ## Documentation examples
 
-LanguageSpecificationTests compiles complete README, handbook, and agent-reference fences
-through the CLI, checks PDB/XML outputs, and executes programs with explicit
-behavioral assertions. Companion units use project labels. File/environment/HTTP
+DocExamplesFixture builds the FPAS application with a fresh packaged SDK. It checks
+complete README, handbook and agent-reference fences and explicit fragment contexts.
+LanguageSpecificationTests uses its assemblies, checks PDB/XML outputs and executes
+programs with existing behavioral assertions. Companion units use project labels. File/environment/HTTP
 inputs are controlled; timer counts and public network availability are not
 ordinary test prerequisites.
+
+DocExamplesBehaviorTests deliberately breaks marker syntax, IDs, paths, contexts,
+includes, companions, expected diagnostics and runtime expectations. It verifies
+documented manifests without source rewriting, empty-selection rejection and
+timeout/cancellation cleanup of actual programs and descendants.
 
 AgentReferenceTests checks policy, unique complete examples, local links, and
 exact o200k_base token budgets using test-only packaged vocabulary. HandbookTests

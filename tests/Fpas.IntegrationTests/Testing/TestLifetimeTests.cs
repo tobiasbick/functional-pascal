@@ -1,18 +1,16 @@
 using Fpas.IntegrationTests.Build;
-using Fpas.IntegrationTests.Debugging;
+using Fpas.IntegrationTests.Processes.Support;
 using Fpas.IntegrationTests.Projects;
-using Fpas.Processes;
 using Fpas.Tests.Support;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Testing;
 
 public sealed class TestLifetimeTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
-    [LinuxFact]
-    public Task SIGINT_joins_an_actual_waiting_test_host() => WaitingHost(cancel: true);
+    [Fact]
+    public Task Console_interrupt_joins_an_actual_waiting_test_host() => WaitingHost(cancel: true);
 
     [Fact]
     public Task The_deadline_joins_an_actual_waiting_test_host() => WaitingHost(cancel: false);
@@ -38,7 +36,7 @@ public sealed class TestLifetimeTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         var built = await ProjectCliFixture.Cli(directory, "build", project, "--report", "json");
         Assert.True(built.ExitCode == 0, built.Output + built.Error);
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        await using var process = OwnedProcess.Start(TestEnvironment.DotnetHost,
+        await using var process = InterruptibleProcess.Start(TestEnvironment.DotnetHost,
             [TestEnvironment.Metadata("FpasCliPath"), "test", project, "--no-build", "--timeout", "15", "--report", "json"],
             directory.Path, new Dictionary<string, string> { ["FPAS_TEST_READY"] = ready });
         process.Input.Dispose();
@@ -52,7 +50,7 @@ public sealed class TestLifetimeTests(SdkPackageFixture sdk) : IClassFixture<Sdk
                 await Task.Delay(20, deadline.Token);
             }
             var child = int.Parse(await File.ReadAllTextAsync(ready, deadline.Token), System.Globalization.CultureInfo.InvariantCulture);
-            if (cancel) Assert.Equal(0, Kill(process.Id, 2));
+            if (cancel) await process.Interrupt();
             await process.WaitForExit(deadline.Token);
             Assert.Equal(cancel ? 130 : 1, process.ExitCode); Assert.Empty(await error);
             using var report = JsonDocument.Parse(await output);
@@ -61,6 +59,4 @@ public sealed class TestLifetimeTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         }
         finally { await process.TerminateAsync(); }
     }
-
-    [DllImport("libc", EntryPoint = "kill", SetLastError = true)] private static extern int Kill(int pid, int signal);
 }

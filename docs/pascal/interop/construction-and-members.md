@@ -3,12 +3,16 @@
 Construct .NET objects with `new` and use their public members by their metadata
 names. Import each library namespace or type with an explicit alias.
 
-```pascal fragment
+```pascal
+program ConstructionAndMembers;
+
 uses System as Sys, System.Net.Http as Http;
 
-// Inside a routine:
-const Client: Http.HttpClient := new Http.HttpClient();
-Client.Timeout := Sys.TimeSpan.FromSeconds(10.0);
+begin
+  using const Client: Http.HttpClient := new Http.HttpClient();
+  Client.Timeout := Sys.TimeSpan.FromSeconds(10.0);
+end;
+end program;
 ```
 
 `new Type(Arguments)` constructs an accessible CLR class, struct, language record,

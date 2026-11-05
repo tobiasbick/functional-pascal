@@ -3,7 +3,7 @@
 A transparent alias gives an existing type a source name without creating a
 new CLR identity. Use nominal domains when a distinct identity is required.
 
-```pascal fragment
+```pascal fragment context=declarations
 type UserName = string;
 type Names = Collections.List<string>;
 type Matrix = double[,];

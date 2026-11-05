@@ -2,7 +2,7 @@
 
 Case evaluates one selector and tests ordered arms with typed patterns.
 
-```pascal fragment
+```pascal fragment context=shape
 const Area: double := case ShapeValue of
   when Shape.Dot: 0.0;
   when Shape.Circle(const Radius: double): Math.PI * Radius * Radius;

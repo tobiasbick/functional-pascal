@@ -29,7 +29,7 @@ Framework accessibility, constructors and lifecycle rules still apply.
 
 In an xUnit unit, import `Xunit as X` and declare public routines:
 
-```pascal fragment
+```pascal fragment context=tests
 [X.FactAttribute]
 public procedure Addition();
 begin
@@ -136,7 +136,8 @@ JSON response directs the caller to native artifacts instead of reporting succes
 | 2 | Invalid arguments, non-test selection or unsupported runner mode |
 | 130 | User cancellation after owned-process cleanup |
 
-Native Windows process/console acceptance remains tracked in [CLI gaps](../../future/cli-gap.md).
+Native Windows console interruption and waiting-host cleanup are covered by the
+[CLI acceptance tests](../../../tests/coverage.md#native-windows-cli-acceptance).
 
 ## See also
 

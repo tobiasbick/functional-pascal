@@ -1,0 +1,224 @@
+unit DocExamples.Markdown;
+
+uses
+  DocExamples.Model as M, System as S, System.IO as IO,
+  System.Text as Text, System.Text.RegularExpressions as R, System.Collections.Generic as C;
+
+public procedure Invalid(Document: string; Line: int; Message: string);
+begin
+  raise new IO.InvalidDataException(Document + ':' + Line.ToString() + ': ' + Message);
+end procedure;
+
+public function ValidName(Name: string): bool;
+begin
+  return R.Regex.IsMatch(Name, '^[A-Za-z0-9_-]+$');
+end function;
+
+public function SafePath(Name: string): bool;
+begin
+  if Name.Length = 0 or IO.Path.IsPathRooted(
+    Name
+  ) or Name.Contains('\') or Name.Contains(':') or Name.Contains('"')
+  then
+    return false;
+  end if;
+
+  for Part: string in Name.Split(#47) do
+    if Part.Length = 0 or Part = '.' or Part = '..' then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function Instructions(Document: string; Line: int; Info: string; Source: string): M.Example;
+begin
+  const Words: string[] := R.Regex.Split(Info.Trim(), '\s+');
+  var Item: M.Example := new M.Example(Document, Line, Words[0], Source, 'line-' + Line.ToString());
+  const Seen: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
+  for Index: int := 1 to Words.Length - 1 do
+    const Word: string := Words[Index];
+    const Parts: string[] := Word.Split(#61, 2);
+    const Key: string := Parts[0];
+    if not Seen.Add(Key) then
+      Invalid(Document, Line, 'Repeated fence option ' + Key);
+    end if;
+
+    if Word = 'fragment' then
+      Item := Item with Fragment := true; end with;
+    elsif Word = 'run' then
+      Item := Item with Execute := true; end with;
+    else
+      if Parts.Length <> 2 or Parts[1].Length = 0 then
+        Invalid(Document, Line, 'Unknown fence option ' + Word);
+      end if;
+      const Value: string := Parts[1];
+      case Key of
+        when 'id':
+          Item := Item with Id := Value; end with;
+        when 'context':
+          Item := Item with Context := Value; end with;
+        when 'error':
+          Item := Item with ExpectedError := Value; end with;
+        when 'project':
+          Item := Item with Project := Value; end with;
+        when 'file':
+          Item := Item with FileName := Value; end with;
+        when 'manifest':
+          Item := Item with Manifest := Value; end with;
+        when 'stdout':
+          Item := Item with ExpectedOutput := Value; end with;
+        when 'exception':
+          Item := Item with ExpectedException := Value; end with;
+        else
+          Invalid(Document, Line, 'Unknown fence option ' + Key);
+      end case;
+    end if;
+  end for;
+
+  for Name: string in [Item.Id, Item.Context, Item.Project] do
+    if Name.Length > 0 and not ValidName(Name) then
+      Invalid(Document, Line, 'Invalid example/context/project name ' + Name);
+    end if;
+  end for;
+
+  for Name: string in [Item.FileName, Item.Manifest, Item.ExpectedOutput] do
+    if Name.Length > 0 and not SafePath(Name) then
+      Invalid(Document, Line, 'Invalid example output path ' + Name);
+    end if;
+  end for;
+
+  if Item.Fragment and Item.Context.Length = 0 then
+    Invalid(Document, Line, 'A fragment requires context=NAME');
+  end if;
+
+  if Item.ExpectedError.Length > 0 and not R.Regex.IsMatch(Item.ExpectedError, '^FP[0-9]{4}$') then
+    Invalid(Document, Line, 'Expected error=FP followed by four digits');
+  end if;
+
+  if Item.Manifest.Length > 0 and Item.Project.Length = 0 then
+    Invalid(Document, Line, 'manifest requires project=NAME');
+  end if;
+
+  if Item.Execute then
+    if Item.ExpectedError.Length > 0 then
+      Invalid(
+        Document,
+        Line,
+        'run requires successful compilation; use exception for a runtime failure'
+      );
+    end if;
+
+    if (Item.ExpectedOutput.Length = 0) = (Item.ExpectedException.Length = 0) then
+      Invalid(Document, Line, 'run requires exactly one of stdout=PATH or exception=TYPE');
+    end if;
+
+    if Item.ExpectedException.Length > 0 and not R.Regex.IsMatch(
+      Item.ExpectedException,
+      '^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$'
+    )
+    then
+      Invalid(Document, Line, 'Invalid CLR exception type');
+    end if;
+  elsif Item.ExpectedOutput.Length > 0 or Item.ExpectedException.Length > 0 then
+    Invalid(Document, Line, 'Runtime expectations require run');
+  end if;
+
+  if Item.Language <> 'pascal' then
+    if Item.Project.Length = 0 or Item.FileName.Length = 0 then
+      Invalid(Document, Line, 'Supporting fences require project and file');
+    end if;
+
+    if Item.Fragment or Item.Execute or Item.Context.Length > 0 or Item.ExpectedError.Length > 0
+      or Item.Manifest.Length > 0
+    then
+      Invalid(Document, Line, 'Supporting fences accept only id, project and file');
+    end if;
+  end if;
+
+  return Item;
+end function;
+
+// Track every Markdown fence, including unsupported languages, so nested-looking source is never selected.
+public function Read(Document: string): M.Example[];
+begin
+  const Items: C.List<M.Example> := new C.List<M.Example>();
+  const Ids: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
+  const Lines: string[] := IO.File.ReadAllText(Document, Text.Encoding.UTF8).Replace(
+    #13 + '' + #10,
+    #10 + ''
+  ).Replace(#13, #10).Split(#10);
+  var Delimiter: char := #0;
+  var Width: int := 0;
+  var Start: int := 0;
+  var Info: string := '';
+  const Source: Text.StringBuilder := new Text.StringBuilder();
+  for Index: int := 0 to Lines.Length - 1 do
+    const Line: string := Lines[Index];
+    const Trimmed: string := Line.Trim();
+    if Delimiter <> #0 then
+      var Count: int := 0;
+      while Count < Trimmed.Length and Trimmed[Count] = Delimiter do
+        Count := Count + 1;
+      end while;
+
+      if Count >= Width and Trimmed.Substring(Count).Length = 0 then
+        const Language: string := R.Regex.Split(Info, '\s+')[0];
+        if (Language.Equals(
+          'pascal',
+          S.StringComparison.OrdinalIgnoreCase
+        ) or Language.Equals('fpas', S.StringComparison.OrdinalIgnoreCase)) and Language <> 'pascal'
+        then
+          Invalid(Document, Start, 'Use the canonical pascal fence tag');
+        end if;
+
+        if Info.Contains(
+          'project='
+        ) and Language <> 'pascal' and Language <> 'xml' and Language <> 'text' and Language <>
+          'json'
+        then
+          Invalid(Document, Start, 'Unsupported project fence language ' + Language);
+        end if;
+
+        if Language = 'pascal' or ((Language = 'xml' or Language = 'text' or Language = 'json')
+          and Info.Contains(
+          'project='
+        ))
+        then
+          const Item: M.Example := Instructions(Document, Start, Info, Source.ToString());
+          if not Ids.Add(Item.Id) then
+            Invalid(Document, Start, 'Duplicate example id ' + Item.Id);
+          end if;
+
+          Items.Add(Item);
+        end if;
+
+        Delimiter := #0;
+      else
+        discard Source.Append(Line).Append(#10);
+      end if;
+    elsif Trimmed.StartsWith('```') or Trimmed.StartsWith('~~~') then
+      Delimiter := Trimmed[0];
+      Width := 0;
+      while Width < Trimmed.Length and Trimmed[Width] = Delimiter do
+        Width := Width + 1;
+      end while;
+
+      Info := Trimmed.Substring(Width).Trim();
+      if Delimiter = #96 and Info.Contains(#96) then
+        Invalid(Document, Index + 1, 'Invalid backtick fence');
+      end if;
+
+      discard Source.Clear();
+      Start := Index + 1;
+    end if;
+  end for;
+
+  if Delimiter <> #0 then
+    Invalid(Document, Start, 'Unclosed Markdown fence');
+  end if;
+
+  return Items.ToArray();
+end function;
+end unit;

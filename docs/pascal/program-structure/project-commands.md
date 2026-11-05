@@ -103,9 +103,10 @@ dependency files.
 Normal mode inherits stdin/stdout/stderr, preserving piped input and terminal
 handles. Build messages go to stderr. JSON mode inherits stdin and captures
 program stdout/stderr as UTF-8 text, with a shared 1 MiB limit; no target output
-is mixed into protocol stdout. An exceeded output limit is explicit. Each run
-owns its process group/job and terminates/joins remaining descendants when the
-main process exits, on cancellation or on a deadline.
+is mixed into protocol stdout. Programs own their stream encoding; select UTF-8
+explicitly when reading UTF-8 pipes through .NET Console APIs. An exceeded output
+limit is explicit. Each run owns its process group/job and terminates/joins
+remaining descendants when the main process exits, on cancellation or on a deadline.
 
 Run has no implicit deadline. `--timeout` accepts 0..3600 seconds for the entire
 operation; zero disables the deadline. Cancellation remains available.
@@ -129,7 +130,8 @@ A run report distinguishes a program exit from a host failure even when numeric
 codes overlap. Init file conflicts use exit 1 and `file_conflict`. These commands
 do not publish applications or choose AOT/apphosts. Test discovery/execution and
 formatting belong to `fpas test` and `fpas fmt`.
-Native Windows console/job acceptance remains in the [CLI gaps](../../future/cli-gap.md).
+Native Windows console, pipe and job behavior is covered by the
+[CLI acceptance tests](../../../tests/coverage.md#native-windows-cli-acceptance).
 
 ## See also
 

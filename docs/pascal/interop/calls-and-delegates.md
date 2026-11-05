@@ -2,7 +2,7 @@
 
 Use `<...>` for explicit generic arguments, including static methods:
 
-```pascal fragment
+```pascal fragment context=json-player
 const Text: string := Json.JsonSerializer.Serialize<Player>(PlayerValue);
 ```
 

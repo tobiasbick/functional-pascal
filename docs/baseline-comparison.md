@@ -7,9 +7,10 @@ come from the [handbook](pascal/README.md), [grammar](specs/syntax.md),
 Deferred proposals and excluded metadata signatures are separate scope.
 
 The comparison maps each rule group to its implementation and primary proof.
-Complete published programs/units are also compiled and executed by
-LanguageSpecificationTests. Explicit syntax fragments are reviewed in their
-declaration context rather than rewritten into invented complete examples.
+The FPAS [documentation checker](pascal/tools/documentation-examples.md) compiles
+published programs/units and explicit fragment contexts. LanguageSpecificationTests
+executes its assemblies with existing behavior/metadata assertions. Contexts
+supply stated prerequisites and preserve the example's source.
 The [coverage map](../tests/coverage.md) identifies the owning test files.
 
 ## Language and CLR rules

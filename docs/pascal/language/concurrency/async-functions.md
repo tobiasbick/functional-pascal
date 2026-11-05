@@ -2,7 +2,7 @@
 
 Declare a .NET Task result and await supported .NET operations inside the body.
 
-```pascal fragment
+```pascal fragment context=async-declarations
 async function Download(Address: string;
   Cancellation: Threading.CancellationToken): Tasks.Task<string>;
 begin

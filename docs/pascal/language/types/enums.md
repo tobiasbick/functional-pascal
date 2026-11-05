@@ -2,7 +2,7 @@
 
 An enum names integral CLR constants. It is distinct from a payload-carrying union.
 
-```pascal fragment
+```pascal fragment context=declarations
 type Direction = enum : byte
   North = 0;
   East = 1;

@@ -1,0 +1,6 @@
+unit Example;
+uses System.Math as Math;
+// @include docs/pascal/language/types/records.md#point
+const Position: Point := new Point(1.0, 2.0);
+// @example
+end unit;

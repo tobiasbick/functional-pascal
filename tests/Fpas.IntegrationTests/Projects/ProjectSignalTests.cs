@@ -1,18 +1,16 @@
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Build.Support;
-using Fpas.IntegrationTests.Debugging;
-using Fpas.Processes;
+using Fpas.IntegrationTests.Processes.Support;
 using Fpas.Tests.Support;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Projects;
 
 public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
-    [LinuxFact]
-    public async Task SIGINT_cancels_build_and_run_preparation_with_one_JSON_result_and_joined_children()
+    [Fact]
+    public async Task Console_interrupt_cancels_build_and_run_preparation_with_one_JSON_result_and_joined_children()
     {
         foreach (var command in new[] { "build", "run" })
         {
@@ -23,8 +21,8 @@ public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<Sd
         }
     }
 
-    [LinuxFact]
-    public async Task SIGINT_cancels_an_actual_running_program_after_joining_the_target()
+    [Fact]
+    public async Task Console_interrupt_cancels_an_actual_running_program_after_joining_the_target()
     {
         using var directory = new TemporaryDirectory();
         var project = await ProjectCliFixture.Init(directory, sdk);
@@ -46,7 +44,7 @@ public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<Sd
     private static async Task Cancel(TemporaryDirectory directory, string[] arguments, string ready)
     {
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        await using var process = OwnedProcess.Start(TestEnvironment.DotnetHost, [TestEnvironment.Metadata("FpasCliPath"), .. arguments], directory.Path);
+        await using var process = InterruptibleProcess.Start(TestEnvironment.DotnetHost, [TestEnvironment.Metadata("FpasCliPath"), .. arguments], directory.Path);
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output); using var stderr = new StreamReader(process.Error);
         var output = stdout.ReadToEndAsync(deadline.Token); var error = stderr.ReadToEndAsync(deadline.Token);
@@ -59,7 +57,7 @@ public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<Sd
                 await Task.Delay(20, deadline.Token);
             }
             child = int.Parse(await File.ReadAllTextAsync(ready, deadline.Token), System.Globalization.CultureInfo.InvariantCulture);
-            Assert.Equal(0, Kill(process.Id, 2));
+            await process.Interrupt();
             await process.WaitForExit(deadline.Token);
             Assert.Equal(130, process.ExitCode); Assert.Equal("", await error);
             using var json = JsonDocument.Parse(await output);
@@ -68,19 +66,7 @@ public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<Sd
         }
         finally
         {
-            if (!process.HasExited)
-            {
-                Kill(process.Id, 2);
-                if (child is { } pid)
-                {
-                    try { using var target = Process.GetProcessById(pid); if (!target.HasExited) target.Kill(true); }
-                    catch (ArgumentException) { }
-                }
-                using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                try { await process.WaitForExit(cleanup.Token); } catch (OperationCanceledException) { }
-            }
+            await process.TerminateAsync();
         }
     }
-
-    [DllImport("libc", EntryPoint = "kill", SetLastError = true)] private static extern int Kill(int pid, int signal);
 }

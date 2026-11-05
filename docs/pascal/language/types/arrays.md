@@ -27,7 +27,7 @@ element type; contextual inference follows [type inference](../functions/type-in
 
 Use actual .NET collections:
 
-```pascal fragment
+```pascal fragment context=body
 const Names: Collections.List<string> := new Collections.List<string>();
 Names.Add('Alpha');
 const Counts: Collections.Dictionary<string, int> := new Collections.Dictionary<string, int>();

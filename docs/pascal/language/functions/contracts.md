@@ -7,7 +7,7 @@ They are not debug-only assertions, static proofs, or a separate failure mechani
 
 ## Syntax
 
-```pascal fragment
+```pascal fragment context=declarations
 function AddPositive(Left: int; Right: int): int;
 requires Left > 0;
 requires Right > 0;
@@ -36,7 +36,7 @@ a result: `ensures (Value >= 0);` is a result-free condition.
 Contracts apply to named free/nested routines and record methods, including
 methods implementing CLR interfaces. Procedures may use result-free ensures:
 
-```pascal fragment
+```pascal fragment context=declarations
 procedure ClampToZero(ref Value: int);
 ensures Value >= 0;
 begin
@@ -49,7 +49,7 @@ end procedure;
 Block-bodied anonymous functions/procedures may put contracts between their
 signature and `begin`, without a declaration-header semicolon:
 
-```pascal fragment
+```pascal fragment context=declarations
 const Double: function(int): int := function(Value: int): int
   requires Value >= 0;
   requires Value <= int.MaxValue div 2;
@@ -143,7 +143,7 @@ contracts do not establish synchronization or a data-race guarantee.
 
 ## Async routines
 
-```pascal fragment
+```pascal fragment context=declarations
 async function DoubleAfterDelay(Value: int): Tasks.Task<int>;
 requires Value >= 0;
 requires Value <= int.MaxValue div 2;

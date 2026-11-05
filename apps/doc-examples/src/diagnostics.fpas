@@ -1,0 +1,55 @@
+unit DocExamples.Diagnostics;
+
+uses DocExamples.Model as M, System as S, System.Text.Json as J;
+
+public type Checked = record
+  Count: int;
+  Expected: bool;
+  Document: string;
+  Line: int;
+  Message: string;
+end record;
+
+public function Read(Output: string; Item: M.Example; Prepared: M.Prepared): Checked;
+begin
+  using const Json: J.JsonDocument := J.JsonDocument.Parse(Output);
+  var Count: int := 0;
+  var Expected: bool := true;
+  var Document: string := Item.Document;
+  var Line: int := Item.Line;
+  var Message: string := '';
+  for Diagnostic: J.JsonElement in Json.RootElement.GetProperty('diagnostics').EnumerateArray() do
+    if Diagnostic.GetProperty('severity').GetString() = 'error' then
+      Count := Count + 1;
+      const Code: string := Diagnostic.GetProperty('code').GetString() ?? '';
+      if Message.Length = 0 then
+        Message := Code + ': ' + (Diagnostic.GetProperty('message').GetString() ?? '');
+      end if;
+      var Primary: bool := false;
+      const Location: J.JsonElement := Diagnostic.GetProperty('location');
+      if Location.ValueKind = J.JsonValueKind.Object then
+        const Path: string := Location.GetProperty('path').GetString() ?? '';
+        const Number: int := Location.GetProperty('line').GetInt32();
+        for Source: M.Source in Prepared.Sources do
+          if Source.Path.Equals(
+            Path,
+            if S.OperatingSystem.IsWindows() then S.StringComparison.OrdinalIgnoreCase
+              else S.StringComparison.Ordinal
+              end if
+          ) and Number > 0 and Number <= Source.Lines.Length
+          then
+            const Origin: M.Origin := Source.Lines[Number - 1];
+            Document := Origin.Document;
+            Line := Origin.Line;
+            Primary := Origin.Primary;
+          end if;
+        end for;
+      end if;
+
+      Expected := Expected and Primary and Code = Item.ExpectedError;
+    end if;
+  end for;
+
+  return new Checked(Count, Expected, Document, Line, Message);
+end function;
+end unit;

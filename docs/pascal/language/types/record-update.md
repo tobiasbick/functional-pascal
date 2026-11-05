@@ -2,7 +2,7 @@
 
 Use with to create a shallow updated copy of a source record.
 
-```pascal fragment
+```pascal fragment context=point-update
 const Moved: Point := Position with X := Position.X + 1.0; end with;
 ```
 

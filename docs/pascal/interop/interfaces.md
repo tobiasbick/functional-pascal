@@ -51,7 +51,7 @@ Empty interfaces are allowed.
 Generic type constraints follow `=` and precede `interface`. Method constraints
 follow the signature, as on implemented routines:
 
-```pascal fragment
+```pascal fragment context=declarations
 public type IFactory<T> =
 where T: class;
 interface

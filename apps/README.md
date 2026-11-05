@@ -1,7 +1,9 @@
 # Applications
 
-This directory is reserved for complete end-user applications written in FPAS.
-Each application will own its README, sources, project files, and assets.
-No applications have been added or migrated from the earlier FPAS repository.
+This directory contains complete applications written in CLR FPAS. Each owns its
+README, sources, project files and assets.
+
+- [doc-examples](doc-examples/) checks Markdown sources, explicit fragment contexts,
+  expected compiler errors and controlled execution through the CLR toolchain.
 
 See the [layout plan](../docs/architecture/project-layout.md#examples-and-applications).

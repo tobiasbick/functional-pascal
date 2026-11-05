@@ -1,6 +1,6 @@
 # Imports and companion sources
 
-```pascal fragment
+```pascal fragment context=imports
 uses System as Sys,
   System.Console as Console,
   System.Collections.Generic as Collections,
@@ -29,7 +29,7 @@ are an error in the baseline; extern assembly alias syntax is outside its scope.
 Save the [Geometry unit](units.md) as `Geometry.fpas` and this program as `Main.fpas`,
 and supply both sources to one compilation:
 
-```pascal project=geometry
+```pascal project=geometry context=geometry
 program MovePoint;
 
 uses Numerics.Geometry as Geometry, System.Console as Console;

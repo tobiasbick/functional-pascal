@@ -97,8 +97,9 @@ Editing covers automatic diagnostic edit ownership, original UTF-16 ranges,
 overlap/duplicate handling, UTF-8 BOM/line endings, permissions, staging/cleanup,
 stale bytes/context and cancellation. CheckFixTests uses fresh packaged SDK
 consumers to verify preview/apply/recheck, parser and type hints, review-only
-proposals, incomplete contexts and idempotence. AnalysisSignalTests also sends
-SIGINT to check --fix during owned dependency preparation.
+proposals, incomplete contexts and idempotence. WindowsPublicationTests protects
+explicit Windows access rules during replacement and rollback. AnalysisSignalTests
+interrupts check --fix during owned dependency preparation on Windows and Linux.
 
 ApiDocumentation exercises `fpas doc` through actual SDK consumers and the public
 workspace service. C#-generated XML is the oracle for constructors, overloads,
@@ -106,7 +107,8 @@ nested generics, parameter modes, arrays, indexers, fields, events and conversio
 Source inspection supplies Markdown; project/reference scopes preserve origins.
 Tests cover framework APIs unused by source, XML budgets/identity/entities,
 changed XML snapshots, missing text, paging, diagnostics, deadlines and packaged
-CLI execution. AnalysisSignalTests verifies SIGINT and owned preparation cleanup.
+CLI execution. AnalysisSignalTests verifies console interruption and owned
+preparation cleanup on Windows and Linux.
 
 CompilerCliTests and ArgumentParsingTests cover generated help/aliases, version
 output, required/allowed/duplicate options, repeatable references, literal source
@@ -188,11 +190,20 @@ modifying their bytes, including disabled-sidecar cleanup.
 
 ## Documentation acceptance
 
-LanguageSpecificationTests compiles complete program/unit fences directly from
-the copied [repository README](../README.md) and [handbook](../docs/pascal/README.md), with portable PDB and XML output,
-then executes programs with explicit assertions. Project-labeled programs compile
-with their unit companions; units compile as libraries. New complete programs
-require execution assertions.
+DocExamplesFixture builds [the FPAS checker](../apps/doc-examples/) with a freshly
+packaged SDK and verifies application SDK/compiler identities. The checker
+compiles all Pascal fences from the copied [README](../README.md) and
+[handbook](../docs/pascal/README.md), including explicit fragment contexts and
+Markdown includes. LanguageSpecificationTests uses the resulting PDB/XML/assemblies
+for existing metadata and runtime assertions. Units compile independently with
+their unit companions; new complete programs require execution assertions.
+
+DocExamplesBehaviorTests verifies the application boundary with valid and broken
+markers, fences, IDs, contexts/includes, paths, companions, expected compiler errors
+and runtime results. Manifest cases build the unmodified .fpasproj and sources.
+Context/companion errors cannot pass as primary example errors. Controlled
+nonterminating examples and descendants verify timeout and console-cancellation
+cleanup before harness cleanup on Windows and Linux.
 
 File examples run in isolated directories and cover success/missing-file cleanup.
 The HTTP example uses a local rejecting proxy to exercise exception handling
@@ -301,8 +312,29 @@ TestReportLimitTests checks a real native result above the JSON budget, preservi
 the TRX artifact and returning one bounded failure. Native TRX run messages retain
 framework warning/error semantics without parsing localized console diagnostics.
 TestLifetimeTests verifies deadline cleanup of an actual waiting test host, plus
-SIGINT cancellation on Linux. Native Windows console/process acceptance remains
-tracked separately in [CLI gaps](../docs/future/cli-gap.md).
+console interruption on native Windows and SIGINT on Linux.
+
+## Native Windows CLI acceptance
+
+Projects, Processes, Testing, ApiDocumentation, Editing, Refactoring, Formatting
+and Diagnostics run against native Windows processes and freshly packaged SDK
+consumers. They cover project templates, mixed-solution configuration/start-project
+selection, native test frameworks/discovery/TRX/runsettings, source/metadata/XML
+documentation, checked corrections and rename families, linked owners and DLL
+boundaries, stale plans, read-only files, rollback and process deadlines.
+
+BuildRunTests checks UTF-8 piped input, separate stdout/stderr, working directories,
+Unicode/space arguments, empty/quoted arguments, trailing backslashes and exit codes
+in inherited and JSON capture modes. WindowsConsoleTests drives an isolated ConPTY
+session and verifies actual console handles, Unicode input/output, exit codes and
+Ctrl+C while a program waits for console input.
+
+ProjectSignalTests, AnalysisSignalTests and TestLifetimeTests use the same scenarios
+on Windows and Linux. Windows uses ConPTY input to deliver Ctrl+C with separate
+redirected protocol streams; Linux sends SIGINT to an owned process group. They
+require one JSON response, exit 130 and child exit before test-harness cleanup,
+including cancellation after correction/rename publication. ConPTY tests require
+Windows 10 version 1809 or newer; they do not open a visible console window.
 
 ## See also
 

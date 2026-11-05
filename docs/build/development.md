@@ -34,13 +34,15 @@ Choose relevant tests through the checked-in runner. For the handbook and agent
 reference:
 
 ```sh
-dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~HandbookTests|FullyQualifiedName~AgentReferenceTests|FullyQualifiedName~LanguageSpecificationTests' --logger 'console;verbosity=normal'
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~HandbookTests|FullyQualifiedName~AgentReferenceTests|FullyQualifiedName~LanguageSpecificationTests|FullyQualifiedName~DocExamplesBehaviorTests' --logger 'console;verbosity=normal'
 ```
 
 AgentReferenceTests checks links, the entrypoint policy, and exact o200k_base
-token counts. LanguageSpecificationTests compiles complete programs/units from
-the repository README and handbook and executes programs. Its assertions cover
-each example's behavior.
+token counts. The [FPAS documentation checker](../../apps/doc-examples/) builds
+through a fresh packaged SDK, compiles complete sources/fragments from Markdown
+and supplies assemblies to LanguageSpecificationTests. Existing execution and
+metadata assertions remain there. DocExamplesBehaviorTests verifies the actual
+checker CLI, rejected inputs, expected failures and process cleanup.
 HandbookTests checks topic hubs, related navigation, repository documentation
 links/anchors, explicit syntax fragments, and current copied inputs.
 Read [tests](../../tests/README.md) and the
@@ -49,6 +51,20 @@ coverage for compiler, metadata, interop, async, or build changes.
 
 Store local logs, scratch work, and performance data under `.temp-data/`.
 Check whitespace with `git diff --check`. Keep generated bin/obj output out of Git.
+
+### Native Windows CLI acceptance
+
+After the Debug build, run the platform and CLI contracts from native Windows:
+
+```powershell
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~.Projects.|FullyQualifiedName~.Processes.|FullyQualifiedName~.Testing.|FullyQualifiedName~.ApiDocumentation.|FullyQualifiedName~.Refactoring.|FullyQualifiedName~.Editing.|FullyQualifiedName~.Formatting.|FullyQualifiedName~.Diagnostics.|FullyQualifiedName~AnalysisSignalTests' --logger 'trx;LogFileName=windows-cli.trx' --results-directory .temp-data/windows-cli
+```
+
+The [acceptance map](../../tests/coverage.md#native-windows-cli-acceptance) describes
+the observable contracts. Console tests use real ConPTY sessions on Windows 10
+version 1809 or newer, with no visible window or external terminal dependency.
+They check target exit before closing their console/job, so harness cleanup
+cannot satisfy a CLI cleanup assertion. Linux retains SIGINT/process-group tests.
 
 ## Deploy the local Release compiler
 

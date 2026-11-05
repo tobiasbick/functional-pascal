@@ -67,8 +67,9 @@ invocation or a manual change.
 Only evaluated regular `.fpas` inputs are eligible, including linked sources
 explicitly owned by the project. Reparse points and read-only files are refused.
 Duplicate edits from shared source owners are applied once. Original UTF-8 BOM,
-line endings, unrelated text and Unix permission bits are preserved. Unchanged
-files retain their timestamps. Corrections do not format the source.
+line endings, unrelated text, Unix permission bits and Windows access rules are
+preserved, including during rollback. Unchanged files retain their timestamps.
+Corrections do not format the source.
 
 Missing/blocked project inputs, the diagnostic error limit, invalid edit ranges,
 wrong original text, conflicting/overlapping edits and changed context inputs

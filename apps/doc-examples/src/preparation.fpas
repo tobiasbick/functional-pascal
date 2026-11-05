@@ -1,0 +1,212 @@
+unit DocExamples.Preparation;
+
+uses
+  DocExamples.Model as M, DocExamples.Markdown as Markdown,
+  System as S, System.IO as IO, System.Text as Text, System.Text.RegularExpressions as R,
+  System.Collections.Generic as C;
+
+function Raw(Item: M.Example; Path: string; Primary: bool): M.Source;
+begin
+  const Lines: C.List<M.Origin> := new C.List<M.Origin>();
+  const Count: int := Item.Source.Split(#10).Length - 1;
+  for Index: int := 0 to Count - 1 do
+    Lines.Add(new M.Origin(Item.Document, Item.Line + 1 + Index, Primary));
+  end for;
+
+  return new M.Source(Path, Item.Source, Lines.ToArray());
+end function;
+
+function Include(Options: M.Options; Reference: string): M.Example;
+begin
+  const Parts: string[] := Reference.Split(#35);
+  if Parts.Length <> 2 or not Markdown.SafePath(Parts[0]) or not Markdown.ValidName(Parts[1]) then
+    raise new IO.InvalidDataException('Invalid context reference ' + Reference);
+  end if;
+
+  for Item: M.Example in Markdown.Read(IO.Path.Combine(Options.Root, Parts[0])) do
+    if Item.Id = Parts[1] and Item.Language = 'pascal' then
+      return Item;
+    end if;
+  end for;
+
+  raise new IO.InvalidDataException('Unknown context example ' + Reference);
+end function;
+
+function Wrap(Item: M.Example; Options: M.Options; Path: string; Primary: bool): M.Source;
+begin
+  if Item.Context.Length = 0 then
+    return Raw(Item, Path, Primary);
+  end if;
+  const Template: string := IO.Path.Combine(Options.Contexts, Item.Context + '.fpas.txt');
+  if not IO.File.Exists(Template) then
+    raise new IO.InvalidDataException('Missing context ' + Item.Context);
+  end if;
+  const Source: Text.StringBuilder := new Text.StringBuilder();
+  const Origins: C.List<M.Origin> := new C.List<M.Origin>();
+  const Lines: string[] := IO.File.ReadAllText(Template).Replace(
+    #13 + '' + #10,
+    #10 + ''
+  ).Replace(#13, #10).TrimEnd(#10).Split(#10);
+  var Slots: int := 0;
+  for Index: int := 0 to Lines.Length - 1 do
+    const Line: string := Lines[Index];
+    if Line.Trim() = '// @example' then
+      Slots := Slots + 1;
+      const Expanded: M.Source := Raw(Item, Path, Primary);
+      discard Source.Append(Expanded.Text);
+      Origins.AddRange(Expanded.Lines);
+    elsif Line.Trim().StartsWith('// @include ') then
+      const Included: M.Example := Include(Options, Line.Trim().Substring(12));
+      const Expanded: M.Source := Raw(Included, Path, false);
+      discard Source.Append(Expanded.Text);
+      Origins.AddRange(Expanded.Lines);
+    else
+      discard Source.Append(Line).Append(#10);
+      Origins.Add(new M.Origin(Template, Index + 1, false));
+    end if;
+  end for;
+
+  if Slots <> 1 then
+    raise new IO.InvalidDataException(
+      'Context must contain exactly one // @example: ' + Item.Context
+    );
+  end if;
+
+  return new M.Source(Path, Source.ToString(), Origins.ToArray());
+end function;
+
+function CompanionSource(FileName: string; Destination: string; Options: M.Options): M.Source;
+begin
+  const Output: Text.StringBuilder := new Text.StringBuilder();
+  const Origins: C.List<M.Origin> := new C.List<M.Origin>();
+  const Lines: string[] := IO.File.ReadAllText(FileName).Replace(
+    #13 + '' + #10,
+    #10 + ''
+  ).Replace(#13, #10).TrimEnd(#10).Split(#10);
+  for Index: int := 0 to Lines.Length - 1 do
+    if Lines[Index].Trim().StartsWith('// @include ') then
+      const Included: M.Example := Include(Options, Lines[Index].Trim().Substring(12));
+      const Expanded: M.Source := Raw(Included, Destination, false);
+      discard Output.Append(Expanded.Text);
+      Origins.AddRange(Expanded.Lines);
+    else
+      discard Output.Append(Lines[Index]).Append(#10);
+      Origins.Add(new M.Origin(FileName, Index + 1, false));
+    end if;
+  end for;
+
+  return new M.Source(Destination, Output.ToString(), Origins.ToArray());
+end function;
+
+public function Header(Source: string): R.Match;
+begin
+  return R.Regex.Match(
+    Source,
+    '\A(?:\s|//[^\n]*(?:\n|$))*(?:async )?(program|unit)\s+([A-Za-z_][A-Za-z_0-9.]*)\s*;'
+  );
+end function;
+
+procedure Write(Path: string; Source: string);
+begin
+  discard IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(Path) ?? '.');
+  IO.File.WriteAllText(Path, Source, new Text.UTF8Encoding(false));
+end procedure;
+
+public function Prepare(Item: M.Example; Options: M.Options; Items: M.Example[]; Directory: string): M.Prepared;
+begin
+  discard IO.Directory.CreateDirectory(Directory);
+  const Name: string := if Item.FileName.Length = 0 then 'example.fpas' else Item.FileName end if;
+  const Primary: M.Source := Wrap(Item, Options, IO.Path.Combine(Directory, Name), true);
+  const Declaration: R.Match := Header(Primary.Text);
+  if not Declaration.Success then
+    raise new IO.InvalidDataException(
+      'Expected a complete program/unit or an explicit fragment context'
+    );
+  end if;
+  const Library: bool := Declaration.Groups[1].Value = 'unit';
+  if Library and Item.Execute then
+    raise new IO.InvalidDataException('A unit cannot have the run fence option');
+  end if;
+  const Sources: C.List<M.Source> := new C.List<M.Source>();
+  Sources.Add(Primary);
+  const Written: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.OrdinalIgnoreCase);
+  discard Written.Add(Name);
+  Write(Primary.Path, Primary.Text);
+  for Companion: M.Example in Items do
+    if Companion.Document = Item.Document and Companion.Project = Item.Project
+      and Item.Project.Length > 0 and Companion.Id <> Item.Id
+    then
+      var FileName: string := Companion.FileName;
+      if FileName.Length = 0 and Companion.Language = 'pascal' then
+        const OtherHeader: R.Match := Header(Companion.Source);
+        if OtherHeader.Success then
+          FileName := OtherHeader.Groups[2].Value + '.fpas';
+        end if;
+      end if;
+
+      if not Markdown.SafePath(FileName) then
+        raise new IO.InvalidDataException('Project companions require relative file paths');
+      end if;
+
+      if not Written.Add(FileName) then
+        raise new IO.InvalidDataException('Duplicate project output file ' + FileName);
+      end if;
+      const Other: M.Source := Wrap(
+        Companion,
+        Options,
+        IO.Path.Combine(Directory, FileName),
+        false
+      );
+      if Companion.Language = 'pascal' then
+        const OtherHeader: R.Match := Header(Other.Text);
+        if not OtherHeader.Success then
+          raise new IO.InvalidDataException('Invalid Pascal companion');
+        end if;
+
+        if OtherHeader.Groups[1].Value = 'unit' then
+          Sources.Add(Other);
+        elsif not Library then
+          raise new IO.InvalidDataException('A project must contain exactly one program');
+        end if;
+      end if;
+
+      Write(Other.Path, Other.Text);
+    end if;
+  end for;
+  const Companions: string := IO.Path.Combine(Options.Contexts, Item.Context);
+  if Item.Context.Length > 0 and IO.Directory.Exists(Companions) then
+    for FileName: string in IO.Directory.GetFiles(Companions, '*.fpas') do
+      const Short: string := IO.Path.GetFileName(FileName) ?? '';
+      if not Written.Add(Short) then
+        raise new IO.InvalidDataException('Duplicate context output file ' + Short);
+      end if;
+      const Extra: M.Source := CompanionSource(
+        FileName,
+        IO.Path.Combine(Directory, Short),
+        Options
+      );
+      if Header(Extra.Text).Groups[1].Value <> 'unit' then
+        raise new IO.InvalidDataException('Context companions must be units');
+      end if;
+
+      Sources.Add(Extra);
+      Write(Extra.Path, Extra.Text);
+    end for;
+  end if;
+  var Manifest: string := '';
+  if Item.Manifest.Length > 0 then
+    Manifest := IO.Path.Combine(Directory, Item.Manifest);
+    if not IO.File.Exists(Manifest) then
+      raise new IO.InvalidDataException('Missing documented project manifest ' + Item.Manifest);
+    end if;
+  end if;
+
+  return new M.Prepared(
+    Primary.Path,
+    IO.Path.Combine(Directory, Declaration.Groups[2].Value + '.dll'),
+    Library,
+    Sources.ToArray(),
+    Manifest
+  );
+end function;
+end unit;

@@ -1,6 +1,6 @@
 # Distinct types
 
-```pascal fragment
+```pascal fragment context=declarations
 type UserId = distinct long;
 type SampleName = distinct string;
 

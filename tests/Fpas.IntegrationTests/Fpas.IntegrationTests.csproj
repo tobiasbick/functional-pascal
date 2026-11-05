@@ -3,6 +3,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="../../apps/doc-examples/**/*" Exclude="../../apps/doc-examples/bin/**/*;../../apps/doc-examples/obj/**/*" Link="Fixtures/doc-examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/pascal/**/*.md" Link="Fixtures/specification/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../README.md" Link="Fixtures/repository/README.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/build/standalone-sdk.md" Link="Fixtures/standalone-sdk.md" CopyToOutputDirectory="PreserveNewest" />

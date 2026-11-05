@@ -2,7 +2,7 @@
 
 Repeat calculations or enumerate actual CLR collections with typed bindings.
 
-```pascal fragment
+```pascal fragment context=loops
 for Index: int := 0 to Values.Length - 1 do
   Console.WriteLine(Values[Index]);
 end for;

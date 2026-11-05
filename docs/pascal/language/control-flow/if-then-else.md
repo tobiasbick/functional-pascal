@@ -2,7 +2,7 @@
 
 Choose branches using bool conditions; only the selected branch executes.
 
-```pascal fragment
+```pascal fragment context=health
 if Health <= 0 then
   Console.WriteLine('Defeated');
 elsif Health < 5 then
@@ -16,7 +16,7 @@ Conditions have type `bool`. `elsif` is one keyword. Each statement, including
 the one before `elsif` or `else`, ends with `;`. An `if` expression requires
 `else` and one expression per branch:
 
-```pascal fragment
+```pascal fragment context=health
 const Label: string := if Health > 0 then 'Alive' else 'Defeated' end if;
 ```
 

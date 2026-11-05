@@ -2,7 +2,7 @@
 
 A union defines a closed set of named cases with optional immutable payloads.
 
-```pascal fragment
+```pascal fragment context=declarations id=shape
 public type Shape = union
   Dot;
   Circle(Radius: double);
@@ -23,7 +23,7 @@ follow the declared constructors; null is not a union case.
 Generic unions are declared by applications or imported from libraries like
 other types. For example:
 
-```pascal fragment
+```pascal fragment context=declarations
 type Tree<T> = union
   Empty;
   Leaf(Value: T);

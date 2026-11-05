@@ -3,7 +3,7 @@
 Use CLR nullability (`T?`) for a value that may be absent. Use the API's existing
 Try-pattern where provided:
 
-```pascal fragment
+```pascal fragment context=body
 var Count: int := 0;
 if int.TryParse('42', out Count) then
   Console.WriteLine(Count);

@@ -70,10 +70,10 @@ a plan; prepare a new one for the changed context.
 
 Application shares [source publication](diagnostics.md#apply-automatic-corrections)
 with automatic corrections: staged replacements, byte checks, preserved UTF-8 BOM,
-line endings and Unix permission bits, and rollback/recovery reporting. Symbolic
-links/reparse points and read-only edited sources are refused. Files not edited
-retain their timestamps. Replacement is atomic per file; the batch does not lock
-other applications.
+line endings, Unix permission bits and Windows access rules, and rollback/recovery
+reporting. Symbolic links/reparse points and read-only edited sources are refused.
+Files not edited retain their timestamps. Replacement is atomic per file; the
+batch does not lock other applications.
 
 After application, the context is reloaded, dependencies prepared and sources
 checked again. Reports distinguish written files from successful rechecking.

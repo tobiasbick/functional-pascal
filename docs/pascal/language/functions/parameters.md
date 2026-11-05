@@ -2,7 +2,7 @@
 
 Use managed modes when a routine must read or update caller storage directly.
 
-```pascal fragment
+```pascal fragment context=declarations
 procedure Increment(ref Value: int);
 begin
   Value := Value + 1;

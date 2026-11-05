@@ -3,7 +3,7 @@
 Use subscribe/unsubscribe with events declared by referenced .NET assemblies
 and ordinary CLR delegates.
 
-```pascal fragment
+```pascal fragment context=events
 const Handler: Timers.ElapsedEventHandler :=
   procedure(Sender: object?; Event: Timers.ElapsedEventArgs) begin
     Console.WriteLine('Tick');

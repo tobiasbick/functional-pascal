@@ -2,7 +2,7 @@
 
 Await asynchronous resource cleanup before leaving its lexical scope.
 
-```pascal fragment
+```pascal fragment context=async-body
 await using const Stream: IO.FileStream := IO.File.OpenRead('world.json');
 const Buffer: byte[] := new byte[128];
 const Count: int := await Stream.ReadAsync(Buffer, 0, Buffer.Length);

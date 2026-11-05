@@ -5,7 +5,7 @@ Generic calls infer type arguments from supplied values. This applies to
 without changing their CLR representation or declaration syntax. Bindings,
 parameters, lambda signatures, and routine results still require explicit types.
 
-```pascal fragment
+```pascal fragment context=body
 function Identity<T>(Value: T): T;
 begin return Value; end function;
 
@@ -51,7 +51,7 @@ an overload and there is no dynamic/reflection fallback.
 
 The uninstantiated name of a generic union supports case construction:
 
-```pascal fragment
+```pascal fragment context=declarations
 type Tree<T> = union
   Empty;
   Leaf(Value: T);

@@ -1,6 +1,6 @@
 # Subranges
 
-```pascal fragment
+```pascal fragment context=declarations
 type Percent = int range 0..100;
 type PortNumber = ushort range 1..65535;
 

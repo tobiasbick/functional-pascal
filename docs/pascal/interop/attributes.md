@@ -4,7 +4,7 @@ Annotate source declarations with actual .NET attribute classes. Attributes
 retain their CLR target and constant representation; they do not introduce a
 separate FPAS annotation runtime.
 
-```pascal fragment
+```pascal fragment context=declarations
 type Measurement = record
   [Serialization.JsonPropertyNameAttribute('sample_name')]
   Name: string;

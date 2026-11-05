@@ -3,10 +3,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Xml.Linq;
 using Fpas.Tests.Support;
+using Fpas.IntegrationTests.Documentation.Support;
 
 namespace Fpas.IntegrationTests.Documentation;
 
-public sealed class LanguageSpecificationTests
+[Collection("Documentation examples")]
+public sealed class LanguageSpecificationTests(DocExamplesFixture checker)
 {
     private static string Root => Path.Combine(AppContext.BaseDirectory, "Fixtures", "specification");
     private static IReadOnlyList<MarkdownExample> Examples() => [.. MarkdownExamples.Read(Root),
@@ -22,17 +24,9 @@ public sealed class LanguageSpecificationTests
         var examples = Examples();
         var example = examples.Single(item => item.Document == document && item.Fence == fence);
         Assert.EndsWith(library ? "end unit;" : "end program;", example.Source.Trim());
-        var sources = new List<string>();
-        foreach (var companion in MarkdownExamples.Sources(example, examples))
-        {
-            var path = directory.File(companion.Name + ".fpas");
-            File.WriteAllText(path, companion.Source); sources.Add(path);
-        }
-        var output = directory.File(name + ".dll");
-        var compile = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", .. sources,
-            "--output", output, "--target", library ? "library" : "exe", "--reference-dir", TestEnvironment.ReferenceDirectory,
-            "--generate-documentation", "--diagnostics", "json"]);
-        Assert.True(compile.ExitCode == 0, document + ": " + compile.Output + compile.Error);
+        var compiled = await checker.Assembly(example);
+        foreach (var file in Directory.GetFiles(Path.GetDirectoryName(compiled)!)) File.Copy(file, directory.File(Path.GetFileName(file)));
+        var output = directory.File(Path.GetFileName(compiled));
         Assert.True(File.Exists(Path.ChangeExtension(output, ".pdb")));
         Assert.Equal(name, XDocument.Load(Path.ChangeExtension(output, ".xml")).Root!.Element("assembly")!.Element("name")!.Value);
         if (library)
@@ -96,6 +90,7 @@ public sealed class LanguageSpecificationTests
             "ChannelBackpressure" => ["10", "20"],
             "ChannelSum" => ["60"],
             "FormatExample" => ["7"],
+            "ConstructionAndMembers" => [""],
             _ => null
         };
         if (expected is not null) Assert.Equal(expected, lines);

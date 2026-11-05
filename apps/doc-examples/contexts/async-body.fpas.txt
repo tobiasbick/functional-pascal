@@ -1,0 +1,6 @@
+async program Example;
+uses System.Console as Console, System.IO as IO;
+begin
+// @example
+end;
+end program;

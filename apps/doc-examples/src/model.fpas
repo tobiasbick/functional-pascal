@@ -1,0 +1,96 @@
+unit DocExamples.Model;
+
+public type Example = record
+  Document: string;
+  Line: int;
+  Language: string;
+  Source: string;
+  Id: string;
+  Fragment: bool := false;
+  Context: string := '';
+  Execute: bool := false;
+  ExpectedError: string := '';
+  Project: string := '';
+  FileName: string := '';
+  Manifest: string := '';
+  ExpectedOutput: string := '';
+  ExpectedException: string := '';
+end record;
+
+public type Options = record
+  Root: string;
+  Output: string;
+  Compiler: string;
+  References: string;
+  Dotnet: string;
+  Contexts: string;
+  Documents: string[];
+  ExtraReferences: string[];
+  Timeout: int := 10;
+  Jobs: int := 4;
+  Json: bool := false;
+end record;
+
+public type Origin = record
+  Document: string;
+  Line: int;
+  Primary: bool;
+end record;
+
+public type Source = record
+  Path: string;
+  Text: string;
+  Lines: Origin[];
+end record;
+
+public type Prepared = record
+  Primary: string;
+  Assembly: string;
+  Library: bool;
+  Sources: Source[];
+  Manifest: string;
+end record;
+
+public type Captured = record
+  ExitCode: int;
+  Output: string;
+  Error: string;
+end record;
+
+public type Outcome = record
+  Document: string;
+  Line: int;
+  Id: string;
+  Passed: bool;
+  Stage: string;
+  Message: string;
+  Compile: string := 'not_run';
+  Run: string := 'not_selected';
+  Assembly: string := '';
+  Library: bool := false;
+  Manifest: string := '';
+end record;
+
+public type Report = record
+  Schema: int;
+  Root: string;
+  Compiler: string;
+  CompilerHash: string;
+  References: string;
+  ExtraReferences: string[];
+  SdkCompiler: string;
+  SdkCompilerHash: string;
+  Output: string;
+  Total: int;
+  Failed: int;
+  Results: Outcome[];
+end record;
+
+public type FailureReport = record
+  Schema: int;
+  Total: int;
+  Failed: int;
+  Results: Outcome[];
+  Error: string;
+end record;
+end unit;

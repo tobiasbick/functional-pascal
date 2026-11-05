@@ -5,7 +5,7 @@ routine body or lexical block. See the
 [local-functions project](../../../../examples/local-functions/README.md) for a
 recursive helper and an escaping counter delegate.
 
-```pascal fragment
+```pascal fragment context=declarations
 function MakeCounter(Start: int): function(): int;
 begin
   var Count: int := Start;

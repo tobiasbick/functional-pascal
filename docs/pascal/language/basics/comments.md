@@ -13,7 +13,7 @@ A comment starts with `//` and ends at LF, CRLF, bare CR, or end of input. It ma
 occupy a whole line or follow code. Prefix each line of a multiline comment with
 `//`. Comment markers inside string literals are ordinary string contents.
 
-```pascal fragment
+```pascal fragment context=declarations
 // Time remaining in the current turn.
 // Measured in seconds.
 const Remaining: int := 30; // Updated by the sampling loop.
@@ -39,7 +39,7 @@ There must be no blank source line or other intervening construct between the
 comment block and the declaration. End-of-line comments never attach. A blank
 source line deliberately detaches a preceding comment:
 
-```pascal fragment
+```pascal fragment context=declarations
 // Explains the next operation, without documenting its binding.
 
 const Count: int := 1;

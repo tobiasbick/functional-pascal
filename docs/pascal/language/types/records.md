@@ -2,7 +2,7 @@
 
 Records group data in nominal CLR reference types with read-only properties.
 
-```pascal fragment
+```pascal fragment context=declarations id=point
 public type Point = record
   X: double;
   Y: double;

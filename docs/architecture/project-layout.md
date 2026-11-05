@@ -6,8 +6,8 @@ Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
 [mixed-project MSBuild builds](../../tests/coverage.md#build-acceptance).
 Fpas.Core supplies record/union metadata attributes; the SDK packages Core, the compiler,
 and the implemented task.
-Examples build and run through the SDK; applications remain later work. The responsibilities
-below describe their responsibilities and boundaries.
+Examples and applications build and run through the SDK. The responsibilities
+below describe their boundaries.
 
 ## Repository tree
 
@@ -264,7 +264,9 @@ Complete [Markdown programs](../pascal/examples/README.md) and the compact
 documentation and executed by integration tests. Companion units use explicit
 project labels. Hello builds through its `.fpasproj` or the direct compiler.
 The [Units example](../../examples/units/README.md) compiles a program and two
-units into one assembly. The apps directory contains its README placeholder.
+units into one assembly. The [doc-examples application](../../apps/doc-examples/)
+checks Markdown sources and explicit contexts and supplies compiled assemblies
+to behavior tests.
 
 ## Extending the implementation
 

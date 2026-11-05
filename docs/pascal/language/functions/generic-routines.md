@@ -2,7 +2,7 @@
 
 Generic routines preserve CLR type parameters and validate their constraints.
 
-```pascal fragment
+```pascal fragment context=declarations
 function Identity<T>(Value: T): T;
 begin
   return Value;
@@ -33,7 +33,7 @@ the body/type definition. Constraints may include a base class, interfaces,
 `class`, `class?`, `struct`, or `new()`. They follow CLR/C# combination rules,
 with `new()` last. A record constraint example is:
 
-```pascal fragment
+```pascal fragment context=declarations
 type Box<T> =
 where T: class;
 record

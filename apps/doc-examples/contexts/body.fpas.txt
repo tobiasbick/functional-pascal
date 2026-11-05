@@ -1,0 +1,7 @@
+program Example;
+uses System as Sys, System.Console as Console, System.IO as IO,
+  System.Math as Math, System.Collections.Generic as Collections;
+begin
+// @example
+end;
+end program;

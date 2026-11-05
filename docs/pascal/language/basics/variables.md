@@ -3,7 +3,7 @@
 Declare one explicitly typed, initialized binding at a time. Const prevents
 rebinding; var permits assignment to writable storage.
 
-```pascal fragment
+```pascal fragment context=body
 const Name: string := 'Alpha';
 var Remaining: int := 10;
 const Limit: int := 100;

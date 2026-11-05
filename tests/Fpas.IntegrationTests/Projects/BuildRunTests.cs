@@ -50,9 +50,11 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         var project = await ProjectCliFixture.Init(directory, sdk);
         File.WriteAllText(directory.File("App/main.fpas"), """
             program IO;
-            uses System.Console as Console, System.Environment as Env, System.IO.File as File;
+            uses System.Console as Console, System.Environment as Env, System.IO.File as File,
+              System.Text.Encoding as Encoding;
             begin
-              Console.WriteLine(args[0]);
+              Console.InputEncoding := Encoding.UTF8;
+              for Value: string in args do Console.WriteLine(Value); end for;
               Console.WriteLine(Console.ReadLine() ?? 'EOF');
               Console.WriteLine(File.ReadAllText('data.txt'));
               Console.Error.WriteLine('diagnostic');
@@ -67,10 +69,11 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         {
             var options = new List<string> { TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build", "--working-directory", directory.File("working Grüße") };
             if (json) options.AddRange(["--report", "json"]);
-            options.AddRange(["--", "a b; $(no-shell)"]);
-            var result = await ProcessRunner.RunAsync(options, "input value\n", directory.Path, timeLimit: TimeSpan.FromMinutes(2));
+            string[] arguments = ["a b; $(no-shell)", "Grüße 😀", "", "quoted \"value\"", "trailing\\", "two\\\\\"quotes", "--flag"];
+            options.AddRange(["--", .. arguments]);
+            var result = await ProcessRunner.RunAsync(options, "input Grüße 😀\n", directory.Path, timeLimit: TimeSpan.FromMinutes(2));
             Assert.Equal(7, result.ExitCode);
-            var expected = "a b; $(no-shell)" + Environment.NewLine + "input value" + Environment.NewLine + "file value" + Environment.NewLine;
+            var expected = string.Join(Environment.NewLine, arguments) + Environment.NewLine + "input Grüße 😀" + Environment.NewLine + "file value" + Environment.NewLine;
             if (!json) { Assert.Equal(expected, result.Output); Assert.Equal("diagnostic" + Environment.NewLine, result.Error); }
             else
             {

@@ -2,7 +2,7 @@
 
 Declare typed functions/procedures and consume their results explicitly.
 
-```pascal fragment
+```pascal fragment context=declarations
 public function Add(Left: int; Right: int): int;
 begin
   return Left + Right;

@@ -2,7 +2,7 @@
 
 Tie IDisposable cleanup to a lexical scope with using const.
 
-```pascal fragment
+```pascal fragment context=body
 using const Reader: IO.StreamReader := new IO.StreamReader('world.json');
 Console.WriteLine(Reader.ReadToEnd());
 ```
@@ -21,7 +21,7 @@ declared in a loop body is acquired and released separately for each iteration.
 There is no separate using-body delimiter. For a shorter lifetime, add an ordinary
 nested block:
 
-```pascal fragment
+```pascal fragment context=body
 begin
   using const Reader: IO.StreamReader := new IO.StreamReader('world.json');
   Console.WriteLine(Reader.ReadToEnd());

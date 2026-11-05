@@ -3,7 +3,7 @@
 CLR exceptions propagate normally through FPAS and .NET calls. `try`/`catch`,
 `raise`, and `finally` use the CLR exception mechanism directly.
 
-```pascal fragment
+```pascal fragment context=body
 try
   Console.WriteLine(IO.File.ReadAllText('world.json'));
 catch Failure: IO.IOException do

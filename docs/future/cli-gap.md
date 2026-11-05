@@ -13,27 +13,6 @@ change FPAS syntax.
 Future commands need concise help/examples, structured failures, bounded work,
 stream ownership and a cancellation contract. Short aliases remain unselected.
 
-## Native Windows command acceptance
-
-Verify the implemented [init/build/run contract](../pascal/program-structure/project-commands.md)
-on native Windows: inherited console and piped stdin/stdout/stderr, Unicode/space
-arguments and paths, job/descendant cleanup, cancellation/deadlines, fresh SDK
-consumers and solution configuration/start-project selection. Linux integration
-coverage and Windows compilation do not establish native console behavior.
-
-Verify [native test commands](../pascal/tools/testing.md) on Windows too: fresh
-framework templates, native discovery/TRX reporting, mixed solutions, runsettings,
-and cancellation/deadline cleanup of a waiting test host.
-
-Verify [API documentation lookup](../pascal/tools/api-documentation.md) on Windows:
-source/metadata selection, adjacent XML, packaged CLI and cancellation cleanup.
-
-Verify `check --fix` on Windows: preview/application, encoding and permission
-preservation, conflicts, read-only inputs, rollback and cancellation cleanup.
-
-Verify [rename/application](../pascal/tools/refactoring.md) on Windows: source
-families, linked owners, DLL boundaries, plan consistency and owned cancellation.
-
 ## Publishing
 
 Application apphosts, self-contained/single-file publishing, AOT and signing need

@@ -1,0 +1,196 @@
+unit DocExamples.Validation;
+
+uses
+  DocExamples.Model as M, DocExamples.Preparation as Preparation,
+  DocExamples.Diagnostics as Diagnostics, DocExamples.Processes as Processes,
+  System as S, System.IO as IO, System.Text.Json as J,
+  System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
+
+procedure Save(Directory: string; Stage: string; Result: M.Captured);
+begin
+  IO.File.WriteAllText(IO.Path.Combine(Directory, Stage + '.json'), Result.Output);
+  IO.File.WriteAllText(IO.Path.Combine(Directory, Stage + '.stderr.txt'), Result.Error);
+end procedure;
+
+function ExpectedOutput(Item: M.Example; Items: M.Example[]): string;
+begin
+  if Item.ExpectedOutput = 'empty' then
+    return '';
+  end if;
+
+  for Companion: M.Example in Items do
+    if Companion.Document = Item.Document and Companion.Project = Item.Project
+      and Item.Project.Length > 0 and Companion.FileName = Item.ExpectedOutput
+      and Companion.Language = 'text'
+    then
+      return Companion.Source;
+    end if;
+  end for;
+
+  raise new IO.InvalidDataException(
+    'Missing expected stdout supporting fence ' + Item.ExpectedOutput
+  );
+end function;
+
+public async function Check(Item: M.Example; Options: M.Options; Items: M.Example[]; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Outcome>;
+begin
+  var Outcome: M.Outcome := new M.Outcome(Item.Document, Item.Line, Item.Id, false, 'prepare', '');
+  try
+    const Prepared: M.Prepared := Preparation.Prepare(Item, Options, Items, Directory);
+    Outcome := Outcome with Assembly := Prepared.Assembly; Library := Prepared.Library; Manifest := Prepared.Manifest; Stage := 'compile'; end with;
+    const Arguments: C.List<string> := new C.List<string>();
+    Arguments.Add(Options.Compiler);
+    Arguments.Add('compile');
+    for Source: M.Source in Prepared.Sources do
+      Arguments.Add(Source.Path);
+    end for;
+
+    for Reference: string in Options.ExtraReferences do
+      Arguments.AddRange(['--reference', Reference]);
+    end for;
+
+    Arguments.AddRange(
+      [
+        '--output',
+        Prepared.Assembly,
+        '--target',
+        if Prepared.Library then 'library' else 'exe' end if,
+        '--reference-dir',
+        Options.References,
+        '--generate-documentation',
+        '--diagnostics',
+        'json'
+      ]
+    );
+    const Compiled: M.Captured := await Processes.Run(
+      Options,
+      Arguments.ToArray(),
+      Directory,
+      Cancellation
+    );
+    Save(Directory, 'compile', Compiled);
+    const Errors: Diagnostics.Checked := Diagnostics.Read(Compiled.Output, Item, Prepared);
+    Outcome := Outcome with Document := Errors.Document; Line := Errors.Line; end with;
+    if Item.ExpectedError.Length > 0 then
+      const Passed: bool := Compiled.ExitCode = 1 and Errors.Count > 0 and Errors.Expected;
+      return Outcome with
+        Passed := Passed; Compile := if Passed then 'rejected' else 'failed' end if;
+        Message := if Passed then 'expected ' + Item.ExpectedError
+          else 'Expected ' + Item.ExpectedError + ' from the example itself. ' + Errors.Message
+          end if;
+      end with;
+    end if;
+
+    if Compiled.ExitCode <> 0 or Errors.Count > 0 then
+      return Outcome with
+        Compile := 'failed'; Message := 'Compilation failed. ' +
+          Errors.Message;
+      end with;
+    end if;
+
+    Outcome := Outcome with Compile := 'passed'; end with;
+    if Prepared.Manifest.Length > 0 then
+      Outcome := Outcome with Stage := 'manifest'; end with;
+      const Built: M.Captured := await Processes.Run(
+        Options,
+        [
+          Options.Compiler,
+          'build',
+          Prepared.Manifest,
+          '--report',
+          'json',
+          '--timeout',
+          Options.Timeout.ToString()
+        ],
+        Directory,
+        Cancellation
+      );
+      Save(Directory, 'manifest', Built);
+      if Built.ExitCode <> 0 then
+        return Outcome with
+          Message := 'Documented project failed. ' + Built.Output +
+            Built.Error;
+        end with;
+      end if;
+    end if;
+
+    if not Item.Execute then
+      return Outcome with Passed := true; Stage := 'compile'; Message := 'passed'; end with;
+    end if;
+
+    Outcome := Outcome with Stage := 'run'; Run := 'failed'; end with;
+    const Expected: string := if Item.ExpectedException.Length = 0 then ExpectedOutput(
+        Item,
+        Items
+      )
+      else ''
+      end if;
+    var Target: string := Prepared.Assembly;
+    if Prepared.Manifest.Length > 0 then
+      const Located: M.Captured := await Processes.Run(
+        Options,
+        ['msbuild', Prepared.Manifest, '-nologo', '-getProperty:TargetPath'],
+        Directory,
+        Cancellation
+      );
+      Save(Directory, 'target', Located);
+      if Located.ExitCode <> 0 or Located.Error.Length > 0 then
+        return Outcome with Message := 'Could not select documented project output'; end with;
+      end if;
+
+      Target := IO.Path.GetFullPath(Located.Output.Trim(), Directory);
+    end if;
+
+    if not IO.File.Exists(Target) or not IO.File.Exists(
+      IO.Path.ChangeExtension(Target, '.runtimeconfig.json')
+    )
+    then
+      return Outcome with Message := 'No executable program output selected'; end with;
+    end if;
+
+    if Prepared.Manifest.Length = 0 then
+      IO.File.Copy(
+        IO.Path.Combine(IO.Path.GetDirectoryName(Options.Compiler) ?? '.', 'Fpas.Core.dll'),
+        IO.Path.Combine(Directory, 'Fpas.Core.dll')
+      );
+      for Reference: string in Options.ExtraReferences do
+        IO.File.Copy(Reference, IO.Path.Combine(Directory, IO.Path.GetFileName(Reference) ?? ''));
+      end for;
+    end if;
+    const Executed: M.Captured := await Processes.Run(
+      Options,
+      [Target],
+      Directory,
+      Cancellation
+    );
+    IO.File.WriteAllText(
+      IO.Path.Combine(Directory, 'run.json'),
+      J.JsonSerializer.Serialize<M.Captured>(Executed)
+    );
+    var Passed: bool := false;
+    if Item.ExpectedException.Length > 0 then
+      Passed := Executed.ExitCode <> 0 and Executed.Error.StartsWith(
+        'Unhandled exception. ' + Item.ExpectedException + ':',
+        S.StringComparison.Ordinal
+      );
+    else
+      Passed := Executed.ExitCode = 0 and Executed.Error.Length = 0 and Executed.Output.Replace(
+        #13 + '' + #10,
+        #10 + ''
+      ) = Expected.Replace(#13 + '' + #10, #10 + '');
+    end if;
+
+    return Outcome with
+      Passed := Passed; Run := if Passed then 'passed' else 'failed' end if;
+      Message := if Passed then 'passed'
+        else 'Execution did not satisfy the expected result. ' + Executed.Output
+        end if;
+    end with;
+  catch Failure: S.OperationCanceledException do
+    Cancellation.ThrowIfCancellationRequested();
+    return Outcome with Message := 'Process exceeded the example timeout'; end with;
+  catch Failure: S.Exception do
+    return Outcome with Message := Failure.Message; end with;
+  end try;
+end function;
+end unit;

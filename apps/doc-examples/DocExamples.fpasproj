@@ -1,0 +1,14 @@
+<Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultFpasCompileItems>false</EnableDefaultFpasCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src/**/*.fpas" />
+    <ProjectReference Include="../../src/Fpas.Processes/Fpas.Processes.csproj" />
+  </ItemGroup>
+  <Target Name="WriteDocExamplesSdkIdentity" AfterTargets="Build">
+    <WriteLinesToFile File="$(TargetDir)DocExamples.sdk.txt" Lines="$(FpasCompilerPath)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+</Project>

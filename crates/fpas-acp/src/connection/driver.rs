@@ -13,7 +13,7 @@ use crate::{
     transport::{Transport, TransportStatus},
 };
 use agent_client_protocol::{
-    Agent, Client, ConnectionTo, Dispatch, HandleDispatchFrom, Handled, UntypedMessage,
+    Agent, Builder, Client, ConnectionTo, Dispatch, HandleDispatchFrom, Handled, UntypedMessage,
 };
 use futures::FutureExt;
 use std::sync::Arc;
@@ -21,8 +21,8 @@ use std::sync::Arc;
 pub(super) async fn run(shared: Arc<Shared>, transport: Arc<dyn Transport>) {
     let wire = Wire::new(shared.clone(), transport.clone());
     let result = std::panic::AssertUnwindSafe(async {
-        let sdk = Client
-            .builder()
+        // FPAS owns v1/v2 negotiation; retain neutral handles across a lower-version selection.
+        let sdk = Builder::new(Client)
             .with_handler(Handler { wire: wire.clone() })
             .connect_with(wire.lines(), async |cx| commands(shared.clone(), cx).await);
         // SDK graceful draining can wait on physical output. Local close owns a

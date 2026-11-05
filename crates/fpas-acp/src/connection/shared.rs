@@ -3,8 +3,8 @@
 use super::{
     Closed, Event, Fault, Lifecycle, Limits, Payload, RequestToken, Responder, queue::Queue,
 };
-use crate::{RawJson, binding::Value, protocol::v1::RequestId, schema::Version};
-use agent_client_protocol::{RequestCancellation, RequestCancellationHandle};
+use crate::{RawJson, binding::Value, schema::Version};
+use agent_client_protocol::{RawJsonRpcId, RequestCancellation, RequestCancellationHandle};
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::{Arc, Mutex, MutexGuard},
@@ -46,7 +46,7 @@ pub(super) struct Pending {
     pub action: super::client::Action,
     pub _metadata: super::budget::Permit,
     pub method: String,
-    pub wire: Option<RequestId>,
+    pub wire: Option<RawJsonRpcId>,
     pub cancellation: Option<RequestCancellationHandle>,
     pub cancel_requested: bool,
 }
@@ -64,17 +64,17 @@ pub(super) struct Deferred {
 }
 
 pub(super) enum Publication {
-    Cancellation(RequestId),
-    Request(RequestId),
+    Cancellation(RawJsonRpcId),
+    Request(RawJsonRpcId),
     Notification(String),
-    Response(RequestId),
+    Response(RawJsonRpcId),
 }
 
 pub(super) struct State {
     pub routes: BTreeMap<String, super::mcp::Endpoint>,
     pub route_serial: u64,
     pub client: super::client::Client,
-    pub cancelled_replies: BTreeMap<RequestId, super::budget::Permit>,
+    pub cancelled_replies: BTreeMap<RawJsonRpcId, super::budget::Permit>,
     pub local_close: bool,
     pub lifecycle: Lifecycle,
     pub fault: Option<Fault>,

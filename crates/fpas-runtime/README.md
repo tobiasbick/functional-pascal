@@ -11,6 +11,11 @@ cells follow the [ownership contract](../../docs/pascal/program-structure/runtim
 Host adapters connect FPAS operations to independently owned ACP/MCP transports
 and other native services.
 
+Optional [execution budgets](../../docs/pascal/program-structure/execution-budgets.md)
+bound managed heap storage, instructions, active time and logical console output
+across all tasks and callbacks. Configure `ExecutionLimits` before running a VM
+or callback session; inspect its `execution_usage()` afterward.
+
 Run runtime checks with:
 
 ```sh

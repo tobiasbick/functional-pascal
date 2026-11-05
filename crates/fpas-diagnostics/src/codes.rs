@@ -318,6 +318,8 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
     /// Native I/O execution failed for an operation without a Result return type.
     RUNTIME_HOST_IO_FAILURE = 5027;
     RUNTIME_RESOURCE_RELEASE_FAILURE = 5028;
+    /// An optional execution-wide heap, instruction, time or output budget was exhausted.
+    RUNTIME_RESOURCE_LIMIT_EXCEEDED = 5029;
 });
 
 define_codes!(PROJECT_ALLOCATED_CODES => {

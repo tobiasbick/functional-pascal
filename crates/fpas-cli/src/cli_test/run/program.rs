@@ -50,6 +50,7 @@ impl RunOutput {
 
 /// Per-execution settings for one compiled or source-backed test program.
 pub(super) struct ProgramRunOptions<'a> {
+    pub execution_limits: fpas_runtime::ExecutionLimits,
     pub no_contracts: bool,
     pub collection_schedule: fpas_runtime::CollectionSchedule,
     /// Optional scripted input configuration.
@@ -70,6 +71,7 @@ pub(super) struct ProgramRunOptions<'a> {
 
 /// Fully compiled test input transferable to an isolated worker process.
 pub(in crate::cli_test) struct PreparedProgram {
+    pub execution_limits: fpas_runtime::ExecutionLimits,
     pub no_contracts: bool,
     pub collection_schedule: fpas_runtime::CollectionSchedule,
     pub test_path: PathBuf,
@@ -117,6 +119,7 @@ fn prepare_test_program(
     options: ProgramRunOptions<'_>,
 ) -> Result<PreparedProgram, TestOutcome> {
     let ProgramRunOptions {
+        execution_limits,
         no_contracts,
         collection_schedule,
         script_override,
@@ -170,6 +173,7 @@ fn prepare_test_program(
     };
 
     Ok(PreparedProgram {
+        execution_limits,
         no_contracts,
         collection_schedule,
         test_path: path.to_path_buf(),
@@ -206,6 +210,7 @@ pub(in crate::cli_test) fn run_prepared_program(
     gate: impl FnOnce() -> Result<(), String>,
 ) -> Result<TestOutcome, String> {
     let PreparedProgram {
+        execution_limits,
         no_contracts: _,
         collection_schedule,
         test_path,
@@ -223,8 +228,9 @@ pub(in crate::cli_test) fn run_prepared_program(
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, &paths));
     reporter.load_sources(&sources);
-    let mut vm =
-        fpas_runtime::execution::Vm::new(executable).with_collection_schedule(collection_schedule);
+    let mut vm = fpas_runtime::execution::Vm::new(executable)
+        .with_collection_schedule(collection_schedule)
+        .with_execution_limits(execution_limits);
     let supplemental = Arc::new(Mutex::new(Vec::new()));
     let received = Arc::clone(&supplemental);
     vm.set_supplemental_diagnostic(Arc::new(move |diagnostic| {

@@ -88,6 +88,7 @@ mod tests {
                 &test.path,
                 None,
                 TestRunSettings {
+                    execution_limits: Default::default(),
                     no_contracts: false,
                     collection_schedule: Default::default(),
                     script_override: None,
@@ -154,6 +155,7 @@ mod tests {
                 &test.path,
                 test.link.as_ref(),
                 TestRunSettings {
+                    execution_limits: Default::default(),
                     no_contracts: false,
                     collection_schedule: Default::default(),
                     script_override: None,
@@ -206,6 +208,7 @@ mod tests {
                 &test.path,
                 None,
                 TestRunSettings {
+                    execution_limits: Default::default(),
                     no_contracts: false,
                     collection_schedule: Default::default(),
                     script_override: None,

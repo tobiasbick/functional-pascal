@@ -31,6 +31,10 @@ impl Builder {
                     maximum: i64::from(i32::MAX),
                 };
             }
+            if owner == "Error" && wire == "data" {
+                // Its Rust field remains arbitrary JSON, including values outside named examples.
+                ty = Type::Raw { object: false };
+            }
             if names::patch(self.version, owner, wire) {
                 let inner = if let Type::Option(inner) = ty {
                     *inner

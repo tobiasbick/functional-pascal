@@ -186,8 +186,8 @@ pub(crate) fn expect_dict(v: &Value, location: SourceLocation) -> Result<&Shared
     }
 }
 
-pub(crate) fn pop_array(v: &Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
-    Ok(expect_array(v, location)?.iter().cloned().collect())
+pub(crate) fn pop_array(v: &Value, location: SourceLocation) -> Result<SharedArray, StdError> {
+    Ok(expect_array(v, location)?.clone())
 }
 
 /// Borrows a [`Value::Array`] without copying its elements.

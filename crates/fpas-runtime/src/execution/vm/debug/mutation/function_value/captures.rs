@@ -198,8 +198,8 @@ fn walk(value: &Value, depth: usize, state: &mut WalkState) -> Result<(), DebugS
 
 fn shared_identity(value: &Value) -> Option<usize> {
     Some(match value {
-        Value::Array(values) => std::ptr::from_ref(&**values) as usize,
-        Value::Dict(entries) => std::ptr::from_ref(&**entries) as usize,
+        Value::Array(values) => values.allocation_identity(),
+        Value::Dict(entries) => entries.allocation_identity(),
         Value::Record(record) => std::ptr::from_ref(record.body()) as usize,
         Value::Enum(enumeration) => std::ptr::from_ref(enumeration.body()) as usize,
         Value::Function(function) => identity_of_function(function),

@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::mem;
 
 use super::Value;
+use super::payload::PayloadBody;
 
 const MAX_BUFFER_CAPACITY: usize = 4096;
 const MAX_RETAINED_BYTES: usize = 4 * 1024 * 1024;
@@ -159,21 +160,35 @@ thread_local! {
         clippy::vec_box,
         reason = "the pool intentionally retains individual allocations for payload reuse"
     )]
-    static PAYLOAD_BOXES: RefCell<Vec<Box<Value>>> = const { RefCell::new(Vec::new()) };
+    static PAYLOAD_BOXES: RefCell<Vec<Box<PayloadBody>>> = const { RefCell::new(Vec::new()) };
 }
 
-pub(super) fn managed_payload_box(value: Value) -> Box<Value> {
+pub(super) fn managed_payload_box(value: Value) -> Box<PayloadBody> {
+    let memory = crate::resources::Reservation::new(mem::size_of::<PayloadBody>());
+    if memory.is_tracked() {
+        return Box::new(PayloadBody { value, memory });
+    }
     let mut payload = PAYLOAD_BOXES
         .try_with(|pool| pool.borrow_mut().pop())
         .ok()
         .flatten()
-        .unwrap_or_else(|| Box::new(Value::Unit));
-    *payload = value;
+        .unwrap_or_else(|| {
+            Box::new(PayloadBody {
+                value: Value::Unit,
+                memory: Default::default(),
+            })
+        });
+    payload.value = value;
+    payload.memory = memory;
     payload
 }
 
-pub(super) fn recycle_payload_box(payload: Box<Value>) {
-    debug_assert!(matches!(*payload, Value::Unit));
+pub(super) fn recycle_payload_box(mut payload: Box<PayloadBody>) {
+    debug_assert!(matches!(payload.value, Value::Unit));
+    if payload.memory.is_tracked() {
+        return;
+    }
+    payload.memory = Default::default();
     let _ = PAYLOAD_BOXES.try_with(move |pool| {
         let mut pool = pool.borrow_mut();
         if pool.len() < MAX_PAYLOAD_BOXES {
@@ -188,25 +203,44 @@ pub(super) fn recycle_payload_box(payload: Box<Value>) {
 /// should move the returned buffer into a shared aggregate so it can be recycled again.
 #[must_use]
 pub fn managed_value_buffer(minimum_capacity: usize) -> Vec<Value> {
+    crate::resources::preflight(minimum_capacity.saturating_mul(mem::size_of::<Value>()));
+    value_buffer(minimum_capacity)
+}
+
+fn value_buffer(minimum_capacity: usize) -> Vec<Value> {
+    if crate::resources::heap_active() {
+        return Vec::with_capacity(minimum_capacity);
+    }
     VALUE_BUFFERS
         .try_with(|pool| pool.borrow_mut().take(minimum_capacity))
         .unwrap_or_else(|_| Vec::with_capacity(minimum_capacity))
 }
 
 pub(super) fn managed_pair_buffer(minimum_capacity: usize) -> Vec<(Value, Value)> {
+    if crate::resources::heap_active() {
+        return Vec::with_capacity(minimum_capacity);
+    }
     PAIR_BUFFERS
         .try_with(|pool| pool.borrow_mut().take(minimum_capacity))
         .unwrap_or_else(|_| Vec::with_capacity(minimum_capacity))
 }
 
 pub(super) fn managed_string_buffer(minimum_capacity: usize) -> String {
+    crate::resources::preflight(minimum_capacity);
+    string_buffer(minimum_capacity)
+}
+
+pub(super) fn string_buffer(minimum_capacity: usize) -> String {
+    if crate::resources::heap_active() {
+        return String::with_capacity(minimum_capacity);
+    }
     STRING_BUFFERS
         .try_with(|pool| pool.borrow_mut().take(minimum_capacity))
         .unwrap_or_else(|_| String::with_capacity(minimum_capacity))
 }
 
 pub(super) fn clone_values(values: &[Value]) -> Vec<Value> {
-    let mut clone = managed_value_buffer(values.len());
+    let mut clone = value_buffer(values.len());
     clone.extend_from_slice(values);
     clone
 }

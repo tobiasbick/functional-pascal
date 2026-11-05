@@ -147,6 +147,7 @@ pub(in crate::execution::vm) fn attach_related(primary: &mut VmError, further: &
 impl Worker {
     /// Preserve the first available fault state; propagated errors retain their original cause.
     pub(in crate::execution::vm) fn capture_failure(&self, mut error: VmError) -> VmError {
+        let _resources = crate::resources::Scope::untracked();
         if let Some(state) = self
             .scheduler
             .as_ref()

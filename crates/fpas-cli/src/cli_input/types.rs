@@ -53,6 +53,7 @@ pub(crate) enum CliInput {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CliConfig {
+    pub execution_limits: fpas_runtime::ExecutionLimits,
     pub no_contracts: bool,
     pub collection_schedule: fpas_runtime::CollectionSchedule,
     pub input: CliInput,
@@ -77,6 +78,7 @@ pub(crate) enum DebugProtocol {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DebugCliConfig {
+    pub heap_limit: Option<usize>,
     pub no_contracts: bool,
     pub profile: Option<PathBuf>,
     pub collection_schedule: fpas_runtime::CollectionSchedule,
@@ -184,6 +186,7 @@ pub(crate) struct FmtCliConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct TestCliConfig {
+    pub execution_limits: fpas_runtime::ExecutionLimits,
     pub no_contracts: bool,
     pub collection_schedule: fpas_runtime::CollectionSchedule,
     pub input: CliInput,

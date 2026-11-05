@@ -93,7 +93,9 @@ impl DebugSession {
         let _evaluation_scope = self.evaluation_roots.enter();
         let _domain_access = self.runtime.access_domains();
         self.require_stopped("variant.construct")?;
-        let result = (|| {
+        let resources = self.resource_budget();
+        let _resources = crate::resources::Scope::enter(&resources);
+        let result = crate::resources::catch(|| {
             let resolved = self.resolve_variant_construction(
                 assignment,
                 PreparedFields { variant, fields },
@@ -113,7 +115,8 @@ impl DebugSession {
                 variant: resolved.variant.canonical_name,
                 value,
             })
-        })();
+        })
+        .unwrap_or_else(Self::budget_failure);
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
     }

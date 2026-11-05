@@ -3,7 +3,13 @@
 #[cfg(test)]
 mod tests;
 
+use crate::resources::Reservation;
 use std::{fmt, ops::Deref, sync::Arc};
+
+struct ByteBody {
+    data: Vec<u8>,
+    memory: Reservation,
+}
 
 /// Maximum logical length and accessible capacity of a byte buffer.
 pub const MAX_BYTE_BUFFER_LENGTH: usize = 256 * 1024 * 1024;
@@ -23,7 +29,7 @@ pub enum ByteStorageError {
 ///
 /// Backing allocations are not pooled. Their final owner releases the native vector.
 #[derive(Clone)]
-pub struct SharedBytes(Arc<Vec<u8>>);
+pub struct SharedBytes(Arc<ByteBody>);
 
 impl SharedBytes {
     #[cfg(test)]
@@ -33,33 +39,38 @@ impl SharedBytes {
 
     /// Allocate `length` initialized zero bytes with exactly that capacity.
     pub fn zeroed(length: usize) -> Result<Self, ByteStorageError> {
+        check_length(length)?;
+        let memory = Reservation::shared::<ByteBody>(length);
         let mut data = allocate(length)?;
         data.resize(length, 0);
-        Ok(Self(Arc::new(data)))
+        Ok(Self(Arc::new(ByteBody { data, memory })))
     }
 
     /// Copy initialized bytes into an independent exact-capacity allocation.
     pub fn from_slice(bytes: &[u8]) -> Result<Self, ByteStorageError> {
+        check_length(bytes.len())?;
+        let memory = Reservation::shared::<ByteBody>(bytes.len());
         let mut data = allocate(bytes.len())?;
         data.extend_from_slice(bytes);
-        Ok(Self(Arc::new(data)))
+        Ok(Self(Arc::new(ByteBody { data, memory })))
     }
 
     /// Adopt native result storage without expanding it into tagged values.
     pub fn from_vec(data: Vec<u8>) -> Result<Self, ByteStorageError> {
         check_length(data.len())?;
         if data.is_empty() {
-            return Ok(Self(Arc::new(Vec::new())));
+            return Self::zeroed(0);
         }
         if data.capacity() > MAX_BYTE_BUFFER_LENGTH {
             return Self::from_slice(&data);
         }
-        Ok(Self(Arc::new(data)))
+        let memory = Reservation::shared::<ByteBody>(data.capacity());
+        Ok(Self(Arc::new(ByteBody { data, memory })))
     }
 
     /// Accessible capacity retained by this value, excluding allocator metadata.
     pub fn capacity(&self) -> usize {
-        self.0.capacity()
+        self.0.data.capacity()
     }
 
     /// Return a checked independent slice; only a nonempty full slice shares backing.
@@ -151,17 +162,24 @@ impl SharedBytes {
         check_length(required)?;
         let capacity = growth(self.capacity(), required);
         if Arc::get_mut(&mut self.0).is_none() {
+            let memory = Reservation::shared::<ByteBody>(capacity);
             let mut data = allocate(capacity)?;
             data.extend_from_slice(self);
-            self.0 = Arc::new(data);
+            self.0 = Arc::new(ByteBody { data, memory });
         }
-        let Some(data) = Arc::get_mut(&mut self.0) else {
+        let Some(body) = Arc::get_mut(&mut self.0) else {
             unreachable!("fresh or unique byte storage has one owner");
         };
-        if capacity > data.capacity() {
-            reserve_exact(data, capacity)?;
+        if capacity > body.data.capacity() {
+            let old = crate::resources::shared_size::<ByteBody>(body.data.capacity());
+            body.memory
+                .resize(crate::resources::shared_size::<ByteBody>(capacity));
+            if let Err(error) = reserve_exact(&mut body.data, capacity) {
+                body.memory.resize(old);
+                return Err(error);
+            }
         }
-        Ok(data)
+        Ok(&mut body.data)
     }
 }
 
@@ -169,7 +187,7 @@ impl Deref for SharedBytes {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.0.data
     }
 }
 

@@ -15,6 +15,7 @@ fn test_cli_reports_skipped_tests_without_strict() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            execution_limits: Default::default(),
             no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
@@ -54,6 +55,7 @@ fn test_cli_reports_skipped_tests_with_timeout() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            execution_limits: Default::default(),
             no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),
@@ -94,6 +96,7 @@ fn test_cli_strict_fails_when_tests_are_skipped() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            execution_limits: Default::default(),
             no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.clone()),

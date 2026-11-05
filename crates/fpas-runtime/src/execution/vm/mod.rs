@@ -128,6 +128,25 @@ pub struct Vm {
 }
 
 impl Vm {
+    /// Set optional execution-wide budgets before starting this VM.
+    #[must_use]
+    pub fn with_execution_limits(self, limits: crate::ExecutionLimits) -> Self {
+        self.hosted.budget.configure(limits);
+        self
+    }
+
+    /// Observe this VM's shared resource accounting.
+    #[must_use]
+    pub fn execution_usage(&self) -> crate::ExecutionUsage {
+        self.hosted.budget.usage()
+    }
+
+    /// Read the execution-wide budgets configured for this VM.
+    #[must_use]
+    pub fn execution_limits(&self) -> crate::ExecutionLimits {
+        self.hosted.budget.limits()
+    }
+
     /// Receive cleanup diagnostics which accompany a preserved program outcome.
     /// The callback may run on any VM worker thread and must not block that worker.
     pub fn set_supplemental_diagnostic(
@@ -395,25 +414,39 @@ impl Vm {
                 "Register VM instances are single-use. Construct a new instance for each callback.",
             ));
         }
-        let result = self.layouts.clone().and_then(|layouts| {
-            let (arguments, argument_roots) =
-                self.host_values.admit(arguments, &self.executable)?;
-            let worker = Worker::for_function_in_domain(
-                Arc::clone(&self.executable),
-                function,
-                FunctionInputs {
-                    arguments: &arguments,
-                    captures: &[],
-                    domain: self.domain.clone(),
-                },
-                Arc::clone(&self.globals),
-                layouts,
-                Arc::clone(&self.hosted),
-            );
-            crate::release_values(arguments);
-            drop(argument_roots);
-            worker?.run()
+        self.hosted.budget.resume();
+        let _resources = crate::resources::Scope::enter(&self.hosted.budget);
+        let result = crate::resources::catch(|| {
+            self.layouts.clone().and_then(|layouts| {
+                let (arguments, argument_roots) =
+                    self.host_values.admit(arguments, &self.executable)?;
+                let worker = Worker::for_function_in_domain(
+                    Arc::clone(&self.executable),
+                    function,
+                    FunctionInputs {
+                        arguments: &arguments,
+                        captures: &[],
+                        domain: self.domain.clone(),
+                    },
+                    Arc::clone(&self.globals),
+                    layouts,
+                    Arc::clone(&self.hosted),
+                );
+                crate::release_values(arguments);
+                drop(argument_roots);
+                worker?.run()
+            })
+        })
+        .unwrap_or_else(|error| {
+            Err(diagnostics::at_address(
+                self.executable.executable(),
+                crate::InstructionAddress::new(0),
+                fpas_diagnostics::codes::RUNTIME_RESOURCE_LIMIT_EXCEEDED,
+                error.to_string(),
+                "Increase the execution budget or reduce the program's resource use.",
+            ))
         });
+        self.hosted.budget.pause();
         self.hosted.close_process_handles();
         self.hosted.close_file_handles();
         self.hosted.wait_process_handles();

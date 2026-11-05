@@ -21,6 +21,11 @@ The runner accepts the three [collection scheduling overrides](../../program-str
 The effective configuration also applies to setup/teardown hooks, parallel runs
 and isolated timeout workers. Omitted options use the shared runtime defaults.
 
+The runner also accepts [execution budgets](../../program-structure/execution-budgets.md):
+`--heap-limit`, `--instruction-limit` and `--output-limit` apply per test VM,
+including child tasks and callbacks. Hook VMs receive the same configuration.
+The existing outer per-test timeout remains in place for native/process cleanup.
+
 `--no-contracts` omits contract evaluation and checks in test bodies, dependencies
 and hooks, including isolated workers. Test assertions retain their behavior.
 See [contract policy](../../program-structure/cli.md#contract-policy).

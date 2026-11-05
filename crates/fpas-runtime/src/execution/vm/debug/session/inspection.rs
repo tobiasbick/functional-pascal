@@ -228,35 +228,37 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<crate::Value, DebugSessionError> {
-        let task_id = self.task_for_frame(frame_id)?;
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        inspection.validate_evaluation_frame(frame_id)?;
-        let worker = self
-            .runtime
-            .worker(task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = LazyCallSandbox::new(
-            inspection,
-            frame_id,
-            Arc::clone(&self.executable),
-            Arc::clone(&worker.layouts),
-            Arc::clone(&worker.globals),
-            self.runtime.worker(0).map(|worker| worker.domain.clone()),
-            limits,
-            Arc::clone(&self.evaluation_cancelled),
-        );
-        let result = evaluate_value(
-            expression,
-            limits,
-            |name| inspection.resolve_evaluation_name(frame_id, name),
-            |target, arguments| sandbox.invoke(target, arguments),
-        )?;
-        self.evaluation_roots
-            .retain(sandbox.result_roots(std::slice::from_ref(&result))?);
-        Ok(result)
+        self.with_resource_budget(|| {
+            let task_id = self.task_for_frame(frame_id)?;
+            let inspection = self
+                .inspections
+                .get(&task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            inspection.validate_evaluation_frame(frame_id)?;
+            let worker = self
+                .runtime
+                .worker(task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            let mut sandbox = LazyCallSandbox::new(
+                inspection,
+                frame_id,
+                Arc::clone(&self.executable),
+                Arc::clone(&worker.layouts),
+                Arc::clone(&worker.globals),
+                self.runtime.worker(0).map(|worker| worker.domain.clone()),
+                limits,
+                Arc::clone(&self.evaluation_cancelled),
+            );
+            let result = evaluate_value(
+                expression,
+                limits,
+                |name| inspection.resolve_evaluation_name(frame_id, name),
+                |target, arguments| sandbox.invoke(target, arguments),
+            )?;
+            self.evaluation_roots
+                .retain(sandbox.result_roots(std::slice::from_ref(&result))?);
+            Ok(result)
+        })
     }
 
     /// Evaluates ordered expressions under one budget in one detached task context.
@@ -266,34 +268,36 @@ impl DebugSession {
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<Vec<crate::Value>, DebugSessionError> {
-        let task_id = self.task_for_frame(frame_id)?;
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        inspection.validate_evaluation_frame(frame_id)?;
-        let worker = self
-            .runtime
-            .worker(task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = LazyCallSandbox::new(
-            inspection,
-            frame_id,
-            Arc::clone(&self.executable),
-            Arc::clone(&worker.layouts),
-            Arc::clone(&worker.globals),
-            self.runtime.worker(0).map(|worker| worker.domain.clone()),
-            limits,
-            Arc::clone(&self.evaluation_cancelled),
-        );
-        let result = evaluate_values(
-            expressions,
-            limits,
-            |name| inspection.resolve_evaluation_name(frame_id, name),
-            |target, arguments| sandbox.invoke(target, arguments),
-        )?;
-        self.evaluation_roots.retain(sandbox.result_roots(&result)?);
-        Ok(result)
+        self.with_resource_budget(|| {
+            let task_id = self.task_for_frame(frame_id)?;
+            let inspection = self
+                .inspections
+                .get(&task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            inspection.validate_evaluation_frame(frame_id)?;
+            let worker = self
+                .runtime
+                .worker(task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            let mut sandbox = LazyCallSandbox::new(
+                inspection,
+                frame_id,
+                Arc::clone(&self.executable),
+                Arc::clone(&worker.layouts),
+                Arc::clone(&worker.globals),
+                self.runtime.worker(0).map(|worker| worker.domain.clone()),
+                limits,
+                Arc::clone(&self.evaluation_cancelled),
+            );
+            let result = evaluate_values(
+                expressions,
+                limits,
+                |name| inspection.resolve_evaluation_name(frame_id, name),
+                |target, arguments| sandbox.invoke(target, arguments),
+            )?;
+            self.evaluation_roots.retain(sandbox.result_roots(&result)?);
+            Ok(result)
+        })
     }
 
     /// Evaluates ordered expressions around one validation checkpoint under one shared budget.
@@ -305,37 +309,39 @@ impl DebugSession {
         limits: DebugEvaluationLimits,
         checkpoint: impl FnOnce(&[crate::Value]) -> Result<T, DebugSessionError>,
     ) -> Result<(T, Vec<crate::Value>), DebugSessionError> {
-        let task_id = self.task_for_frame(frame_id)?;
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        inspection.validate_evaluation_frame(frame_id)?;
-        let worker = self
-            .runtime
-            .worker(task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = LazyCallSandbox::new(
-            inspection,
-            frame_id,
-            Arc::clone(&self.executable),
-            Arc::clone(&worker.layouts),
-            Arc::clone(&worker.globals),
-            self.runtime.worker(0).map(|worker| worker.domain.clone()),
-            limits,
-            Arc::clone(&self.evaluation_cancelled),
-        );
-        let result = evaluate_values_with_checkpoint(
-            prefix,
-            suffix,
-            limits,
-            |name| inspection.resolve_evaluation_name(frame_id, name),
-            |target, arguments| sandbox.invoke(target, arguments),
-            checkpoint,
-        )?;
-        self.evaluation_roots
-            .retain(sandbox.result_roots(&result.1)?);
-        Ok(result)
+        self.with_resource_budget(|| {
+            let task_id = self.task_for_frame(frame_id)?;
+            let inspection = self
+                .inspections
+                .get(&task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            inspection.validate_evaluation_frame(frame_id)?;
+            let worker = self
+                .runtime
+                .worker(task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            let mut sandbox = LazyCallSandbox::new(
+                inspection,
+                frame_id,
+                Arc::clone(&self.executable),
+                Arc::clone(&worker.layouts),
+                Arc::clone(&worker.globals),
+                self.runtime.worker(0).map(|worker| worker.domain.clone()),
+                limits,
+                Arc::clone(&self.evaluation_cancelled),
+            );
+            let result = evaluate_values_with_checkpoint(
+                prefix,
+                suffix,
+                limits,
+                |name| inspection.resolve_evaluation_name(frame_id, name),
+                |target, arguments| sandbox.invoke(target, arguments),
+                checkpoint,
+            )?;
+            self.evaluation_roots
+                .retain(sandbox.result_roots(&result.1)?);
+            Ok(result)
+        })
     }
 
     /// Evaluates selectors, derives ordered value expressions, and evaluates them under one budget.
@@ -346,35 +352,37 @@ impl DebugSession {
         limits: DebugEvaluationLimits,
         checkpoint: impl FnOnce(&[crate::Value]) -> Result<(T, Vec<DebugExpression>), DebugSessionError>,
     ) -> Result<(T, Vec<crate::Value>), DebugSessionError> {
-        let task_id = self.task_for_frame(frame_id)?;
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        inspection.validate_evaluation_frame(frame_id)?;
-        let worker = self
-            .runtime
-            .worker(task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = LazyCallSandbox::new(
-            inspection,
-            frame_id,
-            Arc::clone(&self.executable),
-            Arc::clone(&worker.layouts),
-            Arc::clone(&worker.globals),
-            self.runtime.worker(0).map(|worker| worker.domain.clone()),
-            limits,
-            Arc::clone(&self.evaluation_cancelled),
-        );
-        let result = evaluate_values_with_dynamic_suffix(
-            prefix,
-            limits,
-            |name| inspection.resolve_evaluation_name(frame_id, name),
-            |target, arguments| sandbox.invoke(target, arguments),
-            checkpoint,
-        )?;
-        self.evaluation_roots
-            .retain(sandbox.result_roots(&result.1)?);
-        Ok(result)
+        self.with_resource_budget(|| {
+            let task_id = self.task_for_frame(frame_id)?;
+            let inspection = self
+                .inspections
+                .get(&task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            inspection.validate_evaluation_frame(frame_id)?;
+            let worker = self
+                .runtime
+                .worker(task_id)
+                .ok_or_else(|| unknown_task(task_id))?;
+            let mut sandbox = LazyCallSandbox::new(
+                inspection,
+                frame_id,
+                Arc::clone(&self.executable),
+                Arc::clone(&worker.layouts),
+                Arc::clone(&worker.globals),
+                self.runtime.worker(0).map(|worker| worker.domain.clone()),
+                limits,
+                Arc::clone(&self.evaluation_cancelled),
+            );
+            let result = evaluate_values_with_dynamic_suffix(
+                prefix,
+                limits,
+                |name| inspection.resolve_evaluation_name(frame_id, name),
+                |target, arguments| sandbox.invoke(target, arguments),
+                checkpoint,
+            )?;
+            self.evaluation_roots
+                .retain(sandbox.result_roots(&result.1)?);
+            Ok(result)
+        })
     }
 }

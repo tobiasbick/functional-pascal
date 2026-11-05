@@ -32,6 +32,19 @@ pub struct CallbackSession {
 }
 
 impl CallbackSession {
+    /// Set optional shared budgets before the first invocation in this session.
+    #[must_use]
+    pub fn with_execution_limits(self, limits: crate::ExecutionLimits) -> Self {
+        self.hosted.budget.configure(limits);
+        self
+    }
+
+    /// Observe resources retained across this session's callback invocations.
+    #[must_use]
+    pub fn execution_usage(&self) -> crate::ExecutionUsage {
+        self.hosted.budget.usage()
+    }
+
     /// Configure collection for this reusable session and its nested execution.
     #[must_use]
     pub fn with_collection_schedule(self, schedule: crate::CollectionSchedule) -> Self {
@@ -86,25 +99,41 @@ impl CallbackSession {
         if self.stopped {
             return Err(stopped_error(self.executable.executable()));
         }
-        let layouts = self.layouts.clone()?;
-        let (arguments, argument_roots) = self.host_values.admit(arguments, &self.executable)?;
-        let worker = Worker::for_function_in_domain(
-            Arc::clone(&self.executable),
-            function,
-            FunctionInputs {
-                arguments: &arguments,
-                captures: &[],
-                domain: self.domain.clone(),
-            },
-            Arc::clone(&self.globals),
-            layouts,
-            Arc::clone(&self.hosted),
-        );
-        crate::release_values(arguments);
-        drop(argument_roots);
-        worker?
-            .run()
-            .map(|execution| self.host_values.export(execution))
+        self.hosted.budget.resume();
+        let _resources = crate::resources::Scope::enter(&self.hosted.budget);
+        let result = crate::resources::catch(|| {
+            let layouts = self.layouts.clone()?;
+            let (arguments, argument_roots) =
+                self.host_values.admit(arguments, &self.executable)?;
+            let worker = Worker::for_function_in_domain(
+                Arc::clone(&self.executable),
+                function,
+                FunctionInputs {
+                    arguments: &arguments,
+                    captures: &[],
+                    domain: self.domain.clone(),
+                },
+                Arc::clone(&self.globals),
+                layouts,
+                Arc::clone(&self.hosted),
+            );
+            crate::release_values(arguments);
+            drop(argument_roots);
+            worker?
+                .run()
+                .map(|execution| self.host_values.export(execution))
+        })
+        .unwrap_or_else(|error| {
+            Err(super::diagnostics::at_address(
+                self.executable.executable(),
+                crate::InstructionAddress::new(0),
+                fpas_diagnostics::codes::RUNTIME_RESOURCE_LIMIT_EXCEEDED,
+                error.to_string(),
+                "Increase the execution budget or reduce the callback's resource use.",
+            ))
+        });
+        self.hosted.budget.pause();
+        result
     }
 
     /// Cancel further hosted callback invocations.

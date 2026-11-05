@@ -766,6 +766,7 @@ can describe a structural restriction and leave those fields null.
 | FP5026 | Unsupported seeded scheduling effect | A controlled debug run reaches a host effect or a task operation inside a synchronous native callback | Use ordinary debugging, fixed arguments/queued text input, or move the task operation outside the synchronous callback. |
 | FP5027 | Host I/O worker failure | A suspended plain-return filesystem or Console call cannot start its native worker, or that worker exits without a result | Restore host thread resources and retry the call; ordinary I/O errors retain the API's documented outcome. |
 | FP5028 | Resource release failure | An automatic native release returns an operational error | Inspect the release failure and its resource; a propagated Result error or None remains the function result. |
+| FP5029 | Execution resource budget | `fpas run app.fpas --heap-limit 1024` reaches more managed storage than its budget | Increase the selected heap/instruction/time/output budget or reduce the program's resource use; see [execution budgets](../program-structure/execution-budgets.md). |
 
 ### Internal invariants
 

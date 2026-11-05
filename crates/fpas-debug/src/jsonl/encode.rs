@@ -72,6 +72,7 @@ pub(crate) fn initialize_body(
         "version": 2,
         "capabilities": capabilities,
         "limits": {
+            "heap_bytes": execution.max_heap_bytes,
             "stack_frames": inspection.max_frames,
             "variables": inspection.max_children,
             "value_depth": inspection.max_depth,

@@ -137,6 +137,16 @@ public type AgentResponse = enum
   // Parameters:
   // - `Payload`: `Std.Ai.Acp.V2.CloseSessionResponse` input value used by `CloseSessionResponse`.
   CloseSessionResponse(Payload: CloseSessionResponse);
+  // `CancelToolCallResponse` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.CancelToolCallResponse` input value used by `CancelToolCallResponse`.
+  CancelToolCallResponse(Payload: CancelToolCallResponse);
+  // `CancelTerminalResponse` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.CancelTerminalResponse` input value used by `CancelTerminalResponse`.
+  CancelTerminalResponse(Payload: CancelTerminalResponse);
   // `SetSessionConfigOptionResponse` enum member.
   //
   // Parameters:
@@ -174,12 +184,6 @@ public type AudioContent = record
   public Data: string;
   public MimeType: MediaType;
   public Annotations: option of Annotations;
-  public Meta: option of Types.RawJson;
-end record;
-
-// Intrinsic `AuthCapabilities` data type.
-public type AuthCapabilities = record
-  public Terminal: option of TerminalAuthCapabilities;
   public Meta: option of Types.RawJson;
 end record;
 
@@ -225,12 +229,19 @@ public type AuthMethodTerminal = record
 end record;
 
 // Intrinsic `AvailableCommand` data type.
-public type AvailableCommand = record
-  public Name: string;
-  public Description: string;
-  public Input: option of AvailableCommandInput;
-  public Meta: option of Types.RawJson;
-end record;
+public type AvailableCommand = enum
+  // `Command` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.Command` input value used by `Command`.
+  Command(Payload: Command);
+  // `Unknown` enum member.
+  //
+  // Parameters:
+  // - `Tag`: `string` input value used by `Unknown`.
+  // - `Payload`: `Std.Ai.Acp.Types.RawJson` input value used by `Unknown`.
+  Unknown(Tag: string; Payload: Types.RawJson);
+end enum;
 
 // Intrinsic `AvailableCommandInput` data type.
 public type AvailableCommandInput = enum
@@ -252,6 +263,49 @@ public type AvailableCommandsUpdate = record
   public AvailableCommands: array of AvailableCommand;
   public Meta: option of Types.RawJson;
 end record;
+
+// Intrinsic `BackgroundSubagent` data type.
+public type BackgroundSubagent = record
+  public SessionId: SessionId;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `BackgroundTerminal` data type.
+public type BackgroundTerminal = record
+  public TerminalId: TerminalId;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `BackgroundToolCall` data type.
+public type BackgroundToolCall = record
+  public ToolCallId: ToolCallId;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `BackgroundWork` data type.
+public type BackgroundWork = enum
+  // `Terminal` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.BackgroundTerminal` input value used by `Terminal`.
+  Terminal(Payload: BackgroundTerminal);
+  // `ToolCall` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.BackgroundToolCall` input value used by `ToolCall`.
+  ToolCall(Payload: BackgroundToolCall);
+  // `Subagent` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.BackgroundSubagent` input value used by `Subagent`.
+  Subagent(Payload: BackgroundSubagent);
+  // `Unknown` enum member.
+  //
+  // Parameters:
+  // - `Tag`: `string` input value used by `Unknown`.
+  // - `Payload`: `Std.Ai.Acp.Types.RawJson` input value used by `Unknown`.
+  Unknown(Tag: string; Payload: Types.RawJson);
+end enum;
 
 // Intrinsic `BlobResourceContents` data type.
 public type BlobResourceContents = record
@@ -281,9 +335,44 @@ public type CancelSessionNotification = record
   public Meta: option of Types.RawJson;
 end record;
 
+// Intrinsic `CancelTerminalRequest` data type.
+public type CancelTerminalRequest = record
+  public SessionId: SessionId;
+  public TerminalId: TerminalId;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `CancelTerminalResponse` data type.
+public type CancelTerminalResponse = record
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `CancelToolCallRequest` data type.
+public type CancelToolCallRequest = record
+  public SessionId: SessionId;
+  public ToolCallId: ToolCallId;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `CancelToolCallResponse` data type.
+public type CancelToolCallResponse = record
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `CancelledPermissionOutcome` data type.
+public type CancelledPermissionOutcome = record
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `ClientAuthCapabilities` data type.
+public type ClientAuthCapabilities = record
+  public Terminal: option of TerminalAuthCapabilities;
+  public Meta: option of Types.RawJson;
+end record;
+
 // Intrinsic `ClientCapabilities` data type.
 public type ClientCapabilities = record
-  public Auth: option of AuthCapabilities;
+  public Auth: option of ClientAuthCapabilities;
   public Elicitation: option of ElicitationCapabilities;
   public Meta: option of Types.RawJson;
 end record;
@@ -369,6 +458,16 @@ public type ClientRequest = enum
   // Parameters:
   // - `Payload`: `Std.Ai.Acp.V2.CloseSessionRequest` input value used by `CloseSessionRequest`.
   CloseSessionRequest(Payload: CloseSessionRequest);
+  // `CancelToolCallRequest` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.CancelToolCallRequest` input value used by `CancelToolCallRequest`.
+  CancelToolCallRequest(Payload: CancelToolCallRequest);
+  // `CancelTerminalRequest` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.CancelTerminalRequest` input value used by `CancelTerminalRequest`.
+  CancelTerminalRequest(Payload: CancelTerminalRequest);
   // `SetSessionConfigOptionRequest` enum member.
   //
   // Parameters:
@@ -418,6 +517,14 @@ end record;
 
 // Intrinsic `CloseSessionResponse` data type.
 public type CloseSessionResponse = record
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `Command` data type.
+public type Command = record
+  public Name: string;
+  public Description: string;
+  public Input: option of AvailableCommandInput;
   public Meta: option of Types.RawJson;
 end record;
 
@@ -709,6 +816,7 @@ end enum;
 public type DiffPatch = record
   public Format: DiffPatchFormat;
   public Text: string;
+  public Meta: option of Types.RawJson;
 end record;
 
 // Intrinsic `DiffPatchFormat` data type.
@@ -783,6 +891,11 @@ public type ElicitationContentValue = enum
   // Parameters:
   // - `Payload`: `array of string` input value used by `Items5`.
   Items5(Payload: array of string);
+  // `Variant6` enum member.
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.Types.RawJson` input value used by `Variant6`.
+  Variant6(Payload: Types.RawJson);
 end enum;
 
 // Intrinsic `ElicitationFormCapabilities` data type.
@@ -960,12 +1073,17 @@ public type ErrorCode = enum
   AuthenticationRequired;
   // `ResourceNotFound` enum member.
   ResourceNotFound;
+  // `UnsupportedProtocolVersion` enum member.
+  UnsupportedProtocolVersion;
   // `IntegerValue` enum member.
   //
   // Parameters:
   // - `Payload`: `integer` input value used by `IntegerValue`.
   IntegerValue(Payload: integer);
 end enum;
+
+// Intrinsic `ErrorData` data type.
+public type ErrorData = Types.RawJson;
 
 // Intrinsic `ErrorStopReason` data type.
 public type ErrorStopReason = record
@@ -1020,6 +1138,7 @@ public type Icon = record
   public MimeType: option of MediaType;
   public Sizes: option of array of string;
   public Theme: option of IconTheme;
+  public Meta: option of Types.RawJson;
 end record;
 
 // Intrinsic `IconTheme` data type.
@@ -1038,6 +1157,7 @@ end enum;
 // Intrinsic `IdleStateUpdate` data type.
 public type IdleStateUpdate = record
   public Usage: option of Usage;
+  public Background: option of array of BackgroundWork;
   public Meta: option of Types.RawJson;
   public Kind: IdleStateUpdateKind;
 end record;
@@ -1638,8 +1758,6 @@ end record;
 
 // Intrinsic `RequestId` data type.
 public type RequestId = enum
-  // `NullValue` enum member.
-  NullValue;
   // `IntegerValue` enum member.
   //
   // Parameters:
@@ -1655,7 +1773,10 @@ end enum;
 // Intrinsic `RequestPermissionOutcome` data type.
 public type RequestPermissionOutcome = enum
   // `Cancelled` enum member.
-  Cancelled;
+  //
+  // Parameters:
+  // - `Payload`: `Std.Ai.Acp.V2.CancelledPermissionOutcome` input value used by `Cancelled`.
+  Cancelled(Payload: CancelledPermissionOutcome);
   // `Selected` enum member.
   //
   // Parameters:
@@ -1707,6 +1828,7 @@ end enum;
 
 // Intrinsic `RequiresActionStateUpdate` data type.
 public type RequiresActionStateUpdate = record
+  public Background: option of array of BackgroundWork;
   public Meta: option of Types.RawJson;
 end record;
 
@@ -1718,7 +1840,7 @@ public type ResourceLink = record
   public Description: option of string;
   public Icons: option of array of Icon;
   public MimeType: option of MediaType;
-  public Size: option of integer;
+  public Size: option of Types.UInt64;
   public Annotations: option of Annotations;
   public Meta: option of Types.RawJson;
 end record;
@@ -1756,6 +1878,7 @@ end enum;
 
 // Intrinsic `RunningStateUpdate` data type.
 public type RunningStateUpdate = record
+  public Background: option of array of BackgroundWork;
   public Meta: option of Types.RawJson;
 end record;
 
@@ -1930,6 +2053,8 @@ public type SessionMessage = record
   public MessageId: MessageId;
   public SenderSessionId: option of SessionId;
   public RecipientSessionId: option of SessionId;
+  public SenderMessageId: option of MessageId;
+  public RecipientMessageId: option of MessageId;
   public Content: Types.Field of array of ContentBlock;
   public Meta: Types.Field of Types.RawJson;
 end record;
@@ -1937,9 +2062,13 @@ end record;
 // Intrinsic `SessionMessageChunk` data type.
 public type SessionMessageChunk = record
   public MessageId: MessageId;
-  public SenderSessionId: option of SessionId;
-  public RecipientSessionId: option of SessionId;
   public Content: ContentBlock;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `SessionNotFoundErrorData` data type.
+public type SessionNotFoundErrorData = record
+  public SessionId: SessionId;
   public Meta: option of Types.RawJson;
 end record;
 
@@ -2223,6 +2352,8 @@ public type SubagentUpdate = record
   public Description: Types.Field of string;
   public Capabilities: Types.Field of SubagentSessionCapabilities;
   public State: Types.Field of StateUpdate;
+  public Cwd: option of AbsolutePath;
+  public AdditionalDirectories: option of array of AbsolutePath;
   public Meta: Types.Field of Types.RawJson;
 end record;
 
@@ -2257,6 +2388,17 @@ public type TerminalAuthCapabilities = record
   public Meta: option of Types.RawJson;
 end record;
 
+// Intrinsic `TerminalCancelCapabilities` data type.
+public type TerminalCancelCapabilities = record
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `TerminalCapabilities` data type.
+public type TerminalCapabilities = record
+  public Cancel: option of TerminalCancelCapabilities;
+  public Meta: option of Types.RawJson;
+end record;
+
 // Intrinsic `TerminalExitStatus` data type.
 public type TerminalExitStatus = record
   public ExitCode: option of integer;
@@ -2280,6 +2422,13 @@ public type TerminalOutputChunk = record
   public Meta: option of Types.RawJson;
 end record;
 
+// Intrinsic `TerminalSize` data type.
+public type TerminalSize = record
+  public Cols: integer;
+  public Rows: integer;
+  public Meta: option of Types.RawJson;
+end record;
+
 // Intrinsic `TerminalUpdate` data type.
 public type TerminalUpdate = record
   public TerminalId: TerminalId;
@@ -2287,6 +2436,8 @@ public type TerminalUpdate = record
   public Cwd: Types.Field of AbsolutePath;
   public Output: Types.Field of TerminalOutput;
   public ExitStatus: Types.Field of TerminalExitStatus;
+  public Size: option of TerminalSize;
+  public Capabilities: option of TerminalCapabilities;
   public Meta: Types.Field of Types.RawJson;
 end record;
 
@@ -2314,6 +2465,17 @@ end record;
 // Intrinsic `TitledMultiSelectItems` data type.
 public type TitledMultiSelectItems = record
   public AnyOf: array of EnumOption;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `ToolCallCancelCapabilities` data type.
+public type ToolCallCancelCapabilities = record
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `ToolCallCapabilities` data type.
+public type ToolCallCapabilities = record
+  public Cancel: option of ToolCallCancelCapabilities;
   public Meta: option of Types.RawJson;
 end record;
 
@@ -2362,6 +2524,7 @@ end record;
 // Intrinsic `ToolCallPermissionSubject` data type.
 public type ToolCallPermissionSubject = record
   public ToolCall: ToolCallUpdate;
+  public Meta: option of Types.RawJson;
 end record;
 
 // Intrinsic `ToolCallStatus` data type.
@@ -2370,6 +2533,8 @@ public type ToolCallStatus = enum
   Pending;
   // `InProgress` enum member.
   InProgress;
+  // `Paused` enum member.
+  Paused;
   // `Completed` enum member.
   Completed;
   // `Failed` enum member.
@@ -2394,6 +2559,7 @@ public type ToolCallUpdate = record
   public Locations: Types.Field of array of ToolCallLocation;
   public RawInput: Types.Field of Types.RawJson;
   public RawOutput: Types.Field of Types.RawJson;
+  public Capabilities: Types.Field of ToolCallCapabilities;
   public Meta: Types.Field of Types.RawJson;
 end record;
 
@@ -2428,6 +2594,14 @@ end enum;
 
 // Intrinsic `UnknownStateUpdate` data type.
 public type UnknownStateUpdate = record
+  public Background: option of array of BackgroundWork;
+  public Meta: option of Types.RawJson;
+end record;
+
+// Intrinsic `UnsupportedProtocolVersionErrorData` data type.
+public type UnsupportedProtocolVersionErrorData = record
+  public Requested: integer;
+  public Supported: array of integer;
   public Meta: option of Types.RawJson;
 end record;
 

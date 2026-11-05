@@ -27,12 +27,12 @@ pub(crate) fn run(
         Intrinsic::Array(ArrayIntrinsic::Sort) => {
             let mut arr = pop_array(pop_value(call, location)?, location)?;
             sorting::sort_values(&mut arr, location)?;
-            call.push(Value::Array(arr.into()));
+            call.push(Value::Array(arr));
         }
         Intrinsic::Array(ArrayIntrinsic::Reverse) => {
             let mut arr = pop_array(pop_value(call, location)?, location)?;
             arr.reverse();
-            call.push(Value::Array(arr.into()));
+            call.push(Value::Array(arr));
         }
         Intrinsic::Array(ArrayIntrinsic::IndexOf) => {
             let needle = pop_value(call, location)?;
@@ -66,12 +66,13 @@ pub(crate) fn run(
             let b = pop_array(pop_value(call, location)?, location)?;
             let mut a = pop_array(pop_value(call, location)?, location)?;
             a.extend(b);
-            call.push(Value::Array(a.into()));
+            call.push(Value::Array(a));
         }
         Intrinsic::Array(ArrayIntrinsic::Fill) => {
             let count = pop_int(pop_value(call, location)?, location)?;
             let value = pop_value(call, location)?;
             let len = checked_collection_len(count, location, "Std.Arrays.Fill")?;
+            crate::resources::preflight(len.saturating_mul(std::mem::size_of::<Value>()));
             let arr: Vec<Value> = vec![value.clone(); len];
             call.push(Value::Array(arr.into()));
         }

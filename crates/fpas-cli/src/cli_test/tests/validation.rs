@@ -14,6 +14,7 @@ fn test_cli_rejects_unit_file_as_test_entry() {
     let mut stderr = Vec::new();
     let exit = test_cli_with_stderr(
         TestCliConfig {
+            execution_limits: Default::default(),
             no_contracts: false,
             collection_schedule: Default::default(),
             input: crate::CliInput::SourceFile(cwd.join("helper_test.fpas")),

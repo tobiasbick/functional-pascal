@@ -91,6 +91,7 @@ pub(super) fn run_tests_sequential(
             TestRunSettings {
                 no_contracts: config.no_contracts,
                 collection_schedule: config.collection_schedule,
+                execution_limits: config.execution_limits,
                 script_override: config.script_path.as_deref(),
                 timeout: config.timeout,
                 show_output: config.show_output,
@@ -173,6 +174,7 @@ pub(super) fn run_tests_parallel(
         TestRunSettings {
             no_contracts: config.no_contracts,
             collection_schedule: config.collection_schedule,
+            execution_limits: config.execution_limits,
             script_override: config.script_path.as_deref(),
             timeout: config.timeout,
             show_output: config.show_output,

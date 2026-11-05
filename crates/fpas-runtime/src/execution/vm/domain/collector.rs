@@ -12,6 +12,7 @@ use std::sync::Arc;
 struct LocalCollector;
 impl DomainMaintenance for LocalCollector {
     fn maintain(&self, domain: &MemoryDomain, roots: &[Value]) -> Result<(), OwnershipError> {
+        let _resources = crate::resources::Scope::untracked();
         domain
             .reclaim_unreachable(roots, CollectionLimits::default())
             .map(|_| ())

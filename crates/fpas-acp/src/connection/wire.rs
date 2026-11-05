@@ -6,10 +6,10 @@ use super::{
 };
 use crate::{
     RawJson,
-    protocol::v1::RequestId,
+    schema::Version,
     transport::{Frame, Transport},
 };
-use agent_client_protocol::{Lines, RawJsonRpcMessage};
+use agent_client_protocol::{Lines, RawJsonRpcId, RawJsonRpcMessage};
 use futures::{sink, stream};
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
@@ -25,7 +25,7 @@ pub(super) struct Wire {
     pub shared: Arc<Shared>,
     pub transport: Arc<dyn Transport>,
     captured: Mutex<Option<Receipt>>,
-    automatic: Mutex<Option<(RequestId, Receipt)>>,
+    automatic: Mutex<Option<(RawJsonRpcId, Receipt)>>,
 }
 
 impl Wire {
@@ -49,7 +49,7 @@ impl Wire {
             .ok_or(Fault::InvalidMessage)
     }
 
-    pub fn automatic(&self, id: RequestId, receipt: Receipt) {
+    pub fn automatic(&self, id: RawJsonRpcId, receipt: Receipt) {
         *self.automatic.lock().unwrap_or_else(|e| e.into_inner()) = Some((id, receipt));
     }
 
@@ -113,10 +113,7 @@ impl Wire {
             if let RawJsonRpcMessage::Notification(notification) = &message
                 && notification.method.as_ref() == "$/cancel_request"
             {
-                let params = frame.raw.member("params")?.ok_or(Fault::InvalidMessage)?;
-                crate::codec::deserialize::<crate::protocol::v1::CancelRequestNotification>(
-                    &params,
-                )?;
+                cancellation_id(&frame.raw, self.shared.family())?;
             }
             match &message {
                 RawJsonRpcMessage::Response(response)
@@ -136,6 +133,9 @@ impl Wire {
                     continue;
                 }
                 RawJsonRpcMessage::Request(request) => {
+                    if self.shared.family() == Version::V2 && request.id == RawJsonRpcId::Null {
+                        return Err(Fault::InvalidMessage);
+                    }
                     let state = self.shared.lock();
                     let duplicate = state
                         .responders
@@ -168,13 +168,7 @@ impl Wire {
             serde_json::from_str(raw.text()).map_err(|_| Fault::InvalidMessage)?;
         let cancelled = if matches!(&message, RawJsonRpcMessage::Notification(notification) if notification.method.as_ref() == "$/cancel_request")
         {
-            let params = raw.member("params")?.ok_or(Fault::InvalidMessage)?;
-            Some(
-                crate::codec::deserialize::<crate::protocol::v1::CancelRequestNotification>(
-                    &params,
-                )?
-                .request_id,
-            )
+            Some(cancellation_id(raw, self.shared.family())?)
         } else {
             None
         };
@@ -223,9 +217,25 @@ impl Wire {
     }
 }
 
-fn response_id(response: &agent_client_protocol::RawJsonRpcResponse) -> &RequestId {
+fn response_id(response: &agent_client_protocol::RawJsonRpcResponse) -> &RawJsonRpcId {
     match response {
         agent_client_protocol::RawJsonRpcResponse::Result { id, .. }
         | agent_client_protocol::RawJsonRpcResponse::Error { id, .. } => id,
     }
+}
+
+fn cancellation_id(raw: &RawJson, version: Version) -> Result<RawJsonRpcId, Fault> {
+    let params = raw.member("params")?.ok_or(Fault::InvalidMessage)?;
+    Ok(match version {
+        Version::V1 => {
+            crate::codec::deserialize::<crate::protocol::v1::CancelRequestNotification>(&params)?
+                .request_id
+                .into()
+        }
+        Version::V2 => {
+            crate::codec::deserialize::<crate::protocol::v2::CancelRequestNotification>(&params)?
+                .request_id
+                .into()
+        }
+    })
 }

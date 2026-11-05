@@ -368,8 +368,8 @@ impl Drop for Walker<'_> {
 
 fn allocation_identity(value: &Value) -> (u8, usize) {
     match value {
-        Value::Array(value) => (0, std::ptr::from_ref(&**value) as usize),
-        Value::Dict(value) => (1, std::ptr::from_ref(&**value) as usize),
+        Value::Array(value) => (0, value.allocation_identity()),
+        Value::Dict(value) => (1, value.allocation_identity()),
         Value::Record(value) => (2, std::ptr::from_ref(value.body()) as usize),
         Value::Enum(value) => (3, std::ptr::from_ref(value.body()) as usize),
         Value::Function(value) => (4, value.allocation_identity()),

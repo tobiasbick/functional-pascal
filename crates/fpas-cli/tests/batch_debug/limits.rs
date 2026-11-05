@@ -11,6 +11,12 @@ fn instruction_and_output_limits_return_explicit_partial_results() {
     assert_eq!(r["outcome"], "limit");
     assert!(text(&r).len() <= 100);
     assert_eq!(r["capture"]["incomplete"], true);
+    assert!(
+        r["capture"]["reasons"]
+            .as_array()
+            .unwrap()
+            .contains(&Value::from("output_limit"))
+    );
 }
 #[test]
 fn wall_clock_timeout_contains_a_blocked_native_call() {

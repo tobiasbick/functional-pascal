@@ -53,6 +53,18 @@ pub const FIXTURES: &[(&str, &str, &str)] = &[
     ("AgentResponse", "session/close", "{}"),
     (
         "ClientRequest",
+        "tool_call/cancel",
+        r#"{"sessionId":"s","toolCallId":"t"}"#,
+    ),
+    ("AgentResponse", "tool_call/cancel", "{}"),
+    (
+        "ClientRequest",
+        "terminal/cancel",
+        r#"{"sessionId":"s","terminalId":"t"}"#,
+    ),
+    ("AgentResponse", "terminal/cancel", "{}"),
+    (
+        "ClientRequest",
         "session/fork",
         r#"{"sessionId":"s","cwd":"/workspace"}"#,
     ),
@@ -132,6 +144,6 @@ pub const FIXTURES: &[(&str, &str, &str)] = &[
     (
         "ProtocolLevelNotification",
         "$/cancel_request",
-        r#"{"requestId":null}"#,
+        r#"{"requestId":"pending"}"#,
     ),
 ];

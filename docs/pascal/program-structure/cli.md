@@ -282,6 +282,10 @@ inherit the policy selected by `build --executable`.
 
 ## Collection scheduling
 
+For execution-wide heap, instruction, time and output bounds, see
+[execution budgets](execution-budgets.md). Collection thresholds below control
+when the collector runs; they do not set a managed heap size.
+
 `fpas run`, `fpas test` and `fpas debug` use automatic local cycle collection.
 These positive decimal integer options override the per-domain minimum thresholds:
 

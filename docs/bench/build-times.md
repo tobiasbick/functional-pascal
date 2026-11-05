@@ -104,6 +104,10 @@ for diagnosis by appending `-- --test-threads=1` to `cargo test`.
 
 ### Resource guard
 
+The [VM execution budgets](../pascal/program-structure/execution-budgets.md) bound
+FPAS code inside its execution account. They do not constrain the external Cargo
+compiler/linker or native Rust test executables supervised here.
+
 On Windows, where test compilation or execution risks exhausting memory, use
 the FPAS supervisor with an already built development CLI:
 
@@ -192,6 +196,14 @@ The catalog codec uses static dispatch. Schema features and SDK versions remain
 pinned; splitting the crates does not change protocol fields or wire behavior.
 The model participates in the compiler artifact identity. Runtime connection
 changes do not change this identity.
+
+The ACP SDK is pinned to 5.0.0 together with its exact schema dependency 1.15.1.
+Upgrade both pins and the exported version constants together. Regenerate codec
+tables with `cargo run --profile dev-fast -p fpas-acp-model --example generate_normalizers`.
+The generator depends only on the schema model so an SDK upgrade can regenerate
+tables even when old codec type names no longer compile. Private schema-only
+helpers do not receive Rust serde validators; arbitrary error data retains its
+lossless RawJson representation. The serving MCP SDK is pinned to rmcp 3.8.0.
 
 The artifact identity hashes compiler source, production/build manifests and
 their locked dependency closure. Runtime-only package upgrades and development

@@ -106,6 +106,7 @@ impl TaskState {
 
     /// Publish before taking any scheduler/catalog storage lock. Incomplete views stay busy.
     pub(in crate::execution::vm) fn publish_execution(&self) {
+        let _resources = crate::resources::Scope::untracked();
         use crate::TraceRoots;
         if let Some(execution) = &self.execution {
             let mut values = Vec::new();

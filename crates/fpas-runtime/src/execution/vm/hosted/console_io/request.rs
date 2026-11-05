@@ -68,7 +68,10 @@ impl Call {
         };
         let count = match operation {
             Op::Write | Op::WriteLn => {
-                call.payload = Payload::Text(format!("{}", args::value(values, 0, 1, worker)?));
+                call.payload = Payload::Text(crate::resources::format_output(
+                    args::value(values, 0, 1, worker)?,
+                    operation == Op::WriteLn,
+                ));
                 return Ok(call);
             }
             Op::PutCell => {

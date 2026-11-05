@@ -19,4 +19,4 @@ pub use server::{Call, Endpoint, Reader, Responder, Server};
 pub use transport::{HttpEndpoint, HttpError, HttpOptions};
 
 /// Exact official Rust MCP SDK version used by this crate.
-pub const SDK_VERSION: &str = "3.7.0";
+pub const SDK_VERSION: &str = "3.8.0";

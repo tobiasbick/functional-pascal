@@ -14,7 +14,9 @@ impl Vm {
     /// Returns the preserved runtime diagnostic for scalar failures, or an internal invariant
     /// diagnostic if a verified executable requests an opcode assigned to a later phase.
     pub fn run(&mut self) -> Result<Execution, VmError> {
+        self.hosted.budget.resume();
         let result = self.run_inner();
+        self.hosted.budget.pause();
         self.hosted.close_process_handles();
         self.hosted.close_file_handles();
         self.hosted.wait_process_handles();

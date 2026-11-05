@@ -6,9 +6,11 @@ use std::time::Duration;
 /// Resource limits enforced by controlled debugger execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DebugExecutionLimits {
+    /// Optional execution-wide managed heap limit shared by all debugger tasks.
+    pub max_heap_bytes: Option<usize>,
     /// Maximum instructions dispatched over the whole session.
     pub max_instructions: u64,
-    /// Maximum wall-clock time for one resume operation.
+    /// Maximum active execution time across resumes; stopped time is excluded.
     pub timeout: Duration,
     /// Maximum captured standard-output bytes over the whole session.
     pub max_output_bytes: usize,
@@ -19,6 +21,7 @@ pub struct DebugExecutionLimits {
 impl Default for DebugExecutionLimits {
     fn default() -> Self {
         Self {
+            max_heap_bytes: None,
             max_instructions: 100_000_000,
             timeout: Duration::from_secs(300),
             max_output_bytes: 1_048_576,
@@ -309,12 +312,14 @@ pub enum DebugErrorKind {
     CallCancelled,
     /// The detached worker reported a runtime failure.
     CallRuntime,
-    /// One resume operation exceeded its wall-clock deadline.
+    /// Active session execution exceeded its deadline.
     ExecutionTimeout,
     /// The session exhausted its instruction budget.
     InstructionLimit,
     /// Captured program output exceeded its byte budget.
     OutputLimit,
+    /// Managed execution storage exceeded its shared byte budget.
+    HeapLimit,
     /// Controlled tasks have no remaining internal source of progress.
     ScheduleDeadlock,
     /// The virtual task clock exhausted its numeric range.

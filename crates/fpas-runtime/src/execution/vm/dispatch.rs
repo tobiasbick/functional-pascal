@@ -53,7 +53,12 @@ impl Worker {
     ) -> Result<DispatchBatch, VmError> {
         let access = self.execution_access()?;
         let started = self.hosted.profile.get().map(|_| std::time::Instant::now());
-        let result = match self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget) {
+        let resources = self.hosted.budget.clone();
+        let _resources = crate::resources::Scope::enter(&resources);
+        let dispatched =
+            crate::resources::catch(|| self.dispatch_owned::<SUPPRESS_INITIALIZERS>(budget))
+                .unwrap_or_else(|error| Err(self.resource_error(error)));
+        let result = match dispatched {
             Err(error) => self.begin_cleanup_failure(error).map(|()| DispatchBatch {
                 step: DispatchStep::Continue,
                 steps: 1,
@@ -174,6 +179,10 @@ impl Worker {
                         "Inspect trace coverage.",
                     ));
                 }
+                self.hosted
+                    .budget
+                    .instruction(self.cleanup_masks_cancellation())
+                    .map_err(|error| self.resource_error(error))?;
                 self.ip += 1;
                 self.instruction_count = self.instruction_count.wrapping_add(1);
                 steps += 1;

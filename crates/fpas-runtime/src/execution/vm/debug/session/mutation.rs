@@ -44,7 +44,9 @@ impl DebugSession {
         let _evaluation_scope = self.evaluation_roots.enter();
         let _domain_access = self.runtime.access_domains();
         self.require_stopped("variable.set")?;
-        let result = (|| {
+        let resources = self.resource_budget();
+        let _resources = crate::resources::Scope::enter(&resources);
+        let result = crate::resources::catch(|| {
             let generation = (variables_reference >> 32) as u32;
             let (task_id, target) = self
                 .inspections
@@ -66,7 +68,8 @@ impl DebugSession {
             let replacement =
                 self.evaluate_replacement_for_target(task_id, &target, expression, limits)?;
             self.commit_mutation(task_id, &target, replacement, limits)
-        })();
+        })
+        .unwrap_or_else(Self::budget_failure);
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
     }
@@ -106,7 +109,9 @@ impl DebugSession {
         let _evaluation_scope = self.evaluation_roots.enter();
         let _domain_access = self.runtime.access_domains();
         self.require_stopped("expression.set")?;
-        let result = (|| {
+        let resources = self.resource_budget();
+        let _resources = crate::resources::Scope::enter(&resources);
+        let result = crate::resources::catch(|| {
             let task_id = self.task_for_frame(frame_id)?;
             let (target, current) = self
                 .inspections
@@ -200,7 +205,8 @@ impl DebugSession {
                 }
             };
             self.commit_mutation(task_id, &target, replacement, limits)
-        })();
+        })
+        .unwrap_or_else(Self::budget_failure);
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
     }

@@ -122,6 +122,10 @@ impl Worker {
     /// Stop this task when its owning scope was cancelled or an enclosing scope failed.
     #[inline(always)]
     pub(in crate::execution::vm) fn check_task_cancellation(&self) -> Result<(), VmError> {
+        self.hosted
+            .budget
+            .cleanup_checkpoint(self.cleanup_masks_cancellation())
+            .map_err(|error| self.resource_error(error))?;
         if self.cleanup_masks_cancellation() {
             return Ok(());
         }

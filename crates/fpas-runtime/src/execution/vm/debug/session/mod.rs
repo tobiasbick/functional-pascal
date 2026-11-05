@@ -46,6 +46,7 @@ mod location_assign;
 mod mutation;
 mod profile;
 mod recording;
+mod resources;
 mod scheduling;
 mod sequence;
 mod stop;
@@ -221,6 +222,12 @@ impl DebugSession {
         let hosted = Arc::new(HostedState::for_debug(
             console, text_input, key_input, arguments,
         ));
+        hosted.budget.configure(crate::ExecutionLimits {
+            max_heap_bytes: execution_limits.max_heap_bytes,
+            max_instructions: Some(execution_limits.max_instructions),
+            timeout: Some(execution_limits.timeout),
+            max_output_bytes: Some(execution_limits.max_output_bytes),
+        });
         let scheduler = Arc::new(TaskScheduler::new());
         let worker = Worker::for_function_with_state(
             Arc::clone(&executable),

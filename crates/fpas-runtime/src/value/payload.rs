@@ -12,7 +12,13 @@ use super::managed_heap::{managed_payload_box, recycle_payload_box};
 /// deep-copy behavior while taking its storage from that pool when possible.
 #[derive(Debug)]
 pub struct ValuePayload {
-    value: Option<Box<Value>>,
+    value: Option<Box<PayloadBody>>,
+}
+
+#[derive(Debug)]
+pub(super) struct PayloadBody {
+    pub(super) value: Value,
+    pub(super) memory: crate::resources::Reservation,
 }
 
 impl ValuePayload {
@@ -30,7 +36,7 @@ impl ValuePayload {
         let Some(mut value) = self.value.take() else {
             unreachable!("payload owner must contain a value");
         };
-        let inner = std::mem::replace(&mut *value, Value::Unit);
+        let inner = std::mem::replace(&mut value.value, Value::Unit);
         recycle_payload_box(value);
         inner
     }
@@ -75,7 +81,7 @@ impl Deref for ValuePayload {
         let Some(value) = self.value.as_deref() else {
             unreachable!("payload owner must contain a value");
         };
-        value
+        &value.value
     }
 }
 
@@ -84,7 +90,7 @@ impl DerefMut for ValuePayload {
         let Some(value) = self.value.as_deref_mut() else {
             unreachable!("payload owner must contain a value");
         };
-        value
+        &mut value.value
     }
 }
 
@@ -111,7 +117,7 @@ impl Drop for ValuePayload {
         let Some(mut value) = self.value.take() else {
             return;
         };
-        let inner = std::mem::replace(&mut *value, Value::Unit);
+        let inner = std::mem::replace(&mut value.value, Value::Unit);
         recycle_payload_box(value);
         super::drain::release_value(inner);
     }

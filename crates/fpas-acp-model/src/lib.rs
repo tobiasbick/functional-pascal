@@ -11,4 +11,4 @@ pub use raw::RawJson;
 pub use value::UInt64;
 
 /// Exact schema version used to derive both language declarations and runtime codecs.
-pub const SCHEMA_VERSION: &str = "1.12.0";
+pub const SCHEMA_VERSION: &str = "1.15.1";

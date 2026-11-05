@@ -8,6 +8,21 @@ use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 /// The diagnostic is boxed so `Result<_, VmError>` stays two words wide on hot interpreter paths.
 pub type VmError = Box<Diagnostic>;
 
+impl super::worker::Worker {
+    pub(in crate::execution::vm) fn resource_error(
+        &self,
+        error: crate::resources::Exhausted,
+    ) -> VmError {
+        at_address(
+            self.executable.executable(),
+            self.current_address,
+            fpas_diagnostics::codes::RUNTIME_RESOURCE_LIMIT_EXCEEDED,
+            error.to_string(),
+            "Increase the execution budget or reduce the program's resource use.",
+        )
+    }
+}
+
 pub(crate) fn runtime_error(
     code: DiagnosticCode,
     message: impl Into<String>,

@@ -86,6 +86,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    pub(in crate::execution::vm) budget: Arc<crate::resources::Budget>,
     host_info: host_info::State,
     tokenizers: tokenizer::Cache,
     pub(in crate::execution::vm) acp: acp::Registry,
@@ -130,6 +131,14 @@ pub(super) struct HostedState {
 }
 
 impl HostedState {
+    pub(in crate::execution::vm) fn for_evaluation() -> Self {
+        let mut state = Self::new(Console::new(), Vec::new());
+        if let Some(budget) = crate::resources::current_budget() {
+            state.budget = budget;
+        }
+        state
+    }
+
     pub(super) fn new(console: Console, program_args: Vec<String>) -> Self {
         Self::with_io(
             Arc::new(Mutex::new(console)),
@@ -156,6 +165,7 @@ impl HostedState {
         program_args: Vec<String>,
     ) -> Self {
         Self {
+            budget: Arc::default(),
             host_info: Default::default(),
             tokenizers: Default::default(),
             acp: Default::default(),

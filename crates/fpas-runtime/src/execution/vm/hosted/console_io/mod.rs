@@ -66,6 +66,25 @@ impl Request {
         state: &HostedState,
         cancelled: impl Fn() -> bool,
     ) -> Result<request::Output, StdError> {
+        let _resources = crate::resources::Scope::enter(&state.budget);
+        crate::resources::catch(|| {
+            self.run_inner(state, || cancelled() || state.budget.checkpoint().is_err())
+        })
+        .unwrap_or_else(|error| {
+            Err(crate::stdlib::error::std_runtime_error(
+                fpas_diagnostics::codes::RUNTIME_RESOURCE_LIMIT_EXCEEDED,
+                error.to_string(),
+                "Increase the execution budget or reduce console output.",
+                self.location(),
+            ))
+        })
+    }
+
+    fn run_inner(
+        &self,
+        state: &HostedState,
+        cancelled: impl Fn() -> bool,
+    ) -> Result<request::Output, StdError> {
         while !self.ready() {
             if cancelled() {
                 return Err(self::cancelled(self.location()));

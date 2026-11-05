@@ -132,7 +132,10 @@ impl Builder {
         } else {
             format!("{module}.{}", identifier(key))
         };
-        let shape = if matches!(key, "ExtRequest" | "ExtNotification" | "ExtResponse") {
+        let shape = if self.version == Version::V2 && key == "ErrorData" {
+            // The SDK's private schema helper documents examples of arbitrary error data.
+            Shape::Scalar(Type::Raw { object: false })
+        } else if matches!(key, "ExtRequest" | "ExtNotification" | "ExtResponse") {
             Shape::Extension {
                 response: key == "ExtResponse",
             }

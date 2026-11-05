@@ -20,6 +20,10 @@ string IDs and method-aware payload codecs. Experimental v1 payloads live in
 cleared, and `Field.Value([])` means an empty replacement. Use enum constructors
 and `case` patterns to construct and inspect these states.
 
+`ProtocolError.Data` remains arbitrary lossless JSON in both protocol families.
+The SDK's named examples of error data do not restrict peer-defined payloads or
+change this field into an application enum. Omitted and null data both mean None.
+
 ## Conversions
 
 | Kind | Name | Meaning |

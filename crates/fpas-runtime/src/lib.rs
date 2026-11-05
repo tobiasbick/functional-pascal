@@ -10,6 +10,9 @@
     )
 )]
 
+mod resources;
+pub use resources::{ExecutionLimits, ExecutionUsage};
+
 pub mod profile;
 mod value;
 

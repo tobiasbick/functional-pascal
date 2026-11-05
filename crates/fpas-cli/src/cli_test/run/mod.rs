@@ -27,6 +27,7 @@ use program::{ProgramRunOptions, RunOutput, run_test_program};
 /// Per-run settings shared by every test of one `fpas test` invocation.
 #[derive(Clone, Copy)]
 pub(super) struct TestRunSettings<'a> {
+    pub execution_limits: fpas_runtime::ExecutionLimits,
     pub no_contracts: bool,
     pub collection_schedule: fpas_runtime::CollectionSchedule,
     /// Optional scripted input configuration.
@@ -69,6 +70,7 @@ pub(super) fn run_single_test_capture(
         path,
         link,
         TestRunSettings {
+            execution_limits: Default::default(),
             no_contracts: false,
             collection_schedule: Default::default(),
             script_override,
@@ -102,6 +104,7 @@ pub(super) fn run_single_test_prepared(
     compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
     let TestRunSettings {
+        execution_limits,
         no_contracts,
         collection_schedule,
         script_override,
@@ -128,6 +131,7 @@ pub(super) fn run_single_test_prepared(
             hook,
             "Setup",
             HookRunContext {
+                execution_limits,
                 no_contracts,
                 collection_schedule,
                 test_path: path,
@@ -164,6 +168,7 @@ pub(super) fn run_single_test_prepared(
         link,
         reporter,
         ProgramRunOptions {
+            execution_limits,
             no_contracts,
             collection_schedule,
             script_override,

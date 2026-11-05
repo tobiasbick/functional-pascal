@@ -311,6 +311,8 @@ public type SessionMessage = record
   public MessageId: Types.MessageId;
   public SenderSessionId: option of Types.SessionId;
   public RecipientSessionId: option of Types.SessionId;
+  public SenderMessageId: option of Types.MessageId;
+  public RecipientMessageId: option of Types.MessageId;
   public Content: Types.Field of array of Types.ContentBlock;
   public Meta: Types.Field of Types.RawJson;
 end record;
@@ -318,8 +320,6 @@ end record;
 // Intrinsic `SessionMessageChunk` data type.
 public type SessionMessageChunk = record
   public MessageId: Types.MessageId;
-  public SenderSessionId: option of Types.SessionId;
-  public RecipientSessionId: option of Types.SessionId;
   public Content: Types.ContentBlock;
   public Meta: option of Types.RawJson;
 end record;
@@ -403,6 +403,8 @@ public type SubagentUpdate = record
   public Description: Types.Field of string;
   public Capabilities: Types.Field of SubagentSessionCapabilities;
   public State: Types.Field of StateUpdate;
+  public Cwd: option of string;
+  public AdditionalDirectories: option of array of string;
   public Meta: Types.Field of Types.RawJson;
 end record;
 

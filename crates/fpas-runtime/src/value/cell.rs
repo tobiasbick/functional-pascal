@@ -75,6 +75,7 @@ impl<E: std::error::Error + 'static> std::error::Error for CellUpdateError<E> {
 }
 
 pub(super) struct CellStorage {
+    _memory: crate::resources::Reservation,
     owner: DomainId,
     domain: Weak<DomainState>,
     // Snapshotting an Arc never recursively clones deeply nested wrapper values.
@@ -177,6 +178,9 @@ impl fmt::Debug for OwnedCell {
 impl OwnedCell {
     pub(super) fn new(domain: &MemoryDomain, value: Value) -> Self {
         Self(Arc::new(CellStorage {
+            _memory: crate::resources::Reservation::shared::<CellStorage>(
+                std::mem::size_of::<Value>() + 2 * std::mem::size_of::<usize>(),
+            ),
             owner: domain.id().clone(),
             domain: Arc::downgrade(&domain.0),
             value: Mutex::new(Arc::new(value)),

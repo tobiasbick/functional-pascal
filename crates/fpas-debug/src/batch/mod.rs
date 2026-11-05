@@ -134,6 +134,7 @@ fn run_inner(
     );
     report["limits"]["timeout_seconds"] = json!(limits.timeout.as_secs());
     report["limits"]["instruction_limit"] = json!(limits.max_instructions);
+    report["limits"]["heap_bytes"] = json!(limits.max_heap_bytes);
     report["limits"]["output_bytes"] = json!(limits.max_output_bytes);
     let expressions = match options
         .expressions
@@ -353,8 +354,10 @@ fn run_inner(
                     ..
                 } => {
                     report["outcome"] = json!(if [
+                        "heap_limit",
                         "instruction_limit",
                         "output_limit",
+                        "timeout",
                         "execution_timeout",
                         "trace_event_limit",
                         "trace_value_limit",
@@ -405,6 +408,15 @@ fn run_inner(
     } else {
         report["capture"]["incomplete"] = json!(true);
         report["capture"]["reasons"] = json!(["state_unavailable"]);
+    }
+    // An output refusal can happen before the transport sees any bytes to truncate.
+    if report["diagnostics"].as_array().is_some_and(|diagnostics| {
+        diagnostics
+            .iter()
+            .any(|error| error["code"] == "output_limit")
+    }) {
+        report["capture"]["incomplete"] = json!(true);
+        trace::append_reason(&mut report["capture"]["reasons"], json!("output_limit"));
     }
     if cancellation_requested {
         report["outcome"] = json!("limit");

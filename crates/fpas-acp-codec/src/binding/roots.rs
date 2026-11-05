@@ -117,7 +117,8 @@ fn message<T: JsonRpcMessage + Serialize>(
     method: &str,
     raw: &RawJson,
 ) -> Result<RawJson, CodecError> {
-    let value = T::parse_message(method, raw).map_err(|_| invalid())?;
+    let params = serde_json::from_str(raw.text()).map_err(CodecError::json)?;
+    let value = T::parse_message(method, &params).map_err(|_| invalid())?;
     codec::encode(&value, crate::raw::MAX_RAW_BYTES)
 }
 
@@ -126,7 +127,7 @@ fn response<T: JsonRpcResponse + Serialize>(
     raw: &RawJson,
 ) -> Result<RawJson, CodecError> {
     let value = serde_json::from_str(raw.text()).map_err(CodecError::json)?;
-    let value = T::from_value(method, value).map_err(|_| invalid())?;
+    let value = T::from_json(method, value).map_err(|_| invalid())?;
     codec::encode(&value, crate::raw::MAX_RAW_BYTES)
 }
 

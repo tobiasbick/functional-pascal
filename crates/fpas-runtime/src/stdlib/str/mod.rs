@@ -120,7 +120,10 @@ pub(crate) fn run(
                 String::new()
             } else {
                 let len = checked_collection_len(n, location, "Std.Str.RepeatStr")?;
-                s.repeat(len)
+                {
+                    crate::resources::preflight(s.len().saturating_mul(len));
+                    s.repeat(len)
+                }
             };
             call.push(Value::Str(out.into()));
         }

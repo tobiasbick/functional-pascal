@@ -120,6 +120,7 @@ fn instruction_and_timeout_limits_are_reported() {
 #[test]
 fn initialize_reports_the_configured_execution_limits() {
     let limits = DebugExecutionLimits {
+        max_heap_bytes: Some(4096),
         max_instructions: 123,
         timeout: Duration::from_millis(456),
         max_output_bytes: 789,
@@ -133,6 +134,7 @@ fn initialize_reports_the_configured_execution_limits() {
     assert_eq!(records[0]["body"]["capabilities"]["evaluate_calls"], true);
 
     assert_eq!(reported["instructions"], 123);
+    assert_eq!(reported["heap_bytes"], 4096);
     assert_eq!(reported["timeout_milliseconds"], 456);
     assert_eq!(reported["captured_output_bytes"], 789);
     assert_eq!(reported["debuggee_input_bytes"], 321);

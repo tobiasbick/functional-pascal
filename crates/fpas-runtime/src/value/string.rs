@@ -6,30 +6,29 @@ use std::ops::Deref;
 use std::sync::{Arc, OnceLock};
 
 use super::managed_heap::{managed_string_buffer, recycle_string};
+use crate::resources::Reservation;
 
 /// UTF-8 payload plus a cached Unicode scalar count for O(1) [`SharedStr::char_len`].
 #[derive(Debug)]
 struct StrBody {
+    memory: Reservation,
     data: String,
     char_len: usize,
     // Built on the first character lookup into a long non-ASCII string.
-    char_offsets: OnceLock<Box<[usize]>>,
+    char_offsets: OnceLock<CharOffsets>,
 }
 
-impl Clone for StrBody {
-    fn clone(&self) -> Self {
-        let mut data = managed_string_buffer(self.data.len());
-        data.push_str(&self.data);
-        Self {
-            data,
-            char_len: self.char_len,
-            char_offsets: OnceLock::new(),
-        }
-    }
+#[derive(Debug)]
+struct CharOffsets {
+    data: Box<[usize]>,
+    _memory: Reservation,
 }
 
 impl Drop for StrBody {
     fn drop(&mut self) {
+        if self.memory.is_tracked() {
+            return;
+        }
         recycle_string(&mut self.data);
     }
 }
@@ -78,6 +77,11 @@ impl SharedStr {
 
     /// Concatenate two shared strings, summing cached character lengths.
     pub fn concat(left: &Self, right: &Self) -> Self {
+        crate::resources::preflight(
+            left.len()
+                .saturating_add(right.len())
+                .saturating_add(std::mem::size_of::<StrBody>()),
+        );
         let mut data = managed_string_buffer(left.len() + right.len());
         data.push_str(left);
         data.push_str(right);
@@ -87,6 +91,11 @@ impl SharedStr {
     /// Append `other`, reusing this buffer in place when no other value shares it.
     pub fn append(&mut self, other: &Self) {
         if let Some(body) = Arc::get_mut(&mut self.0) {
+            let required = body.data.len().saturating_add(other.len());
+            if required > body.data.capacity() {
+                body.memory.grow(required - body.data.capacity());
+                body.data.reserve_exact(required - body.data.len());
+            }
             body.data.push_str(other);
             body.char_len += other.char_len();
             body.char_offsets = OnceLock::new();
@@ -114,10 +123,18 @@ impl SharedStr {
                 .nth(index)
                 .map(|(offset, _)| offset);
         }
-        let samples = body
-            .char_offsets
-            .get_or_init(|| char_index::sample(&body.data));
-        char_index::byte_offset(&body.data, samples, index)
+        let samples = body.char_offsets.get_or_init(|| {
+            let bytes = body
+                .char_len
+                .div_ceil(char_index::STRIDE)
+                .saturating_mul(std::mem::size_of::<usize>());
+            let memory = Reservation::new(bytes);
+            CharOffsets {
+                data: char_index::sample(&body.data),
+                _memory: memory,
+            }
+        });
+        char_index::byte_offset(&body.data, &samples.data, index)
     }
 
     /// Unicode scalar at `index`, or `None` when `index` is not below [`Self::char_len`].
@@ -132,6 +149,7 @@ impl SharedStr {
 
     fn from_parts(data: String, char_len: usize) -> Self {
         Self(Arc::new(StrBody {
+            memory: Reservation::shared::<StrBody>(data.capacity()),
             data,
             char_len,
             char_offsets: OnceLock::new(),

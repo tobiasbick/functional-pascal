@@ -44,6 +44,7 @@ struct ChannelState {
 }
 
 struct Channel {
+    _memory: crate::resources::Reservation,
     state: Mutex<ChannelState>,
     can_send: Arc<WakeSource>,
     can_receive: Arc<WakeSource>,
@@ -92,6 +93,9 @@ impl ChannelRegistry {
         if !(1..=MAX_CHANNEL_CAPACITY).contains(&capacity) {
             return Err(capacity_error(i64::try_from(capacity).unwrap_or(i64::MAX)));
         }
+        let memory = crate::resources::Reservation::shared::<Channel>(
+            capacity.saturating_mul(std::mem::size_of::<Value>()),
+        );
         let handle = self.next_handle.fetch_add(1, Ordering::Relaxed);
         self.entries
             .lock()
@@ -99,6 +103,7 @@ impl ChannelRegistry {
             .insert(
                 handle,
                 Arc::new(Channel {
+                    _memory: memory,
                     state: Mutex::new(ChannelState {
                         values: VecDeque::with_capacity(capacity),
                         capacity,

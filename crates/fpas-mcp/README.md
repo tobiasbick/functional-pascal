@@ -86,6 +86,6 @@ Closing a publication preserves its caller-owned server and other publications.
 Closing the server retires every publication. Reopening always creates fresh
 credentials and never revives retired response rights.
 
-The protocol implementation is pinned to `rmcp` 3.7.0. Its product features have
+The protocol implementation is pinned to `rmcp` 3.8.0. Its product features have
 the server role. The independent wire peers in `tests/` use the production SDK
 adapter without enabling the SDK client role.

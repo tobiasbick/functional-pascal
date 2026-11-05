@@ -287,7 +287,10 @@ impl Worker {
         // Resume stores commit at the suspended intrinsic before the next source stop.
         let (owner, address) = (self.function, self.current_address);
         self.trace_local_resume_begin();
-        let result = self.poll_task_suspension_inner();
+        let resources = self.hosted.budget.clone();
+        let _resources = crate::resources::Scope::enter(&resources);
+        let result = crate::resources::catch(|| self.poll_task_suspension_inner())
+            .unwrap_or_else(|error| Err(self.resource_error(error)));
         self.trace_local_finish(owner, address, false, false, false);
         result
     }

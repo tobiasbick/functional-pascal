@@ -172,6 +172,10 @@ Options:
   --failure-dump <path>
                    Write a runtime failure report to a new JSON file
   --profile <path> Write a profile report to a new JSON file
+  --heap-limit <bytes>        Shared managed heap budget (default: unlimited)
+  --instruction-limit <N>     Shared instruction budget (default: unlimited)
+  --output-limit <bytes>      Logical console-output budget (default: unlimited)
+  --timeout <secs>            Cooperative execution deadline (default: unlimited)
   --no-contracts   Omit contract code; existing images must already be built with this policy
   -h, --help       Print this help
   -V, --version    Print version
@@ -269,8 +273,9 @@ Options:
   --task <id>                   Inspection task (default: stopping task)
   --frame <depth>               Inspection frame (default: 0, active frame)
   --script <path>               Existing runner TOML line/key input script
-  --timeout <secs>              Whole batch deadline (default: 30; protocols: 300/resume)
+  --timeout <secs>              Whole batch deadline (default: 30; protocols: 300 active seconds)
   --instruction-limit <count>   Session instruction limit (default: 100000000)
+  --heap-limit <bytes>          Shared managed heap budget (default: unlimited)
   --output-limit <bytes>        Batch output bound (default/ceiling: 1048576)
   --source-root <dir>           Root containing sources for a compiled image
   --profile <path>              Write target routines, lines and debugger phase timings to a new JSON file
@@ -347,6 +352,9 @@ Options:
   --file <path>       Select an exact discovered test path (repeatable; relative to cwd)
   --report json        Write a machine-readable report to stdout
   --timeout <secs>    Per-test timeout in seconds (default: 300)
+  --heap-limit <bytes> Shared managed heap budget per test (default: unlimited)
+  --instruction-limit <N> Shared instruction budget per test (default: unlimited)
+  --output-limit <bytes> Logical console-output budget per test (default: unlimited)
   --jobs <n>          Run up to n tests in parallel; 0 uses available CPUs
   --script <path>     Apply test-script overrides
   -h, --help          Print this help

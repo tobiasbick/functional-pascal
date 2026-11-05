@@ -11,4 +11,4 @@ pub use fpas_acp_model::{
 };
 
 /// Exact Rust SDK version used by this binding.
-pub const SDK_VERSION: &str = "3.5.0";
+pub const SDK_VERSION: &str = "5.0.0";

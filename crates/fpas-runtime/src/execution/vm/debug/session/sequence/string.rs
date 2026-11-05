@@ -46,7 +46,9 @@ impl DebugSession {
         let _evaluation_scope = self.evaluation_roots.enter();
         let _domain_access = self.runtime.access_domains();
         self.require_stopped("string.replace_character")?;
-        let result = (|| {
+        let resources = self.resource_budget();
+        let _resources = crate::resources::Scope::enter(&resources);
+        let result = crate::resources::catch(|| {
             let prepared = self.prepare_container_mutation(
                 ContainerKind::Sequence,
                 assignment,
@@ -90,7 +92,8 @@ impl DebugSession {
                 old_character,
                 new_character,
             })
-        })();
+        })
+        .unwrap_or_else(Self::budget_failure);
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
     }

@@ -1,7 +1,5 @@
 //! Resume, task-aware stepping, pause, termination, and execution-limit control.
 
-use std::time::Instant;
-
 use super::*;
 use crate::execution::vm::debug::tasks::{DebugDispatch, DebugSchedule};
 
@@ -124,7 +122,13 @@ impl DebugSession {
         self.runtime.clear_debug_global_stores();
         self.refresh_data_watch_snapshots();
         let mut pause_pending = false;
-        let started = Instant::now();
+        let resources = self
+            .runtime
+            .worker(0)
+            .map(|worker| worker.hosted.budget.clone());
+        if let Some(resources) = &resources {
+            resources.resume();
+        }
         let mut accesses = Vec::new();
         let mut remaining = 0;
         // Every normal exit publishes retained workers before returning a stop or error.
@@ -166,7 +170,7 @@ impl DebugSession {
                         instruction_count,
                     }));
                 }
-                self.enforce_execution_limits(started)?;
+                self.enforce_execution_limits()?;
                 if self.pause_requested.swap(false, Ordering::AcqRel) {
                     pause_pending = true;
                 }
@@ -174,6 +178,7 @@ impl DebugSession {
                 let schedule = match self.runtime.schedule(preferred) {
                     Ok(schedule) => schedule,
                     Err((task_id, diagnostic)) => {
+                        self.enforce_resource_failure()?;
                         if let Some(error) = self.trace_error() {
                             self.state = DebugSessionState::Stopped;
                             self.refresh_inspection();
@@ -241,6 +246,7 @@ impl DebugSession {
                 let dispatch = match self.runtime.dispatch(task_id) {
                     Ok(dispatch) => dispatch,
                     Err((task_id, diagnostic)) => {
+                        self.enforce_resource_failure()?;
                         if let Some(error) = self.trace_error() {
                             self.state = DebugSessionState::Stopped;
                             self.refresh_inspection();
@@ -299,6 +305,9 @@ impl DebugSession {
             }
         })();
         self.runtime.finish_execution_batch(&mut accesses);
+        if let Some(resources) = resources {
+            resources.pause();
+        }
         if let Some(profile) = &self.profile {
             profile.record_resume(&result);
         }
@@ -415,45 +424,16 @@ impl DebugSession {
         DebugRunResult::Stopped(self.last_stop.clone())
     }
 
-    fn enforce_execution_limits(&mut self, started: Instant) -> Result<(), DebugSessionError> {
-        let instruction_count = self.runtime.instruction_count();
-        let (kind, message, hint) = if instruction_count >= self.execution_limits.max_instructions {
-            (
-                DebugErrorKind::InstructionLimit,
-                format!(
-                    "debug execution exceeded the {} instruction limit",
-                    self.execution_limits.max_instructions
-                ),
-                "Increase the debug instruction limit or inspect the program for a non-terminating loop.",
-            )
-        } else if started.elapsed() >= self.execution_limits.timeout {
-            (
-                DebugErrorKind::ExecutionTimeout,
-                format!(
-                    "debug execution exceeded the {} ms timeout",
-                    self.execution_limits.timeout.as_millis()
-                ),
-                "Increase the debug timeout or pause execution sooner.",
-            )
-        } else if self.output_byte_count() > self.execution_limits.max_output_bytes {
-            (
-                DebugErrorKind::OutputLimit,
-                format!(
-                    "debug execution exceeded the {} byte output limit",
-                    self.execution_limits.max_output_bytes
-                ),
-                "Increase the debug output limit or reduce program output.",
-            )
-        } else {
-            return Ok(());
-        };
-        self.state = DebugSessionState::Failed;
-        self.refresh_inspection();
-        Err(DebugSessionError {
-            kind,
-            message,
-            hint: hint.to_string(),
-        })
+    fn enforce_execution_limits(&mut self) -> Result<(), DebugSessionError> {
+        let resources = self.resource_budget();
+        let _ = resources.checkpoint();
+        // The terminal transport also captures CRT escape sequences, beyond logical text.
+        if self.output_byte_count() > self.execution_limits.max_output_bytes {
+            resources.fail(crate::resources::Exhausted::Output {
+                limit: self.execution_limits.max_output_bytes,
+            });
+        }
+        self.enforce_resource_failure()
     }
 
     fn output_byte_count(&self) -> usize {

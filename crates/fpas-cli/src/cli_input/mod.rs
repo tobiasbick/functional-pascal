@@ -294,6 +294,12 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             diagnostics,
         }),
         CliMode::Run => ResolvedCli::Run(CliConfig {
+            execution_limits: fpas_runtime::ExecutionLimits {
+                max_heap_bytes: options.heap_limit,
+                max_instructions: options.instruction_limit,
+                timeout: options.timeout,
+                max_output_bytes: options.output_limit,
+            },
             no_contracts: options.no_contracts,
             collection_schedule: options.collection_schedule,
             input,
@@ -325,6 +331,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 return Err("Batch --output-limit cannot exceed 1048576 bytes.".into());
             }
             ResolvedCli::Debug(Box::new(DebugCliConfig {
+                heap_limit: options.heap_limit,
                 no_contracts: options.no_contracts,
                 profile,
                 collection_schedule: options.collection_schedule,
@@ -348,6 +355,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             }))
         }
         CliMode::Check => ResolvedCli::Check(CliConfig {
+            execution_limits: Default::default(),
             no_contracts: false,
             collection_schedule: options.collection_schedule,
             input,
@@ -360,6 +368,12 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {
+            execution_limits: fpas_runtime::ExecutionLimits {
+                max_heap_bytes: options.heap_limit,
+                max_instructions: options.instruction_limit,
+                timeout: options.timeout,
+                max_output_bytes: options.output_limit,
+            },
             no_contracts: options.no_contracts,
             collection_schedule: options.collection_schedule,
             input,

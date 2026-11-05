@@ -84,7 +84,7 @@ impl Handler {
                     {
                         let lifecycle = state.lifecycle;
                         let request_scope = params.member("requestId")?.is_some_and(|id| {
-                            crate::codec::deserialize::<crate::protocol::v1::RequestId>(&id)
+                            crate::codec::deserialize::<agent_client_protocol::RawJsonRpcId>(&id)
                                 .is_ok_and(|id| {
                                     state
                                         .pending
@@ -182,7 +182,7 @@ impl Handler {
                         .responders
                         .iter()
                         .find(|(_, entry)| {
-                            entry.sdk.id() == &cancelled.request_id
+                            entry.sdk.id() == &cancelled.request_id.clone().into()
                                 && entry.cancellation.is_cancelled()
                         })
                         .map(|(token, _)| *token);

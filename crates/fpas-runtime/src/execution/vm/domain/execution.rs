@@ -17,6 +17,7 @@ impl Worker {
         &self,
         extra: &[Value],
     ) -> Result<(), VmError> {
+        let _resources = crate::resources::Scope::untracked();
         let Some(execution) = &self.execution else {
             return Ok(());
         };

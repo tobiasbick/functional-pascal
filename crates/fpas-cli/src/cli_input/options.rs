@@ -8,6 +8,7 @@ use super::types::{DebugProtocol, TestReportFormat};
 use crate::cli_output::DiagnosticFormat;
 
 pub(super) struct ParsedOptions {
+    pub(super) heap_limit: Option<usize>,
     pub(super) no_contracts: bool,
     pub(super) collection_schedule: fpas_runtime::CollectionSchedule,
     pub(super) check_only: bool,
@@ -42,6 +43,7 @@ pub(super) struct ParsedOptions {
 /// Parses the options accepted by one CLI subcommand.
 pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<ParsedOptions, String> {
     let mut options = ParsedOptions {
+        heap_limit: None,
         no_contracts: false,
         collection_schedule: Default::default(),
         check_only: false,
@@ -342,7 +344,15 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--source-root` option.".to_string());
                 }
             }
-            "--timeout" if mode == CliMode::Debug => {
+            "--heap-limit" if matches!(mode, CliMode::Run | CliMode::Test | CliMode::Debug) => {
+                let value = positive_u64(cli_args, &mut index, "--heap-limit", "bytes")?;
+                let value = usize::try_from(value)
+                    .map_err(|_| "`--heap-limit` is too large for this host.".to_string())?;
+                if options.heap_limit.replace(value).is_some() {
+                    return Err("Duplicate `--heap-limit` option.".into());
+                }
+            }
+            "--timeout" if matches!(mode, CliMode::Run | CliMode::Debug) => {
                 let value = positive_u64(cli_args, &mut index, "--timeout", "seconds")?;
                 if options
                     .timeout
@@ -352,7 +362,9 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--timeout` option.".into());
                 }
             }
-            "--instruction-limit" if mode == CliMode::Debug => {
+            "--instruction-limit"
+                if matches!(mode, CliMode::Run | CliMode::Test | CliMode::Debug) =>
+            {
                 if options.instruction_limit.is_some() {
                     return Err("Duplicate `--instruction-limit` option.".into());
                 }
@@ -363,7 +375,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     "instructions",
                 )?);
             }
-            "--output-limit" if mode == CliMode::Debug => {
+            "--output-limit" if matches!(mode, CliMode::Run | CliMode::Test | CliMode::Debug) => {
                 let value = positive_u64(cli_args, &mut index, "--output-limit", "bytes")?;
                 if options.output_limit.is_some() {
                     return Err("Duplicate `--output-limit` option.".into());
@@ -448,6 +460,7 @@ fn is_known_option(value: &str) -> bool {
             | "--commands"
             | "--source-root"
             | "--instruction-limit"
+            | "--heap-limit"
             | "--output-limit"
             | "--break"
             | "--print"

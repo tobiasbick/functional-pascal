@@ -7,6 +7,7 @@ use super::Value;
 use super::managed_heap::{
     clone_pairs, clone_values, recycle_error_values, recycle_pairs, recycle_values,
 };
+use crate::resources::Reservation;
 use crate::{EnumTypeId, EnumVariantId, RecordTypeId};
 
 /// Shared immutable metadata for one runtime record layout.
@@ -23,6 +24,7 @@ pub struct RuntimeRecordLayout {
 /// Stored record body with copy-on-write values.
 #[derive(Debug)]
 pub struct RecordValue {
+    memory: Reservation,
     /// Shared layout metadata.
     pub layout: Arc<RuntimeRecordLayout>,
     /// Values in layout order.
@@ -32,9 +34,15 @@ pub struct RecordValue {
 
 impl Clone for RecordValue {
     fn clone(&self) -> Self {
+        let (memory, values) = self.memory.copy_buffer(
+            &self.values,
+            crate::resources::shared_size::<Self>(0),
+            clone_values,
+        );
         Self {
+            memory,
             layout: Arc::clone(&self.layout),
-            values: clone_values(&self.values),
+            values,
             ownership_neutral: self.ownership_neutral,
         }
     }
@@ -42,6 +50,10 @@ impl Clone for RecordValue {
 
 impl Drop for RecordValue {
     fn drop(&mut self) {
+        if self.memory.is_tracked() {
+            super::drain::values(&mut self.values);
+            return;
+        }
         recycle_values(&mut self.values);
     }
 }
@@ -61,6 +73,9 @@ impl SharedRecord {
     pub fn new(layout: Arc<RuntimeRecordLayout>, values: Vec<Value>) -> Self {
         let ownership_neutral = values.iter().all(Value::is_ownership_neutral);
         Self(Arc::new(RecordValue {
+            memory: Reservation::shared::<RecordValue>(
+                values.capacity() * std::mem::size_of::<Value>(),
+            ),
             layout,
             values,
             ownership_neutral,
@@ -74,7 +89,7 @@ impl SharedRecord {
     }
 
     /// Mutably borrow values, detaching only when the body is shared.
-    pub fn values_mut(&mut self) -> &mut Vec<Value> {
+    pub fn values_mut(&mut self) -> &mut [Value] {
         let body = Arc::make_mut(&mut self.0);
         body.ownership_neutral = false;
         &mut body.values
@@ -176,6 +191,7 @@ impl std::error::Error for EnumConstructionError {}
 /// Stored enum body.
 #[derive(Debug)]
 pub struct EnumValue {
+    memory: Reservation,
     /// Shared variant layout metadata.
     pub layout: Arc<RuntimeEnumLayout>,
     /// Associated values in declaration order.
@@ -185,9 +201,15 @@ pub struct EnumValue {
 
 impl Clone for EnumValue {
     fn clone(&self) -> Self {
+        let (memory, values) = self.memory.copy_buffer(
+            &self.values,
+            crate::resources::shared_size::<Self>(0),
+            clone_values,
+        );
         Self {
+            memory,
             layout: Arc::clone(&self.layout),
-            values: clone_values(&self.values),
+            values,
             ownership_neutral: self.ownership_neutral,
         }
     }
@@ -195,6 +217,10 @@ impl Clone for EnumValue {
 
 impl Drop for EnumValue {
     fn drop(&mut self) {
+        if self.memory.is_tracked() {
+            super::drain::values(&mut self.values);
+            return;
+        }
         if self.layout.error.is_some() {
             recycle_error_values(&mut self.values);
         } else {
@@ -242,6 +268,9 @@ impl SharedEnum {
     pub fn new(layout: Arc<RuntimeEnumLayout>, values: Vec<Value>) -> Self {
         let ownership_neutral = values.iter().all(Value::is_ownership_neutral);
         Self(Arc::new(EnumValue {
+            memory: Reservation::shared::<EnumValue>(
+                values.capacity() * std::mem::size_of::<Value>(),
+            ),
             layout,
             values,
             ownership_neutral,
@@ -255,7 +284,7 @@ impl SharedEnum {
     }
 
     /// Mutably borrow values, detaching only when the body is shared.
-    pub fn values_mut(&mut self) -> &mut Vec<Value> {
+    pub fn values_mut(&mut self) -> &mut [Value] {
         let body = Arc::make_mut(&mut self.0);
         body.ownership_neutral = false;
         &mut body.values
@@ -290,14 +319,21 @@ impl SharedEnum {
 
 #[derive(Debug)]
 struct DictValue {
+    memory: Reservation,
     pairs: Vec<(Value, Value)>,
     ownership_neutral: bool,
 }
 
 impl Clone for DictValue {
     fn clone(&self) -> Self {
+        let (memory, pairs) = self.memory.copy_buffer(
+            &self.pairs,
+            crate::resources::shared_size::<Self>(0),
+            clone_pairs,
+        );
         Self {
-            pairs: clone_pairs(&self.pairs),
+            memory,
+            pairs,
             ownership_neutral: self.ownership_neutral,
         }
     }
@@ -305,6 +341,10 @@ impl Clone for DictValue {
 
 impl Drop for DictValue {
     fn drop(&mut self) {
+        if self.memory.is_tracked() {
+            super::drain::pairs(&mut self.pairs);
+            return;
+        }
         recycle_pairs(&mut self.pairs);
     }
 }
@@ -321,6 +361,9 @@ impl From<Vec<(Value, Value)>> for SharedDict {
             .iter()
             .all(|(key, value)| key.is_ownership_neutral() && value.is_ownership_neutral());
         Self(Arc::new(DictValue {
+            memory: Reservation::shared::<DictValue>(
+                pairs.capacity() * std::mem::size_of::<(Value, Value)>(),
+            ),
             pairs,
             ownership_neutral,
         }))
@@ -328,6 +371,10 @@ impl From<Vec<(Value, Value)>> for SharedDict {
 }
 
 impl SharedDict {
+    pub(crate) fn allocation_identity(&self) -> usize {
+        Arc::as_ptr(&self.0) as usize
+    }
+
     pub(super) fn is_ownership_neutral(&self) -> bool {
         self.0.ownership_neutral
     }
@@ -335,8 +382,19 @@ impl SharedDict {
     /// Append a pair while preserving known ownership properties of both key and value.
     pub fn push(&mut self, pair: (Value, Value)) {
         let body = Arc::make_mut(&mut self.0);
+        body.memory.reserve_vec(&mut body.pairs, 1);
         body.ownership_neutral &= pair.0.is_ownership_neutral() && pair.1.is_ownership_neutral();
         body.pairs.push(pair);
+    }
+
+    /// Remove a pair and shift the remaining suffix.
+    pub fn remove(&mut self, index: usize) -> (Value, Value) {
+        Arc::make_mut(&mut self.0).pairs.remove(index)
+    }
+
+    /// Remove all pairs while retaining their backing capacity.
+    pub fn clear(&mut self) {
+        Arc::make_mut(&mut self.0).pairs.clear();
     }
 
     /// Replace the value at one pair position, retaining its key.
@@ -381,7 +439,7 @@ impl From<SharedDict> for Vec<(Value, Value)> {
 }
 
 impl Deref for SharedDict {
-    type Target = Vec<(Value, Value)>;
+    type Target = [(Value, Value)];
 
     fn deref(&self) -> &Self::Target {
         &self.0.pairs

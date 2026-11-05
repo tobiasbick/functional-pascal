@@ -167,6 +167,7 @@ pub(crate) fn session_code(kind: fpas_runtime::execution::DebugErrorKind) -> &'s
         fpas_runtime::execution::DebugErrorKind::ExecutionTimeout => "timeout",
         fpas_runtime::execution::DebugErrorKind::InstructionLimit => "instruction_limit",
         fpas_runtime::execution::DebugErrorKind::OutputLimit => "output_limit",
+        fpas_runtime::execution::DebugErrorKind::HeapLimit => "heap_limit",
         fpas_runtime::execution::DebugErrorKind::ScheduleDeadlock => "schedule_deadlock",
         fpas_runtime::execution::DebugErrorKind::ScheduleClockLimit => "schedule_clock_limit",
         fpas_runtime::execution::DebugErrorKind::TraceEventLimit => "trace_event_limit",

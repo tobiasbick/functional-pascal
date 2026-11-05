@@ -7,6 +7,7 @@ use super::Value;
 use super::managed_heap::{
     clone_values, managed_value_buffer, recycle_plain_values, recycle_values,
 };
+use crate::resources::Reservation;
 
 /// Copy-on-write storage for FPAS array values.
 ///
@@ -14,6 +15,7 @@ use super::managed_heap::{
 /// value semantics while avoiding deep copies for ordinary reads of large arrays.
 #[derive(Debug)]
 struct ArrayValue {
+    memory: Reservation,
     values: Vec<Value>,
     plain_data: bool,
     ownership_neutral: bool,
@@ -21,8 +23,14 @@ struct ArrayValue {
 
 impl Clone for ArrayValue {
     fn clone(&self) -> Self {
+        let (memory, values) = self.memory.copy_buffer(
+            &self.values,
+            crate::resources::shared_size::<Self>(0),
+            clone_values,
+        );
         Self {
-            values: clone_values(&self.values),
+            memory,
+            values,
             plain_data: self.plain_data,
             ownership_neutral: self.ownership_neutral,
         }
@@ -31,6 +39,10 @@ impl Clone for ArrayValue {
 
 impl Drop for ArrayValue {
     fn drop(&mut self) {
+        if self.memory.is_tracked() {
+            super::drain::values(&mut self.values);
+            return;
+        }
         // Plain leaves own no nested values, so ordinary clearing cannot recurse deeply.
         if self.plain_data {
             recycle_plain_values(&mut self.values);
@@ -48,6 +60,23 @@ impl Drop for ArrayValue {
 pub struct SharedArray(Arc<ArrayValue>);
 
 impl SharedArray {
+    pub(crate) fn allocation_identity(&self) -> usize {
+        Arc::as_ptr(&self.0) as usize
+    }
+
+    /// Borrow the elements without exposing unchecked vector growth.
+    pub fn as_slice(&self) -> &[Value] {
+        &self.0.values
+    }
+
+    /// Insert an element, reserving storage before moving the suffix.
+    pub fn insert(&mut self, index: usize, value: Value) {
+        let body = Arc::make_mut(&mut self.0);
+        body.memory.reserve_vec(&mut body.values, 1);
+        body.plain_data &= is_plain_data_leaf(&value);
+        body.ownership_neutral &= value.is_ownership_neutral();
+        body.values.insert(index, value);
+    }
     /// Whether every element is a primitive value without ownership or capabilities.
     ///
     /// A true result guarantees direct integer, real, boolean, string, unit or absent-option
@@ -65,6 +94,7 @@ impl SharedArray {
     #[inline]
     pub fn push(&mut self, value: Value) {
         let body = Arc::make_mut(&mut self.0);
+        body.memory.reserve_vec(&mut body.values, 1);
         body.plain_data &= is_plain_data_leaf(&value);
         body.ownership_neutral &= value.is_ownership_neutral();
         body.values.push(value);
@@ -73,6 +103,33 @@ impl SharedArray {
     /// Remove the last element without invalidating known primitive-only contents.
     pub fn pop(&mut self) -> Option<Value> {
         Arc::make_mut(&mut self.0).values.pop()
+    }
+
+    /// Append values while reserving their backing storage before growth.
+    pub fn extend(&mut self, values: impl IntoIterator<Item = Value>) {
+        for value in values {
+            self.push(value);
+        }
+    }
+
+    /// Keep the first `length` elements, retaining the allocated capacity.
+    pub fn truncate(&mut self, length: usize) {
+        Arc::make_mut(&mut self.0).values.truncate(length);
+    }
+
+    /// Remove all elements, retaining the allocated capacity.
+    pub fn clear(&mut self) {
+        self.truncate(0);
+    }
+
+    /// Remove an element and shift the remaining suffix.
+    pub fn remove(&mut self, index: usize) -> Value {
+        Arc::make_mut(&mut self.0).values.remove(index)
+    }
+
+    /// Retain elements selected by a predicate.
+    pub fn retain(&mut self, predicate: impl FnMut(&Value) -> bool) {
+        Arc::make_mut(&mut self.0).values.retain(predicate);
     }
 
     /// Replace one element and return its previous value.
@@ -118,6 +175,9 @@ impl From<Vec<Value>> for SharedArray {
         let plain_data = values.iter().all(is_plain_data_leaf);
         let ownership_neutral = plain_data || values.iter().all(Value::is_ownership_neutral);
         Self(Arc::new(ArrayValue {
+            memory: Reservation::shared::<ArrayValue>(
+                values.capacity() * std::mem::size_of::<Value>(),
+            ),
             values,
             plain_data,
             ownership_neutral,
@@ -127,6 +187,11 @@ impl From<Vec<Value>> for SharedArray {
 
 impl FromIterator<Value> for SharedArray {
     fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
+        if crate::resources::heap_active() {
+            let mut array = Self::from(Vec::new());
+            array.extend(iter);
+            return array;
+        }
         let iter = iter.into_iter();
         let mut values = managed_value_buffer(iter.size_hint().0);
         values.extend(iter);
@@ -144,7 +209,7 @@ impl From<SharedArray> for Vec<Value> {
 }
 
 impl Deref for SharedArray {
-    type Target = Vec<Value>;
+    type Target = [Value];
 
     fn deref(&self) -> &Self::Target {
         &self.0.values
@@ -275,8 +340,8 @@ mod tests {
     fn raw_mutable_access_invalidates_metadata_before_any_change() {
         let original = SharedArray::from(vec![Value::Integer(1)]);
         let mut edited = original.clone();
-        let raw: &mut Vec<Value> = edited.deref_mut();
-        raw.push(Value::OpaqueHandle(2));
+        let raw: &mut [Value] = edited.deref_mut();
+        raw[0] = Value::OpaqueHandle(2);
         assert!(!edited.is_plain_data());
         assert!(original.is_plain_data());
         let clone = edited.clone();

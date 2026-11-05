@@ -32,10 +32,11 @@ impl Console {
 
     /// `Std.Console.WriteText(value)` - print without newline.
     pub fn write(&mut self, value: &Value, location: SourceLocation) -> Result<(), StdError> {
-        self.write_text(&format!("{value}"), location)
+        self.write_text(&crate::resources::format_output(value, false), location)
     }
 
     pub(crate) fn write_text(&mut self, s: &str, location: SourceLocation) -> Result<(), StdError> {
+        crate::resources::output(s.len());
         self.sync_terminal_size();
         self.state.write_text(s, false);
         if self.state.crt_mode {
@@ -66,7 +67,7 @@ impl Console {
 
     /// `Std.Console.WriteLn(value)` - print with newline.
     pub fn write_ln(&mut self, value: &Value, location: SourceLocation) -> Result<(), StdError> {
-        self.write_line_text(&format!("{value}"), location)
+        self.write_line_text(&crate::resources::format_output(value, true), location)
     }
 
     pub(crate) fn write_line_text(
@@ -74,6 +75,7 @@ impl Console {
         s: &str,
         location: SourceLocation,
     ) -> Result<(), StdError> {
+        crate::resources::output(s.len().saturating_add(1));
         self.sync_terminal_size();
         if self.capture_mode == CaptureMode::Full {
             self.capture_line_buf.push_str(s);

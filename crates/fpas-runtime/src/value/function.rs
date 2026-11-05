@@ -11,6 +11,7 @@ use std::sync::Arc;
 /// programs. **Documentation:** `docs/pascal/language/functions/closures.md`
 #[derive(Debug, Clone)]
 pub struct FunctionValue {
+    _memory: crate::resources::Reservation,
     target: FunctionTarget,
     /// Executable target.
     pub function: FunctionId,
@@ -85,6 +86,9 @@ impl SharedFunction {
     /// Create a non-task-bound function with no runtime task owner.
     pub fn unbound(target: FunctionTarget, captures: Vec<Value>) -> Self {
         Self(Arc::new(FunctionValue {
+            _memory: crate::resources::Reservation::shared::<FunctionValue>(
+                captures.capacity() * std::mem::size_of::<Value>(),
+            ),
             function: target.function(),
             name: Arc::clone(target.name()),
             target,
@@ -103,6 +107,9 @@ impl SharedFunction {
         owner_domain: DomainId,
     ) -> Self {
         Self(Arc::new(FunctionValue {
+            _memory: crate::resources::Reservation::shared::<FunctionValue>(
+                captures.capacity() * std::mem::size_of::<Value>(),
+            ),
             function: target.function(),
             name: Arc::clone(target.name()),
             target,
@@ -117,6 +124,7 @@ impl SharedFunction {
     /// Create a non-task-bound method value with one receiver argument.
     pub fn bound(target: FunctionTarget, receiver: Value) -> Self {
         Self(Arc::new(FunctionValue {
+            _memory: crate::resources::Reservation::shared::<FunctionValue>(0),
             function: target.function(),
             name: Arc::clone(target.name()),
             target,

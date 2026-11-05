@@ -289,7 +289,7 @@ impl CallSandbox {
             },
             Arc::clone(&self.globals),
             Arc::clone(&self.layouts),
-            Arc::new(HostedState::new(crate::stdlib::Console::new(), Vec::new())),
+            Arc::new(HostedState::for_evaluation()),
         )
         .map_err(|diagnostic| runtime_error(*diagnostic))?;
         let _access = worker

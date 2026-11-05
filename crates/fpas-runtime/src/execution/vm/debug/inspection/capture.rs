@@ -82,6 +82,7 @@ impl InspectionSnapshot {
         reserved_handles: usize,
         boundary: Boundary,
     ) -> Self {
+        let _resources = crate::resources::Scope::untracked();
         let mut capture_limits = limits;
         capture_limits.max_handles = capture_limits.max_handles.saturating_sub(reserved_handles);
         let mut snapshot = Self {

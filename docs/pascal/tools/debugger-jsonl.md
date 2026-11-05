@@ -491,7 +491,8 @@ Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 | Captured program output bytes | 1,048,576 |
 | Queued debuggee input bytes | 1,048,576 |
 | Recording events / recording snapshots | 4,096 / 0 |
-| Instructions / resume timeout | 100,000,000 / 300 seconds |
+| Instructions / active session timeout | 100,000,000 / 300 seconds |
+| Managed heap | Unlimited unless `--heap-limit` is selected; shared with tasks and detached calls |
 
 Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
 `unsupported_protocol_version`, `unsupported_capability`, `unknown_breakpoint`,

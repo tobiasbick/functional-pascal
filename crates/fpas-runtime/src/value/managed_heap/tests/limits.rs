@@ -84,10 +84,10 @@ fn payload_box_pool_is_bounded_and_retains_no_values() {
     assert!(weak.upgrade().is_none());
     PAYLOAD_BOXES.with_borrow(|boxes| {
         assert_eq!(boxes.len(), MAX_PAYLOAD_BOXES);
-        assert!(boxes.iter().all(|value| matches!(**value, Value::Unit)));
+        assert!(boxes.iter().all(|value| matches!(value.value, Value::Unit)));
     });
     let payload = managed_payload_box(Value::Integer(42));
-    assert_eq!(*payload, Value::Integer(42));
+    assert_eq!(payload.value, Value::Integer(42));
     PAYLOAD_BOXES.with_borrow(|boxes| assert_eq!(boxes.len(), MAX_PAYLOAD_BOXES - 1));
     drop(payload);
     PAYLOAD_BOXES.with_borrow_mut(Vec::clear);

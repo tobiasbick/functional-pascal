@@ -13,6 +13,7 @@ fn config(
     jobs: usize,
 ) -> TestCliConfig {
     TestCliConfig {
+        execution_limits: Default::default(),
         no_contracts: false,
         collection_schedule: Default::default(),
         input: crate::CliInput::SourceFile(cwd.clone()),

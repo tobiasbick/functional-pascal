@@ -19,6 +19,7 @@ use fpas_project as project;
 
 #[derive(Default)]
 struct ExecutionOptions {
+    execution_limits: fpas_runtime::ExecutionLimits,
     no_contracts: bool,
     program_args: Vec<String>,
     failure_dump: Option<PathBuf>,
@@ -142,6 +143,7 @@ fn run_input(
         CliInput::CompiledProgramFile(path) => ("compiled", path.clone()),
     };
     let options = ExecutionOptions {
+        execution_limits: config.execution_limits,
         no_contracts: config.no_contracts,
         program_args: config.program_args,
         failure_dump: config.failure_dump,
@@ -402,6 +404,7 @@ fn run_executable(
     reporter: &mut Reporter<'_>,
 ) -> i32 {
     let ExecutionOptions {
+        execution_limits,
         no_contracts: _,
         program_args,
         failure_dump,
@@ -421,7 +424,8 @@ fn run_executable(
         .map(|_| crate::cli_failure_dump::Sources::new(&executable, source_paths.as_deref()));
     let mut vm =
         fpas_runtime::execution::Vm::with_writer_and_args(executable, stdout, program_args)
-            .with_collection_schedule(collection_schedule);
+            .with_collection_schedule(collection_schedule)
+            .with_execution_limits(execution_limits);
     let supplemental = Arc::new(Mutex::new(Vec::new()));
     let received = Arc::clone(&supplemental);
     vm.set_supplemental_diagnostic(Arc::new(move |diagnostic| {

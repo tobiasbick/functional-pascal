@@ -8,6 +8,7 @@ namespace Fpas.Cli.Projects;
 internal sealed record ProjectError(string Code, string Message, IReadOnlyList<string>? Candidates = null);
 internal sealed record ProgramResult(int ExitCode, string Output, string Error, bool Truncated);
 internal sealed record PlannedFile(string Path, string State, string Content);
+internal sealed record PublishedOutput(string Mode, string Runtime, string Directory, IReadOnlyList<PublishedFile> Files);
 internal sealed record ProjectReport(string Command, bool Success, string Status, string? Context)
 {
     public ProjectOutput? Target { get; init; }
@@ -16,6 +17,7 @@ internal sealed record ProjectReport(string Command, bool Success, string Status
     public bool DryRun { get; init; }
     public IReadOnlyList<PlannedFile>? Files { get; init; }
     public ProjectError? Error { get; init; }
+    public PublishedOutput? Publish { get; init; }
 
     internal void Write(bool json)
     {

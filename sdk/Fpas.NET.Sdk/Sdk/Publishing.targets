@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup>
+    <_FpasPublishCertificate Condition="'$(FpasPublishCertificate)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(FpasPublishCertificate)'))</_FpasPublishCertificate>
+    <_FpasSigningKey Condition="'$(SignAssembly)' == 'true' and '$(AssemblyOriginatorKeyFile)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(AssemblyOriginatorKeyFile)'))</_FpasSigningKey>
+    <_FpasPublicSign Condition="'$(SignAssembly)' == 'true'">$(PublicSign)</_FpasPublicSign>
+    <_FpasDelaySign Condition="'$(SignAssembly)' == 'true'">$(DelaySign)</_FpasDelaySign>
+  </PropertyGroup>
+  <UsingTask TaskName="Fpas.Build.Tasks.Publishing.FpasSignPublish" AssemblyFile="$(FpasTasksPath)" />
+  <Target Name="FpasValidateSigning" BeforeTargets="FpasPrepareCompilation">
+    <Error Condition="'$(SignAssembly)' == 'true' and !Exists('$(_FpasSigningKey)')" Code="FP5001" Text="SignAssembly requires an existing AssemblyOriginatorKeyFile (.snk)." />
+    <Error Condition="'$(PublicSign)' == 'true' and '$(DelaySign)' == 'true'" Code="FP5001" Text="PublicSign and DelaySign cannot both be enabled." />
+    <Error Condition="'$(SignAssembly)' != 'true' and ('$(PublicSign)' == 'true' or '$(DelaySign)' == 'true')" Code="FP5001" Text="PublicSign and DelaySign require SignAssembly." />
+    <Error Condition="'$(AssemblyOriginatorKeyContainerName)' != ''" Code="FP5001" Text="Use AssemblyOriginatorKeyFile; signing key containers are not supported." />
+  </Target>
+  <Target Name="FpasValidatePublish" BeforeTargets="PrepareForPublish">
+    <Error Condition="'$(OutputType)' != 'Exe' and ('$(PublishAot)' == 'true' or '$(PublishSingleFile)' == 'true' or '$(UseAppHost)' == 'true')" Code="FP5001" Text="FPAS native/apphost/single-file publishing requires OutputType Exe. Publish managed libraries without those options." />
+  </Target>
+  <Target Name="FpasExcludeSigningKey" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="('%(FullPath)' == '$(_FpasSigningKey)' and '$(_FpasSigningKey)' != '') or ('%(FullPath)' == '$(_FpasPublishCertificate)' and '$(_FpasPublishCertificate)' != '')" />
+    </ItemGroup>
+  </Target>
+  <Target Name="FpasSignPublishOutput" AfterTargets="Publish" Condition="'$(FpasPublishCertificate)' != ''">
+    <FpasSignPublish Directory="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(PublishDir)'))" Certificate="$(_FpasPublishCertificate)" PasswordEnvironment="$(FpasPublishCertificatePasswordEnvironment)" />
+  </Target>
+  <Target Name="FpasVerifyPublish">
+    <Error Condition="'$(FpasPublishVerificationCertificate)' == '' or '$(FpasPublishDirectory)' == ''" Code="FP5011" Text="Set FpasPublishDirectory and FpasPublishVerificationCertificate to verify an existing delivery." />
+    <FpasSignPublish Directory="$(FpasPublishDirectory)" Certificate="$(FpasPublishVerificationCertificate)" Verify="true" />
+  </Target>
+</Project>

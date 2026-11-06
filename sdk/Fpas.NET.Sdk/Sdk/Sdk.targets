@@ -3,6 +3,7 @@
     <_FpasRequestedDocumentationFile>$(DocumentationFile)</_FpasRequestedDocumentationFile>
   </PropertyGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="Publishing.targets" />
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(IsTestingPlatformApplication)' != 'true'">
     <OutputType>Library</OutputType>
     <GenerateProgramFile>false</GenerateProgramFile>
@@ -60,7 +61,7 @@
         ProjectAssetsFile="$(ProjectAssetsFile)" GenerateDocumentationFile="$(GenerateDocumentationFile)"
         TreatWarningsAsErrors="$(TreatWarningsAsErrors)" WarningsAsErrors="$(WarningsAsErrors)"
         WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)" OutputAssembly="@(IntermediateAssembly)" BuildCache="$(IntermediateOutputPath)fpas.compile.json"
-        DebugType="$(DebugType)" Optimize="$(Optimize)" DocumentationFile="$(_FpasDocumentationIntermediate)"
+        DebugType="$(DebugType)" Optimize="$(Optimize)" SigningKey="$(_FpasSigningKey)" PublicSign="$(_FpasPublicSign)" DelaySign="$(_FpasDelaySign)" DocumentationFile="$(_FpasDocumentationIntermediate)"
         DocumentationDestination="$(_FpasRequestedDocumentationFile)" DocumentationOutput="$(_FpasDocumentationOutput)" />
   </Target>
   <Target Name="FpasCleanDocumentation" BeforeTargets="CoreClean">
@@ -76,6 +77,7 @@
                  OutputAssembly="@(IntermediateAssembly)" CacheFile="$(IntermediateOutputPath)fpas.compile.json"
                  DotnetHostPath="$(DotNetHostPath)" OutputType="$(OutputType)"
                  Configuration="$(Configuration)" TargetFramework="$(TargetFramework)" DebugType="$(DebugType)" Optimize="$(Optimize)"
+                 SigningKey="$(_FpasSigningKey)" PublicSign="$(_FpasPublicSign)" DelaySign="$(_FpasDelaySign)"
                  DocumentationFile="$(_FpasDocumentationIntermediate)" DocumentationDestination="$(_FpasRequestedDocumentationFile)"
                  DocumentationOutput="$(_FpasDocumentationOutput)" TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
                  WarningsAsErrors="$(WarningsAsErrors)" WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)">

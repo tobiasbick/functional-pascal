@@ -127,8 +127,9 @@ separate fields. Build/program capture reports exit codes and truncation.
 | Program exit | Run preserves the program's exit code, including nonzero values |
 
 A run report distinguishes a program exit from a host failure even when numeric
-codes overlap. Init file conflicts use exit 1 and `file_conflict`. These commands
-do not publish applications or choose AOT/apphosts. Test discovery/execution and
+codes overlap. Init file conflicts use exit 1 and `file_conflict`.
+Application publication uses [fpas publish](../../build/publishing.md) for Native AOT, apphosts, self-contained
+or single-file application output and signing. Test discovery/execution and
 formatting belong to `fpas test` and `fpas fmt`.
 Native Windows console, pipe and job behavior is covered by the
 [CLI acceptance tests](../../../tests/coverage.md#native-windows-cli-acceptance).

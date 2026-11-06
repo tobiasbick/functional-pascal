@@ -1,4 +1,7 @@
 <Project>
+  <PropertyGroup>
+    <PlatformTarget Condition="'$(PlatformTarget)' == ''">AnyCPU</PlatformTarget>
+  </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <PropertyGroup>
     <Language>FPAS</Language>
@@ -11,7 +14,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
-    <UseAppHost>false</UseAppHost>
+    <UseAppHost Condition="'$(UseAppHost)' == '' and '$(RuntimeIdentifier)' == '' and '$(PublishAot)' != 'true' and '$(PublishSingleFile)' != 'true' and '$(SelfContained)' != 'true'">false</UseAppHost>
     <DebugSymbols Condition="'$(DebugSymbols)' == ''">true</DebugSymbols>
     <DebugType Condition="'$(DebugType)' == ''">portable</DebugType>
     <Optimize Condition="'$(Optimize)' == '' and '$(Configuration)' == 'Release'">true</Optimize>

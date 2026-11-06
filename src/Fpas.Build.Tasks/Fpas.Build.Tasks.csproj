@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateDependencyFile>true</GenerateDependencyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" HintPath="$(MSBuildBinPath)/Microsoft.Build.Framework.dll" Private="false" />
     <Reference Include="Microsoft.Build" HintPath="$(MSBuildBinPath)/Microsoft.Build.dll" Private="false" />
     <Reference Include="Microsoft.Build.Utilities.Core" HintPath="$(MSBuildBinPath)/Microsoft.Build.Utilities.Core.dll" Private="false" />
+    <ProjectReference Include="../Fpas.Deployment/Fpas.Deployment.csproj" />
     <ProjectReference Include="../Fpas.Cli/Fpas.Cli.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

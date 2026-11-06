@@ -19,6 +19,7 @@ tools supported by the current compiler and .NET environment.
 | [Profiling](profiling.md) | Actual CLR execution, suitable .NET tools, and controlled measurements |
 | [Development workflow](../../build/development.md) | Build/test commands and local SDK bootstrap |
 | [Compiler distribution](../../build/distribution.md) | Single-file Windows/Linux compiler, offline SDK export and asset caches |
+| [Application publishing](../../build/publishing.md) | Native AOT, apphosts, self-contained/single-file output and signing |
 
 Do not infer a compiler command from an IDE or another language toolchain.
 

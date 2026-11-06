@@ -20,6 +20,9 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     public string TargetFramework { get; set; } = "net10.0";
     public string DebugType { get; set; } = "portable";
     public bool Optimize { get; set; }
+    public string SigningKey { get; set; } = "";
+    public bool PublicSign { get; set; }
+    public bool DelaySign { get; set; }
     public string DocumentationFile { get; set; } = "";
     public string DocumentationDestination { get; set; } = "";
     public string DocumentationOutput { get; set; } = "";
@@ -57,7 +60,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var previous = CompileFingerprint.Read(cache);
             var fingerprint = CompileFingerprint.Compute(sources, references, CompilerPath,
                 CompileFingerprint.Options(OutputType, Configuration, TargetFramework, output, DebugType, Optimize, documents,
-                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn), CompilerAssemblyPath);
+                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) + SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath);
             if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
                 (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
             {
@@ -70,6 +73,9 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var arguments = new List<string>(sources);
             arguments.AddRange(["--output", output, "--target", OutputType == "Library" ? "library" : "exe", "--diagnostics", "json"]);
             arguments.AddRange(["--debug", DebugType]);
+            if (SigningKey.Length != 0) arguments.AddRange(["--key-file", SigningKey]);
+            if (PublicSign) arguments.Add("--public-sign");
+            if (DelaySign) arguments.Add("--delay-sign");
             if (CompilerAssemblyPath.Length > 0)
             {
                 using var compiler = File.OpenRead(CompilerAssemblyPath);

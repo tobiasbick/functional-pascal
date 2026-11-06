@@ -19,6 +19,7 @@ sources and invokes the direct CIL compiler. Follow
 | Bootstrap, toolchain configuration, SDK package versions/cache | [Development workflow](../../../docs/build/development.md) |
 | Outside-checkout consumer, isolated feed/cache, and runnable deployment | [Standalone SDK walkthrough](../../../docs/build/standalone-sdk.md) |
 | Assemblies, symbols, and runtime dependencies | [Compiled output](../../../docs/pascal/program-structure/compiled-programs.md) |
+| Application apphosts, Native AOT, bundles and signing | [Publishing](../../../docs/build/publishing.md) |
 | Build and cross-language verification | [Build acceptance](../../../tests/coverage.md#build-acceptance) |
 
 ## Project workflow
@@ -52,7 +53,8 @@ xUnit SDK tests for source/reference changes, exported metadata, incremental
 builds, Clean/Rebuild, and configuration isolation. Test compilation and execution
 are separate steps; do not replace running toolchain binaries.
 
-Publishing, AOT, signing, native apphosts, and IDE project loading have separate
-scope. Do not silently claim unsupported outputs. The
+Use the [publishing contract](../../../docs/build/publishing.md) for application
+apphosts, Native AOT, self-contained/single-file outputs and signing. IDE project
+loading remains separate editor work. The
 [standalone SDK walkthrough](../../../docs/build/standalone-sdk.md) is checked
 directly by StandaloneSdkGuideTests in Debug and Release.

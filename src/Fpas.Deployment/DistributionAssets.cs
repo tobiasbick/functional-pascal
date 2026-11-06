@@ -46,7 +46,7 @@ public static class DistributionAssets
         {
             File.WriteAllBytes(temporary, bytes);
             try { File.Move(temporary, file, overwrite: true); }
-            catch (IOException) when (Matches(file, hash)) { }
+            catch (Exception error) when ((error is IOException or UnauthorizedAccessException) && Matches(file, hash)) { }
             if (!Matches(file, hash)) throw new IOException("Distribution asset verification failed: " + name);
             return file;
         }

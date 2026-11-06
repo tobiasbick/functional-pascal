@@ -21,6 +21,14 @@ Records, unions, domains, and public aliases use Fpas.Core metadata attributes.
 The SDK supplies and copies its matching Core assembly. See the
 [CLR mapping](../../docs/specs/clr-mapping.md) for the metadata contracts.
 
+Application publishing supports Native AOT, self-contained/single-file outputs,
+native apphosts and framework-dependent DLLs on Windows x64 and Linux x64.
+Standard SignAssembly/AssemblyOriginatorKeyFile, PublicSign and DelaySign
+properties configure strong names. FpasPublishCertificate signs a complete
+delivery with a PFX certificate; FpasVerifyPublish checks it against a pinned
+public certificate. See [publishing](../../docs/build/publishing.md) for modes,
+native prerequisites, password environment variables and verification commands.
+
 IsTestProject=true builds a unit-based library with dependency/runtimeconfig
 files for VSTest. Use native framework packages/attributes and `dotnet test` or
 `fpas test`; no generated C# test entry point is needed. See [native testing](../../docs/pascal/tools/testing.md).

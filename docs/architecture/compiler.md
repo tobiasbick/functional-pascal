@@ -41,7 +41,8 @@ domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapp
 [Compilation.cs](../../src/Fpas.Compiler/Compilation.cs) defines the public API:
 
 - CompilationRequest supplies CompilationSource values, assembly name, reference
-  paths, target kind, debug/documentation switches, and diagnostic policy.
+  paths, target kind, debug/documentation switches, diagnostic policy, and optional
+  strong-name key bytes with public/delay-signing switches.
 - FpasCompiler.Compile returns a CompilationResult with diagnostics and, on
   success, a CompiledProgram. A successful compilation may still have warnings.
   Its CancellationToken overload permits owned speculative dependency compilation;
@@ -58,6 +59,11 @@ domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapp
 Compile and Analyze share PreparedCompilation: parsing, target/reference checks,
 declarations, binding, optional documentation validation and async lowering.
 The emitter consumes those prepared plans without rebinding or lowering again.
+Program images expose the managed entry point without the PE DLL flag, permitting
+the .NET SDK's Native AOT linker to select them as executable roots. Optional
+strong names use the [CLR identity mapping](../specs/clr-mapping.md#identity-and-representation);
+application delivery and certificate signatures belong to
+[publishing](../build/publishing.md).
 Required support metadata, including generated domain helpers, is checked in
 preparation. Analysis shares bounded diagnostic recovery and warning policy. Project
 discovery belongs to [Fpas.Workspaces](workspaces.md).

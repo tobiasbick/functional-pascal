@@ -18,7 +18,8 @@ The supported build scope is .NET 10/net10.0, one explicit TargetFramework,
 AnyCPU, Debug/Release and library/executable output. Standard project, package
 and assembly references form the dependency graph, including FPAS/C#/F# edges.
 Building requires no IDE extension. Multi-targeting is outside this build scope.
-Application publishing/AOT/signing remain in the [toolchain gaps](../future/cli-gap.md).
+Application apphosts, single-file/self-contained publishing, Native AOT and signing
+follow the [publishing contract](publishing.md).
 IDE project loaders belong to [editor work, scheduled last](../future/editor-gap.md).
 The compiler has a separate [single-file distribution contract](distribution.md).
 
@@ -190,7 +191,8 @@ A library has units and no program. An executable compilation has exactly one
 program, with normal/async entry behavior from the language specification.
 Produce an implementation assembly and PDB plus standard runtime/dependency
 files needed by executable output. A framework-dependent `.dll` runnable through
-`dotnet` is supported; native apphosts have separate scope.
+`dotnet` is the default build output. RID-specific apphosts and native AOT outputs
+use the [publishing workflow](publishing.md).
 
 The SDK exposes the implementation assembly rather than a separate reference
 assembly. C# consumers receive the actual metadata defined

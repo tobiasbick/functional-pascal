@@ -145,10 +145,12 @@ reported problems and check again to reach later phases.
 | FP3035 | Invalid attribute class, target, duplicate, constant value, named member, or structural metadata |
 | FP6001 | Documentation warning; severity follows the configured warning policy |
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
+| FP4003 | Invalid strong-name signing key or signing mode |
 | FP5001 | Invalid or unsupported SDK project configuration |
 | FP5002 | Build-adapter input/output or cleanup failure |
 | FP5003 | Compiler process failure or missing requested assembly |
 | FP5004 | Compilation canceled or timed out through the build adapter |
+| FP5011 | Publish certificate signing or pinned-signature verification failure |
 | FP7001 | Formatter preservation check failed; the source is not rewritten |
 
 ## Warning policy

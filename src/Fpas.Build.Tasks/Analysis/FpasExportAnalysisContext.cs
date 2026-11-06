@@ -24,6 +24,9 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     public string BuildCache { get; set; } = "";
     public string DebugType { get; set; } = "portable";
     public bool Optimize { get; set; }
+    public string SigningKey { get; set; } = "";
+    public bool PublicSign { get; set; }
+    public bool DelaySign { get; set; }
     public string DocumentationFile { get; set; } = "";
     public string DocumentationDestination { get; set; } = "";
     public string DocumentationOutput { get; set; } = "";
@@ -64,6 +67,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             var inputs = Phase == "resolved" ? projectFiles.Concat(sources).Concat(references) : projectFiles;
             if (Phase == "resolved" && File.Exists(ProjectAssetsFile)) inputs = inputs.Append(ProjectAssetsFile);
             inputs = inputs.Concat(CompileFingerprint.Tools(CompilerPath));
+            if (SigningKey.Length > 0) inputs = inputs.Append(SigningKey);
             var hashes = inputs.Where(path => File.Exists(path) || !sourceReferences.Any(output => PathComparer.Equals(output.GetMetadata("FullPath"), path)))
                 .Select(Path.GetFullPath).Distinct(PathComparer).Order(StringComparer.Ordinal)
                 .ToDictionary(path => path, Hash, PathComparer);
@@ -90,7 +94,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     {
         var documents = string.IsNullOrEmpty(DocumentationFile) ? [] : DocumentationOutputs.Paths(DocumentationFile, DocumentationDestination, DocumentationOutput);
         return CompileFingerprint.Compute(sources, references, CompilerPath, CompileFingerprint.Options(OutputType, Configuration, TargetFramework,
-            Path.GetFullPath(OutputAssembly), DebugType, Optimize, documents, TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn), CompilerAssemblyPath);
+            Path.GetFullPath(OutputAssembly), DebugType, Optimize, documents, TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) +
+            SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath);
     }
 
     private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;

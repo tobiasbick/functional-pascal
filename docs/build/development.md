@@ -60,6 +60,11 @@ coverage for compiler, metadata, interop, async, or build changes.
 Store local logs, scratch work, and performance data under `.temp-data/`.
 Check whitespace with `git diff --check`. Keep generated bin/obj output out of Git.
 
+Use [application publishing](publishing.md) for Native AOT, runtime bundles,
+apphosts and signing. PublishingTests verifies all five modes with Debug/Release
+targets; run that class from both tool configurations on Windows and WSL/Linux.
+Native AOT needs the platform's native compiler in addition to the .NET SDK.
+
 ### Native Windows CLI acceptance
 
 After the Debug build, run the platform and CLI contracts from native Windows:

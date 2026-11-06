@@ -63,6 +63,14 @@ They verify dependency copying, exported signatures, incremental inputs/outputs,
 configuration isolation, diagnostics, and cleanup. Do not rely on a cached local
 development SDK version.
 
+Projects.PublishingTests owns application delivery through the CLI and actual
+packaged SDK: five publish modes with Debug/Release targets, standalone sources,
+mixed solutions and C# hosts, no-build reuse, transactional replacement and
+deadline cleanup. It independently verifies RSA strong names and CMS delivery
+signatures, including key changes, public/delay signing and tampering. Native AOT
+and single-file outputs execute from independent directories with .NET host search
+disabled. See [publishing](../docs/build/publishing.md).
+
 Workspaces tests exercise evaluated project/solution contexts, check/query JSON,
 exact definitions/types/references, name-search paging, bounded declaration
 inspection, linked-source ownership, stale metadata,

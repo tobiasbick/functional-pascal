@@ -237,8 +237,9 @@ From Host's directory, `dotnet Host.dll` prints `Hello, C#`. Only the installed
 local feed, SDK cache, and FPAS compiler are build inputs. The acceptance test
 renames the consumer directory before these runs and uses an empty package cache.
 
-This is managed DLL deployment. Publishing, AOT, signing, native apphosts, and
-IDE project loaders retain their [separate scope](../future/language-gaps.md).
+This walkthrough verifies managed DLL deployment. For apphosts, Native AOT,
+self-contained/single-file output and signing, use [application publishing](publishing.md).
+IDE project loaders remain [editor work](../future/editor-gap.md).
 
 ## Update the packaged compiler
 

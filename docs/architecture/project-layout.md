@@ -6,8 +6,8 @@ Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
 [mixed-project MSBuild builds](../../tests/coverage.md#build-acceptance).
 Fpas.Core supplies record/union metadata attributes; the SDK packages Core, the compiler,
 and the implemented task.
-Fpas.Deployment owns file-based access to embedded distribution assets and their
-content-addressed user cache. The CLI's Distribution directory owns bundling and
+Fpas.Deployment owns file-based access to embedded distribution assets, their
+content-addressed user cache, and shared CMS delivery signatures. The CLI's Distribution directory owns bundling and
 offline SDK export; the [distribution reference](../build/distribution.md) owns deployment.
 Examples and applications build and run through the SDK. The responsibilities
 below describe their boundaries.
@@ -292,6 +292,7 @@ to behavior tests.
 Preserve compile/execute integration coverage when extending the compiler or SDK.
 Add Fpas.Core contents only when emitted features need them. Follow the owning
 language/build contracts and their tracked gaps. Add executable examples/apps
-using implemented features. Publishing and additional editor tooling retain their
-separately documented scope. Repository commands belong in the
+using implemented features. Application delivery follows the
+[publishing contract](../build/publishing.md). Additional editor tooling stays in
+[editor gaps](../future/editor-gap.md), scheduled last. Repository commands belong in the
 [development workflow](../build/development.md).

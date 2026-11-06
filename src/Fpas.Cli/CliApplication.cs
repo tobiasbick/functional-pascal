@@ -35,6 +35,7 @@ internal static class CliApplication
         var environment = new EnvironmentCommand();
         var lsp = new LspCommand();
         var sdk = new Fpas.Cli.Distribution.SdkCommand();
+        var publish = new PublishCommand();
         var root = new Command("fpas", """
             FPAS compiler, project analysis, language server and agent debugger for .NET
 
@@ -65,6 +66,8 @@ internal static class CliApplication
 
               fpas sdk export ./feed
 
+              fpas publish App/App.fpasproj --output artifacts/app
+
               fpas lsp
             """);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
@@ -79,6 +82,7 @@ internal static class CliApplication
         root.Subcommands.Add(lsp.Command);
         root.Subcommands.Add(sdk.Command);
         root.Subcommands.Add(sdk.Licenses);
+        root.Subcommands.Add(publish.Command);
         var jsonRequested = false; var help = "fpas --help";
         ParseResult? checkResult = null;
         ParseResult? queryResult = null;
@@ -89,6 +93,7 @@ internal static class CliApplication
         ParseResult? refactorResult = null;
         ParseResult? environmentResult = null;
         ParseResult? debugResult = null;
+        ParseResult? publishResult = null;
         var lspSelected = false;
         ExecutionCommand? execution = null;
         try
@@ -105,6 +110,7 @@ internal static class CliApplication
                 parsed = expanded;
                 compile.Validate(parsed);
             }
+            else if (parsed.CommandResult.Command == publish.Command) { help = "fpas publish --help"; publishResult = parsed; }
             else if (parsed.CommandResult.Command == debug.Command) { help = "fpas debug --help"; debugResult = parsed; debug.Validate(parsed, args); }
             else if (parsed.CommandResult.Command == lsp.Command) { help = "fpas lsp --help"; lspSelected = true; }
             else if (parsed.CommandResult.Command == environment.Command) { help = "fpas env --help"; environmentResult = parsed; }
@@ -127,6 +133,7 @@ internal static class CliApplication
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)
         {
+            if (publishResult is not null) { publish.ArgumentError(publishResult, exception.Message); return 2; }
             if (lspSelected) { LspCommand.ArgumentError(exception.Message); return 2; }
             if (debugResult is not null) return await debug.ReportArgumentError(exception.Message);
             if (environmentResult is not null) { environment.ReportArgumentError(environmentResult, exception.Message); return 2; }

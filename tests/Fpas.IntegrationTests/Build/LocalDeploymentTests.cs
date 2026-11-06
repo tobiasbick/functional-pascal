@@ -79,6 +79,7 @@ public sealed partial class LocalDeploymentTests
             await CheckLanguageServer(consumer, launcher, sdkCache, environment);
             if (run == 0)
             {
+                await CheckPublishing(consumer, launcher, directory.File("exported-feed"), version, environment);
                 await CheckSdkCompiler(consumer, launcher, sdkCache, environment);
                 await CheckDebugger(checkout, consumer, launcher, version, packages, environment);
             }

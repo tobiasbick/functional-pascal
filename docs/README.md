@@ -11,6 +11,7 @@ workflow to work on the compiler/toolchain.
 | Repository task skills | [Authoring](../.agents/skills/fpas-authoring/SKILL.md), [projects](../.agents/skills/fpas-projects/SKILL.md), [performance](../.agents/skills/fpas-bench/SKILL.md) |
 | Repository commands and application SDK bootstrap | [Development workflow](build/development.md) |
 | Single-file Windows/Linux compiler, offline SDK export and asset caches | [Compiler distribution](build/distribution.md) |
+| Native AOT, apphosts, application bundles and signing | [Application publishing](build/publishing.md) |
 | Independent FPAS/C# consumer, local SDK package, and deployment files | [Standalone SDK walkthrough](build/standalone-sdk.md) |
 | Project boundaries, compilation, closures, async, and symbols | [Compiler architecture](architecture/README.md) |
 | Test organization and verified behavior | [Tests](../tests/README.md) and [coverage map](../tests/coverage.md) |

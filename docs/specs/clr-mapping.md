@@ -6,7 +6,9 @@ the [compiler overview](../architecture/compiler.md) and
 compiler/emitter support and verification.
 The [MSBuild contract](../build/msbuild.md)
 specifies project/solution integration, framework references, restore, and the
-compiler's build boundary. IDE and language-service integration are deferred.
+compiler's build boundary. The [language server](../pascal/tools/language-server.md)
+owns implemented source services; further IDE integration belongs in
+[editor gaps](../future/editor-gap.md).
 
 ## Compilation pipeline
 
@@ -61,6 +63,21 @@ The same container rule applies to a qualified program name. Visibility is check
 at both source and metadata boundaries. Public nested types in accessible
 containers are available to C# and other .NET consumers using ordinary nested
 type names. Source-only aliases never become new public types.
+
+Executable PE images set ExecutableImage without the Dll characteristic and have
+a real CLR entry-point token, including the async entry bridge. Libraries set
+Dll and have no entry point. The managed implementation filename remains `.dll`.
+This distinction also lets Native AOT identify an executable input module.
+
+Optional strong-name signing writes the RSA public key into Assembly metadata,
+sets PublicKey and reserves the CLR signature directory. Full signing uses the
+ECMA-335 SHA-1/RSA-PKCS1 strong-name format and sets StrongNameSigned. PublicSign
+sets that flag with a zero signature; DelaySign leaves it clear with a reserved
+signature. Unsigned images have neither public key nor signature reservation.
+The content MVID covers code/metadata/symbol linkage before signing, with the MVID
+and signature slots zeroed. Signing does not change source type/member mappings.
+The [publishing contract](../build/publishing.md) owns keys, SDK properties and
+delivery signatures, which are separate from CLR assembly identity.
 
 Public aliases retain their target through a private static, nongeneric
 `<Alias:Name>(): Target` method on the unit container, marked with

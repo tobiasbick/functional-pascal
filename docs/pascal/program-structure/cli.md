@@ -22,6 +22,9 @@ Use [create/build/run](project-commands.md) for `init project`, `init library`,
 reports. `compile` supplies explicit source/reference compilation; project builds
 use their SDK configuration.
 
+Use [application publishing](../../build/publishing.md) for `publish`: Native AOT,
+single-file and runtime-dependent delivery, output ownership and signing.
+
 Use [native .NET testing](../tools/testing.md) for `init test` and `test`: framework
 attributes, VSTest discovery/execution, filters, deadlines and JSON/TRX results.
 

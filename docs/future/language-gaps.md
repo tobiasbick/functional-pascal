@@ -69,7 +69,6 @@ approval before implementation.
 Source event declarations, expression-tree conversion, user-authored class
 hierarchies, custom awaiters, async iterators, unsafe/byref-like features,
 operator declarations, automatic extension-method discovery, and interface
-variance/default bodies remain outside the agreed scope. Publishing/AOT/signing,
-native apphosts and additional platform/framework coverage are separate toolchain
-proposals. Additional language-server services and IDE project-system integration
+variance/default bodies remain outside the agreed scope. Additional platform/framework
+coverage remains a separate toolchain proposal. Additional language-server services and IDE project-system integration
 belong in [editor gaps](editor-gap.md), scheduled last.

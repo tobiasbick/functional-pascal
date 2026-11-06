@@ -58,8 +58,9 @@ and relevant options participate in invalidation. Clean/Rebuild tracks owned
 outputs. See [compiled programs](compiled-programs.md) and the
 [build acceptance](../../../tests/coverage.md#build-acceptance) for verified details.
 
-Multi-targeting, other platforms/framework coverage, publishing, AOT, signing,
-native apphosts, and IDE project loaders have separate scope. A requested
+Application publication, Native AOT, apphosts and signing follow the
+[publishing contract](../../build/publishing.md). Multi-targeting, additional
+platform/framework coverage and IDE project loaders have separate scope. A requested
 unsupported build feature must fail clearly rather than silently pretend to work.
 
 ## See also

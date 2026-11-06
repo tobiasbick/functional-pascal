@@ -23,6 +23,9 @@ public sealed class SdkPackageFixture : IAsyncLifetime
             "Fpas.LanguageServer.dll", "OmniSharp.Extensions.LanguageProtocol.dll", "StreamJsonRpc.dll", "Newtonsoft.Json.dll" })
             Assert.Single(archive.Entries, entry => Path.GetFileName(entry.FullName) == name);
         Assert.DoesNotContain(archive.Entries, entry => Path.GetFileName(entry.FullName) is "Microsoft.Build.dll" or "Microsoft.Build.Framework.dll" or "Microsoft.Build.Utilities.Core.dll");
+        foreach (var path in new[] { "tools/tasks/Fpas.Deployment.dll", "tools/tasks/Fpas.Build.Tasks.deps.json",
+            "tools/tasks/System.Security.Cryptography.Pkcs.dll", "tools/tasks/runtimes/win/lib/net10.0/System.Security.Cryptography.Pkcs.dll" })
+            Assert.Single(archive.Entries, entry => entry.FullName == path);
     }
 
     internal TemporaryDirectory CreateProject()

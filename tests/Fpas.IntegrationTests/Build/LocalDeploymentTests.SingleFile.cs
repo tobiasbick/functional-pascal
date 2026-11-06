@@ -19,7 +19,7 @@ public sealed partial class LocalDeploymentTests
         Directory.Move(checkout, checkout + ".offline");
         try
         {
-            var compiled = await Task.WhenAll(Compile("first"), Compile("second"));
+            var compiled = await Task.WhenAll(Enumerable.Range(0, 8).Select(index => Compile("parallel-" + index)));
             foreach (var result in compiled)
             { Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Empty(result.Error); }
             var invalid = Path.Combine(output, "invalid.fpas"); File.WriteAllText(invalid, "unit Broken; function ; end unit;");

@@ -10,6 +10,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
+using Fpas.Compiler.Emission.Signing;
 
 namespace Fpas.Compiler.Emission.Metadata;
 
@@ -28,10 +29,16 @@ internal sealed partial class AssemblyEmitter
     private readonly Dictionary<string, MemberReferenceHandle> fields = [];
     private PortableDebugInfo? debug;
 
-    internal static CompiledProgram Emit(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize)
-        => new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize);
+    internal static CompiledProgram Emit(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize,
+        byte[]? key, bool publicSign, bool delaySign)
+    {
+        if (publicSign && delaySign || key is null && (publicSign || delaySign)) throw new CryptographicException("Invalid signing mode.");
+        using var signing = key is null ? null : new StrongNameKey(key, publicSign || delaySign);
+        return new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize, signing, publicSign, delaySign);
+    }
 
-    private CompiledProgram Build(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize)
+    private CompiledProgram Build(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize,
+        StrongNameKey? signing, bool publicSign, bool delaySign)
     {
         var program = prepared.Program;
         var sources = prepared.Catalog.Units.Select(unit => unit.Source);
@@ -41,7 +48,9 @@ internal sealed partial class AssemblyEmitter
         if (emitDebug) debug = new(sources);
         var mvid = metadata.ReserveGuid(); mvid.CreateWriter().WriteGuid(Guid.Empty);
         metadata.AddModule(0, metadata.GetOrAddString(assemblyName + ".dll"), mvid.Handle, default, default);
-        metadata.AddAssembly(metadata.GetOrAddString(assemblyName), new Version(1, 0, 0, 0), default, default, 0, AssemblyHashAlgorithm.None);
+        metadata.AddAssembly(metadata.GetOrAddString(assemblyName), new Version(1, 0, 0, 0), default,
+            signing is null ? default : metadata.GetOrAddBlob(signing.PublicKey), signing is null ? 0 : AssemblyFlags.PublicKey,
+            signing is null ? AssemblyHashAlgorithm.None : AssemblyHashAlgorithm.Sha1);
         AddDebuggableAttribute(optimize);
         var objectType = metadata.AddTypeReference(Reference(program.Runtime), metadata.GetOrAddString("System"), metadata.GetOrAddString("Object"));
         var bodies = new BlobBuilder();
@@ -106,12 +115,25 @@ internal sealed partial class AssemblyEmitter
             directory.AddReproducibleEntry();
         }
         var pe = new ManagedPEBuilder(
-            new PEHeaderBuilder(imageCharacteristics: Characteristics.ExecutableImage | Characteristics.Dll),
-            new MetadataRootBuilder(metadata), bodies, debugDirectoryBuilder: directory, entryPoint: entry, flags: CorFlags.ILOnly,
+            new PEHeaderBuilder(imageCharacteristics: Characteristics.ExecutableImage | (program.IsExecutable ? 0 : Characteristics.Dll)),
+            new MetadataRootBuilder(metadata), bodies, debugDirectoryBuilder: directory, entryPoint: entry,
+            strongNameSignatureSize: signing?.SignatureSize ?? 0,
+            flags: CorFlags.ILOnly | (signing is not null && !delaySign ? CorFlags.StrongNameSigned : 0),
             deterministicIdProvider: HashContent);
         var image = new BlobBuilder();
         pe.Serialize(image);
-        return new(ContentIdentifiedImage(image, mvid.Handle), program.IsExecutable ? """
+        var identified = ContentIdentifiedImage(image, mvid.Handle);
+        if (signing is not null && !publicSign && !delaySign)
+        {
+            // Fill the MVID in the original buffers retained by ManagedPEBuilder's signature fixup.
+            var offset = 0;
+            foreach (var blob in image.GetBlobs())
+            {
+                var segment = blob.GetBytes(); identified.AsSpan(offset, segment.Count).CopyTo(segment.AsSpan()); offset += segment.Count;
+            }
+            pe.Sign(image, signing.Sign); identified = image.ToArray();
+        }
+        return new(identified, program.IsExecutable ? """
             {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}
             """ + "\n" : null, symbols?.Image);
     }

@@ -10,7 +10,8 @@ public sealed record CompilationSource(string Path, string Text);
 public sealed record CompilationRequest(
     IReadOnlyList<CompilationSource> Sources, string AssemblyName, IReadOnlyList<string> References,
     CompilationTarget Target = CompilationTarget.Exe, bool EmitDebugInformation = false, bool EmitDocumentation = false, DiagnosticOptions? DiagnosticOptions = null,
-    bool Optimize = false, IReadOnlyList<MetadataImage>? ReferenceImages = null);
+    bool Optimize = false, IReadOnlyList<MetadataImage>? ReferenceImages = null,
+    byte[]? StrongNameKey = null, bool PublicSign = false, bool DelaySign = false);
 
 public sealed record CompiledProgram(byte[] AssemblyImage, string? RuntimeConfiguration, byte[]? PortablePdb = null, byte[]? XmlDocumentation = null);
 
@@ -34,7 +35,8 @@ public static class FpasCompiler
                 request.Target, request.EmitDocumentation, request.DiagnosticOptions, request.ReferenceImages), cancellationToken);
             if (!prepared.Success) return new(null, prepared.Diagnostics);
             var documentation = prepared.Documentation?.Serialize(request.AssemblyName);
-            var output = AssemblyEmitter.Emit(prepared, request.AssemblyName, request.EmitDebugInformation, request.Optimize);
+            var output = AssemblyEmitter.Emit(prepared, request.AssemblyName, request.EmitDebugInformation, request.Optimize,
+                request.StrongNameKey, request.PublicSign, request.DelaySign);
             cancellationToken.ThrowIfCancellationRequested();
             return new(output with { XmlDocumentation = documentation }, prepared.Diagnostics);
         }
@@ -46,6 +48,8 @@ public static class FpasCompiler
         {
             return new(null, [InvalidReference(exception)]);
         }
+        catch (System.Security.Cryptography.CryptographicException)
+        { return new(null, [new("FP4003", "Invalid strong-name signing key or signing mode.", null)]); }
     }
 
     /// <summary>Validates explicit source/metadata inputs without generating PE, PDB or XML output.</summary>

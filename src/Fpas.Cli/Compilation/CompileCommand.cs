@@ -24,6 +24,9 @@ internal sealed class CompileCommand
     private readonly Option<string[]> noWarn = Repeated("--no-warn", "Suppress warning codes (comma/semicolon separated); repeatable.");
     private readonly Option<string> diagnostics = new("--diagnostics") { Description = "Write one JSON result to stdout." };
     private readonly Option<string> expectedCompiler = new("--expected-compiler-sha256") { Hidden = true };
+    private readonly Option<string> keyFile = new("--key-file") { Description = "Strong-name RSA .snk key file." };
+    private readonly Option<bool> publicSign = new("--public-sign") { Description = "Embed the public key without a cryptographic signature." };
+    private readonly Option<bool> delaySign = new("--delay-sign") { Description = "Reserve a signature for later signing; requires --key-file." };
 
     internal Option<string> ResponseFile { get; } = new("--response-file") { Description = "Read all compile arguments from a JSON string array; no inline arguments or nesting." };
     internal Command Command { get; } = new("compile", """
@@ -46,7 +49,7 @@ internal sealed class CompileCommand
         diagnostics.AcceptOnlyFromAmong("json");
         Command.Arguments.Add(sources);
         foreach (var option in new Option[] { output, references, referenceDirectories, target, debug, optimize, generateDocumentation,
-            documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, expectedCompiler, ResponseFile })
+            documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, expectedCompiler, keyFile, publicSign, delaySign, ResponseFile })
             Command.Options.Add(option);
         Command.Validators.Add(result =>
         {
@@ -62,6 +65,8 @@ internal sealed class CompileCommand
 
     internal CompileArguments Read(ParseResult result)
     {
+        if (result.GetValue(publicSign) && result.GetValue(delaySign) || result.GetValue(keyFile) is null && (result.GetValue(publicSign) || result.GetValue(delaySign)))
+            throw new ArgumentException("Select --key-file and at most one of --public-sign or --delay-sign.");
         if (result.GetValue(expectedCompiler) is { } expected)
         {
             using var compiler = File.OpenRead(Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly));
@@ -79,7 +84,8 @@ internal sealed class CompileCommand
             result.GetValue(target) == "library" ? CompilationTarget.Library : CompilationTarget.Exe,
             result.GetValue(debug) == "portable", documentationPath,
             new(result.GetValue(warnAsError), Codes(result.GetValue(warningsAsErrors)!),
-                Codes(result.GetValue(warningsNotAsErrors)!), Codes(result.GetValue(noWarn)!)), result.GetValue(optimize)).Validate();
+                Codes(result.GetValue(warningsNotAsErrors)!), Codes(result.GetValue(noWarn)!)), result.GetValue(optimize),
+                result.GetValue(keyFile), result.GetValue(publicSign), result.GetValue(delaySign)).Validate();
     }
 
     private static string[] Codes(string[] values) => values.SelectMany(value =>

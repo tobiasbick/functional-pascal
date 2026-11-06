@@ -3,7 +3,7 @@ using Fpas.Compiler;
 namespace Fpas.Cli.Compilation;
 
 internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Output, IReadOnlyList<string> References, bool Json, CompilationTarget Target, bool EmitDebug,
-    string? Documentation, DiagnosticOptions DiagnosticOptions, bool Optimize)
+    string? Documentation, DiagnosticOptions DiagnosticOptions, bool Optimize, string? KeyFile, bool PublicSign, bool DelaySign)
 {
     internal CompileArguments Validate()
     {
@@ -32,6 +32,8 @@ internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Ou
         }
         var artifacts = new[] { Path.GetFullPath(output), Path.ChangeExtension(Path.GetFullPath(output), ".pdb"),
             Path.ChangeExtension(Path.GetFullPath(output), ".runtimeconfig.json"), documentation };
+        if (KeyFile is not null && artifacts.Any(artifact => string.Equals(Path.GetFullPath(KeyFile), artifact, comparison)))
+            throw new ArgumentException("The signing key must differ from all output paths.");
         if (References.Any(reference => artifacts.Any(artifact => string.Equals(reference, artifact, comparison))))
             throw new ArgumentException("Reference paths must differ from assembly, runtime configuration, PDB, and XML documentation output paths.");
         return this with { Output = output, Documentation = documentation };

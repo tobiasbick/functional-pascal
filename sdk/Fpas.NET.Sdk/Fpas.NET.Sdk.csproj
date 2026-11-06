@@ -14,6 +14,7 @@
     <ProjectReference Include="../../src/Fpas.Core/Fpas.Core.csproj" ReferenceOutputAssembly="false" />
     <None Update="Sdk/Sdk.props" Pack="true" PackagePath="Sdk/Sdk.props" />
     <None Update="Sdk/Sdk.targets" Pack="true" PackagePath="Sdk/Sdk.targets" />
+    <None Update="Sdk/Publishing.targets" Pack="true" PackagePath="Sdk/Publishing.targets" />
     <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
   <Target Name="IncludeFpasToolAssets" BeforeTargets="_GetPackageFiles">
@@ -25,6 +26,7 @@
     </MSBuild>
     <PropertyGroup>
       <_FpasCompilerDirectory>@(_FpasCompilerAssembly->'%(RootDir)%(Directory)')</_FpasCompilerDirectory>
+      <_FpasTaskDirectory>@(_FpasTaskAssembly->'%(RootDir)%(Directory)')</_FpasTaskDirectory>
     </PropertyGroup>
     <ItemGroup>
       <_FpasLanguageServerAsset Include="$(_FpasCompilerDirectory)Fpas.LanguageServer.dll;$(_FpasCompilerDirectory)OmniSharp.Extensions.LanguageProtocol.dll;$(_FpasCompilerDirectory)StreamJsonRpc.dll;$(_FpasCompilerDirectory)Newtonsoft.Json.dll;$(_FpasCompilerDirectory)Fpas.SdkResolver.dll" />
@@ -34,6 +36,9 @@
       <None Include="@(_FpasCompilerNativeAsset)" Pack="true" PackagePath="tools/compiler/%(_FpasCompilerNativeAsset.RecursiveDir)%(_FpasCompilerNativeAsset.Filename)%(_FpasCompilerNativeAsset.Extension)" />
       <None Include="$(_FpasCompilerDirectory)Fpas.Cli.deps.json;$(_FpasCompilerDirectory)Fpas.Cli.runtimeconfig.json" Pack="true" PackagePath="tools/compiler/" />
       <None Include="@(_FpasTaskAssembly)" Pack="true" PackagePath="tools/tasks/" />
+      <None Include="$(_FpasTaskDirectory)Fpas.Deployment.dll;$(_FpasTaskDirectory)System.Security.Cryptography.Pkcs.dll;$(_FpasTaskDirectory)Fpas.Build.Tasks.deps.json" Pack="true" PackagePath="tools/tasks/" />
+      <_FpasTaskRuntimeAsset Include="$(_FpasTaskDirectory)runtimes/**/*" />
+      <None Include="@(_FpasTaskRuntimeAsset)" Pack="true" PackagePath="tools/tasks/runtimes/%(_FpasTaskRuntimeAsset.RecursiveDir)%(_FpasTaskRuntimeAsset.Filename)%(_FpasTaskRuntimeAsset.Extension)" />
     </ItemGroup>
     <Error Condition="!Exists('%(_FpasLanguageServerAsset.Identity)')" Text="Missing language-server deployment asset: %(_FpasLanguageServerAsset.Identity). Build the matching CLI before packing." />
   </Target>

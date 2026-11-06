@@ -7,12 +7,6 @@ change FPAS syntax.
 Future commands need concise help/examples, structured failures, bounded work,
 stream ownership and a cancellation contract. Short aliases remain unselected.
 
-## Publishing
-
-Application apphosts, self-contained/single-file publishing, AOT and signing need
-separate SDK/CLI contracts. Compiler distribution belongs in
-[the compiler distribution reference](../build/distribution.md).
-
 ## Refactorings
 
 | Proposed refactoring | Open work |
@@ -49,4 +43,4 @@ Linux with the corresponding tooling work.
 
 Additional language-server services and editor workflows belong in [editor gaps](editor-gap.md). The
 [debugging reference](../pascal/tools/debugging.md) owns DAP and batch contracts.
-Clean/restore/publish wrappers and a profiling command remain unselected.
+Clean/restore wrappers and a profiling command remain unselected.

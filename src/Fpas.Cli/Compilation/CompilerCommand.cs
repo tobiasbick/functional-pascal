@@ -31,7 +31,8 @@ internal static class CompilerCommand
             var core = Fpas.Deployment.DistributionAssets.Managed(typeof(Core.RecordAttribute).Assembly);
             if (!references.Any(path => Path.GetFileName(path).Equals("Fpas.Core.dll", StringComparison.OrdinalIgnoreCase))) references.Add(core);
             var result = FpasCompiler.Compile(new(sources,
-                Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions, options.Optimize));
+                Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions, options.Optimize,
+                StrongNameKey: options.KeyFile is null ? null : File.ReadAllBytes(options.KeyFile), PublicSign: options.PublicSign, DelaySign: options.DelaySign));
             if (!result.Success)
             {
                 Report(options.Json, false, null, result.Diagnostics, sources);

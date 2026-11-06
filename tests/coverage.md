@@ -248,6 +248,19 @@ Deleted articles cannot remain as stale fixtures. See
 
 See also [native test frameworks](#native-test-frameworks) for test-library SDK consumers.
 
+Projects.PublishingTests owns [application publishing](../docs/build/publishing.md).
+Native Windows x64 and WSL Linux x64 runs use Debug/Release tool builds and targets
+through Native AOT, single-file, self-contained, apphost and managed DLL modes.
+Mixed FPAS/C# programs exercise Core metadata, generics, closures, contracts and
+async entry points. Independent deliveries execute without source/compiler/feed;
+AOT and single-file cases copy only the executable and disable .NET host search.
+Solution/standalone selection, no-build reuse, output conflicts, mode changes,
+failure preservation and deadline cleanup are checked through real processes.
+Signing cases compare public keys with C# metadata, independently verify RSA
+signatures, change keys/modes and reject invalid keys. FPAS and C# AOT hosts use
+PFX certificates with environment-only passwords; independent CMS checks and the
+SDK verification target reject changed output and unexpected certificates.
+
 LocalDeploymentTests runs the platform's actual dist script twice in an isolated
 checkout/cache, from a different working directory. It verifies a matching
 launcher/SDK through find/inspect, development-version cache refresh, preservation
@@ -257,6 +270,8 @@ checkout hidden and .NET host search disabled, concurrent first starts compile
 real sources, return JSON diagnostics and export the matching embedded SDK.
 The same test checks export conflicts, explicit replacement, asset-cache repair,
 SDK invocation through the executable and rejection of different compiler bytes.
+The copied launcher also publishes, certificate-signs and executes an external
+application through its matching exported SDK, exercising bundled cryptography.
 Both delivered LSP entry points negotiate capabilities and perform diagnostics,
 definition, search and versioned rename against a fresh external consumer. File
 hashes and timestamps prove no implicit source/output writes. LspCliParityTests
@@ -304,9 +319,9 @@ propagation, and Clean retaining unrelated XML.
 MsBuildTests.Acceptance covers parallel configurations and independent projects,
 GetTargetFrameworks/GetTargetPath, reference-list invalidation, and assembly/PDB/XML
 equivalence after a clean rebuild. Debug/Release and portable/none symbols are
-covered. Other frameworks/platforms, publishing, AOT, signing, native apphosts,
-and IDE integration are outside this verified scope. Remaining requirements stay
-in [language gaps](../docs/future/language-gaps.md).
+covered. Other frameworks/platforms remain outside this verified scope; see
+[language gaps](../docs/future/language-gaps.md). Additional IDE integration belongs
+in [editor gaps](../docs/future/editor-gap.md), scheduled last.
 
 ## Native test frameworks
 

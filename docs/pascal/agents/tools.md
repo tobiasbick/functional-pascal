@@ -6,6 +6,8 @@ for SDK requirements, all build/test commands, application bootstrap, and direct
 CLI invocation. AGENTS.md contains repository policy; commands live in docs.
 The [distribution reference](../../build/distribution.md) covers the standalone
 Windows/Linux compiler, offline SDK export, executable SDK invocation and caches.
+Use [application publishing](../../build/publishing.md) for `fpas publish`, Native
+AOT prerequisites, delivery modes, output replacement and assembly/delivery signing.
 
 ## Select the owning reference
 

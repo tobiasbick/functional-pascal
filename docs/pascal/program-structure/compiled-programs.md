@@ -14,6 +14,10 @@ ordinary CLR types/methods to FPAS and other .NET languages.
 | .deps.json and copied dependencies | SDK-managed runtime asset resolution |
 | .xml | Optional API documentation associated with the assembly |
 
+Publication can also produce an apphost, a self-contained/single-file bundle or a
+Native AOT executable. [Application publishing](../../build/publishing.md) owns
+runtime requirements, output ownership, symbols and strong-name/CMS signatures.
+
 Direct CLI compilation writes its documented assembly/PDB/runtime configuration
 and optional XML outputs. SDK projects additionally manage dependency/host files
 and transitive runtime copying. Libraries have no executable entry point.

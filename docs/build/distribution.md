@@ -66,7 +66,7 @@ SDK's compiler metadata. Check/query also require matching compiler bytes.
 
 Offline builds work when the .NET SDK/reference packs and any additional project
 packages are already available. Export itself performs no restore or download.
-Application publishing is governed separately by the [SDK scope](msbuild.md#scope).
+Application outputs use the [publishing contract](publishing.md).
 
 ## Extraction and ownership
 
@@ -99,8 +99,9 @@ the exported SDK also contains `tools/compiler/debugger-notices.txt`.
 
 `LocalDeploymentTests` runs the actual platform distribution script twice with an
 isolated package cache. It copies only the executable into a fresh directory,
-hides the build checkout, removes .NET host search paths, and checks concurrent
-compilation, JSON failures, concurrent SDK export, conflict handling and asset-cache
+hides the build checkout, removes .NET host search paths, and checks eight parallel
+first compilations, JSON failures, concurrent SDK export, conflict handling and asset-cache
 repair. It builds through the matching SDK and explicit executable override,
-rejects compiler mismatches, and exercises check/query, real stdio LSP, batch
+rejects compiler mismatches, publishes and certificate-signs an external application,
+and exercises check/query, real stdio LSP, batch
 debugging and DAP using the delivered executable. See [build acceptance](../../tests/coverage.md#build-acceptance).

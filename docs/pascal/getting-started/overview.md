@@ -62,7 +62,8 @@ The [MSBuild specification](../../build/msbuild.md) defines `.fpasproj` projects
 references as the initial build scope. The local SDK supports and tests this
 contract for net10.0 and AnyCPU; see the
 [acceptance coverage](../../../tests/coverage.md#build-acceptance).
-Application publishing and deployment profiles remain later work. The compiler
+Application [publishing](../../build/publishing.md) supports apphosts, Native AOT,
+self-contained/single-file delivery and signing. The compiler
 has a [single-file Windows/Linux distribution](../../build/distribution.md).
 
 The [repository layout](../../architecture/project-layout.md) defines the C#

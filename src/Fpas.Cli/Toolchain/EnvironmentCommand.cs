@@ -9,7 +9,7 @@ internal sealed class EnvironmentCommand
     private readonly Option<string> directory = new("--directory") { Description = "Working directory for .NET SDK selection; defaults to the current directory." };
     private readonly Option<int> timeout = new("--timeout") { Description = "Overall inspection deadline in seconds (1..3600).", DefaultValueFactory = _ => 30 };
     internal Command Command { get; } = new("env", """
-        Inspect the running FPAS toolchain, installed SDKs, .NET and packaged debugger.
+        Inspect the running FPAS toolchain, installed SDKs, .NET, debugger and stdio language server.
 
         No project is built, restored or evaluated. SDK cache hashes detect stale compiler files.
         Exit codes: 0 inspection without errors, 1 errors/deadline, 2 arguments, 130 cancellation.

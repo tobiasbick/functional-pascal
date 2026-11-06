@@ -16,7 +16,7 @@ public sealed partial class SourceQuery
 
     public static void Validate(NameSearch search)
     {
-        if (string.IsNullOrEmpty(search.Name)) throw new Loading.ContextFailure("invalid_argument", "--name must not be empty.");
+        if (search.Name is null) throw new Loading.ContextFailure("invalid_argument", "Supply a name search.");
         if (search.Match is not ("exact" or "prefix" or "contains")) throw new Loading.ContextFailure("invalid_argument", "--match must be exact, prefix or contains.");
         if (search.Limit is < 1 or > 1000 || search.Offset < 0) throw new Loading.ContextFailure("invalid_argument", "--limit must be 1..1000 and --offset must be nonnegative.");
         if (search.Kinds?.Any(kind => !DeclarationKinds.Contains(kind, StringComparer.Ordinal)) == true)
@@ -24,11 +24,15 @@ public sealed partial class SourceQuery
     }
 
     public SourceQueryResult Find(NameSearch search, CancellationToken cancellationToken = default)
+        => FindCore(search, cancellationToken) with { Coverage = coverage };
+
+    private SourceQueryResult FindCore(NameSearch search, CancellationToken cancellationToken)
     {
         Validate(search);
         var searched = projects.Keys.Where(project => search.Project is null || Paths.Equals(project, Path.GetFullPath(search.Project)))
             .Order(StringComparer.Ordinal).ToArray();
-        if (searched.Length == 0) throw new Loading.ContextFailure("invalid_argument", "--project must name an analyzed FPAS project in the context.");
+        if (searched.Length == 0) throw new Loading.ContextFailure(search.Project is not null && analysis.Projects.Any(project => Paths.Equals(project.Project, Path.GetFullPath(search.Project))) ? "analysis_unavailable" : "invalid_argument",
+            "Select a project with checked semantic regions in the context.");
         var matches = new List<DeclarationMatch>();
         foreach (var project in searched)
             foreach (var symbol in projects[project].Snapshot.Symbols)

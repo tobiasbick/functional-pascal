@@ -10,7 +10,7 @@ internal sealed record DocReport(bool Success, string Status, string? Context, s
     AnalysisCoverage Coverage, Preparation? Preparation, IReadOnlyList<AnalysisDiagnostic> Diagnostics, DocumentationResult? Result, AnalysisError? Error)
 {
     internal static DocReport From(CheckResult check, DocumentationResult result) => new(true, result.Status, check.Context, check.Configuration,
-        result.SnapshotId, check.Coverage with { Searched = result.SearchedProjects }, check.Preparation, check.Diagnostics, result, null);
+        result.SnapshotId, check.Coverage with { Complete = result.Coverage.Complete, Searched = result.SearchedProjects, Semantics = result.Coverage.Projects }, check.Preparation, check.Diagnostics, result, null);
     internal static DocReport Failure(string? context, string configuration, string code, string message, CheckResult? check = null,
         bool truncated = false, IReadOnlyList<string>? candidates = null) => new(false, code == "cancelled" ? "cancelled" : "failed", context, configuration,
         null, check is null ? new(false, [], [], []) : check.Coverage with { Complete = false }, check?.Preparation, check?.Diagnostics ?? [], null, new(code, message, truncated, candidates));
@@ -35,6 +35,7 @@ internal sealed record DocReport(bool Success, string Status, string? Context, s
             }
             Console.WriteLine($"{result.Entries.Count}/{result.TotalCount} entries. Status: {result.Status}." +
                 (result.NextOffset is { } next ? $" Next offset: {next}." : "") +
+                (!result.Coverage.Complete ? " Analysis is incomplete; totals cover checked entries only." : "") +
                 (result.OmittedDocumentationCount != 0 ? $" {result.OmittedDocumentationCount} documentation blocks omitted by budget." : ""));
         }
         DiagnosticRenderer.Write(Diagnostics);

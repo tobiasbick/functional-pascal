@@ -66,11 +66,13 @@ public sealed partial class SourceQuery
             var document = projects[item.Project].Snapshot.Documents.Single(document => Paths.Equals(document.Path, location.Span.Path));
             var declaration = Slice(location.Span, "unavailable");
             var documentation = Slice(location.Documentation, "no_documentation");
-            return new(item.Project, declaration, new(location.Body is null ? "no_body" : "location", location.Body, null), documentation);
+            var valid = projects[item.Project].Snapshot.Coverage;
+            return new(item.Project, declaration, new(location.Body is null ? "no_body" : valid.Available(location.Body) ? "location" : "unavailable", location.Body, null), documentation);
 
             SourceSlice Slice(SourceSpan? span, string missing)
             {
                 if (span is null) return new(missing, null, null);
+                if (!projects[item.Project].Snapshot.Coverage.Available(span)) return new("unavailable", span, null);
                 cancellationToken.ThrowIfCancellationRequested();
                 var text = document.Text.AsSpan(span.Offset, span.Length);
                 var bytes = Encoding.UTF8.GetByteCount(text);

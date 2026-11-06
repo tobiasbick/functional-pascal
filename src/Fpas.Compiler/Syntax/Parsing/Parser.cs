@@ -1,8 +1,9 @@
 namespace Fpas.Compiler.Syntax.Parsing;
 
-internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens, SyntaxLayout? layout = null)
+internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens, SyntaxLayout? layout = null, bool recover = false)
 {
     private int position;
+    internal string? ContainerName { get; private set; }
     private Token Current { get { source.CheckCancellation(); return tokens[position]; } }
     private bool At(string text) => Current.Text == text && Current.Kind is TokenKind.Keyword or TokenKind.Symbol;
 
@@ -18,6 +19,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         if (isAsync && !isProgram) throw source.Error("FP2003", "Only program entry bodies and functions may be async.", Current.Position);
         position++;
         var name = ReadName();
+        ContainerName = name.Text;
         using var container = Declaration(name.Parts[^1], start, documentation: documentation);
         container.Info.SourceName = name.Text;
         Expect(";");
@@ -101,16 +103,13 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         {
             layout?.Section(position);
             var bodyStart = Current.Position;
-            Expect("begin");
-            statements = ReadStatements();
-            Expect("end");
-            Expect(";");
-            container.Body(bodyStart, LastEnd);
+            statements = ReadBody(bodyStart, () => { Expect("begin"); var body = ReadStatements(); Expect("end"); Expect(";"); return body; });
+            container.Body(bodyStart, Math.Max(bodyStart, LastEnd));
         }
         layout?.Line(position);
-        Expect("end");
-        Expect(isProgram ? "program" : "unit");
-        Expect(";");
+        if (recover && Current.Kind == TokenKind.End)
+        { source.Diagnostics.Add(Expected(["end"], "Expected the source terminator.").Diagnostic); InvalidRegions.Add((Current.Position, Current.Position)); }
+        else { Expect("end"); Expect(isProgram ? "program" : "unit"); Expect(";"); }
         if (Current.Kind != TokenKind.End)
             throw source.Error("FP2001", "Unexpected content after the source terminator.", Current.Position, Current.Length);
         container.Info.End = LastEnd;
@@ -151,12 +150,18 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var contracts = ReadContracts();
         var bodyStart = Current.Position;
         layout?.Line(position);
-        Expect("begin");
-        var body = ReadStatements();
-        Expect("end");
-        Expect(function ? "function" : "procedure");
-        declaration.Body(bodyStart, LastEnd);
-        if (!nested) Expect(";");
+        var body = ReadBody(bodyStart, () =>
+        {
+            Expect("begin"); var statements = ReadStatements(); Expect("end"); Expect(function ? "function" : "procedure");
+            return statements;
+        });
+        declaration.Body(bodyStart, Math.Max(bodyStart, LastEnd));
+        if (!nested)
+        {
+            if (recover && !At(";") && (Current.Kind == TokenKind.End || At("end") || At("public") || At("private")))
+            { source.Diagnostics.Add(Expected([";"], "Expected a routine terminator semicolon.").Diagnostic); InvalidRegions.Add((Current.Position, Current.Position)); }
+            else Expect(";");
+        }
         return new(name, isPublic, parameters, result, body, isStatic, typeParameters, constraints, contracts, isAsync, documentation);
     }
 

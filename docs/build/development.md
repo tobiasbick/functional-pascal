@@ -90,6 +90,12 @@ Windows uses `bin/fpas.exe`; Unix uses `bin/fpas`. `dist.sh` is executable in Gi
 and makes the deployed launcher executable. Repeated deployment updates the
 published files and preserves unrelated files in `bin/`.
 
+The same launcher serves `fpas lsp`; its managed protocol dependencies and the
+passive SDK resolver are included in both `bin/` and the matching SDK's
+`tools/compiler/`. Packing rejects missing language-server assets. Run `fpas env`
+to inspect the deployed server, then explicitly restore the consumer before
+connecting a client. See the [language-server contract](../pascal/tools/language-server.md).
+
 Building requires the .NET 10 SDK; running the deployed compiler requires the
 .NET 10 runtime. Keep the published files together. This local managed deployment
 does not close the [single-file/Native AOT distribution gaps](../future/dist-gap.md).

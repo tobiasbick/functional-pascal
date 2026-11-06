@@ -64,6 +64,7 @@ public sealed partial class LocalDeploymentTests
             Assert.Equal("public function Read(): int; begin return 42; end function;",
                 inspect.RootElement.GetProperty("result").GetProperty("inspect").GetProperty("source").GetProperty("declaration").GetProperty("text").GetString());
             Assert.Equal(File.ReadAllBytes(Path.Combine(checkout, "bin", "Fpas.Compiler.dll")), File.ReadAllBytes(Path.Combine(sdkCache, "tools", "compiler", "Fpas.Compiler.dll")));
+            await CheckLanguageServer(consumer, launcher, sdkCache, environment);
             if (run == 0) await CheckDebugger(checkout, consumer, launcher, version, packages, environment);
         }
 

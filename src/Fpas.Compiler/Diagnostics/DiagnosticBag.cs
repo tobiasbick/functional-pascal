@@ -6,6 +6,8 @@ internal sealed class DiagnosticBag
     private readonly List<CompilerDiagnostic> diagnostics = [];
     private int errors;
     internal int Count => diagnostics.Count;
+    internal bool HasErrors => errors != 0;
+    internal IReadOnlyList<CompilerDiagnostic> Snapshot => Array.AsReadOnly(diagnostics.ToArray());
 
     internal void Add(CompilerDiagnostic diagnostic)
     {

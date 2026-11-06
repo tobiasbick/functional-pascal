@@ -2,6 +2,9 @@
 
 Fpas.NET.Sdk packages Sdk/Sdk.props, Sdk/Sdk.targets, the matching compiler/CLI,
 Fpas.Core metadata attributes, and the MSBuild task. The task runs the compiler in a separate .NET process.
+The CLI includes the stdio language server, its protocol dependencies and the
+passive project SDK resolver. Keep tools/compiler intact when extracting it;
+`dotnet tools/compiler/Fpas.Cli.dll lsp` uses the same server as `fpas lsp`.
 FPAS emits CIL directly. Standard .NET SDK targets handle references and managed
 runtime assets; there is no generated C# compilation stage.
 

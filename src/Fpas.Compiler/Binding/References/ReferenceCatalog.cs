@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Reflection.Metadata;
 using Fpas.Compiler.Syntax;
+using Fpas.Compiler.Analysis;
 
 namespace Fpas.Compiler.Binding.References;
 
@@ -12,17 +13,21 @@ internal sealed partial class ReferenceCatalog : IDisposable
     internal IEnumerable<KeyValuePair<string, string>> InputFingerprints => assemblies.Select(assembly =>
         new KeyValuePair<string, string>(assembly.Path, assembly.ContentHash ?? throw new InvalidOperationException("Reference fingerprints were not captured.")));
 
-    internal static ReferenceCatalog Open(IReadOnlyList<string> paths, SourceText source, bool captureFingerprints = false)
+    internal static ReferenceCatalog Open(IReadOnlyList<string> paths, SourceText source, IReadOnlyList<MetadataImage>? images = null, bool captureFingerprints = false)
     {
         var catalog = new ReferenceCatalog();
         try
         {
+            var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            var captured = (images ?? []).ToDictionary(image => image.Path, comparer);
+            var requested = paths.Select(Path.GetFullPath).ToHashSet(comparer);
+            if (captured.Keys.Any(path => !requested.Contains(path))) throw new ArgumentException("A metadata image must identify a requested reference.");
             var names = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var path in paths.Select(Path.GetFullPath).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+            foreach (var path in paths.Select(Path.GetFullPath).Distinct(comparer).Order(StringComparer.Ordinal))
             {
                 source.CheckCancellation();
                 ReferenceAssembly assembly;
-                try { assembly = new(path, captureFingerprints); }
+                try { assembly = new(path, captureFingerprints, captured.GetValueOrDefault(path)); }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or BadImageFormatException)
                 {
                     throw new CompilationFailure(new("FP4001", $"Cannot read reference '{path}': {exception.Message}", null) { InputPath = path });

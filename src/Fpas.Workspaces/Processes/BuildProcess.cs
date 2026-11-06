@@ -7,22 +7,23 @@ public sealed record BuildResult(int ExitCode, string Output, string Error, bool
 
 public static class BuildProcess
 {
-    public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true)
+    public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true,
+        IReadOnlyDictionary<string, string>? environment = null)
     {
         token.ThrowIfCancellationRequested();
-        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment);
+        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment);
     }
 
     public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token)
         => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false);
 
-    private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment)
+    private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment,
+        IReadOnlyDictionary<string, string>? environment = null)
     {
         token.ThrowIfCancellationRequested();
-        await using var process = OwnedProcess.Start(path, arguments, cwd, buildEnvironment ? new Dictionary<string, string>
-        {
-            ["MSBUILDDISABLENODEREUSE"] = "1", ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
-        } : null, inheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture);
+        var variables = new Dictionary<string, string>(environment ?? new Dictionary<string, string>());
+        if (buildEnvironment) { variables["MSBUILDDISABLENODEREUSE"] = "1"; variables["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"; }
+        await using var process = OwnedProcess.Start(path, arguments, cwd, variables, inheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture);
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output, Encoding.UTF8);
         using var stderr = new StreamReader(process.Error, Encoding.UTF8);

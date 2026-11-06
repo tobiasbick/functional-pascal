@@ -62,13 +62,15 @@ public sealed class DocumentationCliTests(SdkPackageFixture sdk) : IClassFixture
     }
 
     [Fact]
-    public async Task Invalid_source_never_looks_like_a_successful_empty_documentation_lookup()
+    public async Task Incomplete_source_never_claims_complete_absence_in_documentation_lookup()
     {
         using var directory = DocumentationFixture.Create(sdk);
         File.WriteAllText(directory.File("Game/Bridge.fpas"), "unit Broken; public function F(): int; begin return Missing; end function; end unit;");
         var result = await DocumentationFixture.Cli(directory, directory.File("Game/Game.fpasproj"), "--name", "Absent", "--report", "json");
-        Assert.Equal(1, result.ExitCode); Assert.Empty(result.Error);
-        using var report = JsonDocument.Parse(result.Output); Assert.Equal("analysis_failed", report.RootElement.GetProperty("error").GetProperty("code").GetString());
-        Assert.False(report.RootElement.TryGetProperty("result", out _)); Assert.False(report.RootElement.GetProperty("coverage").GetProperty("complete").GetBoolean());
+        Assert.Equal(0, result.ExitCode); Assert.Empty(result.Error);
+        using var report = JsonDocument.Parse(result.Output); Assert.Equal("ok", report.RootElement.GetProperty("status").GetString());
+        Assert.Empty(report.RootElement.GetProperty("result").GetProperty("entries").EnumerateArray());
+        Assert.False(report.RootElement.GetProperty("result").GetProperty("coverage").GetProperty("complete").GetBoolean());
+        Assert.Equal("partial", report.RootElement.GetProperty("coverage").GetProperty("semantics")[0].GetProperty("availability").GetString());
     }
 }

@@ -1,4 +1,3 @@
-using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using System.CommandLine;
@@ -50,30 +49,25 @@ internal sealed class CheckCommand
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(result.GetValue(options.Timeout)));
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
         CheckResult? current = null; CheckFixes? fixes = null; CheckResult report; int exit;
+        FileWorkspace? operation = null;
         try
         {
-            var workspace = await WorkspaceLoader.LoadAsync(input, combined.Token);
-            var analysis = WorkspaceAnalysis.Analyze(workspace, combined.Token);
-            current = CheckResult.From(analysis);
+            operation = await FileWorkspace.OpenAsync(input, combined.Token);
+            current = CheckResult.From(operation.Analysis!);
             if (result.GetValue(fix))
             {
-                var plan = await DiagnosticFixPlan.CreateAsync(analysis, combined.Token);
-                fixes = CheckFixes.From(plan, workspace.SnapshotId, result.GetValue(dryRun));
+                var plan = operation.Corrections(combined.Token);
+                fixes = CheckFixes.From(plan, operation.Context.SnapshotId, result.GetValue(dryRun));
                 if ((current with { Fixes = fixes }).JsonBytes().Length > 4_194_304)
                     throw new ContextFailure("result_limit", "Correction preview exceeds 4 MiB; no sources were changed.");
-                if (!result.GetValue(dryRun) && plan.Changes.Count != 0)
+                if (!result.GetValue(dryRun) && plan.Edits.Documents.Count != 0)
                 {
-                    await SourcePublication.ApplyAsync(plan.Changes, workspace.VerifyInputsAsync, combined.Token);
+                    await operation.ApplyAsync(plan.Edits, token: combined.Token);
                     fixes = fixes with { State = "applied", Files = fixes.Files.Select(file => file with { Written = true }).ToArray() };
-                    current = null;
-                    // Refresh references and source/dependency proofs rather than reusing pre-edit metadata.
-                    workspace = await WorkspaceLoader.LoadAsync(input with { NoRestore = true }, combined.Token);
-                    analysis = WorkspaceAnalysis.Analyze(workspace, combined.Token);
-                    current = CheckResult.From(analysis);
-                    await SourcePublication.VerifyAsync(plan.Changes.Select(change => change with { Original = change.Replacement }), combined.Token);
+                    current = CheckResult.From(operation.Analysis!);
                 }
             }
-            await workspace.VerifyInputsAsync(combined.Token);
+            if (!operation.Rechecked) await operation.VerifyAsync(combined.Token);
             combined.Token.ThrowIfCancellationRequested();
             if (fixes is { State: "applied" }) fixes = fixes with { Rechecked = true };
             report = current with { Fixes = fixes }; exit = report.Success ? 0 : 1;
@@ -104,6 +98,13 @@ internal sealed class CheckCommand
 
         CheckResult Failure(string code, string message, bool truncated = false, IReadOnlyList<string>? candidates = null)
         {
+            if (operation is not null)
+            {
+                current = operation.Analysis is { } analysis ? CheckResult.From(analysis) : null;
+                if (fixes is not null && operation.Written.Count != 0)
+                    fixes = fixes with { State = fixes.State == "partial" ? "partial" : "applied", Rechecked = operation.Rechecked,
+                        Files = fixes.Files.Select(file => file with { Written = operation.Written.Contains(file.Path) }).ToArray() };
+            }
             var failed = CheckResult.Failure(selected, selectedConfiguration, code, message, truncated, candidates);
             if (current is not null) failed = failed with { Projects = current.Projects, Diagnostics = current.Diagnostics,
                 Sources = current.Sources, Preparation = current.Preparation, Coverage = current.Coverage with { Complete = false } };

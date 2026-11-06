@@ -26,7 +26,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         using var json = JsonDocument.Parse(result.Output);
         var report = json.RootElement;
         Assert.Equal(0, result.ExitCode); Assert.Empty(result.Error);
-        Assert.Equal(2, report.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(3, report.GetProperty("schemaVersion").GetInt32());
         Assert.True(report.GetProperty("success").GetBoolean());
         var selected = await ProcessRunner.RunAsync(["--version"], workingDirectory: root.Path);
         Assert.Equal(selected.Output.Trim(), report.GetProperty("dotnet").GetProperty("selectedSdk").GetString());
@@ -34,7 +34,14 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(FpasCompiler).Assembly.Location))), compiler.GetProperty("sha256").GetString());
         Assert.All(report.GetProperty("dotnet").GetProperty("sdks").EnumerateArray(), entry => Assert.True(Directory.Exists(entry.GetProperty("path").GetString())));
         Assert.Equal("available", report.GetProperty("debugger").GetProperty("status").GetString());
-        Assert.Equal("not_implemented", report.GetProperty("languageServer").GetProperty("status").GetString());
+        var server = report.GetProperty("languageServer");
+        Assert.Equal("available", server.GetProperty("status").GetString());
+        Assert.Equal("3.17", server.GetProperty("protocol").GetString());
+        Assert.Equal("stdio", server.GetProperty("transport").GetString());
+        Assert.Equal("fpas lsp", server.GetProperty("command").GetString());
+        var assembly = server.GetProperty("assembly");
+        Assert.Equal("Fpas.LanguageServer.dll", Path.GetFileName(assembly.GetProperty("path").GetString()));
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.GetProperty("path").GetString()!))), assembly.GetProperty("sha256").GetString());
         Assert.Contains(report.GetProperty("issues").EnumerateArray(), issue => issue.GetProperty("code").GetString() == "sdk_not_cached");
         Assert.DoesNotContain("private-test-sentinel", result.Output);
         Assert.Equal(before, Directory.GetFiles(root.Path)); Assert.False(Directory.Exists(root.File("obj")));

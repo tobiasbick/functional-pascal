@@ -7,6 +7,7 @@ using Fpas.Cli.Testing;
 using Fpas.Cli.Documentation;
 using Fpas.Cli.Refactoring;
 using Fpas.Cli.Toolchain;
+using Fpas.Cli.LanguageServer;
 using System.CommandLine;
 using System.CommandLine.Help;
 using System.Globalization;
@@ -32,8 +33,9 @@ internal static class CliApplication
         var doc = new DocCommand();
         var refactor = new RefactorCommand();
         var environment = new EnvironmentCommand();
+        var lsp = new LspCommand();
         var root = new Command("fpas", """
-            FPAS compiler, project analysis and agent debugger for .NET
+            FPAS compiler, project analysis, language server and agent debugger for .NET
 
             Examples:
               fpas compile --help
@@ -59,6 +61,8 @@ internal static class CliApplication
               fpas refactor --help
 
               fpas env --json
+
+              fpas lsp
             """);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
         root.Subcommands.Add(compile.Command); root.Subcommands.Add(debug.Command); root.Subcommands.Add(check.Command);
@@ -69,6 +73,7 @@ internal static class CliApplication
         root.Subcommands.Add(doc.Command);
         root.Subcommands.Add(refactor.Command);
         root.Subcommands.Add(environment.Command);
+        root.Subcommands.Add(lsp.Command);
         var jsonRequested = false; var help = "fpas --help";
         ParseResult? checkResult = null;
         ParseResult? queryResult = null;
@@ -79,6 +84,7 @@ internal static class CliApplication
         ParseResult? refactorResult = null;
         ParseResult? environmentResult = null;
         ParseResult? debugResult = null;
+        var lspSelected = false;
         ExecutionCommand? execution = null;
         try
         {
@@ -95,6 +101,7 @@ internal static class CliApplication
                 compile.Validate(parsed);
             }
             else if (parsed.CommandResult.Command == debug.Command) { help = "fpas debug --help"; debugResult = parsed; debug.Validate(parsed, args); }
+            else if (parsed.CommandResult.Command == lsp.Command) { help = "fpas lsp --help"; lspSelected = true; }
             else if (parsed.CommandResult.Command == environment.Command) { help = "fpas env --help"; environmentResult = parsed; }
             else if (parsed.CommandResult.Command == test.Command) { help = "fpas test --help"; testResult = parsed; }
             else if (parsed.CommandResult.Command == doc.Command) { help = "fpas doc --help"; docResult = parsed; }
@@ -115,6 +122,7 @@ internal static class CliApplication
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)
         {
+            if (lspSelected) { LspCommand.ArgumentError(exception.Message); return 2; }
             if (debugResult is not null) return await debug.ReportArgumentError(exception.Message);
             if (environmentResult is not null) { environment.ReportArgumentError(environmentResult, exception.Message); return 2; }
             if (testResult is not null) { test.ReportArgumentError(testResult, exception.Message); return 2; }

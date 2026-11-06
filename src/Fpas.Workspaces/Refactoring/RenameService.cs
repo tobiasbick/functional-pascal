@@ -9,12 +9,12 @@ using System.Text;
 
 namespace Fpas.Workspaces.Refactoring;
 
-public sealed record PreparedRename(RenamePlan Plan, IReadOnlyList<SourceChange> Changes);
+public sealed record PreparedRename(RenamePlan Plan, TextEditSet Edits);
 
 public static class RenameService
 {
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-    public static async Task<PreparedRename> PrepareAsync(WorkspaceAnalysis analysis, SourceSelection selection, string newName, CancellationToken token = default)
+    public static PreparedRename Prepare(WorkspaceAnalysis analysis, SourceSelection selection, string newName, CancellationToken token = default)
     {
         var spelling = IdentifierFacts.Spell(newName); token.ThrowIfCancellationRequested();
         var before = new RenameBindings(analysis);
@@ -65,23 +65,22 @@ public static class RenameService
                 edits.Add(new(new(span.Path, span.Line, span.Column, span.Length, Offset: span.Offset), original, spelling));
                 if (edits.Count > 1000) throw new ContextFailure("rename_limit", "Rename exceeds 1,000 source edits.");
             }
-        var editPlan = await DiagnosticFixPlan.CreateAsync(sources, edits.Count == 0 ? [] :
-            [new(definition.Project, "rename", new("Rename identifier", DiagnosticApplicability.Automatic, edits))], token);
+        var editPlan = TextEditSet.Create(analysis.Context.Texts, edits, token);
         var grouped = edits.DistinctBy(edit => (edit.Location.Path, edit.Location.Offset, edit.Location.Length, edit.NewText))
             .GroupBy(edit => edit.Location.Path, Paths).ToDictionary(group => group.Key, group => group.OrderBy(edit => edit.Location.Offset).ToArray(), Paths);
         int Map(string path, int offset) => offset + (grouped.TryGetValue(path, out var changes) ? changes.Where(edit => edit.Location.Offset < offset)
             .Sum(edit => edit.NewText.Length - edit.Location.Length) : 0);
-        if (editPlan.Changes.Count != 0)
+        if (editPlan.Documents.Count != 0)
         {
-            using var overlay = new RenameOverlay();
-            var texts = editPlan.Changes.ToDictionary(change => change.Path, change => new UTF8Encoding(false, true).GetString(change.Replacement), Paths);
-            var changed = overlay.Analyze(analysis.Context, texts, token);
+            var texts = editPlan.Documents.ToDictionary(document => document.Original.Path, document => document.NewText, Paths);
+            var changed = RenameOverlay.Analyze(analysis.Context, texts, token);
             var expected = new RenameBindings(analysis, Map).Occurrences(token); var actual = new RenameBindings(changed).Occurrences(token);
             if (expected.Count != actual.Count || expected.Any(pair => !actual.TryGetValue(pair.Key, out var key) || key != pair.Value) ||
                 !new RenameBindings(analysis, Map).Relations(token).SetEquals(new RenameBindings(changed).Relations(token)))
                 throw new ContextFailure("rename_conflict", "The rename changes a source binding, overload selection or declaration relationship.");
         }
-        var files = editPlan.Files.Select(file => new RenameFile(file.Path, file.OriginalHash, file.ReplacementHash, grouped[file.Path])).ToArray();
+        var files = editPlan.Documents.Select(document => new RenameFile(document.Original.Path, document.OriginalHash,
+            document.ReplacementHash, grouped[document.Original.Path])).ToArray();
         var descriptors = targets.Select(key => definitions[key]).Select(item => new RenameTarget(item.Project!, item.Symbol.Kind, Token(item),
             item.Symbol.Declaration!, Public(item))).OrderBy(item => item.Project, StringComparer.Ordinal).ThenBy(item => item.Declaration.Path, StringComparer.Ordinal)
             .ThenBy(item => item.Declaration.Offset).ToArray();
@@ -90,7 +89,7 @@ public static class RenameService
             descriptors, files, analysis.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), before.Query.Boundaries());
         plan = plan with { Id = RenamePlanJson.Identity(plan) };
         if (RenamePlanJson.Serialize(plan).Length > RenamePlanJson.MaximumBytes) throw new ContextFailure("rename_limit", "Rename plan exceeds 4 MiB.");
-        return new(plan, editPlan.Changes);
+        return new(plan, editPlan);
 
         string Token(DefinitionResult item) => documents[item.Symbol.Declaration!.Path].Substring(item.Symbol.Declaration.Offset, item.Symbol.Declaration.Length).TrimStart('@');
         bool Public(DefinitionResult item)
@@ -105,5 +104,23 @@ public static class RenameService
             }
             return seenPublic || item.Symbol.Kind == "container";
         }
+    }
+
+    public static PreparedRename Validate(WorkspaceAnalysis analysis, RenamePlan plan, CancellationToken token = default)
+    {
+        if (plan.Version != 1 || plan.Kind != "rename" || RenamePlanJson.Identity(plan) != plan.Id)
+            throw new ContextFailure("invalid_plan", "Invalid or modified rename plan.");
+        ValidateContext(plan, analysis.Context.Path, analysis.Context.Configuration);
+        if (plan.InputSnapshotId != analysis.Context.SnapshotId)
+            throw new ContextFailure("stale_plan", "Project inputs changed after rename planning.");
+        var prepared = Prepare(analysis, plan.Selection, plan.NewName, token);
+        if (prepared.Plan.Id != plan.Id) throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked rename.");
+        return prepared;
+    }
+
+    public static void ValidateContext(RenamePlan plan, string context, string configuration)
+    {
+        if (plan.Context != Path.GetFullPath(context) || plan.Configuration != configuration)
+            throw new ContextFailure("plan_context_mismatch", "Supply the plan's original context and configuration.");
     }
 }

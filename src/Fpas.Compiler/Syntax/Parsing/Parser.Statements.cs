@@ -10,6 +10,7 @@ internal sealed partial class Parser
         var statements = new List<StatementSyntax>();
         while (!terminators.Any(At) && Current.Kind != TokenKind.End)
         {
+            if (recover && (At("public") || At("private") || At("type"))) break;
             var start = position;
             layout?.Line(start);
             if (layout is not null && statements.LastOrDefault() is BlockSyntax or IfSyntax or WhileSyntax or ForSyntax or ForEachSyntax or CaseStatementSyntax or TrySyntax or RepeatSyntax or NestedRoutineSyntax && !At("const") && !At("var"))

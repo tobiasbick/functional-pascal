@@ -51,7 +51,7 @@ domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapp
   publish files or deploy dependencies.
 - FpasCompiler.Analyze accepts an AnalysisRequest from Fpas.Compiler.Analysis
   and returns AnalysisResult with IsComplete, Success, diagnostics and a detached
-  SemanticSnapshot on success. Its
+  SemanticSnapshot with explicit complete/partial/unavailable coverage. Its
   success does not require a program image. It validates explicit sources and
   references without producing assembly, PDB, runtime configuration or XML bytes.
 
@@ -73,9 +73,14 @@ tokens/comments and verifies the output by reparsing. The
 owns nullable source locations with exclusive UTF-16 end positions, expectations,
 help, related notes and exact proposed edits. Parser recovery synchronizes at
 statement boundaries; body binding isolates independent routines and units.
-DiagnosticBag stops after 50 errors with FP0003. A failed phase never reaches
-emission or publishes a semantic snapshot. Invalid declarations/imports can
-still stop their phase; failed local bodies are abandoned to limit cascades.
+DiagnosticBag stops after 50 errors with FP0003. Invalid programs never reach
+emission. Analysis can retain independently checked declarations and bodies.
+Syntax recovery preserves known routine headers and source closers; failed
+bodies and their nested facts are unavailable as a whole. Invalid declaration
+scopes exclude their entire source unit and source consumers, transitively;
+an unreadable container header conservatively makes the source catalog
+unavailable. Independent units can still be checked. Missing/malformed reference
+metadata and diagnostic-limit failures can make the whole analysis unavailable.
 The [diagnostic reference](../pascal/tools/diagnostics.md) owns the public payload
 and presentation contract. CLI text/check share one renderer; source-generated
 JSON carries the same facts. MSBuild consumes the JSON without loading the
@@ -108,6 +113,11 @@ exact CLR exports. Collections are read-only and contain no syntax nodes, bound
 symbols, metadata readers or open files. SymbolRelation records resolved source
 implementation/contract pairs. Qualified import prefixes that name enclosing
 types/containers bind to those identities rather than fabricated namespaces.
+SemanticCoverage partitions captured texts into checked/unavailable regions,
+including reasons. Failed regions contain no binding occurrences, expression
+types or source operations. A routine's valid signature can remain available
+when its body is unavailable. AnalysisResult.Success/IsComplete still require
+successful complete validation; a partial snapshot never authorizes emission.
 Metadata identities include assembly version,
 culture/token, actual reference content hash, declaring type, member kind, arity
 and signature. Extra export
@@ -152,6 +162,13 @@ read-only like the rest of the snapshot; compilation/emitted behavior is unchang
 
 The [query layer](workspaces.md#source-queries) bridges prepared FPAS dependencies
 and supplies explicit project/solution coverage without executing user code.
+
+AnalysisRequest and CompilationRequest may supply immutable MetadataImage values
+for requested logical reference paths. These replace disk input under that path;
+the catalog reads private image streams and fingerprints their actual bytes.
+Analysis and emission share this path. Unrequested/duplicate images are rejected;
+malformed metadata produces the usual reference diagnostics. SyntaxAnalysis.Check
+provides parser diagnostics without binding or metadata discovery for unowned text.
 
 The API's debug/documentation switches default off. The CLI defaults to portable
 symbols and adds its matching Fpas.Core reference unless one is supplied. Direct

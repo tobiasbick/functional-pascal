@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
+using Fpas.Compiler.Analysis;
 
 namespace Fpas.Compiler.Binding.References;
 
@@ -13,12 +14,20 @@ internal sealed class ReferenceAssembly : IDisposable
     internal string Path { get; }
     internal string? ContentHash { get; }
 
-    internal ReferenceAssembly(string path, bool captureFingerprint = false)
+    internal ReferenceAssembly(string path, bool captureFingerprint = false, MetadataImage? captured = null)
     {
-        var bytes = File.ReadAllBytes(path);
         Path = System.IO.Path.GetFullPath(path);
-        ContentHash = captureFingerprint ? Convert.ToHexString(SHA256.HashData(bytes)) : null;
-        image = new PEReader(new MemoryStream(bytes, writable: false));
+        if (captured is null)
+        {
+            var bytes = File.ReadAllBytes(path);
+            ContentHash = captureFingerprint ? Convert.ToHexString(SHA256.HashData(bytes)) : null;
+            image = new PEReader(new MemoryStream(bytes, writable: false));
+        }
+        else
+        {
+            ContentHash = captured.ContentHash;
+            image = new PEReader(captured.OpenRead());
+        }
         try
         {
             if (!image.HasMetadata)

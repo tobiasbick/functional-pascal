@@ -143,13 +143,26 @@ Microsoft.Testing.Platform application mode is outside this VSTest contract.
 | Build | Resolve dependencies and compile changed FPAS inputs to the selected output |
 | CoreCompile | Invoke the FPAS compiler with all selected sources, resolved references, and options; emit direct CIL/metadata/PDB and XML documentation when enabled |
 | FpasPrepareCompilation | Shared compiler-input preparation for CoreCompile and analysis; generators use BeforeTargets or FpasPrepareCompilationDependsOn |
-| FpasDescribeAnalysisContext / FpasExportAnalysisContext | Export versioned graph/evaluated source and resolved reference inputs for project analysis, without compiling the selected root |
+| FpasDescribeAnalysisContext / FpasExportAnalysisContext | Export versioned graph/evaluated source and resolved reference inputs without compiling the selected root; FpasAnalysisPrepare=false selects existing inputs instead of shared generation/build preparation |
 | Clean / Rebuild | Remove this project's generated artifacts; rebuild without stale compiler results |
 | GetTargetFrameworks | Expose framework information for standard project-reference negotiation, even for one target |
 | GetTargetPath | Return the actual produced assembly with metadata expected by reference-resolution targets |
 | Output items/properties | Expose TargetPath, intermediate/output locations, and generated-file tracking through standard MSBuild conventions |
 
 Reuse standard targets instead of independently reimplementing the restore graph.
+The workspace's existing-input policy also disables BuildProjectReferences and
+uses DesignTimeBuild for reference resolution. It does not invoke restore and
+requires installed SDKs, restored assets and dependency metadata. CLI NoRestore
+alone retains ordinary dependency preparation. See
+[context preparation](../architecture/workspaces.md#context-preparation).
+
+For live source snapshots, FpasAnalysisSourceReferences=true also exports FPAS
+project reference paths before their DLL exists. The workspace compiles those
+sources to private metadata images; it does not use a disk build proof or publish
+those outputs. Foreign projects still require verifiable existing metadata.
+Installed-only SDK resolution and preprocessing reject unsupported custom
+preparation before executing analysis targets.
+
 The imported-target order must select language-neutral targets explicitly;
 the base SDK can otherwise select language-specific targets by project extension.
 

@@ -2,12 +2,23 @@ using Fpas.IntegrationTests.Build;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Refactoring;
-using System.Text;
 
 namespace Fpas.IntegrationTests.Refactoring;
 
 public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
+    [Fact]
+    public async Task Rename_planning_uses_the_captured_snapshot_without_reading_changed_source_files()
+    {
+        const string source = "unit Demo.Bridge; public function Read(): int; begin return 42; end function; end unit;";
+        using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
+        File.WriteAllText(directory.File("Game/Bridge.fpas"), "unsaved disk contents differ from the captured source");
+        var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Read():"), "Fetch");
+        Assert.Equal(source.Replace("Read", "Fetch", StringComparison.Ordinal), Assert.Single(prepared.Edits.Documents).NewText);
+        Assert.Equal("inputs_changed", (await Assert.ThrowsAsync<ContextFailure>(() => analysis.Context.VerifyInputsAsync())).Code);
+        Assert.Equal("unsaved disk contents differ from the captured source", File.ReadAllText(directory.File("Game/Bridge.fpas")));
+    }
+
     [Fact]
     public async Task One_overload_and_its_callable_references_are_renamed_without_touching_comments_strings_or_other_overloads()
     {
@@ -25,10 +36,10 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             end unit;
             """;
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
-        var prepared = await RenameService.PrepareAsync(analysis, RenameFixture.Select(directory, source, "Transform(Value: int)"), "Map");
+        var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Transform(Value: int)"), "Map");
         Assert.Equal(3, prepared.Plan.EditCount); Assert.Single(prepared.Plan.Targets); Assert.False(prepared.Plan.ChangesPublicApi);
         Assert.Equal(source, File.ReadAllText(directory.File("Game/Bridge.fpas")));
-        var replacement = Encoding.UTF8.GetString(Assert.Single(prepared.Changes).Replacement);
+        var replacement = Assert.Single(prepared.Edits.Documents).NewText;
         Assert.Contains("function Map(Value: int)", replacement); Assert.Contains("function Transform(Value: string)", replacement);
         Assert.Contains("F: function(int): int := Map", replacement); Assert.Contains("F(Map(Value := 40)) + Transform(Label)", replacement);
         Assert.Contains("// Transform stays", replacement); Assert.Contains("'Transform'", replacement);
@@ -52,7 +63,7 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             end unit;
             """;
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
-        var failure = await Assert.ThrowsAsync<ContextFailure>(() => RenameService.PrepareAsync(analysis, RenameFixture.Select(directory, source, "Local: function"), "Second"));
+        var failure = Assert.Throws<ContextFailure>(() => RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Local: function"), "Second"));
         Assert.Equal("rename_conflict", failure.Code); Assert.Equal(source, File.ReadAllText(directory.File("Game/Bridge.fpas")));
     }
 
@@ -74,11 +85,11 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             end unit;
             """;
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
-        var prepared = await RenameService.PrepareAsync(analysis, RenameFixture.Select(directory, source, marker), newName);
+        var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, marker), newName);
         Assert.True(prepared.Plan.EditCount >= 3); Assert.True(prepared.Plan.ChangesPublicApi);
         var spelling = newName is "end" or "record" ? "@" + newName : newName;
         Assert.All(prepared.Plan.Files.SelectMany(file => file.Edits), edit => { Assert.Equal(oldName, edit.ExpectedText); Assert.Equal(spelling, edit.NewText); });
-        await SourcePublication.ApplyAsync(prepared.Changes, analysis.Context.VerifyInputsAsync);
+        await SourcePublication.ApplyAsync(prepared.Edits.ToSourceChanges(), analysis.Context.VerifyInputsAsync);
         Assert.True((await RenameFixture.Analyze(directory)).Success);
     }
 
@@ -88,8 +99,8 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
         const string source = "unit Demo.Bridge; public type Item<T> = where T: class; record Value: T; end record; end unit;";
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
         var selection = RenameFixture.Select(directory, source, "T> =");
-        var changed = await RenameService.PrepareAsync(analysis, selection, "U"); Assert.Equal(3, changed.Plan.EditCount);
-        var noop = await RenameService.PrepareAsync(analysis, selection, "T"); Assert.Empty(noop.Changes); Assert.Equal(0, noop.Plan.EditCount);
+        var changed = RenameService.Prepare(analysis, selection, "U"); Assert.Equal(3, changed.Plan.EditCount);
+        var noop = RenameService.Prepare(analysis, selection, "T"); Assert.Empty(noop.Edits.Documents); Assert.Equal(0, noop.Plan.EditCount);
         Assert.Equal(source, File.ReadAllText(directory.File("Game/Bridge.fpas")));
     }
 
@@ -108,11 +119,11 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             end unit;
             """;
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
-        var prepared = await RenameService.PrepareAsync(analysis, RenameFixture.Select(directory, source, "Read(): int; end interface"), "Fetch");
+        var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Read(): int; end interface"), "Fetch");
         Assert.Equal(2, prepared.Plan.Targets.Count); Assert.Equal(4, prepared.Plan.EditCount);
         const string external = "unit Demo.Bridge; uses System as S; public type Resource = record implements S.IDisposable procedure Dispose(); begin end procedure; end record; end unit;";
         File.WriteAllText(directory.File("Game/Bridge.fpas"), external); analysis = await RenameFixture.Analyze(directory);
-        Assert.Equal("rename_external_contract", (await Assert.ThrowsAsync<ContextFailure>(() => RenameService.PrepareAsync(analysis,
-            RenameFixture.Select(directory, external, "Dispose();"), "Close"))).Code);
+        Assert.Equal("rename_external_contract", Assert.Throws<ContextFailure>(() => RenameService.Prepare(analysis,
+            RenameFixture.Select(directory, external, "Dispose();"), "Close")).Code);
     }
 }

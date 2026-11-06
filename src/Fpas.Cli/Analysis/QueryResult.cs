@@ -12,7 +12,8 @@ internal sealed record QueryResult(string Status, string? Reason, string? Contex
     IReadOnlyList<string> BinaryBoundaries, QueryPayload? Result, AnalysisError? Error)
 {
     internal static QueryResult From(CheckResult check, SourceQueryResult result)
-        => new(result.Status, result.Reason, check.Context, check.Configuration, check.SnapshotId, result.Selection, check.Diagnostics, check.Coverage with { Searched = result.Searched ?? check.Coverage.Analyzed }, check.Preparation,
+        => new(result.Status, result.Reason, check.Context, check.Configuration, check.SnapshotId, result.Selection, check.Diagnostics,
+            check.Coverage with { Searched = result.Searched ?? check.Coverage.Analyzed, Semantics = result.Coverage?.Projects }, check.Preparation,
             result.Truncated, result.BinaryBoundaries, result.Status == "ok" ? new(result.Definition, result.Type, result.Refs, result.Find, result.Inspect, result.Callees, result.Callers) : null, null);
 
     internal static QueryResult Failure(string? context, string configuration, string code, string message, CheckResult? check = null, bool truncated = false, IReadOnlyList<string>? candidates = null)

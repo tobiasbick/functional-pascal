@@ -1,7 +1,7 @@
 # Toolchain environment
 
 Use `fpas env` to inspect the running compiler, .NET installation, cached FPAS
-SDKs and the packaged debugger. The command does not evaluate projects, build, restore
+SDKs, the packaged debugger and the stdio language server. The command does not evaluate projects, build, restore
 packages or download tools. Missing components remain visible in the report.
 
 ## Commands
@@ -40,7 +40,10 @@ streams. Cancellation or a deadline terminates and joins those probes.
 - `debugger`: passive deployment facts: status, managed/shim versions, selected
   RID and shim path/hash, required runtime and available `batch`/`dap` protocols.
   It does not load the native shim or start a worker/target.
-- `languageServer`: `not_implemented` for the current CLR toolchain.
+- `languageServer`: deployment status, managed assembly path/version/SHA-256,
+  protocol `3.17`, transport `stdio` and command `fpas lsp`. Inspection neither
+  starts the server nor creates a workspace. Capabilities are negotiated when
+  a client initializes a [language-server session](language-server.md).
 
 The cache is an installation inventory, not proof of which SDK an arbitrary
 project will resolve. Other package versions may contain different compilers;
@@ -55,7 +58,7 @@ dumps or package-source credentials.
 
 ## Results and exits
 
-JSON schema version 2 provides `success`, `status`, `directory`, the component
+JSON schema version 3 provides `success`, `status`, `directory`, the component
 records above, `issues` and `truncated`. Each issue has severity, code, message
 and an optional path. Component inspection can fail while other evidence remains
 available. Invalid arguments, cancellation and deadlines return a failure report;

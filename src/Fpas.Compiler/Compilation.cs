@@ -10,7 +10,7 @@ public sealed record CompilationSource(string Path, string Text);
 public sealed record CompilationRequest(
     IReadOnlyList<CompilationSource> Sources, string AssemblyName, IReadOnlyList<string> References,
     CompilationTarget Target = CompilationTarget.Exe, bool EmitDebugInformation = false, bool EmitDocumentation = false, DiagnosticOptions? DiagnosticOptions = null,
-    bool Optimize = false);
+    bool Optimize = false, IReadOnlyList<MetadataImage>? ReferenceImages = null);
 
 public sealed record CompiledProgram(byte[] AssemblyImage, string? RuntimeConfiguration, byte[]? PortablePdb = null, byte[]? XmlDocumentation = null);
 
@@ -31,7 +31,7 @@ public static class FpasCompiler
         try
         {
             using var prepared = PreparedCompilation.Create(new(request.Sources, request.AssemblyName, request.References,
-                request.Target, request.EmitDocumentation, request.DiagnosticOptions), cancellationToken);
+                request.Target, request.EmitDocumentation, request.DiagnosticOptions, request.ReferenceImages), cancellationToken);
             if (!prepared.Success) return new(null, prepared.Diagnostics);
             var documentation = prepared.Documentation?.Serialize(request.AssemblyName);
             var output = AssemblyEmitter.Emit(prepared, request.AssemblyName, request.EmitDebugInformation, request.Optimize);
@@ -56,7 +56,8 @@ public static class FpasCompiler
         {
             using var prepared = PreparedCompilation.Create(request, cancellationToken, collectSemantics: true);
             cancellationToken.ThrowIfCancellationRequested();
-            return new(prepared.Success, prepared.Diagnostics, prepared.Success ? prepared.Analysis!.Finish() : null);
+            var snapshot = prepared.Analysis!.Finish();
+            return new(prepared.Success && snapshot.Coverage.IsComplete, prepared.Diagnostics, snapshot);
         }
         catch (CompilationFailure failure) { cancellationToken.ThrowIfCancellationRequested(); return new(false, failure.Diagnostics); }
         catch (BadImageFormatException exception) { cancellationToken.ThrowIfCancellationRequested(); return new(false, [InvalidReference(exception)]); }

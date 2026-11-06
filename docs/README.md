@@ -22,6 +22,7 @@ workflow to work on the compiler/toolchain.
 | Missing practical guides and verified walkthroughs | [Documentation gaps](future/documentation-gaps.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
 | Open debugger acceptance | [Windows/WSL acceptance](future/debugger-acceptance-plan.md) |
+| Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [native acceptance](future/lsp-acceptance-plan.md), [other editor gaps](future/editor-gap.md) |
 
 Each rule has an owner: the handbook describes language behavior, the grammar
 defines syntax, and the CLR/MSBuild specifications define emitted and build

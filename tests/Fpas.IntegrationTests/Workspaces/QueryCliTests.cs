@@ -116,11 +116,17 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         File.WriteAllText(project.File("Game/Bridge.fpas"), "unit Invalid; function Read(): int; begin return Missing; end function; end unit;");
         var result = operation == "find" ? await Query(project, operation, "Game/Game.fpasproj", "--name", "Absent")
             : await Query(project, operation, "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "1", "--column", "24");
-        Assert.Equal(1, result.ExitCode); Assert.Equal("", result.Error);
+        Assert.Equal(operation == "callees" ? 1 : 0, result.ExitCode); Assert.Equal("", result.Error);
         using var json = JsonDocument.Parse(result.Output);
-        Assert.Equal("analysis_failed", json.RootElement.GetProperty("error").GetProperty("code").GetString());
+        if (operation == "callees")
+        { Assert.Equal("analysis_unavailable", json.RootElement.GetProperty("error").GetProperty("code").GetString()); Assert.False(json.RootElement.TryGetProperty("result", out _)); }
+        else
+        {
+            Assert.Equal("ok", json.RootElement.GetProperty("status").GetString()); Assert.True(json.RootElement.TryGetProperty("result", out _));
+            Assert.Equal("partial", json.RootElement.GetProperty("coverage").GetProperty("semantics")[0].GetProperty("availability").GetString());
+            Assert.NotNull(json.RootElement.GetProperty("snapshotId").GetString());
+        }
         Assert.False(json.RootElement.GetProperty("coverage").GetProperty("complete").GetBoolean());
-        Assert.False(json.RootElement.TryGetProperty("result", out _));
         Assert.Contains(json.RootElement.GetProperty("diagnostics").EnumerateArray(), diagnostic => diagnostic.GetProperty("code").GetString() == "FP3001");
     }
 

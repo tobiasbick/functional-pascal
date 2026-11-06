@@ -15,16 +15,17 @@ internal sealed record DotnetInstallation(string Status, string? Path, string? S
     IReadOnlyList<DotnetSdk> Sdks, IReadOnlyList<DotnetRuntime> Runtimes, string? GlobalPackages);
 internal sealed record CachedSdk(string Version, string Path, bool Expected, string Compatibility, string? CompilerSha256, string? CoreSha256);
 internal sealed record SdkCache(string Status, string? Path, IReadOnlyList<CachedSdk> Installations);
-internal sealed record ToolInstallation(string Status, string? Path = null, string? Version = null, string? Source = null);
+internal sealed record LanguageServerInstallation(string Status, ManagedInstallation? Assembly = null,
+    string Protocol = "3.17", string Transport = "stdio", string Command = "fpas lsp");
 internal sealed record EnvironmentReport(bool Success, string Status, string Directory)
 {
-    public int SchemaVersion => 2;
+    public int SchemaVersion => 3;
     public CompilerInstallation? Fpas { get; init; }
     public RuntimeInstallation? Runtime { get; init; }
     public DotnetInstallation? Dotnet { get; init; }
     public SdkCache? SdkCache { get; init; }
     public Fpas.Debugging.DebuggerDeployment? Debugger { get; init; }
-    public ToolInstallation LanguageServer { get; init; } = new("not_implemented");
+    public LanguageServerInstallation LanguageServer { get; init; } = new("unavailable");
     public IReadOnlyList<EnvironmentIssue> Issues { get; init; } = [];
     public bool Truncated { get; init; }
 
@@ -61,7 +62,9 @@ internal sealed record EnvironmentReport(bool Success, string Status, string Dir
         foreach (var sdk in SdkCache?.Installations ?? []) Line($"  {sdk.Version}: {sdk.Compatibility}{(sdk.Expected ? " (expected)" : "")} ({sdk.Path})");
         Line(""); Line($"Debugger: {Debugger?.Status ?? "unavailable"}");
         if (Debugger is { } debugger) Line($"  CoreCLR; shim {debugger.ShimVersion}; {debugger.Os}-{debugger.Architecture}; {string.Join(", ", debugger.Protocols)} ({debugger.ShimPath})");
-        Line("Language server: not implemented");
+        Line($"Language server: {LanguageServer.Status}");
+        if (LanguageServer.Assembly is { } server)
+            Line($"  {LanguageServer.Command}; LSP {LanguageServer.Protocol}; {LanguageServer.Transport}; {server.Version} ({server.Path})");
         if (Issues.Count != 0) { Line(""); foreach (var issue in Issues) Line($"{issue.Severity} {issue.Code}: {issue.Message}" + (issue.Path is null ? "" : $" ({issue.Path})")); }
         return true;
     }

@@ -1,6 +1,5 @@
 using Fpas.Cli.Analysis;
 using Fpas.Compiler.Syntax;
-using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Queries;
@@ -58,6 +57,7 @@ internal sealed class RefactorCommand
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(result.GetValue(operation.Context.Timeout)));
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellation, deadline.Token); var token = combined.Token;
         RefactorReport? current = null; int exit;
+        FileWorkspace? operationWorkspace = null;
         try
         {
             var input = operation.Context.Read(result); var planPath = Path.GetFullPath(result.GetValue(operation.Plan)!);
@@ -70,35 +70,33 @@ internal sealed class RefactorCommand
                 if (new FileInfo(planPath).Length > RenamePlanJson.MaximumBytes) throw new ContextFailure("invalid_plan", "Plan exceeds 4 MiB.");
                 try { storedBytes = await File.ReadAllBytesAsync(planPath, token); stored = RenamePlanJson.Read(storedBytes); }
                 catch (Exception error) when (error is JsonException or ArgumentException) { throw new ContextFailure("invalid_plan", error.Message); }
-                if (stored.Context != input.Context || stored.Configuration != input.Configuration)
-                    throw new ContextFailure("plan_context_mismatch", "Supply the plan's original context and configuration.");
+                RenameService.ValidateContext(stored, input.Context, input.Configuration);
             }
-            var workspace = await WorkspaceLoader.LoadAsync(input, token);
-            if (stored is not null && stored.InputSnapshotId != workspace.SnapshotId) throw new ContextFailure("stale_plan", "Project inputs changed after rename planning.");
-            var analysis = WorkspaceAnalysis.Analyze(workspace, token);
+            operationWorkspace = await FileWorkspace.OpenAsync(input, token);
+            var analysis = operationWorkspace.Analysis!;
             current = new(false, "validating", planPath, null, [], false, CheckResult.From(analysis).Diagnostics);
             var selection = stored?.Selection ?? new SourceSelection(result.GetValue(operation.File)!, result.GetValue(operation.Line), result.GetValue(operation.Column), result.GetValue(operation.Project));
-            var prepared = await RenameService.PrepareAsync(analysis, selection, stored?.NewName ?? result.GetValue(operation.NewName)!, token);
-            if (stored is not null && prepared.Plan.Id != stored.Id) throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked rename.");
+            var prepared = stored is null ? operationWorkspace.Rename(selection, result.GetValue(operation.NewName)!, token)
+                : operationWorkspace.ValidateRename(stored, token);
             current = new(true, preparing ? "planned" : "applied", planPath, prepared.Plan,
                 prepared.Plan.Files.Select(file => new RefactorFile(file.Path, false)).ToArray(), false, CheckResult.From(analysis).Diagnostics);
             if (current.Bytes().Length > RenamePlanJson.MaximumBytes) throw new ContextFailure("result_limit", "Rename report exceeds 4 MiB; no sources were changed.");
-            await workspace.VerifyInputsAsync(token);
-            if (preparing) await WritePlan(planPath, RenamePlanJson.Serialize(prepared.Plan), token);
+            if (preparing)
+            {
+                await operationWorkspace.VerifyAsync(token);
+                await WritePlan(planPath, RenamePlanJson.Serialize(prepared.Plan), token);
+            }
             else
             {
-                await SourcePublication.ApplyAsync(prepared.Changes, async check =>
+                await operationWorkspace.ApplyAsync(prepared.Edits, async check =>
                 {
-                    await workspace.VerifyInputsAsync(check); SourcePublication.ValidateRegularPath(planPath);
+                    SourcePublication.ValidateRegularPath(planPath);
                     if (!(await File.ReadAllBytesAsync(planPath, check)).AsSpan().SequenceEqual(storedBytes))
                         throw new ContextFailure("inputs_changed", "Rename plan changed during application.");
                 }, token);
                 current = current with { Files = current.Files.Select(file => file with { Written = true }).ToArray(), Diagnostics = [] };
-                var refreshed = await WorkspaceLoader.LoadAsync(input with { NoRestore = true }, token);
-                var checkedResult = CheckResult.From(WorkspaceAnalysis.Analyze(refreshed, token));
+                var checkedResult = CheckResult.From(operationWorkspace.Analysis!);
                 current = current with { Diagnostics = checkedResult.Diagnostics };
-                await SourcePublication.VerifyAsync(prepared.Changes.Select(change => change with { Original = change.Replacement }), token);
-                await refreshed.VerifyInputsAsync(token); token.ThrowIfCancellationRequested();
                 current = current with { Success = checkedResult.Success, Rechecked = true, Error = checkedResult.Error };
             }
             exit = current.Success ? 0 : 1;
@@ -106,7 +104,8 @@ internal sealed class RefactorCommand
         catch (SourcePublicationFailure error)
         {
             current = (current ?? RefactorReport.Failure("refactor_failed", error.Message)) with { Success = false, Status = "partial", Error = new("refactor_failed", error.Message),
-                Files = current?.Files.Select(file => file with { Written = error.Written.Contains(file.Path) }).ToArray() ?? [], RecoveryBackups = error.Backups }; exit = 1;
+                Files = current?.Files.Select(file => file with { Written = error.Written.Contains(file.Path) }).ToArray() ?? [],
+                Diagnostics = error.Written.Count == 0 ? current?.Diagnostics ?? [] : [], RecoveryBackups = error.Backups }; exit = 1;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         { current = Fail(cancellation.IsCancellationRequested ? "cancelled" : "timeout", cancellation.IsCancellationRequested ? "Refactoring cancelled." : "Refactoring exceeded --timeout."); exit = cancellation.IsCancellationRequested ? 130 : 1; }
@@ -119,8 +118,14 @@ internal sealed class RefactorCommand
         { current = Fail(error is ArgumentException ? "invalid_argument" : "refactor_failed", error.Message); exit = error is ArgumentException ? 2 : 1; }
         return current.Write(operation.Json(result)) ? exit : 1;
 
-        RefactorReport Fail(string code, string message) => (current ?? RefactorReport.Failure(code, message)) with
-        { Success = false, Status = current?.Files.Any(file => file.Written) == true ? "applied" : code == "cancelled" ? "cancelled" : "failed", Error = new(code, message) };
+        RefactorReport Fail(string code, string message)
+        {
+            if (current is not null && operationWorkspace is not null)
+                current = current with { Files = current.Files.Select(file => file with { Written = operationWorkspace.Written.Contains(file.Path) }).ToArray(),
+                    Rechecked = operationWorkspace.Rechecked, Diagnostics = operationWorkspace.Analysis is { } checkedAnalysis ? CheckResult.From(checkedAnalysis).Diagnostics : [] };
+            return (current ?? RefactorReport.Failure(code, message)) with
+                { Success = false, Status = current?.Files.Any(file => file.Written) == true ? "applied" : code == "cancelled" ? "cancelled" : "failed", Error = new(code, message) };
+        }
     }
 
     private static async Task WritePlan(string path, byte[] bytes, CancellationToken token)

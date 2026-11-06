@@ -34,6 +34,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     public ITaskItem[] Sources { get; set; } = [];
     public ITaskItem[] References { get; set; } = [];
     public ITaskItem[] Projects { get; set; } = [];
+    public ITaskItem[] ProjectOutputs { get; set; } = [];
+    public bool UseSourceReferences { get; set; }
 
     public override bool Execute()
     {
@@ -43,24 +45,34 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             if (TargetFramework != "net10.0" || platform != "AnyCPU" || OutputType is not ("Exe" or "Library"))
                 throw new InvalidOperationException("Analysis requires net10.0/AnyCPU and OutputType Exe or Library.");
             if (!Path.IsPathFullyQualified(ManifestFile)) throw new InvalidOperationException("The analysis manifest path must be absolute.");
+            if (Phase == "resolved" && !File.Exists(ProjectAssetsFile))
+                throw new InvalidOperationException("Restore the project explicitly before analysis; restore assets are missing.");
             var globals = ((IBuildEngine6)BuildEngine).GetGlobalProperties();
             using var collection = new ProjectCollection(globals.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase));
             var evaluated = collection.LoadProject(ProjectPath);
             var projectFiles = evaluated.Imports.Select(import => import.ImportedProject.FullPath).Append(ProjectPath).ToArray();
             CheckPreparationHooks(evaluated);
+            foreach (var output in ProjectOutputs)
+                if (!File.Exists(output.GetMetadata("FullPath")) && !(UseSourceReferences && SourceOutput(output)))
+                    throw new InvalidOperationException("Build the referenced project before analysis; its metadata is missing: " + output.GetMetadata("FullPath"));
             var sources = Paths(Sources); var references = Phase == "resolved" ? Paths(References) : [];
+            var sourceReferences = UseSourceReferences ? References.Concat(ProjectOutputs).Where(SourceOutput).ToArray() : [];
+            var sourceOutputs = UseSourceReferences ? ProjectOutputs.Where(SourceOutput).Where(output => !References.Any(reference =>
+                PathComparer.Equals(reference.GetMetadata("MSBuildSourceProjectFile"), output.GetMetadata("MSBuildSourceProjectFile")))).ToArray() : [];
+            if (Phase == "resolved") references = references.Concat(Paths(sourceOutputs)).Distinct(PathComparer).Order(StringComparer.Ordinal).ToArray();
             var inputs = Phase == "resolved" ? projectFiles.Concat(sources).Concat(references) : projectFiles;
             if (Phase == "resolved" && File.Exists(ProjectAssetsFile)) inputs = inputs.Append(ProjectAssetsFile);
             inputs = inputs.Concat(CompileFingerprint.Tools(CompilerPath));
-            var hashes = inputs.Select(Path.GetFullPath).Distinct(PathComparer).Order(StringComparer.Ordinal)
+            var hashes = inputs.Where(path => File.Exists(path) || !sourceReferences.Any(output => PathComparer.Equals(output.GetMetadata("FullPath"), path)))
+                .Select(Path.GetFullPath).Distinct(PathComparer).Order(StringComparer.Ordinal)
                 .ToDictionary(path => path, Hash, PathComparer);
             var compiler = Path.Combine(Path.GetDirectoryName(CompilerPath)!, "Fpas.Compiler.dll");
             var result = new ExportedContext(1, Phase, Path.GetFullPath(ProjectPath), Configuration, platform, TargetFramework,
                 AssemblyName, OutputType == "Exe" ? "exe" : "library", Hash(compiler), GenerateDocumentationFile, TreatWarningsAsErrors,
                 Codes(WarningsAsErrors), Codes(WarningsNotAsErrors), Codes(NoWarn), sources, references,
-                Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference")
-                    .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).ToArray(),
-                Path.GetFullPath(BuildCache), Phase == "resolved" ? BuildInputs(sources, references) : "", hashes);
+                Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference").Concat(sourceOutputs)
+                    .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).Distinct().ToArray(),
+                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(sources, references) : "", hashes);
             using var stream = new FileStream(ManifestFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(stream, result, ExportedContextJson.Default.ExportedContext);
             return true;
@@ -80,6 +92,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     }
 
     private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+    private static bool SourceOutput(ITaskItem item) => Path.GetExtension(item.GetMetadata("MSBuildSourceProjectFile")).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase);
     private static string[] Paths(IEnumerable<ITaskItem> items) => items.Select(item => item.GetMetadata("FullPath")).Distinct(PathComparer).Order(StringComparer.Ordinal).ToArray();
     private static string Hash(string path) { using var stream = File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(stream)); }
     private static string[] Codes(string text) => text.Split([';', ','], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);

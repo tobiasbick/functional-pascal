@@ -21,6 +21,9 @@ internal static class EnvironmentInspection
                 await Managed(typeof(Core.RecordAttribute).Assembly, token), ToolSdk.Version);
         }
         catch (Exception exception) when (Recoverable(exception)) { issues.Add(new("error", "compiler_inspection_failed", exception.Message)); }
+        LanguageServerInstallation languageServer = new("unavailable");
+        try { languageServer = new("available", await Managed(typeof(Fpas.LanguageServer.LanguageServerApplication).Assembly, token)); }
+        catch (Exception exception) when (Recoverable(exception)) { issues.Add(new("error", "language_server_unavailable", exception.Message)); }
         var (dotnet, truncated) = await DotnetInspection.Read(directory, issues, token);
         var (cache, cacheTruncated) = await InstalledSdkInspection.Read(dotnet.GlobalPackages, compiler, issues, token);
         var debugger = await Fpas.Debugging.DebuggerDeployment.Inspect(token);
@@ -28,7 +31,8 @@ internal static class EnvironmentInspection
         token.ThrowIfCancellationRequested();
         var success = !issues.Any(issue => issue.Severity == "error");
         return new(success, success ? "ok" : "issues", directory)
-        { Fpas = compiler, Runtime = runtime, Dotnet = dotnet, SdkCache = cache, Debugger = debugger, Issues = issues.AsReadOnly(), Truncated = truncated || cacheTruncated };
+        { Fpas = compiler, Runtime = runtime, Dotnet = dotnet, SdkCache = cache, Debugger = debugger, LanguageServer = languageServer,
+            Issues = issues.AsReadOnly(), Truncated = truncated || cacheTruncated };
     }
 
     private static async Task<ManagedInstallation> Managed(Assembly assembly, CancellationToken token)

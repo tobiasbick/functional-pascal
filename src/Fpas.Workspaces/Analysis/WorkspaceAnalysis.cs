@@ -10,6 +10,8 @@ public sealed record WorkspaceAnalysis(WorkspaceContext Context, IReadOnlyList<P
 {
     public bool Success => Context.Issues.Count == 0 && Projects.All(project => project.State == "checked");
     public bool IsComplete => Context.Issues.Count == 0 && Projects.All(project => project.Result?.IsComplete == true);
+    public WorkspaceSemanticCoverage SemanticCoverage => new(IsComplete, Array.AsReadOnly(Projects.Select(project => new ProjectSemanticCoverage(
+        project.Project, project.Result?.Availability ?? "unavailable", project.Result?.Snapshot?.Coverage.Regions ?? [])).ToArray()));
 
     public static WorkspaceAnalysis Analyze(WorkspaceContext context, CancellationToken cancellationToken = default)
     {

@@ -27,6 +27,7 @@
       <_FpasCompilerDirectory>@(_FpasCompilerAssembly->'%(RootDir)%(Directory)')</_FpasCompilerDirectory>
     </PropertyGroup>
     <ItemGroup>
+      <_FpasLanguageServerAsset Include="$(_FpasCompilerDirectory)Fpas.LanguageServer.dll;$(_FpasCompilerDirectory)OmniSharp.Extensions.LanguageProtocol.dll;$(_FpasCompilerDirectory)StreamJsonRpc.dll;$(_FpasCompilerDirectory)Newtonsoft.Json.dll;$(_FpasCompilerDirectory)Fpas.SdkResolver.dll" />
       <_FpasCompilerManagedAsset Include="$(_FpasCompilerDirectory)**/*.dll" />
       <None Include="@(_FpasCompilerManagedAsset)" Pack="true" PackagePath="tools/compiler/%(_FpasCompilerManagedAsset.RecursiveDir)%(_FpasCompilerManagedAsset.Filename)%(_FpasCompilerManagedAsset.Extension)" />
       <_FpasCompilerNativeAsset Include="$(_FpasCompilerDirectory)**/*.so;$(_FpasCompilerDirectory)debugger-notices.txt" />
@@ -34,5 +35,6 @@
       <None Include="$(_FpasCompilerDirectory)Fpas.Cli.deps.json;$(_FpasCompilerDirectory)Fpas.Cli.runtimeconfig.json" Pack="true" PackagePath="tools/compiler/" />
       <None Include="@(_FpasTaskAssembly)" Pack="true" PackagePath="tools/tasks/" />
     </ItemGroup>
+    <Error Condition="!Exists('%(_FpasLanguageServerAsset.Identity)')" Text="Missing language-server deployment asset: %(_FpasLanguageServerAsset.Identity). Build the matching CLI before packing." />
   </Target>
 </Project>

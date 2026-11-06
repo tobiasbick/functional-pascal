@@ -16,6 +16,7 @@ internal sealed class RenameBindings
     internal SourceQuery Query => query;
     internal RenameBindings(WorkspaceAnalysis analysis, Func<string, int, int>? position = null)
     {
+        if (!analysis.Success || !analysis.IsComplete) throw new ContextFailure("analysis_failed", "Rename requires successful, complete analysis of the affected context.");
         Analysis = analysis; query = new(analysis); this.position = position ?? ((_, offset) => offset);
         foreach (var project in analysis.Projects)
             foreach (var export in project.Result!.Snapshot!.Exports.Where(export => export.Identity.Kind == "type"))

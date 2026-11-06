@@ -11,7 +11,7 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
-internal sealed class PreparedCompilation : IDisposable
+internal sealed partial class PreparedCompilation : IDisposable
 {
     internal SourceCatalog Catalog { get; }
     internal ReferenceCatalog References { get; }
@@ -40,14 +40,20 @@ internal sealed class PreparedCompilation : IDisposable
         var diagnosticsBag = new DiagnosticBag();
         var sourceTokens = new Dictionary<SourceText, IReadOnlyList<Token>>();
         var sources = new List<SourceUnit>();
+        var allSources = new List<SourceText>();
+        var invalid = new Dictionary<SourceText, IReadOnlyList<(int Start, int End)>>();
+        var names = new Dictionary<SourceText, string?>();
         foreach (var input in request.Sources.OrderBy(input => input.Path, StringComparer.Ordinal))
         {
             var text = new SourceText(input.Path, input.Text, cancellationToken, diagnosticsBag);
+            allSources.Add(text);
             var before = diagnosticsBag.Count;
+            Parser? parser = null;
             try
             {
                 var tokens = new Lexer(text).ReadTokens(); sourceTokens.Add(text, tokens);
-                sources.Add(new(text, new Parser(text, tokens).ParseCompilationUnit()));
+                parser = new Parser(text, tokens, recover: collectSemantics);
+                sources.Add(new(text, parser.ParseCompilationUnit())); invalid[text] = parser.InvalidRegions;
             }
             catch (CompilationFailure failure)
             {
@@ -55,33 +61,36 @@ internal sealed class PreparedCompilation : IDisposable
                 // A parser recovery may already have explained an unusable enclosing structure.
                 if (diagnosticsBag.Count == before) diagnosticsBag.Add(failure.Diagnostic);
             }
+            finally { names[text] = parser?.ContainerName; }
         }
-        diagnosticsBag.ThrowIfErrors();
-        ValidateTarget(sources, request.Target);
-        var references = ReferenceCatalog.Open(request.References, sources[0].Source, captureFingerprints: collectSemantics);
+        if (!collectSemantics) diagnosticsBag.ThrowIfErrors();
+        if (!diagnosticsBag.HasErrors) ValidateTarget(sources, request.Target);
+        var references = ReferenceCatalog.Open(request.References, allSources.FirstOrDefault() ?? new SourceText("", "", cancellationToken), request.ReferenceImages, captureFingerprints: collectSemantics);
         try
         {
-            var analysis = collectSemantics ? new SemanticRecorder(request.AssemblyName, references, SemanticRecorder.Fingerprint(request, references, cancellationToken), cancellationToken) : null;
-            foreach (var unit in sources) analysis?.Source(unit.Source, sourceTokens[unit.Source], unit.Syntax.Declarations);
-            var catalog = SourceCatalog.Declare(sources, references, analysis);
+            SemanticRecorder? analysis = null;
+            var catalog = collectSemantics ? RecoverCatalog(request, sources, allSources, sourceTokens, invalid, names, references, diagnosticsBag, cancellationToken, out analysis)
+                : SourceCatalog.Declare(sources, references);
             analysis?.Declarations(catalog);
             var units = new List<BoundUnit>();
             foreach (var unit in catalog.Units)
             {
                 try { units.Add(new Binder(unit, catalog, references).Bind()); }
-                catch (CompilationFailure failure) { if (failure.Diagnostics.Count > 1) throw; diagnosticsBag.Add(failure.Diagnostic); }
+                catch (CompilationFailure failure)
+                { if (failure.Diagnostics.Count > 1) throw; analysis?.Unavailable(unit.Source, 0, unit.Source.Text.Length, "binding_error"); diagnosticsBag.Add(failure.Diagnostic); }
             }
-            diagnosticsBag.ThrowIfErrors();
+            analysis?.PropagateUnavailableScopes(catalog);
+            if (!collectSemantics) diagnosticsBag.ThrowIfErrors();
             var program = new BoundCompilation(references.Runtime, request.Target == CompilationTarget.Exe, units);
-            var documentation = request.ValidateDocumentation ? DocumentationWriter.Analyze(catalog, program) : null;
+            var documentation = request.ValidateDocumentation && !diagnosticsBag.HasErrors ? DocumentationWriter.Analyze(catalog, program) : null;
             var diagnostics = (request.DiagnosticOptions ?? new()).Apply(documentation?.Diagnostics ?? []);
             foreach (var diagnostic in diagnostics) diagnosticsBag.Add(diagnostic);
             cancellationToken.ThrowIfCancellationRequested();
-            var plans = diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            var plans = diagnosticsBag.HasErrors
                 ? new Dictionary<BoundRoutine, AsyncPlan>(ReferenceEqualityComparer.Instance)
                 : AsyncPreparation.Prepare(program, references, cancellationToken);
-            if (!diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)) ReferenceRequirements.Validate(program, references);
-            return new(catalog, references, program, plans, documentation, diagnostics, analysis);
+            if (!diagnosticsBag.HasErrors) ReferenceRequirements.Validate(program, references);
+            return new(catalog, references, program, plans, documentation, diagnosticsBag.Snapshot, analysis);
         }
         catch { references.Dispose(); throw; }
     }

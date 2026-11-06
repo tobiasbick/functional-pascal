@@ -45,11 +45,18 @@
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
         Sources="@(Compile)" Projects="@(ProjectReferenceWithConfiguration)" BuildCache="$(IntermediateOutputPath)fpas.compile.json" />
   </Target>
-  <Target Name="FpasExportAnalysisContext" DependsOnTargets="FpasPrepareCompilation">
+  <PropertyGroup>
+    <FpasAnalysisPrepare Condition="'$(FpasAnalysisPrepare)' == ''">true</FpasAnalysisPrepare>
+    <FpasAnalysisSourceReferences Condition="'$(FpasAnalysisSourceReferences)' == ''">false</FpasAnalysisSourceReferences>
+    <_FpasAnalysisInputs Condition="'$(FpasAnalysisPrepare)' == 'true'">FpasPrepareCompilation</_FpasAnalysisInputs>
+    <_FpasAnalysisInputs Condition="'$(FpasAnalysisPrepare)' != 'true'">ResolveReferences</_FpasAnalysisInputs>
+  </PropertyGroup>
+  <Target Name="FpasExportAnalysisContext" DependsOnTargets="$(_FpasAnalysisInputs)">
     <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="resolved"
+        UseSourceReferences="$(FpasAnalysisSourceReferences)"
         ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" Configuration="$(Configuration)"
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
-        Sources="@(Compile)" References="@(ReferencePath)" Projects="@(_MSBuildProjectReferenceExistent)"
+        Sources="@(Compile)" References="@(ReferencePath)" Projects="@(_MSBuildProjectReferenceExistent)" ProjectOutputs="@(_ResolvedProjectReferencePaths)"
         ProjectAssetsFile="$(ProjectAssetsFile)" GenerateDocumentationFile="$(GenerateDocumentationFile)"
         TreatWarningsAsErrors="$(TreatWarningsAsErrors)" WarningsAsErrors="$(WarningsAsErrors)"
         WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)" OutputAssembly="@(IntermediateAssembly)" BuildCache="$(IntermediateOutputPath)fpas.compile.json"

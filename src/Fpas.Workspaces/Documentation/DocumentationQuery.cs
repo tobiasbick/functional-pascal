@@ -56,9 +56,9 @@ public sealed class DocumentationQuery
             page.Add(entry with { Documentation = docs });
         }
         var next = (long)search.Offset + page.Count;
-        return new(ordered.Length == 0 ? "not_found" : "ok", inputs.SnapshotId, page.AsReadOnly(), ordered.Length, search.Offset,
+        return new(ordered.Length == 0 && analysis.IsComplete ? "not_found" : "ok", inputs.SnapshotId, page.AsReadOnly(), ordered.Length, search.Offset,
             next < ordered.Length ? (int)next : null, page.Count < ordered.Length || omitted != 0, omitted,
-            Array.AsReadOnly(projects.Select(project => project.Path).ToArray()), Array.AsReadOnly(references));
+            Array.AsReadOnly(projects.Select(project => project.Path).ToArray()), Array.AsReadOnly(references), analysis.SemanticCoverage);
     }
     public void VerifyInputs(CancellationToken token = default)
     {

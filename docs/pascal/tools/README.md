@@ -10,6 +10,7 @@ tools supported by the current compiler and .NET environment.
 | [Diagnostics](diagnostics.md) | Stable codes, source positions, warnings, and exit behavior |
 | [API documentation lookup](api-documentation.md) | FPAS declarations, public .NET signatures and reference XML documentation |
 | [Checked renaming](refactoring.md) | Source symbols, reviewed JSON plans and explicit validated application |
+| [Language server](language-server.md) | Stdio lifecycle, unsaved documents, versioned diagnostics and passive project analysis |
 | [Source formatting](fmt-style.md) | Fixed style, comments, wrapping, check/list/stdout and structured reports |
 | [Native .NET tests](testing.md) | xUnit, MSTest, NUnit, test projects, discovery and structured results |
 | [Documentation examples](documentation-examples.md) | Complete sources, companion projects, fragments, and checks |
@@ -18,7 +19,6 @@ tools supported by the current compiler and .NET environment.
 | [Profiling](profiling.md) | Actual CLR execution, suitable .NET tools, and controlled measurements |
 | [Development workflow](../../build/development.md) | Build/test commands and local SDK bootstrap |
 
-Editor/LSP integration has its separately documented scope.
 Do not infer a compiler command from an IDE or another language toolchain.
 
 ## See also

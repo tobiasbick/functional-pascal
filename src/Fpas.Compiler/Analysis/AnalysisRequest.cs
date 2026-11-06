@@ -4,10 +4,11 @@ namespace Fpas.Compiler.Analysis;
 public sealed record AnalysisRequest(
     IReadOnlyList<CompilationSource> Sources, string AssemblyName, IReadOnlyList<string> References,
     CompilationTarget Target = CompilationTarget.Exe, bool ValidateDocumentation = false,
-    DiagnosticOptions? DiagnosticOptions = null);
+    DiagnosticOptions? DiagnosticOptions = null, IReadOnlyList<MetadataImage>? ReferenceImages = null);
 
 /// <summary>Validation completion and diagnostics, independent of assembly generation.</summary>
 public sealed record AnalysisResult(bool IsComplete, IReadOnlyList<CompilerDiagnostic> Diagnostics, SemanticSnapshot? Snapshot = null)
 {
     public bool Success => IsComplete && Diagnostics.All(diagnostic => diagnostic.Severity != DiagnosticSeverity.Error);
+    public string Availability => Snapshot is null || Snapshot.Coverage.Regions.All(region => region.State == "unavailable") ? "unavailable" : IsComplete ? "complete" : "partial";
 }

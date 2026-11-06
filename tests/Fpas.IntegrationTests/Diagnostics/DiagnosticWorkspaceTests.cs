@@ -21,13 +21,13 @@ public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixt
         Assert.Single(diagnostic.GetProperty("fixes").EnumerateArray());
         Assert.Equal(project.File("Game/Game.fpasproj"), diagnostic.GetProperty("project").GetString());
         var query = await Run("query", "type", project.File("Game/Game.fpasproj"), "--file", project.File("Game/Bridge.fpas"), "--line", "1", "--column", "1", "--no-restore");
-        Assert.Equal(1, query.ExitCode); Assert.Equal("", query.Error);
+        Assert.Equal(0, query.ExitCode); Assert.Equal("", query.Error);
         using var queriedJson = JsonDocument.Parse(query.Output);
         var queriedDiagnostic = Assert.Single(queriedJson.RootElement.GetProperty("diagnostics").EnumerateArray());
         Assert.Equal(diagnostic.GetProperty("expectation").GetRawText(), queriedDiagnostic.GetProperty("expectation").GetRawText());
         Assert.Equal(diagnostic.GetProperty("fixes").GetRawText(), queriedDiagnostic.GetProperty("fixes").GetRawText());
         var doc = await Run("doc", project.File("Game/Game.fpasproj"), "--name", "Message", "--report", "json", "--no-restore");
-        Assert.Equal(1, doc.ExitCode); Assert.Empty(doc.Error);
+        Assert.Equal(0, doc.ExitCode); Assert.Empty(doc.Error);
         using var docJson = JsonDocument.Parse(doc.Output);
         var docDiagnostic = Assert.Single(docJson.RootElement.GetProperty("diagnostics").EnumerateArray());
         Assert.Equal(diagnostic.GetProperty("expectation").GetRawText(), docDiagnostic.GetProperty("expectation").GetRawText());
@@ -36,7 +36,7 @@ public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixt
         Assert.Equal(1, text.ExitCode); Assert.Equal("", text.Output);
         Assert.Contains("|", text.Error); Assert.Contains("help:", text.Error); Assert.Contains("Use int", text.Error);
         var docText = await Run("doc", project.File("Game/Game.fpasproj"), "--name", "Message", "--no-restore");
-        Assert.Equal(1, docText.ExitCode); Assert.Empty(docText.Output);
+        Assert.Equal(0, docText.ExitCode); Assert.Contains("Analysis is incomplete", docText.Output);
         Assert.Contains("Bridge.fpas(1,", docText.Error); Assert.Contains("help:", docText.Error); Assert.Contains("Use int", docText.Error);
     }
 

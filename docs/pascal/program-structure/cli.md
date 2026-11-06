@@ -6,6 +6,9 @@ command uses the shared [CLR debugger](../tools/debugging.md) for one-shot batch
 reports or stdio DAP; inspect it with `fpas debug --help`.
 The CLI uses System.CommandLine for argument binding and generated help.
 
+Use the [language server](../tools/language-server.md) for `fpas lsp`: stdio
+lifecycle, unsaved-source diagnostics, navigation, checked rename and formatting.
+
 Use [API documentation lookup](../tools/api-documentation.md) for `fpas doc`:
 name-based FPAS/.NET lookup, overloads, source Markdown, reference XML and bounded
 text/JSON reports.
@@ -77,6 +80,15 @@ is ok, not_found, failed or cancelled. It contains context/configuration, snapsh
 identity, selected project/span, diagnostics, analyzed/searched/blocked coverage,
 preparation artifacts, binary boundaries and the typed result. No query executes
 the application, its initialization, imported attributes or getters.
+
+Queries can return checked facts while other regions contain errors. Inspect
+`coverage.complete` and `coverage.semantics`: each project states complete,
+partial or unavailable analysis with checked/unavailable source regions and
+reasons. Unavailable selection returns `analysis_unavailable`; no symbol in
+checked text returns `not_found`. An `ok` result exits 0 even with incomplete
+coverage. Search totals count checked facts only, so an incomplete empty search
+does not establish absence. Snapshot identity remains available for partial
+answers. Rename still requires successful complete analysis.
 
 Paths resolve against the invocation directory. Lines/columns count original
 UTF-16 code units from one; tabs count as one and CR/LF/CRLF remain intact.

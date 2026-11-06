@@ -30,10 +30,15 @@ Solution configuration/platform mappings and dependency preparation follow
 `--no-restore` skips restore only. The whole operation has a 120-second deadline;
 `--timeout` accepts 1..3600 seconds. Cancellation joins owned preparation processes.
 
-The selected FPAS scope must analyze successfully. Invalid or blocked source is
-an explicit failure, never an apparently successful empty lookup. The command
-does not emit the selected root's assembly. Restore/dependency builds can write
-ordinary bin/obj files and execute build tasks.
+Lookup uses checked regions of the selected FPAS scope. Inspect coverage.complete
+and coverage.semantics before treating source matches or totals as exhaustive.
+Partial searches can return checked signatures and documentation despite errors
+elsewhere. An empty partial search is ok with incomplete coverage; not_found
+establishes absence only in a complete search. If no checked source scope is
+available, lookup fails explicitly. Text output identifies incomplete coverage;
+the shared library result also carries it. The command does not emit the selected
+root's assembly. Restore/dependency builds can write ordinary bin/obj files and
+execute build tasks.
 
 ## Signatures and documentation
 

@@ -19,6 +19,9 @@ public sealed class RenameCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         var plan = RenamePlanJson.Read(original); Assert.Equal(2, plan.EditCount); Assert.True(plan.ChangesPublicApi);
         Assert.Equal(Source, File.ReadAllText(directory.File("Game/Bridge.fpas"))); Assert.False(File.Exists(directory.File("Game/bin/Debug/net10.0/Game.dll")));
         var overwrite = await RenameFixture.Cli(directory, arguments); Assert.Equal(1, overwrite.ExitCode); Assert.Equal(original, File.ReadAllBytes(path));
+        var mismatch = await RenameFixture.Cli(directory, "apply", "Missing.fpasproj", "--plan", path, "--report", "json");
+        Assert.Equal(1, mismatch.ExitCode); Assert.False(File.Exists(directory.File("Missing.fpasproj")));
+        using (var json = JsonDocument.Parse(mismatch.Output)) Assert.Equal("plan_context_mismatch", json.RootElement.GetProperty("error").GetProperty("code").GetString());
         File.WriteAllText(path, System.Text.Encoding.UTF8.GetString(original).Replace("Fetch", "Broken", StringComparison.Ordinal));
         var modified = await RenameFixture.Cli(directory, "apply", "Game/Game.fpasproj", "--plan", path, "--report", "json");
         Assert.Equal(1, modified.ExitCode); using (var json = JsonDocument.Parse(modified.Output)) Assert.Equal("invalid_plan", json.RootElement.GetProperty("error").GetProperty("code").GetString());

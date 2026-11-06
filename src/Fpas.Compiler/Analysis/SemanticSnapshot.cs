@@ -34,11 +34,12 @@ public sealed class SemanticSnapshot
     public IReadOnlyList<SourceOperation> Operations { get; }
     public IReadOnlyList<ExcludedOperation> ExcludedOperations { get; }
     public IReadOnlyList<SymbolRelation> Relations { get; }
+    public SemanticCoverage Coverage { get; }
 
     internal SemanticSnapshot(string id, string assemblyName, IEnumerable<SourceDocument> documents, IEnumerable<SemanticSymbol> symbols,
         IEnumerable<SemanticType> types, IEnumerable<SymbolOccurrence> occurrences, IEnumerable<ExpressionType> expressions, IEnumerable<SymbolExport> exports,
         IEnumerable<SourceBody> bodies, IEnumerable<SourceOperation> operations, IEnumerable<ExcludedOperation> excludedOperations,
-        IEnumerable<SymbolRelation>? relations = null)
+        IEnumerable<SymbolRelation>? relations = null, IEnumerable<SemanticRegion>? invalid = null)
     {
         Id = id; AssemblyName = assemblyName; Documents = Array.AsReadOnly(documents.ToArray()); Symbols = Array.AsReadOnly(symbols.ToArray());
         Types = Array.AsReadOnly(types.ToArray()); Occurrences = Array.AsReadOnly(occurrences.ToArray()); Expressions = Array.AsReadOnly(expressions.ToArray());
@@ -46,6 +47,7 @@ public sealed class SemanticSnapshot
         Bodies = Array.AsReadOnly(bodies.ToArray()); Operations = Array.AsReadOnly(operations.ToArray());
         ExcludedOperations = Array.AsReadOnly(excludedOperations.ToArray());
         Relations = Array.AsReadOnly((relations ?? []).ToArray());
+        Coverage = new(Documents, invalid ?? []);
     }
 
     public SemanticSymbol Symbol(string id) => Symbols.FirstOrDefault(symbol => symbol.Id == id)

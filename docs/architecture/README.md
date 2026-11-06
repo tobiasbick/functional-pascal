@@ -8,7 +8,8 @@ the CLR provides execution, garbage collection, exceptions, and tasks.
 | --- | --- |
 | [Repository layout](project-layout.md) | Projects, dependencies, SDK packaging, fixtures, and applications |
 | [Compiler pipeline](compiler.md) | Source/reference inputs, binding, emission, compiler API, and output publication |
-| [Project analysis](workspaces.md) | Evaluated contexts, dependency preparation, immutable snapshots and source queries |
+| [Project analysis](workspaces.md) | Evaluated contexts, passive SDK preparation, live snapshots, private metadata and shared queries/edits |
+| [Language server](../pascal/tools/language-server.md) | Stdio protocol, unsaved text, versioned results and shared-service adaptation |
 | [Closures](closures.md) | Captured values/cells, lexical environments, and generic parameter translation |
 | [Async and cleanup](async-and-cleanup.md) | Resumable control flow, reference lifetimes, contracts, and disposal |
 | [Debug information](debug-information.md) | Portable symbols, source scopes, generated methods, and async stepping |

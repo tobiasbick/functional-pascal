@@ -1,4 +1,4 @@
-using Fpas.Workspaces.Analysis;
+using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Queries;
 using System.CommandLine;
@@ -125,9 +125,10 @@ internal sealed class QueryCommand
         {
             var search = operation.Command.Name == "find" ? new NameSearch(result.GetValue(operation.Name)!, result.GetValue(operation.Match)!,
                 result.GetValue(operation.Kinds), result.GetValue(operation.Project), result.GetValue(operation.Limit), result.GetValue(operation.Offset)) : null;
-            if (search is not null) SourceQuery.Validate(search);
-            var workspace = await WorkspaceLoader.LoadAsync(input, combined.Token);
-            var analysis = WorkspaceAnalysis.Analyze(workspace, combined.Token); check = CheckResult.From(analysis);
+            if (search is not null)
+            { if (string.IsNullOrEmpty(search.Name)) throw new ContextFailure("invalid_argument", "--name must not be empty."); SourceQuery.Validate(search); }
+            var workspace = await FileWorkspace.OpenAsync(input, combined.Token);
+            var analysis = workspace.Analysis!; check = CheckResult.From(analysis);
             var module = new SourceQuery(analysis);
             SourceQueryResult query;
             if (search is not null) query = module.Find(search, combined.Token);
@@ -141,7 +142,7 @@ internal sealed class QueryCommand
                     _ => module.Execute(operation.Command.Name, selection, operation.Command.Name == "refs" ? result.GetValue(operation.Limit) : 100, combined.Token)
                 };
             }
-            await workspace.VerifyInputsAsync(combined.Token); combined.Token.ThrowIfCancellationRequested();
+            await workspace.VerifyAsync(combined.Token);
             report = QueryResult.From(check, query); exit = 0;
         }
         catch (OperationCanceledException) when (combined.IsCancellationRequested)

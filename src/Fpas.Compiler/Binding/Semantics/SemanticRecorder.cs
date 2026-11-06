@@ -116,17 +116,28 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
     internal SemanticSnapshot Finish()
     {
         token.ThrowIfCancellationRequested();
+        // Failed bodies may have recorded facts before their error. Remove the entire
+        // region, including nested closures, rather than publishing tentative bindings.
+        foreach (var key in occurrences.Where(item => Blocked(item.Value.Span)).Select(item => item.Key).ToArray()) occurrences.Remove(key);
+        foreach (var key in expressions.Where(item => Blocked(item.Value.Span)).Select(item => item.Key).ToArray()) expressions.Remove(key);
+        foreach (var key in bodies.Where(item => Blocked(item.Value.Body.Span)).Select(item => item.Key).ToArray()) bodies.Remove(key);
+        foreach (var key in symbols.Where(item => item.Value.Declaration is { } span && Blocked(span)).Select(item => item.Key).ToArray()) symbols.Remove(key);
+        declarationSymbols = null;
         var allSymbols = symbols.Values.Distinct().Select(entry => new SemanticSymbol(entry.Id, entry.Kind, entry.Name, entry.Signature, entry.Declaration,
             entry.Type, entry.Metadata, entry.Callable, Context(entry))).OrderBy(symbol => symbol.Id, StringComparer.Ordinal).ToArray();
+        var checkedOperations = OperationFacts().Where(operation => !Blocked(operation.Span)).ToArray();
+        var retained = RetainedFacts(allSymbols, checkedOperations); allSymbols = retained.Symbols;
+        var ids = allSymbols.Select(symbol => symbol.Id).ToHashSet(StringComparer.Ordinal);
         return new(snapshotId, assemblyName, documents.Values.OrderBy(document => document.Path, StringComparer.Ordinal), allSymbols,
-            types.Values.OrderBy(type => type.Id, StringComparer.Ordinal),
+            retained.Types.OrderBy(type => type.Id, StringComparer.Ordinal),
             occurrences.Select(item => new SymbolOccurrence(item.Value.Symbol.Id, item.Value.Span, item.Key.Role)).Distinct()
                 .OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Role, StringComparer.Ordinal),
             expressions.Values.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Span.Length),
-            metadataIdentities.OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)),
+            metadataIdentities.Where(item => ids.Contains(metadataSymbols[item.Key].Id)).OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)),
             bodies.Values.Select(entry => entry.Body with { Symbol = entry.Declaration?.Id }).OrderBy(body => body.Id, StringComparer.Ordinal),
-            OperationFacts(), excludedOperations.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset),
-            relations.Select(item => new SymbolRelation(item.Implementation.Id, item.Contract.Id)).Distinct());
+            checkedOperations, excludedOperations.Where(operation => !Blocked(operation.Span)).OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset),
+            relations.Where(item => ids.Contains(item.Implementation.Id) && ids.Contains(item.Contract.Id))
+                .Select(item => new SymbolRelation(item.Implementation.Id, item.Contract.Id)).Distinct(), invalid);
     }
 
     private void Export(MetadataIdentity identity, SymbolEntry entry)

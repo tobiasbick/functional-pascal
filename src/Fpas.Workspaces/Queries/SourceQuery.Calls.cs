@@ -13,6 +13,9 @@ public sealed partial class SourceQuery
 
     public SourceQueryResult Calls(string operation, SourceSelection selection, bool body = false, int limit = 100, int offset = 0,
         CancellationToken cancellationToken = default)
+        => CallsCore(operation, selection, body, limit, offset, cancellationToken) with { Coverage = coverage };
+
+    private SourceQueryResult CallsCore(string operation, SourceSelection selection, bool body, int limit, int offset, CancellationToken cancellationToken)
     {
         if (operation is not ("callees" or "callers")) throw new ContextFailure("invalid_argument", "Unknown call-query operation.");
         if (limit is < 1 or > 1000 || offset < 0) throw new ContextFailure("invalid_argument", "--limit must be 1..1000 and --offset must be nonnegative.");
@@ -83,6 +86,8 @@ public sealed partial class SourceQuery
             }
             var owner = definition.Project ?? project;
             snapshot = projects[owner].Snapshot; project = owner;
+            if (!incoming && definition.Symbol.Context?.Body is { } declaredBody && !snapshot.Coverage.Available(declaredBody))
+                throw new ContextFailure("analysis_unavailable", "The selected callable body could not be checked in this snapshot.");
             body = snapshot.Bodies.SingleOrDefault(body => body.Symbol == definition.Symbol.Id);
             key = Canonical(project, definition.Symbol);
         }

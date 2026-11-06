@@ -2,6 +2,7 @@ using Fpas.Compiler;
 using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Loading;
+using Fpas.Workspaces.Live;
 using System.IO.Compression;
 using System.Xml.Linq;
 
@@ -74,5 +75,16 @@ public sealed class AnalysisCompatibilityTests(SdkPackageFixture sdk) : IClassFi
         Assert.Contains(context.Projects.Single(input => input.Request.AssemblyName == "Game").Request.References, reference => Path.GetFileName(reference) == "FSharp.Core.dll");
         Assert.False(File.Exists(project.File("First/bin/Debug/net10.0/First.dll")));
         Assert.False(File.Exists(project.File("Second/bin/Debug/net10.0/Second.dll")));
+        await using var live = new LiveWorkspace(new(solutionPath));
+        var snapshot = await live.AnalyzeAsync(deadline.Token);
+        Assert.True(snapshot.Analysis.Success, string.Join(';', snapshot.Analysis.Context.Issues.Select(issue => issue.Message)));
+        Assert.Equal(context.Projects.Select(input => input.Path).Order(), snapshot.Analysis.Context.Projects.Select(input => input.Path).Order());
+        await live.VerifyAsync(snapshot, deadline.Token);
+        File.AppendAllText(project.File("FSharp/Api.fs"), "\n// changed source\n"); live.Invalidate();
+        var stale = await live.AnalyzeAsync(deadline.Token);
+        Assert.Contains(stale.Analysis.Context.Issues, issue => issue.Code == "foreign_metadata_stale");
+        Assert.Equal("blocked", stale.Analysis.Projects.Single(input => input.Project == gamePath).State);
+        Assert.Same(snapshot.Analysis.Projects.Single(input => input.Project == project.File("First/First.fpasproj")).Result,
+            stale.Analysis.Projects.Single(input => input.Project == project.File("First/First.fpasproj")).Result);
     }
 }

@@ -94,7 +94,7 @@ public sealed class RichDiagnosticsTests
     }
 
     [Fact]
-    public void Syntax_recovery_finds_independent_errors_and_never_emits_or_returns_a_snapshot()
+    public void Syntax_recovery_finds_independent_errors_and_exposes_only_checked_snapshot_regions()
     {
         const string source = """
             program Sample;
@@ -111,7 +111,9 @@ public sealed class RichDiagnosticsTests
         Assert.Null(compiled.Program);
         Assert.Equal(["FP2002", "FP2001", "FP2002"], compiled.Diagnostics.Select(diagnostic => diagnostic.Code));
         var analyzed = FpasCompiler.Analyze(new([new("sample.fpas", source)], "Sample", TestEnvironment.References));
-        Assert.False(analyzed.IsComplete); Assert.Null(analyzed.Snapshot);
+        Assert.False(analyzed.IsComplete); Assert.NotNull(analyzed.Snapshot);
+        Assert.Empty(analyzed.Snapshot.Bodies); Assert.False(analyzed.Snapshot.Coverage.IsComplete);
+        Assert.DoesNotContain(analyzed.Snapshot.Symbols, symbol => symbol.Name is "First" or "Second" or "Third");
         Assert.Equal(compiled.Diagnostics.Select(diagnostic => diagnostic.Code), analyzed.Diagnostics.Select(diagnostic => diagnostic.Code));
     }
 

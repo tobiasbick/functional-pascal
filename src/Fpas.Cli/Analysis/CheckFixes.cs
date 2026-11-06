@@ -8,7 +8,7 @@ internal sealed record CheckFixes(string Mode, string State, string InputSnapsho
     IReadOnlyList<FixFile> Files, int EditCount, int ReviewCount, bool Rechecked = false, IReadOnlyList<string>? RecoveryBackups = null)
 {
     internal static CheckFixes From(DiagnosticFixPlan plan, string snapshot, bool preview) => new(preview ? "preview" : "apply",
-        plan.Changes.Count == 0 ? "not_needed" : "planned", snapshot, plan.Suggestions, plan.Files, plan.EditCount,
+        plan.Edits.Documents.Count == 0 ? "not_needed" : "planned", snapshot, plan.Suggestions, plan.Files, plan.EditCount,
         plan.Suggestions.Count(suggestion => suggestion.Fix.Applicability == DiagnosticApplicability.Review));
 
     internal void Write()

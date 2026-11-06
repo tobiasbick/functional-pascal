@@ -55,11 +55,18 @@ src/
     Documentation/
     Refactoring/
     Toolchain/
+    LanguageServer/
+  Fpas.LanguageServer/
+    Hosting/
+    Protocol/
+    Transport/
   Fpas.Workspaces/
     Analysis/
     Editing/
     Refactoring/
     Formatting/
+    Snapshots/
+    Live/
     Loading/
     Processes/
     Projects/
@@ -68,6 +75,7 @@ src/
     Testing/
     Documentation/
   Fpas.Processes/
+  Fpas.SdkResolver/
   Fpas.Debugging/
     Fpas.Debugging.csproj
     Core/
@@ -146,7 +154,8 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Compiler` | C# library for source handling, lexing/parsing, name binding, type checking, lowering, and direct CIL/metadata/PDB generation; optional XML API documentation |
 | `Fpas.Cli` | Command binding, compiler invocation, diagnostics, debugger startup and exit status |
 | `Fpas.Debugging` | Shared native CLR debugger core, supervised workers, passive inspection, batch reports and DAP server |
-| `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, immutable input capture, dependency preparation and compiler-backed project analysis |
+| `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, explicit preparation policy, immutable text snapshots, checked edits and compiler-backed analysis/refactoring services |
+| `Fpas.LanguageServer` | Stdio LSP lifecycle, bounded protocol transport, document synchronization and diagnostics over the shared live workspace |
 | `Fpas.Processes` | Shared Linux process-group/subreaper and Windows job ownership for debugger/build processes |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
@@ -181,9 +190,15 @@ Fpas.slnx groups the C# implementation projects, SDK packaging, and xUnit projec
 ProjectReference edges define their build dependencies; solution folders may group
 src, sdk, and tests without introducing separate solutions for each component.
 
-- Fpas.Cli references Fpas.Compiler, Fpas.Workspaces and Fpas.Debugging as C# libraries.
+- Fpas.Cli references Fpas.Compiler, Fpas.Workspaces, Fpas.LanguageServer and Fpas.Debugging as C# libraries.
+- Fpas.LanguageServer references Fpas.Workspaces, MIT-licensed OmniSharp protocol
+  types and StreamJsonRpc. Protocol dependencies stay outside the workspace and
+  compiler libraries.
 - Fpas.Workspaces references the compiler, process ownership and official
   SolutionPersistence library; MSBuild remains in owned SDK processes.
+  Fpas.SdkResolver runs inside those processes and resolves package SDKs from the
+  installed cache without downloads. Its MSBuild framework reference is supplied
+  by that host and is not shipped with the CLI.
 - Fpas.Debugging references process ownership and packaged DbgShim assets; it has
   no dependency on Fpas.Compiler or Fpas.Core. Native interfaces, symbols, values,
   evaluation, supervision and frontends have separate topic directories.
@@ -272,6 +287,6 @@ to behavior tests.
 Preserve compile/execute integration coverage when extending the compiler or SDK.
 Add Fpas.Core contents only when emitted features need them. Follow the owning
 language/build contracts and their tracked gaps. Add executable examples/apps
-using implemented features. Publishing and IDE/LSP tooling retain their
+using implemented features. Publishing and additional editor tooling retain their
 separately documented scope. Repository commands belong in the
 [development workflow](../build/development.md).

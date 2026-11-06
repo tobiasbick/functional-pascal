@@ -10,7 +10,7 @@ public sealed record DocumentationEntry(string Project, string Origin, string Ki
     SourceSpan? Span, DocumentationContent Documentation);
 public sealed record DocumentationResult(string Status, string SnapshotId, IReadOnlyList<DocumentationEntry> Entries,
     int TotalCount, int Offset, int? NextOffset, bool Truncated, int OmittedDocumentationCount,
-    IReadOnlyList<string> SearchedProjects, IReadOnlyList<string> SearchedAssemblies);
+    IReadOnlyList<string> SearchedProjects, IReadOnlyList<string> SearchedAssemblies, Fpas.Workspaces.Analysis.WorkspaceSemanticCoverage Coverage);
 
 internal sealed record DocumentationCandidate(string Project, string Origin, string QualifiedName,
     string SortKey, Func<DocumentationEntry> Read);

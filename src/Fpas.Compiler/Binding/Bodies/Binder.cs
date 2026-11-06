@@ -44,10 +44,11 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
 
         void BindIndependent(RoutineSymbol symbol, IReadOnlyList<StatementSyntax> body, int position, IReadOnlyList<ContractSyntax>? contracts = null)
         {
+            if (catalog.Analysis?.CanBind(source, symbol) == false) return;
             var binder = new Binder(unit, catalog, references, unitClosures: closures);
             foreach (var import in imports) binder.imports.Add(import.Key, import.Value);
             try { methods.Add(binder.BindRoutine(symbol, body, position, contracts)); }
-            catch (CompilationFailure failure) { source.Diagnostics.Add(failure.Diagnostic); }
+            catch (CompilationFailure failure) { catalog.Analysis?.UnavailableBody(source, symbol); source.Diagnostics.Add(failure.Diagnostic); }
         }
     }
 

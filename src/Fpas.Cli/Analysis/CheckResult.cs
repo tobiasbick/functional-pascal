@@ -13,7 +13,8 @@ internal sealed record AnalysisDiagnostic : CompilerDiagnostic
     internal AnalysisDiagnostic(string project, CompilerDiagnostic diagnostic) : base(diagnostic) => Project = project;
 }
 internal sealed record AnalysisError(string Code, string Message, bool OutputTruncated = false, IReadOnlyList<string>? Candidates = null);
-internal sealed record AnalysisCoverage(bool Complete, IReadOnlyList<string> Requested, IReadOnlyList<string> Analyzed, IReadOnlyList<string> Blocked, IReadOnlyList<string>? Searched = null);
+internal sealed record AnalysisCoverage(bool Complete, IReadOnlyList<string> Requested, IReadOnlyList<string> Analyzed, IReadOnlyList<string> Blocked, IReadOnlyList<string>? Searched = null,
+    IReadOnlyList<ProjectSemanticCoverage>? Semantics = null);
 internal sealed record Preparation(bool RestorePerformed, bool DependencyBuildsAllowed, IReadOnlyList<PreparationOutput> DependencyOutputs, IReadOnlyList<ContextIssue> Issues);
 internal sealed record CheckedProject(string Project, string? Configuration, string State, IReadOnlyList<AnalysisDiagnostic> Diagnostics);
 internal sealed record CheckResult(bool Success, string Status, string? Context, string Configuration, string? SnapshotId,
@@ -27,10 +28,10 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
         var projects = analysis.Projects.Select(project => new CheckedProject(project.Project, project.Configuration, project.State,
             (project.Result?.Diagnostics ?? []).Select(diagnostic => new AnalysisDiagnostic(project.Project, diagnostic)).ToArray())).ToArray();
         return new(analysis.Success, analysis.Success ? "ok" : "failed", context.Path, context.Configuration,
-            analysis.IsComplete ? context.SnapshotId : null, projects, projects.SelectMany(project => project.Diagnostics).ToArray(),
+            context.SnapshotId, projects, projects.SelectMany(project => project.Diagnostics).ToArray(),
             new(analysis.IsComplete, context.RequestedProjects, projects.Where(project => project.State != "blocked").Select(project => project.Project).ToArray(),
-                projects.Where(project => project.State == "blocked").Select(project => project.Project).ToArray()),
-            new(context.RestorePerformed, true, context.DependencyOutputs, context.Issues),
+                projects.Where(project => project.State == "blocked").Select(project => project.Project).ToArray(), Semantics: analysis.SemanticCoverage.Projects),
+            new(context.RestorePerformed, context.DependencyBuildsAllowed, context.DependencyOutputs, context.Issues),
             analysis.Success ? null : new(context.Issues.Count != 0 ? "context_failed" : "analysis_failed", "The selected context could not be checked successfully."))
             { Sources = context.Projects.SelectMany(project => project.Request.Sources).Distinct().ToArray() };
     }

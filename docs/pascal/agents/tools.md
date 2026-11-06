@@ -108,6 +108,10 @@ Input changes invalidate results. See the CLI reference for timeout and exit cod
 returns JSON from checked source positions (one-based UTF-16). Refs uses the whole
 declared FPAS scope, with --limit and explicit truncation; linked files may require
 --project. Prefer these queries for resolved identity/type facts over text search.
+Queries can retain checked facts when other regions fail. Inspect
+coverage.complete and coverage.semantics before treating searches as exhaustive;
+analysis_unavailable distinguishes unverified regions from not_found. Rename
+requires successful complete analysis. See the [CLI contract](../program-structure/cli.md).
 `query find <context> --name <text>` searches explicit checked FPAS declarations;
 use --match exact|prefix|contains, repeat --kind, and page with --limit/--offset.
 Find's --project narrows searched owners. Combine pages only with equal snapshotId.
@@ -125,6 +129,12 @@ unknown delegate calls are not attributed to guessed functions. Metadata-only
 and bodyless outgoing targets omit site counts. See the
 [call-query contract](../program-structure/cli.md#callers-and-callees) for scope,
 exact constructor/accessor anchors and excluded runtime protocols.
+
+`fpas lsp` exposes stdio diagnostics, definition/references, workspace symbols,
+checked rename and open-document formatting. Select an absolute project/solution in initializationOptions.context;
+restore and foreign-project builds remain explicit. See the
+[language-server reference](../tools/language-server.md) for lifecycle and limits.
+`fpas env --json` reports its packaged identity without starting a session.
 
 ## Debug and profile
 
@@ -147,7 +157,7 @@ writing external samplers or benchmark variants. Keep execution bounded and
 assert outcomes; avoid depending on timer counts, network availability, or an
 interactive terminal for ordinary regression tests. Isolate test files/processes.
 Store performance output under .temp-data and distinguish measurements from
-language guarantees. LSP and IDE project-system integration remain separate work.
+language guarantees. IDE project-system integration remains separate work.
 
 Write repository maintenance helpers in FPAS when the supported CLR APIs suffice.
 If a concrete missing feature prevents this, document the practical limitation

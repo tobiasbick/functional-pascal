@@ -13,24 +13,29 @@ public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList
 public sealed record SourceQueryResult(string Status, string? Reason, QuerySelection? Selection, DefinitionResult? Definition,
     TypeResult? Type, ReferencesResult? Refs, bool Truncated, IReadOnlyList<string> BinaryBoundaries,
     FindResult? Find = null, InspectResult? Inspect = null, IReadOnlyList<string>? Searched = null,
-    CalleesResult? Callees = null, CallersResult? Callers = null);
+    CalleesResult? Callees = null, CallersResult? Callers = null, WorkspaceSemanticCoverage? Coverage = null);
 
 public sealed partial class SourceQuery
 {
     private readonly WorkspaceAnalysis analysis;
     private readonly Dictionary<string, (ContextProject Input, SemanticSnapshot Snapshot)> projects;
     private readonly Dictionary<(string Project, string Symbol), DefinitionResult> definitions = [];
+    private readonly WorkspaceSemanticCoverage coverage;
     private static StringComparer Paths => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
     public SourceQuery(WorkspaceAnalysis analysis)
     {
-        if (!analysis.Success || !analysis.IsComplete) throw new ContextFailure("analysis_failed", "Queries require successful analysis of the complete selected scope.");
         this.analysis = analysis;
-        projects = analysis.Context.Projects.ToDictionary(project => project.Path,
-            project => (project, analysis.Projects.Single(result => Paths.Equals(result.Project, project.Path)).Result!.Snapshot!), Paths);
+        projects = analysis.Context.Projects.Where(project => analysis.Projects.Any(result => Paths.Equals(result.Project, project.Path) && result.Result is { Snapshot: not null, Availability: not "unavailable" }))
+            .ToDictionary(project => project.Path, project => (project, analysis.Projects.Single(result => Paths.Equals(result.Project, project.Path)).Result!.Snapshot!), Paths);
+        coverage = analysis.SemanticCoverage;
+        if (projects.Count == 0) throw new ContextFailure("analysis_failed", "No checked semantic regions are available in the selected scope.");
     }
 
     public SourceQueryResult Execute(string operation, SourceSelection selection, int limit = 100, CancellationToken cancellationToken = default)
+        => ExecuteCore(operation, selection, limit, cancellationToken) with { Coverage = coverage };
+
+    private SourceQueryResult ExecuteCore(string operation, SourceSelection selection, int limit, CancellationToken cancellationToken)
     {
         if (operation is not ("definition" or "type" or "refs")) throw new ContextFailure("invalid_argument", "Unknown source-query operation.");
         if (limit is < 1 or > 1000) throw new ContextFailure("invalid_argument", "Reference limit must be 1..1000.");

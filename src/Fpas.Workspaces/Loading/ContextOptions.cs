@@ -1,6 +1,9 @@
 namespace Fpas.Workspaces.Loading;
 
-public sealed record ContextOptions(string Context, string Configuration = "Debug", bool NoRestore = false);
+public enum ContextPreparation { BuildDependencies, ExistingInputs, SourceSnapshots }
+
+public sealed record ContextOptions(string Context, string Configuration = "Debug", bool NoRestore = false,
+    ContextPreparation Preparation = ContextPreparation.BuildDependencies);
 
 public sealed class ContextFailure(string code, string message, bool outputTruncated = false, IReadOnlyList<string>? candidates = null) : Exception(message)
 {

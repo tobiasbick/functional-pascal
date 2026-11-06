@@ -16,6 +16,9 @@
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.1" />
     <PackageVersion Include="System.CommandLine" Version="2.0.14" />
+    <PackageVersion Include="OmniSharp.Extensions.LanguageProtocol" Version="1.0.0" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.26.150" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="xunit" Version="$(FpasXunitVersion)" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="$(FpasXunitAdapterVersion)" />
     <PackageVersion Include="MSTest.TestFramework" Version="$(FpasMSTestVersion)" />

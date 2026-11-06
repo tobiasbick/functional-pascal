@@ -71,6 +71,51 @@ complete handbook/agent examples and checks detached index consistency alongside
 their existing compilation/execution assertions. Compiler Analysis tests cover
 exact spans, symbol/flow identity and policies for every expression form.
 
+ExistingInputTests checks preparation policy through the production loader,
+including missing SDK/metadata and generator/build markers during revalidation.
+TextSnapshotTests and DiagnosticFixPlanTests check detached unsaved text, linked
+owners, UTF-16 identity, conflicts and explicit byte publication. FileWorkspaceTests
+checks shared correction/recheck state, typed rename-plan validation and preserved
+root outputs; CLI regression tests exercise the same services through commands.
+
+LiveDocumentTests, LiveWorkspaceTests and LiveGraphTests exercise transactional
+UTF-16 changes, versions, save/close authority, unowned/linked files, unsaved
+cross-project signatures/rename, current failures, reference invalidation,
+independent reuse, limits and cancellation/disposal. PassivePreparationTests
+checks imported SDK resolution and rejection of custom preparation before effects.
+LiveCancellationTests checks that caller cancellation joins an actual owned
+evaluation process before returning on Linux.
+MetadataImageTests exercises actual analysis/emission against private bytes with
+no corresponding DLL and detached caller buffers.
+
+PartialAnalysisTests checks detached coverage and independently checked bodies,
+incomplete calls/types/declarations, missing closers and rejected emission.
+PartialQueryTests checks partial definition/type/refs/Find/call/inspection results,
+explicit unavailable regions/dependencies, current repairs and strict rename.
+DocumentationCliTests and DiagnosticWorkspaceTests verify that documentation
+lookup reports incomplete coverage while preserving compiler diagnostic details.
+LspDiagnosticsTests also verifies syntax and independent semantic errors through
+the actual stdio server and replacement after unsaved repairs.
+
+LspLifecycleTests and LspDiagnosticsTests use an independent byte-framed stdio
+client against the actual CLI, including the installed SDK copy. They check
+initialization, UTF-16/versioned edits, save/close/reopen, passive analysis,
+watched dependencies, invalid messages, limits and resynchronization.
+LspCancellationTests verifies EOF/shutdown against a blocked owned evaluation
+process on Linux. [Native Windows acceptance](../docs/future/lsp-acceptance-plan.md)
+remains open.
+LspFeatureTests checks standard navigation/search/formatting and capability
+negotiation. LspRenameBehaviorTests applies returned edits in the client, rebuilds
+and executes programs across overload, capture, keyword and interface renames.
+LspScopeTests checks linked ownership and response limits; LspRequestLifecycleTests
+checks cancellation, supersession and shutdown of admitted requests on Linux.
+LspCliParityTests compares definition/reference locations, symbol search, rename
+edits, formatting and semantic/syntax failures against the CLI using identical
+saved UTF-16 snapshots. Partial CLI searches retain coverage; LSP refuses them
+because standard result arrays cannot express that coverage.
+LocalDeploymentTests drives both the published launcher and SDK CLI from a fresh
+external consumer and checks that analysis/rename creates or changes no files.
+
 SourceOperationTests verifies body ownership, exact operations, callable
 references, dispatch uncertainty, contract phases and protocol exclusions.
 CallQueryTests verifies source/DLL identities, anonymous regions, constructor/

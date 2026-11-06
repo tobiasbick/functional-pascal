@@ -1,0 +1,77 @@
+program DiagnosticsWorkload;
+
+uses
+  System as Sys, System.Diagnostics as Diag, Diagnostics.Workloads as Work,
+  Diagnostics.Samples as Samples;
+
+function Integer(Value: string; Minimum: int; Maximum: int): int;
+begin
+  const Result: int := Sys.Int32.Parse(Value, Sys.Globalization.CultureInfo.InvariantCulture);
+  if Result < Minimum or Result > Maximum then
+    raise new Sys.ArgumentException('Numeric argument is outside its documented bounds');
+  end if;
+
+  return Result;
+end function;
+
+procedure Help();
+begin
+  Sys.Console.WriteLine(
+    'FPAS diagnostic workload: noop | cpu MILLISECONDS | alloc MILLISECONDS | fault READY RELEASE'
+  );
+  Sys.Console.WriteLine('  bench cpu|alloc ROUNDS WARMUP SAMPLES OUTPUT LABEL local|cloud');
+  Sys.Console.WriteLine(
+    'Bounds: milliseconds 1..30000; rounds 1..100000; warmup 0..10; samples 3..50.'
+  );
+  Sys.Console.WriteLine(
+    'Allocation benchmarks permit at most 512 rounds. Fault mode waits at most 60 seconds.'
+  );
+  Sys.Console.WriteLine('Examples: dotnet Workload.dll cpu 8000');
+  Sys.Console.WriteLine('  dotnet Workload.dll bench cpu 10000 2 7 samples.csv cpu-Release local');
+end procedure;
+
+begin
+  const Args: string[] := Sys.Environment.GetCommandLineArgs();
+  try
+    if Args.Length = 1 or Args[1] = '--help' then
+      Help();
+    elsif Args[1] = 'noop' and Args.Length = 2 then
+      Sys.Console.WriteLine('verified:noop');
+    elsif (Args[1] = 'cpu' or Args[1] = 'alloc') and Args.Length = 3 then
+      const Value: long := Work.RunFor(Args[1], Integer(Args[2], 1, 30000));
+      Sys.Console.WriteLine('verified:' + Args[1] + ' checksum=' + Value.ToString());
+    elsif Args[1] = 'fault' and Args.Length = 4 then
+      Work.HoldFailure(Args[2], Args[3]);
+    elsif Args[1] = 'bench' and Args.Length = 9 and (Args[2] = 'cpu' or Args[2] = 'alloc') then
+      const Rounds: int := Integer(Args[3], 1, 100000);
+      const Warmup: int := Integer(Args[4], 0, 10);
+      const Count: int := Integer(Args[5], 3, 50);
+      Samples.Validate(Args[6], Args[7], Args[8]);
+      if Args[2] = 'alloc' and Rounds > 512 then
+        raise new Sys.ArgumentException('Allocation benchmarks permit at most 512 rounds');
+      end if;
+
+      for Index: int := 1 to Warmup do
+        Work.Verify(Args[2], Rounds, Work.RunBatch(Args[2], Rounds));
+      end for;
+      const Values: double[] := new double[Count];
+      var Last: long := 0;
+      for Index: int := 0 to Count - 1 do
+        const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+        const Value: long := Work.RunBatch(Args[2], Rounds);
+        Values[Index] := Clock.Elapsed.TotalMilliseconds;
+        Work.Verify(Args[2], Rounds, Value);
+        Last := Value;
+      end for;
+
+      Samples.Write(Args[6], Args[7], 'execution-' + Args[2], Args[8], Warmup, Rounds, Values);
+      Sys.Console.WriteLine('verified:' + Args[2] + ' checksum=' + Last.ToString());
+    else
+      raise new Sys.ArgumentException('Invalid arguments; use --help');
+    end if;
+  catch Failure: Sys.ArgumentException do
+    Sys.Console.Error.WriteLine(Failure.Message);
+    Sys.Environment.ExitCode := 2;
+  end try;
+end;
+end program;

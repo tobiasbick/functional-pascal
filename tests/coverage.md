@@ -11,6 +11,21 @@ EnvironmentCommandTests owns the [environment inspection](../docs/pascal/tools/e
 CLI contract: actual SDK selection, package/cache identity and bounds, unavailable
 components, argument JSON, external version probes and owned interruption.
 
+## Measurements and diagnostic artifacts
+
+Profiling.DiagnosticsWorkflowTests is the primary owner of the
+[measurement](../docs/pascal/tools/benchmarks.md) and
+[diagnostic](../docs/pascal/tools/diagnostic-workflows.md) application workflows.
+It builds the checked-in FPAS sources through a newly packaged SDK and drives the
+manifest-pinned Microsoft tools. Independent arithmetic expectations verify the
+CPU/allocation results. Sample counts, fresh-file ownership, rejected child
+output and deadline/reaping checks protect the timing boundary and failure path.
+Actual nettrace decoding checks GC starts and allocation ticks; topN resolves the
+FPAS CPU kernel and counter CSVs contain positive allocation/collection metrics.
+Heap dump analysis recovers managed frames and the held exception after target
+exit; the original portable-PDB stack includes source lines. Native Windows/WSL
+Debug/Release acceptance runs the same contracts without platform skips.
+
 ## Language and metadata
 
 Syntax.TokenBoundaryTests varies every declared boundary individually and all

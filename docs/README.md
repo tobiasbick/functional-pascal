@@ -21,7 +21,7 @@ workflow to work on the compiler/toolchain.
 | Project, dependency, diagnostic, incremental, and output contracts | [MSBuild specification](build/msbuild.md) |
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
-| Missing practical guides and verified walkthroughs | [Documentation gaps](future/documentation-gaps.md) |
+| Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
 | Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [workspace architecture](architecture/workspaces.md) |
 | Editor work, scheduled last | [Editor gaps](future/editor-gap.md) |

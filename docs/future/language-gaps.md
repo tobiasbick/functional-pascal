@@ -2,8 +2,8 @@
 
 Record confirmed omissions from the [baseline](../baseline-comparison.md) with
 their owning rule and reproducer. The proposals below are deferred extensions.
-Maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md); missing guides
-belong in [documentation gaps](documentation-gaps.md).
+Maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md); current
+toolchain procedures belong in the [development workflow](../build/development.md).
 
 ## Deferred proposal: compiler-checked pure functions
 

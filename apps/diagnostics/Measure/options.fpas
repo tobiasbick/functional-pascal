@@ -1,0 +1,92 @@
+unit Diagnostics.MeasureOptions;
+
+uses System as Sys, System.IO as IO, System.Collections.Generic as Collections;
+
+public type Options = record
+  Executable: string;
+  Arguments: string[];
+  Directory: string;
+  Output: string;
+  Label: string;
+  Boundary: string;
+  Environment: string;
+  Warmup: int;
+  Count: int;
+  Timeout: int;
+  Contains: string;
+end record;
+
+function Integer(Value: string; Minimum: int; Maximum: int): int;
+begin
+  const Parsed: int := Sys.Int32.Parse(Value, Sys.Globalization.CultureInfo.InvariantCulture);
+  if Parsed < Minimum or Parsed > Maximum then
+    raise new Sys.ArgumentException('Numeric option outside its documented bounds');
+  end if;
+
+  return Parsed;
+end function;
+
+public function Read(Args: string[]): Options;
+begin
+  var Output: string := '';
+  var Label: string := '';
+  var Boundary: string := '';
+  var Contains: string := '';
+  var Environment: string := 'local';
+  var Directory: string := Sys.Environment.CurrentDirectory;
+  var Warmup: int := 2;
+  var Count: int := 7;
+  var Timeout: int := 120;
+  var Index: int := 1;
+  while Index < Args.Length and Args[Index] <> '--' do
+    if Index + 1 >= Args.Length then
+      raise new Sys.ArgumentException('Every option needs a value; use --help');
+    end if;
+    const Name: string := Args[Index];
+    const Value: string := Args[Index + 1];
+    if Name = '--output' then
+      Output := Value;
+    elsif Name = '--label' then
+      Label := Value;
+    elsif Name = '--boundary' then
+      Boundary := Value;
+    elsif Name = '--contains' then
+      Contains := Value;
+    elsif Name = '--environment' then
+      Environment := Value;
+    elsif Name = '--directory' then
+      Directory := IO.Path.GetFullPath(Value);
+    elsif Name = '--warmup' then
+      Warmup := Integer(Value, 0, 10);
+    elsif Name = '--samples' then
+      Count := Integer(Value, 3, 50);
+    elsif Name = '--timeout' then
+      Timeout := Integer(Value, 1, 600);
+    else
+      raise new Sys.ArgumentException('Unknown option: ' + Name);
+    end if;
+
+    Index := Index + 2;
+  end while;
+
+  if Output.Length = 0 or Label.Length = 0 or Index + 1 >= Args.Length then
+    raise new Sys.ArgumentException(
+      'Supply --output, --label and -- EXECUTABLE ARGUMENTS; use --help'
+    );
+  end if;
+
+  if Boundary <> 'startup' and Boundary <> 'compiler' and Boundary <> 'sdk-build' then
+    raise new Sys.ArgumentException('Boundary must be startup, compiler or sdk-build');
+  end if;
+  const Executable: string := IO.Path.GetFullPath(Args[Index + 1]);
+  const Arguments: Collections.List<string> := new Collections.List<string>();
+  for Offset: int := Index + 2 to Args.Length - 1 do
+    Arguments.Add(Args[Offset]);
+  end for;
+
+  return new Options(
+    Executable, Arguments.ToArray(), Directory, Output, Label, Boundary, Environment,
+    Warmup, Count, Timeout, Contains
+  );
+end function;
+end unit;

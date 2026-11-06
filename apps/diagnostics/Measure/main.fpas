@@ -1,0 +1,82 @@
+async program DiagnosticsMeasure;
+
+uses
+  System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
+  Diagnostics.MeasureOptions as Arguments, Diagnostics.MeasureProcesses as Processes,
+  Diagnostics.Samples as Samples, Fpas.Processes.OwnedProcess as Owned;
+
+procedure Help();
+begin
+  Sys.Console.WriteLine(
+    'Repeated unprofiled end-to-end process measurements. Child exit must be zero.'
+  );
+  Sys.Console.WriteLine(
+    'Options: --output NEW.csv --label NAME --boundary startup|compiler|sdk-build'
+  );
+  Sys.Console.WriteLine('  --warmup 0..10 (2), --samples 3..50 (7), --timeout 1..600 (120),');
+  Sys.Console.WriteLine('  --contains TEXT, --directory PATH, --environment local|cloud (local)');
+  Sys.Console.WriteLine('  -- ABSOLUTE_EXECUTABLE ARGUMENTS');
+  Sys.Console.WriteLine(
+    'Example: dotnet Measure.dll --output startup.csv --label jit-Release --boundary startup --contains verified:noop -- /path/to/dotnet Workload.dll noop'
+  );
+end procedure;
+
+begin
+  const Args: string[] := Sys.Environment.GetCommandLineArgs();
+  using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
+  const Handler: Sys.ConsoleCancelEventHandler := procedure(Sender: object?; Event: Sys.ConsoleCancelEventArgs) begin
+    Event.Cancel := true;
+    Cancellation.Cancel();
+  end procedure;
+  subscribe Sys.Console.CancelKeyPress with Handler;
+  try
+    if Args.Length = 1 or Args[1] = '--help' then
+      Help();
+    else
+      const Options: Arguments.Options := Arguments.Read(Args);
+      Samples.Validate(Options.Output, Options.Label, Options.Environment);
+      Owned.Validate(Options.Executable);
+      const Values: double[] := new double[Options.Count];
+      for Index: int := 0 to Options.Warmup + Options.Count - 1 do
+        const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+        const Result: Processes.Result := await Processes.Run(Options, Cancellation.Token);
+        const Milliseconds: double := Clock.Elapsed.TotalMilliseconds;
+        if Result.ExitCode <> 0 or not Result.Output.Contains(
+          Options.Contains,
+          Sys.StringComparison.Ordinal
+        )
+        then
+          raise new Sys.InvalidOperationException(
+            'Child failed the exit/output check: ' + Result.Output + Result.Error
+          );
+        end if;
+
+        if Index >= Options.Warmup then
+          Values[Index - Options.Warmup] := Milliseconds;
+        end if;
+      end for;
+
+      Samples.Write(
+        Options.Output,
+        Options.Label,
+        Options.Boundary,
+        Options.Environment,
+        Options.Warmup,
+        0,
+        Values
+      );
+    end if;
+  catch Failure: Sys.OperationCanceledException do
+    Sys.Console.Error.WriteLine('Measurement cancelled or timed out');
+    Sys.Environment.ExitCode := if Cancellation.IsCancellationRequested then 130 else 1 end if;
+  catch Failure: Sys.ArgumentException do
+    Sys.Console.Error.WriteLine(Failure.Message);
+    Sys.Environment.ExitCode := 2;
+  catch Failure: Sys.Exception do
+    Sys.Console.Error.WriteLine(Failure.Message);
+    Sys.Environment.ExitCode := 1;
+  finally
+    unsubscribe Sys.Console.CancelKeyPress with Handler;
+  end try;
+end;
+end program;

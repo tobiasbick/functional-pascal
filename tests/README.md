@@ -63,6 +63,14 @@ They verify dependency copying, exported signatures, incremental inputs/outputs,
 configuration isolation, diagnostics, and cleanup. Do not rely on a cached local
 development SDK version.
 
+Profiling.DiagnosticsWorkflowTests builds the actual diagnostic FPAS applications
+from a fresh SDK package and restores the pinned local diagnostic tools. It
+checks independent arithmetic results, unprofiled CSV samples, rejected child
+results, timeout cleanup, real EventPipe stack/GC/allocation events, runtime
+counters and managed exception recovery from a heap dump after target exit.
+These tests require diagnostic IPC and dump permissions on the native platform;
+see [acceptance and retained artifacts](../docs/pascal/tools/diagnostic-workflows.md#acceptance).
+
 Projects.PublishingTests owns application delivery through the CLI and actual
 packaged SDK: five publish modes with Debug/Release targets, standalone sources,
 mixed solutions and C# hosts, no-build reuse, transactional replacement and

@@ -17,6 +17,8 @@ tools supported by the current compiler and .NET environment.
 | [Debugging](debugging.md) | Source files, portable PDBs, closures, and async state machines |
 | [Batch debugging](batch-debugging.md) | One-shot stops, detached JSON observations, explicit input and bounded execution |
 | [Profiling](profiling.md) | Actual CLR execution, suitable .NET tools, and controlled measurements |
+| [Benchmarks](benchmarks.md) | Verified workloads, timing boundaries, warmup, raw samples and variation |
+| [Diagnostic workflows](diagnostic-workflows.md) | Pinned trace/counter/dump tools and Windows/Linux acceptance |
 | [Development workflow](../../build/development.md) | Build/test commands and local SDK bootstrap |
 | [Compiler distribution](../../build/distribution.md) | Single-file Windows/Linux compiler, offline SDK export and asset caches |
 | [Application publishing](../../build/publishing.md) | Native AOT, apphosts, self-contained/single-file output and signing |

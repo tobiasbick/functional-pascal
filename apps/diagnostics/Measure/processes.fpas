@@ -1,0 +1,70 @@
+unit Diagnostics.MeasureProcesses;
+
+uses
+  System as Sys, System.IO as IO, System.Text as Text,
+  System.Threading as Threading, System.Threading.Tasks as Tasks,
+  System.Collections.Generic as Collections, Fpas.Processes as Owned,
+  Diagnostics.MeasureOptions as Model;
+
+public type Result = record
+  ExitCode: int;
+  Output: string;
+  Error: string;
+end record;
+
+async function Drain(Reader: IO.StreamReader; Token: Threading.CancellationToken): Tasks.Task<string>;
+begin
+  const Buffer: char[] := new char[4096];
+  const TextOutput: Text.StringBuilder := new Text.StringBuilder();
+  while true do
+    const Count: int := await Reader.ReadAsync(Buffer, 0, Buffer.Length).WaitAsync(Token);
+    if Count = 0 then
+      break;
+    end if;
+
+    if TextOutput.Length + Count > 65536 then
+      raise new IO.InvalidDataException('Child output exceeded 64 KiB');
+    end if;
+
+    discard TextOutput.Append(Buffer, 0, Count);
+  end while;
+
+  return TextOutput.ToString();
+end function;
+
+public async function Run(Options: Model.Options; Cancellation: Threading.CancellationToken): Tasks.Task<Result>;
+begin
+  using const Deadline: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(
+    Sys.TimeSpan.FromSeconds(Options.Timeout)
+  );
+  using const Token: Threading.CancellationTokenSource := Threading.CancellationTokenSource.CreateLinkedTokenSource(
+    Cancellation,
+    Deadline.Token
+  );
+  const Environment: Collections.Dictionary<string, string> := new Collections.Dictionary<string, string>();
+  Environment['MSBUILDDISABLENODEREUSE'] := '1';
+  Environment['DOTNET_CLI_USE_MSBUILD_SERVER'] := '0';
+  await using const Child: Owned.OwnedProcess := Owned.OwnedProcess.Start(
+    Options.Executable,
+    Options.Arguments,
+    Options.Directory,
+    Environment
+  );
+  Child.Input.Dispose();
+  using const Output: IO.StreamReader := new IO.StreamReader(Child.Output, Text.Encoding.UTF8);
+  using const Error: IO.StreamReader := new IO.StreamReader(Child.Error, Text.Encoding.UTF8);
+  const OutTask: Tasks.Task<string> := Drain(Output, Token.Token);
+  const ErrTask: Tasks.Task<string> := Drain(Error, Token.Token);
+  try
+    await Child.WaitForExit(Token.Token);
+    await Child.TerminateAsync();
+    return new Result(Child.ExitCode, await OutTask, await ErrTask);
+  finally
+    await Child.TerminateAsync();
+    try
+      discard await Tasks.Task.WhenAll<string>([OutTask, ErrTask]);
+    catch do
+    end try;
+  end try;
+end function;
+end unit;

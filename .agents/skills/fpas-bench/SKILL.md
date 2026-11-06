@@ -5,12 +5,13 @@ description: Investigate CLR FPAS program, compiler, or SDK performance with sup
 
 # FPAS CLR performance
 
-Use the [profiling guide](../../../docs/pascal/tools/profiling.md),
-[debugging guide](../../../docs/pascal/tools/debugging.md), and
-[development workflow](../../../docs/build/development.md). The current toolchain
-has no repository benchmark command or curated CLR benchmark suite. Its full
-measurement workflow remains a [documentation gap](../../../docs/future/documentation-gaps.md#d1-reproducible-benchmarks).
-Do not invent commands, report schemas, or completed benchmark coverage.
+Use [unprofiled measurements](../../../docs/pascal/tools/benchmarks.md) for execution,
+startup, compiler-process and SDK timing. Use [diagnostic workflows](../../../docs/pascal/tools/diagnostic-workflows.md)
+for pinned .NET tools, stack/GC recordings, controlled failure dumps and platform
+acceptance. The [FPAS diagnostic applications](../../../apps/diagnostics/) supply
+verified workloads and a bounded process timer. These are applications, separate
+from compiler commands. Build/setup belongs in the
+[development workflow](../../../docs/build/development.md).
 
 ## Investigate the requested cost
 
@@ -21,7 +22,7 @@ Do not invent commands, report schemas, or completed benchmark coverage.
    part of the authorized task.
 2. Inspect the actual generated program with supported .NET tooling before
    writing samplers or variants. Determine which tools and options are installed;
-   the guide names dotnet-trace, dotnet-counters, and dotnet-dump as possible tools,
+   the diagnostic guide pins dotnet-trace, dotnet-counters and dotnet-dump as local tools,
    not bundled compiler commands.
 3. Build the measured configuration before collecting samples. For program
    execution, keep compilation outside the timer. Treat startup and warmed JIT

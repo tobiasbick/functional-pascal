@@ -10,6 +10,7 @@ Restore, compile, and execute tests as separate steps:
 
 ```sh
 dotnet restore Fpas.slnx
+dotnet tool restore
 dotnet build Fpas.slnx --no-restore --configuration Debug -warnaserror
 dotnet test Fpas.slnx --no-build --no-restore --configuration Debug
 ```
@@ -59,6 +60,11 @@ coverage for compiler, metadata, interop, async, or build changes.
 
 Store local logs, scratch work, and performance data under `.temp-data/`.
 Check whitespace with `git diff --check`. Keep generated bin/obj output out of Git.
+
+The local tool manifest supplies the Microsoft diagnostic tools used by
+DiagnosticsWorkflowTests. See [diagnostic acceptance](../pascal/tools/diagnostic-workflows.md#acceptance)
+and [unprofiled measurements](../pascal/tools/benchmarks.md). Run timing samples
+after all builds, tests and profilers have stopped; Windows and WSL share resources.
 
 Use [application publishing](publishing.md) for Native AOT, runtime bundles,
 apphosts and signing. PublishingTests verifies all five modes with Debug/Release

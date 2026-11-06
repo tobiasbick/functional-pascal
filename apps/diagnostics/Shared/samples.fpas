@@ -1,0 +1,99 @@
+unit Diagnostics.Samples;
+
+uses
+  System as Sys, System.IO as IO, System.Text as Text,
+  System.Globalization.CultureInfo as Culture,
+  System.Runtime.InteropServices.RuntimeInformation as Runtime;
+
+public function Number(Value: double): string;
+begin
+  return Value.ToString('R', Culture.InvariantCulture);
+end function;
+
+function Cell(Value: string): string;
+begin
+  return '"' + Value.Replace('"', '""') + '"';
+end function;
+
+public procedure Validate(Output: string; Label: string; Environment: string);
+begin
+  if IO.File.Exists(Output) or IO.Directory.Exists(Output) then
+    raise new Sys.ArgumentException('Output already exists; select a fresh CSV filename');
+  end if;
+
+  if Label.Length = 0 or Label.Length > 80 then
+    raise new Sys.ArgumentException('Label must contain 1..80 characters');
+  end if;
+
+  if Environment <> 'local' and Environment <> 'cloud' then
+    raise new Sys.ArgumentException('Environment must be local or cloud');
+  end if;
+end procedure;
+
+public procedure Write(
+  Output: string; Label: string; Boundary: string; Environment: string;
+  Warmup: int; Rounds: int; Values: double[]
+);
+begin
+  const TextOutput: Text.StringBuilder := new Text.StringBuilder();
+  discard TextOutput.AppendLine(
+    'label,boundary,environment,sample,milliseconds,warmup,rounds,runtime,os,architecture,tiered_compilation,tiered_pgo,ready_to_run'
+  );
+  const OS: string := if Sys.OperatingSystem.IsWindows() then 'windows' else 'linux' end if;
+  const Tiering: string := Sys.Environment.GetEnvironmentVariable(
+    'DOTNET_TieredCompilation'
+  ) ?? 'default';
+  const Pgo: string := Sys.Environment.GetEnvironmentVariable('DOTNET_TieredPGO') ?? 'default';
+  const ReadyToRun: string := Sys.Environment.GetEnvironmentVariable(
+    'DOTNET_ReadyToRun'
+  ) ?? 'default';
+  for Index: int := 0 to Values.Length - 1 do
+    discard TextOutput.AppendLine(
+      Cell(Label) + ',' + Cell(Boundary) + ',' + Cell(Environment) + ',' +
+      (Index + 1).ToString(Culture.InvariantCulture) + ',' + Number(Values[Index]) + ',' +
+      Warmup.ToString(
+        Culture.InvariantCulture
+      ) + ',' + Rounds.ToString(Culture.InvariantCulture) + ',' +
+      Cell(Runtime.FrameworkDescription) + ',' + OS + ',' +
+      Runtime.ProcessArchitecture.ToString() + ',' + Cell(
+        Tiering
+      ) + ',' + Cell(Pgo) + ',' + Cell(ReadyToRun)
+    );
+  end for;
+  const Full: string := IO.Path.GetFullPath(Output);
+  discard IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(Full) ?? '.');
+  using const File: IO.FileStream := new IO.FileStream(
+    Full,
+    IO.FileMode.CreateNew,
+    IO.FileAccess.Write,
+    IO.FileShare.None
+  );
+  using const Writer: IO.StreamWriter := new IO.StreamWriter(File, new Text.UTF8Encoding(false));
+  Writer.Write(TextOutput.ToString());
+
+  const Sorted: double[] := new double[Values.Length];
+  Sys.Array.Copy(Values, Sorted, Values.Length);
+  Sys.Array.Sort<double>(Sorted);
+  var Sum: double := 0.0;
+  for Value: double in Values do
+    Sum := Sum + Value;
+  end for;
+  const Mean: double := Sum / Values.Length;
+  var Squares: double := 0.0;
+  for Value: double in Values do
+    Squares := Squares + (Value - Mean) * (Value - Mean);
+  end for;
+  const Deviation: double := Sys.Math.Sqrt(Squares / (Values.Length - 1));
+  const Middle: int := Sorted.Length div 2;
+  var Median: double := Sorted[Middle];
+  if Sorted.Length mod 2 = 0 then
+    Median := (Sorted[Middle - 1] + Sorted[Middle]) / 2.0;
+  end if;
+
+  Sys.Console.WriteLine(
+    'samples=' + Values.Length.ToString() + ' median_ms=' + Number(Median) +
+    ' min_ms=' + Number(Sorted[0]) + ' max_ms=' + Number(Sorted[Sorted.Length - 1]) +
+    ' mean_ms=' + Number(Mean) + ' sample_stddev_ms=' + Number(Deviation)
+  );
+end procedure;
+end unit;

@@ -8,6 +8,8 @@ The [distribution reference](../../build/distribution.md) covers the standalone
 Windows/Linux compiler, offline SDK export, executable SDK invocation and caches.
 Use [application publishing](../../build/publishing.md) for `fpas publish`, Native
 AOT prerequisites, delivery modes, output replacement and assembly/delivery signing.
+Use [measurements](../tools/benchmarks.md) for benchmarks and
+[diagnostic workflows](../tools/diagnostic-workflows.md) for traces, counters and dumps.
 
 ## Select the owning reference
 

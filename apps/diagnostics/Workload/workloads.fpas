@@ -1,0 +1,99 @@
+unit Diagnostics.Workloads;
+
+uses
+  System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
+  System.Runtime.CompilerServices as Compiler, System.Collections.Generic as Collections;
+
+public const CpuChecksum: long := 11727587164160L;
+public const AllocationChecksum: long := 62795;
+
+public var CapturedFailure: Sys.Exception? := null;
+
+[Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
+public function CpuBatch(): long;
+begin
+  var Result: long := 0;
+  for Index: int := 0 to 32767 do
+    Result := Result + cast<long>(Index) * Index;
+  end for;
+
+  return Result;
+end function;
+
+[Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
+public function AllocationBatch(): long;
+begin
+  const Retained: Collections.Queue<byte[]> := new Collections.Queue<byte[]>();
+  var Result: long := 0;
+  for Index: int := 0 to 511 do
+    const Buffer: byte[] := new byte[8192];
+    Buffer[0] := cast<byte>(Index mod 251);
+    Buffer[8191] := Buffer[0];
+    Result := Result + Buffer[8191];
+    Retained.Enqueue(Buffer);
+    if Retained.Count > 32 then
+      discard Retained.Dequeue();
+    end if;
+  end for;
+
+  Sys.GC.KeepAlive(Retained);
+  return Result;
+end function;
+
+public function RunBatch(Kind: string; Rounds: int): long;
+begin
+  var Result: long := 0;
+  for Round: int := 1 to Rounds do
+    Result := Result + (if Kind = 'cpu' then CpuBatch() else AllocationBatch() end if);
+  end for;
+
+  return Result;
+end function;
+
+public procedure Verify(Kind: string; Rounds: int; Value: long);
+begin
+  const Expected: long := if Kind = 'cpu' then CpuChecksum else AllocationChecksum end if;
+  if Value <> Expected * Rounds then
+    raise new Sys.InvalidOperationException('Workload checksum mismatch');
+  end if;
+end procedure;
+
+public function RunFor(Kind: string; Milliseconds: int): long;
+begin
+  const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+  var Result: long := 0;
+  repeat
+    Result := RunBatch(Kind, 1);
+    Verify(Kind, 1, Result);
+  until Clock.ElapsedMilliseconds >= Milliseconds;
+
+  return Result;
+end function;
+
+[Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
+procedure CauseFailure();
+begin
+  raise new Sys.InvalidOperationException('FPAS_DIAGNOSTIC_FAILURE');
+end procedure;
+
+[Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
+public procedure HoldFailure(Ready: string; Release: string);
+begin
+  try
+    CauseFailure();
+  catch Failure: Sys.InvalidOperationException do
+    CapturedFailure := Failure;
+    Sys.Console.Error.WriteLine(Failure.ToString());
+    Sys.IO.File.WriteAllText(Ready + '.tmp', Sys.Environment.ProcessId.ToString());
+    Sys.IO.File.Move(Ready + '.tmp', Ready);
+    const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+    while not Sys.IO.File.Exists(Release) and Clock.ElapsedMilliseconds < 60000 do
+      Threading.Thread.Sleep(20);
+    end while;
+
+    Sys.GC.KeepAlive(Failure);
+  end try;
+
+  Sys.Environment.ExitCode := 23;
+end procedure;
+end unit;

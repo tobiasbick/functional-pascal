@@ -34,10 +34,9 @@ plan review and explicit application.
   not define the formats of future commands.
 - Disabling contracts would require an explicit language/runtime policy decision.
 
-[D1](documentation-gaps.md#d1-reproducible-benchmarks) and
-[D3](documentation-gaps.md#d3-profiling-and-dump-walkthroughs) track verified
-measurement and profiling/dump procedures. Accept those workflows on Windows and
-Linux with the corresponding tooling work.
+Current measurement and diagnostic procedures belong in
+[benchmarks](../pascal/tools/benchmarks.md) and
+[diagnostic workflows](../pascal/tools/diagnostic-workflows.md).
 
 ## Scope
 

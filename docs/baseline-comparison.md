@@ -111,13 +111,14 @@ are specified and implemented, with NullableOperatorDiagnosticsTests and
 MsBuildTests.NullableOperators covering safety, C# results/exceptions, generic
 dispatch, and operand ordering across suspension in Debug/Release consumers.
 
-Practical documentation work remains in [documentation gaps](future/documentation-gaps.md).
 The [standalone SDK walkthrough](build/standalone-sdk.md) covers an independent
 FPAS/C# consumer with explicit package sources, versions, and deployment files.
 The [library guides](pascal/libraries/README.md) cover practical .NET workflows,
-including task synchronization and joined channel pipelines. The next useful
-items are [D1: reproducible benchmarks](future/documentation-gaps.md#d1-reproducible-benchmarks)
-and [D3: profiling and dump walkthroughs](future/documentation-gaps.md#d3-profiling-and-dump-walkthroughs).
+including task synchronization and joined channel pipelines.
+[Reproducible measurements](pascal/tools/benchmarks.md) and
+[diagnostic workflows](pascal/tools/diagnostic-workflows.md) cover fixed FPAS
+workloads, explicit timing boundaries, real .NET traces/counters and controlled
+failure dumps, accepted in Debug/Release on Windows and WSL/Linux.
 
 ## See also
 

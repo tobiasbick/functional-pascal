@@ -1,7 +1,7 @@
 # Toolchain environment
 
 Use `fpas env` to inspect the running compiler, .NET installation, cached FPAS
-SDKs and NetCoreDbg. The command does not evaluate projects, build, restore
+SDKs and the packaged debugger. The command does not evaluate projects, build, restore
 packages or download tools. Missing components remain visible in the report.
 
 ## Commands
@@ -10,7 +10,6 @@ packages or download tools. Missing components remain visible in the report.
 fpas env
 fpas env --json
 fpas env --directory examples/mandelbrot --json
-fpas env --netcoredbg <absolute-netcoredbg-path> --json
 ```
 
 Without `--json`, output is an English summary. JSON owns stdout and contains one
@@ -38,9 +37,9 @@ streams. Cancellation or a deadline terminates and joins those probes.
   queries NuGet's configured cache location. Compiler/Core content hashes
   distinguish `matching`, `different` and `incomplete` packages, including stale
   files under an unchanged package version.
-- `netcoredbg`: the first tool selected by `--netcoredbg`, `FPAS_NETCOREDBG_PATH`
-  or `PATH`, in that order. The report retains the selection source and the
-  version returned by `--version`. An explicit path must be absolute.
+- `debugger`: passive deployment facts: status, managed/shim versions, selected
+  RID and shim path/hash, required runtime and available `batch`/`dap` protocols.
+  It does not load the native shim or start a worker/target.
 - `languageServer`: `not_implemented` for the current CLR toolchain.
 
 The cache is an installation inventory, not proof of which SDK an arbitrary
@@ -50,14 +49,13 @@ is a warning: it may still be available from the matching distribution feed.
 Follow the [deployment workflow](../../build/development.md#deploy-the-local-release-compiler)
 before resolving that SDK for a project.
 
-A missing optional debugger is `not_found`. A configured debugger that cannot
-be started or identified is an error. No target program or debugger session is
-launched. The report includes tool paths and versions, not environment-variable
+A missing packaged shim or unsupported platform is an error. No target program
+or debugger session is launched. The report includes tool paths and versions, not environment-variable
 dumps or package-source credentials.
 
 ## Results and exits
 
-JSON schema version 1 provides `success`, `status`, `directory`, the component
+JSON schema version 2 provides `success`, `status`, `directory`, the component
 records above, `issues` and `truncated`. Each issue has severity, code, message
 and an optional path. Component inspection can fail while other evidence remains
 available. Invalid arguments, cancellation and deadlines return a failure report;

@@ -27,14 +27,21 @@ inputs retain their own requirements. No publish mechanism is selected yet.
   `typeof(Core.RecordAttribute).Assembly.Location`. A bundled/native executable
   needs another way to supply that managed metadata. Native-linking Core does
   not provide a reference assembly for compiling FPAS sources.
-- Evaluate the complete CLI dependency graph, including workspace/MSBuild and MCP
-  hosting dependencies, under the selected publish mode. Inspecting CIL emission
-  alone cannot establish AOT compatibility.
+- Evaluate the complete CLI dependency graph, including workspace/MSBuild and
+  the [debugger's](../architecture/debugger-core.md) native interop, under the
+  selected publish mode. Inspecting CIL emission alone cannot establish AOT
+  compatibility.
 
 Embedding managed assets and reading them from memory or materializing them in a
 cache are options. The SDK's compiler launch and matching support/package assets
 must work without requiring loose files beside the tool. Generated applications
 may still need their own managed support assembly.
+
+The [debugger reference](../architecture/debugger-core.md)
+owns ordinary managed debugger deployment. Include RID-specific
+dbgshim assets, licenses, target-runtime DBI/DAC lookup and the same-executable
+session worker in single-file/AOT evaluation. Verify cache extraction, concurrent
+launches and native-library loading on Windows and WSL without debug-time downloads.
 
 Project/solution builds still need the .NET SDK, framework references, package and
 project dependencies, SDK props/targets and build tasks. Native AOT removes only

@@ -1,6 +1,5 @@
 using Fpas.Compiler;
 using Fpas.IntegrationTests.Build;
-using Fpas.IntegrationTests.Debugging;
 using Fpas.IntegrationTests.Processes.Support;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Processes;
@@ -27,14 +26,15 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         using var json = JsonDocument.Parse(result.Output);
         var report = json.RootElement;
         Assert.Equal(0, result.ExitCode); Assert.Empty(result.Error);
-        Assert.Equal(1, report.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(2, report.GetProperty("schemaVersion").GetInt32());
         Assert.True(report.GetProperty("success").GetBoolean());
         var selected = await ProcessRunner.RunAsync(["--version"], workingDirectory: root.Path);
         Assert.Equal(selected.Output.Trim(), report.GetProperty("dotnet").GetProperty("selectedSdk").GetString());
         var compiler = report.GetProperty("fpas").GetProperty("compiler");
         Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(FpasCompiler).Assembly.Location))), compiler.GetProperty("sha256").GetString());
         Assert.All(report.GetProperty("dotnet").GetProperty("sdks").EnumerateArray(), entry => Assert.True(Directory.Exists(entry.GetProperty("path").GetString())));
-        Assert.Equal("not_found", report.GetProperty("netcoredbg").GetProperty("status").GetString());
+        Assert.Equal("available", report.GetProperty("debugger").GetProperty("status").GetString());
+        Assert.False(report.TryGetProperty("netcoredbg", out _));
         Assert.Equal("not_implemented", report.GetProperty("languageServer").GetProperty("status").GetString());
         Assert.Contains(report.GetProperty("issues").EnumerateArray(), issue => issue.GetProperty("code").GetString() == "sdk_not_cached");
         Assert.DoesNotContain("private-test-sentinel", result.Output);
@@ -54,7 +54,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         var cli = Path.Combine(runner, "tools", "compiler", "Fpas.Cli.dll");
         var environment = Settings(root);
         var initial = await Run(root, environment, cli: cli);
-        Assert.Equal(0, initial.ExitCode); Assert.Empty(initial.Error);
+        Assert.True(initial.ExitCode == 0, initial.Output + initial.Error); Assert.Empty(initial.Error);
         using (var json = JsonDocument.Parse(initial.Output))
         {
             Assert.Equal(sdk.Version, json.RootElement.GetProperty("fpas").GetProperty("expectedSdkVersion").GetString());
@@ -121,21 +121,21 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         Assert.Equal("invalid_argument", Assert.Single(json.RootElement.GetProperty("issues").EnumerateArray()).GetProperty("code").GetString());
     }
 
-    [NetCoreDbgFact]
-    public async Task Explicit_real_debugger_overrides_invalid_environment_and_reports_its_version()
+    [Fact]
+    public async Task Packaged_own_debugger_reports_its_shim_without_probing_an_external_backend()
     {
         using var root = new TemporaryDirectory();
         var environment = Settings(root);
         environment["FPAS_NETCOREDBG_PATH"] = root.File("absent-backend");
-        var path = Environment.GetEnvironmentVariable("FPAS_NETCOREDBG_PATH")!;
-        var result = await Run(root, environment, ["--netcoredbg", path]);
+        var result = await Run(root, environment);
         Assert.Equal(0, result.ExitCode); Assert.Empty(result.Error);
         using var json = JsonDocument.Parse(result.Output);
-        var debugger = json.RootElement.GetProperty("netcoredbg");
+        var debugger = json.RootElement.GetProperty("debugger");
         Assert.Equal("available", debugger.GetProperty("status").GetString());
-        Assert.Equal(path, debugger.GetProperty("path").GetString());
-        Assert.Equal("option", debugger.GetProperty("source").GetString());
-        Assert.Matches(@"^\d+\.\d+\.\d+", debugger.GetProperty("version").GetString()!);
+        Assert.Equal("10.0.750501", debugger.GetProperty("shimVersion").GetString());
+        var shim = debugger.GetProperty("shimPath").GetString()!;
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(shim))), debugger.GetProperty("shimSha256").GetString());
+        Assert.Equal(new[] { "batch", "dap" }, debugger.GetProperty("protocols").EnumerateArray().Select(item => item.GetString()));
     }
 
     [Theory]
@@ -144,11 +144,12 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
     public async Task Deadline_and_console_cancellation_join_a_waiting_version_probe(bool cancel)
     {
         using var root = new TemporaryDirectory();
-        var backend = await EnvironmentProbe.Build(root, sdk);
+        var probe = await EnvironmentProbe.Build(root, sdk);
         var environment = Settings(root); environment["FPAS_ENV_PROBE_READY"] = root.File("ready.pid");
+        environment["DOTNET_HOST_PATH"] = probe;
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(1));
         await using var process = InterruptibleProcess.Start(BuildProcess.DotnetHost(),
-            [Cli, "env", "--json", "--netcoredbg", backend, "--timeout", cancel ? "30" : "5"], root.Path,
+            [Cli, "env", "--json", "--timeout", cancel ? "30" : "5"], root.Path,
             environment.ToDictionary(pair => pair.Key, pair => pair.Value!));
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output); using var stderr = new StreamReader(process.Error);

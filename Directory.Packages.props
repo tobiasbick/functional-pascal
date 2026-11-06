@@ -10,8 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52" />
-    <PackageVersion Include="ModelContextProtocol" Version="2.3.1" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Diagnostics.DbgShim.win-x64" Version="10.0.750501" />
+    <PackageVersion Include="Microsoft.Diagnostics.DbgShim.linux-x64" Version="10.0.750501" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(FpasTestSdkVersion)" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.1" />

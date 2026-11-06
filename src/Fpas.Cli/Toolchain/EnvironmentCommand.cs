@@ -7,10 +7,9 @@ internal sealed class EnvironmentCommand
 {
     private readonly Option<bool> json = new("--json") { Description = "Write one structured environment report to stdout." };
     private readonly Option<string> directory = new("--directory") { Description = "Working directory for .NET SDK selection; defaults to the current directory." };
-    private readonly Option<string> debugger = new("--netcoredbg") { Description = "Absolute NetCoreDbg path; otherwise use FPAS_NETCOREDBG_PATH, then PATH." };
     private readonly Option<int> timeout = new("--timeout") { Description = "Overall inspection deadline in seconds (1..3600).", DefaultValueFactory = _ => 30 };
     internal Command Command { get; } = new("env", """
-        Inspect the running FPAS toolchain, installed SDKs, .NET and NetCoreDbg.
+        Inspect the running FPAS toolchain, installed SDKs, .NET and packaged debugger.
 
         No project is built, restored or evaluated. SDK cache hashes detect stale compiler files.
         Exit codes: 0 inspection without errors, 1 errors/deadline, 2 arguments, 130 cancellation.
@@ -22,13 +21,12 @@ internal sealed class EnvironmentCommand
 
           fpas env --directory examples/mandelbrot --json
 
-          fpas env --netcoredbg <absolute-netcoredbg-path> --json
         """);
 
     internal EnvironmentCommand()
     {
         ContextCommandOptions.Range(timeout, 1, 3600);
-        foreach (var option in new Option[] { json, directory, debugger, timeout }) Command.Options.Add(option);
+        foreach (var option in new Option[] { json, directory, timeout }) Command.Options.Add(option);
         Command.SetAction(Execute);
     }
 
@@ -46,9 +44,7 @@ internal sealed class EnvironmentCommand
         {
             cwd = Path.GetFullPath(result.GetValue(directory) ?? cwd);
             if (!Directory.Exists(cwd)) throw new ArgumentException("--directory must identify an existing directory.");
-            if (result.GetValue(debugger) is { } backend && !Path.IsPathFullyQualified(backend))
-                throw new ArgumentException("--netcoredbg must be an absolute executable path.");
-            report = await EnvironmentInspection.Read(cwd, result.GetValue(debugger), combined.Token);
+            report = await EnvironmentInspection.Read(cwd, combined.Token);
             exit = report.Success ? 0 : 1;
         }
         catch (OperationCanceledException) when (combined.IsCancellationRequested)

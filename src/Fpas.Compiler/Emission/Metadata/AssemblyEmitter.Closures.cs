@@ -59,6 +59,11 @@ internal sealed partial class AssemblyEmitter
                 var captureField = metadata.AddFieldDefinition(FieldAttributes.Assembly | FieldAttributes.InitOnly,
                     metadata.GetOrAddString(capture.FieldName), metadata.GetOrAddBlob(signature));
                 AddGeneratedField(captureField, hidden: false);
+                debug?.AddStorage(captureField, capture.Original switch
+                {
+                    LocalSymbol local => local.Name, ParameterSymbol parameter => parameter.Name,
+                    _ => throw new InvalidOperationException("A capture must refer to a source binding.")
+                }, capture.Mutable);
                 fieldCount++;
             }
             var constructor = new RoutineSymbol(".ctor", TypeSymbol.Void,

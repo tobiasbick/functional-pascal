@@ -18,9 +18,11 @@ Capture fields use source-derived names so ordinary CLR debuggers can expand
 them. Duplicate names within one environment receive stable numeric suffixes
 such as Value_1. Field definitions and references use the same bound capture
 name. The storage remains the actual captured value or shared cell; no detached
-debug-only copy is created. Stock NetCoreDbg exposes these through the closure
-receiver, with mutable values under the cell's Value field, rather than
-automatically flattening all captures into source locals.
+debug-only copy is created. The own debugger uses the
+[portable source-storage mapping](debug-information.md#passive-source-storage)
+to flatten captures and marked cells into source bindings. Its raw view retains
+the closure receiver and actual cell fields. Debuggers without this mapping can
+expand captures through the receiver and the cell's Value field.
 
 Separate routine calls own separate cells. Cells declared inside a loop are
 allocated per iteration; read-only loop counters are copied into each environment.

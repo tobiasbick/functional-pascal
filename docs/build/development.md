@@ -175,7 +175,7 @@ provide source locations, locals, and closure/async metadata; see
 Investigate actual program behavior before writing benchmark variants or external
 samplers. The FPAS CLI provides compilation, evaluated project checks/source queries,
 [API documentation lookup](../pascal/tools/api-documentation.md) and
-[MCP agent debugging](../pascal/tools/debugging.md#agent-debugging-with-mcp).
+[batch and DAP debugging](../pascal/tools/debugging.md).
 Use [fpas fmt](../pascal/tools/fmt-style.md) to format sources or check the fixed
 style without changes. LSP and automatic IDE project integration remain separate
 work.

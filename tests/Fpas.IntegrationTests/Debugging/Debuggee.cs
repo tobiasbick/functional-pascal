@@ -1,4 +1,5 @@
 using Fpas.Tests.Support;
+using System.Text.Json.Nodes;
 
 namespace Fpas.IntegrationTests.Debugging;
 
@@ -42,8 +43,17 @@ internal sealed class Debuggee : IDisposable
         return result.Output.Replace("\r\n", "\n", StringComparison.Ordinal);
     }
 
+    internal void UseFullyOptimizedJit()
+    {
+        var runtimeFile = Path.ChangeExtension(Assembly, ".runtimeconfig.json");
+        var runtime = JsonNode.Parse(File.ReadAllText(runtimeFile))!;
+        runtime["runtimeOptions"]!["configProperties"] ??= new JsonObject();
+        runtime["runtimeOptions"]!["configProperties"]!["System.Runtime.TieredCompilation"] = false;
+        File.WriteAllText(runtimeFile, runtime.ToJsonString());
+    }
+
     public void Dispose()
     {
-        if (!preserve) Directory.Delete(DirectoryPath, recursive: true);
+        if (!preserve) TemporaryDirectory.Remove(DirectoryPath);
     }
 }

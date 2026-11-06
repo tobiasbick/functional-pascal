@@ -1,165 +1,90 @@
 # Debugging CLR programs
 
-FPAS emits portable PDBs, source positions, local scopes, closure names and async
-metadata for ordinary CLR debuggers. IDE debugging uses official VS Code with
-Microsoft's C# extension (`ms-dotnettools.csharp`).
+The FPAS debugger uses one CoreCLR core for [batch reports](batch-debugging.md)
+and a stdio DAP adapter. It supports .NET 10 targets on Windows x64 and Linux x64,
+including native Linux processes inside WSL2. Its native shim is packaged with
+the compiler. No external debugger installation or debug-time download is needed.
 
-## Launch in VS Code
+Build the executable separately. Keep its DLL, matching portable PDB, runtime
+configuration, dependencies and recorded sources available. Source checksums and
+module identities must match. Debugging does not build or restore a project.
+Use `fpas env --json` to inspect packaged debugger/runtime requirements.
 
-Build through the [project SDK](../../build/development.md#build-an-fpas-application)
-or [compiler CLI](../program-structure/cli.md), retaining matching DLL, PDB,
-runtime configuration, dependencies and source files. Use a Debug build for
-source stepping.
-
-Allow breakpoints in FPAS files in workspace settings:
-
-```json
-{ "debug.allowBreakpointsEverywhere": true }
+```sh
+fpas debug artifacts/Mandelbrot.dll --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
+fpas debug --protocol dap
 ```
 
-Add `.vscode/launch.json`, replacing Program.dll with the assembly name:
+Batch is the default and returns one detached JSON report. It captures the first
+requested breakpoint/exception, then terminates its owned target. Normal exit,
+inspection errors, deadlines and output limits have explicit report outcomes and
+exit codes. See the [batch contract](batch-debugging.md) for input, paths and bounds.
 
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "FPAS",
-      "type": "coreclr",
-      "request": "launch",
-      "program": "${workspaceFolder}/bin/Debug/net10.0/Program.dll",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    }
-  ]
-}
-```
+## Interactive DAP session
 
-Use the normal breakpoint, step, stack and variable controls. Program input
-belongs in the integrated terminal. Debug output supports Microsoft's default
-Just My Code/JIT settings; no custom debugger extension or C# file association is
-required. Automatic project discovery and a Pascal expression evaluator are
-separate features. Watch/evaluate uses the debugger's expression syntax.
+Start `fpas debug --protocol dap` through a stdio DAP client. Launch takes an
+absolute built DLL, optional absolute cwd and individual argv elements. Configure
+source breakpoints and exception filters before configurationDone; the core holds
+the target internally at entry until configuration is complete.
 
-## Values and stepping
+The core stops all CLR threads. Source steps operate on the actual stop thread;
+selecting another thread for a step returns an explicit error. Frame/value
+handles expire after resume. Each adapter owns one launch and waits for owned
+cleanup before acknowledging shutdown. EOF, cancellation and transport failure
+also clean up the worker and target. Attach and restart are outside this protocol.
 
-Records and union cases have source-oriented displays and typed property views
-with a Raw View. Distinct/subrange domains display their decoded Value. Nullable
-values and arrays use standard CLR views. Captured mutable values are reachable
-through `this` -> capture field -> Value; captures are not flat locals.
+Target stdin is closed in DAP. Batch `--stdin` can supply an explicit file;
+interactive console input and runInTerminal are unsupported.
 
-Async source stepping follows the continuation and exposes parameters/hoisted
-locals after suspension. Generated helpers and technical storage are hidden from
-ordinary stepping/expansion. Source display/proxy attributes take precedence.
-Inspection may execute getters, display code or evaluated methods. See
-[debug metadata](../../architecture/debug-information.md#debugger-attributes-and-value-views)
-for representation and scope limits.
+## Passive values and expressions
 
-## Agent debugging with MCP
+Scopes separate source locals/arguments, statics and raw CLR storage. The source
+view exposes supported records, unions, domains, captures and resumed async locals
+through stored metadata/fields. Cycles and unavailable or optimized-out values
+are explicit. Expansion, hover and watch never execute getters, constructors,
+methods, static initializers, ToString or debugger proxy/display code.
 
-`fpas debug --netcoredbg <absolute-executable-path>` hosts a stdio MCP server for agents.
-It uses the official [C# MCP SDK](https://github.com/modelcontextprotocol/csharp-sdk)
-and NetCoreDbg. The VS Code workflow above does not require NetCoreDbg.
+The [expression reference](../../architecture/debugger-expressions.md) defines
+supported literals, primitive operators, stored fields and array/string indexes.
+Unsupported expressions return an error while preserving the stopped context.
+The [core reference](../../architecture/debugger-core.md) owns value identities,
+source mapping, native supervision, stepping and exception policy.
 
-Prepare the external debugger:
+## DAP protocol and bounds
 
-1. Download a matching OS/architecture archive from the
-   [official NetCoreDbg releases](https://github.com/Samsung/netcoredbg/releases).
-   Extract the complete archive, keeping its dependencies and license files.
-2. Locate `netcoredbg` on Unix or `netcoredbg.exe` on Windows. On Unix, ensure
-   it is executable. Use its absolute path; FPAS neither bundles NetCoreDbg as a
-   NuGet package nor downloads it automatically.
-3. Make the program's .NET runtime available to the agent-host process and its
-   children. A nonstandard .NET installation may require PATH and DOTNET_ROOT.
-4. Build the FPAS program in Debug and retain the matching DLL, PDB,
-   runtimeconfig.json, dependencies and source files.
+The [adapter source reference](../../../src/Fpas.Debugging/Dap/README.md) pins the
+Microsoft DAP schema. Transport uses UTF-8 JSON with byte-counted Content-Length
+headers. It supports initialize, launch, configurationDone, source breakpoints,
+raised/unhandled exception filters, threads, stackTrace, scopes, variables,
+evaluate, exceptionInfo, continue, pause, next, stepIn, stepOut, cancel,
+disconnect and terminate. Configuration is completed at an internal entry hold
+before execution; `stopAtEntry` defaults to false.
 
-Register the command as a **stdio MCP server** in the
-agent host. For clients using an mcpServers configuration, the entry is:
+Launch takes absolute program/cwd paths and individual argv elements. Initialize
+negotiates path/file-URI form and zero/one-based UTF-16 source coordinates.
+Unsupported URI schemes, conditional/data/function breakpoints, logpoints,
+mutation and method evaluation are rejected. Only implemented capabilities are
+advertised. Output events preserve stream categories and expose discarded text.
 
-```json
-{
-  "mcpServers": {
-    "fpas-debug": {
-      "command": "fpas",
-      "args": ["debug", "--netcoredbg", "/path/to/netcoredbg/netcoredbg"]
-    }
-  }
-}
-```
+Headers are bounded at 8 KiB, message bodies and the complete queued output at
+1 MiB, pending requests at 64 with reserved control slots, and frame/value handles
+at 4096 each per stop. Thread catalogs have at most 1024 entries. Stack/value pages
+have at most 128 entries and retain the core's byte bound. An unpaged request
+that cannot fit returns a limit error; a shortened page never silently implies
+the end of a catalog. Paging clients receive known named/indexed totals.
 
-Replace the placeholder path; use the host's configuration syntax and ensure
-`fpas` is discoverable there (see [local deployment](../../build/development.md#deploy-the-local-release-compiler)).
-The host starts the server and discovers its tools;
-starting a process in a shell does not register tools with an agent.
+Startup has a 30-second deadline, ordinary operations 10 seconds and shutdown a
+5-second grace. An idle breakpoint has no deadline. Cancelling active native
+work ends its unresponsive worker; ordinary pause remains available while the
+target runs. Control events are not silently discarded under backpressure; an
+unserviceable transport fails and releases the launch.
 
-On Linux install `setsid` from util-linux. The wrapper establishes an owned
-process group; on Windows it uses a kill-on-close Job Object. NetCoreDbg
-3.2.0-1092 with .NET 10 is covered by Windows and Linux/WSL integration tests
-using the official MCP client. Native tests verify early parent exit, adapter
-crash and client-disconnect cleanup.
-
-Use the tools in this order:
-
-1. `debug_launch` with absolute `program` DLL and `cwd` paths, plus optional
-   `args` as individual strings. It stops at entry and returns `sessionId` and
-   `stopId`. It does not build the program. Keep the original sources unchanged;
-   DLL/PDB identity and source checksums are checked before launch.
-2. `debug_set_breakpoints` with `sessionId`, absolute `source` and positive
-   `lines`. An empty array removes that source's breakpoints.
-3. `debug_continue` or `debug_step` with the current IDs. Step kinds are `over`,
-   `into` and `out`. These acknowledge execution; use `debug_status` to observe
-   the next stop. Set `afterEvent` to the returned `event` cursor to wait for
-   changes, up to `waitMilliseconds=30000`. A running result is normal.
-4. At a stop, `debug_threads` and `debug_stack` expose threads and source frames.
-   Pass a returned `frameHandle` to `debug_variables` for scopes, then a returned
-   `variablesHandle` to expand values. Pages use `start` and `count` (default 32,
-   maximum 128). Every resume invalidates old handles and `stopId`.
-5. `debug_evaluate` accepts a current frame and NetCoreDbg expressions. It does
-   not implement Pascal expressions; getters/evaluation can execute target code.
-   User-unhandled exception stops include available backend exception details.
-6. `debug_output` returns stdout/stderr chunks with `sequence` numbers. Pass
-   `nextSequence` as `afterSequence` for the next page. The 1 MiB ring reports
-   expired cursors through `truncated`; pages contain at most 32768 UTF-8 bytes.
-7. `debug_pause` suspends a running program. `debug_stop` terminates the owned
-   target/backend and waits for cleanup; repeating it is safe. An ended session
-   retains output/status until the next launch, which creates a new `sessionId`.
-
-Results use MCP `structuredContent`; tool errors set `isError` with an `error`
-object containing `code` and `message`. Use current IDs after `stale_reference`;
-rebuild matching portable symbols for `missing_symbols`, or restore the exact
-source for `missing_source`. Backend timeout/failure ends the affected session.
-Request cancellation cannot undo target side effects. Idle stops do not expire.
-
-Each response also contains the same JSON in a text block for clients that do
-not expose structured results. Discovery supplies parameter descriptions,
-limits, output schemas for success/errors and hints about side effects.
-Status, threads, stack and retained output are read-only; value expansion and
-evaluation can execute target code.
-
-For a reproducible agent inspection exercise, use the
-[debugger evaluation](../../../tests/Fixtures/debugging/README.md). It provides a
-prepared stop, paged arrays, two source frames and categorized output with ten
-fixed answers. The regression checks those answers through MCP on both platforms.
-
-MCP traffic owns
-stdin/stdout; logs use stderr and program output comes through debug_output.
-Target stdin is not available in the initial scope. See the
-[tool contract](../../architecture/mcp-debugging.md) for state, errors and limits.
-Batch reports and a human CLI debugger are outside this command's scope.
-
-### Agent-host acceptance
-
-Native Windows acceptance with Codex CLI 0.166.0, .NET 10 and NetCoreDbg
-3.2.0-1092 verified the deployed launcher through actual agent tool calls:
-discovery, launch, source breakpoint, threads/stack, locals, expression evaluation,
-step over/out, captured stdout and stop. The final status was `exited`, with no
-remaining NetCoreDbg process. This verifies the CLI host, not the desktop app.
-Restart or reload an existing host session to discover newly registered tools.
+FPAS [portable debug metadata](../../architecture/debug-information.md) is also
+usable by other CLR debuggers. Their evaluation and display policies are owned
+by those tools; the passive policy above belongs to the FPAS debugger.
 
 ## See also
 
-- [Compiled programs](../program-structure/compiled-programs.md)
-- [Exceptions](../language/error-handling/exceptions.md)
-- [Portable symbol implementation](../../architecture/debug-information.md)
-- [.NET debugging tools](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/)
+- [Batch debugging](batch-debugging.md)
+- [Debugger core](../../architecture/debugger-core.md)
+- [Debug information](../../architecture/debug-information.md)

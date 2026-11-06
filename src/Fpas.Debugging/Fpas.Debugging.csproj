@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" />
-    <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Diagnostics.DbgShim.win-x64" />
+    <PackageReference Include="Microsoft.Diagnostics.DbgShim.linux-x64" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Native/THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" TargetPath="debugger-notices.txt" />
   </ItemGroup>
 </Project>

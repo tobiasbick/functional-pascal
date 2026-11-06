@@ -13,6 +13,43 @@ local names and lifetimes. PE CodeView and checksum entries identify the matchin
 portable symbols. Identical source/reference/options produce deterministic
 assembly and PDB bytes.
 
+The assembly MVID derives from the serialized PE's emitted code, metadata and
+symbol linkage. Its reserved GUID slot is zero while hashing and filled only
+afterward. Changed inlined reference constants or other changed emission must
+therefore change the module identity even when FPAS source and portable PDB
+bytes remain equal. The own debugger uses that identity to reject a different
+assembly substituted between preparation and runtime module loading.
+
+A local's lexical debug interval starts after its initializer stores the value
+and ends at its enclosing block's end. Before a shadowing declaration initializes,
+the outer binding remains visible. Async hoisted intervals use the same starts.
+
+## Passive source storage
+
+FPAS portable PDBs identify source storage with custom debug information kind
+`4C590C68-DC5F-4A9D-89A5-B8CE5B937137`. Each blob contains a little-endian UInt32
+version (`1`), a byte flag (`0` direct value, `1` compiler StrongBox cell), and
+a nonempty serialized source-name string. No trailing data is present.
+
+The parent is a LocalVariable for a mutable captured local, or a FieldDefinition
+for a closure capture or source-hoisted async local. Direct closure/async fields
+retain flag zero. LocalVariable entries use the ordinary lexical interval;
+async fields use the standard hoisted scope at their existing slot ordinal.
+Field tokens identify storage even when generated names need collision suffixes.
+
+The own debugger uses this mapping to expose capture source names and the stored
+cell Value without running code. A user-supplied StrongBox without a cell flag
+remains an ordinary object. A raw view retains the actual closure/cell storage.
+Readers reject unknown versions, invalid flags, duplicates and malformed blobs;
+they do not infer a source cell merely from its CLR type name. Names are bounded
+at 8192 UTF-16 code units. This is private debug metadata, with no new CLR public
+API, source syntax or runtime dependency.
+
+Visible sequence-point ranges on one source line end no later than the next
+point's starting column. This keeps different statements on that line distinct
+for column breakpoints. A while-loop backedge targets the condition's visible
+point, so repeated conditions remain source stops rather than hidden plumbing.
+
 The CLI canonicalizes file source paths before compilation; relative command-line
 arguments therefore produce absolute PDB documents that debuggers can resolve
 from a different launch directory. Stdin keeps its virtual name. Compiler API
@@ -38,10 +75,10 @@ the lexical block's emitted interval; internal/non-hoisted storage has an empty
 scope. See [async lowering](async-and-cleanup.md#state-machines) for representation
 and enclosing-interval limits.
 
-IDE debugging uses [Microsoft's VS Code C# debugger](../pascal/tools/debugging.md).
+IDE debugging uses the [FPAS DAP adapter](../pascal/tools/debugging.md).
 The [coverage map](../../tests/coverage.md#language-and-metadata) owns symbol,
 interop and runtime regression coverage. The
-[MCP agent interface](mcp-debugging.md) consumes the same symbols.
+[batch frontend](../pascal/tools/batch-debugging.md) consumes the same symbols.
 
 ## Output lifetime
 

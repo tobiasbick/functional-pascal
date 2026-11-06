@@ -74,7 +74,8 @@ internal sealed partial class ReferenceCatalog
         public TypeSymbol GetGenericMethodParameter(object? context, int index) => types.GetGenericMethodParameter(context, index);
         public TypeSymbol GetByReferenceType(TypeSymbol type) => types.GetByReferenceType(type);
         public TypeSymbol GetArrayType(TypeSymbol type, ArrayShape shape)
-            => shape.Rank == 1 ? Reject("non-vector rank-one CLR arrays") : types.GetArrayType(type, shape);
+            => shape.Rank == 1 ? Reject("non-vector rank-one CLR arrays") : !SignatureTypes.CanonicalRectangularArray(shape)
+                ? Reject("noncanonical rectangular CLR array signature bounds or sizes") : types.GetArrayType(type, shape);
         public TypeSymbol GetSZArrayType(TypeSymbol type) => types.GetSZArrayType(type);
         public TypeSymbol GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte kind)
         {

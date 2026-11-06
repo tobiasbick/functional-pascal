@@ -71,6 +71,13 @@ API or a new type. Importers validate the version, exact helper name, private
 static visibility, zero parameters, and publicly accessible target signature.
 Private aliases need no emitted contract.
 
+Rectangular array signatures use rank 2..32, no fixed sizes and one explicit zero
+lower bound per dimension, matching ordinary C# signatures. Member references
+retain that form so actual .NET methods resolve. Other encoded bounds/sizes,
+including omitted rectangular bounds, are rejected as unsupported during import
+rather than silently rewritten. These signature bounds do not constrain an
+array instance's runtime lower bounds.
+
 ## Records and unions
 
 Record properties use their exact source field names and public/private visibility;
@@ -309,6 +316,10 @@ generated references use the same selected field identity. This supports
 ordinary debugger expansion without changing capture types, shared-cell
 identity, normal execution, or public source declarations. Mutable debug views
 read the shared cell's current value rather than a copied local snapshot.
+Portable PDB source-storage entries identify direct captures and compiler cells
+by field/local identity, with their original source names. Passive readers use
+that mapping rather than unwrapping user StrongBox values by type-name heuristics.
+See the [storage format](../architecture/debug-information.md#passive-source-storage).
 
 Private async state machines distinguish source-hoisted fields from synthesized
 temporaries. Source display names are unique within the machine, including
@@ -327,6 +338,12 @@ signatures, introduce object erasure, or add a runtime dispatch mechanism.
 
 ## Debugger metadata
 
+Module identity is derived from serialized PE content with the MVID slot zeroed
+during hashing. It identifies emitted code/metadata and symbol linkage, including
+reference-driven changes, rather than only source text. Repeated identical
+emission remains byte-identical. See
+[portable identity](../architecture/debug-information.md#source-and-method-identity).
+
 Generated debug presentation uses standard .NET DebuggerDisplay,
 DebuggerTypeProxy, DebuggerBrowsable and generated-code/stepping attributes.
 Record/case proxies are private nested `<DebugView>` types with typed getters;
@@ -337,6 +354,12 @@ override the generated defaults. These attributes are not FPAS reflection
 markers and do not require an F# runtime. See
 [debug information](../architecture/debug-information.md#debugger-attributes-and-value-views)
 for the emitted attributes and stepping boundaries.
+
+The own debugger's passive source views read the versioned record, union-case
+and domain metadata and actual stored fields. They do not invoke generated
+proxies, getters, Tag, display attributes or user methods. Raw field expansion
+remains available independently of an optional source-presentation error. See
+the [debugger value contract](../architecture/debugger-core.md#passive-stored-values).
 
 ## Small language support library
 

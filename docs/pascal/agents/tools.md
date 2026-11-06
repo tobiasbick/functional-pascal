@@ -134,12 +134,13 @@ metadata. Preserve assembly/PDB pairs and source files when debugging generated
 assemblies. The [debug information reference](../../architecture/debug-information.md)
 describes supported symbols and stepping metadata.
 The [debugging guide](../tools/debugging.md) describes IDE debugging, CLR value
-views and external debugger prerequisites. `fpas debug --netcoredbg <absolute-path>`
-hosts agent tools over stdio MCP using the official C# SDK and the separately
-installed NetCoreDbg. Register it in the MCP host; a shell invocation alone does
-not add tools. Launch an already built DLL, use current sessionId/stopId for
-inspection and stepping, read target output through debug_output, and stop with
-debug_stop. Follow the guide for tool order, output cursors and platform acceptance.
+views and packaged debugger requirements. Use `fpas debug Program.dll --break
+main.fpas:12 --print Value` for one bounded detached JSON report. The command
+captures the first requested stop and terminates its owned target. It never
+builds/restores or executes getters/methods during inspection. `--stdin file`
+supplies explicit target input; the default is EOF. See the
+[batch contract](../tools/batch-debugging.md) for limits, paths and exit codes.
+Editors use `fpas debug --protocol dap` with the same core and passive evaluator.
 
 Investigate an actual program with a suitable .NET debugger/profiler before
 writing external samplers or benchmark variants. Keep execution bounded and

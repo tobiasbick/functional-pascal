@@ -10,7 +10,6 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Fpas.Compiler.Emission.Metadata;
 
@@ -40,13 +39,8 @@ internal sealed partial class AssemblyEmitter
         sourceAssemblyName = assemblyName;
         layout = new(program, prepared.AsyncPlans);
         if (emitDebug) debug = new(sources);
-        using var sourceHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        sourceHash.AppendData(Encoding.UTF8.GetBytes(assemblyName));
-        sourceHash.AppendData([(byte)(emitDebug ? 1 : 0), (byte)(optimize ? 1 : 0)]);
-        foreach (var text in sources)
-            sourceHash.AppendData(SHA256.HashData(Encoding.UTF8.GetBytes(text.Text)));
-        var mvid = new Guid(sourceHash.GetHashAndReset()[..16]);
-        metadata.AddModule(0, metadata.GetOrAddString(assemblyName + ".dll"), metadata.GetOrAddGuid(mvid), default, default);
+        var mvid = metadata.ReserveGuid(); mvid.CreateWriter().WriteGuid(Guid.Empty);
+        metadata.AddModule(0, metadata.GetOrAddString(assemblyName + ".dll"), mvid.Handle, default, default);
         metadata.AddAssembly(metadata.GetOrAddString(assemblyName), new Version(1, 0, 0, 0), default, default, 0, AssemblyHashAlgorithm.None);
         AddDebuggableAttribute(optimize);
         var objectType = metadata.AddTypeReference(Reference(program.Runtime), metadata.GetOrAddString("System"), metadata.GetOrAddString("Object"));
@@ -117,7 +111,7 @@ internal sealed partial class AssemblyEmitter
             deterministicIdProvider: HashContent);
         var image = new BlobBuilder();
         pe.Serialize(image);
-        return new(image.ToArray(), program.IsExecutable ? """
+        return new(ContentIdentifiedImage(image, mvid.Handle), program.IsExecutable ? """
             {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}
             """ + "\n" : null, symbols?.Image);
     }

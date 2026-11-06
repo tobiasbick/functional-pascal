@@ -8,7 +8,7 @@ namespace Fpas.Cli.Toolchain;
 
 internal static class EnvironmentInspection
 {
-    internal static async Task<EnvironmentReport> Read(string directory, string? debugger, CancellationToken token)
+    internal static async Task<EnvironmentReport> Read(string directory, CancellationToken token)
     {
         var issues = new List<EnvironmentIssue>();
         var runtime = new RuntimeInstallation(RuntimeInformation.FrameworkDescription,
@@ -23,11 +23,12 @@ internal static class EnvironmentInspection
         catch (Exception exception) when (Recoverable(exception)) { issues.Add(new("error", "compiler_inspection_failed", exception.Message)); }
         var (dotnet, truncated) = await DotnetInspection.Read(directory, issues, token);
         var (cache, cacheTruncated) = await InstalledSdkInspection.Read(dotnet.GlobalPackages, compiler, issues, token);
-        var backend = await DebuggerInspection.Read(directory, debugger, issues, token);
+        var debugger = await Fpas.Debugging.DebuggerDeployment.Inspect(token);
+        if (debugger.Status != "available") issues.Add(new("error", "debugger_unavailable", "The packaged debugger shim is unavailable for this platform."));
         token.ThrowIfCancellationRequested();
         var success = !issues.Any(issue => issue.Severity == "error");
         return new(success, success ? "ok" : "issues", directory)
-        { Fpas = compiler, Runtime = runtime, Dotnet = dotnet, SdkCache = cache, Netcoredbg = backend, Issues = issues.AsReadOnly(), Truncated = truncated || cacheTruncated };
+        { Fpas = compiler, Runtime = runtime, Dotnet = dotnet, SdkCache = cache, Debugger = debugger, Issues = issues.AsReadOnly(), Truncated = truncated || cacheTruncated };
     }
 
     private static async Task<ManagedInstallation> Managed(Assembly assembly, CancellationToken token)

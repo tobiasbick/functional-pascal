@@ -52,7 +52,7 @@ the copied Markdown tree exactly matches the sources, including deleted pages.
 
 Toolchain.EnvironmentCommandTests exercises actual .NET selection and a packaged
 CLI, expected SDK hashes in a large cache, stale/missing files, broken hosts and
-global.json, bounded argument errors and actual NetCoreDbg discovery. An FPAS
+global.json, bounded argument errors and passive packaged-debugger inspection. An FPAS
 version-probe fixture verifies deadline and console-cancellation cleanup on
 Windows and Linux before test-harness cleanup.
 
@@ -76,81 +76,104 @@ references, dispatch uncertainty, contract phases and protocol exclusions.
 CallQueryTests verifies source/DLL identities, anonymous regions, constructor/
 accessor selection, incoming scope, availability and paging. QueryCliTests also
 executes the CLI extracted from the SDK package. Full Debug and focused Release
-acceptance runs on Windows and Linux/WSL, with actual NetCoreDbg for Debug.
+acceptance runs on Windows and Linux/WSL.
 Both published launchers pass callees/callers against a fresh matching SDK
 consumer after dist; an FPAS verifier checks the JSON reports. See the
 [deployment workflow](../docs/build/development.md#deploy-the-local-release-compiler).
 
-## NetCoreDbg integration tests
+## Own CoreCLR connection tests
 
-[NetCoreDbgTests](Fpas.IntegrationTests/Debugging/NetCoreDbgTests.cs) drive a real,
-unmodified NetCoreDbg process over stdio DAP against newly compiled FPAS/PDB
-fixtures. They cover source breakpoints, parameters/locals, next, true async
-suspension, handled/user-unhandled exceptions and normal disconnect. Named and
-lambda captures in a generic referenced library verify live mutable cells;
-another fixture checks shadowed captures with distinct stored names.
-Further fixtures check record/union/domain/nullable/array/generic values,
-escaped generic async routines across two incomplete awaits, shared sibling
-captures, source step-in, hidden compiler temporaries, and hoisted block scopes
-with colliding source names.
-Launch/lifecycle fixtures also verify pending-to-bound breakpoints without an
-entry stop, relative CLI sources with a separate runtime cwd, UTF-8 arguments,
-categorized stdout/stderr, source step-out, pause of running user code and a
-failed launch followed by disconnect.
+`NativeCoreTests` uses the packaged DbgShim directly.
+It compiles real FPAS DLL/PDB/source sets and verifies native source breakpoints,
+local reads, stepping, exit, stopped-target cleanup, invalid cwd, a host that
+exits before CLR startup, and cancellation with a registered suspended target.
+It checks process exit and exclusive DLL/PDB access before fixture cleanup.
+The [native reference](../src/Fpas.Debugging/Native/README.md) owns dependency
+versions, ABI sources and lifetime rules.
 
-Set `FPAS_NETCOREDBG_PATH` to the executable from the tested NetCoreDbg release
-3.2.0-1092. No debugger is downloaded by the tests. Without the variable, xUnit
-reports these external-backend tests as skipped, not passed; an invalid supplied
-path or failed protocol assertion fails the test. Both platform acceptances need
-an actual configured-backend run.
+`CoreSessionTests` exercises the supervised production host: fresh/stale stop
+identities, resume/pause races, startup cancellation, worker crash/hang, native
+callback failure, actual exit codes/signals, UTF-8 output bounds and unrelated
+process survival. The [session reference](../docs/architecture/debugger-core.md)
+owns the implemented supervision contract. Both suites run in Debug and Release
+tool builds on Windows and native WSL Linux.
 
-After building the tests:
+`SymbolContextTests` adds recursive and shadowed frame bindings, library frames
+with equal source basenames, native path-case rules, source/PDB preflight and
+replacement of an already loaded DLL/PDB. Run its filter to check the symbol and
+stack interface independently of the later product frontends.
 
-```sh
-dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~NetCoreDbgTests' --logger 'console;verbosity=normal' --logger 'trx;LogFileName=netcoredbg.trx' --results-directory .temp-data/debugger/test-results
-```
+`SourceControlTests` covers the private entry stop, source breakpoint replacement,
+duplicates, rejection and module load/unload, changes during execution and native
+into/over/out. The fixtures assert recursive frame depths/values, same-line
+columns, repeated loop conditions, step-through behavior and interrupted steps.
+Foreign bad PDBs and repeated loads of the main assembly have real regressions.
 
-Optionally set `FPAS_DEBUGGER_TEST_OUTPUT` to an absolute directory under
-`.temp-data/debugger/` to retain isolated fixture sources, assemblies, PDBs and
-DAP traces. Otherwise fixtures are deleted. The serial test client has bounded
-messages/output and a 45-second scenario deadline. It tracks the launch-owned
-target using the DAP process event and verifies normal disconnect/exit. It does
-not establish crash/hang recovery for an interactive product session.
+`ExceptionInspectionTests` checks policies, passive stored messages and exception
+stacks with explicit clipping; hostile CLR overrides detect accidental execution.
+`AsyncControlTests` checks real and already-completed awaits, a concurrent instance,
+different CLR threads, stable logical IDs, hoisted int32 values, nested generic
+entry, repeated suspension, Task/ValueTask/ConfigureAwait variants and pending-step
+pause/stop/fault/cancellation cleanup. Logical step-out covers unique, missing and
+multiple callers, duplicate assembly loads, optimized targets and unchanged
+event revisions after an operation is rejected before execution.
 
-These are regression tests, not a product frontend or batch debugger.
+`ScalarInspectionTests` covers integer widths, floating special values, decimal
+scale/range, enum storage, UTF-16/surrogates and bounded binding pages. Fully
+optimized first-JIT cases disable tiering in the target configuration, verify
+missing/current locals, assert file effects occur after their source stops and
+reject missing mappings or an excessive binding prefix without losing the session.
 
-## MCP agent debugger tests
+`CompoundInspectionTests` covers passive generic/boxed objects, array ranks and
+actual lower bounds, aliases, cycles, expired references and expansion limits.
+Sentinel files detect accidental getter, proxy or display execution.
+`StaticInspectionTests` checks selected generic/thread contexts, passive reads
+of uninitialized types, literal/runtime fields and expired static-value paths.
+`CaptureInspectionTests` covers source/raw captures, marked mutable cells,
+ordinary/async receivers and lexical shadowing. Compiler metadata tests check
+the emitted storage contract independently of the debugger reader.
+`SourceProjectionTests` checks record/union/domain source and raw views, decoded
+range extrema/defaults and isolation of malformed optional presentation metadata.
+`ExpressionInspectionTests` checks passive FPAS operations, exact scalar rules,
+short-circuit type checking, stored indexes, AST/read bounds and expired frames.
+`ModuleContentIdentityTests` changes referenced constants while preserving the
+FPAS source/PDB and checks distinct module IDs, deterministic repeated bytes
+and rejection of a real file replacement after preflight.
+`RectangularInteropTests` checks canonical metadata and real calls in both C#
+interop directions, as well as diagnostics for unsupported signature shapes.
 
-`McpDebugTests` uses the official MCP client over real pipes to exercise
-`fpas debug --netcoredbg <path>` against the same external backend. Set
-`FPAS_NETCOREDBG_PATH` as above. It covers discovery/schemas, source controls,
-all step kinds, live captures/generics/async values, evaluation, exceptions,
-paging, stale/invalid inputs, failed launch/relaunch and concurrent status/control.
-An observed server verifies actual stdin EOF, clean server exit and target removal.
-An additional backend test verifies native target ownership before killing
-NetCoreDbg alone, then checks the failed state and orphan removal on Windows and Linux.
-
-`McpInfrastructureTests` verifies UTF-8 output retention/cursors without an external
-debugger. Linux-only disposable adapter fixtures verify malformed frames,
-deadlines and concurrent cleanup of pending requests. `OwnedProcessTests` uses
-an FPAS parent/child fixture on both platforms to verify cleanup after early
-parent exit, Unicode/quoted arguments and environment overrides. Windows tests
-verify that job termination joins every process; temporary-directory cleanup
-allows a bounded delay for image-file locks after process exit. SDK packaging
-tests verify managed dependencies without bundling NetCoreDbg. Native Windows
-Codex CLI [agent-host acceptance](../docs/pascal/tools/debugging.md#agent-host-acceptance)
-also verifies actual agent tool calls through the deployed launcher.
-
-`McpContractTests` checks live discovery, parameter constraints, effect hints,
-initialization instructions and machine-readable text fallback without launching
-a backend. A live-target regression checks success fallback as well.
-[McpEvaluationTests](Fpas.IntegrationTests/Debugging/McpEvaluationTests.cs) verifies
-the ten fixed [inspection questions](Fixtures/debugging/README.md) through paged
-MCP values, two source frames and categorized target output.
+After building, run with Debug or Release on native Windows and native WSL Linux:
 
 ```sh
-dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~McpDebugTests|FullyQualifiedName~McpInfrastructureTests' --logger 'trx;LogFileName=mcp.trx' --results-directory .temp-data/debugger/test-results
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~NativeCoreTests|FullyQualifiedName~CoreSessionTests|FullyQualifiedName~SymbolContextTests|FullyQualifiedName~SourceControlTests|FullyQualifiedName~ExceptionInspectionTests|FullyQualifiedName~AsyncControlTests|FullyQualifiedName~ScalarInspectionTests|FullyQualifiedName~CompoundInspectionTests|FullyQualifiedName~StaticInspectionTests|FullyQualifiedName~CaptureInspectionTests|FullyQualifiedName~SourceProjectionTests|FullyQualifiedName~ExpressionInspectionTests|FullyQualifiedName~ModuleContentIdentityTests|FullyQualifiedName~RectangularInteropTests' --logger 'trx;LogFileName=native-core.trx' --results-directory .temp-data/own-debugger/results
 ```
+
+## Batch and DAP frontends
+
+`TargetIoTests` checks exact argv elements, explicit/default stdin, blocked input,
+raw-byte output limits, incremental UTF-8 decoding and owned shutdown.
+`BatchDebuggerTests` invokes the real CLI and parses one complete detached report:
+source-stop effects, exact scalars, independent errors, missed breakpoints,
+exceptions, explicit input, Unicode/quoted paths, deadlines, output and value
+budgets. It checks that no session/frame/value handles escape the report.
+
+`DapDebuggerTests` drives product stdio through an independent client. It checks
+split framing, configuration order, path/coordinate negotiation, scopes, passive
+expressions, pages and stale handles, source stepping, exception information,
+malformed/oversized messages and output backpressure. A suspended real worker
+proves shutdown remains available at the ordinary request limit. Actual Windows
+ConPTY Ctrl+C, native Linux SIGINT and client EOF verify worker/target exit before
+harness cleanup. No external debugger or optional environment switch is required.
+
+```sh
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~BatchDebuggerTests|FullyQualifiedName~DapDebuggerTests|FullyQualifiedName~TargetIoTests' --logger 'trx;LogFileName=frontends.trx' --results-directory .temp-data/own-debugger/results
+```
+
+Run the same suites in Release on native Windows and native WSL Linux. SDK tests
+verify both native RID assets and notices at their exact deployed paths, absence
+of debugger hosting dependencies and working packaged help. Editor setup belongs
+in the [debugging guide](../docs/pascal/tools/debugging.md); remaining acceptance
+work belongs in the [open plan](../docs/future/debugger-acceptance-plan.md).
 
 ## Documentation examples
 

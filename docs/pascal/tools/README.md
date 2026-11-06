@@ -14,6 +14,7 @@ tools supported by the current compiler and .NET environment.
 | [Native .NET tests](testing.md) | xUnit, MSTest, NUnit, test projects, discovery and structured results |
 | [Documentation examples](documentation-examples.md) | Complete sources, companion projects, fragments, and checks |
 | [Debugging](debugging.md) | Source files, portable PDBs, closures, and async state machines |
+| [Batch debugging](batch-debugging.md) | One-shot stops, detached JSON observations, explicit input and bounded execution |
 | [Profiling](profiling.md) | Actual CLR execution, suitable .NET tools, and controlled measurements |
 | [Development workflow](../../build/development.md) | Build/test commands and local SDK bootstrap |
 

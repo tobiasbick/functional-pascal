@@ -19,6 +19,7 @@ internal static class EnvironmentProbe
             uses System.Environment as Env, System.IO.File as File, System.Threading.Thread as Thread;
 
             begin
+              if args.Length <> 1 or args[0] <> '--version' then return; end if;
               const Ready: string := Env.GetEnvironmentVariable('FPAS_ENV_PROBE_READY') ?? 'ready.pid';
               File.WriteAllText(Ready + '.tmp', Env.ProcessId.ToString());
               File.Move(Ready + '.tmp', Ready);

@@ -28,7 +28,9 @@
     </PropertyGroup>
     <ItemGroup>
       <_FpasCompilerManagedAsset Include="$(_FpasCompilerDirectory)**/*.dll" />
-      <None Include="@(_FpasCompilerManagedAsset)" Pack="true" PackagePath="tools/compiler/%(_FpasCompilerManagedAsset.RecursiveDir)" />
+      <None Include="@(_FpasCompilerManagedAsset)" Pack="true" PackagePath="tools/compiler/%(_FpasCompilerManagedAsset.RecursiveDir)%(_FpasCompilerManagedAsset.Filename)%(_FpasCompilerManagedAsset.Extension)" />
+      <_FpasCompilerNativeAsset Include="$(_FpasCompilerDirectory)**/*.so;$(_FpasCompilerDirectory)debugger-notices.txt" />
+      <None Include="@(_FpasCompilerNativeAsset)" Pack="true" PackagePath="tools/compiler/%(_FpasCompilerNativeAsset.RecursiveDir)%(_FpasCompilerNativeAsset.Filename)%(_FpasCompilerNativeAsset.Extension)" />
       <None Include="$(_FpasCompilerDirectory)Fpas.Cli.deps.json;$(_FpasCompilerDirectory)Fpas.Cli.runtimeconfig.json" Pack="true" PackagePath="tools/compiler/" />
       <None Include="@(_FpasTaskAssembly)" Pack="true" PackagePath="tools/tasks/" />
     </ItemGroup>

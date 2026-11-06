@@ -47,6 +47,6 @@ Linux with the corresponding tooling work.
 
 ## Scope
 
-LSP and editor workflows belong in [editor gaps](editor-gap.md). Batch debugging,
-command-file runners and alternate public debugger transports are excluded.
+LSP and editor workflows belong in [editor gaps](editor-gap.md). The
+[debugging reference](../pascal/tools/debugging.md) owns DAP and batch contracts.
 Clean/restore/publish wrappers and a profiling command remain unselected.

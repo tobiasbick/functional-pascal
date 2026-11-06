@@ -71,7 +71,21 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Async faults, cancellation, references, contexts, disposal | AsyncDiagnosticsTests | AsyncExecutionTests, MsBuildTests.Async |
 | Portable PDBs, sequence points, scopes, closures, async metadata | PortableDebugInfoTests, AsyncDebugInfoTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
 | Standard debugger attributes, typed views and symbol/JIT policy | DebuggerAttributeTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
-| Real NetCoreDbg source next/step-in, values, captures, resumed async, exceptions and disconnect | CallableMetadataTests, AsyncDebugInfoTests | NetCoreDbgTests (explicit external backend; see tests README) |
+| Direct native CoreCLR launch/callbacks, source breakpoint/local/step, early-host failure and registered-start cancellation | PortableDebugInfoTests | NativeCoreTests (Windows/WSL, Debug/Release) |
+| Supervised debugger session/stop identities, control races, bounded output, native/worker failures, actual exit status and owned cleanup | NativeCoreTests | CoreSessionTests (Windows/WSL, Debug/Release) |
+| Own debugger source/PDB and loaded-module identities, native path cases, recursion/shadowing, library frames, paging and stale frames | PortableDebugInfoTests | SymbolContextTests (Windows/WSL, Debug/Release) |
+| Own debugger entry/configuration, source breakpoint/module lifecycle and synchronous source stepping | PortableDebugInfoTests, LoopTests | SourceControlTests (Windows/WSL, Debug/Release) |
+| Own debugger exception policies, stored messages, throw/current stacks, passive overrides and omission bounds | PortableDebugInfoTests | ExceptionInspectionTests (Windows/WSL, Debug/Release) |
+| Own debugger await families, nested/generic entry, repeated suspension, real thread/instance identity, logical callers, optimized mappings and step cleanup | AsyncDebugInfoTests | AsyncControlTests (Windows/WSL, Debug/Release) |
+| Own debugger passive scalar/decimal/enum data, UTF-16, paged bindings, fully optimized first-JIT maps and per-breakpoint limits | DebuggerAttributeTests | ScalarInspectionTests (Windows/WSL, Debug/Release) |
+| Own debugger raw stored objects, generic identities, boxed values, actual array bounds, cycles and bounded stale references | — | CompoundInspectionTests (Windows/WSL, Debug/Release) |
+| Own debugger static fields, generic/thread context, metadata literals and passive uninitialized types | — | StaticInspectionTests (Windows/WSL, Debug/Release) |
+| Source capture metadata, marked cells, ordinary/async closures, lexical initialization and shadowing | CaptureStorageMetadataTests | CaptureInspectionTests (Windows/WSL, Debug/Release) |
+| Passive record/union/domain source views, exact decoded/default ranges and independent invalid presentation | — | SourceProjectionTests (Windows/WSL, Debug/Release) |
+| Passive FPAS expressions, scalar promotion, stored indexes, short-circuit type checks, resource bounds and expired frames | — | ExpressionInspectionTests (Windows/WSL, Debug/Release) |
+| Content-derived module IDs for reference-driven emission, deterministic identical output and real preflight/file replacement | — | ModuleContentIdentityTests (Windows/WSL, Debug/Release) |
+| Canonical rectangular CLR array signatures and calls in both C# interop directions; rejected noncanonical bounds/sizes | — | RectangularInteropTests (Windows/WSL, Debug/Release) |
+| Own CLR source control, values, captures, async, exceptions, batch and DAP | CallableMetadataTests, AsyncDebugInfoTests | NativeCoreTests, CoreSessionTests, AsyncControlTests, BatchDebuggerTests, DapDebuggerTests |
 | Comments, XML IDs, public boundaries, warning policy | DocumentationTests | DocumentationCliTests, MsBuildTests.Documentation/DocumentationIds |
 | Global fields, visibility, initialization, nullable metadata | GlobalTests | GlobalExecutionTests, MsBuildTests.Globals |
 | Local recursion, capture initialization, generic/async environments | NestedRoutineTests | NestedRoutineExecutionTests, MsBuildTests.NestedRoutines |
@@ -140,30 +154,7 @@ values, struct method-group snapshots, conservative nullable facts, and prematur
 lexical environment construction. Generic checks inspect TypeSpec/MethodSpec and
 !n/!!n signatures, constraints, nullable annotations, and cross-assembly consumers.
 
-The optional real-backend debugger suite additionally checks source stops before
-execution, updated locals after next, live captured cells, generic library
-captures, shadowed names and an actually suspended async continuation. It checks
-ordinary aggregate/domain/nullable/array values, two incomplete awaits with
-shared generic captures, hidden compiler temporaries and lexical hoisted scopes.
-Metadata checks independently compare hoisted ranges with inside/outside source
-sequence points and retain deterministic assembly/PDB identity. It checks
-ordinary exceptions/output and graceful disconnect of the launch-owned target.
-Launch checks include pending breakpoint events without an entry stop, relative
-CLI paths with a separate working directory, UTF-8 arguments, separate output
-categories, source step-out, pause and failed-launch shutdown. CLI symbol tests
-also verify absolute source documents and runtime exception paths independently.
-MCP tests also kill the real adapter and verify owned target removal on both
-platforms. Shared process tests cover a child outliving its original parent,
-argument/environment fidelity and joined cleanup. Linux fixtures independently
-cover malformed/hung adapters and concurrent disposal. Backend
-selection and explicit skips are documented in the
-[test instructions](README.md#netcoredbg-integration-tests).
-
-MCP discovery checks parameter descriptions/bounds, effect annotations, session
-instructions and success/error schemas. Text-only clients receive the same JSON
-as structured clients. The [debugger evaluation](Fixtures/debugging/README.md)
-verifies ten stable answers from a real paused FPAS order-processing fixture
-using paged arrays, caller/callee locals and stdout/stderr categories.
+BatchDebuggerTests verifies detached one-shot reports, exact observations, input, output and limits. DapDebuggerTests drives the product adapter through an independent framed client: configuration, control, values, stale handles, cancellation, EOF and backpressure. Required native cases run on Windows and Linux without opt-in backend settings. See [frontend tests](README.md#batch-and-dap-frontends).
 
 Aggregate checks cover constructor/default order, private state, copy helpers,
 equality/hash behavior, recursive generic unions, and corrupted versioned
@@ -255,11 +246,7 @@ checkout/cache, from a different working directory. It verifies a matching
 launcher/SDK through find/inspect, development-version cache refresh, preservation
 of other package versions and unrelated deployed files, and first-run bootstrap.
 
-SDK packaging also verifies the MCP debugger and all managed tool dependencies
-are present, packaged debug help runs, and NetCoreDbg is not bundled. The MCP
-regression suite uses the official SDK client against real FPAS targets; see
-[debugger tests](README.md#mcp-agent-debugger-tests) for source, value, async,
-error and process-lifetime coverage and remaining agent-host acceptance.
+SDK packaging verifies the own debugger, exact native RID asset paths and licenses, managed dependencies and working packaged help. Batch and DAP use the same passive native core; see [debugger tests](README.md#batch-and-dap-frontends).
 
 StandaloneSdkGuideTests materializes the exact project/configuration/source blocks
 from the [standalone SDK walkthrough](../docs/build/standalone-sdk.md) outside the

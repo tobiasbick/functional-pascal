@@ -9,7 +9,7 @@ using Fpas.Compiler.Syntax;
 
 namespace Fpas.Compiler.Emission.Debugging;
 
-internal sealed class PortableDebugInfo
+internal sealed partial class PortableDebugInfo
 {
     private readonly MetadataBuilder metadata = new();
     private readonly Dictionary<string, DocumentHandle> documents = new(StringComparer.Ordinal);
@@ -41,6 +41,8 @@ internal sealed class PortableDebugInfo
         blob.WriteCompressedInteger(MetadataTokens.GetRowNumber(signature));
         var previousOffset = 0; var previousLine = 0; var previousColumn = 0;
         var first = true;
+        var columns = points.Where(point => point.Location is not null).Select(point => point.Location!)
+            .GroupBy(location => (location.Path, location.Line)).ToDictionary(group => group.Key, group => group.Select(location => location.Column).Distinct().Order().ToArray());
         foreach (var (offset, location) in points)
         {
             if (offset >= length) continue;
@@ -51,7 +53,10 @@ internal sealed class PortableDebugInfo
                 blob.WriteCompressedInteger(0); blob.WriteCompressedInteger(0);
                 continue;
             }
-            blob.WriteCompressedInteger(0); blob.WriteCompressedInteger(Math.Max(1, location.Length));
+            var nextColumn = columns[(location.Path, location.Line)].FirstOrDefault(column => column > location.Column);
+            var width = Math.Max(1, location.Length);
+            if (nextColumn != 0) width = Math.Min(width, nextColumn - location.Column);
+            blob.WriteCompressedInteger(0); blob.WriteCompressedInteger(width);
             if (previousLine == 0) { blob.WriteCompressedInteger(location.Line); blob.WriteCompressedInteger(location.Column); }
             else { blob.WriteCompressedSignedInteger(location.Line - previousLine); blob.WriteCompressedSignedInteger(location.Column - previousColumn); }
             previousLine = location.Line; previousColumn = location.Column;
@@ -79,7 +84,10 @@ internal sealed class PortableDebugInfo
         {
             var first = MetadataTokens.LocalVariableHandle(metadata.GetRowCount(TableIndex.LocalVariable) + 1);
             foreach (var local in scope.Locals.Where(local => !local.Name.StartsWith('<')))
-                metadata.AddLocalVariable(LocalVariableAttributes.None, local.Slot, metadata.GetOrAddString(local.Name));
+            {
+                var variable = metadata.AddLocalVariable(LocalVariableAttributes.None, local.Slot, metadata.GetOrAddString(local.Name));
+                if (local.Captured && local.Mutable) AddStorage(variable, local.Name, cell: true);
+            }
             metadata.AddLocalScope(scope.Method, default, first, MetadataTokens.LocalConstantHandle(1), scope.Start, scope.Length);
         }
         foreach (var method in asyncMethods.OrderBy(method => MetadataTokens.GetRowNumber(method.Move)))

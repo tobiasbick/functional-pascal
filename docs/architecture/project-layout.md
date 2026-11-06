@@ -144,8 +144,8 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | Project | Responsibility |
 | --- | --- |
 | `Fpas.Compiler` | C# library for source handling, lexing/parsing, name binding, type checking, lowering, and direct CIL/metadata/PDB generation; optional XML API documentation |
-| `Fpas.Cli` | Command binding, compiler invocation, diagnostics, MCP debugger startup and exit status |
-| `Fpas.Debugging` | Official SDK MCP hosting/tools, thin DAP session client and owned external NetCoreDbg processes |
+| `Fpas.Cli` | Command binding, compiler invocation, diagnostics, debugger startup and exit status |
+| `Fpas.Debugging` | Shared native CLR debugger core, supervised workers, passive inspection, batch reports and DAP server |
 | `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, immutable input capture, dependency preparation and compiler-backed project analysis |
 | `Fpas.Processes` | Shared Linux process-group/subreaper and Windows job ownership for debugger/build processes |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
@@ -184,8 +184,9 @@ src, sdk, and tests without introducing separate solutions for each component.
 - Fpas.Cli references Fpas.Compiler, Fpas.Workspaces and Fpas.Debugging as C# libraries.
 - Fpas.Workspaces references the compiler, process ownership and official
   SolutionPersistence library; MSBuild remains in owned SDK processes.
-- Fpas.Debugging uses the official MCP SDK and hosting packages; it has no
-  dependency on Fpas.Compiler or Fpas.Core. NetCoreDbg is installed separately.
+- Fpas.Debugging references process ownership and packaged DbgShim assets; it has
+  no dependency on Fpas.Compiler or Fpas.Core. Native interfaces, symbols, values,
+  evaluation, supervision and frontends have separate topic directories.
 - Fpas.Build.Tasks launches the matching Fpas.Cli in a separate process. Compiler
   dependencies stay outside the MSBuild host process. Resolve the compiler from
   the selected SDK's assets, with normal .NET host invocation where needed.
@@ -213,10 +214,6 @@ SDK to be resolvable before restore/build. Establish that bootstrap before addin
 selected consumer projects to the main solution.
 
 ## Tests and fixtures
-
-The [Neovim integration](../../integrations/neovim/README.md) is configuration for
-an existing external DAP client. It is separate from the C# toolchain and emitted
-programs; no editor/debugger binary or DAP proxy is packaged with FPAS.
 
 Keep C# xUnit tests under tests, separate from production source. Unit tests cover
 focused behavior such as tokenization, parsing, binding, type diagnostics, and

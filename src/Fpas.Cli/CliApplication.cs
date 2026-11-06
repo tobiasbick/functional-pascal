@@ -23,7 +23,7 @@ internal static class CliApplication
         Console.OutputEncoding = new UTF8Encoding(false);
         var configuration = new ParserConfiguration { ResponseFileTokenReplacer = null };
         var compile = CompilerCommand.Create();
-        var debug = DebugCommand.Create();
+        var debug = new DebugCommand();
         var check = new CheckCommand();
         var query = new QueryCommand();
         var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true);
@@ -61,7 +61,7 @@ internal static class CliApplication
               fpas env --json
             """);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
-        root.Subcommands.Add(compile.Command); root.Subcommands.Add(debug); root.Subcommands.Add(check.Command);
+        root.Subcommands.Add(compile.Command); root.Subcommands.Add(debug.Command); root.Subcommands.Add(check.Command);
         root.Subcommands.Add(query.Command);
         root.Subcommands.Add(init.Command); root.Subcommands.Add(build.Command); root.Subcommands.Add(run.Command);
         root.Subcommands.Add(fmt.Command);
@@ -78,6 +78,7 @@ internal static class CliApplication
         ParseResult? docResult = null;
         ParseResult? refactorResult = null;
         ParseResult? environmentResult = null;
+        ParseResult? debugResult = null;
         ExecutionCommand? execution = null;
         try
         {
@@ -93,7 +94,7 @@ internal static class CliApplication
                 parsed = expanded;
                 compile.Validate(parsed);
             }
-            else if (parsed.CommandResult.Command == debug) help = "fpas debug --help";
+            else if (parsed.CommandResult.Command == debug.Command) { help = "fpas debug --help"; debugResult = parsed; debug.Validate(parsed, args); }
             else if (parsed.CommandResult.Command == environment.Command) { help = "fpas env --help"; environmentResult = parsed; }
             else if (parsed.CommandResult.Command == test.Command) { help = "fpas test --help"; testResult = parsed; }
             else if (parsed.CommandResult.Command == doc.Command) { help = "fpas doc --help"; docResult = parsed; }
@@ -114,6 +115,7 @@ internal static class CliApplication
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)
         {
+            if (debugResult is not null) return await debug.ReportArgumentError(exception.Message);
             if (environmentResult is not null) { environment.ReportArgumentError(environmentResult, exception.Message); return 2; }
             if (testResult is not null) { test.ReportArgumentError(testResult, exception.Message); return 2; }
             if (docResult is not null) { doc.ReportArgumentError(docResult, exception.Message); return 2; }

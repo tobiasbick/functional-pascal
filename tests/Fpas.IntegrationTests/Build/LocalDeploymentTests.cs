@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;
 
-public sealed class LocalDeploymentTests
+public sealed partial class LocalDeploymentTests
 {
     [Fact]
     public async Task Dist_deploys_matching_queries_and_SDK_and_refreshes_only_its_cached_version_on_rerun()
@@ -64,6 +64,7 @@ public sealed class LocalDeploymentTests
             Assert.Equal("public function Read(): int; begin return 42; end function;",
                 inspect.RootElement.GetProperty("result").GetProperty("inspect").GetProperty("source").GetProperty("declaration").GetProperty("text").GetString());
             Assert.Equal(File.ReadAllBytes(Path.Combine(checkout, "bin", "Fpas.Compiler.dll")), File.ReadAllBytes(Path.Combine(sdkCache, "tools", "compiler", "Fpas.Compiler.dll")));
+            if (run == 0) await CheckDebugger(checkout, consumer, launcher, version, packages, environment);
         }
 
         static void Copy(string source, string target)

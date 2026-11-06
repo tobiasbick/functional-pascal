@@ -18,12 +18,12 @@ internal sealed record SdkCache(string Status, string? Path, IReadOnlyList<Cache
 internal sealed record ToolInstallation(string Status, string? Path = null, string? Version = null, string? Source = null);
 internal sealed record EnvironmentReport(bool Success, string Status, string Directory)
 {
-    public int SchemaVersion => 1;
+    public int SchemaVersion => 2;
     public CompilerInstallation? Fpas { get; init; }
     public RuntimeInstallation? Runtime { get; init; }
     public DotnetInstallation? Dotnet { get; init; }
     public SdkCache? SdkCache { get; init; }
-    public ToolInstallation? Netcoredbg { get; init; }
+    public Fpas.Debugging.DebuggerDeployment? Debugger { get; init; }
     public ToolInstallation LanguageServer { get; init; } = new("not_implemented");
     public IReadOnlyList<EnvironmentIssue> Issues { get; init; } = [];
     public bool Truncated { get; init; }
@@ -59,8 +59,8 @@ internal sealed record EnvironmentReport(bool Success, string Status, string Dir
         Line(""); Line("FPAS SDK cache");
         Line("  " + (SdkCache?.Path ?? "unavailable"));
         foreach (var sdk in SdkCache?.Installations ?? []) Line($"  {sdk.Version}: {sdk.Compatibility}{(sdk.Expected ? " (expected)" : "")} ({sdk.Path})");
-        Line(""); Line($"NetCoreDbg: {Netcoredbg?.Status ?? "unavailable"}");
-        if (Netcoredbg?.Path is { } path) Line($"  {Netcoredbg.Version ?? "unverified version"} ({path}; {Netcoredbg.Source})");
+        Line(""); Line($"Debugger: {Debugger?.Status ?? "unavailable"}");
+        if (Debugger is { } debugger) Line($"  CoreCLR; shim {debugger.ShimVersion}; {debugger.Os}-{debugger.Architecture}; {string.Join(", ", debugger.Protocols)} ({debugger.ShimPath})");
         Line("Language server: not implemented");
         if (Issues.Count != 0) { Line(""); foreach (var issue in Issues) Line($"{issue.Severity} {issue.Code}: {issue.Message}" + (issue.Path is null ? "" : $" ({issue.Path})")); }
         return true;

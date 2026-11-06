@@ -14,6 +14,7 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
     private InstructionEncoder il;
     private readonly Stack<(LabelHandle Break, LabelHandle Continue, int Depth)> loops = new();
     private readonly List<TypeSymbol> localTypes = [];
+    private readonly Dictionary<LocalSymbol, int> localStarts = [];
     private int protectedDepth;
     private LabelHandle returned;
     private int resultSlot;
@@ -69,6 +70,12 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
         switch (statement)
         {
             case BoundSequencePoint point:
+                if (point.Statement is BoundWhile sourceLoop)
+                {
+                    EmitWhile(sourceLoop, point.Location);
+                    DebugPoint(null);
+                    break;
+                }
                 DebugPoint(point.Location);
                 EmitStatement(point.Statement);
                 DebugPoint(null);
@@ -78,7 +85,11 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
                 foreach (var child in block.Statements)
                     EmitStatement(child);
                 if (debug && block.ScopeLocals is { Count: > 0 } && il.Offset > scopeStart)
-                    LocalScopes.Add((scopeStart, il.Offset - scopeStart, block.ScopeLocals));
+                    foreach (var local in block.ScopeLocals)
+                    {
+                        var start = Math.Max(scopeStart, localStarts.GetValueOrDefault(local, scopeStart));
+                        LocalScopes.Add((start, il.Offset - start, [local]));
+                    }
                 break;
             case BoundBinding binding:
                 StoreStorage(binding.Local, () =>
@@ -86,6 +97,7 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
                     Evaluate(binding.Initializer);
                     if (binding.Local.Captured && binding.Local.Mutable) { il.OpCode(ILOpCode.Newobj); il.Token(reference(catalog.CellConstructor(binding.Local.Type))); }
                 });
+                if (debug) localStarts[binding.Local] = il.Offset;
                 break;
             case BoundDispose dispose: EmitDispose(dispose.Resource); break;
             case BoundAssignment assignment:
@@ -119,16 +131,7 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
                 il.MarkLabel(done);
                 break;
             case BoundWhile loop:
-                var condition = il.DefineLabel();
-                var end = il.DefineLabel();
-                loops.Push((end, condition, protectedDepth));
-                il.MarkLabel(condition);
-                Evaluate(loop.Condition);
-                il.Branch(ILOpCode.Brfalse, end);
-                EmitStatement(loop.Body);
-                il.Branch(ILOpCode.Br, condition);
-                il.MarkLabel(end);
-                loops.Pop();
+                EmitWhile(loop, null);
                 break;
             case BoundRepeat loop:
                 var repeat = il.DefineLabel();
@@ -171,6 +174,19 @@ internal sealed partial class BodyEmitter(Func<ImportedMethod, EntityHandle> ref
         if (SequencePoints.Count > 0 && SequencePoints[^1].Offset == il.Offset) SequencePoints[^1] = (il.Offset, location);
         else SequencePoints.Add((il.Offset, location));
         if (location is not null) il.OpCode(ILOpCode.Nop);
+    }
+
+    private void EmitWhile(BoundWhile loop, SourceLocation? location)
+    {
+        var condition = il.DefineLabel(); var end = il.DefineLabel();
+        loops.Push((end, condition, protectedDepth));
+        il.MarkLabel(condition);
+        if (location is not null) DebugPoint(location);
+        Evaluate(loop.Condition);
+        il.Branch(ILOpCode.Brfalse, end);
+        EmitStatement(loop.Body);
+        il.Branch(ILOpCode.Br, condition);
+        il.MarkLabel(end); loops.Pop();
     }
 
     private void EmitFor(BoundFor loop)

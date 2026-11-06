@@ -26,11 +26,12 @@ internal sealed partial class AssemblyEmitter
             RegisterGenerics(type, machine.GenericParameters, genericTypeContext);
             AddNullabilityContext(type, runtime);
             AddDebugAttribute(type, GeneratedAttribute);
-            void Field(ImportedField field)
+            void Field(ImportedField field, LocalSymbol? local = null)
             {
                 var blob = new BlobBuilder(); EncodeType(new BlobEncoder(blob).FieldSignature(), field.Type);
                 var handle = metadata.AddFieldDefinition(FieldAttributes.Assembly, metadata.GetOrAddString(field.Name), metadata.GetOrAddBlob(blob)); fieldCount++;
                 if (field.Name.StartsWith("<>", StringComparison.Ordinal)) AddGeneratedField(handle);
+                if (local is not null && !local.Name.StartsWith('<')) debug?.AddStorage(handle, local.Name, local.Captured && local.Mutable);
             }
             var builder = catalog.AsyncBuilder(machine);
             var builderField = catalog.MachineField(machine, "<>t__builder", builder);
@@ -38,7 +39,7 @@ internal sealed partial class AssemblyEmitter
             Field(catalog.MachineField(machine, "<>exception", catalog.Symbol(catalog.Required("System.Exception"))));
             if (machine.Routine.Symbol.IsInstance) Field(catalog.MachineField(machine, "<>4__this", machine.HostType!));
             foreach (var parameter in machine.Routine.Symbol.Parameters) Field(catalog.MachineParameter(machine, parameter));
-            foreach (var local in layout.AsyncPlans[machine].Locals.Where(local => local.Type.Kind != TypeKind.ByRef)) Field(catalog.MachineLocal(machine, local));
+            foreach (var local in layout.AsyncPlans[machine].Locals.Where(local => local.Type.Kind != TypeKind.ByRef)) Field(catalog.MachineLocal(machine, local), local);
 
             var il = new InstructionEncoder(new BlobBuilder());
             il.LoadArgument(0); il.Call(Reference(new ImportedMethod(TypeSymbol.Object, ".ctor", TypeSymbol.Void, [], false))); il.OpCode(ILOpCode.Ret);

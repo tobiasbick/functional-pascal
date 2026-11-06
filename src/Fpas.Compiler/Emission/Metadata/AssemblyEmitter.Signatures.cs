@@ -162,7 +162,7 @@ internal sealed partial class AssemblyEmitter
             case TypeKind.Char: encoder.Char(); break;
             case TypeKind.Array:
                 if (type.Rank == 1) EncodeType(encoder.SZArray(), type.Element!);
-                else encoder.Array(element => EncodeType(element, type.Element!), shape => shape.Shape(type.Rank, [], []));
+                else encoder.Array(element => EncodeType(element, type.Element!), shape => shape.Shape(type.Rank, [], [.. Enumerable.Repeat(0, type.Rank)]));
                 break;
             case TypeKind.Named: encoder.Type(DefinitionHandle(type.Definition!), type.IsValue); break;
             case TypeKind.Parameter:

@@ -31,7 +31,10 @@ internal sealed class SignatureTypes(ReferenceCatalog catalog, ReferenceAssembly
         => catalog.FromReference(assembly, handle);
     public TypeSymbol GetTypeFromSpecification(MetadataReader reader, object? context, TypeSpecificationHandle handle, byte kind)
         => reader.GetTypeSpecification(handle).DecodeSignature(this, context);
-    public TypeSymbol GetArrayType(TypeSymbol elementType, ArrayShape shape) => shape.Rank >= 2 && elementType != TypeSymbol.Unsupported ? TypeSymbol.Array(elementType, shape.Rank) : TypeSymbol.Unsupported;
+    internal static bool CanonicalRectangularArray(ArrayShape shape) => shape.Rank is >= 2 and <= 32 && shape.Sizes.IsDefaultOrEmpty
+        && shape.LowerBounds.Length == shape.Rank && shape.LowerBounds.All(bound => bound == 0);
+    public TypeSymbol GetArrayType(TypeSymbol elementType, ArrayShape shape) => CanonicalRectangularArray(shape) && elementType != TypeSymbol.Unsupported
+        ? TypeSymbol.Array(elementType, shape.Rank) : TypeSymbol.Unsupported;
     public TypeSymbol GetByReferenceType(TypeSymbol elementType) => elementType == TypeSymbol.Unsupported ? TypeSymbol.Unsupported : TypeSymbol.ByRef(elementType);
     public TypeSymbol GetFunctionPointerType(MethodSignature<TypeSymbol> signature) => TypeSymbol.Unsupported;
     public TypeSymbol GetGenericMethodParameter(object? context, int index) => new(TypeKind.MethodParameter, ParameterIndex: index);

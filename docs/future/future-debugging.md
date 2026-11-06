@@ -1,98 +1,105 @@
-# Public CoreCLR debugging entry points
+# Own CLR debugger core
 
-Deferred technical option: access CoreCLR's public native debugging interfaces
-directly. No backend implementation is selected here. The entry points below
-provide runtime access; source mapping, session control and value presentation
-would still belong to the debugger using them.
+Build an FPAS debugger on CoreCLR's public native debugging interfaces. One
+protocol-neutral core serves DAP and one-shot batch debugging. Remove the current
+MCP/NetCoreDbg implementation when the replacement passes acceptance. MCP and
+JSONL are outside the selected design.
 
-## Runtime discovery and connection: dbgshim
+This plan contains open replacement work. The [current debugging guide](../pascal/tools/debugging.md)
+and [batch reference](../pascal/tools/batch-debugging.md) describe the public surfaces. These plans own the replacement:
 
-Start with the official [dbgshim exports](https://github.com/dotnet/diagnostics/blob/main/src/dbgshim/dbgshim.h)
-and [implementation](https://github.com/dotnet/diagnostics/blob/main/src/dbgshim/dbgshim.cpp).
-The native shim is available as
-[Microsoft.Diagnostics.DbgShim](https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim).
-It is a native dependency, not a complete managed debugger API.
-
-| Entry point | Possible use |
+| Plan | Open work |
 | --- | --- |
-| CreateProcessForLaunch | Start a target suspended so the debugger can register before runtime initialization. |
-| RegisterForRuntimeStartup / Ex / 3 | Receive the runtime's ICorDebug interface through a startup callback. Supports launch and attach, including a runtime already loaded in the target. |
-| ResumeProcess / CloseResumeHandle | Resume a suspended launch and release its launch handle. |
-| UnregisterForRuntimeStartup | Remove the startup registration and release its token. |
-| EnumerateCLRs / CloseCLREnumeration | Discover runtime modules in an existing process and release enumeration resources. |
-| CreateVersionStringFromModule | Obtain the runtime-identifying string for interface creation. |
-| CreateDebuggingInterfaceFromVersion and its variants | Obtain an ICorDebug interface for an identified runtime. |
+| This document | Shared architecture and replacement completion boundary. |
+| [Frontend plan](debugger-frontends-plan.md) | DAP adapter and removal of MCP/NetCoreDbg. |
+| [Acceptance plan](debugger-acceptance-plan.md) | Required Windows and native Linux/WSL evidence, packaging and completion gates. |
 
-A possible launch path is suspended creation, startup registration, process
-resume, then initialization of ICorDebug in the callback. The startup callback
-runs on another thread and can hold runtime initialization until it returns.
-Callback synchronization and ownership must follow that lifecycle.
+## Selected scope
 
-Attach can use the same startup-registration family with an existing process ID.
-Explicit runtime enumeration and version-based interface creation are another
-entry point when runtime selection is needed. Check the selected shim's supported
-runtime-instance and export behavior rather than assuming every variant exists.
+- Support .NET 10 CoreCLR targets on native Windows x64 and Linux x64 under WSL2.
+  Run Linux debugger and target processes inside WSL. Running a Windows binary
+  from WSL does not establish Linux support.
+- Launch an already built managed executable DLL with its runtime configuration,
+  dependencies and matching portable PDB. Do not build, restore or discover a
+  project implicitly. Keep the compiler's language and CLR representations.
+- Provide source breakpoints, continue, pause, step into/over/out, CLR threads,
+  stacks, lexical locals, arguments, captures, async source views, exception
+  stops, passive value expansion and bounded passive FPAS expressions.
+- Run the target through normal CoreCLR execution. CLR threads are not FPAS VM
+  tasks. Do not introduce a scheduler or serialize execution instruction by
+  instruction.
 
-## Execution and inspection: ICorDebug
+Public attach, dumps, Native AOT targets, native/mixed-mode debugging, mutation,
+managed function evaluation, tracepoints, hot reload, instruction quotas and
+deterministic scheduling are outside this baseline. Other OS/architecture pairs
+need a separate acceptance decision. These exclusions are capability limits,
+not hidden fallback paths through NetCoreDbg.
 
-The authoritative interface definitions are in
-[cordebug.idl](https://github.com/dotnet/runtime/blob/main/src/coreclr/inc/cordebug.idl).
+## Module layout and interface
 
-| Interface or method | Possible use |
-| --- | --- |
-| ICorDebug.Initialize, SetManagedHandler, DebugActiveProcess | Initialize debugging services, install callbacks and connect to a live target. |
-| ICorDebugManagedCallback and its versioned extensions | Receive module/thread/process events, breakpoint hits, step completion and exceptions. |
-| ICorDebugProcess / ICorDebugController | Stop, continue, detach and control the target according to the callback contract. |
-| ICorDebugModule, ICorDebugFunction, ICorDebugCode | Resolve metadata tokens and IL locations, then create breakpoints. |
-| ICorDebugThread, ICorDebugFrame, ICorDebugILFrame | Inspect stacks, arguments and available local values. |
-| ICorDebugStepper | Request instruction/IL-range stepping. Source and async stepping need symbol-aware policy above this interface. |
-| ICorDebugValue and its specialized interfaces | Read primitive, reference, object, string and array values. |
-| ICorDebugEval / ICorDebugEval2 | Invoke managed evaluation operations when the target permits it; this is distinct from passive inspection. |
+Keep the implementation in the existing `Fpas.Debugging` library. Group it into
+`Core`, `Native`, `Symbols`, `Values`, `Evaluation`, `Hosting`, `Batch` and `Dap`
+directories with matching namespaces. Keep files focused and usually below 500
+lines. `Fpas.Core` gains no debugger dependency. Read CLR metadata and portable
+PDBs with `System.Reflection.Metadata`; do not load target assemblies to execute
+their reflection or display code in the debugger.
 
-Portable PDB metadata supplies documents, sequence points and scopes; CLR
-metadata identifies modules, methods and types. Turning these into source
-breakpoints or source-level values requires that mapping above ICorDebug.
-The interfaces do not supply an FPAS expression evaluator.
+The core's interface accepts typed launch/control/inspection operations and
+returns typed results and ordered events. It owns session state, stop identity,
+breakpoint binding, source mapping, value lifetimes, limits and errors. DAP names,
+MCP types, argv and JSON documents do not appear in this interface. DAP and batch
+use the same operations. Batch receives a detached snapshot through the core;
+it cannot borrow native sessions or bypass inspection policy.
 
-## Data-target inspection: ICLRDebugging
+Native loading, vtables, HRESULT translation, callback implementations and
+reference ownership stay inside `Native`. There is one selected CoreCLR
+implementation. Do not create an interchangeable-backend framework or retain a
+second product backend for compatibility. Reuse useful session/output/process
+logic from the current implementation after removing its DAP-client coupling.
 
-[metahost.idl](https://github.com/dotnet/runtime/blob/main/src/coreclr/inc/metahost.idl)
-defines ICLRDebugging.OpenVirtualProcess and ICLRDebuggingLibraryProvider interfaces.
-OpenVirtualProcess obtains an ICorDebugProcess view over a caller-supplied
-ICorDebugDataTarget, such as a dump or externally stopped process.
+The [native connection reference](../../src/Fpas.Debugging/Native/README.md) owns
+the pinned shim, ABI sources, callback lifetime and runtime-library lookup.
+The [core reference](../architecture/debugger-core.md) owns the implemented
+session supervision, source identities, threads, frames and bounded shutdown.
 
-This is an entry point for inspecting an externally controlled data target. It
-does not establish a live callback-driven launch/attach session. The caller owns
-memory/context access, target consistency and the lookup/lifetime of matching
-runtime debugging libraries. ICLRDebuggingLibraryProvider3 also participates in
-the newer dbgshim live-connection variants.
+## Implementation order
 
-## Official examples to inspect
+Finish and verify each step through its production interface before starting
+the next. Run the relevant native cases on Windows and inside WSL throughout
+development; do not defer Linux interop and process ownership to final acceptance.
 
-The [DbgShim.UnitTests sources](https://github.com/dotnet/diagnostics/tree/main/src/tests/DbgShim.UnitTests)
-provide concrete entry points for a managed implementation:
+| Step | Deliverable | Required proof before advancing |
+| --- | --- | --- |
+| [F3](debugger-frontends-plan.md#f3-remove-mcp-and-integrate-the-replacement) | Product cutover, deployment and documentation. | Delivered launchers pass the full matrix without MCP, JSONL or NetCoreDbg. |
 
-- [DbgShimAPI.cs](https://github.com/dotnet/diagnostics/blob/main/src/tests/DbgShim.UnitTests/DbgShimAPI.cs): native loading, exported functions and resource handling.
-- [DbgShimTests.cs](https://github.com/dotnet/diagnostics/blob/main/src/tests/DbgShim.UnitTests/DbgShimTests.cs): launch/attach, runtime enumeration, interface creation and library-provider scenarios.
-- [ICorDebug.cs](https://github.com/dotnet/diagnostics/blob/main/src/tests/DbgShim.UnitTests/ICorDebug.cs): a small managed wrapper around the native vtable.
-- [ManagedCallbackWrapper.cs](https://github.com/dotnet/diagnostics/blob/main/src/tests/DbgShim.UnitTests/ManagedCallbackWrapper.cs): managed implementations of native callback interfaces.
+The [acceptance plan](debugger-acceptance-plan.md) owns the complete matrix.
+After accepting a step, move its behavior to the owning reference and remove
+its completed tasks here. Do not retain this table as a completion history.
 
-These are test helpers and examples, not a supported complete debugger library.
-They are useful references for ABI layout, HRESULT handling, callback lifetimes
-and reference ownership. Native COM-style interfaces need explicit cross-platform
-interop; ordinary Windows COM interop must not be assumed to work on every OS.
+The implemented [value contract](../architecture/debugger-core.md#passive-stored-values)
+and [passive expression subset](../architecture/debugger-expressions.md) belong
+to their references. Batch and DAP must use these same bounded operations.
+Managed function evaluation and execution of display/proxy code require a later
+explicit scope decision.
 
-## Open evaluation
+## Sources and completion
 
-- Select a stable diagnostics/runtime version and supported OS/architecture pairs.
-  The links above track upstream main; inspect matching release sources and exports
-  before implementation.
-- Establish deployment and version matching for dbgshim, DBI and data-access
-  components, including the library-provider route where appropriate.
-- Verify launch/attach, callbacks, stop/continue, detach and cleanup before adding
-  symbol mapping, stepping, value inspection or evaluation.
-- Validate debug and optimized code separately: the interfaces cannot reconstruct
-  locals or execution locations that the compiler/JIT did not preserve.
+Use official sources for interop and protocol behavior:
 
-Keep this document limited to open evaluation. Move selected contracts into the
-owning reference and remove the document when the evaluation is complete.
+- [dbgshim exports](https://github.com/dotnet/diagnostics/blob/main/src/dbgshim/dbgshim.h)
+  and [implementation](https://github.com/dotnet/diagnostics/blob/main/src/dbgshim/dbgshim.cpp).
+- [DbgShim package](https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim)
+  and [managed launch/callback examples](https://github.com/dotnet/diagnostics/tree/main/src/tests/DbgShim.UnitTests).
+- [.NET 10 ICorDebug definitions](https://github.com/dotnet/runtime/blob/v10.0.0/src/coreclr/inc/cordebug.idl)
+  and [public debugging reference](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/).
+- [DAP overview and framing](https://microsoft.github.io/debug-adapter-protocol/overview)
+  and [specification source](https://github.com/microsoft/debug-adapter-protocol/blob/main/debugAdapterProtocol.json).
+
+Upstream `main` links are discovery references. Follow the pinned release sources
+in the native reference before revising exports or layouts. `ICLRDebugging.OpenVirtualProcess`
+is for caller-supplied data targets and is not the live launch implementation.
+The Rust debugger supplies architectural examples, not CLR runtime behavior.
+
+Close this plan only with the [acceptance gates](debugger-acceptance-plan.md).
+Move implemented contracts into the architecture/handbook references, remove
+completed entries and delete the plan once no open work remains.

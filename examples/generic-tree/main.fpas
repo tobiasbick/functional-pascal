@@ -16,7 +16,9 @@ begin
     Model.Render(Text),
     Model.Count(Text)
   );
-  const Updated: Model.Summary<string> := Result with Label := 'leaves'; end with;
+  const Updated: Model.Summary<string> := Result with
+    Label := 'leaves';
+  end with;
 
   Console.WriteLine(Updated.Reader()());
   Console.WriteLine(Updated.Label + ': ' + Updated.Count.ToString());

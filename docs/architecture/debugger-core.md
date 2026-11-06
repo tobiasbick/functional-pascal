@@ -5,6 +5,20 @@ connection. DAP and batch use the same supervised operations and passive values.
 The [debugging guide](../pascal/tools/debugging.md) describes the public command;
 the [batch reference](../pascal/tools/batch-debugging.md) owns detached reports.
 
+## Scope
+
+The debugger launches already built .NET 10 executable DLLs on Windows x64 and
+Linux x64, including Linux processes inside WSL2. It uses CoreCLR's public native
+debugging interfaces through the packaged DbgShim. Source, symbols and runtime
+dependencies are supplied by the caller; debugging does not build or restore.
+
+The public frontends are batch and stdio DAP. Editor-specific extensions and
+configuration are outside this debugger. Public attach, dump inspection, Native
+AOT targets, native/mixed-mode debugging, mutation, managed function evaluation,
+tracepoints, hot reload, instruction quotas and deterministic scheduling are
+unsupported. The [acceptance plan](../future/debugger-acceptance-plan.md) tracks
+the required platform verification independently of these implemented contracts.
+
 ## Sessions and process ownership
 
 `Hosting.DebugSessionHost` starts one private worker through the same CLI
@@ -312,8 +326,7 @@ identities govern exception-object lifetime; continuing invalidates inspection.
 ## Verification
 
 `CoreSessionTests` exercises real compiled FPAS targets through the private
-production host on Windows and native WSL Linux in Debug and Release tool
-builds. It covers current/stale stops, resume/pause races, cancellation before
+production host. It covers current/stale stops, resume/pause races, cancellation before
 and during runtime initialization, normal/nonzero/signal exit, callback failure,
 worker crash/hang, bounded UTF-8 output and unrelated-process survival. Process
 exit is asserted before fixture cleanup. See the [test instructions](../../tests/README.md#own-coreclr-connection-tests).
@@ -322,7 +335,7 @@ exit is asserted before fixture cleanup. See the [test instructions](../../tests
 shadowed locals, paged/stale frames, matching and mismatched files, source
 checksums, spaces/Unicode, native path-case behavior and library/program sources
 with equal filenames. A real DLL/PDB replacement after module load reproduces
-the identity mismatch. Both native platforms run Debug and Release tool builds.
+the identity mismatch. Required platform runs belong in the acceptance plan.
 
 `SourceControlTests` verifies entry side effects, duplicate/moved/rejected
 breakpoints, replacement/removal, running updates, pending and collectible module

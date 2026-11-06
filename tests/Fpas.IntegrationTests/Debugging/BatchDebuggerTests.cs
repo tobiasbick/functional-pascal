@@ -84,7 +84,7 @@ public sealed partial class BatchDebuggerTests
     }
 
     [Theory]
-    [InlineData("--protocol", "jsonl")]
+    [InlineData("--protocol", "unknown")]
     [InlineData("--timeout", "0")]
     [InlineData("--print", "Call()")]
     public async Task Invalid_requests_return_one_json_report_without_executing_target_statements(string option, string value)

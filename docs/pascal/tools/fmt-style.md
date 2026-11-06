@@ -74,6 +74,9 @@ diagnostics go to stderr.
 - Put routine bodies, control bodies, record/union/enum/interface members and
   case arms on structural lines. Bodies indent one level. A case statement's
   arm body indents another level below its `when`/`else` header.
+- Record updates always expand after `with`, including single-field updates.
+  Each field assignment occupies its own line, indented one level; `end with`
+  returns to the update's owning indentation. Nested updates add another level.
 - Named routine `begin` aligns with its declaration. Anonymous routines keep
   `begin` after their signature when no contracts intervene; empty bodies can
   remain compact. Contracts and generic constraints occupy separate lines.

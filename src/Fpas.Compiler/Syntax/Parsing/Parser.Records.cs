@@ -68,18 +68,18 @@ internal sealed partial class Parser
 
     private WithSyntax ReadWith(ExpressionSyntax receiver)
     {
-        var list = layout?.List(position, wrap: false);
         Expect("with");
+        var bodyStart = position;
         var updates = new List<RecordUpdateSyntax>();
         do
         {
-            list?.Item(position);
+            layout?.Line(position);
             var name = Identifier();
             Expect(":=");
             updates.Add(new(name, ReadExpression()));
             Expect(";");
         } while (!At("end"));
-        list?.End(position);
+        layout?.Body(bodyStart, position);
         Expect("end"); Expect("with");
         return new(receiver, updates);
     }

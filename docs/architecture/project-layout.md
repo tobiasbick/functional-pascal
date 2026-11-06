@@ -70,10 +70,14 @@ src/
   Fpas.Processes/
   Fpas.Debugging/
     Fpas.Debugging.csproj
-    Processes/
-    Protocol/
-    Sessions/
-    Tools/
+    Core/
+    Native/
+    Symbols/
+    Values/
+    Evaluation/
+    Hosting/
+    Batch/
+    Dap/
   Fpas.Build.Tasks/
     Fpas.Build.Tasks.csproj
     Analysis/
@@ -121,10 +125,6 @@ examples/
   README.md
 apps/
   README.md
-integrations/
-  neovim/
-    lua/
-      fpas_debug.lua
 docs/
 ```
 

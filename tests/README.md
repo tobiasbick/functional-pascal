@@ -95,8 +95,10 @@ versions, ABI sources and lifetime rules.
 identities, resume/pause races, startup cancellation, worker crash/hang, native
 callback failure, actual exit codes/signals, UTF-8 output bounds and unrelated
 process survival. The [session reference](../docs/architecture/debugger-core.md)
-owns the implemented supervision contract. Both suites run in Debug and Release
-tool builds on Windows and native WSL Linux.
+owns the implemented supervision contract. Run both suites in Debug and Release
+tool builds on native Windows and WSL Linux; the
+[acceptance plan](../docs/future/debugger-acceptance-plan.md) tracks the remaining
+platform verification. Other Linux runs do not establish WSL acceptance.
 
 `SymbolContextTests` adds recursive and shadowed frame bindings, library frames
 with equal source basenames, native path-case rules, source/PDB preflight and
@@ -170,9 +172,9 @@ dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build 
 ```
 
 Run the same suites in Release on native Windows and native WSL Linux. SDK tests
-verify both native RID assets and notices at their exact deployed paths, absence
-of debugger hosting dependencies and working packaged help. Editor setup belongs
-in the [debugging guide](../docs/pascal/tools/debugging.md); remaining acceptance
+verify both native RID assets and notices at their exact deployed paths and
+working packaged help. The [debugging guide](../docs/pascal/tools/debugging.md)
+describes batch and DAP usage; remaining acceptance
 work belongs in the [open plan](../docs/future/debugger-acceptance-plan.md).
 
 ## Documentation examples

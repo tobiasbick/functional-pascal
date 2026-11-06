@@ -161,4 +161,4 @@ FPAS DLL boundary.
 
 The [CLI reference](../pascal/program-structure/cli.md) owns selectors, JSON
 envelopes, exit codes, limits and examples. These services do not implement an
-editor session, unsaved buffers, LSP or query MCP tools.
+editor session, unsaved buffers or LSP.

@@ -56,6 +56,28 @@ public sealed class FormatCorpusTests
         Assert.Contains("cleanup", after.Output);
     }
 
+    [Fact]
+    public async Task Formatting_record_updates_preserves_copying_and_field_evaluation_order()
+    {
+        const string input = """
+            program UpdateOrder;
+            uses System.Console as Console;
+            type Pair = record X:int;Y:int;end record;
+            var Count:int:=0;
+            function Next():int;begin Count:=Count+1;return Count;end function;
+            begin
+            const Original:Pair:=new Pair(10,20);
+            const Changed:Pair:=Original with Y:=Next();X:=Next();end with;
+            Console.WriteLine(Original.X);Console.WriteLine(Original.Y);
+            Console.WriteLine(Changed.X);Console.WriteLine(Changed.Y);Console.WriteLine(Count);
+            end;end program;
+            """;
+        var formatted = Check("updates.fpas", input);
+        var before = await ProgramExecution.Run(input); var after = await ProgramExecution.Run(formatted);
+        Assert.Equal(0, before.ExitCode); Assert.Equal("10\n20\n2\n1\n2\n", before.Output);
+        Assert.Equal(before, after);
+    }
+
     private static string Check(string name, string input)
     {
         var first = FpasFormatter.Format(new(name, input));

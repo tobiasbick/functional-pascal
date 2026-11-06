@@ -47,9 +47,13 @@ begin
     end if;
 
     if Word = 'fragment' then
-      Item := Item with Fragment := true; end with;
+      Item := Item with
+        Fragment := true;
+      end with;
     elsif Word = 'run' then
-      Item := Item with Execute := true; end with;
+      Item := Item with
+        Execute := true;
+      end with;
     else
       if Parts.Length <> 2 or Parts[1].Length = 0 then
         Invalid(Document, Line, 'Unknown fence option ' + Word);
@@ -59,21 +63,37 @@ begin
 
       case Key of
         when 'id':
-          Item := Item with Id := Value; end with;
+          Item := Item with
+            Id := Value;
+          end with;
         when 'context':
-          Item := Item with Context := Value; end with;
+          Item := Item with
+            Context := Value;
+          end with;
         when 'error':
-          Item := Item with ExpectedError := Value; end with;
+          Item := Item with
+            ExpectedError := Value;
+          end with;
         when 'project':
-          Item := Item with Project := Value; end with;
+          Item := Item with
+            Project := Value;
+          end with;
         when 'file':
-          Item := Item with FileName := Value; end with;
+          Item := Item with
+            FileName := Value;
+          end with;
         when 'manifest':
-          Item := Item with Manifest := Value; end with;
+          Item := Item with
+            Manifest := Value;
+          end with;
         when 'stdout':
-          Item := Item with ExpectedOutput := Value; end with;
+          Item := Item with
+            ExpectedOutput := Value;
+          end with;
         when 'exception':
-          Item := Item with ExpectedException := Value; end with;
+          Item := Item with
+            ExpectedException := Value;
+          end with;
         else
           Invalid(Document, Line, 'Unknown fence option ' + Key);
       end case;

@@ -34,7 +34,6 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         Assert.Equal(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(FpasCompiler).Assembly.Location))), compiler.GetProperty("sha256").GetString());
         Assert.All(report.GetProperty("dotnet").GetProperty("sdks").EnumerateArray(), entry => Assert.True(Directory.Exists(entry.GetProperty("path").GetString())));
         Assert.Equal("available", report.GetProperty("debugger").GetProperty("status").GetString());
-        Assert.False(report.TryGetProperty("netcoredbg", out _));
         Assert.Equal("not_implemented", report.GetProperty("languageServer").GetProperty("status").GetString());
         Assert.Contains(report.GetProperty("issues").EnumerateArray(), issue => issue.GetProperty("code").GetString() == "sdk_not_cached");
         Assert.DoesNotContain("private-test-sentinel", result.Output);
@@ -109,7 +108,6 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
     [Theory]
     [InlineData("--timeout", "0")]
     [InlineData("--timeout", "bad")]
-    [InlineData("--netcoredbg", "relative-backend")]
     [InlineData("--directory", "absent-directory")]
     [InlineData("--unknown", "value")]
     public async Task Argument_errors_are_a_single_JSON_response(string option, string value)
@@ -122,11 +120,10 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
     }
 
     [Fact]
-    public async Task Packaged_own_debugger_reports_its_shim_without_probing_an_external_backend()
+    public async Task Packaged_debugger_reports_its_shim_and_supported_protocols()
     {
         using var root = new TemporaryDirectory();
         var environment = Settings(root);
-        environment["FPAS_NETCOREDBG_PATH"] = root.File("absent-backend");
         var result = await Run(root, environment);
         Assert.Equal(0, result.ExitCode); Assert.Empty(result.Error);
         using var json = JsonDocument.Parse(result.Output);
@@ -174,7 +171,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         return new()
         {
             ["DOTNET_HOST_PATH"] = host, ["DOTNET_ROOT"] = Path.GetDirectoryName(host), ["PATH"] = Path.GetDirectoryName(host),
-            ["NUGET_PACKAGES"] = root.File("Packages"), ["FPAS_NETCOREDBG_PATH"] = null
+            ["NUGET_PACKAGES"] = root.File("Packages")
         };
     }
 

@@ -3,7 +3,7 @@
 The native module calls CoreCLR's COM-style debugging vtables directly from C#.
 `ComWrappers` exports the managed callback interfaces on Windows and Linux.
 No Windows COM activation or external debugger executable is involved. The
-shared core and frontends are tracked in the [debugger plan](../../../docs/future/future-debugging.md).
+shared core and frontends are described in the [core reference](../../../docs/architecture/debugger-core.md).
 
 ## Selected dependency
 
@@ -41,8 +41,7 @@ private framing, process containment and shutdown bounds.
 
 ## Verification
 
-`NativeCoreTests` runs real FPAS programs through this module with .NET 10.0.14
-on Windows x64 and Linux x64 under WSL. Debug and Release tool builds cover a
+`NativeCoreTests` runs real FPAS programs through this module. Its cases cover a
 source breakpoint, changed local values after stepping, normal exit, stopped
 target disposal, input validation, a host exiting before CLR startup and
 cancellation after native launch/startup registration while still suspended.
@@ -53,6 +52,8 @@ actual process entry is gone before fixture cleanup.
 The [test instructions](../../../tests/README.md#own-coreclr-connection-tests)
 describe the command. These tests establish the native module's behavior;
 frontends, supervision, general values and async stepping have separate coverage.
+The [acceptance plan](../../../docs/future/debugger-acceptance-plan.md) tracks
+required Debug/Release runs on native Windows x64 and WSL2 Linux x64 separately.
 
 ## Source references
 

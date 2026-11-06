@@ -9,7 +9,9 @@ begin
   const RopeSlot: Inventory.Position := new Inventory.Position(Rope);
   const Potions: Inventory.Position := new Inventory.Position(Potion, 3);
 
-  const AfterDrink: Inventory.Position := Potions with Quantity := Potions.Quantity - 1; end with;
+  const AfterDrink: Inventory.Position := Potions with
+    Quantity := Potions.Quantity - 1;
+  end with;
   const Before: Inventory.Position[] := [RopeSlot, Potions];
   const After: Inventory.Position[] := [RopeSlot, AfterDrink];
 

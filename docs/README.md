@@ -20,8 +20,8 @@ workflow to work on the compiler/toolchain.
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
 | Missing practical guides and verified walkthroughs | [Documentation gaps](future/documentation-gaps.md) |
-| IDE and agent debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
-| Open debugger acceptance | [Remaining work](future/future-debugging.md), [Windows/WSL acceptance](future/debugger-acceptance-plan.md) |
+| Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
+| Open debugger acceptance | [Windows/WSL acceptance](future/debugger-acceptance-plan.md) |
 
 Each rule has an owner: the handbook describes language behavior, the grammar
 defines syntax, and the CLR/MSBuild specifications define emitted and build

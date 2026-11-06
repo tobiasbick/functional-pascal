@@ -5,8 +5,9 @@ and exchange UTF-8, byte-counted `Content-Length` frames. Standard output contai
 protocol messages only; standard error contains connection failures.
 
 The local distribution and project SDK include the server and its dependencies.
-Keep the published files together; `fpas env` reports the server's managed
-identity without starting it. The SDK copy can also run as
+The single-file compiler embeds them; `fpas env` reports the server's managed
+identity without starting it. Keep `tools/compiler/` intact when extracting the
+SDK. Its copy can also run as
 `dotnet tools/compiler/Fpas.Cli.dll lsp` from an extracted package. See the
 [deployment workflow](../../build/development.md#deploy-the-local-release-compiler).
 

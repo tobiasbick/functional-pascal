@@ -82,7 +82,7 @@ internal sealed partial class DapServer
             case "disconnect": case "terminate":
                 if (command == "disconnect" && !args.Flag("terminateDebuggee", true))
                     throw new DebugException("unsupported", "Disconnect must terminate the debugger-owned target.");
-                if (host is not null) await host.Stop(token);
+                if (host is not null) await host.DisposeAsync();
                 return new();
             case "threads": return await ThreadList(token);
             case "stackTrace": return await Stack(args, token);

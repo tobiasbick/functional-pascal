@@ -11,6 +11,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     [Required] public ITaskItem[] Sources { get; set; } = [];
     [Required] public ITaskItem[] References { get; set; } = [];
     [Required] public string CompilerPath { get; set; } = "";
+    public string CompilerAssemblyPath { get; set; } = "";
     [Required] public string OutputAssembly { get; set; } = "";
     [Required] public string CacheFile { get; set; } = "";
     public string DotnetHostPath { get; set; } = "";
@@ -56,7 +57,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var previous = CompileFingerprint.Read(cache);
             var fingerprint = CompileFingerprint.Compute(sources, references, CompilerPath,
                 CompileFingerprint.Options(OutputType, Configuration, TargetFramework, output, DebugType, Optimize, documents,
-                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn));
+                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn), CompilerAssemblyPath);
             if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
                 (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
             {
@@ -69,6 +70,11 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var arguments = new List<string>(sources);
             arguments.AddRange(["--output", output, "--target", OutputType == "Library" ? "library" : "exe", "--diagnostics", "json"]);
             arguments.AddRange(["--debug", DebugType]);
+            if (CompilerAssemblyPath.Length > 0)
+            {
+                using var compiler = File.OpenRead(CompilerAssemblyPath);
+                arguments.AddRange(["--expected-compiler-sha256", Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(compiler))]);
+            }
             if (Optimize) arguments.Add("--optimize");
             if (documents.Length != 0) arguments.AddRange(["--documentation", documents[0]]);
             if (TreatWarningsAsErrors) arguments.Add("--warn-as-error");
@@ -103,8 +109,10 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     {
         var host = string.IsNullOrEmpty(DotnetHostPath)
             ? Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet" : DotnetHostPath;
-        var start = new ProcessStartInfo(host) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
-        foreach (var argument in new[] { Path.GetFullPath(CompilerPath), "compile", "--response-file", response })
+        var managed = CompilerPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+        var start = new ProcessStartInfo(managed ? host : Path.GetFullPath(CompilerPath)) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+        if (managed) start.ArgumentList.Add(Path.GetFullPath(CompilerPath));
+        foreach (var argument in new[] { "compile", "--response-file", response })
             start.ArgumentList.Add(argument);
         using var process = Process.Start(start) ?? throw new IOException("Unable to start the FPAS compiler.");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token);

@@ -16,7 +16,8 @@
     <DebugType Condition="'$(DebugType)' == ''">portable</DebugType>
     <Optimize Condition="'$(Optimize)' == '' and '$(Configuration)' == 'Release'">true</Optimize>
     <Optimize Condition="'$(Optimize)' == ''">false</Optimize>
-    <FpasCompilerPath>$(MSBuildThisFileDirectory)../tools/compiler/Fpas.Cli.dll</FpasCompilerPath>
+    <FpasCompilerPath Condition="'$(FpasCompilerPath)' == ''">$(MSBuildThisFileDirectory)../tools/compiler/Fpas.Cli.dll</FpasCompilerPath>
+    <FpasCompilerAssemblyPath>$(MSBuildThisFileDirectory)../tools/compiler/Fpas.Compiler.dll</FpasCompilerAssemblyPath>
     <FpasTasksPath>$(MSBuildThisFileDirectory)../tools/tasks/Fpas.Build.Tasks.dll</FpasTasksPath>
     <ProjectTypeGuids>{5D4B15AB-1024-4803-9015-4F069B13DE5A}</ProjectTypeGuids>
   </PropertyGroup>

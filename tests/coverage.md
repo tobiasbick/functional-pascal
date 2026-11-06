@@ -50,8 +50,8 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Immutable unsaved text/version identity, checked edits, shared publication/recheck and typed rename validation | | TextSnapshotTests, DiagnosticFixPlanTests, FileWorkspaceTests, RenameSemanticTests, RenameGraphTests |
 | Private reference images, live document versions/revisions, current source dependencies, passive evaluation, stale foreign metadata, reuse and lifecycle | MetadataImageTests | LiveDocumentTests, LiveWorkspaceTests, LiveGraphTests, LiveCancellationTests, PassivePreparationTests |
 | Partial semantic coverage, syntax/body recovery, incomplete declarations, conservative dependency boundaries and strict rename | PartialAnalysisTests | PartialQueryTests, QueryCliTests, LspDiagnosticsTests |
-| Stdio LSP lifecycle, versioned UTF-16 document diagnostics, watched inputs, message limits and EOF/shutdown cleanup | — | LspLifecycleTests, LspDiagnosticsTests, LspCancellationTests (Linux owned-process acceptance) |
-| LSP navigation, complete bounded searches, checked versioned rename, fixed-style formatting and stale/cancelled requests | — | LspFeatureTests, LspRenameBehaviorTests, LspScopeTests, LspRequestLifecycleTests (Linux process acceptance) |
+| Stdio LSP lifecycle, versioned UTF-16 document diagnostics, watched inputs, message limits and EOF/shutdown cleanup | — | LspLifecycleTests, LspDiagnosticsTests, LspCancellationTests (Windows/Linux owned-process acceptance) |
+| LSP navigation, complete bounded searches, checked versioned rename, fixed-style formatting and stale/cancelled requests | — | LspFeatureTests, LspRenameBehaviorTests, LspScopeTests, LspRequestLifecycleTests (Windows/Linux process acceptance) |
 | Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |
 | Init preservation/preview, project/solution build and start selection, source/DLL execution, inherited streams, JSON and process/cancellation ownership | | InitTests, BuildRunTests, SourceRunTests, RunOwnershipTests, ProjectSignalTests |
 | Literal declaration search/paging and exact bounded inspection with direct types | DeclarationContextTests | SourceQueryTests, QueryCliTests |
@@ -77,6 +77,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Portable PDBs, sequence points, scopes, closures, async metadata | PortableDebugInfoTests, AsyncDebugInfoTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
 | Standard debugger attributes, typed views and symbol/JIT policy | DebuggerAttributeTests | DebugSymbolsCliTests, MsBuildTests.DebugSymbols |
 | Direct native CoreCLR launch/callbacks, source breakpoint/local/step, early-host failure and registered-start cancellation | PortableDebugInfoTests | NativeCoreTests (Windows/WSL, Debug/Release) |
+| Deployed native shim selection, missing/incompatible/ARM64 negative assets and refusal to substitute an external library | — | NativeAssetTests (Windows/WSL, Debug/Release) |
 | Supervised debugger session/stop identities, control races, bounded output, native/worker failures, actual exit status and owned cleanup | NativeCoreTests | CoreSessionTests (Windows/WSL, Debug/Release) |
 | Own debugger source/PDB and loaded-module identities, native path cases, recursion/shadowing, library frames, paging and stale frames | PortableDebugInfoTests | SymbolContextTests (Windows/WSL, Debug/Release) |
 | Own debugger entry/configuration, source breakpoint/module lifecycle and synchronous source stepping | PortableDebugInfoTests, LoopTests | SourceControlTests (Windows/WSL, Debug/Release) |
@@ -89,6 +90,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Passive record/union/domain source views, exact decoded/default ranges and independent invalid presentation | — | SourceProjectionTests (Windows/WSL, Debug/Release) |
 | Passive FPAS expressions, scalar promotion, stored indexes, short-circuit type checks, resource bounds and expired frames | — | ExpressionInspectionTests (Windows/WSL, Debug/Release) |
 | Content-derived module IDs for reference-driven emission, deterministic identical output and real preflight/file replacement | — | ModuleContentIdentityTests (Windows/WSL, Debug/Release) |
+| Batch/DAP exact scalar and expression-failure parity at the same source stop | — | FrontendParityTests (Windows/WSL, Debug/Release) |
 | Canonical rectangular CLR array signatures and calls in both C# interop directions; rejected noncanonical bounds/sizes | — | RectangularInteropTests (Windows/WSL, Debug/Release) |
 | Own CLR source control, values, captures, async, exceptions, batch and DAP | CallableMetadataTests, AsyncDebugInfoTests | NativeCoreTests, CoreSessionTests, AsyncControlTests, BatchDebuggerTests, DapDebuggerTests |
 | Comments, XML IDs, public boundaries, warning policy | DocumentationTests | DocumentationCliTests, MsBuildTests.Documentation/DocumentationIds |
@@ -250,14 +252,25 @@ LocalDeploymentTests runs the platform's actual dist script twice in an isolated
 checkout/cache, from a different working directory. It verifies a matching
 launcher/SDK through find/inspect, development-version cache refresh, preservation
 of other package versions and unrelated deployed files, and first-run bootstrap.
+Only the executable is copied into a fresh delivery directory. With the build
+checkout hidden and .NET host search disabled, concurrent first starts compile
+real sources, return JSON diagnostics and export the matching embedded SDK.
+The same test checks export conflicts, explicit replacement, asset-cache repair,
+SDK invocation through the executable and rejection of different compiler bytes.
 Both delivered LSP entry points negotiate capabilities and perform diagnostics,
 definition, search and versioned rename against a fresh external consumer. File
 hashes and timestamps prove no implicit source/output writes. LspCliParityTests
 compares CLI/LSP results and failures over identical snapshots; environment tests
-verify passive server identity reporting. Native Windows verification remains in
-the [acceptance plan](../docs/future/lsp-acceptance-plan.md).
+verify passive server identity reporting. Language-server acceptance covers Debug
+and Release on native Windows and WSL Linux, with evaluation exit checked before
+harness cleanup. Symbolic-link and Windows ACL cases run on their applicable platform.
 
-SDK packaging verifies the own debugger, exact native RID asset paths and licenses, managed dependencies and working packaged help. Batch and DAP use the same passive native core; see [debugger tests](README.md#batch-and-dap-frontends).
+SDK packaging verifies the own debugger, exact native RID asset paths and licenses,
+managed dependencies and working packaged help. Native Windows x64 and WSL2 Linux
+x64 acceptance covers Debug and Release tool builds with Debug and optimized
+targets, native startup/control/values, process cleanup, batch/DAP parity and
+delivered launchers without checkout/feed/cache access. See
+[debugger tests](README.md#batch-and-dap-frontends).
 
 StandaloneSdkGuideTests materializes the exact project/configuration/source blocks
 from the [standalone SDK walkthrough](../docs/build/standalone-sdk.md) outside the

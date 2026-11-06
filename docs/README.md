@@ -10,6 +10,7 @@ workflow to work on the compiler/toolchain.
 | Compact authoring guidance and verified examples | [FPAS for agents](pascal/agents/README.md) |
 | Repository task skills | [Authoring](../.agents/skills/fpas-authoring/SKILL.md), [projects](../.agents/skills/fpas-projects/SKILL.md), [performance](../.agents/skills/fpas-bench/SKILL.md) |
 | Repository commands and application SDK bootstrap | [Development workflow](build/development.md) |
+| Single-file Windows/Linux compiler, offline SDK export and asset caches | [Compiler distribution](build/distribution.md) |
 | Independent FPAS/C# consumer, local SDK package, and deployment files | [Standalone SDK walkthrough](build/standalone-sdk.md) |
 | Project boundaries, compilation, closures, async, and symbols | [Compiler architecture](architecture/README.md) |
 | Test organization and verified behavior | [Tests](../tests/README.md) and [coverage map](../tests/coverage.md) |
@@ -21,8 +22,8 @@ workflow to work on the compiler/toolchain.
 | Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
 | Missing practical guides and verified walkthroughs | [Documentation gaps](future/documentation-gaps.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
-| Open debugger acceptance | [Windows/WSL acceptance](future/debugger-acceptance-plan.md) |
-| Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [native acceptance](future/lsp-acceptance-plan.md), [other editor gaps](future/editor-gap.md) |
+| Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [workspace architecture](architecture/workspaces.md) |
+| Editor work, scheduled last | [Editor gaps](future/editor-gap.md) |
 
 Each rule has an owner: the handbook describes language behavior, the grammar
 defines syntax, and the CLR/MSBuild specifications define emitted and build

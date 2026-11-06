@@ -9,6 +9,8 @@ public sealed partial class DapDebuggerTests
     [InlineData("Content-Length: 1048577\r\n\r\n")]
     [InlineData("Content-Length: 2\r\nContent-Length: 2\r\n\r\n{}")]
     [InlineData("Content-Length: 1\r\n\r\n{")]
+    [InlineData("Content-Length: 46\r\n\r\n{\"seq\":1,\"type\":\"request\",\"command\":\"threads\"}")]
+    [InlineData("Content-Length: 46\r\n\r\n{\"seq\":0,\"type\":\"request\",\"command\":\"threads\"}")]
     public async Task Malformed_or_oversized_frames_fail_boundedly_and_reap_an_already_running_target(string frame)
     {
         using var program = new Debuggee("dap-invalid-frame"); await WaitingProgram(program);

@@ -23,6 +23,7 @@ internal sealed class CompileCommand
     private readonly Option<string[]> warningsNotAsErrors = Repeated("--warnings-not-as-errors", "Exclude warning codes from --warn-as-error; repeatable.");
     private readonly Option<string[]> noWarn = Repeated("--no-warn", "Suppress warning codes (comma/semicolon separated); repeatable.");
     private readonly Option<string> diagnostics = new("--diagnostics") { Description = "Write one JSON result to stdout." };
+    private readonly Option<string> expectedCompiler = new("--expected-compiler-sha256") { Hidden = true };
 
     internal Option<string> ResponseFile { get; } = new("--response-file") { Description = "Read all compile arguments from a JSON string array; no inline arguments or nesting." };
     internal Command Command { get; } = new("compile", """
@@ -45,7 +46,7 @@ internal sealed class CompileCommand
         diagnostics.AcceptOnlyFromAmong("json");
         Command.Arguments.Add(sources);
         foreach (var option in new Option[] { output, references, referenceDirectories, target, debug, optimize, generateDocumentation,
-            documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, ResponseFile })
+            documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, expectedCompiler, ResponseFile })
             Command.Options.Add(option);
         Command.Validators.Add(result =>
         {
@@ -61,6 +62,12 @@ internal sealed class CompileCommand
 
     internal CompileArguments Read(ParseResult result)
     {
+        if (result.GetValue(expectedCompiler) is { } expected)
+        {
+            using var compiler = File.OpenRead(Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly));
+            if (Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(compiler)) != expected)
+                throw new ArgumentException("Selected SDK compiler differs from this CLI; select the matching SDK or FpasCompilerPath.");
+        }
         var referencePaths = result.GetValue(references)!.Select(Path.GetFullPath).ToList();
         foreach (var directory in result.GetValue(referenceDirectories)!)
             referencePaths.AddRange(Directory.EnumerateFiles(Path.GetFullPath(directory), "*.dll").Order(StringComparer.Ordinal));

@@ -5,6 +5,7 @@
     <Project Path="src/Fpas.LanguageServer/Fpas.LanguageServer.csproj" />
     <Project Path="src/Fpas.SdkResolver/Fpas.SdkResolver.csproj" />
     <Project Path="src/Fpas.Processes/Fpas.Processes.csproj" />
+    <Project Path="src/Fpas.Deployment/Fpas.Deployment.csproj" />
     <Project Path="src/Fpas.Cli/Fpas.Cli.csproj" />
     <Project Path="src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj" />
     <Project Path="src/Fpas.Core/Fpas.Core.csproj" />

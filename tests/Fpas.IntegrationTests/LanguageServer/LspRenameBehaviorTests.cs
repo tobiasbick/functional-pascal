@@ -71,9 +71,9 @@ public sealed class LspRenameBehaviorTests(SdkPackageFixture sdk) : IClassFixtur
         await using var client = new LspProbe(); await client.Initialize(directory.File("Game/Game.fpasproj")); await client.Notify("initialized", new { }); await client.Open(path, source, 9);
         var edit = Result(await client.Request("textDocument/rename", new { textDocument = Document(path), position = Position(source, "Answer();"), newName = "Fetch" }));
         var documents = edit.GetProperty("documentChanges").EnumerateArray().ToArray(); Assert.Equal(2, documents.Length);
-        var closed = documents.Single(document => document.GetProperty("textDocument").GetProperty("uri").GetString() == new Uri(libraryPath).AbsoluteUri);
+        var closed = Assert.Single(documents, document => LspProbe.IsFileUri(document.GetProperty("textDocument").GetProperty("uri"), libraryPath));
         Assert.Equal(JsonValueKind.Null, closed.GetProperty("textDocument").GetProperty("version").ValueKind);
-        Assert.Equal(9, documents.Single(document => document.GetProperty("textDocument").GetProperty("uri").GetString() == new Uri(path).AbsoluteUri).GetProperty("textDocument").GetProperty("version").GetInt32());
+        Assert.Equal(9, Assert.Single(documents, document => LspProbe.IsFileUri(document.GetProperty("textDocument").GetProperty("uri"), path)).GetProperty("textDocument").GetProperty("version").GetInt32());
         Assert.Equal(source, File.ReadAllText(path)); Assert.Equal(library, File.ReadAllText(libraryPath)); await client.Stop();
     }
 

@@ -11,12 +11,21 @@ public sealed record DebuggerDeployment(string Status, string Version, string Sh
     {
         var os = OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsLinux() ? "linux" : "unsupported";
         var architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        var name = os == "win" ? "dbgshim.dll" : "libdbgshim.so";
-        var path = new[] { Path.Combine(AppContext.BaseDirectory, "runtimes", os + "-" + architecture, "native", name),
-            Path.Combine(AppContext.BaseDirectory, name) }.FirstOrDefault(File.Exists);
+        var path = FindShim();
         string? hash = null;
         if (path is not null) { await using var file = File.OpenRead(path); hash = Convert.ToHexString(await SHA256.HashDataAsync(file, token)); }
         return new(os == "unsupported" || architecture != "x64" ? "unsupported_platform" : path is null ? "missing_shim" : "available",
             typeof(DebuggerDeployment).Assembly.GetName().Version!.ToString(), DbgShim.Version, path, hash, os, architecture, ".NET 10", ["batch", "dap"]);
+    }
+
+    internal static string? FindShim()
+    {
+        var os = OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsLinux() ? "linux" : "unsupported";
+        var architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        var name = os == "win" ? "dbgshim.dll" : "libdbgshim.so";
+        if (Fpas.Deployment.DistributionAssets.IsBundled)
+            return Fpas.Deployment.DistributionAssets.Materialize(name);
+        return new[] { Path.Combine(AppContext.BaseDirectory, "runtimes", os + "-" + architecture, "native", name),
+            Path.Combine(AppContext.BaseDirectory, name) }.FirstOrDefault(File.Exists);
     }
 }

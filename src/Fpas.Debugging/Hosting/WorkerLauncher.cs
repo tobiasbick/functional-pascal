@@ -14,7 +14,7 @@ internal sealed record WorkerLauncher(string Executable, string[] PrefixArgument
     {
         var executable = Environment.ProcessPath ?? throw new IOException("The debugger launcher path is unavailable.");
         if (Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
-            return new(executable, [Assembly.GetEntryAssembly()?.Location ?? throw new IOException("The CLI assembly path is unavailable.")]);
+            return new(executable, [Fpas.Deployment.DistributionAssets.Managed(Assembly.GetEntryAssembly() ?? throw new IOException("The CLI assembly path is unavailable."))]);
         return new(executable, []);
     }
 

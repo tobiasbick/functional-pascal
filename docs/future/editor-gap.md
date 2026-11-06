@@ -5,7 +5,14 @@ Usable commands belong in the [CLI reference](../pascal/program-structure/cli.md
 The common [formatter](../pascal/tools/fmt-style.md) supplies complete-source
 formatting. Open command/refactoring backends remain in [CLI gaps](cli-gap.md).
 The [stdio language server](../pascal/tools/language-server.md) exposes common
-workspace services. Editor extensions and new FPAS syntax are separate work.
+workspace services. Only additional services and editor integration are listed
+here. Editor extensions and new FPAS syntax are separate work.
+
+## Priority
+
+Address this inventory last, after the non-editor gap inventories. This includes
+additional LSP services such as hover, document symbols, completion and signature
+help, editor extensions and editor-specific acceptance.
 
 ## Language services
 
@@ -26,15 +33,9 @@ workspace services. Editor extensions and new FPAS syntax are separate work.
 | Refactorings | Additional checked refactorings beyond rename. |
 | Call hierarchy | Incoming/outgoing navigation with explicit stale/incomplete results and dynamic-target uncertainty. |
 
-## Documents and project context
-
-- Adapt shared analysis facts to editor-specific views and additional services.
-
-Keep [native platform acceptance](lsp-acceptance-plan.md) separate from additional
-capabilities, and remove entries here as they are accepted.
-
-Integrate [call-query facts](../pascal/program-structure/cli.md#callers-and-callees)
-with editor snapshots and call-hierarchy transport.
+Call hierarchy should adapt the existing
+[call-query facts](../pascal/program-structure/cli.md#callers-and-callees) to live
+snapshots and its LSP requests.
 
 ## Read-only source views
 
@@ -52,13 +53,23 @@ Invalidate stale views. Inspection must not save files or invoke a build.
 | Active project/runs | Project selection/status, arguments, working directory, terminal launch and process ownership, including non-FPAS hosts in mixed solutions. |
 | Server diagnostics | Restart, output channels and actionable launch/protocol errors. |
 
+## Diagnostic presentation
+
+Verify actual Visual Studio error-list display, start/end navigation, warning
+severity and help expansion on Windows. Check that explanation and related-note
+messages do not create extra error-list entries. SDK integration tests verify
+the emitted MSBuild events, but cannot establish the IDE's presentation.
+The [diagnostic reference](../pascal/tools/diagnostics.md) owns the shared payload
+and CLI/MSBuild behavior.
+
 ## Extension distribution and verification
 
 Select compatible installed compiler/SDK/language-server versions, isolate
 protocol stdout from logs and diagnose mismatches. Package grammar, snippets,
 settings and supported workflows independently of a local compiler build.
 Choose reusable editor components when designing extension work. The shared
-server implementation and its transport are owned by the LSP plan.
+server's current behavior belongs in the
+[language-server contract](../pascal/tools/language-server.md).
 
 Verify requests, unsaved buffers, incomplete-source recovery, project refresh,
 cancellation and extension/toolchain interoperability. CLI results alone cannot

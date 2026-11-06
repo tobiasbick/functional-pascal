@@ -21,7 +21,7 @@ internal static class CompileResponseFile
         string[] arguments;
         try
         {
-            arguments = JsonSerializer.Deserialize<string[]>(File.ReadAllText(response.GetValueOrDefault<string>()!))
+            arguments = JsonSerializer.Deserialize(File.ReadAllText(response.GetValueOrDefault<string>()!), Fpas.Cli.Diagnostics.CompileJson.Default.StringArray)
                 ?? throw new JsonException("Missing arguments.");
         }
         catch (JsonException exception)

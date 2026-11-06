@@ -1,0 +1,28 @@
+<Project>
+  <PropertyGroup Condition="'$(FpasDistribution)' == 'true'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <Target Name="EmbedFpasDistribution" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences" Condition="'$(FpasDistribution)' == 'true'">
+    <Error Condition="'$(RuntimeIdentifier)' != 'win-x64' and '$(RuntimeIdentifier)' != 'linux-x64'" Text="FPAS distributions support win-x64 and linux-x64. Publish on the matching operating system." />
+    <Error Condition="!Exists('$(FpasSdkPackage)')" Text="Set FpasSdkPackage to the matching packaged SDK before publishing a distribution." />
+    <ItemGroup>
+      <_FpasEmbeddedAsset Include="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)' == 'Fpas.Compiler' or '%(Filename)' == 'Fpas.Core' or '%(Filename)' == 'Fpas.Workspaces' or '%(Filename)' == 'Fpas.LanguageServer' or '%(Filename)' == 'Fpas.SdkResolver' or '%(Filename)' == 'dbgshim' or '%(Filename)' == 'libdbgshim'" />
+      <_FpasEmbeddedAsset Include="$(FpasSdkPackage)" />
+      <_FpasEmbeddedAsset Include="$(MSBuildThisFileDirectory)../../Fpas.Debugging/Native/THIRD-PARTY-NOTICES.txt" />
+      <EmbeddedResource Include="@(_FpasEmbeddedAsset)" LogicalName="Fpas.Distribution.%(_FpasEmbeddedAsset.Filename)%(_FpasEmbeddedAsset.Extension)" />
+      <_FpasRuntimePack Include="@(ResolvedRuntimePack)" Condition="'%(FrameworkName)' == 'Microsoft.NETCore.App'" />
+      <EmbeddedResource Include="@(_FpasRuntimePack->'%(PackageDirectory)/LICENSE.TXT')" LogicalName="Fpas.Distribution.dotnet-license.txt" />
+      <EmbeddedResource Include="@(_FpasRuntimePack->'%(PackageDirectory)/THIRD-PARTY-NOTICES.TXT')" LogicalName="Fpas.Distribution.dotnet-notices.txt" />
+    </ItemGroup>
+  </Target>
+  <Target Name="RemoveFpasDistributionSidecars" AfterTargets="ComputeResolvedFilesToPublishList" Condition="'$(FpasDistribution)' == 'true'">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Filename)%(Extension)' == 'debugger-notices.txt' or '%(Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
+</Project>

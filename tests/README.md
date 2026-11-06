@@ -17,7 +17,7 @@ in the [development workflow](../docs/build/development.md).
 Compiler tests use Syntax, Analysis, Types, Routines, ControlFlow, Formatting, and Metadata directories with
 matching namespaces. Integration tests use Cli, Execution, Documentation, Build,
 Debugging, Processes, Projects, Formatting, Testing, ApiDocumentation, Editing,
-Refactoring, Toolchain and Workspaces.
+Refactoring, Toolchain, LanguageServer and Workspaces.
 Each topic's Support directory owns its shared setup; compiler tests
 compile through TestCompilation rather than another test class.
 
@@ -84,7 +84,7 @@ cross-project signatures/rename, current failures, reference invalidation,
 independent reuse, limits and cancellation/disposal. PassivePreparationTests
 checks imported SDK resolution and rejection of custom preparation before effects.
 LiveCancellationTests checks that caller cancellation joins an actual owned
-evaluation process before returning on Linux.
+evaluation process before returning on Windows and Linux.
 MetadataImageTests exercises actual analysis/emission against private bytes with
 no corresponding DLL and detached caller buffers.
 
@@ -101,20 +101,25 @@ LspLifecycleTests and LspDiagnosticsTests use an independent byte-framed stdio
 client against the actual CLI, including the installed SDK copy. They check
 initialization, UTF-16/versioned edits, save/close/reopen, passive analysis,
 watched dependencies, invalid messages, limits and resynchronization.
-LspCancellationTests verifies EOF/shutdown against a blocked owned evaluation
-process on Linux. [Native Windows acceptance](../docs/future/lsp-acceptance-plan.md)
-remains open.
+LspCancellationTests verifies EOF, shutdown and superseding edits against a blocked
+owned evaluation process on Windows and Linux. A Windows named pipe or Linux FIFO
+blocks the actual evaluator; exit is observed before client disposal.
 LspFeatureTests checks standard navigation/search/formatting and capability
 negotiation. LspRenameBehaviorTests applies returned edits in the client, rebuilds
 and executes programs across overload, capture, keyword and interface renames.
 LspScopeTests checks linked ownership and response limits; LspRequestLifecycleTests
-checks cancellation, supersession and shutdown of admitted requests on Linux.
+checks cancellation, supersession and shutdown of admitted requests on Windows and Linux.
 LspCliParityTests compares definition/reference locations, symbol search, rename
 edits, formatting and semantic/syntax failures against the CLI using identical
 saved UTF-16 snapshots. Partial CLI searches retain coverage; LSP refuses them
 because standard result arrays cannot express that coverage.
-LocalDeploymentTests drives both the published launcher and SDK CLI from a fresh
-external consumer and checks that analysis/rename creates or changes no files.
+LocalDeploymentTests copies only the published executable into a fresh directory.
+It checks concurrent compilation/export with no compiler checkout or discoverable
+.NET host, SDK export conflicts/replacement, content-cache repair, executable SDK
+invocation and compiler mismatch rejection. It drives both the delivered launcher
+and SDK CLI from a fresh consumer and checks that analysis/rename changes no files.
+The same delivered file runs offline batch/DAP debugging. See
+[distribution](../docs/build/distribution.md) for the Windows/Linux release contract.
 
 SourceOperationTests verifies body ownership, exact operations, callable
 references, dispatch uncertainty, contract phases and protocol exclusions.
@@ -136,14 +141,18 @@ It checks process exit and exclusive DLL/PDB access before fixture cleanup.
 The [native reference](../src/Fpas.Debugging/Native/README.md) owns dependency
 versions, ABI sources and lifetime rules.
 
+`NativeAssetTests` exercises the extracted SDK CLI against valid, missing,
+incompatible and wrong-architecture shim files with a valid external copy on
+the native search path. ARM64 packages supply genuine negative inputs only;
+the delivered SDK retains its Windows x64 and Linux x64 assets.
+
 `CoreSessionTests` exercises the supervised production host: fresh/stale stop
 identities, resume/pause races, startup cancellation, worker crash/hang, native
 callback failure, actual exit codes/signals, UTF-8 output bounds and unrelated
 process survival. The [session reference](../docs/architecture/debugger-core.md)
-owns the implemented supervision contract. Run both suites in Debug and Release
-tool builds on native Windows and WSL Linux; the
-[acceptance plan](../docs/future/debugger-acceptance-plan.md) tracks the remaining
-platform verification. Other Linux runs do not establish WSL acceptance.
+owns the implemented supervision contract. These suites are verified in Debug
+and Release tool builds on native Windows x64 and WSL2 Linux x64. Debug and fully
+optimized target configurations are independent of the tool-build configuration.
 
 `SymbolContextTests` adds recursive and shadowed frame bindings, library frames
 with equal source basenames, native path-case rules, source/PDB preflight and
@@ -207,8 +216,9 @@ budgets. It checks that no session/frame/value handles escape the report.
 `DapDebuggerTests` drives product stdio through an independent client. It checks
 split framing, configuration order, path/coordinate negotiation, scopes, passive
 expressions, pages and stale handles, source stepping, exception information,
-malformed/oversized messages and output backpressure. A suspended real worker
-proves shutdown remains available at the ordinary request limit. Actual Windows
+malformed/oversized messages, duplicate request sequences and output backpressure.
+A suspended real worker proves shutdown completes with empty and full ordinary
+request queues. Actual Windows
 ConPTY Ctrl+C, native Linux SIGINT and client EOF verify worker/target exit before
 harness cleanup. No external debugger or optional environment switch is required.
 
@@ -219,8 +229,10 @@ dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build 
 Run the same suites in Release on native Windows and native WSL Linux. SDK tests
 verify both native RID assets and notices at their exact deployed paths and
 working packaged help. The [debugging guide](../docs/pascal/tools/debugging.md)
-describes batch and DAP usage; remaining acceptance
-work belongs in the [open plan](../docs/future/debugger-acceptance-plan.md).
+describes batch and DAP usage. `FrontendParityTests` compares both frontends at
+the same source stop against independently expected exact values and expression
+failures. `LocalDeploymentTests` also exercises both delivered protocols with the
+checkout, feed and package cache hidden and invalid project inputs beside the target.
 
 ## Documentation examples
 

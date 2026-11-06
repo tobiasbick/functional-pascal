@@ -36,13 +36,18 @@ internal static class EnvironmentInspection
     }
 
     private static async Task<ManagedInstallation> Managed(Assembly assembly, CancellationToken token)
-        => new(assembly.Location, assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? assembly.GetName().Version!.ToString(),
-            await Hash(assembly.Location, token));
+    {
+        var executable = Fpas.Deployment.DistributionAssets.IsBundled && assembly == typeof(EnvironmentInspection).Assembly;
+        var path = executable ? Environment.ProcessPath! : Fpas.Deployment.DistributionAssets.Managed(assembly);
+        return new(path, assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? assembly.GetName().Version!.ToString(),
+            await Hash(path, token, executable));
+    }
 
-    internal static async Task<string> Hash(string path, CancellationToken token)
+    internal static async Task<string> Hash(string path, CancellationToken token, bool executable = false)
     {
         await using var stream = File.OpenRead(path);
-        if (stream.Length > 64 * 1024 * 1024) throw new IOException("A toolchain assembly exceeds 64 MiB.");
+        if (stream.Length > (executable ? 1024L : 64L) * 1024 * 1024)
+            throw new IOException(executable ? "The compiler executable exceeds 1 GiB." : "A toolchain assembly exceeds 64 MiB.");
         return Convert.ToHexString(await SHA256.HashDataAsync(stream, token));
     }
 

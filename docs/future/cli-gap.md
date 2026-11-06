@@ -11,7 +11,7 @@ stream ownership and a cancellation contract. Short aliases remain unselected.
 
 Application apphosts, self-contained/single-file publishing, AOT and signing need
 separate SDK/CLI contracts. Compiler distribution belongs in
-[distribution gaps](dist-gap.md).
+[the compiler distribution reference](../build/distribution.md).
 
 ## Refactorings
 
@@ -34,7 +34,7 @@ plan review and explicit application.
 - A profiling frontend, if selected, needs .NET collection/summary behavior.
   Runtime-failure reports need exception/source stacks and debugger/dump data;
   arbitrary frame locals cannot be recovered from stderr alone.
-- Tracepoints and backend-dependent trace/thread inspection need their own
+- Tracepoints and trace-oriented thread analysis need their own
   scope and evidence before exposure as FPAS commands.
 - General command reports need schemas; existing command-specific JSON does
   not define the formats of future commands.

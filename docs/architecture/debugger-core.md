@@ -16,8 +16,8 @@ The public frontends are batch and stdio DAP. Editor-specific extensions and
 configuration are outside this debugger. Public attach, dump inspection, Native
 AOT targets, native/mixed-mode debugging, mutation, managed function evaluation,
 tracepoints, hot reload, instruction quotas and deterministic scheduling are
-unsupported. The [acceptance plan](../future/debugger-acceptance-plan.md) tracks
-the required platform verification independently of these implemented contracts.
+unsupported. The [test reference](../../tests/README.md#own-coreclr-connection-tests)
+describes native Windows and WSL verification for Debug and Release tool builds.
 
 ## Sessions and process ownership
 
@@ -26,6 +26,10 @@ executable. `Fpas.Processes.OwnedProcess` establishes a Windows kill-on-close Jo
 Object or a Linux process session before the worker can launch a target.
 The host never discovers ownership by scanning PIDs. The native dependency and
 callback contract are described in the [native reference](../../src/Fpas.Debugging/Native/README.md).
+
+The [single-file distribution](../build/distribution.md) uses this same executable
+for workers and Linux target brokers. Its shim is materialized from the bundle
+into the verified asset cache; no external worker or debugger download is needed.
 
 The private channel uses a current-user named pipe, length-prefixed UTF-8 JSON,
 a 1 MiB message ceiling and at most 64 outstanding requests, including a reserved
@@ -78,6 +82,10 @@ capture must select UTF-8 output. Output and state survive worker failure.
 Ordinary shutdown joins readers and releases owned/native resources before
 returning. An external OS kill of the supervisor, OOM or an uninterruptible
 kernel operation cannot promise a final result.
+
+DAP shutdown acknowledges completed owned cleanup, including forced termination
+of an unresponsive worker. Internal worker-stop grace expiry is handled by that
+cleanup before the protocol request completes.
 
 ## Sources and stopped context
 

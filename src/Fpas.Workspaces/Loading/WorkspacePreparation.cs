@@ -29,7 +29,7 @@ internal static class WorkspacePreparation
         var line = result.Output.Split('\n').Select(line => line.Trim()).FirstOrDefault(line => line.StartsWith(prefix, StringComparison.Ordinal));
         if (result.ExitCode != 0 || result.Truncated || line is null) throw new ContextFailure("preparation_required", "Cannot locate installed package SDKs.");
         var root = Path.Combine(scratch, "resolvers"); var folder = Path.Combine(root, "Fpas.SdkResolver"); Directory.CreateDirectory(folder);
-        var assembly = Path.Combine(Path.GetDirectoryName(typeof(WorkspaceLoader).Assembly.Location)!, "Fpas.SdkResolver.dll");
+        var assembly = Fpas.Deployment.DistributionAssets.Sidecar(typeof(WorkspaceLoader).Assembly, "Fpas.SdkResolver.dll");
         if (!File.Exists(assembly)) throw new ContextFailure("preparation_required", "The installed SDK resolver is missing from this compiler distribution.");
         File.WriteAllText(Path.Combine(folder, "Fpas.SdkResolver.xml"), new XElement("SdkResolver", new XElement("Path", assembly)).ToString());
         return new Dictionary<string, string> { ["MSBUILDDISABLENUGETSDKRESOLVER"] = "1", ["MSBUILDADDITIONALSDKRESOLVERSFOLDER"] = root,

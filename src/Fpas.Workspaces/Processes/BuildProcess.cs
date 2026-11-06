@@ -23,6 +23,8 @@ public static class BuildProcess
         token.ThrowIfCancellationRequested();
         var variables = new Dictionary<string, string>(environment ?? new Dictionary<string, string>());
         if (buildEnvironment) { variables["MSBUILDDISABLENODEREUSE"] = "1"; variables["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"; }
+        if (buildEnvironment && Fpas.Deployment.DistributionAssets.IsBundled)
+            variables["FpasCompilerPath"] = Environment.ProcessPath!;
         await using var process = OwnedProcess.Start(path, arguments, cwd, variables, inheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture);
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output, Encoding.UTF8);

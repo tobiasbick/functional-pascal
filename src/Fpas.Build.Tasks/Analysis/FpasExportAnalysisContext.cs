@@ -12,6 +12,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     [Required] public string ManifestFile { get; set; } = "";
     [Required] public string ProjectPath { get; set; } = "";
     [Required] public string CompilerPath { get; set; } = "";
+    public string CompilerAssemblyPath { get; set; } = "";
     public string Phase { get; set; } = "description";
     public string Configuration { get; set; } = "Debug";
     public string Platform { get; set; } = "AnyCPU";
@@ -66,7 +67,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             var hashes = inputs.Where(path => File.Exists(path) || !sourceReferences.Any(output => PathComparer.Equals(output.GetMetadata("FullPath"), path)))
                 .Select(Path.GetFullPath).Distinct(PathComparer).Order(StringComparer.Ordinal)
                 .ToDictionary(path => path, Hash, PathComparer);
-            var compiler = Path.Combine(Path.GetDirectoryName(CompilerPath)!, "Fpas.Compiler.dll");
+            var compiler = CompilerAssemblyPath.Length > 0 ? CompilerAssemblyPath : Path.Combine(Path.GetDirectoryName(CompilerPath)!, "Fpas.Compiler.dll");
+            hashes[Path.GetFullPath(compiler)] = Hash(compiler);
             var result = new ExportedContext(1, Phase, Path.GetFullPath(ProjectPath), Configuration, platform, TargetFramework,
                 AssemblyName, OutputType == "Exe" ? "exe" : "library", Hash(compiler), GenerateDocumentationFile, TreatWarningsAsErrors,
                 Codes(WarningsAsErrors), Codes(WarningsNotAsErrors), Codes(NoWarn), sources, references,
@@ -88,7 +90,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     {
         var documents = string.IsNullOrEmpty(DocumentationFile) ? [] : DocumentationOutputs.Paths(DocumentationFile, DocumentationDestination, DocumentationOutput);
         return CompileFingerprint.Compute(sources, references, CompilerPath, CompileFingerprint.Options(OutputType, Configuration, TargetFramework,
-            Path.GetFullPath(OutputAssembly), DebugType, Optimize, documents, TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn));
+            Path.GetFullPath(OutputAssembly), DebugType, Optimize, documents, TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn), CompilerAssemblyPath);
     }
 
     private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;

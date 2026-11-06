@@ -17,8 +17,9 @@ internal sealed class DbgShim
     {
         if (RuntimeInformation.ProcessArchitecture != Architecture.X64 || !(OperatingSystem.IsWindows() || OperatingSystem.IsLinux()))
             throw new PlatformNotSupportedException("The FPAS debugger requires Windows x64 or Linux x64.");
+        var path = DebuggerDeployment.FindShim() ?? throw new DllNotFoundException("The packaged CoreCLR debugging shim was not found.");
         // Keep the shim loaded for the lifetime of native callbacks and the process.
-        library = NativeLibrary.Load(OperatingSystem.IsWindows() ? "dbgshim.dll" : "libdbgshim.so", typeof(DbgShim).Assembly, null);
+        library = NativeLibrary.Load(path);
         CreateProcess = Export<Launch>("CreateProcessForLaunch");
         Resume = Export<HandleOperation>("ResumeProcess");
         CloseResume = Export<HandleOperation>("CloseResumeHandle");

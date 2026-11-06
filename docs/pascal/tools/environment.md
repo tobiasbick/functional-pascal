@@ -25,6 +25,9 @@ streams. Cancellation or a deadline terminates and joins those probes.
 
 - `fpas`: paths, informational versions and SHA-256 hashes of the running CLI,
   compiler and Core assemblies, plus the expected FPAS SDK package version.
+  Single-file distributions report the executable's identity for the CLI and
+  verified materialized files for metadata and native assets. Inspection can
+  populate those local caches without loading the shim or starting a server.
   A CLI extracted from an SDK uses that package's manifest version.
 - `runtime`: the framework, operating system and process architecture running
   the CLI. This is separate from the SDK selected for future builds.
@@ -75,7 +78,11 @@ Inventories are bounded to 128 entries each. The expected FPAS SDK is always
 checked, including in a larger cache. Omitted cache versions produce a warning,
 `sdkCache.status: partial` and `truncated: true`; they do not hide a mismatch in
 the expected version. A .NET inventory beyond its bound is an error. Hashing is
-bounded to 64 MiB per assembly, probe output to 1 MiB and the final JSON to 1 MiB.
+bounded to 64 MiB per managed assembly (1 GiB for the bundled executable), probe
+output to 1 MiB and the final JSON to 1 MiB. A missing external .NET host is still
+reported for project tools even when the self-contained compiler can compile
+explicit sources. See [distribution](../../build/distribution.md) for cache paths
+and offline SDK export.
 
 ## See also
 

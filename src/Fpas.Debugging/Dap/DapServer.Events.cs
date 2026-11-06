@@ -31,7 +31,7 @@ internal sealed partial class DapServer
                     }
                     if (state.State is "exited" or "failed")
                     {
-                        await Host.Stop(lifetime.Token); await Output(); FlushOutputLoss();
+                        await Host.DisposeAsync(); await Output(); FlushOutputLoss();
                         if (state.ExitCode is { } exit) Event("exited", new() { ["exitCode"] = exit });
                         if (state.Error is { } failure) Event("output", new() { ["category"] = "stderr", ["output"] = failure.Code + ": " + failure.Message + "\n" });
                         Terminated();

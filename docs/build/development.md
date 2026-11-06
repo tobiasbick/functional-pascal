@@ -30,6 +30,14 @@ builds preserve staged documentation; stale-fixture cleanup runs with actual
 output copying. Integration tests also build their own fixture projects;
 this is part of the test, not a second toolchain build.
 
+Project and language-server integration tests launch real MSBuild processes.
+For platform acceptance on a shared host, append `-- xUnit.MaxParallelThreads=4`
+to `dotnet test` to bound concurrent test classes while retaining process deadlines.
+Run the large mixed FPAS/C#/F# solution compatibility case separately from other
+integration builds.
+This [runner setting](https://xunit.net/docs/config-runsettings#maxparallelthreads)
+does not change SDK build parallelism.
+
 Choose relevant tests through the checked-in runner. For the handbook and agent
 reference:
 
@@ -78,9 +86,9 @@ Run [dist.ps1](../../dist.ps1) on Windows or [dist.sh](../../dist.sh) on Unix:
 ./dist.sh
 ```
 
-Both scripts restore/build the CLI and project SDK together in Release, publish
-the launcher and its dependencies to the ignored `bin/` directory, and pack the
-matching SDK into `sdk/feed/`. They resolve paths relative to the script, so
+Both scripts restore/build the CLI and project SDK together in Release, deliver
+one self-contained executable in the ignored `bin/` directory, and pack the
+matching SDK into `sdk/feed/` and the executable itself. They resolve paths relative to the script, so
 invocation also works from another working directory. Build artifacts stay under
 `.temp-data/dist/`, separate from ordinary toolchain/test builds.
 
@@ -91,14 +99,16 @@ and makes the deployed launcher executable. Repeated deployment updates the
 published files and preserves unrelated files in `bin/`.
 
 The same launcher serves `fpas lsp`; its managed protocol dependencies and the
-passive SDK resolver are included in both `bin/` and the matching SDK's
-`tools/compiler/`. Packing rejects missing language-server assets. Run `fpas env`
+passive SDK resolver are embedded in the executable and included in the matching
+SDK's `tools/compiler/`. Packing rejects missing language-server assets. Run `fpas env`
 to inspect the deployed server, then explicitly restore the consumer before
 connecting a client. See the [language-server contract](../pascal/tools/language-server.md).
 
-Building requires the .NET 10 SDK; running the deployed compiler requires the
-.NET 10 runtime. Keep the published files together. This local managed deployment
-does not close the [single-file/Native AOT distribution gaps](../future/dist-gap.md).
+Building requires the .NET 10 SDK. The delivered compiler contains its runtime;
+copy only `fpas.exe` (Windows x64) or `fpas` (Linux x64/glibc). It uses compressed,
+untrimmed single-file deployment because the complete protocol dependency graph
+requires dynamic code. See [distribution](distribution.md) for Native AOT limits,
+offline SDK export, cache ownership, native assets and optional symbols.
 
 Check/query require the CLI and the project's SDK to contain the same compiler
 binary. Dist builds both from the same artifacts directory and reads the package
@@ -107,7 +117,9 @@ version from the SDK project (currently `0.1.0-dev`). It removes only that versi
 consumer restore/SDK resolution selects the new package. Other versions/packages
 remain cached. No separate SDK build, pack or cache-clear command is needed after
 dist. Consumers must select this SDK version and have the local feed configured;
-the checkout's examples already do.
+the checkout's examples already do. Outside the checkout, `fpas sdk export ./feed`
+exports the embedded matching package without downloads. `fpas build` selects the
+delivered executable; the SDK verifies its compiler hash before compilation.
 
 ## Build an FPAS application
 
@@ -183,8 +195,8 @@ samplers. The FPAS CLI provides compilation, evaluated project checks/source que
 [API documentation lookup](../pascal/tools/api-documentation.md) and
 [batch and DAP debugging](../pascal/tools/debugging.md).
 Use [fpas fmt](../pascal/tools/fmt-style.md) to format sources or check the fixed
-style without changes. LSP and automatic IDE project integration remain separate
-work.
+style without changes. The [stdio language server](../pascal/tools/language-server.md)
+shares the workspace services. Automatic IDE project integration remains separate work.
 
 For FPAS-authored tests, use native framework attributes and assertions in a test
 library. [Native .NET testing](../pascal/tools/testing.md) describes `fpas init test`,

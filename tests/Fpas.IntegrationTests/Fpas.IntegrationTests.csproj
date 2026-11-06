@@ -12,6 +12,8 @@
     <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Diagnostics.DbgShim.win-arm64" PrivateAssets="all" ExcludeAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Diagnostics.DbgShim.linux-arm64" PrivateAssets="all" ExcludeAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Fpas.Cli/Fpas.Cli.csproj" ReferenceOutputAssembly="false" />
@@ -39,6 +41,8 @@
     <None Include="../Fixtures/testing/*.fpas" Link="Fixtures/testing/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
+    <AssemblyMetadata Include="FpasWindowsArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_win-arm64)/runtimes/win-arm64/native/dbgshim.dll" />
+    <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
     <RemoveDir Directories="$(OutputPath)Fixtures/specification" />

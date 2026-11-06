@@ -8,17 +8,22 @@ try {
         throw 'Unable to determine the project SDK package version.'
     }
     New-Item -ItemType Directory -Force -Path sdk/feed | Out-Null
-    dotnet build $sdkProject --configuration Release --artifacts-path .temp-data/dist/windows -p:UseAppHost=true -warnaserror
+    if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') { throw 'FPAS distributions support Windows x64 and Linux x64.' }
+    $artifacts = Join-Path $PSScriptRoot '.temp-data/dist/windows'
+    $package = Join-Path $PSScriptRoot "sdk/feed/Fpas.NET.Sdk.$sdkVersion.nupkg"
+    dotnet build $sdkProject --configuration Release --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" -warnaserror
     if ($LASTEXITCODE -ne 0) { throw "Release SDK build failed (exit code $LASTEXITCODE)." }
     dotnet pack $sdkProject --no-build --no-restore --configuration Release `
-        --artifacts-path .temp-data/dist/windows -p:UseAppHost=true --output sdk/feed
+        --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" --output sdk/feed
     if ($LASTEXITCODE -ne 0) { throw "Release SDK pack failed (exit code $LASTEXITCODE)." }
-    dotnet publish src/Fpas.Cli/Fpas.Cli.csproj --no-build --no-restore --configuration Release --self-contained false `
-        -p:UseAppHost=true --artifacts-path .temp-data/dist/windows --output bin -warnaserror
+    dotnet publish src/Fpas.Cli/Fpas.Cli.csproj --configuration Release --runtime win-x64 `
+        -p:FpasDistribution=true -p:DebugType=portable "-p:FpasSdkPackage=$package" "-p:FpasSdkVersion=$sdkVersion" `
+        --artifacts-path $artifacts --output "$artifacts/publish" -warnaserror
     if ($LASTEXITCODE -ne 0) {
         throw "Release publish failed (exit code $LASTEXITCODE)."
     }
-    Move-Item -LiteralPath bin/Fpas.Cli.exe -Destination bin/fpas.exe -Force
+    New-Item -ItemType Directory -Force -Path bin | Out-Null
+    Copy-Item -LiteralPath "$artifacts/publish/Fpas.Cli.exe" -Destination bin/fpas.exe -Force
 
     $cacheInfo = (dotnet nuget locals global-packages --list --force-english-output).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $cacheInfo.StartsWith('global-packages: ')) {
@@ -31,7 +36,7 @@ try {
     $versionCache = [System.IO.Path]::GetFullPath((Join-Path $sdkCache $sdkVersion.ToLowerInvariant()))
     if ([System.IO.Path]::GetDirectoryName($versionCache) -ne $sdkCache) { throw 'Invalid SDK cache target.' }
     if (Test-Path -LiteralPath $versionCache) { Remove-Item -LiteralPath $versionCache -Recurse -Force }
-    Write-Host "Deployed bin/fpas.exe and sdk/feed/Fpas.NET.Sdk.$sdkVersion.nupkg (requires .NET 10)."
+    Write-Host "Deployed self-contained single-file bin/fpas.exe with embedded Fpas.NET.Sdk $sdkVersion."
     Write-Host "Refreshed the local Fpas.NET.Sdk $sdkVersion cache; consumers restore from the feed."
 }
 finally {

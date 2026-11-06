@@ -34,6 +34,7 @@ internal static class CliApplication
         var refactor = new RefactorCommand();
         var environment = new EnvironmentCommand();
         var lsp = new LspCommand();
+        var sdk = new Fpas.Cli.Distribution.SdkCommand();
         var root = new Command("fpas", """
             FPAS compiler, project analysis, language server and agent debugger for .NET
 
@@ -62,6 +63,8 @@ internal static class CliApplication
 
               fpas env --json
 
+              fpas sdk export ./feed
+
               fpas lsp
             """);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
@@ -74,6 +77,8 @@ internal static class CliApplication
         root.Subcommands.Add(refactor.Command);
         root.Subcommands.Add(environment.Command);
         root.Subcommands.Add(lsp.Command);
+        root.Subcommands.Add(sdk.Command);
+        root.Subcommands.Add(sdk.Licenses);
         var jsonRequested = false; var help = "fpas --help";
         ParseResult? checkResult = null;
         ParseResult? queryResult = null;

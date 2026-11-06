@@ -62,15 +62,16 @@ The [MSBuild specification](../../build/msbuild.md) defines `.fpasproj` projects
 references as the initial build scope. The local SDK supports and tests this
 contract for net10.0 and AnyCPU; see the
 [acceptance coverage](../../../tests/coverage.md#build-acceptance).
-Publishing and deployment profiles remain later work.
+Application publishing and deployment profiles remain later work. The compiler
+has a [single-file Windows/Linux distribution](../../build/distribution.md).
 
 The [repository layout](../../architecture/project-layout.md) defines the C#
 compiler/toolchain projects, xUnit tests, and examples/apps directories.
 
 The CLI supplies [source queries](../program-structure/cli.md),
-[formatting](../tools/fmt-style.md) and [agent debugging](../tools/debugging.md).
-Visual Studio project-system integration, LSP and editor extensions remain
-separate work.
+[formatting](../tools/fmt-style.md), [agent debugging](../tools/debugging.md) and
+a [stdio language server](../tools/language-server.md). Visual Studio
+project-system integration and editor extensions remain separate work.
 
 ## See also
 

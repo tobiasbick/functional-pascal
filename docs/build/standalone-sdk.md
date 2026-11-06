@@ -9,6 +9,12 @@ executables/libraries. No public FPAS package is published.
 
 ## Prepare one versioned package
 
+With a [single-file compiler distribution](distribution.md), export its embedded
+matching package with `fpas sdk export ./feed`; no checkout is needed. The commands
+below instead build a development package with an explicit walkthrough version.
+When using the exported package, replace `0.1.0-local.1` in the consumer SDK
+identifiers with the version in the exported package filename.
+
 From the compiler checkout, restore and build the toolchain, then pack it:
 
 ```sh

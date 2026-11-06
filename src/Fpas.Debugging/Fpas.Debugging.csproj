@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" />
+    <ProjectReference Include="../Fpas.Deployment/Fpas.Deployment.csproj" />
     <PackageReference Include="Microsoft.Diagnostics.DbgShim.win-x64" />
     <PackageReference Include="Microsoft.Diagnostics.DbgShim.linux-x64" />
   </ItemGroup>

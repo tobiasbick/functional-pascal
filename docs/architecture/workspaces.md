@@ -43,6 +43,10 @@ compiler into MSBuild. Missing targets, malformed data, incompatible compiler
 hashes and unsupported settings produce setup errors. The CLI and SDK must
 contain the same compiler; repack a development SDK after compiler changes.
 
+Cancellation joins owned evaluation processes before returning. Private manifests
+are removed after that join. Windows sharing or lock failures during scratch
+cleanup are retried for at most five seconds.
+
 FpasPrepareCompilation shares reference resolution and generated-source hooks
 between CoreCompile and analysis. Use BeforeTargets=FpasPrepareCompilation or
 FpasPrepareCompilationDependsOn. Arbitrary Build/CoreCompile preparation hooks,

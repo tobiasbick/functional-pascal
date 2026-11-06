@@ -12,4 +12,5 @@ internal sealed record CompileReport(bool Success, string? Output, IReadOnlyList
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     Converters = [typeof(SeverityConverter), typeof(ApplicabilityConverter)])]
 [JsonSerializable(typeof(CompileReport))]
+[JsonSerializable(typeof(string[]))]
 internal partial class CompileJson : JsonSerializerContext;

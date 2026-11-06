@@ -62,11 +62,11 @@ It prints `Hello from FPAS`. The
 [development workflow](docs/build/development.md) describes Release builds,
 tests, direct compilation, and SDK version/cache handling after toolchain changes.
 
-For a local Release compiler on PATH, run `./dist.ps1` on Windows or `./dist.sh`
-on Unix, then add the repository's `bin/` directory to PATH. The scripts deploy
-`fpas.exe` or `fpas` together with its required files. Keep those files together;
-the compiler uses the installed .NET 10 runtime. See
-[local deployment](docs/build/development.md#deploy-the-local-release-compiler).
+For a Release compiler on PATH, run `./dist.ps1` on Windows x64 or `./dist.sh`
+on Linux x64, then add the repository's `bin/` directory to PATH. The scripts
+deliver one self-contained `fpas.exe` or `fpas`, including its .NET runtime and
+matching SDK package. Copy only that executable; `fpas sdk export ./feed` exports
+the SDK for offline project restore. See [distribution](docs/build/distribution.md).
 
 ### Hello World
 

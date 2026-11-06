@@ -17,4 +17,5 @@
     <ProjectReference Include="../Fpas.Core/Fpas.Core.csproj" />
     <ProjectReference Include="../Fpas.Debugging/Fpas.Debugging.csproj" />
   </ItemGroup>
+  <Import Project="Distribution/Distribution.targets" />
 </Project>

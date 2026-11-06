@@ -11,9 +11,6 @@ public sealed partial class LocalDeploymentTests
     private static async Task CheckLanguageServer(string consumer, string launcher, string sdkCache, IReadOnlyDictionary<string, string?> environment)
     {
         var source = Path.Combine(consumer, "Probe.fpas"); var text = File.ReadAllText(source);
-        var binaries = new[] { "Fpas.LanguageServer.dll", "Fpas.SdkResolver.dll", "OmniSharp.Extensions.LanguageProtocol.dll", "StreamJsonRpc.dll", "Newtonsoft.Json.dll" };
-        foreach (var name in binaries)
-            Assert.Equal(File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(launcher)!, name)), File.ReadAllBytes(Path.Combine(sdkCache, "tools", "compiler", name)));
         foreach (var executable in new[] { true, false })
         {
             var entry = executable ? launcher : Path.Combine(sdkCache, "tools", "compiler", "Fpas.Cli.dll");
@@ -30,7 +27,7 @@ public sealed partial class LocalDeploymentTests
             await client.Notify("initialized", new { }); await client.Open(source, text, 7);
             var diagnostics = await client.Diagnostics(source, 7); Assert.Empty(diagnostics.GetProperty("params").GetProperty("diagnostics").EnumerateArray());
             var location = Result(await client.Request("textDocument/definition", new { textDocument = Document(source), position = Position(text, "Read():") }));
-            Assert.Equal(new Uri(source).AbsoluteUri, location.GetProperty("uri").GetString());
+            LspProbe.AssertFileUri(source, location.GetProperty("uri"));
             Assert.Single(Result(await client.Request("workspace/symbol", new { query = "Read" })).EnumerateArray());
             var rename = Result(await client.Request("textDocument/rename", new { textDocument = Document(source), position = Position(text, "Read():"), newName = "Fetch" }));
             Assert.Equal(7, Assert.Single(rename.GetProperty("documentChanges").EnumerateArray()).GetProperty("textDocument").GetProperty("version").GetInt32());

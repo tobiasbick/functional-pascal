@@ -36,7 +36,7 @@ public sealed class LspFeatureTests(SdkPackageFixture sdk) : IClassFixture<SdkPa
         const string source = "unit Demo.Bridge;\r\nfunction Answer(): int; begin return 42; end function;\r\nfunction Run(): int; begin const Label: string := '😀'; return Answer(); end function;\r\nend unit;";
         await using var client = new LspProbe(); await client.Initialize(directory.File("Game/Game.fpasproj")); await client.Notify("initialized", new { }); await client.Open(path, source, 7);
         var definition = Result(await client.Request("textDocument/definition", new { textDocument = Document(path), position = Position(source, "Answer();", true) }));
-        Assert.Equal(new Uri(path).AbsoluteUri, definition.GetProperty("uri").GetString()); Assert.Equal(1, definition.GetProperty("range").GetProperty("start").GetProperty("line").GetInt32());
+        LspProbe.AssertFileUri(path, definition.GetProperty("uri")); Assert.Equal(1, definition.GetProperty("range").GetProperty("start").GetProperty("line").GetInt32());
         var refs = Result(await client.Request("textDocument/references", new { textDocument = Document(path), position = Position(source, "Answer():"), context = new { includeDeclaration = true } }));
         Assert.Equal(2, refs.GetArrayLength()); Assert.Contains(refs.EnumerateArray(), location => location.GetProperty("range").GetProperty("start").GetProperty("character").GetInt32() == source.Split("\r\n")[2].IndexOf("Answer", StringComparison.Ordinal));
         var symbols = Result(await client.Request("workspace/symbol", new { query = "" })); Assert.Contains(symbols.EnumerateArray(), symbol => symbol.GetProperty("name").GetString() == "Answer");

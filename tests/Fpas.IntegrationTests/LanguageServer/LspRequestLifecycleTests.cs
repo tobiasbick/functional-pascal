@@ -1,6 +1,5 @@
 using Fpas.IntegrationTests.Build;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+using Fpas.IntegrationTests.Processes.Support;
 using static Fpas.IntegrationTests.LanguageServer.LspFeatureTests;
 
 namespace Fpas.IntegrationTests.LanguageServer;
@@ -13,11 +12,11 @@ public sealed class LspRequestLifecycleTests(SdkPackageFixture sdk) : IClassFixt
     [InlineData("shutdown")]
     public async Task Accepted_requests_cancel_or_reject_superseded_content_and_shutdown_joins_evaluation(string operation)
     {
-        if (!OperatingSystem.IsLinux()) return;
-        using var directory = sdk.CreateProject(); var configuration = directory.File("NuGet.Config"); File.Delete(configuration); Assert.Equal(0, MakeFifo(configuration, 384));
+        using var directory = sdk.CreateProject();
+        using var blocked = new BlockedEvaluation(directory);
         await using var client = new LspProbe(); await client.Initialize(directory.File("Game/Game.fpasproj")); await client.Notify("initialized", new { });
         var path = directory.File("Game/Bridge.fpas"); await client.Open(path, "unit Changed; end unit;");
-        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(1)); using var child = await Evaluation(client.Id, directory.File("Game"), deadline.Token);
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(1)); using var child = await blocked.ConnectedProcess(client.Id, deadline.Token);
         var pending = client.Request("workspace/symbol", new { query = "" }, stringId: "in-flight");
         await client.Request("unknown");
         if (operation == "cancel") await client.Notify("$/cancelRequest", new { id = "in-flight" });
@@ -27,24 +26,4 @@ public sealed class LspRequestLifecycleTests(SdkPackageFixture sdk) : IClassFixt
         if (operation != "shutdown") await client.Stop();
         Assert.True(child.HasExited);
     }
-
-    private static async Task<Process> Evaluation(int parent, string cwd, CancellationToken token)
-    {
-        while (true)
-        {
-            foreach (var path in Directory.EnumerateDirectories("/proc"))
-            {
-                if (!int.TryParse(Path.GetFileName(path), out var pid)) continue;
-                try
-                {
-                    if (!File.ReadAllLines(Path.Combine(path, "status")).Any(line => line.StartsWith("PPid:", StringComparison.Ordinal) && int.Parse(line[5..].Trim(), System.Globalization.CultureInfo.InvariantCulture) == parent)) continue;
-                    if (Directory.ResolveLinkTarget(Path.Combine(path, "cwd"), true)?.FullName == cwd) return Process.GetProcessById(pid);
-                }
-                catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException) { }
-            }
-            await Task.Delay(10, token);
-        }
-    }
-    [DllImport("libc", EntryPoint = "mkfifo", SetLastError = true)]
-    private static extern int MakeFifo(string path, uint mode);
 }

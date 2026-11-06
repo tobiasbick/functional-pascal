@@ -120,7 +120,7 @@ public sealed class LspDiagnosticsTests(SdkPackageFixture sdk) : IClassFixture<S
         var diagnostic = Values(await client.Diagnostics(path, 1)).EnumerateArray().Single();
         Assert.True(diagnostic.TryGetProperty("relatedInformation", out var related), diagnostic.GetRawText());
         var previous = related.EnumerateArray().Single();
-        Assert.Equal(new Uri(path).AbsoluteUri, previous.GetProperty("location").GetProperty("uri").GetString());
+        LspProbe.AssertFileUri(path, previous.GetProperty("location").GetProperty("uri"));
         Assert.Equal(duplicate.IndexOf("Value", StringComparison.Ordinal), previous.GetProperty("location").GetProperty("range").GetProperty("start").GetProperty("character").GetInt32());
         await client.FullChange(path, "unit Demo.Bridge; function Read(): int; begin const Value: int := 'text'; return Value; end function; end unit;", 2);
         var conversion = Values(await client.Diagnostics(path, 2)).EnumerateArray().Single();

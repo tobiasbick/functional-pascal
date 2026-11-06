@@ -29,7 +29,21 @@ public static class WorkspaceLoader
         try { return await Load(options, context, scope, scratch, cancellationToken); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or System.Xml.XmlException or DecoderFallbackException or System.ComponentModel.Win32Exception)
         { throw new ContextFailure("context_failed", "Cannot read the selected context: " + exception.Message); }
-        finally { Directory.Delete(scratch, recursive: true); }
+        finally { await RemoveScratch(scratch); }
+    }
+
+    private static async Task RemoveScratch(string scratch)
+    {
+        var deadline = Environment.TickCount64 + 5000;
+        while (true)
+        {
+            try { Directory.Delete(scratch, recursive: true); return; }
+            catch (IOException error) when (OperatingSystem.IsWindows() && (error.HResult & 0xffff) is 32 or 33 && Environment.TickCount64 < deadline)
+            {
+                // Windows can retain pending I/O handles briefly after the evaluator exits.
+                await Task.Delay(20);
+            }
+        }
     }
 
     private static async Task<WorkspaceContext> Load(ContextOptions options, string context, SolutionScope scope, string scratch, CancellationToken token)
@@ -90,7 +104,7 @@ public static class WorkspaceLoader
                 var manifest = await Export(selection, scope, scratch, "resolved", options.Preparation, environment, token);
                 resolved.Add(selection.Path, manifest);
                 outputs.AddRange(manifest.Outputs.Select(output => new PreparationOutput(output.Project, output.Path)));
-                var compiler = typeof(FpasCompiler).Assembly.Location;
+                var compiler = Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly);
                 hashes[compiler] = WorkspaceContext.HashFile(compiler);
                 var sources = new List<CompilationSource>();
                 foreach (var (path, hash) in manifest.InputHashes)
@@ -186,7 +200,7 @@ public static class WorkspaceLoader
             manifest.Outputs.Any(output => output is null || !Path.IsPathFullyQualified(output.Path)) ||
             manifest.InputHashes.Values.Any(hash => hash is null || hash.Length != 64 || !hash.All(char.IsAsciiHexDigit)))
             throw new ContextFailure("context_failed", "Invalid context identities or content fingerprints.");
-        var currentCompiler = WorkspaceContext.HashFile(typeof(FpasCompiler).Assembly.Location);
+        var currentCompiler = WorkspaceContext.HashFile(Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly));
         if (manifest.CompilerHash != currentCompiler) throw new ContextFailure("context_failed", "Selected SDK compiler differs from this CLI; rebuild/repack the matching SDK.");
         bool SourceReference(string file) => preparation == ContextPreparation.SourceSnapshots && manifest.Outputs.Any(output => Paths.Equals(output.Path, file) &&
             Path.GetExtension(output.Project).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase));

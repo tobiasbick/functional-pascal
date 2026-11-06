@@ -79,6 +79,10 @@ work ends its unresponsive worker; ordinary pause remains available while the
 target runs. Control events are not silently discarded under backpressure; an
 unserviceable transport fails and releases the launch.
 
+`terminate` and `disconnect` await owned cleanup, including forced termination
+of an unresponsive worker, before acknowledging shutdown. Pending ordinary
+requests complete with their cancellation responses even when their queue is full.
+
 FPAS [portable debug metadata](../../architecture/debug-information.md) is also
 usable by other CLR debuggers. Their evaluation and display policies are owned
 by those tools; the passive policy above belongs to the FPAS debugger.

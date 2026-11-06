@@ -4,6 +4,8 @@ Read this when building/testing the repository, finding an API, or investigating
 compiler/program behavior. Start with the [development workflow](../../build/development.md)
 for SDK requirements, all build/test commands, application bootstrap, and direct
 CLI invocation. AGENTS.md contains repository policy; commands live in docs.
+The [distribution reference](../../build/distribution.md) covers the standalone
+Windows/Linux compiler, offline SDK export, executable SDK invocation and caches.
 
 ## Select the owning reference
 

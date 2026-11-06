@@ -19,10 +19,20 @@ The Windows x64 and Linux x64 assets are pinned to Microsoft.Diagnostics.DbgShim
 These packages supply native assets, not a managed debugger library. Runtime
 startup registration discovers the launched runtime. The selected shim locates
 its matching DBI beside that runtime; DBI loads the matching data-access library.
-The supported baseline is the installed .NET 10 CoreCLR layout. Single-file and
-custom-runtime library providers are outside this baseline. Debug launch does
-not download runtime libraries. Missing assets produce an HRESULT failure before
-managed program execution.
+The supported target baseline is the installed .NET 10 CoreCLR layout. Single-file
+targets and custom target-runtime library providers are outside this baseline. Debug launch does
+not download runtime libraries. Missing or incompatible assets produce a setup
+failure before managed program execution.
+
+Native loading and passive inspection share the deployed shim selection:
+`runtimes/<rid>/native/<library>`, then a flattened file beside the compiler.
+The loader opens that absolute path. An incompatible selected file is a setup
+failure even when PATH or LD_LIBRARY_PATH contains another valid copy.
+
+In a [single-file compiler distribution](../../../docs/build/distribution.md),
+selection materializes the embedded RID-specific shim in FPAS's verified asset
+cache. Inspection reports that same path/hash and the loader opens it absolutely.
+The compiler's bundle does not change the supported target-runtime layout.
 
 Source binding uses ICorDebugFunction4 native entry breakpoints when JIT-time
 rejection arrives before native code publication. Rebinding then stays within
@@ -52,8 +62,11 @@ actual process entry is gone before fixture cleanup.
 The [test instructions](../../../tests/README.md#own-coreclr-connection-tests)
 describe the command. These tests establish the native module's behavior;
 frontends, supervision, general values and async stepping have separate coverage.
-The [acceptance plan](../../../docs/future/debugger-acceptance-plan.md) tracks
-required Debug/Release runs on native Windows x64 and WSL2 Linux x64 separately.
+Debug and Release tool builds are verified on native Windows x64 and WSL2 Linux
+x64, with Debug and fully optimized FPAS targets. `NativeAssetTests` also runs the
+extracted SDK CLI with missing, incompatible and genuine ARM64 shim files, while
+a valid external copy remains discoverable. Only the deployed selected file may
+be loaded; unusable assets fail before target code executes.
 
 ## Source references
 

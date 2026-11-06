@@ -16,5 +16,5 @@ needs a separate decision.
 
 If a maintenance task requires byref-like/span APIs, pointers, ref returns,
 custom awaiters, expression trees or async enumeration, record the blocked task
-and a reproducer before selecting a fallback or extension. Editor sessions and
-LSP remain in [editor gaps](editor-gap.md).
+and a reproducer before selecting a fallback or extension. Additional editor
+services and integration remain in [editor gaps](editor-gap.md).

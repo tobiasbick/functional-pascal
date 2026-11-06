@@ -22,8 +22,10 @@ public sealed partial class DapDebuggerTests
         Gone(target); Gone(worker);
     }
 
-    [Fact]
-    public async Task A_full_ordinary_queue_still_accepts_terminate_and_completes_cancelled_request_replies()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(64)]
+    public async Task Terminate_joins_an_unresponsive_worker_with_and_without_a_full_ordinary_queue(int requestCount)
     {
         using var program = new Debuggee("dap-control-reserve");
         await WaitingProgram(program);
@@ -32,7 +34,7 @@ public sealed partial class DapDebuggerTests
         var parent = ProcessIdentity.Parent(pid); using var worker = Track(OperatingSystem.IsLinux() ? ProcessIdentity.Parent(parent) : parent);
         await client.Success("pause"); await client.Event("stopped");
         using var suspended = new WorkerSuspension(worker);
-        var requests = Enumerable.Range(0, 64).Select(_ => client.Request("threads")).ToArray();
+        var requests = Enumerable.Range(0, requestCount).Select(_ => client.Request("threads")).ToArray();
         await Task.Delay(100);
         await client.Success("terminate");
         foreach (var request in requests) Assert.False((await request).GetProperty("success").GetBoolean());

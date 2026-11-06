@@ -74,7 +74,7 @@ public sealed class FormatCorpusTests
             """;
         var formatted = Check("updates.fpas", input);
         var before = await ProgramExecution.Run(input); var after = await ProgramExecution.Run(formatted);
-        Assert.Equal(0, before.ExitCode); Assert.Equal("10\n20\n2\n1\n2\n", before.Output);
+        Assert.Equal(0, before.ExitCode); Assert.Equal("10\n20\n2\n1\n2\n", before.Output.ReplaceLineEndings("\n"));
         Assert.Equal(before, after);
     }
 

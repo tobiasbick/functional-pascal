@@ -28,7 +28,7 @@ internal static class CompilerCommand
                 sources.Add(new(affectedPath, text));
             }
             var references = options.References.ToList();
-            var core = typeof(Core.RecordAttribute).Assembly.Location;
+            var core = Fpas.Deployment.DistributionAssets.Managed(typeof(Core.RecordAttribute).Assembly);
             if (!references.Any(path => Path.GetFileName(path).Equals("Fpas.Core.dll", StringComparison.OrdinalIgnoreCase))) references.Add(core);
             var result = FpasCompiler.Compile(new(sources,
                 Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions, options.Optimize));

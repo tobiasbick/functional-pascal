@@ -72,7 +72,7 @@ public sealed class LspCliParityTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         using var plan = JsonDocument.Parse(File.ReadAllBytes(directory.File("rename.json")));
         var edits = Result(await client.Request("textDocument/rename", new { textDocument = Document(path), position = Position(Source, "Answer():"), newName = "type" }));
         var document = Assert.Single(edits.GetProperty("documentChanges").EnumerateArray());
-        Assert.Equal(new Uri(path).AbsoluteUri, document.GetProperty("textDocument").GetProperty("uri").GetString());
+        LspProbe.AssertFileUri(path, document.GetProperty("textDocument").GetProperty("uri"));
         Assert.Equal(7, document.GetProperty("textDocument").GetProperty("version").GetInt32());
         var cliEdits = Assert.Single(plan.RootElement.GetProperty("files").EnumerateArray()).GetProperty("edits");
         var lspEdits = document.GetProperty("edits"); Assert.Equal(cliEdits.GetArrayLength(), lspEdits.GetArrayLength());
@@ -139,7 +139,7 @@ public sealed class LspCliParityTests(SdkPackageFixture sdk) : IClassFixture<Sdk
     }
 
     private static void AssertLocation(JsonElement span, JsonElement location)
-    { Assert.Equal(new Uri(span.GetProperty("path").GetString()!).AbsoluteUri, location.GetProperty("uri").GetString()); AssertRange(span, location.GetProperty("range")); }
+    { LspProbe.AssertFileUri(span.GetProperty("path").GetString()!, location.GetProperty("uri")); AssertRange(span, location.GetProperty("range")); }
     private static void AssertRange(JsonElement span, JsonElement range)
     {
         var line = span.GetProperty("line").GetInt32() - 1; var column = span.GetProperty("column").GetInt32() - 1;

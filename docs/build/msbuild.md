@@ -17,9 +17,10 @@ ordinary MSBuild Rebuild target.
 The supported build scope is .NET 10/net10.0, one explicit TargetFramework,
 AnyCPU, Debug/Release and library/executable output. Standard project, package
 and assembly references form the dependency graph, including FPAS/C#/F# edges.
-Building requires no IDE extension. Multi-targeting, IDE project loaders,
-publishing/AOT/signing and compiler distribution remain in the
-[toolchain gaps](../future/cli-gap.md).
+Building requires no IDE extension. Multi-targeting is outside this build scope.
+Application publishing/AOT/signing remain in the [toolchain gaps](../future/cli-gap.md).
+IDE project loaders belong to [editor work, scheduled last](../future/editor-gap.md).
+The compiler has a separate [single-file distribution contract](distribution.md).
 
 ## Project identity and solution shape
 
@@ -92,6 +93,14 @@ and xUnit unit/integration tests in tests, grouped by Fpas.slnx. The SDK selects
 Fpas.Build.Tasks, which invokes Fpas.Cli as a separate compiler process. These
 are implementation-project boundaries; FPAS applications consume the resulting
 SDK through their own `.fpasproj` projects.
+
+`FpasCompilerPath` can select the absolute path of a delivered `fpas` executable
+instead of the packaged managed CLI. `fpas build` selects its own executable in
+single-file distributions. The task invokes executable paths directly and DLL
+paths through the selected dotnet host. It passes the SDK compiler's content hash
+in the JSON response arguments and refuses a different compiler. Incremental
+state includes the selected tool and the matching SDK compiler assembly; analysis
+manifests use that same SDK assembly identity.
 
 Reuse language-neutral .NET SDK/NuGet infrastructure for restore, framework
 references, project-reference negotiation, and application assets where possible.

@@ -65,8 +65,13 @@ internal sealed class LspProbe : IAsyncDisposable
         throw new IOException("Server EOF before expected notification: " + method + " " + await errors);
     }
     internal Task<JsonElement> Diagnostics(string path, int version) => Notification("textDocument/publishDiagnostics", item =>
-        item.GetProperty("params").GetProperty("uri").GetString() == new Uri(path).AbsoluteUri &&
+        IsFileUri(item.GetProperty("params").GetProperty("uri"), path) &&
         item.GetProperty("params").TryGetProperty("version", out var actual) && actual.GetInt32() == version);
+    internal static bool IsFileUri(JsonElement value, string path) =>
+        Uri.TryCreate(value.GetString(), UriKind.Absolute, out var uri) && uri.IsFile && !uri.IsUnc &&
+        (OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal).Equals(Path.GetFullPath(uri.LocalPath), Path.GetFullPath(path));
+    internal static void AssertFileUri(string path, JsonElement value) =>
+        Assert.True(IsFileUri(value, path), "Expected file " + path + "; received URI " + value.GetRawText());
     internal Task Open(string path, string text, int version = 1) => Notify("textDocument/didOpen", new { textDocument = new { uri = new Uri(path).AbsoluteUri, languageId = "fpas", version, text } });
     internal Task FullChange(string path, string text, int version) => Notify("textDocument/didChange", new { textDocument = new { uri = new Uri(path).AbsoluteUri, version }, contentChanges = new[] { new { text } } });
     internal Task Close(string path) => Notify("textDocument/didClose", new { textDocument = new { uri = new Uri(path).AbsoluteUri } });

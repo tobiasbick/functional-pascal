@@ -95,5 +95,6 @@ Verify FPAS library builds, C#/F# consumers, independent instances, MVU/routing,
 cache lifecycle, effect cleanup, Unicode geometry, terminal restoration, headless
 assertions and live snapshot/frame consistency on Windows and Linux.
 
-[CLI gaps](cli-gap.md) own command/debugger protocols; [editor gaps](editor-gap.md)
-own IDE integration. TUI live inspection is a library capability, separate from DAP.
+[CLI gaps](cli-gap.md) own other command work. The [own debugger plan](future-debugging.md)
+owns DAP/batch protocols; [editor gaps](editor-gap.md) own other IDE integration.
+TUI live inspection is a library capability, separate from DAP.

@@ -1,0 +1,120 @@
+program CanvasInputContract;
+
+uses Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+
+type State = record
+  public Notice: string := '';
+  public Editor: string := '';
+  public Columns: int := 0;
+  public Rows: int := 0;
+end record;
+
+type Msg = union
+  Resized(Columns: int; Rows: int);
+  Edited(Text: string);
+  Shortcut;
+end union;
+
+function Update(Model: State; Message: Msg): App.Transition<State, Msg>;
+begin
+  const Next: State := case Message of
+    when Msg.Resized(const Columns: int, const Rows: int): Model with
+      Notice := Model.Notice + Columns.ToString() + 'x' + Rows.ToString() + ' ';
+      Columns := Columns;
+      Rows := Rows;
+    end with;
+    when Msg.Edited(const Text: string): Model with
+      Editor := Text;
+    end with;
+    when Msg.Shortcut: Model with
+      Notice := Model.Notice + 'shortcut ';
+    end with;
+  end case;
+  return new App.Transition<State, Msg>(Next, []);
+end function;
+
+function Resize(Columns: int; Rows: int): Msg;
+begin
+  return Msg.Resized(Columns, Rows);
+end function;
+
+function View(Model: State): E.Element<Msg>;
+  function Draw(Column: int; Row: int): E.Cell;
+  begin
+    if Column >= Model.Columns or Row >= Model.Rows then
+      raise new Sys.InvalidOperationException('Canvas drew before its size was reported.');
+    end if;
+
+    return new E.Cell('X', new E.Style(Foreground := $117733));
+  end function;
+begin
+  return E.Screen<Msg>(
+    E.Column<Msg>(
+      E.Size<Msg>(E.Text<Msg>(Model.Notice), new E.Flex(Basis := 1, Minimum := 1)),
+      E.Size<Msg>(
+        E.CellCanvas<Msg>('viewport', Draw, new E.CanvasEvents<Msg>(OnResize := Resize)),
+        new E.Flex(Grow := 1)
+      ),
+      E.TextInput<Msg>('editor', Model.Editor, function(Text: string): Msg => Msg.Edited(Text))
+    ), [], [E.CharacterShortcut<Msg>('2', Msg.Shortcut)]
+  );
+end function;
+
+procedure Send(Session: App.HeadlessSession; Input: App.Input);
+begin
+  case Session.Send(Input) of
+    when App.Admission.Queued(const Id: long):
+      case Session.Step() of
+        when App.StepResult.Processed(const Processed: long, _, _):
+          if Processed = Id then
+            return;
+          end if;
+        else
+      end case;
+    else
+  end case;
+
+  raise new Sys.InvalidOperationException('Expected one completed input.');
+end procedure;
+
+procedure ExpectNotice(Session: App.HeadlessSession; Expected: string);
+begin
+  if Session.Snapshot().Lines[0].TrimEnd() <> Expected then
+    raise new Sys.InvalidOperationException('Unexpected viewport notification or shortcut.');
+  end if;
+end procedure;
+
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<State, Msg>(
+    new State(),
+    Update,
+    View,
+    36,
+    8
+  );
+  ExpectNotice(Session, '36x6');
+  if Session.Snapshot().Cells[36].Style.Foreground <> $117733 then
+    raise new Sys.InvalidOperationException('Canvas focus changed a drawn pixel.');
+  end if;
+
+  Send(Session, App.Input.TextInput('2'));
+  Send(Session, App.Input.Paste('2'));
+  ExpectNotice(Session, '36x6');
+  Send(Session, App.Input.Character('2'));
+  ExpectNotice(Session, '36x6 shortcut');
+  Send(Session, App.Input.Activate('editor'));
+  Send(Session, App.Input.Character('2'));
+  if Session.Snapshot().Controls[1].Value <> '2' then
+    raise new Sys.InvalidOperationException('The focused editor must receive the typed character.');
+  end if;
+
+  ExpectNotice(Session, '36x6 shortcut');
+  Send(Session, App.Input.Resize(36, 8));
+  ExpectNotice(Session, '36x6 shortcut');
+  Send(Session, App.Input.Resize(32, 1));
+  ExpectNotice(Session, '36x6 shortcut 0x0');
+  Send(Session, App.Input.Resize(32, 5));
+  ExpectNotice(Session, '36x6 shortcut 0x0 32x3');
+  Console.WriteLine('canvas input contracts verified');
+end;
+end program;

@@ -12,6 +12,7 @@ public sealed class HeadlessTuiTests
 {
     [Theory]
     [InlineData("headless.fpas", "headless contracts verified\n")]
+    [InlineData("canvas-input.fpas", "canvas input contracts verified\n")]
     [InlineData("effects.fpas", "effect contracts verified\n")]
     public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)
     {

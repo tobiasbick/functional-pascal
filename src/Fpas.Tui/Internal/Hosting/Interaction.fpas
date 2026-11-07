@@ -1,7 +1,7 @@
 unit Fpas.Tui.Internal.Hosting.Interaction;
 
 uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as A,
+  Fpas.Tui.Elements as E, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Arrangement as A,
   Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G,
   System as Sys, System.Collections.Generic as Generic;
 
@@ -11,11 +11,11 @@ public type State<TMsg> = record
   public ScopeId: function(): string;
   public Reconcile: procedure(A.Layout<TMsg>);
   public Activate: procedure(A.Layout<TMsg>, string);
-  public Click: procedure(A.Layout<TMsg>, int, int);
-  public Pointer: procedure(A.Layout<TMsg>, E.PointerKind, int, int);
+  public Click: procedure(A.Layout<TMsg>, E.MouseButton, int, int);
+  public Pointer: procedure(A.Layout<TMsg>, E.PointerKind, E.MouseButton, int, int);
   public Scroll: procedure(A.Layout<TMsg>, int, int, int);
   public Key: procedure(A.Layout<TMsg>, E.Key, E.KeyModifiers);
-  public Insert: procedure(A.Layout<TMsg>, string);
+  public Insert: procedure(A.Layout<TMsg>, string, bool);
   public Selection: function(string, string): Edit.Selection;
 end record;
 
@@ -40,6 +40,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     const Scope: string := ActiveId(Layout);
     if Scope <> FocusScope then
       Captured := '';
+      MiddleCaptured := '';
       Hover := '';
       if FocusScope <> '' and Saved.ContainsKey(
         FocusScope
@@ -119,10 +120,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return null;
   end function;
 
-  procedure ClickAt(Layout: A.Layout<TMsg>; Column: int; Row: int);
+  procedure ClickAt(Layout: A.Layout<TMsg>; Button: E.MouseButton; Column: int; Row: int);
   begin
     const Control: A.Control<TMsg>? := Hit(Layout, Column, Row);
-    if Control = null then
+    if Control = null or (Button = E.MouseButton.Middle and Control.Role <> 'canvas') then
       return;
     end if;
 
@@ -138,26 +139,44 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         );
         const Position: int := G.IndexAt(Value, Start, Column - Control.Bounds.X - 2);
         Selections[Control.Id] := new Edit.Selection(Position, Position);
-      when A.Binding.Canvas(const X: int, const Y: int, const Click: function(int, int): TMsg):
-        Apply(Click(Column - X, Row - Y));
+      when A.Binding.Canvas(const X: int, const Y: int, const Events: E.CanvasEvents<TMsg>):
+        const Click: Sys.Func<int, int, TMsg>? := if Button = E.MouseButton.Left then Events.OnClick
+          else Events.OnMiddleClick
+          end if;
+        case Click of
+          when is Sys.Func<int, int, TMsg> as Callback:
+            Apply(Callback.Invoke(Column - X, Row - Y));
+          else
+        end case;
     end case;
   end procedure;
 
-  procedure Point(Layout: A.Layout<TMsg>; Kind: E.PointerKind; Column: int; Row: int);
+  procedure Point(Layout: A.Layout<TMsg>; Kind: E.PointerKind; Button: E.MouseButton; Column: int; Row: int);
   begin
     const Target: A.Control<TMsg>? := Hit(Layout, Column, Row);
     Hover := if Target = null then '' else Target.Id end if;
     case Kind of
       when E.PointerKind.Press:
-        Captured := Hover;
-        if Captured <> '' then
-          Focus := Captured;
+        if Button = E.MouseButton.Left then
+          Captured := Hover;
+          if Captured <> '' then
+            Focus := Captured;
+          end if;
+        else
+          MiddleCaptured := Hover;
         end if;
       when E.PointerKind.Release:
-        const Held: string := Captured;
-        Captured := '';
+        const Held: string := if Button = E.MouseButton.Left then Captured
+          else MiddleCaptured
+          end if;
+        if Button = E.MouseButton.Left then
+          Captured := '';
+        else
+          MiddleCaptured := '';
+        end if;
+
         if Held <> '' and Held = Hover then
-          ClickAt(Layout, Column, Row);
+          ClickAt(Layout, Button, Column, Row);
         end if;
       else
     end case;
@@ -271,7 +290,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       else Modal.Shortcuts
       end if;
     for Shortcut: E.ShortcutBinding<TMsg> in Keys do
-      if Shortcut.PressedKey = Key and Shortcut.Modifiers = Modifiers then
+      if Shortcut.Character = '' and Shortcut.PressedKey = Key and Shortcut.Modifiers =
+        Modifiers
+      then
         Apply(Shortcut.Message);
         return;
       end if;
@@ -284,6 +305,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       if Control.Id = Id and Eligible(Control, FocusScope) then
         ClickAt(
           Layout,
+          E.MouseButton.Left,
           Control.Bounds.X + Control.Bounds.Width div 2,
           Control.Bounds.Y + Control.Bounds.Height div 2
         );
@@ -294,6 +316,21 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure ScrollAt(Layout: A.Layout<TMsg>; Column: int; Row: int; Delta: int);
   begin
+    const Control: A.Control<TMsg>? := Hit(Layout, Column, Row);
+    if Control <> null then
+      case Control.Action of
+        when A.Binding.Canvas(const X: int, const Y: int, const Events: E.CanvasEvents<TMsg>):
+          const Wheel: Sys.Func<int, int, int, TMsg>? := Events.OnScroll;
+          case Wheel of
+            when is Sys.Func<int, int, int, TMsg> as Callback:
+              Apply(Callback.Invoke(Column - X, Row - Y, Delta));
+              return;
+            else
+          end case;
+        else
+      end case;
+    end if;
+
     for Index: int := Layout.Regions.Length - 1 downto 0 do
       const Region: A.ScrollRegion := Layout.Regions[Index];
       if Region.Scope = FocusScope and Region.Bounds.Contains(Column, Row) then
@@ -312,15 +349,29 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end for;
   end procedure;
 
-  procedure Insert(Layout: A.Layout<TMsg>; Text: string);
+  procedure Insert(Layout: A.Layout<TMsg>; Text: string; Typed: bool);
   begin
     const Control: A.Control<TMsg>? := Focused(Layout);
     if Control <> null then
       case Control.Action of
         when A.Binding.Edit(const Value: string, const Change: function(string): TMsg):
           Replace(Control.Id, Value, SelectionFor(Control.Id, Value), G.SingleLine(Text), Change);
+          return;
         else
       end case;
+    end if;
+
+    if Typed and Text <> '' then
+      const Modal: A.Scope<TMsg>? := Layout.Active;
+      const Keys: array of E.ShortcutBinding<TMsg> := if Modal = null then Layout.GlobalKeys
+        else Modal.Shortcuts
+        end if;
+      for Shortcut: E.ShortcutBinding<TMsg> in Keys do
+        if Shortcut.Character = Text then
+          Apply(Shortcut.Message);
+          return;
+        end if;
+      end for;
     end if;
   end procedure;
 begin
@@ -329,10 +380,41 @@ begin
   var Focus: string := '';
   var Hover: string := '';
   var Captured: string := '';
+  var MiddleCaptured: string := '';
   var FocusScope: string := '';
   return new State<TMsg>(
     function(): string => Focus, function(): string => Hover, function(): string => FocusScope,
     ReconcileFocus, Activate, ClickAt, Point, ScrollAt, RouteKey, Insert, SelectionFor
   );
 end function;
+
+public procedure Dispatch<TMsg>(Routing: State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
+begin
+  case Event of
+    when App.Input.Activate(const Id: string):
+      Routing.Activate(Layout, Id);
+    when App.Input.Click(const Column: int, const Row: int):
+      Routing.Click(Layout, E.MouseButton.Left, Column, Row);
+    when App.Input.ButtonClick(const Button: E.MouseButton, const Column: int, const Row: int):
+      Routing.Click(Layout, Button, Column, Row);
+    when App.Input.Pointer(const Kind: E.PointerKind, const Column: int, const Row: int):
+      Routing.Pointer(Layout, Kind, E.MouseButton.Left, Column, Row);
+    when App.Input.ButtonPointer(
+      const Kind: E.PointerKind,
+      const Button: E.MouseButton,
+      const Column: int,
+      const Row: int
+    ):
+      Routing.Pointer(Layout, Kind, Button, Column, Row);
+    when App.Input.Scroll(const Column: int, const Row: int, const Delta: int):
+      Routing.Scroll(Layout, Column, Row, Delta);
+    when App.Input.KeyPress(const Key: E.Key, const Modifiers: E.KeyModifiers):
+      Routing.Key(Layout, Key, Modifiers);
+    when App.Input.Character(const Text: string):
+      Routing.Insert(Layout, Text, true);
+    when App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
+      Routing.Insert(Layout, Text, false);
+    when App.Input.Resize(_, _):
+  end case;
+end procedure;
 end unit;

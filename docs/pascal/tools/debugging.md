@@ -59,10 +59,12 @@ controller outside the target process.
 | `fpasTuiResize` | Pass `columns` and `rows` to resize the private terminal. This also works at a breakpoint. |
 | `fpasTuiTerminalInput` | Pass `bytes` as base64 for raw terminal input. |
 
-For `fpasTuiSend`, select `input.kind` from `text` or `paste` with `text`,
-`key` with a logical `key` name and optional modifier mask (Shift 1, Alt 2,
-Ctrl 4), `click` with zero-based `column` and `row`, `scroll` with coordinates
-and `delta`, or `activate` with a stable `control` ID.
+For `fpasTuiSend`, use `text`, `paste` or `character` with a `text` value.
+`character` simulates typing and can trigger a character shortcut. `key`
+accepts a logical `key` name and optional modifier mask (Shift 1, Alt 2, Ctrl 4).
+`click`, `press` and `release` accept zero-based `column` and `row` and an
+optional `button` of `left` (default) or `middle`. `scroll` takes coordinates
+and `delta`. `activate` takes a stable `control` ID.
 
 While stopped, a snapshot keeps the completed frame's original size. After
 resizing and continuing, wait for a frame at the new size. A wait for an input

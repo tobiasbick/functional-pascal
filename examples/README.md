@@ -8,6 +8,7 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | --- | --- |
 | [Hello](hello/README.md) | Minimal program, Console, and SDK project |
 | [Mandelbrot](mandelbrot/README.md) | Numeric calculations, casts, loops, and console rendering |
+| [Mandelbrot Explorer](tui/mandelbrot/README.md) | Interactive RGB cell canvas, keyboard and mouse, and cancellable parallel rendering |
 | [Units](units/README.md) | Program and companion units with explicit imports |
 | [Read a file](read-file/README.md) | StreamReader, exceptions, and deterministic disposal |
 | [Directory inventory](directory-inventory/README.md) | Arguments, files, collections, static LINQ calls, and captured state |

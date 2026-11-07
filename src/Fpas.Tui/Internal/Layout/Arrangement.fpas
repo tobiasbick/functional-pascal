@@ -8,7 +8,7 @@ uses
 public type Binding<TMsg> = union
   Invoke(Message: TMsg);
   Edit(Value: string; Change: function(string): TMsg);
-  Canvas(Column: int; Row: int; Click: function(int, int): TMsg);
+  Canvas(Column: int; Row: int; Events: E.CanvasEvents<TMsg>);
 end union;
 
 public type Control<TMsg> = record
@@ -52,6 +52,19 @@ public type Layout<TMsg> = record
   public Painted: array of D.PaintedRow;
   public Allocations: array of AllocationMemo;
 end record;
+
+public function CanvasBounds<TMsg>(Layout: Layout<TMsg>?; Id: string): F.Rect;
+begin
+  if Layout <> null then
+    for Control: Control<TMsg> in Layout.Controls do
+      if Control.Role = 'canvas' and Control.Id = Id then
+        return Control.Bounds;
+      end if;
+    end for;
+  end if;
+
+  return new F.Rect(0, 0, 0, 0);
+end function;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -267,26 +280,42 @@ public function Arrange<TMsg>(
         const Width: int, const Height: int, const DrawCell: function(int, int): E.Cell,
         const Action: E.CanvasBinding<TMsg>
       ):
-        const CanvasArea: F.Rect := F.Intersect(Clip, new F.Rect(Area.X, Area.Y, Width, Height));
+        var CanvasArea: F.Rect := F.Intersect(Clip, new F.Rect(Area.X, Area.Y, Width, Height));
+        var OriginX: int := Area.X;
+        var OriginY: int := Area.Y;
         case Action of
           when E.CanvasBinding.Click(const Id: string, const Click: function(int, int): TMsg):
+            Register(
+              Id, Id, 'canvas', '', CanvasArea, ScopeId, true,
+              Binding<TMsg>.Canvas(OriginX, OriginY, new E.CanvasEvents<TMsg>(OnClick := Click))
+            );
+          when E.CanvasBinding.Responsive(const Id: string, const Events: E.CanvasEvents<TMsg>):
+            CanvasArea := Clip;
+            OriginX := Clip.X;
+            OriginY := Clip.Y;
             Register(
               Id,
               Id,
               'canvas',
               '',
-              CanvasArea,
+              Clip,
               ScopeId,
               true,
-              Binding<TMsg>.Canvas(Area.X, Area.Y, Click)
+              Binding<TMsg>.Canvas(OriginX, OriginY, Events)
             );
+            if Events.OnResize <> null then
+              const Old: F.Rect := CanvasBounds<TMsg>(Previous, Id);
+              if Old.Width <> Clip.Width or Old.Height <> Clip.Height then
+                return;
+              end if;
+            end if;
           when E.CanvasBinding.None:
         end case;
 
         for Y: int := CanvasArea.Y to CanvasArea.Y + CanvasArea.Height - 1 do
           var X: int := CanvasArea.X;
           while X < CanvasArea.X + CanvasArea.Width do
-            const Cell: E.Cell := DrawCell(X - Area.X, Y - Area.Y);
+            const Cell: E.Cell := DrawCell(X - OriginX, Y - OriginY);
             const Glyph: string := G.Sanitize(Cell.Text);
             Put(X, Y, Glyph, Cell.Style, CanvasArea);
             X := X + G.Width(Glyph);

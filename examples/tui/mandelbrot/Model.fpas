@@ -1,0 +1,60 @@
+unit Mandelbrot.Model;
+
+uses Fpas.Tui.Elements as E, Mandelbrot.Palette as P, System as Sys;
+
+public type Camera = record
+  public X: double := -0.75;
+  public Y: double := 0.0;
+  public Span: double := 2.4;
+  public Iterations: int := 160;
+  public Palette: P.Kind := P.Kind.DeepOcean;
+
+  public function SpanX(Columns: int; Rows: int): double;
+  begin
+    return self.Span * cast<double>(Sys.Math.Max(
+      Columns,
+      1
+    )) / cast<double>(Sys.Math.Max(Rows, 1)) * 0.5;
+  end function;
+
+  public function XAt(Column: int; Columns: int; Rows: int): double;
+  begin
+    return self.X + self.SpanX(Columns, Rows) *
+      (cast<double>(Column) / cast<double>(Sys.Math.Max(Columns - 1, 1)) - 0.5);
+  end function;
+
+  public function YAt(Row: int; Rows: int): double;
+  begin
+    return self.Y + self.Span * (0.5 - cast<double>(Row) / cast<double>(Sys.Math.Max(Rows - 1, 1)));
+  end function;
+
+  public function Zoom(): double;
+  begin
+    return 2.4 / self.Span;
+  end function;
+end record;
+
+public type State = record
+  public Camera: Camera := new Camera();
+  public Columns: int := 0;
+  public Rows: int := 0;
+  public Image: array of E.Cell := [];
+  public Ready: bool := false;
+  public Help: bool := false;
+  public Failure: string := '';
+end record;
+
+public type Message = union
+  Resize(Columns: int; Rows: int);
+  Pan(X: int; Y: int);
+  Center(Column: int; Row: int);
+  Zoom(Factor: double);
+  Iterate(Delta: int);
+  SelectPalette(Kind: P.Kind);
+  Reset;
+  ToggleHelp;
+  Exit;
+  Rendered(Image: array of E.Cell);
+  Failed(Reason: string);
+end union;
+end unit;

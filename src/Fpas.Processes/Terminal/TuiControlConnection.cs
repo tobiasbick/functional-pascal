@@ -78,11 +78,13 @@ public sealed class TuiControlConnection : IDisposable
         {
             "activate" => new("activate", Text: value.GetProperty("control").GetString() ?? ""),
             "text" => new("text", Text: value.GetProperty("text").GetString() ?? ""),
+            "character" => new("character", Text: value.GetProperty("text").GetString() ?? ""),
             "paste" => new("paste", Text: value.GetProperty("text").GetString() ?? ""),
             "key" => new("key", value.GetProperty("key").GetString() ?? "",
                 value.TryGetProperty("modifiers", out var modifiers) ? modifiers.GetInt32() : 0),
             "click" or "move" or "press" or "release" => new(value.GetProperty("kind").GetString()!,
-                Column: value.GetProperty("column").GetInt32(), Row: value.GetProperty("row").GetInt32()),
+                Column: value.GetProperty("column").GetInt32(), Row: value.GetProperty("row").GetInt32(),
+                Button: value.TryGetProperty("button", out var button) ? button.GetString() ?? "" : "left"),
             "scroll" => new("scroll", Column: value.GetProperty("column").GetInt32(), Row: value.GetProperty("row").GetInt32(),
                 Delta: value.GetProperty("delta").GetInt32()),
             _ => throw new ArgumentException("Unknown TUI input kind.")

@@ -42,6 +42,10 @@ Debug/Release acceptance runs the same contracts without platform skips.
 `HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including
 frame updates, queue ordering, stale results after replacing an effect, delivery
 of a worker failure on a later step, and joining cancelled workers before exit.
+It also checks canvas size notifications and the priority of typed characters
+in a focused editor. The Mandelbrot DAP test drives the actual explorer with
+terminal keyboard and mouse input, then resizes the terminal and checks the
+new RGB image.
 `TerminalModeTests` reads Win32 input and output modes or Linux termios state
 before, during and after an interactive run in a private terminal. It checks
 exact restoration after both normal exit and a native output failure.

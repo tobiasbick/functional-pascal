@@ -6,6 +6,9 @@ uses
 
 public function Translate(Event: Terminal.TerminalInput): App.Input?;
 begin
+  const Button: E.MouseButton := if Event.Button = 'middle' then E.MouseButton.Middle
+    else E.MouseButton.Left
+    end if;
   case Event.Kind of
     when 'activate':
       return App.Input.Activate(Event.Text);
@@ -13,16 +16,27 @@ begin
       return App.Input.Resize(Event.Column, Event.Row);
     when 'text':
       return App.Input.TextInput(Event.Text);
+    when 'character':
+      return App.Input.Character(Event.Text);
     when 'paste':
       return App.Input.Paste(Event.Text);
     when 'click':
-      return App.Input.Click(Event.Column, Event.Row);
+      if Event.Button = 'left' or Event.Button = 'middle' then
+        return App.Input.ButtonClick(Button, Event.Column, Event.Row);
+      end if;
+
+      return null;
     when 'move':
       return App.Input.Pointer(E.PointerKind.Move, Event.Column, Event.Row);
-    when 'press':
-      return App.Input.Pointer(E.PointerKind.Press, Event.Column, Event.Row);
-    when 'release':
-      return App.Input.Pointer(E.PointerKind.Release, Event.Column, Event.Row);
+    when 'press', 'release':
+      if Event.Button = 'left' or Event.Button = 'middle' then
+        const Kind: E.PointerKind := if Event.Kind = 'press' then E.PointerKind.Press
+          else E.PointerKind.Release
+          end if;
+        return App.Input.ButtonPointer(Kind, Button, Event.Column, Event.Row);
+      end if;
+
+      return null;
     when 'scroll':
       return App.Input.Scroll(Event.Column, Event.Row, Event.Delta);
     when 'key':

@@ -6,7 +6,7 @@ using Microsoft.Win32.SafeHandles;
 namespace Fpas.Processes.Terminal;
 
 public sealed record TerminalInput(string Kind, string Key = "", int Modifiers = 0, string Text = "",
-    int Column = 0, int Row = 0, int Delta = 0);
+    int Column = 0, int Row = 0, int Delta = 0, string Button = "left");
 
 public sealed class ConsoleTerminal : IDisposable
 {
@@ -21,7 +21,8 @@ public sealed class ConsoleTerminal : IDisposable
     private readonly byte[] bytes = new byte[4096];
     private bool disposed;
     private bool outputFailed;
-    private bool pressed;
+    private uint pressedButtons;
+    private TerminalInput? pendingMouse;
     private char highSurrogate;
     public int Columns { get; private set; }
     public int Rows { get; private set; }
@@ -155,6 +156,11 @@ public sealed class ConsoleTerminal : IDisposable
 
     private TerminalInput? PollWindows(int milliseconds)
     {
+        if (pendingMouse is { } mouse)
+        {
+            pendingMouse = null;
+            return mouse;
+        }
         if (decoder.Take(false) is { } pending) return pending;
         var ready = WaitForSingleObject(inputHandle, (uint)milliseconds);
         if (ready == 258) return decoder.Take(milliseconds >= 20);
@@ -162,18 +168,7 @@ public sealed class ConsoleTerminal : IDisposable
         Check(ReadConsoleInput(inputHandle, out var record, 1, out var count));
         if (count == 0) return null;
         if (record.Type == 4) return ReadSize() ? new("resize", Column: Columns, Row: Rows) : null;
-        if (record.Type == 2)
-        {
-            if (record.MouseFlags == 4) return new("scroll", Column: record.X, Row: record.Y, Delta: (short)(record.Buttons >> 16) > 0 ? -3 : 3);
-            if (record.MouseFlags == 1) return new("move", Column: record.X, Row: record.Y);
-            var down = (record.Buttons & 1) != 0;
-            if (record.MouseFlags == 0 && down != pressed)
-            {
-                pressed = down;
-                return new(down ? "press" : "release", Column: record.X, Row: record.Y);
-            }
-            return null;
-        }
+        if (record.Type == 2) return ReadMouse(record);
         if (record.Type != 1 || record.KeyDown == 0) return null;
         if (char.IsHighSurrogate(record.Character)) { highSurrogate = record.Character; return null; }
         var text = highSurrogate != 0 && char.IsLowSurrogate(record.Character)
@@ -197,7 +192,27 @@ public sealed class ConsoleTerminal : IDisposable
         };
         if (name is not null) return new("key", name, modifiers);
         if (record.Character == 0 || char.IsControl(record.Character)) return null;
-        return new("text", Text: text);
+        return new("character", Text: text);
+    }
+
+    private TerminalInput? ReadMouse(InputRecord record)
+    {
+        const uint left = 1, middle = 4;
+        if (record.MouseFlags == 4)
+            return new("scroll", Column: record.X, Row: record.Y, Delta: -3 * Math.Sign((short)(record.Buttons >> 16)));
+        if (record.MouseFlags == 1) return new("move", Column: record.X, Row: record.Y);
+        if (record.MouseFlags is not (0 or 2)) return null;
+
+        var changed = (pressedButtons ^ record.Buttons) & (left | middle);
+        pressedButtons = record.Buttons;
+        if ((changed & middle) != 0) pendingMouse = Button(middle, "middle");
+        if ((changed & left) != 0) return Button(left, "left");
+        var result = pendingMouse;
+        pendingMouse = null;
+        return result;
+
+        TerminalInput Button(uint mask, string name) => new((record.Buttons & mask) != 0 ? "press" : "release",
+            Column: record.X, Row: record.Y, Button: name);
     }
 
     public void Dispose()

@@ -77,7 +77,7 @@ internal sealed class VtInput
         var decoded = Rune.DecodeFromUtf8(input, out var rune, out var consumed);
         if (decoded == OperationStatus.NeedMoreData) return null;
         bytes.RemoveRange(0, consumed);
-        return new("text", Text: rune.ToString());
+        return new("character", Text: rune.ToString());
     }
 
     private static TerminalInput? DecodeCsi(string code, char last)
@@ -89,9 +89,13 @@ internal sealed class VtInput
                 int.TryParse(coordinates[1], out var x) && int.TryParse(coordinates[2], out var y) &&
                 x is >= 1 and <= 500 && y is >= 1 and <= 300 && last is 'M' or 'm')
             {
-                if (button is 64 or 65 && last == 'M') return new("scroll", Column: x - 1, Row: y - 1, Delta: button == 64 ? -3 : 3);
+                var codeWithoutModifiers = button & ~28;
+                if (codeWithoutModifiers is 64 or 65 && last == 'M')
+                    return new("scroll", Column: x - 1, Row: y - 1, Delta: codeWithoutModifiers == 64 ? -3 : 3);
                 if ((button & 32) != 0) return new("move", Column: x - 1, Row: y - 1);
-                if ((button & 0b0110_0011) == 0) return new(last == 'M' ? "press" : "release", Column: x - 1, Row: y - 1);
+                if (codeWithoutModifiers is 0 or 1)
+                    return new(last == 'M' ? "press" : "release", Column: x - 1, Row: y - 1,
+                        Button: codeWithoutModifiers == 0 ? "left" : "middle");
             }
             return null;
         }

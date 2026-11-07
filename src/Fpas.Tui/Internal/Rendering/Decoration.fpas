@@ -17,6 +17,9 @@ public procedure Apply<TMsg>(
     end if;
   end procedure;
 begin
+  if Control.Role = 'canvas' then
+    return;
+  end if;
   const Widgets: E.WidgetStyles? := Theme.Widgets;
   const Style: E.Style := if not Focused then Theme.Hover
     else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField

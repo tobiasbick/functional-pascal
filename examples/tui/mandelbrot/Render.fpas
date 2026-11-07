@@ -1,0 +1,50 @@
+unit Mandelbrot.Render;
+
+uses
+  Fpas.Tui.Elements as E, Mandelbrot.Model as M, Mandelbrot.Palette as P, System as Sys, System.Linq as Linq,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+function Pixel(X: double; Y: double; Camera: M.Camera; Token: Threads.CancellationToken): E.Cell;
+begin
+  var Re: double := 0.0;
+  var Im: double := 0.0;
+  var Magnitude: double := 0.0;
+  var Iteration: int := 0;
+  while Iteration < Camera.Iterations and Magnitude <= 256.0 do
+    if Iteration mod 128 = 0 then
+      Token.ThrowIfCancellationRequested();
+    end if;
+    const Next: double := Re * Re - Im * Im + X;
+    Im := 2.0 * Re * Im + Y;
+    Re := Next;
+    Magnitude := Re * Re + Im * Im;
+    Iteration := Iteration + 1;
+  end while;
+
+  if Iteration = Camera.Iterations then
+    return P.Blank;
+  end if;
+  const Escape: double := cast<double>(Iteration) + 1.0 -
+    Sys.Math.Log2(Sys.Math.Log(Sys.Math.Max(4.0, Magnitude)) * 0.5);
+  return P.Color(Camera.Palette, Escape);
+end function;
+
+public function Compute(Camera: M.Camera; Columns: int; Rows: int; Token: Threads.CancellationToken): array of E.Cell;
+  procedure DrawRow(Row: int);
+  begin
+    const Y: double := Camera.YAt(Row, Rows);
+    for Column: int := 0 to Columns - 1 do
+      const X: double := Camera.XAt(Column, Columns, Rows);
+      Cells[Row * Columns + Column] := Pixel(X, Y, Camera, Token);
+    end for;
+  end procedure;
+begin
+  const Cells: array of E.Cell := Linq.Enumerable.ToArray<E.Cell>(
+    Linq.Enumerable.Repeat<E.Cell>(P.Blank, Columns * Rows)
+  );
+  const Options: Tasks.ParallelOptions := new Tasks.ParallelOptions();
+  Options.CancellationToken := Token;
+  discard Tasks.Parallel.For(0, Rows, Options, DrawRow);
+  return Cells;
+end function;
+end unit;

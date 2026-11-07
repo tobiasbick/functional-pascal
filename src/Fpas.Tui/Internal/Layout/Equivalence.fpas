@@ -24,11 +24,11 @@ begin
     when Tree.Binding.Canvas(
       const Column: int,
       const Row: int,
-      const Click: function(int, int): TMsg
+      const Events: E.CanvasEvents<TMsg>
     ):
       case Right of
-        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: function(int, int): TMsg):
-          return X = Column and Y = Row and Sys.Object.Equals(Click, Other);
+        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: E.CanvasEvents<TMsg>):
+          return X = Column and Y = Row and Events = Other;
         else
           return false;
       end case;

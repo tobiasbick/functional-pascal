@@ -71,6 +71,11 @@ public type PointerKind = enum: byte
   Release;
 end enum;
 
+public type MouseButton = enum: byte
+  Left;
+  Middle;
+end enum;
+
 public type Alignment = enum: byte
   Stretch;
   Start;
@@ -96,6 +101,7 @@ public type ShortcutBinding<TMsg> = record
   public PressedKey: Key;
   public Modifiers: KeyModifiers;
   public Message: TMsg;
+  public Character: string := '';
 end record;
 
 public type EscapeBinding<TMsg> = union
@@ -103,9 +109,17 @@ public type EscapeBinding<TMsg> = union
   Send(Message: TMsg);
 end union;
 
+public type CanvasEvents<TMsg> = record
+  public OnResize: Sys.Func<int, int, TMsg>? := null;
+  public OnClick: Sys.Func<int, int, TMsg>? := null;
+  public OnMiddleClick: Sys.Func<int, int, TMsg>? := null;
+  public OnScroll: Sys.Func<int, int, int, TMsg>? := null;
+end record;
+
 public type CanvasBinding<TMsg> = union
   None;
   Click(Id: string; Message: function(int, int): TMsg);
+  Responsive(Id: string; Events: CanvasEvents<TMsg>);
 end union;
 
 public type ListItem<TMsg> = record
@@ -264,6 +278,14 @@ begin
   return Element<TMsg>.Custom(Columns, Rows, Draw, CanvasBinding<TMsg>.Click(Id, OnClick));
 end function;
 
+/// Draws into the available area. Use Size with Grow to fill unused space in a stack.
+public function CellCanvas<TMsg>(
+  Id: string; Draw: function(int, int): Cell; Events: CanvasEvents<TMsg>
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Custom(1, 1, Draw, CanvasBinding<TMsg>.Responsive(Id, Events));
+end function;
+
 public function Screen<TMsg>(
   Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>
 ): Element<TMsg>;
@@ -298,6 +320,23 @@ end function;
 public function Shortcut<TMsg>(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding<TMsg>;
 begin
   return new ShortcutBinding<TMsg>(PressedKey, Modifiers, Message);
+end function;
+
+/// Binds a typed character when the focused control does not accept text.
+public function CharacterShortcut<TMsg>(Character: string; Message: TMsg): ShortcutBinding<TMsg>;
+begin
+  var Rune: Sys.Text.Rune := new Sys.Text.Rune(0);
+  if not Sys.Text.Rune.TryGetRuneAt(
+    Character,
+    0,
+    out Rune
+  ) or Rune.Utf16SequenceLength <> Character.Length
+    or Sys.Text.Rune.IsControl(Rune)
+  then
+    raise new Sys.ArgumentException('A character shortcut requires one printable Unicode scalar.');
+  end if;
+
+  return new ShortcutBinding<TMsg>(Key.Unknown, KeyModifiers.None, Message, Character);
 end function;
 
 /// Describes a subtree which the host reuses while its typed dependencies compare equal.

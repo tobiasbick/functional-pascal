@@ -4,6 +4,7 @@ uses
   Fpas.Tui.Application as App, Fpas.Tui.Elements as E,
   Fpas.Tui.Internal.Layout.Arrangement as A, Fpas.Tui.Internal.Layout.Equivalence as Q,
   Fpas.Tui.Internal.Hosting.Interaction as I, Fpas.Tui.Internal.Hosting.Effects as Fx,
+  Fpas.Tui.Internal.Hosting.Viewports as V,
   Fpas.Tui.Internal.Rendering.Decoration as D, Fpas.Tui.Internal.Terminal.Inputs as Inputs,
   Fpas.Processes.Terminal as Terminal,
   System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag,
@@ -230,6 +231,9 @@ public function Start<TModel, TMsg>(
 
   procedure Apply(Message: TMsg);
   begin
+    if not Open then
+      return;
+    end if;
     const Next: App.Transition<TModel, TMsg> := Update(Model, Message);
     Model := Next.Model;
     for Effect: App.Command<TMsg> in Next.Commands do
@@ -250,6 +254,16 @@ public function Start<TModel, TMsg>(
   end procedure;
 
   procedure Paint();
+    function Arrange(Theme: E.Theme; Previous: A.Layout<TMsg>?; Routing: I.State<TMsg>): A.Layout<TMsg>;
+    begin
+      Phase := 'view';
+      const Root: E.Element<TMsg> := View(Model);
+      Phase := 'layout_or_drawing';
+      return A.Arrange<TMsg>(
+        Root, Width, Height, Previous, ScrollOffsets, Theme,
+        function(Id: string; Value: string): int => Routing.Selection(Id, Value).Caret
+      );
+    end function;
   begin
     const Routing: I.State<TMsg>? := Interaction;
     if Routing = null then
@@ -257,13 +271,35 @@ public function Start<TModel, TMsg>(
     end if;
 
     Phase := 'view';
-    const Theme: E.Theme := ThemeFor(Model);
-    const Root: E.Element<TMsg> := View(Model);
+    Phase := 'view';
+    var Theme: E.Theme := ThemeFor(Model);
+    var Layout: A.Layout<TMsg> := Arrange(Theme, Current, Routing);
+    var Previous: A.Layout<TMsg>? := Current;
+    for Pass: int := 1 to 16 do
+      Phase := 'update';
+      if not V.Notify<TMsg>(Previous, Layout, Apply) then
+        break;
+      end if;
+
+      if not Open then
+        if Published <> null then
+          return;
+        end if;
+
+        break;
+      end if;
+
+      if Pass = 16 then
+        raise new Sys.InvalidOperationException('Canvas resize updates did not converge.');
+      end if;
+
+      Previous := Layout;
+      Phase := 'view';
+      Theme := ThemeFor(Model);
+      Layout := Arrange(Theme, Previous, Routing);
+    end for;
+
     Phase := 'layout_or_drawing';
-    const Layout: A.Layout<TMsg> := A.Arrange<TMsg>(
-      Root, Width, Height, Current, ScrollOffsets, Theme,
-      function(Id: string; Value: string): int => Routing.Selection(Id, Value).Caret
-    );
     Routing.Reconcile(Layout);
     const Focus: string := Routing.FocusId();
     const Hover: string := Routing.HoverId();
@@ -335,21 +371,11 @@ public function Start<TModel, TMsg>(
     end if;
 
     case Event of
-      when App.Input.Activate(const Id: string):
-        Routing.Activate(Layout, Id);
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
         Width := NewColumns;
         Height := NewRows;
-      when App.Input.Click(const Column: int, const Row: int):
-        Routing.Click(Layout, Column, Row);
-      when App.Input.Pointer(const Kind: E.PointerKind, const Column: int, const Row: int):
-        Routing.Pointer(Layout, Kind, Column, Row);
-      when App.Input.Scroll(const Column: int, const Row: int, const Delta: int):
-        Routing.Scroll(Layout, Column, Row, Delta);
-      when App.Input.KeyPress(const Key: E.Key, const Modifiers: E.KeyModifiers):
-        Routing.Key(Layout, Key, Modifiers);
-      when App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
-        Routing.Insert(Layout, Text);
+      else
+        I.Dispatch<TMsg>(Routing, Layout, Event);
     end case;
   end procedure;
 
@@ -459,11 +485,23 @@ begin
   );
   Interaction := I.Create<TMsg>(Apply, ScrollOffsets);
   CheckSize(Columns, Rows);
-  Paint();
-  Connection := Terminal.TuiControlConnection.Open(
-    SendControl, function(): Sys.Object => ReadFrame(),
-    function(): Terminal.TuiControlReply => Describe(Step()), WaitControl, Ready, Capacity, Manual
-  );
+  try
+    Paint();
+    if Open then
+      Connection := Terminal.TuiControlConnection.Open(
+        SendControl,
+        function(): Sys.Object => ReadFrame(),
+        function(): Terminal.TuiControlReply => Describe(Step()),
+        WaitControl,
+        Ready,
+        Capacity,
+        Manual
+      );
+    end if;
+  catch Error: Sys.Exception do
+    Close();
+    raise;
+  end try;
   const Observer: Terminal.TuiControlConnection? := Connection;
   if Observer <> null then
     Observer.Publish(ReadFrame());

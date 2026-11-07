@@ -24,10 +24,13 @@ public type Input = union
   Activate(Id: string);
   Resize(Columns: int; Rows: int);
   KeyPress(Key: E.Key; Modifiers: E.KeyModifiers);
+  Character(Text: string);
   TextInput(Text: string);
   Paste(Text: string);
   Click(Column: int; Row: int);
+  ButtonClick(Button: E.MouseButton; Column: int; Row: int);
   Pointer(Kind: E.PointerKind; Column: int; Row: int);
+  ButtonPointer(Kind: E.PointerKind; Button: E.MouseButton; Column: int; Row: int);
   Scroll(Column: int; Row: int; Delta: int);
 end union;
 

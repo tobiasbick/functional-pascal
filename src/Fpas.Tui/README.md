@@ -43,8 +43,29 @@ A modal overlay owns the focus scope and suspends global shortcuts. The host
 tries the requested initial control, then the first focusable control. On
 close it restores the old focus if available. Tab and Shift+Tab stay within
 the scope. Host navigation precedes the focused control's keys, then scoped
-shortcuts, then global shortcuts. Text and paste bypass shortcuts. The
-single-line editor replaces pasted line breaks with spaces.
+shortcuts, then global shortcuts. Use `Shortcut` for named keys and modifiers.
+Use `CharacterShortcut` to match one exact printable character. A typed
+character goes to the focused text field first. Otherwise it can trigger a
+character shortcut in the active scope. `Input.Character` simulates this
+path. `TextInput` and `Paste` go directly to the editor, which replaces line
+breaks with spaces.
+
+### Responsive cell canvas
+
+Use `CellCanvas(Id, Draw, Events)` to draw into the space assigned by the layout.
+In a stack, wrap the canvas or its border in `Size` with `Grow` to fill the
+remaining space. The fixed-size canvas overloads are still available.
+
+Provide `CanvasEvents.OnResize` to map the visible column and row counts to a
+typed message. The host delivers the initial size and each subsequent size
+change through `Update` before drawing the canvas at that size. A previously
+visible canvas that disappears receives `(0, 0)`. Keep resize updates stable so
+layout can settle within the same turn.
+
+`Draw`, `OnClick`, `OnMiddleClick` and `OnScroll` use coordinates relative to
+the visible canvas, starting at zero. A negative wheel delta means up and a
+positive delta means down. A modal overlay blocks pointer input to the canvas
+behind it. The canvas owns its cell colors, including while focused or hovered.
 
 ## Styling
 

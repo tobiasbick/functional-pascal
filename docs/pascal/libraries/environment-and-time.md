@@ -74,13 +74,14 @@ begin
   const Restored: Sys.DateTimeOffset := Sys.DateTimeOffset.ParseExact(
     Wire, 'O', Culture, Global.DateTimeStyles.None);
   const Utc: Sys.DateTimeOffset := Stamp.ToUniversalTime();
-  const Deadline: Sys.DateTimeOffset := Stamp.Add(Sys.TimeSpan.FromMinutes(90.0));
-  const Duration: Sys.TimeSpan := Deadline.Subtract(Stamp);
+  const Window: Sys.TimeSpan := Sys.TimeSpan.FromMinutes(90.0);
+  const Deadline: Sys.DateTimeOffset := Stamp + Window;
+  const Duration: Sys.TimeSpan := Deadline - Stamp;
   const Elapsed: Sys.TimeSpan := Diagnostics.Stopwatch.GetElapsedTime(Started);
   const Now: Sys.DateTimeOffset := Sys.DateTimeOffset.UtcNow;
   if Restored <> Stamp or Restored.Offset <> Stamp.Offset or
     Utc.Hour <> 10 or Utc.Offset <> Sys.TimeSpan.Zero or
-    Duration <> Sys.TimeSpan.FromMinutes(90.0) or Elapsed < Sys.TimeSpan.Zero or
+    Duration <> Window or Deadline - Window <> Stamp or Elapsed < Sys.TimeSpan.Zero or
     Now.Offset <> Sys.TimeSpan.Zero then
     raise new Sys.InvalidOperationException('Incorrect instant or duration');
   end if;
@@ -96,10 +97,8 @@ The string-based
 overload takes a format, provider, and DateTimeStyles; malformed input throws
 FormatException. The round-trip `O` format preserves fractional seconds and the
 offset. TimeSpan's `c` format represents a duration without calendar/time-zone rules.
-Use the instance Subtract(DateTimeOffset) method here: concrete imported
-date/time arithmetic operators are outside the current operator lookup. The
-[dogfooding boundary](../../future/dogfooding-gaps.md#current-boundaries)
-records the rejected subtraction form.
+Subtracting two DateTimeOffset values yields a TimeSpan. Adding or subtracting
+a TimeSpan yields a DateTimeOffset.
 
 Use UtcNow for a current wall-clock instant and
 [Stopwatch.GetElapsedTime(Int64)](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.stopwatch.getelapsedtime?view=net-10.0)

@@ -22,7 +22,7 @@ internal sealed partial class ReferenceCatalog
         throw source.Error(code, $"{(best.Length == 0 ? "No supported public overload" : "Ambiguous overloads")} for '{owner}.{name}'.", position);
     }
 
-    internal IReadOnlyList<ImportedMethod> Methods(TypeSymbol owner, string name, bool isStatic, TypeList? methodArguments = null, RecordSymbol? access = null, bool includeOpen = false)
+    internal IReadOnlyList<ImportedMethod> Methods(TypeSymbol owner, string name, bool isStatic, TypeList? methodArguments = null, RecordSymbol? access = null, bool includeOpen = false, bool operatorsOnly = false)
     {
         var result = new List<ImportedMethod>();
         var signatures = new HashSet<string>(StringComparer.Ordinal);
@@ -71,6 +71,7 @@ internal sealed partial class ReferenceCatalog
                 var method = definition.Assembly.Reader.GetMethodDefinition(handle);
                 if (definition.Assembly.Reader.GetString(method.Name) != name ||
                     method.Attributes.HasFlag(MethodAttributes.Static) != isStatic ||
+                    operatorsOnly && !method.Attributes.HasFlag(MethodAttributes.SpecialName) ||
                     (method.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public || !includeOpen && method.GetGenericParameters().Count != (methodArguments?.Count ?? 0)) continue;
                 var imported = ConstrainStatic(ReadMethod(type, handle, methodArguments, allowOpen: includeOpen), owner);
                 if (imported is null) continue;

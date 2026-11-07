@@ -133,15 +133,11 @@ internal sealed partial class Binder
         if (references.ScalarInfo(right.Type) is { Category: ScalarCategory.Range } rightRange && TypeFacts.Numeric(left.Type))
             right = new BoundCall(ReferenceCatalog.DomainGetter(rightRange), [], right);
         if (TypeFacts.Numeric(left.Type) && TypeFacts.Numeric(right.Type)) return NumericBinary(left, op, right, syntax.Position, check);
-        if (BindConstrainedOperator(op, [left, right], syntax.Position, check, lifted) is { } operatorCall)
+        if (BindClrOperator(op, [left, right], syntax.Position, check, lifted) is { } call)
         {
-            operatorCalls[syntax] = false;
-            return operatorCall;
-        }
-        if (BindComparisonOperator(left, op, right, syntax.Position, lifted) is BoundCall comparison)
-        {
-            operatorCalls[syntax] = references.RecordInfo(comparison.Method.Owner) is not null || references.UnionInfo(comparison.Method.Owner) is not null;
-            return comparison;
+            operatorCalls[syntax] = call.Method.ConstrainedType is null &&
+                (references.RecordInfo(call.Method.Owner) is not null || references.UnionInfo(call.Method.Owner) is not null);
+            return call;
         }
         if (op == "??")
         {

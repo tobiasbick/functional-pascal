@@ -267,6 +267,15 @@ property/helper/factory signatures and case bases, retaining nullable annotation
 They verify matching generic arity and all existing readonly/accessibility rules.
 See [implemented generic data types](../pascal/language/types/generics.md).
 
+## Imported CLR operators
+
+Concrete operators bind to public static CLR operator methods with supported
+signatures. Emit an ordinary CIL call with the selected method's declaring
+type, parameter types and result type. Evaluate operands in source order and
+apply the conversions chosen by overload resolution. Checked expressions prefer
+an applicable checked operator, then fall back to the ordinary operator.
+See the [operator rules](../pascal/language/basics/operators.md#imported-clr-operators).
+
 ## Lifted nullable operators
 
 Real division of two integral values emits both operands converted to

@@ -8,7 +8,7 @@ internal sealed partial class Binder
 {
     private BoundExpression BindUnaryOperation(BoundExpression operand, string op, int position, bool check, bool lifted = false)
     {
-        if (BindConstrainedOperator(op, [operand], position, check, lifted) is { } call) return call;
+        if (BindClrOperator(op, [operand], position, check, lifted) is { } call) return call;
         if (op == "not" && references.ScalarInfo(operand.Type) is { Category: ScalarCategory.Enum } enumeration)
         {
             var promoted = NumericFacts.Unary(enumeration.Base, "not");

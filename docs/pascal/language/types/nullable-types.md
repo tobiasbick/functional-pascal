@@ -65,9 +65,9 @@ otherwise valid lifted operation. A null shift count uses int?. An arithmetic
 expression with two untyped null operands has no underlying type and is rejected.
 Existing direct null tests remain available on references and nullable values.
 
-The same lifting rules apply to already supported CLR value-type comparison
-operators and constrained generic operators when their parameter and result
-types are non-nullable value types. Generic lifting requires a struct constraint
+The same lifting rules apply to imported CLR value-type operators and
+constrained generic operators when their parameter and result types are
+non-nullable value types. Generic lifting requires a struct constraint
 and the appropriate operator interface; struct alone does not supply arithmetic
 or equality. Imported default/checked implementations keep their ordinary
 dispatch rules. Lifting neither introduces new underlying operators nor erases

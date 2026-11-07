@@ -23,10 +23,9 @@ interface dispatch and CLR boxing/casts. Foreign reference annotations are
 contracts; unannotated results are conservatively nullable. `typeof(T)` produces
 the actual Type without constructing an instance or running its type initializer.
 
-CLR comparison operators are resolved from both operand types and invoked
-directly, including DateTime/TimeSpan/Guid comparisons. Arrays compare by
-identity. Other references without an applicable equality operator use identity,
-not a virtual Equals call. Supported value-type operators have
+CLR operators resolve from both operand types and call the selected CLR method.
+For example, DateTimeOffset subtraction yields TimeSpan. Arrays and references
+without an applicable equality operator compare by identity. Value-type operators have
 [lifted nullable forms](../language/types/nullable-types.md#lifted-value-operators).
 
 ## Implementing interfaces and using attributes

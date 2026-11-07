@@ -128,7 +128,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Event metadata/accessors, storage, delegates, nullable captures | EventTests, EventMetadataTests | MsBuildTests.Events/EventDiagnostics |
 | Type tokens, generic identity, initialization effects | TypeOfTests | TypeOfExecutionTests, MsBuildTests.TypeOf |
 | Attribute constants, targets, usage, flags | AttributeTests | MsBuildTests.Attributes/AttributeDiagnostics |
-| CLR comparison operators and unsupported signatures | ComparisonOperatorTests | ComparisonExecutionTests, MsBuildTests.Comparisons/SignatureLimits |
+| CLR operators, overloads, checked and lifted calls, and unsupported signatures | ComparisonOperatorTests | ComparisonExecutionTests, MsBuildTests.Comparisons/ImportedOperators/SignatureLimits, LanguageSpecificationTests (TimeAndDuration) |
 
 Files live in [compiler tests](Fpas.Compiler.Tests/) and
 [integration tests](Fpas.IntegrationTests/). MsBuildTests uses topic-based partial
@@ -207,8 +207,9 @@ classes, unsigned enums, null/boxed/array values, type tokens, async kickoff
 placement, and supported pseudo-flags. A throwing attribute constructor does not
 execute during compilation.
 
-Comparison tests exercise both operand owners, ambiguity, once-only evaluation,
-and safe nullable flow. Signature-limit builds check methods, method groups,
+CLR operator tests exercise both operand owners, ambiguity, once-only evaluation,
+checked and lifted dispatch, and safe nullable flow. Signature-limit builds
+check methods, method groups,
 delegates, fields, properties, and indexers against a real C# reference with
 unsupported ref returns, pointers, byref-like types, or required modifiers.
 Supported overloads remain usable; excluded ones produce identifying diagnostics.

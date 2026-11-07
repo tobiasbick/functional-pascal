@@ -30,7 +30,8 @@ logical chain.
   and subranges projected to their base type. `1 / 2` yields `0.5`,
   `1 / 0` yields positive infinity, and `0 / 0` yields NaN. If an operand
   is already `float`, `double`, or `decimal`, use ordinary promotion.
-- `div` and `mod` accept integral operands; division truncates toward zero.
+- With built-in numeric operands, `div` and `mod` take integral operands.
+  Division truncates toward zero.
 - Numeric widening and binary promotion follow C# rules. For example,
   `int + long` produces `long`, and `short + short` produces `int`.
   `decimal` does not implicitly mix with `float` or `double`.
@@ -48,37 +49,44 @@ Strings compare ordinal contents; arrays use reference identity. Generated
 record/union equality is described in [types](../types/README.md). Other reference types
 without an applicable equality operator use reference identity, not an implicit
 call to virtual `Equals`. Ordering requires an applicable primitive/operator rule.
-Applicable CLR comparison operators are resolved from both operand types using
-ordinary overload rules, including for value types such as DateTime and TimeSpan.
-Ambiguous operators are errors. Supported value operators have
-[lifted nullable forms](../types/nullable-types.md#lifted-value-operators);
-source operator declarations remain unsupported. See
-[comparisons and acceptance](../../../../tests/coverage.md).
+
+## Imported CLR operators
+
+Concrete CLR operands can supply public static operator methods with supported
+signatures. Binary lookup considers both operand types and unary lookup uses
+the operand type. Ordinary overload rules select the method and its declared
+result type. For example, subtracting two DateTimeOffset values yields a
+TimeSpan, while subtracting a TimeSpan from a DateTimeOffset yields a
+DateTimeOffset. Ambiguity is an error.
+
+The existing symbols map to CLR operator members: +, -, *, / and div, mod,
+and/or/xor, shl/shr, unary +/-, not, and comparisons. Both / and div select
+op_Division for imported operators. Not selects op_OnesComplement or, if
+unavailable, op_LogicalNot. Imported operators evaluate operands once in written
+order. For concrete operands, a bool left operand makes and/or short-circuit
+and requires a bool right operand. Built-in numeric, Boolean, and string rules
+apply to their own operand combinations.
+
+Checked arithmetic selects an applicable op_CheckedAddition, op_CheckedSubtraction,
+op_CheckedMultiply, op_CheckedDivision, or op_CheckedUnaryNegation when supplied
+by the CLR type or interface contract, otherwise the ordinary operator. Unchecked
+selects the ordinary operator. The CLR implementation determines overflow and
+exception behavior. Supported value operators have
+[lifted nullable forms](../types/nullable-types.md#lifted-value-operators).
+See [operator acceptance](../../../../tests/coverage.md).
 
 ## Operators from generic constraints
 
 For a type parameter, operators resolve from its imported CLR interface
 constraints, including inherited contracts such as INumber<T>. Binary lookup
-uses both operands' type parameters and normal overload applicability; it retains
-the selected interface, implementing parameter, argument types, and result type.
-There is no implicit numeric promotion of an unknown T. Missing and ambiguous
-contracts are errors. Struct-constrained nullable parameters support lifting when
-the selected operator has non-nullable value parameter and result types.
-
-The existing symbols map to CLR operator members: +, -, *, / and div, mod,
-and/or/xor, shl/shr, unary +/-, not, and comparisons. Both / and div select
-op_Division when used through a constraint; the CLR contract supplies its result
-and division behavior. Not selects op_OnesComplement or, if unavailable,
-op_LogicalNot. Constrained and/or calls are eager; bool and/or retain their
-ordinary short-circuit behavior. Generic equality does not establish that an
-operand is non-null.
-
-Checked arithmetic selects an applicable op_CheckedAddition, op_CheckedSubtraction,
-op_CheckedMultiply, op_CheckedDivision, or op_CheckedUnaryNegation when supplied
-by the contract, otherwise the ordinary operator. Unchecked selects the ordinary
-operator. The implementation, including any CLR default body, determines its
-overflow and exception behavior. This consumes imported contracts; it does not
-declare FPAS operators or static interface implementations on source records.
+uses both operands' type parameters and normal overload applicability. It
+retains the selected interface, implementing parameter, argument types, and
+result type. Unknown type parameters do not undergo implicit numeric promotion.
+Missing and ambiguous contracts are errors. Struct-constrained
+nullable parameters support lifting when the selected operator has non-nullable
+value parameter and result types. Generic equality does not establish that an
+operand is non-null. FPAS source operator declarations and static interface
+implementations remain outside this scope.
 
 ## See also
 

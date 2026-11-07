@@ -127,8 +127,8 @@ The [diagnostic CLI](pascal/tools/cli-diagnostics.md),
 [terminal runner](pascal/tools/terminal-testing.md) and
 [report schemas](pascal/tools/report-schemas.md) expose these workflows through
 bounded commands. Thread samples describe wall time, including waiting threads;
-they do not measure CPU utilization. Additional refactorings remain in the
-[editor inventory](future/editor-gap.md), scheduled last.
+they do not measure CPU utilization. The [refactoring reference](pascal/tools/refactoring.md)
+describes checked source edits in the CLI and VS Code.
 
 ## See also
 

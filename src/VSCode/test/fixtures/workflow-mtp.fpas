@@ -1,0 +1,27 @@
+unit Native;
+
+uses Microsoft.VisualStudio.TestTools.UnitTesting as T;
+
+[T.TestClassAttribute]
+public type Cases = record
+  [T.TestMethodAttribute(DisplayName := 'Same display name')]
+  procedure Addition();
+  begin
+    T.Assert.AreEqual<int>(4, 2 + 2);
+  end procedure;
+
+  [T.TestMethodAttribute(DisplayName := 'Same display name')]
+  procedure Failure();
+  begin
+    T.Assert.AreEqual<int>(1, 2);
+  end procedure;
+
+  [T.TestMethodAttribute]
+  [T.IgnoreAttribute]
+  procedure Skipped();
+  begin
+    T.Assert.IsTrue(false);
+  end procedure;
+end record;
+
+end unit;

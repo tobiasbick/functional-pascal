@@ -25,9 +25,12 @@ internal sealed class ExecutionCommand
     private readonly Option<string> report = new("--report") { Description = "Write one JSON result, capturing program output." };
     internal Command Command { get; }
 
-    internal ExecutionCommand(bool run)
+    private readonly bool editorControlled;
+
+    internal ExecutionCommand(bool run, bool editorControlled = false)
     {
         this.run = run;
+        this.editorControlled = editorControlled;
         timeout = new("--timeout") { DefaultValueFactory = _ => run ? 0 : 120, Description = run ? "Overall deadline in seconds (0..3600; 0 means no deadline)." : "Overall deadline in seconds (1..3600)." };
         Command = new(run ? "run" : "build", run ? """
             Build and run an explicit source, project or solution, or run an existing managed DLL.
@@ -64,6 +67,7 @@ internal sealed class ExecutionCommand
     {
         if (run && (result.GetValue(arguments)?.Length ?? 0) != 0 && !raw.Contains("--", StringComparer.Ordinal))
             throw new ArgumentException("Pass program arguments after --.");
+        if (editorControlled && !Json(result)) throw new ArgumentException("Captured runs require --report json.");
     }
     internal void ReportArgumentError(ParseResult result, string message)
         => Failure(null, "invalid_argument", message + $" See fpas {Command.Name} --help.").Write(Json(result));
@@ -109,7 +113,7 @@ internal sealed class ExecutionCommand
                 if (run) target = await ProjectDriver.SelectExecutableAsync(buildContext, selectedConfiguration, selectedProject, combined.Token);
                 if (!skipBuild)
                 {
-                    built = await ProjectDriver.BuildAsync(buildContext, selectedConfiguration, result.GetValue(noRestore), combined.Token);
+                    built = await ProjectDriver.BuildAsync(buildContext, selectedConfiguration, result.GetValue(noRestore), combined.Token, captureDiagnostics: json);
                     if (built.ExitCode != 0 || built.Truncated)
                     {
                         Failure(context, built.Truncated ? "output_limit" : "build_failed", "Build failed or exceeded its captured output limit.", built: built).Write(json); return 1;
@@ -127,7 +131,7 @@ internal sealed class ExecutionCommand
             var programArguments = new[] { target.Assembly }.Concat(result.GetValue(arguments) ?? []).ToArray();
             if (json)
             {
-                var output = await BuildProcess.Run(cwd, programArguments, combined.Token, inheritInput: true, buildEnvironment: false);
+                var output = await BuildProcess.Run(cwd, programArguments, combined.Token, inheritInput: !editorControlled, buildEnvironment: false);
                 executed = new(output.ExitCode, output.Output, output.Error, output.Truncated);
             }
             else

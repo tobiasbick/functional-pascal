@@ -50,7 +50,11 @@ internal sealed class LspProbe : IAsyncDisposable
     { var response = await InitializeResponse(context, watch, rename); Assert.True(response.TryGetProperty("result", out _), response.GetRawText()); }
     internal Task<JsonElement> InitializeResponse(string context, bool watch = false, bool rename = true) => Request("initialize", new
     {
-        capabilities = new { general = new { positionEncodings = new[] { "utf-16", "utf-8" } }, workspace = new { didChangeWatchedFiles = new { dynamicRegistration = watch }, workspaceEdit = new { documentChanges = rename } }, textDocument = new { rename = new { prepareSupport = rename } } },
+        capabilities = new { general = new { positionEncodings = new[] { "utf-16", "utf-8" } },
+            workspace = new { didChangeWatchedFiles = new { dynamicRegistration = watch }, workspaceEdit = new { documentChanges = rename } },
+            textDocument = new { rename = new { prepareSupport = rename }, documentSymbol = new { hierarchicalDocumentSymbolSupport = true },
+                semanticTokens = new { requests = new { full = true }, tokenTypes = new[] { "namespace", "struct", "function", "variable", "parameter", "property", "type" },
+                    tokenModifiers = new[] { "declaration" } } } },
         initializationOptions = new { context, configuration = "Debug" }
     });
     internal async Task<JsonElement> Notification(string method, Func<JsonElement, bool>? predicate = null)

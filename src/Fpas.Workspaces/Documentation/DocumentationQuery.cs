@@ -21,7 +21,7 @@ public sealed class DocumentationQuery
         if (search.Limit is < 1 or > 100 || search.Offset < 0) throw new ContextFailure("invalid_argument", "--limit must be 1..100 and --offset must be nonnegative.");
         if (search.Assembly is not null && string.IsNullOrWhiteSpace(search.Assembly)) throw new ContextFailure("invalid_argument", "--assembly must be an assembly's simple name.");
     }
-    public DocumentationResult Search(DocumentationSearch search, CancellationToken token = default)
+    public DocumentationResult Search(DocumentationSearch search, CancellationToken token = default, bool metadataOnly = false)
     {
         Validate(search); token.ThrowIfCancellationRequested();
         var projects = analysis.Context.Projects.Where(project => search.Project is null || Paths.Equals(project.Path, Path.GetFullPath(search.Project)))
@@ -31,13 +31,21 @@ public sealed class DocumentationQuery
         inputs = new(analysis.Context.SnapshotId, references, token);
         var xml = new XmlDocumentation(inputs, token);
         using var metadata = new MetadataCatalog();
-        var candidates = source.Documentation(search, token).ToList();
+        var candidates = metadataOnly ? [] : source.Documentation(search, token).ToList();
         var sourceProjects = projects.Select(project => project.Path).ToHashSet(Paths);
         var sourceOutputs = analysis.Context.DependencyOutputs.Where(output => sourceProjects.Contains(output.Project)).Select(output => output.Path).ToHashSet(Paths);
         foreach (var project in projects)
             foreach (var path in project.Request.References.Distinct(Paths).Where(path => !sourceOutputs.Contains(path)))
             {
-                token.ThrowIfCancellationRequested(); candidates.AddRange(metadata.Search(project.Path, path, search, token));
+                token.ThrowIfCancellationRequested();
+                var image = metadataOnly ? project.Request.ReferenceImages?.FirstOrDefault(item => Paths.Equals(item.Path, path)) : null;
+                if (metadataOnly && image is null) continue;
+                foreach (var candidate in metadata.Search(project.Path, path, search, token, image))
+                {
+                    if (metadataOnly && candidates.Count == 1000)
+                        throw new ContextFailure("documentation_limit", "Metadata search exceeds 1,000 matches. Narrow the name or project.");
+                    candidates.Add(candidate);
+                }
             }
         var ordered = candidates.OrderBy(item => item.Project, StringComparer.Ordinal).ThenBy(item => item.Origin == "source" ? 0 : 1)
             .ThenBy(item => item.QualifiedName, StringComparer.Ordinal).ThenBy(item => item.SortKey, StringComparer.Ordinal).ToArray();

@@ -7,7 +7,11 @@ public sealed record DocumentationSearch(string Name, string Match = "exact", st
 public sealed record DocumentationContent(string Availability, string Format, string? Path, string? Content);
 public sealed record DocumentationEntry(string Project, string Origin, string Kind, string Name, string QualifiedName,
     string Signature, string SignatureFormat, string Assembly, string? AssemblyPath, string? DocumentationId,
-    SourceSpan? Span, DocumentationContent Documentation);
+    SourceSpan? Span, DocumentationContent Documentation)
+{
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? Identity { get; init; }
+}
 public sealed record DocumentationResult(string Status, string SnapshotId, IReadOnlyList<DocumentationEntry> Entries,
     int TotalCount, int Offset, int? NextOffset, bool Truncated, int OmittedDocumentationCount,
     IReadOnlyList<string> SearchedProjects, IReadOnlyList<string> SearchedAssemblies, Fpas.Workspaces.Analysis.WorkspaceSemanticCoverage Coverage);

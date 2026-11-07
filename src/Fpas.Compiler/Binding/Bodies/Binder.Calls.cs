@@ -10,6 +10,16 @@ internal sealed partial class Binder
 {
     private BoundExpression BindCall(CallSyntax call, bool check, TypeSymbol? expected)
     {
+        if (source.Editor is null) return BindCallCore(call, check, expected);
+        EditorExpression(call.Target, check);
+        var previous = editorInvocation;
+        editorInvocation = source.Editor.Context == "signature" && source.Editor.Position == call.ArgumentsStart ? call.Position : -1;
+        try { return BindCallCore(call, check, expected); }
+        finally { editorInvocation = previous; }
+    }
+
+    private BoundExpression BindCallCore(CallSyntax call, bool check, TypeSymbol? expected)
+    {
         var target = call.Target;
         TypeList? typeArguments = null;
         if (target is GenericNameSyntax generic) { typeArguments = new(generic.Arguments.Select(BindType)); target = generic.Name; }
@@ -74,6 +84,7 @@ internal sealed partial class Binder
         if (target.Type.IsNullable) throw source.Error("FP3013", "The delegate may be null; validate a stable binding before invocation.", position);
         if (!invoke.Flexible && arguments.All(argument => argument is not (NamedArgumentSyntax or ArgumentModeSyntax)))
         {
+            if (source.Editor is not null) EditorSignatures([invoke], arguments, position);
             if (arguments.Count != invoke.Parameters.Count) throw source.Error("FP3003", "The delegate argument count does not match.", position);
             var values = arguments.Select((argument, index) => BindExpression(argument, check, invoke.Parameters[index])).ToArray();
             ForgetCapturedFacts();

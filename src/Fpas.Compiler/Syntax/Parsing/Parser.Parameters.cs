@@ -8,6 +8,7 @@ internal sealed partial class Parser
         var mode = At("ref") || At("out") || At("in") || At("params") ? tokens[position++].Text : "";
         var name = Identifier();
         using var declaration = Declaration(name, start);
+        declaration.Info.Kind = "parameter";
         var type = ReadBindingType(name);
         ExpressionSyntax? value = null;
         if (At(":=")) { position++; value = ReadExpression(); }

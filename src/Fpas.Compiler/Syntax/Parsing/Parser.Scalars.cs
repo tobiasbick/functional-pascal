@@ -10,6 +10,7 @@ internal sealed partial class Parser
         if (At("public") || At("private")) position++;
         Expect("type"); var name = Identifier();
         using var declaration = Declaration(name, start, visible ? "public" : "private", documentation);
+        declaration.Info.Kind = "domain";
         if (At("<")) throw source.Error("FP3031", "Aliases, enums, and scalar domains do not declare type parameters.", Current.Position);
         Expect("=");
         if (At("enum"))
@@ -25,6 +26,7 @@ internal sealed partial class Parser
                 layout?.Line(position);
                 var doc = Current.Documentation; var label = Identifier(); ExpressionSyntax? value = null;
                 using var memberDeclaration = Declaration(label, label.Position, "public", doc);
+                memberDeclaration.Info.Kind = "enum_member";
                 if (At("=")) { position++; value = ReadExpression(); }
                 Expect(";"); members.Add(new(label, value, doc));
             }

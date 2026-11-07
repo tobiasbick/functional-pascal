@@ -239,7 +239,8 @@ renames the consumer directory before these runs and uses an empty package cache
 
 This walkthrough verifies managed DLL deployment. For apphosts, Native AOT,
 self-contained/single-file output and signing, use [application publishing](publishing.md).
-IDE project loaders remain [editor work](../future/editor-gap.md).
+The [VS Code extension](../../src/VSCode/README.md) can analyze and build restored
+project contexts with this toolchain.
 
 ## Update the packaged compiler
 

@@ -23,12 +23,14 @@ public static class ProjectDriver
         return path;
     }
 
-    public static async Task<BuildResult> BuildAsync(string context, string configuration, bool noRestore, CancellationToken token)
+    public static async Task<BuildResult> BuildAsync(string context, string configuration, bool noRestore, CancellationToken token,
+        bool captureDiagnostics = false)
     {
         context = ValidateContext(context);
         var args = new List<string> { "build", context, "--configuration", MsBuildSyntax.Escape(configuration), "--disable-build-servers", "-nr:false", "-p:UseSharedCompilation=false", "--verbosity", "minimal" };
         if (noRestore) args.Add("--no-restore");
-        return await BuildProcess.Run(Path.GetDirectoryName(context)!, args, token);
+        var directory = Path.GetDirectoryName(context)!;
+        return captureDiagnostics ? await ProjectBuildDiagnostics.Run(directory, args, token) : await BuildProcess.Run(directory, args, token);
     }
 
     public static async Task<ProjectOutput> SelectExecutableAsync(string context, string configuration, string? project, CancellationToken token)

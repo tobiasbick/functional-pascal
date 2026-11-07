@@ -16,6 +16,7 @@ internal sealed class TestCommand
     private readonly Option<bool> noRestore = new("--no-restore") { Description = "Build without restoring packages." };
     private readonly Option<bool> list = new("--list") { Description = "Discover fully qualified method identities without executing tests." };
     private readonly Option<string> filter = new("--filter") { Description = "Native VSTest or registered MTP framework filter expression." };
+    private readonly Option<string> expectedOutput = new("--expected-output") { Description = "With --no-build, require the output identity reported by discovery for the selected project." };
     private readonly Option<string> settings = new("--settings") { Description = "Existing native .runsettings file." };
     private readonly Option<string> directory = new("--results-directory") { Description = "Parent for a new, unique result directory; defaults to context/TestResults." };
     private readonly Option<string> report = new("--report") { Description = "Write one structured JSON document to stdout." };
@@ -45,7 +46,7 @@ internal sealed class TestCommand
         report.AcceptOnlyFromAmong("json"); ContextCommandOptions.Range(timeout, 1, 3600);
         Command.Arguments.Add(context);
         Command.Arguments.Add(arguments);
-        foreach (var option in new Option[] { configuration, project, noBuild, noRestore, list, filter, settings, directory, report, timeout, adapters, collectors }) Command.Options.Add(option);
+        foreach (var option in new Option[] { configuration, project, noBuild, noRestore, list, filter, expectedOutput, settings, directory, report, timeout, adapters, collectors }) Command.Options.Add(option);
         Command.SetAction(Execute);
     }
 
@@ -71,6 +72,9 @@ internal sealed class TestCommand
         {
             input = ProjectDriver.ValidateContext(result.GetValue(context)!);
             var config = result.GetValue(configuration)!;
+            var expected = result.GetValue(expectedOutput);
+            if (expected is not null && (!result.GetValue(noBuild) || mode == "list"))
+                throw new ContextFailure("invalid_argument", "--expected-output requires an execution with --no-build.");
             if (string.IsNullOrWhiteSpace(config)) throw new ContextFailure("invalid_argument", "Configuration must not be empty.");
             var runsettings = result.GetValue(settings) is { } file ? Path.GetFullPath(file) : null;
             if (runsettings is not null && !File.Exists(runsettings)) throw new ContextFailure("invalid_argument", "--settings must select an existing runsettings file.");
@@ -81,30 +85,36 @@ internal sealed class TestCommand
             var options = new TestRunOptions(paths, result.GetValue(collectors) ?? [], extra);
             if (!result.GetValue(noBuild))
             {
-                build = await ProjectDriver.BuildAsync(input, config, result.GetValue(noRestore), token);
+                build = await ProjectDriver.BuildAsync(input, config, result.GetValue(noRestore), token, captureDiagnostics: json);
                 if (build.ExitCode != 0 || build.Truncated) { Failure("build_failed", "Build failed or exceeded its output limit.").Write(json); return 1; }
             }
             var projects = await TestDriver.SelectAsync(input, config, result.GetValue(project), token);
+            if (expected is not null && projects.Count != 1) throw new ContextFailure("invalid_argument", "--expected-output requires one selected test project.");
             results = Path.Combine(Path.GetFullPath(result.GetValue(directory) ?? Path.Combine(Path.GetDirectoryName(input)!, "TestResults")), "fpas-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(results);
-            foreach (var selected in projects)
+            foreach (var candidate in projects)
             {
-                token.ThrowIfCancellationRequested(); TestDriver.RequireOutput(selected);
+                token.ThrowIfCancellationRequested();
+                var output = new TestOutput(candidate, token);
+                var selected = output.Project;
+                if (expected is not null && (expected != selected.OutputIdentity || selected.StaleSources))
+                    throw new ContextFailure("test_output_changed", "The selected test output or its source is stale. Build and refresh before selecting tests.");
                 var folder = Path.Combine(results, completed.Count.ToString("D4", System.Globalization.CultureInfo.InvariantCulture)); Directory.CreateDirectory(folder);
                 if (mode == "list")
                 {
                     var discovered = await TestDriver.DiscoverAsync(selected, folder, result.GetValue(filter), runsettings, token, options);
-                    completed.Add(new(selected, discovered.Process, null, null, discovered.Tests));
+                    completed.Add(new(selected, discovered.Process, null, null, output.AttachLocations(discovered.Tests)));
                 }
                 else
                 {
                     var process = await TestDriver.RunAsync(selected, folder, result.GetValue(filter), runsettings, token, options);
                     var trx = Path.Combine(folder, "results.trx");
-                    var native = File.Exists(trx) ? TrxReport.Read(trx, token) : null;
+                    var native = File.Exists(trx) && !token.IsCancellationRequested ? TrxReport.Read(trx, token) : null;
                     completed.Add(new(selected, process, File.Exists(trx) ? trx : null, native, null));
                     if (native is null && process.ExitCode == 0 && !process.Truncated)
                         throw new ContextFailure("results_missing", "The native test runner returned success without a TRX artifact.");
                 }
+                output.Verify(token);
             }
             token.ThrowIfCancellationRequested();
             var success = completed.All(item => item.Runner.ExitCode == 0 && !item.Runner.Truncated && item.Result?.Success != false);

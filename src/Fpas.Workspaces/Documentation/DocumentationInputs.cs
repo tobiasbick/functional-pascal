@@ -38,8 +38,13 @@ internal sealed class DocumentationInputs
         token.ThrowIfCancellationRequested();
         if (!File.Exists(path)) return "missing";
         using var stream = File.OpenRead(path); using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        var buffer = new byte[65_536]; int count;
-        while ((count = stream.Read(buffer)) != 0) { token.ThrowIfCancellationRequested(); hash.AppendData(buffer.AsSpan(0, count)); }
+        var buffer = new byte[65_536]; int count; long bytes = 0;
+        while ((count = stream.Read(buffer)) != 0)
+        {
+            token.ThrowIfCancellationRequested();
+            if ((bytes += count) > 67_108_864) throw new ContextFailure("documentation_limit", "XML documentation exceeds its 64 MiB input limit: " + path);
+            hash.AppendData(buffer.AsSpan(0, count));
+        }
         return Convert.ToHexString(hash.GetHashAndReset());
     }
 }

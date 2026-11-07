@@ -7,8 +7,7 @@ compiler/emitter support and verification.
 The [MSBuild contract](../build/msbuild.md)
 specifies project/solution integration, framework references, restore, and the
 compiler's build boundary. The [language server](../pascal/tools/language-server.md)
-owns implemented source services; further IDE integration belongs in
-[editor gaps](../future/editor-gap.md).
+owns source services used by the [VS Code extension](../../src/VSCode/README.md).
 
 ## Compilation pipeline
 

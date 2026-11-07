@@ -14,12 +14,12 @@ internal sealed class RenameBindings
     private readonly Func<string, int, int> position;
     internal WorkspaceAnalysis Analysis { get; }
     internal SourceQuery Query => query;
-    internal RenameBindings(WorkspaceAnalysis analysis, Func<string, int, int>? position = null)
+    internal RenameBindings(WorkspaceAnalysis analysis, Func<string, int, int>? position = null, bool requireComplete = true)
     {
-        if (!analysis.Success || !analysis.IsComplete) throw new ContextFailure("analysis_failed", "Rename requires successful, complete analysis of the affected context.");
+        if (requireComplete && (!analysis.Success || !analysis.IsComplete)) throw new ContextFailure("analysis_failed", "Rename requires successful, complete analysis of the affected context.");
         Analysis = analysis; query = new(analysis); this.position = position ?? ((_, offset) => offset);
         foreach (var project in analysis.Projects)
-            foreach (var export in project.Result!.Snapshot!.Exports.Where(export => export.Identity.Kind == "type"))
+            foreach (var export in (project.Result?.Snapshot?.Exports ?? []).Where(export => export.Identity.Kind == "type"))
             {
                 var declaration = query.Resolve(project.Project, export.Symbol);
                 if (declaration.Origin == "source") types[export.Identity.Assembly + "\0" + export.Identity.Type] = SourceKey(declaration);
@@ -56,13 +56,15 @@ internal sealed class RenameBindings
         return text;
     }
 
-    internal Dictionary<(string Project, string Path, int Offset, string Role), string> Occurrences(CancellationToken token)
+    internal Dictionary<(string Project, string Path, int Offset, string Role), string> Occurrences(CancellationToken token,
+        Func<SourceSpan, bool>? include = null)
     {
         var result = new Dictionary<(string, string, int, string), string>();
         foreach (var project in Analysis.Projects)
-            foreach (var occurrence in project.Result!.Snapshot!.Occurrences)
+            foreach (var occurrence in project.Result?.Snapshot?.Occurrences ?? [])
             {
                 token.ThrowIfCancellationRequested();
+                if (include?.Invoke(occurrence.Span) == false) continue;
                 if (result.Count >= 100_000) throw new ContextFailure("rename_limit", "Rename validation exceeds 100,000 source occurrences.");
                 result.Add((project.Project, occurrence.Span.Path, position(occurrence.Span.Path, occurrence.Span.Offset), occurrence.Role), Key(project.Project, occurrence.Symbol));
             }
@@ -72,7 +74,7 @@ internal sealed class RenameBindings
     {
         var result = new HashSet<(string, string, string)>();
         foreach (var project in Analysis.Projects)
-            foreach (var relation in project.Result!.Snapshot!.Relations)
+            foreach (var relation in project.Result?.Snapshot?.Relations ?? [])
             { token.ThrowIfCancellationRequested(); result.Add((project.Project, Key(project.Project, relation.Implementation), Key(project.Project, relation.Contract))); }
         return result;
     }

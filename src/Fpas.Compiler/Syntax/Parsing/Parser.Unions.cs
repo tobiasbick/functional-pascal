@@ -11,6 +11,7 @@ internal sealed partial class Parser
         if (At("public") || At("private")) position++;
         Expect("type"); var name = Identifier();
         using var declaration = Declaration(name, start, visible ? "public" : "private", documentation);
+        declaration.Info.Kind = "union";
         var parameters = ReadTypeParameters();
         Expect("="); var constraints = ReadConstraints(); Expect("union");
         var cases = new List<UnionCaseSyntax>();
@@ -22,6 +23,7 @@ internal sealed partial class Parser
             var caseDocumentation = Current.Documentation;
             var label = Identifier(); IReadOnlyList<ParameterSyntax> fields = [];
             using var caseDeclaration = Declaration(label, label.Position, "public", caseDocumentation);
+            caseDeclaration.Info.Kind = "union_case";
             if (At("("))
             {
                 fields = ReadList("(", ")", ";", () =>

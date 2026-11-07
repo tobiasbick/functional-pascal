@@ -5,7 +5,7 @@ namespace Fpas.Workspaces.Queries;
 
 public sealed partial class SourceQuery
 {
-    private (string Project, SemanticSnapshot Snapshot, int Offset, QuerySelection Position) SelectPosition(SourceSelection selection)
+    private (string Project, SemanticSnapshot Snapshot, int Offset, QuerySelection Position) SelectPosition(SourceSelection selection, bool requireChecked = true)
     {
         var file = Path.GetFullPath(selection.File);
         var owners = analysis.Context.Projects.Where(project => project.Request.Sources.Any(document => Paths.Equals(document.Path, file))).ToArray();
@@ -18,7 +18,7 @@ public sealed partial class SourceQuery
         int offset;
         try { offset = document.Offset(selection.Line, selection.Column); }
         catch (ArgumentOutOfRangeException exception) { throw new ContextFailure("invalid_argument", exception.Message); }
-        if (!owner.Snapshot.Coverage.AvailableAt(file, offset)) throw new ContextFailure("analysis_unavailable", "The selected source region could not be checked in this snapshot.");
+        if (requireChecked && !owner.Snapshot.Coverage.AvailableAt(file, offset)) throw new ContextFailure("analysis_unavailable", "The selected source region could not be checked in this snapshot.");
         return (owner.Input.Path, owner.Snapshot, offset, new(owner.Input.Path, new(file, offset, 0, selection.Line, selection.Column)));
     }
 }

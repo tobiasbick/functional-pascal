@@ -17,6 +17,7 @@ internal static class BuildDiagnostics
         if (Text(diagnostic, "severity") == "warning")
             log.LogWarning(null, code, Text(diagnostic, "helpLink"), file, line, column, endLine, endColumn, message);
         else log.LogError(null, code, Text(diagnostic, "helpLink"), file, line, column, endLine, endColumn, message);
+        log.LogMessage(MessageImportance.Low, "FPAS-DIAGNOSTIC {0}", diagnostic.GetRawText());
         Note("note", Text(diagnostic, "explanation"));
         Note("help", Text(diagnostic, "help"));
         if (diagnostic.TryGetProperty("related", out var related))

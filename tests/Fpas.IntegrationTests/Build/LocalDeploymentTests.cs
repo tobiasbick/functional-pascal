@@ -90,7 +90,7 @@ public sealed partial class LocalDeploymentTests
         {
             Directory.CreateDirectory(target);
             foreach (var file in Directory.GetFiles(source)) File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
-            foreach (var child in Directory.GetDirectories(source).Where(path => Path.GetFileName(path) is not ("bin" or "obj" or "feed")))
+            foreach (var child in Directory.GetDirectories(source).Where(path => Path.GetFileName(path) is not ("bin" or "obj" or "feed" or "VSCode")))
                 Copy(child, Path.Combine(target, Path.GetFileName(child)));
         }
     }

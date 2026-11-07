@@ -22,7 +22,7 @@ internal static class TestingPlatformDriver
                 throw new ContextFailure("invalid_argument", "FPAS owns MTP mode, result location and exit status; do not override " + name + ".");
             args.Add(argument);
         }
-        return BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token);
+        return BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true);
     }
 
     internal static async Task<(BuildResult Process, IReadOnlyList<DiscoveredTest> Tests)> Discover(TestProject project, string directory, string? filter,

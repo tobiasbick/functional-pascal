@@ -2,17 +2,21 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Fpas.Compiler.Analysis;
 
 namespace Fpas.Workspaces.Documentation;
 
 internal sealed class MetadataCatalog : IDisposable
 {
-    private readonly Dictionary<string, PEReader> images = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-    internal IEnumerable<DocumentationCandidate> Search(string project, string path, DocumentationSearch search, CancellationToken token)
+    private readonly Dictionary<(string Path, string? Hash), PEReader> images = [];
+    internal IEnumerable<DocumentationCandidate> Search(string project, string path, DocumentationSearch search, CancellationToken token,
+        MetadataImage? captured = null)
     {
-        if (!images.TryGetValue(path, out var image))
+        var key = (path, captured?.ContentHash);
+        if (!images.TryGetValue(key, out var image))
         {
-            image = new PEReader(File.OpenRead(path), PEStreamOptions.PrefetchMetadata); images.Add(path, image);
+            image = new PEReader(captured?.OpenRead() ?? File.OpenRead(path), PEStreamOptions.PrefetchMetadata);
+            images.Add(key, image);
         }
         var reader = image.GetMetadataReader();
         var assembly = reader.GetString(reader.GetAssemblyDefinition().Name);
@@ -72,8 +76,11 @@ internal sealed class MetadataCatalog : IDisposable
                 => new(project, "metadata", fullName, path + ":" + MetadataTokens.GetToken(handle).ToString("X8", System.Globalization.CultureInfo.InvariantCulture), () =>
                 {
                     token.ThrowIfCancellationRequested(); var data = signature();
-                    return new(project, "metadata", kind, member, fullName, data.Signature, "clr", assembly, path, data.Id, null,
-                        new("file_missing", "xml", Path.ChangeExtension(path, ".xml"), null));
+                    return new DocumentationEntry(project, "metadata", kind, member, fullName, data.Signature, "clr", assembly, path, data.Id, null,
+                        new("file_missing", "xml", Path.ChangeExtension(path, ".xml"), null))
+                    {
+                        Identity = captured is null ? null : captured.ContentHash + ":" + MetadataTokens.GetToken(handle).ToString("X8", System.Globalization.CultureInfo.InvariantCulture)
+                    };
                 });
         }
     }

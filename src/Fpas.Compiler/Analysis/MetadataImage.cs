@@ -16,7 +16,7 @@ public sealed class MetadataImage
         ContentHash = Convert.ToHexString(SHA256.HashData(bytes));
     }
 
-    internal Stream OpenRead() => new MemoryStream(bytes, writable: false);
+    public Stream OpenRead() => new MemoryStream(bytes, writable: false);
 
     private MetadataImage(string path, MetadataImage image)
     { Path = System.IO.Path.GetFullPath(path); bytes = image.bytes; ContentHash = image.ContentHash; }

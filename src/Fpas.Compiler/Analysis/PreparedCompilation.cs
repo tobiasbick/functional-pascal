@@ -30,7 +30,8 @@ internal sealed partial class PreparedCompilation : IDisposable
         Analysis = analysis;
     }
 
-    internal static PreparedCompilation Create(AnalysisRequest request, CancellationToken cancellationToken, bool collectSemantics = false)
+    internal static PreparedCompilation Create(AnalysisRequest request, CancellationToken cancellationToken, bool collectSemantics = false,
+        (string Path, EditorProbe Probe)? editor = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.AssemblyName);
@@ -46,6 +47,7 @@ internal sealed partial class PreparedCompilation : IDisposable
         foreach (var input in request.Sources.OrderBy(input => input.Path, StringComparer.Ordinal))
         {
             var text = new SourceText(input.Path, input.Text, cancellationToken, diagnosticsBag);
+            if (editor is { } cursor && cursor.Path == input.Path) text.Editor = cursor.Probe;
             allSources.Add(text);
             var before = diagnosticsBag.Count;
             Parser? parser = null;

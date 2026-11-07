@@ -22,6 +22,12 @@ exit codes. See the [batch contract](batch-debugging.md) for input, paths and bo
 
 ## Interactive DAP session
 
+In VS Code, select an analysis context and launch with type `fpas-clr`. Omit
+`program` to resolve the configured project's DLL, and set `build: true` to
+prepare the project before launch. Set `program` to an absolute built DLL for an
+explicit launch. Use `cwd`, `args` and `stopAtEntry` in either form.
+See the [VS Code extension guide](../../../src/VSCode/README.md#project-test-and-debug-workflows).
+
 Start `fpas debug --protocol dap` through a stdio DAP client. Launch takes an
 absolute built DLL, optional absolute cwd and individual argv elements. Configure
 source breakpoints and exception filters before configurationDone; the core holds

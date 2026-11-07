@@ -3,7 +3,7 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
-public static class SyntaxAnalysis
+public static partial class SyntaxAnalysis
 {
     public static IReadOnlyList<CompilerDiagnostic> Check(CompilationSource input, CancellationToken token = default)
     {

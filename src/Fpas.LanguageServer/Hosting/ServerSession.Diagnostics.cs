@@ -16,14 +16,14 @@ internal sealed partial class ServerSession
             {
                 while (changes.Reader.TryRead(out _)) { }
                 long selected;
-                lock (gate) { if (state != SessionState.Running || desynchronized.Count != 0) continue; selected = revision; }
+                using (gate.EnterScope()) { if (state != SessionState.Running || desynchronized.Count != 0) continue; selected = revision; }
                 LiveSnapshot? snapshot = null;
                 try
                 {
                     using var deadline = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token); deadline.CancelAfter(TimeSpan.FromSeconds(30));
                     snapshot = await workspace!.AnalyzeAsync(deadline.Token);
                     await workspace.VerifyAsync(snapshot, deadline.Token);
-                    lock (gate)
+                    using (gate.EnterScope())
                     {
                         if (!IsCurrent(selected) || desynchronized.Count != 0) continue;
                         var diagnostics = snapshot.Analysis.Projects.SelectMany(project => project.Result?.Diagnostics ?? []).Concat(snapshot.Unowned.SelectMany(document => document.Diagnostics)).Distinct().ToArray();
@@ -41,11 +41,11 @@ internal sealed partial class ServerSession
                 }
                 catch (OperationCanceledException)
                 {
-                    lock (gate) if (IsCurrent(selected)) { ClearDiagnostics(selected); Log("Analysis was cancelled or exceeded its 30-second work deadline."); }
+                    using (gate.EnterScope()) if (IsCurrent(selected)) { ClearDiagnostics(selected); Log("Analysis was cancelled or exceeded its 30-second work deadline."); }
                 }
                 catch (ContextFailure error)
                 {
-                    lock (gate)
+                    using (gate.EnterScope())
                     {
                         if (!IsCurrent(selected)) continue;
                         ClearDiagnostics(selected);
@@ -54,7 +54,7 @@ internal sealed partial class ServerSession
                     }
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
-                { lock (gate) if (IsCurrent(selected)) { ClearDiagnostics(selected); Log("Analysis failed: " + error.Message); } }
+                { using (gate.EnterScope()) if (IsCurrent(selected)) { ClearDiagnostics(selected); Log("Analysis failed: " + error.Message); } }
                 finally { snapshot = null; }
             }
         }

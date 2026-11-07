@@ -6,7 +6,7 @@ namespace Fpas.Workspaces.Queries;
 
 public sealed partial class SourceQuery
 {
-    public SourceQueryResult Inspect(SourceSelection selection, int limit = 20, CancellationToken cancellationToken = default)
+    public SourceQueryResult Inspect(SourceSelection selection, int limit = 20, CancellationToken cancellationToken = default, bool includeBody = false)
     {
         if (limit is < 1 or > 100) throw new ContextFailure("invalid_argument", "Related declaration limit must be 1..100.");
         var selected = Execute("definition", selection, cancellationToken: cancellationToken);
@@ -62,12 +62,18 @@ public sealed partial class SourceQuery
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (item.Symbol.Context is not { } location || item.Project is null)
-                return new(item.Project, new("metadata_only", null, null), new("metadata_only", null, null), new("metadata_only", null, null));
+            {
+                var text = includeBody && item.Symbol.Metadata is { } metadata ? EditorDocumentation(selection, metadata, null, cancellationToken) : null;
+                return new(item.Project, new("metadata_only", null, null), new("metadata_only", null, null),
+                    text is null ? new("metadata_only", null, null) : new("available", null, text));
+            }
             var document = projects[item.Project].Snapshot.Documents.Single(document => Paths.Equals(document.Path, location.Span.Path));
             var declaration = Slice(location.Span, "unavailable");
             var documentation = Slice(location.Documentation, "no_documentation");
             var valid = projects[item.Project].Snapshot.Coverage;
-            return new(item.Project, declaration, new(location.Body is null ? "no_body" : valid.Available(location.Body) ? "location" : "unavailable", location.Body, null), documentation);
+            var body = includeBody && Identity(item) == Identity(definition) ? Slice(location.Body, "no_body") :
+                new(location.Body is null ? "no_body" : valid.Available(location.Body) ? "location" : "unavailable", location.Body, null);
+            return new(item.Project, declaration, body, documentation);
 
             SourceSlice Slice(SourceSpan? span, string missing)
             {

@@ -10,7 +10,7 @@ internal sealed partial class Binder
 {
     private sealed record CallShape(ImportedMethod Method, int[] Slots, bool Expanded, IReadOnlyList<TypeSymbol> Types, int Omitted);
 
-    private CallShape? Shape(ImportedMethod method, IReadOnlyList<ExpressionSyntax> syntax, bool expanded)
+    private CallShape? Shape(ImportedMethod method, IReadOnlyList<ExpressionSyntax> syntax, bool expanded, bool allowMissing = false)
     {
         var count = method.Parameters.Count;
         var variadic = count > 0 && method.Parameter(count - 1).Mode == "params";
@@ -37,7 +37,7 @@ internal sealed partial class Binder
             slots[index] = slot;
         }
         var missing = Enumerable.Range(0, count).Where(slot => !used.Contains(slot) && !(expanded && slot == count - 1)).ToArray();
-        if (missing.Any(slot => method.Parameter(slot).Default is null)) return null;
+        if (!allowMissing && missing.Any(slot => method.Parameter(slot).Default is null)) return null;
         var types = slots.Select(slot => expanded && slot == count - 1 ? method.Parameters[slot].Element! : method.Parameters[slot]).ToArray();
         return new(method, slots, expanded, types, missing.Length);
     }
@@ -45,7 +45,9 @@ internal sealed partial class Binder
     private (CallShape Shape, BoundExpression[] Values) SelectInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
         bool check, int position, bool inferGenerics, Action? noApplicable = null)
     {
-        var shapes = templates.SelectMany(method => new[] { Shape(method, syntax, false), Shape(method, syntax, true) })
+        if (source.Editor is not null) EditorSignatures(templates, syntax, position);
+        var incomplete = position == editorInvocation && source.Editor?.Incomplete == true;
+        var shapes = templates.SelectMany(method => new[] { Shape(method, syntax, false, incomplete), Shape(method, syntax, true, incomplete) })
             .Where(shape => shape is not null).Select(shape => shape!).ToArray();
         var arguments = syntax.Select(argument => argument is NamedArgumentSyntax named ? named.Value : argument).ToArray();
         var only = shapes.Length == 1 ? shapes[0] : null;
@@ -68,11 +70,13 @@ internal sealed partial class Binder
                 method = references.CloseMethod(method, fixedTypes);
             }
             if (!references.ValidMethodArguments(method)) { constraintsFailed = true; continue; }
-            var closed = Shape(method, syntax, shape.Expanded)!;
+            var closed = Shape(method, syntax, shape.Expanded, incomplete)!;
             if (values.Where((value, index) => !AcceptsArgument(value, arguments[index], closed, index)).Any()) continue;
             matches.Add(closed);
         }
         var best = matches.Where(candidate => !matches.Any(other => BetterCall(other, candidate, values))).ToArray();
+        if (source.Editor is not null) EditorSignatures(templates, syntax, position, matches, best.Length == 1 ? best[0] : null);
+        if (incomplete) throw source.Error("FP3003", "Editor signature recovery stops at the incomplete call.", position);
         if (best.Length == 0 && !constraintsFailed && !inferenceFailed) noApplicable?.Invoke();
         if (best.Length != 1)
             throw source.Error(best.Length == 0 && constraintsFailed ? "FP3018" : best.Length == 0 && inferenceFailed && matches.Count == 0 ? "FP3026" : "FP3003",

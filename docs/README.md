@@ -24,7 +24,7 @@ workflow to work on the compiler/toolchain.
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
 | Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [workspace architecture](architecture/workspaces.md) |
-| Editor work, scheduled last | [Editor gaps](future/editor-gap.md) |
+| VS Code project workflows and refactorings | [Extension guide](../src/VSCode/README.md), [checked refactorings](pascal/tools/refactoring.md#vs-code-refactorings) |
 
 Each rule has an owner: the handbook describes language behavior, the grammar
 defines syntax, and the CLR/MSBuild specifications define emitted and build

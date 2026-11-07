@@ -65,7 +65,7 @@ internal sealed partial class ServerSession
             return new PlaceholderRange { Range = FeatureProjection.Token(span), Placeholder = original };
         }
         var prepared = snapshot.Rename(selection, input.Name!, token);
-        return FeatureProjection.Rename(prepared.Edits);
+        return FeatureProjection.WorkspaceEdits(prepared.Edits);
     }
 
     private object Format(JObject parameters, RequestStamp stamp, CancellationToken token)
@@ -73,17 +73,21 @@ internal sealed partial class ServerSession
         var path = DocumentPath(parameters); var options = Object(parameters["options"], "options");
         if (RequiredInteger(options, "tabSize") < 1) throw Invalid("tabSize must be positive.");
         _ = Boolean(options, "insertSpaces");
-        Fpas.Workspaces.Snapshots.TextDocumentSnapshot document;
-        lock (gate)
-        {
-            CheckRequest(stamp);
-            if (desynchronized.Contains(path)) throw Invalid("Resynchronize this document before formatting.", -32803);
-            document = workspace!.OpenDocuments.Documents.FirstOrDefault(document => PathComparer.Equals(document.Path, path))
-                ?? throw Invalid("Open the document before formatting.", -32803);
-        }
+        var document = OpenDocument(path, stamp);
         var formatted = FpasFormatter.Format(new(path, document.Text), token);
         if (!formatted.Success) throw Invalid("format_failed: " + string.Join("; ", formatted.Diagnostics.Select(diagnostic => diagnostic.Code + ": " + diagnostic.Message)), -32803);
         return formatted.Text == document.Text ? Array.Empty<TextEdit>() : new[] { new TextEdit { Range = new(new(0, 0), FeatureProjection.End(document.Text)), NewText = formatted.Text! } };
+    }
+
+    private Fpas.Workspaces.Snapshots.TextDocumentSnapshot OpenDocument(string path, RequestStamp stamp)
+    {
+        lock (gate)
+        {
+            CheckRequest(stamp);
+            if (desynchronized.Contains(path)) throw Invalid("Resynchronize this document before requesting its features.", -32803);
+            return workspace!.OpenDocuments.Documents.FirstOrDefault(document => PathComparer.Equals(document.Path, path))
+                ?? throw Invalid("Open the document before requesting its features.", -32803);
+        }
     }
 
     private static void CompleteSearch(SourceQueryResult result)

@@ -1,0 +1,16 @@
+unit Engine;
+
+uses System as Sys;
+
+public function Compute(Input: int): int;
+begin
+  const Doubled: int := Input * 2;
+  return Doubled;
+end function;
+
+public procedure Fail();
+begin
+  raise new Sys.InvalidOperationException('editor exception');
+end procedure;
+
+end unit;

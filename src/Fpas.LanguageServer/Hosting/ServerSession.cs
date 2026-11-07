@@ -13,7 +13,7 @@ internal enum SessionState { Created, Initialized, Running, ShuttingDown, Exited
 
 internal sealed partial class ServerSession : IAsyncDisposable
 {
-    private readonly object gate = new();
+    private readonly Lock gate = new();
     private readonly CancellationTokenSource lifetime = new();
     private readonly Channel<byte> changes = Channel.CreateBounded<byte>(new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropWrite });
     private readonly HashSet<string> desynchronized = new(PathComparer);
@@ -72,14 +72,19 @@ internal sealed partial class ServerSession : IAsyncDisposable
                 throw Invalid("Select an existing .fpasproj or .slnx context.");
             if (options["configuration"] is { } configuration && (configuration.Type != JTokenType.String || string.IsNullOrWhiteSpace(configuration.Value<string>())))
                 throw Invalid("configuration must be a nonempty string.");
+            if (options["correctionCommand"] is { Type: not JTokenType.Boolean })
+                throw Invalid("correctionCommand must be a boolean.");
+            correctionCommand = options.Value<bool>("correctionCommand");
             workspace = new(new(context, options.Value<string>("configuration") ?? "Debug"));
             watchRegistration = watching?.Value<bool>("dynamicRegistration") == true;
             state = SessionState.Initialized;
-            return ProtocolJson.Object(new InitializeResult { Capabilities = new ServerCapabilities { PositionEncoding = PositionEncodingKind.UTF16,
+            var response = ProtocolJson.Object(new InitializeResult { Capabilities = new ServerCapabilities { PositionEncoding = PositionEncodingKind.UTF16,
                 DefinitionProvider = true, ReferencesProvider = true, WorkspaceSymbolProvider = true, DocumentFormattingProvider = true,
                 RenameProvider = renameSupported ? new BooleanOr<RenameRegistrationOptions.StaticOptions>(new RenameRegistrationOptions.StaticOptions { PrepareProvider = prepareSupported }) : null,
                 TextDocumentSync = new TextDocumentSyncOptions
                 { OpenClose = true, Change = TextDocumentSyncKind.Incremental, Save = new SaveOptions { IncludeText = false } } } });
+            EditorCapabilities((JObject)response["capabilities"]!, capabilities["textDocument"] as JObject);
+            return response;
         }
     }
 
@@ -87,14 +92,14 @@ internal sealed partial class ServerSession : IAsyncDisposable
     public async Task<object?> Shutdown()
     {
         LiveWorkspace? selected;
-        lock (gate)
+        using (gate.EnterScope())
         {
             if (state is not (SessionState.Initialized or SessionState.Running)) throw Invalid("The server is not accepting shutdown.", state == SessionState.Created ? -32002 : -32600);
             state = SessionState.ShuttingDown; revision++; selected = workspace; lifetime.Cancel(); changes.Writer.TryComplete();
         }
         if (selected is not null) await selected.DisposeAsync();
         await diagnostics;
-        Task[] pending; lock (gate) pending = requests.ToArray();
+        Task[] pending; using (gate.EnterScope()) pending = requests.ToArray();
         try { await Task.WhenAll(pending); } catch (Exception) { /* Request failures are returned by JSON-RPC. */ }
         return null;
     }
@@ -108,7 +113,15 @@ internal sealed partial class ServerSession : IAsyncDisposable
         }
     }
     internal void Fail() { lock (gate) { state = SessionState.Exited; revision++; exit.TrySetResult(1); lifetime.Cancel(); } }
-    private void Changed() { revision++; changes.Writer.TryWrite(0); }
+    private void Changed()
+    {
+        revision++;
+        refactorings.Clear();
+        changes.Writer.TryWrite(0);
+        if (!viewsPublished) return;
+        viewsPublished = false;
+        outgoing.Enqueue("fpas/viewsInvalidated", new { revision }, () => State == SessionState.Running);
+    }
     private static LocalRpcException Invalid(string message, int code = -32602) => new(message) { ErrorCode = code };
     private static JsonSerializer Serializer() => JsonSerializer.Create(new JsonSerializerSettings
         { MaxDepth = 64, TypeNameHandling = TypeNameHandling.None, DateParseHandling = DateParseHandling.None, NullValueHandling = NullValueHandling.Ignore });
@@ -120,10 +133,10 @@ internal sealed partial class ServerSession : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        lock (gate) { state = SessionState.Exited; revision++; lifetime.Cancel(); changes.Writer.TryComplete(); }
+        using (gate.EnterScope()) { state = SessionState.Exited; revision++; lifetime.Cancel(); changes.Writer.TryComplete(); }
         if (workspace is not null) await workspace.DisposeAsync();
         await diagnostics;
-        Task[] pending; lock (gate) pending = requests.ToArray();
+        Task[] pending; using (gate.EnterScope()) pending = requests.ToArray();
         try { await Task.WhenAll(pending); } catch (Exception) { /* Request failures are returned by JSON-RPC. */ }
         if (registration is not null) try { await registration; } catch (OperationCanceledException) { }
         if (outgoing is not null) await outgoing.DisposeAsync();

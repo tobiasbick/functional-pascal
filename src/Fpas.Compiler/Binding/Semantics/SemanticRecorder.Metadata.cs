@@ -9,6 +9,9 @@ internal sealed partial class SemanticRecorder
 {
     private static string Key(MetadataIdentity value) => value.GetKey();
 
+    internal MetadataIdentity EditorMethod(ImportedMethod method) => MethodMetadata(method);
+    internal MetadataIdentity EditorField(ImportedField field) => Metadata(field.Owner, "field", field.Name);
+
     private MetadataIdentity Metadata(TypeSymbol owner, string kind, string name, int arity = 0, IEnumerable<string>? parameters = null, string? result = null)
     {
         var definition = owner.Definition;

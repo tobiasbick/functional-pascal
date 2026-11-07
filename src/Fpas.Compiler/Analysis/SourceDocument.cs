@@ -11,7 +11,7 @@ public sealed class SourceDocument
     public string Text { get; }
     private readonly int[] lines;
 
-    internal SourceDocument(string path, string text, CancellationToken token)
+    public SourceDocument(string path, string text, CancellationToken token = default)
     {
         Path = path; Text = text;
         var starts = new List<int> { 0 };
@@ -38,7 +38,7 @@ public sealed class SourceDocument
         return start + column - 1;
     }
 
-    internal SourceSpan Span(int offset, int length)
+    public SourceSpan Span(int offset, int length)
     {
         if (offset < 0 || length < 0 || (long)offset + length > Text.Length) throw new ArgumentOutOfRangeException(nameof(offset));
         var line = Array.BinarySearch(lines, offset); if (line < 0) line = ~line - 1;

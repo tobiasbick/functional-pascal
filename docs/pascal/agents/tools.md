@@ -22,6 +22,8 @@ and [JSON schemas](../tools/report-schemas.md) for the corresponding CLI contrac
 | Bind/parser/type-check/lower a language feature | Its [handbook topic](../README.md#start-here), [grammar](../../specs/syntax.md), and [compiler architecture](../../architecture/README.md) |
 | Change public types, signatures, dispatch, or emitted metadata | [Interop](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md) |
 | Change project/reference/restore/incremental/output behavior | [MSBuild contract](../../build/msbuild.md) and [compiler output](../../architecture/compiler.md) |
+| Run or verify VS Code project, test and debug workflows | [VS Code extension guide](../../../src/VSCode/README.md#project-test-and-debug-workflows) |
+| Preview and apply checked editor refactorings | [Refactoring reference](../tools/refactoring.md#vs-code-refactorings) |
 | Decide which tests prove a behavior | [Test overview](../../../tests/README.md) and [acceptance map](../../../tests/coverage.md) |
 | Distinguish implemented work, missing baseline work, and proposals | [Language scope](../getting-started/overview.md#initial-language-scope) and [language gaps](../../future/language-gaps.md) |
 | Update this reference or add examples | [Maintenance](maintenance.md) |
@@ -139,9 +141,10 @@ and bodyless outgoing targets omit site counts. See the
 [call-query contract](../program-structure/cli.md#callers-and-callees) for scope,
 exact constructor/accessor anchors and excluded runtime protocols.
 
-`fpas lsp` exposes stdio diagnostics, definition/references, workspace symbols,
-checked rename and open-document formatting. Select an absolute project/solution in initializationOptions.context;
-restore and foreign-project builds remain explicit. See the
+`fpas lsp` exposes stdio diagnostics, syntax and semantic navigation,
+IntelliSense, checked edits and read-only source views. Select an absolute
+project or solution in `initializationOptions.context`. Restore and
+foreign-project builds remain explicit. See the
 [language-server reference](../tools/language-server.md) for lifecycle and limits.
 `fpas env --json` reports its packaged identity without starting a session.
 

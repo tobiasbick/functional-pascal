@@ -6,7 +6,10 @@ using System.Xml.Linq;
 namespace Fpas.Workspaces.Testing;
 
 public sealed record TestCounts(int Total, int Passed, int Failed, int Skipped);
-public sealed record TestCaseResult(string Name, string? FullyQualifiedName, string Outcome, string? Duration, string? Output, string? ErrorOutput, string? Error, string? StackTrace);
+public sealed record TestCaseResult(string Name, string? FullyQualifiedName, string Outcome, string? Duration, string? Output, string? ErrorOutput, string? Error, string? StackTrace)
+{
+    public string? Id { get; init; }
+}
 public sealed record TestRunMessage(string Outcome, string Text);
 public sealed record TrxReport(TestCounts Counts, IReadOnlyList<TestCaseResult> Tests, string Outcome,
     IReadOnlyList<TestRunMessage> Messages, string? Output, string? ErrorOutput)
@@ -35,10 +38,11 @@ public sealed record TrxReport(TestCounts Counts, IReadOnlyList<TestCaseResult> 
             token.ThrowIfCancellationRequested();
             if (result.Descendants(ns + "UnitTestResult").Any()) continue;
             var output = result.Element(ns + "Output"); var error = output?.Element(ns + "ErrorInfo");
-            definitions.TryGetValue((string?)result.Attribute("testId") ?? "", out var name);
+            var id = (string?)result.Attribute("testId");
+            definitions.TryGetValue(id ?? "", out var name);
             tests.Add(new((string?)result.Attribute("testName") ?? "", name, (string?)result.Attribute("outcome") ?? "Unknown",
                 (string?)result.Attribute("duration"), output?.Element(ns + "StdOut")?.Value, output?.Element(ns + "StdErr")?.Value, error?.Element(ns + "Message")?.Value,
-                error?.Element(ns + "StackTrace")?.Value));
+                error?.Element(ns + "StackTrace")?.Value) { Id = id });
         }
         // VSTest leaves several legacy summary counters at zero, including notExecuted.
         var counts = new TestCounts(Count("total"), Count("passed"), Count("failed"), tests.Count(test => test.Outcome == "NotExecuted"));

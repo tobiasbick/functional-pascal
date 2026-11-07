@@ -9,7 +9,14 @@ internal static class FileUris
     {
         if (uri is null || !uri.IsAbsoluteUri || !uri.IsFile || uri.IsUnc || uri.Host.Length != 0 && uri.Host != "localhost" || uri.Query.Length != 0 || uri.Fragment.Length != 0)
             throw new LocalRpcException("Supply a local file URI.") { ErrorCode = -32602 };
-        return System.IO.Path.GetFullPath(uri.LocalPath);
+        var local = uri.LocalPath;
+        // Uri keeps the root slash when a Windows drive separator is percent-encoded.
+        if (OperatingSystem.IsWindows() && local.Length >= 4 && local[0] == '/' &&
+            char.IsAsciiLetter(local[1]) && local[2] == ':' && local[3] == '/')
+            local = local[1..];
+        if (!System.IO.Path.IsPathFullyQualified(local))
+            throw new LocalRpcException("Supply an absolute local file URI.") { ErrorCode = -32602 };
+        return System.IO.Path.GetFullPath(local);
     }
     internal static string Context(string value)
     {

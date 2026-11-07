@@ -1,6 +1,7 @@
 using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Fpas.IntegrationTests.LanguageServer;
 
@@ -34,15 +35,20 @@ public sealed class LspFeatureTests(SdkPackageFixture sdk) : IClassFixture<SdkPa
         const string disk = "unit Demo.Bridge; function Old(): int; begin return 42; end function; end unit;";
         await Prepare(directory, disk); var path = directory.File("Game/Bridge.fpas");
         const string source = "unit Demo.Bridge;\r\nfunction Answer(): int; begin return 42; end function;\r\nfunction Run(): int; begin const Label: string := '😀'; return Answer(); end function;\r\nend unit;";
-        await using var client = new LspProbe(); await client.Initialize(directory.File("Game/Game.fpasproj")); await client.Notify("initialized", new { }); await client.Open(path, source, 7);
-        var definition = Result(await client.Request("textDocument/definition", new { textDocument = Document(path), position = Position(source, "Answer();", true) }));
+        var uri = new Uri(path).AbsoluteUri;
+        // VS Code percent-encodes the colon in Windows file URI drive letters.
+        if (OperatingSystem.IsWindows()) uri = Regex.Replace(uri, "^(file:///[A-Za-z]):/", "$1%3A/");
+        var document = new { uri };
+        await using var client = new LspProbe(); await client.Initialize(directory.File("Game/Game.fpasproj")); await client.Notify("initialized", new { });
+        await client.Notify("textDocument/didOpen", new { textDocument = new { uri, languageId = "fpas", version = 7, text = source } });
+        var definition = Result(await client.Request("textDocument/definition", new { textDocument = document, position = Position(source, "Answer();", true) }));
         LspProbe.AssertFileUri(path, definition.GetProperty("uri")); Assert.Equal(1, definition.GetProperty("range").GetProperty("start").GetProperty("line").GetInt32());
-        var refs = Result(await client.Request("textDocument/references", new { textDocument = Document(path), position = Position(source, "Answer():"), context = new { includeDeclaration = true } }));
+        var refs = Result(await client.Request("textDocument/references", new { textDocument = document, position = Position(source, "Answer():"), context = new { includeDeclaration = true } }));
         Assert.Equal(2, refs.GetArrayLength()); Assert.Contains(refs.EnumerateArray(), location => location.GetProperty("range").GetProperty("start").GetProperty("character").GetInt32() == source.Split("\r\n")[2].IndexOf("Answer", StringComparison.Ordinal));
         var symbols = Result(await client.Request("workspace/symbol", new { query = "" })); Assert.Contains(symbols.EnumerateArray(), symbol => symbol.GetProperty("name").GetString() == "Answer");
-        var prepared = Result(await client.Request("textDocument/prepareRename", new { textDocument = Document(path), position = Position(source, "Answer();", true) }));
+        var prepared = Result(await client.Request("textDocument/prepareRename", new { textDocument = document, position = Position(source, "Answer();", true) }));
         Assert.Equal("Answer", prepared.GetProperty("placeholder").GetString()); Assert.Equal(2, prepared.GetProperty("range").GetProperty("start").GetProperty("line").GetInt32());
-        var edit = Result(await client.Request("textDocument/rename", new { textDocument = Document(path), position = Position(source, "Answer():"), newName = "type" }));
+        var edit = Result(await client.Request("textDocument/rename", new { textDocument = document, position = Position(source, "Answer():"), newName = "type" }));
         var changes = edit.GetProperty("documentChanges"); Assert.Equal(7, changes[0].GetProperty("textDocument").GetProperty("version").GetInt32());
         Assert.All(changes[0].GetProperty("edits").EnumerateArray(), item => Assert.Equal("@type", item.GetProperty("newText").GetString()));
         Assert.False(edit.TryGetProperty("changes", out _)); Assert.Equal(disk, File.ReadAllText(path)); await client.Stop();

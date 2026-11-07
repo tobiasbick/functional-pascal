@@ -12,11 +12,12 @@ internal sealed class SyntaxLayout(int tokenCount)
     internal List<SyntaxBinary> Binary { get; } = [];
     internal List<(int Start, int Clause)> Conditions { get; } = [];
     internal List<SyntaxConditional> Conditionals { get; } = [];
+    internal List<(int Start, int End)> Bodies { get; } = [];
 
     internal void Line(int index) => Breaks[index] = Math.Max(Breaks[index], 1);
     internal void Section(int index) => Breaks[index] = 2;
     internal void Indent(int start, int end) { Indents[start]++; Indents[end]--; }
-    internal void Body(int start, int end) { Line(start); Line(end); Indent(start, end); ClosingComments[end]++; }
+    internal void Body(int start, int end) { Line(start); Line(end); Indent(start, end); ClosingComments[end]++; Bodies.Add((start, end)); }
     internal ListBuilder List(int open, bool wrap = true, bool closeLine = true) => new(this, open, wrap, closeLine);
 
     internal sealed class ListBuilder(SyntaxLayout layout, int open, bool wrap, bool closeLine)

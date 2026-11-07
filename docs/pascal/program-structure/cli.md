@@ -18,9 +18,9 @@ Use [checked renaming](../tools/refactoring.md) for `refactor rename` and
 reviewable plans and stale-checked source publication.
 
 Use [create/build/run](project-commands.md) for `init project`, `init library`,
-`init solution`, `build` and `run`, including project selection, streams and JSON
-reports. `compile` supplies explicit source/reference compilation; project builds
-use their SDK configuration.
+`init solution`, `build`, `run` and the read-only `target` query. `compile`
+supplies explicit source/reference compilation. Project builds use their SDK
+configuration.
 
 Use [application publishing](../../build/publishing.md) for `publish`: Native AOT,
 single-file and runtime-dependent delivery, output ownership and signing.

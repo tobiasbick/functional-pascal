@@ -4,6 +4,7 @@ internal sealed class DeclarationSyntax(Token name, int start, int? owner, strin
 {
     internal Token Name { get; } = name;
     internal string SourceName { get; set; } = name.Text;
+    internal string Kind { get; set; } = "variable";
     internal int Start { get; set; } = start;
     internal int End { get; set; }
     internal int? Owner { get; } = owner;

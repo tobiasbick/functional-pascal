@@ -12,6 +12,7 @@ internal sealed partial class Parser
         Expect("type");
         var name = Identifier();
         using var declaration = Declaration(name, start, isPublic ? "public" : "private", documentation);
+        declaration.Info.Kind = "record";
         var parameters = ReadTypeParameters();
         Expect("=");
         var constraints = ReadConstraints();
@@ -53,6 +54,7 @@ internal sealed partial class Parser
                 if (At("public") || At("private")) position++;
                 var field = Identifier();
                 using var fieldDeclaration = Declaration(field, memberStart, visible ? "public" : "private", memberDocumentation);
+                fieldDeclaration.Info.Kind = "property";
                 var type = ReadBindingType(field);
                 ExpressionSyntax? value = null;
                 if (At(":=")) { position++; value = ReadExpression(); }

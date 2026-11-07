@@ -59,8 +59,10 @@ public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<Sd
             child = int.Parse(await File.ReadAllTextAsync(ready, deadline.Token), System.Globalization.CultureInfo.InvariantCulture);
             await process.Interrupt();
             await process.WaitForExit(deadline.Token);
-            Assert.Equal(130, process.ExitCode); Assert.Equal("", await error);
-            using var json = JsonDocument.Parse(await output);
+            var report = await output;
+            Assert.True(process.ExitCode == 130, $"{arguments[0]} exited with {process.ExitCode}: {report}");
+            Assert.Equal("", await error);
+            using var json = JsonDocument.Parse(report);
             Assert.Equal("cancelled", json.RootElement.GetProperty("status").GetString());
             Assert.Throws<ArgumentException>(() => Process.GetProcessById(child.Value));
         }

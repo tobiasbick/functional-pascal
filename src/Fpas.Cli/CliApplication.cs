@@ -17,7 +17,7 @@ namespace Fpas.Cli;
 
 internal static class CliApplication
 {
-    internal static async Task<int> RunAsync(string[] args)
+    internal static async Task<int> RunAsync(string[] args, CancellationToken cancellationToken = default, bool editorControlled = false)
     {
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
@@ -27,7 +27,8 @@ internal static class CliApplication
         var debug = new DebugCommand();
         var check = new CheckCommand();
         var query = new QueryCommand();
-        var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true);
+        var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true, editorControlled);
+        var target = new TargetCommand();
         var fmt = new FormatCommand();
         var test = new TestCommand();
         var doc = new DocCommand();
@@ -57,6 +58,8 @@ internal static class CliApplication
               fpas build examples/hello/Hello.fpasproj
 
               fpas run examples/hello/Hello.fpasproj
+
+              fpas target examples/hello/Hello.fpasproj
 
               fpas fmt --check examples
 
@@ -90,6 +93,7 @@ internal static class CliApplication
         root.Subcommands.Add(compile.Command); root.Subcommands.Add(debug.Command); root.Subcommands.Add(check.Command);
         root.Subcommands.Add(query.Command);
         root.Subcommands.Add(init.Command); root.Subcommands.Add(build.Command); root.Subcommands.Add(run.Command);
+        root.Subcommands.Add(target.Command);
         root.Subcommands.Add(fmt.Command);
         root.Subcommands.Add(test.Command);
         root.Subcommands.Add(doc.Command);
@@ -118,6 +122,7 @@ internal static class CliApplication
         ParseResult? maintenanceResult = null;
         var profileSelected = false; var terminalSelected = false; var schemaSelected = false;
         ParseResult? diagnoseResult = null;
+        var targetSelected = false;
         ExecutionCommand? execution = null;
         try
         {
@@ -139,6 +144,7 @@ internal static class CliApplication
             else if (diagnose.Owns(parsed.CommandResult.Command)) { diagnoseResult = parsed; diagnose.Validate(parsed, args); }
             else if (terminal.Owns(parsed.CommandResult.Command)) { terminalSelected = true; }
             else if (parsed.CommandResult.Command == schema.Command) { schemaSelected = true; }
+            else if (parsed.CommandResult.Command == target.Command) { targetSelected = true; }
             else if (parsed.CommandResult.Command == publish.Command) { help = "fpas publish --help"; publishResult = parsed; }
             else if (parsed.CommandResult.Command == debug.Command) { help = "fpas debug --help"; debugResult = parsed; debug.Validate(parsed, args); }
             else if (parsed.CommandResult.Command == lsp.Command) { help = "fpas lsp --help"; lspSelected = true; }
@@ -158,7 +164,7 @@ internal static class CliApplication
             }
             if (parsed.Errors.Count > 0) throw new ArgumentException(string.Join(" ", parsed.Errors.Select(error => error.Message)));
             if (parsed.Action is HelpAction helpAction) return await CliHelp.WriteAsync(parsed, helpAction);
-            return await parsed.InvokeAsync(new InvocationConfiguration { EnableDefaultExceptionHandler = false });
+            return await parsed.InvokeAsync(new InvocationConfiguration { EnableDefaultExceptionHandler = false }, cancellationToken);
         }
         catch (ArgumentException exception) when (exception is not DecoderFallbackException)
         {
@@ -167,6 +173,7 @@ internal static class CliApplication
             if (diagnoseResult is not null) return await diagnose.ArgumentError(diagnoseResult, exception.Message);
             if (terminalSelected) return terminal.ArgumentError(exception.Message);
             if (schemaSelected) return Reporting.OperationReport.Fail("schema", "invalid_argument", exception.Message + " See fpas schema --help.", 2);
+            if (targetSelected) return TargetCommand.Fail(null, "invalid_argument", exception.Message, 2);
             if (publishResult is not null) { publish.ArgumentError(publishResult, exception.Message); return 2; }
             if (lspSelected) { LspCommand.ArgumentError(exception.Message); return 2; }
             if (debugResult is not null) return await debug.ReportArgumentError(exception.Message);

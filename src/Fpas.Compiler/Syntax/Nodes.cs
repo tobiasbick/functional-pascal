@@ -50,7 +50,7 @@ internal abstract record ExpressionSyntax(int Position)
 internal sealed record LiteralSyntax(Token Token) : ExpressionSyntax(Token.Position);
 internal sealed record ParenthesizedSyntax(int Start, ExpressionSyntax Expression) : ExpressionSyntax(Start);
 internal sealed record NameExpressionSyntax(Token Name) : ExpressionSyntax(Name.Position);
-internal sealed record CallSyntax(ExpressionSyntax Target, IReadOnlyList<ExpressionSyntax> Arguments) : ExpressionSyntax(Target.Position);
+internal sealed record CallSyntax(ExpressionSyntax Target, IReadOnlyList<ExpressionSyntax> Arguments, int ArgumentsStart = -1) : ExpressionSyntax(Target.Position);
 internal sealed record UnarySyntax(Token Operator, ExpressionSyntax Operand) : ExpressionSyntax(Operator.Position);
 internal sealed record BinarySyntax(ExpressionSyntax Left, Token Operator, ExpressionSyntax Right) : ExpressionSyntax(Operator.Position);
 internal sealed record CastSyntax(int Start, TypeSyntax Type, ExpressionSyntax Operand) : ExpressionSyntax(Start);

@@ -2,6 +2,8 @@ namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser
 {
+    internal ExpressionSyntax ParseExpressionFragment() => ReadExpression();
+
     private ExpressionSyntax Extent(ExpressionSyntax expression, int start)
         => expression with { SpanStart = start, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
 
@@ -141,7 +143,11 @@ internal sealed partial class Parser
                 if (layout is not null) arguments = ReadTypeArguments();
                 expression = new GenericNameSyntax(expression, arguments);
             }
-            else expression = new CallSyntax(expression, ReadArguments());
+            else
+            {
+                var argumentsStart = Current.Position;
+                expression = new CallSyntax(expression, ReadArguments(), argumentsStart);
+            }
             expression = Extent(expression, start);
         }
         return expression;

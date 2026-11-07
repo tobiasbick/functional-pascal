@@ -11,6 +11,11 @@ internal static class FeatureProjection
     // Navigation and rename spans identify single identifier tokens, including @.
     internal static LspRange Token(SourceSpan span) => new(new(span.Line - 1, span.Column - 1), new(span.Line - 1, span.Column - 1 + span.Length));
     internal static Location Location(SourceSpan span) => new() { Uri = FileUris.Uri(span.Path), Range = Token(span) };
+    internal static LspRange Range(SourceDocument document, SourceSpan span)
+    {
+        var end = document.Span(span.Offset + span.Length, 0);
+        return new(new(span.Line - 1, span.Column - 1), new(end.Line - 1, end.Column - 1));
+    }
     internal static Position End(string text)
     {
         var line = 0; var character = 0;
@@ -22,15 +27,21 @@ internal static class FeatureProjection
         return new(line, character);
     }
 
-    internal static WorkspaceEdit Rename(TextEditSet edits) => new()
+    internal static WorkspaceEdit WorkspaceEdits(TextEditSet edits) => new()
     {
         DocumentChanges = new Container<WorkspaceEditDocumentChange>(edits.Documents.Select(document => new WorkspaceEditDocumentChange(new TextDocumentEdit
         {
             TextDocument = new OptionalVersionedTextDocumentIdentifier { Uri = FileUris.Uri(document.Original.Path), Version = document.Original.Version },
-            Edits = new TextEditContainer(document.Edits.Select(edit => new TextEdit
-            { Range = Token(new(edit.Location.Path, edit.Location.Offset!.Value, edit.Location.Length, edit.Location.Line, edit.Location.Column)), NewText = edit.NewText }))
+            Edits = Ranges(document)
         })))
     };
+
+    private static TextEditContainer Ranges(DocumentEdits edits)
+    {
+        var document = new SourceDocument(edits.Original.Path, edits.Original.Text);
+        return new(edits.Edits.Select(edit => new TextEdit
+            { Range = Range(document, document.Span(edit.Location.Offset!.Value, edit.Location.Length)), NewText = edit.NewText }));
+    }
 
     internal static SymbolInformation Symbol(DeclarationMatch match) => new()
     {

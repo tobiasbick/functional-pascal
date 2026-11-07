@@ -111,6 +111,15 @@ remaining descendants when the main process exits, on cancellation or on a deadl
 Run has no implicit deadline. `--timeout` accepts 0..3600 seconds for the entire
 operation; zero disables the deadline. Cancellation remains available.
 
+## Resolve a runnable target
+
+`fpas target CONTEXT` evaluates the selected executable without restoring or
+compiling. Its JSON report includes the DLL path, framework, platform and
+mapped configuration. Use `--project` for an ambiguous solution and
+`--configuration` to choose a solution configuration. Ambiguity reports the
+included candidates. The evaluation deadline defaults to 30 seconds and can
+be changed with `--timeout`.
+
 ## Reports and exit codes
 
 `fpas restore CONTEXT` and `fpas clean CONTEXT` run the selected SDK operation for
@@ -129,6 +138,10 @@ These commands support `--report json`: one stdout document for success or
 failure, including argument failures. Fields identify command, status and context;
 available file plans, selected target, build output, program result and error are
 separate fields. Build/program capture reports exit codes and truncation.
+
+JSON build reports include bounded MSBuild error and warning events with source
+ranges and project paths when available. FPAS diagnostics can carry related
+locations. `diagnosticsTruncated` indicates that the event budget was exceeded.
 
 | Exit | Meaning |
 | --- | --- |

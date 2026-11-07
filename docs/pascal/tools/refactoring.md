@@ -1,4 +1,4 @@
-# Rename FPAS symbols
+# Checked FPAS refactorings
 
 `fpas refactor rename` prepares a checked JSON edit plan in an explicit `.fpasproj`
 or `.slnx` context. `fpas refactor apply` validates and applies that plan. Both
@@ -94,6 +94,39 @@ owns stdout with one object, including failures. It contains success/status,
 planPath/plan, per-file written flags, rechecked, diagnostics, error and recovery
 paths. Exit codes: 0 success/help, 1 conflict/stale plan/setup/publication/deadline
 failure, 2 invalid arguments/ambiguous source owner, 130 cancellation.
+
+## VS Code refactorings
+
+The VS Code commands prepare edits against the checked live workspace, including
+unsaved buffers and each owner of a linked file. The preview lists exact edits
+and their original ranges. Apply recomputes the edit against the current input
+snapshot, then submits one versioned text edit for the open buffers. The editor
+owns undo and saving. An affected closed file leaves the result preview-only.
+Reprepare after opening it, changing an input, switching context or restarting
+the language server.
+
+- **Add Parameter** accepts a name, an explicit FPAS type and one value
+  expression for checked direct calls to a private unit, program or record routine.
+  It inserts the parameter before existing defaults and labels positional
+  arguments that cross the insertion. Each new value argument is evaluated
+  after the existing explicit arguments. The routine body stays intact.
+  Routines with attributes, `params`, external contracts, callable references
+  or untracked callers require a manual signature change.
+- **Extract Variable** creates a typed local `const` in the same block.
+  Select an expression evaluated first in an initializer, return, raise,
+  initial condition or case selector. Extraction can traverse a leading
+  operand or first argument of a checked unqualified call. A later or guarded
+  operand, loop condition, indirect receiver, managed argument, lambda or
+  await requires manual editing.
+- **Organize Imports** removes unused CLR type and namespace aliases when all
+  source owners agree. It preserves source-unit imports, comments, line
+  endings and the order of surviving imports. Entries adjacent to comments
+  stay in place when deletion would consume the comment.
+
+All three check the proposed overlay with the actual project references.
+Existing source bindings and relationships must survive the edit. A changed
+overload, invalid type, name collision or changed input prevents application.
+Plans expire after five minutes and each application consumes its preview.
 
 ## See also
 

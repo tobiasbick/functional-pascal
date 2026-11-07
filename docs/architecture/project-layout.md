@@ -297,6 +297,6 @@ Preserve compile/execute integration coverage when extending the compiler or SDK
 Add Fpas.Core contents only when emitted features need them. Follow the owning
 language/build contracts and their tracked gaps. Add executable examples/apps
 using implemented features. Application delivery follows the
-[publishing contract](../build/publishing.md). Additional editor tooling stays in
-[editor gaps](../future/editor-gap.md), scheduled last. Repository commands belong in the
+[publishing contract](../build/publishing.md). The [VS Code extension](../../src/VSCode/README.md)
+lives in `src/VSCode`. Repository commands belong in the
 [development workflow](../build/development.md).

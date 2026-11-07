@@ -1,0 +1,159 @@
+{
+  "name": "functional-pascal-clr",
+  "displayName": "Functional Pascal CLR",
+  "description": "Language support for Functional Pascal on .NET",
+  "version": "0.1.0",
+  "publisher": "functional-pascal",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tobiasbick/functional-pascal.git",
+    "directory": "src/VSCode"
+  },
+  "engines": { "vscode": "^1.145.0" },
+  "categories": ["Programming Languages"],
+  "extensionKind": ["workspace"],
+  "main": "./out/extension.cjs",
+  "activationEvents": ["onLanguage:fpas", "workspaceContains:**/*.fpasproj", "onDebugResolve:fpas-clr", "onTaskType:fpas"],
+  "capabilities": {
+    "virtualWorkspaces": false,
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Syntax and snippets are available. Trust the workspace to run FPAS and analyze projects.",
+      "restrictedConfigurations": ["functionalPascalClr.executablePath", "functionalPascalClr.configuration"]
+    }
+  },
+  "contributes": {
+    "languages": [{
+      "id": "fpas",
+      "aliases": ["Functional Pascal", "FPAS"],
+      "extensions": [".fpas"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "fpas",
+      "scopeName": "source.fpas",
+      "path": "./syntaxes/fpas.tmLanguage.json"
+    }],
+    "snippets": [{ "language": "fpas", "path": "./snippets/fpas.json" }],
+    "commands": [
+      { "command": "functionalPascalClr.selectContext", "title": "Select Analysis Context", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.selectExecutable", "title": "Select FPAS Executable", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.selectConfiguration", "title": "Select Build Configuration", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.restartLanguageServer", "title": "Restart Language Server", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.showOutput", "title": "Show Language Server Output", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.showPublicSignatures", "title": "Show Public Signatures", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.inspectDeclaration", "title": "Inspect Declaration", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.searchMetadata", "title": "Search Referenced CLR Metadata", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.check", "title": "Check Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.restore", "title": "Restore Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.build", "title": "Build Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.clean", "title": "Clean Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.run", "title": "Run Project in Terminal", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.test", "title": "Test Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.format", "title": "Format Project Sources", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.selectRunProject", "title": "Select Run Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.selectTestProject", "title": "Select Test Project", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.refreshTests", "title": "Refresh Tests", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.buildTests", "title": "Build Test Outputs", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.addParameter", "title": "Preview Add Parameter", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.extractVariable", "title": "Preview Extract Variable", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.organizeImports", "title": "Preview Organize Imports", "category": "Functional Pascal" },
+      { "command": "functionalPascalClr.applyRefactoring", "title": "Apply Refactoring", "category": "Functional Pascal", "icon": "$(check)" },
+      { "command": "functionalPascalClr.discardRefactoring", "title": "Discard Refactoring", "category": "Functional Pascal", "icon": "$(close)" }
+    ],
+    "taskDefinitions": [{
+      "type": "fpas",
+      "required": ["operation"],
+      "properties": {
+        "operation": { "type": "string", "enum": ["check", "restore", "build", "clean", "run", "test", "format"] },
+        "configuration": { "type": "string", "description": "Build or mapped solution configuration." },
+        "project": { "type": "string", "description": "Absolute included run or test project path." },
+        "args": { "type": "array", "items": { "type": "string" }, "description": "Individual run arguments." },
+        "cwd": { "type": "string", "description": "Absolute program working directory." },
+        "captured": { "type": "boolean", "description": "Capture run output as JSON with closed program stdin." },
+        "noBuild": { "type": "boolean", "description": "Use existing outputs for run or test." }
+      }
+    }],
+    "debuggers": [{
+      "type": "fpas-clr",
+      "label": "Functional Pascal CLR",
+      "languages": ["fpas"],
+      "configurationAttributes": {
+        "launch": {
+          "properties": {
+            "program": { "type": "string", "description": "Absolute path to a built managed DLL. Omit to launch the selected project." },
+            "project": { "type": "string", "description": "Absolute included executable project path." },
+            "configuration": { "type": "string", "description": "Build or mapped solution configuration." },
+            "cwd": { "type": "string", "description": "Absolute program working directory." },
+            "args": { "type": "array", "items": { "type": "string" }, "description": "Individual program arguments." },
+            "build": { "type": "boolean", "default": false, "description": "Build the selected project or solution before launching." },
+            "stopAtEntry": { "type": "boolean", "default": false, "description": "Stop at program entry." }
+          }
+        }
+      },
+      "initialConfigurations": [{ "name": "Launch selected FPAS target", "type": "fpas-clr", "request": "launch" }]
+    }],
+    "menus": {
+      "editor/title": [
+        { "command": "functionalPascalClr.applyRefactoring", "when": "resourceScheme == fpas-refactoring && isWorkspaceTrusted", "group": "navigation@1" },
+        { "command": "functionalPascalClr.discardRefactoring", "when": "resourceScheme == fpas-refactoring && isWorkspaceTrusted", "group": "navigation@2" }
+      ],
+      "explorer/context": [{
+        "command": "functionalPascalClr.selectContext",
+        "when": "isWorkspaceTrusted && (resourceExtname == .fpasproj || resourceExtname == .slnx)",
+        "group": "navigation"
+      }]
+    },
+    "configuration": {
+      "title": "Functional Pascal CLR",
+      "properties": {
+        "functionalPascalClr.executablePath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Absolute path to an installed FPAS executable on this workspace host. An empty value searches the host PATH."
+        },
+        "functionalPascalClr.configuration": {
+          "type": "string",
+          "default": "Debug",
+          "scope": "window",
+          "description": "Configuration used when evaluating the selected FPAS project or solution."
+        },
+        "functionalPascalClr.run.arguments": {
+          "type": "array", "items": { "type": "string" }, "default": [],
+          "description": "Program arguments passed individually by the FPAS Run command."
+        },
+        "functionalPascalClr.run.workingDirectory": {
+          "type": "string", "default": "",
+          "description": "Absolute working directory for FPAS run and debug. Defaults to the selected program or project directory."
+        },
+        "functionalPascalClr.trace.server": {
+          "type": "string",
+          "enum": ["messages", "verbose"],
+          "default": "messages",
+          "description": "Protocol detail when the Functional Pascal log level is Trace. Verbose traces include source text."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "npm run check && node scripts/build.mjs",
+    "test": "npm run build && node scripts/test.mjs",
+    "test:grammar": "node scripts/grammar.mjs",
+    "package": "vsce package --no-dependencies --baseContentUrl https://github.com/tobiasbick/functional-pascal/blob/HEAD/src/VSCode",
+    "vscode:prepublish": "npm run build"
+  },
+  "dependencies": { "vscode-languageclient": "11.0.0" },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/vscode": "1.145.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.1.0",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "vscode-oniguruma": "2.0.1",
+    "vscode-textmate": "9.3.2"
+  }
+}

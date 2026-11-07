@@ -1,0 +1,32 @@
+program RefactoringProbe;
+uses System.Text as Unused, System.Console as Console, RefactoringDependency as Keep;
+
+var Trace: int := 0;
+
+function Step(Value: int): int;
+begin
+  Trace := Trace * 10 + Value;
+  return Value;
+end function;
+
+function Compute(Value: int; Extra: int := 4): int;
+begin
+  return Value + Extra;
+end function;
+
+function Compute(Value: int; Collision: string): int;
+begin
+  return Value;
+end function;
+
+begin
+  const First: int := Compute(Step(1), Step(2));
+  const Label: string := '😀'; const Second: int := Compute(Step(3), Extra := Step(4));
+  const Third: int := Compute(Step(5));
+  if false and (Step(7) = 7) then
+    Console.WriteLine('unreachable');
+  end if;
+  Console.WriteLine(Trace);
+  Console.WriteLine(First + Second + Third);
+end;
+end program;

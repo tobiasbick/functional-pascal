@@ -1,4 +1,5 @@
 using Fpas.Compiler.Diagnostics;
+using Fpas.Compiler.Analysis;
 
 namespace Fpas.Compiler.Syntax;
 
@@ -8,6 +9,7 @@ internal sealed class SourceText(string path, string text, CancellationToken can
     internal string Text { get; } = text;
     internal CancellationToken CancellationToken => cancellationToken;
     internal DiagnosticBag Diagnostics { get; } = diagnostics ?? new();
+    internal EditorProbe? Editor { get; set; }
     internal void CheckCancellation() => cancellationToken.ThrowIfCancellationRequested();
 
     internal SourceLocation Location(int position, int length = 1)

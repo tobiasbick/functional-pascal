@@ -4,6 +4,7 @@ using Fpas.Workspaces.Projects;
 using Fpas.Workspaces.Solutions;
 using Microsoft.VisualStudio.SolutionPersistence.Model;
 using System.Text.Json;
+using Fpas.Compiler;
 
 namespace Fpas.Workspaces.Testing;
 
@@ -12,11 +13,14 @@ public sealed record TestProject(string Project, string Configuration, string Pl
     public bool TestingPlatform { get; init; }
     public string FrameworkMoniker { get; init; } = "";
     public IReadOnlyList<string> VstestExtensionPaths { get; init; } = [];
+    public string? OutputIdentity { get; init; }
+    public bool StaleSources { get; init; }
 }
 public sealed record DiscoveredTest(string Project, string FullyQualifiedName)
 {
     public string? Uid { get; init; }
     public string? DisplayName { get; init; }
+    public SourceLocation? Location { get; init; }
 }
 public sealed record TestRunOptions(IReadOnlyList<string> AdapterPaths, IReadOnlyList<string> Collectors, IReadOnlyList<string> Arguments);
 
@@ -74,7 +78,7 @@ public static class TestDriver
         if (filter is not null) args.Add("/TestCaseFilter:" + filter);
         if (settings is not null) args.Add("/Settings:" + settings);
         VstestOptions(project, args, options);
-        return await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token);
+        return await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true);
     }
 
     public static async Task<(BuildResult Process, IReadOnlyList<DiscoveredTest> Tests)> DiscoverAsync(TestProject project,
@@ -88,7 +92,7 @@ public static class TestDriver
         if (filter is not null) args.Add("/TestCaseFilter:" + filter);
         if (settings is not null) args.Add("/Settings:" + settings);
         VstestOptions(project, args, options);
-        var process = await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token);
+        var process = await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true);
         if (process.ExitCode != 0 || process.Truncated) return (process, []);
         if (!File.Exists(output) || new FileInfo(output).Length > 4_194_304)
             throw new ContextFailure("discovery_failed", "Native discovery did not produce a bounded test-name artifact.");

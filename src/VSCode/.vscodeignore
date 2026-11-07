@@ -1,0 +1,9 @@
+**
+!README.md
+!LICENSE
+!package.json
+!language-configuration.json
+!syntaxes/fpas.tmLanguage.json
+!snippets/fpas.json
+!out/extension.cjs
+!out/ThirdPartyNotices.txt

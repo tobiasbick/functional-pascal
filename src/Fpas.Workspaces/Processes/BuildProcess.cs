@@ -3,22 +3,28 @@ using System.Text;
 
 namespace Fpas.Workspaces.Processes;
 
-public sealed record BuildResult(int ExitCode, string Output, string Error, bool Truncated);
+public sealed record BuildResult(int ExitCode, string Output, string Error, bool Truncated)
+{
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<ProjectBuildDiagnostic>? Diagnostics { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool DiagnosticsTruncated { get; init; }
+}
 
 public static class BuildProcess
 {
     public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true,
-        IReadOnlyDictionary<string, string>? environment = null)
+        IReadOnlyDictionary<string, string>? environment = null, bool captureCancellation = false)
     {
         token.ThrowIfCancellationRequested();
-        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment);
+        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment, captureCancellation: captureCancellation);
     }
 
     public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, int outputLimit = 1_048_576)
         => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false, outputLimit: outputLimit);
 
     private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment,
-        IReadOnlyDictionary<string, string>? environment = null, int outputLimit = 1_048_576)
+        IReadOnlyDictionary<string, string>? environment = null, int outputLimit = 1_048_576, bool captureCancellation = false)
     {
         if (outputLimit is < 1 or > 4_194_304) throw new ArgumentOutOfRangeException(nameof(outputLimit));
         token.ThrowIfCancellationRequested();
@@ -34,7 +40,7 @@ public static class BuildProcess
         async Task<string> Drain(StreamReader reader)
         {
             var buffer = new char[4096]; var result = new StringBuilder(); int count;
-            while ((count = await reader.ReadAsync(buffer, token)) > 0)
+            while ((count = await reader.ReadAsync(buffer, captureCancellation ? CancellationToken.None : token)) > 0)
             {
                 var bytes = Encoding.UTF8.GetByteCount(buffer.AsSpan(0, count));
                 if (Interlocked.Add(ref captured, bytes) <= outputLimit) result.Append(buffer, 0, count);
@@ -49,6 +55,11 @@ public static class BuildProcess
             var exitCode = process.ExitCode;
             await process.TerminateAsync();
             return new(exitCode, await output, await error, truncated);
+        }
+        catch (OperationCanceledException) when (captureCancellation && token.IsCancellationRequested)
+        {
+            await process.TerminateAsync();
+            return new(130, await output, await error, truncated);
         }
         finally
         {

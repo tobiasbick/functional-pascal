@@ -1,0 +1,27 @@
+{
+  "Program": {
+    "prefix": "program",
+    "body": ["program ${1:Hello};", "", "uses System.Console as Console;", "", "begin", "  Console.WriteLine('${2:Hello}');", "  $0", "end;", "end program;"],
+    "description": "CLR program with a console entry block"
+  },
+  "Unit": {
+    "prefix": "unit",
+    "body": ["unit ${1:Utilities};", "", "$0", "end unit;"],
+    "description": "CLR source unit"
+  },
+  "Function": {
+    "prefix": "function",
+    "body": ["function ${1:Identity}(${2:Value}: ${3:int}): ${3:int};", "begin", "  return ${2:Value};", "end function;", "$0"],
+    "description": "Function with typed parameters and result"
+  },
+  "If": {
+    "prefix": "if",
+    "body": ["if ${1:Condition} then", "  $0", "end if;"],
+    "description": "Conditional statement"
+  },
+  "For": {
+    "prefix": "for",
+    "body": ["for ${1:Index}: int := ${2:0} to ${3:9} do", "  $0", "end for;"],
+    "description": "Counting loop with a typed binding"
+  }
+}

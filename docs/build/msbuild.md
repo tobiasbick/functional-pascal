@@ -20,7 +20,8 @@ and assembly references form the dependency graph, including FPAS/C#/F# edges.
 Building requires no IDE extension. Multi-targeting is outside this build scope.
 Application apphosts, single-file/self-contained publishing, Native AOT and signing
 follow the [publishing contract](publishing.md).
-IDE project loaders belong to [editor work, scheduled last](../future/editor-gap.md).
+The [VS Code extension](../../src/VSCode/README.md) selects restored project
+contexts and uses the same CLI for project commands.
 The compiler has a separate [single-file distribution contract](distribution.md).
 
 ## Project identity and solution shape

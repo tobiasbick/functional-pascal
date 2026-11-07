@@ -15,7 +15,7 @@ fpas schema test
 | --- | --- |
 | `operation` | Profile, terminal, dump operations and schema argument failures |
 | `terminal-script` | Controlled terminal-test input |
-| `project` | Init, build, run, publish, clean and restore |
+| `project` | Init, build, run, target, publish, clean and restore |
 | `compile` | Standalone compiler diagnostics |
 | `check` | Evaluated project/solution checking and corrections |
 | `query` | Checked source queries |

@@ -1,0 +1,14 @@
+program EditorProbe;
+
+uses System.Console as Console, Helpers as H, Fixture.Api as Api;
+
+function Double(Value: int): int;
+begin
+  return Value * 2;
+end function;
+
+begin
+  Console.WriteLine('λ😀' + Double(H.Answer() + Api.Value()).ToString());
+  discard Api.Echo('text', 2);
+end;
+end program;

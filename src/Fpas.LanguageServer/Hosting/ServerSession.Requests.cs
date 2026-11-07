@@ -11,7 +11,8 @@ namespace Fpas.LanguageServer.Hosting;
 
 internal sealed partial class ServerSession
 {
-    internal static readonly string[] FeatureMethods = ["textDocument/definition", "textDocument/references", "workspace/symbol", "textDocument/prepareRename", "textDocument/rename", "textDocument/formatting"];
+    private static readonly string[] CoreMethods = ["textDocument/definition", "textDocument/references", "workspace/symbol", "textDocument/prepareRename", "textDocument/rename", "textDocument/formatting"];
+    internal static string[] FeatureMethods => [.. CoreMethods, .. SyntaxMethods, .. EditorMethods];
     private readonly AsyncLocal<RequestStamp?> request = new();
     private readonly HashSet<Task> requests = [];
     private bool renameSupported;
@@ -26,17 +27,12 @@ internal sealed partial class ServerSession
 
     internal void RegisterFeatures(JsonRpc connection)
     {
-        Register("textDocument/definition", Definition); Register("textDocument/references", References); Register("workspace/symbol", Symbols);
-        Register("textDocument/prepareRename", PrepareRename); Register("textDocument/rename", Rename); Register("textDocument/formatting", Formatting);
-        void Register(string method, Func<JObject, CancellationToken, Task<JToken?>> action)
-            => connection.AddLocalRpcMethod(action.Method, this, new JsonRpcMethodAttribute(method) { UseSingleObjectParameterDeserialization = true });
+        foreach (var method in FeatureMethods)
+        {
+            Func<JObject, CancellationToken, Task<JToken?>> action = (parameters, token) => StartRequest(method, parameters, token);
+            connection.AddLocalRpcMethod(action.Method, action.Target, new JsonRpcMethodAttribute(method) { UseSingleObjectParameterDeserialization = true });
+        }
     }
-    public Task<JToken?> Definition(JObject parameters, CancellationToken token) => StartRequest("textDocument/definition", parameters, token);
-    public Task<JToken?> References(JObject parameters, CancellationToken token) => StartRequest("textDocument/references", parameters, token);
-    public Task<JToken?> Symbols(JObject parameters, CancellationToken token) => StartRequest("workspace/symbol", parameters, token);
-    public Task<JToken?> PrepareRename(JObject parameters, CancellationToken token) => StartRequest("textDocument/prepareRename", parameters, token);
-    public Task<JToken?> Rename(JObject parameters, CancellationToken token) => StartRequest("textDocument/rename", parameters, token);
-    public Task<JToken?> Formatting(JObject parameters, CancellationToken token) => StartRequest("textDocument/formatting", parameters, token);
 
     private Task<JToken?> StartRequest(string method, JObject parameters, CancellationToken token)
     {
@@ -60,24 +56,26 @@ internal sealed partial class ServerSession
             if (parameters is null) throw Invalid("Supply a parameter object.");
             object? result;
             if (method == "textDocument/formatting") result = Format(parameters, stamp, deadline.Token);
+            else if (SyntaxMethods.Contains(method, StringComparer.Ordinal)) result = SyntaxFeature(method, parameters, stamp, deadline.Token);
             else
             {
-                var input = ReadFeature(method, parameters);
-                lock (gate) { CheckRequest(stamp); if (desynchronized.Count != 0) throw Invalid("Resynchronize open documents before semantic requests.", -32803); }
-                var snapshot = await workspace!.AnalyzeAsync(deadline.Token);
-                lock (gate) CheckRequest(stamp);
-                result = Feature(method, input, snapshot, deadline.Token);
-                await workspace.VerifyAsync(snapshot, deadline.Token);
+                var core = CoreMethods.Contains(method, StringComparer.Ordinal) ? ReadFeature(method, parameters) : null;
+                using (gate.EnterScope()) { CheckRequest(stamp); if (desynchronized.Count != 0) throw Invalid("Resynchronize open documents before semantic requests.", -32803); }
+                var snapshot = await AnalyzeForRequest(stamp, deadline.Token);
+                CheckRequest(stamp);
+                result = core is not null ? Feature(method, core, snapshot, deadline.Token) :
+                    EditorFeature(method, parameters, snapshot, deadline.Token);
+                await workspace!.VerifyAsync(snapshot, deadline.Token);
             }
-            var json = result is null ? null : ProtocolJson.Token(result);
+            var json = result is null ? null : ProtocolJson.Token(result, omitNulls: !CoreMethods.Contains(method, StringComparer.Ordinal));
             if (json is not null && Encoding.UTF8.GetByteCount(json.ToString(Newtonsoft.Json.Formatting.None)) > BoundedFormatter.OutputLimit - 1024)
                 throw Invalid("Result exceeds 4 MiB. Narrow the request or reduce the document.", -32803);
-            deadline.Token.ThrowIfCancellationRequested(); lock (gate) CheckRequest(stamp);
+            deadline.Token.ThrowIfCancellationRequested(); CheckRequest(stamp);
             return json;
         }
         catch (OperationCanceledException)
         {
-            lock (gate) if (Current(stamp) && !lifetime.IsCancellationRequested) changes.Writer.TryWrite(0);
+            using (gate.EnterScope()) if (Current(stamp) && !lifetime.IsCancellationRequested) changes.Writer.TryWrite(0);
             if (token.IsCancellationRequested || lifetime.IsCancellationRequested) throw Invalid("Request cancelled.", -32800);
             if (!Current(stamp)) throw Invalid("Document or workspace content changed during the request.", -32801);
             throw Invalid("Request exceeded its 30-second work deadline.", -32803);
@@ -87,7 +85,7 @@ internal sealed partial class ServerSession
         {
             if (failure.Code is "content_modified" or "inputs_changed")
             {
-                lock (gate) if (state == SessionState.Running && revision == stamp.Session) { workspace!.Invalidate(); Changed(); }
+                using (gate.EnterScope()) if (state == SessionState.Running && revision == stamp.Session) { workspace!.Invalidate(); Changed(); }
                 throw Invalid(failure.Message, -32801);
             }
             throw Invalid(failure.Code + ": " + failure.Message, failure.Code is "invalid_argument" ? -32602 : -32803);
@@ -100,4 +98,17 @@ internal sealed partial class ServerSession
 
     private void CheckRequest(RequestStamp stamp)
     { if (!Current(stamp)) throw Invalid("Document or workspace content changed during the request.", -32801); }
+
+    private async Task<LiveSnapshot> AnalyzeForRequest(RequestStamp stamp, CancellationToken token)
+    {
+        for (var attempt = 0; ; attempt++)
+        {
+            try { return await workspace!.AnalyzeAsync(token); }
+            catch (OperationCanceledException) when (!token.IsCancellationRequested && Current(stamp))
+            {
+                // Another request may have started and then cancelled the shared analysis.
+                if (attempt == 2) throw Invalid("A concurrent request interrupted workspace analysis. Retry the request.", -32801);
+            }
+        }
+    }
 }

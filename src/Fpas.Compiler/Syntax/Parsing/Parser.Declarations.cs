@@ -3,6 +3,7 @@ namespace Fpas.Compiler.Syntax.Parsing;
 internal sealed partial class Parser
 {
     private readonly Dictionary<int, DeclarationSyntax> declarations = [];
+    internal IReadOnlyDictionary<int, DeclarationSyntax> Declarations => declarations;
     private int? declarationOwner;
     private int LastEnd => tokens[position - 1].Position + tokens[position - 1].Length;
 

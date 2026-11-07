@@ -11,6 +11,7 @@ internal sealed partial class Binder
 {
     private BoundExpression BindExpression(ExpressionSyntax expression, bool check = true, TypeSymbol? expected = null)
     {
+        if (source.Editor is not null) EditorExpression(expression, check);
         var result = BindExpressionCore(expression, check, expected);
         catalog.Analysis?.Expression(source, expression, result);
         return result;

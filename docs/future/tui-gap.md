@@ -97,5 +97,6 @@ cache lifecycle, effect cleanup, Unicode geometry, terminal restoration, headles
 assertions and live snapshot/frame consistency on Windows and Linux.
 
 The [CLI reference](../pascal/program-structure/cli.md) owns command workflows. The [debugger reference](../pascal/tools/debugging.md)
-owns DAP/batch protocols; [editor gaps](editor-gap.md) own other IDE integration.
+owns the DAP and batch protocols. The [VS Code extension](../../src/VSCode/README.md)
+owns its editor workflows.
 TUI live inspection is a library capability, separate from DAP.

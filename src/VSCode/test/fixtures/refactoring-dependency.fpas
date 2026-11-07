@@ -1,0 +1,8 @@
+unit RefactoringDependency;
+
+public function Value(): int;
+begin
+  return 17;
+end function;
+
+end unit;

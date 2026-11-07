@@ -97,7 +97,7 @@ internal sealed partial class ServerSession
             await rpc.InvokeWithParameterObjectAsync<object?>("client/registerCapability", new
             {
                 registrations = new[] { new { id = "fpas-inputs", method = "workspace/didChangeWatchedFiles", registerOptions = new
-                { watchers = new[] { new { globPattern = "**/*.{fpas,fpasproj,slnx,cs,csproj,fs,fsi,fsproj,props,targets,json,config,Config,dll,pdb}", kind = 7 } } } } }
+                { watchers = new[] { new { globPattern = "**/*.{fpas,fpasproj,slnx,cs,csproj,fs,fsi,fsproj,props,targets,json,config,Config,dll,pdb,xml}", kind = 7 } } } } }
             }, deadline.Token);
         }
         catch (Exception error) when (error is StreamJsonRpc.RemoteRpcException or OperationCanceledException or StreamJsonRpc.ConnectionLostException)

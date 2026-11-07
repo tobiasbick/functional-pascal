@@ -1,0 +1,28 @@
+{
+  "name": "Functional Pascal CLR",
+  "scopeName": "source.fpas",
+  "patterns": [
+    { "name": "comment.line.double-slash.fpas", "match": "//.*$" },
+    {
+      "name": "string.quoted.single.fpas",
+      "begin": "'",
+      "end": "'(?!')|$",
+      "patterns": [{ "name": "constant.character.escape.fpas", "match": "''" }]
+    },
+    { "name": "variable.other.escaped.fpas", "match": "@[A-Za-z_][A-Za-z0-9_]*" },
+    { "name": "constant.character.fpas", "match": "#[0-9](?:_?[0-9])*\\b" },
+    { "name": "constant.numeric.fpas", "match": "\\$[0-9A-Fa-f](?:_?[0-9A-Fa-f])*(?:[uU][lL]?|[lL])?\\b" },
+    { "name": "constant.numeric.fpas", "match": "\\b[0-9](?:_?[0-9])*(?:\\.[0-9](?:_?[0-9])*)?(?:[eE][+-]?[0-9](?:_?[0-9])*)?(?:[uU][lL]?|[lLfFdDmM])?\\b" },
+    { "name": "constant.language.fpas", "match": "\\b(?:true|false|null)\\b" },
+    { "name": "storage.type.primitive.fpas", "match": "\\b(?:bool|byte|sbyte|short|ushort|int|uint|long|ulong|nint|nuint|float|double|decimal|char|string|object)\\b" },
+    {
+      "name": "keyword.control.fpas",
+      "match": "\\b(?:await|begin|break|case|catch|continue|discard|do|downto|else|elsif|end|finally|for|if|in|of|raise|repeat|return|then|to|try|until|using|when|while|with)\\b"
+    },
+    {
+      "name": "keyword.other.fpas",
+      "match": "\\b(?:as|async|cast|class|const|distinct|ensures|enum|extends|function|implements|interface|is|new|out|params|private|procedure|program|public|range|record|ref|requires|static|struct|subscribe|type|typeof|unchecked|union|unit|unsubscribe|uses|var|where)\\b"
+    },
+    { "name": "keyword.operator.fpas", "match": "\\b(?:and|div|mod|not|or|shl|shr|xor)\\b|:=|<>|<=|>=|\\?\\?|\\.\\.|[+*/=<>-]" }
+  ]
+}

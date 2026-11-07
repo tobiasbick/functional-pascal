@@ -45,8 +45,15 @@ public static class DistributionAssets
         try
         {
             File.WriteAllBytes(temporary, bytes);
-            try { File.Move(temporary, file, overwrite: true); }
-            catch (Exception error) when ((error is IOException or UnauthorizedAccessException) && Matches(file, hash)) { }
+            try { File.Move(temporary, file); }
+            catch (IOException) when (File.Exists(file))
+            {
+                if (!Matches(file, hash))
+                {
+                    try { File.Move(temporary, file, overwrite: true); }
+                    catch (Exception error) when ((error is IOException or UnauthorizedAccessException) && Matches(file, hash)) { }
+                }
+            }
             if (!Matches(file, hash)) throw new IOException("Distribution asset verification failed: " + name);
             return file;
         }
@@ -56,7 +63,7 @@ public static class DistributionAssets
     private static bool Matches(string file, string hash)
     {
         if (!File.Exists(file)) return false;
-        using var input = File.OpenRead(file);
+        using var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
         return Convert.ToHexString(SHA256.HashData(input)) == hash;
     }
 }

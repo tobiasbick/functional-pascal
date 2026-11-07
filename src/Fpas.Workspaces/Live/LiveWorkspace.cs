@@ -63,6 +63,7 @@ public sealed class LiveWorkspace : IAsyncDisposable
         lock (gate)
         {
             Check(); token.ThrowIfCancellationRequested();
+            if (pending is { IsCompleted: true, IsCompletedSuccessfully: false }) pending = null;
             if (pending is not null) return pending.WaitAsync(token);
             if (owned.Count >= 64) throw new ContextFailure("workspace_limit", "Too many outstanding workspace operations.");
             var captured = new WorkspaceTextSnapshot(opened.Values); var selected = revision;
@@ -104,6 +105,7 @@ public sealed class LiveWorkspace : IAsyncDisposable
                     throw new ContextFailure("content_modified", "Workspace files or project inputs changed after analysis.");
                 lock (gate) CheckSnapshot(snapshot);
             }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { throw; }
             catch
             {
                 lock (gate) if (!disposed && revision == snapshot.Revision) Changed();

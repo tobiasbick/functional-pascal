@@ -12,6 +12,7 @@ internal sealed partial class Parser
         Expect("type");
         var name = Identifier();
         using var declaration = Declaration(name, start, isPublic ? "public" : "private", documentation);
+        declaration.Info.Kind = "interface";
         var parameters = ReadTypeParameters();
         Expect("=");
         var constraints = ReadConstraints();
@@ -45,6 +46,7 @@ internal sealed partial class Parser
             {
                 var member = Identifier();
                 using var propertyDeclaration = Declaration(member, memberStart, "public", memberDocumentation);
+                propertyDeclaration.Info.Kind = "property";
                 Expect(":");
                 var type = SurfaceType();
                 Expect(";");

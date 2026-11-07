@@ -110,13 +110,15 @@ internal sealed partial class CoreClrSession
         var metadata = probe.Symbols;
         uint offset = 0, mapping = 0;
         NativeObject.Check(((delegate* unmanaged[Stdcall]<nint, uint*, uint*, int>)il.Slot(11))(il.Pointer, &offset, &mapping));
-        var mapped = (mapping & (0x10 | 0x20)) != 0;
+        // CoreCLR may report a prolog mapping at a bound IL breakpoint.
+        var atBreakpoint = breakpointFrame?.SameIdentity(il.Pointer) == true;
+        var mapped = atBreakpoint || (mapping & (0x10 | 0x20)) != 0;
         var effective = FramePosition(il);
         var source = mapped ? metadata?.Position(token, checked((int)effective.Offset)) : null;
         var async = AsyncFrameFor(il, metadata, token);
         var runtimeName = metadata?.MethodName(token) ?? $"[method 0x{token:X8}]";
         var data = new DebugFrame(id, thread, async?.Method ?? runtimeName, path, token,
-            mapped ? checked((int)offset) : null, source, metadata is null ? probe.Error?.Code ?? "missing_symbols" : source?.Status ?? "no_source",
+            mapped ? checked((int)(atBreakpoint ? effective.Offset : offset)) : null, source, metadata is null ? probe.Error?.Code ?? "missing_symbols" : source?.Status ?? "no_source",
             effective.Offset != offset || (mapping & 0x20) != 0 || source is not null && !metadata!.IsSourcePoint(token, (int)offset), async is null && (metadata?.Generated(token) ?? false), async, runtimeName);
         return new(data, NativeObject.Borrow(frame.Pointer), metadata);
     }

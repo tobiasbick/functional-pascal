@@ -158,6 +158,12 @@ Framework warnings remain warnings: xUnit's adapter can report an invalid filter
 as a warning with zero tests. JSON preserves native run messages; inspect them
 when no tests match. FPAS does not reinterpret localized adapter messages.
 
+JSON discovery reports the build output identity. FPAS source locations require
+matching portable symbols and source checksums. The VS Code Testing view uses
+`--expected-output` with `--no-build` and one selected project to reject stale
+selections. MTP UIDs come from native discovery and can be forwarded as
+`-- --filter-uid UID`. TRX cases preserve native test IDs and method names.
+
 ## Results and process ownership
 
 The whole operation has a 120-second deadline; `--timeout` accepts 1..3600 seconds.

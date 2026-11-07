@@ -1,0 +1,35 @@
+unit Vstest;
+
+uses System as Sys, Xunit as X;
+
+[X.TheoryAttribute]
+[X.InlineDataAttribute(1, 2, 3)]
+[X.InlineDataAttribute(2, 3, 5)]
+public procedure Addition(Left: int; Right: int; Expected: int);
+begin
+  X.Assert.Equal<int>(Expected, Left + Right);
+end procedure;
+
+[X.FactAttribute]
+public procedure Failure();
+begin
+  X.Assert.Equal<int>(1, 2);
+end procedure;
+
+[X.FactAttribute(Skip := 'intentional skip')]
+public procedure Skipped();
+begin
+  X.Assert.True(false);
+end procedure;
+
+[X.FactAttribute]
+public procedure CanCancel();
+begin
+  const Base: string := Sys.AppContext.BaseDirectory;
+  if Sys.IO.File.Exists(Sys.IO.Path.Combine(Base, 'wait-for-cancellation')) then
+    Sys.IO.File.WriteAllText(Sys.IO.Path.Combine(Base, 'waiting-test.pid'), Sys.Environment.ProcessId.ToString());
+    Sys.Threading.Thread.Sleep(60000);
+  end if;
+end procedure;
+
+end unit;

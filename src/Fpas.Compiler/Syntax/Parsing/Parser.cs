@@ -22,6 +22,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         ContainerName = name.Text;
         using var container = Declaration(name.Parts[^1], start, documentation: documentation);
         container.Info.SourceName = name.Text;
+        container.Info.Kind = "container";
         Expect(";");
         layout?.Section(position);
         var imports = new List<ImportSyntax>();
@@ -36,7 +37,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var target = ReadName();
                 Expect("as");
                 var alias = Identifier();
-                using (Declaration(alias, importStart)) { }
+                using (var declaration = Declaration(alias, importStart)) declaration.Info.Kind = "alias";
                 imports.Add(new(target, alias));
                 if (!At(","))
                     break;
@@ -79,6 +80,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
                 var global = globals[^1].Binding.Name;
                 Decorate(global, declarationStart, declarationDocumentation);
                 declarations[global.Position].Accessibility = visible ? "public" : "private";
+                declarations[global.Position].Kind = tokens[declaration].Text == "const" ? "constant" : "variable";
                 declarations[global.Position].End = LastEnd;
             }
             else if (tokens[declaration].Text == "type")
@@ -135,6 +137,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         Expect(function ? "function" : "procedure");
         var name = Identifier();
         using var declaration = Declaration(name, start, nested ? null : isPublic ? "public" : "private", documentation);
+        declaration.Info.Kind = "routine";
         var typeParameters = ReadTypeParameters();
         var parameters = ReadList("(", ")", ";", ReadParameter, wrap: false);
         TypeSyntax? result = null;

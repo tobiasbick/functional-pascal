@@ -8,7 +8,8 @@ try {
         throw 'Unable to determine the project SDK package version.'
     }
     New-Item -ItemType Directory -Force -Path sdk/feed | Out-Null
-    if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') { throw 'FPAS distributions support Windows x64 and Linux x64.' }
+    # PSReadLine can shadow the framework type in Windows PowerShell.
+    if ([System.Runtime.InteropServices.RuntimeInformation, mscorlib]::OSArchitecture -ne 'X64') { throw 'FPAS distributions support Windows x64 and Linux x64.' }
     $artifacts = Join-Path $PSScriptRoot '.temp-data/dist/windows'
     $package = Join-Path $PSScriptRoot "sdk/feed/Fpas.NET.Sdk.$sdkVersion.nupkg"
     dotnet build $sdkProject --configuration Release --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" -warnaserror

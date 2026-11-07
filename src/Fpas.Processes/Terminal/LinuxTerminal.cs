@@ -11,14 +11,16 @@ internal sealed class LinuxTerminal : PseudoTerminal
     private readonly FileStream output;
     private readonly Task<int> completion;
     private Task? termination;
+    private bool suspended;
     public override Stream Input => input;
     public override Stream Output => output;
     public override int Id { get; }
     public override Task<int> Completion => completion;
 
-    private LinuxTerminal(int pid, SafeFileHandle master, SafeFileHandle duplicate)
+    private LinuxTerminal(int pid, SafeFileHandle master, SafeFileHandle duplicate, bool suspended)
     {
         Id = pid; this.master = master; input = new(master, FileAccess.Write); output = new(duplicate, FileAccess.Read);
+        this.suspended = suspended;
         completion = Task.Run(() =>
         {
             int result; int status;
@@ -28,7 +30,7 @@ internal sealed class LinuxTerminal : PseudoTerminal
         });
     }
 
-    internal new static PseudoTerminal Start(string path, IReadOnlyList<string> arguments, string cwd, int columns, int rows)
+    internal static PseudoTerminal Start(string path, IReadOnlyList<string> arguments, string cwd, int columns, int rows, bool suspended)
     {
         if (Prctl(36, 1, 0, 0, 0) != 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
         var fd = PosixOpenPt(0x102); // O_RDWR | O_NOCTTY; the slave becomes the child's controlling terminal.
@@ -55,12 +57,21 @@ internal sealed class LinuxTerminal : PseudoTerminal
                 for (var index = 0; index < items.Length; index++) Marshal.WriteIntPtr(vector, index * IntPtr.Size, items[index]);
                 Marshal.WriteIntPtr(vector, items.Length * IntPtr.Size, IntPtr.Zero); return vector;
             }
-            argv = Vector(new[] { path }.Concat(arguments));
+            // The shell stops before exec, preserving the PID registered with the CLR startup shim.
+            argv = Vector(suspended
+                ? new[] { "/bin/sh", "-c", "kill -STOP \"$$\" && exec \"$@\"", "fpas-terminal", path }.Concat(arguments)
+                : new[] { path }.Concat(arguments));
             environment = Vector(Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>().Select(item => item.Key + "=" + item.Value));
-            Check(PosixSpawn(out var pid, path, actions, attributes, argv, environment));
+            Check(PosixSpawn(out var pid, suspended ? "/bin/sh" : path, actions, attributes, argv, environment));
             var duplicate = Dup(fd);
             if (duplicate < 0) { Kill(-pid, 9); WaitPid(pid, out _, 0); throw new Win32Exception(Marshal.GetLastPInvokeError()); }
-            return new LinuxTerminal(pid, handle, new SafeFileHandle(duplicate, true));
+            var output = new SafeFileHandle(duplicate, true);
+            try
+            {
+                if (suspended) WaitForStartupStop(pid);
+                return new LinuxTerminal(pid, handle, output, suspended);
+            }
+            catch { output.Dispose(); throw; }
         }
         catch { handle.Dispose(); throw; }
         finally
@@ -70,6 +81,31 @@ internal sealed class LinuxTerminal : PseudoTerminal
             if (argv != IntPtr.Zero) Marshal.FreeHGlobal(argv); if (environment != IntPtr.Zero) Marshal.FreeHGlobal(environment);
             foreach (var pointer in strings) Marshal.FreeCoTaskMem(pointer);
         }
+    }
+    private static void WaitForStartupStop(int pid)
+    {
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        while (started.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            var result = WaitPid(pid, out var status, 3); // WNOHANG | WUNTRACED
+            if (result == pid)
+            {
+                if ((status & 0xff) == 0x7f) return;
+                throw new IOException("The terminal startup gate exited before stopping.");
+            }
+            if (result < 0 && Marshal.GetLastPInvokeError() != 4)
+                throw new Win32Exception(Marshal.GetLastPInvokeError());
+            Thread.Sleep(5);
+        }
+        Kill(-pid, 9); WaitPid(pid, out _, 0);
+        throw new TimeoutException("The terminal startup gate did not stop.");
+    }
+
+    internal override void Resume()
+    {
+        if (!suspended) throw new InvalidOperationException("The terminal target has already been released.");
+        Check(Kill(Id, 18)); // SIGCONT
+        suspended = false;
     }
     public override void Resize(int columns, int rows)
     { Dimensions(columns, rows); var size = new WindowSize { Columns = (ushort)columns, Rows = (ushort)rows }; Check(Ioctl((int)master.DangerousGetHandle(), 0x5414, ref size)); }

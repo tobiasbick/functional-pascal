@@ -39,8 +39,40 @@ handles expire after resume. Each adapter owns one launch and waits for owned
 cleanup before acknowledging shutdown. EOF, cancellation and transport failure
 also clean up the worker and target. Attach and restart are outside this protocol.
 
-Target stdin is closed in DAP. Batch `--stdin` can supply an explicit file;
-interactive console input and runInTerminal are unsupported.
+The default DAP launch closes target stdin. Batch `--stdin` can supply an
+explicit file. The private-terminal mode supplies terminal input separately
+from the DAP connection.
+
+## Private terminal and TUI control
+
+Set `fpasTui: true` in the DAP launch arguments to start the target in a private
+ConPTY on Windows or PTY on Linux. Set initial `columns` and `rows` in
+`fpasTerminal` if needed. The defaults are 80 columns and 24 rows. The debugger
+holds the target at entry during configuration and the adapter owns the
+controller outside the target process.
+
+| Request | Arguments and result |
+| --- | --- |
+| `fpasTuiSnapshot` | Returns the last completed `frame`, terminal screen as `terminalLines`, `paused`, latest `pendingWork` counts and a bounded outcome `history`. Set `cells: true` for styled cells within the DAP message limit. |
+| `fpasTuiSend` | Pass an `input` object. A structured send returns an input ID on admission, `QueueFull` on saturation or `paused` while stopped. |
+| `fpasTuiWait` | Pass `inputId`, `queue` (`work` or `capacity`), or a `frame` condition with `after`, `columns`, `rows`, `text` or `control`. The default deadline is 5 seconds. Set `timeoutMs` up to 60 seconds. |
+| `fpasTuiResize` | Pass `columns` and `rows` to resize the private terminal. This also works at a breakpoint. |
+| `fpasTuiTerminalInput` | Pass `bytes` as base64 for raw terminal input. |
+
+For `fpasTuiSend`, select `input.kind` from `text` or `paste` with `text`,
+`key` with a logical `key` name and optional modifier mask (Shift 1, Alt 2,
+Ctrl 4), `click` with zero-based `column` and `row`, `scroll` with coordinates
+and `delta`, or `activate` with a stable `control` ID.
+
+While stopped, a snapshot keeps the completed frame's original size. After
+resizing and continuing, wait for a frame at the new size. A wait for an input
+ID reads the controller's outcome history. It returns `paused` if the input is
+still pending at the deadline and the target is stopped. An external
+controller can instead supply its own current-user pipe named
+`fpas-terminal-<32 hex digits>` through `fpasTerminal.pipe`. On that pipe,
+terminal messages use four-byte big-endian lengths and UTF-8 JSON. The worker
+emits `output` events with base64 payloads and replies to `resize` and `input`
+requests.
 
 ## Passive values and expressions
 

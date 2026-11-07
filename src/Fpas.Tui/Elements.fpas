@@ -1,0 +1,313 @@
+unit Fpas.Tui.Elements;
+
+uses System as Sys, System.Collections.Generic as Generic;
+
+public type Key = enum: byte
+  Unknown;
+  Enter;
+  Escape;
+  Tab;
+  Backspace;
+  Delete;
+  Left;
+  Right;
+  Up;
+  Down;
+  Home;
+  End;
+  Insert;
+  PageUp;
+  PageDown;
+  F1;
+  F2;
+  F3;
+  F4;
+  F5;
+  F6;
+  F7;
+  F8;
+  F9;
+  F10;
+  F11;
+  F12;
+  A;
+  B;
+  C;
+  D;
+  E;
+  F;
+  G;
+  H;
+  I;
+  J;
+  K;
+  L;
+  M;
+  N;
+  O;
+  P;
+  Q;
+  R;
+  S;
+  T;
+  U;
+  V;
+  W;
+  X;
+  Y;
+  Z;
+end enum;
+
+public type KeyModifiers = enum: byte
+  None = 0;
+  Shift = 1;
+  Alt = 2;
+  Ctrl = 4;
+end enum;
+
+public type PointerKind = enum: byte
+  Move;
+  Press;
+  Release;
+end enum;
+
+public type Alignment = enum: byte
+  Stretch;
+  Start;
+  Center;
+  End;
+end enum;
+
+public type Flex = record
+  public Basis: int := -1;
+  public Minimum: int := 0;
+  public Maximum: int := int.MaxValue;
+  public Grow: int := 0;
+  public Shrink: int := 1;
+end record;
+
+public type Flow = record
+  public Gap: int := 0;
+  public Padding: int := 0;
+  public Align: Alignment := Alignment.Stretch;
+end record;
+
+public type ShortcutBinding<TMsg> = record
+  public PressedKey: Key;
+  public Modifiers: KeyModifiers;
+  public Message: TMsg;
+end record;
+
+public type EscapeBinding<TMsg> = union
+  None;
+  Send(Message: TMsg);
+end union;
+
+public type CanvasBinding<TMsg> = union
+  None;
+  Click(Id: string; Message: function(int, int): TMsg);
+end union;
+
+public type ListItem<TMsg> = record
+  public Key: string;
+  public Text: string;
+  public Message: TMsg;
+  public Selected: bool := false;
+end record;
+
+public type Style = record
+  public Foreground: int := -1;
+  public Background: int := -1;
+end record;
+
+public type Theme = record
+  public Text: Style := new Style();
+  public Focus: Style := new Style(Foreground := 16777215, Background := 2445729);
+  public Hover: Style := new Style(Foreground := 16777215, Background := 3355443);
+  public Caret: Style := new Style(Foreground := 0, Background := 16777215);
+end record;
+
+public type Cell = record
+  public Text: string;
+  public Style: Style;
+end record;
+
+public type Element<TMsg> = union
+  Label(Value: string);
+  Action(Id: string; Caption: string; Message: TMsg; Enabled: bool; Role: string; Value: string);
+  Editor(Id: string; Value: string; OnChange: function(string): TMsg);
+  Choices(Id: string; Items: array of ListItem<TMsg>);
+  Gauge(Percent: int);
+  Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: Flow);
+  Sized(Child: Element<TMsg>; Settings: Flex);
+  Decorated(Child: Element<TMsg>; Settings: Style);
+  Framed(Child: Element<TMsg>; Title: string);
+  Scrollable(Id: string; Child: Element<TMsg>);
+  Custom(Columns: int; Rows: int; Draw: function(int, int): Cell; Input: CanvasBinding<TMsg>);
+  Desktop(Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>);
+  Layer(
+    Id: string; Modal: bool; InitialFocus: string; OnEscape: EscapeBinding<TMsg>; Content: Element<TMsg>;
+    Shortcuts: array of ShortcutBinding<TMsg>
+  );
+  Deferred(Id: string; Resolve: function(CacheEntry<TMsg>?): CacheEntry<TMsg>);
+end union;
+
+public type CacheEntry<TMsg> = record
+  public Dependencies: Sys.Object;
+  public Tree: Element<TMsg>;
+end record;
+
+type DependencyBox<T> = record
+  public Value: T;
+end record;
+
+public function Text<TMsg>(Value: string): Element<TMsg>;
+begin
+  return Element<TMsg>.Label(Value);
+end function;
+
+public function Button<TMsg>(Id: string; Text: string; OnActivate: TMsg; Enabled: bool := true): Element<TMsg>;
+begin
+  return Element<TMsg>.Action(Id, '[' + Text + ']', OnActivate, Enabled, 'button', '');
+end function;
+
+public function Column<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
+begin
+  return Column<TMsg>(new Flow(), Children);
+end function;
+
+public function Column<TMsg>(Settings: Flow; params Children: array of Element<TMsg>): Element<TMsg>;
+begin
+  return Element<TMsg>.Stack(cast<array of Element<TMsg>>(Children.Clone()), false, Settings);
+end function;
+
+public function Row<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
+begin
+  return Row<TMsg>(new Flow(), Children);
+end function;
+
+public function Row<TMsg>(Settings: Flow; params Children: array of Element<TMsg>): Element<TMsg>;
+begin
+  return Element<TMsg>.Stack(cast<array of Element<TMsg>>(Children.Clone()), true, Settings);
+end function;
+
+public function Size<TMsg>(Child: Element<TMsg>; Settings: Flex): Element<TMsg>;
+begin
+  return Element<TMsg>.Sized(Child, Settings);
+end function;
+
+public function Styled<TMsg>(Child: Element<TMsg>; Settings: Style): Element<TMsg>;
+begin
+  return Element<TMsg>.Decorated(Child, Settings);
+end function;
+
+public function Checkbox<TMsg>(Id: string; Text: string; Checked: bool; OnChange: function(bool): TMsg; Enabled: bool := true): Element<TMsg>;
+begin
+  const Prefix: string := if Checked then '[x] ' else '[ ] ' end if;
+  return Element<TMsg>.Action(
+    Id, Prefix + Text, OnChange(not Checked), Enabled, 'checkbox',
+    if Checked then 'true' else 'false' end if
+  );
+end function;
+
+public function TextInput<TMsg>(Id: string; Value: string; OnChange: function(string): TMsg): Element<TMsg>;
+begin
+  return Element<TMsg>.Editor(Id, Value, OnChange);
+end function;
+
+public function List<TMsg>(Id: string; Items: array of ListItem<TMsg>): Element<TMsg>;
+begin
+  const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+  for Item: ListItem<TMsg> in Items do
+    if Item.Key.Length = 0 or not Keys.Add(Item.Key) then
+      raise new Sys.ArgumentException('List keys must be nonempty and unique.');
+    end if;
+  end for;
+
+  return Element<TMsg>.Choices(Id, cast<array of ListItem<TMsg>>(Items.Clone()));
+end function;
+
+public function ProgressBar<TMsg>(Percent: int): Element<TMsg>;
+begin
+  return Element<TMsg>.Gauge(Sys.Math.Clamp(Percent, 0, 100));
+end function;
+
+public function Border<TMsg>(Child: Element<TMsg>; Title: string := ''): Element<TMsg>;
+begin
+  return Element<TMsg>.Framed(Child, Title);
+end function;
+
+public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>): Element<TMsg>;
+begin
+  return Element<TMsg>.Scrollable(Id, Child);
+end function;
+
+public function CellCanvas<TMsg>(Columns: int; Rows: int; Draw: function(int, int): Cell): Element<TMsg>;
+begin
+  return Element<TMsg>.Custom(Columns, Rows, Draw, CanvasBinding<TMsg>.None);
+end function;
+
+public function CellCanvas<TMsg>(
+  Id: string; Columns: int; Rows: int; Draw: function(int, int): Cell; OnClick: function(int, int): TMsg
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Custom(Columns, Rows, Draw, CanvasBinding<TMsg>.Click(Id, OnClick));
+end function;
+
+public function Screen<TMsg>(
+  Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Desktop(
+    Content, cast<array of Element<TMsg>>(Overlays.Clone()),
+    cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone())
+  );
+end function;
+
+public function Overlay<TMsg>(
+  Id: string; Modal: bool; InitialFocus: string; OnEscape: TMsg; Content: Element<TMsg>;
+  Shortcuts: array of ShortcutBinding<TMsg>
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Layer(
+    Id, Modal, InitialFocus, EscapeBinding<TMsg>.Send(OnEscape),
+    Content, cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone())
+  );
+end function;
+
+public function Overlay<TMsg>(
+  Id: string; Modal: bool; InitialFocus: string; Content: Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Layer(
+    Id, Modal, InitialFocus, EscapeBinding<TMsg>.None,
+    Content, cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone())
+  );
+end function;
+
+public function Shortcut<TMsg>(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding<TMsg>;
+begin
+  return new ShortcutBinding<TMsg>(PressedKey, Modifiers, Message);
+end function;
+
+/// Describes a subtree which the host reuses while its typed dependencies compare equal.
+public function CachedSubview<TDeps, TMsg>(
+  Id: string; Dependencies: TDeps; Build: function(TDeps): Element<TMsg>; Equal: function(TDeps, TDeps): bool
+): Element<TMsg>;
+  function Resolve(Previous: CacheEntry<TMsg>?): CacheEntry<TMsg>;
+  begin
+    if Previous <> null then
+      if Previous.Dependencies is DependencyBox<TDeps> then
+        const Old: DependencyBox<TDeps> := cast<DependencyBox<TDeps>>(Previous.Dependencies);
+        if Equal(Old.Value, Dependencies) then
+          return Previous;
+        end if;
+      end if;
+    end if;
+
+    return new CacheEntry<TMsg>(new DependencyBox<TDeps>(Dependencies), Build(Dependencies));
+  end function;
+begin
+  return Element<TMsg>.Deferred(Id, Resolve);
+end function;
+end unit;

@@ -36,9 +36,18 @@ internal sealed partial class DapServer
                 if (args.Flag("noDebug") || args["env"] is not null || args["stdin"] is not null || args["console"] is { } console && console.GetValue<string>() != "internalConsole")
                     throw new DebugException("unsupported", "Launch supports an internal console with closed target stdin and inherited environment.");
                 var argv = args.Array("args").Select(item => item?.GetValue<string>() ?? throw DapArguments.Invalid("args")).ToArray();
+                TerminalLaunch? terminal;
+                if (args.Flag("fpasTui"))
+                {
+                    var dimensions = args.Object("fpasTerminal");
+                    var size = ReadSize(dimensions);
+                    tui = new(size.Columns, size.Rows);
+                    terminal = tui.Launch;
+                }
+                else terminal = args["fpasTerminal"] is null ? null : ReadTerminal(args.Object("fpasTerminal"));
                 stopAtEntry = args.Flag("stopAtEntry"); launched = true;
                 host = await DebugSessionHost.Start(WorkerLauncher.Current(), cwd, token);
-                await host.Prepare(new(dotnet, program, cwd, Arguments: argv), token);
+                await host.Prepare(new(dotnet, program, cwd, Arguments: argv, Terminal: terminal), token);
                 await host.Initialize(token); var entry = await host.WaitForStop(token);
                 if (entry.State != "stopped") throw new DebugException("startup_failure", entry.Error?.Message ?? "The target did not reach entry.");
                 return new();
@@ -75,6 +84,22 @@ internal sealed partial class DapServer
                 return command == "continue" ? new() { ["allThreadsContinued"] = true } : new();
             case "pause":
                 await Host.Pause(token); return new();
+            case "fpasTuiSnapshot":
+                return Tui.Snapshot(Host.Snapshot.State == "stopped", args.Flag("cells"));
+            case "fpasTuiSend":
+                return Host.Snapshot.State == "stopped" ? new() { ["status"] = "paused" } : await Tui.Forward("send", args, token);
+            case "fpasTuiWait":
+                if (args["frame"] is not null) return await Tui.WaitFrame(args, token);
+                if (args["inputId"] is JsonValue inputId && inputId.TryGetValue<long>(out var id))
+                    return await Tui.WaitInput(id, args.Number("timeoutMs", 5000), () => Host.Snapshot.State == "stopped", token);
+                return await WaitForTuiQueue(args, token);
+            case "fpasTuiResize":
+                var requested = ReadSize(args);
+                await Tui.Resize(requested.Columns, requested.Rows, token);
+                return new();
+            case "fpasTuiTerminalInput":
+                await Tui.WriteTerminal(Convert.FromBase64String(args.Text("bytes")), token);
+                return new();
             case "cancel":
                 var cancelled = args.Number("requestId", 0);
                 if (pending.TryGetValue(cancelled, out var waiting)) { try { waiting.Cancel(); } catch (ObjectDisposedException) { } }
@@ -92,6 +117,40 @@ internal sealed partial class DapServer
             case "exceptionInfo": return await Exception(args, token);
             default: throw new DebugException("unsupported_request", "Unsupported DAP request: " + command + ".");
         }
+    }
+
+    private static TerminalLaunch ReadTerminal(JsonObject args)
+    {
+        var pipe = args.Text("pipe");
+        if (!pipe.StartsWith("fpas-terminal-", StringComparison.Ordinal) ||
+            !Guid.TryParseExact(pipe["fpas-terminal-".Length..], "N", out _))
+            throw DapArguments.Invalid("fpasTerminal.pipe");
+        var size = ReadSize(args);
+        return new(pipe, size.Columns, size.Rows);
+    }
+
+    private static TerminalSize ReadSize(JsonObject args)
+    {
+        var columns = args.Number("columns", 80);
+        var rows = args.Number("rows", 24);
+        if (columns is < 1 or > 500 || rows is < 1 or > 300) throw DapArguments.Invalid("fpasTerminal dimensions");
+        return new(columns, rows);
+    }
+
+    private TuiController Tui => tui ?? throw new DebugException("invalid_state", "Launch with fpasTui enabled first.");
+
+    private async Task<JsonObject> WaitForTuiQueue(JsonObject args, CancellationToken token)
+    {
+        var timeout = args.Number("timeoutMs", 5000);
+        if (timeout is < 0 or > 60_000) throw DapArguments.Invalid("timeoutMs");
+        if (Host.Snapshot.State == "stopped") return new() { ["status"] = "paused" };
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(timeout);
+        var request = args.DeepClone().AsObject();
+        request["timeoutMs"] = timeout;
+        try { return await Tui.Forward("wait", request, deadline.Token); }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        { return new() { ["status"] = Host.Snapshot.State == "stopped" ? "paused" : "timeout" }; }
     }
 
     private async Task ValidateThread(JsonObject args, CancellationToken token, bool stopThread = false)

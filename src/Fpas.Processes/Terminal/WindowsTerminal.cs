@@ -11,6 +11,7 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
     private readonly Process process;
     private readonly SafeFileHandle job;
     private readonly FileStream input, output;
+    private SafeFileHandle? startupThread;
     private IntPtr console;
     private Task? termination;
     public override Stream Input => input;
@@ -18,15 +19,16 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
     public override int Id => process.Id;
     public override Task<int> Completion { get; }
 
-    private WindowsTerminal(Process process, SafeFileHandle job, IntPtr console, SafeFileHandle input, SafeFileHandle output)
+    private WindowsTerminal(Process process, SafeFileHandle job, IntPtr console, SafeFileHandle input, SafeFileHandle output, SafeFileHandle? startupThread)
     {
         this.process = process; this.job = job; this.console = console;
+        this.startupThread = startupThread;
         this.input = new(input, FileAccess.Write); this.output = new(output, FileAccess.Read);
         Completion = Complete();
     }
     private async Task<int> Complete() { await process.WaitForExitAsync(); return process.ExitCode; }
 
-    internal new static PseudoTerminal Start(string path, IReadOnlyList<string> arguments, string cwd, int columns, int rows)
+    internal static PseudoTerminal Start(string path, IReadOnlyList<string> arguments, string cwd, int columns, int rows, bool suspended)
     {
         SafeFileHandle? read = null, write = null, outputRead = null, outputWrite = null, job = null, process = null, thread = null;
         var console = IntPtr.Zero; var initialized = false;
@@ -47,8 +49,10 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
             process = new(info.Process, true); thread = new(info.Thread, true);
             Check(AssignProcessToJobObject(job, process));
             var tracked = Process.GetProcessById((int)info.Id); _ = tracked.SafeHandle;
-            Check(ResumeThread(thread) != uint.MaxValue);
-            return new WindowsTerminal(tracked, job, console, write, outputRead);
+            if (!suspended) Check(ResumeThread(thread) != uint.MaxValue);
+            var terminal = new WindowsTerminal(tracked, job, console, write, outputRead, suspended ? thread : null);
+            if (suspended) thread = null;
+            return terminal;
         }
         catch
         {
@@ -62,6 +66,12 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
             if (startup.Attributes != IntPtr.Zero) Marshal.FreeHGlobal(startup.Attributes);
         }
     }
+    internal override void Resume()
+    {
+        using var thread = Interlocked.Exchange(ref startupThread, null)
+            ?? throw new InvalidOperationException("The terminal target has already been released.");
+        Check(ResumeThread(thread) != uint.MaxValue);
+    }
     public override void Resize(int columns, int rows)
     { Dimensions(columns, rows); Marshal.ThrowExceptionForHR(ResizePseudoConsole(console, new() { X = (short)columns, Y = (short)rows })); }
     public override Task TerminateAsync() => termination ??= Terminate();
@@ -74,7 +84,7 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
         if (handle != IntPtr.Zero) await Task.Run(() => ClosePseudoConsole(handle)).WaitAsync(TimeSpan.FromSeconds(5));
     }
     public override async ValueTask DisposeAsync()
-    { try { await TerminateAsync(); } finally { input.Dispose(); output.Dispose(); job.Dispose(); process.Dispose(); } }
+    { try { await TerminateAsync(); } finally { startupThread?.Dispose(); input.Dispose(); output.Dispose(); job.Dispose(); process.Dispose(); } }
     private static string Quote(string value) => "\"" + System.Text.RegularExpressions.Regex.Replace(value, "(\\\\*)(\"|$)",
         match => new string('\\', match.Groups[1].Length * 2) + (match.Groups[2].Length == 0 ? "" : "\\\"")) + "\"";
     private static void Check(bool success) { if (!success) throw new Win32Exception(Marshal.GetLastPInvokeError()); }

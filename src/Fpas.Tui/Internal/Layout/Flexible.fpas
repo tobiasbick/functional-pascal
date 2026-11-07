@@ -1,0 +1,87 @@
+unit Fpas.Tui.Internal.Layout.Flexible;
+
+uses Fpas.Tui.Elements as E, System as Sys;
+
+public type Rect = record
+  public X: int;
+  public Y: int;
+  public Width: int;
+  public Height: int;
+
+  public function Contains(Column: int; Row: int): bool;
+  begin
+    return Column >= self.X and Column - self.X < self.Width and Row >= self.Y and Row - self.Y <
+      self.Height;
+  end function;
+end record;
+
+public function Intersect(Left: Rect; Right: Rect): Rect;
+begin
+  const X: int := Sys.Math.Max(Left.X, Right.X);
+  const Y: int := Sys.Math.Max(Left.Y, Right.Y);
+  return new Rect(
+    X, Y,
+    Sys.Math.Max(0, Sys.Math.Min(Left.X + Left.Width, Right.X + Right.Width) - X),
+    Sys.Math.Max(0, Sys.Math.Min(Left.Y + Left.Height, Right.Y + Right.Height) - Y)
+  );
+end function;
+
+public function Allocate(Preferred: array of int; Settings: array of E.Flex; Available: int): array of int;
+begin
+  const Sizes: array of int := new int[Preferred.Length];
+  var Total: long := 0L;
+  for Index: int := 0 to Sizes.Length - 1 do
+    const Rule: E.Flex := Settings[Index];
+    if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1 or Rule.Grow < 0
+      or Rule.Shrink < 0
+    then
+      raise new Sys.ArgumentException('Invalid flex size rule.');
+    end if;
+    const Basis: int := if Rule.Basis < 0 then Preferred[Index] else Rule.Basis end if;
+    Sizes[Index] := Sys.Math.Clamp(Basis, Rule.Minimum, Rule.Maximum);
+    Total := Total + cast<long>(Sizes[Index]);
+  end for;
+
+  const Growing: bool := Total < cast<long>(Available);
+  var Remaining: long := Sys.Math.Abs(cast<long>(Available) - Total);
+  while Remaining > 0L do
+    var Weight: long := 0L;
+    for Index: int := 0 to Sizes.Length - 1 do
+      const Rule: E.Flex := Settings[Index];
+      if Growing and Sizes[Index] < Rule.Maximum then
+        Weight := Weight + cast<long>(Rule.Grow);
+      else
+        if not Growing and Sizes[Index] > Rule.Minimum then
+          Weight := Weight + cast<long>(Rule.Shrink);
+        end if;
+      end if;
+    end for;
+
+    if Weight = 0L then
+      break;
+    end if;
+    const Budget: long := Remaining;
+    for Index: int := 0 to Sizes.Length - 1 do
+      const Rule: E.Flex := Settings[Index];
+      const Factor: int := if Growing then Rule.Grow else Rule.Shrink end if;
+      const Room: int := if Growing then Rule.Maximum - Sizes[
+          Index
+        ]
+        else Sizes[Index] - Rule.Minimum
+        end if;
+      if Factor > 0 and Room > 0 and Remaining > 0L then
+        const Share: long := cast<long>(cast<double>(Budget) * cast<double>(Factor) /
+          cast<double>(Weight));
+        const Change: int := cast<int>(Sys.Math.Min(
+          cast<long>(Room),
+          Sys.Math.Min(Remaining, Sys.Math.Max(1L, Share))
+        ));
+        Sizes[Index] := if Growing then Sizes[Index] + Change else Sizes[Index] - Change end if;
+        Remaining := Remaining - cast<long>(Change);
+      end if;
+    end for;
+  end while;
+
+  return Sizes;
+end function;
+end unit;

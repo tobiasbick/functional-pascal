@@ -1,0 +1,472 @@
+unit Fpas.Tui.Internal.Hosting.Session;
+
+uses
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E,
+  Fpas.Tui.Internal.Layout.Arrangement as A, Fpas.Tui.Internal.Layout.Equivalence as Q,
+  Fpas.Tui.Internal.Hosting.Interaction as I, Fpas.Tui.Internal.Hosting.Effects as Fx,
+  Fpas.Tui.Internal.Rendering.Decoration as D, Fpas.Tui.Internal.Terminal.Inputs as Inputs,
+  Fpas.Processes.Terminal as Terminal,
+  System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag,
+  System.Threading as Threads, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
+
+type Pending<TMsg> = union
+  User(Id: long; Event: App.Input; Acknowledgement: Tasks.Task?);
+  Background(Id: string; Version: long; Message: TMsg);
+end union;
+
+procedure CheckSize(Columns: int; Rows: int);
+begin
+  if Columns < 1 or Columns > 500 or Rows < 1 or Rows > 300 then
+    raise new Sys.ArgumentOutOfRangeException(
+      'Terminal size must fit 1..500 columns and 1..300 rows.'
+    );
+  end if;
+end procedure;
+
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
+  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Present: procedure(App.Frame); Manual: bool; Theme: E.Theme
+): App.HeadlessSession;
+  function IsOpen(): bool;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      return Open;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  procedure Close();
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      if not Open then
+        return;
+      end if;
+
+      Open := false;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+
+    try
+      Effects.Close();
+    finally
+      discard Queue.Writer.TryComplete();
+    end try;
+  end procedure;
+
+  function Enqueue(Event: App.Input; Acknowledgement: Tasks.Task?): App.Admission;
+  begin
+    case Event of
+      when App.Input.Resize(const NewColumns: int, const NewRows: int):
+        CheckSize(NewColumns, NewRows);
+      else
+    end case;
+
+    Threads.Monitor.Enter(Gate);
+    try
+      if not Open then
+        return App.Admission.Closed;
+      end if;
+      const Id: long := InputId + 1L;
+      if not Queue.Writer.TryWrite(Pending<TMsg>.User(Id, Event, Acknowledgement)) then
+        return App.Admission.QueueFull;
+      end if;
+
+      InputId := Id;
+      return App.Admission.Queued(Id);
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  function Send(Event: App.Input): App.Admission;
+  begin
+    return Enqueue(Event, null);
+  end function;
+
+  function ReadFrame(): App.Frame;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      const Value: App.Frame? := Published;
+      if Value = null then
+        raise new Sys.InvalidOperationException('No complete frame.');
+      end if;
+
+      return new App.Frame(
+        Value.Id,
+        Value.Columns,
+        Value.Rows,
+        cast<array of string>(Value.Lines.Clone()),
+        cast<array of E.Cell>(Value.Cells.Clone()),
+        cast<array of App.ControlSnapshot>(Value.Controls.Clone())
+      );
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  function FindOutcome(Id: long): App.StepResult?;
+  begin
+    Threads.Monitor.Enter(Gate);
+    try
+      if Outcomes.ContainsKey(Id) then
+        return Outcomes[Id];
+      end if;
+
+      return null;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end function;
+
+  async function Wait(Id: long; Timeout: Sys.TimeSpan): Tasks.Task<App.StepResult?>;
+  begin
+    const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+    while true do
+      const Outcome: App.StepResult? := FindOutcome(Id);
+      if Outcome <> null then
+        return Outcome;
+      end if;
+
+      if Clock.Elapsed >= Timeout then
+        return null;
+      end if;
+
+      await Tasks.Task.Delay(5);
+    end while;
+  end function;
+
+  function Ready(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  begin
+    if not IsOpen() then
+      return Tasks.Task.FromResult<bool>(false);
+    end if;
+
+    return Queue.Reader.WaitToReadAsync(Cancellation).AsTask();
+  end function;
+
+  function Capacity(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  begin
+    if not IsOpen() then
+      return Tasks.Task.FromResult<bool>(false);
+    end if;
+
+    return Queue.Writer.WaitToWriteAsync(Cancellation).AsTask();
+  end function;
+
+  function SendControl(Event: Terminal.TerminalInput): Terminal.TuiControlReply;
+  begin
+    const Normalized: App.Input? := Inputs.Translate(Event);
+    if Normalized = null then
+      return new Terminal.TuiControlReply('invalid_input');
+    end if;
+    const Receipt: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    case Enqueue(Normalized, Receipt.Task) of
+      when App.Admission.Queued(const Id: long):
+        return new Terminal.TuiControlReply('queued', Id, Acknowledgement := Receipt);
+      when App.Admission.QueueFull:
+        return new Terminal.TuiControlReply('QueueFull');
+      when App.Admission.Closed:
+        return new Terminal.TuiControlReply('closed');
+    end case;
+  end function;
+
+  function Describe(Outcome: App.StepResult): Terminal.TuiControlReply;
+  begin
+    case Outcome of
+      when App.StepResult.Processed(const Id: long, const Complete: long, const Published: bool):
+        return new Terminal.TuiControlReply(
+          if Published then 'presented' else 'unchanged' end if,
+          Id,
+          Complete
+        );
+      when App.StepResult.EffectProcessed(const Complete: long):
+        return new Terminal.TuiControlReply('processed', 0L, Complete);
+      when App.StepResult.Failed(
+        const Id: long,
+        const Complete: long,
+        const Stage: string,
+        const Reason: string
+      ):
+        return new Terminal.TuiControlReply('failed', Id, Complete, Stage, Reason);
+      when App.StepResult.Idle:
+        return new Terminal.TuiControlReply('idle');
+    end case;
+  end function;
+
+  async function WaitControl(Id: long; Milliseconds: int): Tasks.Task<Terminal.TuiControlReply>;
+  begin
+    const Outcome: App.StepResult? := await Wait(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));
+    return if Outcome = null then new Terminal.TuiControlReply(
+        'timeout'
+      )
+      else Describe(Outcome)
+      end if;
+  end function;
+
+  procedure DisposeSession();
+  begin
+    try
+      Threads.Monitor.Enter(StepGate);
+      try
+        Close();
+      finally
+        Threads.Monitor.Exit(StepGate);
+      end try;
+    finally
+      const Observer: Terminal.TuiControlConnection? := Connection;
+      if Observer <> null then
+        Observer.Dispose();
+      end if;
+    end try;
+  end procedure;
+
+  procedure Apply(Message: TMsg);
+  begin
+    const Next: App.Transition<TModel, TMsg> := Update(Model, Message);
+    Model := Next.Model;
+    for Effect: App.Command<TMsg> in Next.Commands do
+      case Effect of
+        when App.Command.EndSession:
+          Close();
+          break;
+        when App.Command.Cancel(const Id: string):
+          Effects.Cancel(Id);
+        when App.Command.Start(
+          const Id: string,
+          const Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
+          const OnFailure: function(Sys.Exception): TMsg
+        ):
+          Effects.Start(Id, Work, OnFailure);
+      end case;
+    end for;
+  end procedure;
+
+  procedure Paint();
+  begin
+    const Routing: I.State<TMsg>? := Interaction;
+    if Routing = null then
+      raise new Sys.InvalidOperationException('Missing interaction state.');
+    end if;
+
+    Phase := 'view';
+    const Root: E.Element<TMsg> := View(Model);
+    Phase := 'layout_or_drawing';
+    const Layout: A.Layout<TMsg> := A.Arrange<TMsg>(
+      Root, Width, Height, Current, ScrollOffsets, Theme.Text,
+      function(Id: string; Value: string): int => Routing.Selection(Id, Value).Caret
+    );
+    Routing.Reconcile(Layout);
+    const Focus: string := Routing.FocusId();
+    const Hover: string := Routing.HoverId();
+    const Scope: string := Routing.ScopeId();
+    const Controls: Generic.List<App.ControlSnapshot> := new Generic.List<App.ControlSnapshot>();
+    for Control: A.Control<TMsg> in Layout.Controls do
+      Controls.Add(
+        new App.ControlSnapshot(
+          Control.Id,
+          Control.Label,
+          Control.Role,
+          Control.Value,
+          Control.Bounds.X,
+          Control.Bounds.Y,
+          Control.Bounds.Width,
+          Control.Bounds.Height,
+          Control.Id = Focus,
+          Control.Id =
+          Hover,
+          Control.Enabled and Control.Scope = Scope
+        )
+      );
+      if Control.Id = Focus or Control.Id = Hover then
+        D.Apply<TMsg>(Layout.Cells, Width, Control, Theme, Control.Id = Focus, Routing.Selection);
+      end if;
+    end for;
+    const Prior: App.Frame? := Published;
+    const Before: A.Layout<TMsg>? := Current;
+    if Prior <> null and Before <> null and Prior.Columns = Width and Prior.Rows = Height
+      and LastFocus = Focus and LastHover = Hover
+      and Q.Equivalent<TMsg>(Before, Layout)
+    then
+      Current := Layout;
+      return;
+    end if;
+    const Value: App.Frame := new App.Frame(
+      FrameId + 1L,
+      Width,
+      Height,
+      Layout.Lines,
+      Layout.Cells,
+      Controls.ToArray()
+    );
+    Phase := 'presentation';
+    Present(Value);
+    const Observer: Terminal.TuiControlConnection? := Connection;
+    if Observer <> null then
+      Observer.Publish(Value);
+    end if;
+
+    Threads.Monitor.Enter(Gate);
+    try
+      FrameId := Value.Id;
+      Published := Value;
+      Current := Layout;
+      LastFocus := Focus;
+      LastHover := Hover;
+    finally
+      Threads.Monitor.Exit(Gate);
+    end try;
+  end procedure;
+
+  procedure Route(Event: App.Input);
+  begin
+    const Layout: A.Layout<TMsg>? := Current;
+    const Routing: I.State<TMsg>? := Interaction;
+    if Layout = null or Routing = null then
+      return;
+    end if;
+
+    case Event of
+      when App.Input.Activate(const Id: string):
+        Routing.Activate(Layout, Id);
+      when App.Input.Resize(const NewColumns: int, const NewRows: int):
+        Width := NewColumns;
+        Height := NewRows;
+      when App.Input.Click(const Column: int, const Row: int):
+        Routing.Click(Layout, Column, Row);
+      when App.Input.Pointer(const Kind: E.PointerKind, const Column: int, const Row: int):
+        Routing.Pointer(Layout, Kind, Column, Row);
+      when App.Input.Scroll(const Column: int, const Row: int, const Delta: int):
+        Routing.Scroll(Layout, Column, Row, Delta);
+      when App.Input.KeyPress(const Key: E.Key, const Modifiers: E.KeyModifiers):
+        Routing.Key(Layout, Key, Modifiers);
+      when App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
+        Routing.Insert(Layout, Text);
+    end case;
+  end procedure;
+
+  function Step(): App.StepResult;
+    function Report(Outcome: App.StepResult): App.StepResult;
+    begin
+      const Observer: Terminal.TuiControlConnection? := Connection;
+      if Observer <> null then
+        Observer.PublishOutcome(Describe(Outcome), Queue.Reader.Count, Effects.Pending());
+      end if;
+
+      return Outcome;
+    end function;
+
+    procedure Remember(Id: long; Outcome: App.StepResult);
+    begin
+      Threads.Monitor.Enter(Gate);
+      try
+        Outcomes[Id] := Outcome;
+        OutcomeOrder.Enqueue(Id);
+        if OutcomeOrder.Count > 256 then
+          discard Outcomes.Remove(OutcomeOrder.Dequeue());
+        end if;
+      finally
+        Threads.Monitor.Exit(Gate);
+      end try;
+    end procedure;
+  begin
+    var Processing: long := 0L;
+    Threads.Monitor.Enter(StepGate);
+    try
+      var Entry: Pending<TMsg> := Placeholder;
+      if not Open or not Queue.Reader.TryRead(out Entry) then
+        return App.StepResult.Idle;
+      end if;
+
+      Phase := 'update';
+      case Entry of
+        when Pending.User(const Id: long, const Event: App.Input, const Receipt: Tasks.Task?):
+          // A breakpoint in Update can stop every thread in the debuggee.
+          if Receipt <> null then
+            Receipt.GetAwaiter().GetResult();
+          end if;
+
+          Processing := Id;
+          const Before: long := FrameId;
+          Route(Event);
+          if Open then
+            Paint();
+          end if;
+          const Outcome: App.StepResult := App.StepResult.Processed(Id, FrameId, FrameId <> Before);
+          Remember(Id, Outcome);
+          return Report(Outcome);
+        when Pending.Background(const Id: string, const Generation: long, const Message: TMsg):
+          if Effects.IsCurrent(Id, Generation) then
+            Apply(Message);
+            if Open then
+              Paint();
+            end if;
+          end if;
+
+          return Report(App.StepResult.EffectProcessed(FrameId));
+      end case;
+    catch Error: Sys.Exception do
+      var Reason: string := Error.Message;
+      try
+        Close();
+      catch Cleanup: Sys.Exception do
+        Reason := Reason + ' Cleanup failed: ' + Cleanup.Message;
+      end try;
+      const Failure: App.StepResult := App.StepResult.Failed(Processing, FrameId, Phase, Reason);
+      if Processing > 0L then
+        Remember(Processing, Failure);
+      end if;
+
+      return Report(Failure);
+    finally
+      Threads.Monitor.Exit(StepGate);
+    end try;
+  end function;
+begin
+  const Queue: Channels.Channel<Pending<TMsg>> := Channels.Channel.CreateBounded<Pending<TMsg>>(64);
+  const Placeholder: Pending<TMsg> := Pending<TMsg>.User(0L, App.Input.Resize(1, 1), null);
+  const Gate: Sys.Object := new Sys.Object();
+  const StepGate: Sys.Object := new Sys.Object();
+  const Outcomes: Generic.Dictionary<long, App.StepResult> := new Generic.Dictionary<long, App.StepResult>();
+  const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
+  const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  var Model: TModel := InitialModel;
+  var Width: int := Columns;
+  var Height: int := Rows;
+  var Current: A.Layout<TMsg>? := null;
+  var Published: App.Frame? := null;
+  var FrameId: long := 0L;
+  var InputId: long := 0L;
+  var Open: bool := true;
+  var Phase: string := 'startup';
+  var LastFocus: string := '';
+  var LastHover: string := '';
+  var Connection: Terminal.TuiControlConnection? := null;
+  var Interaction: I.State<TMsg>? := null;
+  const Effects: Fx.State<TMsg> := Fx.Create<TMsg>(
+    function(Id: string; Generation: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => Queue.Writer.WriteAsync(
+      Pending<TMsg>.Background(Id, Generation, Message),
+      Cancellation
+    ).AsTask()
+  );
+  Interaction := I.Create<TMsg>(Apply, ScrollOffsets);
+  CheckSize(Columns, Rows);
+  Paint();
+  Connection := Terminal.TuiControlConnection.Open(
+    SendControl, function(): Sys.Object => ReadFrame(),
+    function(): Terminal.TuiControlReply => Describe(Step()), WaitControl, Ready, Capacity, Manual
+  );
+  const Observer: Terminal.TuiControlConnection? := Connection;
+  if Observer <> null then
+    Observer.Publish(ReadFrame());
+  end if;
+
+  return App.HeadlessSession.Create(Send, Step, ReadFrame, Wait, Ready, IsOpen, DisposeSession);
+end function;
+end unit;

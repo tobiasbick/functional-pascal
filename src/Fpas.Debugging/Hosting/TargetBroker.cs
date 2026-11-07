@@ -10,7 +10,7 @@ internal static class TargetBroker
 {
     internal static async Task<int> Run(string name)
     {
-        if (!OperatingSystem.IsLinux() || !name.StartsWith("fpas-debug-", StringComparison.Ordinal) || name.Length > 96) return 2;
+        if (!name.StartsWith("fpas-debug-", StringComparison.Ordinal) || name.Length > 96) return 2;
         using var lifetime = new CancellationTokenSource();
         using var startup = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var pipe = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
@@ -18,6 +18,9 @@ internal static class TargetBroker
         await using var channel = new WorkerChannel(pipe);
         var request = await channel.Read(startup.Token) ?? throw new IOException("No target broker request.");
         var target = request.Payload?.Deserialize(WorkerJson.Default.BrokerLaunch) ?? throw new IOException("Invalid target broker request.");
+        if (target.Terminal is not null)
+            return await TerminalTarget.Run(target, request.Id, channel, startup.Token);
+        if (!OperatingSystem.IsLinux()) return 2;
         uint id = 0; nint resume = 0;
         Task<BrokerExit>? exit = null;
         try

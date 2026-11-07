@@ -14,6 +14,7 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
     private readonly StopHandles<long> frames = new();
     private readonly StopHandles<ValueHandle> values = new();
     private DebugSessionHost? host;
+    private TuiController? tui;
     private DapTransport transport = null!;
     private Task monitor = Task.CompletedTask;
     private bool initialized, launched, configured, stopAtEntry, linesStartAt1 = true, columnsStartAt1 = true, uriPaths, terminal, variablePaging;
@@ -60,6 +61,7 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
             lifetime.Cancel();
             if (host is not null) { try { await host.DisposeAsync(); } catch (IOException) { result = 1; } }
             try { await Task.WhenAll(tasks.Values).WaitAsync(TimeSpan.FromSeconds(5)); await monitor; } catch (Exception) { }
+            if (tui is not null) { try { await tui.DisposeAsync(); } catch (IOException) { result = 1; } }
             transport.Complete();
             try { await transport.WriteTask.WaitAsync(TimeSpan.FromSeconds(5)); } catch (Exception) { }
             lifetime.Dispose(); operations.Dispose();
@@ -72,7 +74,13 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
         var held = false; var replied = false;
         try
         {
-            request.CancelAfter(TimeSpan.FromSeconds(command == "launch" ? 30 : command is "disconnect" or "terminate" ? 5 : 10));
+            request.CancelAfter(TimeSpan.FromSeconds(command switch
+            {
+                "launch" => 30,
+                "disconnect" or "terminate" => 5,
+                "fpasTuiWait" => 65,
+                _ => 10
+            }));
             if (command is "disconnect" or "terminate")
             {
                 if (command == "disconnect" && !args.Flag("terminateDebuggee", true) || args.Flag("restart"))
@@ -81,7 +89,8 @@ internal sealed partial class DapServer(string dotnet, Stream input, Stream outp
                 foreach (var item in pending.Where(item => item.Key != id)) { try { item.Value.Cancel(); } catch (ObjectDisposedException) { } }
             }
             else if (Volatile.Read(ref closeRequest) != 0) throw new DebugException("invalid_state", "The adapter is shutting down.");
-            if (command is not ("cancel" or "disconnect" or "terminate" or "pause")) { await operations.WaitAsync(request.Token); held = true; }
+            if (command is not ("cancel" or "disconnect" or "terminate" or "pause" or "fpasTuiWait" or "fpasTuiSend"))
+            { await operations.WaitAsync(request.Token); held = true; }
             var body = await Execute(command, args, request.Token);
             if (command is "disconnect" or "terminate")
                 await Task.WhenAll(tasks.Where(item => item.Key != id).Select(item => item.Value)).WaitAsync(request.Token);

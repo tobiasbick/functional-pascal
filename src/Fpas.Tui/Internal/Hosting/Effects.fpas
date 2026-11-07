@@ -1,0 +1,142 @@
+unit Fpas.Tui.Internal.Hosting.Effects;
+
+uses
+  System as Sys, System.Collections.Generic as Generic, System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
+
+type Run = record
+  public Id: string;
+  public Version: long;
+  public Cancellation: Threads.CancellationTokenSource;
+  public Task: Tasks.Task;
+end record;
+
+public type State<TMsg> = record
+  public Start: procedure(
+    string, function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
+    function(Sys.Exception): TMsg
+  );
+  public Cancel: procedure(string);
+  public IsCurrent: function(string, long): bool;
+  public Pending: function(): int;
+  public Close: procedure();
+end record;
+
+public function Create<TMsg>(Enqueue: function(string, long, TMsg, Threads.CancellationToken): Tasks.Task): State<TMsg>;
+  async function Perform(
+    Id: string; Version: long; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    OnFailure: function(Sys.Exception): TMsg; Token: Threads.CancellationToken
+  ): Tasks.Task;
+    function Post(Message: TMsg): Tasks.Task;
+    begin
+      return Enqueue(Id, Version, Message, Token);
+    end function;
+  begin
+    try
+      await Work(Post, Token);
+    catch Failure: Sys.Exception do
+      if not Token.IsCancellationRequested then
+        await Post(OnFailure(Failure));
+      end if;
+    end try;
+  end function;
+
+  procedure Prune();
+  begin
+    for Index: int := Workers.Count - 1 downto 0 do
+      const Worker: Run := Workers[Index];
+      if Worker.Task.IsCompletedSuccessfully then
+        if Active.ContainsKey(Worker.Id) and Active[Worker.Id].Version = Worker.Version then
+          discard Active.Remove(Worker.Id);
+        end if;
+
+        Worker.Cancellation.Dispose();
+        Workers.RemoveAt(Index);
+      end if;
+    end for;
+  end procedure;
+
+  procedure Cancel(Id: string);
+  begin
+    discard Versions.Remove(Id);
+    if Active.ContainsKey(Id) then
+      const Worker: Run := Active[Id];
+      discard Active.Remove(Id);
+      Worker.Cancellation.Cancel();
+    end if;
+  end procedure;
+
+  procedure Start(
+    Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    OnFailure: function(Sys.Exception): TMsg
+  );
+  begin
+    Prune();
+    Cancel(Id);
+    Sequence := Sequence + 1L;
+    const Version: long := Sequence;
+    const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
+    const Task: Tasks.Task := Tasks.Task.Run(
+      function(): Tasks.Task => Perform(Id, Version, Work, OnFailure, Source.Token)
+    );
+    const Worker: Run := new Run(Id, Version, Source, Task);
+    Versions.Add(Id, Version);
+    Active.Add(Id, Worker);
+    Workers.Add(Worker);
+  end procedure;
+
+  function IsCurrent(Id: string; Version: long): bool;
+  begin
+    return Versions.ContainsKey(Id) and Versions[Id] = Version;
+  end function;
+
+  function Pending(): int;
+  begin
+    var Count: int := 0;
+    for Worker: Run in Workers do
+      if not Worker.Task.IsCompleted then
+        Count := Count + 1;
+      end if;
+    end for;
+
+    return Count;
+  end function;
+
+  procedure Close();
+  begin
+    var Error: Sys.Exception? := null;
+    for Worker: Run in Workers do
+      try
+        Worker.Cancellation.Cancel();
+      catch Failure: Sys.Exception do
+        Error := Error ?? Failure;
+      end try;
+    end for;
+
+    for Worker: Run in Workers do
+      try
+        Worker.Task.GetAwaiter().GetResult();
+      catch Failure: Sys.OperationCanceledException when Worker.Cancellation.IsCancellationRequested do
+      catch Failure: Sys.Exception do
+        Error := Error ?? Failure;
+      finally
+        Worker.Cancellation.Dispose();
+      end try;
+    end for;
+
+    Workers.Clear();
+    Active.Clear();
+    Versions.Clear();
+    const Failure: Sys.Exception? := Error;
+    if Failure <> null then
+      raise new Sys.InvalidOperationException('Background cleanup failed.', Failure);
+    end if;
+  end procedure;
+begin
+  const Workers: Generic.List<Run> := new Generic.List<Run>();
+  const Active: Generic.Dictionary<string, Run> := new Generic.Dictionary<string, Run>();
+  const Versions: Generic.Dictionary<string, long> := new Generic.Dictionary<string, long>();
+  var Sequence: long := 0L;
+  return new State<TMsg>(Start, Cancel, IsCurrent, Pending, Close);
+end function;
+end unit;

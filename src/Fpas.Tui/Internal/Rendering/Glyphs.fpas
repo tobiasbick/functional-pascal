@@ -1,0 +1,97 @@
+unit Fpas.Tui.Internal.Rendering.Glyphs;
+
+uses System as Sys, System.Globalization as Global;
+
+public function Width(Value: string): int;
+begin
+  if Value.Length = 0 then
+    return 0;
+  end if;
+  var Code: int := cast<int>(Value[0]);
+  if Value.Length > 1 and Sys.Char.IsSurrogatePair(Value[0], Value[1]) then
+    Code := Sys.Char.ConvertToUtf32(Value[0], Value[1]);
+  end if;
+
+  if (Code >= 4352 and Code <= 4447) or (Code >= 11904 and Code <= 42191)
+    or (Code >= 44032 and Code <= 55203) or (Code >= 63744 and Code <= 64255)
+    or (Code >= 65040 and Code <= 65376) or (Code >= 65504 and Code <= 65510)
+    or (Code >= 127744 and Code <= 129791) or (Code >= 131072 and Code <= 196605)
+    or Value.IndexOf(cast<char>(65039)) >= 0
+  then
+    return 2;
+  end if;
+
+  return 1;
+end function;
+
+public function Sanitize(Value: string): string;
+begin
+  if Value.Length = 0 then
+    return ' ';
+  end if;
+
+  if Sys.Char.IsControl(Value[0]) or (Value.Length = 1 and Sys.Char.IsSurrogate(Value[0])) then
+    return ' ';
+  end if;
+
+  return Value;
+end function;
+
+public function Measure(Value: string): int;
+begin
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
+  var Cells: int := 0;
+  while Glyphs.MoveNext() do
+    Cells := Cells + Width(Glyphs.GetTextElement());
+  end while;
+
+  return Cells;
+end function;
+
+public function SingleLine(Value: string): string;
+begin
+  return Value.Replace(
+    new string([#13, #10]),
+    ' '
+  ).Replace(#13, #32).Replace(#10, #32).Replace(#8232, #32).Replace(#8233, #32);
+end function;
+
+public function ViewStart(Value: string; Caret: int; Columns: int): int;
+begin
+  if Columns <= 0 then
+    return Caret;
+  end if;
+  const Prefix: string := Value.Substring(0, Caret);
+  var Remaining: int := Measure(Prefix);
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Prefix);
+  var Start: int := 0;
+  while Remaining >= Columns and Glyphs.MoveNext() do
+    const Glyph: string := Glyphs.GetTextElement();
+    Remaining := Remaining - Width(Glyph);
+    Start := Glyphs.ElementIndex + Glyph.Length;
+  end while;
+
+  return Start;
+end function;
+
+public function IndexAt(Value: string; Start: int; Column: int): int;
+begin
+  if Column <= 0 then
+    return Start;
+  end if;
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(
+    Value,
+    Start
+  );
+  var Position: int := 0;
+  while Glyphs.MoveNext() do
+    const Glyph: string := Glyphs.GetTextElement();
+    Position := Position + Width(Glyph);
+    if Column < Position then
+      return Glyphs.ElementIndex;
+    end if;
+  end while;
+
+  return Value.Length;
+end function;
+end unit;

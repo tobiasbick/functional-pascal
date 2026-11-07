@@ -58,7 +58,8 @@ internal sealed partial class CoreClrSession : IAsyncDisposable
     internal static async Task<CoreClrSession> Prepare(string dotnet, string program, string cwd, string source, int line, CancellationToken token, WorkerLauncher? launcher = null)
         => await Prepare(dotnet, program, cwd, new SourceBreakpoint(source, line), token, launcher);
 
-    internal static async Task<CoreClrSession> Prepare(string dotnet, string program, string cwd, SourceBreakpoint? initial, CancellationToken token, WorkerLauncher? launcher = null, IReadOnlyList<string>? arguments = null)
+    internal static async Task<CoreClrSession> Prepare(string dotnet, string program, string cwd, SourceBreakpoint? initial, CancellationToken token, WorkerLauncher? launcher = null,
+        IReadOnlyList<string>? arguments = null, TerminalLaunch? terminal = null)
     {
         token.ThrowIfCancellationRequested();
         if (OperatingSystem.IsLinux() && (dotnet.Contains('"') || dotnet.EndsWith('\\')))
@@ -72,9 +73,9 @@ internal sealed partial class CoreClrSession : IAsyncDisposable
         var session = new CoreClrSession(program, initial);
         try
         {
-            if (OperatingSystem.IsLinux())
+            if (OperatingSystem.IsLinux() || terminal is not null)
             {
-                session.broker = await LaunchBroker.Start(launcher ?? WorkerLauncher.Current(), new(dotnet, program, cwd, argv), token);
+                session.broker = await LaunchBroker.Start(launcher ?? WorkerLauncher.Current(), new(dotnet, program, cwd, argv, terminal), token);
                 session.target = CreatedProcess.Capture((uint)session.broker.TargetId);
                 NativeObject.Check(DbgShim.Instance.Startup((uint)session.ProcessId, Marshal.GetFunctionPointerForDelegate(session.startupCallback), 0, out session.registration));
             }

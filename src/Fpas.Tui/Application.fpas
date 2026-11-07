@@ -1,0 +1,247 @@
+unit Fpas.Tui.Application;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Hosting.Session as Host,
+  Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Terminal.Inputs as Inputs,
+  Fpas.Processes.Terminal as Terminal,
+  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+public type Command<TMsg> = union
+  EndSession;
+  Start(
+    Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+    OnFailure: function(Sys.Exception): TMsg
+  );
+  Cancel(Id: string);
+end union;
+
+public type Transition<TModel, TMsg> = record
+  public Model: TModel;
+  public Commands: array of Command<TMsg>;
+end record;
+
+public type Input = union
+  Activate(Id: string);
+  Resize(Columns: int; Rows: int);
+  KeyPress(Key: E.Key; Modifiers: E.KeyModifiers);
+  TextInput(Text: string);
+  Paste(Text: string);
+  Click(Column: int; Row: int);
+  Pointer(Kind: E.PointerKind; Column: int; Row: int);
+  Scroll(Column: int; Row: int; Delta: int);
+end union;
+
+public type ControlSnapshot = record
+  public Id: string;
+  public Label: string;
+  public Role: string;
+  public Value: string;
+  public Column: int;
+  public Row: int;
+  public Width: int;
+  public Height: int;
+  public Focused: bool;
+  public Hovered: bool;
+  public Enabled: bool;
+end record;
+
+public type Frame = record
+  public Id: long;
+  public Columns: int;
+  public Rows: int;
+  public Lines: array of string;
+  public Cells: array of E.Cell;
+  public Controls: array of ControlSnapshot;
+end record;
+
+public type Admission = union
+  Queued(Id: long);
+  QueueFull;
+  Closed;
+end union;
+
+public type StepResult = union
+  Idle;
+  Processed(InputId: long; FrameId: long; Published: bool);
+  EffectProcessed(FrameId: long);
+  Failed(InputId: long; FrameId: long; Stage: string; Reason: string);
+end union;
+
+public type HeadlessSession = record implements Sys.IDisposable
+  SendInput: function(Input): Admission;
+  Process: function(): StepResult;
+  ReadFrame: function(): Frame;
+  ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task<StepResult?>;
+  ReadReady: function(Threads.CancellationToken): Tasks.Task<bool>;
+  Status: function(): bool;
+  Close: procedure();
+
+  public static function Create(
+    SendInput: function(Input): Admission; Process: function(): StepResult;
+    ReadFrame: function(): Frame; ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task<StepResult?>;
+    ReadReady: function(Threads.CancellationToken): Tasks.Task<bool>; Status: function(): bool; Close: procedure()
+  ): HeadlessSession;
+  begin
+    return new HeadlessSession(
+      SendInput,
+      Process,
+      ReadFrame,
+      ReadOutcome,
+      ReadReady,
+      Status,
+      Close
+    );
+  end function;
+
+  public function Send(Event: Input): Admission;
+  begin
+    return self.SendInput(Event);
+  end function;
+
+  public function Step(): StepResult;
+  begin
+    return self.Process();
+  end function;
+
+  public function Snapshot(): Frame;
+  begin
+    return self.ReadFrame();
+  end function;
+
+  public function Wait(InputId: long; Timeout: Sys.TimeSpan): Tasks.Task<StepResult?>;
+  begin
+    return self.ReadOutcome(InputId, Timeout);
+  end function;
+
+  public function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  begin
+    return self.ReadReady(Cancellation);
+  end function;
+
+  public function IsOpen(): bool;
+  begin
+    return self.Status();
+  end function;
+
+  public procedure Dispose();
+  begin
+    self.Close();
+  end procedure;
+end record;
+
+public function Exit<TMsg>(): Command<TMsg>;
+begin
+  return Command<TMsg>.EndSession;
+end function;
+
+/// Describes a cancellable background run which posts typed messages to the host.
+public function StartBackground<TMsg>(
+  Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+  OnFailure: function(Sys.Exception): TMsg
+): Command<TMsg>;
+begin
+  if Id.Length = 0 then
+    raise new Sys.ArgumentException('A background command needs an ID.');
+  end if;
+
+  return Command<TMsg>.Start(Id, Work, OnFailure);
+end function;
+
+public function CancelBackground<TMsg>(Id: string): Command<TMsg>;
+begin
+  return Command<TMsg>.Cancel(Id);
+end function;
+
+/// Publishes the initial frame and returns a manually stepped session.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new E.Theme());
+end function;
+
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Theme: E.Theme
+): HeadlessSession;
+  procedure Present(Value: Frame);
+  begin
+  end procedure;
+begin
+  return Host.Start<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, Present, true, Theme);
+end function;
+
+/// Runs the application on the current terminal and restores terminal modes on exit.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>; View: function(TModel): E.Element<TMsg>
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, new E.Theme());
+end procedure;
+
+function TerminalWriter(Device: Terminal.ConsoleTerminal): procedure(int, int, array of E.Cell);
+  procedure WriteOutput(Value: string);
+  begin
+    Device.Write(Value);
+  end procedure;
+begin
+  return P.Create(WriteOutput);
+end function;
+
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>; View: function(TModel): E.Element<TMsg>; Theme: E.Theme
+);
+  procedure Present(Value: Frame);
+  begin
+    Write(Value.Columns, Value.Rows, Value.Cells);
+  end procedure;
+begin
+  using const Device: Terminal.ConsoleTerminal := new Terminal.ConsoleTerminal();
+  const Write: procedure(int, int, array of E.Cell) := TerminalWriter(Device);
+  using const Session: HeadlessSession := Host.Start<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Device.Columns,
+    Device.Rows,
+    Present,
+    false,
+    Theme
+  );
+  var Pending: Input? := null;
+  while Session.IsOpen() do
+    const Result: StepResult := Session.Step();
+    case Result of
+      when StepResult.Failed(_, _, const Stage: string, const Reason: string):
+        raise new Sys.InvalidOperationException('TUI ' + Stage + ' failed: ' + Reason);
+      else
+    end case;
+
+    if not Session.IsOpen() then
+      break;
+    end if;
+
+    if Pending = null then
+      const Delay: int := case Result of
+        when StepResult.Idle: 20;
+        else 0;
+      end case;
+      const Event: Terminal.TerminalInput? := Device.Poll(Delay);
+      case Event of
+        when is Terminal.TerminalInput as Value:
+          Pending := Inputs.Translate(Value);
+        else
+      end case;
+    end if;
+    const Event: Input? := Pending;
+    if Event <> null then
+      case Session.Send(Event) of
+        when Admission.Queued(_), Admission.Closed:
+          Pending := null;
+        when Admission.QueueFull:
+      end case;
+    end if;
+  end while;
+end procedure;
+end unit;

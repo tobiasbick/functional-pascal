@@ -1,7 +1,10 @@
 namespace Fpas.Debugging.Core;
 
 internal sealed record SourceBreakpoint(string Source, int Line, int? Column = null);
-internal sealed record LaunchTarget(string Dotnet, string Program, string Cwd, SourceBreakpoint? InitialBreakpoint = null, string[]? Arguments = null);
+internal sealed record LaunchTarget(string Dotnet, string Program, string Cwd, SourceBreakpoint? InitialBreakpoint = null, string[]? Arguments = null,
+    TerminalLaunch? Terminal = null);
+internal sealed record TerminalLaunch(string Pipe, int Columns, int Rows, string? TuiPipe = null);
+internal sealed record TerminalSize(int Columns, int Rows);
 internal sealed record BreakpointPosition(int Line, int? Column = null);
 internal sealed record BreakpointsRequest(string Source, BreakpointPosition[] Positions, long? StopId = null);
 internal sealed record BreakpointInfo(long Id, SourceBreakpoint Requested, string State, SourceLocation? Actual = null, DebugProblem? Error = null, long Hits = 0);

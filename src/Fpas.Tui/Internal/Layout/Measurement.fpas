@@ -1,0 +1,77 @@
+unit Fpas.Tui.Internal.Layout.Measurement;
+
+uses Fpas.Tui.Elements as E, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys;
+
+public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): int;
+begin
+  case Node of
+    when E.Element.Label(const Value: string):
+      if Horizontal then
+        return G.Measure(Value);
+      end if;
+
+      return Value.Split(cast<char>(10)).Length;
+    when E.Element.Action(_, const Caption: string, _, _, _, _):
+      return if Horizontal then G.Measure(Caption) else 1 end if;
+    when E.Element.Editor(_, const Value: string, _):
+      return if Horizontal then Sys.Math.Max(12, G.Measure(Value) + 2) else 1 end if;
+    when E.Element.Choices(_, const Items: array of E.ListItem<TMsg>):
+      if not Horizontal then
+        return Items.Length;
+      end if;
+      var Width: int := 0;
+      for Item: E.ListItem<TMsg> in Items do
+        Width := Sys.Math.Max(Width, G.Measure(Item.Text) + 2);
+      end for;
+
+      return Width;
+    when E.Element.Gauge(_):
+      return if Horizontal then 12 else 1 end if;
+    when E.Element.Stack(
+      const Children: array of E.Element<TMsg>,
+      const Axis: bool,
+      const Rule: E.Flow
+    ):
+      var Size: int := 0;
+      for Child: E.Element<TMsg> in Children do
+        const Span: int := Intrinsic<TMsg>(Child, Horizontal);
+        Size := if Axis = Horizontal then Size + Span else Sys.Math.Max(Size, Span) end if;
+      end for;
+
+      return Size + 2 * Rule.Padding + (if Axis = Horizontal then Sys.Math.Max(
+          0,
+          Children.Length - 1
+        ) * Rule.Gap
+        else 0
+        end if);
+    when E.Element.Sized(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.Decorated(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>), E.Element.Desktop(
+      const Child: E.Element<TMsg>,
+      _,
+      _
+    ), E.Element.Layer(
+      _,
+      _,
+      _,
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ):
+      return Intrinsic<TMsg>(Child, Horizontal);
+    when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+      return Sys.Math.Max(
+        Intrinsic<TMsg>(Child, Horizontal),
+        if Horizontal then G.Measure(Title) else 0 end if
+      ) + 2;
+    when E.Element.Custom(const Columns: int, const Rows: int, _, _):
+      return if Horizontal then Columns else Rows end if;
+    when E.Element.Deferred(_, _):
+      raise new Sys.InvalidOperationException('Unresolved cached subview.');
+  end case;
+end function;
+end unit;

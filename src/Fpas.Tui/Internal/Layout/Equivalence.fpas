@@ -1,0 +1,122 @@
+unit Fpas.Tui.Internal.Layout.Equivalence;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as Tree, System as Sys,
+  System.Collections.Generic as Generic;
+
+function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
+begin
+  case Left of
+    when Tree.Binding.Invoke(const Message: TMsg):
+      case Right of
+        when Tree.Binding.Invoke(const Other: TMsg):
+          return Generic.EqualityComparer<TMsg>.Default.Equals(Message, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Edit(const Value: string, const Change: function(string): TMsg):
+      case Right of
+        when Tree.Binding.Edit(const OtherValue: string, const OtherChange: function(string): TMsg):
+          return Value = OtherValue and Sys.Object.Equals(Change, OtherChange);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Canvas(
+      const Column: int,
+      const Row: int,
+      const Click: function(int, int): TMsg
+    ):
+      case Right of
+        when Tree.Binding.Canvas(const X: int, const Y: int, const Other: function(int, int): TMsg):
+          return X = Column and Y = Row and Sys.Object.Equals(Click, Other);
+        else
+          return false;
+      end case;
+  end case;
+end function;
+
+function SameKeys<TMsg>(Left: array of E.ShortcutBinding<TMsg>; Right: array of E.ShortcutBinding<TMsg>): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    if Left[Index] <> Right[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function SameScope<TMsg>(Left: Tree.Scope<TMsg>?; Right: Tree.Scope<TMsg>?): bool;
+begin
+  if Left = null then
+    return Right = null;
+  end if;
+
+  if Right = null or Left.Id <> Right.Id or Left.Initial <> Right.Initial or not SameKeys<TMsg>(
+    Left.Shortcuts,
+    Right.Shortcuts
+  )
+  then
+    return false;
+  end if;
+
+  case Left.Escape of
+    when E.EscapeBinding.Send(const Message: TMsg):
+      case Right.Escape of
+        when E.EscapeBinding.Send(const Other: TMsg):
+          return Generic.EqualityComparer<TMsg>.Default.Equals(Message, Other);
+        else
+          return false;
+      end case;
+    when E.EscapeBinding.None:
+      case Right.Escape of
+        when E.EscapeBinding.None:
+          return true;
+        else
+          return false;
+      end case;
+  end case;
+end function;
+
+public function Equivalent<TMsg>(Left: Tree.Layout<TMsg>; Right: Tree.Layout<TMsg>): bool;
+begin
+  if Left.Cells.Length <> Right.Cells.Length or Left.Controls.Length <> Right.Controls.Length
+    or Left.Regions.Length <> Right.Regions.Length
+    or not SameScope<TMsg>(
+    Left.Active,
+    Right.Active
+  ) or not SameKeys<TMsg>(Left.GlobalKeys, Right.GlobalKeys)
+  then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Cells.Length - 1 do
+    if Left.Cells[Index] <> Right.Cells[Index] then
+      return false;
+    end if;
+  end for;
+
+  for Index: int := 0 to Left.Controls.Length - 1 do
+    const A: Tree.Control<TMsg> := Left.Controls[Index];
+    const B: Tree.Control<TMsg> := Right.Controls[Index];
+    if A.Id <> B.Id or A.Label <> B.Label or A.Role <> B.Role or A.Value <> B.Value
+      or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.Enabled <> B.Enabled
+      or not SameBinding<TMsg>(A.Action, B.Action)
+    then
+      return false;
+    end if;
+  end for;
+
+  for Index: int := 0 to Left.Regions.Length - 1 do
+    if Left.Regions[Index] <> Right.Regions[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+end unit;

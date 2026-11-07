@@ -1,0 +1,383 @@
+program HeadlessContract;
+
+uses
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
+  Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Layout.Flexible as F, System.IO as IO,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+type Msg = union
+  Start;
+  Cancel;
+  Progress;
+  Fail;
+end union;
+
+const Posted: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>();
+
+async function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+begin
+  Token.ThrowIfCancellationRequested();
+  await Post(Msg.Progress);
+  discard Posted.TrySetResult(true);
+end function;
+
+function Update(State: int; Message: Msg): App.Transition<int, Msg>;
+begin
+  case Message of
+    when Msg.Start:
+      return new App.Transition<int, Msg>(
+        State,
+        [App.StartBackground<Msg>('task', Work, function(Error: Sys.Exception): Msg => Msg.Fail)]
+      );
+    when Msg.Cancel:
+      return new App.Transition<int, Msg>(State, [App.CancelBackground<Msg>('task')]);
+    when Msg.Progress:
+      return new App.Transition<int, Msg>(1, []);
+    when Msg.Fail:
+      return new App.Transition<int, Msg>(-1, []);
+  end case;
+end function;
+
+function View(State: int): E.Element<Msg>;
+begin
+  if State < 0 then
+    raise new Sys.InvalidOperationException('staged view failure');
+  end if;
+
+  return E.Column<Msg>(
+    E.Text<Msg>(State.ToString()),
+    E.Button<Msg>('start', 'Start', Msg.Start), E.Button<Msg>('cancel', 'Cancel', Msg.Cancel),
+    E.Button<Msg>('fail', 'Fail', Msg.Fail)
+  );
+end function;
+
+function Send(Session: App.HeadlessSession; Id: string): long;
+begin
+  case Session.Send(App.Input.Activate(Id)) of
+    when App.Admission.Queued(const Sequence: long):
+      return Sequence;
+    else
+      raise new Sys.InvalidOperationException('Expected admission.');
+  end case;
+end function;
+
+procedure CheckCancellation();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
+  discard Send(Session, 'start');
+  discard Send(Session, 'cancel');
+  discard Session.Step();
+  discard Posted.Task.WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+  discard Session.Step();
+  const Before: App.Frame := Session.Snapshot();
+  case Session.Step() of
+    when App.StepResult.EffectProcessed(const FrameId: long):
+      if FrameId <> Before.Id or Session.Snapshot().Lines[0].TrimEnd() <> '0' then
+        raise new Sys.InvalidOperationException('A cancelled run changed the model.');
+      end if;
+    else
+      raise new Sys.InvalidOperationException('The queued background entry was not stepped.');
+  end case;
+end procedure;
+
+procedure CheckQueue();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
+  const First: long := Send(Session, 'missing');
+  var Last: long := First;
+  var Full: bool := false;
+  for Index: int := 1 to 128 do
+    case Session.Send(App.Input.Activate('missing')) of
+      when App.Admission.Queued(const Id: long):
+        Last := Id;
+      when App.Admission.QueueFull:
+        Full := true;
+        break;
+      else
+        raise new Sys.InvalidOperationException('Unexpected queue status.');
+    end case;
+  end for;
+
+  if not Full then
+    raise new Sys.InvalidOperationException('The queue did not enforce a capacity.');
+  end if;
+
+  if Session.Wait(First, Sys.TimeSpan.Zero).GetAwaiter().GetResult() <> null then
+    raise new Sys.InvalidOperationException('Wait advanced a manually stepped session.');
+  end if;
+
+  discard Session.Step();
+  const Outcome: App.StepResult? := Session.Wait(First, Sys.TimeSpan.Zero).GetAwaiter().GetResult();
+  if Outcome = null then
+    raise new Sys.InvalidOperationException('Missing completed input.');
+  end if;
+
+  case Outcome of
+    when App.StepResult.Processed(const Id: long, _, const Published: bool):
+      if Id <> First or Published then
+        raise new Sys.InvalidOperationException('A no-op published a frame.');
+      end if;
+    else
+      raise new Sys.InvalidOperationException('Unexpected input outcome.');
+  end case;
+
+  if Send(Session, 'missing') <> Last + 1L then
+    raise new Sys.InvalidOperationException('Rejected input took a sequence number.');
+  end if;
+end procedure;
+
+procedure CheckFailure();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
+  const Complete: App.Frame := Session.Snapshot();
+  const Id: long := Send(Session, 'fail');
+  case Session.Step() of
+    when App.StepResult.Failed(const InputId: long, const FrameId: long, const Stage: string, _):
+      if InputId <> Id or FrameId <> Complete.Id or Stage <> 'view' or Session.IsOpen() then
+        raise new Sys.InvalidOperationException('Unexpected failure outcome.');
+      end if;
+    else
+      raise new Sys.InvalidOperationException('A failed view completed normally.');
+  end case;
+
+  if Session.Snapshot().Id <> Complete.Id then
+    raise new Sys.InvalidOperationException('The complete frame was lost.');
+  end if;
+end procedure;
+
+procedure CheckPresentation();
+  procedure Output(Value: string);
+  begin
+    Writes := Writes + 1;
+    Last := Value;
+    if FailNext then
+      FailNext := false;
+      raise new IO.IOException('simulated partial output');
+    end if;
+  end procedure;
+begin
+  var Writes: int := 0;
+  var Last: string := '';
+  var FailNext: bool := false;
+  const Draw: procedure(int, int, array of E.Cell) := P.Create(Output);
+  const Style: E.Style := new E.Style();
+  const Initial: array of E.Cell := [new E.Cell('a', Style), new E.Cell('b', Style)];
+  const Changed: array of E.Cell := [Initial[0], new E.Cell('c', Style)];
+  Draw(2, 1, Initial);
+  Draw(2, 1, Initial);
+  if Writes <> 1 then
+    raise new Sys.InvalidOperationException('Unchanged cells caused another terminal write.');
+  end if;
+
+  FailNext := true;
+  Draw(2, 1, Changed);
+  if Writes <> 3 or not Last.Contains('[2J') or not Last.Contains('ac') then
+    raise new Sys.InvalidOperationException('Presentation did not recover with one full redraw.');
+  end if;
+
+  Draw(2, 1, Changed);
+  if Writes <> 3 then
+    raise new Sys.InvalidOperationException('The recovered frame did not become the baseline.');
+  end if;
+end procedure;
+
+procedure CheckCanvas();
+  function Unchanged(State: int; Message: int): App.Transition<int, int>;
+  begin
+    return new App.Transition<int, int>(State, []);
+  end function;
+
+  function WideCell(Column: int; Row: int): E.Cell;
+  begin
+    return new E.Cell('界', new E.Style());
+  end function;
+
+  function Canvas(State: int): E.Element<int>;
+  begin
+    return E.CellCanvas<int>(2, 1, WideCell);
+  end function;
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
+    0,
+    Unchanged,
+    Canvas,
+    3,
+    1
+  );
+  const Frame: App.Frame := Session.Snapshot();
+  if Frame.Cells[0].Text <> '界' or Frame.Cells[1].Text <> '' or Frame.Cells[2].Text <> ' ' then
+    raise new Sys.InvalidOperationException('The wide cell did not reserve its continuation.');
+  end if;
+
+  discard Session.Send(App.Input.Resize(1, 1));
+  discard Session.Step();
+  if Session.Snapshot().Cells[0].Text <> ' ' then
+    raise new Sys.InvalidOperationException('A clipped wide cell was partially painted.');
+  end if;
+end procedure;
+
+function OverlayUpdate(State: int; Message: int): App.Transition<int, int>;
+begin
+  return new App.Transition<int, int>(Message, []);
+end function;
+
+function OverlayView(State: int): E.Element<int>;
+begin
+  const A: E.ListItem<int> := new E.ListItem<int>('a', 'Alpha', 4);
+  const B: E.ListItem<int> := new E.ListItem<int>('b', 'Beta', if State = 5 then 6 else 4 end if);
+  const Items: array of E.ListItem<int> := if State >= 4 then [B, A] else [A, B] end if;
+  const Base: E.Element<int> := E.Column<int>(
+    E.Button<int>('options', 'Options', 1, State <> 3),
+    E.List<int>('items', Items)
+  );
+  var Layers: array of E.Element<int> := [];
+  if State = 1 then
+    Layers := [
+      E.Overlay<int>(
+        'options-overlay', true, 'missing', 3,
+        E.Column<int>(E.Button<int>('close', 'Close', 0), E.Button<int>('details', 'Details', 2)),
+        [E.Shortcut<int>(E.Key.R, E.KeyModifiers.Ctrl, 2)]
+      )
+    ];
+  else
+    if State = 2 then
+      Layers := [E.Overlay<int>('details-overlay', true, 'missing', 3, E.Text<int>('Details'), [])];
+    end if;
+  end if;
+
+  return E.Screen<int>(Base, Layers, [E.Shortcut<int>(E.Key.R, E.KeyModifiers.Ctrl, 5)]);
+end function;
+
+procedure ExpectFocus(Session: App.HeadlessSession; Expected: string);
+begin
+  var Actual: string := '';
+  for Control: App.ControlSnapshot in Session.Snapshot().Controls do
+    if Control.Focused then
+      Actual := Control.Id;
+      break;
+    end if;
+  end for;
+
+  if Actual <> Expected then
+    raise new Sys.InvalidOperationException('Expected focus ' + Expected + ', got ' + Actual);
+  end if;
+end procedure;
+
+procedure Turn(Session: App.HeadlessSession; Event: App.Input);
+begin
+  discard Session.Send(Event);
+  discard Session.Step();
+end procedure;
+
+procedure CheckOverlay();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
+    0, OverlayUpdate, OverlayView, 30, 10
+  );
+  Turn(Session, App.Input.Activate('options'));
+  ExpectFocus(Session, 'close');
+  const Before: long := Session.Snapshot().Id;
+  Turn(Session, App.Input.Click(0, 0));
+  if Session.Snapshot().Id <> Before then
+    raise new Sys.InvalidOperationException('The modal overlay let a click reach the base.');
+  end if;
+
+  Turn(Session, App.Input.KeyPress(E.Key.Tab, E.KeyModifiers.None));
+  ExpectFocus(Session, 'details');
+  Turn(Session, App.Input.KeyPress(E.Key.Tab, E.KeyModifiers.Shift));
+  ExpectFocus(Session, 'close');
+  Turn(Session, App.Input.Activate('close'));
+  ExpectFocus(Session, 'options');
+  Turn(Session, App.Input.Activate('options'));
+  Turn(Session, App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
+  ExpectFocus(Session, '');
+  Turn(Session, App.Input.KeyPress(E.Key.Escape, E.KeyModifiers.None));
+  ExpectFocus(Session, 'items/a');
+  Turn(Session, App.Input.Activate('items/b'));
+  ExpectFocus(Session, 'items/b');
+  const Original: App.Frame := Session.Snapshot();
+  Turn(Session, App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
+  const Changed: App.Frame := Session.Snapshot();
+  if Original.Id = Changed.Id or not Sys.String.Join('|', Original.Lines).Equals(
+    Sys.String.Join('|', Changed.Lines)
+  )
+  then
+    raise new Sys.InvalidOperationException(
+      'An action-only change must publish without repainting cells.'
+    );
+  end if;
+end procedure;
+
+procedure CheckReuse();
+  function Build(Dependency: int): E.Element<int>;
+  begin
+    Builds := Builds + 1;
+    return E.Button<int>('stable', 'Stable', Dependency);
+  end function;
+
+  function Cached(State: int): E.Element<int>;
+  begin
+    return E.CachedSubview<int, int>(
+      'stable-subview',
+      0,
+      Build,
+      function(A: int; B: int): bool => A = B
+    );
+  end function;
+begin
+  var Builds: int := 0;
+  using const Resized: App.HeadlessSession := App.StartHeadless<int, int>(
+    0,
+    OverlayUpdate,
+    Cached,
+    20,
+    8
+  );
+  Turn(Resized, App.Input.Resize(11, 3));
+  if Builds <> 1 then
+    raise new Sys.InvalidOperationException('Resize rebuilt an equivalent subview.');
+  end if;
+
+  using const Fresh: App.HeadlessSession := App.StartHeadless<int, int>(
+    0,
+    OverlayUpdate,
+    Cached,
+    11,
+    3
+  );
+  const ReusedFrame: App.Frame := Resized.Snapshot();
+  const FreshFrame: App.Frame := Fresh.Snapshot();
+  if Builds <> 2 or ReusedFrame.Controls[0] <> FreshFrame.Controls[0] then
+    raise new Sys.InvalidOperationException(
+      'Cache reuse changed routing or crossed session boundaries.'
+    );
+  end if;
+
+  for Index: int := 0 to FreshFrame.Cells.Length - 1 do
+    if ReusedFrame.Cells[Index] <> FreshFrame.Cells[Index] then
+      raise new Sys.InvalidOperationException('Reused cells differ from a fresh render.');
+    end if;
+  end for;
+
+  const Rules: array of E.Flex := [
+    new E.Flex(Minimum := 2, Maximum := 6, Grow := 1),
+    new E.Flex(Minimum := 3, Maximum := 9, Grow := 1)
+  ];
+  const Grown: array of int := F.Allocate([4, 4], Rules, 11);
+  const Shrunk: array of int := F.Allocate([4, 4], Rules, 4);
+  if Grown[0] <> 6 or Grown[1] <> 5 or Shrunk[0] <> 2 or Shrunk[1] <> 3 then
+    raise new Sys.InvalidOperationException('Unexpected bounded cell allocation.');
+  end if;
+end procedure;
+
+begin
+  CheckCancellation();
+  CheckQueue();
+  CheckFailure();
+  CheckPresentation();
+  CheckCanvas();
+  CheckOverlay();
+  CheckReuse();
+  Console.WriteLine('headless contracts verified');
+end;
+end program;

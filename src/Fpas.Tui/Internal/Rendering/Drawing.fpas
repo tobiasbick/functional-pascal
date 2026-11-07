@@ -1,0 +1,159 @@
+unit Fpas.Tui.Internal.Rendering.Drawing;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Collections.Generic as Generic,
+  System.Globalization as Global, System.Text as Text;
+
+public type Operation = record
+  public Value: string;
+  public Area: F.Rect;
+  public Clip: F.Rect;
+  public Style: E.Style;
+  public Wrap: bool;
+end record;
+
+public type PaintedRow = record
+  public Operations: array of Operation;
+  public Cells: array of E.Cell;
+  public Text: string;
+end record;
+
+public type Surface = record
+  public Rows: array of PaintedRow;
+  public Cells: array of E.Cell;
+  public Lines: array of string;
+end record;
+
+function Same(Left: array of Operation; Right: array of Operation): bool;
+begin
+  if Left.Length <> Right.Length then
+    return false;
+  end if;
+
+  for Index: int := 0 to Left.Length - 1 do
+    if Left[Index] <> Right[Index] then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; Blank: E.Cell): PaintedRow;
+  procedure Erase(Column: int);
+  begin
+    const Old: string := Buffer[Column].Text;
+    if Old = '' and Column > 0 then
+      Buffer[Column - 1] := Blank;
+    else
+      if G.Width(Old) = 2 and Column + 1 < Columns then
+        Buffer[Column + 1] := Blank;
+      end if;
+    end if;
+
+    Buffer[Column] := Blank;
+  end procedure;
+
+  procedure Put(Column: int; Value: string; Style: E.Style; Clip: F.Rect);
+  begin
+    const Glyph: string := G.Sanitize(Value);
+    const Span: int := G.Width(Glyph);
+    if Clip.Contains(Column, TargetRow) and Clip.Contains(Column + Span - 1, TargetRow) then
+      Erase(Column);
+      if Span = 2 then
+        Erase(Column + 1);
+      end if;
+
+      Buffer[Column] := new E.Cell(Glyph, Style);
+      if Span = 2 then
+        Buffer[Column + 1] := new E.Cell('', Style);
+      end if;
+    end if;
+  end procedure;
+
+  procedure Draw(Item: Operation);
+  begin
+    const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(
+      Item.Value
+    );
+    var X: int := Item.Area.X;
+    var Y: int := Item.Area.Y;
+    while Y <= TargetRow and Y < Item.Area.Y + Item.Area.Height and Glyphs.MoveNext() do
+      const Glyph: string := Glyphs.GetTextElement();
+      const Span: int := G.Width(Glyph);
+      const LineBreak: bool := Glyph[0] = #10 or Glyph[0] = #13;
+      if LineBreak or X + Span > Item.Area.X + Item.Area.Width then
+        if not Item.Wrap then
+          break;
+        end if;
+
+        X := Item.Area.X;
+        Y := Y + 1;
+        if LineBreak then
+          continue;
+        end if;
+      end if;
+
+      if Span <= Item.Area.Width then
+        if Y = TargetRow then
+          Put(X, Glyph, Item.Style, Item.Clip);
+        end if;
+
+        X := X + Span;
+      end if;
+    end while;
+  end procedure;
+begin
+  const Buffer: Generic.List<E.Cell> := new Generic.List<E.Cell>(Columns);
+  for Column: int := 1 to Columns do
+    Buffer.Add(Blank);
+  end for;
+
+  for Item: Operation in Operations do
+    Draw(Item);
+  end for;
+  const Line: Text.StringBuilder := new Text.StringBuilder();
+  for Cell: E.Cell in Buffer do
+    discard Line.Append(Cell.Text);
+  end for;
+
+  return new PaintedRow(Operations, Buffer.ToArray(), Line.ToString());
+end function;
+
+public function Render(
+  Operations: Generic.List<Operation>; Columns: int; Rows: int;
+  Previous: array of PaintedRow; DefaultStyle: E.Style
+): Surface;
+begin
+  const Blank: E.Cell := new E.Cell(' ', DefaultStyle);
+  const Pending: Generic.List<Generic.List<Operation>> := new Generic.List<Generic.List<Operation>>(
+    Rows
+  );
+  for Row: int := 1 to Rows do
+    Pending.Add(new Generic.List<Operation>());
+  end for;
+
+  for Item: Operation in Operations do
+    const Visible: F.Rect := F.Intersect(Item.Area, Item.Clip);
+    for Row: int := Visible.Y to Visible.Y + Visible.Height - 1 do
+      Pending[Row].Add(Item);
+    end for;
+  end for;
+  const Painted: Generic.List<PaintedRow> := new Generic.List<PaintedRow>(Rows);
+  const Cells: Generic.List<E.Cell> := new Generic.List<E.Cell>(Columns * Rows);
+  const Lines: Generic.List<string> := new Generic.List<string>(Rows);
+  for Row: int := 0 to Rows - 1 do
+    const Plan: array of Operation := Pending[Row].ToArray();
+    const Complete: PaintedRow := if Row < Previous.Length and Previous[Row].Cells.Length = Columns
+        and Same(Plan, Previous[Row].Operations) then Previous[Row]
+      else PaintRow(Plan, Columns, Row, Blank)
+      end if;
+    Painted.Add(Complete);
+    Cells.AddRange(Complete.Cells);
+    Lines.Add(Complete.Text);
+  end for;
+
+  return new Surface(Painted.ToArray(), Cells.ToArray(), Lines.ToArray());
+end function;
+end unit;

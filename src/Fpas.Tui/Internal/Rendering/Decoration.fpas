@@ -1,0 +1,52 @@
+unit Fpas.Tui.Internal.Rendering.Decoration;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as A,
+  Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys;
+
+public procedure Apply<TMsg>(
+  Cells: array of E.Cell; Columns: int; Control: A.Control<TMsg>;
+  Theme: E.Theme; Focused: bool; Selection: function(string, string): Edit.Selection
+);
+  procedure Mark(Column: int; Row: int; Style: E.Style);
+  begin
+    if Control.Bounds.Contains(Column, Row) then
+      const Index: int := Row * Columns + Column;
+      Cells[Index] := new E.Cell(Cells[Index].Text, Style);
+    end if;
+  end procedure;
+begin
+  const Style: E.Style := if Focused then Theme.Focus else Theme.Hover end if;
+  const Bounds: F.Rect := Control.Bounds;
+  for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
+    for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
+      Mark(X, Y, Style);
+    end for;
+  end for;
+
+  if Focused and Bounds.Width > 2 then
+    case Control.Action of
+      when A.Binding.Edit(const Value: string, _):
+        const Range: Edit.Selection := Selection(Control.Id, Value);
+        const Start: int := G.ViewStart(Value, Range.Caret, Bounds.Width - 2);
+        const First: int := Bounds.X + 2 + G.Measure(
+          Value.Substring(
+            Start,
+            Sys.Math.Max(Start, Sys.Math.Min(Range.Caret, Range.Anchor)) - Start
+          )
+        );
+        const Last: int := Bounds.X + 2 + G.Measure(
+          Value.Substring(Start, Sys.Math.Max(Range.Caret, Range.Anchor) - Start)
+        );
+        for X: int := First to Sys.Math.Min(
+          Sys.Math.Max(First, Last - 1),
+          Bounds.X + Bounds.Width - 1
+        ) do
+          Mark(X, Bounds.Y, Theme.Caret);
+        end for;
+      else
+    end case;
+  end if;
+end procedure;
+end unit;

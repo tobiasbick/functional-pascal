@@ -1,0 +1,83 @@
+unit Fpas.Tui.Internal.Rendering.Presentation;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Rendering.Glyphs as G,
+  System as Sys, System.IO as IO, System.Text as Text;
+
+function Color(Value: int; Foreground: bool): string;
+begin
+  if Value < 0 then
+    return if Foreground then '39' else '49' end if;
+  end if;
+  const Rgb: int := Sys.Math.Min(Value, 16777215);
+  return (if Foreground then '38;2;' else '48;2;' end if) + (Rgb div 65536).ToString() + ';' +
+    (Rgb div 256 mod 256).ToString() + ';' + (Rgb mod 256).ToString();
+end function;
+
+public function Create(WriteOutput: procedure(string)): procedure(int, int, array of E.Cell);
+  procedure Write(Columns: int; Rows: int; Cells: array of E.Cell; Full: bool);
+  begin
+    const Output: Text.StringBuilder := new Text.StringBuilder();
+    if Full then
+      discard Output.Append(Escape).Append('[2J');
+    end if;
+    var Style: E.Style? := null;
+    for Y: int := 0 to Rows - 1 do
+      var X: int := 0;
+      var Cursor: int := -1;
+      while X < Columns do
+        const Index: int := Y * Columns + X;
+        const Cell: E.Cell := Cells[Index];
+        const Span: int := Sys.Math.Max(1, G.Width(Cell.Text));
+        if Cell.Text <> '' and (Full or Cell <> Baseline[Index]
+          or (Span = 2 and X + 1 < Columns and Cells[Index + 1] <> Baseline[Index + 1]))
+        then
+          if Cursor <> X then
+            discard Output.Append(Escape).Append('[').Append(
+              Y + 1
+            ).Append(';').Append(X + 1).Append('H');
+          end if;
+          const Previous: E.Style? := Style;
+          if Previous = null or Previous <> Cell.Style then
+            discard Output.Append(Escape).Append('[').Append(
+              Color(Cell.Style.Foreground, true)
+            ).Append(';').Append(Color(Cell.Style.Background, false)).Append('m');
+            Style := Cell.Style;
+          end if;
+
+          discard Output.Append(Cell.Text);
+          Cursor := X + Span;
+        end if;
+
+        X := X + Span;
+      end while;
+    end for;
+
+    if Output.Length > 0 then
+      discard Output.Append(Escape).Append('[0m');
+      WriteOutput(Output.ToString());
+    end if;
+  end procedure;
+
+  procedure Present(Columns: int; Rows: int; Cells: array of E.Cell);
+  begin
+    try
+      Write(Columns, Rows, Cells, Columns <> LastColumns or Rows <> LastRows);
+    catch Failure: IO.IOException do
+      LastColumns := 0;
+      LastRows := 0;
+      Write(Columns, Rows, Cells, true);
+    end try;
+
+    LastColumns := Columns;
+    LastRows := Rows;
+    Baseline := Cells;
+  end procedure;
+begin
+  const Escape: char := #27;
+  var LastColumns: int := 0;
+  var LastRows: int := 0;
+  var Baseline: array of E.Cell := [];
+  return Present;
+end function;
+end unit;

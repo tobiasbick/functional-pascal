@@ -6,7 +6,7 @@ namespace Fpas.Debugging.Hosting;
 
 // Correlation and serialized payloads belong to the private worker channel, not the core interface.
 internal sealed record WorkerMessage(long Id, string Kind, string Operation, JsonElement? Payload = null, DebugProblem? Error = null);
-internal sealed record BrokerLaunch(string Dotnet, string Program, string Cwd, string[]? Arguments = null);
+internal sealed record BrokerLaunch(string Dotnet, string Program, string Cwd, string[]? Arguments = null, TerminalLaunch? Terminal = null);
 internal sealed record BrokerTarget(int ProcessId);
 internal sealed record BrokerExit(int Code, int? Signal = null);
 
@@ -33,4 +33,6 @@ internal sealed record BrokerExit(int Code, int? Signal = null);
 [JsonSerializable(typeof(BrokerLaunch))]
 [JsonSerializable(typeof(BrokerTarget))]
 [JsonSerializable(typeof(BrokerExit))]
+[JsonSerializable(typeof(TerminalSize))]
+[JsonSerializable(typeof(byte[]))]
 internal sealed partial class WorkerJson : JsonSerializerContext;

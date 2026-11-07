@@ -26,6 +26,9 @@
     <Using Include="Xunit" />
     <None Include="../../examples/hello/main.fpas" Link="Fixtures/hello.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/mandelbrot/main.fpas;../../examples/mandelbrot/Mandelbrot.fpasproj" Link="Fixtures/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Tui/**/*.fpas" Exclude="../../src/Fpas.Tui/bin/**/*;../../src/Fpas.Tui/obj/**/*" Link="Fixtures/tui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/tui/filter-list/main.fpas" Link="Fixtures/tui/example.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/units/**/*.fpas;../../examples/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/read-file/*.fpas;../../examples/read-file/*.fpasproj;../../examples/read-file/*.txt" Link="Fixtures/read-file/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/directory-inventory/*.fpas;../../examples/directory-inventory/*.fpasproj" Link="Fixtures/directory-inventory/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

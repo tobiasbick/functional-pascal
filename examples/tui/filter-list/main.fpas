@@ -1,0 +1,258 @@
+program FilterList;
+
+uses
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys,
+  System.Collections.Generic as Generic, System.Console as Console,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+type Msg = union
+  FilterChanged(Value: string);
+  SelectItem(Id: string);
+  OpenOptions;
+  CloseOptions;
+  ShowHidden(Value: bool);
+  ResetOptions;
+  Refresh;
+  ProgressChanged(Value: int);
+  RefreshFailed(Reason: string);
+  Quit;
+end union;
+
+type ListDeps = record
+  public Filter: string;
+  public Selected: string;
+  public ShowHidden: bool;
+end record;
+
+type Model = record
+  public Filter: string := '';
+  public Selected: string := '';
+  public ShowHidden: bool := false;
+  public Options: bool := false;
+  public Progress: int := 0;
+  public Failure: string := '';
+end record;
+
+async function RefreshItems(Post: function(Msg): Tasks.Task; Cancellation: Threads.CancellationToken): Tasks.Task;
+begin
+  for Value: int in [25, 50, 75, 100] do
+    await Tasks.Task.Delay(30, Cancellation);
+    await Post(Msg.ProgressChanged(Value));
+  end for;
+end function;
+
+function Update(State: Model; Message: Msg): App.Transition<Model, Msg>;
+begin
+  var Next: Model := State;
+  var Commands: array of App.Command<Msg> := [];
+  case Message of
+    when Msg.FilterChanged(const Value: string):
+      Next := State with
+        Filter := Value;
+      end with;
+    when Msg.SelectItem(const Id: string):
+      Next := State with
+        Selected := Id;
+      end with;
+    when Msg.OpenOptions:
+      Next := State with
+        Options := true;
+      end with;
+    when Msg.CloseOptions:
+      Next := State with
+        Options := false;
+      end with;
+    when Msg.ShowHidden(const Value: bool):
+      Next := State with
+        ShowHidden := Value;
+      end with;
+    when Msg.ResetOptions:
+      Next := State with
+        ShowHidden := false;
+      end with;
+    when Msg.Refresh:
+      Next := State with
+        Progress := 0;
+        Failure := '';
+      end with;
+      Commands := [
+        App.StartBackground<Msg>(
+          'refresh', RefreshItems,
+          function(Error: Sys.Exception): Msg => Msg.RefreshFailed(Error.Message)
+        )
+      ];
+    when Msg.ProgressChanged(const Value: int):
+      Next := State with
+        Progress := Value;
+      end with;
+    when Msg.RefreshFailed(const Reason: string):
+      Next := State with
+        Failure := Reason;
+      end with;
+    when Msg.Quit:
+      Commands := [App.Exit<Msg>()];
+  end case;
+
+  return new App.Transition<Model, Msg>(Next, Commands);
+end function;
+
+function SameList(Previous: ListDeps; Current: ListDeps): bool;
+begin
+  return Previous = Current;
+end function;
+
+function BuildList(Deps: ListDeps): E.Element<Msg>;
+begin
+  const Items: Generic.List<E.ListItem<Msg>> := new Generic.List<E.ListItem<Msg>>();
+  for Name: string in ['Amber', 'Birch', 'Cedar', 'Hidden'] do
+    if (Deps.ShowHidden or Name <> 'Hidden') and Name.Contains(
+      Deps.Filter,
+      Sys.StringComparison.OrdinalIgnoreCase
+    )
+    then
+      Items.Add(new E.ListItem<Msg>(Name, Name, Msg.SelectItem(Name), Name = Deps.Selected));
+    end if;
+  end for;
+
+  return E.List<Msg>('items', Items.ToArray());
+end function;
+
+function View(State: Model): E.Element<Msg>;
+begin
+  const Results: E.Element<Msg> := E.CachedSubview<ListDeps, Msg>(
+    'results', new ListDeps(State.Filter, State.Selected, State.ShowHidden), BuildList, SameList
+  );
+  const Body: E.Element<Msg> := E.Column<Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<Msg>('Filter results'),
+    E.TextInput<Msg>(
+      'filter',
+      State.Filter,
+      function(Value: string): Msg => Msg.FilterChanged(Value)
+    ),
+    Results,
+    E.ProgressBar<Msg>(State.Progress),
+    E.Text<Msg>('Progress: ' + State.Progress.ToString() + '% ' + State.Failure),
+    E.Row<Msg>(
+      new E.Flow(Gap := 1), E.Button<Msg>('options', 'Options', Msg.OpenOptions),
+      E.Button<Msg>('refresh', 'Refresh', Msg.Refresh), E.Button<Msg>('quit', 'Quit', Msg.Quit)
+    )
+  );
+  var Layers: array of E.Element<Msg> := [];
+  if State.Options then
+    const Content: E.Element<Msg> := E.Border<Msg>(
+      E.Column<Msg>(
+        E.Checkbox<Msg>(
+          'show-hidden',
+          'Show hidden',
+          State.ShowHidden,
+          function(Value: bool): Msg => Msg.ShowHidden(Value)
+        ),
+        E.Button<Msg>('close', 'Close', Msg.CloseOptions)
+      ), 'Options'
+    );
+    Layers := [
+      E.Overlay<Msg>(
+        'options-overlay', true, 'show-hidden', Msg.CloseOptions, Content,
+        [E.Shortcut<Msg>(E.Key.R, E.KeyModifiers.Ctrl, Msg.ResetOptions)]
+      )
+    ];
+  end if;
+
+  return E.Screen<Msg>(
+    Body, Layers, [
+      E.Shortcut<Msg>(E.Key.R, E.KeyModifiers.Ctrl, Msg.Refresh),
+      E.Shortcut<Msg>(E.Key.Q, E.KeyModifiers.Ctrl, Msg.Quit)
+    ]
+  );
+end function;
+
+procedure RequireControl(Frame: App.Frame; Id: string; Focused: bool := false);
+begin
+  for Control: App.ControlSnapshot in Frame.Controls do
+    if Control.Id = Id and (not Focused or Control.Focused) then
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing expected control: ' + Id);
+end procedure;
+
+procedure Demonstrate();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    80,
+    24
+  );
+  RequireControl(Session.Snapshot(), 'filter', true);
+  discard Session.Send(App.Input.Paste('bir' + new string([#13, #10]) + 'ch'));
+  discard Session.Step();
+  if Session.Snapshot().Controls[0].Value <> 'bir ch' then
+    raise new Sys.InvalidOperationException('Paste was not normalized.');
+  end if;
+
+  discard Session.Send(App.Input.KeyPress(E.Key.A, E.KeyModifiers.Ctrl));
+  discard Session.Step();
+  discard Session.Send(App.Input.TextInput('bir'));
+  discard Session.Step();
+  RequireControl(Session.Snapshot(), 'items/Birch');
+  discard Session.Send(App.Input.Activate('options'));
+  discard Session.Step();
+  RequireControl(Session.Snapshot(), 'show-hidden', true);
+  discard Session.Send(App.Input.KeyPress(E.Key.Escape, E.KeyModifiers.None));
+  discard Session.Step();
+  RequireControl(Session.Snapshot(), 'options', true);
+  discard Session.Send(App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
+  discard Session.Step();
+  using const Deadline: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
+    5000
+  );
+  for Index: int := 1 to 4 do
+    if not Session.WaitForWork(Deadline.Token).GetAwaiter().GetResult() then
+      raise new Sys.InvalidOperationException('Missing progress update.');
+    end if;
+
+    discard Session.Step();
+  end for;
+
+  discard Session.Send(App.Input.Resize(53, 17));
+  discard Session.Step();
+  const Frame: App.Frame := Session.Snapshot();
+  if Frame.Columns <> 53 or Frame.Rows <> 17 then
+    raise new Sys.InvalidOperationException('Unexpected frame size.');
+  end if;
+
+  if not Sys.String.Join('', Frame.Lines).Contains('Progress: 100%') then
+    raise new Sys.InvalidOperationException('The last progress message was not displayed.');
+  end if;
+
+  for Line: string in Frame.Lines do
+    Console.WriteLine(Line.TrimEnd());
+  end for;
+end procedure;
+
+begin
+  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
+  if Sys.Array.IndexOf<string>(Arguments, '--headless-control') >= 0 then
+    using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
+      new Model(),
+      Update,
+      View,
+      80,
+      24
+    );
+    while Session.IsOpen() do
+      Threads.Thread.Sleep(20);
+    end while;
+  else
+    if Sys.Array.IndexOf<string>(Arguments, '--headless') >= 0 then
+      Demonstrate();
+    else
+      App.Run<Model, Msg>(new Model(), Update, View);
+    end if;
+  end if;
+end;
+end program;

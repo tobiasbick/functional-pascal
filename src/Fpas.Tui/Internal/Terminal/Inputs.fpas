@@ -1,0 +1,39 @@
+unit Fpas.Tui.Internal.Terminal.Inputs;
+
+uses
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E,
+  Fpas.Processes.Terminal as Terminal, System as Sys;
+
+public function Translate(Event: Terminal.TerminalInput): App.Input?;
+begin
+  case Event.Kind of
+    when 'activate':
+      return App.Input.Activate(Event.Text);
+    when 'resize':
+      return App.Input.Resize(Event.Column, Event.Row);
+    when 'text':
+      return App.Input.TextInput(Event.Text);
+    when 'paste':
+      return App.Input.Paste(Event.Text);
+    when 'click':
+      return App.Input.Click(Event.Column, Event.Row);
+    when 'move':
+      return App.Input.Pointer(E.PointerKind.Move, Event.Column, Event.Row);
+    when 'press':
+      return App.Input.Pointer(E.PointerKind.Press, Event.Column, Event.Row);
+    when 'release':
+      return App.Input.Pointer(E.PointerKind.Release, Event.Column, Event.Row);
+    when 'scroll':
+      return App.Input.Scroll(Event.Column, Event.Row, Event.Delta);
+    when 'key':
+      var Key: E.Key := E.Key.Unknown;
+      if Sys.Enum.TryParse<E.Key>(Event.Key, out Key) then
+        return App.Input.KeyPress(Key, cast<E.KeyModifiers>(Event.Modifiers));
+      end if;
+
+      return null;
+    else
+      return null;
+  end case;
+end function;
+end unit;

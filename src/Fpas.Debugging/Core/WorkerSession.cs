@@ -35,7 +35,7 @@ internal sealed partial class WorkerSession : IAsyncDisposable
             if (stopping || snapshot.State != "created") throw new DebugException("invalid_state", "This worker already owns a launch.");
             Publish(snapshot with { State = "starting" });
             preparation = pending = CoreClrSession.Prepare(target.Dotnet, target.Program, target.Cwd,
-                target.InitialBreakpoint, lifetime.Token, arguments: target.Arguments);
+                target.InitialBreakpoint, lifetime.Token, arguments: target.Arguments, terminal: target.Terminal);
         }
         CoreClrSession prepared;
         try { prepared = await pending; }

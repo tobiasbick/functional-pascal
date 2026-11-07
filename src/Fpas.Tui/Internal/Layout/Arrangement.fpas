@@ -1,0 +1,462 @@
+unit Fpas.Tui.Internal.Layout.Arrangement;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Layout.Measurement as M, Fpas.Tui.Internal.Rendering.Glyphs as G, Fpas.Tui.Internal.Rendering.Drawing as D,
+  System as Sys, System.Collections.Generic as Generic, System.Text as Text;
+
+public type Binding<TMsg> = union
+  Invoke(Message: TMsg);
+  Edit(Value: string; Change: function(string): TMsg);
+  Canvas(Column: int; Row: int; Click: function(int, int): TMsg);
+end union;
+
+public type Control<TMsg> = record
+  public Id: string;
+  public Label: string;
+  public Role: string;
+  public Value: string;
+  public Bounds: F.Rect;
+  public Scope: string;
+  public Enabled: bool;
+  public Action: Binding<TMsg>;
+end record;
+
+public type Scope<TMsg> = record
+  public Id: string;
+  public Initial: string;
+  public Escape: E.EscapeBinding<TMsg>;
+  public Shortcuts: array of E.ShortcutBinding<TMsg>;
+end record;
+
+public type ScrollRegion = record
+  public Id: string;
+  public Scope: string;
+  public Bounds: F.Rect;
+  public Maximum: int;
+end record;
+
+public type AllocationMemo = record
+  public Key: string;
+  public Sizes: array of int;
+end record;
+
+public type Layout<TMsg> = record
+  public Lines: array of string;
+  public Cells: array of E.Cell;
+  public Controls: array of Control<TMsg>;
+  public Active: Scope<TMsg>?;
+  public GlobalKeys: array of E.ShortcutBinding<TMsg>;
+  public Regions: array of ScrollRegion;
+  public Cache: Generic.Dictionary<string, E.CacheEntry<TMsg>>;
+  public Painted: array of D.PaintedRow;
+  public Allocations: array of AllocationMemo;
+end record;
+
+public function Arrange<TMsg>(
+  Root: E.Element<TMsg>; Columns: int; Rows: int;
+  Previous: Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; DefaultStyle: E.Style;
+  Caret: function(string, string): int
+): Layout<TMsg>;
+  function ResolveChildren(Children: array of E.Element<TMsg>): array of E.Element<TMsg>;
+  begin
+    const Result: Generic.List<E.Element<TMsg>> := new Generic.List<E.Element<TMsg>>(
+      Children.Length
+    );
+    for Child: E.Element<TMsg> in Children do
+      Result.Add(Resolve(Child));
+    end for;
+
+    return Result.ToArray();
+  end function;
+
+  function Resolve(Node: E.Element<TMsg>): E.Element<TMsg>;
+  begin
+    case Node of
+      when E.Element.Deferred(
+        const Id: string,
+        const Build: function(E.CacheEntry<TMsg>?): E.CacheEntry<TMsg>
+      ):
+        if Id.Length = 0 or Next.ContainsKey(Id) then
+          raise new Sys.ArgumentException('Subview IDs must be nonempty and unique.');
+        end if;
+        const Old: E.CacheEntry<TMsg>? := if PreviousCache.ContainsKey(
+            Id
+          ) then PreviousCache[Id]
+          else null
+          end if;
+        const Entry: E.CacheEntry<TMsg> := Build(Old);
+        Next.Add(Id, Entry);
+        return Resolve(Entry.Tree);
+      when E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        const Axis: bool,
+        const Rule: E.Flow
+      ):
+        return E.Element<TMsg>.Stack(ResolveChildren(Children), Axis, Rule);
+      when E.Element.Sized(const Child: E.Element<TMsg>, const Rule: E.Flex):
+        return E.Element<TMsg>.Sized(Resolve(Child), Rule);
+      when E.Element.Decorated(const Child: E.Element<TMsg>, const Rule: E.Style):
+        return E.Element<TMsg>.Decorated(Resolve(Child), Rule);
+      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+        return E.Element<TMsg>.Framed(Resolve(Child), Title);
+      when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>):
+        return E.Element<TMsg>.Scrollable(Id, Resolve(Child));
+      when E.Element.Desktop(
+        const Content: E.Element<TMsg>,
+        const Overlays: array of E.Element<TMsg>,
+        const Keys: array of E.ShortcutBinding<TMsg>
+      ):
+        return E.Element<TMsg>.Desktop(Resolve(Content), ResolveChildren(Overlays), Keys);
+      when E.Element.Layer(
+        const Id: string,
+        const Modal: bool,
+        const First: string,
+        const Escape: E.EscapeBinding<TMsg>,
+        const Content: E.Element<TMsg>,
+        const Keys: array of E.ShortcutBinding<TMsg>
+      ):
+        return E.Element<TMsg>.Layer(Id, Modal, First, Escape, Resolve(Content), Keys);
+      when E.Element.Label(_), E.Element.Action(
+        _,
+        _,
+        _,
+        _,
+        _,
+        _
+      ), E.Element.Editor(_, _, _), E.Element.Choices(_, _), E.Element.Gauge(_), E.Element.Custom(
+        _,
+        _,
+        _,
+        _
+      ):
+        return Node;
+    end case;
+  end function;
+
+  procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: E.Style; Wrap: bool);
+  begin
+    if Value.Length > 0 then
+      Operations.Add(new D.Operation(Value, Area, Clip, Style, Wrap));
+    end if;
+  end procedure;
+
+  procedure Put(Column: int; Row: int; Value: string; Style: E.Style; Clip: F.Rect);
+  begin
+    const Glyph: string := G.Sanitize(Value);
+    Draw(Glyph, new F.Rect(Column, Row, G.Width(Glyph), 1), Clip, Style, false);
+  end procedure;
+
+  procedure Register(
+    Id: string; Label: string; Role: string; Value: string;
+    Area: F.Rect; ScopeId: string; Enabled: bool; Action: Binding<TMsg>
+  );
+  begin
+    if Id.Length = 0 or not Ids.Add(Id) then
+      raise new Sys.ArgumentException('Control IDs must be nonempty and unique.');
+    end if;
+
+    if Area.Width > 0 and Area.Height > 0 then
+      Controls.Add(new Control<TMsg>(Id, Label, Role, Value, Area, ScopeId, Enabled, Action));
+    end if;
+  end procedure;
+
+  procedure Visit(Node: E.Element<TMsg>; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: E.Style);
+  begin
+    const Clip: F.Rect := F.Intersect(Area, Limit);
+    if Clip.Width = 0 or Clip.Height = 0 then
+      return;
+    end if;
+
+    case Node of
+      when E.Element.Label(const Value: string):
+        Draw(Value, Area, Clip, Style, true);
+      when E.Element.Action(
+        const Id: string, const Caption: string, const Message: TMsg, const Enabled: bool,
+        const Role: string, const Value: string
+      ):
+        Draw(Caption, Area, Clip, Style, false);
+        Register(Id, Caption, Role, Value, Clip, ScopeId, Enabled, Binding<TMsg>.Invoke(Message));
+      when E.Element.Editor(
+        const Id: string,
+        const Value: string,
+        const Change: function(string): TMsg
+      ):
+        const Start: int := G.ViewStart(Value, Caret(Id, Value), Area.Width - 2);
+        Draw('> ' + Value.Substring(Start), Area, Clip, Style, false);
+        Register(Id, Id, 'textbox', Value, Clip, ScopeId, true, Binding<TMsg>.Edit(Value, Change));
+      when E.Element.Choices(const Id: string, const Items: array of E.ListItem<TMsg>):
+        const Max: int := Sys.Math.Max(0, Items.Length - Area.Height);
+        const First: int := Offset(Id, Max);
+        Regions.Add(new ScrollRegion(Id, ScopeId, Clip, Max));
+        for Index: int := First to Sys.Math.Min(Items.Length, First + Area.Height) - 1 do
+          const Item: E.ListItem<TMsg> := Items[Index];
+          const Line: F.Rect := new F.Rect(Area.X, Area.Y + Index - First, Area.Width, 1);
+          const Prefix: string := if Item.Selected then '* ' else '  ' end if;
+          Draw(Prefix + Item.Text, Line, Clip, Style, false);
+          Register(
+            Id + '/' + Item.Key,
+            Item.Text,
+            'listitem',
+            if Item.Selected then 'true' else 'false' end if,
+            F.Intersect(Line, Clip),
+            ScopeId,
+            true,
+            Binding<TMsg>.Invoke(Item.Message)
+          );
+        end for;
+      when E.Element.Gauge(const Percent: int):
+        const Amount: int := Percent * Area.Width div 100;
+        Draw(
+          new string(#35, Amount) + new string(#45, Area.Width - Amount),
+          Area,
+          Clip,
+          Style,
+          false
+        );
+      when E.Element.Sized(const Child: E.Element<TMsg>, _):
+        Visit(Child, Area, Clip, ScopeId, Style);
+      when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: E.Style):
+        Visit(Child, Area, Clip, ScopeId, ChildStyle);
+      when E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        const Axis: bool,
+        const Flow: E.Flow
+      ):
+        VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
+      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+        Draw(
+          '+' + new string(#45, Sys.Math.Max(0, Area.Width - 2)) + '+',
+          Area,
+          Clip,
+          Style,
+          false
+        );
+        Draw(
+          Title,
+          new F.Rect(Area.X + 1, Area.Y, Sys.Math.Max(0, Area.Width - 2), 1),
+          Clip,
+          Style,
+          false
+        );
+        for Y: int := Clip.Y + 1 to Clip.Y + Clip.Height - 2 do
+          Put(Area.X, Y, '|', Style, Clip);
+          Put(Area.X + Area.Width - 1, Y, '|', Style, Clip);
+        end for;
+
+        Draw(
+          '+' + new string(#45, Sys.Math.Max(0, Area.Width - 2)) + '+',
+          new F.Rect(Area.X, Area.Y + Area.Height - 1, Area.Width, 1), Clip, Style, false
+        );
+        Visit(
+          Child, new F.Rect(
+            Area.X + 1, Area.Y + 1, Sys.Math.Max(0, Area.Width - 2),
+            Sys.Math.Max(0, Area.Height - 2)
+          ), Clip, ScopeId, Style
+        );
+      when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>):
+        const Height: int := Sys.Math.Max(Area.Height, M.Intrinsic<TMsg>(Child, false));
+        const Max: int := Height - Area.Height;
+        Regions.Add(new ScrollRegion(Id, ScopeId, Clip, Max));
+        Visit(
+          Child,
+          new F.Rect(Area.X, Area.Y - Offset(Id, Max), Area.Width, Height),
+          Clip,
+          ScopeId,
+          Style
+        );
+      when E.Element.Custom(
+        const Width: int, const Height: int, const DrawCell: function(int, int): E.Cell,
+        const Action: E.CanvasBinding<TMsg>
+      ):
+        const CanvasArea: F.Rect := F.Intersect(Clip, new F.Rect(Area.X, Area.Y, Width, Height));
+        case Action of
+          when E.CanvasBinding.Click(const Id: string, const Click: function(int, int): TMsg):
+            Register(
+              Id,
+              Id,
+              'canvas',
+              '',
+              CanvasArea,
+              ScopeId,
+              true,
+              Binding<TMsg>.Canvas(Area.X, Area.Y, Click)
+            );
+          when E.CanvasBinding.None:
+        end case;
+
+        for Y: int := CanvasArea.Y to CanvasArea.Y + CanvasArea.Height - 1 do
+          var X: int := CanvasArea.X;
+          while X < CanvasArea.X + CanvasArea.Width do
+            const Cell: E.Cell := DrawCell(X - Area.X, Y - Area.Y);
+            const Glyph: string := G.Sanitize(Cell.Text);
+            Put(X, Y, Glyph, Cell.Style, CanvasArea);
+            X := X + G.Width(Glyph);
+          end while;
+        end for;
+      when E.Element.Desktop(
+        const Content: E.Element<TMsg>, const Overlays: array of E.Element<TMsg>,
+        const Keys: array of E.ShortcutBinding<TMsg>
+      ):
+        GlobalKeys := Keys;
+        Visit(Content, Area, Clip, ScopeId, Style);
+        for Layer: E.Element<TMsg> in Overlays do
+          Visit(Layer, Area, Clip, ScopeId, Style);
+        end for;
+      when E.Element.Layer(
+        const Id: string,
+        const Modal: bool,
+        const Initial: string,
+        const Escape: E.EscapeBinding<TMsg>,
+        const Content: E.Element<TMsg>,
+        const Keys: array of E.ShortcutBinding<TMsg>
+      ):
+        if Modal then
+          Active := new Scope<TMsg>(Id, Initial, Escape, Keys);
+        end if;
+        const Width: int := Sys.Math.Min(Area.Width, M.Intrinsic<TMsg>(Content, true));
+        const Height: int := Sys.Math.Min(Area.Height, M.Intrinsic<TMsg>(Content, false));
+        const Bounds: F.Rect := new F.Rect(
+          Area.X + (Area.Width - Width) div 2,
+          Area.Y + (Area.Height - Height) div 2,
+          Width,
+          Height
+        );
+        const Visible: F.Rect := F.Intersect(Bounds, Clip);
+        for Y: int := Visible.Y to Visible.Y + Visible.Height - 1 do
+          Draw(
+            new string(#32, Visible.Width),
+            new F.Rect(Visible.X, Y, Visible.Width, 1),
+            Visible,
+            Style,
+            false
+          );
+        end for;
+
+        Visit(Content, Bounds, Visible, if Modal then Id else ScopeId end if, Style);
+      when E.Element.Deferred(_, _):
+        raise new Sys.InvalidOperationException('Unresolved cached subview.');
+    end case;
+  end procedure;
+
+  function Offset(Id: string; Maximum: int): int;
+  begin
+    if Scroll.ContainsKey(Id) then
+      return Sys.Math.Clamp(Scroll[Id], 0, Maximum);
+    end if;
+
+    return 0;
+  end function;
+
+  procedure VisitStack(
+    Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow;
+    Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: E.Style
+  );
+  begin
+    if Flow.Padding < 0 or Flow.Gap < 0 then
+      raise new Sys.ArgumentException('Invalid layout spacing.');
+    end if;
+    const Space: F.Rect := new F.Rect(
+      Area.X + Flow.Padding,
+      Area.Y + Flow.Padding,
+      Sys.Math.Max(0, Area.Width - 2 * Flow.Padding),
+      Sys.Math.Max(0, Area.Height - 2 * Flow.Padding)
+    );
+    const Main: int := if Axis then Space.Width else Space.Height end if;
+    const Cross: int := if Axis then Space.Height else Space.Width end if;
+    const Sizes: array of int := new int[Children.Length];
+    const Rules: Generic.List<E.Flex> := new Generic.List<E.Flex>(Children.Length);
+    for Index: int := 0 to Children.Length - 1 do
+      const Child: E.Element<TMsg> := Children[Index];
+      Sizes[Index] := M.Intrinsic<TMsg>(Child, Axis);
+      case Child of
+        when E.Element.Sized(_, const Rule: E.Flex):
+          Rules.Add(Rule);
+        else
+          Rules.Add(new E.Flex());
+      end case;
+    end for;
+    const Allocation: array of int := Allocate(
+      Sizes, Rules.ToArray(),
+      Sys.Math.Max(0, Main - Sys.Math.Max(0, Children.Length - 1) * Flow.Gap)
+    );
+    var Offset: int := 0;
+    for Index: int := 0 to Children.Length - 1 do
+      const Child: E.Element<TMsg> := Children[Index];
+      const Span: int := Allocation[Index];
+      const ChildCross: int := if Flow.Align = E.Alignment.Stretch then Cross
+        else Sys.Math.Min(
+          Cross,
+          M.Intrinsic<TMsg>(Child, not Axis)
+        )
+        end if;
+      const CrossOffset: int := case Flow.Align of
+        when E.Alignment.Center: (Cross - ChildCross) div 2;
+        when E.Alignment.End: Cross - ChildCross;
+        else 0;
+      end case;
+      const Bounds: F.Rect := if Axis then new F.Rect(
+          Space.X + Offset,
+          Space.Y + CrossOffset,
+          Span,
+          ChildCross
+        )
+        else new F.Rect(Space.X + CrossOffset, Space.Y + Offset, ChildCross, Span)
+        end if;
+      Visit(Child, Bounds, Clip, ScopeId, Style);
+      Offset := Offset + Span + Flow.Gap;
+    end for;
+  end procedure;
+  function Allocate(Preferred: array of int; Rules: array of E.Flex; Available: int): array of int;
+  begin
+    const Signature: Text.StringBuilder := new Text.StringBuilder();
+    discard Signature.Append(Available);
+    for Index: int := 0 to Preferred.Length - 1 do
+      const Rule: E.Flex := Rules[Index];
+      discard Signature.Append('/').Append(
+        Preferred[Index]
+      ).Append('/').Append(
+        Rule.Basis
+      ).Append('/').Append(
+        Rule.Minimum
+      ).Append('/').Append(
+        Rule.Maximum
+      ).Append('/').Append(Rule.Grow).Append('/').Append(Rule.Shrink);
+    end for;
+    const Key: string := Signature.ToString();
+    const Index: int := Allocations.Count;
+    const Old: Layout<TMsg>? := Previous;
+    if Old <> null and Index < Old.Allocations.Length and Old.Allocations[Index].Key = Key then
+      const Reused: AllocationMemo := Old.Allocations[Index];
+      Allocations.Add(Reused);
+      return Reused.Sizes;
+    end if;
+    const Sizes: array of int := F.Allocate(Preferred, Rules, Available);
+    Allocations.Add(new AllocationMemo(Key, Sizes));
+    return Sizes;
+  end function;
+begin
+  const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
+  const Allocations: Generic.List<AllocationMemo> := new Generic.List<AllocationMemo>();
+  const Controls: Generic.List<Control<TMsg>> := new Generic.List<Control<TMsg>>();
+  const Regions: Generic.List<ScrollRegion> := new Generic.List<ScrollRegion>();
+  const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
+  const Next: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
+  const PreviousCache: Generic.Dictionary<string, E.CacheEntry<TMsg>> := if Previous =
+      null then new Generic.Dictionary<string, E.CacheEntry<TMsg>>()
+    else Previous.Cache
+    end if;
+  var Active: Scope<TMsg>? := null;
+  var GlobalKeys: array of E.ShortcutBinding<TMsg> := [];
+  const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
+  Visit(Resolve(Root), Screen, Screen, '', DefaultStyle);
+  const PreviousRows: array of D.PaintedRow := if Previous = null then []
+    else Previous.Painted
+    end if;
+  const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, DefaultStyle);
+  return new Layout<TMsg>(
+    Surface.Lines, Surface.Cells, Controls.ToArray(), Active, GlobalKeys, Regions.ToArray(),
+    Next, Surface.Rows, Allocations.ToArray()
+  );
+end function;
+end unit;

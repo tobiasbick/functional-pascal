@@ -1,0 +1,96 @@
+using System.Buffers.Binary;
+using System.Diagnostics;
+using System.IO.Pipes;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Fpas.IntegrationTests.Debugging;
+using Fpas.Workspaces.Processes;
+
+namespace Fpas.IntegrationTests.Tui;
+
+public sealed class HeadlessTuiTests
+{
+    [Fact]
+    public async Task Headless_host_preserves_scheduling_focus_and_frame_contracts()
+    {
+        using var program = new Debuggee("headless-tui");
+        await TuiFixture.Compile(program, "headless.fpas");
+        Assert.Equal("headless contracts verified\n", await program.Run());
+    }
+
+    [Fact]
+    public async Task Headless_example_can_be_inspected_and_stepped_over_the_control_pipe()
+    {
+        using var program = new Debuggee("headless-control");
+        await TuiFixture.Compile(program, "example.fpas");
+        var name = "fpas-tui-" + Guid.NewGuid().ToString("N");
+        await using var pipe = new NamedPipeServerStream(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        var start = new ProcessStartInfo(BuildProcess.DotnetHost()) { WorkingDirectory = program.DirectoryPath };
+        start.ArgumentList.Add(program.Assembly);
+        start.ArgumentList.Add("--headless-control");
+        start.Environment["FPAS_TUI_CONTROL_PIPE"] = name;
+        using var process = Process.Start(start)!;
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        var token = deadline.Token;
+        var sequence = 0;
+        try
+        {
+            await pipe.WaitForConnectionAsync(token);
+            var first = await Request("snapshot");
+            var initialId = first.GetProperty("id").GetInt64();
+            Assert.Equal(80, first.GetProperty("columns").GetInt32());
+            var queued = await Request("send", new() { ["input"] = new JsonObject { ["kind"] = "text", ["text"] = "bir" } });
+            Assert.Equal("queued", Status(queued));
+            var wait = new JsonObject { ["inputId"] = queued.GetProperty("inputId").GetInt64(), ["timeoutMs"] = 0 };
+            Assert.Equal("timeout", Status(await Request("wait", wait)));
+            Assert.Equal(initialId, (await Request("snapshot")).GetProperty("id").GetInt64());
+            Assert.Equal("presented", Status(await Request("step")));
+            Assert.Equal("presented", Status(await Request("wait", wait)));
+            Assert.Equal("queued", Status(await Request("resize", new() { ["columns"] = 53, ["rows"] = 17 })));
+            Assert.Equal("presented", Status(await Request("step")));
+            var resized = await Request("snapshot");
+            Assert.Equal(53, resized.GetProperty("columns").GetInt32());
+            Assert.Equal(17, resized.GetProperty("rows").GetInt32());
+            Assert.Contains(resized.GetProperty("controls").EnumerateArray(), item => item.GetProperty("id").GetString() == "items/Birch");
+            Assert.Equal("queued", Status(await Request("send", new() { ["input"] = new JsonObject { ["kind"] = "activate", ["control"] = "quit" } })));
+            Assert.Equal("unchanged", Status(await Request("step")));
+            await process.WaitForExitAsync(token);
+            Assert.Equal(0, process.ExitCode);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+                await process.WaitForExitAsync();
+            }
+        }
+
+        async Task<JsonElement> Request(string operation, JsonObject? arguments = null)
+        {
+            var request = arguments?.DeepClone().AsObject() ?? new JsonObject();
+            request["operation"] = operation;
+            request["id"] = ++sequence;
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(request);
+            var header = new byte[4];
+            BinaryPrimitives.WriteInt32BigEndian(header, bytes.Length);
+            await pipe.WriteAsync(header, token);
+            await pipe.WriteAsync(bytes, token);
+            while (true)
+            {
+                await pipe.ReadExactlyAsync(header, token);
+                var length = BinaryPrimitives.ReadInt32BigEndian(header);
+                Assert.InRange(length, 1, 16_777_216);
+                var body = new byte[length];
+                await pipe.ReadExactlyAsync(body, token);
+                using var message = JsonDocument.Parse(body);
+                if (message.RootElement.GetProperty("kind").GetString() != "reply") continue;
+                Assert.Equal(sequence, message.RootElement.GetProperty("id").GetInt32());
+                return message.RootElement.GetProperty("result").Clone();
+            }
+        }
+
+        static string? Status(JsonElement result) => result.GetProperty("status").GetString();
+    }
+}

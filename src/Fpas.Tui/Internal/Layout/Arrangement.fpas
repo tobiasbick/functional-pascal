@@ -55,7 +55,7 @@ end record;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
-  Previous: Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; DefaultStyle: E.Style;
+  Previous: Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: E.Theme;
   Caret: function(string, string): int
 ): Layout<TMsg>;
   function ResolveChildren(Children: array of E.Element<TMsg>): array of E.Element<TMsg>;
@@ -175,7 +175,12 @@ public function Arrange<TMsg>(
         const Id: string, const Caption: string, const Message: TMsg, const Enabled: bool,
         const Role: string, const Value: string
       ):
-        Draw(Caption, Area, Clip, Style, false);
+        const Display: string := if Role = 'button' then if Widgets = null then '[' + Caption + ']'
+            else ' ' + Caption + ' '
+            end if
+          else Caption
+          end if;
+        Draw(Display, Area, Clip, Style, false);
         Register(Id, Caption, Role, Value, Clip, ScopeId, Enabled, Binding<TMsg>.Invoke(Message));
       when E.Element.Editor(
         const Id: string,
@@ -183,7 +188,13 @@ public function Arrange<TMsg>(
         const Change: function(string): TMsg
       ):
         const Start: int := G.ViewStart(Value, Caret(Id, Value), Area.Width - 2);
-        Draw('> ' + Value.Substring(Start), Area, Clip, Style, false);
+        const Field: E.Style := if Widgets = null then Style else Widgets.Field end if;
+        const Prompt: string := if Widgets = null then '> ' else '› ' end if;
+        if Widgets <> null then
+          D.Fill(Operations, Clip, Field);
+        end if;
+
+        Draw(Prompt + Value.Substring(Start), Area, Clip, Field, false);
         Register(Id, Id, 'textbox', Value, Clip, ScopeId, true, Binding<TMsg>.Edit(Value, Change));
       when E.Element.Choices(const Id: string, const Items: array of E.ListItem<TMsg>):
         const Max: int := Sys.Math.Max(0, Items.Length - Area.Height);
@@ -192,8 +203,17 @@ public function Arrange<TMsg>(
         for Index: int := First to Sys.Math.Min(Items.Length, First + Area.Height) - 1 do
           const Item: E.ListItem<TMsg> := Items[Index];
           const Line: F.Rect := new F.Rect(Area.X, Area.Y + Index - First, Area.Width, 1);
-          const Prefix: string := if Item.Selected then '* ' else '  ' end if;
-          Draw(Prefix + Item.Text, Line, Clip, Style, false);
+          var RowStyle: E.Style := Style;
+          var Prefix: string := '  ';
+          if Item.Selected then
+            Prefix := if Widgets = null then '* ' else '▸ ' end if;
+            if Widgets <> null then
+              RowStyle := Widgets.Selected;
+              D.Fill(Operations, F.Intersect(Line, Clip), RowStyle);
+            end if;
+          end if;
+
+          Draw(Prefix + Item.Text, Line, Clip, RowStyle, false);
           Register(
             Id + '/' + Item.Key,
             Item.Text,
@@ -206,17 +226,14 @@ public function Arrange<TMsg>(
           );
         end for;
       when E.Element.Gauge(const Percent: int):
-        const Amount: int := Percent * Area.Width div 100;
-        Draw(
-          new string(#35, Amount) + new string(#45, Area.Width - Amount),
-          Area,
-          Clip,
-          Style,
-          false
-        );
+        D.Progress(Operations, Area, Clip, Percent, Style, Widgets);
       when E.Element.Sized(const Child: E.Element<TMsg>, _):
         Visit(Child, Area, Clip, ScopeId, Style);
       when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: E.Style):
+        if ChildStyle.Background >= 0 and ChildStyle.Background <> Style.Background then
+          D.Fill(Operations, Clip, ChildStyle);
+        end if;
+
         Visit(Child, Area, Clip, ScopeId, ChildStyle);
       when E.Element.Stack(
         const Children: array of E.Element<TMsg>,
@@ -225,29 +242,10 @@ public function Arrange<TMsg>(
       ):
         VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
       when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
-        Draw(
-          '+' + new string(#45, Sys.Math.Max(0, Area.Width - 2)) + '+',
-          Area,
-          Clip,
-          Style,
-          false
-        );
-        Draw(
-          Title,
-          new F.Rect(Area.X + 1, Area.Y, Sys.Math.Max(0, Area.Width - 2), 1),
-          Clip,
-          Style,
-          false
-        );
-        for Y: int := Clip.Y + 1 to Clip.Y + Clip.Height - 2 do
-          Put(Area.X, Y, '|', Style, Clip);
-          Put(Area.X + Area.Width - 1, Y, '|', Style, Clip);
-        end for;
-
-        Draw(
-          '+' + new string(#45, Sys.Math.Max(0, Area.Width - 2)) + '+',
-          new F.Rect(Area.X, Area.Y + Area.Height - 1, Area.Width, 1), Clip, Style, false
-        );
+        const Edge: E.Style := if Widgets = null then Style
+          else new E.Style(Widgets.BorderColor, Style.Background)
+          end if;
+        D.Border(Operations, Area, Clip, Title, Edge, Widgets <> null);
         Visit(
           Child, new F.Rect(
             Area.X + 1, Area.Y + 1, Sys.Math.Max(0, Area.Width - 2),
@@ -323,15 +321,7 @@ public function Arrange<TMsg>(
           Height
         );
         const Visible: F.Rect := F.Intersect(Bounds, Clip);
-        for Y: int := Visible.Y to Visible.Y + Visible.Height - 1 do
-          Draw(
-            new string(#32, Visible.Width),
-            new F.Rect(Visible.X, Y, Visible.Width, 1),
-            Visible,
-            Style,
-            false
-          );
-        end for;
+        D.Fill(Operations, Visible, Style);
 
         Visit(Content, Bounds, Visible, if Modal then Id else ScopeId end if, Style);
       when E.Element.Deferred(_, _):
@@ -436,6 +426,7 @@ public function Arrange<TMsg>(
     return Sizes;
   end function;
 begin
+  const Widgets: E.WidgetStyles? := Theme.Widgets;
   const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
   const Allocations: Generic.List<AllocationMemo> := new Generic.List<AllocationMemo>();
   const Controls: Generic.List<Control<TMsg>> := new Generic.List<Control<TMsg>>();
@@ -449,11 +440,11 @@ begin
   var Active: Scope<TMsg>? := null;
   var GlobalKeys: array of E.ShortcutBinding<TMsg> := [];
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
-  Visit(Resolve(Root), Screen, Screen, '', DefaultStyle);
+  Visit(Resolve(Root), Screen, Screen, '', Theme.Text);
   const PreviousRows: array of D.PaintedRow := if Previous = null then []
     else Previous.Painted
     end if;
-  const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, DefaultStyle);
+  const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, Theme.Text);
   return new Layout<TMsg>(
     Surface.Lines, Surface.Cells, Controls.ToArray(), Active, GlobalKeys, Regions.ToArray(),
     Next, Surface.Rows, Allocations.ToArray()

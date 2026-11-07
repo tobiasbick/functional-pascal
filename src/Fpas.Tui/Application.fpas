@@ -165,11 +165,31 @@ public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
   View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Theme: E.Theme
 ): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): E.Theme => Theme
+  );
+end function;
+
+/// Resolves the theme from the current model before laying out each frame.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): E.Theme
+): HeadlessSession;
   procedure Present(Value: Frame);
   begin
   end procedure;
 begin
-  return Host.Start<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, Present, true, Theme);
+  return Host.Start<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Columns,
+    Rows,
+    Present,
+    true,
+    ThemeFor
+  );
 end function;
 
 /// Runs the application on the current terminal and restores terminal modes on exit.
@@ -192,6 +212,15 @@ end function;
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>; View: function(TModel): E.Element<TMsg>; Theme: E.Theme
 );
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): E.Theme => Theme);
+end procedure;
+
+/// Resolves the theme from the current model before drawing each terminal frame.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel): E.Element<TMsg>; ThemeFor: function(TModel): E.Theme
+);
   procedure Present(Value: Frame);
   begin
     Write(Value.Columns, Value.Rows, Value.Cells);
@@ -207,7 +236,7 @@ begin
     Device.Rows,
     Present,
     false,
-    Theme
+    ThemeFor
   );
   var Pending: Input? := null;
   while Session.IsOpen() do

@@ -370,6 +370,50 @@ begin
   end if;
 end procedure;
 
+procedure CheckLiveTheme();
+  function UpdateTheme(State: bool; Message: bool): App.Transition<bool, bool>;
+  begin
+    return new App.Transition<bool, bool>(Message, []);
+  end function;
+
+  function ThemeFor(State: bool): E.Theme;
+  begin
+    const Background: int := if State then $39566C else $102030 end if;
+    return new E.Theme(Text := new E.Style(Foreground := $D0E2F5, Background := Background));
+  end function;
+
+  function StableView(State: bool): E.Element<bool>;
+  begin
+    return E.Column<bool>(
+      E.Styled<bool>(
+        E.Button<bool>('theme', 'Change color', true),
+        new E.Style(Foreground := $E0ECF5)
+      )
+    );
+  end function;
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<bool, bool>(
+    false, UpdateTheme, StableView, 20, 5, ThemeFor
+  );
+  const Original: App.Frame := Session.Snapshot();
+  Turn(Session, App.Input.Activate('theme'));
+  const Recolored: App.Frame := Session.Snapshot();
+  const Last: int := Recolored.Cells.Length - 1;
+  if Recolored.Id <= Original.Id or Original.Cells[Last].Style.Background <> $102030
+    or Recolored.Cells[Last].Style.Background <> $39566C
+  then
+    raise new Sys.InvalidOperationException('The custom theme did not repaint unchanged rows.');
+  end if;
+
+  ExpectFocus(Session, 'theme');
+  Turn(Session, App.Input.Activate('theme'));
+  if Session.Snapshot().Id <> Recolored.Id then
+    raise new Sys.InvalidOperationException(
+      'Equivalent theme colors should preserve the current frame.'
+    );
+  end if;
+end procedure;
+
 begin
   CheckCancellation();
   CheckQueue();
@@ -378,6 +422,7 @@ begin
   CheckCanvas();
   CheckOverlay();
   CheckReuse();
+  CheckLiveTheme();
   Console.WriteLine('headless contracts verified');
 end;
 end program;

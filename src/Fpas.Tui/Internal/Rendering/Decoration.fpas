@@ -17,7 +17,12 @@ public procedure Apply<TMsg>(
     end if;
   end procedure;
 begin
-  const Style: E.Style := if Focused then Theme.Focus else Theme.Hover end if;
+  const Widgets: E.WidgetStyles? := Theme.Widgets;
+  const Style: E.Style := if not Focused then Theme.Hover
+    else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField
+      else Theme.Focus
+      end if
+    end if;
   const Bounds: F.Rect := Control.Bounds;
   for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do

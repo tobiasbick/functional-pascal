@@ -12,10 +12,10 @@ public sealed class ConsoleTerminal : IDisposable
 {
     private const string EnterScreen = "\x1b[?1049h\x1b[?7l\x1b[?25l\x1b[?1003h\x1b[?1006h\x1b[?2004h";
     private const string LeaveScreen = "\x1b[0m\x1b[?2004l\x1b[?1006l\x1b[?1003l\x1b[?25h\x1b[?7h\x1b[?1049l";
-    private readonly Stream output = Console.OpenStandardOutput();
+    private readonly Stream? output;
     private readonly byte[]? previousUnixMode;
     private readonly uint previousInputMode, previousOutputMode;
-    private readonly nint inputHandle;
+    private readonly nint inputHandle, outputHandle;
     private readonly SafeFileHandle? outputModeHandle;
     private readonly VtInput decoder = new();
     private readonly byte[] bytes = new byte[4096];
@@ -33,7 +33,7 @@ public sealed class ConsoleTerminal : IDisposable
         if (OperatingSystem.IsWindows())
         {
             inputHandle = GetStdHandle(-10);
-            var outputHandle = GetStdHandle(-11);
+            outputHandle = GetStdHandle(-11);
             Check(GetConsoleMode(inputHandle, out previousInputMode));
             Check(GetConsoleMode(outputHandle, out previousOutputMode));
             // Keep a handle to the original screen buffer if stdout becomes unusable.
@@ -62,10 +62,19 @@ public sealed class ConsoleTerminal : IDisposable
         }
         else throw new PlatformNotSupportedException("Interactive TUI supports Windows and Linux.");
 
-        try { _ = ReadSize(); Write(EnterScreen); }
+        try
+        {
+            if (OperatingSystem.IsLinux()) output = Console.OpenStandardOutput();
+            _ = ReadSize();
+            Write(EnterScreen);
+        }
         catch
         {
-            try { Dispose(); }
+            try
+            {
+                if (OperatingSystem.IsWindows() || output is not null) Dispose();
+                else Restore();
+            }
             catch (IOException) { }
             throw;
         }
@@ -73,18 +82,35 @@ public sealed class ConsoleTerminal : IDisposable
 
     public void Write(string text)
     {
-        var utf8 = Encoding.UTF8.GetBytes(text);
         outputFailed = true;
         try
         {
-            output.Write(utf8);
-            output.Flush();
+            if (output is { } stream)
+            {
+                stream.Write(Encoding.UTF8.GetBytes(text));
+                stream.Flush();
+            }
+            else WriteWindows(text);
         }
         catch (UnauthorizedAccessException failure)
         {
             throw new IOException(failure.Message, failure);
         }
         outputFailed = false;
+    }
+
+    private void WriteWindows(string text)
+    {
+        // Write UTF-16 directly so glyphs and VT sequences reach the screen on any code page.
+        for (var offset = 0; offset < text.Length;)
+        {
+            var count = Math.Min(16_384, text.Length - offset);
+            if (offset + count < text.Length && char.IsHighSurrogate(text[offset + count - 1])) count--;
+            if (!WriteConsole(outputHandle, text.Substring(offset, count), count, out var written, 0))
+                throw new IOException("Terminal output write failed.", new Win32Exception(Marshal.GetLastPInvokeError()));
+            if (written <= 0) throw new IOException("Terminal output write made no progress.");
+            offset += written;
+        }
     }
 
     public TerminalInput? Poll(int milliseconds)
@@ -181,7 +207,7 @@ public sealed class ConsoleTerminal : IDisposable
         var recovering = outputFailed;
         try { Write(LeaveScreen); }
         catch (IOException) when (recovering) { } // Preserve the earlier presentation error.
-        finally { Restore(); output.Dispose(); }
+        finally { Restore(); output?.Dispose(); }
     }
 
     private void Restore()
@@ -225,6 +251,8 @@ public sealed class ConsoleTerminal : IDisposable
     private static extern bool DuplicateHandle(nint sourceProcess, nint source, nint targetProcess, out SafeFileHandle target, uint access, bool inherit, uint options);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetConsoleMode(nint console, out uint mode);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetConsoleMode(nint console, uint mode);
+    [DllImport("kernel32.dll", EntryPoint = "WriteConsoleW", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool WriteConsole(nint console, string buffer, int length, out int written, nint reserved);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(nint handle, uint milliseconds);
     [DllImport("kernel32.dll", EntryPoint = "ReadConsoleInputW", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ReadConsoleInput(nint console, out InputRecord record, uint length, out uint count);

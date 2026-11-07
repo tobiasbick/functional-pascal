@@ -1,0 +1,123 @@
+unit Fpas.Tui.Themes;
+
+uses Fpas.Tui.Elements as E;
+
+public type Palette = record
+  public Theme: E.Theme;
+  public Heading: E.Style;
+  public Panel: E.Style;
+  public Muted: E.Style;
+  public Primary: E.Style;
+  public Secondary: E.Style;
+  public Error: E.Style;
+end record;
+
+type Swatches = record
+  public Canvas: int;
+  public Panel: int;
+  public Text: int;
+  public Heading: int;
+  public Muted: int;
+  public Accent: int;
+  public AccentText: int;
+  public Hover: int;
+  public Border: int;
+  public Field: int;
+  public FocusedField: int;
+  public Selection: int;
+  public SelectionText: int;
+  public Track: int;
+  public Secondary: int;
+  public Error: int;
+end record;
+
+function Create(Colors: Swatches): Palette;
+begin
+  const Focus: E.Style := new E.Style(Colors.AccentText, Colors.Accent);
+  const Theme: E.Theme := new E.Theme(
+    Text := new E.Style(Colors.Text, Colors.Canvas),
+    Focus := Focus,
+    Hover := new E.Style(Colors.Text, Colors.Hover),
+    Caret := Focus,
+    Widgets := new E.WidgetStyles(
+      BorderColor := Colors.Border,
+      Field := new E.Style(Colors.Text, Colors.Field),
+      FocusedField := new E.Style(Colors.Text, Colors.FocusedField),
+      Selected := new E.Style(Colors.SelectionText, Colors.Selection),
+      ProgressFillColor := Colors.Accent,
+      ProgressTrackColor := Colors.Track
+    )
+  );
+  return new Palette(
+    Theme, new E.Style(Colors.Heading, Colors.Canvas), new E.Style(Colors.Text, Colors.Panel),
+    new E.Style(Colors.Muted, Colors.Canvas), Focus, new E.Style(Colors.Text, Colors.Secondary),
+    new E.Style(Colors.Error, Colors.Canvas)
+  );
+end function;
+
+const LightPalette: Palette := Create(
+  new Swatches(
+    Canvas := $F3F6FA, Panel := $FFFFFF, Text := $213247, Heading := $142134,
+    Muted := $53657A, Accent := $176854, AccentText := $FFFFFF, Hover := $DBE8F2,
+    Border := $71849A, Field := $EAF0F6, FocusedField := $DCEDE7,
+    Selection := $CFE8DE, SelectionText := $164C3F, Track := $788DA2,
+    Secondary := $E3EBF4, Error := $A62B2B
+  )
+);
+
+const DarkPalette: Palette := Create(
+  new Swatches(
+    Canvas := $141C28, Panel := $1B2736, Text := $E4EDF7, Heading := $F5F8FC,
+    Muted := $A2B5C9, Accent := $8CE2C1, AccentText := $10251F, Hover := $34475A,
+    Border := $5A748F, Field := $202E3E, FocusedField := $203B40,
+    Selection := $2C454B, SelectionText := $BAF1D8, Track := $56708A,
+    Secondary := $29394C, Error := $FFABAA
+  )
+);
+
+const GreenPalette: Palette := Create(
+  new Swatches(
+    Canvas := $101A15, Panel := $18261D, Text := $DDF3E1, Heading := $EEFFF2,
+    Muted := $A4BAA7, Accent := $A6E36F, AccentText := $142512, Hover := $314733,
+    Border := $5E8063, Field := $203024, FocusedField := $304A36,
+    Selection := $354B2C, SelectionText := $D2F5AC, Track := $62795A,
+    Secondary := $293C2C, Error := $FFABA2
+  )
+);
+
+const BluePalette: Palette := Create(
+  new Swatches(
+    Canvas := $121B32, Panel := $1B2844, Text := $E2EAFB, Heading := $F2F6FF,
+    Muted := $A3B5D3, Accent := $9BC6FF, AccentText := $14254A, Hover := $364D77,
+    Border := $647DAA, Field := $223151, FocusedField := $2A416A,
+    Selection := $334D78, SelectionText := $D4E6FF, Track := $5A739C,
+    Secondary := $2B3B5E, Error := $FFB1B9
+  )
+);
+
+public function Light(): Palette;
+begin
+  return LightPalette;
+end function;
+
+public function Dark(): Palette;
+begin
+  return DarkPalette;
+end function;
+
+public function Green(): Palette;
+begin
+  return GreenPalette;
+end function;
+
+public function Blue(): Palette;
+begin
+  return BluePalette;
+end function;
+
+/// The original slate palette is also available as Dark.
+public function Slate(): Palette;
+begin
+  return Dark();
+end function;
+end unit;

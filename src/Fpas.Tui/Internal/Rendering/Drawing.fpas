@@ -15,6 +15,7 @@ end record;
 
 public type PaintedRow = record
   public Operations: array of Operation;
+  public DefaultStyle: E.Style;
   public Cells: array of E.Cell;
   public Text: string;
 end record;
@@ -24,6 +25,84 @@ public type Surface = record
   public Cells: array of E.Cell;
   public Lines: array of string;
 end record;
+
+public procedure Fill(Operations: Generic.List<Operation>; Area: F.Rect; Style: E.Style);
+begin
+  const Spaces: string := new string(#32, Area.Width);
+  for Row: int := Area.Y to Area.Y + Area.Height - 1 do
+    Operations.Add(
+      new Operation(Spaces, new F.Rect(Area.X, Row, Area.Width, 1), Area, Style, false)
+    );
+  end for;
+end procedure;
+
+public procedure Border(
+  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
+  Style: E.Style; Rounded: bool
+);
+  procedure Line(Value: string; Column: int; Row: int; Width: int);
+  begin
+    Operations.Add(new Operation(Value, new F.Rect(Column, Row, Width, 1), Clip, Style, false));
+  end procedure;
+begin
+  const Edge: char := if Rounded then #9472 else #45 end if;
+  const Vertical: string := if Rounded then '│' else '|' end if;
+  const Inner: int := Sys.Math.Max(0, Area.Width - 2);
+  const Span: string := new string(Edge, Inner);
+  const Top: string := if Rounded then '╭' + Span + '╮' else '+' + Span + '+' end if;
+  Line(Top, Area.X, Area.Y, Area.Width);
+  if Title.Length > 0 and Inner > 0 then
+    Line(if Rounded then ' ' + Title + ' ' else Title end if, Area.X + 1, Area.Y, Inner);
+  end if;
+
+  for Row: int := Sys.Math.Max(Clip.Y, Area.Y + 1) to Sys.Math.Min(
+    Clip.Y + Clip.Height - 1, Area.Y + Area.Height - 2
+  ) do
+    Line(Vertical, Area.X, Row, 1);
+    if Area.Width > 1 then
+      Line(Vertical, Area.X + Area.Width - 1, Row, 1);
+    end if;
+  end for;
+
+  if Area.Height > 1 then
+    const Bottom: string := if Rounded then '╰' + Span + '╯' else '+' + Span + '+' end if;
+    Line(Bottom, Area.X, Area.Y + Area.Height - 1, Area.Width);
+  end if;
+end procedure;
+
+public procedure Progress(
+  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Percent: int;
+  Style: E.Style; Widgets: E.WidgetStyles?
+);
+begin
+  const Amount: int := Percent * Area.Width div 100;
+  if Widgets = null then
+    Operations.Add(
+      new Operation(
+        new string(#35, Amount) + new string(#45, Area.Width - Amount), Area, Clip, Style, false
+      )
+    );
+    return;
+  end if;
+
+  if Amount > 0 then
+    Operations.Add(
+      new Operation(
+        new string(#9473, Amount), new F.Rect(Area.X, Area.Y, Amount, 1), Clip,
+        new E.Style(Widgets.ProgressFillColor, Style.Background), false
+      )
+    );
+  end if;
+  const Left: int := Area.Width - Amount;
+  if Left > 0 then
+    Operations.Add(
+      new Operation(
+        new string(#9472, Left), new F.Rect(Area.X + Amount, Area.Y, Left, 1), Clip,
+        new E.Style(Widgets.ProgressTrackColor, Style.Background), false
+      )
+    );
+  end if;
+end procedure;
 
 function Same(Left: array of Operation; Right: array of Operation): bool;
 begin
@@ -118,7 +197,7 @@ begin
     discard Line.Append(Cell.Text);
   end for;
 
-  return new PaintedRow(Operations, Buffer.ToArray(), Line.ToString());
+  return new PaintedRow(Operations, Blank.Style, Buffer.ToArray(), Line.ToString());
 end function;
 
 public function Render(
@@ -146,7 +225,10 @@ begin
   for Row: int := 0 to Rows - 1 do
     const Plan: array of Operation := Pending[Row].ToArray();
     const Complete: PaintedRow := if Row < Previous.Length and Previous[Row].Cells.Length = Columns
-        and Same(Plan, Previous[Row].Operations) then Previous[Row]
+        and Previous[Row].DefaultStyle = DefaultStyle and Same(
+        Plan,
+        Previous[Row].Operations
+      ) then Previous[Row]
       else PaintRow(Plan, Columns, Row, Blank)
       end if;
     Painted.Add(Complete);

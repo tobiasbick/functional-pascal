@@ -46,6 +46,30 @@ the scope. Host navigation precedes the focused control's keys, then scoped
 shortcuts, then global shortcuts. Text and paste bypass shortcuts. The
 single-line editor replaces pasted line breaks with spaces.
 
+## Styling
+
+`Fpas.Tui.Themes` supplies `Light()`, `Dark()`, `Green()` and `Blue()`.
+`Dark()` uses the original slate palette, also available as `Slate()`.
+Each preset returns a `Palette`. Its `Theme` controls borders, field focus,
+list selection and progress. Apply the palette's `Panel`, `Heading`, `Muted`,
+`Primary`, `Secondary` and `Error` roles with `Styled`. A different explicit
+background color fills the element's clipped bounds, including padding.
+
+Applications can construct a `Palette` with their own `Theme`, `WidgetStyles`
+and RGB `Style` values. In FPAS, use `with` to change individual roles of a
+preset. Pass a fixed `Theme` to `Run` or `StartHeadless` for a constant look.
+
+To switch at runtime, store the selected palette in the application model and
+pass a `ThemeFor` function from the model to `Theme` to either entry point.
+`Update` can change the palette in response to a user action. The host resolves
+it from the new model for the same frame. Read the palette in `View` for styles
+applied with `Styled`. A cached subview that embeds those styles must include
+its palette or relevant styles among its dependencies.
+
+The application chooses how to load and save theme preferences, including
+preset names and custom RGB colors. The [filter list](../../examples/tui/filter-list/)
+demonstrates a live switch from its Options overlay.
+
 ## Build and inspect
 
 The package contains the TUI library, its terminal adapter and the matching

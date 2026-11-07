@@ -11,8 +11,12 @@ begin
       end if;
 
       return Value.Split(cast<char>(10)).Length;
-    when E.Element.Action(_, const Caption: string, _, _, _, _):
-      return if Horizontal then G.Measure(Caption) else 1 end if;
+    when E.Element.Action(_, const Caption: string, _, _, const Role: string, _):
+      return if Horizontal then G.Measure(
+          Caption
+        ) + (if Role = 'button' then 2 else 0 end if)
+        else 1
+        end if;
     when E.Element.Editor(_, const Value: string, _):
       return if Horizontal then Sys.Math.Max(12, G.Measure(Value) + 2) else 1 end if;
     when E.Element.Choices(_, const Items: array of E.ListItem<TMsg>):

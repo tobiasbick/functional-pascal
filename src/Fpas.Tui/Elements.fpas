@@ -120,11 +120,21 @@ public type Style = record
   public Background: int := -1;
 end record;
 
+public type WidgetStyles = record
+  public BorderColor: int;
+  public Field: Style;
+  public FocusedField: Style;
+  public Selected: Style;
+  public ProgressFillColor: int;
+  public ProgressTrackColor: int;
+end record;
+
 public type Theme = record
   public Text: Style := new Style();
   public Focus: Style := new Style(Foreground := 16777215, Background := 2445729);
   public Hover: Style := new Style(Foreground := 16777215, Background := 3355443);
   public Caret: Style := new Style(Foreground := 0, Background := 16777215);
+  public Widgets: WidgetStyles? := null;
 end record;
 
 public type Cell = record
@@ -168,7 +178,7 @@ end function;
 
 public function Button<TMsg>(Id: string; Text: string; OnActivate: TMsg; Enabled: bool := true): Element<TMsg>;
 begin
-  return Element<TMsg>.Action(Id, '[' + Text + ']', OnActivate, Enabled, 'button', '');
+  return Element<TMsg>.Action(Id, Text, OnActivate, Enabled, 'button', '');
 end function;
 
 public function Column<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;

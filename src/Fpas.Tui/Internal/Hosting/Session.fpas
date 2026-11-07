@@ -25,7 +25,8 @@ end procedure;
 
 public function Start<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
-  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Present: procedure(App.Frame); Manual: bool; Theme: E.Theme
+  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Present: procedure(App.Frame); Manual: bool;
+  ThemeFor: function(TModel): E.Theme
 ): App.HeadlessSession;
   function IsOpen(): bool;
   begin
@@ -256,10 +257,11 @@ public function Start<TModel, TMsg>(
     end if;
 
     Phase := 'view';
+    const Theme: E.Theme := ThemeFor(Model);
     const Root: E.Element<TMsg> := View(Model);
     Phase := 'layout_or_drawing';
     const Layout: A.Layout<TMsg> := A.Arrange<TMsg>(
-      Root, Width, Height, Current, ScrollOffsets, Theme.Text,
+      Root, Width, Height, Current, ScrollOffsets, Theme,
       function(Id: string; Value: string): int => Routing.Selection(Id, Value).Caret
     );
     Routing.Reconcile(Layout);

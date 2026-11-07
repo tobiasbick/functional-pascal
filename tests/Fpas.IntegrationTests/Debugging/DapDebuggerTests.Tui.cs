@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Fpas.IntegrationTests.Tui;
 
@@ -57,7 +58,7 @@ public sealed partial class DapDebuggerTests
         Assert.DoesNotContain(resized.GetProperty("frame").GetProperty("controls").EnumerateArray(), control => control.GetProperty("id").GetString() == "items/Amber");
         Assert.Equal(17, resized.GetProperty("terminalLines").GetArrayLength());
         using var terminalDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-        while (!resized.GetProperty("terminalLines").EnumerateArray().Any(row => row.GetString()!.Contains("Birch", StringComparison.Ordinal)))
+        while (!ShowsStyledResults(resized))
         {
             await Task.Delay(20, terminalDeadline.Token);
             resized = await client.Success("fpasTuiSnapshot");
@@ -71,10 +72,37 @@ public sealed partial class DapDebuggerTests
         {
             ["frame"] = new JsonObject { ["text"] = "ce", ["control"] = "items/Cedar" }
         })).GetProperty("status").GetString());
+
+        await client.Success("fpasTuiSend", new() { ["input"] = new JsonObject { ["kind"] = "key", ["key"] = "O", ["modifiers"] = 4 } });
+        Assert.Equal("matched", (await client.Success("fpasTuiWait", new()
+        {
+            ["frame"] = new JsonObject { ["control"] = "theme-blue" }
+        })).GetProperty("status").GetString());
+        var theme = await client.Success("fpasTuiSend", new()
+        {
+            ["input"] = new JsonObject { ["kind"] = "activate", ["control"] = "theme-blue" }
+        });
+        Assert.Equal("presented", (await client.Success("fpasTuiWait", new()
+        {
+            ["inputId"] = theme.GetProperty("inputId").GetInt64()
+        })).GetProperty("status").GetString());
+        var themed = (await client.Success("fpasTuiSnapshot", new() { ["cells"] = true })).GetProperty("frame");
+        Assert.Equal(0x121B32, themed.GetProperty("cells")[0].GetProperty("style").GetProperty("background").GetInt32());
+        Assert.Contains(themed.GetProperty("controls").EnumerateArray(), control =>
+            control.GetProperty("id").GetString() == "theme-blue" && control.GetProperty("focused").GetBoolean());
+        await client.Success("fpasTuiSend", new() { ["input"] = new JsonObject { ["kind"] = "key", ["key"] = "Escape" } });
         await client.Success("fpasTuiSend", new() { ["input"] = new JsonObject { ["kind"] = "activate", ["control"] = "quit" } });
         Assert.Equal(0, (await client.Event("exited")).GetProperty("exitCode").GetInt32());
         await client.Event("terminated");
         await client.Success("disconnect");
         await client.End();
+    }
+
+    private static bool ShowsStyledResults(JsonElement snapshot)
+    {
+        var lines = snapshot.GetProperty("terminalLines").EnumerateArray()
+            .Select(row => row.GetString()!).ToArray();
+        return lines.Any(row => row.Contains("Birch", StringComparison.Ordinal))
+            && lines.Any(row => row.Contains("╭ Results ─", StringComparison.Ordinal));
     }
 }

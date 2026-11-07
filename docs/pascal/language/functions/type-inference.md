@@ -22,7 +22,7 @@ Label) and Map(Items, Format); a method group for generic Identity keeps its
 explicit arguments.
 
 Evidence comes from argument types, array elements, matching constructed generic
-types, and typed callable signatures. A List<string> or string[] can provide the
+types, and typed callable signatures. A List<string> or `array of string` can provide the
 string argument of an IEnumerable<T> parameter. A typed lambda can provide both
 the input and output of Func<T, U>, including when it converts to a custom CLR
 delegate. Unique nongeneric method groups provide their ordinary callable types.
@@ -33,7 +33,7 @@ It uses implemented implicit conversions, including numeric widening. It does
 not invent object as a fallback for unrelated inputs or choose arbitrarily
 between multiple instantiations of the same interface. Stored arrays retain
 normal CLR conversions. An array literal can instead construct the vector element
-type selected by its parameter, such as a double[] for a widened numeric call.
+type selected by its parameter, such as `array of double` for a widened numeric call.
 
 Constraints are checked after inference and never supply missing type arguments.
 The expected routine result does not infer routine arguments. For example, a

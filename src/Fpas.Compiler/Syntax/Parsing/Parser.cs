@@ -123,7 +123,9 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
     {
         var start = Current.Position;
         var documentation = Current.Documentation;
-        var isPublic = At("public") || inRecord && !At("private");
+        var isPublic = At("public") || abstractMember;
+        if (nested && (At("public") || At("private")))
+            throw source.Error("FP2003", "Local routines have lexical visibility.", Current.Position);
         if (isProgram && isPublic && !inRecord)
             throw source.Error("FP2003", "Public free declarations belong in units.", Current.Position);
         if (At("public") || At("private"))
@@ -152,11 +154,16 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             return new(name, true, parameters, result, [], false, typeParameters, constraints, Documentation: documentation);
         var contracts = ReadContracts();
         var bodyStart = Current.Position;
-        layout?.Line(position);
         var body = ReadBody(bodyStart, () =>
         {
-            Expect("begin"); var statements = ReadStatements(); Expect("end"); Expect(function ? "function" : "procedure");
-            return statements;
+            var helpers = ReadRoutineHelpers();
+            bodyStart = Current.Position;
+            layout?.Line(position);
+            Expect("begin");
+            var statements = ReadStatements(allowRoutineDeclarations: false);
+            Expect("end");
+            Expect(function ? "function" : "procedure");
+            return helpers.Count == 0 ? statements : [..helpers, ..statements];
         });
         declaration.Body(bodyStart, Math.Max(bodyStart, LastEnd));
         if (!nested)
@@ -167,41 +174,6 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         }
         return new(name, isPublic, parameters, result, body, isStatic, typeParameters, constraints, contracts, isAsync, documentation);
     }
-
-    private TypeSyntax ReadType(bool arrays = true)
-    {
-        if (At("function") || At("procedure")) return ReadCallableType();
-        var segments = new List<TypeSegmentSyntax>();
-        do
-        {
-            var name = Identifier();
-            segments.Add(new(name, At("<") ? ReadTypeArguments() : null));
-            if (!At(".")) break;
-            position++;
-        } while (true);
-        var type = new TypeSyntax(segments) { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
-        while (At("?") || arrays && At("[") && position + 1 < tokens.Count && tokens[position + 1].Text is "]" or ",")
-        {
-            if (At("?"))
-            {
-                if (type.Nullable) throw source.Error("FP2003", "Repeated nullable suffixes are invalid.", Current.Position);
-                layout?.Tight.Add(position);
-                position++; type = type with { Nullable = true, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
-            }
-            else
-            {
-                position++;
-                var rank = 1;
-                while (At(",")) { rank++; position++; }
-                Expect("]");
-                type = new(segments, Element: type, Rank: rank) { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
-            }
-        }
-        return type with { SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
-    }
-
-    private IReadOnlyList<TypeSyntax> ReadTypeArguments()
-        => ReadList("<", ">", ",", () => ReadType(), empty: false, wrap: false, tight: true);
 
     private NameSyntax ReadName()
     {

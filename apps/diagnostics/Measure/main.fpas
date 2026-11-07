@@ -22,7 +22,7 @@ begin
 end procedure;
 
 begin
-  const Args: string[] := Sys.Environment.GetCommandLineArgs();
+  const Args: array of string := Sys.Environment.GetCommandLineArgs();
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
   const Handler: Sys.ConsoleCancelEventHandler := procedure(Sender: object?; Event: Sys.ConsoleCancelEventArgs) begin
     Event.Cancel := true;
@@ -36,7 +36,7 @@ begin
       const Options: Arguments.Options := Arguments.Read(Args);
       Samples.Validate(Options.Output, Options.Label, Options.Environment);
       Owned.Validate(Options.Executable);
-      const Values: double[] := new double[Options.Count];
+      const Values: array of double := new double[Options.Count];
       for Index: int := 0 to Options.Warmup + Options.Count - 1 do
         const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
         const Result: Processes.Result := await Processes.Run(Options, Cancellation.Token);

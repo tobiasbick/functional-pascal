@@ -83,7 +83,28 @@ internal sealed class LayoutWriter(SourceText source, IReadOnlyList<Token> token
 
     private void Append(string text)
     {
-        output.Append(text); column += TextColumns.Width(text, column, source.CancellationToken); newlines = 0;
+        var start = 0;
+        for (var length = text.AsSpan().IndexOfAny('\r', '\n'); length >= 0;
+            length = text.AsSpan(start).IndexOfAny('\r', '\n'))
+        {
+            source.CheckCancellation();
+            var end = start + length;
+            AppendPart(text[start..end]);
+            renderedLines.Add(new(line++, column, lineIndent));
+            output.Append('\n');
+            column = 0;
+            lineIndent = 0;
+            start = end + 1;
+            if (text[end] == '\r' && start < text.Length && text[start] == '\n') start++;
+        }
+        AppendPart(text[start..]);
+        newlines = 0;
+
+        void AppendPart(string part)
+        {
+            output.Append(part);
+            column += TextColumns.Width(part, column, source.CancellationToken);
+        }
     }
 
     private void Break(int count)

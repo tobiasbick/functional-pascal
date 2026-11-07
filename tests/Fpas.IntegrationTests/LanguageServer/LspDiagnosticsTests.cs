@@ -47,6 +47,29 @@ public sealed class LspDiagnosticsTests(SdkPackageFixture sdk) : IClassFixture<S
     }
 
     [Fact]
+    public async Task An_unsaved_mixed_logical_chain_reports_the_offending_operator()
+    {
+        using var project = sdk.CreateProject();
+        await Prepare(project);
+        var path = project.File("Game/Bridge.fpas");
+        var disk = File.ReadAllText(path);
+        const string statement = "  const Text: string := '😀'; if true and false or true then return 1; end if; return 42;";
+        var broken = disk.Replace("  const Text: string := '😀'; return 42;", statement, StringComparison.Ordinal);
+        await using var client = new LspProbe();
+        await client.Initialize(project.File("Game/Game.fpasproj"));
+        await client.Notify("initialized", new { });
+        await client.Open(path, disk);
+        Assert.Empty(Values(await client.Diagnostics(path, 1)).EnumerateArray());
+        await client.FullChange(path, broken, 2);
+        var error = Assert.Single(Values(await client.Diagnostics(path, 2)).EnumerateArray());
+        Assert.Equal("FP2003", error.GetProperty("code").GetString());
+        var start = error.GetProperty("range").GetProperty("start");
+        Assert.Equal(3, start.GetProperty("line").GetInt32());
+        Assert.Equal(statement.IndexOf("or true", StringComparison.Ordinal), start.GetProperty("character").GetInt32());
+        await client.Stop();
+    }
+
+    [Fact]
     public async Task Stale_versions_invalid_ranges_and_oversized_text_clear_diagnostics_until_full_resynchronization()
     {
         using var project = sdk.CreateProject(); await Prepare(project); var path = project.File("Game/Bridge.fpas");

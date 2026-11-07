@@ -13,7 +13,7 @@ public sealed class ParameterDiagnosticsTests
     [InlineData("procedure Check(Value: int); begin Value := 1; end procedure;", "", "FP3009")]
     [InlineData("procedure Check(ref Value: int := 0); begin end procedure;", "", "FP3028")]
     [InlineData("procedure Check(params Value: int); begin end procedure;", "", "FP3028")]
-    [InlineData("procedure Check(params Values: int[]; Last: int); begin end procedure;", "", "FP3028")]
+    [InlineData("procedure Check(params Values: array of int; Last: int); begin end procedure;", "", "FP3028")]
     [InlineData("procedure Check(Value: int := 1; Required: int); begin end procedure;", "", "FP3028")]
     [InlineData("procedure Check(Value: int := Sys.Math.Abs(-1)); begin end procedure;", "", "FP3028")]
     [InlineData("procedure Check(Value: int := if true then 1 else Sys.Environment.TickCount end if); begin end procedure;", "", "FP3028")]

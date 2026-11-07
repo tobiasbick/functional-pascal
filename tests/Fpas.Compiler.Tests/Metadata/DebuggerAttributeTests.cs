@@ -31,16 +31,16 @@ public sealed class DebuggerAttributeTests
         var program = Compile("""
             unit Demo.Views;
             uses System.Diagnostics as D;
-            public type Box<T> = record Item: T; end record;
-            public type Constrained<T> = where T: struct; record Item: T; end record;
+            public type Box<T> = record public Item: T; end record;
+            public type Constrained<T> = where T: struct; record public Item: T; end record;
             public type Privacy = record
-              [D.DebuggerBrowsableAttribute(D.DebuggerBrowsableState.Never)] Secret: int;
-              Visible: int;
+              [D.DebuggerBrowsableAttribute(D.DebuggerBrowsableState.Never)] public Secret: int;
+              public Visible: int;
             end record;
             public type Outcome<T> = union Success(Value: T); Missing; end union;
             [D.DebuggerDisplayAttribute('custom')]
             [D.DebuggerTypeProxyAttribute(typeof(string))]
-            public type Custom = record Value: int; end record;
+            public type Custom = record public Value: int; end record;
             [D.DebuggerDisplayAttribute('choice')]
             [D.DebuggerDisplayAttribute('alternative')]
             public type CustomUnion = union Present; end union;
@@ -99,7 +99,7 @@ public sealed class DebuggerAttributeTests
         var program = Compile("""
             async program Methods;
             uses System.Threading.Tasks as Tasks, System.Diagnostics as D;
-            type R = record X: int := 1; end record;
+            type R = record public X: int := 1; end record;
             function Make(Value: int): function(): int;
             begin return function(): int => Value; end function;
             [D.DebuggerStepThroughAttribute]

@@ -83,13 +83,15 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Literal declaration search/paging and exact bounded inspection with direct types | DeclarationContextTests | SourceQueryTests, QueryCliTests |
 | Source-body ownership, checked call/reference sites, dispatch and protocol exclusions | SourceOperationTests, SemanticPolicyTests | CallQueryTests, QueryCliTests, SourceQueryTests |
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |
-| Numeric widths, promotions, checked/unchecked, native/decimal | ScalarDiagnosticsTests, ScalarMetadataTests | NumericExecutionTests, ScalarExecutionTests, MsBuildTests.Scalars |
+| Numeric widths, promotions, real division of integrals, checked/unchecked, native/decimal | ScalarDiagnosticsTests, ScalarMetadataTests | NumericExecutionTests, ScalarExecutionTests, MsBuildTests.Scalars |
+| Mixed logical operator grouping and evaluation | ExpressionDiagnosticsTests, FormatterTests | ControlFlowExecutionTests, ExpressionInspectionTests |
+| Multiline string values, source spans and formatting | DiagnosticsTests, FormatterTests | MultilineStringExecutionTests |
 | Lifted nullable operators, explicit null safety and CLR eligibility | NullableOperatorDiagnosticsTests | MsBuildTests.NullableOperators (C# result/exception matrix, numeric widths, domains, generic calls, evaluation order and await), LanguageSpecificationTests (NullableArithmetic) |
 | Units, visibility, source/reference conflicts, deterministic ordering | MultiSourceTests, EmissionTests | MultiSourceCliTests, MsBuildTests.MultiSource |
 | CLR members, boxing, nullable flow, struct storage, cleanup | InteropDiagnosticsTests, NullableEffectTests | InteropExecutionTests, MsBuildTests.Interop |
-| Arrays, UTF-16, generic owners, indexers, enumeration | CollectionsDiagnosticsTests | CollectionsExecutionTests, MsBuildTests.Collections |
+| Prefix array types, nullable and jagged shapes, UTF-16, indexers, enumeration | CollectionsDiagnosticsTests | CollectionsExecutionTests, MsBuildTests.Collections/NestedTypes |
 | Delegates, shared captures, callbacks, method groups | CallableDiagnosticsTests, CallableMetadataTests | CallableExecutionTests, MsBuildTests.Callables |
-| Records, defaults/copy helpers, equality, imported metadata | RecordTests, RecordMetadataTests | RecordExecutionTests, MsBuildTests.Records |
+| Records, private members by default, defaults/copy helpers, equality, imported metadata | RecordTests, RecordMetadataTests | RecordExecutionTests, MsBuildTests.Records |
 | Unions, payload patterns, guards, coverage, imported cases | UnionTests, CaseCoverageTests, UnionMetadataTests | UnionExecutionTests, CaseExecutionTests, MsBuildTests.Unions |
 | Generic constraints, closures, type/method parameter identity | GenericRoutineTests, GenericRoutineMetadataTests, GenericTypeTests, GenericTypeMetadataTests | GenericRoutineExecutionTests, GenericTypeExecutionTests, MsBuildTests.GenericRoutines/GenericTypes |
 | Nested CLR type paths, enclosing arguments, constraints and identities | | MsBuildTests.NestedTypes |
@@ -121,7 +123,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Own CLR source control, values, captures, async, exceptions, batch and DAP | CallableMetadataTests, AsyncDebugInfoTests | NativeCoreTests, CoreSessionTests, AsyncControlTests, BatchDebuggerTests, DapDebuggerTests |
 | Comments, XML IDs, public boundaries, warning policy | DocumentationTests | DocumentationCliTests, MsBuildTests.Documentation/DocumentationIds |
 | Global fields, visibility, initialization, nullable metadata | GlobalTests | GlobalExecutionTests, MsBuildTests.Globals |
-| Local recursion, capture initialization, generic/async environments | NestedRoutineTests | NestedRoutineExecutionTests, MsBuildTests.NestedRoutines |
+| Local helper placement, recursion, capture initialization, generic/async environments | NestedRoutineTests | NestedRoutineExecutionTests, MsBuildTests.NestedRoutines |
 | Typed/repeat loops, extreme endpoints, flow, iteration captures | LoopTests | LoopExecutionTests, MsBuildTests.Loops |
 | Event metadata/accessors, storage, delegates, nullable captures | EventTests, EventMetadataTests | MsBuildTests.Events/EventDiagnostics |
 | Type tokens, generic identity, initialization effects | TypeOfTests | TypeOfExecutionTests, MsBuildTests.TypeOf |
@@ -346,8 +348,8 @@ MsBuildTests.Acceptance covers parallel configurations and independent projects,
 GetTargetFrameworks/GetTargetPath, reference-list invalidation, and assembly/PDB/XML
 equivalence after a clean rebuild. Debug/Release and portable/none symbols are
 covered. Other frameworks/platforms remain outside this verified scope; see
-[language gaps](../docs/future/language-gaps.md). Additional IDE integration belongs
-in [editor gaps](../docs/future/editor-gap.md), scheduled last.
+[language gaps](../docs/future/language-gaps.md). Editor workflows have their own
+[VS Code verification](../src/VSCode/verification.md).
 
 ## Native test frameworks
 

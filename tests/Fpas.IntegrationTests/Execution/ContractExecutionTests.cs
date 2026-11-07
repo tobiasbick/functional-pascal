@@ -10,9 +10,9 @@ public sealed class ContractExecutionTests
         => ProgramExecution.Output("""
             program Contracts;
             uses System.Console as Console;
-            function Once(State: int[]): int;
+            function Once(State: array of int): int;
             begin State[1] := State[1] + 1; return 7; end function;
-            function Choose(State: int[]; Early: bool): int;
+            function Choose(State: array of int; Early: bool): int;
             requires State.Length = 2;
             ensures (Returned: int): Returned = State[0];
             ensures State[1] = 1;
@@ -22,11 +22,11 @@ public sealed class ContractExecutionTests
                 return Once(State);
               finally State[0] := 7; end try;
             end function;
-            procedure Finish(State: int[]);
+            procedure Finish(State: array of int);
             ensures State[0] = 9;
             begin try return; finally State[0] := 9; end try; end procedure;
             begin
-              const State: int[] := [0, 0];
+              const State: array of int := [0, 0];
               Console.WriteLine(Choose(State, true));
               State[0] := 0; State[1] := 0;
               Console.WriteLine(Choose(State, false));
@@ -41,12 +41,12 @@ public sealed class ContractExecutionTests
         var result = await ProgramExecution.Run("""
             program Contracts;
             uses System as Sys, System.Console as Console;
-            function Check(Value: int; State: int[]): int;
+            function Check(Value: int; State: array of int): int;
             requires Value > 0;
             requires State[99] = 0;
             begin State[0] := 1; return Value; end function;
             begin
-              const State: int[] := [0];
+              const State: array of int := [0];
               try discard Check(0, State);
               catch Failure: Sys.InvalidOperationException do Console.WriteLine(Failure.Message); end try;
               Console.WriteLine(State[0]);
@@ -96,17 +96,17 @@ public sealed class ContractExecutionTests
         => ProgramExecution.Output("""
             program Exceptions;
             uses System as Sys, System.Console as Console;
-            function Fail(State: int[]): int;
+            function Fail(State: array of int): int;
             ensures State[99] = 0;
             begin raise new Sys.ArgumentException('body'); end function;
-            function Condition(State: int[]): int;
+            function Condition(State: array of int): int;
             requires State[99] = 0;
             begin return 1; end function;
-            function Postcondition(State: int[]): int;
+            function Postcondition(State: array of int): int;
             ensures State[99] = 0;
             begin return 1; end function;
             begin
-              const State: int[] := [0];
+              const State: array of int := [0];
               try discard Fail(State); catch Failure: Sys.ArgumentException do Console.WriteLine(Failure.Message); end try;
               try discard Condition(State); catch Failure: Sys.IndexOutOfRangeException do Console.WriteLine('condition'); end try;
               try discard Postcondition(State); catch Failure: Sys.IndexOutOfRangeException do Console.WriteLine('postcondition'); end try;

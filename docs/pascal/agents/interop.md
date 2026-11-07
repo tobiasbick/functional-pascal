@@ -62,13 +62,13 @@ uses System as Sys, System.Console as Console, System.Collections.Generic as C,
   System.Text.Json.Serialization as Serialization;
 
 type Descending = record implements C.IComparer<int>
-  function Compare(Left: int; Right: int): int;
+  public function Compare(Left: int; Right: int): int;
   begin return Right.CompareTo(Left); end function;
 end record;
 
 type Item = record
   [Serialization.JsonPropertyNameAttribute('item_name')]
-  Name: string;
+  public Name: string;
 end record;
 
 begin

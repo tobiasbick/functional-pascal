@@ -11,14 +11,14 @@ var FixtureCount: int := 0;
 const Events: string := Sys.Environment.GetEnvironmentVariable('FPAS_TEST_EVENTS') ?? 'events.log';
 
 public type Lifetime = record implements X.IAsyncLifetime
-  function InitializeAsync(): Tasks.Task;
+  public function InitializeAsync(): Tasks.Task;
   begin
     Active := 1;
     File.AppendAllText(Events, 'setup' + #10);
     return Tasks.Task.CompletedTask;
   end function;
 
-  function DisposeAsync(): Tasks.Task;
+  public function DisposeAsync(): Tasks.Task;
   begin
     Active := 0;
     File.AppendAllText(Events, 'cleanup' + #10);
@@ -26,7 +26,7 @@ public type Lifetime = record implements X.IAsyncLifetime
   end function;
 
   [X.FactAttribute]
-  procedure SetupWasCalled();
+  public procedure SetupWasCalled();
   begin
     X.Assert.Equal<int>(1, Active);
   end procedure;
@@ -34,13 +34,13 @@ public type Lifetime = record implements X.IAsyncLifetime
   [X.TheoryAttribute]
   [X.InlineDataAttribute(1, 2, 3)]
   [X.InlineDataAttribute(2, 3, 5)]
-  procedure Addition(Left: int; Right: int; Expected: int);
+  public procedure Addition(Left: int; Right: int; Expected: int);
   begin
     X.Assert.Equal<int>(Expected, Left + Right);
   end procedure;
 
   [X.FactAttribute]
-  async function AsyncTest(): Tasks.Task;
+  public async function AsyncTest(): Tasks.Task;
   begin
     discard await Tasks.Task.FromResult<int>(42);
 
@@ -48,32 +48,32 @@ public type Lifetime = record implements X.IAsyncLifetime
   end function;
 
   [X.FactAttribute(Skip := 'deliberate skip')]
-  procedure Skipped();
+  public procedure Skipped();
   begin
     raise new Sys.Exception('must not execute');
   end procedure;
 
   [X.FactAttribute]
-  procedure AssertionFailure();
+  public procedure AssertionFailure();
   begin
     X.Assert.True(false);
   end procedure;
 
   [X.FactAttribute]
-  procedure UserException();
+  public procedure UserException();
   begin
     raise new Sys.InvalidOperationException('user failure');
   end procedure;
 end record;
 
 public type Shared = record implements X.IAsyncLifetime
-  function InitializeAsync(): Tasks.Task;
+  public function InitializeAsync(): Tasks.Task;
   begin
     FixtureCount := FixtureCount + 1;
     return Tasks.Task.CompletedTask;
   end function;
 
-  function DisposeAsync(): Tasks.Task;
+  public function DisposeAsync(): Tasks.Task;
   begin
     File.WriteAllText(Events + '.fixture', 'disposed');
     return Tasks.Task.CompletedTask;
@@ -81,11 +81,11 @@ public type Shared = record implements X.IAsyncLifetime
 end record;
 
 public type FixtureTests = record implements X.IClassFixture<Shared>
-  Fixture: Shared;
-  Output: A.ITestOutputHelper;
+  public Fixture: Shared;
+  public Output: A.ITestOutputHelper;
 
   [X.FactAttribute]
-  procedure Injected();
+  public procedure Injected();
   begin
     X.Assert.NotNull(self.Fixture);
     X.Assert.Equal<int>(1, FixtureCount);
@@ -94,9 +94,9 @@ public type FixtureTests = record implements X.IClassFixture<Shared>
   end procedure;
 end record;
 
-public function Rows(): C.IEnumerable<object[]>;
+public function Rows(): C.IEnumerable<array of object>;
 begin
-  const Values: object[][] := [[1, 2, 3], [2, 3, 5]];
+  const Values: array of array of object := [[1, 2, 3], [2, 3, 5]];
   return Values;
 end function;
 

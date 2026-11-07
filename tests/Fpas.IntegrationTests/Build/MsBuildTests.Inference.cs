@@ -58,7 +58,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
             uses Demo.InferenceLibrary as L, Demo.InferenceApi as Api, Demo as D;
-            public function Run(): string[];
+            public function Run(): array of string;
             begin
               const Tree: L.Tree<int> := L.Tree.Branch(L.Tree.Empty, L.Tree.Leaf(L.Identity(42)));
               const Empty: L.Tree<string> := L.Tree.Empty;

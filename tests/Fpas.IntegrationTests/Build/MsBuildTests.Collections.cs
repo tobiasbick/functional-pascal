@@ -129,13 +129,13 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
             uses System.Collections.Generic as C, Demo as D;
-            public function Echo(Value: C.Dictionary<string, C.List<string?[]>>): C.Dictionary<string, C.List<string?[]>>;
+            public function Echo(Value: C.Dictionary<string, C.List<array of string?>>): C.Dictionary<string, C.List<array of string?>>;
             begin return D.CollectionApi.Echo(Value); end function;
             public function Maybe(Value: C.List<string?>?): C.List<string?>?;
             begin return Value; end function;
-            public function Grid(Value: int[,]): int[,];
+            public function Grid(Value: array[,] of int): array[,] of int;
             begin Value[1, 0] := 9; return Value; end function;
-            public function Jagged(Value: string?[][]): string?[][];
+            public function Jagged(Value: array of array of string?): array of array of string?;
             begin return Value; end function;
             public function Pair(Value: C.KeyValuePair<string, string?>?): C.KeyValuePair<string, string?>?;
             begin return D.CollectionApi.EchoPair(Value); end function;
@@ -143,19 +143,19 @@ public sealed partial class MsBuildTests
             begin
               const Box: D.DerivedBox<string?> := new D.DerivedBox<string?>(null);
               Box.Field := 'field'; Box.Value := null;
-              const Cells: string?[] := Box.Repeat();
+              const Cells: array of string? := Box.Repeat();
               const Optional: C.List<string?>? := D.CollectionApi.NullableList(true);
               if Optional = null then return 'missing'; end if;
-              const Elements: C.List<string?[]> := D.CollectionApi.Nested();
+              const Elements: C.List<array of string?> := D.CollectionApi.Nested();
               const Numbers: C.List<int?> := D.CollectionApi.NullableNumbers();
               return (Cells[1] ?? 'null') + ':' + (Optional[0] ?? 'null') + ':' + (Elements[0][0] ?? 'null') + ':' +
                 D.CollectionApi.Overload(['item']) + ':' + (Box.Maybe() ?? 'null');
             end function;
             public function StructArrays(): int;
             begin
-              const Vector: D.Counter[] := new D.Counter[1];
+              const Vector: array of D.Counter := new D.Counter[1];
               Vector[0].Increment(); Vector[0].Value := Vector[0].Value + 2;
-              const Grid: D.Counter[,] := new D.Counter[1, 1];
+              const Grid: array[,] of D.Counter := new D.Counter[1, 1];
               Grid[0, 0].Increment(); Grid[0, 0].Value := Grid[0, 0].Value + 3;
               return Vector[0].Value + Grid[0, 0].Value;
             end function;
@@ -206,10 +206,10 @@ public sealed partial class MsBuildTests
             uses Demo.Bridge as B, System.Collections.Generic as C;
             public function Read(): string;
             begin
-              const Data: C.Dictionary<string, C.List<string?[]>> := new C.Dictionary<string, C.List<string?[]>>();
-              const Rows: string?[][] := [[null]];
-              Data['key'] := new C.List<string?[]>(Rows);
-              const Returned: C.Dictionary<string, C.List<string?[]>> := B.Echo(Data);
+              const Data: C.Dictionary<string, C.List<array of string?>> := new C.Dictionary<string, C.List<array of string?>>();
+              const Rows: array of array of string? := [[null]];
+              Data['key'] := new C.List<array of string?>(Rows);
+              const Returned: C.Dictionary<string, C.List<array of string?>> := B.Echo(Data);
               return Returned['key'][0][0] ?? 'round trip';
             end function;
             end unit;

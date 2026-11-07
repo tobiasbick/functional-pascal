@@ -73,7 +73,7 @@ public sealed class TerminalWorkflowTests
             program WaitingTerminal;
             uses System as Sys;
             begin
-              const Args: string[] := Sys.Environment.GetCommandLineArgs();
+              const Args: array of string := Sys.Environment.GetCommandLineArgs();
               if Args.Length = 1 then
                 const Info: Sys.Diagnostics.ProcessStartInfo := new Sys.Diagnostics.ProcessStartInfo();
                 Info.FileName := Sys.Environment.ProcessPath ?? '';

@@ -35,9 +35,15 @@ internal sealed record TypeSymbol(TypeKind Kind, ImportedType? Definition = null
     public override string ToString()
     {
         if (Container is { } container) return container.Syntax.Name.Text;
+        if (Kind == TypeKind.Array)
+        {
+            var rank = Rank == 1 ? "" : "[" + new string(',', Rank - 1) + "]";
+            var array = $"array{rank} of {Element}";
+            return IsNullable ? $"({array})?" : array;
+        }
         if (Interface is { } contract) return contract.Owner.Syntax.Name.Text + "." + contract.Name +
             (Arguments is { Count: > 0 } ? "<" + string.Join(",", Arguments) + ">" : "") + (IsNullable ? "?" : "");
-        var name = IsParameter ? Parameter!.Name : Kind == TypeKind.Scalar ? Scalar!.Owner.Syntax.Name.Text + "." + Scalar.Name : Kind == TypeKind.ByRef ? Element + "&" : Kind == TypeKind.Union ? Union!.Owner.Syntax.Name.Text + "." + Union.Name : Kind == TypeKind.Record ? Record!.Owner.Syntax.Name.Text + "." + (Record.UnionCase is { } member ? member.Owner.Name + "." : "") + Record.Name : Kind == TypeKind.Generated ? "<Closure" + Closure!.Id + ">" : Kind == TypeKind.Array ? Element + "[" + new string(',', Rank - 1) + "]" : Definition?.FullName ?? TypeFacts.Alias(this) ?? Kind switch
+        var name = IsParameter ? Parameter!.Name : Kind == TypeKind.Scalar ? Scalar!.Owner.Syntax.Name.Text + "." + Scalar.Name : Kind == TypeKind.ByRef ? Element + "&" : Kind == TypeKind.Union ? Union!.Owner.Syntax.Name.Text + "." + Union.Name : Kind == TypeKind.Record ? Record!.Owner.Syntax.Name.Text + "." + (Record.UnionCase is { } member ? member.Owner.Name + "." : "") + Record.Name : Kind == TypeKind.Generated ? "<Closure" + Closure!.Id + ">" : Definition?.FullName ?? TypeFacts.Alias(this) ?? Kind switch
         {
             TypeKind.String => "string", TypeKind.Int32 => "int", TypeKind.Boolean => "bool", TypeKind.Double => "double", TypeKind.Char => "char",
             TypeKind.Object => "object", TypeKind.Void => "void", TypeKind.Null => "null", TypeKind.TypeParameter => "!" + ParameterIndex, TypeKind.MethodParameter => "!!" + ParameterIndex, _ => "unsupported"

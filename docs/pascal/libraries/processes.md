@@ -32,25 +32,25 @@ uses System as Sys, System.Diagnostics as Diagnostics, System.IO as IO,
 // A bounded prefix of one output stream.
 public type CapturedText = record
   // Retained UTF-16 text.
-  Value: string;
+  public Value: string;
   // True when additional characters were discarded.
-  Truncated: bool;
+  public Truncated: bool;
 end record;
 
 // A completed process, including nonzero exit codes.
 public type Result = record
   // The child's exit status.
-  ExitCode: int;
+  public ExitCode: int;
   // Standard output, independently bounded.
-  Output: CapturedText;
+  public Output: CapturedText;
   // Standard error, independently bounded.
-  Error: CapturedText;
+  public Error: CapturedText;
 end record;
 
 async function Drain(Reader: IO.StreamReader; MaximumCharacters: int;
   Cancellation: Threading.CancellationToken): Tasks.Task<CapturedText>;
 begin
-  const Buffer: char[] := new char[4096];
+  const Buffer: array of char := new char[4096];
   const Memory: Sys.Memory<char> := new Sys.Memory<char>(Buffer);
   const Prefix: Text.StringBuilder := new Text.StringBuilder();
   var Truncated: bool := false;
@@ -87,12 +87,12 @@ begin
   Deadline.CancelAfter(TimeoutMilliseconds);
   const Output: Tasks.Task<CapturedText> := Drain(Child.StandardOutput, MaximumCharacters, Deadline.Token);
   const Error: Tasks.Task<CapturedText> := Drain(Child.StandardError, MaximumCharacters, Deadline.Token);
-  const Readers: Tasks.Task<CapturedText>[] := [Output, Error];
-  const Reading: Tasks.Task<CapturedText[]> := Tasks.Task.WhenAll<CapturedText>(Readers);
+  const Readers: array of Tasks.Task<CapturedText> := [Output, Error];
+  const Reading: Tasks.Task<array of CapturedText> := Tasks.Task.WhenAll<CapturedText>(Readers);
   try
     Child.StandardInput.Close();
     await Child.WaitForExitAsync(Deadline.Token).ConfigureAwait(false);
-    const Captures: CapturedText[] := await Reading.ConfigureAwait(false);
+    const Captures: array of CapturedText := await Reading.ConfigureAwait(false);
     return new Result(Child.ExitCode, Captures[0], Captures[1]);
   catch Failure: Sys.OperationCanceledException do
     Cancellation.ThrowIfCancellationRequested();

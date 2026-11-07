@@ -15,7 +15,7 @@ Positional arguments may precede named arguments; none may follow them. Labels
 match the selected declaration exactly. Receiver/arguments execute once in
 written order. Required parameters precede optional parameters. Optional defaults
 must be legal CLR constants, not runtime const bindings. A final params Values:
-T[] accepts an array or expanded elements, allocating one array when expanded.
+`array of T` accepts an array or expanded elements, allocating one array when expanded.
 
 Value parameters are read-only bindings. Ref aliases writable storage; out must
 be assigned before reading and on every successful exit; in is a read-only managed
@@ -60,7 +60,7 @@ numeric operators. For example, where T: N.INumber<T>; permits T.Zero,
 T.CreateChecked(Value), and arithmetic through constrained static CLR dispatch.
 
 After where clauses, place requires clauses followed by ensures clauses, then
-begin. Conditions are read-only bool expressions over permitted inputs/captures
+local routine declarations and begin. Conditions are read-only bool expressions over permitted inputs/captures
 and built-in operations. Arbitrary calls, CLR getters, foreign operators, and
 generated aggregate equality are disallowed. A typed ensures binding names the
 result only in that clause. It must have exactly the result type.
@@ -87,10 +87,10 @@ ensures (Answer: int): Answer = Left + Right;
 begin return Left + Right; end function;
 
 function MakeCounter(Start: int): function(): int;
-begin
-  var Count: int := Start;
   function Next(): int;
   begin Count := Count + 1; return Count; end function;
+begin
+  var Count: int := Start;
   return Next;
 end function;
 

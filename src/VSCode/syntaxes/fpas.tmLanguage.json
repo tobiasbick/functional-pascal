@@ -6,7 +6,7 @@
     {
       "name": "string.quoted.single.fpas",
       "begin": "'",
-      "end": "'(?!')|$",
+      "end": "'(?!')",
       "patterns": [{ "name": "constant.character.escape.fpas", "match": "''" }]
     },
     { "name": "variable.other.escaped.fpas", "match": "@[A-Za-z_][A-Za-z0-9_]*" },
@@ -21,7 +21,7 @@
     },
     {
       "name": "keyword.other.fpas",
-      "match": "\\b(?:as|async|cast|class|const|distinct|ensures|enum|extends|function|implements|interface|is|new|out|params|private|procedure|program|public|range|record|ref|requires|static|struct|subscribe|type|typeof|unchecked|union|unit|unsubscribe|uses|var|where)\\b"
+      "match": "\\b(?:array|as|async|cast|class|const|distinct|ensures|enum|extends|function|implements|interface|is|new|out|params|private|procedure|program|public|range|record|ref|requires|static|struct|subscribe|type|typeof|unchecked|union|unit|unsubscribe|uses|var|where)\\b"
     },
     { "name": "keyword.operator.fpas", "match": "\\b(?:and|div|mod|not|or|shl|shr|xor)\\b|:=|<>|<=|>=|\\?\\?|\\.\\.|[+*/=<>-]" }
   ]

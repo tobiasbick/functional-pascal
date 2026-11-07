@@ -54,6 +54,27 @@ public sealed class DiagnosticsTests
         => Assert.Equal("FP2001", Assert.Single(Compile(source).Diagnostics).Code);
 
     [Fact]
+    public void Diagnostics_after_a_multiline_string_keep_physical_source_positions()
+    {
+        const string source = "program Example;\r\nbegin\r\n  const Text: string := 'first\r\nsecond';\r\n  discard Missing;\r\nend;\r\nend program;";
+        var error = Assert.Single(Compile(source).Diagnostics);
+        Assert.Equal("FP3001", error.Code);
+        Assert.Equal(5, error.Location!.Line);
+        Assert.Equal(11, error.Location.Column);
+        Assert.Equal(source.IndexOf("Missing", StringComparison.Ordinal), error.Location.Offset);
+    }
+
+    [Fact]
+    public void An_unterminated_multiline_string_points_to_its_opening_quote()
+    {
+        const string source = "program Example;\nbegin\n  const Text: string := 'first\r\nsecond";
+        var error = Assert.Single(Compile(source).Diagnostics);
+        Assert.Equal("FP1002", error.Code);
+        Assert.Equal(3, error.Location!.Line);
+        Assert.Equal(source.IndexOf('\''), error.Location.Offset);
+    }
+
+    [Fact]
     public void Duplicate_imports_are_rejected()
     {
         var result = Compile("program Example; uses System.Console as First, System.Console as Second; begin end; end program;");

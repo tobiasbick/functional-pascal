@@ -7,14 +7,14 @@ uses
   Diagnostics.MeasureOptions as Model;
 
 public type Result = record
-  ExitCode: int;
-  Output: string;
-  Error: string;
+  public ExitCode: int;
+  public Output: string;
+  public Error: string;
 end record;
 
 async function Drain(Reader: IO.StreamReader; Token: Threading.CancellationToken): Tasks.Task<string>;
 begin
-  const Buffer: char[] := new char[4096];
+  const Buffer: array of char := new char[4096];
   const TextOutput: Text.StringBuilder := new Text.StringBuilder();
   while true do
     const Count: int := await Reader.ReadAsync(Buffer, 0, Buffer.Length).WaitAsync(Token);

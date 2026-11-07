@@ -40,8 +40,8 @@ public sealed partial class MsBuildTests
             unit Demo.Models;
             public type Count = ulong;
             public type MaybeText = string?;
-            public type Texts = string?[];
-            public type Box<T> = record Value: T; end record;
+            public type Texts = array of string?;
+            public type Box<T> = record public Value: T; end record;
             public type CountBox = Box<Count>;
             public type Direction = enum : byte North; East = 4; West; end enum;
             public type Huge = enum : ulong Max = 18446744073709551615UL; end enum;

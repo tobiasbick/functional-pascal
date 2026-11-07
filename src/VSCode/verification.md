@@ -34,6 +34,7 @@ install the package, confirm the extension loads from the installed directory,
 verify LSP shutdown and verify the extension is gone after uninstall and reload.
 The trusted run previews and applies all three refactorings, checks stale-plan
 rejection, undo and redo, and builds and executes the edited fixture.
+It also checks diagnostics and formatting while editing a multiline string.
 The receipts include the loaded bundle hash, host, Node and VS Code versions,
 configuration, scenario results and the CLI/SDK identities in trusted runs.
 

@@ -8,7 +8,7 @@ public sealed class GenericRoutineExecutionTests
         program Generics;
         uses System.Console as Console, System.Collections.Generic as Collections;
         function Identity<T>(Value: T): T; begin return Value; end function;
-        function Map<T, U>(Items: T[]; Transform: function(T): U): U[];
+        function Map<T, U>(Items: array of T; Transform: function(T): U): array of U;
         begin
           const Result: Collections.List<U> := new Collections.List<U>();
           for Item: T in Items do Result.Add(Transform(Item)); end for;
@@ -20,7 +20,7 @@ public sealed class GenericRoutineExecutionTests
           Console.WriteLine(Identity<int>(42)); Console.WriteLine(Identity<string>('text'));
           const Copy: function(int): int := Identity<int>;
           Console.WriteLine(Copy(7)); Console.WriteLine(Repeat<int>(3, 4));
-          const Values: string[] := Map<int, string>([1, 2], function(N: int): string => N.ToString());
+          const Values: array of string := Map<int, string>([1, 2], function(N: int): string => N.ToString());
           for Value: string in Values do Console.WriteLine(Value); end for;
           const Empty: string? := Identity<string?>(null);
           Console.WriteLine(Empty = null);

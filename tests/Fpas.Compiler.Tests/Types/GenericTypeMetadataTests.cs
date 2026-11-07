@@ -13,9 +13,9 @@ public sealed class GenericTypeMetadataTests
         var result = TestCompilation.Compile("""
             program Metadata;
             type Box<T> = record
-              Value: T;
-              function Upcast<U>(Other: U): T; where U: T; begin return Other; end function;
-              function Capture<U>(Other: U): function(): U;
+              public Value: T;
+              public function Upcast<U>(Other: U): T; where U: T; begin return Other; end function;
+              public function Capture<U>(Other: U): function(): U;
               begin return function(): U begin discard self.Value; return Other; end function; end function;
             end record;
             begin discard new Box<int>(42).Capture<string>('text')(); end;

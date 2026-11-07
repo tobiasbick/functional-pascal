@@ -33,9 +33,9 @@ public sealed partial class MsBuildTests
             begin
               try return 1; catch Failure: Sys.InvalidOperationException do return 99; end try;
             end function;
-            function Once(State: int[]): int;
+            function Once(State: array of int): int;
             begin State[1] := State[1] + 1; return 7; end function;
-            public function Cleanup(State: int[]; Mode: int): int;
+            public function Cleanup(State: array of int; Mode: int): int;
             requires State.Length = 3;
             ensures (Returned: int): Returned = State[0];
             ensures State[1] = 1 and State[2] = 1 and Mode = 0;
@@ -47,8 +47,8 @@ public sealed partial class MsBuildTests
               finally State[0] := 7; end try;
             end function;
             public type Counter = record
-              Value: int;
-              function Positive(): int;
+              public Value: int;
+              public function Positive(): int;
               requires self.Value > 0;
               ensures (Returned: int): Returned = self.Value;
               begin return self.Value; end function;
@@ -101,7 +101,7 @@ public sealed partial class MsBuildTests
             ensures Value = Previous + Delta;
             ensures (Returned: int): Returned = Value;
             begin Previous := Value; Value := Value + Delta; return Value; end function;
-            public function Sum(Seed: int := 1 + 2; params Values: int[]): int;
+            public function Sum(Seed: int := 1 + 2; params Values: array of int): int;
             begin var Total: int := Seed; for Value: int in Values do Total := Total + Value; end for; return Total; end function;
             public function Run(): int;
             begin

@@ -26,11 +26,30 @@ internal sealed partial class Parser
             return new(token.Position, parameters, result, ReadExpression(), null, IsAsync: isAsync);
         }
         var contracts = ReadContracts();
-        if (contracts.Count != 0) layout?.Line(position);
+        var helpers = ReadRoutineHelpers();
+        if (contracts.Count != 0 || helpers.Count != 0) layout?.Line(position);
         Expect("begin");
-        var body = ReadStatements();
+        var body = ReadStatements(allowRoutineDeclarations: false);
         if (body.Count == 0 && layout is not null) layout.Breaks[position] = 0;
         Expect("end"); Expect(token.Text);
-        return new(token.Position, parameters, result, null, body, contracts, isAsync);
+        return new(token.Position, parameters, result, null, helpers.Count == 0 ? body : [..helpers, ..body], contracts, isAsync);
+    }
+
+    private List<StatementSyntax> ReadRoutineHelpers()
+    {
+        var start = position;
+        var helpers = new List<StatementSyntax>();
+        while (At("function") || At("procedure") || At("async") || At("["))
+        {
+            layout?.Line(position);
+            var helper = At("[")
+                ? ReadAttributedRoutine(Current.Documentation) ?? throw Expected(["function", "procedure"], "Expected a local routine after attributes.")
+                : new NestedRoutineSyntax(ReadRoutine(false, nested: true));
+            Expect(";");
+            declarations[helper.Routine.Name.Position].End = LastEnd;
+            helpers.Add(helper);
+        }
+        if (helpers.Count != 0) layout?.Body(start, position);
+        return helpers;
     }
 }

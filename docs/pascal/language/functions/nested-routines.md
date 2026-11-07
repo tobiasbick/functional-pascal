@@ -1,26 +1,29 @@
 # Named nested routines
 
-Declare local functions and procedures with ordinary routine syntax inside a
-routine body or lexical block. See the
+Declare a routine's named helpers after its constraints and contracts, before
+its outer `begin`. This placement also applies to block-bodied anonymous
+routines. A helper in an inner block, branch, loop, or the program entry block
+is declared inside that scope. See the
 [local-functions project](../../../../examples/local-functions/README.md) for a
 recursive helper and an escaping counter delegate.
 
 ```pascal fragment context=declarations
 function MakeCounter(Start: int): function(): int;
-begin
-  var Count: int := Start;
   function Next(): int;
   begin Count := Count + 1; return Count; end function;
+begin
+  var Count: int := Start;
   return Next;
 end function;
 ```
 
 ## Scope and calls
 
-Signatures are visible throughout their declaring block, including before the
-written declaration. Self-recursion and mutually recursive siblings work.
-Declarations do not execute statements or introduce debugger stops, and may
-appear after a return. Bodies are checked even when no caller uses them.
+Signatures are visible throughout their declaring block. Helpers declared before
+`begin` belong to the outer body scope and can capture directly declared body
+locals. Self-recursion and mutually recursive siblings work. The debugger has
+sequence points for statements inside a helper body. The compiler checks each
+helper body even when it has no callers.
 
 Nested routines remain private to their lexical block. Parameters/local values
 and nested groups follow lexical shadowing; declarations cannot duplicate a

@@ -60,7 +60,11 @@ public static partial class CheckedRefactoring
         SemanticType Find(string id) => snapshot.Types.Single(candidate => candidate.Id == id);
         var nullable = type.Nullable ? "?" : "";
         if (type.Kind == "array" && type.Element is { } element)
-            return Spell(element) + "[" + new string(',', type.Rank - 1) + "]" + nullable;
+        {
+            var rank = type.Rank == 1 ? "" : "[" + new string(',', type.Rank - 1) + "]";
+            var array = $"array{rank} of {Spell(element)}";
+            return type.Nullable ? $"({array})?" : array;
+        }
         var name = type.Display.TrimEnd('?').Split('<')[0];
         if (name.Length == 0 || name[0] is '!' or '<') throw Refuse("The selected value has no expressible FPAS type.");
         var alias = imports.Where(item => name == item.TargetName || name.StartsWith(item.TargetName + ".", StringComparison.Ordinal) ||

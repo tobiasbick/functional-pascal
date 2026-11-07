@@ -73,7 +73,7 @@ public sealed class RichDiagnosticsTests
     [Fact]
     public void Record_methods_have_isolated_recovery_and_semantic_errors_share_the_limit()
     {
-        const string record = "program Sample; type Point = record procedure First(); begin discard Missing; end procedure; procedure Second(); begin break; end procedure; end record; begin end; end program;";
+        const string record = "program Sample; type Point = record public procedure First(); begin discard Missing; end procedure; public procedure Second(); begin break; end procedure; end record; begin end; end program;";
         Assert.Equal(["FP3001", "FP3010"], Compile(record).Diagnostics.Select(diagnostic => diagnostic.Code));
         var source = "program Sample; " + string.Concat(Enumerable.Range(0, 100).Select(index => $"procedure P{index}(); begin break; end procedure; ")) + "begin end; end program;";
         var result = Compile(source);

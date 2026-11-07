@@ -3,8 +3,8 @@ program TypeInspection;
 uses System as Sys, System.Console as Console;
 
 type Player = record
-  Name: string;
-  Score: int;
+  public Name: string;
+  public Score: int;
 end record;
 
 function TypeName<T>(): string;
@@ -17,7 +17,7 @@ begin
   Console.WriteLine(NumberType.FullName);
   Console.WriteLine(typeof(int?).IsValueType);
   Console.WriteLine(typeof(Player).IsClass);
-  Console.WriteLine(typeof(int[,]).GetArrayRank());
+  Console.WriteLine(typeof(array[,] of int).GetArrayRank());
   Console.WriteLine(TypeName<string>());
 end;
 end program;

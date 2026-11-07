@@ -6,7 +6,7 @@ new CLR identity. Use nominal domains when a distinct identity is required.
 ```pascal fragment context=declarations
 type UserName = string;
 type Names = Collections.List<string>;
-type Matrix = double[,];
+type Matrix = array[,] of double;
 ```
 
 `type Name = T;` is a transparent source alias and does not emit a new CLR type.

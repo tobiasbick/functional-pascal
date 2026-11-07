@@ -13,12 +13,12 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
     private const string Library = """
         unit Numerics.Api;
         uses System as S;
-        public type Box<T> = record Value: T; end record;
+        public type Box<T> = record public Value: T; end record;
         public type Choice = union Empty; Value(Item: int); end union;
         public type IValue = interface Value: int; function Read(): int; end interface;
         public type Sample = record implements IValue
-          Value: int;
-          function Read(): int; begin return self.Value; end function;
+          public Value: int;
+          public function Read(): int; begin return self.Value; end function;
         end record;
         public function Read(Value: int): int; begin return Value; end function;
         public function Read(Value: string): int; begin return Value.Length; end function;

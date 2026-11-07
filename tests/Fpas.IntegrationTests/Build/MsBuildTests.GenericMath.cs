@@ -118,8 +118,8 @@ public sealed partial class MsBuildTests
             begin return function(Value: T): T => Start + Value; end function;
             public type Accumulator<T> = where T: N.INumber<T>;
             record
-              Value: T;
-              function Add(Other: T): T; begin return self.Value + Other; end function;
+              public Value: T;
+              public function Add(Other: T): T; begin return self.Value + Other; end function;
             end record;
             public type DefaultRecord = record implements S.IDefault<DefaultRecord> end record;
             public function DefaultValue<T>(): int;

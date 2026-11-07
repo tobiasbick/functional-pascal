@@ -4,15 +4,32 @@ namespace Fpas.IntegrationTests.Execution;
 public sealed class NestedRoutineExecutionTests
 {
     [Fact]
+    public Task A_block_lambda_helper_captures_a_local_in_its_outer_body()
+        => ProgramExecution.Output("""
+            program LambdaHelper;
+            uses System.Console as Console;
+            begin
+              const Read: function(int): int := function(Input: int): int
+                function Answer(): int; begin return Value; end function;
+              begin
+                const Value: int := Input + 1;
+                return Answer();
+              end function;
+              Console.WriteLine(Read(41));
+            end;
+            end program;
+            """, "42");
+
+    [Fact]
     public Task Generic_nested_methods_and_lambdas_keep_outer_and_method_type_parameters_distinct() => ProgramExecution.Output("""
         program GenericNested;
         uses System.Console as Console;
         function Build<T>(Value: T): function(int): T;
-        begin
           function Make<U>(Other: U): function(): T;
           where U: struct;
           begin return function(): T begin discard Other; return Value; end function; end function;
           function Run(Index: int): T; begin return Make<int>(Index)(); end function;
+        begin
           return Run;
         end function;
         begin const Read: function(int): string := Build<string>('generic'); Console.WriteLine(Read(4)); end;
@@ -24,11 +41,11 @@ public sealed class NestedRoutineExecutionTests
         async program AsyncNested;
         uses System.Console as Console, System.Threading.Tasks as Tasks;
         function Create<T>(Value: T): Tasks.Task<T>;
-        begin
           async function Run<U>(Other: U): Tasks.Task<T>;
           where U: struct;
           begin await Tasks.Task.Delay(1); return Select<U>(Value, Other); end function;
           function Select<U>(Left: T; Right: U): T; begin discard Right; return Left; end function;
+        begin
           return Run<int>(1);
         end function;
         begin Console.WriteLine(await Create<string>('async')); end;
@@ -63,16 +80,16 @@ public sealed class NestedRoutineExecutionTests
         program Nested;
         uses System.Console as Console;
         function Factorial(Value: int): int;
-        begin
-          return Multiply(Value);
           function Multiply(N: int): int;
           begin if N = 0 then return 1; end if; return N * Multiply(N - 1); end function;
+        begin
+          return Multiply(Value);
         end function;
         function Parity(Value: int): bool;
-        begin
-          return Even(Value);
           function Even(N: int): bool; begin if N = 0 then return true; end if; return Odd(N - 1); end function;
           function Odd(N: int): bool; begin if N = 0 then return false; end if; return Even(N - 1); end function;
+        begin
+          return Even(Value);
         end function;
         begin Console.WriteLine(Factorial(5)); Console.WriteLine(Parity(8)); Console.WriteLine(Parity(9)); end;
         end program;
@@ -83,19 +100,19 @@ public sealed class NestedRoutineExecutionTests
         program Captures;
         uses System.Console as Console;
         function Counter(Start: int): function(): int;
-        begin
-          var Count: int := Start;
           function Read(): int; begin return Next(); end function;
           function Next(): int; begin Count := Count + 1; return Count; end function;
+        begin
+          var Count: int := Start;
           return Read;
         end function;
         function Deep(Base: int): function(int): int;
-        begin
           function Outer(Value: int): int;
-          begin
             function Inner(Extra: int): int; begin return Base + Value + Extra; end function;
+          begin
             return Inner(2);
           end function;
+        begin
           return Outer;
         end function;
         begin
@@ -110,15 +127,15 @@ public sealed class NestedRoutineExecutionTests
         program Calls;
         uses System.Console as Console;
         function Outer<T>(Value: T): T;
-        begin
           function Echo<U>(Item: U): U; begin return Item; end function;
           function Echo(Item: int): int; begin return Item + 1; end function;
           procedure Set(out Target: int; in Input: int; Amount: int := 2);
           ensures Target >= Input;
           begin Target := Input + Amount; end procedure;
           procedure Increment(ref Target: int); begin Target := Target + 1; end procedure;
-          function Sum(params Values: int[]): int;
+          function Sum(params Values: array of int): int;
           begin var Total: int := 0; for Item: int in Values do Total := Total + Item; end for; return Total; end function;
+        begin
           var Answer: int := 0; const Input: int := 40;
           Set(out Answer, in Input); Increment(ref Answer); Console.WriteLine(Answer); Console.WriteLine(Echo(1));
           Console.WriteLine(Sum(1, 2, 3));

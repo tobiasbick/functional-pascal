@@ -5,8 +5,8 @@ Read this when modeling data or sharing declarations across source files.
 ## Records and identity
 
 A source record is a sealed CLR reference type with read-only properties.
-Fields/methods are public by default within the record's accessibility. Private
-members are accessible only lexically inside that record. Construct with
+Unmarked fields and methods are private to the record. Mark exposed members
+and interface implementations `public`. Construct with
 new Point(X := 1, Y := 2), or positional arguments in field order. Explicit
 arguments evaluate in written order; omitted defaults run afterward in field
 order, once per construction. Defaults use declaration scope and cannot read self.
@@ -53,11 +53,11 @@ uses System as Sys, System.Console as Console;
 type UserId = distinct long;
 type Port = ushort range 1..65535;
 type Box<T> = record
-  Value: T;
+  public Value: T;
 end record;
 type Point = record
-  X: int;
-  Y: int := 2;
+  public X: int;
+  public Y: int := 2;
 end record;
 
 begin
@@ -65,7 +65,7 @@ begin
   const Moved: Point := Original with X := 4; end with;
   const Id: UserId := new UserId(7L);
   const Wrapped: Box<UserId> := new Box<UserId>(Id);
-  const Ports: Port[] := new Port[1];
+  const Ports: array of Port := new Port[1];
   if Original.X <> 1 or Moved.X <> 4 or Moved.Y <> 2 or
     cast<long>(Wrapped.Value) <> 7L or Ports[0].Value <> 1 then
     raise new Sys.InvalidOperationException('Incorrect record or domain behavior');

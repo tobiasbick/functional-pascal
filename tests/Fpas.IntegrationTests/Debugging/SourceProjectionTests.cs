@@ -115,8 +115,8 @@ public sealed class SourceProjectionTests
         var source = """
             program SourceValues;
             uses System.Console as Console;
-            type Point = record X: int; Label: string; end record;
-            type Envelope<T> = record Value: T; end record;
+            type Point = record public X: int; public Label: string; end record;
+            type Envelope<T> = record public Value: T; end record;
             type Choice<T> = union Missing; Found(Value: T); end union;
             type UserId = distinct ulong;
             type Amount = distinct decimal;
@@ -134,7 +134,7 @@ public sealed class SourceProjectionTests
               const Name: Label := new Label('mandelbrot');
               const Character: Letter := new Letter(#955);
               const Low: Window := new Window(-8);
-              const Defaults: Window[] := new Window[1];
+              const Defaults: array of Window := new Window[1];
               const Maximum: Full := new Full(9223372036854775807L);
               Console.WriteLine('observe');
             end procedure;

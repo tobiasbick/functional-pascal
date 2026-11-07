@@ -8,14 +8,14 @@ public sealed class RecordExecutionTests
         program Records;
         uses System.Console as Console, System.Collections.Generic as Collections, System.Double as Real;
         type Point = record
-          X: double;
-          Y: double := 0.0;
-          function Shift(Amount: double): Point;
+          public X: double;
+          public Y: double := 0.0;
+          public function Shift(Amount: double): Point;
           begin return self with X := self.X + Amount; end with; end function;
-          function Reader(): function(): double;
+          public function Reader(): function(): double;
           begin return function(): double => self.X; end function;
         end record;
-        type Box = record Values: int[]; end record;
+        type Box = record public Values: array of int; end record;
         begin
           const First: Point := new Point(X := 2.0);
           const Equal: Point := new Point(Y := 0.0, X := 2.0);
@@ -33,7 +33,7 @@ public sealed class RecordExecutionTests
           Console.WriteLine(Missing = null); Console.WriteLine(Missing <> First);
           const NaN: Point := new Point(Real.NaN);
           Console.WriteLine(NaN = new Point(Real.NaN));
-          const Values: int[] := [1, 2];
+          const Values: array of int := [1, 2];
           Console.WriteLine(new Box(Values) = new Box(Values));
           Console.WriteLine(new Box(Values) = new Box([1, 2]));
         end;
@@ -46,14 +46,14 @@ public sealed class RecordExecutionTests
         uses System.Console as Console;
         type Counter = record
           private Value: int := 0;
-          Label: string := 'initial';
-          static function Create(Initial: int): Counter;
+          public Label: string := 'initial';
+          public static function Create(Initial: int): Counter;
           begin return new Counter(Value := Initial); end function;
           private function Read(): int;
           begin return self.Value; end function;
-          function Current(): function(): int;
+          public function Current(): function(): int;
           begin return function(): int => self.Read(); end function;
-          function Increment(): Counter;
+          public function Increment(): Counter;
           begin return self with Value := self.Value + 1; end with; end function;
         end record;
         begin
@@ -75,8 +75,8 @@ public sealed class RecordExecutionTests
         function Mark(Value: int): int;
         begin Console.WriteLine(Value); return Value; end function;
         type Pair = record
-          X: int := Mark(1);
-          Y: int := Mark(2);
+          public X: int := Mark(1);
+          public Y: int := Mark(2);
         end record;
         function OrderValue(): int; begin return Mark(3); end function;
         function Make(): Pair;

@@ -27,9 +27,9 @@ public sealed class ParameterExecutionTests
               var Value: int := 3; var Previous: int := 0; const Delta: int := 2;
               Forward(ref Value, out Previous, in Delta);
               Console.WriteLine(Value); Console.WriteLine(Previous);
-              const Vector: int[] := [1];
+              const Vector: array of int := [1];
               Change(ref Vector[0], out Previous, in Delta); Console.WriteLine(Vector[0]);
-              const Grid: int[,] := new int[1, 1];
+              const Grid: array[,] of int := new int[1, 1];
               Change(ref Grid[0, 0], out Previous, in Delta); Console.WriteLine(Grid[0, 0]);
               Cleanup(out Value); Console.WriteLine(Value);
               Console.WriteLine(int.TryParse('42', out Value)); Console.WriteLine(Value);
@@ -44,20 +44,20 @@ public sealed class ParameterExecutionTests
         => ProgramExecution.Output("""
             program Arguments;
             uses System.Console as Console, System.String as Text;
-            function Next(State: int[]): int;
+            function Next(State: array of int): int;
             begin State[0] := State[0] + 1; return State[0]; end function;
             function Pair(Left: int; Right: int := 2 * 3): int;
             begin return Left * 10 + Right; end function;
-            function Sum(Seed: int := 3; params Values: int[]): int;
+            function Sum(Seed: int := 3; params Values: array of int): int;
             begin var Total: int := Seed; for Value: int in Values do Total := Total + Value; end for; return Total; end function;
-            function Head<T>(params Values: T[]): T;
+            function Head<T>(params Values: array of T): T;
             begin return Values[0]; end function;
             procedure Copy<T>(in Source: T; out Target: T);
             begin Target := Source; end procedure;
             function Label(Name: string := 'a' + 'b'; Flag: bool := 'x' = 'x'; Optional: int? := null): string;
             begin if Flag and not Optional.HasValue then return Name; else return 'bad'; end if; end function;
             begin
-              const State: int[] := [0];
+              const State: array of int := [0];
               Console.WriteLine(Pair(Right := Next(State), Left := Next(State)));
               Console.WriteLine(Pair(1));
               Console.WriteLine(Sum()); Console.WriteLine(Sum(1, 2, 3));

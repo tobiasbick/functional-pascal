@@ -66,15 +66,15 @@ public sealed class SourceInterfaceTests
     [InlineData("type I = interface function F(): int; function F(): string; end interface;", "FP3004")]
     [InlineData("type I = interface function F(): int; end interface; type R = record implements I end record;", "FP3029")]
     [InlineData("type I = interface extends Sys.Collections.IList end interface; type R = record implements I end record;", "FP3029")]
-    [InlineData("type I = interface procedure F(in Value: int); end interface; type R = record implements I procedure F(ref Value: int); begin end procedure; end record;", "FP3029")]
-    [InlineData("type I = interface function F<T>(Value: T): T; where T: class; end interface; type R = record implements I function F<T>(Value: T): T; begin return Value; end function; end record;", "FP3029")]
+    [InlineData("type I = interface procedure F(in Value: int); end interface; type R = record implements I public procedure F(ref Value: int); begin end procedure; end record;", "FP3029")]
+    [InlineData("type I = interface function F<T>(Value: T): T; where T: class; end interface; type R = record implements I public function F<T>(Value: T): T; begin return Value; end function; end record;", "FP3029")]
     [InlineData("type A = interface function F(): int; end interface; type B = interface function F(): string; end interface; type C = interface extends A, B end interface;", "FP3029")]
     [InlineData("type A = interface Name: string; end interface; type B = interface function Name(): string; end interface; type C = interface extends A, B end interface;", "FP3029")]
     [InlineData("type A = interface function F<T>(Value: T): T; where T: class; end interface; type B = interface function F<U>(Value: U): U; where U: struct; end interface; type C = interface extends A, B end interface;", "FP3029")]
     [InlineData("type A = interface Value: string; end interface; type B = interface function get_Value(): string; end interface; type C = interface extends A, B end interface;", "FP3029")]
-    [InlineData("type I = interface function F(Value: string?): string; end interface; type R = record implements I function F(Value: string): string; begin return Value; end function; end record;", "FP3029")]
-    [InlineData("type I = interface Value: string; end interface; type R = record implements I Value: string?; end record;", "FP3029")]
-    [InlineData("type I = interface procedure F(ref Value: string?); end interface; type R = record implements I procedure F(ref Value: string); begin end procedure; end record;", "FP3029")]
+    [InlineData("type I = interface function F(Value: string?): string; end interface; type R = record implements I public function F(Value: string): string; begin return Value; end function; end record;", "FP3029")]
+    [InlineData("type I = interface Value: string; end interface; type R = record implements I public Value: string?; end record;", "FP3029")]
+    [InlineData("type I = interface procedure F(ref Value: string?); end interface; type R = record implements I public procedure F(ref Value: string); begin end procedure; end record;", "FP3029")]
     [InlineData("type I = interface [Sys.Diagnostics.CodeAnalysis.MaybeNullAttribute] Value: string; end interface;", "FP3035")]
     [InlineData("type I = interface [Sys.Diagnostics.CodeAnalysis.NotNullAttribute] Value: string?; end interface;", "FP3035")]
     public void Invalid_interface_graphs_members_and_implementations_are_diagnosed(string declarations, string code)
@@ -100,12 +100,12 @@ public sealed class SourceInterfaceTests
 
     [Theory]
     [InlineData("type I = interface end interface;", "discard new I();", "FP3003")]
-    [InlineData("type I = interface function Read(): int; end interface; type R = record function Read(): int; begin return 1; end function; end record;", "const Value: I := new R();", "FP3002")]
+    [InlineData("type I = interface function Read(): int; end interface; type R = record public function Read(): int; begin return 1; end function; end record;", "const Value: I := new R();", "FP3002")]
     [InlineData("type I<T> = where T: class; interface end interface;", "const Value: I<int>? := null;", "FP3018")]
     [InlineData("type I<T> = interface end interface; type R = record implements I<string> end record;", "const Value: I<object> := new R();", "FP3002")]
-    [InlineData("type A = interface Value: string; end interface; type B = interface Value: string?; end interface; type C = interface extends A, B end interface; type R = record implements C Value: string; end record;", "const Value: C := new R('x'); discard Value.Value;", "FP3003")]
-    [InlineData("type A = interface Value: int; end interface; type B = interface Value: int; end interface; type C = interface extends A, B end interface; type R = record implements C Value: int; end record;", "const Value: C := new R(1); discard Value.Value;", "FP3003")]
-    [InlineData("type A = interface function Read(): int; end interface; type B = interface function Read(): int; end interface; type C = interface extends A, B end interface; type R = record implements C function Read(): int; begin return 1; end function; end record;", "const Value: C := new R(); discard Value.Read();", "FP3003")]
+    [InlineData("type A = interface Value: string; end interface; type B = interface Value: string?; end interface; type C = interface extends A, B end interface; type R = record implements C public Value: string; end record;", "const Value: C := new R('x'); discard Value.Value;", "FP3003")]
+    [InlineData("type A = interface Value: int; end interface; type B = interface Value: int; end interface; type C = interface extends A, B end interface; type R = record implements C public Value: int; end record;", "const Value: C := new R(1); discard Value.Value;", "FP3003")]
+    [InlineData("type A = interface function Read(): int; end interface; type B = interface function Read(): int; end interface; type C = interface extends A, B end interface; type R = record implements C public function Read(): int; begin return 1; end function; end record;", "const Value: C := new R(); discard Value.Read();", "FP3003")]
     public void Interface_construction_constraints_nominality_and_ambiguous_uses_are_diagnosed(string declarations, string body, string code)
     {
         var result = TestCompilation.Compile("program Invalid; " + declarations + " begin " + body + " end; end program;");

@@ -15,11 +15,11 @@ public sealed class OverloadExecutionTests
             function Mode(Value: int): string; begin return 'value'; end function;
             function Mode(in Value: int): string; begin return 'in'; end function;
             function Many(Value: int): string; begin return 'fixed'; end function;
-            function Many(params Values: int[]): string; begin return 'params'; end function;
+            function Many(params Values: array of int): string; begin return 'params'; end function;
             type Box = record
-              Value: int;
-              function Read(): int; begin return self.Value; end function;
-              function Read(Delta: int): int; begin return self.Read() + Delta; end function;
+              public Value: int;
+              public function Read(): int; begin return self.Value; end function;
+              public function Read(Delta: int): int; begin return self.Read() + Delta; end function;
             end record;
             begin
               Console.WriteLine(Choose(1)); Console.WriteLine(Choose(1.5)); Console.WriteLine(Choose('text'));

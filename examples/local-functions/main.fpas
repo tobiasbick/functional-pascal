@@ -3,9 +3,6 @@ program LocalFunctions;
 uses System.Console as Console;
 
 function Factorial(Value: int): int;
-begin
-  return Multiply(Value);
-
   function Multiply(N: int): int;
   begin
     if N = 0 then
@@ -14,17 +11,18 @@ begin
 
     return N * Multiply(N - 1);
   end function;
+begin
+  return Multiply(Value);
 end function;
 
 function MakeCounter(Start: int): function(): int;
-begin
-  var Count: int := Start;
-
   function Next(): int;
   begin
     Count := Count + 1;
     return Count;
   end function;
+begin
+  var Count: int := Start;
 
   return Next;
 end function;

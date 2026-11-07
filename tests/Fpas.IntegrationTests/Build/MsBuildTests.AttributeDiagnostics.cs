@@ -46,7 +46,7 @@ public sealed partial class MsBuildTests
             ("[S.DataAttribute(1, PrivateSetter := 1)] procedure P(); begin end procedure;", "FP3035"),
             ("[S.DataAttribute(1, GetterOnly := 1)] procedure P(); begin end procedure;", "FP3035"),
             ("[S.DataAttribute(1, Item := 1)] procedure P(); begin end procedure;", "FP3035"),
-            ("[S.TypeAttribute(typeof(T))] type R<T> = record Value: T; end record;", "FP3035"),
+            ("[S.TypeAttribute(typeof(T))] type R<T> = record public Value: T; end record;", "FP3035"),
             ("[S.TypeAttribute(typeof(C.List<T>))] procedure P<T>(); begin end procedure;", "FP3035"),
             ("[S.TypeAttribute(@type := typeof(int))] procedure P(); begin end procedure;", "FP3003"),
             ("[S.DecimalAttribute(1.0M)] procedure P(); begin end procedure;", "FP3003"),

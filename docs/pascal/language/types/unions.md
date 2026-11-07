@@ -49,8 +49,8 @@ program MoveOutcomes;
 uses System.Console as Console;
 
 type Position = record
-  X: int;
-  Y: int;
+  public X: int;
+  public Y: int;
 end record;
 
 type MoveOutcome = union

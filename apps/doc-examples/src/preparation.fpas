@@ -19,7 +19,7 @@ end function;
 
 function Include(Options: M.Options; Reference: string): M.Example;
 begin
-  const Parts: string[] := Reference.Split(#35);
+  const Parts: array of string := Reference.Split(#35);
   if Parts.Length <> 2 or not Markdown.SafePath(Parts[0]) or not Markdown.ValidName(Parts[1]) then
     raise new IO.InvalidDataException('Invalid context reference ' + Reference);
   end if;
@@ -46,7 +46,7 @@ begin
 
   const Source: Text.StringBuilder := new Text.StringBuilder();
   const Origins: C.List<M.Origin> := new C.List<M.Origin>();
-  const Lines: string[] := IO.File.ReadAllText(Template).Replace(
+  const Lines: array of string := IO.File.ReadAllText(Template).Replace(
     #13 + '' + #10,
     #10 + ''
   ).Replace(#13, #10).TrimEnd(#10).Split(#10);
@@ -83,7 +83,7 @@ function CompanionSource(FileName: string; Destination: string; Options: M.Optio
 begin
   const Output: Text.StringBuilder := new Text.StringBuilder();
   const Origins: C.List<M.Origin> := new C.List<M.Origin>();
-  const Lines: string[] := IO.File.ReadAllText(FileName).Replace(
+  const Lines: array of string := IO.File.ReadAllText(FileName).Replace(
     #13 + '' + #10,
     #10 + ''
   ).Replace(#13, #10).TrimEnd(#10).Split(#10);
@@ -117,7 +117,7 @@ begin
   IO.File.WriteAllText(Path, Source, new Text.UTF8Encoding(false));
 end procedure;
 
-public function Prepare(Item: M.Example; Options: M.Options; Items: M.Example[]; Directory: string): M.Prepared;
+public function Prepare(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string): M.Prepared;
 begin
   discard IO.Directory.CreateDirectory(Directory);
   const Name: string := if Item.FileName.Length = 0 then 'example.fpas' else Item.FileName end if;

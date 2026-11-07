@@ -5,7 +5,7 @@ public sealed class ScalarDiagnosticsTests
 {
     [Theory]
     [InlineData("type A = B; type B = A;", "", "FP3031")]
-    [InlineData("type Box<T> = where T: class; record Value: T; end record; type Bad = Box<int>;", "", "FP3018")]
+    [InlineData("type Box<T> = where T: class; record public Value: T; end record; type Bad = Box<int>;", "", "FP3018")]
     [InlineData("type long = int;", "", "FP3031")]
     [InlineData("type R = enum end enum;", "", "FP3031")]
     [InlineData("type R = enum A; A; end enum;", "", "FP3031")]

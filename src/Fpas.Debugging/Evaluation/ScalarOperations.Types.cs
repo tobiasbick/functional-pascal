@@ -30,6 +30,14 @@ internal static partial class ScalarOperations
         10 or 11 => to is 12 or 13 or 80, 12 => to == 13, _ => false
     };
 
+    private static uint BinaryKind(DebugBinding left, string op, DebugBinding right)
+    {
+        var kind = Kind(left.Type);
+        if (op is "shl" or "shr") return UnaryKind(kind, "+");
+        if (op == "/" && Integral(kind) && Integral(Kind(right.Type))) return 13;
+        return Promote(left, right);
+    }
+
     private static uint Promote(DebugBinding left, DebugBinding right)
     {
         var a = Kind(left.Type); var b = Kind(right.Type);

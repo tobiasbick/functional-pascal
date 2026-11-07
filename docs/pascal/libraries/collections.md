@@ -6,7 +6,7 @@ indexer, and exception behavior.
 
 | Need | .NET API |
 | --- | --- |
-| Fixed-size indexed storage | T[] or rectangular CLR arrays |
+| Fixed-size indexed storage | `array of T` or rectangular CLR arrays |
 | Growable ordered storage | List<T> |
 | Key lookup | Dictionary<TKey, TValue>, including TryGetValue |
 | Unique values | HashSet<T> |

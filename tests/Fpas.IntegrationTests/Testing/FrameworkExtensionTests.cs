@@ -41,7 +41,7 @@ public sealed class FrameworkExtensionTests(SdkPackageFixture sdk) : IClassFixtu
             public type Tests = record
               [T.TestMethodAttribute]
               [Data.CasesAttribute]
-              procedure Addition(Left: int; Right: int; Expected: int);
+              public procedure Addition(Left: int; Right: int; Expected: int);
               begin T.Assert.AreEqual<int>(Expected, Left + Right); end procedure;
             end record;
             end unit;

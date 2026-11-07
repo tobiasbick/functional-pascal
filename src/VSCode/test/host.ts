@@ -4,7 +4,7 @@ import { readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import * as vscode from 'vscode';
 import { command, compiler, editor, errors, eventually, execute, fixture, lspChildren, type Fixture } from './support';
-import { languageFeatures, watchInputs, linkedOwnership, snippetPrograms, recoverToolchain } from './scenarios';
+import { languageFeatures, watchInputs, linkedOwnership, snippetPrograms, recoverToolchain, multilineStrings } from './scenarios';
 import { editorServices } from './editor-services';
 import { projectWorkflows } from './workflow-projects';
 import { testingWorkflows } from './workflow-testing';
@@ -102,6 +102,10 @@ export async function run(): Promise<void> {
     }
     const scenario = (name: Fixture['workflowScenario']) =>
       data.workflowScenario === undefined || data.workflowScenario === 'all' || data.workflowScenario === name;
+    if (scenario('multiline')) {
+      await multilineStrings(data);
+      record('Multiline strings preserve content and report unterminated unsaved literals');
+    }
     if (scenario('projects')) {
       await projectWorkflows(data);
       record('Project commands, mapped mixed-host run, Problems, terminal input and owned cleanup');

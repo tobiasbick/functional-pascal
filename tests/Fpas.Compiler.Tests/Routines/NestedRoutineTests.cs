@@ -16,11 +16,11 @@ public sealed class NestedRoutineTests
         const string text = """
             unit Factory;
             public function Build<T>(Value: T): function(): T;
-            begin
               // Read the captured value.
               function Read<U>(Other: U): T; where U: struct;
               begin discard Other; return Value; end function;
               function Get(): T; begin return Read<int>(1); end function;
+            begin
               return Get;
             end function;
             end unit;
@@ -39,7 +39,12 @@ public sealed class NestedRoutineTests
         Assert.Single(owner.GetGenericParameters());
         Assert.Equal(TypeAttributes.NestedPrivate, owner.Attributes & TypeAttributes.VisibilityMask);
         using var symbols = MetadataReaderProvider.FromPortablePdbStream(new MemoryStream(first.Program.PortablePdb!));
-        Assert.Contains(symbols.GetMetadataReader().GetMethodDebugInformation(local).GetSequencePoints(), point => !point.IsHidden && point.StartLine == 6);
+        var helperBodyLine = Array.FindIndex(text.Split('\n'), line => line.Contains("begin discard Other", StringComparison.Ordinal)) + 1;
+        Assert.Contains(symbols.GetMetadataReader().GetMethodDebugInformation(local).GetSequencePoints(),
+            point => !point.IsHidden && point.StartLine == helperBodyLine);
+        var enclosing = metadata.MethodDefinitions.Single(handle => metadata.GetString(metadata.GetMethodDefinition(handle).Name) == "Build");
+        Assert.DoesNotContain(symbols.GetMetadataReader().GetMethodDebugInformation(enclosing).GetSequencePoints(),
+            point => !point.IsHidden && point.StartLine == helperBodyLine);
         var xml = XDocument.Parse(Encoding.UTF8.GetString(first.Program.XmlDocumentation!));
         Assert.DoesNotContain(xml.Descendants("member"), member => ((string)member.Attribute("name")!).Contains("Read", StringComparison.Ordinal));
     }
@@ -62,9 +67,47 @@ public sealed class NestedRoutineTests
     }
 
     [Fact]
+    public void A_direct_helper_in_the_outer_statement_block_has_a_placement_diagnostic()
+    {
+        var result = TestCompilation.Compile("""
+            program Example;
+            function Outer(): int;
+            begin
+              function Helper(): int; begin return 42; end function;
+              return Helper();
+            end function;
+            begin end;
+            end program;
+            """);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("FP2003", diagnostic.Code);
+        Assert.Equal(4, diagnostic.Location!.Line);
+        Assert.Equal(3, diagnostic.Location.Column);
+    }
+
+    [Fact]
+    public void Every_capture_in_the_outer_helper_group_must_be_initialized()
+    {
+        var result = TestCompilation.Compile("""
+            program Example;
+            function Outer(): int;
+              function First(): int; begin return 1; end function;
+              function Second(): int; begin return Captured; end function;
+            begin
+              const Early: int := First();
+              const Captured: int := 41;
+              return Early + Second();
+            end function;
+            begin end;
+            end program;
+            """);
+        Assert.Equal("FP3033", Assert.Single(result.Diagnostics).Code);
+    }
+
+    [Fact]
     public void Nested_routines_cannot_capture_managed_reference_parameters()
     {
-        var result = TestCompilation.Compile("program Example; procedure Outer(ref Value: int); begin function Read(): int; begin return Value; end function; discard Read(); end procedure; begin end; end program;");
+        var result = TestCompilation.Compile("program Example; procedure Outer(ref Value: int); function Read(): int; begin return Value; end function; begin  discard Read(); end procedure; begin end; end program;");
         Assert.False(result.Success); Assert.Equal("FP3028", Assert.Single(result.Diagnostics).Code);
     }
 
@@ -74,10 +117,10 @@ public sealed class NestedRoutineTests
         var result = TestCompilation.Compile("""
             program Example;
             type R = record
-              function Read(): int; begin return 1; end function;
-              function Invalid(): int;
-              begin
+              public function Read(): int; begin return 1; end function;
+              public function Invalid(): int;
                 function Inner(self: int): int; begin return Read(); end function;
+              begin
                 return Inner(1);
               end function;
             end record;

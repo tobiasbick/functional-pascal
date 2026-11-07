@@ -41,29 +41,29 @@ public sealed partial class MsBuildTests
               function Narrow<U>(Value: U): U;
               where U: T;
               procedure Adjust(ref Value: int; out Before: int; in Step: int);
-              function Sum(Base: int := 3; params Values: int[]): int;
+              function Sum(Base: int := 3; params Values: array of int): int;
               function Optional(Value: string?): string?;
               function ReadAsync(): Tasks.Task<T>;
             end interface;
             public type Api<T> =
             where T: class;
             record implements IApi<T>, IOther<T>
-              Name: string;
-              Value: T;
-              function Read(): T; begin return self.Value; end function;
-              function Read(Other: T): T;
+              public Name: string;
+              public Value: T;
+              public function Read(): T; begin return self.Value; end function;
+              public function Read(Other: T): T;
               requires Other <> null;
               begin return Other; end function;
-              function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
-              function Narrow<U>(Value: U): U; where U: T; begin return Value; end function;
-              function Exception<U>(Value: U): U; where U: Sys.Exception; begin return Value; end function;
-              procedure Adjust(ref Value: int; out Before: int; in Step: int);
+              public function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
+              public function Narrow<U>(Value: U): U; where U: T; begin return Value; end function;
+              public function Exception<U>(Value: U): U; where U: Sys.Exception; begin return Value; end function;
+              public procedure Adjust(ref Value: int; out Before: int; in Step: int);
               begin Before := Value; Value := Value + Step; end procedure;
-              function Sum(Base: int := 3; params Values: int[]): int;
+              public function Sum(Base: int := 3; params Values: array of int): int;
               begin var Total: int := Base; for Value: int in Values do Total := Total + Value; end for; return Total; end function;
-              function Optional(Value: string?): string?; begin return Value; end function;
-              async function ReadAsync(): Tasks.Task<T>; begin return self.Value; end function;
-              procedure Dispose(); begin Disposals := Disposals + 1; end procedure;
+              public function Optional(Value: string?): string?; begin return Value; end function;
+              public async function ReadAsync(): Tasks.Task<T>; begin return self.Value; end function;
+              public procedure Dispose(); begin Disposals := Disposals + 1; end procedure;
             end record;
             public function Accept(Value: IApi<string>): string;
             begin
@@ -99,22 +99,22 @@ public sealed partial class MsBuildTests
             unit Demo.Consumer;
             uses Demo.Contracts as C, System as Sys, System.Threading.Tasks as Tasks;
             public type Local = record implements C.IRoot<string>
-              Value: string;
-              function Read(): string; begin return self.Value; end function;
+              public Value: string;
+              public function Read(): string; begin return self.Value; end function;
             end record;
             public type External<T> = where T: class;
             record implements C.IApi<T>
-              Name: string; Value: T;
-              function Read(): T; begin return self.Value; end function;
-              function Read(Other: T): T; begin return Other; end function;
-              function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
-              function Narrow<U>(Value: U): U; where U: T; begin return Value; end function;
-              function Exception<U>(Value: U): U; where U: Sys.Exception; begin return Value; end function;
-              procedure Adjust(ref Value: int; out Before: int; in Step: int); begin Before := Value; Value := Value + Step; end procedure;
-              function Sum(Base: int := 3; params Values: int[]): int; begin return Base; end function;
-              function Optional(Value: string?): string?; begin return Value; end function;
-              function ReadAsync(): Tasks.Task<T>; begin return Tasks.Task.FromResult(self.Value); end function;
-              procedure Dispose(); begin end procedure;
+              public Name: string; public Value: T;
+              public function Read(): T; begin return self.Value; end function;
+              public function Read(Other: T): T; begin return Other; end function;
+              public function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
+              public function Narrow<U>(Value: U): U; where U: T; begin return Value; end function;
+              public function Exception<U>(Value: U): U; where U: Sys.Exception; begin return Value; end function;
+              public procedure Adjust(ref Value: int; out Before: int; in Step: int); begin Before := Value; Value := Value + Step; end procedure;
+              public function Sum(Base: int := 3; params Values: array of int): int; begin return Base; end function;
+              public function Optional(Value: string?): string?; begin return Value; end function;
+              public function ReadAsync(): Tasks.Task<T>; begin return Tasks.Task.FromResult(self.Value); end function;
+              public procedure Dispose(); begin end procedure;
             end record;
             public function Accept(Value: C.IApi<string>): string;
             begin return Value.Read() + Value.Echo('external') + Value.ReadAsync().GetAwaiter().GetResult(); end function;

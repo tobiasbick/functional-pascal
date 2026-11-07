@@ -12,7 +12,7 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
 {
     private const string Library = """
         unit Demo.Bridge;
-        public type Box<T> = record Value: T; end record;
+        public type Box<T> = record public Value: T; end record;
         public type Number = int;
         public function Read(Value: int): int; begin return Value; end function;
         public function Unused(): int; begin return 0; end function;

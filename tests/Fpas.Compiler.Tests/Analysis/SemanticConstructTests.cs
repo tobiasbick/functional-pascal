@@ -11,7 +11,7 @@ public sealed class SemanticConstructTests
         const string source = """
             program Data;
             type Number = int;
-            type Point = record X: Number; end record;
+            type Point = record public X: Number; end record;
             type Choice = union None; Some(Value: int); end union;
             function Identity<T>(Value: T): T; begin return Value; end function;
             begin
@@ -56,7 +56,7 @@ public sealed class SemanticConstructTests
               var Value: int := 21;
               var Output: int := 0;
               Work(ref Value, out Output, in Value);
-              const Values: int[,] := new int[1, 2];
+              const Values: array[,] of int := new int[1, 2];
               Values[0, 0] := Positive(Output);
               S.Console.WriteLine(Values.Length);
             end;
@@ -112,7 +112,7 @@ public sealed class SemanticConstructTests
         const string source = """
             program ExactTypes;
             type Choice<T> = union None; Some(Value: T); end union;
-            type Holder = record Callback: function(int): int; end record;
+            type Holder = record public Callback: function(int): int; end record;
             procedure Keep(in Value: string?); begin end procedure;
             begin
               const Selected: Choice<int> := Choice.Some(42);
@@ -161,7 +161,7 @@ public sealed class SemanticConstructTests
             uses System.Numerics as N;
             type IReader = interface function Read(): int; end interface;
             type Reader = record implements IReader
-              function Read(): int; begin return 42; end function;
+              public function Read(): int; begin return 42; end function;
             end record;
             function Zero<T>(): T; where T: N.INumber<T>;
             begin return T.Zero; end function;

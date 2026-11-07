@@ -34,7 +34,7 @@ begin
   const Body: IO.Stream := await Response.Content.ReadAsStreamAsync(Cancellation).ConfigureAwait(false);
   using const Reader: IO.StreamReader := new IO.StreamReader(Body,
     new Text.UTF8Encoding(false, true), false, 4096, true);
-  const Buffer: char[] := new char[4096];
+  const Buffer: array of char := new char[4096];
   const Memory: Sys.Memory<char> := new Sys.Memory<char>(Buffer);
   const Result: Text.StringBuilder := new Text.StringBuilder();
   while true do

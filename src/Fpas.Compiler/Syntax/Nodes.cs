@@ -9,7 +9,7 @@ internal sealed record NameSyntax(IReadOnlyList<Token> Parts)
 internal sealed record TypeSegmentSyntax(Token Name, IReadOnlyList<TypeSyntax>? Arguments = null);
 internal sealed record TypeSyntax(IReadOnlyList<TypeSegmentSyntax> Segments, bool Nullable = false, TypeSyntax? Element = null, int Rank = 0, IReadOnlyList<TypeSyntax>? CallableParameters = null, TypeSyntax? CallableResult = null)
 {
-    internal int Position => Segments[0].Name.Position;
+    internal int Position { get; init; } = Segments[0].Name.Position;
     internal string Text => string.Join('.', Segments.Select(segment => segment.Name.Text));
     internal int SpanEnd { get; init; }
 }

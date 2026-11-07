@@ -6,7 +6,7 @@ uses
   System.Text.Json as J, System.Security.Cryptography as Crypto,
   System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
 
-function Arguments(args: string[]): M.Options;
+function Arguments(args: array of string): M.Options;
 begin
   var Root: string := S.Environment.CurrentDirectory;
   var Output: string := '';

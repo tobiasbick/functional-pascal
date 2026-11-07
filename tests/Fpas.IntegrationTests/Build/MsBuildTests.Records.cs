@@ -33,20 +33,22 @@ public sealed partial class MsBuildTests
             function DefaultLabel(): string;
             begin Console.WriteLine('default'); return 'initial'; end function;
             public type Item = record
-              Label: string := DefaultLabel();
-              Count: int := 1;
-              Note: string? := null;
-              function Increase(): Item;
+              public Label: string := DefaultLabel();
+              public Count: int := 1;
+              public Note: string? := null;
+              public function Increase(): Item;
               begin return self with Count := self.Count + 1; end with; end function;
             end record;
-            type State = record Value: int; end record;
+            type State = record public Value: int; end record;
             public type Counter = record
-              private State: State;
-              Label: string := 'counter';
-              static function Create(Value: int): Counter;
+              State: State;
+              public Label: string := 'counter';
+              static function ReadState(Value: State): int;
+              begin return Value.Value; end function;
+              public static function Create(Value: int): Counter;
               begin return new Counter(new State(Value)); end function;
-              function Current(): int;
-              begin return self.State.Value; end function;
+              public function Current(): int;
+              begin return ReadState(self.State); end function;
             end record;
             end unit;
             """);
@@ -80,7 +82,12 @@ public sealed partial class MsBuildTests
             if (Bridge.HasNote(expected) || !Bridge.HasNote(new Models.Item("C#", 4, "note"))) throw new Exception("Nullable fields");
             if (updated.Increase().Count != 4) throw new Exception("Instance method");
             var counter = Bridge.RenameCounter();
-            if (counter.Current() != 42 || counter.Label != "changed" || typeof(Models.Counter).GetConstructors().Length != 0) throw new Exception("Private state");
+            var counterType = typeof(Models.Counter);
+            if (counter.Current() != 42 || counter.Label != "changed" || counterType.GetConstructors().Length != 0 ||
+                counterType.GetProperty("State") is not null || counterType.GetMethod("ReadState") is not null ||
+                counterType.GetProperty("State", BindingFlags.Instance | BindingFlags.NonPublic)?.GetMethod?.IsPrivate != true ||
+                counterType.GetMethod("ReadState", BindingFlags.Static | BindingFlags.NonPublic)?.IsPrivate != true)
+                throw new Exception("Private state or helper visibility");
             if (!typeof(Models.Item).IsSealed || typeof(Models.Item).GetProperty("Label")!.CanWrite) throw new Exception("CLR shape");
             var marker = typeof(Models.Item).GetCustomAttributes(false).Single(attribute => attribute.GetType().FullName == "Fpas.Core.RecordAttribute");
             if ((int)marker.GetType().GetProperty("Version")!.GetValue(marker)! != 1) throw new Exception("Record marker");

@@ -18,16 +18,18 @@ The [coverage map](../tests/coverage.md) identifies the owning test files.
 | Required behavior | Implementation owner | Verification |
 | --- | --- | --- |
 | Strict UTF-8, initial BOM, supported line endings, ASCII/case-sensitive identifiers, escapes, numeric/string/char literals, line comments | Syntax/Lexer, CLI source input | EmissionTests, ScalarDiagnosticsTests, CompilerCliTests, DocumentationTests |
+| Multiline strings preserve literal whitespace and normalize line endings to LF | Syntax/Lexer, Formatting/LayoutWriter | DiagnosticsTests, FormatterTests, MultilineStringExecutionTests |
 | Program/unit counts, named terminators, entry args, explicit aliased imports, visibility and duplicate identities | Parser, SourceCatalog, Binder | DiagnosticsTests, MultiSourceTests, RoutineTests, MultiSourceCliTests |
 | Explicit initialized bindings, immutable/mutable storage, assignment order and definite assignment | Parser.Statements, Binder.Statements, ParameterFlow | DiagnosticsTests, ExpressionDiagnosticsTests, ParameterDiagnosticsTests, ParameterExecutionTests |
-| Primitive CLR identities, widths, native integers, decimal, numeric promotion, checked/unchecked behavior, UTF-16 | TypeFacts, NumericFacts/Value, numeric binding/emission | ScalarMetadataTests, NumericExecutionTests, PrimitiveExecutionTests, MsBuildTests.Scalars |
+| Primitive CLR identities, widths, native integers, decimal, numeric promotion, real division of integrals, checked/unchecked behavior, UTF-16 | TypeFacts, NumericFacts/Value, numeric binding/emission | ScalarMetadataTests, NumericExecutionTests, PrimitiveExecutionTests, MsBuildTests.Scalars |
+| Parentheses around mixed logical operators, Boolean short-circuiting, eager XOR and bitwise evaluation | Parser.Expressions, Binder.Operators | ExpressionDiagnosticsTests, ControlFlowExecutionTests, ExpressionInspectionTests |
 | Transparent aliases, nominal domains, enum constants, full-width ranges, checked construction and lower-bound defaults | SourceCatalog.Scalars, scalar metadata/emission | ScalarDiagnosticsTests, ScalarMetadataTests, ScalarExecutionTests, MsBuildTests.Scalars |
 | Nullable storage/metadata, stable flow facts, boxing/unboxing, casts, typeof and initialization effects | NullabilityMetadata, Binder.NullableFlow, conversions | InteropDiagnosticsTests, TypeOfTests, GlobalTests, MsBuildTests.Collections/TypeOf/Globals |
-| Arrays, rectangular/jagged shape, contextual literals, default elements, indexers and enumeration cleanup | Binder.Arrays/Enumeration, ReferenceCatalog.Indexers | CollectionsDiagnosticsTests, CollectionsExecutionTests, MsBuildTests.Collections |
+| Prefix array types, rectangular and jagged shapes, element and array nullability, contextual literals, indexers and enumeration cleanup | Parser.Types, Binder.Arrays/Enumeration, ReferenceCatalog.Indexers | CollectionsDiagnosticsTests, CollectionsExecutionTests, MsBuildTests.Collections/NestedTypes |
 | Boolean branches, typed counting/enumeration, repeat/while, extreme endpoints, iteration captures and cleanup exits | Binder.Loops, FlowAnalysis, ParameterFlow | LoopTests, LoopExecutionTests, ControlFlowExecutionTests, MsBuildTests.Loops |
 | Overloads, inference, named/optional/params arguments, exact ref/out/in storage and readonly defensive copies | SourceCatalog.Routines, Binder.Arguments/Inference, ReferenceCatalog | GenericRoutineTests, InferenceTests, ParameterDiagnosticsTests, MsBuildTests.Inference/ContractsAndParameters |
-| Delegates, lexical recursion, shared mutable cells, escaping closures, generic environments and capture initialization | Binder.Callables/NestedRoutines, closure emission | CallableDiagnosticsTests, NestedRoutineTests, CallableExecutionTests, MsBuildTests.Callables/NestedRoutines |
-| Records, immutable properties, defaults, private construction, static methods, shallow updates and field equality | SourceCatalog.Records, Binder.Records, record emission | RecordTests, RecordMetadataTests, RecordExecutionTests, MsBuildTests.Records |
+| Delegates, local helpers before routine bodies, lexical recursion, shared captures, generic environments and capture initialization | Parser.Callables, Binder.Callables/NestedRoutines, closure emission | CallableDiagnosticsTests, NestedRoutineTests, CallableExecutionTests, MsBuildTests.Callables/NestedRoutines |
+| Records, private members by default, immutable properties, defaults, constructor visibility, shallow updates and field equality | Parser.Records, SourceCatalog.Records, Binder.Records, record emission | RecordTests, RecordMetadataTests, RecordExecutionTests, MsBuildTests.Records |
 | Closed generic records/unions, constraints and complete interface declarations before field/signature validation | SourceCatalog.TypeGenerics/Interfaces/Scalars, ReferenceCatalog.SourceGenerics | GenericTypeTests, ScalarDiagnosticsTests, MsBuildTests.GenericTypes/Baseline |
 | Union constructors and contextual inference, immutable payloads, typed/nested/range patterns and exhaustive coverage | Binder.Unions/Patterns, PatternCoverage, union metadata | UnionTests, CaseCoverageTests, UnionMetadataTests, MsBuildTests.Unions/Inference |
 | Imported CLR inheritance/members, real struct storage, interface implementation/defaults and unsupported signatures | ReferenceCatalog, Binder.Members, member emission | InteropDiagnosticsTests, OverloadAndInterfaceDiagnosticsTests, MsBuildTests.Interop/Interfaces/SignatureLimits |
@@ -63,14 +65,14 @@ execution alone is not the diagnostic contract.
 | Clean/Rebuild, isolated parallel configurations/projects and equivalence to clean output | SDK cleanup/file tracking and standard project graph | MsBuildTests.Acceptance, DebugSymbols and Documentation |
 | Optional/default/custom XML paths, reference sidecar propagation, toggle/repair and ownership-aware cleanup | DocumentationOutputs, FpasCleanDocumentation | MsBuildTests.Documentation/DocumentationIds |
 | Explicit clean/restore and schema export for command reports and terminal scripts | CLI Projects/MaintenanceCommand and Reporting/SchemaCommand | MaintenanceTests, ReportSchemaTests, TerminalWorkflowTests |
-| Native VSTest extensions, data providers, coverage collectors and self-hosted MTP projects, including mixed solutions | Workspaces/Testing and CLI test templates | FrameworkExtensionTests, ExternalAdapterTests, TestingPlatformTests |
+| Native VSTest extensions, data providers, coverage collectors and self-hosted MTP projects, including mixed solutions | Workspaces/Testing and CLI test templates | NativeFrameworkTests, FrameworkExtensionTests, ExternalAdapterTests, TestingPlatformTests |
 | Real PTY/ConPTY input, Unicode, resize, bounded output and owned-process cleanup | Processes/Terminal and CLI Terminal | TerminalWorkflowTests |
 | Runtime-failure reports, continuing tracepoints, saved dumps, real traces/counters and bounded thread/GC summaries | Debugging/Batch and CLI Debugging/Profiling | TracepointCliTests, DiagnosticsWorkflowTests |
 
 ## Findings addressed by the comparison
 
 The source interface graph was populated after constructed record fields and
-method signatures were checked. A valid `Box<Item>[]` field was rejected when
+method signatures were checked. An array of `Box<Item>` was rejected when
 Box constrained T to IComparable<T> and Item implemented IComparable<Item>.
 The reduced program failed with FP3018 before the correction.
 

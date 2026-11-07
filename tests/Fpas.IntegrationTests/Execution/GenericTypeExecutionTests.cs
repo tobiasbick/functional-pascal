@@ -8,12 +8,12 @@ public sealed class GenericTypeExecutionTests
         program Records;
         uses System.Console as Console;
         type Box<T> = record
-          Value: T;
-          Label: string := 'box';
-          function Get(): T; begin return self.Value; end function;
-          function Map<U>(Transform: function(T): U): Box<U>;
+          public Value: T;
+          public Label: string := 'box';
+          public function Get(): T; begin return self.Value; end function;
+          public function Map<U>(Transform: function(T): U): Box<U>;
           begin return new Box<U>(Transform(self.Value)); end function;
-          static function Make(Value: T): Box<T>; begin return new Box<T>(Value); end function;
+          public static function Make(Value: T): Box<T>; begin return new Box<T>(Value); end function;
         end record;
         function Wrap<T>(Value: T): Box<T>; begin return Box<T>.Make(Value); end function;
         begin
@@ -35,9 +35,9 @@ public sealed class GenericTypeExecutionTests
         program Closures;
         uses System.Console as Console;
         type Box<T> = record
-          Value: T;
-          function Reader(): function(): T; begin return function(): T => self.Value; end function;
-          function Join<U>(Other: U; Combine: function(T, U): string): function(): function(): string;
+          public Value: T;
+          public function Reader(): function(): T; begin return function(): T => self.Value; end function;
+          public function Join<U>(Other: U; Combine: function(T, U): string): function(): function(): string;
           begin return function(): function(): string => function(): string => Combine(self.Value, Other); end function;
         end record;
         begin

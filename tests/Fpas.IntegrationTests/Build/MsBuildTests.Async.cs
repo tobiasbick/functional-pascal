@@ -32,7 +32,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
             uses System as Sys, System.Threading.Tasks as Tasks, Demo as D;
-            public async function Wait(Gate: Tasks.Task<int>; State: int[]): Tasks.Task<int>;
+            public async function Wait(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
             requires State.Length = 3;
             ensures (Returned: int): Returned = State[2];
             begin
@@ -41,7 +41,7 @@ public sealed partial class MsBuildTests
               State[1] := D.AsyncApi.ThreadId();
               return Value + State[2];
             end function;
-            public async function Configure(Gate: Tasks.Task<int>; State: int[]): Tasks.Task<int>;
+            public async function Configure(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
             begin
               const Value: int := await Gate.ConfigureAwait(false);
               State[1] := D.AsyncApi.ThreadId(); return Value;
@@ -49,7 +49,7 @@ public sealed partial class MsBuildTests
             public async function Guard(Value: int): Tasks.Task<int>;
             requires Value > 0;
             begin return Value; end function;
-            public async function Clean(Gate: Tasks.Task<int>; State: int[]; Mode: int): Tasks.Task<int>;
+            public async function Clean(Gate: Tasks.Task<int>; State: array of int; Mode: int): Tasks.Task<int>;
             ensures (Returned: int): Returned = 7;
             ensures State[0] = 3214;
             begin
@@ -62,7 +62,7 @@ public sealed partial class MsBuildTests
                 await Tasks.Task.Delay(1); State[0] := State[0] * 10 + 4;
               end try;
             end function;
-            public async function Catch(Gate: Tasks.Task<int>; State: int[]): Tasks.Task<int>;
+            public async function Catch(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
             begin
               try
                 try discard await Gate;
@@ -77,7 +77,7 @@ public sealed partial class MsBuildTests
             end function;
             public async function Identity<T>(Gate: Tasks.Task<T>): Tasks.Task<T>;
             begin return await Gate; end function;
-            public async function Loops(State: int[]): Tasks.Task<int>;
+            public async function Loops(State: array of int): Tasks.Task<int>;
             begin
               for Index: int := 1 to 3 do
                 await using const Resource: D.AsyncResource := new D.AsyncResource(State, Index, false);
@@ -85,12 +85,12 @@ public sealed partial class MsBuildTests
                 if Index = 1 then continue; end if;
                 break;
               end for;
-              const Values: int[] := [3, 4];
+              const Values: array of int := [3, 4];
               for Value: int in Values do await Tasks.Task.Delay(1); State[0] := State[0] * 10 + Value; end for;
               await using const Empty: D.AsyncResource? := null;
               return State[0];
             end function;
-            public async function Acquisition(State: int[]): Tasks.Task;
+            public async function Acquisition(State: array of int): Tasks.Task;
             begin
               await using const First: D.AsyncResource := D.AsyncApi.Acquire(State, 1, false);
               await using const Second: D.AsyncResource := D.AsyncApi.Acquire(State, 2, true);
@@ -98,8 +98,8 @@ public sealed partial class MsBuildTests
             public function Capture<T>(Value: T): function(): Tasks.Task<T>;
             begin return async function(): Tasks.Task<T> begin await Tasks.Task.Delay(1); return Value; end function; end function;
             public type Box<T> = record
-              Value: T;
-              async function Read<U>(Other: U): Tasks.Task<U>;
+              public Value: T;
+              public async function Read<U>(Other: U): Tasks.Task<U>;
               begin await Tasks.Task.Delay(1); return Other; end function;
             end record;
             end unit;

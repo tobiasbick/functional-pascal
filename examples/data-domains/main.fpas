@@ -8,7 +8,7 @@ begin
   const State: D.Status := D.Status.Online;
   const Price: D.Amount := 19.95M;
   const Endpoint: D.Port := new D.Port(80);
-  const Defaults: D.Port[] := new D.Port[1];
+  const Defaults: array of D.Port := new D.Port[1];
 
   Console.WriteLine(Account.Value);
   Console.WriteLine(Name.Value);

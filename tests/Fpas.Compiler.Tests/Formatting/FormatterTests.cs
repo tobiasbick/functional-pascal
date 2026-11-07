@@ -7,6 +7,31 @@ namespace Fpas.Compiler.Tests.Formatting;
 
 public sealed class FormatterTests
 {
+    [Theory]
+    [InlineData("\n", "\n")]
+    [InlineData("\r\n", "\r\n")]
+    [InlineData("\r", "\r")]
+    [InlineData("\r\n", "\r")]
+    public void Formatting_normalizes_line_breaks_but_preserves_spaces_and_tabs_in_a_multiline_literal(string first, string second)
+    {
+        var source = $"program Example;begin const Text:string:='first{first}\t  // part of the literal  {second}last''line';discard Text;end;end program;";
+        var formatted = Format(source);
+        Assert.DoesNotContain('\r', formatted);
+        Assert.Contains("  const Text: string := 'first\n\t  // part of the literal  \nlast''line';\n  discard Text;", formatted);
+        Assert.Equal(formatted, Format(formatted));
+        Assert.True(TestCompilation.Compile(formatted).Success);
+    }
+
+    [Fact]
+    public void A_routine_prefix_formats_contracts_and_helpers_before_the_outer_begin()
+    {
+        const string source = "program Example;function Run(Value:int):int;requires Value>=0;ensures Value>=0;function Read():int;begin return Value;end function;begin return Read();end function;begin end;end program;";
+        var formatted = Format(source);
+        Assert.Contains("ensures Value >= 0;\n  function Read(): int;\n  begin", formatted);
+        Assert.Contains("  end function;\nbegin\n  return Read();", formatted);
+        Assert.Equal(formatted, Format(formatted));
+    }
+
     [Fact]
     public void Formats_program_declarations_and_named_blocks()
     {
@@ -153,8 +178,8 @@ public sealed class FormatterTests
     [Fact]
     public void Type_constraints_members_contracts_and_attributes_use_structural_lines()
     {
-        var output = Format("unit Models;[Sys.Obsolete('sample')]public type Box<T> =where T:class;record Value:T;function Read():T;requires true;ensures true;begin return Self.Value;end function;end record;end unit;");
-        Assert.Contains("[Sys.Obsolete('sample')]\npublic type Box<T> =\nwhere T: class;\nrecord\n  Value: T;\n\n  function Read(): T;\n  requires true;\n  ensures true;\n  begin\n    return Self.Value;\n  end function;\nend record;\nend unit;", output);
+        var output = Format("unit Models;[Sys.Obsolete('sample')]public type Box<T> =where T:class;record public Value:T;public function Read():T;requires true;ensures true;begin return Self.Value;end function;end record;end unit;");
+        Assert.Contains("[Sys.Obsolete('sample')]\npublic type Box<T> =\nwhere T: class;\nrecord\n  public Value: T;\n\n  public function Read(): T;\n  requires true;\n  ensures true;\n  begin\n    return Self.Value;\n  end function;\nend record;\nend unit;", output);
     }
 
     [Fact]

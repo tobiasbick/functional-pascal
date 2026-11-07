@@ -60,7 +60,7 @@ public sealed class DocumentationTests
             // - `T`: Stored value.
             public type Box<T> = record
               // Stored property.
-              Value: T;
+              public Value: T;
               // Private state.
               private Secret: int := 0;
               // Copies a value.
@@ -72,7 +72,7 @@ public sealed class DocumentationTests
               // - `U`: Method type.
               // ## Returns
               // The other value.
-              function Copy<U>(ref Item: T; out Previous: T; in Other: U): U;
+              public function Copy<U>(ref Item: T; out Previous: T; in Other: U): U;
               begin Previous := Item; return Other; end function;
             end record;
             // Optional result.
@@ -89,7 +89,7 @@ public sealed class DocumentationTests
             // Generic overload.
             public function Read<T>(Value: T): T; begin return Value; end function;
             // Array and nullable arguments.
-            public function Arrays(Grid: int[,]; Text: string?[][]; Number: double?): int; begin return 0; end function;
+            public function Arrays(Grid: array[,] of int; Text: array of array of string?; Number: double?): int; begin return 0; end function;
             // Private helper.
             private function Hidden(): int; begin return 1; end function;
             end unit;

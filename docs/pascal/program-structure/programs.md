@@ -26,7 +26,7 @@ retain their own named terminators.
 `async program Name;` enables await in the entry body. Source selection and build
 configuration are specified in the [MSBuild contract](../../build/msbuild.md).
 
-The entry body receives an implicit immutable `args: string[]` binding, containing
+The entry body receives an implicit immutable `args: array of string` binding, containing
 command-line arguments excluding the executable name. Free functions do not
 implicitly receive args. Entry completion yields process exit code zero;
 unhandled exceptions follow the .NET host's failure behavior. The baseline has

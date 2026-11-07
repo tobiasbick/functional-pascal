@@ -5,7 +5,7 @@ namespace Fpas.Debugging.Evaluation;
 
 internal static class ExpressionLexer
 {
-    private static readonly HashSet<string> Keywords = new(("async await begin break case catch const continue discard distinct div do downto else elsif end ensures enum extends false finally for function if implements in interface is mod new not null of or out params private procedure program public raise range record ref repeat return requires shl shr static subscribe then to true try type union unit unsubscribe until using var when where while with and xor as uses class struct cast typeof unchecked").Split(' '), StringComparer.Ordinal);
+    private static readonly HashSet<string> Keywords = new(("array async await begin break case catch const continue discard distinct div do downto else elsif end ensures enum extends false finally for function if implements in interface is mod new not null of or out params private procedure program public raise range record ref repeat return requires shl shr static subscribe then to true try type union unit unsubscribe until using var when where while with and xor as uses class struct cast typeof unchecked").Split(' '), StringComparer.Ordinal);
 
     internal static ExpressionToken[] Read(string source)
     {
@@ -18,11 +18,16 @@ internal static class ExpressionLexer
             if (current == '\'')
             {
                 var buffer = new StringBuilder(); var closed = false;
-                while (position < source.Length && source[position] is not ('\r' or '\n'))
+                while (position < source.Length)
                 {
                     var character = source[position++];
                     if (character == '\'')
                     { if (position < source.Length && source[position] == '\'') position++; else { closed = true; break; } }
+                    if (character == '\r')
+                    {
+                        if (position < source.Length && source[position] == '\n') position++;
+                        character = '\n';
+                    }
                     buffer.Append(character);
                 }
                 if (!closed) throw Invalid(start, "Unterminated string literal.");

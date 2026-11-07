@@ -18,7 +18,7 @@ uses System as Sys, System.Console as Console, System.Text as Text,
   System.Text.RegularExpressions as Regular;
 
 begin
-  const Bytes: byte[] := Text.Encoding.UTF8.GetBytes('Aé');
+  const Bytes: array of byte := Text.Encoding.UTF8.GetBytes('Aé');
   const Decoded: string := Text.Encoding.UTF8.GetString(Bytes);
   const Replaced: string := Regular.Regex.Replace('room12', '[0-9]+', '#');
   if Bytes.Length <> 3 or Decoded <> 'Aé' or Replaced <> 'room#' then

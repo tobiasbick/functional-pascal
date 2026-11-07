@@ -54,10 +54,10 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             function First(): int; begin return 1; end function;
             function Second(): int; begin return 2; end function;
             public function Run(): int;
-            begin
-              const Local: function(): int := First;
               function Nested(): int;
               begin const Alias: function(): int := Second; return Local() + Alias(); end function;
+            begin
+              const Local: function(): int := First;
               return Nested();
             end function;
             end unit;
@@ -75,7 +75,7 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
     {
         const string source = """
             unit Demo.Bridge;
-            public type Point<T> = record X: T; end record;
+            public type Point<T> = record public X: T; end record;
             public function Read(Value: int): int;
             begin
               const P: Point<int> := new Point<int>(X := Value);
@@ -96,7 +96,7 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
     [Fact]
     public async Task Generic_constraint_parameter_references_and_noop_renames_are_preserved()
     {
-        const string source = "unit Demo.Bridge; public type Item<T> = where T: class; record Value: T; end record; end unit;";
+        const string source = "unit Demo.Bridge; public type Item<T> = where T: class; record public Value: T; end record; end unit;";
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
         var selection = RenameFixture.Select(directory, source, "T> =");
         var changed = RenameService.Prepare(analysis, selection, "U"); Assert.Equal(3, changed.Plan.EditCount);
@@ -111,8 +111,8 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             unit Demo.Bridge;
             public type IReader = interface function Read(): int; end interface;
             public type Reader = record implements IReader
-              Value: int;
-              function Read(): int; begin return self.Value; end function;
+              public Value: int;
+              public function Read(): int; begin return self.Value; end function;
             end record;
             public function Run(): int;
             begin const R: Reader := new Reader(Value := 21); const I: IReader := R; return R.Read() + I.Read(); end function;
@@ -121,7 +121,7 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
         var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Read(): int; end interface"), "Fetch");
         Assert.Equal(2, prepared.Plan.Targets.Count); Assert.Equal(4, prepared.Plan.EditCount);
-        const string external = "unit Demo.Bridge; uses System as S; public type Resource = record implements S.IDisposable procedure Dispose(); begin end procedure; end record; end unit;";
+        const string external = "unit Demo.Bridge; uses System as S; public type Resource = record implements S.IDisposable public procedure Dispose(); begin end procedure; end record; end unit;";
         File.WriteAllText(directory.File("Game/Bridge.fpas"), external); analysis = await RenameFixture.Analyze(directory);
         Assert.Equal("rename_external_contract", Assert.Throws<ContextFailure>(() => RenameService.Prepare(analysis,
             RenameFixture.Select(directory, external, "Dispose();"), "Close")).Code);

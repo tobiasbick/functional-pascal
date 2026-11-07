@@ -33,7 +33,7 @@ public sealed partial class SourceControlTests
               for Kind: Type in Loaded.GetTypes() do
                 const Method: MethodInfo? := Kind.GetMethod('Compute');
                 if Method is MethodInfo then
-                  const Arguments: object?[] := [41];
+                  const Arguments: array of object? := [41];
                   Console.WriteLine(Method.Invoke(null, Arguments));
                 end if;
               end for;

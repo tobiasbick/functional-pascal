@@ -7,7 +7,7 @@ separate FPAS annotation runtime.
 ```pascal fragment context=declarations
 type Measurement = record
   [Serialization.JsonPropertyNameAttribute('sample_name')]
-  Name: string;
+  public Name: string;
 end record;
 ```
 

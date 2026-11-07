@@ -32,8 +32,10 @@ Select the existing operator for the contained non-nullable types, retaining
 ordinary numeric promotion, constant-expression conversions, and domain rules.
 At least one nullable operand lifts that operation. Non-nullable operands may be
 mixed with nullable operands. For example, int? + long produces long?, and
-short? + byte? produces int?. Decimal still cannot implicitly mix with float or
-double; integral division still uses div. Unary numeric promotion also applies.
+short? + byte? produces int?. Real division of integral operands produces
+double? when either operand is nullable. Use div for the integral quotient.
+Decimal cannot implicitly mix with float or double. Unary numeric promotion
+also applies.
 
 | Operator | Result type | Behavior when an operand is absent |
 | --- | --- | --- |

@@ -12,7 +12,7 @@ public sealed partial class DapDebuggerTests
             program PageBytes;
             uses System as Sys, System.Console as Console;
             begin
-              const Items: string?[] := new string?[128];
+              const Items: array of string? := new string?[128];
               const Text: string := new Sys.String(#120, 4096);
               for Index: int := 0 to 127 do Items[Index] := Text; end for;
               Console.WriteLine('observe');
@@ -40,7 +40,7 @@ public sealed partial class DapDebuggerTests
             uses System.Console as Console;
             begin
               const Missing: string? := null;
-              const Numbers: int[] := new int[129];
+              const Numbers: array of int := new int[129];
               Numbers[128] := 73;
               Console.WriteLine('observe');
             end;

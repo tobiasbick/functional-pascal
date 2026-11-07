@@ -3,6 +3,9 @@ namespace Fpas.Compiler.Syntax.Parsing;
 internal sealed partial class Parser
 {
     private IReadOnlyList<StatementSyntax> ReadStatements(params string[] terminators)
+        => ReadStatements(allowRoutineDeclarations: true, terminators);
+
+    private IReadOnlyList<StatementSyntax> ReadStatements(bool allowRoutineDeclarations, params string[] terminators)
     {
         var bodyStart = position;
         if (terminators.Length == 0)
@@ -18,7 +21,15 @@ internal sealed partial class Parser
             StatementSyntax? statement = null;
             try
             {
-                statement = ReadStatement(); statements.Add(statement);
+                statement = ReadStatement();
+                if (!allowRoutineDeclarations && statement is NestedRoutineSyntax)
+                {
+                    Expect(";");
+                    source.Diagnostics.Add(source.Error("FP2003", "Place this local routine before the outer 'begin'.",
+                        tokens[start].Position, tokens[start].Length).Diagnostic);
+                    continue;
+                }
+                statements.Add(statement);
                 Expect(";");
                 var name = statement switch { BindingSyntax binding => binding.Name, UsingSyntax use => use.Binding.Name, NestedRoutineSyntax nested => nested.Routine.Name, _ => null };
                 if (name is not null) declarations[name.Position].End = LastEnd;

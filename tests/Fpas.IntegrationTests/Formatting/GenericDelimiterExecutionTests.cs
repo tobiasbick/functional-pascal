@@ -11,7 +11,7 @@ public sealed class GenericDelimiterExecutionTests
         const string source = """
             program Adjacent;
             uses System.Console as Console;
-            type Box<T>=record Value:T;end record;
+            type Box<T>=record public Value:T;end record;
             type Choice<T>=union Empty;Value(Item:T);end union;
             type IBox<T>=interface Value:T;end interface;
             begin

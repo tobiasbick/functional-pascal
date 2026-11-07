@@ -11,7 +11,7 @@ public sealed class ComparisonOperatorTests
     {
         var result = TestCompilation.Compile("""
             program Guard;
-            type Item = record Value: int; end record;
+            type Item = record public Value: int; end record;
             function Read(Value: Item?): int;
             begin if Value <> null then return Value.Value; else return 0; end if; end function;
             begin end;

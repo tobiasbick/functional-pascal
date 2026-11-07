@@ -31,7 +31,7 @@ begin
 end procedure;
 
 begin
-  const Args: string[] := Sys.Environment.GetCommandLineArgs();
+  const Args: array of string := Sys.Environment.GetCommandLineArgs();
   try
     if Args.Length = 1 or Args[1] = '--help' then
       Help();
@@ -54,7 +54,7 @@ begin
       for Index: int := 1 to Warmup do
         Work.Verify(Args[2], Rounds, Work.RunBatch(Args[2], Rounds));
       end for;
-      const Values: double[] := new double[Count];
+      const Values: array of double := new double[Count];
       var Last: long := 0;
       for Index: int := 0 to Count - 1 do
         const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();

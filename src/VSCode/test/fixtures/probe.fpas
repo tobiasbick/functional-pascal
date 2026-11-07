@@ -3,7 +3,7 @@ program Probe;
 uses System as Sys;
 
 begin
-  const Args: string[] := Sys.Environment.GetCommandLineArgs();
+  const Args: array of string := Sys.Environment.GetCommandLineArgs();
   const Root: string := Sys.AppContext.BaseDirectory;
   Sys.IO.File.AppendAllText(Sys.IO.Path.Combine(Root, 'calls.log'), Args[1] + Sys.Environment.NewLine);
   if Args[1] = 'env' then

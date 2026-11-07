@@ -70,7 +70,7 @@ program LoopValues;
 uses System as Sys, System.Console as Console;
 
 begin
-  const Values: int[] := [2, 3];
+  const Values: array of int := [2, 3];
   var Total: int := 0;
   for Value: int in Values do Total := Total + Value; end for;
   for Index: int := 0 to 1 do Total := Total + Index; end for;

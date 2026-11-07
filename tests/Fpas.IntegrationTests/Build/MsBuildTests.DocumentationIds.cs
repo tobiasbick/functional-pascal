@@ -50,9 +50,9 @@ public sealed partial class MsBuildTests
             // Box.
             public type Box<T> = record
               // Value.
-              Value: T;
+              public Value: T;
               // Copy.
-              function Copy<U>(ref item: T; out previous: T; in other: U): U;
+              public function Copy<U>(ref item: T; out previous: T; in other: U): U;
               begin previous := item; return other; end function;
             end record;
             // Outcome.
@@ -67,7 +67,7 @@ public sealed partial class MsBuildTests
             // Read.
             public function Read<T>(value: T): T; begin return value; end function;
             // Arguments.
-            public procedure Arguments(box: Box<int>; grid: int[][,]; text: string?[]?; number: double?; callback: function(int): string);
+            public procedure Arguments(box: Box<int>; grid: array[,] of array of int; text: (array of string?)?; number: double?; callback: function(int): string);
             begin end procedure;
             end unit;
             """);

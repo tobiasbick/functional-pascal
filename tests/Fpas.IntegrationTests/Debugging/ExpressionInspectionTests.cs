@@ -15,12 +15,13 @@ public sealed class ExpressionInspectionTests
             program Expressions;
             uses System.Console as Console, System.IO.File as File, System.String as Strings;
             var Global: int := 21;
-            type Point = record X: int; end record;
+            type Point = record public X: int; end record;
             type UserId = distinct long;
             procedure Observe(Input: int);
             begin
               const Global: int := 99;
               const Value: int := 41;
+              const @array: int := 7;
               const Unsigned: uint := 42U;
               const NativeSigned: nint := cast<nint>(41);
               const NativeUnsigned: nuint := cast<nuint>(41);
@@ -30,10 +31,10 @@ public sealed class ExpressionInspectionTests
               const Text: string := 'λ😀';
               const LongText: string := new Strings(#955, 5000);
               const Position: Point := new Point(42);
-              const Points: Point[] := [new Point(42)];
+              const Points: array of Point := [new Point(42)];
               const Id: UserId := new UserId(41L);
-              const Values: int[] := [10, 20, 30];
-              const Grid: int[,] := new int[2, 3];
+              const Values: array of int := [10, 20, 30];
+              const Grid: array[,] of int := new int[2, 3];
               Grid[1, 2] := 42;
               Console.WriteLine('observe');
               File.WriteAllText('after.txt', 'executed');
@@ -55,10 +56,14 @@ public sealed class ExpressionInspectionTests
             ("1_000 div 3", "int", "333"), ("$FF and 15", "int", "15"), ("not 0", "int", "-1"), ("1 shl 33", "int", "2"),
             ("Unsigned + 1", "uint", "43"), ("NativeSigned + 1", "nint", "42"), ("NativeUnsigned + 1", "nuint", "42"),
             ("Amount + 1.25M", "decimal", "2.5000"), ("Wide - Rounded", "float", "0"), ("1.0 / 0.0", "double", "Infinity"),
+            ("1 / 2", "double", "0.5"), ("NativeUnsigned / -2", "double", "-20.5"),
+            ("false and (1 / 0 > 0.0)", "bool", "false"),
             ("-2147483648", "int", "-2147483648"), ("-9223372036854775808L", "long", "-9223372036854775808"),
             ("false and (1 div 0 = 0)", "bool", "false"), ("true or (1 div 0 = 0)", "bool", "true"), ("true xor false", "bool", "true"),
+            ("(false and false) or true", "bool", "true"), ("false and (false or true)", "bool", "false"),
             ("false and (Points[1 div 0].X = 0)", "bool", "false"),
-            ("'it''s' + #10", "string", "it's\n"), ("Text[0]", "char", "λ"), ("Position.X * 2", "int", "84"), ("Id.Value + 1L", "long", "42"),
+            ("'it''s' + #10", "string", "it's\n"), ("'first\r\nsecond\rlast''line'", "string", "first\nsecond\nlast'line"),
+            ("@array", "int", "7"), ("Text[0]", "char", "λ"), ("Position.X * 2", "int", "84"), ("Id.Value + 1L", "long", "42"),
             ("Values[1 + 1]", "int", "30"), ("Grid[1, 2]", "int", "42"), ("int.MaxValue", "int", "2147483647"),
             ("string.Empty + 'x'", "string", "x"), ("null = null", "bool", "true"), ("LongText[4095]", "char", "λ")
         })
@@ -71,9 +76,11 @@ public sealed class ExpressionInspectionTests
         Assert.Null(surrogate.Error); Assert.Equal("D83D", surrogate.Value!.RawUtf16);
         foreach (var (expression, code) in new[]
         {
-            ("Value div 0", "division_by_zero"), ("int.MaxValue + 1", "overflow"), ("1 / 2", "unsupported_expression"),
+            ("Value div 0", "division_by_zero"), ("int.MaxValue + 1", "overflow"),
             ("Amount + 1.0", "unsupported_expression"), ("false and 1", "unsupported_expression"), ("Values[3]", "index_out_of_range"),
+            ("false and (false) or true", "invalid_expression"),
             ("Text[-1]", "index_out_of_range"), ("value", "unresolved_name"), ("Position + Position", "unsupported_expression"),
+            ("array", "unsupported_expression"),
             ("File.WriteAllText('bad.txt', 'bad')", "unsupported_expression"), ("new Point(1)", "unsupported_expression"),
             ("Value := 0", "unsupported_expression"), ("1.0L", "invalid_expression"),
             ("'abc' ?? 1", "unsupported_expression"), ("'abc' ?? MissingName", "unsupported_expression"), ("null ?? 1", "unsupported_expression"),

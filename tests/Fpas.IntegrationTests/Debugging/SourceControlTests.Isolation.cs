@@ -53,7 +53,7 @@ public sealed partial class SourceControlTests
                 const Loaded: Assembly := Context.LoadFromAssemblyPath(Assembly.GetExecutingAssembly().Location);
                 const Entry: MethodInfo? := Loaded.EntryPoint;
                 if Entry is MethodInfo then
-                  const Arguments: object?[] := new object?[Entry.GetParameters().Length];
+                  const Arguments: array of object? := new object?[Entry.GetParameters().Length];
                   if Arguments.Length > 0 then Arguments[0] := new string[0]; end if;
                   discard Entry.Invoke(null, Arguments);
                 end if;

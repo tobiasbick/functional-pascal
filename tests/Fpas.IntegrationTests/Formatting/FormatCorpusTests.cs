@@ -62,7 +62,7 @@ public sealed class FormatCorpusTests
         const string input = """
             program UpdateOrder;
             uses System.Console as Console;
-            type Pair = record X:int;Y:int;end record;
+            type Pair = record public X:int;public Y:int;end record;
             var Count:int:=0;
             function Next():int;begin Count:=Count+1;return Count;end function;
             begin

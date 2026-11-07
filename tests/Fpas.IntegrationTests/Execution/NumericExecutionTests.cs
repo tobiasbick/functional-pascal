@@ -16,15 +16,21 @@ public sealed class NumericExecutionTests
     [InlineData("int", "-8 shr 1", "-4")]
     [InlineData("int", "1 shl 33", "2")]
     [InlineData("int", "not 0", "-1")]
-    [InlineData("int", "7 and 3 xor 8 or 16", "27")]
+    [InlineData("int", "((7 and 3) xor 8) or 16", "27")]
+    [InlineData("int", "cast<int?>(null) and 3 ?? 4 or 1", "5")]
     [InlineData("double", "1.5 + 2 * 0.5", "2.5")]
     [InlineData("double", "3 / 2.0", "1.5")]
+    [InlineData("double", "1 / 2", "0.5")]
+    [InlineData("double", "-7 / 2", "-3.5")]
+    [InlineData("double", "#65 / 2", "32.5")]
+    [InlineData("bool", "(1 / 0) = double.PositiveInfinity", "True")]
+    [InlineData("bool", "(0 / 0) <> (0 / 0)", "True")]
     [InlineData("double", "1_0.5_0e-1 + 2D", "3.05")]
     [InlineData("double", "1e2 + 1d", "101")]
     [InlineData("double", "2", "2")]
     [InlineData("int", "cast<int>(-3.75)", "-3")]
     [InlineData("double", "cast<double>(3) / 2.0", "1.5")]
-    [InlineData("bool", "not false and true xor false or false", "True")]
+    [InlineData("bool", "((not false and true) xor false) or false", "True")]
     [InlineData("bool", "2 < 3 and 3 <= 3 and 4 > 3 and 4 >= 4", "True")]
     [InlineData("bool", "2 = 2.0 and 2 <> 3", "True")]
     [InlineData("bool", "false = (1 > 2)", "True")]
@@ -58,6 +64,26 @@ public sealed class NumericExecutionTests
         Assert.NotEqual(0, result.ExitCode);
         Assert.Contains("System." + exception, result.Error);
     }
+
+    [Fact]
+    public Task Integral_real_division_folds_like_runtime_at_double_rounding_boundaries()
+        => ProgramExecution.Output("""
+            program Quotients;
+            uses System.Console as Console;
+            function Folded(Value: double := 9_007_199_254_740_995L / 2): double;
+            begin return Value; end function;
+            function FoldedUnsigned(Value: double := 18_446_744_073_709_551_615UL / -2L): double;
+            begin return Value; end function;
+            function DivideSigned(Value: long): double; begin return Value / 2; end function;
+            function DivideMixed(Value: ulong; Divisor: long): double; begin return Value / Divisor; end function;
+            begin
+              Console.WriteLine(Folded() = 4_503_599_627_370_498.0);
+              Console.WriteLine(DivideSigned(9_007_199_254_740_995L) = Folded());
+              Console.WriteLine(FoldedUnsigned() = -9_223_372_036_854_775_808.0);
+              Console.WriteLine(DivideMixed(18_446_744_073_709_551_615UL, -2L) = FoldedUnsigned());
+            end;
+            end program;
+            """, "True", "True", "True", "True");
 
     [Fact]
     public Task Metadata_overloads_and_source_calls_apply_numeric_widening()

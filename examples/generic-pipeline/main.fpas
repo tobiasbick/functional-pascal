@@ -14,7 +14,7 @@ end function;
 
 begin
   const Format: function(int): string := Pipeline.Compose(Double, Label);
-  const Rows: string[] := Pipeline.Map([1, 2, 3], Format);
+  const Rows: array of string := Pipeline.Map([1, 2, 3], Format);
 
   for Row: string in Rows do
     Console.WriteLine(Row);

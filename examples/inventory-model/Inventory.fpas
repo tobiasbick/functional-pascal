@@ -3,15 +3,15 @@ unit Dungeon.Inventory;
 uses System.Collections.Generic as Collections;
 
 public type Item = record
-  Name: string;
-  Weight: double;
+  public Name: string;
+  public Weight: double;
 end record;
 
 public type Position = record
-  Item: Item;
-  Quantity: int := 1;
+  public Item: Item;
+  public Quantity: int := 1;
 
-  function TotalWeight(): double;
+  public function TotalWeight(): double;
   begin
     return self.Item.Weight * self.Quantity;
   end function;

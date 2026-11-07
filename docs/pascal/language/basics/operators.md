@@ -9,19 +9,27 @@ Precedence, high to low:
 5. `shl`, `shr`.
 6. `<`, `<=`, `>`, `>=`, `is`.
 7. `=`, `<>`.
-8. `and`, then `xor`, then `or`.
+8. A chain of `and`, `or`, or `xor`.
 9. `??` (right associative).
 
 Other binary operators associate left. Comparison/equality operators do not
 chain. Parenthesize expressions combining `await` and coalescing when their
 grouping would be unclear: `(await Load()) ?? 'Fallback'`.
 
+Use one operator kind per logical chain. Write `(A and B) or C` or
+`A and (B or C)` to mix kinds. The parser diagnoses the `or` in both
+`A and B or C` and `A and (B) or C`. Each operand of `??` has its own
+logical chain.
+
 - `and`/`or` on `bool` short-circuit. `xor` is eager.
 - On integral values, `and`, `or`, `xor`, `not`, `shl`, and `shr` are bitwise,
   with CLR/C# numeric promotion and shift-count rules. Same-type enum bitwise
   operations retain the enum type.
-- `/` accepts promoted `float`, `double`, or `decimal` operands. Two integral
-  operands require `div` or an explicit floating conversion.
+- With two integral operands, `/` converts each to `double` before dividing.
+  This includes mixed signed and unsigned types, native integers, `char`,
+  and subranges projected to their base type. `1 / 2` yields `0.5`,
+  `1 / 0` yields positive infinity, and `0 / 0` yields NaN. If an operand
+  is already `float`, `double`, or `decimal`, use ordinary promotion.
 - `div` and `mod` accept integral operands; division truncates toward zero.
 - Numeric widening and binary promotion follow C# rules. For example,
   `int + long` produces `long`, and `short + short` produces `int`.

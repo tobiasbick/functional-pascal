@@ -25,23 +25,25 @@ public sealed class CollectionsExecutionTests
             program Arrays;
             uses System as Sys, System.Console as Console;
             begin
-              const Values: int[] := [1, 2, 3];
-              const Alias: int[] := Values;
+              const Values: array of int := [1, 2, 3];
+              const Alias: array of int := Values;
               Alias[1] := 9;
               Console.WriteLine(Values[1]);
-              const Empty: string[] := [];
+              const Empty: array of string := [];
               Console.WriteLine(Empty.Length);
-              const Jagged: int[][] := [[], [4, 5]];
+              const Jagged: array of array of int := [[], [4, 5]];
               Jagged[1][0] := 7;
               Console.WriteLine(Jagged[1][0]);
-              const Grid: int[,] := new int[2, 3];
+              const Grid: array[,] of int := new int[2, 3];
               Grid[1, 2] := 8;
               Console.WriteLine(Grid.Length);
               for Cell: int in Grid do Console.WriteLine(Cell); end for;
-              const Optional: string?[] := new string?[1];
+              const Optional: array of string? := new string?[1];
               Console.WriteLine(Optional[0] ?? 'null element');
-              const Zero: string[,] := new string[0, 3];
+              const Zero: array[,] of string := new string[0, 3];
               Console.WriteLine(Zero.Length);
+              const @array: array of function(): int := [function(): int => 42];
+              Console.WriteLine(@array[0]());
               const Text: string := 'A😀';
               Console.WriteLine(Text.Length);
               Console.WriteLine(Text[0]);
@@ -51,7 +53,7 @@ public sealed class CollectionsExecutionTests
               try discard Values[3]; catch Failure: Sys.IndexOutOfRangeException do Console.WriteLine('bounds'); end try;
             end;
             end program;
-            """, "9", "0", "7", "6", "0", "0", "0", "0", "0", "8", "null element", "0", "3", "A", "65", "55357", "56832", "line\ntwo", "66", "bounds");
+            """, "9", "0", "7", "6", "0", "0", "0", "0", "0", "8", "null element", "0", "42", "3", "A", "65", "55357", "56832", "line\ntwo", "66", "bounds");
 
     [Fact]
     public Task Generic_methods_fields_indexers_nested_types_and_interface_variance_execute()
@@ -90,14 +92,14 @@ public sealed class CollectionsExecutionTests
         => ProgramExecution.Output("""
             program Context;
             uses System.Console as Console;
-            function Echo(Values: int[]): int[];
+            function Echo(Values: array of int): array of int;
             begin return Values; end function;
-            function Empty(Present: bool): int[];
+            function Empty(Present: bool): array of int;
             begin return if Present then [] else [1] end if; end function;
             begin
               Console.WriteLine(Echo([]).Length);
               Console.WriteLine(Empty(true).Length);
-              Console.WriteLine(cast<int[]>([]).Length);
+              Console.WriteLine(cast<array of int>([]).Length);
             end;
             end program;
             """, "0", "0", "0");
@@ -107,7 +109,7 @@ public sealed class CollectionsExecutionTests
         => ProgramExecution.Output("""
             program Loops;
             uses System as Sys, System.Collections.Generic as C, System.Console as Console;
-            function Source(): int[];
+            function Source(): array of int;
             begin Console.WriteLine('source'); return [1, 2, 3]; end function;
             begin
               for Item: int in Source() do

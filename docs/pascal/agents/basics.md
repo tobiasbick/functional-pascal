@@ -18,8 +18,9 @@ Use an explicit conversion rather than guessing a different Pascal dialect's typ
 Strings use apostrophes: `'it''s ready'`. Numeric forms include `$FF`, `1_000`,
 `42L`, `42U`, `42UL`, `1.5`, `1e3`, `1.5F`, and `1.5M`. Unsuffixed integers must
 fit int; representable constants can convert contextually to appropriate smaller/
-unsigned types. `#65` is char. Strings cannot span lines; concatenate with `#10`
-for a line feed. Only `//` starts a comment. Whitespace and comments do not
+unsigned types. `#65` is char. Strings can span lines. LF, CRLF, and CR inside
+quotes each become LF. Spaces and tabs inside the literal are preserved.
+Only `//` starts a comment. Whitespace and comments do not
 replace required statement terminators.
 
 ## Operators and decisions
@@ -30,16 +31,17 @@ floating-point types. Integer arithmetic/conversions check overflow; use
 `unchecked(Expression)` for wrapping integral operations. Decimal retains checks.
 Floating operations can produce NaN/infinity. Subrange validation always remains.
 
-Use div/mod for integral division/remainder. `/` requires floating/decimal
-operands; cast first when starting with integers. Casts use `cast<T>(Value)`.
+Use div/mod for the integral quotient and remainder. `1 / 2` yields
+`0.5` as double. Use `cast<T>(Value)` for explicit conversions.
 No implicit conversion to bool exists. Boolean and/or short-circuit; xor is eager.
 Integral and/or/xor/not and shl/shr are bitwise, with CLR promotion/shift rules.
 
 Precedence, highest first: postfix operations; unary +, -, not, await;
 multiplication/division; addition/subtraction; shifts; ordering/is; equality;
-and; xor; or; right-associative ??. Comparisons do not chain. Parenthesize when
-the intended grouping is unclear. String + accepts strings/chars, not arbitrary
-object formatting. Use actual .NET formatting APIs for other values.
+logical chains; right-associative ??. Comparisons do not chain. Use one of
+and, or, xor per logical chain. Group mixed operators explicitly, as in
+`(A and B) or C`. Each operand of `??` has its own chain. String + accepts
+strings/chars. Use actual .NET formatting APIs for other values.
 
 If statements use if/then, optional elsif/then, optional else, and end if.
 An if expression requires else and one compatible expression per branch.
@@ -48,7 +50,9 @@ Nested begin/end blocks, branches, and loop bodies introduce local scopes.
 
 ## Arrays, strings, and loops
 
-Vectors use int[]; rectangular arrays use int[,]; jagged arrays use int[][].
+Use `array of int` for vectors, `array[,] of int` for rectangles, and
+`array of array of int` for jagged arrays. `array of string?` allows null
+elements. `(array of string)?` allows a null array.
 Literals such as [1, 2] produce vectors; empty [] needs an expected element type.
 Allocate with new int[Count] or new double[Rows, Columns]. Length is a property,
 and indexes start at zero. Nonempty default-initialized reference arrays require
@@ -72,8 +76,8 @@ program AgentBasics;
 uses System as Sys, System.Console as Console;
 
 begin
-  const Items: int[] := [1, 2];
-  const Shared: int[] := Items;
+  const Items: array of int := [1, 2];
+  const Shared: array of int := Items;
   Shared[0] := 3;
   var Total: int := 0;
   for Value: int in Items do Total := Total + Value; end for;
@@ -82,7 +86,7 @@ begin
   while Total < 9 do Total := Total + 1; end while;
 
   const Text: string := 'A😀';
-  const Half: double := cast<double>(Total) / 2.0;
+  const Half: double := Total / 2;
   if Total <> 9 or Items[0] <> 3 or Text.Length <> 3 or Text[0] <> #65 or Half <> 4.5 then
     raise new Sys.InvalidOperationException('Incorrect value, loop, or text behavior');
   end if;

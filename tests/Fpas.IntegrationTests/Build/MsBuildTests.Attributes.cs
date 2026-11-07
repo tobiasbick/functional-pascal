@@ -79,15 +79,15 @@ public sealed partial class MsBuildTests
             [S.ScalarsAttribute(-128, 255, -32768, 65535, -2147483648, 4294967295U, -9223372036854775808L,
               18446744073709551615UL, 1.25F, 2.5, #65535, true)]
             [S.PayloadAttribute('hello' + #10 + 'CLR', typeof(C.List<string?>), S.Mode.High, typeof(int?), [1, 2],
-              [null, 'text', 42, true, #65, S.Mode.High, typeof(Model<int>), [1, 2], typeof(Model<int>[]), typeof(int[,])],
+              [null, 'text', 42, true, #65, S.Mode.High, typeof(Model<int>), [1, 2], typeof(array of Model<int>), typeof(array[,] of int)],
               Note := 'named', ExtraType := typeof(Local), Modes := [S.Mode.High], Count := 4294967295U)]
             [S.PayloadAttribute(null, null, S.Mode.High, Local.A, null, null)]
             public type Model<T> = record
               [Json.JsonPropertyNameAttribute('payload')]
-              Value: T;
+              public Value: T;
               [S.SingleAttribute(9)]
               [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.AggressiveInlining)]
-              function Read(): T; begin return self.Value; end function;
+              public function Read(): T; begin return self.Value; end function;
             end record;
             [Sys.SerializableAttribute] [S.SingleAttribute(1)] public type Outcome<T> = union Empty; Value(Data: T); end union;
             [S.SingleAttribute(2)] public type Id = distinct long;
@@ -99,10 +99,10 @@ public sealed partial class MsBuildTests
             [S.ExplodingAttribute]
             public function Explosive(): int; begin return 42; end function;
             public function Nested(): int;
-            begin
               [S.SingleAttribute(6)]
               [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoOptimization)]
               function Local(): int; begin return 6; end function;
+            begin
               [procedure() begin end procedure][0]();
               return Local();
             end function;

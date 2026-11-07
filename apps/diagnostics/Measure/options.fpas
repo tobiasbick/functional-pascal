@@ -3,17 +3,17 @@ unit Diagnostics.MeasureOptions;
 uses System as Sys, System.IO as IO, System.Collections.Generic as Collections;
 
 public type Options = record
-  Executable: string;
-  Arguments: string[];
-  Directory: string;
-  Output: string;
-  Label: string;
-  Boundary: string;
-  Environment: string;
-  Warmup: int;
-  Count: int;
-  Timeout: int;
-  Contains: string;
+  public Executable: string;
+  public Arguments: array of string;
+  public Directory: string;
+  public Output: string;
+  public Label: string;
+  public Boundary: string;
+  public Environment: string;
+  public Warmup: int;
+  public Count: int;
+  public Timeout: int;
+  public Contains: string;
 end record;
 
 function Integer(Value: string; Minimum: int; Maximum: int): int;
@@ -26,7 +26,7 @@ begin
   return Parsed;
 end function;
 
-public function Read(Args: string[]): Options;
+public function Read(Args: array of string): Options;
 begin
   var Output: string := '';
   var Label: string := '';

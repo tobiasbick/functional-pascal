@@ -60,7 +60,7 @@ public sealed partial class PublishingTests(SdkPackageFixture sdk) : IClassFixtu
               Fpas.Core.RecordAttribute as RecordMarker;
             type Id = distinct int;
             type Box<T> = record
-              Value: T;
+              public Value: T;
             end record;
             async function Twice(Value: int): Tasks.Task<int>;
             requires Value >= 0;

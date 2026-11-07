@@ -60,7 +60,7 @@ internal static class TestTemplate
             [T.TestClassAttribute]
             public type Tests = record
               [T.TestMethodAttribute]
-              procedure Addition();
+              public procedure Addition();
               begin
                 T.Assert.AreEqual<int>(4, 2 + 2);
               end procedure;
@@ -76,7 +76,7 @@ internal static class TestTemplate
             [N.TestFixtureAttribute]
             public type Tests = record
               [N.TestAttribute]
-              procedure Addition();
+              public procedure Addition();
               begin
                 L.ClassicAssert.AreEqual(4, 2 + 2);
               end procedure;
@@ -97,7 +97,7 @@ internal static class TestTemplate
           Microsoft.Testing.Extensions.TrxReportExtensions as Trx;
 
         begin
-          const Args: string[] := Sys.Environment.GetCommandLineArgs();
+          const Args: array of string := Sys.Environment.GetCommandLineArgs();
           const Arguments: Collections.List<string> := new Collections.List<string>();
           for Index: int := 1 to Args.Length - 1 do Arguments.Add(Args[Index]); end for;
           const Builder: Platform.ITestApplicationBuilder := await Platform.TestApplication.CreateBuilderAsync(Arguments.ToArray());

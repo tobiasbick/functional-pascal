@@ -94,7 +94,7 @@ public sealed class CallableExecutionTests
               Console.WriteLine(Calls);
               for Text: string in Labels do Console.WriteLine(Text); end for;
               Console.WriteLine(Calls);
-              const Array: string[] := Seq.ToArray<string>(Labels);
+              const Array: array of string := Seq.ToArray<string>(Labels);
               Console.WriteLine(Array.Length);
               Console.WriteLine(Calls);
               const Values: C.List<int> := new C.List<int>([3, 1, 2]);

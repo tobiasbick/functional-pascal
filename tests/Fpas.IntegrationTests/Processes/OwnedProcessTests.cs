@@ -16,7 +16,7 @@ public sealed class OwnedProcessTests
             uses System as S, System.IO.File as File, System.Diagnostics as P,
               System.Threading.Thread as Thread;
             begin
-              const Args: string[] := S.Environment.GetCommandLineArgs();
+              const Args: array of string := S.Environment.GetCommandLineArgs();
               if Args[1] = 'child' then
                 File.WriteAllText(Args[3] + '.argument', Args[4]);
                 File.WriteAllText(Args[3] + '.environment', S.Environment.GetEnvironmentVariable('FPAS_PROCESS_TEST_VALUE') ?? '');

@@ -27,7 +27,7 @@ only if the invoked method's CLR signature itself supports that synchronous call
 the caller must not keep a managed reference across suspension. No pointer,
 `ref struct`, ref return, or byref-local syntax is provided.
 
-`params Values: T[]` may be the final by-value parameter. A call may supply an
+`params Values: array of T` may be the final by-value parameter. A call may supply an
 existing array or expanded element arguments. Expanded arguments allocate one
 array. The same rules apply to imported CLR `ParamArray` parameters.
 

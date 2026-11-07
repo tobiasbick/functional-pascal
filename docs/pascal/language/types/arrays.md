@@ -1,8 +1,17 @@
 # Arrays and collections
 
-`T[]` is a one-dimensional zero-based CLR vector; `T[,]` is a rectangular
-two-dimensional array; `T[][]` is jagged. Allocation uses `new int[Count]` or
-`new double[Rows, Columns]`. Indexes are `Values[I]` and `Grid[X, Y]`.
+`array of T` is a one-dimensional zero-based CLR vector. `array[,] of T` is
+a rectangular two-dimensional array. Use one comma per additional dimension,
+up to rank 32. `array of array of T` is jagged. Array type declarations nest
+up to the parser's 256-level type limit.
+
+`array of string?` allows null elements. `(array of string)?` allows a null
+array. Combine these as `(array of string?)?`. A vector of nullable inner
+arrays uses `array of (array of string)?`. Escape the reserved word with
+`@array` to use it as a name.
+
+Allocate with `new int[Count]` or `new double[Rows, Columns]`. Index with
+`Values[I]` or `Grid[X, Y]`.
 All dimensions are evaluated once and must be valid `int` lengths. Rectangular
 rank is at most 32. Length is the total element count, returned as int.
 
@@ -46,8 +55,8 @@ program Collections;
 uses System.Console as Console, System.Collections.Generic as Generic;
 
 begin
-  const Values: int[] := [1, 2, 3];
-  const Shared: int[] := Values;
+  const Values: array of int := [1, 2, 3];
+  const Shared: array of int := Values;
   Shared[0] := 9;
   Console.WriteLine(Values[0]); // 9: both bindings reference the same array
 

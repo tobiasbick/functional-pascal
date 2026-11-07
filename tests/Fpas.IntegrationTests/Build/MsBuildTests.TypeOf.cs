@@ -42,7 +42,7 @@ public sealed partial class MsBuildTests
             public type UserName = distinct string;
             public type Percent = int range 0..100;
             public type Direction = enum North; South; end enum;
-            public type Model<T> = record Value: T; end record;
+            public type Model<T> = record public Value: T; end record;
             public type Tree<T> = union Empty; Leaf(Value: T); end union;
             public function Touch(): int; begin return Initialized; end function;
             end unit;
@@ -51,11 +51,11 @@ public sealed partial class MsBuildTests
             unit Demo.Types;
             uses Demo.Models as M, Shared as S, System as Sys, System.Threading.Tasks as Tasks;
             public const IntegerType: Sys.Type := typeof(int);
-            type Hidden = record Value: int := S.Log.Mark(); end record;
-            public function Snapshot(): Sys.Type[];
+            type Hidden = record public Value: int := S.Log.Mark(); end record;
+            public function Snapshot(): array of Sys.Type;
             begin
               return [typeof(M.Amount), typeof(M.UserName), typeof(M.Percent), typeof(M.Direction),
-                typeof(M.Model<int>), typeof(M.Tree<string>), typeof(M.Tree<string>[]), typeof(S.Foreign)];
+                typeof(M.Model<int>), typeof(M.Tree<string>), typeof(array of M.Tree<string>), typeof(S.Foreign)];
             end function;
             public function Get<T>(): Sys.Type; begin return typeof(T); end function;
             public function Factory<T>(): function(): Sys.Type; begin return function(): Sys.Type => typeof(T); end function;

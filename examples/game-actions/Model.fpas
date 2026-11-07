@@ -1,8 +1,8 @@
 unit Dungeon.Model;
 
 public type Position = record
-  X: int;
-  Y: int;
+  public X: int;
+  public Y: int;
 end record;
 
 public type ActionOutcome = union

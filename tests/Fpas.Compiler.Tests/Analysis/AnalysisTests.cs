@@ -10,7 +10,7 @@ public sealed class AnalysisTests
     [Theory]
     [InlineData("program Empty; begin end; end program;", CompilationTarget.Exe)]
     [InlineData("unit Library; public function Read(): int; begin return 42; end function; end unit;", CompilationTarget.Library)]
-    [InlineData("program Records; type Point = record X: int; end record; begin const P: Point := new Point(42); end; end program;", CompilationTarget.Exe)]
+    [InlineData("program Records; type Point = record public X: int; end record; begin const P: Point := new Point(42); end; end program;", CompilationTarget.Exe)]
     [InlineData("async program Async; uses System.Threading.Tasks as T; async function F(): T.Task<int>; begin return await T.Task.FromResult<int>(42); end function; begin discard await F(); end; end program;", CompilationTarget.Exe)]
     public void Successful_analysis_has_independent_completion_and_does_not_publish_files(string source, CompilationTarget target)
     {

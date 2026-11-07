@@ -15,7 +15,7 @@ public sealed class GlobalExecutionTests
         var Counter: long := 3L;
         const Read: function(): long := function(): long => Counter;
         const Saved: function(): long := Capture();
-        const Items: int[] := [10];
+        const Items: array of int := [10];
         function Capture(): function(): long;
         begin const Local: long := 40L; return function(): long => Local + Counter; end function;
         procedure Increment(ref Value: long); begin Value := Value + 1L; end procedure;
@@ -66,9 +66,9 @@ public sealed class GlobalExecutionTests
         uses System.Console as Console;
         var Count: int := 3;
         type Reader = record
-          function Count(): int; begin return 42; end function;
-          function Read(): int; begin return Count(); end function;
-          function Saved(): function(): int; begin return function(): int => Count(); end function;
+          public function Count(): int; begin return 42; end function;
+          public function Read(): int; begin return Count(); end function;
+          public function Saved(): function(): int; begin return function(): int => Count(); end function;
         end record;
         begin
           const Value: Reader := new Reader();

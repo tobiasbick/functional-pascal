@@ -7,7 +7,7 @@ begin
   return Value;
 end function;
 
-public function Map<T, U>(Items: Collections.IEnumerable<T>; Transform: function(T): U): U[];
+public function Map<T, U>(Items: Collections.IEnumerable<T>; Transform: function(T): U): array of U;
 begin
   const Result: Collections.List<U> := new Collections.List<U>();
 

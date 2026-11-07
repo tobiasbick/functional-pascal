@@ -78,8 +78,8 @@ public sealed class GlobalTests
             program Example;
             var self: int := 1;
             type R = record
-              function Read(): int; begin return 1; end function;
-              static function Invalid(): int; begin return Read(); end function;
+              public function Read(): int; begin return 1; end function;
+              public static function Invalid(): int; begin return Read(); end function;
             end record;
             begin end;
             end program;

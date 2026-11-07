@@ -19,7 +19,7 @@ public sealed class TestReportLimitTests(SdkPackageFixture sdk) : IClassFixture<
             [N.TestFixtureAttribute]
             public type Tests = record
               [N.TestAttribute]
-              procedure Output();
+              public procedure Output();
               begin
                 const Text: string := 'x';
                 S.Console.WriteLine(Text.PadRight(6_000_000, #120));

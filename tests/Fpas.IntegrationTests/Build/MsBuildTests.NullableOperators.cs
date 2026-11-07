@@ -30,12 +30,12 @@ public sealed partial class MsBuildTests
             public function Evaluate(): int;
             begin
               Trace := 0;
-              const Sum: int? := Tap(1, null) + Tap(2, 3);
-              if Sum <> null then raise new Sys.InvalidOperationException('Missing result lost'); end if;
+              const Quotient: double? := Tap(1, null) / Tap(2, 3);
+              if Quotient <> null then raise new Sys.InvalidOperationException('Missing result lost'); end if;
               const Skipped: int? := cast<int?>(null) div 0;
               if Skipped <> null then raise new Sys.InvalidOperationException('Division should be absent'); end if;
               try
-                discard Tap(3, null) + (1 div 0);
+                discard Tap(3, null) / (1 div 0);
                 raise new Sys.InvalidOperationException('Right operand was skipped');
               catch Error: Sys.DivideByZeroException do
               end try;
@@ -78,6 +78,8 @@ public sealed partial class MsBuildTests
             public function EnumNot(A: Flags?): Flags?; begin return not A; end function;
             public function DomainEqual(A: Meters?; B: Meters?): bool; begin return A = B; end function;
             public function RangeAdd(A: Percent?; B: int?): int?; begin return A + B; end function;
+            public function RangeQuotient(A: Percent?; B: int?): double?; begin return A / B; end function;
+            public function NativeQuotient(A: nint; B: nuint): double; begin return A / B; end function;
             public function Wrapping(A: int?; B: int?): int?; begin return unchecked(A + B); end function;
             public function NullLeft(A: int?): int?; begin return null + A; end function;
             public function NullRight(A: int?): int?; begin return A + null; end function;
@@ -158,6 +160,12 @@ public sealed partial class MsBuildTests
             Check(() => Bridge.DomainEqual(null, new Bridge.Meters(2)), () => false);
             Check(() => Bridge.RangeAdd(new Bridge.Percent(50), 100), () => (int?)150);
             Check(() => Bridge.RangeAdd(null, 100), () => (int?)null);
+            foreach (int? divisor in new int?[] { null, 0, 4 })
+            {
+                Check(() => Bridge.RangeQuotient(new Bridge.Percent(50), divisor), () => 50.0 / divisor);
+                Check(() => Bridge.RangeQuotient(null, divisor), () => (double?)null);
+            }
+            Check(() => Bridge.NativeQuotient(-9, 2), () => -4.5);
             Check(() => Bridge.Contract(1, 2), () => (int?)3);
             Check(() => Bridge.Contract(null, 2), () => throw new InvalidOperationException());
             if (!Bridge.SourceCalls() || Bridge.Evaluate() != 123) throw new Exception("Source calls or operand order changed.");

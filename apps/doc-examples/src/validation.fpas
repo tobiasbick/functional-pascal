@@ -12,7 +12,7 @@ begin
   IO.File.WriteAllText(IO.Path.Combine(Directory, Stage + '.stderr.txt'), Result.Error);
 end procedure;
 
-function ExpectedOutput(Item: M.Example; Items: M.Example[]): string;
+function ExpectedOutput(Item: M.Example; Items: array of M.Example): string;
 begin
   if Item.ExpectedOutput = 'empty' then
     return '';
@@ -32,7 +32,7 @@ begin
   );
 end function;
 
-public async function Check(Item: M.Example; Options: M.Options; Items: M.Example[]; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Outcome>;
+public async function Check(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Outcome>;
 begin
   var Outcome: M.Outcome := new M.Outcome(Item.Document, Item.Line, Item.Id, false, 'prepare', '');
 

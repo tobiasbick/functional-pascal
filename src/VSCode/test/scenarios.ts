@@ -19,6 +19,46 @@ async function symbols(name: string): Promise<vscode.SymbolInformation[]> {
   return await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeWorkspaceSymbolProvider', name) ?? [];
 }
 
+export async function multilineStrings(data: Fixture): Promise<void> {
+  await command('selectContext', vscode.Uri.file(data.mainProject));
+  const target = await editor(path.join(path.dirname(data.mainProject), 'main.fpas'));
+  const document = target.document;
+  const original = document.getText();
+  const diskSource = await readFile(document.uri.fsPath, 'utf8');
+  const unfinished = [
+    'program EditorProbe;',
+    'begin',
+    " const Text:string:='first",
+    '\t  // part of the literal  ',
+    "last''line",
+  ].join('\n');
+  try {
+    await replace(target, unfinished);
+    const error = await eventually('unterminated string diagnostic', () =>
+      errors(document.uri).find(diagnostic => diagnostic.code === 'FP1002'), diagnostic => diagnostic !== undefined);
+    assert(error);
+    assert.deepEqual(error.range.start, position(document, "'first"));
+
+    await replace(target, unfinished + "';\n discard Text;\nend;\nend program;\n");
+    await eventually('closing the string clears the diagnostic', () => errors(document.uri), diagnostics => diagnostics.length === 0);
+    const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+      'vscode.executeFormatDocumentProvider', document.uri, { tabSize: 2, insertSpaces: true });
+    assert(edits?.length);
+    const formatting = new vscode.WorkspaceEdit();
+    formatting.set(document.uri, edits);
+    assert(await vscode.workspace.applyEdit(formatting));
+    assert(document.getText().replaceAll('\r\n', '\n').includes(
+      "  const Text: string := 'first\n\t  // part of the literal  \nlast''line';\n  discard Text;"));
+    assert.equal(await readFile(document.uri.fsPath, 'utf8'), diskSource);
+
+    await replace(target, unfinished);
+    await eventually('reopening the string restores its diagnostic', () => errors(document.uri),
+      diagnostics => diagnostics.some(diagnostic => diagnostic.code === 'FP1002'));
+  } finally {
+    await replace(target, original);
+  }
+}
+
 export async function languageFeatures(data: Fixture, target: vscode.TextEditor): Promise<vscode.TextEditor> {
   const document = target.document;
   const original = document.getText();

@@ -60,12 +60,12 @@ public sealed class DeclarationContextTests
     {
         var source = string.Join(newline,
             "// Catalogue 🙂", "program Catalogue;", "uses System as Sys;",
-            "type Box<T> = record", "  // Stored value", "  Value: T;",
-            "  function Read(): T; begin return self.Value; end function;", "end record;",
+            "type Box<T> = record", "  // Stored value", "  public Value: T;",
+            "  public function Read(): T; begin return self.Value; end function;", "end record;",
             "// Outer documentation", "[Sys.ObsoleteAttribute('Example')]",
-            "function Outer(Value: int): int;", "requires Value > 0;", "begin",
-            "  const @type: int := Value;", "  function Inner(Input: int): int;",
-            "  begin return Input + @type; end function;", "  return Inner(1);", "end function;",
+            "function Outer(Value: int): int;", "requires Value > 0;", "  function Inner(Input: int): int;",
+            "  begin return Input + @type; end function;", "begin",
+            "  const @type: int := Value;", "  return Inner(1);", "end function;",
             "begin discard Outer(1); end;", "end program;");
         var snapshot = Analyze(source);
         var outer = Symbol("Outer"); var inner = Symbol("Inner"); var local = Symbol("type");
@@ -80,6 +80,7 @@ public sealed class DeclarationContextTests
         Assert.Equal("// Outer documentation", Text(outer.Context.Documentation!));
         Assert.StartsWith("[Sys.ObsoleteAttribute", Text(outer.Context.Span));
         Assert.EndsWith("end function;", Text(inner.Context.Span));
+        Assert.StartsWith("begin" + newline, Text(outer.Context.Body!));
         Assert.EndsWith("return Inner(1);" + newline + "end function", Text(outer.Context.Body!));
         Assert.Null(Symbol("Value", "parameter").Context!.Body);
         Assert.Contains(outer.Context.SurfaceTypes, id => snapshot.Types.Single(type => type.Id == id).Display == "int");

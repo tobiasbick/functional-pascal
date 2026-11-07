@@ -34,13 +34,13 @@ end function;
 
 function Instructions(Document: string; Line: int; Info: string; Source: string): M.Example;
 begin
-  const Words: string[] := R.Regex.Split(Info.Trim(), '\s+');
+  const Words: array of string := R.Regex.Split(Info.Trim(), '\s+');
   var Item: M.Example := new M.Example(Document, Line, Words[0], Source, 'line-' + Line.ToString());
   const Seen: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
 
   for Index: int := 1 to Words.Length - 1 do
     const Word: string := Words[Index];
-    const Parts: string[] := Word.Split(#61, 2);
+    const Parts: array of string := Word.Split(#61, 2);
     const Key: string := Parts[0];
     if not Seen.Add(Key) then
       Invalid(Document, Line, 'Repeated fence option ' + Key);
@@ -164,11 +164,11 @@ begin
 end function;
 
 // Track every Markdown fence, including unsupported languages, so nested-looking source is never selected.
-public function Read(Document: string): M.Example[];
+public function Read(Document: string): array of M.Example;
 begin
   const Items: C.List<M.Example> := new C.List<M.Example>();
   const Ids: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
-  const Lines: string[] := IO.File.ReadAllText(Document, Text.Encoding.UTF8).Replace(
+  const Lines: array of string := IO.File.ReadAllText(Document, Text.Encoding.UTF8).Replace(
     #13 + '' + #10,
     #10 + ''
   ).Replace(#13, #10).Split(#10);

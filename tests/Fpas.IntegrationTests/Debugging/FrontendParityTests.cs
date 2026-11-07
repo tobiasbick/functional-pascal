@@ -15,7 +15,7 @@ public sealed class FrontendParityTests
             uses System.Console as Console;
             begin
               const Value: long := 9007199254740993L;
-              const Numbers: int[] := [3, 7];
+              const Numbers: array of int := [3, 7];
               Console.WriteLine(Value);
             end;
             end program;

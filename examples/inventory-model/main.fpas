@@ -12,8 +12,8 @@ begin
   const AfterDrink: Inventory.Position := Potions with
     Quantity := Potions.Quantity - 1;
   end with;
-  const Before: Inventory.Position[] := [RopeSlot, Potions];
-  const After: Inventory.Position[] := [RopeSlot, AfterDrink];
+  const Before: array of Inventory.Position := [RopeSlot, Potions];
+  const After: array of Inventory.Position := [RopeSlot, AfterDrink];
 
   Console.WriteLine('Before: ' + Potions.Quantity.ToString());
   Console.WriteLine('After: ' + AfterDrink.Quantity.ToString());

@@ -56,8 +56,8 @@ public sealed class NullableEffectTests
         begin Text := null; return Result; end function;
         function ClearRef(ref Text: string?): bool;
         begin Text := null; return true; end function;
-        procedure Take(Items: int[]; Size: int); begin end procedure;
-        procedure TakeSize(Size: int; Items: int[]); begin end procedure;
+        procedure Take(Items: array of int; Size: int); begin end procedure;
+        procedure TakeSize(Size: int; Items: array of int); begin end procedure;
         begin
           var Text: string? := 'initial';
         """ + body + " end; end program;");

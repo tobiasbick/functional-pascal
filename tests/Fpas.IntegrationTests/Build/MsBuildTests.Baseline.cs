@@ -54,7 +54,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
             uses CrossLanguage as F;
-            public type Pair = record Left: int; Right: int; end record;
+            public type Pair = record public Left: int; public Right: int; end record;
             public function Build(): Pair;
             begin return new Pair(F.Api.Double(20), F.Api.Step); end function;
             public function Answer(): int;
@@ -90,17 +90,17 @@ public sealed partial class MsBuildTests
             unit Demo.Graph;
             uses System as Sys;
             public type Box<T> = where T: Sys.IComparable<T>;
-            record Value: T; end record;
+            record public Value: T; end record;
             public type ItemBox = Box<Item>;
             public type Item = record implements Sys.IComparable<Item>
-              Value: int;
-              Children: ItemBox[] := [];
-              function CompareTo(Other: Item?): int;
+              public Value: int;
+              public Children: array of ItemBox := [];
+              public function CompareTo(Other: Item?): int;
               begin
                 if Other = null then return 1; end if;
                 return self.Value.CompareTo(Other.Value);
               end function;
-              function Wrap(): ItemBox;
+              public function Wrap(): ItemBox;
               begin return new ItemBox(self); end function;
             end record;
             public type Link<T> = where T: Sys.IComparable<T>;

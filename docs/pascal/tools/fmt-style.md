@@ -60,15 +60,17 @@ diagnostics go to stderr.
 
 ## Fixed rules
 
-- UTF-8 without BOM, LF line endings, one final newline, no trailing whitespace.
+- UTF-8 without BOM, LF line endings, one final newline. Trim trailing
+  whitespace outside string literals.
 - Two spaces per structural level; no indentation tabs.
 - A 100-display-column target. Wide characters count as two cells; combining
   sequences do not add cells. Indivisible names, literals and comments can exceed
   the target. Tokens are never split.
 - Preserve keyword and identifier spelling, including escaped identifiers.
   FPAS is case-sensitive; formatting does not repair keyword casing.
-- Preserve every literal token exactly, including numeric bases, separators,
-  suffixes, quote escaping and character codes.
+- Preserve literal spelling, including numeric bases, separators, suffixes,
+  quote escaping and character codes. Normalize line endings in multiline
+  strings to LF and preserve their spaces and tabs.
 - Preserve all tokens, explicit parentheses, named endings, semicolons,
   declaration/import order and scope boundaries. Do not add or remove `begin`.
 - Put routine bodies, control bodies, record/union/enum/interface members and

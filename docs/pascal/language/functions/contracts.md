@@ -20,7 +20,8 @@ end function;
 ```
 
 The order is routine header, generic `where` constraints, zero or more requires
-clauses, zero or more ensures clauses, then `begin`. A requires clause after an
+clauses, zero or more ensures clauses, local routine declarations, then
+`begin`. A requires clause after an
 ensures clause is invalid. Each clause ends with a semicolon.
 
 - `requires Condition;` requires a `bool` expression.

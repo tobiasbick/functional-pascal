@@ -16,16 +16,16 @@ public sealed class LspRenameBehaviorTests(SdkPackageFixture sdk) : IClassFixtur
             uses System.Console as C;
             type IReader = interface function Read(): int; end interface;
             type Reader = record implements IReader
-              Value: int;
-              function Read(): int; begin return self.Value; end function;
+              public Value: int;
+              public function Read(): int; begin return self.Value; end function;
             end record;
             // Transform and 😀 stay unchanged.
             function Transform(Value: int): int; begin return Value; end function;
             function Transform(Value: string): int; begin return Value.Length; end function;
             function Outer(): int;
+              function Inner(): int; begin return Captured; end function;
             begin
               const Captured: int := 20;
-              function Inner(): int; begin return Captured; end function;
               return Inner();
             end function;
             begin
@@ -36,20 +36,31 @@ public sealed class LspRenameBehaviorTests(SdkPackageFixture sdk) : IClassFixtur
             end;
             end program;
             """;
-        var text = source.Replace("\n", "\r\n", StringComparison.Ordinal);
+        var original = source.ReplaceLineEndings("\r\n");
+        var text = original;
         File.WriteAllText(directory.File("Game/Game.fpasproj"), $"<Project Sdk=\"Fpas.NET.Sdk/{sdk.Version}\"><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup></Project>");
         File.WriteAllText(path, text);
         var before = await BuildAndRun(directory); Assert.Equal("64", before.Output.Trim());
         var dll = directory.File("Game/bin/Debug/net10.0/Game.dll"); var bytes = File.ReadAllBytes(dll); var stamp = File.GetLastWriteTimeUtc(dll);
         await using var client = new LspProbe(); await client.Initialize(directory.File("Game/Game.fpasproj")); await client.Notify("initialized", new { });
         var version = 7; await client.Open(path, text, version);
+        var definition = Result(await client.Request("textDocument/definition", new
+        {
+            textDocument = Document(path), position = Position(text, "Inner();")
+        }));
+        var helperLine = Array.FindIndex(source.Split('\n'), line => line.Contains("function Inner()", StringComparison.Ordinal));
+        Assert.Equal(helperLine, definition.GetProperty("range").GetProperty("start").GetProperty("line").GetInt32());
+        var outline = Result(await client.Request("textDocument/documentSymbol", new { textDocument = Document(path) }));
+        var outer = Assert.Single(outline[0].GetProperty("children").EnumerateArray(), item => item.GetProperty("name").GetString() == "Outer");
+        var inner = Assert.Single(outer.GetProperty("children").EnumerateArray(), item => item.GetProperty("name").GetString() == "Inner");
+        Assert.Equal(helperLine, inner.GetProperty("selectionRange").GetProperty("start").GetProperty("line").GetInt32());
         foreach (var (marker, name) in new[] { ("Transform(Value: int)", "type"), ("Captured: int", "SavedValue"), ("Read(): int; end interface", "Fetch") })
         {
             var changes = Result(await client.Request("textDocument/rename", new { textDocument = Document(path), position = Position(text, marker), newName = name }));
             var document = Assert.Single(changes.GetProperty("documentChanges").EnumerateArray()); Assert.Equal(version, document.GetProperty("textDocument").GetProperty("version").GetInt32());
             text = Apply(text, document.GetProperty("edits"));
             await client.FullChange(path, text, ++version);
-            Assert.Equal(source.Replace("\n", "\r\n", StringComparison.Ordinal), File.ReadAllText(path)); Assert.Equal(bytes, File.ReadAllBytes(dll)); Assert.Equal(stamp, File.GetLastWriteTimeUtc(dll));
+            Assert.Equal(original, File.ReadAllText(path)); Assert.Equal(bytes, File.ReadAllBytes(dll)); Assert.Equal(stamp, File.GetLastWriteTimeUtc(dll));
         }
         Assert.Contains("function @type(Value: int)", text); Assert.Contains("function Transform(Value: string)", text);
         Assert.Contains("// Transform and 😀 stay unchanged.", text); Assert.DoesNotContain("Captured", text); Assert.DoesNotContain("Read()", text); Assert.Contains("I.Fetch()", text);

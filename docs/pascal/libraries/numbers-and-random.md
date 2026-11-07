@@ -85,9 +85,9 @@ begin
   const Replay: Sys.Random := new Sys.Random(1729);
   for Index: int := 1 to 3 do Console.WriteLine(Replay.Next(1, 7)); end for;
   const Die: int := Sys.Random.Shared.Next(1, 7);
-  const Names: string[] := ['North', 'East', 'West'];
+  const Names: array of string := ['North', 'East', 'West'];
   const Choice: int := Crypto.RandomNumberGenerator.GetInt32(0, Names.Length);
-  const Bytes: byte[] := Crypto.RandomNumberGenerator.GetBytes(16);
+  const Bytes: array of byte := Crypto.RandomNumberGenerator.GetBytes(16);
   if Die < 1 or Die >= 7 or Choice < 0 or Choice >= Names.Length or Bytes.Length <> 16 then
     raise new Sys.InvalidOperationException('Incorrect random range or buffer');
   end if;

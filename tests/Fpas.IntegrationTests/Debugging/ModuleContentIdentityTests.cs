@@ -22,7 +22,7 @@ public sealed class ModuleContentIdentityTests
             uses ConstantFixture.Values as Values, System.IO.File as File;
             type Number = int range Values.Lower..100;
             begin
-              const Numbers: Number[] := new Number[1];
+              const Numbers: array of Number := new Number[1];
               File.WriteAllText('executed.txt', 'bad');
             end;
             end program;

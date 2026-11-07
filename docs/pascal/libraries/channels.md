@@ -57,17 +57,6 @@ uses System as Sys, System.Collections.Generic as Generic, System.IO as IO,
 public async function Sum(Values: Generic.IEnumerable<int>; Capacity: int;
   Cancellation: Threading.CancellationToken): Tasks.Task<int>;
 requires Capacity > 0;
-begin
-  Cancellation.ThrowIfCancellationRequested();
-  using const Stop: Threading.CancellationTokenSource :=
-    Threading.CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
-  const Options: Channels.BoundedChannelOptions := new Channels.BoundedChannelOptions(Capacity);
-  Options.FullMode := Channels.BoundedChannelFullMode.Wait;
-  Options.SingleWriter := true;
-  Options.SingleReader := true;
-  Options.AllowSynchronousContinuations := false;
-  const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(Options);
-
   async function Produce(): Tasks.Task;
   begin
     try
@@ -81,7 +70,6 @@ begin
       discard Pipe.Writer.TryComplete();
     end try;
   end function;
-
   async function Consume(): Tasks.Task<int>;
   begin
     try
@@ -100,10 +88,22 @@ begin
       raise;
     end try;
   end function;
+begin
+  Cancellation.ThrowIfCancellationRequested();
+  using const Stop: Threading.CancellationTokenSource :=
+    Threading.CancellationTokenSource.CreateLinkedTokenSource(Cancellation);
+  const Options: Channels.BoundedChannelOptions := new Channels.BoundedChannelOptions(Capacity);
+  Options.FullMode := Channels.BoundedChannelFullMode.Wait;
+  Options.SingleWriter := true;
+  Options.SingleReader := true;
+  Options.AllowSynchronousContinuations := false;
+  const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(Options);
+
+
 
   const Sending: Tasks.Task := Produce();
   const Receiving: Tasks.Task<int> := Consume();
-  const Workers: Tasks.Task[] := [Sending, Receiving];
+  const Workers: array of Tasks.Task := [Sending, Receiving];
   await Tasks.Task.WhenAll(Workers).ConfigureAwait(false);
   return await Receiving.ConfigureAwait(false);
 end function;
@@ -139,7 +139,7 @@ uses System.Console as Console, System.Threading as Threading,
   Recipes.ChannelPipeline as Pipeline;
 
 begin
-  const Values: int[] := [10, 20, 30];
+  const Values: array of int := [10, 20, 30];
   Console.WriteLine(await Pipeline.Sum(Values, 1, Threading.CancellationToken.None));
 end;
 end program;

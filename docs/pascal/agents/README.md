@@ -40,8 +40,8 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 - `const` prevents rebinding; `var` permits assignment. Arrays, collections, and
   records retain reference semantics. Const does not freeze referenced objects.
 - Import namespaces, types, and units explicitly with aliases. Call real .NET
-  APIs through those aliases. Top-level declarations are private unless public;
-  record members are public unless private.
+  APIs through those aliases. Mark declarations and record members `public` to
+  expose them. Unmarked record members are private to the declaring record.
 - End statements with `;`, including before `else`. Close constructs by name.
   A program's entry block ends with `end;`, then the declaration ends with
   `end program;`. A unit ends with `end unit;`.

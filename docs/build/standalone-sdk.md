@@ -125,7 +125,7 @@ uses Standalone.Shared as Shared;
 // A greeting returned to callers.
 public type Greeting = record
   // The formatted text.
-  Text: string;
+  public Text: string;
 end record;
 
 // Creates a greeting through the C# dependency.

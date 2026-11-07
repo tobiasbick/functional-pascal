@@ -220,7 +220,7 @@ program NullableExample;
 
 uses System.Console as Console;
 
-function FindFirst(Items: int[]; Minimum: int): int?;
+function FindFirst(Items: array of int; Minimum: int): int?;
 begin
   for Item: int in Items do
     if Item >= Minimum then

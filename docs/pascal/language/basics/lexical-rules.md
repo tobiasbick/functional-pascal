@@ -60,10 +60,20 @@ character literal or an explicit cast. Otherwise, an unsuffixed integral literal
 use an explicit suffix for larger values. Floating literals must fit their
 chosen representation; use CLR APIs to obtain infinity or NaN.
 
-Strings do not span source lines. Use concatenation and character literals:
-`'First' + #10 + 'Second'`. There is no adjacent-literal concatenation. A `char`
-may be a surrogate code unit; it is not a Unicode scalar. Use `System.Text.Rune`
-when scalar processing is needed.
+An apostrophe-delimited string may span source lines. Each LF, CRLF, or bare
+CR between the delimiters becomes one LF in the value. Spaces, tabs, and
+blank lines are part of the value. This includes indentation and any line
+break directly after the opening or before the closing apostrophe. Two
+apostrophes inside the literal produce one apostrophe.
+
+```pascal fragment context=body
+const Lines: string := 'First
+Second';
+discard Lines;
+```
+
+Use `+` to concatenate separate literals. Use `System.Text.Rune` for Unicode
+scalar processing. A `char` holds one UTF-16 code unit, including surrogates.
 
 ## See also
 

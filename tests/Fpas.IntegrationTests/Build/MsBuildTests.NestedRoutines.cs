@@ -29,45 +29,45 @@ public sealed partial class MsBuildTests
             unit Demo.Factory;
             uses System as Sys, Shared as S, System.Threading.Tasks as Tasks;
             public function Counter(Start: int): Sys.Func<int>;
-            begin
-              var Value: int := Start;
               function Read(): int; begin return Next(); end function;
               function Next(): int; begin Value := Value + 1; return Value; end function;
+            begin
+              var Value: int := Start;
               return Read;
             end function;
             public function Writer(Base: int): S.RefWriter;
-            begin
               procedure Add(ref Target: int; Amount: int); begin Target := Target + Amount + Base; end procedure;
+            begin
               return Add;
             end function;
             public function Positive(Limit: int): Sys.Func<int, int>;
-            begin
               function Check(Value: int): int;
               requires Value >= 0;
               requires Value <= Limit;
               ensures (Returned: int): Returned = Value + 1;
               begin return Value + 1; end function;
+            begin
               return Check;
             end function;
             public function ReadLater(Value: Tasks.Task<int>): Tasks.Task<int>;
-            begin
               async function Run(): Tasks.Task<int>; begin return (await Value) + 1; end function;
+            begin
               return Run();
             end function;
             public type Box<T> = record
-              Value: T;
-              function Capture<U>(Other: U): Sys.Func<T>;
-              begin
+              public Value: T;
+              public function Capture<U>(Other: U): Sys.Func<T>;
                 function Pick<V>(Extra: V): T; where V: struct;
                 begin discard Other; discard Extra; return self.Value; end function;
                 function Read(): T; begin return Pick<int>(2); end function;
+              begin
                 return Read;
               end function;
             end record;
             public function Format(): Sys.Func<int, string>;
-            begin
               function Convert(Value: int): string; begin return Value.ToString(); end function;
               function Convert(Value: string): string; begin return Value; end function;
+            begin
               return Convert;
             end function;
             end unit;

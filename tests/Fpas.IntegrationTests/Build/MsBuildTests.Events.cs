@@ -107,7 +107,7 @@ public sealed partial class MsBuildTests
             begin
               var Value: S.Counter := new S.Counter();
               subscribe Value.Changed with Handler; unsubscribe Value.Changed with Handler;
-              const Items: S.Counter[] := new S.Counter[1];
+              const Items: array of S.Counter := new S.Counter[1];
               subscribe Items[0].Changed with Handler; unsubscribe Items[0].Changed with Handler;
               return Value.Adds + Value.Removes + Items[0].Adds + Items[0].Removes;
             end function;

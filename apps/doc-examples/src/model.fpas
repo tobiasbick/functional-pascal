@@ -1,99 +1,99 @@
 unit DocExamples.Model;
 
 public type Example = record
-  Document: string;
-  Line: int;
-  Language: string;
-  Source: string;
-  Id: string;
-  Fragment: bool := false;
-  Context: string := '';
-  Execute: bool := false;
-  ExpectedError: string := '';
-  Project: string := '';
-  FileName: string := '';
-  Manifest: string := '';
-  ExpectedOutput: string := '';
-  ExpectedException: string := '';
+  public Document: string;
+  public Line: int;
+  public Language: string;
+  public Source: string;
+  public Id: string;
+  public Fragment: bool := false;
+  public Context: string := '';
+  public Execute: bool := false;
+  public ExpectedError: string := '';
+  public Project: string := '';
+  public FileName: string := '';
+  public Manifest: string := '';
+  public ExpectedOutput: string := '';
+  public ExpectedException: string := '';
 end record;
 
 public type Options = record
-  Root: string;
-  Output: string;
-  Compiler: string;
-  References: string;
-  Dotnet: string;
-  Contexts: string;
+  public Root: string;
+  public Output: string;
+  public Compiler: string;
+  public References: string;
+  public Dotnet: string;
+  public Contexts: string;
 
-  Documents: string[];
-  ExtraReferences: string[];
+  public Documents: array of string;
+  public ExtraReferences: array of string;
 
-  Timeout: int := 10;
-  Jobs: int := 4;
-  Json: bool := false;
+  public Timeout: int := 10;
+  public Jobs: int := 4;
+  public Json: bool := false;
 end record;
 
 public type Origin = record
-  Document: string;
-  Line: int;
-  Primary: bool;
+  public Document: string;
+  public Line: int;
+  public Primary: bool;
 end record;
 
 public type Source = record
-  Path: string;
-  Text: string;
-  Lines: Origin[];
+  public Path: string;
+  public Text: string;
+  public Lines: array of Origin;
 end record;
 
 public type Prepared = record
-  Primary: string;
-  Assembly: string;
-  Library: bool;
-  Sources: Source[];
-  Manifest: string;
+  public Primary: string;
+  public Assembly: string;
+  public Library: bool;
+  public Sources: array of Source;
+  public Manifest: string;
 end record;
 
 public type Captured = record
-  ExitCode: int;
-  Output: string;
-  Error: string;
+  public ExitCode: int;
+  public Output: string;
+  public Error: string;
 end record;
 
 public type Outcome = record
-  Document: string;
-  Line: int;
-  Id: string;
-  Passed: bool;
-  Stage: string;
-  Message: string;
-  Compile: string := 'not_run';
-  Run: string := 'not_selected';
-  Assembly: string := '';
-  Library: bool := false;
-  Manifest: string := '';
+  public Document: string;
+  public Line: int;
+  public Id: string;
+  public Passed: bool;
+  public Stage: string;
+  public Message: string;
+  public Compile: string := 'not_run';
+  public Run: string := 'not_selected';
+  public Assembly: string := '';
+  public Library: bool := false;
+  public Manifest: string := '';
 end record;
 
 public type Report = record
-  Schema: int;
-  Root: string;
-  Compiler: string;
-  CompilerHash: string;
-  References: string;
-  ExtraReferences: string[];
-  SdkCompiler: string;
-  SdkCompilerHash: string;
-  Output: string;
+  public Schema: int;
+  public Root: string;
+  public Compiler: string;
+  public CompilerHash: string;
+  public References: string;
+  public ExtraReferences: array of string;
+  public SdkCompiler: string;
+  public SdkCompilerHash: string;
+  public Output: string;
 
-  Total: int;
-  Failed: int;
-  Results: Outcome[];
+  public Total: int;
+  public Failed: int;
+  public Results: array of Outcome;
 end record;
 
 public type FailureReport = record
-  Schema: int;
-  Total: int;
-  Failed: int;
-  Results: Outcome[];
-  Error: string;
+  public Schema: int;
+  public Total: int;
+  public Failed: int;
+  public Results: array of Outcome;
+  public Error: string;
 end record;
 end unit;

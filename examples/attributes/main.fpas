@@ -7,8 +7,8 @@ uses
 // A measurement with an explicit JSON property name.
 type Measurement = record
   [Serialization.JsonPropertyNameAttribute('sample_name')]
-  Name: string;
-  Value: int;
+  public Name: string;
+  public Value: int;
 end record;
 
 begin

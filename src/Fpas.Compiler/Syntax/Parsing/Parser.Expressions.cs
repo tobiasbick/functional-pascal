@@ -7,9 +7,11 @@ internal sealed partial class Parser
     private ExpressionSyntax Extent(ExpressionSyntax expression, int start)
         => expression with { SpanStart = start, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
 
+    private const int LogicalPrecedence = 4;
+
     private static int Precedence(Token token) => token.Kind is not (TokenKind.Symbol or TokenKind.Keyword) ? 0 : token.Text switch
     {
-        "??" => 1, "or" => 2, "xor" => 3, "and" => 4,
+        "??" => 1, "or" or "xor" or "and" => LogicalPrecedence,
         "=" or "<>" => 5, "<" or "<=" or ">" or ">=" or "is" => 6,
         "shl" or "shr" => 7, "+" or "-" => 8, "*" or "/" or "div" or "mod" => 9,
         _ => 0
@@ -19,12 +21,19 @@ internal sealed partial class Parser
     {
         var start = position;
         var left = ReadUnary();
+        string? logicalOperator = null;
         while (Precedence(Current) >= minimum)
         {
             var operatorIndex = position;
             var op = ReadBinaryOperator();
             var rightIndex = position;
             var precedence = Precedence(op);
+            if (precedence == LogicalPrecedence)
+            {
+                logicalOperator ??= op.Text;
+                if (logicalOperator != op.Text)
+                    throw source.Error("FP2003", "Group mixed 'and', 'or', and 'xor' operators with parentheses.", op.Position, op.Length);
+            }
             if (op.Text == "is")
             {
                 left = Extent(new TypeTestSyntax(left, ReadType()), left.SpanStart);

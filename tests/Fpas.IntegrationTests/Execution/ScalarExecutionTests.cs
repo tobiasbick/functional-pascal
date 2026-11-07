@@ -11,7 +11,7 @@ public sealed class ScalarExecutionTests
         type Counter = long;
         type Direction = enum : Octet North; East = 4; West = East + 1; Alias = East; Forward = Last; Last = 8; end enum;
         type Big = enum : ulong Max = 18446744073709551615UL; end enum;
-        type Directions = Direction[];
+        type Directions = array of Direction;
         begin
           const Count: Counter := 42L; Console.WriteLine(Count);
           const Values: Directions := [Direction.North, Direction.West];
@@ -65,7 +65,7 @@ public sealed class ScalarExecutionTests
         type High = ulong range 18446744073709551610UL..18446744073709551615UL;
         function Create<T>(): T; where T: struct; begin return new T(); end function;
         begin
-          const Ports: Port[] := new Port[2]; Console.WriteLine(Ports[0].Value); Console.WriteLine(Create<Port>().Value);
+          const Ports: array of Port := new Port[2]; Console.WriteLine(Ports[0].Value); Console.WriteLine(Create<Port>().Value);
           const Value: Port := new Port(80); const Number: int := Value; Console.WriteLine(Number); Console.WriteLine(Value + 1);
           Console.WriteLine(Port.LowerBound); Console.WriteLine(Port.UpperBound); Console.WriteLine(Value = new Port(80));
           Console.WriteLine(new Negative().Value); Console.WriteLine(new Negative(-1L).Value);

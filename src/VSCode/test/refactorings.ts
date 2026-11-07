@@ -75,6 +75,12 @@ export async function refactorings(data: Fixture): Promise<void> {
   assert.equal(await command('applyRefactoring'), true);
   assert.match(source.document.getText(), /Compute\(Local, Extra := Step\(4\), Added := 99\)/);
 
+  await select('ReadRows(2)', true);
+  assert.equal(await command('extractVariable', { name: 'CheckedRows' }), true);
+  assert.match(preview().document.getText(), /const CheckedRows: array of \(array of string\?\)\? := ReadRows\(2\);/);
+  assert.equal(await command('applyRefactoring'), true);
+  assert.match(source.document.getText(), /const Rows: array of \(array of string\?\)\? := CheckedRows;/);
+
   await select('System.Text');
   assert.equal(await command('organizeImports'), true);
   assert.match(preview().document.getText(), /System\.Text as Unused/);

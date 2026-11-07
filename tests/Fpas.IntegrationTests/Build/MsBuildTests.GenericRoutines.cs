@@ -99,10 +99,10 @@ public sealed partial class MsBuildTests
             where U: class;
             begin return Value; end function;
             public type Holder = record
-              Value: int;
+              public Value: int;
               private function Inner<T>(Item: T): T; begin return Item; end function;
-              function Echo<T>(Item: T): T; begin return Inner<T>(Item); end function;
-              function Capture<T>(Item: T): function(): T;
+              public function Echo<T>(Item: T): T; begin return Inner<T>(Item); end function;
+              public function Capture<T>(Item: T): function(): T;
               begin return function(): T begin discard self.Value; return self.Inner<T>(Item); end function; end function;
             end record;
             end unit;

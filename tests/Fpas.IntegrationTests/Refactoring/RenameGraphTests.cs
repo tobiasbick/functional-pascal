@@ -43,7 +43,7 @@ public sealed class RenameGraphTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         const string source = """
             unit Demo.Bridge;
             uses System as Alias;
-            public type Item<T> = record Value: T; end record;
+            public type Item<T> = record public Value: T; end record;
             public function Run(): int;
             begin const X: Item<int> := new Item<int>(Value := 42); return Alias.Math.Abs(X.Value); end function;
             end unit;
@@ -57,7 +57,7 @@ public sealed class RenameGraphTests(SdkPackageFixture sdk) : IClassFixture<SdkP
     [Fact]
     public async Task Unit_renames_update_qualified_type_import_prefixes()
     {
-        const string library = "unit Demo.Bridge; public type Point = record X: int; end record; end unit;";
+        const string library = "unit Demo.Bridge; public type Point = record public X: int; end record; end unit;";
         const string consumer = "unit Consumer; uses Demo.Bridge.Point as P; public function Read(): int; begin return new P(X := 42).X; end function; end unit;";
         using var directory = RenameFixture.Create(sdk, library); File.WriteAllText(directory.File("Game/Consumer.fpas"), consumer);
         var analysis = await RenameFixture.Analyze(directory);

@@ -7,7 +7,7 @@ uses
 
 async function Drain(Reader: IO.StreamReader; Cancellation: T.CancellationToken): Tasks.Task<string>;
 begin
-  const Buffer: char[] := new char[4096];
+  const Buffer: array of char := new char[4096];
   const Result: Text.StringBuilder := new Text.StringBuilder();
   var Bytes: int := 0;
 
@@ -28,7 +28,7 @@ begin
   return Result.ToString();
 end function;
 
-public async function Run(Options: M.Options; Arguments: string[]; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Captured>;
+public async function Run(Options: M.Options; Arguments: array of string; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Captured>;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(
     S.TimeSpan.FromSeconds(Options.Timeout)

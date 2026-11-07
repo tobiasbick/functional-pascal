@@ -15,7 +15,7 @@ public sealed class RecordMetadataTests
     [InlineData("constructor")]
     public void Invalid_imported_record_contracts_are_rejected_before_emission(string corruption)
     {
-        var library = TestCompilation.Compile("unit Model; public type Item = record Value: int := 1; end record; end unit;", CompilationTarget.Library);
+        var library = TestCompilation.Compile("unit Model; public type Item = record public Value: int := 1; end record; end unit;", CompilationTarget.Library);
         Assert.True(library.Success);
         var bytes = library.Program!.AssemblyImage.ToArray();
         using (var pe = new PEReader(new MemoryStream(bytes)))
@@ -52,7 +52,7 @@ public sealed class RecordMetadataTests
     {
         CompilationSource[] sources =
         [
-            new("model.fpas", "unit Demo.Model; public type Link = record Next: Link? := null; Other: Payload? := null; end record; public type Payload = record Value: int; end record; end unit;"),
+            new("model.fpas", "unit Demo.Model; public type Link = record public Next: Link? := null; public Other: Payload? := null; end record; public type Payload = record public Value: int; end record; end unit;"),
             new("api.fpas", "unit Demo.Api; uses Demo.Model as M; public function Make(): M.Link; begin return new M.Link(Other := new M.Payload(2)); end function; end unit;")
         ];
         string[] references = [.. TestEnvironment.References, typeof(Core.RecordAttribute).Assembly.Location];

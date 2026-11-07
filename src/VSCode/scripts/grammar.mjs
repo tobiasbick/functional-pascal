@@ -22,6 +22,8 @@ for (const [line, token, expected] of [
   ['Program Demo;', 'Program', 'source.fpas'],
   ['const @end: int := #65;', '@end', 'variable.other.escaped.fpas'],
   ['const @end: int := #65;', '#65', 'constant.character.fpas'],
+  ['const Values: array[,] of int := new int[1, 2];', 'array', 'keyword.other.fpas'],
+  ['const @array: array of int := [];', '@array', 'variable.other.escaped.fpas'],
   ['const Hex: uint := $FFu;', '$FFu', 'constant.numeric.fpas'],
   ['const Number: decimal := 1_000.5M;', '1_000.5M', 'constant.numeric.fpas'],
   ["'It''s // a string' // comment", '// a string', 'string.quoted.single.fpas'],
@@ -33,7 +35,11 @@ for (const [line, token, expected] of [
   const scopes = grammar.tokenizeLine(line).tokens.find(entry => entry.startIndex <= start && entry.endIndex > start)?.scopes;
   assert.equal(scopes?.at(-1), expected, `${line} at ${token}`);
 }
-const broken = grammar.tokenizeLine("'incomplete");
-const next = grammar.tokenizeLine('end program;', broken.ruleStack);
+const open = grammar.tokenizeLine("'first");
+const interior = grammar.tokenizeLine('// literal', open.ruleStack);
+assert.equal(interior.tokens[0].scopes.at(-1), 'string.quoted.single.fpas');
+const closing = grammar.tokenizeLine("last''line' // comment", interior.ruleStack);
+assert.equal(closing.tokens.at(-1).scopes.at(-1), 'comment.line.double-slash.fpas');
+const next = grammar.tokenizeLine('end program;', closing.ruleStack);
 assert.equal(next.tokens[0].scopes.at(-1), 'keyword.control.fpas');
-console.log('TextMate tokenization passed for CLR syntax and incomplete strings.');
+console.log('TextMate tokenization passed for CLR syntax and multiline strings.');

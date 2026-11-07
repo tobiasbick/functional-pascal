@@ -13,7 +13,7 @@ public sealed partial class BatchDebuggerTests
             program ValueBudget;
             uses System.Console as Console;
             begin
-              const Grid: int[][] := [{{string.Join(", ", Enumerable.Repeat("new int[64]", 64))}}];
+              const Grid: array of array of int := [{{string.Join(", ", Enumerable.Repeat("new int[64]", 64))}}];
               Console.WriteLine('capture');
             end;
             end program;

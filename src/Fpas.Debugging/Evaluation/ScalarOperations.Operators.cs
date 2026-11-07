@@ -45,7 +45,7 @@ internal static partial class ScalarOperations
             Complete(left); Complete(right); var a = StoredString(left); var b = StoredString(right);
             return op == "+" ? Text(a + b) : Boolean((a == b) == (op == "="));
         }
-        var shift = op is "shl" or "shr"; var kind = shift ? UnaryKind(Kind(left.Type), "+") : Promote(left, right);
+        var shift = op is "shl" or "shr"; var kind = BinaryKind(left, op, right);
         if (kind == 0) throw Error("The operands have no supported primitive representation.");
         if (kind is 12 or 13)
         {
@@ -72,7 +72,7 @@ internal static partial class ScalarOperations
         {
             "+" => x + y, "-" => x - y, "*" => x * y, "div" => x / y, "mod" => x % y,
             "and" => x & y, "or" => x | y, "xor" => x ^ y, "shl" => x << count, "shr" => x >> count,
-            _ => throw Error("The numeric operator does not accept these operands; '/' requires floating or decimal values.")
+            _ => throw Error("The numeric operator does not accept these operands.")
         };
         return Integer(kind, number, check: op is "+" or "-" or "*" or "div");
     }

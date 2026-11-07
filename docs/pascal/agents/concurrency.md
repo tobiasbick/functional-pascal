@@ -63,8 +63,8 @@ begin
     new Threading.CancellationTokenSource();
   const Work: Tasks.Task<int> := DoubleAfter(21, Cancellation.Token);
   const Other: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int => 7);
-  const Pending: Tasks.Task<int>[] := [Work, Other];
-  const Results: int[] := await Tasks.Task.WhenAll<int>(Pending).ConfigureAwait(false);
+  const Pending: array of Tasks.Task<int> := [Work, Other];
+  const Results: array of int := await Tasks.Task.WhenAll<int>(Pending).ConfigureAwait(false);
   begin
     await using const Stream: IO.MemoryStream := new IO.MemoryStream();
     Stream.WriteByte(65);

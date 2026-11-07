@@ -20,12 +20,12 @@ uses System.Console as Console,
 
 type Measurement = record
   [Serialization.JsonPropertyNameAttribute('sample_name')]
-  Name: string;
-  Value: int;
+  public Name: string;
+  public Value: int;
 end record;
 
 type Descending = record implements Generic.IComparer<int>
-  function Compare(Left: int; Right: int): int;
+  public function Compare(Left: int; Right: int): int;
   begin
     return Right.CompareTo(Left);
   end function;

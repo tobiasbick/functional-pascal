@@ -25,26 +25,26 @@ public sealed partial class MsBuildTests
             unit Demo.Models;
             uses System as Sys;
             public type Box<T> = record
-              Value: T;
-              Label: string := 'default';
-              function Get(): T; begin return self.Value; end function;
-              function Capture<U>(Other: U): function(): function(): U;
+              public Value: T;
+              public Label: string := 'default';
+              public function Get(): T; begin return self.Value; end function;
+              public function Capture<U>(Other: U): function(): function(): U;
               begin return function(): function(): U => function(): U begin discard self.Value; return Other; end function; end function;
-              function Upcast<U>(Other: U): T; where U: T; begin return Other; end function;
+              public function Upcast<U>(Other: U): T; where U: T; begin return Other; end function;
             end record;
             public type ValueBox<T> = where T: struct;
-            record Value: T?; Label: string? := null; end record;
+            record public Value: T?; public Label: string? := null; end record;
             public type Factory<T> = where T: class, new();
             record
-              Value: T := new T();
-              function Read(): function(): T; begin return function(): T => self.Value; end function;
+              public Value: T := new T();
+              public function Read(): function(): T; begin return function(): T => self.Value; end function;
             end record;
             public type Tree<T> = union Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end union;
             public type Pair<T> = where T: Sys.IComparable<T>;
             record
-              Left: T; Right: T;
-              function Compare(): int; begin return self.Left.CompareTo(self.Right); end function;
-              function Read(): function(): int; begin return function(): int => self.Compare(); end function;
+              public Left: T; public Right: T;
+              public function Compare(): int; begin return self.Left.CompareTo(self.Right); end function;
+              public function Read(): function(): int; begin return function(): int => self.Compare(); end function;
             end record;
             end unit;
             """);

@@ -38,7 +38,7 @@ internal sealed partial class SourceCatalog
                     method.Result.Erased == required.Result.Erased && method.DelegateParameters.Select(parameter => parameter.Erased).SequenceEqual(required.DelegateParameters.Select(parameter => parameter.Erased)))) continue;
                 if (implementations.Length == 0 && !requirement.Required) continue;
                 if (implementations.Length != 1)
-                    throw source.Error("FP3029", $"Record '{record.Name}' must implement '{required.Owner}.{required.Name}' with its exact CLR result, parameter types, generic arity, and modes.", record.Syntax.Name.Position);
+                    throw source.Error("FP3029", $"Record '{record.Name}' must implement '{required.Owner}.{required.Name}' with a public instance member matching the exact CLR result, parameter types, generic arity, and modes.", record.Syntax.Name.Position);
                 var body = implementations[0];
                 if (body.GenericParameters.Count != 0 && !references.InterfaceConstraints(body, required))
                     throw source.Error("FP3029", "Generic implementation constraints must match the interface method constraints.", record.Syntax.Name.Position);

@@ -64,9 +64,9 @@ internal static class DocumentationFixture
             // Source point.
             public type Point = record
               // Horizontal position.
-              X: int;
+              public X: int;
               // Returns the coordinate.
-              function Read(): int; begin return self.X; end function;
+              public function Read(): int; begin return self.X; end function;
             end record;
             end unit;
             """);

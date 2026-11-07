@@ -7,11 +7,11 @@ public type Tree<T> = union
 end union;
 
 public type Summary<T> = record
-  Value: T;
-  Count: int;
-  Label: string := 'tree';
+  public Value: T;
+  public Count: int;
+  public Label: string := 'tree';
 
-  function Reader(): function(): T;
+  public function Reader(): function(): T;
   begin
     return function(): T => self.Value;
   end function;

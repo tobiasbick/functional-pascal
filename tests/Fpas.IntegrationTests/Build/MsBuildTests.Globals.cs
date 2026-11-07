@@ -41,11 +41,11 @@ public sealed partial class MsBuildTests
             public var Count: long := 2L;
             public const Last: int := Log.Mark(2);
             public var Label: string? := null;
-            public const Labels: string?[] := [null, 'text'];
+            public const Labels: array of string? := [null, 'text'];
             private var Hidden: int := 7;
             public type Snapshot = record
-              Count: long := Count;
-              function Read(): long; begin return Count; end function;
+              public Count: long := Count;
+              public function Read(): long; begin return Count; end function;
             end record;
             public type Outcome = union None; Some(Value: int); end union;
             public type Mode = enum Idle; Ready; end enum;

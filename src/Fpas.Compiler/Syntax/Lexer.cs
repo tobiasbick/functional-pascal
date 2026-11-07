@@ -11,7 +11,7 @@ internal sealed record SourceComment(int Start, int End, bool Standalone);
 internal sealed class Lexer(SourceText source, List<SourceComment>? comments = null)
 {
     private static readonly HashSet<string> Keywords = new(
-        ("async await begin break case catch const continue discard distinct div do downto else " +
+        ("array async await begin break case catch const continue discard distinct div do downto else " +
          "elsif end ensures enum extends false finally for function if implements in interface is mod new not null " +
          "of or out params private procedure program public raise range record ref repeat return " +
          "requires shl shr static subscribe then to true try type union unit unsubscribe until using var " +
@@ -127,18 +127,23 @@ internal sealed class Lexer(SourceText source, List<SourceComment>? comments = n
         var value = new StringBuilder();
         while (position < source.Text.Length)
         {
-            if (Current is '\r' or '\n')
-                break;
-            if (Current == '\'')
+            var character = Current;
+            if (character == '\r')
+            {
+                value.Append('\n');
+                position += Peek == '\n' ? 2 : 1;
+                continue;
+            }
+            if (character == '\'')
             {
                 position++;
                 if (Current != '\'')
                     return new(TokenKind.String, value.ToString(), start, position - start);
             }
-            value.Append(Current);
+            value.Append(character);
             position++;
         }
-        throw source.Error("FP1002", "Unterminated string literal; strings cannot span source lines.", start, position - start);
+        throw source.Error("FP1002", "Unterminated string literal.", start, position - start);
     }
 
     private Token ReadNumber()

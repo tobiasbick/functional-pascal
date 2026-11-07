@@ -7,8 +7,8 @@ begin
 end procedure;
 
 begin
-  const Values: int[] := [1, 2];
-  const Items: string[] := ['Alpha'];
+  const Values: array of int := [1, 2];
+  const Items: array of string := ['Alpha'];
 
   const Ready: bool := false;
   const Done: bool := true;

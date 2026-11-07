@@ -16,9 +16,9 @@ public sealed class TypeOfExecutionTests
           Console.WriteLine(typeof(int?) = typeof(Sys.Nullable<int>));
           Console.WriteLine(typeof(int?) <> typeof(int));
           Console.WriteLine(typeof(C.List<string?>) = typeof(C.List<string>));
-          Console.WriteLine(typeof(int[]).IsArray);
-          Console.WriteLine(typeof(int[,]).GetArrayRank());
-          Console.WriteLine(typeof(int[][]).GetArrayRank());
+          Console.WriteLine(typeof(array of int).IsArray);
+          Console.WriteLine(typeof(array[,] of int).GetArrayRank());
+          Console.WriteLine(typeof(array of array of int).GetArrayRank());
           Console.WriteLine(typeof(function(int): string) = typeof(Sys.Func<int, string>));
           Console.WriteLine(typeof(procedure()) = typeof(Sys.Action));
           Console.WriteLine(typeof(Sys.IDisposable).IsInterface);
@@ -35,18 +35,18 @@ public sealed class TypeOfExecutionTests
         async program GenericTypes;
         uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks, System.Collections.Generic as C;
         type Box<T> = record
-          Value: T;
-          function Get<U>(): Sys.Type[];
+          public Value: T;
+          public function Get<U>(): array of Sys.Type;
           begin return [typeof(T), typeof(U), typeof(Box<T>)]; end function;
-          function Reader<U>(): function(): Sys.Type[];
-          begin return function(): Sys.Type[] => [typeof(T), typeof(U), typeof(C.KeyValuePair<T, U>)]; end function;
+          public function Reader<U>(): function(): array of Sys.Type;
+          begin return function(): array of Sys.Type => [typeof(T), typeof(U), typeof(C.KeyValuePair<T, U>)]; end function;
         end record;
         function Get<T>(): Sys.Type; begin return typeof(T); end function;
         function NullableValue<T>(): Sys.Type; where T: struct; begin return typeof(T?); end function;
         function NullableReference<T>(): Sys.Type; where T: class; begin return typeof(T?); end function;
         function Nested<T>(): function(): Sys.Type;
-        begin
           function Local<U>(): Sys.Type; begin return typeof(C.KeyValuePair<T, U>); end function;
+        begin
           return Local<string>;
         end function;
         async function AsyncGet<T>(Gate: Tasks.Task): Tasks.Task<Sys.Type>;
@@ -56,10 +56,10 @@ public sealed class TypeOfExecutionTests
           Console.WriteLine(NullableValue<int>() = typeof(int?));
           Console.WriteLine(NullableReference<string>() = typeof(string));
           const Box: Box<int> := new Box<int>(1);
-          const Types: Sys.Type[] := Box.Get<string>();
+          const Types: array of Sys.Type := Box.Get<string>();
           Console.WriteLine(Types[0] = typeof(int)); Console.WriteLine(Types[1] = typeof(string));
           Console.WriteLine(Types[2] = typeof(Box<int>));
-          const Closed: Sys.Type[] := Box.Reader<string>()();
+          const Closed: array of Sys.Type := Box.Reader<string>()();
           Console.WriteLine(Closed[0] = typeof(int)); Console.WriteLine(Closed[1] = typeof(string));
           Console.WriteLine(Closed[2] = typeof(C.KeyValuePair<int, string>));
           Console.WriteLine(Nested<int>()() = typeof(C.KeyValuePair<int, string>));

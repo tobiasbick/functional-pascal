@@ -5,20 +5,20 @@ uses Microsoft.VisualStudio.TestTools.UnitTesting as T;
 [T.TestClassAttribute]
 public type Cases = record
   [T.TestMethodAttribute(DisplayName := 'Same display name')]
-  procedure Addition();
+  public procedure Addition();
   begin
     T.Assert.AreEqual<int>(4, 2 + 2);
   end procedure;
 
   [T.TestMethodAttribute(DisplayName := 'Same display name')]
-  procedure Failure();
+  public procedure Failure();
   begin
     T.Assert.AreEqual<int>(1, 2);
   end procedure;
 
   [T.TestMethodAttribute]
   [T.IgnoreAttribute]
-  procedure Skipped();
+  public procedure Skipped();
   begin
     T.Assert.IsTrue(false);
   end procedure;

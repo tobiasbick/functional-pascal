@@ -92,7 +92,7 @@ public sealed partial class MsBuildTests
             begin return S.Nesting.Outer<string>.Inner<int>.Create('value', 7).Echo<string>('echo'); end function;
             public function Inspect(): Sys.Type;
             begin return typeof(N.Outer<string?>.Inner<int>.Deep<string>); end function;
-            public function Optional(Value: N.Outer<string?>.Inner<int>?[]?): N.Outer<string?>.Inner<int>?[]?;
+            public function Optional(Value: (array of N.Outer<string?>.Inner<int>?)?): (array of N.Outer<string?>.Inner<int>?)?;
             begin return Value; end function;
             public function Validate(Value: object): bool;
             begin

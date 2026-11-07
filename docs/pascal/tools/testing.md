@@ -51,12 +51,12 @@ named properties follow the normal [attribute rules](../interop/attributes.md).
 Defining custom attribute classes is outside the language's supported class model.
 
 MSTest uses a public record with `[T.TestClassAttribute]`, where T aliases
-Microsoft.VisualStudio.TestTools.UnitTesting. Instance methods carry
+Microsoft.VisualStudio.TestTools.UnitTesting. Public instance methods carry
 `[T.TestMethodAttribute]`; data rows add `[T.DataRowAttribute(...)]`.
 Assert with `T.Assert.AreEqual<int>(Expected, Actual)`.
 
 NUnit uses a public record with `[N.TestFixtureAttribute]`, where N aliases
-NUnit.Framework. Instance methods carry `[N.TestAttribute]` or repeated
+NUnit.Framework. Public instance methods carry `[N.TestAttribute]` or repeated
 `[N.TestCaseAttribute(...)]`. The template imports NUnit.Framework.Legacy as L
 and calls `L.ClassicAssert.AreEqual(Expected, Actual)`.
 

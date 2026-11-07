@@ -50,7 +50,7 @@ internal sealed partial class Parser
             {
                 if (previousMethod) layout?.Section(memberIndex);
                 previousMethod = false;
-                var visible = !At("private");
+                var visible = At("public");
                 if (At("public") || At("private")) position++;
                 var field = Identifier();
                 using var fieldDeclaration = Declaration(field, memberStart, visible ? "public" : "private", memberDocumentation);

@@ -4,10 +4,10 @@ Records group data in nominal CLR reference types with read-only properties.
 
 ```pascal fragment context=declarations id=point
 public type Point = record
-  X: double;
-  Y: double;
+  public X: double;
+  public Y: double;
 
-  function Length(): double;
+  public function Length(): double;
   begin
     return Math.Sqrt(self.X * self.X + self.Y * self.Y);
   end function;
@@ -19,10 +19,11 @@ properties. It is not a CLR struct and has no implicit value-copy-on-assignment
 operation. Assignment shares the reference; immutability makes sharing safe for
 the record's own fields. Referenced objects inside fields may still be mutable.
 
-Fields and methods are public by default within the record's accessibility.
-Explicit `public` is allowed; `private` restricts a member to code lexically
-inside that record, including static methods. Other code, even in the same unit,
-must use its public API. All fields remain read-only regardless of visibility.
+Fields, instance methods, and static methods are private to the declaring
+record by default. `private` spells that restriction explicitly. Use
+`public` to expose a member within the record's own accessibility and to
+implement an interface member. Code outside the record uses its public API,
+including code in the same unit. All fields are read-only.
 
 Construct with `new Point(X := 3.0, Y := 4.0)` or `new Point(3.0, 4.0)`.
 Declaration order defines positional constructor order. A field without a default
@@ -80,8 +81,8 @@ program Shapes;
 uses System.Console as Console, System.Math as Math;
 
 type Point = record
-  X: double;
-  Y: double;
+  public X: double;
+  public Y: double;
 end record;
 
 type Shape = union

@@ -24,7 +24,7 @@ end function;
 
 begin
   const Start: Model.Position := new Model.Position(0, 0);
-  const Outcomes: Model.ActionOutcome[] := [
+  const Outcomes: array of Model.ActionOutcome := [
     Model.AttemptMove(Start, 1),
     Model.AttemptMove(Start, -1), Model.AttemptMove(Start, 2), Model.ActionOutcome.Stayed
   ];

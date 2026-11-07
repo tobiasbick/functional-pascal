@@ -70,7 +70,7 @@ begin
   const Next: Percent := new Percent(Increased);
   Console.WriteLine(cast<int>(Next)); // 60
 
-  const Ports: PortNumber[] := new PortNumber[2];
+  const Ports: array of PortNumber := new PortNumber[2];
   Console.WriteLine(Ports[0].Value); // 1: the valid lower bound, not zero
 
   var Input: int := int.Parse('101');

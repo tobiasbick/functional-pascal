@@ -27,9 +27,11 @@ internal sealed class ExpressionParser
         return expression;
     }
 
+    private const int LogicalPrecedence = 4;
+
     private static int Precedence(ExpressionToken token) => token.Kind is "name" or "literal" or "end" ? 0 : token.Text switch
     {
-        "or" => 2, "xor" => 3, "and" => 4, "=" or "<>" => 5, "<" or "<=" or ">" or ">=" => 6,
+        "or" or "xor" or "and" => LogicalPrecedence, "=" or "<>" => 5, "<" or "<=" or ">" or ">=" => 6,
         "shl" or "shr" => 7, "+" or "-" => 8, "*" or "/" or "div" or "mod" => 9, _ => 0
     };
 
@@ -39,9 +41,18 @@ internal sealed class ExpressionParser
         try
         {
             var left = Unary();
+            string? logicalOperator = null;
             while (Precedence(Current) >= minimum)
             {
-                var op = tokens[position++]; var precedence = Precedence(op); var right = Expression(precedence + 1);
+                var op = tokens[position++];
+                var precedence = Precedence(op);
+                if (precedence == LogicalPrecedence)
+                {
+                    logicalOperator ??= op.Text;
+                    if (logicalOperator != op.Text)
+                        throw new DebugException("invalid_expression", $"Group mixed logical operators with parentheses at column {op.Position + 1}.");
+                }
+                var right = Expression(precedence + 1);
                 if (precedence is 5 or 6 && (Comparison(left) || Comparison(right))) throw new DebugException("invalid_expression", "Comparisons cannot be chained; use parentheses or Boolean operators.");
                 left = Add(new BinaryExpression(left, op.Text, right));
             }

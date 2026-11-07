@@ -33,12 +33,12 @@ when the complete runtime string is longer; it does not invent a character.
 
 ## Primitive operations
 
-Literals use FPAS spelling, including apostrophe strings, doubled apostrophes,
+Literals use FPAS spelling, including multiline apostrophe strings, doubled apostrophes,
 decimal character codes, hexadecimal integers, digit separators and numeric
 suffixes. Unsuffixed integers fit int; negative minimum literals retain their
 selected signed type. Finite real literals and runtime NaN/infinity values keep
 their separate language rules. Escaped identifiers and line comments follow
-FPAS spelling.
+FPAS spelling. Physical line endings in a string evaluate as LF.
 
 Supported operators, from highest to lowest precedence:
 
@@ -46,12 +46,15 @@ Supported operators, from highest to lowest precedence:
 | --- | --- |
 | Member/index access and parentheses | Stored fields and array/string elements. |
 | Unary `+`, `-`, `not` | Primitive numeric promotion, Boolean negation and integral complement. |
-| `*`, `/`, `div`, `mod` | `/` requires floating or decimal operands; div/mod require integral operands. |
+| `*`, `/`, `div`, `mod` | `/` converts two integral operands to double. Use div/mod for integral quotient and remainder. |
 | `+`, `-` | Primitive arithmetic; string/char concatenation. |
 | `shl`, `shr` | CLR promotion and masked shift counts. |
 | `<`, `<=`, `>`, `>=` | Primitive numeric ordering. |
 | `=`, `<>` | Primitive equality and null tests for reference values. |
 | `and`, `xor`, `or` | Boolean logic or integral bit operations. Boolean and/or short-circuit; xor is eager. |
+
+Use one operator kind per logical chain. Parentheses can group a separate chain,
+as in `(A and B) or C`.
 
 Numeric promotion follows the compiler's CLR rules, including representable
 integer constants with unsigned operands. Integral arithmetic checks overflow;

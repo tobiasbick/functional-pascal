@@ -5,11 +5,19 @@ namespace Fpas.Compiler.Tests.Formatting;
 public sealed class GenericOperatorFormattingTests
 {
     [Fact]
+    public void Array_type_spelling_keeps_rectangular_rank_and_nullable_groups()
+    {
+        var output = FormatterTests.Format("program Demo;begin const Values:(array [ , ] of string ? ) ? :=null;end;end program;");
+        Assert.Contains("const Values: (array[,] of string?)? := null;", output);
+    }
+
+    [Fact]
     public void Generic_closers_and_comparison_operators_get_their_contextual_spacing()
     {
-        var output = FormatterTests.Format("program Demo;type Box<T>=record Value:T;end record;begin const X:int:=1;if X>=1 then discard X;end if;end;end program;");
+        var output = FormatterTests.Format("program Demo;type Box<T>=record public Value:T;end record;begin const X:int:=(1 and 3)or(2 xor 1);if X>=1 then discard X;end if;end;end program;");
         Assert.Contains("type Box<T> = record", output);
         Assert.Contains("Value: T;", output);
+        Assert.Contains("const X: int := (1 and 3) or (2 xor 1);", output);
         Assert.Contains("if X >= 1 then", output);
         Assert.DoesNotContain("if X > =", output);
     }

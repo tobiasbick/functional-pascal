@@ -14,7 +14,7 @@ public sealed partial class DapDebuggerTests
             procedure Observe();
             begin
               const Value: int := 42;
-              const Numbers: int[] := [3, 7];
+              const Numbers: array of int := [3, 7];
               Console.WriteLine('capture');
               Console.WriteLine(Value);
             end procedure;

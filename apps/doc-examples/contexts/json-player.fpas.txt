@@ -3,7 +3,7 @@ program Example;
 uses System.Text.Json as Json;
 
 type Player = record
-  Name: string;
+  public Name: string;
 end record;
 
 begin

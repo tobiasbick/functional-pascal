@@ -14,7 +14,7 @@ public sealed partial class BatchDebuggerTests
             uses System.Console as Console, System.IO.File as File;
             begin
               const Answer: long := 9007199254740993L;
-              const Numbers: int[] := [3, 7];
+              const Numbers: array of int := [3, 7];
               File.WriteAllText('before.txt', 'before');
               Console.WriteLine(Answer);
               File.WriteAllText('after.txt', 'after');

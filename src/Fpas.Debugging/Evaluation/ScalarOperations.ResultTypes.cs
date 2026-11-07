@@ -25,8 +25,7 @@ internal static partial class ScalarOperations
         if (left.Type == "string" && right.Type == "string" && op is "+" or "=" or "<>")
             return new("", op == "+" ? "string" : "bool", op == "+" ? "string" : "boolean", null);
         if (op == "+" && (left.Type == "string" && right.Type == "char" || left.Type == "char" && right.Type == "string")) return new("", "string", "string", null);
-        var shift = op is "shl" or "shr";
-        var kind = shift ? UnaryKind(Kind(left.Type), "+") : Promote(left with { Constant = false }, right with { Constant = false });
+        var kind = BinaryKind(left with { Constant = false }, op, right with { Constant = false });
         if (kind == 0 || op is "and" or "or" or "xor" or "div" or "mod" or "shl" or "shr" && (!Integral(kind) || !Integral(Kind(right.Type)))
             || op == "/" && kind is not (12 or 13 or 80)) throw Error("The numeric operator does not accept these types.");
         return Comparison(op) ? new("", "bool", "boolean", null) : TypeValue(kind);

@@ -20,7 +20,7 @@ begin
 end function;
 
 type Counter = record
-  private Value: int := 0;
+  Value: int := 0;
   public Label: string := NextLabel();
 
   public static function Create(Initial: int := 0): Counter;
@@ -37,7 +37,7 @@ type Counter = record
     TotalCreated := 0;
   end procedure;
 
-  private function NextValue(): int;
+  function NextValue(): int;
   begin
     return self.Value + 1;
   end function;
@@ -68,8 +68,8 @@ end;
 end program;
 ```
 
-Private Value makes the generated constructor private, even though it has a
-default. Code outside Counter uses the public factory and cannot directly read
+The unmarked Value field makes the generated constructor private, even though
+the field has a default. Code outside Counter uses the public factory and cannot directly read
 or update Value or call NextValue. The factory's postcondition can read Value
 because it is lexically inside Counter; it does not read mutable global counters.
 

@@ -12,16 +12,16 @@ public sealed class AttributeTests
     [Theory]
     [InlineData("[Sys.FlagsAttribute] type Flag = enum A = 1; B = 2; end enum;")]
     [InlineData("[Sys.SerializableAttribute] type R = record end record;")]
-    [InlineData("type R = record [Analysis.MaybeNullAttribute] Value: string?; [Analysis.NotNullAttribute] Other: string; end record;")]
-    [InlineData("[Sys.ObsoleteAttribute('old', false)] type R = record [Json.JsonPropertyNameAttribute('value')] Value: int; end record;")]
+    [InlineData("type R = record [Analysis.MaybeNullAttribute] public Value: string?; [Analysis.NotNullAttribute] public Other: string; end record;")]
+    [InlineData("[Sys.ObsoleteAttribute('old', false)] type R = record [Json.JsonPropertyNameAttribute('value')] public Value: int; end record;")]
     [InlineData("[Sys.ObsoleteAttribute('one' + #10 + 'two')] procedure P(); begin end procedure;")]
     [InlineData("[Sys.ObsoleteAttribute('old', DiagnosticId := 'TEST001', UrlFormat := 'https://example.com/{0}')] procedure P(); begin end procedure;")]
-    [InlineData("type R<T> = record [Sys.ObsoleteAttribute('old')] static function Get(): int; begin return 1; end function; end record;")]
+    [InlineData("type R<T> = record [Sys.ObsoleteAttribute('old')] public static function Get(): int; begin return 1; end function; end record;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type U<T> = union Empty; Value(Data: T); end union;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type Id = distinct int;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type Name = distinct string;")]
     [InlineData("[Sys.ObsoleteAttribute('old')] type Percent = int range 0..100;")]
-    [InlineData("procedure Outer(); begin [Sys.ObsoleteAttribute('old')] procedure Inner(); begin end procedure; Inner(); end procedure;")]
+    [InlineData("procedure Outer(); [Sys.ObsoleteAttribute('old')] procedure Inner(); begin end procedure; begin  Inner(); end procedure;")]
     [InlineData("procedure Outer(); begin [procedure() begin end procedure][0](); end procedure;")]
     public void Existing_attribute_syntax_supports_emitted_types_routines_and_record_properties(string declarations)
     {
@@ -42,9 +42,9 @@ public sealed class AttributeTests
     [InlineData("[Sys.ObsoleteAttribute(DiagnosticId := 'a', 'old')] procedure P(); begin end procedure;")]
     [InlineData("[Sys.ObsoleteAttribute(Sys.String.Empty)] procedure P(); begin end procedure;")]
     [InlineData("[Sys.ObsoleteAttribute(int.Parse('1').ToString())] procedure P(); begin end procedure;")]
-    [InlineData("type R = record [Sys.NonSerializedAttribute] Value: int; end record;")]
-    [InlineData("type R = record [Analysis.MaybeNullAttribute] Value: string; end record;")]
-    [InlineData("type R = record [Analysis.NotNullAttribute] Value: string?; end record;")]
+    [InlineData("type R = record [Sys.NonSerializedAttribute] public Value: int; end record;")]
+    [InlineData("type R = record [Analysis.MaybeNullAttribute] public Value: string; end record;")]
+    [InlineData("type R = record [Analysis.NotNullAttribute] public Value: string?; end record;")]
     public void Invalid_attribute_targets_duplicates_members_and_runtime_values_are_rejected(string declarations)
     {
         var result = Compile(declarations);
@@ -62,7 +62,7 @@ public sealed class AttributeTests
             public type R = record
               // A documented property.
               [Json.JsonPropertyNameAttribute('payload')]
-              Value: int;
+              public Value: int;
             end record;
             // A documented routine.
             [Sys.ObsoleteAttribute('routine')]

@@ -19,10 +19,18 @@ begin
   return Value;
 end function;
 
+function ReadRows(Count: int): array of (array of string?)?;
+begin
+  discard Count;
+  return [[null], null];
+end function;
+
 begin
   const First: int := Compute(Step(1), Step(2));
   const Label: string := '😀'; const Second: int := Compute(Step(3), Extra := Step(4));
   const Third: int := Compute(Step(5));
+  const Rows: array of (array of string?)? := ReadRows(2);
+  discard Rows;
   if false and (Step(7) = 7) then
     Console.WriteLine('unreachable');
   end if;

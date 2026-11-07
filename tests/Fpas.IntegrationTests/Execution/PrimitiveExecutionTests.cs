@@ -55,7 +55,7 @@ public sealed class PrimitiveExecutionTests
           Console.WriteLine(18446744073709551615UL > 1UL);
           Console.WriteLine(4294967295U div 2U);
           Console.WriteLine(Amount());
-          const Values: byte[] := [1, 2, 255]; Console.WriteLine(Values[2]);
+          const Values: array of byte := [1, 2, 255]; Console.WriteLine(Values[2]);
           const Optional: ulong? := 18446744073709551615UL; Console.WriteLine(Optional ?? 0UL);
           const Small: short := 2; const Sum: int := Small + Small; Console.WriteLine(Sum);
         end;

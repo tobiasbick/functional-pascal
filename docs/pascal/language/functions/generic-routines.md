@@ -37,7 +37,7 @@ with `new()` last. A record constraint example is:
 type Box<T> =
 where T: class;
 record
-  Value: T;
+  public Value: T;
 end record;
 ```
 
@@ -70,7 +70,7 @@ are no built-in Numeric/Printable constraints or runtime reflection fallback.
 program GenericArithmetic;
 uses System.Numerics as N, System.Console as Console;
 
-function Sum<T>(Values: T[]): T;
+function Sum<T>(Values: array of T): T;
 where T: N.INumber<T>;
 begin
   var Total: T := T.Zero;

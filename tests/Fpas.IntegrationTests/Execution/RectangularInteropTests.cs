@@ -15,13 +15,15 @@ public sealed class RectangularInteropTests
         var source = directory.File("GridBridge.fpas"); var library = directory.File("GridBridge.dll");
         File.WriteAllText(source, """
             unit GridBridge;
-            public function Echo<T>(Grid: T[,]): T[,]; begin return Grid; end function;
-            public function Create(): int[,];
+            public function Echo<T>(Grid: array[,] of T): array[,] of T; begin return Grid; end function;
+            public function Create(): array[,] of int;
             begin
-              const Grid: int[,] := new int[2, 3];
+              const Grid: array[,] of int := new int[2, 3];
               Grid[1, 2] := 42;
               return Grid;
             end function;
+            public function Annotated(): (array of (array of string?)?)?;
+            begin return [[null], null]; end function;
             end unit;
             """);
         var compiled = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", source, "--output", library,
@@ -37,7 +39,17 @@ public sealed class RectangularInteropTests
               </ItemGroup>
             </Project>
             """);
-        File.WriteAllText(directory.File("Consumer.cs"), "System.Console.WriteLine(GridBridge.Echo<int>(GridBridge.Create())[1, 2]);");
+        File.WriteAllText(directory.File("Consumer.cs"), """
+            using System;
+            using System.Reflection;
+            Console.WriteLine(GridBridge.Echo<int>(GridBridge.Create())[1, 2]);
+            var values = GridBridge.Annotated();
+            var annotation = new NullabilityInfoContext().Create(typeof(GridBridge).GetMethod("Annotated")!.ReturnParameter);
+            if (values is not [ [null], null ] || annotation.ReadState != NullabilityState.Nullable ||
+                annotation.ElementType?.ReadState != NullabilityState.Nullable ||
+                annotation.ElementType.ElementType?.ReadState != NullabilityState.Nullable)
+                throw new Exception("Jagged array shape or nullable annotations changed");
+            """);
         var build = await ProcessRunner.RunAsync(["build", directory.File("Consumer.csproj"), "--configuration", "Release", "--nologo", "--verbosity", "quiet"],
             workingDirectory: directory.Path);
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
@@ -60,9 +72,9 @@ public sealed class RectangularInteropTests
             program Consumer;
             uses ShapeFixture.Producer as Producer, System.Console as Console, System as Sys;
             begin
-              const Grid: int[,] := new int[1, 2];
+              const Grid: array[,] of int := new int[1, 2];
               Grid[0, 1] := 42;
-              const Result: int[,]? := Producer.Echo(Grid);
+              const Result: (array[,] of int)? := Producer.Echo(Grid);
               if Result = null then raise new Sys.InvalidOperationException('Missing array'); end if;
               Console.WriteLine(Result[0, 1]);
               discard Producer.Create();

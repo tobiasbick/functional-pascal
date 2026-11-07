@@ -3,6 +3,23 @@ namespace Fpas.Compiler.Tests.ControlFlow;
 public sealed class ExpressionDiagnosticsTests
 {
     [Theory]
+    [InlineData("and", "or")]
+    [InlineData("and", "xor")]
+    [InlineData("or", "and")]
+    [InlineData("or", "xor")]
+    [InlineData("xor", "and")]
+    [InlineData("xor", "or")]
+    public void Mixed_logical_chains_diagnose_the_first_different_operator(string first, string second)
+    {
+        var statement = $"const Value: bool := true {first} (false) {second} true;";
+        var result = DiagnosticsTests.Compile($"program Bad;\nbegin\n{statement}\nend;\nend program;");
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("FP2003", diagnostic.Code);
+        Assert.Equal(3, diagnostic.Location!.Line);
+        Assert.Equal(statement.IndexOf($" {second} ", StringComparison.Ordinal) + 2, diagnostic.Location.Column);
+    }
+
+    [Theory]
     [InlineData("const X: int := 1.0;", "FP3002")]
     [InlineData("const X: int := true;", "FP3002")]
     [InlineData("const X: bool := 1;", "FP3002")]

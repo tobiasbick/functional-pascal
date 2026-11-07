@@ -68,7 +68,7 @@ export type Fixture = {
   workflowSolution: string; engineProject: string; hostProject: string; hostConfiguration: 'Debug' | 'Release';
   testSolution: string; vstestProject: string; mtpProject: string;
   refactorProject: string; refactorSource: string; refactorDependency: string;
-  workflowScenario?: 'projects' | 'testing' | 'debug' | 'refactoring' | 'all';
+  workflowScenario?: 'projects' | 'testing' | 'debug' | 'refactoring' | 'multiline' | 'all';
 };
 
 export async function fixture(): Promise<{ data: Fixture; restricted: boolean }> {

@@ -11,8 +11,8 @@ public sealed class AsyncExecutionTests
             async function Echo<T>(Value: T): Tasks.Task<T>;
             begin await Tasks.Task.Delay(1); return Value; end function;
             type Box<T> = record
-              Value: T;
-              async function Read(): Tasks.Task<T>;
+              public Value: T;
+              public async function Read(): Tasks.Task<T>;
               begin await Tasks.Task.Delay(1).ConfigureAwait(false); return self.Value; end function;
             end record;
             begin
@@ -48,7 +48,7 @@ public sealed class AsyncExecutionTests
             begin Console.WriteLine(Value); return Value; end function;
             begin
               Console.WriteLine(Mark(1) + await Number(2) + Mark(3));
-              const Values: int[] := [await Number(4), await Number(5)];
+              const Values: array of int := [await Number(4), await Number(5)];
               Values[Mark(0)] := await Number(9);
               for Index: int := 0 to await Number(1) do
                 Console.WriteLine(await Number(Values[Index]));
@@ -72,7 +72,7 @@ public sealed class AsyncExecutionTests
         => ProgramExecution.Output("""
             async program Cleanup;
             uses System as Sys, System.Console as Console, System.Threading.Tasks as Tasks;
-            async function Work(State: int[]; Mode: int): Tasks.Task<int>;
+            async function Work(State: array of int; Mode: int): Tasks.Task<int>;
             requires Mode >= 0;
             ensures (Returned: int): Returned = State[0];
             ensures State[1] = 1;
@@ -91,7 +91,7 @@ public sealed class AsyncExecutionTests
             ensures false;
             begin await Tasks.Task.Delay(1); raise new Sys.ArgumentException('original'); end function;
             begin
-              const State: int[] := [0, 0];
+              const State: array of int := [0, 0];
               Console.WriteLine(await Work(State, 0));
               State[1] := 0; Console.WriteLine(await Work(State, 1));
               try discard await Work(State, -1); catch Error: Sys.InvalidOperationException do Console.WriteLine('requires'); end try;

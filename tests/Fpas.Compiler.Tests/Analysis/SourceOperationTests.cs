@@ -11,11 +11,11 @@ public sealed class SourceOperationTests
         const string source = """
             program Ownership;
             const Initial: int := Seed();
-            type Sample = record Value: int := Seed(); end record;
+            type Sample = record public Value: int := Seed(); end record;
             function Seed(): int; begin return 1; end function;
             function Outer(): int;
-            begin
               function Inner(): int; begin return Seed(); end function;
+            begin
               const Callback: function(): int := function(): int => Seed();
               return Inner() + Callback();
             end function;

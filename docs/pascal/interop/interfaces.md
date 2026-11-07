@@ -21,13 +21,13 @@ type IDisposableSource<T> = interface extends ISource<T>, Sys.IDisposable
 end interface;
 
 type ConstantSource<T> = record implements IDisposableSource<T>
-  Name: string;
-  Value: T;
+  public Name: string;
+  public Value: T;
 
-  function Read(): T;
+  public function Read(): T;
   begin return self.Value; end function;
 
-  procedure Dispose();
+  public procedure Dispose();
   begin end procedure;
 end record;
 
@@ -83,6 +83,7 @@ distinct equally applicable inherited members is ambiguous; cast to a declaring
 interface to select a slot. Declaration order does not select one.
 
 The record header lists interfaces after `implements`, separated by commas.
+Mark each implementing field and instance method `public`.
 Public instance methods satisfy compatible interface members. Public read-only
 record properties may satisfy matching getter-only interface properties; private
 members and static methods do not satisfy instance contracts. Signatures match

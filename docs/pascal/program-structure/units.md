@@ -4,8 +4,8 @@
 unit Numerics.Geometry;
 
 public type Point = record
-  X: double;
-  Y: double;
+  public X: double;
+  public Y: double;
 end record;
 
 public function Translate(Value: Point; DX: double; DY: double): Point;

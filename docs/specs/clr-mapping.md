@@ -87,6 +87,9 @@ API or a new type. Importers validate the version, exact helper name, private
 static visibility, zero parameters, and publicly accessible target signature.
 Private aliases need no emitted contract.
 
+`array of T` maps to a CLR vector. `array[,] of T` and higher ranks map to CLR
+rectangular arrays. The nullable suffix on a grouped array type annotates
+the array reference, and the suffix on its element type annotates the element.
 Rectangular array signatures use rank 2..32, no fixed sizes and one explicit zero
 lower bound per dimension, matching ordinary C# signatures. Member references
 retain that form so actual .NET methods resolve. Other encoded bounds/sizes,
@@ -98,7 +101,8 @@ array instance's runtime lower bounds.
 
 Record properties use their exact source field names and public/private visibility;
 constructor parameters use the same names and declaration order. Fields remain
-read-only. If any field is private, the all-fields constructor is private and
+read-only. Unmarked record fields and methods emit as private. If any field is
+private, the all-fields constructor is private and
 public factories control external construction. Emit typed equality, Equals, GetHashCode,
 and equality operators consistently, using EqualityComparer<T>.Default per field.
 Do not generate mutation setters or silently deep-copy fields.
@@ -264,6 +268,10 @@ They verify matching generic arity and all existing readonly/accessibility rules
 See [implemented generic data types](../pascal/language/types/generics.md).
 
 ## Lifted nullable operators
+
+Real division of two integral values emits both operands converted to
+double, including unsigned conversions, followed by floating division.
+The same double conversions and division apply to constant evaluation.
 
 Lift supported non-nullable value operators through Nullable<T>, retaining their
 ordinary result types, numeric promotion, checked behavior, and CLR dispatch.

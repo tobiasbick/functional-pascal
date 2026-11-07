@@ -65,7 +65,7 @@ begin
         return Total;
       end function, Threading.CancellationToken.None).ConfigureAwait(false);
   end function;
-  const Jobs: Tasks.Task<int>[] := [Add(1), Add(2), Add(3)];
+  const Jobs: array of Tasks.Task<int> := [Add(1), Add(2), Add(3)];
   Start.SetResult(true);
   discard await Tasks.Task.WhenAll<int>(Jobs).ConfigureAwait(false);
   if Total <> 6 then raise new Sys.InvalidOperationException('Shared update was lost'); end if;
@@ -103,8 +103,8 @@ begin
     new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
   const Second: Tasks.TaskCompletionSource<int> :=
     new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-  const Jobs: Tasks.Task<int>[] := [First.Task, Second.Task];
-  const Joined: Tasks.Task<int[]> := Tasks.Task.WhenAll<int>(Jobs);
+  const Jobs: array of Tasks.Task<int> := [First.Task, Second.Task];
+  const Joined: Tasks.Task<array of int> := Tasks.Task.WhenAll<int>(Jobs);
   First.SetException(new Sys.InvalidOperationException('First operation failed'));
   const Finished: Tasks.Task<int> := await Tasks.Task.WhenAny<int>(Jobs);
   try
@@ -125,9 +125,9 @@ begin
   end try;
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
   Cancellation.Cancel();
-  const CanceledJobs: Tasks.Task<int>[] := [Tasks.Task.FromResult<int>(1),
+  const CanceledJobs: array of Tasks.Task<int> := [Tasks.Task.FromResult<int>(1),
     Tasks.Task.FromCanceled<int>(Cancellation.Token)];
-  const CanceledJoin: Tasks.Task<int[]> := Tasks.Task.WhenAll<int>(CanceledJobs);
+  const CanceledJoin: Tasks.Task<array of int> := Tasks.Task.WhenAll<int>(CanceledJobs);
   try
     discard await CanceledJoin;
   catch Failure: Sys.OperationCanceledException when CanceledJoin.IsCanceled do

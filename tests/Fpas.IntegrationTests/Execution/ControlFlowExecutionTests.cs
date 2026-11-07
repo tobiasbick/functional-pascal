@@ -40,11 +40,13 @@ public sealed class ControlFlowExecutionTests
               Console.WriteLine(true and Touch('and'));
               Console.WriteLine(false or Touch('or'));
               Console.WriteLine(true xor Touch('xor'));
+              Console.WriteLine((false and Touch('wrong')) or Touch('grouped-or'));
+              Console.WriteLine(false and (Touch('wrong') or Touch('wrong')));
               const Value: bool := if true then Touch('chosen') else Touch('wrong') end if;
               discard Value;
             end;
             end program;
-            """, "False", "True", "and", "True", "or", "True", "xor", "False", "chosen");
+            """, "False", "True", "and", "True", "or", "True", "xor", "False", "grouped-or", "True", "False", "chosen");
 
     [Fact]
     public Task Nested_loops_break_continue_and_while_conditions_execute()

@@ -3,11 +3,11 @@ unit DocExamples.Diagnostics;
 uses DocExamples.Model as M, System as S, System.Text.Json as J;
 
 public type Checked = record
-  Count: int;
-  Expected: bool;
-  Document: string;
-  Line: int;
-  Message: string;
+  public Count: int;
+  public Expected: bool;
+  public Document: string;
+  public Line: int;
+  public Message: string;
 end record;
 
 public function Read(Output: string; Item: M.Example; Prepared: M.Prepared): Checked;

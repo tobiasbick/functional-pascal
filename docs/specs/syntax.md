@@ -51,10 +51,11 @@ distinct_type   = "distinct", named_type ;
 subrange_type   = named_type, "range", expression, "..", expression ;
 type_parameters = "<", identifier, {",", identifier}, ">" ;
 type_arguments  = "<", type, {",", type}, ">" ;
-type            = named_type, {type_suffix} | callable_type ;
+type            = named_type, ["?"] | callable_type | array_type
+                | "(", array_type, ")", "?" ;
 named_type      = identifier, [type_arguments],
                   {".", identifier, [type_arguments]} ;
-type_suffix     = "?" | "[", {","}, "]" ;
+array_type      = "array", ["[", ",", {","}, "]"], "of", type ;
 callable_type   = "function", "(", [type_list], ")", ":", type
                 | "procedure", "(", [type_list], ")" ;
 type_list       = type, {",", type} ;
@@ -85,11 +86,12 @@ enum_case       = identifier, ["=", expression], ";" ;
 
 function_declaration = ["async"], "function", identifier, [type_parameters],
                        "(", [parameters], ")", ":", type, ";",
-                       {constraint}, contracts, "begin", statements,
-                       "end", "function", ";" ;
+                       {constraint}, contracts, routine_body, "function", ";" ;
 procedure_declaration = "procedure", identifier, [type_parameters],
                         "(", [parameters], ")", ";", {constraint},
-                        contracts, "begin", statements, "end", "procedure", ";" ;
+                        contracts, routine_body, "procedure", ";" ;
+routine_body    = {local_routine}, "begin", {ordinary_statement}, "end" ;
+local_routine   = {attribute}, (function_declaration | procedure_declaration) ;
 contracts       = {requires_clause}, {ensures_clause} ;
 requires_clause = "requires", expression, ";" ;
 ensures_clause  = "ensures", ["(", identifier, ":", type, ")", ":"],
@@ -118,6 +120,8 @@ They cannot have generic parameters or where constraints. A field default is a
 runtime initializer, not necessarily a compile-time constant. Static is restricted
 to record methods; it cannot modify a field or a local/free routine. A private
 modifier on a top-level declaration restates its default unit-private visibility.
+Unmarked record members are private to their declaring record. Mark a member
+`public` to expose it or to implement an interface member.
 Public/private modifiers are not available on local declarations.
 Ensures result bindings also require a type. A parenthesized Boolean expression
 without the typed-binding-and-colon prefix is an ordinary result-free condition.
@@ -127,9 +131,8 @@ Contracts are ordered requires clauses followed by ensures clauses; the rules in
 ## Statements
 
 ```ebnf
-statements      = {statement} ;
-statement       = const_declaration | var_declaration
-                | function_declaration | procedure_declaration
+statements      = {ordinary_statement | local_routine} ;
+ordinary_statement = const_declaration | var_declaration
                 | "begin", statements, "end", ";"
                 | expression, ":=", expression, ";"
                 | expression, ";"
@@ -176,10 +179,11 @@ and disposal requirements.
 
 ```ebnf
 expression      = coalesce_expression ;
-coalesce_expression = or_expression, ["??", coalesce_expression] ;
-or_expression   = xor_expression, {"or", xor_expression} ;
-xor_expression  = and_expression, {"xor", and_expression} ;
-and_expression  = equality_expression, {"and", equality_expression} ;
+coalesce_expression = logical_expression, ["??", coalesce_expression] ;
+logical_expression = equality_expression,
+                    [ "and", equality_expression, {"and", equality_expression}
+                    | "or", equality_expression, {"or", equality_expression}
+                    | "xor", equality_expression, {"xor", equality_expression} ] ;
 equality_expression = relation_expression,
                       [("=" | "<>"), relation_expression] ;
 relation_expression = shift_expression,
@@ -217,9 +221,9 @@ case_expression = "case", expression, "of",
                   ["else", expression, ";"], "end", "case" ;
 lambda          = ["async"], "function", "(", [field_parameters], ")", ":", type,
                   ("=>", expression |
-                   contracts, "begin", statements, "end", "function")
+                   contracts, routine_body, "function")
                 | "procedure", "(", [field_parameters], ")",
-                  contracts, "begin", statements, "end", "procedure" ;
+                  contracts, routine_body, "procedure" ;
 
 patterns        = pattern, {",", pattern} ;
 pattern         = "_" | "const", identifier, ":", type
@@ -232,6 +236,8 @@ constant_pattern = ["-"], (literal | qualified_name) ;
 ```
 
 `literal` includes strings, character codes, numeric forms, true, false, and null.
+Apostrophe-delimited strings may span lines. Each physical LF, CRLF, or CR
+inside the literal decodes to one LF.
 Semantic analysis restricts subrange bounds, pattern ranges, enum initializers,
 attribute constants, and optional-parameter defaults to legal constant types.
 An ordinary alias remains distinct from the `BaseType range Low..High` production.

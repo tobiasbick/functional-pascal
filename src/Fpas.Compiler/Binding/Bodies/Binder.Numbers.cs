@@ -44,6 +44,10 @@ internal sealed partial class Binder
 
     private BoundExpression NumericBinary(BoundExpression left, string op, BoundExpression right, int position, bool check)
     {
+        if (op == "/" && NumericFacts.Integral(left.Type) && NumericFacts.Integral(right.Type))
+            return new BoundBinary(Convert(left, TypeSymbol.Double, position), op,
+                Convert(right, TypeSymbol.Double, position), TypeSymbol.Double, check);
+
         var shift = op is "shl" or "shr";
         if (!shift)
         {

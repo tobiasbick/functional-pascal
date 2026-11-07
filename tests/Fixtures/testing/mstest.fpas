@@ -11,21 +11,21 @@ const Events: string := Sys.Environment.GetEnvironmentVariable('FPAS_TEST_EVENTS
 [T.TestClassAttribute]
 public type Tests = record
   [T.TestInitializeAttribute]
-  procedure Setup();
+  public procedure Setup();
   begin
     Active := 1;
     File.AppendAllText(Events, 'setup' + #10);
   end procedure;
 
   [T.TestCleanupAttribute]
-  procedure Cleanup();
+  public procedure Cleanup();
   begin
     Active := 0;
     File.AppendAllText(Events, 'cleanup' + #10);
   end procedure;
 
   [T.TestMethodAttribute]
-  procedure SetupWasCalled();
+  public procedure SetupWasCalled();
   begin
     T.Assert.AreEqual<int>(1, Active);
     Sys.Console.WriteLine('native output');
@@ -34,13 +34,13 @@ public type Tests = record
   [T.TestMethodAttribute]
   [T.DataRowAttribute(1, 2, 3)]
   [T.DataRowAttribute(2, 3, 5)]
-  procedure Addition(Left: int; Right: int; Expected: int);
+  public procedure Addition(Left: int; Right: int; Expected: int);
   begin
     T.Assert.AreEqual<int>(Expected, Left + Right);
   end procedure;
 
   [T.TestMethodAttribute]
-  async function AsyncTest(): Tasks.Task;
+  public async function AsyncTest(): Tasks.Task;
   begin
     discard await Tasks.Task.FromResult<int>(42);
 
@@ -49,19 +49,19 @@ public type Tests = record
 
   [T.TestMethodAttribute]
   [T.IgnoreAttribute('deliberate skip')]
-  procedure Skipped();
+  public procedure Skipped();
   begin
     raise new Sys.Exception('must not execute');
   end procedure;
 
   [T.TestMethodAttribute]
-  procedure AssertionFailure();
+  public procedure AssertionFailure();
   begin
     T.Assert.IsTrue(false);
   end procedure;
 
   [T.TestMethodAttribute]
-  procedure UserException();
+  public procedure UserException();
   begin
     raise new Sys.InvalidOperationException('user failure');
   end procedure;

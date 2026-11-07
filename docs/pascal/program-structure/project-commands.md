@@ -113,7 +113,19 @@ operation; zero disables the deadline. Cancellation remains available.
 
 ## Reports and exit codes
 
-All three commands support `--report json`: one stdout document for success or
+`fpas restore CONTEXT` and `fpas clean CONTEXT` run the selected SDK operation for
+an explicit project or .slnx solution. They accept `--configuration`, `--report json`
+and a 1..3600 second `--timeout` (default 120). Restore resolves dependencies;
+clean asks MSBuild to remove its owned outputs. FPAS does not recursively remove
+project directories. Repeated clean preserves unrelated files. Failures, output
+limits and cancellation follow build's project report and exit contract below.
+
+```sh
+fpas restore examples/hello/Hello.fpasproj --report json
+fpas clean examples/hello/Hello.fpasproj --configuration Release --report json
+```
+
+These commands support `--report json`: one stdout document for success or
 failure, including argument failures. Fields identify command, status and context;
 available file plans, selected target, build output, program result and error are
 separate fields. Build/program capture reports exit codes and truncation.

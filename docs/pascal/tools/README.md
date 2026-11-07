@@ -13,12 +13,15 @@ tools supported by the current compiler and .NET environment.
 | [Language server](language-server.md) | Stdio lifecycle, unsaved documents, versioned diagnostics and passive project analysis |
 | [Source formatting](fmt-style.md) | Fixed style, comments, wrapping, check/list/stdout and structured reports |
 | [Native .NET tests](testing.md) | xUnit, MSTest, NUnit, test projects, discovery and structured results |
+| [Terminal tests](terminal-testing.md) | Ordered UTF-8 input/output expectations, resize, PTY/ConPTY and owned cleanup |
+| [Report schemas](report-schemas.md) | JSON Schema exports and report-family/version contracts |
 | [Documentation examples](documentation-examples.md) | Complete sources, companion projects, fragments, and checks |
 | [Debugging](debugging.md) | Source files, portable PDBs, closures, and async state machines |
 | [Batch debugging](batch-debugging.md) | One-shot stops, detached JSON observations, explicit input and bounded execution |
 | [Profiling](profiling.md) | Actual CLR execution, suitable .NET tools, and controlled measurements |
 | [Benchmarks](benchmarks.md) | Verified workloads, timing boundaries, warmup, raw samples and variation |
 | [Diagnostic workflows](diagnostic-workflows.md) | Pinned trace/counter/dump tools and Windows/Linux acceptance |
+| [Diagnostic CLI](cli-diagnostics.md) | Profile collection/summary, debugger failure reports, dump commands and tracepoints |
 | [Development workflow](../../build/development.md) | Build/test commands and local SDK bootstrap |
 | [Compiler distribution](../../build/distribution.md) | Single-file Windows/Linux compiler, offline SDK export and asset caches |
 | [Application publishing](../../build/publishing.md) | Native AOT, apphosts, self-contained/single-file output and signing |

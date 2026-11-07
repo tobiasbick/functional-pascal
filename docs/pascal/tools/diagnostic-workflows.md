@@ -4,6 +4,9 @@ These procedures use the actual FPAS [diagnostic workload](../../../apps/diagnos
 They support native Windows x64 and WSL/Linux x64 with the .NET 10 SDK/runtime.
 Use [unprofiled benchmarks](benchmarks.md) for timing comparisons.
 
+The [diagnostic CLI](cli-diagnostics.md) supplies a separate owned frontend for
+these tools, structured per-thread/GC summaries and debugger failure reports.
+
 ## Prepare tools and artifacts
 
 The repository's [local tool manifest](../../../.config/dotnet-tools.json) pins

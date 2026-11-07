@@ -10,7 +10,9 @@
     <AssemblyMetadata Include="FpasMSTestVersion" Value="$(FpasMSTestVersion)" />
     <AssemblyMetadata Include="FpasNUnitVersion" Value="$(FpasNUnitVersion)" />
     <AssemblyMetadata Include="FpasNUnitAdapterVersion" Value="$(FpasNUnitAdapterVersion)" />
+    <AssemblyMetadata Include="FpasTestingPlatformVersion" Value="$(FpasTestingPlatformVersion)" />
     <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" />
     <ProjectReference Include="../Fpas.Compiler/Fpas.Compiler.csproj" />
     <ProjectReference Include="../Fpas.Workspaces/Fpas.Workspaces.csproj" />
     <ProjectReference Include="../Fpas.LanguageServer/Fpas.LanguageServer.csproj" />

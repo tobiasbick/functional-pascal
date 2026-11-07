@@ -23,6 +23,7 @@ internal sealed class BatchReport
     public ReportCapture Capture { get; } = new();
     public ReportLimits Limits { get; set; } = new(30, 1_048_576);
     public ReportToolchain? Toolchain { get; set; }
+    public List<BatchReport> Tracepoints { get; } = [];
 
     internal void Issue(string code, string stage, string message) => Issues.Add(new(code, stage, message));
 
@@ -32,6 +33,12 @@ internal sealed class BatchReport
         var data = Encode();
         if (data.Length < ReportLimits.ReportBytes) return data;
         Capture.Omit("report_bytes");
+        while (Tracepoints.Count != 0 && data.Length >= ReportLimits.ReportBytes)
+        {
+            Tracepoints.RemoveAt(Tracepoints.Count - 1); ExitCode = 4; Outcome = "limit";
+            data = Encode();
+        }
+        if (data.Length < ReportLimits.ReportBytes) return data;
         // Keep requested observations ahead of automatic context and target text.
         Bindings.Clear(); Frames.Clear(); Threads.Clear();
         data = Encode();

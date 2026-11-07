@@ -11,6 +11,9 @@
     <GenerateDependencyFile>true</GenerateDependencyFile>
   </PropertyGroup>
   <PropertyGroup>
+    <GenerateTestingPlatformEntryPoint Condition="'$(IsTestingPlatformApplication)' == 'true'">false</GenerateTestingPlatformEntryPoint>
+    <GenerateTestingPlatformApplicationHelper Condition="'$(IsTestingPlatformApplication)' == 'true'">false</GenerateTestingPlatformApplicationHelper>
+    <GenerateSelfRegisteredExtensions Condition="'$(IsTestingPlatformApplication)' == 'true'">false</GenerateSelfRegisteredExtensions>
     <FpasPrepareCompilationDependsOn Condition="'$(TraceDataCollectorDirectoryPath)' != ''">$(FpasPrepareCompilationDependsOn);MsCoverageReferencedPathMaps</FpasPrepareCompilationDependsOn>
     <FpasPrepareCompilationDependsOn Condition="'$(MicrosoftTestingPlatformMSBuildTaskFolder)' != ''">$(FpasPrepareCompilationDependsOn);_IncludeGenerateTestingPlatformEntryPointIntoCompilation;_IncludeGenerateAutoRegisteredExtensionsIntoCompilation</FpasPrepareCompilationDependsOn>
     <FpasPrepareCompilationDependsOn Condition="'$(_TestAdapterPlatformServicesRoot)' != ''">$(FpasPrepareCompilationDependsOn);_MSTestValidateParallelizeProperties</FpasPrepareCompilationDependsOn>
@@ -36,8 +39,8 @@
   <UsingTask TaskName="Fpas.Build.Tasks.FpasCleanDocumentation" AssemblyFile="$(FpasTasksPath)" />
   <UsingTask TaskName="Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext" AssemblyFile="$(FpasTasksPath)" />
   <Target Name="FpasValidateTestRunner" BeforeTargets="FpasPrepareCompilation">
-    <Error Condition="'$(IsTestProject)' == 'true' and '$(IsTestingPlatformApplication)' == 'true'" Code="FP5001"
-        Text="FPAS test projects support VSTest adapters. Microsoft.Testing.Platform self-hosting is not supported." />
+    <Error Condition="'$(IsTestProject)' == 'true' and '$(IsTestingPlatformApplication)' == 'true' and '$(OutputType)' != 'Exe'" Code="FP5001"
+        Text="An FPAS Microsoft.Testing.Platform application requires OutputType Exe and an explicit FPAS program entry point." />
   </Target>
   <Target Name="FpasPrepareCompilation" DependsOnTargets="$(FpasPrepareCompilationDependsOn);ResolveReferences" />
   <Target Name="FpasDescribeAnalysisContext" DependsOnTargets="AssignProjectConfiguration">

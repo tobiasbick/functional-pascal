@@ -14,12 +14,13 @@ public static class BuildProcess
         return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment);
     }
 
-    public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token)
-        => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false);
+    public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, int outputLimit = 1_048_576)
+        => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false, outputLimit: outputLimit);
 
     private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment,
-        IReadOnlyDictionary<string, string>? environment = null)
+        IReadOnlyDictionary<string, string>? environment = null, int outputLimit = 1_048_576)
     {
+        if (outputLimit is < 1 or > 4_194_304) throw new ArgumentOutOfRangeException(nameof(outputLimit));
         token.ThrowIfCancellationRequested();
         var variables = new Dictionary<string, string>(environment ?? new Dictionary<string, string>());
         if (buildEnvironment) { variables["MSBUILDDISABLENODEREUSE"] = "1"; variables["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"; }
@@ -36,7 +37,7 @@ public static class BuildProcess
             while ((count = await reader.ReadAsync(buffer, token)) > 0)
             {
                 var bytes = Encoding.UTF8.GetByteCount(buffer.AsSpan(0, count));
-                if (Interlocked.Add(ref captured, bytes) <= 1_048_576) result.Append(buffer, 0, count);
+                if (Interlocked.Add(ref captured, bytes) <= outputLimit) result.Append(buffer, 0, count);
                 else truncated = true;
             }
             return result.ToString();

@@ -62,6 +62,10 @@ execution alone is not the diagnostic contract.
 | Stable source-located errors/warnings, nonzero failures, cached warning replay and preserved previous outputs | FpasCompile diagnostics and CLI publication | MsBuildTests diagnostics and documentation-policy cases |
 | Clean/Rebuild, isolated parallel configurations/projects and equivalence to clean output | SDK cleanup/file tracking and standard project graph | MsBuildTests.Acceptance, DebugSymbols and Documentation |
 | Optional/default/custom XML paths, reference sidecar propagation, toggle/repair and ownership-aware cleanup | DocumentationOutputs, FpasCleanDocumentation | MsBuildTests.Documentation/DocumentationIds |
+| Explicit clean/restore and schema export for command reports and terminal scripts | CLI Projects/MaintenanceCommand and Reporting/SchemaCommand | MaintenanceTests, ReportSchemaTests, TerminalWorkflowTests |
+| Native VSTest extensions, data providers, coverage collectors and self-hosted MTP projects, including mixed solutions | Workspaces/Testing and CLI test templates | FrameworkExtensionTests, ExternalAdapterTests, TestingPlatformTests |
+| Real PTY/ConPTY input, Unicode, resize, bounded output and owned-process cleanup | Processes/Terminal and CLI Terminal | TerminalWorkflowTests |
+| Runtime-failure reports, continuing tracepoints, saved dumps, real traces/counters and bounded thread/GC summaries | Debugging/Batch and CLI Debugging/Profiling | TracepointCliTests, DiagnosticsWorkflowTests |
 
 ## Findings addressed by the comparison
 
@@ -119,6 +123,12 @@ including task synchronization and joined channel pipelines.
 [diagnostic workflows](pascal/tools/diagnostic-workflows.md) cover fixed FPAS
 workloads, explicit timing boundaries, real .NET traces/counters and controlled
 failure dumps, accepted in Debug/Release on Windows and WSL/Linux.
+The [diagnostic CLI](pascal/tools/cli-diagnostics.md),
+[terminal runner](pascal/tools/terminal-testing.md) and
+[report schemas](pascal/tools/report-schemas.md) expose these workflows through
+bounded commands. Thread samples describe wall time, including waiting threads;
+they do not measure CPU utilization. Additional refactorings remain in the
+[editor inventory](future/editor-gap.md), scheduled last.
 
 ## See also
 

@@ -60,6 +60,9 @@ src/
     Toolchain/
     LanguageServer/
     Distribution/
+    Profiling/
+    Terminal/
+    Reporting/
   Fpas.LanguageServer/
     Hosting/
     Protocol/
@@ -79,6 +82,7 @@ src/
     Testing/
     Documentation/
   Fpas.Processes/
+    Terminal/
   Fpas.Deployment/
   Fpas.SdkResolver/
   Fpas.Debugging/
@@ -161,7 +165,7 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Debugging` | Shared native CLR debugger core, supervised workers, passive inspection, batch reports and DAP server |
 | `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, explicit preparation policy, immutable text snapshots, checked edits and compiler-backed analysis/refactoring services |
 | `Fpas.LanguageServer` | Stdio LSP lifecycle, bounded protocol transport, document synchronization and diagnostics over the shared live workspace |
-| `Fpas.Processes` | Shared Linux process-group/subreaper and Windows job ownership for debugger/build processes |
+| `Fpas.Processes` | Linux process-group/subreaper, Windows jobs and private native PTY/ConPTY ownership |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |

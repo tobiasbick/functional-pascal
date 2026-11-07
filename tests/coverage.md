@@ -13,6 +13,17 @@ components, argument JSON, external version probes and owned interruption.
 
 ## Measurements and diagnostic artifacts
 
+CLI-facing acceptance is owned by DiagnosticsWorkflowTests (profile/dump
+commands and collector cleanup), TracepointCliTests (detached repeated values
+and hit limits), TerminalWorkflowTests (real native PTY/ConPTY input, Unicode,
+resize, natural exit and descendant reaping), ReportSchemaTests (independent
+validation of actual report bytes) and MaintenanceTests (SDK restore/clean).
+TestingPlatformTests owns FPAS MTP execution, native JSON identities, TRX,
+filter/extension transport and timeout reaping. FrameworkExtensionTests covers
+imported custom data providers and actual Code Coverage output;
+ExternalAdapterTests verifies an external native adapter against a real FPAS
+method, including a no-adapter negative control.
+
 Profiling.DiagnosticsWorkflowTests is the primary owner of the
 [measurement](../docs/pascal/tools/benchmarks.md) and
 [diagnostic](../docs/pascal/tools/diagnostic-workflows.md) application workflows.

@@ -71,6 +71,18 @@ counters and managed exception recovery from a heap dump after target exit.
 These tests require diagnostic IPC and dump permissions on the native platform;
 see [acceptance and retained artifacts](../docs/pascal/tools/diagnostic-workflows.md#acceptance).
 
+CLI diagnostics also drives profile setup/collection/summary and dump commands,
+including real per-thread sampled stacks, native counters/GC events, partial
+capture failure and collector-target reaping. TracepointCliTests checks repeated
+passive values, continuation and hit-limit termination. TerminalWorkflowTests
+owns native PTY/ConPTY input, Unicode, resize, exit and descendant cleanup.
+ReportSchemaTests validates actual CLI failure reports with an independent JSON
+Schema implementation. MaintenanceTests owns SDK restore/clean file ownership.
+TestingPlatformTests runs a real FPAS-hosted MTP application through discovery,
+filters, TRX, native extension options and deadline cleanup. FrameworkExtensionTests
+and ExternalAdapterTests own imported custom data attributes, real coverage and
+an explicitly selected VSTest adapter executing an FPAS method.
+
 Projects.PublishingTests owns application delivery through the CLI and actual
 packaged SDK: five publish modes with Debug/Release targets, standalone sources,
 mixed solutions and C# hosts, no-build reuse, transactional replacement and

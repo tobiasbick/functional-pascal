@@ -5,6 +5,11 @@ matching portable PDB, recorded sources and runtime dependencies available.
 The command uses the packaged CLR debugger; it does not build, restore or
 download a backend.
 
+This page describes one-shot batch capture. Repeated `--tracepoint` capture and
+`diagnose failure` use the same core/report family; see
+[diagnostic commands](cli-diagnostics.md#tracepoints). `fpas schema debug` exports
+the report's structural JSON Schema.
+
 ```sh
 fpas debug artifacts/Mandelbrot.dll --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
 fpas debug artifacts/Mandelbrot.dll --timeout 10 -- first "two words"
@@ -44,6 +49,7 @@ Schema version 1 contains:
 
 | Field | Meaning |
 | --- | --- |
+| `tracepoints` | Ordered detached observations for tracepoint mode; empty for one-shot capture. |
 | `outcome` | `breakpoint`, `exception`, `completed`, `limit`, `cancelled`, `error`. |
 | `exitCode`, `targetExitCode`, `termination` | CLI result, separately observed natural target exit or null, and termination cause. Debugger-requested termination does not invent a natural target failure. |
 | `stop`, `breakpoints` | Actual source/thread stop and requested/bound/rejected/pending/hit breakpoint facts. |

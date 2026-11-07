@@ -7,9 +7,12 @@
     <FpasMSTestVersion>4.5.2</FpasMSTestVersion>
     <FpasNUnitVersion>5.0.0</FpasNUnitVersion>
     <FpasNUnitAdapterVersion>6.3.1</FpasNUnitAdapterVersion>
+    <FpasTestingPlatformVersion>2.5.2</FpasTestingPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.23" />
+    <PackageVersion Include="JsonSchema.Net" Version="9.4.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="$(FpasTestingPlatformVersion)" />
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
     <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52" />
     <PackageVersion Include="Microsoft.Diagnostics.DbgShim.win-x64" Version="10.0.750501" />

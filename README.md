@@ -280,6 +280,12 @@ Write FPAS tests with native xUnit, MSTest or NUnit attributes and assertions.
 `fpas init test Tests` creates a test library; `fpas test Tests/Tests.fpasproj`
 builds and runs it through VSTest. See the [testing guide](docs/pascal/tools/testing.md).
 
+`--framework mstest --runner mtp` creates a self-hosted FPAS test application.
+The [diagnostic CLI](docs/pascal/tools/cli-diagnostics.md) owns trace/counter/dump
+operations and runtime-failure reports; [terminal tests](docs/pascal/tools/terminal-testing.md)
+exercise explicit PTY/ConPTY scripts. [JSON schemas](docs/pascal/tools/report-schemas.md)
+describe their structured reports.
+
 The xUnit suite checks compiler diagnostics, emitted metadata, actual program
 execution, and mixed C#/FPAS builds. It compiles complete Pascal examples in this
 README and the handbook directly from Markdown and checks their results.

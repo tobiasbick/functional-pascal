@@ -3,6 +3,9 @@
 Investigate the actual generated program with a suitable .NET profiler or
 diagnostic tool before writing external samplers or benchmark variants.
 
+The [diagnostic CLI](cli-diagnostics.md) provides owned collection, bounded
+EventPipe decoding, per-thread sampled stacks, counters and dump workflows.
+
 Use [reproducible measurements](benchmarks.md) for fixed workloads, startup,
 compilation and SDK timing. Use [diagnostic workflows](diagnostic-workflows.md)
 for pinned tools, actual stack/GC recordings and controlled failure dumps.

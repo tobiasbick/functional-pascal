@@ -3,7 +3,7 @@
 The current CLI compiles FPAS sources into ordinary CLR libraries or executable
 DLLs. Project builds invoke the same compiler through the SDK. The `debug`
 command uses the shared [CLR debugger](../tools/debugging.md) for one-shot batch
-reports or stdio DAP; inspect it with `fpas debug --help`.
+reports, repeated tracepoints or stdio DAP; inspect it with `fpas debug --help`.
 The CLI uses System.CommandLine for argument binding and generated help.
 
 Use the [language server](../tools/language-server.md) for `fpas lsp`: stdio
@@ -27,6 +27,13 @@ single-file and runtime-dependent delivery, output ownership and signing.
 
 Use [native .NET testing](../tools/testing.md) for `init test` and `test`: framework
 attributes, VSTest discovery/execution, filters, deadlines and JSON/TRX results.
+
+Self-hosted MTP applications, native test extensions and explicit adapter/collector
+paths use the same [testing reference](../tools/testing.md).
+Use [diagnostic commands](../tools/cli-diagnostics.md) for `profile`, `diagnose`
+and tracepoints, [terminal scripts](../tools/terminal-testing.md) for controlled
+PTY/ConPTY interaction, and [report schemas](../tools/report-schemas.md) for
+`fpas schema` and command-specific JSON families.
 
 Use [source formatting](../tools/fmt-style.md) for `fpas fmt`, its fixed style,
 explicit source/directory/project/solution inputs, check/list/stdout modes and

@@ -4,6 +4,8 @@ Contracts express executable expectations on a routine. `requires` checks its
 inputs before the body runs; `ensures` checks its state/result on successful exit.
 They are normal runtime checks in the emitted CLR method, in every build mode.
 They are not debug-only assertions, static proofs, or a separate failure mechanism.
+There is no CLI switch or SDK property to disable them. Optimization and native
+publishing retain these callee checks; callers must satisfy the same contract.
 
 ## Syntax
 

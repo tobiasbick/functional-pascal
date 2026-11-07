@@ -4,6 +4,8 @@ namespace Fpas.Debugging;
 
 public static class DebuggerApplication
 {
+    public static System.Text.Json.Nodes.JsonNode ReportSchema()
+        => System.Text.Json.Schema.JsonSchemaExporter.GetJsonSchemaAsNode(BatchJson.Default.BatchReport);
     public static Task<int> RunDapAsync(string dotnet, Stream input, Stream output, CancellationToken token = default)
         => new Dap.DapServer(dotnet, input, output, token).Run();
     public static async Task<int> RunBatchAsync(BatchOptions options, string dotnet, Stream output, CancellationToken token = default)
@@ -16,10 +18,10 @@ public static class DebuggerApplication
         return report.ExitCode;
     }
 
-    public static async Task<int> ArgumentErrorAsync(string message, Stream output)
+    public static async Task<int> ArgumentErrorAsync(string message, Stream output, string help = "fpas debug --help")
     {
         var report = new BatchReport { ExitCode = 2 };
-        report.Issue("invalid_argument", "arguments", message + " See fpas debug --help.");
+        report.Issue("invalid_argument", "arguments", message + " See " + help + ".");
         await output.WriteAsync(report.Serialize()); await output.WriteAsync("\n"u8.ToArray()); await output.FlushAsync();
         return 2;
     }

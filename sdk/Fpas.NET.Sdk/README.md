@@ -32,7 +32,9 @@ native prerequisites, password environment variables and verification commands.
 IsTestProject=true builds a unit-based library with dependency/runtimeconfig
 files for VSTest. Use native framework packages/attributes and `dotnet test` or
 `fpas test`; no generated C# test entry point is needed. See [native testing](../../docs/pascal/tools/testing.md).
-Microsoft.Testing.Platform self-hosted mode is outside this contract.
+Microsoft.Testing.Platform uses OutputType Exe and an explicit FPAS program entry
+point; `fpas init test --framework mstest --runner mtp` supplies one. The SDK
+disables generated foreign entry-point/helper sources for that mode.
 
 Build the toolchain, pack this project to sdk/feed, and restore the example
 against that local source. NuGet package versions are immutable; use a fresh

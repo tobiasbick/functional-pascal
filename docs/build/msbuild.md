@@ -141,9 +141,11 @@ remain diagnosed rather than silently omitted by analysis.
 
 Reference Microsoft.NET.Test.Sdk plus an actual framework and VSTest adapter.
 `dotnet test` runs the generated assembly directly. The [testing guide](../pascal/tools/testing.md)
-owns template versions and supported framework scenarios. The SDK diagnoses
-IsTestingPlatformApplication=true as unsupported for FPAS test projects; the
-Microsoft.Testing.Platform application mode is outside this VSTest contract.
+owns versions, extensions and both native runner modes. An
+IsTestingPlatformApplication=true FPAS project uses OutputType Exe and an explicit
+FPAS program which registers the actual MTP framework/report extensions. The SDK
+disables generated foreign entry-point/helper sources. The CLI selects the runner
+from evaluated properties and preserves VSTest adapter/collector paths.
 
 ## Compiler and build contract
 

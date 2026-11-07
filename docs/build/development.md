@@ -66,6 +66,15 @@ DiagnosticsWorkflowTests. See [diagnostic acceptance](../pascal/tools/diagnostic
 and [unprofiled measurements](../pascal/tools/benchmarks.md). Run timing samples
 after all builds, tests and profilers have stopped; Windows and WSL share resources.
 
+The [diagnostic CLI](../pascal/tools/cli-diagnostics.md),
+[terminal scripts](../pascal/tools/terminal-testing.md) and
+[report schemas](../pascal/tools/report-schemas.md) have native Windows/WSL
+acceptance. Build Debug and Release before running the corresponding test
+configuration. Select MaintenanceTests, TerminalWorkflowTests, ReportSchemaTests,
+TracepointCliTests, TestingPlatformTests, FrameworkExtensionTests,
+ExternalAdapterTests and DiagnosticsWorkflowTests for those contracts; add the
+existing CLI, native framework/process and documentation owners for regressions.
+
 Use [application publishing](publishing.md) for Native AOT, runtime bundles,
 apphosts and signing. PublishingTests verifies all five modes with Debug/Release
 targets; run that class from both tool configurations on Windows and WSL/Linux.

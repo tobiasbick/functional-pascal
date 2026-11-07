@@ -10,6 +10,8 @@ Use [application publishing](../../build/publishing.md) for `fpas publish`, Nati
 AOT prerequisites, delivery modes, output replacement and assembly/delivery signing.
 Use [measurements](../tools/benchmarks.md) for benchmarks and
 [diagnostic workflows](../tools/diagnostic-workflows.md) for traces, counters and dumps.
+Use [diagnostic commands](../tools/cli-diagnostics.md), [terminal tests](../tools/terminal-testing.md)
+and [JSON schemas](../tools/report-schemas.md) for the corresponding CLI contracts.
 
 ## Select the owning reference
 
@@ -92,8 +94,9 @@ output separately; stdin remains inherited. Run defaults to no deadline; select
 --timeout for bounded automation. No command overwrites conflicting init files.
 
 Use `fpas init test Tests --framework xunit` to create a native test library;
-mstest/nunit are also supported. Use existing framework attributes and assertions.
-`fpas test <project|solution> --report json` builds and runs through VSTest/TRX;
+mstest/nunit are also supported. `--framework mstest --runner mtp` creates a
+self-hosted FPAS test application. Use existing framework attributes and assertions.
+`fpas test <project|solution> --report json` builds and runs through VSTest or MTP with native TRX;
 --list discovers method identities, --filter/--settings select native behavior,
 --no-build uses existing outputs. The default whole-operation deadline is 120s.
 See [testing](../tools/testing.md) for frameworks, result fields and limits.

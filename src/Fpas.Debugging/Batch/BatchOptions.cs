@@ -5,7 +5,8 @@ using Fpas.Debugging.Evaluation;
 namespace Fpas.Debugging.Batch;
 
 public sealed record BatchOptions(string? Program, string? Cwd = null, string[]? Breakpoints = null, string[]? Expressions = null,
-    string? Stdin = null, int Timeout = 30, int OutputLimit = 1_048_576, string[]? Arguments = null);
+    string? Stdin = null, int Timeout = 30, int OutputLimit = 1_048_576, string[]? Arguments = null,
+    string[]? Tracepoints = null, int MaxHits = 100);
 
 internal sealed record BatchRequest(string Program, string Cwd, SourceBreakpoint[] Breakpoints, string[] Expressions,
     string? Stdin, int Timeout, int OutputLimit, string[] Arguments)
@@ -14,6 +15,9 @@ internal sealed record BatchRequest(string Program, string Cwd, SourceBreakpoint
     {
         if (options.Timeout is < 1 or > 3600 || options.OutputLimit is < 1 or > 1_048_576)
             throw new ArgumentException("Use --timeout 1..3600 and --output-limit 1..1048576.");
+        if (options.MaxHits is < 1 or > 256) throw new ArgumentException("Use --max-hits 1..256.");
+        if ((options.Tracepoints?.Length ?? 0) != 0 && (options.Breakpoints?.Length ?? 0) != 0)
+            throw new ArgumentException("Choose tracepoints or one-shot breakpoints for one invocation.");
         if (string.IsNullOrWhiteSpace(options.Program)) throw new ArgumentException("A built executable DLL is required. See fpas debug --help.");
         var program = Path.GetFullPath(options.Program);
         if (!program.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || !File.Exists(program))
@@ -23,7 +27,8 @@ internal sealed record BatchRequest(string Program, string Cwd, SourceBreakpoint
         var cwd = options.Cwd is null ? Path.GetDirectoryName(program)! : Path.GetFullPath(options.Cwd);
         if (!Directory.Exists(cwd)) throw new IOException("The target working directory does not exist.");
         var expressions = options.Expressions ?? [];
-        if ((options.Breakpoints?.Length ?? 0) > 64 || expressions.Length > 64)
+        var requested = options.Tracepoints is { Length: > 0 } tracing ? tracing : options.Breakpoints ?? [];
+        if (requested.Length > 64 || expressions.Length > 64)
             throw new ArgumentException("Supply at most 64 breakpoints and 64 expressions.");
         foreach (var expression in expressions)
         {
@@ -31,7 +36,7 @@ internal sealed record BatchRequest(string Program, string Cwd, SourceBreakpoint
             catch (DebugException failure) { throw new ArgumentException(failure.Message, failure); }
         }
         var comparison = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-        var points = (options.Breakpoints ?? []).Select(text => ParseBreakpoint(text, cwd))
+        var points = requested.Select(text => ParseBreakpoint(text, cwd))
             .DistinctBy(point => (point.Source, point.Line, point.Column), new BreakpointComparer(comparison)).ToArray();
         var arguments = options.Arguments ?? [];
         if (arguments.Length > 1024 || arguments.Any(item => item is null || item.Contains('\0')) || arguments.Sum(item => (long)item.Length) > 65536)

@@ -32,7 +32,7 @@ public sealed class TestTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sdk
     }
 
     [Fact]
-    public async Task Test_libraries_reject_program_entries_and_self_hosted_MTP_mode()
+    public async Task Test_libraries_reject_program_entries_and_MTP_templates_require_MSTest()
     {
         using var directory = new TemporaryDirectory();
         var project = await TestProjectFixture.Create(directory, sdk, "xunit");
@@ -40,9 +40,9 @@ public sealed class TestTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sdk
         var program = await ProjectCliFixture.Cli(directory, "build", project, "--report", "json");
         Assert.Equal(1, program.ExitCode);
         using (var report = JsonDocument.Parse(program.Output)) Assert.Contains("library", report.RootElement.GetProperty("build").GetProperty("output").GetString(), StringComparison.OrdinalIgnoreCase);
-        var xml = XDocument.Load(project); xml.Root!.Element("PropertyGroup")!.Add(new XElement("IsTestingPlatformApplication", "true")); xml.Save(project);
-        var mode = await ProjectCliFixture.Cli(directory, "test", project, "--no-build", "--report", "json");
+        var mode = await ProjectCliFixture.Cli(directory, "init", "test", "InvalidMtp", "--runner", "mtp", "--framework", "xunit", "--report", "json");
         Assert.Equal(2, mode.ExitCode);
-        using var failure = JsonDocument.Parse(mode.Output); Assert.Equal("unsupported_runner", failure.RootElement.GetProperty("error").GetProperty("code").GetString());
+        using var failure = JsonDocument.Parse(mode.Output); Assert.Equal("invalid_argument", failure.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.False(Directory.Exists(directory.File("InvalidMtp")));
     }
 }

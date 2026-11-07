@@ -87,14 +87,15 @@ retain controlled headless and terminal tests.
 ## Terminal adapter and acceptance
 
 Define raw input, keyboard/mouse events, resize, alternate screen, cursor state,
-capabilities and restoration. Select Windows/Linux adapters and native-resource
-ownership; managed streams alone do not establish those behaviors. A narrow C#
-adapter may be needed for native modes and PTY/ConPTY hosting.
+capabilities and restoration. Select Windows/Linux adapters for library input
+modes and restoration, with explicit native-resource ownership. Reuse the
+[controlled terminal runner](../pascal/tools/terminal-testing.md) and
+Fpas.Processes.Terminal for private PTY/ConPTY hosting.
 
 Verify FPAS library builds, C#/F# consumers, independent instances, MVU/routing,
 cache lifecycle, effect cleanup, Unicode geometry, terminal restoration, headless
 assertions and live snapshot/frame consistency on Windows and Linux.
 
-[CLI gaps](cli-gap.md) own other command work. The [debugger reference](../pascal/tools/debugging.md)
+The [CLI reference](../pascal/program-structure/cli.md) owns command workflows. The [debugger reference](../pascal/tools/debugging.md)
 owns DAP/batch protocols; [editor gaps](editor-gap.md) own other IDE integration.
 TUI live inspection is a library capability, separate from DAP.

@@ -52,15 +52,34 @@ internal static class BatchRunner
             stage = "execution";
             await host.Resume(entry.StopId!.Value, "continue", token);
             var stopped = await host.WaitForStop(token);
+            while (options.Tracepoints is { Length: > 0 } && stopped.State == "stopped" && stopped.Reason == "breakpoint")
+            {
+                var observation = new BatchReport { Outcome = "tracepoint", ExitCode = 0, Termination = "continued" };
+                await new SnapshotCapture(host, stopped, observation, token).Capture(request.Expressions);
+                report.Tracepoints.Add(observation);
+                if (observation.Expressions.Any(item => item.Error is not null || item.Value?.Status != "available"))
+                    report.Issue("trace_observation_failed", "inspection", "A tracepoint expression was unavailable; inspect the detached observation.");
+                if (report.Tracepoints.Count >= options.MaxHits || System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(report, BatchJson.Default.BatchReport).Length >= ReportLimits.ReportBytes)
+                {
+                    observation.Termination = "debugger_requested";
+                    report.Outcome = "limit"; report.Termination = "debugger_requested"; report.ExitCode = 4;
+                    report.Issue("trace_limit", "inspection", "Tracepoint capture reached its hit or report limit before natural exit.");
+                    return report;
+                }
+                await host.Resume(stopped.StopId!.Value, "continue", token);
+                stopped = await host.WaitForStop(token);
+            }
             report.Breakpoints = stopped.Breakpoints ?? await host.Breakpoints(token);
             report.TargetExitCode = stopped.ExitCode;
             if (stopped.State == "failed") throw new DebugException(stopped.Error?.Code ?? "worker_failure", stopped.Error?.Message ?? "Debugger execution failed.");
             if (stopped.State == "exited")
             {
                 report.Outcome = "completed"; report.Termination = "natural";
-                report.ExitCode = stopped.ExitCode == 0 && request.Breakpoints.Length == 0 && request.Expressions.Length == 0 ? 0 : 3;
-                if (request.Breakpoints.Length != 0) report.Issue("breakpoint_missed", stage, "The program exited before a requested breakpoint.");
-                foreach (var expression in request.Expressions) report.Expressions.Add(new(expression, Error: new("unavailable", "Runtime inspection is unavailable after process exit.")));
+                var trace = options.Tracepoints is { Length: > 0 };
+                var missed = trace && report.Breakpoints.Any(point => point.Hits == 0);
+                report.ExitCode = stopped.ExitCode == 0 && (trace ? report.Tracepoints.Count > 0 && !missed && report.Issues.Count == 0 : request.Breakpoints.Length == 0 && request.Expressions.Length == 0) ? 0 : 3;
+                if (request.Breakpoints.Length != 0 && (!trace || report.Tracepoints.Count == 0 || missed)) report.Issue("breakpoint_missed", stage, "The program exited before a requested breakpoint/tracepoint.");
+                if (!trace) foreach (var expression in request.Expressions) report.Expressions.Add(new(expression, Error: new("unavailable", "Runtime inspection is unavailable after process exit.")));
             }
             else
             {

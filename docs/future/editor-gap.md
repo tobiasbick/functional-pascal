@@ -3,7 +3,7 @@
 Open editor work builds on [workspace analysis](../architecture/workspaces.md).
 Usable commands belong in the [CLI reference](../pascal/program-structure/cli.md).
 The common [formatter](../pascal/tools/fmt-style.md) supplies complete-source
-formatting. Open command/refactoring backends remain in [CLI gaps](cli-gap.md).
+formatting. This inventory also owns the remaining refactoring backends.
 The [stdio language server](../pascal/tools/language-server.md) exposes common
 workspace services. Only additional services and editor integration are listed
 here. Editor extensions and new FPAS syntax are separate work.
@@ -36,6 +36,20 @@ help, editor extensions and editor-specific acceptance.
 Call hierarchy should adapt the existing
 [call-query facts](../pascal/program-structure/cli.md#callers-and-callees) to live
 snapshots and its LSP requests.
+
+## Refactoring backends
+
+| Proposed refactoring | Open work |
+| --- | --- |
+| `add-parameter` | Validate declarations and affected calls, parameter modes, argument binding and evaluation order. |
+| `extract-variable` | Preserve scope, evaluation order and execution frequency. |
+| `organize-imports` | Preserve aliases, comments and initialization effects while removing safe unused imports. |
+
+Each operation needs typed fragment/range and behavior checks. Extend the
+[rename plan/application service](../pascal/tools/refactoring.md) with
+compiler-backed validation, context/deadline selection, edit ownership, plan
+review and explicit application. Backend implementation and editor exposure
+are both scheduled last.
 
 ## Read-only source views
 

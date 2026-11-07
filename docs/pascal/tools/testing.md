@@ -66,14 +66,44 @@ and calls `L.ClassicAssert.AreEqual(Expected, Actual)`.
 | MSTest | TestClass/TestMethod, DataRow, Ignore, Task tests, TestInitialize/TestCleanup | MSTest.TestFramework/TestAdapter 4.5.2 |
 | NUnit | TestFixture/Test/TestCase, Ignore, Task tests, SetUp/TearDown | NUnit 5.0.0; NUnit3TestAdapter 6.3.1 |
 
-All templates use Microsoft.NET.Test.Sdk 17.14.1. Assertions, exceptions, data
+VSTest templates use Microsoft.NET.Test.Sdk 17.14.1. Assertions, exceptions, data
 expansion, output capture, setup/cleanup and skips belong to the framework.
 For async tests, return System.Threading.Tasks.Task from an async function.
 xUnit fixtures use public record constructors: record fields become constructor
 parameters. Data providers return the framework's actual enumerable types.
 This does not imply support for every framework extension or C# class hierarchy.
-Microsoft.Testing.Platform self-hosted applications are rejected by this VSTest
-baseline; they require a separate runner integration.
+Imported framework extensions can supply custom attributes/data providers through
+ordinary references. Acceptance runs a C# ITestDataSource attribute on FPAS
+methods, an external VSTest adapter which invokes an FPAS method, and the native
+Code Coverage collector. Frameworks own their extension APIs and dependencies.
+
+## Self-hosted Microsoft.Testing.Platform
+
+```sh
+fpas init test NativeTests --framework mstest --runner mtp --sdk-feed sdk/feed
+fpas test NativeTests/NativeTests.fpasproj --report json
+fpas test NativeTests/NativeTests.fpasproj --no-build --list --report json
+fpas test NativeTests/NativeTests.fpasproj --no-build -- --minimum-expected-tests 1
+```
+
+The MTP template uses MSTest 4.5.2 and Microsoft.Testing.Extensions.TrxReport
+2.5.2 with an explicit async FPAS program. It creates the real MTP builder,
+registers its executing assembly with MSTest and adds the TRX provider. It owns
+disposal and preserves RunAsync's native exit code. The SDK disables foreign
+entry-point/helper generation for FPAS; no generated C#/F# source is compiled as
+Pascal. Self-hosted FPAS projects require OutputType Exe; VSTest uses libraries.
+
+Existing C#/F#/FPAS MTP projects are selected by their evaluated
+IsTestingPlatformApplication property. They must provide a runnable DLL/runtime
+configuration, the common Microsoft TRX extension (`--report-trx`) and MTP 2.3+
+JSON discovery schema 1. Another framework's differently named private reporter
+does not satisfy that contract. Missing extensions or malformed artifacts fail
+explicitly. Solutions can mix VSTest and MTP projects.
+
+MTP `--list-tests json` supplies actual UIDs, display names and available method
+identities without localized text parsing. Absent method metadata leaves the
+native UID as identity. JSON is retained as discovery.json; runs use results.trx.
+Filters/settings require the selected runner's corresponding extension.
 
 ## Discover and run
 
@@ -96,9 +126,32 @@ uses existing outputs and implies no restore. A failed build never runs stale
 tests. `--filter` passes a native VSTest expression. `--settings` selects an
 existing .runsettings file, including native parallelism settings.
 
+`--adapter-path DIRECTORY` adds explicit VSTest extension locations; repeat it
+for several directories. Evaluated VSTestTestAdapterPath and
+TraceDataCollectorDirectoryPath are preserved too. `--collect NAME` selects a
+native VSTest collector. Packages own their dependencies and artifacts under
+resultsDirectory. These two switches are VSTest-only. Supply adapters compatible
+with the installed VSTest host; the external-adapter acceptance uses netstandard2.0.
+
+For external adapter assemblies, the CLI prepares a per-run `subject` copy under
+the native results folder, with the test output and the adapter's dependencies.
+This satisfies the CoreCLR VSTest host's discovery beside the source assembly.
+Identical dependency files are shared in that copy; conflicting files fail with
+extension_conflict. Preparation is bounded to 10000 entries, directory depth 32
+and 512 MiB. It rejects reparse points and requires results outside the
+source/adapter directories.
+The original project output remains the selected identity; native artifacts name
+the deployed source. The evaluated framework moniker is supplied explicitly.
+
+Arguments after `--` are native VSTest runsettings (`Name=Value`) or MTP extension
+options, retaining individual tokens. FPAS owns MTP run/list mode, TRX filename,
+results directory and exit status; overrides, response files and configuration
+files through that channel are rejected. Registered MTP extensions can expose
+additional options. Native deadlines do not replace the CLI's overall deadline.
+
 `--list` discovers without executing test bodies and prints fully qualified
 method identities, deduplicated per project. Frameworks may expand/name data rows
-differently during execution. Discovery uses VSTest's native name artifact;
+differently during execution. VSTest discovery uses its native name artifact;
 execution uses native TRX results. Neither parses localized console output.
 A native run selecting no tests can succeed with an explicit total of zero.
 Framework warnings remain warnings: xUnit's adapter can report an invalid filter
@@ -114,7 +167,8 @@ processes. Frameworks own test scheduling; projects run sequentially.
 Each invocation creates a unique `TestResults/fpas-<id>/` under the context's
 parent directory, with numbered per-project folders. `--results-directory`
 changes the parent. Run artifacts contain results.trx; list artifacts contain
-discovery.txt. Earlier runs are preserved. Normal build outputs stay in bin/obj.
+discovery.txt (VSTest) or discovery.json (MTP). Earlier runs are preserved. Normal
+build outputs stay in bin/obj.
 
 Human mode sends build diagnostics to stderr and native runner output to stdout.
 List mode prints only discovered identities to stdout. `--report json` owns

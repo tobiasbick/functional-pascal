@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 namespace Fpas.Processes.Terminal;
 
@@ -14,10 +15,12 @@ public sealed class ConsoleTerminal : IDisposable
     private readonly Stream output = Console.OpenStandardOutput();
     private readonly byte[]? previousUnixMode;
     private readonly uint previousInputMode, previousOutputMode;
-    private readonly nint inputHandle, outputHandle;
+    private readonly nint inputHandle;
+    private readonly SafeFileHandle? outputModeHandle;
     private readonly VtInput decoder = new();
     private readonly byte[] bytes = new byte[4096];
     private bool disposed;
+    private bool outputFailed;
     private bool pressed;
     private char highSurrogate;
     public int Columns { get; private set; }
@@ -29,16 +32,25 @@ public sealed class ConsoleTerminal : IDisposable
             throw new IOException("Interactive TUI requires a terminal for input and output.");
         if (OperatingSystem.IsWindows())
         {
-            inputHandle = GetStdHandle(-10); outputHandle = GetStdHandle(-11);
+            inputHandle = GetStdHandle(-10);
+            var outputHandle = GetStdHandle(-11);
             Check(GetConsoleMode(inputHandle, out previousInputMode));
             Check(GetConsoleMode(outputHandle, out previousOutputMode));
-            Check(SetConsoleMode(inputHandle, (previousInputMode & ~0x247u) | 0x98u));
-            if (!SetConsoleMode(outputHandle, previousOutputMode | 7))
+            // Keep a handle to the original screen buffer if stdout becomes unusable.
+            var process = GetCurrentProcess();
+            Check(DuplicateHandle(process, outputHandle, process, out var modeHandle, 0, false, 2));
+            try
             {
-                var failure = Marshal.GetLastPInvokeError();
-                SetConsoleMode(inputHandle, previousInputMode);
-                throw new Win32Exception(failure);
+                Check(SetConsoleMode(inputHandle, (previousInputMode & ~0x247u) | 0x98u));
+                if (!SetConsoleMode(outputHandle, previousOutputMode | 7))
+                {
+                    var failure = Marshal.GetLastPInvokeError();
+                    SetConsoleMode(inputHandle, previousInputMode);
+                    throw new Win32Exception(failure);
+                }
             }
+            catch { modeHandle.Dispose(); throw; }
+            outputModeHandle = modeHandle;
         }
         else if (OperatingSystem.IsLinux())
         {
@@ -62,8 +74,17 @@ public sealed class ConsoleTerminal : IDisposable
     public void Write(string text)
     {
         var utf8 = Encoding.UTF8.GetBytes(text);
-        output.Write(utf8);
-        output.Flush();
+        outputFailed = true;
+        try
+        {
+            output.Write(utf8);
+            output.Flush();
+        }
+        catch (UnauthorizedAccessException failure)
+        {
+            throw new IOException(failure.Message, failure);
+        }
+        outputFailed = false;
     }
 
     public TerminalInput? Poll(int milliseconds)
@@ -157,16 +178,19 @@ public sealed class ConsoleTerminal : IDisposable
     {
         if (disposed) return;
         disposed = true;
+        var recovering = outputFailed;
         try { Write(LeaveScreen); }
+        catch (IOException) when (recovering) { } // Preserve the earlier presentation error.
         finally { Restore(); output.Dispose(); }
     }
 
     private void Restore()
     {
-        if (OperatingSystem.IsWindows())
+        if (outputModeHandle is { } modeHandle)
         {
             SetConsoleMode(inputHandle, previousInputMode);
-            SetConsoleMode(outputHandle, previousOutputMode);
+            SetConsoleMode(modeHandle.DangerousGetHandle(), previousOutputMode);
+            modeHandle.Dispose();
         }
         else if (previousUnixMode is not null) TcSetAttr(0, 0, previousUnixMode);
     }
@@ -196,6 +220,9 @@ public sealed class ConsoleTerminal : IDisposable
     [DllImport("libc", EntryPoint = "poll", SetLastError = true)] private static extern int PollNative(ref PollDescriptor fd, nuint count, int milliseconds);
     [DllImport("libc", EntryPoint = "read", SetLastError = true)] private static extern nint ReadNative(int fd, [Out] byte[] buffer, nuint count);
     [DllImport("kernel32.dll")] private static extern nint GetStdHandle(int handle);
+    [DllImport("kernel32.dll")] private static extern nint GetCurrentProcess();
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DuplicateHandle(nint sourceProcess, nint source, nint targetProcess, out SafeFileHandle target, uint access, bool inherit, uint options);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetConsoleMode(nint console, out uint mode);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetConsoleMode(nint console, uint mode);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(nint handle, uint milliseconds);

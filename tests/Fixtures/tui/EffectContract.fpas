@@ -1,0 +1,228 @@
+program EffectContract;
+
+uses
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
+  System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+type Msg = union
+  StartOriginal;
+  Replace;
+  StartFailure;
+  StartUntilExit;
+  Changed(Value: string);
+  Quit;
+end union;
+
+const Deadline: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5);
+const Posted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const Replaced: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const Started: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const Stopping: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const Release: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+const Joined: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+);
+
+procedure ObserveReplacement();
+begin
+  Replaced.SetResult();
+end procedure;
+
+procedure ObserveStop();
+begin
+  Stopping.SetResult();
+end procedure;
+
+async function Original(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+begin
+  using const Registration: Threads.CancellationTokenRegistration := Token.Register(
+    ObserveReplacement
+  );
+  await Post(Msg.Changed('obsolete'));
+  Posted.SetResult();
+  await Replaced.Task.WaitAsync(Deadline);
+end function;
+
+function Replacement(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+begin
+  Token.ThrowIfCancellationRequested();
+  return Post(Msg.Changed('replacement'));
+end function;
+
+function Failing(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+begin
+  raise new Sys.InvalidOperationException('worker boom');
+end function;
+
+async function UntilExit(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+begin
+  using const Registration: Threads.CancellationTokenRegistration := Token.Register(ObserveStop);
+  Started.SetResult();
+  await Stopping.Task.WaitAsync(Deadline);
+  await Release.Task.WaitAsync(Deadline);
+  Joined.SetResult();
+end function;
+
+function Failed(Error: Sys.Exception): Msg;
+begin
+  return Msg.Changed('failed: ' + Error.Message);
+end function;
+
+function Update(State: string; Message: Msg): App.Transition<string, Msg>;
+begin
+  case Message of
+    when Msg.StartOriginal:
+      return new App.Transition<string, Msg>(
+        State,
+        [App.StartBackground<Msg>('job', Original, Failed)]
+      );
+    when Msg.Replace:
+      return new App.Transition<string, Msg>(
+        State,
+        [App.StartBackground<Msg>('job', Replacement, Failed)]
+      );
+    when Msg.StartFailure:
+      return new App.Transition<string, Msg>(
+        State,
+        [App.StartBackground<Msg>('failing', Failing, Failed)]
+      );
+    when Msg.StartUntilExit:
+      return new App.Transition<string, Msg>(
+        State,
+        [App.StartBackground<Msg>('until-exit', UntilExit, Failed)]
+      );
+    when Msg.Changed(const Value: string):
+      return new App.Transition<string, Msg>(Value, []);
+    when Msg.Quit:
+      return new App.Transition<string, Msg>(State, [App.Exit<Msg>()]);
+  end case;
+end function;
+
+function View(State: string): E.Element<Msg>;
+begin
+  return E.Column<Msg>(
+    E.Text<Msg>(State), E.Button<Msg>('original', 'Original', Msg.StartOriginal),
+    E.Button<Msg>('replacement', 'Replacement', Msg.Replace),
+    E.Button<Msg>('failing', 'Failing', Msg.StartFailure),
+    E.Button<Msg>('until-exit', 'Until exit', Msg.StartUntilExit),
+    E.Button<Msg>('quit', 'Quit', Msg.Quit)
+  );
+end function;
+
+procedure Send(Session: App.HeadlessSession; Control: string);
+begin
+  case Session.Send(App.Input.Activate(Control)) of
+    when App.Admission.Queued(_):
+    else
+      raise new Sys.InvalidOperationException('Input was not admitted: ' + Control);
+  end case;
+end procedure;
+
+procedure StepEffect(Session: App.HeadlessSession; Expected: string);
+begin
+  using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
+    Deadline
+  );
+  if not Session.WaitForWork(Limit.Token).GetAwaiter().GetResult() then
+    raise new Sys.InvalidOperationException('No pending effect result.');
+  end if;
+
+  case Session.Step() of
+    when App.StepResult.EffectProcessed(_):
+      if Session.Snapshot().Lines[0].TrimEnd() <> Expected then
+        raise new Sys.InvalidOperationException('Unexpected effect result, expected: ' + Expected);
+      end if;
+    else
+      raise new Sys.InvalidOperationException('The queued entry was not an effect result.');
+  end case;
+end procedure;
+
+procedure CheckReplacementAndFailure();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<string, Msg>(
+    'initial',
+    Update,
+    View,
+    30,
+    8
+  );
+  Send(Session, 'original');
+  Send(Session, 'replacement');
+  discard Session.Step();
+  Posted.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+  discard Session.Step();
+  Replaced.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+  StepEffect(Session, 'initial');
+  StepEffect(Session, 'replacement');
+
+  Send(Session, 'failing');
+  discard Session.Step();
+  if Session.Snapshot().Lines[0].TrimEnd() <> 'replacement' then
+    raise new Sys.InvalidOperationException('The failure message ran in the starting step.');
+  end if;
+
+  StepEffect(Session, 'failed: worker boom');
+end procedure;
+
+procedure CheckExit();
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<string, Msg>(
+    'initial',
+    Update,
+    View,
+    30,
+    8
+  );
+  Send(Session, 'until-exit');
+  discard Session.Step();
+  Started.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+  Send(Session, 'quit');
+
+  const Exiting: Tasks.Task<App.StepResult> := Tasks.Task.Run<App.StepResult>(
+    function(): App.StepResult => Session.Step()
+  );
+  try
+    Stopping.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    if Exiting.Wait(100) then
+      raise new Sys.InvalidOperationException(
+        'Exit returned before its cancelled worker completed.'
+      );
+    end if;
+  finally
+    discard Release.TrySetResult();
+  end try;
+
+  case Exiting.WaitAsync(Deadline).GetAwaiter().GetResult() of
+    when App.StepResult.Processed(_, _, _):
+      if not Joined.Task.IsCompletedSuccessfully or Session.IsOpen() then
+        raise new Sys.InvalidOperationException(
+          'Exit did not join the worker and close the session.'
+        );
+      end if;
+    else
+      raise new Sys.InvalidOperationException('Unexpected exit outcome.');
+  end case;
+
+  case Session.Send(App.Input.Activate('quit')) of
+    when App.Admission.Closed:
+    else
+      raise new Sys.InvalidOperationException('The exited session still admits input.');
+  end case;
+end procedure;
+
+begin
+  CheckReplacementAndFailure();
+  CheckExit();
+  Console.WriteLine('effect contracts verified');
+end;
+end program;

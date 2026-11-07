@@ -76,8 +76,10 @@ public function Create<TMsg>(Enqueue: function(string, long, TMsg, Threads.Cance
     Sequence := Sequence + 1L;
     const Version: long := Sequence;
     const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
-    const Task: Tasks.Task := Tasks.Task.Run(
-      function(): Tasks.Task => Perform(Id, Version, Work, OnFailure, Source.Token)
+    const Task: Tasks.Task := Tasks.TaskExtensions.Unwrap(
+      Tasks.Task.Run<Tasks.Task>(
+        function(): Tasks.Task => Perform(Id, Version, Work, OnFailure, Source.Token)
+      )
     );
     const Worker: Run := new Run(Id, Version, Source, Task);
     Versions.Add(Id, Version);

@@ -7,17 +7,24 @@ internal static class TuiFixture
 {
     internal static async Task<string> Compile(Debuggee program, string fixture)
     {
-        var fixtures = Path.Combine(AppContext.BaseDirectory, "Fixtures", "tui");
+        var library = await BuildLibrary(program);
+        var source = await File.ReadAllTextAsync(Path.Combine(Fixtures, fixture));
+        await program.Compile(source, "--reference", library, "--reference", program.FilePath("Fpas.Processes.dll"));
+        return source;
+    }
+
+    internal static string Fixtures => Path.Combine(AppContext.BaseDirectory, "Fixtures", "tui");
+
+    internal static async Task<string> BuildLibrary(Debuggee program)
+    {
         var cli = TestEnvironment.Metadata("FpasCliPath");
         var platform = Path.Combine(Path.GetDirectoryName(cli)!, "Fpas.Processes.dll");
         var library = program.FilePath("Fpas.Tui.dll");
-        var sources = Directory.GetFiles(Path.Combine(fixtures, "lib"), "*.fpas", SearchOption.AllDirectories);
+        var sources = Directory.GetFiles(Path.Combine(Fixtures, "lib"), "*.fpas", SearchOption.AllDirectories);
         var compiled = await ProcessRunner.RunAsync([cli, "compile", .. sources, "--output", library, "--target", "library",
             "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", platform]);
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
         File.Copy(platform, program.FilePath("Fpas.Processes.dll"));
-        var source = await File.ReadAllTextAsync(Path.Combine(fixtures, fixture));
-        await program.Compile(source, "--reference", library, "--reference", platform);
-        return source;
+        return library;
     }
 }

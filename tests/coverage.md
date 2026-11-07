@@ -37,6 +37,15 @@ Heap dump analysis recovers managed frames and the held exception after target
 exit; the original portable-PDB stack includes source lines. Native Windows/WSL
 Debug/Release acceptance runs the same contracts without platform skips.
 
+## Terminal UI
+
+`HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including
+frame updates, queue ordering, stale results after replacing an effect, delivery
+of a worker failure on a later step, and joining cancelled workers before exit.
+`TerminalModeTests` reads Win32 input and output modes or Linux termios state
+before, during and after an interactive run in a private terminal. It checks
+exact restoration after both normal exit and a native output failure.
+
 ## Language and metadata
 
 Syntax.TokenBoundaryTests varies every declared boundary individually and all

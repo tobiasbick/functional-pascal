@@ -10,12 +10,14 @@ namespace Fpas.IntegrationTests.Tui;
 
 public sealed class HeadlessTuiTests
 {
-    [Fact]
-    public async Task Headless_host_preserves_scheduling_focus_and_frame_contracts()
+    [Theory]
+    [InlineData("headless.fpas", "headless contracts verified\n")]
+    [InlineData("effects.fpas", "effect contracts verified\n")]
+    public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)
     {
         using var program = new Debuggee("headless-tui");
-        await TuiFixture.Compile(program, "headless.fpas");
-        Assert.Equal("headless contracts verified\n", await program.Run());
+        await TuiFixture.Compile(program, fixture);
+        Assert.Equal(expected, await program.Run());
     }
 
     [Fact]

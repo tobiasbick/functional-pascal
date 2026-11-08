@@ -1,0 +1,215 @@
+unit Gallery.Previews;
+
+uses
+  Gallery.State as G, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes;
+
+function Button(
+  Colors: Themes.Palette; Id: string; Label: string; Message: G.Msg; Enabled: bool := true
+): E.Element<G.Msg>;
+begin
+  return E.Styled<G.Msg>(
+    E.Button<G.Msg>(Id, Label, Message, Enabled),
+    if Enabled then Colors.Primary else Colors.Muted end if
+  );
+end function;
+
+function Buttons(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<G.Msg>('Presses: ' + State.Presses.ToString()),
+    E.Row<G.Msg>(
+      new E.Flow(Gap := 1),
+      Button(Colors, 'button-press', 'Press me', G.Msg.Press),
+      Button(Colors, 'button-disabled', 'Disabled', G.Msg.Press, false)
+    )
+  );
+end function;
+
+function Checkboxes(State: G.Model): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Checkbox<G.Msg>(
+      'check-toggle',
+      'Toggle this option',
+      State.Checked,
+      function(Value: bool): G.Msg => G.Msg.Check(Value)
+    ),
+    E.Checkbox<G.Msg>(
+      'check-disabled',
+      'Disabled and checked',
+      true,
+      function(Value: bool): G.Msg => G.Msg.Check(Value),
+      false
+    )
+  );
+end function;
+
+function Editor(State: G.Model): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<G.Msg>('Type, select, or paste text.'),
+    E.TextInput<G.Msg>(
+      'text-entry',
+      State.Text,
+      function(Value: string): G.Msg => G.Msg.Edit(Value)
+    ),
+    E.Text<G.Msg>('Text length: ' + State.Text.Length.ToString())
+  );
+end function;
+
+function Lists(State: G.Model): E.Element<G.Msg>;
+begin
+  const Items: E.Element<G.Msg> := if State.Empty then E.Text<G.Msg>('No items.')
+    else E.List<G.Msg>(
+      'sample-list', [
+        new E.ListItem<G.Msg>('amber', 'Amber', G.Msg.Choose('Amber'), State.Selection = 'Amber'),
+        new E.ListItem<G.Msg>('birch', 'Birch', G.Msg.Choose('Birch'), State.Selection = 'Birch'),
+        new E.ListItem<G.Msg>('cedar', 'Cedar', G.Msg.Choose('Cedar'), State.Selection = 'Cedar')
+      ]
+    )
+    end if;
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Checkbox<G.Msg>(
+      'list-empty',
+      'Show empty state',
+      State.Empty,
+      function(Value: bool): G.Msg => G.Msg.EmptyList(Value)
+    ),
+    Items,
+    E.Text<G.Msg>(if State.Empty then 'Selection hidden' else 'Selected: ' + State.Selection end if)
+  );
+end function;
+
+function Progress(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<G.Msg>(State.Progress.ToString() + '% complete'),
+    E.ProgressBar<G.Msg>(State.Progress),
+    E.Row<G.Msg>(
+      new E.Flow(Gap := 1),
+      Button(Colors, 'progress-advance', '+25%', G.Msg.Advance, State.Progress < 100),
+      Button(Colors, 'progress-reset', 'Reset', G.Msg.ResetProgress)
+    )
+  );
+end function;
+
+function Layout(Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<G.Msg>('A row with a fixed and a growing child.'),
+    E.Row<G.Msg>(
+      new E.Flow(Gap := 1),
+      E.Size<G.Msg>(
+        E.Styled<G.Msg>(E.Text<G.Msg>('Fixed'), Colors.Secondary),
+        new E.Flex(Basis := 8)
+      ),
+      E.Size<G.Msg>(
+        E.Styled<G.Msg>(E.Text<G.Msg>('Fills the rest'), Colors.Primary),
+        new E.Flex(Grow := 1)
+      )
+    ),
+    E.Border<G.Msg>(E.Text<G.Msg>('A border around text'), 'Border')
+  );
+end function;
+
+function Scrolling(): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    E.Text<G.Msg>('Scroll over the box to read more.'),
+    E.Size<G.Msg>(
+      E.Border<G.Msg>(
+        E.ScrollView<G.Msg>(
+          'sample-scroll', E.Column<G.Msg>(
+            E.Text<G.Msg>('01  Amber'), E.Text<G.Msg>('02  Birch'), E.Text<G.Msg>('03  Cedar'),
+            E.Text<G.Msg>('04  Dogwood'), E.Text<G.Msg>('05  Elm'), E.Text<G.Msg>('06  Fir'),
+            E.Text<G.Msg>('07  Ginkgo'), E.Text<G.Msg>('08  Hazel'), E.Text<G.Msg>('09  Juniper')
+          )
+        ), 'Scroll view'
+      ),
+      new E.Flex(Basis := 6, Minimum := 4)
+    )
+  );
+end function;
+
+function Position(Label: string; Column: int; Row: int): G.Msg;
+begin
+  return G.Msg.CanvasEvent(Label + ' at ' + Column.ToString() + ', ' + Row.ToString());
+end function;
+
+function Canvas(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+  function Draw(Column: int; Row: int): E.Cell;
+  begin
+    return if (Column div 4 + Row div 2) mod 2 = 0 then Tile else Other end if;
+  end function;
+begin
+  const Tile: E.Cell := new E.Cell(' ', Colors.Primary);
+  const Other: E.Cell := new E.Cell(' ', Colors.Secondary);
+  return E.Column<G.Msg>(
+    E.Text<G.Msg>('Canvas: ' + State.Columns.ToString() + ' × ' + State.Rows.ToString()),
+    E.Size<G.Msg>(
+      E.CellCanvas<G.Msg>(
+        'sample-canvas', Draw, new E.CanvasEvents<G.Msg>(
+          OnResize := function(Columns: int; Rows: int): G.Msg => G.Msg.ResizeCanvas(Columns, Rows),
+          OnClick := function(Column: int; Row: int): G.Msg => Position('Left click', Column, Row),
+          OnMiddleClick := function(Column: int; Row: int): G.Msg => Position(
+            'Middle click',
+            Column,
+            Row
+          ),
+          OnScroll := function(Column: int; Row: int; Delta: int): G.Msg => Position(
+            if Delta < 0 then 'Wheel up' else 'Wheel down' end if,
+            Column,
+            Row
+          )
+        )
+      ),
+      new E.Flex(Grow := 1)
+    ),
+    E.Text<G.Msg>(State.Pointer)
+  );
+end function;
+
+public function Body(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  return case State.Active of
+    when G.Page.Buttons: Buttons(State, Colors);
+    when G.Page.Checkbox: Checkboxes(State);
+    when G.Page.TextInput: Editor(State);
+    when G.Page.Lists: Lists(State);
+    when G.Page.Progress: Progress(State, Colors);
+    when G.Page.Layout: Layout(Colors);
+    when G.Page.Scrolling: Scrolling();
+    when G.Page.Canvas: Canvas(State, Colors);
+    when G.Page.Overlay: E.Column<G.Msg>(
+      new E.Flow(Gap := 1),
+      E.Text<G.Msg>('Focus returns here when you close it.'),
+      Button(Colors, 'overlay-open', 'Open overlay', G.Msg.SetOverlay(true))
+    );
+    else E.Text<G.Msg>('Choose a widget.');
+  end case;
+end function;
+
+public function Overlay(Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  return E.Overlay<G.Msg>(
+    'sample-overlay', true, 'overlay-close', G.Msg.SetOverlay(false),
+    E.Styled<G.Msg>(
+      E.Border<G.Msg>(
+        E.Column<G.Msg>(
+          new E.Flow(Gap := 1, Padding := 1),
+          E.Text<G.Msg>('Focus stays inside this overlay.'),
+          Button(Colors, 'overlay-close', 'Esc Close', G.Msg.SetOverlay(false))
+        ),
+        'Modal overlay'
+      ),
+      Colors.Panel
+    ), []
+  );
+end function;
+end unit;

@@ -10,12 +10,7 @@ public sealed partial class DapDebuggerTests
     public async Task Mandelbrot_responds_to_real_terminal_keys_mouse_and_resize()
     {
         using var program = new Debuggee("mandelbrot-tui");
-        var library = await TuiFixture.BuildLibrary(program);
-        var folder = Path.Combine(TuiFixture.Fixtures, "mandelbrot");
-        var main = Path.Combine(folder, "main.fpas");
-        await program.Compile(await File.ReadAllTextAsync(main),
-            [.. Directory.GetFiles(folder, "*.fpas").Where(path => path != main),
-             "--reference", library, "--reference", program.FilePath("Fpas.Processes.dll")]);
+        await TuiFixture.CompileExample(program, "mandelbrot");
 
         await using var client = new DapProbe();
         await client.Success("initialize");

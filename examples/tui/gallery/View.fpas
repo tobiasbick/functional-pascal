@@ -1,0 +1,77 @@
+unit Gallery.View;
+
+uses
+  Gallery.State as G, Gallery.Previews as P, Fpas.Tui.Elements as E,
+  Fpas.Tui.Themes as Themes, System.Collections.Generic as Generic;
+
+function Pages(Active: G.Page): E.Element<G.Msg>;
+begin
+  const Items: Generic.List<E.ListItem<G.Msg>> := new Generic.List<E.ListItem<G.Msg>>();
+  for Page: G.Page in G.Pages do
+    Items.Add(
+      new E.ListItem<G.Msg>(
+        Page.ToString().ToLowerInvariant(), G.Title(Page), G.Msg.Show(Page), Page = Active
+      )
+    );
+  end for;
+
+  return E.Border<G.Msg>(E.List<G.Msg>('pages', Items.ToArray()), 'Widgets');
+end function;
+
+function ThemeButton(Colors: Themes.Palette; Current: G.Preset; Target: G.Preset): E.Element<G.Msg>;
+begin
+  const Label: string := Target.ToString();
+  return E.Styled<G.Msg>(
+    E.Button<G.Msg>('theme-' + Label.ToLowerInvariant(), Label, G.Msg.ChangeTheme(Target)),
+    if Current = Target then Colors.Primary else Colors.Secondary end if
+  );
+end function;
+
+function ThemeBar(Current: G.Preset; Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  return E.Row<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<G.Msg>('Theme: ' + Current.ToString()),
+    ThemeButton(Colors, Current, G.Preset.Light),
+    ThemeButton(Colors, Current, G.Preset.Dark),
+    ThemeButton(Colors, Current, G.Preset.Green),
+    ThemeButton(Colors, Current, G.Preset.Blue)
+  );
+end function;
+
+const Keys: array of E.ShortcutBinding<G.Msg> := [
+  E.Shortcut<G.Msg>(E.Key.PageUp, E.KeyModifiers.None, G.Msg.MovePage(-1)),
+  E.Shortcut<G.Msg>(E.Key.PageDown, E.KeyModifiers.None, G.Msg.MovePage(1)),
+  E.Shortcut<G.Msg>(E.Key.Q, E.KeyModifiers.Ctrl, G.Msg.Quit)
+];
+
+public function View(State: G.Model): E.Element<G.Msg>;
+begin
+  const Colors: Themes.Palette := G.Colors(State.Appearance);
+  const Preview: E.Element<G.Msg> := E.Styled<G.Msg>(
+    E.Border<G.Msg>(
+      E.Column<G.Msg>(
+        new E.Flow(Padding := 1),
+        E.Size<G.Msg>(P.Body(State, Colors), new E.Flex(Grow := 1))
+      ), G.Title(State.Active)
+    ),
+    Colors.Panel
+  );
+  const Body: E.Element<G.Msg> := E.Row<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Size<G.Msg>(Pages(State.Active), new E.Flex(Basis := 17, Minimum := 11)),
+    E.Size<G.Msg>(Preview, new E.Flex(Basis := 0, Grow := 1))
+  );
+  return E.Screen<G.Msg>(
+    E.Column<G.Msg>(
+      new E.Flow(Padding := 1, Gap := 1),
+      E.Styled<G.Msg>(E.Text<G.Msg>('FPAS  /  Widget Gallery'), Colors.Heading),
+      E.Size<G.Msg>(Body, new E.Flex(Basis := 4, Grow := 1)),
+      ThemeBar(State.Appearance, Colors),
+      E.Styled<G.Msg>(E.Text<G.Msg>('PgUp/PgDn Pages   Tab Focus   Ctrl+Q Quit'), Colors.Muted)
+    ),
+    if State.Overlay then [P.Overlay(Colors)] else [] end if,
+    Keys
+  );
+end function;
+end unit;

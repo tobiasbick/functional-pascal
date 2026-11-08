@@ -96,5 +96,7 @@ demonstrates a live switch from its Options overlay.
 The package contains the TUI library, its terminal adapter and the matching
 FPAS runtime support assembly. Use the current local FPAS SDK to build the
 source project and the [filter list example](../../examples/tui/filter-list/).
+The [widget gallery](../../examples/tui/gallery/) shows the available
+controls and layout elements in all four themes.
 Use the [private-terminal debugger](../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)
 for interactive inspection at breakpoints.

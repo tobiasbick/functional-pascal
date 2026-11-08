@@ -1,0 +1,153 @@
+unit Gallery.State;
+
+uses
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
+  System as Sys;
+
+public type Page = enum: byte
+  Buttons;
+  Checkbox;
+  TextInput;
+  Lists;
+  Progress;
+  Layout;
+  Scrolling;
+  Canvas;
+  Overlay;
+end enum;
+
+public type Preset = enum: byte
+  Light;
+  Dark;
+  Green;
+  Blue;
+end enum;
+
+public const Pages: array of Page := Sys.Enum.GetValues<Page>();
+
+public type Model = record
+  public Active: Page := Page.Buttons;
+  public Appearance: Preset := Preset.Dark;
+  public Presses: int := 0;
+  public Checked: bool := false;
+  public Text: string := '';
+  public Selection: string := 'Birch';
+  public Empty: bool := false;
+  public Progress: int := 0;
+  public Overlay: bool := false;
+  public Columns: int := 0;
+  public Rows: int := 0;
+  public Pointer: string := 'Try the mouse here.';
+end record;
+
+public type Msg = union
+  Show(Value: Page);
+  MovePage(Direction: int);
+  ChangeTheme(Value: Preset);
+  Press;
+  Check(Value: bool);
+  Edit(Value: string);
+  Choose(Value: string);
+  EmptyList(Value: bool);
+  Advance;
+  ResetProgress;
+  ResizeCanvas(Columns: int; Rows: int);
+  CanvasEvent(Value: string);
+  SetOverlay(Open: bool);
+  Quit;
+end union;
+
+public function Title(Value: Page): string;
+begin
+  case Value of
+    when Page.TextInput:
+      return 'Text input';
+    when Page.Progress:
+      return 'Progress bar';
+    when Page.Layout:
+      return 'Text & layout';
+    when Page.Scrolling:
+      return 'Scroll view';
+    when Page.Canvas:
+      return 'Cell canvas';
+    else
+      return Value.ToString();
+  end case;
+end function;
+
+public function Colors(Value: Preset): Themes.Palette;
+begin
+  case Value of
+    when Preset.Light:
+      return Themes.Light();
+    when Preset.Green:
+      return Themes.Green();
+    when Preset.Blue:
+      return Themes.Blue();
+    else
+      return Themes.Dark();
+  end case;
+end function;
+
+public function ThemeFor(State: Model): E.Theme;
+begin
+  return Colors(State.Appearance).Theme;
+end function;
+
+function Adjacent(Value: Page; Direction: int): Page;
+begin
+  return Pages[(cast<int>(Value) + Direction + Pages.Length) mod Pages.Length];
+end function;
+
+public function Update(State: Model; Message: Msg): App.Transition<Model, Msg>;
+begin
+  const Next: Model := case Message of
+    when Msg.Show(const Value: Page): State with
+      Active := Value;
+    end with;
+    when Msg.MovePage(const Direction: int): State with
+      Active := Adjacent(State.Active, Direction);
+    end with;
+    when Msg.ChangeTheme(const Value: Preset): State with
+      Appearance := Value;
+    end with;
+    when Msg.Press: State with
+      Presses := State.Presses + 1;
+    end with;
+    when Msg.Check(const Value: bool): State with
+      Checked := Value;
+    end with;
+    when Msg.Edit(const Value: string): State with
+      Text := Value;
+    end with;
+    when Msg.Choose(const Value: string): State with
+      Selection := Value;
+    end with;
+    when Msg.EmptyList(const Value: bool): State with
+      Empty := Value;
+    end with;
+    when Msg.Advance: State with
+      Progress := Sys.Math.Min(State.Progress + 25, 100);
+    end with;
+    when Msg.ResetProgress: State with
+      Progress := 0;
+    end with;
+    when Msg.ResizeCanvas(const Columns: int, const Rows: int): State with
+      Columns := Columns;
+      Rows := Rows;
+    end with;
+    when Msg.CanvasEvent(const Value: string): State with
+      Pointer := Value;
+    end with;
+    when Msg.SetOverlay(const Open: bool): State with
+      Overlay := Open;
+    end with;
+    when Msg.Quit: State;
+  end case;
+  const Commands: array of App.Command<Msg> := case Message of
+    when Msg.Quit: [App.Exit<Msg>()];
+    else [];
+  end case;
+  return new App.Transition<Model, Msg>(Next, Commands);
+end function;
+end unit;

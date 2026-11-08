@@ -17,7 +17,8 @@ export async function projectWorkflows(data: Fixture): Promise<void> {
   await writeFile(duplicate, 'unit Engine; end unit;\n');
   try {
     assert.equal(await command('build'), 1);
-    const issue = vscode.languages.getDiagnostics(vscode.Uri.file(source)).find(item => item.code === 'FP2005');
+    const issue = await eventually('duplicate container in Problems', () =>
+      vscode.languages.getDiagnostics(vscode.Uri.file(source)).find(item => item.code === 'FP2005'), item => item !== undefined);
     assert(issue);
     assert(issue.relatedInformation?.some(note => note.location.uri.fsPath === vscode.Uri.file(duplicate).fsPath));
     assert.equal(issue.range.start.line, 0);
@@ -29,8 +30,8 @@ export async function projectWorkflows(data: Fixture): Promise<void> {
   try {
     await writeFile(hostFile, '#warning Editor workflow warning\n' + host);
     assert.equal(await command('build'), 0);
-    assert(vscode.languages.getDiagnostics(vscode.Uri.file(hostFile)).some(item =>
-      item.code === 'CS1030' && item.severity === vscode.DiagnosticSeverity.Warning));
+    await eventually('C# warning in Problems', () => vscode.languages.getDiagnostics(vscode.Uri.file(hostFile)),
+      diagnostics => diagnostics.some(item => item.code === 'CS1030' && item.severity === vscode.DiagnosticSeverity.Warning));
   } finally { await writeFile(hostFile, host); }
   assert.equal(await command('build'), 0);
   assert.equal(await command('format'), 0);

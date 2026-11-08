@@ -17,8 +17,8 @@ public sealed class SourceProjectionTests
             program Receiver;
             uses System.Console as Console, System.Threading.Tasks as Tasks;
             type Counter = record
-              Value: int;
-              {{(asynchronous ? "async function Read(): Tasks.Task<int>;" : "function Read(): int;")}}
+              public Value: int;
+              {{(asynchronous ? "public async function Read(): Tasks.Task<int>;" : "public function Read(): int;")}}
               begin
                 {{(asynchronous ? "await Tasks.Task.Delay(10);" : "discard 0;")}}
                 Console.WriteLine('self');

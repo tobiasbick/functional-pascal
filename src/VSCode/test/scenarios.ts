@@ -23,7 +23,6 @@ export async function multilineStrings(data: Fixture): Promise<void> {
   await command('selectContext', vscode.Uri.file(data.mainProject));
   const target = await editor(path.join(path.dirname(data.mainProject), 'main.fpas'));
   const document = target.document;
-  const original = document.getText();
   const diskSource = await readFile(document.uri.fsPath, 'utf8');
   const unfinished = [
     'program EditorProbe;',
@@ -55,7 +54,8 @@ export async function multilineStrings(data: Fixture): Promise<void> {
     await eventually('reopening the string restores its diagnostic', () => errors(document.uri),
       diagnostics => diagnostics.some(diagnostic => diagnostic.code === 'FP1002'));
   } finally {
-    await replace(target, original);
+    await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+    assert.equal(await readFile(document.uri.fsPath, 'utf8'), diskSource);
   }
 }
 

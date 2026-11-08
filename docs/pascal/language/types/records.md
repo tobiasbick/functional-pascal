@@ -54,6 +54,8 @@ Duplicate/unknown/inaccessible update fields are errors. Unmentioned fields,
 including private fields, are retained; defaults do not rerun. Generated copy
 helpers permit external updates of accessible fields without exposing private
 payloads. The operand must be a language record, not an arbitrary imported CLR object.
+Record updates are postfix operations. Chain another update or select a member
+directly after `end with`.
 
 Instance methods have an implicit read-only `self` binding. `static function` or
 `static procedure` declares a type-level method with no self, called through the

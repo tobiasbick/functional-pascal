@@ -216,7 +216,9 @@ samplers. The FPAS CLI provides compilation, evaluated project checks/source que
 [batch and DAP debugging](../pascal/tools/debugging.md).
 Use [fpas fmt](../pascal/tools/fmt-style.md) to format sources or check the fixed
 style without changes. The [stdio language server](../pascal/tools/language-server.md)
-shares the workspace services. Automatic IDE project integration remains separate work.
+shares the workspace services. In a trusted workspace, the
+[VS Code extension](../../src/VSCode/README.md) starts it when you open an FPAS
+file and one analysis context is available. When there are several, select one.
 
 For FPAS-authored tests, use native framework attributes and assertions in a test
 library. [Native .NET testing](../pascal/tools/testing.md) describes `fpas init test`,

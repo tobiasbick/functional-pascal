@@ -23,7 +23,11 @@ that result, not to the callable itself.
 Anonymous functions have typed parameters, a result annotation, and either `=>`
 with one expression or a full `begin ... end function` body. Anonymous procedures
 use `begin ... end procedure`. Their parameter names remain local to the body.
-Named nested routines use the ordinary declaration syntax inside a routine body.
+A synchronous lambda can use `ref`, `out`, or `in` with a compatible imported
+delegate type. Lambda parameters are required and have no `params` form.
+
+Named nested routines use the ordinary declaration syntax. Declare a routine's
+direct helpers before its outer `begin`.
 Their signatures are visible throughout the declaring lexical block, allowing
 forward and mutually recursive calls. A declaration has no runtime statement
 effect. Captured bindings must be initialized before a call or conversion to a

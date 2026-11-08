@@ -14,6 +14,7 @@ sources and invokes the direct CIL compiler. Follow
 | Task | Reference |
 | --- | --- |
 | Project shape, sources, dependencies, and solutions | [Projects](../../../docs/pascal/program-structure/projects.md) |
+| Project, library, test, and solution templates, build, and run | [Project commands](../../../docs/pascal/program-structure/project-commands.md) |
 | Units, source identity, aliases, and visibility | [Program structure](../../../docs/pascal/program-structure/README.md) |
 | Restore/build, warning policy, incremental state, and cleanup | [MSBuild contract](../../../docs/build/msbuild.md) |
 | Bootstrap, toolchain configuration, SDK package versions/cache | [Development workflow](../../../docs/build/development.md) |
@@ -21,13 +22,15 @@ sources and invokes the direct CIL compiler. Follow
 | Assemblies, symbols, and runtime dependencies | [Compiled output](../../../docs/pascal/program-structure/compiled-programs.md) |
 | Application apphosts, Native AOT, bundles and signing | [Publishing](../../../docs/build/publishing.md) |
 | Build and cross-language verification | [Build acceptance](../../../tests/coverage.md#build-acceptance) |
+| Native FPAS test projects and runners | [Testing](../../../docs/pascal/tools/testing.md) |
 
 ## Project workflow
 
-1. Start from a working project such as [Hello](../../../examples/hello/Hello.fpasproj)
-   or [Units](../../../examples/units/Units.fpasproj). Package the local SDK before
-   restoring a consumer. After changing packaged tools, use the documented
-   package-version/cache workflow so consumers select the current compiler.
+1. Use a `fpas init` template when it fits the new project or solution. For
+   existing projects, inspect the current SDK selection and source items.
+   Package the local SDK before restoring a consumer. When repacking the same
+   version, evict that version from the target NuGet cache before restoring.
+   Use isolated caches for concurrent tests.
 2. Set net10.0, AnyCPU, and OutputType Exe or Library. Executables contain exactly
    one program plus optional units; libraries contain units without a program.
    Each source header defines its identity, independent of filename/order.
@@ -38,13 +41,14 @@ sources and invokes the direct CIL compiler. Follow
    consumer. Source uses aliases resolve those supplied references; they do not
    acquire packages or define project dependencies. The SDK supplies framework
    references and its matching Core dependency.
-5. Put related FPAS/C# projects in a `.slnx` with the FPAS project-type mapping
-   described by the MSBuild contract. ProjectReference edges define build order.
+5. Put related projects in a `.slnx` with the
+   [FPAS project-type mapping](../../../docs/build/msbuild.md#project-identity-and-solution-shape).
+   ProjectReference edges define build order.
    Inspect the [mixed fixture](../../../tests/Fixtures/msbuild/Game.slnx) for a
    concrete layout. Public/private source declarations govern exported APIs.
-6. Restore/build through dotnet using explicit project/solution paths. Run a
-   managed executable through dotnet with its dependencies present. Use the
-   [documented commands](../../../docs/build/development.md#build-an-fpas-application).
+6. Use explicit project or solution paths with `fpas build` or `dotnet build`.
+   To resolve and launch a project executable, use `fpas run`. Select `--project`
+   when a solution has several executables. Use `fpas test` for native test projects.
 
 ## Verification
 
@@ -54,7 +58,7 @@ builds, Clean/Rebuild, and configuration isolation. Test compilation and executi
 are separate steps; do not replace running toolchain binaries.
 
 Use the [publishing contract](../../../docs/build/publishing.md) for application
-apphosts, Native AOT, self-contained/single-file outputs and signing. IDE project
-loading remains separate editor work. The
-[standalone SDK walkthrough](../../../docs/build/standalone-sdk.md) is checked
-directly by StandaloneSdkGuideTests in Debug and Release.
+apphosts, Native AOT, self-contained/single-file outputs and signing. For editor
+work, use the [VS Code extension guide](../../../src/VSCode/README.md) to restore
+and select the analysis context and verify project, test, or debug commands.
+StandaloneSdkGuideTests verifies the isolated SDK walkthrough in Debug and Release.

@@ -39,7 +39,10 @@ body. Use an imported delegate type for byref parameters, nullable delegates, or
 signatures outside Func/Action arity limits.
 
 Named nested routines are declarations inside a lexical body. Their signatures
-are visible throughout that block, permitting forward/mutually recursive calls.
+are visible throughout that block, permitting forward and mutually recursive
+calls. Put a routine's direct helpers after its constraints and contracts, before
+its outer `begin`. Helpers in inner blocks or the program entry block go inside
+that scope.
 Captured bindings must be initialized before calls/delegate conversion. Immutable
 captures retain values; captured var locals share cells and can outlive the call.
 Capturing a reference does not copy the object. Mutable captures need ordinary

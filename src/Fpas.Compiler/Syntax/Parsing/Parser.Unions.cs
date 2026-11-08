@@ -84,6 +84,7 @@ internal sealed partial class Parser
 
     private PatternSyntax ReadPattern()
     {
+        using var nesting = EnterNesting();
         var start = Current.Position;
         if (At("_")) { position++; return new AnyPatternSyntax(start); }
         if (At("const"))
@@ -113,6 +114,7 @@ internal sealed partial class Parser
             }
             if (fields is null && At(".."))
             {
+                CheckNesting(name.Parts.Count, name.Position);
                 position++;
                 ExpressionSyntax lowerName = new NameExpressionSyntax(name.Parts[0]) { SpanEnd = name.Parts[0].Position + name.Parts[0].Length };
                 foreach (var part in name.Parts.Skip(1)) lowerName = new MemberSyntax(lowerName, part) { SpanStart = lowerName.SpanStart, SpanEnd = part.Position + part.Length };

@@ -85,7 +85,8 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             }
             else if (tokens[declaration].Text == "type")
             {
-                var probe = new Parser(source, tokens) { position = declaration + 2 };
+                var probe = new Parser(source, tokens) { position = declaration + 1 };
+                probe.Identifier();
                 probe.ReadTypeParameters(); probe.Expect("="); probe.ReadConstraints();
                 var union = probe.At("union"); var record = probe.At("record"); var protocol = probe.At("protocol");
                 if (union) unions.Add(ReadUnion(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
@@ -121,6 +122,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
 
     private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false, bool nested = false, bool abstractMember = false)
     {
+        using var nesting = EnterNesting();
         var start = Current.Position;
         var documentation = Current.Documentation;
         var isPublic = At("public") || abstractMember;

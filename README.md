@@ -51,7 +51,11 @@ dotnet pack sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj --no-build --configuration Debu
 
 The compiler is `src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll`. Run it through
 `dotnet`; keep its output directory's dependencies together. The local SDK feed
-is configured by [NuGet.Config](NuGet.Config). Build and run the checked-in example:
+is configured by [NuGet.Config](NuGet.Config). If you repacked an SDK version
+already in your NuGet package cache, remove that version's cached package before
+building the example. See the [SDK cache instructions](docs/build/development.md#build-an-fpas-application).
+
+Build and run the checked-in example.
 
 ```sh
 dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll build examples/hello/Hello.fpasproj
@@ -116,14 +120,15 @@ the generated assembly/PDB pair. See [debugging](docs/pascal/tools/debugging.md)
 and [profiling](docs/pascal/tools/profiling.md).
 
 Use [fpas fmt](docs/pascal/tools/fmt-style.md) for the fixed source style and
-check/list/stdout modes. LSP, automatic IDE/project loading and editor extensions
-have separate scope.
+check/list/stdout modes. The [VS Code extension](src/VSCode/README.md) uses the
+[language server](docs/pascal/tools/language-server.md) for live analysis and
+provides project, test, and debug commands.
 
 ## Applications
 
-[`apps/`](apps/README.md) is reserved for complete FPAS applications. No end-user
-applications are currently included in the CLR checkout. Focused language and
-.NET API demonstrations live under [`examples/`](examples/README.md).
+[`apps/`](apps/README.md) contains the documentation example checker and the
+diagnostic workloads for profiling and failure investigation. Focused language
+and .NET API demonstrations live under [`examples/`](examples/README.md).
 
 ## Examples
 
@@ -342,7 +347,7 @@ contract, follow [AGENTS.md](AGENTS.md) when using an agent, and use the
 | `sdk/Fpas.NET.Sdk` | Project props/targets and packaging of the matching toolchain |
 | `tests/` | Compiler, metadata, execution, documentation, and SDK verification |
 | `examples/` | Focused executable FPAS/.NET projects |
-| `apps/` | Reserved for complete end-user applications |
+| `apps/` | Documentation checker and diagnostic workloads written in FPAS |
 
 See [compiler architecture](docs/architecture/README.md) for project dependencies,
 closures, async lowering, and debug metadata. The CLR owns execution and GC.

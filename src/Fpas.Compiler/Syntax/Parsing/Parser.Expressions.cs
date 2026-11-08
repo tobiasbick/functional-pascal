@@ -5,7 +5,12 @@ internal sealed partial class Parser
     internal ExpressionSyntax ParseExpressionFragment() => ReadExpression();
 
     private ExpressionSyntax Extent(ExpressionSyntax expression, int start)
-        => expression with { SpanStart = start, SpanEnd = tokens[position - 1].Position + tokens[position - 1].Length };
+    {
+        var depth = 1;
+        foreach (var child in expression.Children()) depth = Math.Max(depth, child.Depth + 1);
+        CheckNesting(depth, expression.Position);
+        return expression with { SpanStart = start, SpanEnd = LastEnd, Depth = depth };
+    }
 
     private const int LogicalPrecedence = 4;
 
@@ -19,6 +24,7 @@ internal sealed partial class Parser
 
     private ExpressionSyntax ReadExpression(int minimum = 1)
     {
+        using var nesting = EnterNesting();
         var start = position;
         var left = ReadUnary();
         string? logicalOperator = null;
@@ -64,11 +70,13 @@ internal sealed partial class Parser
 
     private ExpressionSyntax ReadUnary()
     {
-        if (At("await")) { var token = tokens[position++]; return Extent(new AwaitSyntax(token.Position, ReadUnary()), token.Position); }
-        if (At("+") || At("-") || At("not"))
+        if (At("await") || At("+") || At("-") || At("not"))
         {
-            layout?.Unary.Add(position);
-            var token = tokens[position++]; return Extent(new UnarySyntax(token, ReadUnary()), token.Position);
+            using var nesting = EnterNesting();
+            if (!At("await")) layout?.Unary.Add(position);
+            var token = tokens[position++];
+            var operand = ReadUnary();
+            return Extent(token.Text == "await" ? new AwaitSyntax(token.Position, operand) : new UnarySyntax(token, operand), token.Position);
         }
         var start = Current.Position;
         if (At("unchecked"))

@@ -15,5 +15,5 @@ dotnet examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll
 After changing packaged compiler tools, use a fresh SDK version/cache entry as
 described in the bootstrap instructions. The integration suite packages current
 tools under a unique version, builds this exact project/source, and checks every
-rendered pixel against a .NET Complex calculation. This is a bounded console
-example; interactive graphics and deep zoom are later application work.
+rendered pixel against a .NET Complex calculation. For interactive pan and zoom
+in a fullscreen terminal, see the [Mandelbrot Explorer](../tui/mandelbrot/README.md).

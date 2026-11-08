@@ -6,33 +6,48 @@ uses
   System.Collections.Generic as Collections, Fpas.Processes as Owned,
   Diagnostics.MeasureOptions as Model;
 
+// A completed measurement target and its captured streams.
 public type Result = record
+  // The target process exit code.
   public ExitCode: int;
+  // The decoded standard output.
   public Output: string;
+  // The decoded standard error.
   public Error: string;
 end record;
 
-async function Drain(Reader: IO.StreamReader; Token: Threading.CancellationToken): Tasks.Task<string>;
+async function Drain(Stream: IO.Stream; Token: Threading.CancellationToken): Tasks.Task<string>;
 begin
-  const Buffer: array of char := new char[4096];
-  const TextOutput: Text.StringBuilder := new Text.StringBuilder();
+  const Buffer: array of byte := new byte[4096];
+  using const Bytes: IO.MemoryStream := new IO.MemoryStream();
   while true do
-    const Count: int := await Reader.ReadAsync(Buffer, 0, Buffer.Length).WaitAsync(Token);
+    const Count: int := await Stream.ReadAsync(Buffer, 0, Buffer.Length, Token);
     if Count = 0 then
       break;
     end if;
 
-    if TextOutput.Length + Count > 65536 then
+    if Bytes.Length + Count > 65536 then
       raise new IO.InvalidDataException('Child output exceeded 64 KiB');
     end if;
 
-    discard TextOutput.Append(Buffer, 0, Count);
+    Bytes.Write(Buffer, 0, Count);
   end while;
 
-  return TextOutput.ToString();
+  Bytes.Position := 0;
+  using const Reader: IO.StreamReader := new IO.StreamReader(Bytes, Text.Encoding.UTF8);
+  return Reader.ReadToEnd();
 end function;
 
+// Runs and joins one measurement target with bounded output on each stream.
+//
+// ## Parameters
+// - `Options`: Target, arguments, working directory, and positive timeout.
+// - `Cancellation`: Cancellation requested by the caller.
+//
+// ## Returns
+// The target exit code and the two decoded streams.
 public async function Run(Options: Model.Options; Cancellation: Threading.CancellationToken): Tasks.Task<Result>;
+requires Options.Timeout > 0;
 begin
   using const Deadline: Threading.CancellationTokenSource := new Threading.CancellationTokenSource(
     Sys.TimeSpan.FromSeconds(Options.Timeout)
@@ -51,18 +66,29 @@ begin
     Environment
   );
   Child.Input.Dispose();
-  using const Output: IO.StreamReader := new IO.StreamReader(Child.Output, Text.Encoding.UTF8);
-  using const Error: IO.StreamReader := new IO.StreamReader(Child.Error, Text.Encoding.UTF8);
-  const OutTask: Tasks.Task<string> := Drain(Output, Token.Token);
-  const ErrTask: Tasks.Task<string> := Drain(Error, Token.Token);
+  const OutTask: Tasks.Task<string> := Drain(Child.Output, Token.Token);
+  const ErrTask: Tasks.Task<string> := Drain(Child.Error, Token.Token);
+  const Exited: Tasks.Task := Child.WaitForExit(Token.Token);
+  const Pending: Collections.List<Tasks.Task> := new Collections.List<Tasks.Task>();
+  Pending.Add(Exited);
+  Pending.Add(OutTask);
+  Pending.Add(ErrTask);
+
   try
-    await Child.WaitForExit(Token.Token);
-    await Child.TerminateAsync();
+    while Pending.Count > 0 do
+      const Finished: Tasks.Task := await Tasks.Task.WhenAny(Pending);
+      await Finished;
+      discard Pending.Remove(Finished);
+      if Sys.Object.ReferenceEquals(Finished, Exited) then
+        await Child.TerminateAsync();
+      end if;
+    end while;
+
     return new Result(Child.ExitCode, await OutTask, await ErrTask);
   finally
     await Child.TerminateAsync();
     try
-      discard await Tasks.Task.WhenAll<string>([OutTask, ErrTask]);
+      await Tasks.Task.WhenAll(Pending);
     catch do
     end try;
   end try;

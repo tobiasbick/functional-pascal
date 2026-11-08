@@ -2,6 +2,13 @@ unit Fpas.Tui.Internal.Rendering.Glyphs;
 
 uses System as Sys, System.Globalization as Global;
 
+// Measures one text element in terminal cells.
+//
+// ## Parameters
+// - `Value`: A grapheme cluster or an empty string.
+//
+// ## Returns
+// Zero for an empty string, one for a narrow glyph, or two for a wide glyph.
 public function Width(Value: string): int;
 begin
   if Value.Length = 0 then
@@ -10,6 +17,17 @@ begin
   var Code: int := cast<int>(Value[0]);
   if Value.Length > 1 and Sys.Char.IsSurrogatePair(Value[0], Value[1]) then
     Code := Sys.Char.ConvertToUtf32(Value[0], Value[1]);
+  end if;
+
+  const FirstIndicator: int := $1F1E6;
+  const LastIndicator: int := $1F1FF;
+  if Code >= FirstIndicator and Code <= LastIndicator and Value.Length >= 4
+    and Sys.Char.IsSurrogatePair(Value[2], Value[3])
+  then
+    const Second: int := Sys.Char.ConvertToUtf32(Value[2], Value[3]);
+    if Second >= FirstIndicator and Second <= LastIndicator then
+      return 2;
+    end if;
   end if;
 
   if (Code >= 4352 and Code <= 4447) or (Code >= 11904 and Code <= 42191)

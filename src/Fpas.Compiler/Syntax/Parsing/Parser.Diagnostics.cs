@@ -4,6 +4,27 @@ namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser
 {
+    private const int MaximumNesting = 256;
+    private int syntaxDepth;
+
+    private Nesting EnterNesting()
+    {
+        CheckNesting(syntaxDepth + 1, Current.Position);
+        syntaxDepth++;
+        return new(this);
+    }
+
+    private void CheckNesting(int depth, int offset)
+    {
+        if (depth > MaximumNesting)
+            throw source.Error("FP2003", $"Syntax exceeds {MaximumNesting} nesting levels.", offset);
+    }
+
+    private readonly struct Nesting(Parser parser) : IDisposable
+    {
+        void IDisposable.Dispose() => parser.syntaxDepth--;
+    }
+
     private CompilationFailure Expected(string[] expected, string message, string kind = "token")
         => ExpectedAt(Current, expected, message, kind);
 

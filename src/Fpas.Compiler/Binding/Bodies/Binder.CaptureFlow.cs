@@ -6,7 +6,7 @@ internal sealed partial class Binder
 {
     private bool MayInvoke(ExpressionSyntax expression)
         => expression is CallSyntax or NewSyntax or MemberSyntax or IndexSyntax or WithSyntax or CaseExpressionSyntax ||
-            operatorCalls.ContainsKey(expression) || Children(expression).Any(MayInvoke);
+            operatorCalls.ContainsKey(expression) || expression.Children().Any(MayInvoke);
 
     private static IEnumerable<string> AssignedInLambdas(ExpressionSyntax expression)
     {
@@ -15,7 +15,7 @@ internal sealed partial class Binder
             foreach (var name in LambdaWrites(lambda, [])) yield return name;
             yield break;
         }
-        foreach (var child in Children(expression))
+        foreach (var child in expression.Children())
             foreach (var name in AssignedInLambdas(child)) yield return name;
     }
 
@@ -37,7 +37,7 @@ internal sealed partial class Binder
         }
         if (expression is ArgumentModeSyntax { Mode: "ref" or "out", Value: NameExpressionSyntax target } && !declared.Contains(target.Name.Text))
             yield return target.Name.Text;
-        foreach (var child in Children(expression))
+        foreach (var child in expression.Children())
             foreach (var name in ExpressionWrites(child, declared)) yield return name;
     }
 
@@ -141,21 +141,5 @@ internal sealed partial class Binder
         WhileSyntax loop => [loop.Condition], RepeatSyntax loop => [loop.Condition], ForSyntax loop => [loop.Lower, loop.Upper], ForEachSyntax loop => [loop.Source],
         TrySyntax guarded => guarded.Catches.Where(handler => handler.Filter is not null).Select(handler => handler.Filter!),
         _ => []
-    };
-
-    private static IEnumerable<ExpressionSyntax> Children(ExpressionSyntax expression) => expression switch
-    {
-        TypeTestSyntax test => [test.Value],
-        CaseExpressionSyntax match => new[] { match.Selector }.Concat(match.Arms.SelectMany(arm => arm.Guard is null ? new[] { arm.Value! } : new[] { arm.Guard, arm.Value! })),
-        ParenthesizedSyntax wrapped => [wrapped.Expression], UnarySyntax unary => [unary.Operand],
-        BinarySyntax binary => [binary.Left, binary.Right], CastSyntax cast => [cast.Operand], UncheckedSyntax uncheckedExpression => [uncheckedExpression.Operand],
-        CallSyntax call => new[] { call.Target }.Concat(call.Arguments), MemberSyntax member => [member.Receiver],
-        GenericNameSyntax generic => [generic.Name], IndexSyntax index => new[] { index.Receiver }.Concat(index.Indices),
-        NamedArgumentSyntax named => [named.Value],
-        ArgumentModeSyntax argument => [argument.Value], AwaitSyntax awaited => [awaited.Operand],
-        WithSyntax updated => new[] { updated.Receiver }.Concat(updated.Updates.Select(update => update.Value)),
-        NewSyntax created => created.Arguments, NewArraySyntax array => array.Lengths, ArrayLiteralSyntax array => array.Elements,
-        ConditionalSyntax branch => branch.Arms.SelectMany(arm => new[] { arm.Condition, arm.Value }).Append(branch.Else),
-        LambdaSyntax { Expression: { } body } => [body], _ => []
     };
 }

@@ -169,7 +169,7 @@ writing external samplers or benchmark variants. Keep execution bounded and
 assert outcomes; avoid depending on timer counts, network availability, or an
 interactive terminal for ordinary regression tests. Isolate test files/processes.
 Store performance output under .temp-data and distinguish measurements from
-language guarantees. IDE project-system integration remains separate work.
+language guarantees.
 
 Write repository maintenance helpers in FPAS when the supported CLR APIs suffice.
 If a concrete missing feature prevents this, document the practical limitation

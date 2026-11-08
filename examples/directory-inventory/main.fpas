@@ -23,10 +23,10 @@ begin
     return;
   end if;
 
-  const Root: string := IO.Path.GetFullPath(args[0]);
   const Pattern: string := if args.Length = 2 then args[1] else '*' end if;
 
   try
+    const Root: string := IO.Path.GetFullPath(args[0]);
     const Visible: Collections.IEnumerable<string> := Seq.Where<string>(
       IO.Directory.EnumerateFiles(Root, Pattern, IO.SearchOption.AllDirectories),
       function(Path: string): bool => not (IO.Path.GetFileName(Path) ?? '').StartsWith('.')

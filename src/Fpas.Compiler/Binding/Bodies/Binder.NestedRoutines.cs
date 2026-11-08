@@ -128,6 +128,6 @@ internal sealed partial class Binder
         if (expression is NameExpressionSyntax identifier) yield return identifier.Name.Text;
         if (expression is LambdaSyntax { Body: { } body })
             foreach (var name in StatementNames(body)) yield return name;
-        foreach (var name in Children(expression).SelectMany(ExpressionNames)) yield return name;
+        foreach (var name in expression.Children().SelectMany(ExpressionNames)) yield return name;
     }
 }

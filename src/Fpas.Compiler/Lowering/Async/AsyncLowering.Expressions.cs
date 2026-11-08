@@ -99,9 +99,23 @@ internal sealed partial class AsyncLowering
     private int LValue(BoundExpression target, Func<BoundExpression, int> next, Context context) => target switch
     {
         BoundArrayIndex index => Values(new[] { index.Receiver }.Concat(index.Indices).ToArray(), values => next(index with { Receiver = values[0], Indices = values.Skip(1).ToArray() }), context),
-        BoundField { Receiver: not null } field => Values([field.Receiver], values => next(field with { Receiver = values[0] }), context),
-        BoundProperty property => Values((property.Receiver is null ? [] : new[] { property.Receiver }).Concat(property.Arguments ?? []).ToArray(), values => next(property with
-            { Receiver = property.Receiver is null ? null : values[0], Arguments = values.Skip(property.Receiver is null ? 0 : 1).ToArray() }), context),
+        BoundField { Receiver: not null } field => LValueReceiver(field.Receiver, receiver => next(field with { Receiver = receiver }), context),
+        BoundProperty property => LValueReceiver(property.Receiver, receiver => Values(property.Arguments ?? [],
+            arguments => next(property with { Receiver = receiver, Arguments = arguments }), context), context),
         _ => next(target)
     };
+
+    private int LValueReceiver(BoundExpression? receiver, Func<BoundExpression?, int> next, Context context)
+    {
+        if (receiver is null) return next(null);
+        if (!receiver.Type.IsValue)
+            return Values([receiver], values => next(values[0]), context);
+
+        // These storage locations can be addressed again on resume without reevaluating a receiver or index.
+        if (receiver is BoundLocal or BoundCapture) return next(receiver);
+
+        // Evaluate the address before the remaining operands. Async liveness rejects it if it crosses a suspension.
+        var address = new BoundAddress(receiver, "ref");
+        return Values([address], values => next(new BoundDereference(values[0])), context);
+    }
 }

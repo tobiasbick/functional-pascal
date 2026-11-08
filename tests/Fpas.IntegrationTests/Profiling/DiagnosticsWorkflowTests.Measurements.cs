@@ -1,4 +1,5 @@
 using System.Globalization;
+using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Profiling;
@@ -45,5 +46,53 @@ public sealed partial class DiagnosticsWorkflowTests(DiagnosticsFixture fixture)
         Assert.False(File.Exists(output)); Assert.True(File.Exists(ready));
         var pid = int.Parse(File.ReadAllText(ready), CultureInfo.InvariantCulture);
         try { using var process = System.Diagnostics.Process.GetProcessById(pid); Assert.True(process.HasExited); } catch (ArgumentException) { }
+    }
+
+    /// <summary>Checks that multibyte output triggers the byte limit and joins the still-running child.</summary>
+    /// <returns>The completed process and publication assertions.</returns>
+    [Fact]
+    public async Task Measurement_output_limit_terminates_the_child_before_reporting_failure()
+    {
+        using var child = new Debuggee("measurement-output-limit");
+        await child.Compile("""
+            program OutputFlood;
+            uses System as Sys, System.IO as IO, System.Text as Text, System.Threading as Threading;
+            begin
+              const Bytes: array of byte := Text.Encoding.UTF8.GetBytes(new Sys.String(#233, 40000));
+              IO.File.WriteAllText(args[0], Sys.Environment.ProcessId.ToString());
+              const Output: IO.Stream := Sys.Console.OpenStandardOutput();
+              Output.Write(Bytes, 0, Bytes.Length);
+              Threading.Thread.Sleep(Threading.Timeout.Infinite);
+            end;
+            end program;
+            """);
+        var ready = Path.Combine(fixture.Reports, "output-limit.ready");
+        var output = Path.Combine(fixture.Reports, "output-limit.csv");
+        var result = await fixture.Run(fixture.Measure, "--output", output, "--label", "output-limit-control",
+            "--boundary", "startup", "--warmup", "0", "--samples", "3", "--timeout", "10", "--",
+            TestEnvironment.DotnetHost, child.Assembly, ready);
+
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains("Child output exceeded 64 KiB", result.Error, StringComparison.Ordinal);
+        Assert.False(File.Exists(output));
+        var pid = int.Parse(File.ReadAllText(ready), CultureInfo.InvariantCulture);
+        try { using var process = System.Diagnostics.Process.GetProcessById(pid); Assert.True(process.HasExited); } catch (ArgumentException) { }
+    }
+
+    /// <summary>Checks that invalid integer inputs use the documented argument-error exit path.</summary>
+    /// <param name="value">An invalid or overflowing numeric argument.</param>
+    /// <returns>The completed exit-code assertions.</returns>
+    [Theory]
+    [InlineData("invalid")]
+    [InlineData("2147483648")]
+    public async Task Invalid_numeric_arguments_report_usage_errors(string value)
+    {
+        var workload = await fixture.Run(fixture.Workload, "cpu", value);
+        Assert.Equal(2, workload.ExitCode);
+        Assert.Contains("Numeric argument", workload.Error, StringComparison.Ordinal);
+
+        var measure = await fixture.Run(fixture.Measure, "--timeout", value, "--", TestEnvironment.DotnetHost);
+        Assert.Equal(2, measure.ExitCode);
+        Assert.Contains("Numeric option", measure.Error, StringComparison.Ordinal);
     }
 }

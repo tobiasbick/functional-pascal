@@ -11,14 +11,16 @@ module identities must match. Debugging does not build or restore a project.
 Use `fpas env --json` to inspect packaged debugger/runtime requirements.
 
 ```sh
-fpas debug artifacts/Mandelbrot.dll --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
+fpas debug examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
+  --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
 fpas debug --protocol dap
 ```
 
 Batch is the default and returns one detached JSON report. It captures the first
 requested breakpoint/exception, then terminates its owned target. Normal exit,
 inspection errors, deadlines and output limits have explicit report outcomes and
-exit codes. See the [batch contract](batch-debugging.md) for input, paths and bounds.
+exit codes. The [batch guide](batch-debugging.md) includes the build command for
+the example and describes input, paths, and bounds.
 
 ## Interactive DAP session
 

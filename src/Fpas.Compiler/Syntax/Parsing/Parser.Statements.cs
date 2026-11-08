@@ -7,6 +7,7 @@ internal sealed partial class Parser
 
     private IReadOnlyList<StatementSyntax> ReadStatements(bool allowRoutineDeclarations, params string[] terminators)
     {
+        using var nesting = EnterNesting();
         var bodyStart = position;
         if (terminators.Length == 0)
             terminators = ["end"];

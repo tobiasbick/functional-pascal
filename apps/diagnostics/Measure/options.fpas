@@ -18,8 +18,10 @@ end record;
 
 function Integer(Value: string; Minimum: int; Maximum: int): int;
 begin
-  const Parsed: int := Sys.Int32.Parse(Value, Sys.Globalization.CultureInfo.InvariantCulture);
-  if Parsed < Minimum or Parsed > Maximum then
+  var Parsed: int := 0;
+  if not Sys.Int32.TryParse(Value, Sys.Globalization.CultureInfo.InvariantCulture, out Parsed)
+    or Parsed < Minimum or Parsed > Maximum
+  then
     raise new Sys.ArgumentException('Numeric option outside its documented bounds');
   end if;
 

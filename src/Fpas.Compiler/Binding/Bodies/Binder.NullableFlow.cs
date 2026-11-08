@@ -163,7 +163,7 @@ internal sealed partial class Binder
     {
         if (expression is ArgumentModeSyntax { Mode: "ref" or "out" } argument && StableSymbol(argument.Value) is { } symbol)
             yield return symbol;
-        foreach (var child in Children(expression))
+        foreach (var child in expression.Children())
             foreach (var written in ReferenceWrites(child)) yield return written;
     }
 }

@@ -5,8 +5,8 @@ The [entrypoint](README.md) gives the complete source shape.
 
 ## Bindings and literals
 
-Every declaration has one name, an explicit type, and an initializer:
-`const Limit: int := 10;` or `var Count: int := 0;`. Repeat the declaration
+Every `const` or `var` binding has one name, an explicit type, and an initializer.
+For example, `const Limit: int := 10;` or `var Count: int := 0;`. Repeat the declaration
 keyword for each binding. A const initializer can run arbitrary code; const
 does not mean a compile-time constant. Assignment uses `:=`.
 

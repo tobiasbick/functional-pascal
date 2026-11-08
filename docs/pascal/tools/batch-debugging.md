@@ -10,9 +10,14 @@ This page describes one-shot batch capture. Repeated `--tracepoint` capture and
 [diagnostic commands](cli-diagnostics.md#tracepoints). `fpas schema debug` exports
 the report's structural JSON Schema.
 
+After the [local SDK setup](../../build/development.md#build-an-fpas-application),
+run this example from the repository root.
+
 ```sh
-fpas debug artifacts/Mandelbrot.dll --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
-fpas debug artifacts/Mandelbrot.dll --timeout 10 -- first "two words"
+fpas build examples/mandelbrot/Mandelbrot.fpasproj
+fpas debug examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
+  --cwd examples/mandelbrot --break main.fpas:13 --print Iteration
+fpas debug examples/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll --timeout 10 -- first "two words"
 ```
 
 The default protocol is `batch`. Relative DLL and explicit `--cwd` paths resolve

@@ -43,10 +43,10 @@ end;
 end program;
 ```
 
-This exact source is the [executable Mandelbrot example](../../../examples/mandelbrot/main.fpas).
-Its MSBuild integration test verifies every pixel against a .NET Complex calculation.
-It is a small console rendering to show numeric and loop syntax. It makes no
-claim about interactive graphics, deep-zoom precision, or performance.
+The [standalone project](../../../examples/mandelbrot/README.md) runs the same
+program. Its MSBuild integration test verifies every pixel against a .NET
+Complex calculation. The [Mandelbrot Explorer](../../../examples/tui/mandelbrot/README.md)
+adds interactive pan, zoom, and color palettes in a fullscreen terminal.
 
 ## See also
 

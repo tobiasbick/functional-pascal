@@ -5,13 +5,14 @@ description: Investigate CLR FPAS program, compiler, or SDK performance with sup
 
 # FPAS CLR performance
 
-Use [unprofiled measurements](../../../docs/pascal/tools/benchmarks.md) for execution,
-startup, compiler-process and SDK timing. Use [diagnostic workflows](../../../docs/pascal/tools/diagnostic-workflows.md)
-for pinned .NET tools, stack/GC recordings, controlled failure dumps and platform
-acceptance. The [FPAS diagnostic applications](../../../apps/diagnostics/) supply
-verified workloads and a bounded process timer. These are applications, separate
-from compiler commands. Build/setup belongs in the
-[development workflow](../../../docs/build/development.md).
+Use [unprofiled measurements](../../../docs/pascal/tools/benchmarks.md) for
+execution, startup, compiler-process and SDK timing. Use
+[`fpas profile`](../../../docs/pascal/tools/cli-diagnostics.md) for owned trace
+and counter collection and structured summaries. Use the
+[manual .NET workflows](../../../docs/pascal/tools/diagnostic-workflows.md) for
+direct tool invocation and platform acceptance. The
+[FPAS diagnostic applications](../../../apps/diagnostics/) supply verified
+workloads and a bounded process timer.
 
 ## Investigate the requested cost
 
@@ -21,12 +22,14 @@ from compiler commands. Build/setup belongs in the
    and [fpas-projects](../fpas-projects/SKILL.md) when source/project changes are
    part of the authorized task.
 2. Inspect the actual generated program with supported .NET tooling before
-   writing samplers or variants. Determine which tools and options are installed;
-   the diagnostic guide pins dotnet-trace, dotnet-counters and dotnet-dump as local tools,
-   not bundled compiler commands.
-3. Build the measured configuration before collecting samples. For program
-   execution, keep compilation outside the timer. Treat startup and warmed JIT
-   execution as separate questions, and record the chosen boundary and warmup.
+   writing samplers or variants. Check the available tool versions and options.
+   Follow the setup for the chosen path. `fpas profile setup` uses its own tool
+   directory. The manual workflow uses the repository's `dotnet tool restore`.
+3. Build the measured configuration using the
+   [development workflow](../../../docs/build/development.md). Finish other
+   builds, tests, and profilers before timing. Measure Windows and WSL separately.
+   Keep compilation outside program execution samples. Record the boundary and
+   warmup for startup or warmed JIT execution.
 4. Compare the same workload, arguments, build/runtime configuration, and result
    checks. Use repeated unprofiled samples for timing comparisons; retain sample
    counts and variation. Investigate noisy or conflicting results before making

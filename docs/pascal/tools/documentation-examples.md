@@ -16,20 +16,29 @@ Build the compiler and tests with the [development workflow](../../build/develop
 Its documentation filter includes DocExamplesBehaviorTests, which exercises the
 actual application boundary and deliberately broken examples.
 
-For direct use, deploy the matching compiler/SDK with dist, then build/run
-[DocExamples.fpasproj](../../../apps/doc-examples/DocExamples.fpasproj). Select
-framework metadata with FPAS_REFERENCE_DIR or --reference-dir. The testing guide's
-xUnit fragment also needs its actual xUnit core/assert reference assemblies:
+To run the checker directly, follow the [source quickstart](../../../README.md#build-from-source)
+to build the Debug compiler and pack its matching SDK. Run the following commands
+from the repository root after setting [FPAS_REFERENCE_DIR](../../build/development.md#direct-compiler-invocation).
+The full check uses the xUnit core and assert assemblies copied by the integration
+test build for the testing guide's xUnit fragment.
 
 ```sh
-fpas run apps/doc-examples/DocExamples.fpasproj -- --reference-dir "$FPAS_REFERENCE_DIR" --reference tests/Fpas.IntegrationTests/bin/Debug/net10.0/xunit.core.dll --reference tests/Fpas.IntegrationTests/bin/Debug/net10.0/xunit.assert.dll
-fpas run apps/doc-examples/DocExamples.fpasproj -- --document docs/pascal/language/types/records.md --reference-dir "$FPAS_REFERENCE_DIR" --json
+cli=src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll
+dotnet "$cli" run apps/doc-examples/DocExamples.fpasproj -- \
+  --compiler "$cli" --reference-dir "$FPAS_REFERENCE_DIR" \
+  --reference tests/Fpas.IntegrationTests/bin/Debug/net10.0/xunit.core.dll \
+  --reference tests/Fpas.IntegrationTests/bin/Debug/net10.0/xunit.assert.dll
+dotnet "$cli" run apps/doc-examples/DocExamples.fpasproj -- \
+  --compiler "$cli" --reference-dir "$FPAS_REFERENCE_DIR" \
+  --document docs/pascal/language/types/records.md --json
 ```
 
---compiler selects a CLR compiler DLL; default bin/Fpas.Cli.dll under --root.
---dotnet selects an absolute .NET host; otherwise DOTNET_HOST_PATH, DOTNET_ROOT
-and PATH are searched. --reference is repeatable. --contexts overrides the default
-apps/doc-examples/contexts directory. Quote paths with spaces in the calling shell.
+`--compiler` selects the managed compiler DLL. Without it, the checker looks
+for `bin/Fpas.Cli.dll` under `--root`. `--dotnet` selects the .NET host explicitly.
+Without `--dotnet`, the checker uses `DOTNET_HOST_PATH` if set. If neither is set,
+it looks under `DOTNET_ROOT` and then on `PATH`. `--reference` is repeatable.
+`--contexts` overrides the default `apps/doc-examples/contexts` directory. Quote
+paths with spaces.
 
 --document is repeatable and replaces the default selection. --root selects the
 repository and resolves document/include paths. --output must name a new directory;

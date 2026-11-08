@@ -46,6 +46,23 @@ internal abstract record ExpressionSyntax(int Position)
 {
     internal int SpanStart { get; init; } = Position;
     internal int SpanEnd { get; init; }
+    internal int Depth { get; init; } = 1;
+
+    internal IEnumerable<ExpressionSyntax> Children() => this switch
+    {
+        TypeTestSyntax test => [test.Value],
+        CaseExpressionSyntax match => new[] { match.Selector }.Concat(match.Arms.SelectMany(arm => arm.Guard is null ? new[] { arm.Value! } : new[] { arm.Guard, arm.Value! })),
+        ParenthesizedSyntax wrapped => [wrapped.Expression], UnarySyntax unary => [unary.Operand],
+        BinarySyntax binary => [binary.Left, binary.Right], CastSyntax cast => [cast.Operand], UncheckedSyntax uncheckedExpression => [uncheckedExpression.Operand],
+        CallSyntax call => new[] { call.Target }.Concat(call.Arguments), MemberSyntax member => [member.Receiver],
+        GenericNameSyntax generic => [generic.Name], IndexSyntax index => new[] { index.Receiver }.Concat(index.Indices),
+        NamedArgumentSyntax named => [named.Value],
+        ArgumentModeSyntax argument => [argument.Value], AwaitSyntax awaited => [awaited.Operand],
+        WithSyntax updated => new[] { updated.Receiver }.Concat(updated.Updates.Select(update => update.Value)),
+        NewSyntax created => created.Arguments, NewArraySyntax array => array.Lengths, ArrayLiteralSyntax array => array.Elements,
+        ConditionalSyntax branch => branch.Arms.SelectMany(arm => new[] { arm.Condition, arm.Value }).Append(branch.Else),
+        LambdaSyntax { Expression: { } body } => [body], _ => []
+    };
 }
 internal sealed record LiteralSyntax(Token Token) : ExpressionSyntax(Token.Position);
 internal sealed record ParenthesizedSyntax(int Start, ExpressionSyntax Expression) : ExpressionSyntax(Start);

@@ -34,12 +34,15 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
    terminators. Consume returned values or use discard. Use CLR nullability and
    exceptions; define application unions for domain outcomes.
 4. Compile through the current CLR toolchain using the
-   [development workflow](../../../docs/build/development.md). The CLI provides
-   compile; project builds use the SDK. Use `fpas fmt` for the
-   [fixed source style](../../../docs/pascal/tools/fmt-style.md).
-5. Select meaningful xUnit compiler, execution, or mixed-project tests. Rebuild
-   copied inputs before execution and keep fixture/toolchain builds separate.
-   Interactive programs need explicit bounded scenarios.
+   [development workflow](../../../docs/build/development.md). Use `fpas compile`
+   for explicit sources and the SDK for projects. Format changed sources with
+   `fpas fmt`. Use [`fpas fmt --check`](../../../docs/pascal/tools/fmt-style.md#command)
+   to verify style during a read-only review.
+5. Select the tests that exercise the changed behavior. Use the compiler and
+   integration suites for toolchain regressions. For FPAS test projects, run
+   [native framework tests](../../../docs/pascal/tools/testing.md) with `fpas test`.
+   Rebuild copied inputs before execution. Use bounded scenarios for interactive
+   programs.
 
 ## Readable logical sections
 
@@ -49,8 +52,9 @@ result. Keep related bindings and operations together, including in tests.
 `fpas fmt` preserves authored sections before `const` and `var`; inspect the result
 for readability.
 
-Complete README/handbook programs have execution assertions in the Markdown
-runner. Follow [example conventions](../../../docs/pascal/tools/documentation-examples.md)
+The documentation checker compiles README and handbook examples.
+LanguageSpecificationTests runs the complete programs and checks their behavior.
+Follow [example conventions](../../../docs/pascal/tools/documentation-examples.md)
 and [reference maintenance](../../../docs/pascal/agents/maintenance.md).
 Debug/profile actual generated programs with supported .NET tools before writing
 variants; use [fpas-bench](../fpas-bench/SKILL.md) for authorized measurements.

@@ -14,6 +14,10 @@ Default continuation-context behavior matches ordinary .NET await. Call
 `ConfigureAwait(false)` explicitly when appropriate. Await does not imply a new
 synchronization context, thread affinity, or mutual exclusion.
 
+A managed reference cannot remain live across `await`. When a struct member
+assignment needs such a reference to preserve its receiver, await the right-hand
+value before selecting the assignment target.
+
 ## See also
 
 - [Topic overview](README.md)

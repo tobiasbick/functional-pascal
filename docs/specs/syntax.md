@@ -196,7 +196,7 @@ product_expression = unary_expression,
                      {("*" | "/" | "div" | "mod"), unary_expression} ;
 unary_expression = ("+" | "-" | "not" | "await"), unary_expression
                  | postfix_expression ;
-postfix_expression = member_expression, [record_update] ;
+postfix_expression = primary, {postfix_suffix | record_update} ;
 member_expression = primary, {postfix_suffix} ;
 postfix_suffix  = ".", identifier, [type_arguments]
                 | "(", [arguments], ")"
@@ -220,11 +220,13 @@ if_expression   = "if", expression, "then", expression,
 case_expression = "case", expression, "of",
                   {"when", patterns, ["if", expression], ":", expression, ";"},
                   ["else", expression, ";"], "end", "case" ;
-lambda          = ["async"], "function", "(", [field_parameters], ")", ":", type,
+lambda          = ["async"], "function", "(", [lambda_parameters], ")", ":", type,
                   ("=>", expression |
                    contracts, routine_body, "function")
-                | "procedure", "(", [field_parameters], ")",
+                | "procedure", "(", [lambda_parameters], ")",
                   contracts, routine_body, "procedure" ;
+lambda_parameters = lambda_parameter, {";", lambda_parameter} ;
+lambda_parameter = ["ref" | "out" | "in"], identifier, ":", type ;
 
 patterns        = pattern, {",", pattern} ;
 pattern         = "_" | "const", identifier, ":", type

@@ -10,14 +10,18 @@ fence instructions, reports, limits, contexts and companion projects.
 
 ## Build and run
 
-Prepare the matching local compiler and SDK with the repository's
-[development workflow](../../docs/build/development.md). The application is a
-normal net10.0 FPAS consumer with a project reference to Fpas.Processes.
+Build the Debug compiler and pack its SDK with the
+[source quickstart](../../README.md#build-from-source). The application is a
+net10.0 FPAS consumer with a project reference to Fpas.Processes. Run from the
+repository root after setting [FPAS_REFERENCE_DIR](../../docs/build/development.md#direct-compiler-invocation).
 
 ```sh
-fpas build apps/doc-examples/DocExamples.fpasproj
-fpas run apps/doc-examples/DocExamples.fpasproj --no-build -- --help
-fpas run apps/doc-examples/DocExamples.fpasproj --no-build -- --document docs/pascal/language/types/records.md --reference-dir "$FPAS_REFERENCE_DIR" --json
+cli=src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll
+dotnet "$cli" build apps/doc-examples/DocExamples.fpasproj
+dotnet "$cli" run apps/doc-examples/DocExamples.fpasproj --no-build -- --help
+dotnet "$cli" run apps/doc-examples/DocExamples.fpasproj --no-build -- \
+  --compiler "$cli" --reference-dir "$FPAS_REFERENCE_DIR" \
+  --document docs/pascal/language/types/records.md --json
 ```
 
 The full selection also requires explicit xUnit references for the native testing

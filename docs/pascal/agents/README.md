@@ -46,7 +46,7 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
   A program's entry block ends with `end;`, then the declaration ends with
   `end program;`. A unit ends with `end unit;`.
 - Parameters use semicolons; arguments use commas. Consume function results or
-  write `discard Call();`. Writable caller storage uses explicit ref/out/in modes.
+  write `discard Call();`. Spell `ref`, `out`, and `in` in both declarations and calls.
 - Construct records with `new Point(X := 1, Y := 2)`. Unions have qualified cases
   and exhaustive matching. Use CLR nullability and exceptions for absence/failure.
 - Tasks and cancellation use ordinary .NET APIs. Resources use `using const` or

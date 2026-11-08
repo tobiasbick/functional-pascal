@@ -62,7 +62,10 @@ FP3030 rejects unsupported async contexts/awaitables and a managed reference tha
 would remain live across suspension. Async declarations cannot have ref/out/in
 parameters. A caller may await argument values before selecting writable storage;
 it cannot retain a struct receiver address while awaiting a later handler or call
-argument. Reference receivers and ordinary delegate values may survive suspension.
+argument. Assignments can address a struct local or capture after resumption.
+Other struct receivers that need a managed reference before the right-hand side
+are subject to the same lifetime check. Reference receivers and ordinary delegate
+values may survive suspension.
 
 Async procedures/void, custom awaiters, awaits in filters, async enumeration, and
 general ref-like values are outside the supported source contract. Rejected

@@ -38,6 +38,7 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
         yield return ["wrong-diagnostic", Fence(Body + " error=FP3002", "const Value: int := Missing;"), false, "FP3001"];
         yield return ["missing-error", Fence("pascal error=FP3002", Program), false, "Expected FP3002"];
         yield return ["broken-example", "# Heading\n\n" + Fence(Body, "const Value: int := 'wrong';"), false, "FP3002"];
+        yield return ["multiple-errors", Fence(Body, "const First := 1;\nconst Second: int := ;"), false, "FP2002"];
         yield return ["fragment-without-context", Fence("pascal fragment", "const Value: int := 1;"), false, "requires context"];
         yield return ["unknown-context", Fence("pascal fragment context=absent", "const Value: int := 1;"), false, "Missing context"];
         yield return ["broken-context", Fence("pascal fragment context=broken error=FP3002", "const Value: int := 1;"), false, "from the example itself"];
@@ -147,6 +148,7 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
         Assert.Equal(accepted, report.RootElement.GetProperty("failed").GetInt32() == 0);
         if (expected.Length > 0) Assert.Contains(expected, result.Output, StringComparison.OrdinalIgnoreCase);
         if (name == "broken-example") Assert.Equal(4, Assert.Single(report.RootElement.GetProperty("results").EnumerateArray()).GetProperty("line").GetInt32());
+        if (name == "multiple-errors") Assert.Equal(2, Assert.Single(report.RootElement.GetProperty("results").EnumerateArray()).GetProperty("line").GetInt32());
         if (name == "include-error") Assert.Contains("definitions.md", Assert.Single(report.RootElement.GetProperty("results").EnumerateArray()).GetProperty("document").GetString());
     }
 

@@ -67,6 +67,77 @@ public sealed class AsyncExecutionTests
             end program;
             """, "1", "3", "6", "0", "9", "5", "1", "3", "short", "8");
 
+    /// <summary>Checks that async assignments mutate CLR struct storage through both execution paths.</summary>
+    /// <returns>The completed execution and output assertions.</returns>
+    [Fact]
+    public Task Async_assignments_mutate_the_original_struct_storage()
+        => ProgramExecution.Output("""
+            async program StructAssignments;
+            uses System as Sys, System.Console as Console, System.Drawing as Drawing,
+              System.Numerics as Numerics, System.Threading.Tasks as Tasks;
+
+            async function Update(Gate: Tasks.Task<int>): Tasks.Task;
+            begin
+              var Point: Drawing.Point := new Drawing.Point(1, 2);
+              const Points: array of Drawing.Point := [Point];
+              Points[0].Y := 3;
+              Console.WriteLine(Points[0].Y);
+
+              var Vector: Numerics.Vector2 := new Numerics.Vector2(0.0F, 0.0F);
+              Point.X := await Gate;
+              Vector.X := cast<float>(await Gate);
+              Console.WriteLine(Point.X);
+              Console.WriteLine(cast<int>(Vector.X));
+            end function;
+
+            begin
+              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>();
+              const Pending: Tasks.Task := Update(Gate.Task);
+              if Pending.IsCompleted then
+                raise new Sys.InvalidOperationException('The assignment must wait for the gate');
+              end if;
+              Gate.SetResult(42);
+              await Pending;
+            end;
+            end program;
+            """, "3", "42", "42");
+
+    /// <summary>Checks that an awaited assignment keeps the original generic reference receiver.</summary>
+    /// <returns>The completed execution and output assertions.</returns>
+    [Fact]
+    public Task Await_keeps_the_original_generic_reference_receiver()
+        => ProgramExecution.Output("""
+            async program GenericReceiver;
+            uses System.Console as Console, System.Collections.Generic as C, System.Threading.Tasks as Tasks;
+
+            async function Update<T>(Original: T; Replacement: T; Gate: Tasks.Task<int>): Tasks.Task;
+            where T: class, C.IList<int>;
+              function ChangeReceiver(): Tasks.Task<int>;
+              begin
+                Current := Replacement;
+                return Gate;
+              end function;
+            begin
+              var Current: T := Original;
+              Current[0] := await ChangeReceiver();
+            end function;
+
+            begin
+              const First: C.List<int> := new C.List<int>();
+              First.Add(1);
+              const Second: C.List<int> := new C.List<int>();
+              Second.Add(2);
+
+              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>();
+              const Pending: Tasks.Task := Update(First, Second, Gate.Task);
+              Gate.SetResult(42);
+              await Pending;
+              Console.WriteLine(First[0]);
+              Console.WriteLine(Second[0]);
+            end;
+            end program;
+            """, "42", "2");
+
     [Fact]
     public Task Await_in_catch_finally_and_contracts_preserves_cleanup_and_results()
         => ProgramExecution.Output("""

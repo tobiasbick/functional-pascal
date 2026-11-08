@@ -71,7 +71,7 @@ suite when focused checks cover the changed behavior.
 
 - **[examples/](examples/README.md)** contains focused FPAS/.NET demonstrations
   and tutorials with `.fpasproj` projects.
-- **[apps/](apps/README.md)** is reserved for complete end-user applications.
+- **[apps/](apps/README.md)** contains complete FPAS applications and their projects.
 - **[tests/](tests/README.md)** contains the xUnit regression harness, controlled
   FPAS/C# fixtures, and execution checks.
 

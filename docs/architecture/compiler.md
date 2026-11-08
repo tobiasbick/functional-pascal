@@ -80,7 +80,9 @@ owns nullable source locations with exclusive UTF-16 end positions, expectations
 help, related notes and exact proposed edits. Parser recovery synchronizes at
 statement boundaries; body binding isolates independent routines and units.
 DiagnosticBag stops after 50 errors with FP0003. Invalid programs never reach
-emission. Analysis can retain independently checked declarations and bodies.
+emission. The parser reports FP2003 when recursive syntax or an expression tree
+exceeds 256 levels, including trees built by long operator and member chains.
+Analysis can retain independently checked declarations and bodies.
 Syntax recovery preserves known routine headers and source closers; failed
 bodies and their nested facts are unavailable as a whole. Invalid declaration
 scopes exclude their entire source unit and source consumers, transitively;

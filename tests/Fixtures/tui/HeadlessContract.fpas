@@ -182,7 +182,7 @@ begin
   end if;
 end procedure;
 
-procedure CheckCanvas();
+procedure CheckCanvas(Glyph: string);
   function Unchanged(State: int; Message: int): App.Transition<int, int>;
   begin
     return new App.Transition<int, int>(State, []);
@@ -190,7 +190,7 @@ procedure CheckCanvas();
 
   function WideCell(Column: int; Row: int): E.Cell;
   begin
-    return new E.Cell('界', new E.Style());
+    return new E.Cell(Glyph, new E.Style());
   end function;
 
   function Canvas(State: int): E.Element<int>;
@@ -206,7 +206,7 @@ begin
     1
   );
   const Frame: App.Frame := Session.Snapshot();
-  if Frame.Cells[0].Text <> '界' or Frame.Cells[1].Text <> '' or Frame.Cells[2].Text <> ' ' then
+  if Frame.Cells[0].Text <> Glyph or Frame.Cells[1].Text <> '' or Frame.Cells[2].Text <> ' ' then
     raise new Sys.InvalidOperationException('The wide cell did not reserve its continuation.');
   end if;
 
@@ -470,7 +470,8 @@ begin
   CheckQueue();
   CheckFailure();
   CheckPresentation();
-  CheckCanvas();
+  CheckCanvas('界');
+  CheckCanvas('🇩🇪');
   CheckOverlay();
   CheckReuse();
   CheckDividers();

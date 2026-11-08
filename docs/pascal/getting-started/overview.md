@@ -71,8 +71,9 @@ compiler/toolchain projects, xUnit tests, and examples/apps directories.
 
 The CLI supplies [source queries](../program-structure/cli.md),
 [formatting](../tools/fmt-style.md), [agent debugging](../tools/debugging.md) and
-a [stdio language server](../tools/language-server.md). Visual Studio
-project-system integration and editor extensions remain separate work.
+a [stdio language server](../tools/language-server.md). The
+[VS Code extension](../../../src/VSCode/README.md) uses the language server for
+live analysis and adds project, test, and debug workflows.
 
 ## See also
 

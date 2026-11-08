@@ -2,14 +2,29 @@ unit DocExamples.Diagnostics;
 
 uses DocExamples.Model as M, System as S, System.Text.Json as J;
 
+// The compiler error count, expectation result, and first reported error.
 public type Checked = record
+  // The total number of error diagnostics.
   public Count: int;
+  // Whether each error has the expected code and maps to the example itself.
   public Expected: bool;
+  // The source document of the first error or the example's document.
   public Document: string;
+  // The one-based source line of the first error or the opening fence.
   public Line: int;
+  // The first error's code and message, or an empty string.
   public Message: string;
 end record;
 
+// Reads compiler diagnostics and maps the first error back to its original source.
+//
+// ## Parameters
+// - `Output`: The compiler's JSON report.
+// - `Item`: The example and its expected diagnostic code.
+// - `Prepared`: The generated sources and their line mappings.
+//
+// ## Returns
+// The result of checking the diagnostics against the example's expectation.
 public function Read(Output: string; Item: M.Example; Prepared: M.Prepared): Checked;
 begin
   using const Json: J.JsonDocument := J.JsonDocument.Parse(Output);
@@ -24,7 +39,7 @@ begin
       Count := Count + 1;
       const Code: string := Diagnostic.GetProperty('code').GetString() ?? '';
 
-      if Message.Length = 0 then
+      if Count = 1 then
         Message := Code + ': ' + (Diagnostic.GetProperty('message').GetString() ?? '');
       end if;
 
@@ -42,9 +57,13 @@ begin
           ) and Number > 0 and Number <= Source.Lines.Length
           then
             const Origin: M.Origin := Source.Lines[Number - 1];
-            Document := Origin.Document;
-            Line := Origin.Line;
             Primary := Origin.Primary;
+            if Count = 1 then
+              Document := Origin.Document;
+              Line := Origin.Line;
+            end if;
+
+            break;
           end if;
         end for;
       end if;

@@ -109,7 +109,7 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
     {
         const string source = """
             unit Demo.Bridge;
-            public type IReader = interface function Read(): int; end interface;
+            public type IReader = protocol function Read(): int; end protocol;
             public type Reader = record implements IReader
               public Value: int;
               public function Read(): int; begin return self.Value; end function;
@@ -119,7 +119,7 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
             end unit;
             """;
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
-        var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Read(): int; end interface"), "Fetch");
+        var prepared = RenameService.Prepare(analysis, RenameFixture.Select(directory, source, "Read(): int; end protocol"), "Fetch");
         Assert.Equal(2, prepared.Plan.Targets.Count); Assert.Equal(4, prepared.Plan.EditCount);
         const string external = "unit Demo.Bridge; uses System as S; public type Resource = record implements S.IDisposable public procedure Dispose(); begin end procedure; end record; end unit;";
         File.WriteAllText(directory.File("Game/Bridge.fpas"), external); analysis = await RenameFixture.Analyze(directory);

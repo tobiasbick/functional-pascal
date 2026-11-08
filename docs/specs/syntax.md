@@ -46,7 +46,7 @@ var_declaration = "var", identifier, ":", type, ":=", expression, ";" ;
 
 type_declaration = "type", identifier, [type_parameters], "=", {constraint},
                    (type | distinct_type | subrange_type |
-                    record_body | union_body | enum_body | interface_body), ";" ;
+                    record_body | union_body | enum_body | protocol_body), ";" ;
 distinct_type   = "distinct", named_type ;
 subrange_type   = named_type, "range", expression, "..", expression ;
 type_parameters = "<", identifier, {",", identifier}, ">" ;
@@ -63,9 +63,9 @@ constraint      = "where", identifier, ":", constraint_item,
                   {",", constraint_item}, ";" ;
 constraint_item = named_type | "class", ["?"] | "struct" | "new", "(", ")" ;
 
-interface_body  = "interface", ["extends", named_type, {",", named_type}],
-                  {interface_member}, "end", "interface" ;
-interface_member = {attribute}, ["public"],
+protocol_body   = "protocol", ["extends", named_type, {",", named_type}],
+                  {protocol_member}, "end", "protocol" ;
+protocol_member = {attribute}, ["public"],
                   (identifier, ":", type, ";" |
                    "function", identifier, [type_parameters], "(", [parameters], ")",
                      ":", type, ";", {constraint} |
@@ -105,11 +105,12 @@ attribute       = "[", named_type, ["(", [arguments], ")"], "]" ;
 
 Empty unions/enums, nullable-byref types, invalid array ranks, unsupported generic
 combinations, and misplaced attributes are rejected by semantic rules even if a
-shape production accepts them. Interface members are public abstract instance
-signatures and getter-only properties. They cannot have bodies or contracts;
-extends accepts only distinct non-nullable interfaces without inheritance cycles.
-See [interfaces](../pascal/interop/interfaces.md) for inherited member rules.
-Attributes apply to supported types, routines, record fields, and interface properties.
+shape production accepts them. Protocol members are public abstract instance
+signatures and getter-only properties. They cannot have bodies or contracts.
+`extends` accepts distinct non-nullable protocols and imported CLR interfaces
+without inheritance cycles. See [protocols](../pascal/interop/interfaces.md) for
+inherited member rules.
+Attributes apply to supported types, routines, record fields, and protocol properties.
 Type annotations are required on value declarations at
 every scope; no local-binding annotation is optional.
 Programs terminate with `end program;`; units terminate with `end unit;`.

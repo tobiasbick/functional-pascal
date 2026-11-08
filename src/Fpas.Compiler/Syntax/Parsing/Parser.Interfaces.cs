@@ -16,7 +16,7 @@ internal sealed partial class Parser
         var parameters = ReadTypeParameters();
         Expect("=");
         var constraints = ReadConstraints();
-        Expect("interface");
+        Expect("protocol");
         var bases = new List<TypeSyntax>();
         if (At("extends"))
         {
@@ -35,7 +35,7 @@ internal sealed partial class Parser
             var memberDocumentation = Current.Documentation;
             var attributes = ReadAttributes();
             if (At("private") || At("static") || At("async"))
-                throw source.Error("FP2003", "Interface members are public abstract instance signatures.", Current.Position);
+                throw source.Error("FP2003", "Protocol members are public abstract instance signatures.", Current.Position);
             if (At("public")) position++;
             if (At("function") || At("procedure"))
             {
@@ -55,7 +55,7 @@ internal sealed partial class Parser
         }
         layout?.Body(bodyIndex, position);
         declaration.Body(bodyStart, Current.Position);
-        Expect("end"); Expect("interface"); Expect(";");
+        Expect("end"); Expect("protocol"); Expect(";");
         return new(name, isPublic, properties, methods, parameters, constraints, bases);
     }
 }

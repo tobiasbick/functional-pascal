@@ -1,9 +1,9 @@
-# Declaring and implementing interfaces
+# Declaring protocols and implementing interfaces
 
-Interfaces describe nominal CLR contracts. Declare one with `type Name =
-interface ... end interface;`, then list it after a record's `implements`.
-Source and imported interfaces use the same dispatch and implementation rules.
-A record needs an explicit implements declaration even when its members match.
+Declare a nominal CLR interface in FPAS with `type Name = protocol ... end protocol;`.
+List protocols and imported CLR interfaces after a record's `implements`.
+Both use the same dispatch and implementation rules. A record needs an explicit
+`implements` declaration even when its members match.
 
 ## Declarations
 
@@ -12,13 +12,13 @@ program InterfaceSources;
 
 uses System as Sys, System.Console as Console;
 
-type ISource<T> = interface
+type ISource<T> = protocol
   Name: string;
   function Read(): T;
-end interface;
+end protocol;
 
-type IDisposableSource<T> = interface extends ISource<T>, Sys.IDisposable
-end interface;
+type IDisposableSource<T> = protocol extends ISource<T>, Sys.IDisposable
+end protocol;
 
 type ConstantSource<T> = record implements IDisposableSource<T>
   public Name: string;
@@ -46,19 +46,19 @@ units. Members are public abstract instance signatures; explicit `public` is
 optional. A property such as `Name: string;` has a getter and no storage or
 initializer. Function/procedure signatures end after their semicolon and any
 method constraints. They have no body or `end function`/`end procedure`.
-Empty interfaces are allowed.
+Empty protocols are allowed.
 
-Generic type constraints follow `=` and precede `interface`. Method constraints
-follow the signature, as on implemented routines:
+Generic type constraints follow `=` and precede `protocol`. Method constraints
+follow the signature, as on implemented routines.
 
 ```pascal fragment context=declarations
 public type IFactory<T> =
 where T: class;
-interface
+protocol
   function Create(): T;
   function Echo<U>(Value: U): U;
   where U: class;
-end interface;
+end protocol;
 ```
 
 Interfaces are invariant. Overloads, generic methods, optional/params parameters,
@@ -68,12 +68,12 @@ the implementing function. Contracts belong on implementations and still execute
 when called through an interface, including from another .NET language.
 
 Private/static members, constructors, bodies, contracts, events, setters, indexers,
-variance, and default implementations cannot be declared in source interfaces.
+variance, and default implementations cannot be declared in protocols.
 Ordinary source attributes target the actual interface, method, or property.
 
 ## Inheritance and implementation
 
-`extends` lists distinct non-nullable source or imported interfaces. Classes,
+`extends` lists distinct non-nullable protocols or imported CLR interfaces. Classes,
 duplicate bases, inaccessible types, and inheritance cycles are errors. Generic
 arguments substitute through the complete inherited graph. A diamond that reaches
 the same declaring member has one slot. Distinct inherited slots may share a
@@ -97,9 +97,9 @@ Existing imported default implementations may be used. Explicit-interface
 implementations, setter properties, indexers, events, static abstract members,
 and byref-like implementations cannot be authored by a record. Such an imported
 interface can still be consumed where its signatures are supported. Unsupported
-inherited requirements produce diagnostics even through a source interface.
+inherited requirements produce diagnostics even through a protocol.
 
-Source declarations emit ordinary nested CLR interfaces with abstract methods,
+Protocol declarations emit ordinary nested CLR interfaces with abstract methods,
 getter metadata, base interfaces, generic constraints, nullable annotations, and
 XML documentation identities. C# and other FPAS assemblies consume these through
 normal references. No interface runtime wrapper is required.

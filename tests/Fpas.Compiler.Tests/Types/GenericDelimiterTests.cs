@@ -13,7 +13,7 @@ public sealed class GenericDelimiterTests
     [InlineData("type Box<T>// declaration\n=record public Value:T;end record;")]
     [InlineData("public type Pair<T,U>=record First:T;Second:U;end record;")]
     [InlineData("type Choice<T>=union Empty;Value(Item:T);end union;")]
-    [InlineData("type IValue<T>=interface Value:T;end interface;")]
+    [InlineData("type IValue<T>=protocol Value:T;end protocol;")]
     [InlineData("type Box<T>=where T:class;record public Value:T;end record;")]
     public void Generic_declarations_accept_the_equals_delimiter_without_whitespace(string declaration)
     {

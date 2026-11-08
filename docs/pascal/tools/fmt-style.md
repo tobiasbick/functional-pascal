@@ -73,7 +73,7 @@ diagnostics go to stderr.
   strings to LF and preserve their spaces and tabs.
 - Preserve all tokens, explicit parentheses, named endings, semicolons,
   declaration/import order and scope boundaries. Do not add or remove `begin`.
-- Put routine bodies, control bodies, record/union/enum/interface members and
+- Put routine bodies, control bodies, record/union/enum/protocol members and
   case arms on structural lines. Bodies indent one level. A case statement's
   arm body indents another level below its `when`/`else` header.
 - Record updates always expand after `with`, including single-field updates.

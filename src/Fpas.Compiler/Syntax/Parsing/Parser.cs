@@ -87,10 +87,10 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             {
                 var probe = new Parser(source, tokens) { position = declaration + 2 };
                 probe.ReadTypeParameters(); probe.Expect("="); probe.ReadConstraints();
-                var union = probe.At("union"); var record = probe.At("record"); var contract = probe.At("interface");
+                var union = probe.At("union"); var record = probe.At("record"); var protocol = probe.At("protocol");
                 if (union) unions.Add(ReadUnion(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else if (record) records.Add(ReadRecord(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
-                else if (contract) interfaces.Add(ReadInterface(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
+                else if (protocol) interfaces.Add(ReadInterface(isProgram) with { Attributes = attributes, Documentation = declarationDocumentation });
                 else ReadScalarDeclaration(isProgram, aliases, scalars, attributes, declarationDocumentation);
                 Decorate(tokens[declaration + 1], declarationStart, declarationDocumentation);
             }

@@ -9,7 +9,7 @@
   "surroundingPairs": [["(", ")"], ["[", "]"], ["'", "'"]],
   "wordPattern": "@?[A-Za-z_][A-Za-z0-9_]*|[0-9][A-Za-z0-9_]*",
   "indentationRules": {
-    "increaseIndentPattern": "^\\s*(?!end\\b)(?:(?:begin|repeat|try|else|finally)\\s*|[^/'\\r\\n]*\\b(?:then|do|record|union|interface|enum|of)\\s*)(?://.*)?$",
+    "increaseIndentPattern": "^\\s*(?!end\\b)(?:(?:begin|repeat|try|else|finally)\\s*|[^/'\\r\\n]*\\b(?:then|do|record|union|enum|of|protocol(?:\\s+extends\\b[^/'\\r\\n;]*)?)\\s*)(?://.*)?$",
     "decreaseIndentPattern": "^\\s*(?:end|else|elsif|until|catch|finally)\\b"
   }
 }

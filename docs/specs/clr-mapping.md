@@ -219,7 +219,7 @@ contract is an error, not a guessed set of subclasses. See
 
 ## Source interfaces
 
-A source interface emits a nested Interface/Abstract CLR type under its
+A `protocol` declaration emits a nested Interface/Abstract CLR type under its
 unit/program container with the ordinary source visibility and generic arity.
 It has no base class, instance fields, or constructors. Each declared signature
 emits a public abstract virtual newslot instance MethodDef with no CIL body.

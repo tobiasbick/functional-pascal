@@ -15,7 +15,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         uses System as S;
         public type Box<T> = record public Value: T; end record;
         public type Choice = union Empty; Value(Item: int); end union;
-        public type IValue = interface Value: int; function Read(): int; end interface;
+        public type IValue = protocol Value: int; function Read(): int; end protocol;
         public type Sample = record implements IValue
           public Value: int;
           public function Read(): int; begin return self.Value; end function;
@@ -71,7 +71,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         Assert.Equal(project.File("Game/Game.fpasproj"), selected.Callees.Target!.Project);
         var empty = query.Calls("callees", Select(project, "Game/Bridge.fpas", Library, "Empty():"));
         Assert.Equal(0, empty.Callees!.Page!.TotalCount); Assert.NotNull(empty.Callees.Summary);
-        var bodyless = query.Calls("callees", Select(project, "Game/Bridge.fpas", Library, "Read(): int; end interface"));
+        var bodyless = query.Calls("callees", Select(project, "Game/Bridge.fpas", Library, "Read(): int; end protocol"));
         Assert.Equal("no_body", bodyless.Callees!.Availability); Assert.Null(bodyless.Callees.Page); Assert.Null(bodyless.Callees.Summary);
         var metadata = query.Calls("callees", Select(project, "Game/Bridge.fpas", Library, "Length;"));
         Assert.Equal("metadata_only", metadata.Callees!.Availability); Assert.Null(metadata.Callees.Page);
@@ -110,7 +110,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         Assert.All(generic.Callers.Page.Sites, site => Assert.Equal("int", site.Types.Single(type => type.Id == site.Site.Signature!.TypeParameters[0]).Display));
         var recursive = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Recursive(Value:"));
         Assert.Equal("Recursive", Assert.Single(recursive.Callers!.Page.Sites).Target!.Symbol.Name);
-        var contract = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Read(): int; end interface"));
+        var contract = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Read(): int; end protocol"));
         Assert.Single(contract.Callers!.Page.Sites); Assert.Equal("interface", contract.Callers.Page.Sites[0].Site.Dispatch);
         var implementation = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Read(): int; begin"));
         Assert.Empty(implementation.Callers!.Page.Sites);

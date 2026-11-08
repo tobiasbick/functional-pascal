@@ -57,7 +57,7 @@ public sealed class RecordTests
     public void An_unmarked_record_method_cannot_implement_a_public_interface_method()
         => Error("""
             program Example;
-            type IReader = interface function Read(): int; end interface;
+            type IReader = protocol function Read(): int; end protocol;
             type Reader = record implements IReader
               function Read(): int; begin return 42; end function;
             end record;

@@ -14,7 +14,7 @@ public sealed class DeclarationContextTests
             type Number = int;
             type Key = distinct int;
             type Code = enum One; Two = 2; end enum;
-            type IValue = interface Name: string; function Read(Value: int): int; end interface;
+            type IValue = protocol Name: string; function Read(Value: int): int; end protocol;
             type Choice = union None; Some(Item: int); end union;
             var Global: int := 1;
             begin

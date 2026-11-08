@@ -25,7 +25,7 @@ sources directly to CIL and CLR assemblies, running through the .NET host.
 - **CLR nullability and exceptions** — `T?`, validation, coalescing, `try`/`catch`/`finally`, and stack-preserving rethrow. Application unions model domain outcomes.
 - **Resource lifetime** — `using const` and `await using const` dispose resources when the enclosing scope exits, including exceptional exits.
 - **Async and concurrency** — Task-based functions, lambdas, and programs; supported Task/ValueTask awaits, cancellation tokens, channels, and coordination through actual .NET APIs.
-- **.NET interoperability** — Consume referenced classes, structs, interfaces, properties, indexers, delegates, events, and attributes. Declare CLR interfaces with generic methods, inheritance, and getter-only properties. Records can implement source and imported interface contracts.
+- **.NET interoperability** — Consume referenced classes, structs, interfaces, properties, indexers, delegates, events, and attributes. A `protocol` declares a CLR interface with generic methods, inheritance, and getter-only properties. Records can implement protocols and imported CLR interfaces.
 - **.NET libraries** — Use collections, files, text, regex, JSON, networking, and other supported framework/package APIs through explicit imports.
 - **Projects and tooling** — `.fpasproj` projects, mixed FPAS/C# `.slnx` solutions, portable PDBs, XML API documentation, and incremental builds through Fpas.NET.Sdk.
 - **Managed execution** — The CLR supplies garbage collection, exceptions, and task infrastructure. FPAS has no pointer or manual-memory-management syntax.

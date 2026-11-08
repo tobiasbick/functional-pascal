@@ -159,7 +159,7 @@ public sealed class SemanticConstructTests
         const string source = """
             program StaticTargets;
             uses System.Numerics as N;
-            type IReader = interface function Read(): int; end interface;
+            type IReader = protocol function Read(): int; end protocol;
             type Reader = record implements IReader
               public function Read(): int; begin return 42; end function;
             end record;

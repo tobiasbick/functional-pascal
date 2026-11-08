@@ -13,7 +13,7 @@ public sealed class GenericDelimiterExecutionTests
             uses System.Console as Console;
             type Box<T>=record public Value:T;end record;
             type Choice<T>=union Empty;Value(Item:T);end union;
-            type IBox<T>=interface Value:T;end interface;
+            type IBox<T>=protocol Value:T;end protocol;
             begin
               const Make:function():Box<Box<int>>:=function():Box<Box<int>>=>new Box<Box<int>>(new Box<int>(42));
               const Result:Box<Box<int>>:=Make();

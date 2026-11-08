@@ -22,18 +22,18 @@ public sealed partial class MsBuildTests
             uses System as Sys, Demo as D, System.Threading.Tasks as Tasks, System.ComponentModel as Metadata;
             public var Disposals: int := 0;
             [Metadata.DescriptionAttribute('source interface')]
-            public type IRoot<T> = interface
+            public type IRoot<T> = protocol
               [Metadata.DescriptionAttribute('value property')]
               Value: T;
               [Metadata.DescriptionAttribute('read method')]
               function Read(): T;
-            end interface;
-            public type ILeft<T> = interface extends IRoot<T> end interface;
-            public type IRight<T> = interface extends IRoot<T> end interface;
-            public type IOther<T> = interface Value: T; function Read(): T; end interface;
+            end protocol;
+            public type ILeft<T> = protocol extends IRoot<T> end protocol;
+            public type IRight<T> = protocol extends IRoot<T> end protocol;
+            public type IOther<T> = protocol Value: T; function Read(): T; end protocol;
             public type IApi<T> =
             where T: class;
-            interface extends ILeft<T>, IRight<T>, D.IOverrideApi, D.IExceptionApi, Sys.IDisposable
+            protocol extends ILeft<T>, IRight<T>, D.IOverrideApi, D.IExceptionApi, Sys.IDisposable
               Name: string;
               function Read(Other: T): T;
               function Echo<U>(Value: U): U;
@@ -44,7 +44,7 @@ public sealed partial class MsBuildTests
               function Sum(Base: int := 3; params Values: array of int): int;
               function Optional(Value: string?): string?;
               function ReadAsync(): Tasks.Task<T>;
-            end interface;
+            end protocol;
             public type Api<T> =
             where T: class;
             record implements IApi<T>, IOther<T>

@@ -43,7 +43,7 @@
 
 The baseline includes functions and closures, contracts, CLR generics, records,
 distinct types, subranges, unions, global values, exceptions, disposal, delegates,
-events, interface declarations/implementation, and asynchronous methods.
+events, protocol declarations, interface implementation, and asynchronous methods.
 It supports ordinary managed .NET APIs.
 
 It does not include user-authored class hierarchies,

@@ -20,6 +20,8 @@ const grammar = await registry.loadGrammar('source.fpas');
 for (const [line, token, expected] of [
   ['program Demo;', 'program', 'keyword.other.fpas'],
   ['Program Demo;', 'Program', 'source.fpas'],
+  ['type Source = protocol', 'protocol', 'keyword.other.fpas'],
+  ['const interface: int := 1;', 'interface', 'source.fpas'],
   ['const @end: int := #65;', '@end', 'variable.other.escaped.fpas'],
   ['const @end: int := #65;', '#65', 'constant.character.fpas'],
   ['const Values: array[,] of int := new int[1, 2];', 'array', 'keyword.other.fpas'],
@@ -42,4 +44,9 @@ const closing = grammar.tokenizeLine("last''line' // comment", interior.ruleStac
 assert.equal(closing.tokens.at(-1).scopes.at(-1), 'comment.line.double-slash.fpas');
 const next = grammar.tokenizeLine('end program;', closing.ruleStack);
 assert.equal(next.tokens[0].scopes.at(-1), 'keyword.control.fpas');
+const configuration = JSON.parse(await readFile(new URL('../language-configuration.json', import.meta.url), 'utf8'));
+const increaseIndent = new RegExp(configuration.indentationRules.increaseIndentPattern);
+assert.match('type Source = protocol', increaseIndent);
+assert.match('protocol extends Base, Sys.IDisposable // inherited', increaseIndent);
+assert.doesNotMatch('end protocol;', increaseIndent);
 console.log('TextMate tokenization passed for CLR syntax and multiline strings.');

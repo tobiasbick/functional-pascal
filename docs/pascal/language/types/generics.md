@@ -1,11 +1,11 @@
 # Generic data types
 
-Records, unions, and interfaces can declare CLR type parameters, such as Box<T> or Tree<T>.
+Records, unions, and protocols can declare CLR type parameters, such as Box<T> or Tree<T>.
 Use angle brackets consistently in declarations, type annotations, and explicit
 construction. These source types are invariant: Box<string> does not convert to
 Box<object>. Recursive references still need finite constructed values.
 
-Constraints follow the type declaration's equals sign and precede record/union/interface.
+Constraints follow the type declaration's equals sign and precede `record`, `union`, or `protocol`.
 They are checked at construction, in field/signature types, and when forwarding
 parameters. A method may introduce its own type parameters without redeclaring an
 enclosing parameter. Defaults must type-check for every valid instantiation.

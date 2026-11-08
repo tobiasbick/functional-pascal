@@ -28,25 +28,25 @@ For example, DateTimeOffset subtraction yields TimeSpan. Arrays and references
 without an applicable equality operator compare by identity. Value-type operators have
 [lifted nullable forms](../language/types/nullable-types.md#lifted-value-operators).
 
-## Implementing interfaces and using attributes
+## Protocols, interfaces, and attributes
 
-Declare nominal interfaces with `type ISource<T> = interface ... end interface;`.
+Declare nominal CLR interfaces with `type Source<T> = protocol ... end protocol;`.
 Use `Name: T;` for getter-only properties and bodyless function/procedure
-signatures for methods. Optional extends lists source/imported interfaces.
-Type constraints precede interface; method constraints follow signatures.
-Members are public abstract instance members. Generic interfaces are invariant.
-Read [interfaces](../interop/interfaces.md) for inheritance and ambiguity rules.
+signatures for methods. Optional `extends` lists protocols or imported interfaces.
+Type constraints precede `protocol`. Method constraints follow signatures.
+Members are public abstract instance members. Generic protocols are invariant.
+Read [protocols](../interop/interfaces.md) for inheritance and ambiguity rules.
 
-Source records can implement source/imported interfaces with compatible public instance
-methods and getter-only properties. List interfaces after implements. Required
+Records can implement protocols and imported CLR interfaces with compatible public
+instance methods and getter-only properties. List them after `implements`. Required
 inherited abstract members must be satisfied; applicable default implementations
 remain usable. Labels can differ but CLR types, modes, generic constraints, and
 nullable safety must match. Setter/indexer/event/static-abstract implementations
-cannot be authored by a record. Interface declarations cannot contain bodies,
+cannot be authored by a record. Protocol declarations cannot contain bodies,
 contracts, private/static members, setters, indexers, or events. Task-returning
 signatures support async implementations; async is only on the implementation.
 
-Attribute lists precede a type, routine, record field, or interface property. Use the complete
+Attribute lists precede a type, routine, record field, or protocol property. Use the complete
 Attribute type name. Positional arguments select its constructor; subsequent
 named arguments set public writable properties/fields. Values must be legal CLR
 metadata constants, closed typeof values, or supported array literals. Record

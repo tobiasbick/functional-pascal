@@ -14,7 +14,7 @@ public sealed class LspRenameBehaviorTests(SdkPackageFixture sdk) : IClassFixtur
         const string source = """
             program Example;
             uses System.Console as C;
-            type IReader = interface function Read(): int; end interface;
+            type IReader = protocol function Read(): int; end protocol;
             type Reader = record implements IReader
               public Value: int;
               public function Read(): int; begin return self.Value; end function;
@@ -54,7 +54,7 @@ public sealed class LspRenameBehaviorTests(SdkPackageFixture sdk) : IClassFixtur
         var outer = Assert.Single(outline[0].GetProperty("children").EnumerateArray(), item => item.GetProperty("name").GetString() == "Outer");
         var inner = Assert.Single(outer.GetProperty("children").EnumerateArray(), item => item.GetProperty("name").GetString() == "Inner");
         Assert.Equal(helperLine, inner.GetProperty("selectionRange").GetProperty("start").GetProperty("line").GetInt32());
-        foreach (var (marker, name) in new[] { ("Transform(Value: int)", "type"), ("Captured: int", "SavedValue"), ("Read(): int; end interface", "Fetch") })
+        foreach (var (marker, name) in new[] { ("Transform(Value: int)", "type"), ("Captured: int", "SavedValue"), ("Read(): int; end protocol", "Fetch") })
         {
             var changes = Result(await client.Request("textDocument/rename", new { textDocument = Document(path), position = Position(text, marker), newName = name }));
             var document = Assert.Single(changes.GetProperty("documentChanges").EnumerateArray()); Assert.Equal(version, document.GetProperty("textDocument").GetProperty("version").GetInt32());

@@ -1,6 +1,6 @@
 unit Fpas.Tui.Internal.Layout.Flexible;
 
-uses Fpas.Tui.Elements as E, System as Sys;
+uses Fpas.Tui.Elements as E, System as Sys, System.Collections.Generic as Generic, System.Text as Text;
 
 public type Rect = record
   public X: int;
@@ -26,19 +26,24 @@ begin
   );
 end function;
 
+public function PreferredSize(Intrinsic: int; Rule: E.Flex): int;
+begin
+  if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1 or Rule.Grow < 0
+    or Rule.Shrink < 0
+  then
+    raise new Sys.ArgumentException('Invalid flex size rule.');
+  end if;
+
+  const Basis: int := if Rule.Basis < 0 then Intrinsic else Rule.Basis end if;
+  return Sys.Math.Clamp(Basis, Rule.Minimum, Rule.Maximum);
+end function;
+
 public function Allocate(Preferred: array of int; Settings: array of E.Flex; Available: int): array of int;
 begin
   const Sizes: array of int := new int[Preferred.Length];
   var Total: long := 0L;
   for Index: int := 0 to Sizes.Length - 1 do
-    const Rule: E.Flex := Settings[Index];
-    if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1 or Rule.Grow < 0
-      or Rule.Shrink < 0
-    then
-      raise new Sys.ArgumentException('Invalid flex size rule.');
-    end if;
-    const Basis: int := if Rule.Basis < 0 then Preferred[Index] else Rule.Basis end if;
-    Sizes[Index] := Sys.Math.Clamp(Basis, Rule.Minimum, Rule.Maximum);
+    Sizes[Index] := PreferredSize(Preferred[Index], Settings[Index]);
     Total := Total + cast<long>(Sizes[Index]);
   end for;
 
@@ -82,6 +87,42 @@ begin
     end for;
   end while;
 
+  return Sizes;
+end function;
+
+public type AllocationMemo = record
+  public Key: string;
+  public Sizes: array of int;
+end record;
+
+public function AllocateCached(
+  Preferred: array of int; Rules: array of E.Flex; Available: int;
+  Previous: array of AllocationMemo; Next: Generic.List<AllocationMemo>
+): array of int;
+begin
+  const Signature: Text.StringBuilder := new Text.StringBuilder();
+  discard Signature.Append(Available);
+  for Index: int := 0 to Preferred.Length - 1 do
+    const Rule: E.Flex := Rules[Index];
+    discard Signature.Append('/').Append(
+      Preferred[Index]
+    ).Append('/').Append(
+      Rule.Basis
+    ).Append('/').Append(
+      Rule.Minimum
+    ).Append('/').Append(
+      Rule.Maximum
+    ).Append('/').Append(Rule.Grow).Append('/').Append(Rule.Shrink);
+  end for;
+  const Key: string := Signature.ToString();
+  const Index: int := Next.Count;
+  if Index < Previous.Length and Previous[Index].Key = Key then
+    const Reused: AllocationMemo := Previous[Index];
+    Next.Add(Reused);
+    return Reused.Sizes;
+  end if;
+  const Sizes: array of int := Allocate(Preferred, Rules, Available);
+  Next.Add(new AllocationMemo(Key, Sizes));
   return Sizes;
 end function;
 end unit;

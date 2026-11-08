@@ -48,6 +48,17 @@ public function Resolve<TMsg>(
         return E.Element<TMsg>.Decorated(Walk(Child), Rule);
       when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
         return E.Element<TMsg>.Framed(Walk(Child), Title);
+      when E.Element.TabSet(
+        const Id: string, const Items: array of E.TabItem, const Active: int,
+        const OnSelect: function(string): TMsg, const Panel: E.Element<TMsg>?
+      ):
+        return E.Element<TMsg>.TabSet(
+          Id,
+          Items,
+          Active,
+          OnSelect,
+          if Panel = null then null else Walk(Panel) end if
+        );
       when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>):
         return E.Element<TMsg>.Scrollable(Id, Walk(Child));
       when E.Element.ControlledScroll(
@@ -61,15 +72,23 @@ public function Resolve<TMsg>(
         const Keys: array of E.ShortcutBinding<TMsg>
       ):
         return E.Element<TMsg>.Desktop(Walk(Content), ResolveChildren(Overlays), Keys);
+      when E.Element.Panel(
+        const Body: E.Element<TMsg>,
+        const Footer: E.Element<TMsg>,
+        const Title: string,
+        const Padding: byte
+      ):
+        return E.Element<TMsg>.Panel(Walk(Body), Walk(Footer), Title, Padding);
       when E.Element.Layer(
         const Id: string,
         const Modal: bool,
         const First: string,
         const Escape: E.EscapeBinding<TMsg>,
         const Content: E.Element<TMsg>,
-        const Keys: array of E.ShortcutBinding<TMsg>
+        const Keys: array of E.ShortcutBinding<TMsg>,
+        const Limits: E.OverlayLimits?
       ):
-        return E.Element<TMsg>.Layer(Id, Modal, First, Escape, Walk(Content), Keys);
+        return E.Element<TMsg>.Layer(Id, Modal, First, Escape, Walk(Content), Keys, Limits);
       else
         return Node;
     end case;

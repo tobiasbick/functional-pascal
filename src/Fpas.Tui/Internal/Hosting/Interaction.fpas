@@ -1,17 +1,23 @@
 unit Fpas.Tui.Internal.Hosting.Interaction;
 
 uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Arrangement as A,
+  Fpas.Tui.Elements as E, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Scene as A,
+  Fpas.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Tui.Internal.Controls.Selection as SelectionOps,
+  Fpas.Tui.Internal.Layout.TabHeaders as Tabs, Fpas.Tui.Internal.Hosting.TabNavigation as TabKeys,
   Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Hosting.ListNavigation as Lists,
   Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
-  Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Controls.TextEditing as TextEditing,
+  Fpas.Tui.Internal.Hosting.SingleLineEditor as Single, Fpas.Tui.Internal.Hosting.MultilineEditor as Multi,
+  Fpas.Tui.Internal.Layout.EditorView as EditorView,
   System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
   public HoverId: function(): string;
   public ScopeId: function(): string;
-  public Reconcile: procedure(A.Layout<TMsg>);
+  public Reconcile: procedure(A.Layout<TMsg>, A.Layout<TMsg>?);
+  public SetFocus: procedure(A.Layout<TMsg>, string);
   public Activate: procedure(A.Layout<TMsg>, string);
   public Click: procedure(A.Layout<TMsg>, E.MouseButton, int, int);
   public Pointer: procedure(A.Layout<TMsg>, E.PointerKind, E.MouseButton, int, int);
@@ -37,7 +43,31 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return Control.Enabled and Control.Scope = Scope;
   end function;
 
-  procedure ReconcileFocus(Layout: A.Layout<TMsg>);
+  procedure SetFocus(Layout: A.Layout<TMsg>; Id: string);
+  begin
+    const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+    if Control <> null and Eligible(Control, FocusScope) then
+      Focus := Control.Id;
+    end if;
+  end procedure;
+
+  function Invoke(Control: A.Control<TMsg>): bool;
+  begin
+    const Handler: Actions.IActivatable<TMsg>? := A.Activatable<TMsg>(Control.Action);
+    if Handler = null then
+      return false;
+    end if;
+
+    case Handler.Activate() of
+      when Actions.Result.Send(const Message: TMsg):
+        Apply(Message);
+      when Actions.Result.NoAction:
+    end case;
+
+    return true;
+  end function;
+
+  procedure ReconcileFocus(Layout: A.Layout<TMsg>; Previous: A.Layout<TMsg>?);
   begin
     const Scope: string := ActiveId(Layout);
     if Scope <> FocusScope then
@@ -66,6 +96,18 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         return;
       end if;
     end for;
+
+    var Old: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Focus);
+    while Old <> null and Old.FocusReturn <> '' do
+      const Parent: string := Old.FocusReturn;
+      const Candidate: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Parent);
+      if Candidate <> null and Eligible(Candidate, Scope) then
+        Focus := Candidate.Id;
+        return;
+      end if;
+
+      Old := A.FindControl<TMsg>(Previous, Parent);
+    end while;
 
     Focus := '';
     for Control: A.Control<TMsg> in Layout.Controls do
@@ -131,18 +173,17 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
     Focus := Control.Id;
     case Control.Action of
-      when A.Binding.Invoke(const Message: TMsg):
-        Apply(Message);
-      when A.Binding.Edit(const Value: string, _):
-        const Start: int := G.ViewStart(
-          Value,
-          SelectionFor(Control.Id, Value).Caret,
-          Control.Bounds.Width - 2
-        );
-        const Position: int := G.IndexAt(Value, Start, Column - Control.Bounds.X - 2);
-        Selections[Control.Id] := new Edit.Selection(Position, Position);
+      when A.Binding.Invoke(_):
+        discard Invoke(Control);
+      when A.Binding.Edit(_, _, _), A.Binding.Multiline(_):
+        const Editor: TextEditing.ITextEditor? := EditorFor(Control);
+        if Editor <> null then
+          Editor.Place(Column - Control.Bounds.X, Row - Control.Bounds.Y);
+        end if;
       when A.Binding.SelectList(const List: S.Viewport<TMsg>):
-        Lists.SelectAt<TMsg>(List, List.First + Row - Control.Bounds.Y, Apply);
+        SelectionOps.SelectAt<TMsg>(List, List.First + Row - Control.Bounds.Y, Apply);
+      when A.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
+        SelectionOps.SelectAt<TMsg>(Bar, Bar.Targets[Column - Control.Bounds.X], Apply);
       when A.Binding.Scroll(_):
       when A.Binding.Canvas(const X: int, const Y: int, const Events: E.CanvasEvents<TMsg>):
         const Click: Sys.Func<int, int, TMsg>? := if Button = E.MouseButton.Left then Events.OnClick
@@ -200,58 +241,27 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return new Edit.Selection(Value.Length, Value.Length);
   end function;
 
-  procedure Replace(Id: string; Value: string; Selection: Edit.Selection; Insert: string; Change: function(string): TMsg);
+  function EditorFor(Control: A.Control<TMsg>): TextEditing.ITextEditor?;
   begin
-    const First: int := Sys.Math.Min(Selection.Caret, Selection.Anchor);
-    const Last: int := Sys.Math.Max(Selection.Caret, Selection.Anchor);
-    const Caret: int := First + Insert.Length;
-    Selections[Id] := new Edit.Selection(Caret, Caret);
-    Apply(Change(Value.Substring(0, First) + Insert + Value.Substring(Last)));
-  end procedure;
-
-  function EditKey(Id: string; Value: string; Change: function(string): TMsg; Key: E.Key; Modifiers: E.KeyModifiers): bool;
-  begin
-    const Selection: Edit.Selection := SelectionFor(Id, Value);
-    var Caret: int := Selection.Caret;
-    case Key of
-      when E.Key.Left:
-        Caret := Edit.Previous(Value, Caret);
-      when E.Key.Right:
-        Caret := Edit.Next(Value, Caret);
-      when E.Key.Home:
-        Caret := 0;
-      when E.Key.End:
-        Caret := Value.Length;
-      when E.Key.A:
-        if Modifiers <> E.KeyModifiers.Ctrl then
-          return false;
-        end if;
-
-        Selections[Id] := new Edit.Selection(Value.Length, 0);
-        return true;
-      when E.Key.Backspace, E.Key.Delete:
-        var Deletion: Edit.Selection := Selection;
-        if Selection.Caret = Selection.Anchor then
-          const Other: int := if Key = E.Key.Backspace then Edit.Previous(
-              Value,
-              Caret
-            )
-            else Edit.Next(Value, Caret)
-            end if;
-          Deletion := new Edit.Selection(Caret, Other);
-        end if;
-
-        Replace(Id, Value, Deletion, '', Change);
-        return true;
+    case Control.Action of
+      when A.Binding.Edit(const Value: string, const Change: function(string): TMsg, _):
+        const Id: string := Control.Id;
+        const Save: procedure(Edit.Selection) := procedure(Range: Edit.Selection) begin
+          Selections[Id] := Range;
+        end procedure;
+        return new Single.Handler<TMsg>(
+          Value,
+          SelectionFor(Id, Value),
+          Control.Bounds.Width,
+          Save,
+          Change,
+          Apply
+        );
+      when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
+        return new Multi.Handler<TMsg>(View, Apply);
       else
-        return false;
+        return null;
     end case;
-
-    Selections[Id] := new Edit.Selection(
-      Caret,
-      if Modifiers = E.KeyModifiers.Shift then Selection.Anchor else Caret end if
-    );
-    return true;
   end function;
 
   procedure RouteKey(Layout: A.Layout<TMsg>; Key: E.Key; Modifiers: E.KeyModifiers);
@@ -273,19 +283,19 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
     const Control: A.Control<TMsg>? := Focused(Layout);
     if Control <> null then
-      case Control.Action of
-        when A.Binding.Invoke(const Message: TMsg):
-          if Key = E.Key.Enter then
-            Apply(Message);
-            return;
-          end if;
+      if Key = E.Key.Enter and Modifiers = E.KeyModifiers.None and Invoke(Control) then
+        return;
+      end if;
 
+      case Control.Action of
+        when A.Binding.Invoke(_):
           if Key = E.Key.Up or Key = E.Key.Down then
             Cycle(Layout, Key = E.Key.Up);
             return;
           end if;
-        when A.Binding.Edit(const Value: string, const Change: function(string): TMsg):
-          if EditKey(Control.Id, Value, Change, Key, Modifiers) then
+        when A.Binding.Edit(_, _, _), A.Binding.Multiline(_):
+          const Editor: TextEditing.ITextEditor? := EditorFor(Control);
+          if Editor <> null and Editor.Key(Key, Modifiers) then
             return;
           end if;
         when A.Binding.SelectList(const List: S.Viewport<TMsg>):
@@ -294,6 +304,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
             ScrollOffsets[Id] := First;
           end procedure;
           if Lists.Key<TMsg>(List, Key, Modifiers, Apply, Scroll) then
+            return;
+          end if;
+        when A.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
+          if TabKeys.Key<TMsg>(Bar, Key, Modifiers, Apply) then
             return;
           end if;
         when A.Binding.Scroll(const View: V.Viewport<TMsg>):
@@ -318,24 +332,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   procedure Activate(Layout: A.Layout<TMsg>; Id: string);
   begin
-    for Control: A.Control<TMsg> in Layout.Controls do
-      if Control.Id = Id and Eligible(Control, FocusScope) then
-        case Control.Action of
-          when A.Binding.SelectList(const List: S.Viewport<TMsg>):
-            Focus := Control.Id;
-            Lists.Activate<TMsg>(List, Apply);
-          when A.Binding.Scroll(_):
-            Focus := Control.Id;
-          else
-            ClickAt(
-              Layout, E.MouseButton.Left, Control.Bounds.X + Control.Bounds.Width div 2,
-              Control.Bounds.Y + Control.Bounds.Height div 2
-            );
-        end case;
-
-        return;
-      end if;
-    end for;
+    const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+    if Control <> null and Eligible(Control, FocusScope) then
+      discard Invoke(Control);
+    end if;
   end procedure;
 
   procedure ScrollAt(Layout: A.Layout<TMsg>; Column: int; Row: int; Delta: int);
@@ -343,6 +343,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     const Control: A.Control<TMsg>? := Hit(Layout, Column, Row);
     if Control <> null then
       case Control.Action of
+        when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
+          Multi.Scroll<TMsg>(View, Delta, Apply);
+          return;
         when A.Binding.Canvas(const X: int, const Y: int, const Events: E.CanvasEvents<TMsg>):
           const Wheel: Sys.Func<int, int, int, TMsg>? := Events.OnScroll;
           case Wheel of
@@ -389,12 +392,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   begin
     const Control: A.Control<TMsg>? := Focused(Layout);
     if Control <> null then
-      case Control.Action of
-        when A.Binding.Edit(const Value: string, const Change: function(string): TMsg):
-          Replace(Control.Id, Value, SelectionFor(Control.Id, Value), G.SingleLine(Text), Change);
-          return;
-        else
-      end case;
+      const Editor: TextEditing.ITextEditor? := EditorFor(Control);
+      if Editor <> null then
+        Editor.Insert(Text);
+        return;
+      end if;
     end if;
 
     if Typed and Text <> '' then
@@ -420,13 +422,15 @@ begin
   var FocusScope: string := '';
   return new State<TMsg>(
     function(): string => Focus, function(): string => Hover, function(): string => FocusScope,
-    ReconcileFocus, Activate, ClickAt, Point, ScrollAt, RouteKey, Insert, SelectionFor
+    ReconcileFocus, SetFocus, Activate, ClickAt, Point, ScrollAt, RouteKey, Insert, SelectionFor
   );
 end function;
 
 public procedure Dispatch<TMsg>(Routing: State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
 begin
   case Event of
+    when App.Input.Focus(const Id: string):
+      Routing.SetFocus(Layout, Id);
     when App.Input.Activate(const Id: string):
       Routing.Activate(Layout, Id);
     when App.Input.Click(const Column: int, const Row: int):

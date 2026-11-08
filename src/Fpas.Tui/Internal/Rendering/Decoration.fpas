@@ -1,10 +1,15 @@
 unit Fpas.Tui.Internal.Rendering.Decoration;
 
 uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as A,
+  Fpas.Tui.Elements as E, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Scene as A,
   Fpas.Tui.Internal.Layout.Flexible as F,
   Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V,
-  Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys;
+  Fpas.Tui.Internal.Layout.TabHeaders as Tabs,
+  Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Tui.Internal.Rendering.Drawing as D,
+  Fpas.Tui.Internal.Rendering.Buttons as Buttons,
+  Fpas.Tui.Internal.Layout.EditorView as EditorView, Fpas.Tui.Internal.Rendering.EditorText as EditorText,
+  System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of E.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -23,6 +28,16 @@ begin
   end if;
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
+    when A.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
+      if Focused then
+        for Index: int := 0 to Bar.Targets.Length - 1 do
+          if Bar.Targets[Index] = Bar.Active then
+            Mark(Bounds.X + Index, Bounds.Y, Theme.Focus);
+          end if;
+        end for;
+      end if;
+
+      return;
     when A.Binding.SelectList(const List: S.Viewport<TMsg>):
       if Focused then
         const Offset: int := List.Selected - List.First;
@@ -49,20 +64,38 @@ begin
     else
   end case;
   const Widgets: E.WidgetStyles? := Theme.Widgets;
-  const Style: E.Style := if not Focused then Theme.Hover
+  const Standard: E.Style := if not Focused then Theme.Hover
     else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField
       else Theme.Focus
       end if
     end if;
+  const Style: E.Style := Buttons.Resolve(
+    Theme, Control.Variant, Control.Enabled, Focused, not Focused
+  ) ?? Standard;
+  const ShowsPlaceholder: bool := case Control.Action of
+    when A.Binding.Edit(_, _, const Show: bool): Show;
+    else false;
+  end case;
+  const HintStyle: E.Style := if ShowsPlaceholder then D.PlaceholderStyle(
+      Style,
+      Theme
+    )
+    else Style
+    end if;
   for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
-      Mark(X, Y, Style);
+      Mark(X, Y, if Y = Bounds.Y and X >= Bounds.X + 2 then HintStyle else Style end if);
     end for;
   end for;
 
-  if Focused and Bounds.Width > 2 then
+  if Focused then
     case Control.Action of
-      when A.Binding.Edit(const Value: string, _):
+      when A.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
+        EditorText.MarkSelection(View.Document, Theme, Mark);
+      when A.Binding.Edit(const Value: string, _, _):
+        if Bounds.Width <= 2 then
+          return;
+        end if;
         const Range: Edit.Selection := Selection(Control.Id, Value);
         const Start: int := G.ViewStart(Value, Range.Caret, Bounds.Width - 2);
         const First: int := Bounds.X + 2 + G.Measure(
@@ -74,14 +107,50 @@ begin
         const Last: int := Bounds.X + 2 + G.Measure(
           Value.Substring(Start, Sys.Math.Max(Range.Caret, Range.Anchor) - Start)
         );
-        for X: int := First to Sys.Math.Min(
-          Sys.Math.Max(First, Last - 1),
-          Bounds.X + Bounds.Width - 1
-        ) do
+        var EndCell: int := Sys.Math.Max(First, Last - 1);
+        if ShowsPlaceholder and Bounds.Contains(First, Bounds.Y) then
+          EndCell := First + Sys.Math.Max(1, G.Width(Cells[Bounds.Y * Columns + First].Text)) - 1;
+        end if;
+
+        for X: int := First to Sys.Math.Min(EndCell, Bounds.X + Bounds.Width - 1) do
           Mark(X, Bounds.Y, Theme.Caret);
         end for;
       else
     end case;
   end if;
 end procedure;
+
+public function Capture<TMsg>(
+  Layout: A.Layout<TMsg>; Columns: int; Theme: E.Theme; Focus: string; Hover: string; Scope: string;
+  Selection: function(string, string): Edit.Selection
+): array of App.ControlSnapshot;
+begin
+  const Controls: Generic.List<App.ControlSnapshot> := new Generic.List<App.ControlSnapshot>(
+    Layout.Controls.Length
+  );
+  for Control: A.Control<TMsg> in Layout.Controls do
+    const Focused: bool := Control.Id = Focus;
+    const Hovered: bool := Control.Id = Hover;
+    Controls.Add(
+      new App.ControlSnapshot(
+        Control.Id,
+        Control.Label,
+        Control.Role,
+        Control.Value,
+        Control.Bounds.X,
+        Control.Bounds.Y,
+        Control.Bounds.Width,
+        Control.Bounds.Height,
+        Focused,
+        Hovered,
+        Control.Enabled and Control.Scope = Scope
+      )
+    );
+    if Focused or Hovered then
+      Apply<TMsg>(Layout.Cells, Columns, Control, Theme, Focused, Selection);
+    end if;
+  end for;
+
+  return Controls.ToArray();
+end function;
 end unit;

@@ -11,20 +11,24 @@ public sealed record BuildResult(int ExitCode, string Output, string Error, bool
     public bool DiagnosticsTruncated { get; init; }
 }
 
+public sealed record ProcessOutput(TextWriter StandardOutput, TextWriter StandardError);
+
 public static class BuildProcess
 {
     public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true,
-        IReadOnlyDictionary<string, string>? environment = null, bool captureCancellation = false)
+        IReadOnlyDictionary<string, string>? environment = null, bool captureCancellation = false, ProcessOutput? liveOutput = null)
     {
         token.ThrowIfCancellationRequested();
-        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment, captureCancellation: captureCancellation);
+        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment,
+            captureCancellation: captureCancellation, liveOutput: liveOutput);
     }
 
     public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, int outputLimit = 1_048_576)
         => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false, outputLimit: outputLimit);
 
     private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment,
-        IReadOnlyDictionary<string, string>? environment = null, int outputLimit = 1_048_576, bool captureCancellation = false)
+        IReadOnlyDictionary<string, string>? environment = null, int outputLimit = 1_048_576, bool captureCancellation = false,
+        ProcessOutput? liveOutput = null)
     {
         if (outputLimit is < 1 or > 4_194_304) throw new ArgumentOutOfRangeException(nameof(outputLimit));
         token.ThrowIfCancellationRequested();
@@ -36,30 +40,42 @@ public static class BuildProcess
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output, Encoding.UTF8);
         using var stderr = new StreamReader(process.Error, Encoding.UTF8);
-        long captured = 0; var truncated = false;
-        async Task<string> Drain(StreamReader reader)
+        long outputBytes = 0;
+        async Task<string> Drain(StreamReader reader, TextWriter? destination)
         {
-            var buffer = new char[4096]; var result = new StringBuilder(); int count;
+            var buffer = new char[4096];
+            var result = destination is null ? new StringBuilder() : null;
+            int count;
             while ((count = await reader.ReadAsync(buffer, captureCancellation ? CancellationToken.None : token)) > 0)
             {
                 var bytes = Encoding.UTF8.GetByteCount(buffer.AsSpan(0, count));
-                if (Interlocked.Add(ref captured, bytes) <= outputLimit) result.Append(buffer, 0, count);
-                else truncated = true;
+                if (Interlocked.Add(ref outputBytes, bytes) > outputLimit) continue;
+                if (destination is null) result!.Append(buffer, 0, count);
+                else
+                {
+                    try { destination.Write(buffer, 0, count); }
+                    catch (IOException)
+                    {
+                        await process.TerminateAsync();
+                        throw;
+                    }
+                }
             }
-            return result.ToString();
+            return result?.ToString() ?? "";
         }
-        var output = Drain(stdout); var error = Drain(stderr);
+        var output = Drain(stdout, liveOutput?.StandardOutput);
+        var error = Drain(stderr, liveOutput?.StandardError);
         try
         {
             await process.WaitForExit(token);
             var exitCode = process.ExitCode;
             await process.TerminateAsync();
-            return new(exitCode, await output, await error, truncated);
+            return new(exitCode, await output, await error, outputBytes > outputLimit);
         }
         catch (OperationCanceledException) when (captureCancellation && token.IsCancellationRequested)
         {
             await process.TerminateAsync();
-            return new(130, await output, await error, truncated);
+            return new(130, await output, await error, outputBytes > outputLimit);
         }
         finally
         {

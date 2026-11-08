@@ -1,0 +1,189 @@
+unit Fpas.Tui.Internal.Hosting.MultilineEditor;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Editors as Editors, Fpas.Tui.Internal.Layout.EditorView as View,
+  Fpas.Tui.Internal.Controls.TextEditing as TextEditing, Fpas.Tui.Internal.Hosting.Editing as Edit,
+  System as Sys;
+
+const NewLine: string := new string(#10, 1);
+const ExtendDocument: E.KeyModifiers := cast<E.KeyModifiers>(cast<int>(E.KeyModifiers.Ctrl)
+  or cast<int>(E.KeyModifiers.Shift));
+
+public type Handler<TMsg> = record implements TextEditing.ITextEditor
+  public Viewport: View.Viewport<TMsg>;
+  public Apply: procedure(TMsg);
+
+  procedure Navigate(Requested: Editors.EditorPosition);
+  begin
+    const Document: View.Document := self.Viewport.Document;
+    const Position: Editors.EditorPosition := View.Resolve(Document, Requested);
+    if Position <> Document.Position then
+      self.Apply(self.Viewport.OnNavigate(Position));
+    end if;
+  end procedure;
+
+  procedure Move(Caret: int; Extend: bool; PreferredColumn: int := -1);
+  begin
+    const Current: Editors.EditorPosition := self.Viewport.Document.Position;
+    self.Navigate(
+      Current with
+        Caret := Caret;
+        Anchor := if Extend then Current.Anchor else Caret end if;
+        PreferredColumn := PreferredColumn;
+        FollowCaret := true;
+      end with
+    );
+  end procedure;
+
+  procedure Commit(Change: Edit.Change);
+  begin
+    const Document: View.Document := self.Viewport.Document;
+    const Requested: Editors.EditorPosition := Document.Position with
+      Caret := Change.Caret;
+      Anchor := Change.Caret;
+      PreferredColumn := -1;
+      FollowCaret := true;
+    end with;
+    if Change.Text = Document.Text then
+      self.Navigate(Requested);
+      return;
+    end if;
+
+    const Updated: View.Document := View.Arrange(Change.Text, Document.Area, Requested);
+    self.Apply(self.Viewport.OnEdit(new Editors.TextEdit(Updated.Text, Updated.Position)));
+  end procedure;
+
+  public procedure Insert(Text: string);
+  begin
+    if Text = '' then
+      return;
+    end if;
+    const Document: View.Document := self.Viewport.Document;
+    const Position: Editors.EditorPosition := Document.Position;
+    const Normalized: string := Text.Replace(
+      new string([#13, #10]),
+      NewLine
+    ).Replace(#13, #10).Replace(#8232, #10).Replace(#8233, #10);
+    self.Commit(
+      Edit.Replace(Document.Text, new Edit.Selection(Position.Caret, Position.Anchor), Normalized)
+    );
+  end procedure;
+
+  public procedure Place(Column: int; Row: int);
+  begin
+    const Document: View.Document := self.Viewport.Document;
+    const Position: Editors.EditorPosition := Document.Position;
+    self.Move(View.IndexAt(Document, Position.TopRow + Row, Position.LeftColumn + Column), false);
+  end procedure;
+
+  public function Key(Pressed: E.Key; Modifiers: E.KeyModifiers): bool;
+  begin
+    const Document: View.Document := self.Viewport.Document;
+    const Position: Editors.EditorPosition := Document.Position;
+    const Extend: bool := Modifiers = E.KeyModifiers.Shift or Modifiers = ExtendDocument;
+    if Modifiers = E.KeyModifiers.Ctrl or Modifiers = ExtendDocument then
+      case Pressed of
+        when E.Key.Home:
+          self.Move(0, Extend);
+        when E.Key.End:
+          self.Move(Document.Text.Length, Extend);
+        when E.Key.A:
+          if Extend then
+            return false;
+          end if;
+
+          self.Navigate(
+            Position with
+              Caret := Document.Text.Length;
+              Anchor := 0;
+              PreferredColumn := -1;
+              FollowCaret := true;
+            end with
+          );
+        else
+          return false;
+      end case;
+
+      return true;
+    end if;
+
+    if Modifiers <> E.KeyModifiers.None and Modifiers <> E.KeyModifiers.Shift then
+      return false;
+    end if;
+
+    case Pressed of
+      when E.Key.Enter:
+        if Extend then
+          return false;
+        end if;
+
+        self.Insert(NewLine);
+      when E.Key.Backspace, E.Key.Delete:
+        self.Commit(
+          Edit.Delete(
+            Document.Text,
+            new Edit.Selection(Position.Caret, Position.Anchor),
+            Pressed = E.Key.Backspace
+          )
+        );
+      when E.Key.Left:
+        const First: int := Sys.Math.Min(Position.Caret, Position.Anchor);
+        self.Move(
+          if not Extend and Position.Caret <> Position.Anchor then First
+            else Edit.Previous(Document.Text, Position.Caret)
+            end if, Extend
+        );
+      when E.Key.Right:
+        const Last: int := Sys.Math.Max(Position.Caret, Position.Anchor);
+        self.Move(
+          if not Extend and Position.Caret <> Position.Anchor then Last
+            else Edit.Next(Document.Text, Position.Caret)
+            end if, Extend
+        );
+      when E.Key.Home, E.Key.End:
+        const Line: View.Line := Document.Lines[View.RowAt(Document.Lines, Position.Caret)];
+        self.Move(
+          if Pressed = E.Key.Home then Line.Start else Line.Start + Line.Text.Length end if,
+          Extend
+        );
+      when E.Key.Up, E.Key.Down, E.Key.PageUp, E.Key.PageDown:
+        const Row: int := View.RowAt(Document.Lines, Position.Caret);
+        const Goal: int := if Position.PreferredColumn >= 0 then Position.PreferredColumn
+          else View.ColumnAt(Document.Lines[Row], Position.Caret)
+          end if;
+        const Delta: int := case Pressed of
+          when E.Key.Up: -1;
+          when E.Key.Down: 1;
+          when E.Key.PageUp: -Document.Area.Height;
+          else Document.Area.Height;
+        end case;
+        const Target: int := Sys.Math.Clamp(Row + Delta, 0, Document.Lines.Length - 1);
+        self.Move(View.IndexAt(Document, Target, Goal), Extend, Goal);
+      else
+        return false;
+    end case;
+
+    return true;
+  end function;
+end record;
+
+public procedure Scroll<TMsg>(Viewport: View.Viewport<TMsg>; Delta: int; Apply: procedure(TMsg));
+begin
+  const Position: Editors.EditorPosition := Viewport.Document.Position;
+  const Top: int := cast<int>(Sys.Math.Clamp(
+    cast<long>(Position.TopRow) + cast<long>(Delta),
+    0L,
+    cast<long>(View.MaximumTop(Viewport.Document))
+  ));
+  if Top <> Position.TopRow then
+    Apply(
+      Viewport.OnNavigate(
+        Position with
+          TopRow := Top;
+          FollowCaret := false;
+        end with
+      )
+    );
+  end if;
+end procedure;
+end unit;

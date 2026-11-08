@@ -1,6 +1,6 @@
 unit Fpas.Tui.Elements;
 
-uses System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Tui.Editors as Editors, System as Sys, System.Collections.Generic as Generic;
 
 public type Key = enum: byte
   Unknown;
@@ -109,6 +109,11 @@ public type EscapeBinding<TMsg> = union
   Send(Message: TMsg);
 end union;
 
+public type OverlayLimits = record
+  public MaxWidthPercent: int := 100;
+  public MaxHeightPercent: int := 100;
+end record;
+
 public type CanvasEvents<TMsg> = record
   public OnResize: Sys.Func<int, int, TMsg>? := null;
   public OnClick: Sys.Func<int, int, TMsg>? := null;
@@ -135,6 +140,23 @@ public type SelectionItem = record
   public CanActivate: bool := true;
 end record;
 
+public type TabItem = record
+  public Key: string;
+  public Label: string;
+  public Enabled: bool := true;
+end record;
+
+public type TableColumn = record
+  public Header: string;
+  public Sizing: Flex;
+end record;
+
+public type TableRow = record
+  public Key: string;
+  public Cells: array of string;
+  public CanActivate: bool := true;
+end record;
+
 public type ScrollPosition = union
   Offset(Row: int);
   End;
@@ -149,6 +171,28 @@ end record;
 public type Style = record
   public Foreground: int := -1;
   public Background: int := -1;
+end record;
+
+public type ButtonVariant = enum: byte
+  Default;
+  Secondary;
+  Primary;
+  Active;
+  Destructive;
+end enum;
+
+public type ButtonAppearance = record
+  public Normal: Style;
+  public Focused: Style;
+  public Hovered: Style;
+end record;
+
+public type ButtonStyles = record
+  public Secondary: ButtonAppearance;
+  public Primary: ButtonAppearance;
+  public Active: ButtonAppearance;
+  public Destructive: ButtonAppearance;
+  public Disabled: Style;
 end record;
 
 public type WidgetStyles = record
@@ -166,6 +210,8 @@ public type Theme = record
   public Hover: Style := new Style(Foreground := 16777215, Background := 3355443);
   public Caret: Style := new Style(Foreground := 0, Background := 16777215);
   public Widgets: WidgetStyles? := null;
+  public PlaceholderColor: int := -1;
+  public Buttons: ButtonStyles? := null;
 end record;
 
 public type Cell = record
@@ -175,11 +221,28 @@ end record;
 
 public type Element<TMsg> = union
   Label(Value: string);
-  Action(Id: string; Caption: string; Message: TMsg; Enabled: bool; Role: string; Value: string);
-  Editor(Id: string; Value: string; OnChange: function(string): TMsg);
+  Separator(Title: string);
+  StatusLine(Message: string; Hints: array of string);
+  Action(
+    Id: string; Caption: string; Message: TMsg; Enabled: bool; Role: string; Value: string;
+    Variant: ButtonVariant
+  );
+  Editor(Id: string; Value: string; OnChange: function(string): TMsg; Placeholder: string);
+  DocumentEditor(
+    Id: string; Text: string; Position: Editors.EditorPosition; OnEdit: function(Editors.TextEdit): TMsg;
+    OnNavigate: function(Editors.EditorPosition): TMsg
+  );
   Choices(Id: string; Items: array of ListItem<TMsg>);
   Selectable(
     Id: string; Items: array of SelectionItem; SelectedKey: string;
+    OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+  );
+  TabSet(
+    Id: string; Items: array of TabItem; Active: int;
+    OnSelect: function(string): TMsg; Panel: Element<TMsg>?
+  );
+  TableView(
+    Id: string; Columns: array of TableColumn; Rows: array of TableRow; SelectedKey: string;
     OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
   );
   Gauge(Percent: int);
@@ -194,9 +257,10 @@ public type Element<TMsg> = union
   );
   Custom(Columns: int; Rows: int; Draw: function(int, int): Cell; Input: CanvasBinding<TMsg>);
   Desktop(Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>);
+  Panel(Body: Element<TMsg>; Footer: Element<TMsg>; Title: string; Padding: byte);
   Layer(
     Id: string; Modal: bool; InitialFocus: string; OnEscape: EscapeBinding<TMsg>; Content: Element<TMsg>;
-    Shortcuts: array of ShortcutBinding<TMsg>
+    Shortcuts: array of ShortcutBinding<TMsg>; Limits: OverlayLimits?
   );
   Deferred(Id: string; Resolve: function(CacheEntry<TMsg>?): CacheEntry<TMsg>);
 end union;
@@ -215,9 +279,18 @@ begin
   return Element<TMsg>.Label(Value);
 end function;
 
-public function Button<TMsg>(Id: string; Text: string; OnActivate: TMsg; Enabled: bool := true): Element<TMsg>;
+/// Draws a horizontal rule with an optional title.
+public function Divider<TMsg>(Title: string := ''): Element<TMsg>;
 begin
-  return Element<TMsg>.Action(Id, Text, OnActivate, Enabled, 'button', '');
+  return Element<TMsg>.Separator(Title);
+end function;
+
+public function Button<TMsg>(
+  Id: string; Text: string; OnActivate: TMsg; Enabled: bool := true;
+  Variant: ButtonVariant := ButtonVariant.Default
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Action(Id, Text, OnActivate, Enabled, 'button', '', Variant);
 end function;
 
 public function Column<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
@@ -255,13 +328,16 @@ begin
   const Prefix: string := if Checked then '[x] ' else '[ ] ' end if;
   return Element<TMsg>.Action(
     Id, Prefix + Text, OnChange(not Checked), Enabled, 'checkbox',
-    if Checked then 'true' else 'false' end if
+    if Checked then 'true' else 'false' end if, ButtonVariant.Default
   );
 end function;
 
-public function TextInput<TMsg>(Id: string; Value: string; OnChange: function(string): TMsg): Element<TMsg>;
+/// Displays Placeholder while Value is empty.
+public function TextInput<TMsg>(
+  Id: string; Value: string; OnChange: function(string): TMsg; Placeholder: string := ''
+): Element<TMsg>;
 begin
-  return Element<TMsg>.Editor(Id, Value, OnChange);
+  return Element<TMsg>.Editor(Id, Value, OnChange, Placeholder);
 end function;
 
 public function List<TMsg>(Id: string; Items: array of ListItem<TMsg>): Element<TMsg>;
@@ -291,6 +367,61 @@ begin
 
   return Element<TMsg>.Selectable(
     Id, cast<array of SelectionItem>(Items.Clone()), SelectedKey, OnSelect, OnActivate
+  );
+end function;
+
+/// Switches between panels by stable key. The view builds only the active panel.
+public function Tabs<TMsg>(
+  Id: string; Items: array of TabItem; ActiveKey: string; OnSelect: function(string): TMsg;
+  Content: function(string): Element<TMsg>
+): Element<TMsg>;
+begin
+  const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+  var Active: int := -1;
+  for Index: int := 0 to Items.Length - 1 do
+    const Item: TabItem := Items[Index];
+    if Item.Key.Length = 0 or not Keys.Add(Item.Key) then
+      raise new Sys.ArgumentException('Tab keys must be nonempty and unique.');
+    end if;
+
+    if Item.Enabled and (Active < 0 or Item.Key = ActiveKey) then
+      Active := Index;
+    end if;
+  end for;
+  const Panel: Element<TMsg>? := if Active < 0 then null else Content(Items[Active].Key) end if;
+  return Element<TMsg>.TabSet(Id, cast<array of TabItem>(Items.Clone()), Active, OnSelect, Panel);
+end function;
+
+/// Displays a fixed header above a selectable body with one focus stop.
+public function Table<TMsg>(
+  Id: string; Columns: array of TableColumn; Rows: array of TableRow; SelectedKey: string;
+  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+): Element<TMsg>;
+begin
+  if Columns.Length = 0 then
+    raise new Sys.ArgumentException('A table needs at least one column.');
+  end if;
+  const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+  const Copy: Generic.List<TableRow> := new Generic.List<TableRow>(Rows.Length);
+  for Row: TableRow in Rows do
+    if Row.Key.Length = 0 or not Keys.Add(Row.Key) then
+      raise new Sys.ArgumentException('Table row keys must be nonempty and unique.');
+    end if;
+
+    if Row.Cells.Length <> Columns.Length then
+      raise new Sys.ArgumentException('Each table row needs one cell per column.');
+    end if;
+
+    Copy.Add(new TableRow(Row.Key, cast<array of string>(Row.Cells.Clone()), Row.CanActivate));
+  end for;
+
+  return Element<TMsg>.TableView(
+    Id,
+    cast<array of TableColumn>(Columns.Clone()),
+    Copy.ToArray(),
+    SelectedKey,
+    OnSelect,
+    OnActivate
   );
 end function;
 
@@ -348,24 +479,33 @@ begin
   );
 end function;
 
+/// Frames an overlay body and pins its footer below it. Use ScrollView for an overflowing body.
+public function OverlayPanel<TMsg>(
+  Body: Element<TMsg>; Footer: Element<TMsg>; Title: string := ''; Padding: byte := 0
+): Element<TMsg>;
+begin
+  return Element<TMsg>.Panel(Body, Footer, Title, Padding);
+end function;
+
 public function Overlay<TMsg>(
   Id: string; Modal: bool; InitialFocus: string; OnEscape: TMsg; Content: Element<TMsg>;
-  Shortcuts: array of ShortcutBinding<TMsg>
+  Shortcuts: array of ShortcutBinding<TMsg>; Limits: OverlayLimits? := null
 ): Element<TMsg>;
 begin
   return Element<TMsg>.Layer(
     Id, Modal, InitialFocus, EscapeBinding<TMsg>.Send(OnEscape),
-    Content, cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone())
+    Content, cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone()), Limits
   );
 end function;
 
 public function Overlay<TMsg>(
-  Id: string; Modal: bool; InitialFocus: string; Content: Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>
+  Id: string; Modal: bool; InitialFocus: string; Content: Element<TMsg>;
+  Shortcuts: array of ShortcutBinding<TMsg>; Limits: OverlayLimits? := null
 ): Element<TMsg>;
 begin
   return Element<TMsg>.Layer(
     Id, Modal, InitialFocus, EscapeBinding<TMsg>.None,
-    Content, cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone())
+    Content, cast<array of ShortcutBinding<TMsg>>(Shortcuts.Clone()), Limits
   );
 end function;
 

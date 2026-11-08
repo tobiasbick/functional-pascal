@@ -1,0 +1,20 @@
+unit Fpas.Tui.Internal.Controls.Activation;
+
+public type Result<TMsg> = union
+  NoAction;
+  Send(Message: TMsg);
+end union;
+
+public type IActivatable<TMsg> = protocol
+  function Activate(): Result<TMsg>;
+end protocol;
+
+public type Direct<TMsg> = record implements IActivatable<TMsg>
+  public Message: TMsg;
+
+  public function Activate(): Result<TMsg>;
+  begin
+    return Result<TMsg>.Send(self.Message);
+  end function;
+end record;
+end unit;

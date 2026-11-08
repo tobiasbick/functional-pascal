@@ -32,6 +32,9 @@
     <None Include="../../examples/tui/mandelbrot/*.fpas" Link="Fixtures/tui/mandelbrot/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CanvasInputContract.fpas" Link="Fixtures/tui/canvas-input.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/TabsContract.fpas" Link="Fixtures/tui/tabs.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/TableContract.fpas" Link="Fixtures/tui/table.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/MultilineContract.fpas" Link="Fixtures/tui/multiline.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/units/**/*.fpas;../../examples/units/*.fpasproj" Link="Fixtures/units/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

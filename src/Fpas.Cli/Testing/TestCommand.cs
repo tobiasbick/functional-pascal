@@ -1,5 +1,7 @@
 using Fpas.Cli.Analysis;
+using Fpas.Cli.Reporting;
 using Fpas.Workspaces.Loading;
+using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Projects;
 using Fpas.Workspaces.Testing;
 using System.CommandLine;
@@ -60,7 +62,7 @@ internal sealed class TestCommand
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
         var json = Json(result); var mode = result.GetValue(list) ? "list" : "run";
-        string? input = null; string? results = null; Workspaces.Processes.BuildResult? build = null;
+        string? input = null; string? results = null; BuildResult? build = null;
         var completed = new List<ProjectTestResult>();
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(result.GetValue(timeout)));
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
@@ -85,7 +87,8 @@ internal sealed class TestCommand
             var options = new TestRunOptions(paths, result.GetValue(collectors) ?? [], extra);
             if (!result.GetValue(noBuild))
             {
-                build = await ProjectDriver.BuildAsync(input, config, result.GetValue(noRestore), token, captureDiagnostics: json);
+                var liveOutput = ProjectProgress.BuildOutput(json, "Building", input);
+                build = await ProjectDriver.BuildAsync(input, config, result.GetValue(noRestore), token, captureDiagnostics: json, liveOutput: liveOutput);
                 if (build.ExitCode != 0 || build.Truncated) { Failure("build_failed", "Build failed or exceeded its output limit.").Write(json); return 1; }
             }
             var projects = await TestDriver.SelectAsync(input, config, result.GetValue(project), token);
@@ -102,12 +105,15 @@ internal sealed class TestCommand
                 var folder = Path.Combine(results, completed.Count.ToString("D4", System.Globalization.CultureInfo.InvariantCulture)); Directory.CreateDirectory(folder);
                 if (mode == "list")
                 {
+                    ProjectProgress.Phase(json, "Discovering tests in", selected.Project);
                     var discovered = await TestDriver.DiscoverAsync(selected, folder, result.GetValue(filter), runsettings, token, options);
                     completed.Add(new(selected, discovered.Process, null, null, output.AttachLocations(discovered.Tests)));
                 }
                 else
                 {
-                    var process = await TestDriver.RunAsync(selected, folder, result.GetValue(filter), runsettings, token, options);
+                    ProjectProgress.Phase(json, "Testing", selected.Project);
+                    ProcessOutput? liveOutput = json ? null : new(Console.Out, Console.Error);
+                    var process = await TestDriver.RunAsync(selected, folder, result.GetValue(filter), runsettings, token, options, liveOutput);
                     var trx = Path.Combine(folder, "results.trx");
                     var native = File.Exists(trx) && !token.IsCancellationRequested ? TrxReport.Read(trx, token) : null;
                     completed.Add(new(selected, process, File.Exists(trx) ? trx : null, native, null));
@@ -118,8 +124,8 @@ internal sealed class TestCommand
             }
             token.ThrowIfCancellationRequested();
             var success = completed.All(item => item.Runner.ExitCode == 0 && !item.Runner.Truncated && item.Result?.Success != false);
-            response = completed.Any(item => item.Runner.Truncated) ? Failure("output_limit", "A native runner exceeded its captured output limit.") :
-                !success && !completed.Any(item => (item.Result?.Counts.Failed ?? 0) != 0) ? Failure(mode == "list" ? "discovery_failed" : "runner_failed", "The native runner failed; inspect the captured runner diagnostics.") :
+            response = completed.Any(item => item.Runner.Truncated) ? Failure("output_limit", "A native runner exceeded its output limit.") :
+                !success && !completed.Any(item => (item.Result?.Counts.Failed ?? 0) != 0) ? Failure(mode == "list" ? "discovery_failed" : "runner_failed", "The native runner failed. Inspect its diagnostics.") :
                 new(success, success ? "ok" : "test_failed", mode, input) { ResultsDirectory = results, Build = build, Projects = completed.ToArray() };
             exit = success ? 0 : 1;
         }

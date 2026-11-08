@@ -2,6 +2,7 @@ program HeadlessContract;
 
 uses
   Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console,
+  Fpas.Tui.Themes as Themes, Fpas.Tui.Status as Status,
   Fpas.Tui.Internal.Rendering.Presentation as P, Fpas.Tui.Internal.Layout.Flexible as F, System.IO as IO,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
 
@@ -274,6 +275,7 @@ begin
   using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
     0, OverlayUpdate, OverlayView, 30, 10
   );
+  Turn(Session, App.Input.Focus('options'));
   Turn(Session, App.Input.Activate('options'));
   ExpectFocus(Session, 'close');
   const Before: long := Session.Snapshot().Id;
@@ -294,6 +296,7 @@ begin
   Turn(Session, App.Input.KeyPress(E.Key.Escape, E.KeyModifiers.None));
   ExpectFocus(Session, 'items/a');
   Turn(Session, App.Input.Activate('items/b'));
+  Turn(Session, App.Input.Focus('items/b'));
   ExpectFocus(Session, 'items/b');
   const Original: App.Frame := Session.Snapshot();
   Turn(Session, App.Input.KeyPress(E.Key.R, E.KeyModifiers.Ctrl));
@@ -370,6 +373,54 @@ begin
   end if;
 end procedure;
 
+procedure CheckDividers();
+  function DividerView(State: int): E.Element<Msg>;
+  begin
+    return E.Column<Msg>(
+      E.Divider<Msg>(),
+      E.Divider<Msg>('界e' + new string(#10, 1) + 'z'),
+      E.Button<Msg>('start', 'Start', Msg.Start)
+    );
+  end function;
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(
+    0, Update, DividerView, 10, 3, Themes.Dark().Theme
+  );
+  const Full: App.Frame := Session.Snapshot();
+  if Full.Lines[0] <> '──────────' or Full.Lines[1] <> '─ 界e z ──'
+    or Full.Cells[0].Style.Foreground <> $5A748F or Full.Controls.Length <> 1
+  then
+    raise new Sys.InvalidOperationException('Unexpected divider layout, style or control list.');
+  end if;
+
+  ExpectFocus(Session, 'start');
+
+  Turn(Session, App.Input.Resize(6, 3));
+  if Session.Snapshot().Lines[1] <> '─ 界 ─' then
+    raise new Sys.InvalidOperationException('A narrow divider must keep the whole title glyph.');
+  end if;
+
+  Turn(Session, App.Input.Resize(5, 3));
+  if Session.Snapshot().Lines[1] <> '─────' then
+    raise new Sys.InvalidOperationException('A divider needs room for the first title glyph.');
+  end if;
+end procedure;
+
+procedure CheckStatusHints();
+begin
+  const Chord: E.ShortcutBinding<Msg> := E.Shortcut<Msg>(
+    E.Key.F2,
+    cast<E.KeyModifiers>(cast<int>(E.KeyModifiers.Ctrl) or cast<int>(E.KeyModifiers.Shift)),
+    Msg.Start
+  );
+  const Character: E.ShortcutBinding<Msg> := E.CharacterShortcut<Msg>('?', Msg.Start);
+  if Status.Hint<Msg>(Chord, 'Start') <> 'Ctrl+Shift+F2 Start'
+    or Status.Hint<Msg>(Character, 'Help') <> '? Help'
+  then
+    raise new Sys.InvalidOperationException('Shortcut hints must use the actual bindings.');
+  end if;
+end procedure;
+
 procedure CheckLiveTheme();
   function UpdateTheme(State: bool; Message: bool): App.Transition<bool, bool>;
   begin
@@ -422,6 +473,8 @@ begin
   CheckCanvas();
   CheckOverlay();
   CheckReuse();
+  CheckDividers();
+  CheckStatusHints();
   CheckLiveTheme();
   Console.WriteLine('headless contracts verified');
 end;

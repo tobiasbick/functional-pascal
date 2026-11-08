@@ -26,14 +26,14 @@ internal sealed record TestReport(bool Success, string Status, string Mode, stri
                     Error = new("report_limit", "The test report exceeds 4 MiB; inspect the native artifacts in resultsDirectory.") }, TestJson.Default.TestReport);
             Console.WriteLine(text); return !limited;
         }
-        if (Build is { } build) { Console.Error.Write(build.Output); Console.Error.Write(build.Error); }
-        foreach (var project in Projects)
+        if (Mode == "list")
         {
-            if (Mode == "list")
+            foreach (var project in Projects)
+            {
                 foreach (var test in project.Discovery ?? []) Console.WriteLine(test.FullyQualifiedName);
-            else Console.Write(project.Runner.Output);
-            Console.Error.Write(project.Runner.Error);
-            if (Mode == "list" && project.Runner.ExitCode != 0) Console.Error.Write(project.Runner.Output);
+                Console.Error.Write(project.Runner.Error);
+                if (project.Runner.ExitCode != 0) Console.Error.Write(project.Runner.Output);
+            }
         }
         if (Error is { } error) Console.Error.WriteLine(Diagnostics.DiagnosticRenderer.Safe(error.Code + ": " + error.Message));
         return true;

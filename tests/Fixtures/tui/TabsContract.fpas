@@ -1,0 +1,67 @@
+program TabsContract;
+
+uses Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+
+function Update(State: int; Message: int): App.Transition<int, int>;
+begin
+  raise new Sys.InvalidOperationException('Rendering tabs sent an update.');
+end function;
+
+function Panel(Key: string): E.Element<int>;
+begin
+  if Key <> 'first' then
+    raise new Sys.InvalidOperationException('An inactive tab built a panel.');
+  end if;
+
+  return E.Text<int>('First panel');
+end function;
+
+function View(State: int): E.Element<int>;
+begin
+  const Items: array of E.TabItem := if State = 3 then []
+    else [
+      new E.TabItem('disabled', 'Disabled', false),
+      new E.TabItem('first', 'First', State < 2),
+      new E.TabItem('last', 'Last', State < 2)
+    ]
+    end if;
+  return E.Tabs<int>(
+    'tabs', Items, if State = 0 then 'missing' else 'disabled' end if,
+    function(Key: string): int => 1, Panel
+  );
+end function;
+
+begin
+  for State: int := 0 to 3 do
+    using const Session: App.HeadlessSession := App.StartHeadless<int, int>(
+      State,
+      Update,
+      View,
+      24,
+      5
+    );
+    const Frame: App.Frame := Session.Snapshot();
+    if State < 2 then
+      if Frame.Controls.Length <> 1 or Frame.Controls[
+        0
+      ].Value <> 'first' or not Frame.Controls[0].Focused
+        or not Frame.Lines[1].Contains('First panel')
+      then
+        raise new Sys.InvalidOperationException('The first enabled tab did not become active.');
+      end if;
+    elsif State = 2 then
+      if Frame.Controls.Length <> 1 or Frame.Controls[0].Enabled or Frame.Controls[0].Focused
+        or Frame.Controls[0].Value <> ''
+      then
+        raise new Sys.InvalidOperationException('An all-disabled tab bar accepted focus.');
+      end if;
+    else
+      if Frame.Controls.Length <> 0 then
+        raise new Sys.InvalidOperationException('An empty tab set exposed a control.');
+      end if;
+    end if;
+  end for;
+
+  Console.WriteLine('tab fallback contracts verified');
+end;
+end program;

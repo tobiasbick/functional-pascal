@@ -6,7 +6,8 @@ namespace Fpas.Workspaces.Testing;
 
 internal static class TestingPlatformDriver
 {
-    internal static Task<BuildResult> Run(TestProject project, string directory, string? filter, string? settings, TestRunOptions? options, bool list, CancellationToken token)
+    internal static Task<BuildResult> Run(TestProject project, string directory, string? filter, string? settings, TestRunOptions? options,
+        bool list, CancellationToken token, ProcessOutput? liveOutput = null)
     {
         if (options is { AdapterPaths.Count: > 0 } or { Collectors.Count: > 0 })
             throw new ContextFailure("invalid_argument", "--adapter-path and --collect are VSTest options. Pass MTP extension options after --.");
@@ -22,7 +23,7 @@ internal static class TestingPlatformDriver
                 throw new ContextFailure("invalid_argument", "FPAS owns MTP mode, result location and exit status; do not override " + name + ".");
             args.Add(argument);
         }
-        return BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true);
+        return BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true, liveOutput: liveOutput);
     }
 
     internal static async Task<(BuildResult Process, IReadOnlyList<DiscoveredTest> Tests)> Discover(TestProject project, string directory, string? filter,

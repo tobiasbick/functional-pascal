@@ -1,0 +1,72 @@
+program TableContract;
+
+uses Fpas.Tui.Application as App, Fpas.Tui.Elements as E, System as Sys, System.Console as Console;
+
+const Columns: array of E.TableColumn := [
+  new E.TableColumn('A', new E.Flex(Basis := 1, Minimum := 1, Maximum := 1)),
+  new E.TableColumn('B', new E.Flex(Basis := 3, Minimum := 3, Maximum := 3))
+];
+
+function Update(State: bool; Message: int): App.Transition<bool, int>;
+begin
+  raise new Sys.InvalidOperationException('Rendering a table sent an update.');
+end function;
+
+function Message(Key: string): int;
+begin
+  return 1;
+end function;
+
+function View(Empty: bool): E.Element<int>;
+begin
+  const Rows: array of E.TableRow := if Empty then []
+    else [
+      new E.TableRow('one', ['界', 'OK'])
+    ]
+    end if;
+  return E.Table<int>('table', Columns, Rows, 'one', Message, Message);
+end function;
+
+begin
+  using const Narrow: App.HeadlessSession := App.StartHeadless<bool, int>(
+    false,
+    Update,
+    View,
+    9,
+    3
+  );
+  const Frame: App.Frame := Narrow.Snapshot();
+  if Frame.Cells[4].Text <> 'A' or Frame.Cells[6].Text <> 'B'
+    or Frame.Cells[13].Text <> ' ' or Frame.Cells[15].Text <> 'O' or Frame.Cells[16].Text <> 'K'
+  then
+    raise new Sys.InvalidOperationException(
+      'A wide glyph crossed its column or shifted the next column.'
+    );
+  end if;
+
+  using const Empty: App.HeadlessSession := App.StartHeadless<bool, int>(true, Update, View, 9, 3);
+  const Blank: App.Frame := Empty.Snapshot();
+  if Blank.Cells[4].Text <> 'A' or Blank.Controls[0].Enabled or Blank.Controls[0].Focused then
+    raise new Sys.InvalidOperationException('An empty table lost its header or accepted focus.');
+  end if;
+  var Rejected: bool := false;
+  try
+    discard E.Table<int>(
+      'bad',
+      Columns,
+      [new E.TableRow('one', ['Missing cell'])],
+      '',
+      Message,
+      Message
+    );
+  catch Failure: Sys.ArgumentException do
+    Rejected := true;
+  end try;
+
+  if not Rejected then
+    raise new Sys.InvalidOperationException('A row with the wrong number of cells was accepted.');
+  end if;
+
+  Console.WriteLine('table contracts verified');
+end;
+end program;

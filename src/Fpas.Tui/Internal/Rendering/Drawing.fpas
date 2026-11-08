@@ -36,6 +36,38 @@ begin
   end for;
 end procedure;
 
+public function PlaceholderStyle(Field: E.Style; Theme: E.Theme): E.Style;
+begin
+  return if Theme.PlaceholderColor < 0 then Field
+    else new E.Style(Theme.PlaceholderColor, Field.Background)
+    end if;
+end function;
+
+public procedure TextField(
+  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Value: string;
+  Hint: string; Caret: int; Style: E.Style; Theme: E.Theme
+);
+begin
+  const Widgets: E.WidgetStyles? := Theme.Widgets;
+  const Field: E.Style := if Widgets = null then Style else Widgets.Field end if;
+  const Prompt: string := if Widgets = null then '> ' else '› ' end if;
+  if Widgets <> null then
+    Fill(Operations, Clip, Field);
+  end if;
+
+  const Start: int := G.ViewStart(Value, Caret, Area.Width - 2);
+  Operations.Add(new Operation(Prompt + Value.Substring(Start), Area, Clip, Field, false));
+  if Hint <> '' and Area.Width > 2 then
+    const Content: F.Rect := new F.Rect(Area.X + 2, Area.Y, Area.Width - 2, 1);
+    Operations.Add(new Operation(Hint, Content, Clip, PlaceholderStyle(Field, Theme), false));
+  end if;
+end procedure;
+
+public function SelectionStyle(Selected: bool; Style: E.Style; Widgets: E.WidgetStyles?): E.Style;
+begin
+  return if Selected and Widgets <> null then Widgets.Selected else Style end if;
+end function;
+
 public procedure ListRow(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect;
   Caption: string; Selected: bool; Style: E.Style; Widgets: E.WidgetStyles?
@@ -44,25 +76,73 @@ begin
   const Prefix: string := if Selected then if Widgets = null then '* ' else '▸ ' end if
     else '  '
     end if;
-  var Color: E.Style := Style;
+  const Color: E.Style := SelectionStyle(Selected, Style, Widgets);
   if Selected and Widgets <> null then
-    Color := Widgets.Selected;
     Fill(Operations, F.Intersect(Area, Clip), Color);
   end if;
 
   Operations.Add(new Operation(Prefix + Caption, Area, Clip, Color, false));
 end procedure;
 
+function BorderStyle(Style: E.Style; Widgets: E.WidgetStyles?): E.Style;
+begin
+  return if Widgets = null then Style
+    else new E.Style(
+      Widgets.BorderColor,
+      Style.Background
+    )
+    end if;
+end function;
+
+function HorizontalEdge(Widgets: E.WidgetStyles?): char;
+begin
+  return if Widgets = null then #45 else #9472 end if;
+end function;
+
+public procedure Divider(
+  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
+  Style: E.Style; Widgets: E.WidgetStyles?
+);
+begin
+  const Width: int := Clip.X + Clip.Width - Area.X;
+  const Edge: char := HorizontalEdge(Widgets);
+  var Caption: string := '';
+  if Title <> '' and Width > 4 then
+    const Normalized: string := G.SingleLine(Title);
+    Caption := Normalized.Substring(0, G.IndexAt(Normalized, 0, Width - 4));
+  end if;
+
+  const Prefix: string := if Caption = '' then ''
+    else new string(
+      Edge,
+      1
+    ) + ' ' + Caption + ' '
+    end if;
+  const Length: int := if Prefix = '' then 0 else G.Measure(Prefix) end if;
+  const Line: F.Rect := new F.Rect(Area.X, Area.Y, Width, 1);
+  Operations.Add(
+    new Operation(
+      Prefix + new string(Edge, Width - Length),
+      Line,
+      Clip,
+      BorderStyle(Style, Widgets),
+      false
+    )
+  );
+end procedure;
+
 public procedure Border(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
-  Style: E.Style; Rounded: bool
+  Style: E.Style; Widgets: E.WidgetStyles?
 );
   procedure Line(Value: string; Column: int; Row: int; Width: int);
   begin
-    Operations.Add(new Operation(Value, new F.Rect(Column, Row, Width, 1), Clip, Style, false));
+    Operations.Add(new Operation(Value, new F.Rect(Column, Row, Width, 1), Clip, Color, false));
   end procedure;
 begin
-  const Edge: char := if Rounded then #9472 else #45 end if;
+  const Color: E.Style := BorderStyle(Style, Widgets);
+  const Rounded: bool := Widgets <> null;
+  const Edge: char := HorizontalEdge(Widgets);
   const Vertical: string := if Rounded then '│' else '|' end if;
   const Inner: int := Sys.Math.Max(0, Area.Width - 2);
   const Span: string := new string(Edge, Inner);
@@ -178,7 +258,7 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
     while Y <= TargetRow and Y < Item.Area.Y + Item.Area.Height and Glyphs.MoveNext() do
       const Glyph: string := Glyphs.GetTextElement();
       const Span: int := G.Width(Glyph);
-      const LineBreak: bool := Glyph[0] = #10 or Glyph[0] = #13;
+      const LineBreak: bool := G.LineBreak(Glyph);
       if LineBreak or X + Span > Item.Area.X + Item.Area.Width then
         if not Item.Wrap then
           break;

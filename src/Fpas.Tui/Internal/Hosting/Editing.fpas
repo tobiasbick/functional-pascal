@@ -7,6 +7,11 @@ public type Selection = record
   public Anchor: int;
 end record;
 
+public type Change = record
+  public Text: string;
+  public Caret: int;
+end record;
+
 public function Previous(Value: string; Index: int): int;
 begin
   var Boundary: int := 0;
@@ -43,5 +48,30 @@ begin
   end if;
 
   return Previous(Value, Index + 1);
+end function;
+
+public function Replace(Value: string; Range: Selection; Insert: string): Change;
+begin
+  const First: int := Sys.Math.Min(Range.Caret, Range.Anchor);
+  const Last: int := Sys.Math.Max(Range.Caret, Range.Anchor);
+  return new Change(
+    Value.Substring(0, First) + Insert + Value.Substring(Last),
+    First + Insert.Length
+  );
+end function;
+
+public function Delete(Value: string; Range: Selection; Backward: bool): Change;
+begin
+  if Range.Caret <> Range.Anchor then
+    return Replace(Value, Range, '');
+  end if;
+
+  const Other: int := if Backward then Previous(
+      Value,
+      Range.Caret
+    )
+    else Next(Value, Range.Caret)
+    end if;
+  return Replace(Value, new Selection(Range.Caret, Other), '');
 end function;
 end unit;

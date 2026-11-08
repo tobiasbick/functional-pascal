@@ -42,7 +42,8 @@ public sealed class ConsoleTerminal : IDisposable
             Check(DuplicateHandle(process, outputHandle, process, out var modeHandle, 0, false, 2));
             try
             {
-                Check(SetConsoleMode(inputHandle, (previousInputMode & ~0x247u) | 0x98u));
+                // Preserve bracketed paste framing when reading input records from ConPTY.
+                Check(SetConsoleMode(inputHandle, (previousInputMode & ~0x47u) | 0x298u));
                 if (!SetConsoleMode(outputHandle, previousOutputMode | 7))
                 {
                     var failure = Marshal.GetLastPInvokeError();
@@ -174,7 +175,7 @@ public sealed class ConsoleTerminal : IDisposable
         var text = highSurrogate != 0 && char.IsLowSurrogate(record.Character)
             ? new string([highSurrogate, record.Character]) : record.Character.ToString();
         highSurrogate = (char)0;
-        if (record.Character == 27 || decoder.HasPending && record.Character != 0)
+        if (record.Character != 0 && (record.VirtualKey == 0 || record.Character == 27 || decoder.HasPending))
         {
             decoder.Append(Encoding.UTF8.GetBytes(text));
             return decoder.Take(false);

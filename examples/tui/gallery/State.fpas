@@ -1,7 +1,7 @@
 unit Gallery.State;
 
 uses
-  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
+  Fpas.Tui.Application as App, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes, Fpas.Tui.Editors as Editors,
   System as Sys;
 
 public type Page = enum: byte
@@ -14,6 +14,9 @@ public type Page = enum: byte
   Scrolling;
   Canvas;
   Overlay;
+  Tabs;
+  Table;
+  Multiline;
 end enum;
 
 public type Preset = enum: byte
@@ -21,9 +24,31 @@ public type Preset = enum: byte
   Dark;
   Green;
   Blue;
+  /// The built-in dark amber palette.
+  Amber;
 end enum;
 
 public const Pages: array of Page := Sys.Enum.GetValues<Page>();
+
+public type DocumentKind = enum: byte
+  Notes;
+  Draft;
+end enum;
+
+public type Document = record
+  public Text: string;
+  public Position: Editors.EditorPosition := new Editors.EditorPosition();
+  public Dirty: bool := false;
+end record;
+
+const NoteLines: array of string := [
+  'Field notes', '', '01 · Arrival', '02 · North path', '03 · Birch grove', '04 · Creek',
+  '05 · Bridge', '06 · Old mill', '07 · Ridge', '08 · Lookout', '09 · Camp', '10 · Dusk',
+  '11 · Map', '12 · Waypoints', '13 · Supplies', '14 · Weather', '15 · Return', '16 · Review',
+  'End of notes'
+];
+
+const Notes: string := Sys.String.Join(new string(#10, 1), NoteLines);
 
 public type Model = record
   public Active: Page := Page.Buttons;
@@ -38,9 +63,18 @@ public type Model = record
   public LogCount: int := 9;
   public LogPosition: E.ScrollPosition := E.ScrollPosition.End;
   public Overlay: bool := false;
+  public OverlayPosition: E.ScrollPosition := E.ScrollPosition.Offset(0);
+  public ActiveTab: string := 'general';
+  public TabName: string := 'Gallery';
+  public PreviewColors: bool := true;
+  public TableSelection: string := 'alder';
+  public TableOpened: string := '';
   public Columns: int := 0;
   public Rows: int := 0;
   public Pointer: string := 'Try the mouse here.';
+  public ActiveDocument: DocumentKind := DocumentKind.Notes;
+  public Notebook: Document := new Document(Notes);
+  public Draft: Document := new Document('Draft idea');
 end record;
 
 public type Msg = union
@@ -48,6 +82,7 @@ public type Msg = union
   MovePage(Direction: int);
   ChangeTheme(Value: Preset);
   Press;
+  ResetPresses;
   Check(Value: bool);
   Edit(Value: string);
   Choose(Value: string);
@@ -60,6 +95,15 @@ public type Msg = union
   ResizeCanvas(Columns: int; Rows: int);
   CanvasEvent(Value: string);
   SetOverlay(Open: bool);
+  ScrollOverlay(Position: E.ScrollPosition);
+  ChooseTab(Key: string);
+  EditTabName(Value: string);
+  ToggleTabColors(Value: bool);
+  SelectWorld(Key: string);
+  OpenWorld(Key: string);
+  ChooseDocument(Kind: DocumentKind);
+  EditDocument(Change: Editors.TextEdit);
+  NavigateDocument(Position: Editors.EditorPosition);
   Quit;
 end union;
 
@@ -76,6 +120,8 @@ begin
       return 'Scroll view';
     when Page.Canvas:
       return 'Cell canvas';
+    when Page.Multiline:
+      return 'Multiline editor';
     else
       return Value.ToString();
   end case;
@@ -90,6 +136,8 @@ begin
       return Themes.Green();
     when Preset.Blue:
       return Themes.Blue();
+    when Preset.Amber:
+      return Themes.Amber();
     else
       return Themes.Dark();
   end case;
@@ -103,6 +151,24 @@ end function;
 function Adjacent(Value: Page; Direction: int): Page;
 begin
   return Pages[(cast<int>(Value) + Direction + Pages.Length) mod Pages.Length];
+end function;
+
+public function CurrentDocument(State: Model): Document;
+begin
+  return if State.ActiveDocument = DocumentKind.Notes then State.Notebook else State.Draft end if;
+end function;
+
+function StoreDocument(State: Model; Value: Document): Model;
+begin
+  if State.ActiveDocument = DocumentKind.Notes then
+    return State with
+      Notebook := Value;
+    end with;
+  end if;
+
+  return State with
+    Draft := Value;
+  end with;
 end function;
 
 public function Update(State: Model; Message: Msg): App.Transition<Model, Msg>;
@@ -119,6 +185,9 @@ begin
     end with;
     when Msg.Press: State with
       Presses := State.Presses + 1;
+    end with;
+    when Msg.ResetPresses: State with
+      Presses := 0;
     end with;
     when Msg.Check(const Value: bool): State with
       Checked := Value;
@@ -156,12 +225,53 @@ begin
     end with;
     when Msg.SetOverlay(const Open: bool): State with
       Overlay := Open;
+      OverlayPosition := E.ScrollPosition.Offset(0);
     end with;
+    when Msg.ScrollOverlay(const Position: E.ScrollPosition): State with
+      OverlayPosition := Position;
+    end with;
+    when Msg.ChooseTab(const Key: string): if State.Active = Page.Tabs then State with
+        ActiveTab := Key;
+      end with
+      else State
+      end if;
+    when Msg.EditTabName(const Value: string): State with
+      TabName := Value;
+    end with;
+    when Msg.ToggleTabColors(const Value: bool): State with
+      PreviewColors := Value;
+    end with;
+    when Msg.SelectWorld(const Key: string): State with
+      TableSelection := Key;
+    end with;
+    when Msg.OpenWorld(const Key: string): State with
+      TableOpened := Key;
+    end with;
+    when Msg.ChooseDocument(const Kind: DocumentKind): State with
+      ActiveDocument := Kind;
+    end with;
+    when Msg.EditDocument(const Change: Editors.TextEdit): StoreDocument(
+      State, new Document(Change.Text, Change.Position, true)
+    );
+    when Msg.NavigateDocument(const Position: Editors.EditorPosition): StoreDocument(
+      State, CurrentDocument(State) with
+        Position := Position;
+      end with
+    );
     when Msg.Quit: State;
   end case;
   const Commands: array of App.Command<Msg> := case Message of
     when Msg.Quit: [App.Exit<Msg>()];
-    else [];
+    when Msg.ChooseDocument(_): [App.Focus<Msg>('document-editor')];
+    else if Next.Active = Page.Multiline and Next.Active <> State.Active then [
+        App.Focus<Msg>('document-editor')
+      ]
+      else if Next.Active = Page.TextInput and Next.Active <> State.Active then [
+          App.Focus<Msg>('text-entry')
+        ]
+        else []
+        end if
+      end if;
   end case;
   return new App.Transition<Model, Msg>(Next, Commands);
 end function;

@@ -14,7 +14,8 @@ public static class PublishDirectory
 {
     private const string Manifest = ".fpas-publish.json";
 
-    public static async Task<PublishResult> Publish(ProjectOutput project, PublishOptions options, string destination, CancellationToken token, string? context = null)
+    public static async Task<PublishResult> Publish(ProjectOutput project, PublishOptions options, string destination, CancellationToken token,
+        string? context = null, ProcessOutput? liveOutput = null)
     {
         options.Validate(); destination = Path.GetFullPath(destination);
         await Check(destination, token);
@@ -34,7 +35,7 @@ public static class PublishDirectory
                     arguments.AddRange(["-p:BuildingSolutionFile=true", "-p:SolutionDir=" + MsBuildSyntax.Escape(scope.Directory!),
                         "-p:CurrentSolutionConfigurationContents=" + MsBuildSyntax.Escape(scope.ConfigurationXml)]);
             }
-            var built = await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, arguments, token);
+            var built = await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, arguments, token, liveOutput: liveOutput);
             if (built.ExitCode != 0 || built.Truncated) return new(built, []);
             foreach (var secret in new[] { options.Certificate, options.KeyFile }.OfType<string>())
             {

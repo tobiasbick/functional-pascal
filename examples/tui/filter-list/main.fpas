@@ -10,6 +10,7 @@ type Preset = enum: byte
   Dark;
   Green;
   Blue;
+  Amber;
 end enum;
 
 type Msg = union
@@ -17,6 +18,7 @@ type Msg = union
   SelectItem(Id: string);
   OpenOptions;
   CloseOptions;
+  ScrollOptions(Position: E.ScrollPosition);
   ShowHidden(Value: bool);
   ChangeTheme(Value: Preset);
   ResetOptions;
@@ -37,6 +39,7 @@ type Model = record
   public Selected: string := '';
   public ShowHidden: bool := false;
   public Options: bool := false;
+  public OptionsPosition: E.ScrollPosition := E.ScrollPosition.Offset(0);
   public Appearance: Preset := Preset.Dark;
   public Progress: int := 0;
   public Refreshing: bool := false;
@@ -54,6 +57,8 @@ begin
       return Themes.Green();
     when Preset.Blue:
       return Themes.Blue();
+    when Preset.Amber:
+      return Themes.Amber();
     else
       return Themes.Dark();
   end case;
@@ -88,10 +93,15 @@ begin
     when Msg.OpenOptions:
       Next := State with
         Options := true;
+        OptionsPosition := E.ScrollPosition.Offset(0);
       end with;
     when Msg.CloseOptions:
       Next := State with
         Options := false;
+      end with;
+    when Msg.ScrollOptions(const Position: E.ScrollPosition):
+      Next := State with
+        OptionsPosition := Position;
       end with;
     when Msg.ShowHidden(const Value: bool):
       Next := State with
@@ -161,13 +171,6 @@ begin
     end if;
 end function;
 
-function Action(Colors: Themes.Palette; Id: string; Text: string; Message: Msg; Primary: bool := false): E.Element<Msg>;
-begin
-  return E.Styled<Msg>(
-    E.Button<Msg>(Id, Text, Message), if Primary then Colors.Primary else Colors.Secondary end if
-  );
-end function;
-
 function Status(State: Model; Colors: Themes.Palette): E.Element<Msg>;
 begin
   if State.Failure <> '' then
@@ -187,53 +190,62 @@ begin
   );
 end function;
 
-function ThemeChoice(Colors: Themes.Palette; Value: Preset; Selected: Preset): E.Element<Msg>;
+function ThemeChoice(Value: Preset; Selected: Preset): E.Element<Msg>;
 begin
   const Name: string := Value.ToString();
-  return Action(
-    Colors,
+  return E.Button<Msg>(
     'theme-' + Name.ToLowerInvariant(),
     Name,
     Msg.ChangeTheme(Value),
-    Value = Selected
+    Variant := if Value = Selected then E.ButtonVariant.Active else E.ButtonVariant.Secondary end if
   );
+end function;
+
+function OptionsScrolled(Change: E.ScrollChange): Msg;
+begin
+  return Msg.ScrollOptions(Change.Position);
 end function;
 
 function Options(State: Model; Colors: Themes.Palette): E.Element<Msg>;
 begin
+  const Settings: E.Element<Msg> := E.Column<Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<Msg>('Choose which entries appear in the results.'),
+    E.Styled<Msg>(
+      E.Checkbox<Msg>(
+        'show-hidden', 'Show hidden', State.ShowHidden,
+        function(Value: bool): Msg => Msg.ShowHidden(Value)
+      ), Colors.Secondary
+    ),
+    E.Column<Msg>(
+      E.Text<Msg>('Theme · ' + State.Appearance.ToString()),
+      E.Row<Msg>(
+        new E.Flow(Gap := 1), ThemeChoice(Preset.Light, State.Appearance),
+        ThemeChoice(Preset.Dark, State.Appearance), ThemeChoice(Preset.Green, State.Appearance)
+      ),
+      E.Row<Msg>(
+        new E.Flow(Gap := 1), ThemeChoice(Preset.Blue, State.Appearance),
+        ThemeChoice(Preset.Amber, State.Appearance)
+      )
+    ),
+    E.Text<Msg>('')
+  );
+  const Body: E.Element<Msg> := E.ScrollView<Msg>(
+    'options-body', Settings, State.OptionsPosition, OptionsScrolled
+  );
+  const Footer: E.Element<Msg> := E.Row<Msg>(
+    new E.Flow(Gap := 1),
+    E.Size<Msg>(E.Text<Msg>(''), new E.Flex(Grow := 1)),
+    E.Button<Msg>('reset', 'Ctrl+R Reset', Msg.ResetOptions, Variant := E.ButtonVariant.Secondary),
+    E.Button<Msg>('close', 'Esc Done', Msg.CloseOptions, Variant := E.ButtonVariant.Primary)
+  );
   const Content: E.Element<Msg> := E.Styled<Msg>(
-    E.Border<Msg>(
-      E.Column<Msg>(
-        new E.Flow(Gap := 1, Padding := 1),
-        E.Text<Msg>('Choose which entries appear in the results.'),
-        E.Styled<Msg>(
-          E.Checkbox<Msg>(
-            'show-hidden',
-            'Show hidden',
-            State.ShowHidden,
-            function(Value: bool): Msg => Msg.ShowHidden(Value)
-          ), Colors.Secondary
-        ),
-        E.Row<Msg>(
-          new E.Flow(Gap := 1),
-          E.Text<Msg>('Theme · ' + State.Appearance.ToString()),
-          ThemeChoice(Colors, Preset.Light, State.Appearance),
-          ThemeChoice(Colors, Preset.Dark, State.Appearance),
-          ThemeChoice(Colors, Preset.Green, State.Appearance),
-          ThemeChoice(Colors, Preset.Blue, State.Appearance)
-        ),
-        E.Row<Msg>(
-          new E.Flow(Gap := 1),
-          E.Size<Msg>(E.Text<Msg>(''), new E.Flex(Grow := 1)),
-          Action(Colors, 'reset', 'Ctrl+R Reset', Msg.ResetOptions),
-          Action(Colors, 'close', 'Esc Done', Msg.CloseOptions, true)
-        )
-      ), 'Options'
-    ), Colors.Panel
+    E.OverlayPanel<Msg>(Body, Footer, 'Options', Padding := 1), Colors.Panel
   );
   return E.Overlay<Msg>(
     'options-overlay', true, 'show-hidden', Msg.CloseOptions, Content,
-    [E.Shortcut<Msg>(E.Key.R, E.KeyModifiers.Ctrl, Msg.ResetOptions)]
+    [E.Shortcut<Msg>(E.Key.R, E.KeyModifiers.Ctrl, Msg.ResetOptions)],
+    new E.OverlayLimits(MaxWidthPercent := 95, MaxHeightPercent := 90)
   );
 end function;
 
@@ -259,9 +271,14 @@ begin
     )
     else E.Row<Msg>(
       new E.Flow(Gap := 1),
-      Action(Colors, 'options', 'Ctrl+O Options', Msg.OpenOptions),
-      Action(Colors, 'refresh', 'Ctrl+R Refresh', Msg.Refresh, true),
-      Action(Colors, 'quit', 'Ctrl+Q Quit', Msg.Quit)
+      E.Button<Msg>(
+        'options',
+        'Ctrl+O Options',
+        Msg.OpenOptions,
+        Variant := E.ButtonVariant.Secondary
+      ),
+      E.Button<Msg>('refresh', 'Ctrl+R Refresh', Msg.Refresh, Variant := E.ButtonVariant.Primary),
+      E.Button<Msg>('quit', 'Ctrl+Q Quit', Msg.Quit, Variant := E.ButtonVariant.Secondary)
     )
     end if;
   const Body: E.Element<Msg> := E.Column<Msg>(
@@ -280,7 +297,8 @@ begin
         E.TextInput<Msg>(
           'filter',
           State.Filter,
-          function(Value: string): Msg => Msg.FilterChanged(Value)
+          function(Value: string): Msg => Msg.FilterChanged(Value),
+          Placeholder := 'Filter by name…'
         ),
         new E.Flex(Grow := 1)
       )
@@ -299,8 +317,10 @@ begin
   );
 
   const Layers: array of E.Element<Msg> := if State.Options then [
-    Options(State, Colors)
-  ] else [] end if;
+      Options(State, Colors)
+    ]
+    else []
+    end if;
   return E.Screen<Msg>(
     Body, Layers, [
       E.Shortcut<Msg>(E.Key.O, E.KeyModifiers.Ctrl, Msg.OpenOptions),
@@ -323,6 +343,8 @@ end function;
 
 procedure CheckPalette(Session: App.HeadlessSession; Control: string; Expected: Themes.Palette);
 begin
+  discard Session.Send(App.Input.Focus(Control));
+  discard Session.Step();
   discard Session.Send(App.Input.Activate(Control));
   discard Session.Step();
   const Frame: App.Frame := Session.Snapshot();
@@ -358,7 +380,7 @@ begin
   discard Session.Step();
   discard Session.Send(App.Input.Activate('items/Birch'));
   discard Session.Step();
-  discard Session.Send(App.Input.Activate('filter'));
+  discard Session.Send(App.Input.Focus('filter'));
   discard Session.Step();
   const Selected: App.Frame := Session.Snapshot();
   const Birch: App.ControlSnapshot := RequireControl(Selected, 'items/Birch');
@@ -371,12 +393,15 @@ begin
     );
   end if;
 
+  discard Session.Send(App.Input.Focus('options'));
+  discard Session.Step();
   discard Session.Send(App.Input.Activate('options'));
   discard Session.Step();
   discard RequireControl(Session.Snapshot(), 'show-hidden', true);
   CheckPalette(Session, 'theme-light', Themes.Light());
   CheckPalette(Session, 'theme-green', Themes.Green());
   CheckPalette(Session, 'theme-blue', Themes.Blue());
+  CheckPalette(Session, 'theme-amber', Themes.Amber());
   CheckPalette(Session, 'theme-dark', Themes.Dark());
   discard Session.Send(App.Input.KeyPress(E.Key.Escape, E.KeyModifiers.None));
   discard Session.Step();

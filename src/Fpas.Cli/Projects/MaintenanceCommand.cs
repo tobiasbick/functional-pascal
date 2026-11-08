@@ -1,4 +1,5 @@
 using Fpas.Cli.Analysis;
+using Fpas.Cli.Reporting;
 using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Projects;
 using System.CommandLine;
@@ -38,11 +39,13 @@ internal sealed class MaintenanceCommand
             input = ProjectDriver.ValidateContext(result.GetValue(context)!);
             var config = result.GetValue(configuration)!;
             if (string.IsNullOrWhiteSpace(config)) throw new ArgumentException("Configuration must not be empty.");
+            var liveOutput = ProjectProgress.BuildOutput(Json(result), Command.Name == "restore" ? "Restoring" : "Cleaning", input);
             var built = await BuildProcess.Run(Path.GetDirectoryName(input)!, [Command.Name, input, "--disable-build-servers", "-nr:false",
-                "-p:UseSharedCompilation=false", "-p:Configuration=" + MsBuildSyntax.Escape(config), "--verbosity", "minimal"], linked.Token);
+                "-p:UseSharedCompilation=false", "-p:Configuration=" + MsBuildSyntax.Escape(config), "--verbosity", "minimal"], linked.Token,
+                liveOutput: liveOutput);
             var success = built.ExitCode == 0 && !built.Truncated;
             new ProjectReport(Command.Name, success, success ? "ok" : "failed", input) { Build = built,
-                Error = success ? null : new(built.Truncated ? "output_limit" : Command.Name + "_failed", "Inspect the captured SDK output.") }.Write(Json(result));
+                Error = success ? null : new(built.Truncated ? "output_limit" : Command.Name + "_failed", "Inspect the SDK output.") }.Write(Json(result));
             return success ? 0 : 1;
         }
         catch (OperationCanceledException)

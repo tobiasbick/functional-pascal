@@ -13,6 +13,7 @@ public type Command<TMsg> = union
     OnFailure: function(Sys.Exception): TMsg
   );
   Cancel(Id: string);
+  Focus(Id: string);
 end union;
 
 public type Transition<TModel, TMsg> = record
@@ -20,7 +21,14 @@ public type Transition<TModel, TMsg> = record
   public Commands: array of Command<TMsg>;
 end record;
 
+/// The current terminal size in cells, before layout.
+public type Viewport = record
+  public Columns: int;
+  public Rows: int;
+end record;
+
 public type Input = union
+  Focus(Id: string);
   Activate(Id: string);
   Resize(Columns: int; Rows: int);
   KeyPress(Key: E.Key; Modifiers: E.KeyModifiers);
@@ -137,6 +145,12 @@ begin
   return Command<TMsg>.EndSession;
 end function;
 
+/// Requests focus in the view produced by the current update.
+public function Focus<TMsg>(Id: string): Command<TMsg>;
+begin
+  return Command<TMsg>.Focus(Id);
+end function;
+
 /// Describes a cancellable background run which posts typed messages to the host.
 public function StartBackground<TMsg>(
   Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
@@ -178,6 +192,38 @@ end function;
 public function StartHeadless<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
   View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): E.Theme
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(
+    InitialModel, Update,
+    function(State: TModel; Size: Viewport): E.Element<TMsg> => View(State),
+    Columns, Rows, ThemeFor
+  );
+end function;
+
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel, Viewport): E.Element<TMsg>; Columns: int; Rows: int
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new E.Theme());
+end function;
+
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel, Viewport): E.Element<TMsg>; Columns: int; Rows: int; Theme: E.Theme
+): HeadlessSession;
+begin
+  return StartHeadless<TModel, TMsg>(
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): E.Theme => Theme
+  );
+end function;
+
+/// Gives the view the initial dimensions and the dimensions of each processed resize.
+public function StartHeadless<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel, Viewport): E.Element<TMsg>; Columns: int; Rows: int;
+  ThemeFor: function(TModel): E.Theme
 ): HeadlessSession;
   procedure Present(Value: Frame);
   begin
@@ -223,6 +269,34 @@ end procedure;
 public procedure Run<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
   View: function(TModel): E.Element<TMsg>; ThemeFor: function(TModel): E.Theme
+);
+begin
+  Run<TModel, TMsg>(
+    InitialModel, Update, function(State: TModel; Size: Viewport): E.Element<TMsg> => View(State),
+    ThemeFor
+  );
+end procedure;
+
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel, Viewport): E.Element<TMsg>
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, new E.Theme());
+end procedure;
+
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel, Viewport): E.Element<TMsg>; Theme: E.Theme
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): E.Theme => Theme);
+end procedure;
+
+/// Gives the view the terminal dimensions before laying out each frame.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Transition<TModel, TMsg>;
+  View: function(TModel, Viewport): E.Element<TMsg>; ThemeFor: function(TModel): E.Theme
 );
   procedure Present(Value: Frame);
   begin

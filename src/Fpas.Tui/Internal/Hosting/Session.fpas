@@ -2,7 +2,7 @@ unit Fpas.Tui.Internal.Hosting.Session;
 
 uses
   Fpas.Tui.Application as App, Fpas.Tui.Elements as E,
-  Fpas.Tui.Internal.Layout.Arrangement as A, Fpas.Tui.Internal.Layout.Equivalence as Q,
+  Fpas.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Tui.Internal.Layout.Scene as A, Fpas.Tui.Internal.Layout.Equivalence as Q,
   Fpas.Tui.Internal.Hosting.Interaction as I, Fpas.Tui.Internal.Hosting.Effects as Fx,
   Fpas.Tui.Internal.Hosting.Viewports as V,
   Fpas.Tui.Internal.Rendering.Decoration as D, Fpas.Tui.Internal.Terminal.Inputs as Inputs,
@@ -26,7 +26,8 @@ end procedure;
 
 public function Start<TModel, TMsg>(
   InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
-  View: function(TModel): E.Element<TMsg>; Columns: int; Rows: int; Present: procedure(App.Frame); Manual: bool;
+  View: function(TModel, App.Viewport): E.Element<TMsg>; Columns: int; Rows: int;
+  Present: procedure(App.Frame); Manual: bool;
   ThemeFor: function(TModel): E.Theme
 ): App.HeadlessSession;
   function IsOpen(): bool;
@@ -243,6 +244,8 @@ public function Start<TModel, TMsg>(
           break;
         when App.Command.Cancel(const Id: string):
           Effects.Cancel(Id);
+        when App.Command.Focus(const Id: string):
+          PendingFocus := Id;
         when App.Command.Start(
           const Id: string,
           const Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
@@ -257,10 +260,10 @@ public function Start<TModel, TMsg>(
     function Arrange(Theme: E.Theme; Previous: A.Layout<TMsg>?; Routing: I.State<TMsg>): A.Layout<TMsg>;
     begin
       Phase := 'view';
-      const Root: E.Element<TMsg> := View(Model);
+      const Root: E.Element<TMsg> := View(Model, Viewport);
       Phase := 'layout_or_drawing';
-      return A.Arrange<TMsg>(
-        Root, Width, Height, Previous, ScrollOffsets, Theme,
+      return Arrangement.Arrange<TMsg>(
+        Root, Viewport.Columns, Viewport.Rows, Previous, ScrollOffsets, Theme,
         function(Id: string; Value: string): int => Routing.Selection(Id, Value).Caret
       );
     end function;
@@ -270,7 +273,6 @@ public function Start<TModel, TMsg>(
       raise new Sys.InvalidOperationException('Missing interaction state.');
     end if;
 
-    Phase := 'view';
     Phase := 'view';
     var Theme: E.Theme := ThemeFor(Model);
     var Layout: A.Layout<TMsg> := Arrange(Theme, Current, Routing);
@@ -300,35 +302,21 @@ public function Start<TModel, TMsg>(
     end for;
 
     Phase := 'layout_or_drawing';
-    Routing.Reconcile(Layout);
+    Routing.Reconcile(Layout, Current);
+    const Target: string? := PendingFocus;
+    PendingFocus := null;
+    if Target <> null then
+      Routing.SetFocus(Layout, Target);
+    end if;
     const Focus: string := Routing.FocusId();
     const Hover: string := Routing.HoverId();
-    const Scope: string := Routing.ScopeId();
-    const Controls: Generic.List<App.ControlSnapshot> := new Generic.List<App.ControlSnapshot>();
-    for Control: A.Control<TMsg> in Layout.Controls do
-      Controls.Add(
-        new App.ControlSnapshot(
-          Control.Id,
-          Control.Label,
-          Control.Role,
-          Control.Value,
-          Control.Bounds.X,
-          Control.Bounds.Y,
-          Control.Bounds.Width,
-          Control.Bounds.Height,
-          Control.Id = Focus,
-          Control.Id =
-          Hover,
-          Control.Enabled and Control.Scope = Scope
-        )
-      );
-      if Control.Id = Focus or Control.Id = Hover then
-        D.Apply<TMsg>(Layout.Cells, Width, Control, Theme, Control.Id = Focus, Routing.Selection);
-      end if;
-    end for;
+    const Controls: array of App.ControlSnapshot := D.Capture<TMsg>(
+      Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId(), Routing.Selection
+    );
     const Prior: App.Frame? := Published;
     const Before: A.Layout<TMsg>? := Current;
-    if Prior <> null and Before <> null and Prior.Columns = Width and Prior.Rows = Height
+    if Prior <> null and Before <> null and Prior.Columns = Viewport.Columns and Prior.Rows =
+      Viewport.Rows
       and LastFocus = Focus and LastHover = Hover
       and Q.Equivalent<TMsg>(Before, Layout)
     then
@@ -337,11 +325,11 @@ public function Start<TModel, TMsg>(
     end if;
     const Value: App.Frame := new App.Frame(
       FrameId + 1L,
-      Width,
-      Height,
+      Viewport.Columns,
+      Viewport.Rows,
       Layout.Lines,
       Layout.Cells,
-      Controls.ToArray()
+      Controls
     );
     Phase := 'presentation';
     Present(Value);
@@ -372,8 +360,7 @@ public function Start<TModel, TMsg>(
 
     case Event of
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
-        Width := NewColumns;
-        Height := NewRows;
+        Viewport := new App.Viewport(NewColumns, NewRows);
       else
         I.Dispatch<TMsg>(Routing, Layout, Event);
     end case;
@@ -465,8 +452,8 @@ begin
   const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
   var Model: TModel := InitialModel;
-  var Width: int := Columns;
-  var Height: int := Rows;
+  var PendingFocus: string? := null;
+  var Viewport: App.Viewport := new App.Viewport(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;
   var Published: App.Frame? := null;
   var FrameId: long := 0L;

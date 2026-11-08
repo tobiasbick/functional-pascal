@@ -1,4 +1,5 @@
 using Fpas.Cli.Analysis;
+using Fpas.Cli.Reporting;
 using Fpas.Processes;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Processes;
@@ -110,13 +111,19 @@ internal sealed class ExecutionCommand
             else
             {
                 ProjectDriver.ValidateContext(buildContext);
-                if (run) target = await ProjectDriver.SelectExecutableAsync(buildContext, selectedConfiguration, selectedProject, combined.Token);
+                if (run)
+                {
+                    if (!skipBuild) ProjectProgress.Phase(json, "Resolving", context);
+                    target = await ProjectDriver.SelectExecutableAsync(buildContext, selectedConfiguration, selectedProject, combined.Token);
+                }
                 if (!skipBuild)
                 {
-                    built = await ProjectDriver.BuildAsync(buildContext, selectedConfiguration, result.GetValue(noRestore), combined.Token, captureDiagnostics: json);
+                    var liveOutput = ProjectProgress.BuildOutput(json, "Building", context);
+                    built = await ProjectDriver.BuildAsync(buildContext, selectedConfiguration, result.GetValue(noRestore), combined.Token,
+                        captureDiagnostics: json, liveOutput: liveOutput);
                     if (built.ExitCode != 0 || built.Truncated)
                     {
-                        Failure(context, built.Truncated ? "output_limit" : "build_failed", "Build failed or exceeded its captured output limit.", built: built).Write(json); return 1;
+                        Failure(context, built.Truncated ? "output_limit" : "build_failed", "Build failed or exceeded its output limit.", built: built).Write(json); return 1;
                     }
                 }
                 if (run && !skipBuild) target = await ProjectDriver.DescribeAsync(buildContext, selectedConfiguration, target!.Project, combined.Token);
@@ -136,7 +143,7 @@ internal sealed class ExecutionCommand
             }
             else
             {
-                if (built is not null) { Console.Error.Write(built.Output); Console.Error.Write(built.Error); built = null; }
+                if (built is not null) ProjectProgress.Phase(json, "Running", target.Assembly);
                 await using var process = OwnedProcess.Start(BuildProcess.DotnetHost(), programArguments, cwd, stdio: ProcessStdio.Inherit);
                 await process.WaitForExit(combined.Token);
                 executed = new(process.ExitCode, "", "", false);

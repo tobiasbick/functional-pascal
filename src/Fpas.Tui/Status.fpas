@@ -1,0 +1,49 @@
+unit Fpas.Tui.Status;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Rendering.Glyphs as G,
+  System.Collections.Generic as Generic;
+
+/// Creates a single-row status line. Put the most important hints first.
+public function Line<TMsg>(Message: string; params Hints: array of string): E.Element<TMsg>;
+begin
+  const Items: Generic.List<string> := new Generic.List<string>(Hints.Length);
+  for Hint: string in Hints do
+    const Text: string := G.SingleLine(Hint).Trim();
+    if Text <> '' then
+      Items.Add(Text);
+    end if;
+  end for;
+
+  return E.Element<TMsg>.StatusLine(G.SingleLine(Message), Items.ToArray());
+end function;
+
+function Caption(Gesture: string; Label: string): string;
+begin
+  return if Label = '' then Gesture else Gesture + ' ' + Label end if;
+end function;
+
+/// Formats a hint for a key handled by the host or a focused widget.
+public function Hint(Key: E.Key; Modifiers: E.KeyModifiers; Label: string): string;
+begin
+  const Flags: int := cast<int>(Modifiers);
+  const Ctrl: string := if (Flags and cast<int>(E.KeyModifiers.Ctrl)) <> 0 then 'Ctrl+'
+    else ''
+    end if;
+  const Alt: string := if (Flags and cast<int>(E.KeyModifiers.Alt)) <> 0 then 'Alt+' else '' end if;
+  const Shift: string := if (Flags and cast<int>(E.KeyModifiers.Shift)) <> 0 then 'Shift+'
+    else ''
+    end if;
+  return Caption(Ctrl + Alt + Shift + Key.ToString(), Label);
+end function;
+
+/// Formats a hint from the binding also passed to Screen or Overlay.
+public function Hint<TMsg>(Binding: E.ShortcutBinding<TMsg>; Label: string): string;
+begin
+  if Binding.Character = '' then
+    return Hint(Binding.PressedKey, Binding.Modifiers, Label);
+  end if;
+
+  return Caption(if Binding.Character = ' ' then 'Space' else Binding.Character end if, Label);
+end function;
+end unit;

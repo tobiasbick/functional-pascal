@@ -2,27 +2,24 @@ unit Gallery.Previews;
 
 uses
   Gallery.State as G, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
+  Fpas.Tui.Editors as Editors,
   System.Collections.Generic as Generic;
 
-function Button(
-  Colors: Themes.Palette; Id: string; Label: string; Message: G.Msg; Enabled: bool := true
-): E.Element<G.Msg>;
-begin
-  return E.Styled<G.Msg>(
-    E.Button<G.Msg>(Id, Label, Message, Enabled),
-    if Enabled then Colors.Primary else Colors.Muted end if
-  );
-end function;
-
-function Buttons(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+function Buttons(State: G.Model): E.Element<G.Msg>;
 begin
   return E.Column<G.Msg>(
     new E.Flow(Gap := 1),
     E.Text<G.Msg>('Presses: ' + State.Presses.ToString()),
     E.Row<G.Msg>(
       new E.Flow(Gap := 1),
-      Button(Colors, 'button-press', 'Press me', G.Msg.Press),
-      Button(Colors, 'button-disabled', 'Disabled', G.Msg.Press, false)
+      E.Button<G.Msg>('button-press', 'Press me', G.Msg.Press, Variant := E.ButtonVariant.Primary),
+      E.Button<G.Msg>(
+        'button-reset',
+        'Reset',
+        G.Msg.ResetPresses,
+        Variant := E.ButtonVariant.Destructive
+      ),
+      E.Button<G.Msg>('button-disabled', 'Disabled', G.Msg.Press, false, E.ButtonVariant.Primary)
     )
   );
 end function;
@@ -47,16 +44,17 @@ begin
   );
 end function;
 
+function EditText(Value: string): G.Msg;
+begin
+  return G.Msg.Edit(Value);
+end function;
+
 function Editor(State: G.Model): E.Element<G.Msg>;
 begin
   return E.Column<G.Msg>(
     new E.Flow(Gap := 1),
     E.Text<G.Msg>('Type, select, or paste text.'),
-    E.TextInput<G.Msg>(
-      'text-entry',
-      State.Text,
-      function(Value: string): G.Msg => G.Msg.Edit(Value)
-    ),
+    E.TextInput<G.Msg>('text-entry', State.Text, EditText, Placeholder := 'Type something…'),
     E.Text<G.Msg>('Text length: ' + State.Text.Length.ToString())
   );
 end function;
@@ -114,7 +112,7 @@ begin
   );
 end function;
 
-function Progress(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+function Progress(State: G.Model): E.Element<G.Msg>;
 begin
   return E.Column<G.Msg>(
     new E.Flow(Gap := 1),
@@ -122,8 +120,19 @@ begin
     E.ProgressBar<G.Msg>(State.Progress),
     E.Row<G.Msg>(
       new E.Flow(Gap := 1),
-      Button(Colors, 'progress-advance', '+25%', G.Msg.Advance, State.Progress < 100),
-      Button(Colors, 'progress-reset', 'Reset', G.Msg.ResetProgress)
+      E.Button<G.Msg>(
+        'progress-advance',
+        '+25%',
+        G.Msg.Advance,
+        State.Progress < 100,
+        E.ButtonVariant.Primary
+      ),
+      E.Button<G.Msg>(
+        'progress-reset',
+        'Reset',
+        G.Msg.ResetProgress,
+        Variant := E.ButtonVariant.Secondary
+      )
     )
   );
 end function;
@@ -132,6 +141,7 @@ function Layout(Colors: Themes.Palette): E.Element<G.Msg>;
 begin
   return E.Column<G.Msg>(
     new E.Flow(Gap := 1),
+    E.Divider<G.Msg>('Rows and columns'),
     E.Text<G.Msg>('A row with a fixed and a growing child.'),
     E.Row<G.Msg>(
       new E.Flow(Gap := 1),
@@ -144,6 +154,7 @@ begin
         new E.Flex(Grow := 1)
       )
     ),
+    E.Divider<G.Msg>(),
     E.Border<G.Msg>(E.Text<G.Msg>('A border around text'), 'Border')
   );
 end function;
@@ -153,7 +164,7 @@ begin
   return G.Msg.ScrollLog(Change.Position);
 end function;
 
-function Scrolling(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+function Scrolling(State: G.Model): E.Element<G.Msg>;
 begin
   const Lines: Generic.List<E.Element<G.Msg>> := new Generic.List<E.Element<G.Msg>>();
   for Entry: int := 1 to State.LogCount do
@@ -175,8 +186,19 @@ begin
     ),
     E.Row<G.Msg>(
       new E.Flow(Gap := 1),
-      Button(Colors, 'log-append', 'Append event', G.Msg.AppendLog, State.LogCount < 100),
-      Button(Colors, 'log-follow', 'Follow newest', G.Msg.ScrollLog(E.ScrollPosition.End))
+      E.Button<G.Msg>(
+        'log-append',
+        'Append event',
+        G.Msg.AppendLog,
+        State.LogCount < 100,
+        E.ButtonVariant.Primary
+      ),
+      E.Button<G.Msg>(
+        'log-follow',
+        'Follow newest',
+        G.Msg.ScrollLog(E.ScrollPosition.End),
+        Variant := E.ButtonVariant.Secondary
+      )
     )
   );
 end function;
@@ -219,41 +241,190 @@ begin
   );
 end function;
 
+const SettingsTabs: array of E.TabItem := [
+  new E.TabItem('general', 'General settings'),
+  new E.TabItem('updates', 'Updates unavailable', false),
+  new E.TabItem('appearance', 'Appearance and themes'),
+  new E.TabItem('shortcuts', 'Keyboard shortcuts')
+];
+
+function SettingsPanel(State: G.Model; Key: string): E.Element<G.Msg>;
+begin
+  case Key of
+    when 'general':
+      return E.Column<G.Msg>(
+        E.Text<G.Msg>('Display name'),
+        E.TextInput<G.Msg>(
+          'tab-name',
+          State.TabName,
+          function(Value: string): G.Msg => G.Msg.EditTabName(Value)
+        )
+      );
+    when 'appearance':
+      return E.Checkbox<G.Msg>(
+        'tab-colors',
+        'Preview colors',
+        State.PreviewColors,
+        function(Value: bool): G.Msg => G.Msg.ToggleTabColors(Value)
+      );
+    else
+      return E.Text<G.Msg>('Ctrl+T returns to General.');
+  end case;
+end function;
+
+function Settings(State: G.Model): E.Element<G.Msg>;
+begin
+  return E.Tabs<G.Msg>(
+    'settings-tabs', SettingsTabs, State.ActiveTab,
+    function(Key: string): G.Msg => G.Msg.ChooseTab(Key),
+    function(Key: string): E.Element<G.Msg> => SettingsPanel(State, Key)
+  );
+end function;
+
+const WorldColumns: array of E.TableColumn := [
+  new E.TableColumn('World', new E.Flex(Basis := 12, Minimum := 5, Grow := 1)),
+  new E.TableColumn('Status', new E.Flex(Basis := 8, Minimum := 8, Maximum := 8)),
+  new E.TableColumn('Players', new E.Flex(Basis := 7, Minimum := 7, Maximum := 7))
+];
+
+const Worlds: array of E.TableRow := [
+  new E.TableRow('alder', ['Alder', 'Ready', '2']),
+  new E.TableRow('birch', ['Birch', 'Offline', '0'], false),
+  new E.TableRow('cedar', ['Cedar', 'Ready', '4']),
+  new E.TableRow('dogwood', ['Dogwood', 'Ready', '1']),
+  new E.TableRow('elm', ['Elm', 'Ready', '3']),
+  new E.TableRow('fir', ['Fir', 'Offline', '0'], false),
+  new E.TableRow('ginkgo', ['Ginkgo', 'Ready', '1']),
+  new E.TableRow('hazel', ['Hazel', 'Ready', '5']),
+  new E.TableRow('juniper', ['Juniper', 'Ready', '2'])
+];
+
+function WorldTable(State: G.Model): E.Element<G.Msg>;
+begin
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Size<G.Msg>(
+      E.Table<G.Msg>(
+        'world-table', WorldColumns, Worlds, State.TableSelection,
+        function(Key: string): G.Msg => G.Msg.SelectWorld(Key),
+        function(Key: string): G.Msg => G.Msg.OpenWorld(Key)
+      ),
+      new E.Flex(Basis := 3, Grow := 1, Maximum := 7)
+    ),
+    E.Column<G.Msg>(
+      E.Text<G.Msg>('Selected: ' + State.TableSelection),
+      E.Text<G.Msg>('Opened: ' + (if State.TableOpened = '' then '-' else State.TableOpened end if))
+    )
+  );
+end function;
+
+function EditDocument(Change: Editors.TextEdit): G.Msg;
+begin
+  return G.Msg.EditDocument(Change);
+end function;
+
+function NavigateDocument(Position: Editors.EditorPosition): G.Msg;
+begin
+  return G.Msg.NavigateDocument(Position);
+end function;
+
+function DocumentButton(State: G.Model; Kind: G.DocumentKind): E.Element<G.Msg>;
+begin
+  const Name: string := Kind.ToString();
+  return E.Button<G.Msg>(
+    'document-' + Name.ToLowerInvariant(), Name, G.Msg.ChooseDocument(Kind),
+    Variant := if State.ActiveDocument = Kind then E.ButtonVariant.Active
+      else E.ButtonVariant.Secondary
+      end if
+  );
+end function;
+
+function Multiline(State: G.Model): E.Element<G.Msg>;
+begin
+  const Document: G.Document := G.CurrentDocument(State);
+  const Status: string := if Document.Dirty then 'Edited' else 'Unchanged' end if;
+  return E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Row<G.Msg>(
+      new E.Flow(Gap := 1), DocumentButton(State, G.DocumentKind.Notes),
+      DocumentButton(State, G.DocumentKind.Draft), E.Text<G.Msg>(Status)
+    ),
+    E.Size<G.Msg>(
+      Editors.Multiline<G.Msg>(
+        'document-editor',
+        Document.Text,
+        Document.Position,
+        EditDocument,
+        NavigateDocument
+      ),
+      new E.Flex(Basis := 1, Grow := 1)
+    )
+  );
+end function;
+
 public function Body(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
 begin
   return case State.Active of
-    when G.Page.Buttons: Buttons(State, Colors);
+    when G.Page.Buttons: Buttons(State);
     when G.Page.Checkbox: Checkboxes(State);
     when G.Page.TextInput: Editor(State);
     when G.Page.Lists: Lists(State);
-    when G.Page.Progress: Progress(State, Colors);
+    when G.Page.Progress: Progress(State);
     when G.Page.Layout: Layout(Colors);
-    when G.Page.Scrolling: Scrolling(State, Colors);
+    when G.Page.Scrolling: Scrolling(State);
     when G.Page.Canvas: Canvas(State, Colors);
+    when G.Page.Tabs: Settings(State);
+    when G.Page.Table: WorldTable(State);
+    when G.Page.Multiline: Multiline(State);
     when G.Page.Overlay: E.Column<G.Msg>(
       new E.Flow(Gap := 1),
       E.Text<G.Msg>('Focus returns here when you close it.'),
-      Button(Colors, 'overlay-open', 'Open overlay', G.Msg.SetOverlay(true))
+      E.Button<G.Msg>(
+        'overlay-open',
+        'Open overlay',
+        G.Msg.SetOverlay(true),
+        Variant := E.ButtonVariant.Primary
+      )
     );
     else E.Text<G.Msg>('Choose a widget.');
   end case;
 end function;
 
-public function Overlay(Colors: Themes.Palette): E.Element<G.Msg>;
+function OverlayScrolled(Change: E.ScrollChange): G.Msg;
 begin
+  return G.Msg.ScrollOverlay(Change.Position);
+end function;
+
+public function Overlay(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  const Instructions: E.Element<G.Msg> := E.Column<G.Msg>(
+    new E.Flow(Gap := 1),
+    E.Text<G.Msg>('Scroll from here. Tab to the body and use Page Down, or use the mouse wheel.'),
+    E.Text<G.Msg>('Resize the terminal to make the body narrower or shorter.'),
+    E.Text<G.Msg>('The text wraps to the available width, including space for the scrollbar.'),
+    E.Text<G.Msg>('Only the body scrolls. The Close button stays in the footer.'),
+    E.Text<G.Msg>('Focus stays inside the overlay until you close it.'),
+    E.Text<G.Msg>('End of overlay notes.')
+  );
+  const Body: E.Element<G.Msg> := E.ScrollView<G.Msg>(
+    'overlay-body', Instructions, State.OverlayPosition, OverlayScrolled
+  );
   return E.Overlay<G.Msg>(
     'sample-overlay', true, 'overlay-close', G.Msg.SetOverlay(false),
     E.Styled<G.Msg>(
-      E.Border<G.Msg>(
-        E.Column<G.Msg>(
-          new E.Flow(Gap := 1, Padding := 1),
-          E.Text<G.Msg>('Focus stays inside this overlay.'),
-          Button(Colors, 'overlay-close', 'Esc Close', G.Msg.SetOverlay(false))
+      E.OverlayPanel<G.Msg>(
+        Body,
+        E.Button<G.Msg>(
+          'overlay-close',
+          'Esc Close',
+          G.Msg.SetOverlay(false),
+          Variant := E.ButtonVariant.Primary
         ),
-        'Modal overlay'
+        'Modal overlay',
+        Padding := 1
       ),
       Colors.Panel
-    ), []
+    ), [], new E.OverlayLimits(MaxWidthPercent := 80, MaxHeightPercent := 60)
   );
 end function;
 end unit;

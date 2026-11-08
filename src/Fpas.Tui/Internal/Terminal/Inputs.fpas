@@ -10,6 +10,8 @@ begin
     else E.MouseButton.Left
     end if;
   case Event.Kind of
+    when 'focus':
+      return App.Input.Focus(Event.Text);
     when 'activate':
       return App.Input.Activate(Event.Text);
     when 'resize':

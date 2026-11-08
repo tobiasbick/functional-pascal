@@ -66,9 +66,11 @@ source-only SDK options.
 
 Build defaults to a 120-second overall deadline; `--timeout` accepts 1..3600.
 Build workers and compiler servers are disabled for owned-process cleanup;
-MSBuild retains its default build parallelism. Captured output is bounded to
-1 MiB across stdout and stderr. An exceeded limit is a failure, even if MSBuild
-has emitted artifacts. Failed FPAS compilation preserves prior compiler outputs.
+MSBuild retains its default build parallelism. Text mode forwards build output
+to stderr as it arrives and displays a phase label when stderr is a terminal.
+Build output is bounded to 1 MiB across both child streams. An exceeded limit is
+a failure, even if MSBuild has emitted artifacts. Failed FPAS compilation
+preserves prior compiler outputs.
 
 ## Run
 
@@ -100,13 +102,14 @@ directory for every input form; `--working-directory` selects another existing
 directory. Runtime assembly lookup still belongs to .NET and the output's
 dependency files.
 
-Normal mode inherits stdin/stdout/stderr, preserving piped input and terminal
-handles. Build messages go to stderr. JSON mode inherits stdin and captures
-program stdout/stderr as UTF-8 text, with a shared 1 MiB limit; no target output
-is mixed into protocol stdout. Programs own their stream encoding; select UTF-8
-explicitly when reading UTF-8 pipes through .NET Console APIs. An exceeded output
-limit is explicit. Each run owns its process group/job and terminates/joins
-remaining descendants when the main process exits, on cancellation or on a deadline.
+Normal mode forwards build messages live to stderr. The program inherits
+stdin/stdout/stderr, preserving piped input and terminal handles. JSON mode
+inherits stdin and captures program stdout/stderr as UTF-8 text under a shared
+1 MiB limit. Only the JSON document goes to protocol stdout. Programs own their
+stream encoding. Select UTF-8 explicitly when reading UTF-8 pipes through .NET
+Console APIs. An exceeded output limit is explicit. Each run owns its process
+group or job and terminates and joins remaining descendants when the main
+process exits, on cancellation or on a deadline.
 
 Run has no implicit deadline. `--timeout` accepts 0..3600 seconds for the entire
 operation; zero disables the deadline. Cancellation remains available.
@@ -124,9 +127,10 @@ be changed with `--timeout`.
 
 `fpas restore CONTEXT` and `fpas clean CONTEXT` run the selected SDK operation for
 an explicit project or .slnx solution. They accept `--configuration`, `--report json`
-and a 1..3600 second `--timeout` (default 120). Restore resolves dependencies;
-clean asks MSBuild to remove its owned outputs. FPAS does not recursively remove
-project directories. Repeated clean preserves unrelated files. Failures, output
+and a 1..3600 second `--timeout` (default 120). Text mode forwards SDK messages
+live to stderr. Restore resolves dependencies. Clean asks MSBuild to remove its
+owned outputs. FPAS does not recursively remove project directories. Repeated
+clean preserves unrelated files. Failures, output
 limits and cancellation follow build's project report and exit contract below.
 
 ```sh

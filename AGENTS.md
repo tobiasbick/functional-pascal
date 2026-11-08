@@ -15,10 +15,18 @@ for the task.
 - On every code change, review affected files for size, cohesion, directory
   placement, and namespaces. Split or reorganize them as needed in the same change.
 - Write all code comments in English.
+- Document every public declaration in source, including types, routines, and
+  members. Explain its purpose and document each parameter, type parameter, and
+  return value where applicable. Documentation for private declarations is
+  optional.
+- When writing FPAS, use `requires` and `ensures` to state caller obligations
+  and guarantees on successful return. Put these contracts only on entry
+  routines, such as the main routine called by a program's entry body or a
+  library operation exposed to callers. Let internal helpers rely on the
+  conditions checked at entry.
 - Before changing public CLR names, namespaces, signatures, or representations,
   follow the owning interop and CLR mapping specifications. Update them in the
-  same change when revising a mapping. Consume actual .NET APIs; do not recreate
-  the former `Std.*` wrapper catalog.
+  same change when revising a mapping. Consume actual .NET APIs.
 
 ## Approach
 
@@ -31,16 +39,17 @@ for the task.
   rewritten, reorganized, or replaced.
 - Changes to FPAS syntax require the user's explicit approval before
   implementation.
-- Finish the agreed language/build baseline before adding extensions. Distinguish
-  missing baseline work from deferred proposals in the language-gaps document.
+- Resolve confirmed gaps in the agreed language/build baseline before adding
+  extensions. Track them separately from deferred proposals in the language-gaps
+  document.
 - Fix errors and code organization issues when you encounter them. Do not
   dismiss them as pre-existing.
 - Keep the agent reference aligned with implemented language and toolchain behavior.
 - Keep plans and gap inventories limited to open work. Remove completed entries
   and delete fully completed documents; current contracts and usage belong in
   their owning references.
-- Remove obsolete `Fpas.NET.Sdk` versions from the target NuGet cache before
-  caching a new build; use isolated caches for concurrent tests.
+- When replacing a build under the same `Fpas.NET.Sdk` version, evict that
+  version from the target NuGet cache. Use isolated caches for concurrent tests.
 
 ## Before every commit
 
@@ -54,11 +63,8 @@ for the task.
 
 ## Dogfooding
 
-- Write helper scripts in FPAS once the CLR compiler can build and execute them.
-  Until then, use available host tools for repository maintenance and identify
-  verification limits. The former VM/compiler cannot validate the new language.
+- Write repository maintenance helpers in FPAS when supported CLR APIs suffice.
+  When a missing feature forces a fallback to host tools, record the blocker
+  and verification limits under `docs/future/`.
 - Debug and profile implemented programs with supported .NET tools before
   writing external samplers or benchmark variants.
-- During compiler implementation, record concrete language/tooling gaps that
-  force a fallback in focused documents under `docs/future/`. Keep dogfooding
-  gaps aligned with implemented features.

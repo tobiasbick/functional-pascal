@@ -1,0 +1,48 @@
+unit Fpas.Tui.Internal.Rendering.Buttons;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Rendering.Drawing as D, System.Collections.Generic as Generic;
+
+public function Resolve(
+  Theme: E.Theme; Variant: E.ButtonVariant; Enabled: bool;
+  Focused: bool := false; Hovered: bool := false
+): E.Style?;
+begin
+  const Styles: E.ButtonStyles? := Theme.Buttons;
+  if Styles = null or Variant = E.ButtonVariant.Default then
+    return null;
+  end if;
+
+  if not Enabled then
+    return Styles.Disabled;
+  end if;
+
+  const Appearance: E.ButtonAppearance := case Variant of
+    when E.ButtonVariant.Primary: Styles.Primary;
+    when E.ButtonVariant.Active: Styles.Active;
+    when E.ButtonVariant.Destructive: Styles.Destructive;
+    else Styles.Secondary;
+  end case;
+  return if Focused then Appearance.Focused
+    else if Hovered then Appearance.Hovered else Appearance.Normal end if
+    end if;
+end function;
+
+public procedure Paint(
+  Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: E.Style;
+  Theme: E.Theme; Caption: string; IsButton: bool; Variant: E.ButtonVariant; Enabled: bool
+);
+begin
+  const Color: E.Style? := Resolve(Theme, Variant, Enabled);
+  if Color <> null then
+    D.Fill(Operations, Clip, Color);
+  end if;
+  const Display: string := if not IsButton then Caption
+    else if Theme.Widgets = null then '[' + Caption + ']' else ' ' + Caption + ' ' end if
+    end if;
+  if Display <> '' then
+    Operations.Add(new D.Operation(Display, Area, Clip, Color ?? Style, false));
+  end if;
+end procedure;
+end unit;

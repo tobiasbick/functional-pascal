@@ -5,6 +5,9 @@ their owning rule and reproducer. The proposals below are deferred extensions.
 Maintenance limits belong in [dogfooding gaps](dogfooding-gaps.md); current
 toolchain procedures belong in the [development workflow](../build/development.md).
 
+[Effects in FPAS](effect-system-gap.md) tracks the deferred library pilot and
+open questions about compiler-checked effects.
+
 ## Deferred proposal: compiler-checked pure functions
 
 Add optional compiler-checked purity. Ordinary functions keep their current

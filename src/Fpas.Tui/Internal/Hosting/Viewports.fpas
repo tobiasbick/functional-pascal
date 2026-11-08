@@ -1,7 +1,7 @@
 unit Fpas.Tui.Internal.Hosting.Viewports;
 
 uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as A,
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Scene as A,
   Fpas.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 public function Notify<TMsg>(Before: A.Layout<TMsg>?; After: A.Layout<TMsg>; Apply: procedure(TMsg)): bool;

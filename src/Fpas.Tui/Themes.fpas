@@ -34,24 +34,45 @@ end record;
 function Create(Colors: Swatches): Palette;
 begin
   const Focus: E.Style := new E.Style(Colors.AccentText, Colors.Accent);
+  const Hover: E.Style := new E.Style(Colors.Text, Colors.Hover);
+  const Secondary: E.Style := new E.Style(Colors.Text, Colors.Secondary);
+  const Selected: E.Style := new E.Style(Colors.SelectionText, Colors.Selection);
+  const Error: E.Style := new E.Style(Colors.Error, Colors.Canvas);
   const Theme: E.Theme := new E.Theme(
     Text := new E.Style(Colors.Text, Colors.Canvas),
     Focus := Focus,
-    Hover := new E.Style(Colors.Text, Colors.Hover),
+    Hover := Hover,
     Caret := Focus,
     Widgets := new E.WidgetStyles(
       BorderColor := Colors.Border,
       Field := new E.Style(Colors.Text, Colors.Field),
       FocusedField := new E.Style(Colors.Text, Colors.FocusedField),
-      Selected := new E.Style(Colors.SelectionText, Colors.Selection),
+      Selected := Selected,
       ProgressFillColor := Colors.Accent,
       ProgressTrackColor := Colors.Track
+    ),
+    PlaceholderColor := Colors.Muted,
+    Buttons := new E.ButtonStyles(
+      Secondary := new E.ButtonAppearance(Secondary, Focus, Hover),
+      Primary := new E.ButtonAppearance(
+        Focus,
+        new E.Style(Colors.Accent, Colors.AccentText),
+        new E.Style(Colors.Accent, Colors.Hover)
+      ),
+      Active := new E.ButtonAppearance(
+        Selected,
+        new E.Style(Colors.Selection, Colors.SelectionText),
+        new E.Style(Colors.SelectionText, Colors.Hover)
+      ),
+      Destructive := new E.ButtonAppearance(
+        new E.Style(Colors.Canvas, Colors.Error), Error, new E.Style(Colors.Error, Colors.Hover)
+      ),
+      Disabled := new E.Style(Colors.Muted, Colors.Panel)
     )
   );
   return new Palette(
     Theme, new E.Style(Colors.Heading, Colors.Canvas), new E.Style(Colors.Text, Colors.Panel),
-    new E.Style(Colors.Muted, Colors.Canvas), Focus, new E.Style(Colors.Text, Colors.Secondary),
-    new E.Style(Colors.Error, Colors.Canvas)
+    new E.Style(Colors.Muted, Colors.Canvas), Focus, Secondary, Error
   );
 end function;
 
@@ -95,6 +116,16 @@ const BluePalette: Palette := Create(
   )
 );
 
+const AmberPalette: Palette := Create(
+  new Swatches(
+    Canvas := $1B1209, Panel := $2A1C0E, Text := $FFE2B3, Heading := $FFF0D4,
+    Muted := $CAA66E, Accent := $FFB84D, AccentText := $2A1704, Hover := $4B3219,
+    Border := $936939, Field := $332311, FocusedField := $493218,
+    Selection := $593A16, SelectionText := $FFDC91, Track := $906840,
+    Secondary := $3C2A17, Error := $FFAAA0
+  )
+);
+
 public function Light(): Palette;
 begin
   return LightPalette;
@@ -113,6 +144,13 @@ end function;
 public function Blue(): Palette;
 begin
   return BluePalette;
+end function;
+
+/// <summary>Provides warm amber accents on dark brown surfaces.</summary>
+/// <returns>The built-in Amber palette with its widget and button styles.</returns>
+public function Amber(): Palette;
+begin
+  return AmberPalette;
 end function;
 
 /// The original slate palette is also available as Dark.

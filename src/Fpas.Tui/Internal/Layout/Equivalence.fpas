@@ -1,25 +1,36 @@
 unit Fpas.Tui.Internal.Layout.Equivalence;
 
 uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as Tree,
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Scene as Tree,
   Fpas.Tui.Internal.Layout.SelectionLists as S, System as Sys,
   Fpas.Tui.Internal.Layout.ScrollViews as V,
+  Fpas.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Tui.Internal.Layout.TabHeaders as Tabs,
+  Fpas.Tui.Internal.Layout.EditorView as EditorView,
   System.Collections.Generic as Generic;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
 begin
   case Left of
-    when Tree.Binding.Invoke(const Message: TMsg):
+    when Tree.Binding.Invoke(const Action: Actions.Direct<TMsg>):
       case Right of
-        when Tree.Binding.Invoke(const Other: TMsg):
-          return Generic.EqualityComparer<TMsg>.Default.Equals(Message, Other);
+        when Tree.Binding.Invoke(const Other: Actions.Direct<TMsg>):
+          return Generic.EqualityComparer<TMsg>.Default.Equals(Action.Message, Other.Message);
         else
           return false;
       end case;
-    when Tree.Binding.Edit(const Value: string, const Change: function(string): TMsg):
+    when Tree.Binding.Edit(
+      const Value: string,
+      const Change: function(string): TMsg,
+      const Hint: bool
+    ):
       case Right of
-        when Tree.Binding.Edit(const OtherValue: string, const OtherChange: function(string): TMsg):
-          return Value = OtherValue and Sys.Object.Equals(Change, OtherChange);
+        when Tree.Binding.Edit(
+          const OtherValue: string,
+          const OtherChange: function(string): TMsg,
+          const OtherHint: bool
+        ):
+          return Value = OtherValue and Hint = OtherHint and Sys.Object.Equals(Change, OtherChange);
         else
           return false;
       end case;
@@ -30,10 +41,24 @@ begin
         else
           return false;
       end case;
+    when Tree.Binding.Multiline(const View: EditorView.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.Multiline(const Other: EditorView.Viewport<TMsg>):
+          return EditorView.Equivalent<TMsg>(View, Other);
+        else
+          return false;
+      end case;
     when Tree.Binding.Scroll(const View: V.Viewport<TMsg>):
       case Right of
         when Tree.Binding.Scroll(const Other: V.Viewport<TMsg>):
           return V.Equivalent<TMsg>(View, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.SelectTab(const Bar: Tabs.Header<TMsg>):
+      case Right of
+        when Tree.Binding.SelectTab(const Other: Tabs.Header<TMsg>):
+          return Tabs.Equivalent<TMsg>(Bar, Other);
         else
           return false;
       end case;
@@ -120,7 +145,9 @@ begin
     const A: Tree.Control<TMsg> := Left.Controls[Index];
     const B: Tree.Control<TMsg> := Right.Controls[Index];
     if A.Id <> B.Id or A.Label <> B.Label or A.Role <> B.Role or A.Value <> B.Value
-      or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.Enabled <> B.Enabled
+      or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.FocusReturn <> B.FocusReturn
+      or A.Variant <> B.Variant or A.Enabled <>
+      B.Enabled
       or not SameBinding<TMsg>(A.Action, B.Action)
     then
       return false;

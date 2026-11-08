@@ -48,6 +48,57 @@ begin
   return Cells;
 end function;
 
+public function LineBreak(Glyph: string): bool;
+begin
+  return Glyph[0] = #10 or Glyph[0] = #13;
+end function;
+
+public function LineWidth(Value: string): int;
+begin
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
+  var Longest: int := 0;
+  var Cells: int := 0;
+  while Glyphs.MoveNext() do
+    const Glyph: string := Glyphs.GetTextElement();
+    if LineBreak(Glyph) then
+      Longest := Sys.Math.Max(Longest, Cells);
+      Cells := 0;
+    else
+      Cells := Cells + Width(Glyph);
+    end if;
+  end while;
+
+  return Sys.Math.Max(Longest, Cells);
+end function;
+
+public function LineCount(Value: string; Columns: int): int;
+begin
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
+  var Rows: int := 1;
+  var Cells: int := 0;
+  while Glyphs.MoveNext() do
+    const Glyph: string := Glyphs.GetTextElement();
+    if LineBreak(Glyph) then
+      Rows := Rows + 1;
+      Cells := 0;
+    else
+      if Columns > 0 then
+        const Span: int := Width(Glyph);
+        if Cells + Span > Columns then
+          Rows := Rows + 1;
+          Cells := 0;
+        end if;
+
+        if Span <= Columns then
+          Cells := Cells + Span;
+        end if;
+      end if;
+    end if;
+  end while;
+
+  return Rows;
+end function;
+
 public function SingleLine(Value: string): string;
 begin
   return Value.Replace(

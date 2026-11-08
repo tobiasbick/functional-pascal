@@ -64,7 +64,9 @@ For `fpasTuiSend`, use `text`, `paste` or `character` with a `text` value.
 accepts a logical `key` name and optional modifier mask (Shift 1, Alt 2, Ctrl 4).
 `click`, `press` and `release` accept zero-based `column` and `row` and an
 optional `button` of `left` (default) or `middle`. `scroll` takes coordinates
-and `delta`. `activate` takes a stable `control` ID.
+and `delta`. `focus` and `activate` take a stable `control` ID. Use
+`focus` to target an editor or viewport. `activate` invokes the target's
+action as Enter would and leaves focus in place unless the app moves it.
 
 While stopped, a snapshot keeps the completed frame's original size. After
 resizing and continuing, wait for a frame at the new size. A wait for an input

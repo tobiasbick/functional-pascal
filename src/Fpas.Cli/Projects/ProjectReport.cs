@@ -22,7 +22,6 @@ internal sealed record ProjectReport(string Command, bool Success, string Status
     internal void Write(bool json)
     {
         if (json) { Console.WriteLine(JsonSerializer.Serialize(this, ProjectJson.Default.ProjectReport)); return; }
-        if (Build is { } build) { Console.Error.Write(build.Output); Console.Error.Write(build.Error); }
         if (Files is not null)
             foreach (var file in Files) Console.WriteLine($"{file.State}: {file.Path}");
         if (Error is { } error)

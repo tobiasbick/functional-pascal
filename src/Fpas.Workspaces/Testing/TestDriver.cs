@@ -70,15 +70,16 @@ public static class TestDriver
         return selected.AsReadOnly();
     }
 
-    public static async Task<BuildResult> RunAsync(TestProject project, string directory, string? filter, string? settings, CancellationToken token, TestRunOptions? options = null)
+    public static async Task<BuildResult> RunAsync(TestProject project, string directory, string? filter, string? settings, CancellationToken token,
+        TestRunOptions? options = null, ProcessOutput? liveOutput = null)
     {
-        if (project.TestingPlatform) return await TestingPlatformDriver.Run(project, directory, filter, settings, options, list: false, token);
+        if (project.TestingPlatform) return await TestingPlatformDriver.Run(project, directory, filter, settings, options, list: false, token, liveOutput);
         var assembly = await VstestDeployment.Prepare(project, directory, options, token);
         var args = new List<string> { "vstest", assembly, "/Logger:trx;LogFileName=results.trx", "/ResultsDirectory:" + directory };
         if (filter is not null) args.Add("/TestCaseFilter:" + filter);
         if (settings is not null) args.Add("/Settings:" + settings);
         VstestOptions(project, args, options);
-        return await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true);
+        return await BuildProcess.Run(Path.GetDirectoryName(project.Project)!, args, token, captureCancellation: true, liveOutput: liveOutput);
     }
 
     public static async Task<(BuildResult Process, IReadOnlyList<DiscoveredTest> Tests)> DiscoverAsync(TestProject project,

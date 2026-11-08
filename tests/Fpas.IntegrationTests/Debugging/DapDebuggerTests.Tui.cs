@@ -78,6 +78,10 @@ public sealed partial class DapDebuggerTests
         {
             ["frame"] = new JsonObject { ["control"] = "theme-blue" }
         })).GetProperty("status").GetString());
+        await client.Success("fpasTuiSend", new()
+        {
+            ["input"] = new JsonObject { ["kind"] = "focus", ["control"] = "theme-blue" }
+        });
         var theme = await client.Success("fpasTuiSend", new()
         {
             ["input"] = new JsonObject { ["kind"] = "activate", ["control"] = "theme-blue" }

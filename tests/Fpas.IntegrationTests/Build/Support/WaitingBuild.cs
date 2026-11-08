@@ -5,6 +5,7 @@ namespace Fpas.IntegrationTests.Build.Support;
 
 internal sealed class WaitingBuild : IDisposable
 {
+    internal const string ProgressMessage = "Build reached the controlled wait.";
     private readonly TemporaryDirectory directory = new();
     internal string Ready => directory.File("ready.pid");
 
@@ -29,6 +30,7 @@ internal sealed class WaitingBuild : IDisposable
             Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
             var xml = XDocument.Load(project);
             xml.Root!.Add(new XElement("Target", new XAttribute("Name", "WaitForCancellation"), new XAttribute("BeforeTargets", "FpasPrepareCompilation"),
+                new XElement("Message", new XAttribute("Text", ProgressMessage), new XAttribute("Importance", "high")),
                 new XElement("Exec", new XAttribute("Command", $"\"{TestEnvironment.DotnetHost}\" \"{assembly}\" \"{helper.Ready}\""))));
             xml.Save(project); return helper;
         }

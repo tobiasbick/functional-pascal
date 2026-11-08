@@ -52,7 +52,7 @@ terminates and joins owned build/linker processes. Exit codes are 0 success/prev
 1 publish/I/O/deadline/conflict failure, 2 invalid arguments or ambiguous selection,
 and 130 caller cancellation. `--report json` owns stdout and includes selection,
 build output, mode/RID/destination and relative file sizes/SHA-256 hashes. Normal
-success prints the destination; build logs go to stderr.
+success prints the destination. Build logs stream to stderr during publishing.
 
 ## Output ownership
 

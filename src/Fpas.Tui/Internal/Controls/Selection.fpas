@@ -1,0 +1,51 @@
+unit Fpas.Tui.Internal.Controls.Selection;
+
+uses Fpas.Tui.Internal.Controls.Activation as Actions;
+
+public type ISelectable<TMsg> = protocol
+  function Count(): int;
+  function SelectedIndex(): int;
+  function CanSelect(Index: int): bool;
+  function Select(Index: int): Actions.Result<TMsg>;
+end protocol;
+
+public procedure SelectAt<TMsg>(Target: ISelectable<TMsg>; Index: int; Apply: procedure(TMsg));
+begin
+  if Index < 0 or Index >= Target.Count() or Index = Target.SelectedIndex() or not Target.CanSelect(
+    Index
+  )
+  then
+    return;
+  end if;
+
+  case Target.Select(Index) of
+    when Actions.Result.Send(const Message: TMsg):
+      Apply(Message);
+    when Actions.Result.NoAction:
+  end case;
+end procedure;
+
+/// Searches from First in the given direction, skipping unavailable choices.
+public function Find<TMsg>(Target: ISelectable<TMsg>; First: int; Direction: int; Wrap: bool): int;
+begin
+  const Count: int := Target.Count();
+  var Index: int := First;
+  for Attempt: int := 1 to Count do
+    if Index < 0 or Index >= Count then
+      if not Wrap then
+        break;
+      end if;
+
+      Index := if Index < 0 then Count - 1 else 0 end if;
+    end if;
+
+    if Target.CanSelect(Index) then
+      return Index;
+    end if;
+
+    Index := Index + Direction;
+  end for;
+
+  return -1;
+end function;
+end unit;

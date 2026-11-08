@@ -2,6 +2,7 @@ unit Fpas.Tui.Internal.Layout.ScrollViews;
 
 uses
   Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Layout.Measurement as M,
   Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public type Viewport<TMsg> = record
@@ -13,7 +14,18 @@ public type Viewport<TMsg> = record
   public OnScroll: function(E.ScrollChange): TMsg;
 end record;
 
-public function Resolve<TMsg>(
+public type Geometry<TMsg> = record
+  public View: Viewport<TMsg>;
+  public Content: F.Rect;
+  public Clip: F.Rect;
+end record;
+
+public function ContentHeight<TMsg>(Child: E.Element<TMsg>; Area: F.Rect): int;
+begin
+  return Sys.Math.Max(Area.Height, M.Intrinsic<TMsg>(Child, false, Area.Width));
+end function;
+
+function Resolve<TMsg>(
   Position: E.ScrollPosition; ContentRows: int; Area: F.Rect;
   ShowScrollbar: bool; OnScroll: function(E.ScrollChange): TMsg
 ): Viewport<TMsg>;
@@ -31,6 +43,25 @@ begin
   return new Viewport<TMsg>(
     Offset, Maximum, Area.Height, Following,
     ShowScrollbar and Maximum > 0 and Area.Width > 1, OnScroll
+  );
+end function;
+
+public function Arrange<TMsg>(
+  Child: E.Element<TMsg>; Position: E.ScrollPosition; Area: F.Rect; Clip: F.Rect;
+  ShowScrollbar: bool; OnScroll: function(E.ScrollChange): TMsg
+): Geometry<TMsg>;
+begin
+  var Height: int := ContentHeight<TMsg>(Child, Area);
+  var View: Viewport<TMsg> := Resolve<TMsg>(Position, Height, Area, ShowScrollbar, OnScroll);
+  const Width: int := Area.Width - (if View.Bar then 1 else 0 end if);
+  const Body: F.Rect := new F.Rect(Area.X, Area.Y, Width, Area.Height);
+  if View.Bar then
+    Height := Sys.Math.Max(Height, ContentHeight<TMsg>(Child, Body));
+    View := Resolve<TMsg>(Position, Height, Area, ShowScrollbar, OnScroll);
+  end if;
+
+  return new Geometry<TMsg>(
+    View, new F.Rect(Body.X, Body.Y - View.Offset, Width, Height), F.Intersect(Body, Clip)
   );
 end function;
 

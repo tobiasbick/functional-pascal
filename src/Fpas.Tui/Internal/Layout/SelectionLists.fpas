@@ -2,9 +2,11 @@ unit Fpas.Tui.Internal.Layout.SelectionLists;
 
 uses
   Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Tui.Internal.Controls.Selection as Selections,
   Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
-public type Viewport<TMsg> = record
+public type Viewport<TMsg> = record implements Actions.IActivatable<TMsg>, Selections.ISelectable<TMsg>
   public Items: array of E.SelectionItem;
   public Selected: int;
   public First: int;
@@ -12,9 +14,38 @@ public type Viewport<TMsg> = record
   public OnSelect: function(string): TMsg;
   public OnActivate: function(string): TMsg;
 
+  public function Count(): int;
+  begin
+    return self.Items.Length;
+  end function;
+
+  public function SelectedIndex(): int;
+  begin
+    return self.Selected;
+  end function;
+
+  public function CanSelect(Index: int): bool;
+  begin
+    return Index >= 0 and Index < self.Items.Length;
+  end function;
+
+  public function Select(Index: int): Actions.Result<TMsg>;
+  begin
+    return Actions.Result<TMsg>.Send(self.OnSelect(self.Items[Index].Key));
+  end function;
+
   public function Key(): string;
   begin
     return if self.Selected < 0 then '' else self.Items[self.Selected].Key end if;
+  end function;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    if self.Selected >= 0 and self.Items[self.Selected].CanActivate then
+      return Actions.Result<TMsg>.Send(self.OnActivate(self.Key()));
+    end if;
+
+    return Actions.Result<TMsg>.NoAction;
   end function;
 end record;
 

@@ -42,13 +42,34 @@ Debug/Release acceptance runs the same contracts without platform skips.
 `HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including
 frame updates, queue ordering, stale results after replacing an effect, delivery
 of a worker failure on a later step, and joining cancelled workers before exit.
-It also checks canvas size notifications and the priority of typed characters
-in a focused editor. The Mandelbrot DAP test drives the actual explorer with
-terminal keyboard and mouse input, then resizes the terminal and checks the
-new RGB image.
+It also checks initial and resized viewports in the gallery, canvas size
+notifications and the priority of typed characters in a focused editor.
+The gallery verifies that an empty text field shows its placeholder after
+focus and theme changes and after clearing a pasted value.
+The headless fixture checks themed dividers, title clipping at a wide glyph
+and initial focus on the adjacent button.
+Status line coverage checks formatting from shortcut bindings, complete
+hints at narrow widths and the switch to the overlay's Escape hint.
+The gallery checks themed button variants, disabled, hovered and focused
+appearance, live palette changes and activation of the destructive variant.
+The multiline fixture checks grapheme-safe deletion, newline normalization,
+caret visibility on resize and navigation without an edit message. The
+gallery DAP test restores a document's caret and scroll position and pastes
+several lines through the private terminal.
+The gallery DAP test resizes the private terminal across the layout threshold
+with a modal overlay open and closes it with Enter through the terminal.
+The headless gallery checks the overlay caps, body scrolling and the
+footer-only layout on a short terminal. The Mandelbrot DAP test drives
+the actual explorer with terminal keyboard and mouse input, then resizes
+the terminal and checks the new RGB image.
 The widget gallery runs through the headless control pipe and in a private
-debug terminal. Its tests check selection after changing themes and focus
-restoration after resizing and closing the overlay.
+debug terminal. Its tests check that focus and activation are independent,
+that an update can focus a newly displayed control, and that closing the
+overlay restores focus after a resize. They also check selection after
+changing themes. The tab checks cover keyboard and mouse selection,
+disabled and missing keys, narrow terminals, and focus when a panel
+is removed. The table checks cover fixed headers, resizing columns,
+row activation, and clipping wide glyphs at column edges.
 `TerminalModeTests` reads Win32 input and output modes or Linux termios state
 before, during and after an interactive run in a private terminal. It checks
 exact restoration after both normal exit and a native output failure.

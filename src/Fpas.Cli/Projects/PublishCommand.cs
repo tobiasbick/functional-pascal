@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text.Json;
+using Fpas.Cli.Reporting;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Projects;
 
@@ -52,6 +53,7 @@ internal sealed class PublishCommand
 
     private async Task<int> Execute(ParseResult result, CancellationToken cancellation)
     {
+        var json = Json(result);
         string? context = null;
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(result.GetValue(timeout)));
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellation, deadline.Token);
@@ -75,15 +77,16 @@ internal sealed class PublishCommand
             if (source && result.GetValue(dryRun)) throw new ArgumentException("Use a project for --dry-run; standalone source preparation writes a project.");
             var buildContext = source ? new SourceProject(context, ToolSdk.ValidateVersion(result.GetValue(version)), result.GetValue(feed)).Project : context;
             var selected = await ProjectDriver.SelectExecutableAsync(buildContext, options.Configuration, result.GetValue(project), combined.Token);
-            PublishResult? published = result.GetValue(dryRun) ? null : await PublishDirectory.Publish(selected, options, destination, combined.Token, buildContext);
+            PublishResult? published = result.GetValue(dryRun) ? null : await PublishDirectory.Publish(selected, options, destination, combined.Token,
+                buildContext, ProjectProgress.BuildOutput(json, "Publishing", context));
             var success = published is null || published.Build.ExitCode == 0 && !published.Build.Truncated;
             new ProjectReport("publish", success, success ? published is null ? "preview" : "ok" : "publish_failed", context)
             {
                 Target = selected, Build = published?.Build, DryRun = published is null,
                 Publish = new(options.Mode, options.RuntimeIdentifier, destination, published?.Files ?? []),
                 Error = success ? null : new("publish_failed", "Publish failed or exceeded the output limit; the previous output was preserved.")
-            }.Write(Json(result));
-            if (success && !Json(result)) Console.WriteLine(destination);
+            }.Write(json);
+            if (success && !json) Console.WriteLine(destination);
             return success ? 0 : 1;
         }
         catch (OperationCanceledException) when (combined.IsCancellationRequested)
@@ -95,6 +98,6 @@ internal sealed class PublishCommand
         { Failure(error is ArgumentException ? "invalid_argument" : "publish_failed", error.Message); return error is ArgumentException ? 2 : 1; }
 
         void Failure(string code, string message, IReadOnlyList<string>? candidates = null) =>
-            new ProjectReport("publish", false, "failed", context) { Error = new(code, message, candidates) }.Write(Json(result));
+            new ProjectReport("publish", false, "failed", context) { Error = new(code, message, candidates) }.Write(json);
     }
 }

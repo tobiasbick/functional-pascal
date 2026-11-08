@@ -176,7 +176,8 @@ changes the parent. Run artifacts contain results.trx; list artifacts contain
 discovery.txt (VSTest) or discovery.json (MTP). Earlier runs are preserved. Normal
 build outputs stay in bin/obj.
 
-Human mode sends build diagnostics to stderr and native runner output to stdout.
+Text mode forwards build output live to stderr and preserves each native
+runner's stdout and stderr during execution.
 List mode prints only discovered identities to stdout. `--report json` owns
 stdout with one document, including failures. It reports success/status/mode,
 context, resultsDirectory, build, per-project runner diagnostics, discovery or
@@ -184,8 +185,9 @@ TRX counts/cases/run messages, and an error when applicable. Cases preserve nati
 duration, captured output, assertion/exception messages and stacks. Skipped counts
 come from leaf NotExecuted results because legacy TRX summary fields may stay zero.
 
-Owned stdout/stderr capture shares a 1 MiB budget per process. Discovery artifacts
-are limited to 4 MiB, TRX XML to 16 MiB characters and JSON reports to 4 MiB UTF-8.
+Forwarded and captured stdout/stderr share a 1 MiB budget per process. Discovery
+artifacts are limited to 4 MiB, TRX XML to 16 MiB characters and JSON reports to
+4 MiB UTF-8.
 An exceeded limit, missing report or malformed report fails explicitly. An oversized
 JSON response directs the caller to native artifacts instead of reporting success.
 

@@ -1,0 +1,60 @@
+unit Fpas.Tui.Internal.Rendering.StatusLines;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Rendering.Drawing as D, Fpas.Tui.Internal.Rendering.Glyphs as G,
+  System.Collections.Generic as Generic, System.Text as Text;
+
+const Gap: string := '  ';
+
+public function PreferredWidth(Message: string; Hints: array of string): int;
+begin
+  var Width: int := G.Measure(Message);
+  for Hint: string in Hints do
+    Width := Width + (if Width > 0 then Gap.Length else 0 end if) + G.Measure(Hint);
+  end for;
+
+  return Width;
+end function;
+
+public procedure Draw(
+  Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Style: E.Style;
+  Message: string; Hints: array of string
+);
+begin
+  const Width: int := Clip.X + Clip.Width - Area.X;
+  if Message <> '' then
+    Operations.Add(
+      new D.Operation(Message, new F.Rect(Area.X, Area.Y, Width, 1), Clip, Style, false)
+    );
+  end if;
+
+  const Available: int := Width - G.Measure(
+    Message
+  ) - (if Message <> '' then Gap.Length else 0 end if);
+  if Hints.Length = 0 or Available <= 0 then
+    return;
+  end if;
+
+  const Caption: Text.StringBuilder := new Text.StringBuilder();
+  var Used: int := 0;
+  for Hint: string in Hints do
+    const Span: int := G.Measure(Hint) + (if Used > 0 then Gap.Length else 0 end if);
+    if Span > Available - Used then
+      break;
+    end if;
+
+    if Used > 0 then
+      discard Caption.Append(Gap);
+    end if;
+
+    discard Caption.Append(Hint);
+    Used := Used + Span;
+  end for;
+
+  if Used > 0 then
+    const Bounds: F.Rect := new F.Rect(Area.X + Width - Used, Area.Y, Used, 1);
+    Operations.Add(new D.Operation(Caption.ToString(), Bounds, Clip, Style, false));
+  end if;
+end procedure;
+end unit;

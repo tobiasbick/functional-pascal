@@ -3,7 +3,7 @@
 The example uses the same FPAS model, update function and view in an interactive
 terminal and a manually stepped headless session. The example uses the
 `Fpas.Tui.Themes.Dark()` palette by default. Type in the search field or use
-Ctrl+O to open the Options overlay. Select Light, Dark, Green or Blue to
+Ctrl+O to open the Options overlay. Select Light, Dark, Green, Blue or Amber to
 recolor the current screen immediately. Ctrl+R refreshes the main screen or
 resets the options to their defaults while the overlay is open. Ctrl+Q exits
 the main screen. Escape closes the overlay.

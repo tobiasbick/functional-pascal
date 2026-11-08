@@ -102,7 +102,7 @@ begin
   ExpectNotice(Session, '36x6');
   Send(Session, App.Input.Character('2'));
   ExpectNotice(Session, '36x6 shortcut');
-  Send(Session, App.Input.Activate('editor'));
+  Send(Session, App.Input.Focus('editor'));
   Send(Session, App.Input.Character('2'));
   if Session.Snapshot().Controls[1].Value <> '2' then
     raise new Sys.InvalidOperationException('The focused editor must receive the typed character.');

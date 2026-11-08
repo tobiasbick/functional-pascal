@@ -76,7 +76,8 @@ public sealed class TuiControlConnection : IDisposable
     {
         return value.GetProperty("kind").GetString() switch
         {
-            "activate" => new("activate", Text: value.GetProperty("control").GetString() ?? ""),
+            "focus" or "activate" => new(value.GetProperty("kind").GetString()!,
+                Text: value.GetProperty("control").GetString() ?? ""),
             "text" => new("text", Text: value.GetProperty("text").GetString() ?? ""),
             "character" => new("character", Text: value.GetProperty("text").GetString() ?? ""),
             "paste" => new("paste", Text: value.GetProperty("text").GetString() ?? ""),

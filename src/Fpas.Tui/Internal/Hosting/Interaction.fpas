@@ -2,6 +2,8 @@ unit Fpas.Tui.Internal.Hosting.Interaction;
 
 uses
   Fpas.Tui.Elements as E, Fpas.Tui.Application as App, Fpas.Tui.Internal.Layout.Arrangement as A,
+  Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Hosting.ListNavigation as Lists,
+  Fpas.Tui.Internal.Layout.ScrollViews as V, Fpas.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
   Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G,
   System as Sys, System.Collections.Generic as Generic;
 
@@ -139,6 +141,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         );
         const Position: int := G.IndexAt(Value, Start, Column - Control.Bounds.X - 2);
         Selections[Control.Id] := new Edit.Selection(Position, Position);
+      when A.Binding.SelectList(const List: S.Viewport<TMsg>):
+        Lists.SelectAt<TMsg>(List, List.First + Row - Control.Bounds.Y, Apply);
+      when A.Binding.Scroll(_):
       when A.Binding.Canvas(const X: int, const Y: int, const Events: E.CanvasEvents<TMsg>):
         const Click: Sys.Func<int, int, TMsg>? := if Button = E.MouseButton.Left then Events.OnClick
           else Events.OnMiddleClick
@@ -283,6 +288,18 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           if EditKey(Control.Id, Value, Change, Key, Modifiers) then
             return;
           end if;
+        when A.Binding.SelectList(const List: S.Viewport<TMsg>):
+          const Id: string := Control.Id;
+          const Scroll: procedure(int) := procedure(First: int) begin
+            ScrollOffsets[Id] := First;
+          end procedure;
+          if Lists.Key<TMsg>(List, Key, Modifiers, Apply, Scroll) then
+            return;
+          end if;
+        when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+          if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
+            return;
+          end if;
         when A.Binding.Canvas(_, _, _):
       end case;
     end if;
@@ -303,12 +320,19 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   begin
     for Control: A.Control<TMsg> in Layout.Controls do
       if Control.Id = Id and Eligible(Control, FocusScope) then
-        ClickAt(
-          Layout,
-          E.MouseButton.Left,
-          Control.Bounds.X + Control.Bounds.Width div 2,
-          Control.Bounds.Y + Control.Bounds.Height div 2
-        );
+        case Control.Action of
+          when A.Binding.SelectList(const List: S.Viewport<TMsg>):
+            Focus := Control.Id;
+            Lists.Activate<TMsg>(List, Apply);
+          when A.Binding.Scroll(_):
+            Focus := Control.Id;
+          else
+            ClickAt(
+              Layout, E.MouseButton.Left, Control.Bounds.X + Control.Bounds.Width div 2,
+              Control.Bounds.Y + Control.Bounds.Height div 2
+            );
+        end case;
+
         return;
       end if;
     end for;
@@ -334,6 +358,18 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     for Index: int := Layout.Regions.Length - 1 downto 0 do
       const Region: A.ScrollRegion := Layout.Regions[Index];
       if Region.Scope = FocusScope and Region.Bounds.Contains(Column, Row) then
+        if Region.Controlled then
+          const Target: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Region.Id);
+          if Target <> null then
+            case Target.Action of
+              when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+                Scrolling.Move<TMsg>(View, Delta, Apply);
+              else
+            end case;
+          end if;
+
+          return;
+        end if;
         const Before: int := if ScrollOffsets.ContainsKey(
             Region.Id
           ) then ScrollOffsets[Region.Id]

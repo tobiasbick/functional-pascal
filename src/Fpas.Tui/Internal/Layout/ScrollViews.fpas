@@ -1,0 +1,78 @@
+unit Fpas.Tui.Internal.Layout.ScrollViews;
+
+uses
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+
+public type Viewport<TMsg> = record
+  public Offset: int;
+  public Maximum: int;
+  public Rows: int;
+  public Following: bool;
+  public Bar: bool;
+  public OnScroll: function(E.ScrollChange): TMsg;
+end record;
+
+public function Resolve<TMsg>(
+  Position: E.ScrollPosition; ContentRows: int; Area: F.Rect;
+  ShowScrollbar: bool; OnScroll: function(E.ScrollChange): TMsg
+): Viewport<TMsg>;
+begin
+  const Maximum: int := Sys.Math.Max(0, ContentRows - Area.Height);
+  var Offset: int := Maximum;
+  var Following: bool := true;
+  case Position of
+    when E.ScrollPosition.Offset(const Row: int):
+      Offset := Sys.Math.Clamp(Row, 0, Maximum);
+      Following := false;
+    when E.ScrollPosition.End:
+  end case;
+
+  return new Viewport<TMsg>(
+    Offset, Maximum, Area.Height, Following,
+    ShowScrollbar and Maximum > 0 and Area.Width > 1, OnScroll
+  );
+end function;
+
+public procedure DrawBar<TMsg>(
+  View: Viewport<TMsg>; Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect;
+  Style: E.Style; Widgets: E.WidgetStyles?
+);
+begin
+  if not View.Bar then
+    return;
+  end if;
+  const Thumb: int := Sys.Math.Max(
+    1,
+    cast<int>(cast<long>(View.Rows) * cast<long>(View.Rows) div (cast<long>(View.Maximum) +
+      cast<long>(View.Rows)))
+  );
+  const Start: int := cast<int>(cast<long>(View.Offset) * cast<long>(View.Rows - Thumb) div
+    cast<long>(View.Maximum));
+  const TrackStyle: E.Style := if Widgets = null then Style
+    else new E.Style(Widgets.ProgressTrackColor, Style.Background)
+    end if;
+  const ThumbStyle: E.Style := if Widgets = null then Style
+    else new E.Style(Widgets.ProgressFillColor, Style.Background)
+    end if;
+  for Row: int := 0 to View.Rows - 1 do
+    const BarCell: F.Rect := new F.Rect(Area.X + Area.Width - 1, Area.Y + Row, 1, 1);
+    const Active: bool := Row >= Start and Row < Start + Thumb;
+    Operations.Add(
+      new D.Operation(
+        if Active then '█' else '│' end if, BarCell, Clip,
+        if Active then ThumbStyle else TrackStyle end if, false
+      )
+    );
+  end for;
+end procedure;
+
+public function Equivalent<TMsg>(Left: Viewport<TMsg>; Right: Viewport<TMsg>): bool;
+begin
+  return Left.Offset = Right.Offset and Left.Maximum = Right.Maximum and Left.Rows = Right.Rows
+    and Left.Following = Right.Following and Left.Bar = Right.Bar and Sys.Object.Equals(
+    Left.OnScroll,
+    Right.OnScroll
+  );
+end function;
+end unit;

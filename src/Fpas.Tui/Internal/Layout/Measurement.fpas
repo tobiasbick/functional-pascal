@@ -29,6 +29,17 @@ begin
       end for;
 
       return Width;
+    when E.Element.Selectable(_, const Items: array of E.SelectionItem, _, _, _):
+      if not Horizontal then
+        return Items.Length;
+      end if;
+      var Width: int := 0;
+      for Item: E.SelectionItem in Items do
+        const Prefix: int := if Item.CanActivate then 2 else 6 end if;
+        Width := Sys.Math.Max(Width, G.Measure(Item.Text) + Prefix);
+      end for;
+
+      return Width;
     when E.Element.Gauge(_):
       return if Horizontal then 12 else 1 end if;
     when E.Element.Stack(
@@ -54,7 +65,9 @@ begin
     ), E.Element.Decorated(
       const Child: E.Element<TMsg>,
       _
-    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>), E.Element.Desktop(
+    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>), E.Element.ControlledScroll(
+      _, const Child: E.Element<TMsg>, _, _, _
+    ), E.Element.Desktop(
       const Child: E.Element<TMsg>,
       _,
       _

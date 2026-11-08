@@ -1,7 +1,8 @@
 unit Gallery.Previews;
 
 uses
-  Gallery.State as G, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes;
+  Gallery.State as G, Fpas.Tui.Elements as E, Fpas.Tui.Themes as Themes,
+  System.Collections.Generic as Generic;
 
 function Button(
   Colors: Themes.Palette; Id: string; Label: string; Message: G.Msg; Enabled: bool := true
@@ -60,15 +61,39 @@ begin
   );
 end function;
 
+const SampleItems: array of E.SelectionItem := [
+  new E.SelectionItem('amber', 'Amber'),
+  new E.SelectionItem('birch', 'Birch'),
+  new E.SelectionItem('cedar', 'Cedar', false),
+  new E.SelectionItem('dogwood', 'Dogwood'),
+  new E.SelectionItem('elm', 'Elm'),
+  new E.SelectionItem('fir', 'Fir'),
+  new E.SelectionItem('ginkgo', 'Ginkgo'),
+  new E.SelectionItem('hazel', 'Hazel'),
+  new E.SelectionItem('juniper', 'Juniper')
+];
+
+function ItemName(Key: string): string;
+begin
+  for Item: E.SelectionItem in SampleItems do
+    if Item.Key = Key then
+      return Item.Text;
+    end if;
+  end for;
+
+  return '-';
+end function;
+
 function Lists(State: G.Model): E.Element<G.Msg>;
 begin
   const Items: E.Element<G.Msg> := if State.Empty then E.Text<G.Msg>('No items.')
-    else E.List<G.Msg>(
-      'sample-list', [
-        new E.ListItem<G.Msg>('amber', 'Amber', G.Msg.Choose('Amber'), State.Selection = 'Amber'),
-        new E.ListItem<G.Msg>('birch', 'Birch', G.Msg.Choose('Birch'), State.Selection = 'Birch'),
-        new E.ListItem<G.Msg>('cedar', 'Cedar', G.Msg.Choose('Cedar'), State.Selection = 'Cedar')
-      ]
+    else E.Size<G.Msg>(
+      E.SelectionList<G.Msg>(
+        'sample-list', SampleItems, State.Selection,
+        function(Key: string): G.Msg => G.Msg.Choose(Key),
+        function(Key: string): G.Msg => G.Msg.OpenItem(Key)
+      ),
+      new E.Flex(Basis := 3, Grow := 1, Maximum := 6)
     )
     end if;
   return E.Column<G.Msg>(
@@ -80,7 +105,12 @@ begin
       function(Value: bool): G.Msg => G.Msg.EmptyList(Value)
     ),
     Items,
-    E.Text<G.Msg>(if State.Empty then 'Selection hidden' else 'Selected: ' + State.Selection end if)
+    E.Column<G.Msg>(
+      E.Text<G.Msg>(
+        if State.Empty then 'Selection hidden' else 'Selected: ' + ItemName(State.Selection) end if
+      ),
+      E.Text<G.Msg>('Opened: ' + ItemName(State.Opened))
+    )
   );
 end function;
 
@@ -118,21 +148,35 @@ begin
   );
 end function;
 
-function Scrolling(): E.Element<G.Msg>;
+function LogScrolled(Change: E.ScrollChange): G.Msg;
 begin
+  return G.Msg.ScrollLog(Change.Position);
+end function;
+
+function Scrolling(State: G.Model; Colors: Themes.Palette): E.Element<G.Msg>;
+begin
+  const Lines: Generic.List<E.Element<G.Msg>> := new Generic.List<E.Element<G.Msg>>();
+  for Entry: int := 1 to State.LogCount do
+    Lines.Add(E.Text<G.Msg>('Event ' + Entry.ToString('00')));
+  end for;
+  const Status: string := case State.LogPosition of
+    when E.ScrollPosition.End: 'Following newest';
+    when E.ScrollPosition.Offset(_): 'Paused · End follows newest';
+  end case;
   return E.Column<G.Msg>(
-    E.Text<G.Msg>('Scroll over the box to read more.'),
+    E.Text<G.Msg>(Status),
     E.Size<G.Msg>(
       E.Border<G.Msg>(
         E.ScrollView<G.Msg>(
-          'sample-scroll', E.Column<G.Msg>(
-            E.Text<G.Msg>('01  Amber'), E.Text<G.Msg>('02  Birch'), E.Text<G.Msg>('03  Cedar'),
-            E.Text<G.Msg>('04  Dogwood'), E.Text<G.Msg>('05  Elm'), E.Text<G.Msg>('06  Fir'),
-            E.Text<G.Msg>('07  Ginkgo'), E.Text<G.Msg>('08  Hazel'), E.Text<G.Msg>('09  Juniper')
-          )
-        ), 'Scroll view'
+          'sample-scroll', E.Column<G.Msg>(Lines.ToArray()), State.LogPosition, LogScrolled
+        ), 'Event log'
       ),
       new E.Flex(Basis := 6, Minimum := 4)
+    ),
+    E.Row<G.Msg>(
+      new E.Flow(Gap := 1),
+      Button(Colors, 'log-append', 'Append event', G.Msg.AppendLog, State.LogCount < 100),
+      Button(Colors, 'log-follow', 'Follow newest', G.Msg.ScrollLog(E.ScrollPosition.End))
     )
   );
 end function;
@@ -184,7 +228,7 @@ begin
     when G.Page.Lists: Lists(State);
     when G.Page.Progress: Progress(State, Colors);
     when G.Page.Layout: Layout(Colors);
-    when G.Page.Scrolling: Scrolling();
+    when G.Page.Scrolling: Scrolling(State, Colors);
     when G.Page.Canvas: Canvas(State, Colors);
     when G.Page.Overlay: E.Column<G.Msg>(
       new E.Flow(Gap := 1),

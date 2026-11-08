@@ -1,0 +1,46 @@
+unit Fpas.Tui.Internal.Hosting.ScrollNavigation;
+
+uses Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.ScrollViews as V, System as Sys;
+
+public procedure Move<TMsg>(View: V.Viewport<TMsg>; Delta: int; Apply: procedure(TMsg));
+begin
+  const Offset: int := cast<int>(Sys.Math.Clamp(
+    cast<long>(View.Offset) + cast<long>(Delta),
+    0L,
+    cast<long>(View.Maximum)
+  ));
+  if Offset <> View.Offset then
+    Apply(View.OnScroll(new E.ScrollChange(E.ScrollPosition.Offset(Offset), Offset, View.Maximum)));
+  end if;
+end procedure;
+
+public function Key<TMsg>(
+  View: V.Viewport<TMsg>; Pressed: E.Key; Modifiers: E.KeyModifiers; Apply: procedure(TMsg)
+): bool;
+begin
+  if Modifiers <> E.KeyModifiers.None then
+    return false;
+  end if;
+
+  case Pressed of
+    when E.Key.Up:
+      Move<TMsg>(View, -1, Apply);
+    when E.Key.Down:
+      Move<TMsg>(View, 1, Apply);
+    when E.Key.PageUp:
+      Move<TMsg>(View, -View.Rows, Apply);
+    when E.Key.PageDown:
+      Move<TMsg>(View, View.Rows, Apply);
+    when E.Key.Home:
+      Move<TMsg>(View, -View.Offset, Apply);
+    when E.Key.End:
+      if not View.Following then
+        Apply(View.OnScroll(new E.ScrollChange(E.ScrollPosition.End, View.Maximum, View.Maximum)));
+      end if;
+    else
+      return false;
+  end case;
+
+  return true;
+end function;
+end unit;

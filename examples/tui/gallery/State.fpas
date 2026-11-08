@@ -31,9 +31,12 @@ public type Model = record
   public Presses: int := 0;
   public Checked: bool := false;
   public Text: string := '';
-  public Selection: string := 'Birch';
+  public Selection: string := 'birch';
+  public Opened: string := '';
   public Empty: bool := false;
   public Progress: int := 0;
+  public LogCount: int := 9;
+  public LogPosition: E.ScrollPosition := E.ScrollPosition.End;
   public Overlay: bool := false;
   public Columns: int := 0;
   public Rows: int := 0;
@@ -48,9 +51,12 @@ public type Msg = union
   Check(Value: bool);
   Edit(Value: string);
   Choose(Value: string);
+  OpenItem(Value: string);
   EmptyList(Value: bool);
   Advance;
   ResetProgress;
+  AppendLog;
+  ScrollLog(Position: E.ScrollPosition);
   ResizeCanvas(Columns: int; Rows: int);
   CanvasEvent(Value: string);
   SetOverlay(Open: bool);
@@ -123,6 +129,9 @@ begin
     when Msg.Choose(const Value: string): State with
       Selection := Value;
     end with;
+    when Msg.OpenItem(const Value: string): State with
+      Opened := Value;
+    end with;
     when Msg.EmptyList(const Value: bool): State with
       Empty := Value;
     end with;
@@ -131,6 +140,12 @@ begin
     end with;
     when Msg.ResetProgress: State with
       Progress := 0;
+    end with;
+    when Msg.AppendLog: State with
+      LogCount := Sys.Math.Min(State.LogCount + 1, 100);
+    end with;
+    when Msg.ScrollLog(const Position: E.ScrollPosition): State with
+      LogPosition := Position;
     end with;
     when Msg.ResizeCanvas(const Columns: int, const Rows: int): State with
       Columns := Columns;

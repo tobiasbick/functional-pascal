@@ -1,0 +1,58 @@
+unit Fpas.Tui.Internal.Hosting.ListNavigation;
+
+uses Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.SelectionLists as S, System as Sys;
+
+public procedure SelectAt<TMsg>(List: S.Viewport<TMsg>; Index: int; Apply: procedure(TMsg));
+begin
+  if Index >= 0 and Index < List.Items.Length and Index <> List.Selected then
+    Apply(List.OnSelect(List.Items[Index].Key));
+  end if;
+end procedure;
+
+public procedure Activate<TMsg>(List: S.Viewport<TMsg>; Apply: procedure(TMsg));
+begin
+  if List.Selected >= 0 and List.Items[List.Selected].CanActivate then
+    Apply(List.OnActivate(List.Key()));
+  end if;
+end procedure;
+
+public function Key<TMsg>(
+  List: S.Viewport<TMsg>; Pressed: E.Key; Modifiers: E.KeyModifiers; Apply: procedure(TMsg);
+  Scroll: procedure(int)
+): bool;
+begin
+  if Modifiers <> E.KeyModifiers.None then
+    return false;
+  end if;
+  const Last: int := List.Items.Length - 1;
+  var Next: int := List.Selected;
+  case Pressed of
+    when E.Key.Enter:
+      Activate<TMsg>(List, Apply);
+      return true;
+    when E.Key.Up:
+      Next := if Next < 0 then Last else Next - 1 end if;
+    when E.Key.Down:
+      Next := Next + 1;
+    when E.Key.Home:
+      Next := 0;
+    when E.Key.End:
+      Next := Last;
+    when E.Key.PageUp:
+      Next := if Next < 0 then Last else Next - List.Rows end if;
+    when E.Key.PageDown:
+      Next := if Next < 0 then 0 else Next + List.Rows end if;
+    else
+      return false;
+  end case;
+
+  const Index: int := Sys.Math.Clamp(Next, 0, Last);
+  if Index = List.Selected then
+    Scroll(S.Reveal(Index, List.First, List.Rows));
+  else
+    SelectAt<TMsg>(List, Index, Apply);
+  end if;
+
+  return true;
+end function;
+end unit;

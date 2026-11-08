@@ -1,7 +1,9 @@
 unit Fpas.Tui.Internal.Layout.Equivalence;
 
 uses
-  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as Tree, System as Sys,
+  Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as Tree,
+  Fpas.Tui.Internal.Layout.SelectionLists as S, System as Sys,
+  Fpas.Tui.Internal.Layout.ScrollViews as V,
   System.Collections.Generic as Generic;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
@@ -18,6 +20,20 @@ begin
       case Right of
         when Tree.Binding.Edit(const OtherValue: string, const OtherChange: function(string): TMsg):
           return Value = OtherValue and Sys.Object.Equals(Change, OtherChange);
+        else
+          return false;
+      end case;
+    when Tree.Binding.SelectList(const List: S.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.SelectList(const Other: S.Viewport<TMsg>):
+          return S.Equivalent<TMsg>(List, Other);
+        else
+          return false;
+      end case;
+    when Tree.Binding.Scroll(const View: V.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.Scroll(const Other: V.Viewport<TMsg>):
+          return V.Equivalent<TMsg>(View, Other);
         else
           return false;
       end case;

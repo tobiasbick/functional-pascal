@@ -3,6 +3,7 @@ unit Fpas.Tui.Internal.Rendering.Decoration;
 uses
   Fpas.Tui.Elements as E, Fpas.Tui.Internal.Layout.Arrangement as A,
   Fpas.Tui.Internal.Layout.Flexible as F,
+  Fpas.Tui.Internal.Layout.SelectionLists as S, Fpas.Tui.Internal.Layout.ScrollViews as V,
   Fpas.Tui.Internal.Hosting.Editing as Edit, Fpas.Tui.Internal.Rendering.Glyphs as G, System as Sys;
 
 public procedure Apply<TMsg>(
@@ -20,13 +21,39 @@ begin
   if Control.Role = 'canvas' then
     return;
   end if;
+  const Bounds: F.Rect := Control.Bounds;
+  case Control.Action of
+    when A.Binding.SelectList(const List: S.Viewport<TMsg>):
+      if Focused then
+        const Offset: int := List.Selected - List.First;
+        if Offset >= 0 and Offset < Bounds.Height then
+          for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
+            Mark(X, Bounds.Y + Offset, Theme.Focus);
+          end for;
+        else
+          Mark(Bounds.X, Bounds.Y, Theme.Focus);
+        end if;
+      end if;
+
+      return;
+    when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+      if Focused then
+        Mark(
+          if View.Bar then Bounds.X + Bounds.Width - 1 else Bounds.X end if,
+          Bounds.Y,
+          Theme.Focus
+        );
+      end if;
+
+      return;
+    else
+  end case;
   const Widgets: E.WidgetStyles? := Theme.Widgets;
   const Style: E.Style := if not Focused then Theme.Hover
     else if Widgets <> null and Control.Role = 'textbox' then Widgets.FocusedField
       else Theme.Focus
       end if
     end if;
-  const Bounds: F.Rect := Control.Bounds;
   for Y: int := Bounds.Y to Bounds.Y + Bounds.Height - 1 do
     for X: int := Bounds.X to Bounds.X + Bounds.Width - 1 do
       Mark(X, Y, Style);

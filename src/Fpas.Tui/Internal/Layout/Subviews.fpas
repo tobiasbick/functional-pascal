@@ -1,0 +1,80 @@
+unit Fpas.Tui.Internal.Layout.Subviews;
+
+uses Fpas.Tui.Elements as E, System as Sys, System.Collections.Generic as Generic;
+
+public function Resolve<TMsg>(
+  Root: E.Element<TMsg>; PreviousCache: Generic.Dictionary<string, E.CacheEntry<TMsg>>;
+  Next: Generic.Dictionary<string, E.CacheEntry<TMsg>>
+): E.Element<TMsg>;
+  function ResolveChildren(Children: array of E.Element<TMsg>): array of E.Element<TMsg>;
+  begin
+    const Result: Generic.List<E.Element<TMsg>> := new Generic.List<E.Element<TMsg>>(
+      Children.Length
+    );
+    for Child: E.Element<TMsg> in Children do
+      Result.Add(Walk(Child));
+    end for;
+
+    return Result.ToArray();
+  end function;
+
+  function Walk(Node: E.Element<TMsg>): E.Element<TMsg>;
+  begin
+    case Node of
+      when E.Element.Deferred(
+        const Id: string,
+        const Build: function(E.CacheEntry<TMsg>?): E.CacheEntry<TMsg>
+      ):
+        if Id.Length = 0 or Next.ContainsKey(Id) then
+          raise new Sys.ArgumentException('Subview IDs must be nonempty and unique.');
+        end if;
+        const Old: E.CacheEntry<TMsg>? := if PreviousCache.ContainsKey(
+            Id
+          ) then PreviousCache[Id]
+          else null
+          end if;
+        const Entry: E.CacheEntry<TMsg> := Build(Old);
+        Next.Add(Id, Entry);
+        return Walk(Entry.Tree);
+      when E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        const Axis: bool,
+        const Rule: E.Flow
+      ):
+        return E.Element<TMsg>.Stack(ResolveChildren(Children), Axis, Rule);
+      when E.Element.Sized(const Child: E.Element<TMsg>, const Rule: E.Flex):
+        return E.Element<TMsg>.Sized(Walk(Child), Rule);
+      when E.Element.Decorated(const Child: E.Element<TMsg>, const Rule: E.Style):
+        return E.Element<TMsg>.Decorated(Walk(Child), Rule);
+      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+        return E.Element<TMsg>.Framed(Walk(Child), Title);
+      when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>):
+        return E.Element<TMsg>.Scrollable(Id, Walk(Child));
+      when E.Element.ControlledScroll(
+        const Id: string, const Child: E.Element<TMsg>, const Position: E.ScrollPosition,
+        const OnScroll: function(E.ScrollChange): TMsg, const ShowScrollbar: bool
+      ):
+        return E.Element<TMsg>.ControlledScroll(Id, Walk(Child), Position, OnScroll, ShowScrollbar);
+      when E.Element.Desktop(
+        const Content: E.Element<TMsg>,
+        const Overlays: array of E.Element<TMsg>,
+        const Keys: array of E.ShortcutBinding<TMsg>
+      ):
+        return E.Element<TMsg>.Desktop(Walk(Content), ResolveChildren(Overlays), Keys);
+      when E.Element.Layer(
+        const Id: string,
+        const Modal: bool,
+        const First: string,
+        const Escape: E.EscapeBinding<TMsg>,
+        const Content: E.Element<TMsg>,
+        const Keys: array of E.ShortcutBinding<TMsg>
+      ):
+        return E.Element<TMsg>.Layer(Id, Modal, First, Escape, Walk(Content), Keys);
+      else
+        return Node;
+    end case;
+  end function;
+begin
+  return Walk(Root);
+end function;
+end unit;

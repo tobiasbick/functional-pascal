@@ -36,6 +36,23 @@ begin
   end for;
 end procedure;
 
+public procedure ListRow(
+  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect;
+  Caption: string; Selected: bool; Style: E.Style; Widgets: E.WidgetStyles?
+);
+begin
+  const Prefix: string := if Selected then if Widgets = null then '* ' else '▸ ' end if
+    else '  '
+    end if;
+  var Color: E.Style := Style;
+  if Selected and Widgets <> null then
+    Color := Widgets.Selected;
+    Fill(Operations, F.Intersect(Area, Clip), Color);
+  end if;
+
+  Operations.Add(new Operation(Prefix + Caption, Area, Clip, Color, false));
+end procedure;
+
 public procedure Border(
   Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
   Style: E.Style; Rounded: bool

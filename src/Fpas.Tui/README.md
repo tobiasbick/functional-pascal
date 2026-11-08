@@ -31,7 +31,7 @@ Compose the screen with `Row`, `Column`, `Border`, `ScrollView` and
 `Overlay`. Use `Size` for flex basis, minimum, maximum, grow and shrink.
 Containers clip overflowing content. Use `ScrollView` for vertical scrolling.
 The controls include `Text`, `Button`, `Checkbox`, `TextInput`, `List`,
-`ProgressBar` and `CellCanvas`.
+`SelectionList`, `ProgressBar` and `CellCanvas`.
 
 Control and cached subview IDs must be unique within the current tree. List
 item keys are local to the list, and item controls use `list-id/item-key`.
@@ -49,6 +49,40 @@ character goes to the focused text field first. Otherwise it can trigger a
 character shortcut in the active scope. `Input.Character` simulates this
 path. `TextInput` and `Paste` go directly to the editor, which replaces line
 breaks with spaces.
+
+### Selection list
+
+`SelectionList(Id, Items, SelectedKey, OnSelect, OnActivate)` gives the list
+one focus stop. Set `SelectedKey` from the model and use an empty string for
+no selection. Each `SelectionItem` has a unique nonempty key, a label and a
+`CanActivate` flag.
+
+A click or an unmodified navigation key selects a row. The list supports Up,
+Down, Home, End, Page Up and Page Down. It keeps the new selection
+visible. The wheel scrolls the viewport without changing the selection.
+Enter or `Input.Activate(Id)` activates the selected row if it is enabled.
+An empty list is skipped by Tab. The control snapshot has role `listbox`
+and reports the selected key as its value.
+
+### Controlled scroll view
+
+Use `ScrollView(Id, Child, Position, OnScroll, ShowScrollbar)` to keep the
+vertical scroll position in the model. Use `ScrollPosition.Offset(Row)` for
+a zero-based top row or `ScrollPosition.End` to keep the newest rows in
+view as content grows. The layout clamps the displayed offset to the
+available rows.
+
+The focused viewport handles Up, Down, Page Up, Page Down, Home and End.
+The wheel scrolls the viewport under the pointer. `OnScroll` receives the
+requested position, its resolved offset and the maximum offset. Ordinary
+movement requests a fixed offset. End requests follow mode, including
+when the last row is already visible. Apply the new position in `Update`.
+Layout changes resolve the position again without sending a scroll message.
+
+The scrollbar appears when content overflows and can be disabled with
+`ShowScrollbar := false`. The viewport takes one focus stop when it can
+scroll. Its snapshot has role `scrollview` and reports the resolved offset
+as its value. The two-argument `ScrollView` keeps its offset in the host.
 
 ### Responsive cell canvas
 

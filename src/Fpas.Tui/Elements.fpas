@@ -129,6 +129,23 @@ public type ListItem<TMsg> = record
   public Selected: bool := false;
 end record;
 
+public type SelectionItem = record
+  public Key: string;
+  public Text: string;
+  public CanActivate: bool := true;
+end record;
+
+public type ScrollPosition = union
+  Offset(Row: int);
+  End;
+end union;
+
+public type ScrollChange = record
+  public Position: ScrollPosition;
+  public Offset: int;
+  public Maximum: int;
+end record;
+
 public type Style = record
   public Foreground: int := -1;
   public Background: int := -1;
@@ -161,12 +178,20 @@ public type Element<TMsg> = union
   Action(Id: string; Caption: string; Message: TMsg; Enabled: bool; Role: string; Value: string);
   Editor(Id: string; Value: string; OnChange: function(string): TMsg);
   Choices(Id: string; Items: array of ListItem<TMsg>);
+  Selectable(
+    Id: string; Items: array of SelectionItem; SelectedKey: string;
+    OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+  );
   Gauge(Percent: int);
   Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: Flow);
   Sized(Child: Element<TMsg>; Settings: Flex);
   Decorated(Child: Element<TMsg>; Settings: Style);
   Framed(Child: Element<TMsg>; Title: string);
   Scrollable(Id: string; Child: Element<TMsg>);
+  ControlledScroll(
+    Id: string; Child: Element<TMsg>; Position: ScrollPosition;
+    OnScroll: function(ScrollChange): TMsg; ShowScrollbar: bool
+  );
   Custom(Columns: int; Rows: int; Draw: function(int, int): Cell; Input: CanvasBinding<TMsg>);
   Desktop(Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of ShortcutBinding<TMsg>);
   Layer(
@@ -251,6 +276,24 @@ begin
   return Element<TMsg>.Choices(Id, cast<array of ListItem<TMsg>>(Items.Clone()));
 end function;
 
+/// A single focus stop with separate messages for selection and activation.
+public function SelectionList<TMsg>(
+  Id: string; Items: array of SelectionItem; SelectedKey: string;
+  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+): Element<TMsg>;
+begin
+  const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+  for Item: SelectionItem in Items do
+    if Item.Key.Length = 0 or not Keys.Add(Item.Key) then
+      raise new Sys.ArgumentException('List keys must be nonempty and unique.');
+    end if;
+  end for;
+
+  return Element<TMsg>.Selectable(
+    Id, cast<array of SelectionItem>(Items.Clone()), SelectedKey, OnSelect, OnActivate
+  );
+end function;
+
 public function ProgressBar<TMsg>(Percent: int): Element<TMsg>;
 begin
   return Element<TMsg>.Gauge(Sys.Math.Clamp(Percent, 0, 100));
@@ -264,6 +307,15 @@ end function;
 public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>): Element<TMsg>;
 begin
   return Element<TMsg>.Scrollable(Id, Child);
+end function;
+
+/// A vertical viewport whose scroll position is owned by the application model.
+public function ScrollView<TMsg>(
+  Id: string; Child: Element<TMsg>; Position: ScrollPosition;
+  OnScroll: function(ScrollChange): TMsg; ShowScrollbar: bool := true
+): Element<TMsg>;
+begin
+  return Element<TMsg>.ControlledScroll(Id, Child, Position, OnScroll, ShowScrollbar);
 end function;
 
 public function CellCanvas<TMsg>(Columns: int; Rows: int; Draw: function(int, int): Cell): Element<TMsg>;

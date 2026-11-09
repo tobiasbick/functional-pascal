@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <FpasCuiCMakeCommand Condition="'$(FpasCuiCMakeCommand)' == ''">cmake</FpasCuiCMakeCommand>
+    <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</FpasCuiNativeRid>
+    <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</FpasCuiNativeRid>
+    <FpasCuiNativeBuildDirectory>$(MSBuildProjectDirectory)/obj/native/$(FpasCuiNativeRid)/$(Configuration)/shared</FpasCuiNativeBuildDirectory>
+    <FpasCuiNativeOutput>$(FpasCuiNativeBuildDirectory)/out</FpasCuiNativeOutput>
+    <FpasCuiNativeFile Condition="'$(FpasCuiNativeRid)' == 'linux-x64'">libfpas_cui.so</FpasCuiNativeFile>
+    <FpasCuiNativeFile Condition="'$(FpasCuiNativeRid)' == 'win-x64'">fpas_cui.dll</FpasCuiNativeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="$(FpasCuiNativeOutput)/$(FpasCuiNativeFile)" Link="$(FpasCuiNativeFile)"
+             Condition="'$(FpasCuiNativeFile)' != ''"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildProjectDirectory)/../../third-party/cui/LICENSE-*.txt"
+             Link="licenses/cui/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- CMake owns incremental recompilation; reconfigure when callers change options. -->
+  <Target Name="BuildFpasCuiNative" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="'$(FpasCuiNativeFile)' == ''" Text="CUI supports linux-x64 and win-x64; requested $(FpasCuiNativeRid)." />
+    <Error Condition="'$(FpasCuiNativeRid)' != '$(NETCoreSdkRuntimeIdentifier)'"
+           Text="The source CUI build requires a matching host toolchain; cross-RID asset selection is not implemented." />
+    <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; -S &quot;$(MSBuildProjectDirectory)/native&quot; -B &quot;$(FpasCuiNativeBuildDirectory)&quot; -DCMAKE_BUILD_TYPE=$(Configuration) -DBUILD_SHARED_LIBS=ON -DFPAS_CUI_BUILD_TESTS=OFF -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_$(Configuration.ToUpperInvariant())=&quot;$(FpasCuiNativeOutput)&quot; -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_$(Configuration.ToUpperInvariant())=&quot;$(FpasCuiNativeOutput)&quot; $(FpasCuiCMakeArguments)" />
+    <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; --build &quot;$(FpasCuiNativeBuildDirectory)&quot; --config $(Configuration) --parallel" />
+  </Target>
+</Project>

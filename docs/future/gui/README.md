@@ -4,10 +4,13 @@ Implement a CUI-backed desktop GUI for FPAS, then share MVU and compatible
 widget contracts with the TUI. FPAS programs use ordinary CLR libraries and the
 current language syntax. Initial targets are `linux-x64`, followed by `win-x64`.
 
-Implementation is open. The separate C# proof of concept establishes Linux
-single-header interop, software/OpenGL rendering and static CUI linking into a
-NativeAOT executable. Repository integration, the FPAS-facing libraries and
-Windows verification remain to be implemented.
+Implementation is open. The [native build](../../../src/Fpas.Gui.Cui/native/README.md)
+provides Linux shared/static libraries with headless consumer link/render checks.
+The initial [C# binding](../../../src/Fpas.Gui.Cui/README.md) adds window/control
+interop, UTF-8 buffers and an automatic local native build, verified on Linux.
+The separate proof of concept establishes static CUI linking into NativeAOT.
+Complete widget coverage, SDK integration, the FPAS-facing libraries and Windows
+verification remain to be implemented.
 
 ## Execution order
 
@@ -40,6 +43,11 @@ Windows checks remain open; overall completion requires both platforms.
 | `Fpas.Gui` | FPAS GUI host and CUI adapter | Binding, MVU core and widget contracts |
 | `Fpas.Tui` | Terminal host, cell layout and renderer | MVU core and widget contracts |
 
+Upstream files belong under the repository-root `third-party/<library>/` tree.
+For CUI, `third-party/cui/` holds `cui_single.h`, license notices and `UPSTREAM.md`
+with source, version, commit and checksum. Our C# binding stays under
+`src/Fpas.Gui.Cui/`; our C bridge and CMake files stay in its `native/` directory.
+
 The public application path is MVU plus declarative widgets. The low-level C#
 binding supports the host and integration fixtures; do not develop a competing
 FPAS application API around imperative native calls. Portable views use the
@@ -47,11 +55,14 @@ same widget constructors for both hosts. GUI and terminal extensions are explici
 
 ## Agreed scope
 
-- Vendor the pinned single header and licenses; maintain the integration locally.
+- Use the [pinned single header and notices](../../../third-party/cui/UPSTREAM.md);
+  maintain the integration locally.
 - Build native assets with FPAS and deliver prebuilt assets to GUI consumers.
 - Support the existing `fpas publish` modes. NativeAOT links CUI statically from
   the start; ordinary single-file publishing can embed/extract the shared library.
 - Keep terminal-only applications independent of CUI and native GUI tooling.
+- Provide an interactive FPAS GUI widget gallery under `examples/gui/gallery/`,
+  comparable to the TUI gallery; its scope belongs to the [GUI host plan](gui-host.md#widget-gallery-example).
 - Upstream security corrections are outside this implementation plan by user
   decision. They are not tasks or completion gates for these stages.
 - macOS, other architectures, direct Wayland support, accessibility implementation

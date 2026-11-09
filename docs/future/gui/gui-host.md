@@ -38,6 +38,25 @@ adapter from shared declarative views to CUI.
 - [ ] Expose actual renderer selection for diagnostics/tests. Software fallback
   is usable; tests requesting OpenGL must identify it if fallback occurs.
 
+## Widget gallery example
+
+- [ ] Add `examples/gui/gallery/` with its own `GuiWidgetGallery.fpasproj`,
+  following the [TUI gallery](../../../examples/tui/gallery/README.md). Write
+  the application in FPAS using the canonical MVU host and widget contracts,
+  with focused model/update, view and preview units.
+- [ ] Provide widget navigation and interactive previews for every implemented
+  GUI widget and supported variant, including disabled, empty and selected
+  states. Keep the gallery aligned when adding or changing widget support.
+- [ ] Cover text editing, lists/tables/tabs, progress, scrolling, overlays and
+  layout, plus available GUI-only image/canvas extensions. Show current values
+  and demonstrate asynchronous completion and cancellation.
+- [ ] Support keyboard and pointer navigation, responsive window resizing and
+  switching supported themes. Preserve page selection and preview model state
+  across resize/theme changes. Reuse portable TUI gallery state/transitions
+  where useful; graphical presentation follows the GUI's own layout units.
+- [ ] Document how to build, run, navigate and publish the gallery in its README.
+  Provide stable control IDs and deterministic scenarios for GUI-host tests.
+
 ## Acceptance
 
 - [ ] Run a small public FPAS MVU GUI example with a counter, checkbox, UTF-8
@@ -48,6 +67,8 @@ adapter from shared declarative views to CUI.
   removal and repeated open/close. Assert ownership of native resources.
 - [ ] Exercise the host under software and OpenGL rendering on Linux, then on
   Windows. Use virtual displays for cloud integration checks and retain screenshots.
+- [ ] Build and run the FPAS gallery, verify navigation and representative edits
+  on its pages, and ensure previews cover the implemented GUI widget inventory.
 
 The low-level binding fixture remains a targeted integration test; user-facing
 examples and documentation use this single MVU/declarative application path.

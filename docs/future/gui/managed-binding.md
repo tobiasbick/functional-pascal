@@ -1,51 +1,45 @@
 # Managed CUI binding
 
-Depends on [native integration](native-integration.md). Implement
-`Fpas.Gui.Cui` as a C# library compatible with .NET 10 and NativeAOT. It owns
-native lifetime and marshalling; application model/update logic remains outside it.
+The initial [Fpas.Gui.Cui binding](../../../src/Fpas.Gui.Cui/README.md) provides
+UI-thread-owned windows, scalar native option adapters, column layout, headings,
+text, buttons, checkboxes and single-line editing. Its MSBuild target builds and
+copies the shared native library and notices into referencing project outputs.
 
-## Interop contract
+Linux tests cover explicit C interop, boolean/geometry values, UTF-8 editing
+under compacting collections, Unicode/grapheme offset conversion, thread/frame
+ownership, both renderers, resized capture and capture-failure recovery.
+The library enables AOT compatibility analysis. Windows and the following work
+remain open; full application/SDK publishing belongs to
+[FPAS publishing](fpas-publishing.md).
 
-- [ ] Use source-generated `LibraryImport` with explicit C calling conventions
-  for every entry point. Represent C booleans with the correct one-byte ABI;
-  verify struct layout for any directly imported value types on both targets.
-- [ ] Import ordinary CUI functions directly. Use the small C bridge for macros
-  and complex option setup instead of duplicating native structs throughout C#.
-- [ ] Keep pointers and native allocation details out of FPAS-facing types.
-  Expose ordinary CLR values, owned handles and bounded buffers.
-- [ ] Implement the primitives needed by the planned shared widgets, including
-  layout, controls, focus, selection, editing, scrolling and overlays. Scope the
-  first integration fixture to a window, button, checkbox and text field.
+## Remaining primitives and ownership
 
-## Lifetime, threading and text
+- [ ] Add the primitives required by the remaining shared widgets: rows, focus,
+  list/table/tab selection, multiline editing, scrolling and overlays. Keep a
+  single owned binding rather than exposing native option structs to FPAS.
+- [ ] Connect the buffer's UTF-16/UTF-8 conversion to native editor caret and
+  selection state, with controlled document replacement and multiline navigation.
+  Preserve grapheme boundaries when native editing reports code-point positions.
+- [ ] Add explicit ownership and UI-thread disposal for image/texture resources
+  and other persistent allocations introduced by these controls. Review native
+  string retention for each new widget instead of extending the current subset's
+  frame-copy assumptions to the entire CUI API.
+- [ ] Supply thread-safe wakeup for queued managed work. Post a platform event
+  without mutating CUI state from a worker; cover wakeup racing with disposal.
+- [ ] If native callbacks are introduced, root their state/delegates for their
+  full lifetime, handle live-resize reentrancy and surface failures after leaving
+  native frames. Managed exceptions must not cross the C ABI.
 
-- [ ] Own windows, contexts, textures and native buffers explicitly. Dispose
-  graphics resources on their UI thread, including on failure; never call native
-  graphics teardown from an arbitrary managed finalizer thread.
-- [ ] Keep UTF-8 editing buffers stable for the required native lifetime.
-  Validate sizes/terminators and distinguish borrowed, frame-local and persistent
-  memory. Review string retention for each bound widget rather than assuming
-  every CUI call copies temporary marshalling buffers.
-- [ ] Keep application-visible strings and document positions in CLR form.
-  Provide explicit conversion between UTF-8 byte positions and UTF-16 offsets,
-  preserving valid scalar/grapheme boundaries and editor selection semantics.
-- [ ] Keep all CUI mutation on the UI thread. If native callbacks are introduced,
-  root their state/delegates for their full lifetime and return exceptions to the
-  managed host after leaving native frames; exceptions must not cross the C ABI.
-- [ ] Supply a thread-safe wake operation for queued managed work. CUI's app
-  layer can sleep awaiting native input; waking it must post a platform event
-  without calling ordinary CUI state APIs from a worker thread.
+## Remaining acceptance
 
-## Acceptance
+- [ ] Assert owned resource counts across repeated sessions, allocation failures
+  and resource replacement. Disposal/state tests alone do not establish leak freedom.
+- [ ] Verify idle background wakeup and shutdown races: completion after disposal
+  must not touch a destroyed window or deliver a late application message.
+- [ ] Verify the corresponding Windows calling convention, boolean/struct ABI,
+  editing, lifetime and rendering cases on Windows.
+- [ ] Exercise the finished binding in final NativeAOT consumers as part of the
+  publishing work, including static linking and all newly added entry points.
 
-- [ ] Exercise managed-to-native calls and returned changes for a button,
-  checkbox and UTF-8 editor, including compacting managed collections between frames.
-- [ ] Test empty/non-ASCII text, buffer limits, position conversion and repeated
-  create/dispose cycles. Assert that owned handles/buffers are released on failure.
-- [ ] Verify idle wakeup and shutdown races: completion after disposal must not
-  access a destroyed native window or deliver a late application message.
-- [ ] Build with AOT compatibility analysis and no reflection/code-generation
-  workaround for the interop layer. Verify Linux first, then Windows.
-
-The application-level GUI API belongs to the [GUI host](gui-host.md), not to a
-second FPAS rendering loop built around this low-level binding.
+The application-level API belongs to the [GUI host](gui-host.md); the low-level
+binding and its fixtures do not define a second FPAS application model.

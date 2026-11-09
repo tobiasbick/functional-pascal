@@ -5,6 +5,37 @@
 *.nupkg
 *.snupkg
 
+# Native compiler and linker output
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.dbg
+*.ilk
+*.exp
+*.pch
+
+# CMake build output
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+install_manifest.txt
+compile_commands.json
+cmake-build-*/
+/src/Fpas.Gui.Cui/native/build*/
+/src/Fpas.Gui.Cui/native/Testing/
+/src/Fpas.Gui.Cui/native/Makefile
+/src/Fpas.Gui.Cui/native/build*.ninja
+/src/Fpas.Gui.Cui/native/.ninja_*
+/src/Fpas.Gui.Cui/native/fpas_cui_smoke
+
 # Test and coverage output
 [Tt]est[Rr]esults/
 coverage/

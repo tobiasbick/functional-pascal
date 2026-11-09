@@ -8,7 +8,8 @@ adapter from shared declarative views to CUI.
 
 - [ ] Provide an application/session entry point accepting an initial model,
   update routine and typed view, matching the shared MVU contracts. Keep all
-  transitions, view evaluation and CUI calls on the owning UI thread.
+  transitions, view evaluation and CUI calls on the owning UI thread. Keep
+  `Update` and `View` short. Schedule I/O and long computations as effects.
 - [ ] Translate the current widget tree into CUI calls with stable scoped IDs.
   Reconcile focus, controlled values, selection and editor state after model
   changes, including controls that disappear or move between modal scopes.
@@ -35,8 +36,11 @@ adapter from shared declarative views to CUI.
 - [ ] Wake an idle native loop when a background result or cancellation arrives.
   Use the binding's platform wake operation; do not mutate CUI from worker tasks
   or require continuous polling/rendering as the normal idle strategy.
-- [ ] Handle close, rendering failure and exceptions with ordered MVU shutdown
-  and UI-thread native cleanup. Keep exceptions out of unmanaged callback frames.
+- [ ] Handle close, rendering failure and exceptions with the
+  [MVU shutdown protocol](shared-mvu.md#cancellation-and-shutdown). Keep the
+  native event loop responsive while cancellation and worker cleanup finish.
+  Wake it on shutdown completion and release CUI resources on the owner thread.
+  Keep exceptions out of unmanaged callback frames.
 - [ ] Expose actual renderer selection for diagnostics/tests. Software fallback
   is usable; tests requesting OpenGL must identify it if fallback occurs.
 
@@ -65,6 +69,10 @@ adapter from shared declarative views to CUI.
   editing, asynchronous result, cancellation and a modal overlay.
 - [ ] Verify that idle completion reaches Update, events arrive once, animations
   do not restart commands and late results after close have no effect.
+- [ ] In a real CUI window, hold a background effect and then its cancellation
+  callback at test gates. Click a second button and verify its state is painted
+  before releasing each gate. During normal close with cleanup still pending,
+  verify that the window handles a redraw before final teardown.
 - [ ] Cover focus restoration, editor/document replacement, resize, control
   removal and repeated open/close. Assert ownership of native resources.
 - [ ] Exercise the host under software and OpenGL rendering on Linux, then on

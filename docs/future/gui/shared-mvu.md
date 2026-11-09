@@ -19,10 +19,23 @@ the same runtime contracts. It must not depend on widget, terminal or CUI types.
   effect execution. Hosts resolve control IDs and own their input/view/presenter
   state; the core never imports terminal keys, cell sizes or native handles.
 - [ ] Define scheduling/wakeup and lifecycle hooks that both hosts can implement.
-  Background work posts messages; model transitions run on the owning host thread.
-- [ ] Define close/failure ordering: stop new work, cancel owned effects, reject
-  late posts, join cooperative work before releasing resources it can use, and
-  make cleanup observable. Cancellation does not force uncooperative code to stop.
+  Run each effect on a worker from the start of its body, including code before
+  the first `await`. Effects post messages. Model transitions run on the owning
+  host thread.
+
+## Cancellation and shutdown
+
+- [ ] Replace synchronous `Cancel()` in the
+  [TUI effect runner](../../../src/Fpas.Tui/Internal/Hosting/Effects.fpas)
+  during extraction. On cancel or replacement, invalidate the old run
+  immediately and use `CancellationTokenSource.CancelAsync()` so registered
+  callbacks run off the host thread. Track callback completion and failures
+  alongside the worker task. Dispose the token source after both have finished.
+- [ ] Split shutdown into a close request and an observable asynchronous
+  completion. Close message admission, release blocked writers, reject late
+  results and request cancellation. Let the host loop continue while cleanup
+  joins workers and callbacks. Keep resources used by effects alive until the
+  work completes. Effects must cooperate with cancellation for cleanup to finish.
 
 ## Host adaptation
 
@@ -37,6 +50,13 @@ the same runtime contracts. It must not depend on widget, terminal or CUI types.
 
 - [ ] Cover message ordering/backpressure, effect replacement, cancellation,
   failures, stale queued results and shutdown with deterministic tests.
+- [ ] Hold an effect before its first await, then hold its cancellation callback
+  in a separate step. In each case, use the TUI headless driver to activate a
+  second button and verify its updated frame before releasing the gate. Exercise
+  explicit cancellation and replacement.
+- [ ] Request shutdown while a worker is held at a gate. Verify that the host
+  step returns, pending posts are released and late messages are rejected.
+  Release the worker and verify that shutdown reports completion after cleanup.
 - [ ] Confirm one update/effect execution per accepted message. Repaint, layout
   and animation do not replay messages; explicitly generated messages such as
   a canvas resize still run Update under the same delivery rules.
@@ -44,5 +64,5 @@ the same runtime contracts. It must not depend on widget, terminal or CUI types.
 - [ ] Demonstrate the same model/update/effects under a headless driver and the
   adapted TUI. Reuse them under the GUI when its [host](gui-host.md) is available.
 
-This library extracts the existing MVU command system. It does not depend on the
-separate [language effect-system proposal](../effect-system-gap.md).
+Use existing FPAS async functions, tasks and cancellation tokens. The
+[language effect-system proposal](../effect-system-gap.md) is separate work.

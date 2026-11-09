@@ -353,7 +353,7 @@ public sealed partial class CuiWindow : IDisposable
     public void TypeText(string text) { CheckFrame(); Utf8.Validate(text, nameof(text)); NativeMethods.TypeText(context, text); }
 
     /// <summary>Renders the current completed view into a PNG after a frame has been presented.</summary>
-    /// <param name="path">Output filename; the containing directory must exist.</param>
+    /// <param name="path">Unicode output filename in an existing directory.</param>
     public void CapturePng(string path)
     {
         CheckFrame(); Utf8.Validate(path, nameof(path));

@@ -364,15 +364,12 @@ public sealed class CuiWindowTests
 
     private static void Capture(CuiWindow window, int width, int height)
     {
-        string path = Path.Combine(Path.GetTempPath(), $"fpas-cui-{Guid.NewGuid():N}.png");
-        try
-        {
-            window.CapturePng(path);
-            byte[] image = File.ReadAllBytes(path);
-            Assert.Equal(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }, image[..8]);
-            Assert.Equal(width, BinaryPrimitives.ReadInt32BigEndian(image.AsSpan(16, 4)));
-            Assert.Equal(height, BinaryPrimitives.ReadInt32BigEndian(image.AsSpan(20, 4)));
-        }
-        finally { File.Delete(path); }
+        using var directory = new TemporaryDirectory();
+        string path = directory.File("capture-雪.png");
+        window.CapturePng(path);
+        byte[] image = File.ReadAllBytes(path);
+        Assert.Equal(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }, image[..8]);
+        Assert.Equal(width, BinaryPrimitives.ReadInt32BigEndian(image.AsSpan(16, 4)));
+        Assert.Equal(height, BinaryPrimitives.ReadInt32BigEndian(image.AsSpan(20, 4)));
     }
 }

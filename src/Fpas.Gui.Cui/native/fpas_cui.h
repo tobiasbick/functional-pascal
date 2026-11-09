@@ -24,23 +24,6 @@ CUI_API void fpas_cui_row_begin(cui_ctx *ui, float padding, float gap);
  * @param id Borrowed control identity, resolved in the current ID scope. */
 CUI_API void fpas_cui_request_focus(cui_ctx *ui, const char *id);
 
-/** Draws a single-line editor and claims the pending text if it handled input.
- * @param ui Current UI-thread context.
- * @param id Borrowed stable UTF-8 control identity.
- * @param buffer Writable, zero-terminated UTF-8 text.
- * @param capacity Buffer size in bytes including the terminator.
- * @return CUI text-input event flags. */
-CUI_API int fpas_cui_text_input(cui_ctx *ui, const char *id, char *buffer, size_t capacity);
-
-/** Draws a multiline editor and claims the pending text if it handled input.
- * @param ui Current UI-thread context.
- * @param id Borrowed stable UTF-8 control identity.
- * @param buffer Writable, zero-terminated UTF-8 text.
- * @param capacity Buffer size in bytes including the terminator.
- * @param height Positive finite height in logical units.
- * @return CUI text-input event flags. */
-CUI_API int fpas_cui_text_area(cui_ctx *ui, const char *id, char *buffer, size_t capacity, float height);
-
 /** Draws an editor with host-supplied selection. A new document version clears undo and scroll state.
  * @param ui Current UI-thread context.
  * @param id Borrowed stable UTF-8 control identity.

@@ -74,6 +74,12 @@ Source builds require a C99 compiler, CMake 3.20 or newer and the platform's
 development libraries. See the [native build](native/README.md) for prerequisites.
 The managed project invokes CMake incrementally and copies its shared library
 and complete license notices to referencing projects' outputs.
+Use source project references for managed builds. For Native AOT publication,
+use the [binding package](#packaged-binding) so the final executable receives
+the archive and linker settings. With a source reference, setting `PublishAot`
+only in the consuming project can leave a shared CUI library beside the
+executable. `fpas publish --mode aot` reports the package requirement during
+the source build.
 
 ```sh
 dotnet build src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj -c Release -warnaserror
@@ -105,8 +111,8 @@ software/OpenGL rendering, returned events and compacting managed collections,
 thread ownership, nested layout, focus transfer, document replacement, grapheme
 boundaries after edits and controlled selection in lists, tables and tabs. They
 also cover scroll geometry, modal click routing and dismissal, image replacement
-and ownership, idle wakeup during shutdown, resize capture and capture-failure
-recovery. The tests inject input through CUI's public API.
+and ownership, idle wakeup during shutdown, resize capture to Unicode filenames
+and capture-failure recovery. The tests inject input through CUI's public API.
 OS keyboard and pointer delivery are separate checks.
 The texture lifetime test counts native software-renderer allocations and
 releases during image replacement and repeated window teardown. It injects a

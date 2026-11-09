@@ -38,7 +38,8 @@ remain separate and must also be copied. Directory modes need all runtime files.
 
 For applications using the [packaged CUI binding](../../src/Fpas.Gui.Cui/README.md#packaged-binding),
 directory modes include the shared CUI library beside the application. Single-file
-publication bundles it for native extraction. Native AOT links CUI statically.
+publication bundles it for native extraction. Use the binding package for
+Native AOT so its transitive targets link CUI statically.
 All five modes deliver the notices under `licenses/cui/`. The CLI inventories
 the files it delivers, including those notices, and covers them when signing.
 

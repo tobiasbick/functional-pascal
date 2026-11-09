@@ -24,6 +24,8 @@
   <!-- CMake owns incremental recompilation; reconfigure when callers change options. -->
   <Target Name="BuildFpasCuiNative" BeforeTargets="BeforeBuild"
           Condition="'$(DesignTimeBuild)' != 'true' and '$(FpasCuiSkipSourceBuild)' != 'true'">
+    <Error Condition="'$(PublishAot)' == 'true'"
+           Text="Native AOT publishing requires a PackageReference to Fpas.Gui.Cui from the distribution feed. Replace the source ProjectReference to obtain the transitive static link inputs." />
     <Error Condition="'$(FpasCuiNativeFile)' == ''" Text="CUI supports linux-x64 and win-x64. Requested $(FpasCuiNativeRid)." />
     <Error Condition="'$(FpasCuiBuildShared)' == ''" Text="CUI native linkage must be shared or static. Requested $(FpasCuiNativeLinkage)." />
     <Error Condition="'$(FpasCuiNativeRid)' != '$(NETCoreSdkRuntimeIdentifier)'"

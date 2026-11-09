@@ -25,6 +25,9 @@ add_subdirectory("${FPAS_CUI_UPSTREAM_DIR}" upstream)
 
 target_sources(cui PRIVATE bridge.c controls.c image.c text_edit.c wakeup.c)
 target_include_directories(cui PRIVATE "${FPAS_CUI_UPSTREAM_DIR}/src")
+if(WIN32)
+    target_compile_definitions(cui PRIVATE STBIW_WINDOWS_UTF8)
+endif()
 add_library(fpas::cui ALIAS cui)
 set_target_properties(cui PROPERTIES OUTPUT_NAME fpas_cui POSITION_INDEPENDENT_CODE YES)
 # The binding distributes one unversioned library under its P/Invoke name.

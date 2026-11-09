@@ -37,6 +37,22 @@ Heap dump analysis recovers managed frames and the held exception after target
 exit; the original portable-PDB stack includes source lines. Native Windows/WSL
 Debug/Release acceptance runs the same contracts without platform skips.
 
+## Native GUI
+
+`Fpas.Gui.Cui.Tests` covers native window lifetime, thread/frame ownership,
+software/OpenGL control input and capture, and strict UTF-8 buffer boundaries.
+`FpasProjectTests` builds the internal `Fixtures/gui` project with a fresh local
+FPAS SDK and the solution-built CLR binding. It verifies project-reference native
+asset/notices delivery, execution from another working directory, rendered PNG
+content, button/checkbox/Unicode edits and FPAS `using` cleanup on normal and
+exceptional exits. Both renderers must actually be selected.
+
+Run the GUI suite under Xvfb on headless Linux; see the
+[binding reference](../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
+Window cases are skipped without `DISPLAY`; encoding tests still run. Linux
+evidence does not establish Windows support, OS event delivery, leak freedom or
+final native package/publish behavior.
+
 ## Terminal UI
 
 `HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including

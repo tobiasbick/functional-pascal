@@ -8,9 +8,11 @@ Implementation is open. The [native build](../../../src/Fpas.Gui.Cui/native/READ
 provides Linux shared/static libraries with headless consumer link/render checks.
 The initial [C# binding](../../../src/Fpas.Gui.Cui/README.md) adds window/control
 interop, UTF-8 buffers and an automatic local native build, verified on Linux.
+An internal FPAS fixture builds through a freshly packaged SDK, receives native
+assets through a binding project reference and runs both renderers on Linux.
 The separate proof of concept establishes static CUI linking into NativeAOT.
-Complete widget coverage, SDK integration, the FPAS-facing libraries and Windows
-verification remain to be implemented.
+Complete widget coverage, native asset packaging/publishing, the FPAS-facing
+libraries and Windows verification remain to be implemented.
 
 ## Execution order
 

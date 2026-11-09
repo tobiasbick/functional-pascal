@@ -105,6 +105,11 @@ src/
     Incremental/
   Fpas.Core/
     Fpas.Core.csproj
+  Fpas.Gui.Cui/
+    Build/
+    Interop/
+    Text/
+    native/
 sdk/
   Fpas.NET.Sdk/
     Fpas.NET.Sdk.csproj
@@ -139,11 +144,14 @@ tests/
     Editing/
     Refactoring/
     Toolchain/
+  Fpas.Gui.Cui.Tests/
   Fixtures/
 examples/
   README.md
 apps/
   README.md
+third-party/
+  cui/
 docs/
 ```
 
@@ -171,8 +179,10 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
+| `Fpas.Gui.Cui` | Low-level CUI binding, UI-thread native lifetime, UTF-8 editing buffers and native build integration |
 | `Fpas.Compiler.Tests` | C# xUnit unit tests for compiler components and their observable rules |
 | `Fpas.IntegrationTests` | C# xUnit tests for the actual compiler executable, generated programs, .NET interop, and complete MSBuild builds |
+| `Fpas.Gui.Cui.Tests` | Native GUI/interop tests and the packaged-SDK FPAS GUI fixture |
 
 Use folders and namespaces within Fpas.Compiler for Syntax, Binding, Lowering,
 and Emission. Split a compiler component into another project when independent
@@ -221,6 +231,9 @@ src, sdk, and tests without introducing separate solutions for each component.
   account for those inputs without creating a dependency cycle.
 - Generated FPAS assemblies reference Fpas.Core only for the language support
   they need. Fpas.Core has no dependency on compiler or MSBuild implementation.
+- Fpas.Gui.Cui owns the native CUI dependency without referencing the compiler,
+  CLI or TUI. GUI consumers opt in through CLR references. Unmodified upstream
+  source and notices live under `third-party/cui/`.
 - Tests reference the component under test or invoke the actual built toolchain.
   Compiler components do not depend on tests, examples, or applications.
 

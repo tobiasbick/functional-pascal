@@ -5,20 +5,22 @@ native assets and final linking through the existing
 [project SDK](../../../sdk/Fpas.NET.Sdk/README.md) and
 [publishing workflow](../../build/publishing.md).
 
-## Project integration
+The [binding reference](../../../src/Fpas.Gui.Cui/README.md#fpas-integration-fixture)
+owns the implemented source-project integration and internal FPAS fixture.
+The binding and GUI tests belong to the repository solution. Linux checks use a
+freshly packaged FPAS SDK and a normal binding project reference; native binding
+packages and the publishing modes below remain open.
 
-- [ ] Add the binding to the repository solution and library/package build.
-  GUI projects opt in through normal CLR project/package references. Keep CUI
-  out of compiler/CLI startup and out of terminal-only applications.
-- [ ] Add an internal FPAS integration fixture that opens a window and exercises
-  a button, checkbox and text field through the binding. This proves emitted
-  FPAS CIL and native interop before MVU extraction; it is not a second public
-  application programming model.
+## Remaining project integration
+
+- [ ] Include the binding, native assets, notices and transitive build/link
+  targets in the library/package distribution. Keep GUI opt-in through normal
+  CLR references and keep CUI out of compiler/CLI startup and terminal-only apps.
 - [ ] Resolve native assets from the selected RID, including when the managed
   binding is reached through another project/package. Avoid absolute build-machine
   paths, dependence on the working directory and manual consumer copy steps.
-- [ ] Make ordinary build/run use the matching shared library automatically.
-  Report unsupported RIDs or missing assets while building.
+- [ ] Extend automatic shared-library delivery from source-project references
+  to packaged consumers. Report unsupported RIDs or missing assets while building.
 
 ## Publishing modes
 
@@ -40,8 +42,8 @@ native assets and final linking through the existing
 
 ## Acceptance
 
-- [ ] Build and run the FPAS fixture through the packaged/local-feed SDK, not
-  just through references to source-tree build output.
+- [ ] Build and run the FPAS fixture through packaged native binding assets as
+  well as the packaged/local-feed SDK.
 - [ ] Publish and launch from another working directory with no source-tree
   library search overrides. Check native asset selection and license delivery.
 - [ ] Copy only the NativeAOT executable to an otherwise empty directory. Without

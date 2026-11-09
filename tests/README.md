@@ -11,6 +11,8 @@ in the [development workflow](../docs/build/development.md).
 | --- | --- |
 | [Fpas.Compiler.Tests](Fpas.Compiler.Tests/) | Compiler API diagnostics, source locations, flow analysis, emitted metadata, and deterministic images |
 | [Fpas.IntegrationTests](Fpas.IntegrationTests/) | Actual CLI/host execution, handbook examples, and packaged SDK/mixed FPAS/C# projects |
+| [Fpas.Gui.Cui.Tests](Fpas.Gui.Cui.Tests/) | Native CUI lifetime, input/rendering, UTF-8 buffers and packaged-SDK FPAS GUI integration |
+| [Fixtures/gui](Fixtures/gui/) | Internal FPAS window/control fixture using the CLR binding through a project reference |
 | [Fixtures/msbuild](Fixtures/msbuild/) | Shared.csproj → Game.fpasproj → Host.csproj and a mixed .slnx solution |
 | [TestSupport](TestSupport/) and [Directory.Build.targets](Directory.Build.targets) | Shared bounded-process and temporary-directory helpers plus resolved framework reference inputs |
 

@@ -4,6 +4,13 @@ Use a stable .NET 10 SDK satisfying global.json. Package versions are centralize
 in Directory.Packages.props. Commands below run from the repository root.
 Use the SDK's default build parallelism unless the user requests a limit.
 
+The solution includes the CUI binding and its tests. Building it also requires
+CMake 3.20 or newer, a C99 compiler and the platform development libraries listed
+in the [native build reference](../../src/Fpas.Gui.Cui/native/README.md#prerequisites).
+GUI tests need a display; on headless Linux, run them under Xvfb with software
+OpenGL support. Without `DISPLAY`, window tests are skipped; text-buffer tests
+still run. See the [GUI test reference](../../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
+
 ## Build the compiler and tests
 
 Restore, compile, and execute tests as separate steps:

@@ -7,6 +7,11 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
     <ProjectReference Include="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" />
+    <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
+    <None Include="../Fixtures/gui/*" Link="Fixtures/gui/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
+    <AssemblyMetadata Include="FpasCuiProject" Value="$(MSBuildThisFileDirectory)../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" />
+    <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
   </ItemGroup>
 </Project>

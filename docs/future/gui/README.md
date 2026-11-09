@@ -2,17 +2,17 @@
 
 Implement a CUI-backed desktop GUI for FPAS, then share MVU and compatible
 widget contracts with the TUI. FPAS programs use ordinary CLR libraries and the
-current language syntax. Initial targets are `linux-x64`, followed by `win-x64`.
+current language syntax. The initial targets are `linux-x64` and `win-x64`.
 
-Implementation is open. The [native build](../../../src/Fpas.Gui.Cui/native/README.md)
-provides Linux shared/static libraries with headless consumer link/render checks.
-The initial [C# binding](../../../src/Fpas.Gui.Cui/README.md) adds window/control
-interop, UTF-8 buffers and an automatic local native build, verified on Linux.
-An internal FPAS fixture builds through a freshly packaged SDK, receives native
-assets through a binding project reference and runs both renderers on Linux.
-The separate proof of concept establishes static CUI linking into NativeAOT.
-Complete widget coverage, native asset packaging/publishing, the FPAS-facing
-libraries and Windows verification remain to be implemented.
+The [native build](../../../src/Fpas.Gui.Cui/native/README.md) provides shared
+and static libraries with headless consumer link/render checks. The
+[distribution SDK](../../build/distribution.md#native-cui-assets) carries both
+library variants and their notices for the host RID. The initial
+[C# binding](../../../src/Fpas.Gui.Cui/README.md) provides window/control interop,
+UTF-8 buffers and an automatic local native build. The binding tests and FPAS
+fixture pass with software and OpenGL rendering on Windows x64 and Ubuntu x64
+under WSL 2. Widget coverage, consumer packaging, publishing and the
+FPAS-facing libraries remain open.
 
 ## Execution order
 
@@ -20,10 +20,9 @@ Follow this order and check off the tasks and acceptance criteria in each file.
 The files refine native integration, FPAS delivery, shared MVU and widget/TUI
 alignment into independently verifiable changes.
 
-| Order | Work | Prerequisites |
+| Phase | Work | Prerequisites |
 | --- | --- | --- |
-| 1 | [Native integration](native-integration.md) | None |
-| 2 | [Managed binding](managed-binding.md) | Native integration |
+| 2 | [Managed binding](managed-binding.md) | Native CUI build and SDK assets |
 | 3 | [FPAS projects and publishing](fpas-publishing.md) | Managed binding |
 | 4 | [Shared MVU core](shared-mvu.md) | FPAS integration smoke fixture |
 | 5 | [Shared widget contracts](shared-widgets.md) | MVU boundaries |
@@ -46,9 +45,9 @@ Windows checks remain open; overall completion requires both platforms.
 | `Fpas.Tui` | Terminal host, cell layout and renderer | MVU core and widget contracts |
 
 Upstream files belong under the repository-root `third-party/<library>/` tree.
-For CUI, `third-party/cui/` holds `cui_single.h`, license notices and `UPSTREAM.md`
-with source, version, commit and checksum. Our C# binding stays under
-`src/Fpas.Gui.Cui/`; our C bridge and CMake files stay in its `native/` directory.
+For CUI, `third-party/cui/` holds the vendored source tree, license notices and
+`UPSTREAM.md` with the source version, commit and Git object IDs. The C# binding
+stays under `src/Fpas.Gui.Cui/`, with the FPAS C bridge and CMake files in `native/`.
 
 The public application path is MVU plus declarative widgets. The low-level C#
 binding supports the host and integration fixtures; do not develop a competing
@@ -57,8 +56,9 @@ same widget constructors for both hosts. GUI and terminal extensions are explici
 
 ## Agreed scope
 
-- Use the [pinned single header and notices](../../../third-party/cui/UPSTREAM.md);
-  maintain the integration locally.
+- Build from the [pinned C sources and headers](../../../third-party/cui/UPSTREAM.md).
+  Keep upstream files byte-identical and maintain the FPAS bridge and build
+  integration locally.
 - Build native assets with FPAS and deliver prebuilt assets to GUI consumers.
 - Support the existing `fpas publish` modes. NativeAOT links CUI statically from
   the start; ordinary single-file publishing can embed/extract the shared library.

@@ -12,10 +12,10 @@ try {
     if ([System.Runtime.InteropServices.RuntimeInformation, mscorlib]::OSArchitecture -ne 'X64') { throw 'FPAS distributions support Windows x64 and Linux x64.' }
     $artifacts = Join-Path $PSScriptRoot '.temp-data/dist/windows'
     $package = Join-Path $PSScriptRoot "sdk/feed/Fpas.NET.Sdk.$sdkVersion.nupkg"
-    dotnet build $sdkProject --configuration Release --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" -warnaserror
+    dotnet build $sdkProject --configuration Release --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" -p:FpasCuiDistributionRid=win-x64 -warnaserror
     if ($LASTEXITCODE -ne 0) { throw "Release SDK build failed (exit code $LASTEXITCODE)." }
     dotnet pack $sdkProject --no-build --no-restore --configuration Release `
-        --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" --output sdk/feed
+        --artifacts-path $artifacts -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdkVersion" -p:FpasCuiDistributionRid=win-x64 --output sdk/feed
     if ($LASTEXITCODE -ne 0) { throw "Release SDK pack failed (exit code $LASTEXITCODE)." }
     dotnet publish src/Fpas.Cli/Fpas.Cli.csproj --configuration Release --runtime win-x64 `
         -p:FpasDistribution=true -p:DebugType=portable "-p:FpasSdkPackage=$package" "-p:FpasSdkVersion=$sdkVersion" `

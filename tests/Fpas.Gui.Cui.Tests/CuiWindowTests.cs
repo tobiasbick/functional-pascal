@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Fpas.Gui.Cui.Text;
+using Fpas.Tests.Support;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
@@ -64,6 +65,179 @@ public sealed class CuiWindowTests
         Capture(window, 640, 480);
     }
 
+    /// <summary>Places row children side by side with the requested gap inside a column.</summary>
+    [GuiFact]
+    [Trait("Category", "NativeGui")]
+    public void RowsPlaceChildrenBesideEachOtherInsideAColumn()
+    {
+        using var window = new CuiWindow("Nested layout", renderer: CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        const float gap = 16;
+        CuiRectangle first = default, second = default, below = default;
+        for (int frame = 0; frame < 3; frame++)
+        {
+            Assert.True(window.NextFrame());
+            window.BeginColumn();
+            window.BeginRow(padding: 6, gap: gap);
+            window.Button("First");
+            first = window.LastRectangle;
+            window.Button("Second");
+            second = window.LastRectangle;
+            window.EndRow();
+            window.Button("Below");
+            below = window.LastRectangle;
+            window.EndColumn();
+        }
+        Assert.True(first.Width > 0 && second.Width > 0);
+        Assert.InRange(MathF.Abs(first.Y - second.Y), 0, 0.01f);
+        Assert.InRange(second.X - (first.X + first.Width), gap - 0.01f, gap + 0.01f);
+        Assert.True(below.Y >= second.Y + second.Height);
+    }
+
+    /// <summary>Moves text input to the requested UTF-8 control identity without pointer input.</summary>
+    [GuiFact]
+    [Trait("Category", "NativeGui")]
+    public void RequestFocusRoutesTextToTheRequestedEditor()
+    {
+        using var window = new CuiWindow("Programmatic focus", renderer: CuiRenderer.Software, continuous: true);
+        var first = new CuiTextBuffer("");
+        var second = new CuiTextBuffer("");
+        const string firstId = "first";
+        const string secondId = "Ziel-🧭";
+
+        Assert.True(window.NextFrame());
+        window.RequestFocus(firstId);
+        Assert.True(window.TextInput(firstId, first).HasFlag(CuiTextInputEvents.Focused));
+        window.TextInput(secondId, second);
+
+        Assert.True(window.NextFrame());
+        window.TypeText("eins");
+        window.TextInput(firstId, first);
+        window.RequestFocus(secondId);
+        Assert.True(window.TextInput(secondId, second).HasFlag(CuiTextInputEvents.Focused));
+
+        Assert.True(window.NextFrame());
+        window.TypeText("Grüße");
+        window.TextInput(firstId, first);
+        window.TextInput(secondId, second);
+        Assert.Equal("eins", first.Text);
+        Assert.Equal("Grüße", second.Text);
+    }
+
+    /// <summary>Identifies the control exercised by the controlled selection cases.</summary>
+    public enum SelectionWidget
+    {
+        /// <summary>A list of selectable items.</summary>
+        List,
+        /// <summary>A table of selectable rows.</summary>
+        Table,
+        /// <summary>A horizontal row of tab items.</summary>
+        Tabs
+    }
+
+    /// <summary>Reports activation of the matching item and paints the selection supplied by the host.</summary>
+    /// <param name="widget">The kind of control to render and activate.</param>
+    [GuiTheory]
+    [InlineData(SelectionWidget.List)]
+    [InlineData(SelectionWidget.Table)]
+    [InlineData(SelectionWidget.Tabs)]
+    [Trait("Category", "NativeGui")]
+    public void SelectionWidgetsReportActivationAndUseHostSelection(SelectionWidget widget)
+    {
+        const int width = 640, height = 480;
+        using var directory = new TemporaryDirectory();
+        using var window = new CuiWindow("Controlled selection", width, height, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        int firstActivations = 0, secondActivations = 0;
+        CuiRectangle first = default, second = default;
+
+        DrawWithoutHover(secondSelected: false);
+        var initial = CaptureSelection("initial.png");
+        Assert.NotEqual(initial.First, initial.Second);
+
+        for (int frame = 0; frame < 3; frame++)
+        {
+            Assert.True(window.NextFrame());
+            window.MovePointer(second.X + second.Width / 2, second.Y + second.Height / 2);
+            if (frame > 0) window.SetLeftButton(frame == 1);
+            DrawItems(secondSelected: false);
+        }
+
+        DrawWithoutHover(secondSelected: false);
+        Assert.Equal(initial, CaptureSelection("after-click.png"));
+
+        DrawWithoutHover(secondSelected: true);
+        Assert.Equal((initial.Second, initial.First), CaptureSelection("host-selected.png"));
+        Assert.Equal((0, 1), (firstActivations, secondActivations));
+
+        void DrawWithoutHover(bool secondSelected)
+        {
+            for (int frame = 0; frame < 3; frame++)
+            {
+                Assert.True(window.NextFrame());
+                window.MovePointer(4, 4);
+                DrawItems(secondSelected);
+            }
+        }
+
+        void DrawItems(bool secondSelected)
+        {
+            Action close;
+            switch (widget)
+            {
+                case SelectionWidget.List:
+                    window.BeginColumn();
+                    close = window.EndColumn;
+                    break;
+                case SelectionWidget.Table:
+                    window.BeginTable("Auswahl-🧭", ["Einträge", "Status"]);
+                    close = window.EndTable;
+                    break;
+                default:
+                    window.BeginRow();
+                    close = window.EndRow;
+                    break;
+            }
+            first = DrawItem("Grüße###first", !secondSelected, ref firstActivations);
+            second = DrawItem("Grüße###second", secondSelected, ref secondActivations);
+            close();
+        }
+
+        CuiRectangle DrawItem(string label, bool selected, ref int activations)
+        {
+            bool activated = widget switch
+            {
+                SelectionWidget.List => window.ListItem(label, selected),
+                SelectionWidget.Table => window.TableRow(selected),
+                _ => window.TabItem(label, selected)
+            };
+            if (activated) activations++;
+            CuiRectangle bounds = window.LastRectangle;
+            if (widget == SelectionWidget.Table)
+            {
+                window.TableCell("Grüße");
+                window.TableCell("Bereit");
+            }
+            return bounds;
+        }
+
+        (uint First, uint Second) CaptureSelection(string filename)
+        {
+            string path = directory.File(filename);
+            window.CapturePng(path);
+            uint[] pixels = PngAssertions.ReadPixels(path, width, height);
+            return (pixels[BackgroundIndex(first)], pixels[BackgroundIndex(second)]);
+        }
+
+        static int BackgroundIndex(CuiRectangle item)
+        {
+            Assert.True(item.Width > 0 && item.Height > 0);
+            int x = (int)(item.X + item.Width * 0.75f);
+            int y = (int)(item.Y + item.Height * 0.8f);
+            return y * width + x;
+        }
+    }
+
     /// <summary>Prevents cross-thread use and verifies disposal and layout-state failures.</summary>
     [GuiFact]
     [Trait("Category", "NativeGui")]
@@ -71,6 +245,7 @@ public sealed class CuiWindowTests
     {
         using var window = new CuiWindow("Lifetime", renderer: CuiRenderer.Software, continuous: true);
         Assert.Throws<InvalidOperationException>(() => window.Text("Outside a frame"));
+        Assert.Throws<InvalidOperationException>(() => window.RequestFocus("outside"));
         Exception? failure = null;
         var worker = new Thread(() =>
         {
@@ -87,8 +262,23 @@ public sealed class CuiWindowTests
         Assert.True(window.NextFrame());
         Assert.Throws<InvalidOperationException>(() => window.EndColumn());
         window.BeginColumn();
+        window.BeginRow();
+        Assert.Throws<InvalidOperationException>(() => window.EndColumn());
         Assert.Throws<InvalidOperationException>(() => window.NextFrame());
+        window.EndRow();
+        Assert.Throws<InvalidOperationException>(() => window.EndRow());
         window.EndColumn();
+        Assert.Throws<ArgumentException>(() => window.BeginTable("table", []));
+        window.BeginTable("table", ["Column"]);
+        Assert.Throws<InvalidOperationException>(() => window.TableCell("No row"));
+        Assert.Throws<InvalidOperationException>(() => window.EndColumn());
+        Assert.Throws<InvalidOperationException>(() => window.NextFrame());
+        window.TableRow(selected: false);
+        window.TableCell("Cell");
+        Assert.Throws<InvalidOperationException>(() => window.TableCell("Extra cell"));
+        window.TableRow(selected: false);
+        window.TableCell("Next row");
+        window.EndTable();
         Assert.Throws<InvalidOperationException>(() => window.CapturePng("unused.png"));
         window.Dispose();
         window.Dispose();

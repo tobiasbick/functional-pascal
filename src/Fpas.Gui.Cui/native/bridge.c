@@ -1,5 +1,6 @@
 /* Small ABI adapters for options structs and compound-literal CUI macros. */
-#include "cui_single.h"
+#include "fpas_cui.h"
+#include "platform/cui_platform.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -19,13 +20,9 @@ CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height
     return cui_app_create(&options);
 }
 
-/** Opens a full-width column.
- * @param ui Current UI-thread context.
- * @param padding Nonnegative logical padding.
- * @param gap Nonnegative logical child spacing. */
-CUI_API void fpas_cui_column_begin(cui_ctx *ui, float padding, float gap) {
-    const cui_box options = { .pad = padding, .gap = gap, .width = CUI_FILL };
-    (void)cui_column_begin(ui, &options);
+void fpas_cui_set_resize_renderer(cui_app *app, void (*render)(cui_ctx *, void *), void *user) {
+    app->frame_cb = render;
+    app->frame_user = render ? user : NULL;
 }
 
 /** Captures a view after at least one frame has been presented.

@@ -1,0 +1,8 @@
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <!-- Match the fixture's expected PNG pixels to its logical window dimensions. -->
+      <CUI_SCALE>1</CUI_SCALE>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

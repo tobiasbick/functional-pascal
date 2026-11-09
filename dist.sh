@@ -11,9 +11,9 @@ mkdir -p sdk/feed
 case "$(uname -s)-$(uname -m)" in Linux-x86_64) rid=linux-x64;; *) printf '%s\n' 'FPAS distributions support Windows x64 and Linux x64.' >&2; exit 1;; esac
 artifacts="$PWD/.temp-data/dist/unix"
 package="$PWD/sdk/feed/Fpas.NET.Sdk.$sdk_version.nupkg"
-dotnet build "$sdk_project" --configuration Release --artifacts-path "$artifacts" -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdk_version" -warnaserror
+dotnet build "$sdk_project" --configuration Release --artifacts-path "$artifacts" -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdk_version" "-p:FpasCuiDistributionRid=$rid" -warnaserror
 dotnet pack "$sdk_project" --no-build --no-restore --configuration Release \
-    --artifacts-path "$artifacts" -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdk_version" --output sdk/feed
+    --artifacts-path "$artifacts" -p:UseAppHost=true -p:DebugType=portable "-p:FpasSdkVersion=$sdk_version" "-p:FpasCuiDistributionRid=$rid" --output sdk/feed
 dotnet publish src/Fpas.Cli/Fpas.Cli.csproj --configuration Release --runtime "$rid" \
     -p:FpasDistribution=true -p:DebugType=portable "-p:FpasSdkPackage=$package" "-p:FpasSdkVersion=$sdk_version" \
     --artifacts-path "$artifacts" --output "$artifacts/publish" -warnaserror

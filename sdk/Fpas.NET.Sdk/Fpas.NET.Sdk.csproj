@@ -42,4 +42,5 @@
     </ItemGroup>
     <Error Condition="!Exists('%(_FpasLanguageServerAsset.Identity)')" Text="Missing language-server deployment asset: %(_FpasLanguageServerAsset.Identity). Build the matching CLI before packing." />
   </Target>
+  <Import Project="GuiAssets.targets" />
 </Project>

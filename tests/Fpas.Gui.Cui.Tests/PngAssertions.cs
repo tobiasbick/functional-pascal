@@ -7,6 +7,12 @@ internal static class PngAssertions
 {
     internal static void HasRenderedContent(string path, int width, int height)
     {
+        uint[] pixels = ReadPixels(path, width, height);
+        Assert.True(Array.Exists(pixels, pixel => pixel != pixels[0]), "The captured native view contains only one color.");
+    }
+
+    internal static uint[] ReadPixels(string path, int width, int height)
+    {
         byte[] png = File.ReadAllBytes(path);
         Assert.Equal(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }, png[..8]);
         Assert.Equal(width, BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16, 4)));
@@ -26,8 +32,7 @@ internal static class PngAssertions
         int stride = width * 4;
         var prior = new byte[stride];
         var row = new byte[stride];
-        uint? firstPixel = null;
-        bool varied = false;
+        var pixels = new uint[width * height];
         for (int y = 0; y < height; y++)
         {
             int filter = decoder.ReadByte();
@@ -43,16 +48,12 @@ internal static class PngAssertions
                 };
                 row[x] = unchecked((byte)(row[x] + prediction));
             }
-            for (int x = 0; x < stride; x += 4)
-            {
-                uint pixel = BinaryPrimitives.ReadUInt32LittleEndian(row.AsSpan(x, 4));
-                firstPixel ??= pixel;
-                varied |= pixel != firstPixel;
-            }
+            for (int x = 0; x < width; x++)
+                pixels[y * width + x] = BinaryPrimitives.ReadUInt32LittleEndian(row.AsSpan(x * 4, 4));
             (row, prior) = (prior, row);
         }
         Assert.Equal(-1, decoder.ReadByte());
-        Assert.True(varied, "The captured native view contains only one color.");
+        return pixels;
     }
 
     private static int Paeth(int left, int above, int upperLeft)

@@ -2,9 +2,13 @@ namespace Fpas.Tests.Support;
 
 internal sealed class TemporaryDirectory : IDisposable
 {
-    internal string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "fpas tests " + Guid.NewGuid().ToString("N"));
+    internal string Path { get; }
 
-    internal TemporaryDirectory() => Directory.CreateDirectory(Path);
+    internal TemporaryDirectory(string? parent = null)
+    {
+        Path = System.IO.Path.Combine(parent ?? System.IO.Path.GetTempPath(), "fpas tests " + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path);
+    }
     internal string File(string name) => System.IO.Path.GetFullPath(System.IO.Path.Combine(Path, name));
     public void Dispose() => Remove(Path);
 

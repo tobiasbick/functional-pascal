@@ -41,6 +41,16 @@ Debug/Release acceptance runs the same contracts without platform skips.
 
 `Fpas.Gui.Cui.Tests` covers native window lifetime, thread/frame ownership,
 software/OpenGL control input and capture, and strict UTF-8 buffer boundaries.
+The window tests check nested row and column geometry and route text input
+between editors using programmatic focus and a non-ASCII control ID.
+The selection tests activate list items, table rows and tabs. They compare
+captured backgrounds before the click, while the host keeps the old selection
+and after the host applies the new selection. The table case also exercises UTF-8
+column titles and text cells.
+`CuiWakeupTests` waits for a noncontinuous window to go idle, posts a wakeup from
+a worker and checks that the window rejects new wakeups after disposal. Native
+CTest cases link the control adapters through both library variants and exercise
+Win32 live-resize callback registration and detachment.
 `FpasProjectTests` builds the internal `Fixtures/gui` project with a fresh local
 FPAS SDK and the solution-built CLR binding. It verifies project-reference native
 asset/notices delivery, execution from another working directory, rendered PNG
@@ -49,9 +59,9 @@ exceptional exits. Both renderers must actually be selected.
 
 Run the GUI suite under Xvfb on headless Linux; see the
 [binding reference](../src/Fpas.Gui.Cui/README.md#source-build-and-verification).
-Window cases are skipped without `DISPLAY`; encoding tests still run. Linux
-evidence does not establish Windows support, OS event delivery, leak freedom or
-final native package/publish behavior.
+Window cases are skipped on Linux without `DISPLAY`. Encoding tests still run.
+The [GUI plan](../docs/future/gui/verification-and-documentation.md) tracks OS
+input delivery, leak checks and final application publishing.
 
 ## Terminal UI
 
@@ -361,6 +371,9 @@ of other package versions and unrelated deployed files, and first-run bootstrap.
 Only the executable is copied into a fresh delivery directory. With the build
 checkout hidden and .NET host search disabled, concurrent first starts compile
 real sources, return JSON diagnostics and export the matching embedded SDK.
+The exported SDK contains a loadable CUI shared library, a static archive and
+all six notices for the host RID. Packing for a supported RID whose assets are
+absent reports the missing RID and leaves no package.
 The same test checks export conflicts, explicit replacement, executable-local
 asset-cache hashes, repair, recreation after deletion and an explicit cache override,
 SDK invocation through the executable and rejection of different compiler bytes.

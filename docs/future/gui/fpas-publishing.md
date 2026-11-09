@@ -5,17 +5,16 @@ native assets and final linking through the existing
 [project SDK](../../../sdk/Fpas.NET.Sdk/README.md) and
 [publishing workflow](../../build/publishing.md).
 
-The [binding reference](../../../src/Fpas.Gui.Cui/README.md#fpas-integration-fixture)
-owns the implemented source-project integration and internal FPAS fixture.
-The binding and GUI tests belong to the repository solution. Linux checks use a
-freshly packaged FPAS SDK and a normal binding project reference; native binding
-packages and the publishing modes below remain open.
+The [FPAS fixture](../../../src/Fpas.Gui.Cui/README.md#fpas-integration-fixture)
+already exercises source-project integration with a freshly packaged FPAS SDK
+and a CLR project reference. Extend that coverage to packaged native binding
+assets and the publishing modes below.
 
 ## Remaining project integration
 
-- [ ] Include the binding, native assets, notices and transitive build/link
-  targets in the library/package distribution. Keep GUI opt-in through normal
-  CLR references and keep CUI out of compiler/CLI startup and terminal-only apps.
+- [ ] Package the binding and transitive build/link targets for consumers. Use the
+  [native assets and notices](../../build/distribution.md#native-cui-assets) from
+  the distribution SDK. Keep GUI opt-in through normal CLR references.
 - [ ] Resolve native assets from the selected RID, including when the managed
   binding is reached through another project/package. Avoid absolute build-machine
   paths, dependence on the working directory and manual consumer copy steps.

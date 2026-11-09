@@ -1,6 +1,7 @@
 /* Checks real consumer linkage, font initialization and software rendering
  * against either the shared library or static archive, without a display. */
-#include "cui_single.h"
+#include "../fpas_cui.h"
+#include <cui/cui_render.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,13 +25,36 @@ int main(void) {
     }
     cui_set_viewport(ui, (float)width, (float)height, 1);
     cui_set_reduced_motion(ui, true);
+    char text[64] = "FPAS";
+    bool focused = false;
     for (int frame = 0; frame < 3; frame++) {
         cui_begin_frame(ui, 1.0f / 60.0f);
-        cui_column(ui, .pad = 12, .gap = 8) {
-            cui_heading(ui, "FPAS native CUI", 2);
-            cui_button(ui, "Linked successfully");
+        fpas_cui_scroll_begin(ui, "smoke-scroll", 160, 0);
+        fpas_cui_column_begin(ui, 12, 8);
+        fpas_cui_row_begin(ui, 0, 4);
+        cui_heading(ui, "FPAS native CUI", 2);
+        (void)fpas_cui_list_item(ui, "Selected", 1);
+        (void)fpas_cui_tab_item(ui, "Tab", 1);
+        cui_box_end(ui);
+        if (frame == 0) fpas_cui_request_focus(ui, "editor");
+        if (cui_input_ex(ui, "editor", text, sizeof text, NULL) & CUI_FOCUSED) focused = true;
+        if (fpas_cui_table_begin(ui, "smoke-table", (const char *const[]){ "Status" }, 1)) {
+            (void)fpas_cui_table_row(ui, 1);
+            cui_table_cell_text(ui, "Linked successfully");
+            cui_table_end(ui);
         }
+        int open = 1;
+        if (fpas_cui_dialog_begin(ui, "CUI dialog", &open)) {
+            cui_text(ui, "Modal contents");
+            cui_dialog_end(ui);
+        }
+        cui_box_end(ui);
+        cui_scroll_end(ui);
         cui_end_frame(ui);
+    }
+    if (!focused) {
+        fprintf(stderr, "The requested control did not gain focus.\n");
+        goto cleanup;
     }
     const cui_draw_data *draw = cui_get_draw_data(ui);
     if (!draw || draw->width_px != width || draw->height_px != height ||

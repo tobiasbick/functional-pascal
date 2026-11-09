@@ -1,0 +1,40 @@
+<Project>
+  <Target Name="ResolveFpasGuiDistributionInputs" Condition="'$(FpasCuiDistributionRid)' != ''">
+    <Error Condition="'$(FpasCuiDistributionRid)' != 'win-x64' and '$(FpasCuiDistributionRid)' != 'linux-x64'"
+           Text="No CUI distribution assets for RID '$(FpasCuiDistributionRid)'. Supported RIDs are win-x64 and linux-x64." />
+    <PropertyGroup>
+      <_FpasCuiArtifacts Condition="'$(ArtifactsPath)' != ''">$(ArtifactsPath)</_FpasCuiArtifacts>
+      <_FpasCuiArtifacts Condition="'$(_FpasCuiArtifacts)' == ''">$(BaseIntermediateOutputPath)</_FpasCuiArtifacts>
+      <_FpasCuiRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(_FpasCuiArtifacts)', 'cui', '$(Configuration)', '$(FpasCuiDistributionRid)'))</_FpasCuiRoot>
+      <_FpasCuiSharedFile Condition="'$(FpasCuiDistributionRid)' == 'win-x64'">fpas_cui.dll</_FpasCuiSharedFile>
+      <_FpasCuiStaticFile Condition="'$(FpasCuiDistributionRid)' == 'win-x64'">fpas_cui.lib</_FpasCuiStaticFile>
+      <_FpasCuiSharedFile Condition="'$(FpasCuiDistributionRid)' == 'linux-x64'">libfpas_cui.so</_FpasCuiSharedFile>
+      <_FpasCuiStaticFile Condition="'$(FpasCuiDistributionRid)' == 'linux-x64'">libfpas_cui.a</_FpasCuiStaticFile>
+      <_FpasCuiPackageRoot>tools/gui/runtimes/$(FpasCuiDistributionRid)</_FpasCuiPackageRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <_FpasCuiLinkage Include="shared;static" />
+      <_FpasCuiBinary Include="$(_FpasCuiRoot)shared/out/$(_FpasCuiSharedFile)" PackagePath="$(_FpasCuiPackageRoot)/native/$(_FpasCuiSharedFile)" />
+      <_FpasCuiBinary Include="$(_FpasCuiRoot)static/out/$(_FpasCuiStaticFile)" PackagePath="$(_FpasCuiPackageRoot)/static/$(_FpasCuiStaticFile)" />
+      <_FpasCuiLicenseName Include="CUI;Geist;Inter;Lucide;stb;Unicode" />
+      <_FpasCuiLicense Include="@(_FpasCuiLicenseName->'$(MSBuildThisFileDirectory)../../third-party/cui/LICENSE-%(Identity).txt')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BuildFpasGuiDistributionAssets" BeforeTargets="BeforeBuild" DependsOnTargets="ResolveFpasGuiDistributionInputs"
+          Condition="'$(FpasCuiDistributionRid)' != '' and '$(DesignTimeBuild)' != 'true'">
+    <MSBuild Projects="../../src/Fpas.Gui.Cui/Fpas.Gui.Cui.csproj" Targets="BuildFpasCuiNative"
+             Properties="FpasCuiNativeRid=$(FpasCuiDistributionRid);FpasCuiNativeLinkage=%(_FpasCuiLinkage.Identity);FpasCuiNativeBuildDirectory=$(_FpasCuiRoot)%(_FpasCuiLinkage.Identity)" />
+  </Target>
+
+  <Target Name="PackFpasGuiDistributionAssets" BeforeTargets="_GetPackageFiles" DependsOnTargets="ResolveFpasGuiDistributionInputs"
+          Condition="'$(FpasCuiDistributionRid)' != ''">
+    <Error Condition="!Exists('%(_FpasCuiBinary.Identity)')"
+           Text="Missing CUI asset for RID '$(FpasCuiDistributionRid)': %(_FpasCuiBinary.Filename)%(_FpasCuiBinary.Extension). Build the distribution SDK for this RID before packing." />
+    <Error Condition="!Exists('%(_FpasCuiLicense.Identity)')" Text="Missing CUI license notice: %(_FpasCuiLicense.Filename)%(_FpasCuiLicense.Extension)." />
+    <ItemGroup>
+      <None Include="@(_FpasCuiBinary)" Pack="true" />
+      <None Include="@(_FpasCuiLicense)" Pack="true" PackagePath="tools/gui/licenses/" />
+    </ItemGroup>
+  </Target>
+</Project>

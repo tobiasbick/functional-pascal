@@ -9,11 +9,12 @@ public sealed partial class LocalDeploymentTests
     [Fact]
     public async Task Dist_delivers_one_offline_executable_with_matching_SDK_and_refreshes_only_its_cached_version()
     {
-        using var directory = new TemporaryDirectory();
         var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
+        // MSVC tracks native outputs incrementally and warns for builds inside the system temporary directory.
+        using var directory = new TemporaryDirectory(Path.Combine(repository, ".temp-data"));
         var checkout = directory.File("checkout");
         Directory.CreateDirectory(checkout);
-        foreach (var name in new[] { "src", "sdk" }) Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
+        foreach (var name in new[] { "src", "sdk", "third-party" }) Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
         foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist.ps1", "dist.sh" })
             File.Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
         var sdkProject = Path.Combine(checkout, "sdk", "Fpas.NET.Sdk", "Fpas.NET.Sdk.csproj");
@@ -79,6 +80,8 @@ public sealed partial class LocalDeploymentTests
             await CheckLanguageServer(consumer, launcher, sdkCache, environment);
             if (run == 0)
             {
+                CheckCuiAssets(Path.Combine(directory.File("exported-feed"), $"Fpas.NET.Sdk.{version}.nupkg"), checkout);
+                await CheckMissingCuiAssets(sdkProject, checkout, directory.File("missing-rid"), environment);
                 await CheckPublishing(consumer, launcher, directory.File("exported-feed"), version, environment);
                 await CheckSdkCompiler(consumer, launcher, sdkCache, environment);
                 await CheckDebugger(checkout, consumer, launcher, version, packages, environment);

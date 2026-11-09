@@ -3,14 +3,19 @@
     <FpasCuiCMakeCommand Condition="'$(FpasCuiCMakeCommand)' == ''">cmake</FpasCuiCMakeCommand>
     <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</FpasCuiNativeRid>
     <FpasCuiNativeRid Condition="'$(FpasCuiNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</FpasCuiNativeRid>
-    <FpasCuiNativeBuildDirectory>$(MSBuildProjectDirectory)/obj/native/$(FpasCuiNativeRid)/$(Configuration)/shared</FpasCuiNativeBuildDirectory>
+    <FpasCuiNativeLinkage Condition="'$(FpasCuiNativeLinkage)' == ''">shared</FpasCuiNativeLinkage>
+    <FpasCuiBuildShared Condition="'$(FpasCuiNativeLinkage)' == 'shared'">ON</FpasCuiBuildShared>
+    <FpasCuiBuildShared Condition="'$(FpasCuiNativeLinkage)' == 'static'">OFF</FpasCuiBuildShared>
+    <FpasCuiNativeBuildDirectory Condition="'$(FpasCuiNativeBuildDirectory)' == ''">$(MSBuildProjectDirectory)/obj/native/$(FpasCuiNativeRid)/$(Configuration)/$(FpasCuiNativeLinkage)</FpasCuiNativeBuildDirectory>
     <FpasCuiNativeOutput>$(FpasCuiNativeBuildDirectory)/out</FpasCuiNativeOutput>
     <FpasCuiNativeFile Condition="'$(FpasCuiNativeRid)' == 'linux-x64'">libfpas_cui.so</FpasCuiNativeFile>
     <FpasCuiNativeFile Condition="'$(FpasCuiNativeRid)' == 'win-x64'">fpas_cui.dll</FpasCuiNativeFile>
+    <!-- The pinned CUI visualization code shadows a parameter. Keep MSVC's warning visible. -->
+    <MSBuildWarningsNotAsErrors Condition="'$(FpasCuiNativeRid)' == 'win-x64'">$(MSBuildWarningsNotAsErrors);C4457</MSBuildWarningsNotAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="$(FpasCuiNativeOutput)/$(FpasCuiNativeFile)" Link="$(FpasCuiNativeFile)"
-             Condition="'$(FpasCuiNativeFile)' != ''"
+             Condition="'$(FpasCuiNativeFile)' != '' and '$(FpasCuiNativeLinkage)' == 'shared'"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="$(MSBuildProjectDirectory)/../../third-party/cui/LICENSE-*.txt"
              Link="licenses/cui/%(Filename)%(Extension)"
@@ -18,10 +23,11 @@
   </ItemGroup>
   <!-- CMake owns incremental recompilation; reconfigure when callers change options. -->
   <Target Name="BuildFpasCuiNative" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
-    <Error Condition="'$(FpasCuiNativeFile)' == ''" Text="CUI supports linux-x64 and win-x64; requested $(FpasCuiNativeRid)." />
+    <Error Condition="'$(FpasCuiNativeFile)' == ''" Text="CUI supports linux-x64 and win-x64. Requested $(FpasCuiNativeRid)." />
+    <Error Condition="'$(FpasCuiBuildShared)' == ''" Text="CUI native linkage must be shared or static. Requested $(FpasCuiNativeLinkage)." />
     <Error Condition="'$(FpasCuiNativeRid)' != '$(NETCoreSdkRuntimeIdentifier)'"
-           Text="The source CUI build requires a matching host toolchain; cross-RID asset selection is not implemented." />
-    <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; -S &quot;$(MSBuildProjectDirectory)/native&quot; -B &quot;$(FpasCuiNativeBuildDirectory)&quot; -DCMAKE_BUILD_TYPE=$(Configuration) -DBUILD_SHARED_LIBS=ON -DFPAS_CUI_BUILD_TESTS=OFF -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_$(Configuration.ToUpperInvariant())=&quot;$(FpasCuiNativeOutput)&quot; -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_$(Configuration.ToUpperInvariant())=&quot;$(FpasCuiNativeOutput)&quot; $(FpasCuiCMakeArguments)" />
+           Text="CUI cannot build $(FpasCuiNativeRid) assets on $(NETCoreSdkRuntimeIdentifier). Build on the matching host with its native toolchain." />
+    <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; -S &quot;$(MSBuildProjectDirectory)/native&quot; -B &quot;$(FpasCuiNativeBuildDirectory)&quot; -DFPAS_CUI_BUILD_CONFIGURATION=$(Configuration) -DBUILD_SHARED_LIBS=$(FpasCuiBuildShared) -DFPAS_CUI_BUILD_TESTS=OFF -DFPAS_CUI_OUTPUT_DIRECTORY=&quot;$(FpasCuiNativeOutput)&quot; $(FpasCuiCMakeArguments)" />
     <Exec Command="&quot;$(FpasCuiCMakeCommand)&quot; --build &quot;$(FpasCuiNativeBuildDirectory)&quot; --config $(Configuration) --parallel" />
   </Target>
 </Project>

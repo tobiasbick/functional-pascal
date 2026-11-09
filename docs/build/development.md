@@ -131,8 +131,10 @@ SDK's `tools/compiler/`. Packing rejects missing language-server assets. Run `fp
 to inspect the deployed server, then explicitly restore the consumer before
 connecting a client. See the [language-server contract](../pascal/tools/language-server.md).
 
-Building requires the .NET 10 SDK. The delivered compiler contains its runtime;
-copy only `fpas.exe` (Windows x64) or `fpas` (Linux x64/glibc). It uses compressed,
+Distribution builds require the .NET 10 SDK and the
+[CUI native toolchain](../../src/Fpas.Gui.Cui/native/README.md#prerequisites).
+The delivered compiler contains its runtime. Copy `fpas.exe` on Windows x64 or
+`fpas` on Linux x64 with glibc. It uses compressed,
 untrimmed single-file deployment because the complete protocol dependency graph
 requires dynamic code. See [distribution](distribution.md) for Native AOT limits,
 offline SDK export, cache ownership, native assets and optional symbols.

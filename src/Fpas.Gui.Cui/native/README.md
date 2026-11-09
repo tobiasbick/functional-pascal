@@ -1,10 +1,17 @@
 # Native CUI build
 
 Build the private native `fpas_cui` module from the repository's pinned
-[single header](../../../third-party/cui/UPSTREAM.md). `fpas_cui.c` is the
-only CUI implementation translation unit. `bridge.c` adapts window options,
-column configuration and screenshot buffers for the managed binding. Project-owned helpers belong here;
-upstream source and licenses remain under `third-party/cui/`.
+[CUI sources](../../../third-party/cui/UPSTREAM.md). The upstream CMake target
+selects the platform backend and compiles the separate C files. FPAS adds
+`bridge.c` for window options, screenshot buffers and Win32 live-resize callbacks.
+[`fpas_cui.h`](fpas_cui.h) declares the native adapters for layout, focus, lists,
+tables, scrolling and modal dialogs. Tabs and multiline editing use the upstream
+entry points. The table adapter keeps column descriptors alive through the frame.
+
+The resize callback draws an open CUI frame on the UI thread. Its caller owns
+the callback and user data through detachment or window destruction. Wake targets
+post `WM_NULL` on Win32 or an X11 client message through a separate connection.
+The managed window serializes posting and release before it destroys the target window.
 
 ## Prerequisites
 
@@ -12,8 +19,10 @@ upstream source and licenses remain under `third-party/cui/`.
 - Linux: X11 development headers/libraries and the usual C development tools.
 - Windows: MSVC with the Windows SDK, or a suitable MinGW toolchain.
 
-The CMake definitions cover Linux and Windows. Linux x64 is verified; Windows
-execution and packaging remain in the [implementation plan](../../../docs/future/gui/native-integration.md).
+The native link and render test passes for the shared and static builds on
+Windows x64 with MSVC and Ubuntu x64 under WSL 2 with GCC. The
+[distribution reference](../../../docs/build/distribution.md#native-cui-assets)
+describes the prebuilt SDK assets and notices.
 
 ## Build and check
 
@@ -36,15 +45,17 @@ ctest --test-dir .temp-data/gui-native/linux-x64/Release/static --output-on-fail
 
 The outputs are `libfpas_cui.so` and `libfpas_cui.a`. On Windows the corresponding
 outputs are `fpas_cui.dll` and `fpas_cui.lib`; shared builds also have an import
-library. Multi-configuration generators use `--config Release` for building
-and `-C Release` for CTest, and can place outputs in a configuration subdirectory.
-Keep their shared import library and static archive in separate build directories.
+library. With the Visual Studio generator, select x64 with `-A x64` at configure
+time and `--config Release` at build time. Run CTest with `-C Release` and find
+the outputs in the build directory's `Release/` subdirectory. Keep the shared
+import library and static archive in separate build directories.
 
 The optional smoke target is an independent C consumer linked through
 `fpas::cui`. It initializes the bundled fonts, creates a widget tree and verifies
 software-rendered pixels. It needs no X server. Configure each linkage variant
-with tests enabled to check both real linking paths. This does not verify native
-window creation or OS input.
+with tests enabled to check both linking paths and the control adapters. On
+Windows, the live-resize test also creates a hidden window and verifies callback
+registration and detachment.
 
 For Linux ABI inspection, check public symbols in each output:
 
@@ -53,10 +64,9 @@ nm -D --defined-only .temp-data/gui-native/linux-x64/Release/shared/libfpas_cui.
 nm --defined-only .temp-data/gui-native/linux-x64/Release/static/libfpas_cui.a
 ```
 
-Shared builds export the `cui_*` API while keeping internal symbols hidden.
+Shared builds export the `cui_*` API and FPAS bridge while keeping internal symbols hidden.
 Static builds omit shared-library import/export definitions and use position
-independent code for final NativeAOT linking. Both use the same source/header.
+independent code for final NativeAOT linking. Both use the same sources.
 
-The [managed project](../README.md) invokes this build through MSBuild. SDK
-packaging and native asset distribution are tracked in the plan.
+The [managed project](../README.md) invokes this build through MSBuild.
 Redistributing either library requires its accompanying upstream license notices.

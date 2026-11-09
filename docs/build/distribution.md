@@ -17,7 +17,8 @@ applications requires their own .NET runtime and application dependencies.
 
 Run [dist.ps1](../../dist.ps1) on Windows x64 or [dist.sh](../../dist.sh) on Linux
 x64, with the .NET 10 SDK installed. Each script builds and packages the Release
-SDK, then publishes the CLI with its matching package embedded. Builds use the
+SDK, including the [native CUI assets](#native-cui-assets), then publishes the CLI
+with its matching package embedded. Builds use the
 default SDK parallelism and separate `.temp-data/dist/windows` or
 `.temp-data/dist/unix` artifacts. Invocation works from another directory.
 
@@ -69,6 +70,26 @@ SDK's compiler metadata. Check/query also require matching compiler bytes.
 Offline builds work when the .NET SDK/reference packs and any additional project
 packages are already available. Export itself performs no restore or download.
 Application outputs use the [publishing contract](publishing.md).
+
+## Native CUI assets
+
+Distribution builds compile CUI from the pinned upstream sources using the
+[native build prerequisites](../../src/Fpas.Gui.Cui/native/README.md#prerequisites).
+The embedded SDK package carries the native files for the distribution's RID.
+
+| SDK package path | `win-x64` | `linux-x64` |
+| --- | --- | --- |
+| `tools/gui/runtimes/<rid>/native/` | `fpas_cui.dll` | `libfpas_cui.so` |
+| `tools/gui/runtimes/<rid>/static/` | `fpas_cui.lib` | `libfpas_cui.a` |
+| `tools/gui/licenses/` | Six CUI and bundled-component notices | Same notices |
+
+The scripts set `FpasCuiDistributionRid` for both the SDK build and pack. Packing
+reports the RID and filename if an expected binary is missing. `fpas sdk export`
+delivers the package offline. Use separate feeds when exporting distributions
+for different RIDs with the same SDK version. The compiler and terminal programs have no CUI
+runtime dependency. Ordinary compiler and SDK development builds can omit the
+distribution property. Automatic asset selection and final application linking
+belong to [GUI publishing](../future/gui/fpas-publishing.md).
 
 ## Extraction and ownership
 

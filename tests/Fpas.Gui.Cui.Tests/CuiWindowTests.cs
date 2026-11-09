@@ -30,16 +30,18 @@ public sealed class CuiWindowTests
         for (int frame = 0; frame < 60; frame++)
         {
             Assert.True(window.NextFrame());
+            // Each press moves from outside the controls after the native frame has begun.
+            if (frame is 10 or 20 or 30) window.MovePointer(-1, -1);
             CuiRectangle target = frame switch
             {
-                10 or 11 or 12 => button,
-                20 or 21 or 22 => checkbox,
-                30 or 31 or 32 => editor,
+                11 or 12 => button,
+                21 or 22 => checkbox,
+                31 or 32 => editor,
                 _ => default
             };
             if (target.Width > 0)
             {
-                float x = frame is 30 or 31 or 32 ? target.X + target.Width - 12 : target.X + target.Width / 2;
+                float x = frame is 31 or 32 ? target.X + target.Width - 12 : target.X + target.Width / 2;
                 window.MovePointer(x, target.Y + target.Height / 2);
             }
             if (frame is 11 or 21 or 31) window.SetLeftButton(true);

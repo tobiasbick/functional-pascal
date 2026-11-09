@@ -158,7 +158,7 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial CuiRectangle LastRectangle(nint context);
 
-    [LibraryImport(Library, EntryPoint = "cui_input_mouse_move")]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_move_pointer")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void MovePointer(nint context, float x, float y);
 

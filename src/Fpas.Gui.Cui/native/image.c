@@ -1,5 +1,4 @@
 #include "fpas_cui.h"
-#include "platform/cui_platform.h"
 
 #if defined(_WIN32)
 #define FPAS_GL_CALL __stdcall

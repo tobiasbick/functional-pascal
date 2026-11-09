@@ -1,6 +1,5 @@
 /* Small ABI adapters for options structs and compound-literal CUI macros. */
 #include "fpas_cui.h"
-#include "platform/cui_platform.h"
 #include <math.h>
 #include <stdlib.h>
 

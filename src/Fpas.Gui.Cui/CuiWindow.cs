@@ -333,7 +333,7 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Gets the most recent widget's rectangle from the latest native layout.</summary>
     public CuiRectangle LastRectangle { get { CheckFrame(); return NativeMethods.LastRectangle(context); } }
 
-    /// <summary>Injects a logical pointer position through CUI's input API.</summary>
+    /// <summary>Injects a logical pointer position before drawing widgets in the current frame.</summary>
     /// <param name="x">Finite horizontal coordinate.</param>
     /// <param name="y">Finite vertical coordinate.</param>
     public void MovePointer(float x, float y)

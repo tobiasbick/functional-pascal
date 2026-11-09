@@ -42,8 +42,8 @@ Windows checks remain open; overall completion requires both platforms.
 | `Fpas.Tui` | Terminal host, cell layout and renderer | MVU core and widget contracts |
 
 Upstream files belong under the repository-root `third-party/<library>/` tree.
-For CUI, `third-party/cui/` holds the vendored source tree, license notices and
-`UPSTREAM.md` with the source version, commit and Git object IDs. The C# binding
+For CUI, `third-party/cui/` holds the release files, license notices and
+`UPSTREAM.md` with the version, commit and checksums. The C# binding
 stays under `src/Fpas.Gui.Cui/`, with the FPAS C bridge and CMake files in `native/`.
 
 The public application path is MVU plus declarative widgets. The low-level C#
@@ -53,7 +53,7 @@ same widget constructors for both hosts. GUI and terminal extensions are explici
 
 ## Agreed scope
 
-- Build from the [pinned C sources and headers](../../../third-party/cui/UPSTREAM.md).
+- Build from the [pinned `cui.c` and `cui.h` release files](../../../third-party/cui/UPSTREAM.md).
   Keep upstream files byte-identical and maintain the FPAS bridge and build
   integration locally.
 - Build native assets with FPAS and deliver prebuilt assets to GUI consumers.

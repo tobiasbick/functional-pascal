@@ -1,7 +1,7 @@
 #ifndef FPAS_CUI_H
 #define FPAS_CUI_H
 
-#include <cui/cui_app.h>
+#include <cui.h>
 
 /** Finishes deferred paint without presenting before resource and window destruction.
  * @param app Live UI-thread application. Destroy it without opening or presenting another frame. */
@@ -23,6 +23,12 @@ CUI_API void fpas_cui_row_begin(cui_ctx *ui, float padding, float gap);
  * @param ui Current UI-thread context.
  * @param id Borrowed control identity, resolved in the current ID scope. */
 CUI_API void fpas_cui_request_focus(cui_ctx *ui, const char *id);
+
+/** Moves the synthetic pointer and refreshes hit testing in the open frame.
+ * @param ui Current UI-thread context before drawing widgets.
+ * @param x Logical horizontal coordinate.
+ * @param y Logical vertical coordinate. */
+CUI_API void fpas_cui_move_pointer(cui_ctx *ui, float x, float y);
 
 /** Draws an editor with host-supplied selection. A new document version clears undo and scroll state.
  * @param ui Current UI-thread context.

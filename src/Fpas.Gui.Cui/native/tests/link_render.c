@@ -1,7 +1,6 @@
 /* Checks real consumer linkage, font initialization and software rendering
  * against either the shared library or static archive, without a display. */
 #include "../fpas_cui.h"
-#include <cui/cui_render.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

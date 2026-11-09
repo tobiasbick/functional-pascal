@@ -1,5 +1,4 @@
 #include "fpas_cui.h"
-#include "cui_internal.h"
 
 typedef struct {
     /* CUI owns the first member and releases its undo history with the widget state. */

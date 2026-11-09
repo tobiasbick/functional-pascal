@@ -3,21 +3,19 @@
 | Property | Value |
 | --- | --- |
 | Repository | <https://github.com/yappologistic/CUI> |
-| Release | [v1.2.0](https://github.com/yappologistic/CUI/releases/tag/v1.2.0) |
-| Commit | `7bb08ff7c56eb912fe7133985f8b7fa65098ea2e` |
-| Build inputs | [`upstream/`](upstream/) |
+| Release | [v1.3.0](https://github.com/yappologistic/CUI/releases/tag/v1.3.0) |
+| Commit | `f70a1d3d095cafd67814b23bdd82c2dfba28efe0` |
+| Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
-The vendored CMake file, sources, public headers and bundled third-party headers
-retain their upstream paths and bytes. The following Git object IDs identify the
-copied paths in the pinned commit.
+The two files are the release's amalgamated C source and public header. Both
+match the release assets byte for byte and can be reconstructed from the tagged
+source tree.
 
-| Path under `upstream/` | Upstream Git object ID |
+| Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `CMakeLists.txt` | `cbe9d6f02522064fd26a432bce97133404bf25f0` |
-| `include/` | `e0b69bb531220662ac26d2fb3dc5d37102a5c86f` |
-| `src/` | `1344119548fb37563d77281db85ae0440e2cd282` |
-| `third_party/` | `82705a8c2982bc60838a5804c7508a12b9fd4a32` |
+| `cui.c` | `07f2be6fec062fc5a44fe4cec430f27282151a04bf5f8f4715de50bd7b9098c6` |
+| `cui.h` | `81431e25aa4d2373777d1e6510a6f5d95f33e7c4e1a679841048539d418b7840` |
 
 Project-owned integration belongs under `src/Fpas.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -38,8 +36,7 @@ Standalone notices accompany binary distributions.
 | [LICENSE-Lucide.txt](LICENSE-Lucide.txt) | `assets/fonts/LICENSE-Lucide.txt` | ISC, including Feather-derived icons under MIT |
 
 The CUI, Unicode and font/icon notice files are copied unchanged. The stb notice
-contains the dual-license text from the bundled stb headers, which retain their
-original license blocks.
+contains the dual-license text from the stb code in `cui.c`.
 
 Keep these notices when redistributing the dependency, including native,
 single-file and NativeAOT application distributions.
@@ -47,11 +44,10 @@ single-file and NativeAOT application distributions.
 ## Updating the dependency
 
 1. Choose an upstream release deliberately and resolve its tag to a commit.
-2. Export the build paths listed above and obtain the license notices from the
-   same commit. Review changes in source, build configuration and licensing.
-3. Compare `git hash-object --no-filters <vendored-file>` for each copied file
-   with its blob ID from `git ls-tree -r <commit>`. Preserve line endings during
-   export and checkout.
-4. Replace the vendored files and notices together. Check every bundled component
-   for license changes and refresh the version, commit, object IDs and inventory.
+2. Download `cui.c` and `cui.h` from the release. Review source and license changes
+   against the pinned release.
+3. Verify the SHA-256 digests and check that the files match an amalgamation of
+   the tagged sources. Copy the assets without changing their bytes.
+4. Refresh the version, commit and digests. Use the tagged sources to check
+   whether the license inventory or notice files need updating.
 5. Run the native, binding and FPAS-consumer checks.

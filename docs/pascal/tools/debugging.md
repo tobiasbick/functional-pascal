@@ -5,6 +5,11 @@ and a stdio DAP adapter. It supports .NET 10 targets on Windows x64 and Linux x6
 including native Linux processes inside WSL2. Its native shim is packaged with
 the compiler. No external debugger installation or debug-time download is needed.
 
+For automatic exception capture while running a source or project, use
+`fpas run CONTEXT --failure-report failure.json`. It shares the debugger's passive
+snapshot/report implementation, inherits ordinary console input and resumes the
+original process after saving. See [run failure reports](../program-structure/project-commands.md#save-the-original-failure).
+
 Build the executable separately. Keep its DLL, matching portable PDB, runtime
 configuration, dependencies and recorded sources available. Source checksums and
 module identities must match. Debugging does not build or restore a project.

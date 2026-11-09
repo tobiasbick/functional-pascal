@@ -14,7 +14,7 @@ internal static partial class BoundDocumentation
         var content = reader.Read(new("", "metadata", identity.Kind, identity.Name, identity.Type, "", "clr", identity.Assembly, path, id, null,
             new("file_missing", "xml", null, null)));
         inputs.Verify(token);
-        return content.Content is null ? null : DocumentationDisplay.Text(content);
+        return content.Content is null ? null : DocumentationMarkdown.PlainText(DocumentationDisplay.Text(content));
     }
 
     private static string? Id(MetadataIdentity identity)

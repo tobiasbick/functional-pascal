@@ -34,11 +34,7 @@ public sealed partial class SourceQuery
                     token.ThrowIfCancellationRequested();
                     var inspection = Inspect(new(match.Span.Path, match.Span.Line, match.Span.Column, match.Project), 1, token).Inspect!;
                     var docs = inspection.Source.Documentation;
-                    var content = docs.Text is null ? null : string.Join('\n', docs.Text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n').Select(line =>
-                    {
-                        var marker = line.IndexOf("//", StringComparison.Ordinal);
-                        var text = marker < 0 ? line : line[(marker + 2)..]; return text.StartsWith(' ') ? text[1..] : text;
-                    }));
+                    var content = docs.Text is null ? null : DocumentationMarkdown.Source(docs.Text);
                     return new(match.Project, "source", match.Kind, match.Name, match.QualifiedName, match.Signature, "fpas", snapshot.AssemblyName,
                         null, null, match.Span, new(docs.Availability, "markdown", docs.Span?.Path, content));
                 });

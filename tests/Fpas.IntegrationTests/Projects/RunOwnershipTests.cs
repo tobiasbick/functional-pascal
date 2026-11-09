@@ -7,8 +7,12 @@ namespace Fpas.IntegrationTests.Projects;
 
 public sealed class RunOwnershipTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
-    [Fact]
-    public async Task JSON_run_drains_output_and_joins_descendants_after_the_parent_exits()
+    /// <summary>Drain output and join descendants after the main target exits in both run modes.</summary>
+    /// <param name="captureFailure">Whether the run enables automatic failure capture.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task JSON_run_drains_output_and_joins_descendants_after_the_parent_exits(bool captureFailure)
     {
         using var directory = new TemporaryDirectory();
         var source = directory.File("Parent.fpas"); var ready = directory.File("child.pid");
@@ -35,11 +39,13 @@ public sealed class RunOwnershipTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             end;
             end program;
             """);
-        var result = await ProjectCliFixture.Cli(directory, "run", source, "--sdk-version", sdk.Version, "--sdk-feed", sdk.Feed,
-            "--timeout", "30", "--report", "json", "--", "parent", TestEnvironment.DotnetHost, ready);
+        var result = await ProjectCliFixture.Cli(directory, ["run", source, "--sdk-version", sdk.Version, "--sdk-feed", sdk.Feed,
+            "--timeout", "30", "--report", "json", .. captureFailure ? new[] { "--failure-report", directory.File("failure.json") } : [],
+            "--", "parent", TestEnvironment.DotnetHost, ready]);
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
         using var json = JsonDocument.Parse(result.Output);
         Assert.Equal("parent done" + Environment.NewLine, json.RootElement.GetProperty("program").GetProperty("output").GetString());
+        Assert.False(File.Exists(directory.File("failure.json")));
         var child = int.Parse(File.ReadAllText(ready), System.Globalization.CultureInfo.InvariantCulture);
         try
         {

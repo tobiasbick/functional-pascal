@@ -39,6 +39,9 @@ for the task.
   rewritten, reorganized, or replaced.
 - Changes to FPAS syntax require the user's explicit approval before
   implementation.
+- Prefer one canonical spelling per language construct. Justify deviations from
+  Pascal or Ada conventions, or explain the intended form with targeted
+  diagnostics.
 - Resolve confirmed gaps in the agreed language/build baseline before adding
   extensions. Track them separately from deferred proposals in the language-gaps
   document.

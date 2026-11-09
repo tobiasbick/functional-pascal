@@ -75,6 +75,13 @@ that worker and its descendants exit.
 
 ## Failure reports and dumps
 
+For automatic capture during a development run, use
+`fpas run CONTEXT --failure-report failure.json`. It captures the first unhandled
+managed exception before resuming the original process, keeps normal console
+input and preserves the actual program exit. The destination must be new.
+See [run failure reports](../program-structure/project-commands.md#save-the-original-failure)
+for symbols, platform requirements, capture limits and report persistence.
+
 ```sh
 fpas diagnose failure artifacts/App.dll --timeout 20 -- input.txt
 fpas diagnose dump --process-id 1234 --output failure.dmp

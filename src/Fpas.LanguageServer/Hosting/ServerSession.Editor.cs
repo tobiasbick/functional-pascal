@@ -75,8 +75,7 @@ internal sealed partial class ServerSession
     {
         var content = "```fpas\n" + signature.Replace("`", "`\u200b", StringComparison.Ordinal) + "\n```";
         if (documentation is null) return content;
-        return content + "\n\n" + string.Concat(documentation.Select(character =>
-            "\\`*_{}[]<>()#+-.!|~&".Contains(character) ? "\\" + character : character.ToString()));
+        return content + "\n\n" + documentation;
     }
 
     private object SemanticTokens(SourceQuery query, string path, CancellationToken token)

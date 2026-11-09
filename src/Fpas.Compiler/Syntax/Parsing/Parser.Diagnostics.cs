@@ -25,10 +25,10 @@ internal sealed partial class Parser
         void IDisposable.Dispose() => parser.syntaxDepth--;
     }
 
-    private CompilationFailure Expected(string[] expected, string message, string kind = "token")
-        => ExpectedAt(Current, expected, message, kind);
+    private CompilationFailure Expected(string[] expected, string message, string kind = "token", bool programEnd = false)
+        => ExpectedAt(Current, expected, message, kind, programEnd);
 
-    private CompilationFailure ExpectedAt(Token token, string[] expected, string message, string kind = "token")
+    private CompilationFailure ExpectedAt(Token token, string[] expected, string message, string kind = "token", bool programEnd = false)
     {
         var found = token.Kind == TokenKind.End ? "end of file" : token.Text;
         var replacement = expected.FirstOrDefault(value => value.Equals(token.Text, StringComparison.OrdinalIgnoreCase) && value != token.Text);
@@ -48,6 +48,10 @@ internal sealed partial class Parser
             help = "Terminate the preceding statement with ';', including before else or a block closer.";
             fixes.Add(DiagnosticHints.Replace(source, token.Position, "", ";", "Insert the missing semicolon"));
         }
+        else if (programEnd && expected is [";"] && token.Text == ".")
+            help = "FPAS closes blocks with ';', not '.'. End a program entry body with 'end;', followed by 'end program;'.";
+        else if (expected is ["program", "unit"] && token.Text.Equals("procedure", StringComparison.OrdinalIgnoreCase))
+            help = "An Ada-style main procedure is not a FPAS source container. Start with 'program Name;', declare routines before the entry body, then write 'begin ... end; end program;'.";
         return source.Error("FP2001", message, token.Position, token.Length, help,
             new(kind, expected, found), fixes: fixes);
     }

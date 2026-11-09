@@ -83,6 +83,11 @@ DiagnosticBag stops after 50 errors with FP0003. Invalid programs never reach
 emission. The parser reports FP2003 when recursive syntax or an expression tree
 exceeds 256 levels, including trees built by long operator and member chains.
 Analysis can retain independently checked declarations and bodies.
+Editor completion and signature-help candidates retain a source declaration span
+or an imported metadata identity so documentation lookup uses the selected
+declaration, including the selected overload, rather than matching a display name.
+Recovery edits project those declaration spans back to the original captured
+source; an overlapping edit supplies no declaration instead of a guessed location.
 Syntax recovery preserves known routine headers and source closers; failed
 bodies and their nested facts are unavailable as a whole. Invalid declaration
 scopes exclude their entire source unit and source consumers, transitively;

@@ -23,11 +23,20 @@ internal static class DiagnosticHints
                 Expectation = new("type", [replacement], word),
                 Fixes = [Replace(source, position, word, replacement, $"Use {replacement}")]
             };
-        if (diagnostic.Code == "FP1001" && position >= 0 && source.Text.AsSpan(position).StartsWith("!=", StringComparison.Ordinal))
+        if (diagnostic.Code == "FP1001" && position >= 0 &&
+            (source.Text.AsSpan(position).StartsWith("!=", StringComparison.Ordinal) || source.Text.AsSpan(position).StartsWith("/=", StringComparison.Ordinal)))
             return diagnostic with
             {
                 Location = source.Location(position, 2), Help = "Use '<>' for inequality.",
-                Expectation = new("operator", ["<>"], "!="), Fixes = [Replace(source, position, "!=", "<>", "Use <>")]
+                Expectation = new("operator", ["<>"], source.Text.Substring(position, 2)),
+                Fixes = [Replace(source, position, source.Text.Substring(position, 2), "<>", "Use <>")]
+            };
+        if (diagnostic.Code == "FP1001" && position >= 0 &&
+            (source.Text.AsSpan(position).StartsWith("{", StringComparison.Ordinal) || source.Text.AsSpan(position).StartsWith("(*", StringComparison.Ordinal)))
+            return diagnostic with
+            {
+                Help = "FPAS uses '//' line comments. Replace a Pascal block comment with one '//' comment per line.",
+                Expectation = new("comment", ["//"], source.Text[position] == '{' ? "{" : "(*")
             };
         if (diagnostic.Code == "FP3001" && word.ToLowerInvariant() is "writeln" or "readln")
             return diagnostic with { Help = "Import System.Console explicitly, then call Console.WriteLine or Console.ReadLine; consume returned values." };

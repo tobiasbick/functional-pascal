@@ -106,7 +106,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         {
             layout?.Section(position);
             var bodyStart = Current.Position;
-            statements = ReadBody(bodyStart, () => { Expect("begin"); var body = ReadStatements(); Expect("end"); Expect(";"); return body; });
+            statements = ReadBody(bodyStart, () => { Expect("begin"); var body = ReadStatements(); Expect("end"); Expect(";", programEnd: true); return body; });
             container.Body(bodyStart, Math.Max(bodyStart, LastEnd));
         }
         layout?.Line(position);
@@ -195,10 +195,10 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         return tokens[position++];
     }
 
-    private void Expect(string text)
+    private void Expect(string text, bool programEnd = false)
     {
         if (!At(text))
-            throw Expected([text], $"Expected '{text}', found '{Current.Text}'.");
+            throw Expected([text], $"Expected '{text}', found '{Current.Text}'.", programEnd: programEnd);
         position++;
     }
 }

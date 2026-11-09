@@ -76,6 +76,12 @@ exact restoration after both normal exit and a native output failure.
 
 ## Language and metadata
 
+ForeignHabitDiagnosticsTests verifies targeted Pascal/Delphi/Ada guidance,
+exact operator edits, compile/analysis parity and preservation of valid `Result`
+storage and comment-like text in literals. DiagnosticCliTests checks the JSON
+guidance and output preservation; CheckFixTests applies the Ada inequality edit
+through a fresh SDK consumer and rechecks the corrected project.
+
 Syntax.TokenBoundaryTests varies every declared boundary individually and all
 boundaries together across complete programs: empty gaps where permitted,
 spaces/tabs, LF/CRLF/CR, Unicode whitespace, inline/standalone/detached comments.
@@ -116,7 +122,7 @@ build mixed FPAS/C# consumers and compare exported contracts with .NET behavior.
 | Stdio LSP lifecycle, versioned UTF-16 document diagnostics, watched inputs, message limits and EOF/shutdown cleanup | — | LspLifecycleTests, LspDiagnosticsTests, LspCancellationTests (Windows/Linux owned-process acceptance) |
 | LSP navigation, complete bounded searches, checked versioned rename, fixed-style formatting and stale/cancelled requests | — | LspFeatureTests, LspRenameBehaviorTests, LspScopeTests, LspRequestLifecycleTests (Windows/Linux process acceptance) |
 | Check/query JSON, source coverage, no execution, preserved outputs and cancellation | | CheckTests, QueryCliTests, AnalysisSignalTests |
-| Init preservation/preview, project/solution build and start selection, source/DLL execution, inherited streams, JSON and process/cancellation ownership | | InitTests, BuildRunTests, SourceRunTests, RunOwnershipTests, ProjectSignalTests |
+| Init preservation/preview, project/solution build and start selection, source/DLL execution, inherited streams, JSON, automatic original-failure reports and process/cancellation ownership | | InitTests, BuildRunTests, SourceRunTests, FailureReportTests, RunOwnershipTests, ProjectSignalTests |
 | Literal declaration search/paging and exact bounded inspection with direct types | DeclarationContextTests | SourceQueryTests, QueryCliTests |
 | Source-body ownership, checked call/reference sites, dispatch and protocol exclusions | SourceOperationTests, SemanticPolicyTests | CallQueryTests, QueryCliTests, SourceQueryTests |
 | Parsing, annotations, locations, return/unused-result rules | DiagnosticsTests, ExpressionDiagnosticsTests, RoutineTests | CompilerCliTests, PrimitiveExecutionTests, ControlFlowExecutionTests |
@@ -227,6 +233,11 @@ lexical environment construction. Generic checks inspect TypeSpec/MethodSpec and
 !n/!!n signatures, constraints, nullable annotations, and cross-assembly consumers.
 
 BatchDebuggerTests verifies detached one-shot reports, exact observations, input, output and limits. DapDebuggerTests drives the product adapter through an independent framed client: configuration, control, values, stale handles, cancellation, EOF and backpressure. Required native cases run on Windows and Linux without opt-in backend settings. See [frontend tests](README.md#batch-and-dap-frontends).
+
+FailureReportTests exercises `run --failure-report` through the real CLI: original
+exception/local capture without replay, inherited Unicode input and both output
+modes, natural crash/nonzero exits, handled exceptions, storage/symbol rejection
+before side effects, and deadline cleanup.
 
 Aggregate checks cover constructor/default order, private state, copy helpers,
 equality/hash behavior, recursive generic unions, and corrupted versioned
@@ -346,6 +357,12 @@ compares CLI/LSP results and failures over identical snapshots; environment test
 verify passive server identity reporting. Language-server acceptance covers Debug
 and Release on native Windows and WSL Linux, with evaluation exit checked before
 harness cleanup. Symbolic-link and Windows ACL cases run on their applicable platform.
+
+LspDocumentationTests compares CLI lookup, real LSP hover, resolved completion and
+signature help for the same source comments under LF, CRLF and CR. It checks
+selected overloads and declarations after the call site, Markdown headings,
+nested lists and indented code, plus literal rendering of
+imported XML text without changing the CLI's XML payload.
 
 SDK packaging verifies the own debugger, exact native RID asset paths and licenses,
 managed dependencies and working packaged help. Native Windows x64 and WSL2 Linux

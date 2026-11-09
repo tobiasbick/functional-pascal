@@ -132,7 +132,7 @@ public sealed partial class SourceQuery
         if (!snapshot.Coverage.Available(span)) return null;
         var document = snapshot.Documents.Single(item => Paths.Equals(item.Path, span.Path));
         var content = Bound(document.Text.Substring(span.Offset, span.Length));
-        return string.Join('\n', content.Split('\n').Select(line => line.TrimStart().StartsWith("//", StringComparison.Ordinal) ? line.TrimStart()[2..].TrimStart() : line.TrimEnd()));
+        return DocumentationMarkdown.Source(content);
     }
 
     private static string Signature(string name, CallableSignature signature, SemanticSnapshot snapshot)

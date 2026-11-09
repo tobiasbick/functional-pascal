@@ -47,7 +47,13 @@ public sealed class ProjectSignalTests(SdkPackageFixture sdk) : IClassFixture<Sd
             """);
         var built = await ProjectCliFixture.Cli(directory, "build", project, "--report", "json"); Assert.Equal(0, built.ExitCode);
         var ready = directory.File("program.pid");
-        await Cancel(directory, ["run", project, "--no-build", "--report", "json", "--", ready], ready);
+        foreach (var captureFailure in new[] { false, true })
+        {
+            File.Delete(ready);
+            await Cancel(directory, ["run", project, "--no-build", "--report", "json",
+                .. captureFailure ? new[] { "--failure-report", directory.File("failure.json") } : [], "--", ready], ready);
+            Assert.False(File.Exists(directory.File("failure.json")));
+        }
     }
 
     private static async Task Cancel(TemporaryDirectory directory, string[] arguments, string ready, string? liveMessage = null)

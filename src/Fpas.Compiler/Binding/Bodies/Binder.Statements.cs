@@ -59,7 +59,10 @@ internal sealed partial class Binder
                 BoundExpression target;
                 if (assignment.Target is NameExpressionSyntax name)
                 {
-                    if (!HasValue(name.Name.Text)) throw source.Error("FP3009", "Assignment requires writable storage.", name.Position);
+                    if (!HasValue(name.Name.Text))
+                    {
+                        throw source.Error("FP3009", "Assignment requires writable storage.", name.Position, name.Name.Length, help: UndeclaredResultHint(name.Name));
+                    }
                     target = Value(name.Name.Text, name.Position);
                     if (!Writable(target)) throw source.Error("FP3009", "Assignment requires writable storage.", name.Position);
                     if (target is BoundLocal stored) target = new BoundLocal(stored.Local);
@@ -124,4 +127,13 @@ internal sealed partial class Binder
         }
     }
 
+    private string? UndeclaredResultHint(Token name)
+    {
+        if (currentRoutine.BodyResult == TypeSymbol.Void || name.Length != name.Text.Length || !name.Text.Equals("Result", StringComparison.OrdinalIgnoreCase))
+            return null;
+        if (routines.ContainsKey(name.Text) || recordContext?.UserMethods.ContainsKey(name.Text) == true ||
+            recordContext?.Fields.Any(field => field.Name == name.Text) == true || imports.ContainsKey(name.Text) || unit.HasType(name.Text) || TypeParameters.ContainsKey(name.Text))
+            return null;
+        return "FPAS returns function values with 'return Value;', not by assigning to 'Result'. Returning exits the function; review the control flow before changing this assignment.";
+    }
 }

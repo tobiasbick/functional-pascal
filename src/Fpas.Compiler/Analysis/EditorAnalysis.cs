@@ -5,7 +5,13 @@ namespace Fpas.Compiler.Analysis;
 
 public sealed record EditorCandidate(string Name, string Kind, string Signature, MetadataIdentity? Metadata = null, SourceSpan? Declaration = null);
 public sealed record EditorCompletion(string Context, SourceSpan Replacement, IReadOnlyList<EditorCandidate> Items, bool Incomplete);
-public sealed record EditorCallSignature(string Label, IReadOnlyList<string> Parameters, int? ActiveParameter, MetadataIdentity? Metadata = null);
+/// <summary>A checked call candidate with its source declaration or imported metadata identity.</summary>
+/// <param name="Label">The rendered callable signature.</param>
+/// <param name="Parameters">The rendered parameter labels in declaration order.</param>
+/// <param name="ActiveParameter">The parameter corresponding to the cursor, when known.</param>
+/// <param name="Metadata">The imported callable identity, when available.</param>
+/// <param name="Declaration">The source name span for a source-defined callable, when available.</param>
+public sealed record EditorCallSignature(string Label, IReadOnlyList<string> Parameters, int? ActiveParameter, MetadataIdentity? Metadata = null, SourceSpan? Declaration = null);
 public sealed record EditorCallSignatures(IReadOnlyList<EditorCallSignature> Items, int? ActiveSignature, bool Incomplete);
 
 /// <summary>Checks a cursor against captured inputs. Any recovery edits exist only for the duration of the query.</summary>
@@ -140,11 +146,19 @@ public static class EditorAnalysis
 
     private static void Run(AnalysisRequest request, CompilationSource input, string text, EditorProbe probe, CancellationToken token)
     {
-        using var prepared = PreparedCompilation.Create(request with
+        try
         {
-            Sources = request.Sources.Select(item => item == input ? item with { Text = text } : item).ToArray(),
-            ValidateDocumentation = false
-        }, token, collectSemantics: true, editor: (input.Path, probe));
+            using var prepared = PreparedCompilation.Create(request with
+            {
+                Sources = request.Sources.Select(item => item == input ? item with { Text = text } : item).ToArray(),
+                ValidateDocumentation = false
+            }, token, collectSemantics: true, editor: (input.Path, probe));
+        }
+        finally
+        {
+            if (text != input.Text)
+                probe.ProjectDeclarations(new EditorSourceProjection(input, text, token));
+        }
     }
 }
 
@@ -163,6 +177,13 @@ internal sealed class EditorProbe(string context, string prefix, int position)
     internal int? ActiveSignature { get; set; }
     internal bool Matches(Token name) => name.Position == Position && name.Text == EditorAnalysis.Marker;
     internal bool Accepts(string name) => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+
+    internal void ProjectDeclarations(EditorSourceProjection projection)
+    {
+        foreach (var name in candidates.Keys.ToArray())
+            candidates[name] = candidates[name] with { Declaration = projection.Restore(candidates[name].Declaration) };
+        Signatures = Signatures.Select(signature => signature with { Declaration = projection.Restore(signature.Declaration) }).ToArray();
+    }
 
     internal void Add(EditorCandidate candidate)
     {

@@ -11,11 +11,19 @@ The debugger launches already built .NET 10 executable DLLs on Windows x64 and
 Linux x64, including Linux processes inside WSL2. It uses CoreCLR's public native
 debugging interfaces through the packaged DbgShim. Source, symbols and runtime
 dependencies are supplied by the caller; debugging does not build or restore.
+The run frontend resolves/builds its target through the ordinary project driver
+before entering this debugger core.
 
-The public frontends are batch and stdio DAP. Editor-specific extensions and
+The public frontends are batch, stdio DAP and optional automatic
+[run failure reports](../pascal/program-structure/project-commands.md#save-the-original-failure).
+The run frontend shares batch identity checks and snapshot capture, atomically
+publishes the first unhandled-exception report before resuming, and then observes
+the natural target exit. It never replays target execution. Snapshot inspection
+has a ten-second budget; interrupted captures retain issues and omissions.
+Editor-specific extensions and
 configuration are outside this debugger. Public attach, dump inspection, Native
 AOT targets, native/mixed-mode debugging, mutation, managed function evaluation,
-tracepoints, hot reload, instruction quotas and deterministic scheduling are
+hot reload, instruction quotas and deterministic scheduling are
 unsupported. The [test reference](../../tests/README.md#own-coreclr-connection-tests)
 describes native Windows and WSL verification for Debug and Release tool builds.
 
@@ -78,6 +86,10 @@ Prefix capture never resumes retaining text after an omitted code point; a
 partial code point at the quota waits for continuation or EOF. Total received
 bytes and quota notification are independent of retained text. Programs requiring exact text
 capture must select UTF-8 output. Output and state survive worker failure.
+The run failure frontend instead inherits the console handles, or inherits stdin
+and captures bounded stdout/stderr for JSON runs. Editor-controlled captured runs
+keep stdin closed. These choices apply when launching the worker, whose target
+inherits the same handles; interactive input is not buffered through the protocol.
 
 Ordinary shutdown joins readers and releases owned/native resources before
 returning. An external OS kill of the supervisor, OOM or an uninterruptible

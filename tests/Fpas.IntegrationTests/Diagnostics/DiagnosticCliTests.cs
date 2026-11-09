@@ -5,6 +5,31 @@ namespace Fpas.IntegrationTests.Diagnostics;
 
 public sealed class DiagnosticCliTests
 {
+    /// <summary>Publish foreign-syntax guidance as JSON while preserving invalid sources and prior outputs.</summary>
+    /// <param name="text">The rejected source text.</param>
+    /// <param name="help">The expected diagnostic guidance fragment.</param>
+    [Theory]
+    [InlineData("program Example; begin discard 1 /= 2; end; end program;", "'<>'")]
+    [InlineData("program Example; begin { comment } end; end program;", "'//' line comments")]
+    [InlineData("program Example; begin (* comment *) end; end program;", "'//' line comments")]
+    [InlineData("program Example; begin end.", "'end program;'")]
+    [InlineData("procedure Main is begin null; end Main;", "'program Name;'")]
+    [InlineData("program Example; function Answer(): int; begin Result := 1; end function; begin discard Answer(); end; end program;", "'return Value;'")]
+    public async Task Foreign_habit_guidance_reaches_JSON_without_accepting_the_source_or_replacing_outputs(string text, string help)
+    {
+        using var directory = new TemporaryDirectory();
+        var source = directory.File("Example.fpas"); var output = directory.File("Example.dll");
+        File.WriteAllText(source, text); File.WriteAllText(output, "retained assembly");
+        var result = await Compile(source, output, "--diagnostics", "json");
+        Assert.Equal(1, result.ExitCode); Assert.Empty(result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        Assert.False(json.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("output").ValueKind);
+        var diagnostic = Assert.Single(json.RootElement.GetProperty("diagnostics").EnumerateArray());
+        Assert.Contains(help, diagnostic.GetProperty("help").GetString());
+        Assert.Equal(text, File.ReadAllText(source)); Assert.Equal("retained assembly", File.ReadAllText(output));
+    }
+
     [Fact]
     public async Task Json_exposes_a_complete_correction_and_never_publishes_an_invalid_program()
     {

@@ -94,6 +94,11 @@ run selects an executable (use --project when a solution is ambiguous), forwards
 arguments after -- and preserves its exit code. --report json captures program
 output separately; stdin remains inherited. Run defaults to no deadline; select
 --timeout for bounded automation. No command overwrites conflicting init files.
+Use `run --failure-report failure.json` to save the first unhandled exception
+with the shared debugger report, then resume the same process to its natural exit.
+The destination must be new; matching PDBs/sources and the supported CoreCLR
+debugger platform are required. Available locals and async stack context are
+bounded; global task enumeration is unavailable. See the run reference for limits.
 
 Use `fpas init test Tests --framework xunit` to create a native test library;
 mstest/nunit are also supported. `--framework mstest --runner mtp` creates a

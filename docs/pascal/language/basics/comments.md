@@ -167,8 +167,13 @@ external content. This baseline does not add source XML tags, symbol-link/cref
 resolution, include directives, or automatic inherited documentation.
 
 The sidecar enables standard .NET documentation consumers, including C# and VB
-projects referencing the assembly. Implementing FPAS hover, completion, generated
-documentation sites, or a Visual Studio project system remains separate work.
+projects referencing the assembly. FPAS [editor documentation](../../tools/language-server.md)
+and [CLI lookup](../../tools/api-documentation.md) use the same attached source
+Markdown. They normalize CRLF and CR to LF, remove the comment prefix and at most
+one following ASCII space, and preserve Markdown indentation, lists and code
+fences. Hover, resolved completion items and signature help render source
+documentation as Markdown. Imported XML documentation is rendered as literal
+text in editor Markdown; the CLI retains its XML representation.
 
 ## Verification
 

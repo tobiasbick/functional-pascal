@@ -20,7 +20,7 @@ fpas schema test
 | `check` | Evaluated project/solution checking and corrections |
 | `query` | Checked source queries |
 | `test` | Native VSTest/MTP results and discovery |
-| `debug` | Batch, tracepoints and runtime-failure observations |
+| `debug` | Batch, tracepoints, runtime-failure observations and `run --failure-report` files |
 | `format` | Source formatting |
 | `doc` | API documentation lookup |
 | `refactor` | Existing rename plans/application |

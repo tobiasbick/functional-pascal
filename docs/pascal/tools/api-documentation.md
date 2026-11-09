@@ -52,6 +52,10 @@ second metadata copy. Narrowing source owners can expose a dependency through
 its public binary API instead. C#/F# source is not indexed; those dependencies
 are described from their actual reference metadata.
 
+Source Markdown uses the same comment preparation as editor documentation:
+normalize CRLF and CR to LF, remove the `//` prefix and at most one following
+ASCII space, and retain all remaining indentation and Markdown syntax.
+
 External signatures identify types, constructors, methods, properties/indexers,
 fields, events, generic parameters/constraints, parameter modes and metadata
 defaults. Accessor methods are represented by their properties/events. Only

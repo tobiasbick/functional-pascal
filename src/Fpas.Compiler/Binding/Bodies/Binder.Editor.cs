@@ -94,11 +94,16 @@ internal sealed partial class Binder
     {
         name ??= method.Name;
         if (!probe.Accepts(name)) return;
+        probe.Add(new(name, "routine", MethodText(method, name), EditorMetadata(method), EditorDeclaration(method)));
+    }
+
+    private SourceSpan? EditorDeclaration(ImportedMethod method)
+    {
         var symbol = method.SourceMethod;
-        var token = symbol?.Declaration?.Name;
-        var owner = symbol?.Owner?.Owner ?? catalog.Units.FirstOrDefault(item => item.Routines.Values.Any(group => group.Contains(symbol!))) ?? unit;
-        probe.Add(new(name, "routine", MethodText(method, name), EditorMetadata(method),
-            token is null ? null : new SourceDocument(owner.Source.Path, owner.Source.Text, source.CancellationToken).Span(token.Position, token.Length)));
+        if (symbol?.Declaration?.Name is not { } token) return null;
+        var owner = symbol.Owner?.Owner ?? symbol.InterfaceOwner?.Owner ??
+            catalog.Units.FirstOrDefault(item => item.Routines.Values.Any(group => group.Contains(symbol))) ?? unit;
+        return new SourceDocument(owner.Source.Path, owner.Source.Text, source.CancellationToken).Span(token.Position, token.Length);
     }
 
     private void AddGlobal(EditorProbe probe, GlobalSymbol global)
@@ -147,7 +152,7 @@ internal sealed partial class Binder
             var label = MethodText(method, method.Name);
             if (items.Any(item => item.Label == label)) continue;
             if (selected?.Method == method && !probe.Incomplete) active = items.Count;
-            items.Add(new(label, MethodParameters(method), parameter, EditorMetadata(method)));
+            items.Add(new(label, MethodParameters(method), parameter, EditorMetadata(method), EditorDeclaration(method)));
         }
         probe.Signatures = items.AsReadOnly();
         probe.ActiveSignature = active ?? (items.Count == 0 ? null : items.FindIndex(item => item.ActiveParameter is not null) is var first && first >= 0 ? first : 0);

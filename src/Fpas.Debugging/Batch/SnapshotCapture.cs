@@ -12,6 +12,11 @@ internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopp
 
     internal async Task Capture(string[] expressions)
     {
+        if (stopped.Reason == "exception")
+        {
+            var exception = await host.ExceptionInfo(Stop, token);
+            report.Exception = new(exception.Type, exception.Message, exception.Policy, exception.Source, exception.ThrowStack, exception.Truncated, exception.Status);
+        }
         var threads = await host.Threads(Stop, token);
         report.Capture.TotalThreads = threads.Length;
         var selected = threads.FirstOrDefault(item => item.IsStopThread);
@@ -29,11 +34,6 @@ internal sealed class SnapshotCapture(DebugSessionHost host, DebugSnapshot stopp
                 report.Expressions.Add(new(expression, result.Value is null ? null : await Value(result.Value, 0), result.Error));
             }
             catch (DebugException failure) when (LocalFailure(failure)) { report.Expressions.Add(new(expression, Error: new(failure.Code, failure.Message))); }
-        }
-        if (stopped.Reason == "exception")
-        {
-            var exception = await host.ExceptionInfo(Stop, token);
-            report.Exception = new(exception.Type, exception.Message, exception.Policy, exception.Source, exception.ThrowStack, exception.Truncated, exception.Status);
         }
         if (threads.Length > 64) report.Capture.Omit("threads");
         foreach (var thread in threads.Take(64))

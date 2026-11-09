@@ -14,6 +14,8 @@ internal sealed record ProjectReport(string Command, bool Success, string Status
     public ProjectOutput? Target { get; init; }
     public BuildResult? Build { get; init; }
     public ProgramResult? Program { get; init; }
+    /// <summary>The detached original-failure report saved during a run, when available.</summary>
+    public string? FailureReport { get; init; }
     public bool DryRun { get; init; }
     public IReadOnlyList<PlannedFile>? Files { get; init; }
     public ProjectError? Error { get; init; }
@@ -24,6 +26,7 @@ internal sealed record ProjectReport(string Command, bool Success, string Status
         if (json) { Console.WriteLine(JsonSerializer.Serialize(this, ProjectJson.Default.ProjectReport)); return; }
         if (Files is not null)
             foreach (var file in Files) Console.WriteLine($"{file.State}: {file.Path}");
+        if (FailureReport is not null) Console.Error.WriteLine($"Failure report: {FailureReport}");
         if (Error is { } error)
         {
             Console.Error.WriteLine($"{error.Code}: {error.Message}");

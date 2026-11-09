@@ -1,5 +1,6 @@
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Reporting;
+using Fpas.Debugging;
 using Fpas.Processes;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Processes;
@@ -24,6 +25,7 @@ internal sealed class ExecutionCommand
     private readonly Option<string> feed = new("--sdk-feed") { Description = "SDK feed for standalone source input." };
     private readonly Option<int> timeout;
     private readonly Option<string> report = new("--report") { Description = "Write one JSON result, capturing program output." };
+    private readonly Option<string> failureReport = new("--failure-report") { Description = "Save the first unhandled exception as debug JSON to a new file (requires matching PDB and sources)." };
     internal Command Command { get; }
 
     private readonly bool editorControlled;
@@ -57,7 +59,7 @@ internal sealed class ExecutionCommand
         if (run)
         {
             Command.Arguments.Add(arguments);
-            foreach (var option in new Option[] { noBuild, project, workingDirectory }) Command.Options.Add(option);
+            foreach (var option in new Option[] { noBuild, project, workingDirectory, failureReport }) Command.Options.Add(option);
         }
         Command.SetAction(Execute);
     }
@@ -135,8 +137,19 @@ internal sealed class ExecutionCommand
             if (!target!.Executable || !File.Exists(target.Assembly) || !File.Exists(Path.ChangeExtension(target.Assembly, ".runtimeconfig.json")))
                 throw new ContextFailure("not_executable", "The selected managed output and its runtimeconfig.json must exist. Build the executable first.");
             ProgramResult executed;
+            string? savedFailure = null;
             var programArguments = new[] { target.Assembly }.Concat(result.GetValue(arguments) ?? []).ToArray();
-            if (json)
+            if (result.GetValue(failureReport) is { } destination)
+            {
+                if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException("The failure report path must not be empty.");
+                if (built is not null) ProjectProgress.Phase(json, "Running", target.Assembly);
+                var observed = await DebuggerApplication.RunWithFailureReportAsync(new(target.Assembly, cwd,
+                    result.GetValue(arguments) ?? [], Path.GetFullPath(destination), json, !editorControlled, result.GetValue(timeout)),
+                    BuildProcess.DotnetHost(), combined.Token);
+                executed = new(observed.ExitCode, observed.Output, observed.Error, observed.Truncated);
+                savedFailure = observed.ReportPath;
+            }
+            else if (json)
             {
                 var output = await BuildProcess.Run(cwd, programArguments, combined.Token, inheritInput: !editorControlled, buildEnvironment: false);
                 executed = new(output.ExitCode, output.Output, output.Error, output.Truncated);
@@ -149,7 +162,7 @@ internal sealed class ExecutionCommand
                 executed = new(process.ExitCode, "", "", false);
             }
             new ProjectReport("run", executed.ExitCode == 0 && !executed.Truncated, executed.Truncated ? "output_limit" : executed.ExitCode == 0 ? "ok" : "program_failed", context)
-                { Target = target, Build = built, Program = executed }.Write(json);
+                { Target = target, Build = built, Program = executed, FailureReport = savedFailure }.Write(json);
             return executed.Truncated ? 1 : executed.ExitCode;
         }
         catch (OperationCanceledException) when (combined.IsCancellationRequested)

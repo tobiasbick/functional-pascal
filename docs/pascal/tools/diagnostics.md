@@ -45,8 +45,24 @@ before applying a proposal; a successful replacement does not establish the
 correctness of the rest of the program.
 
 Hints cover common Pascal type names, keyword capitalization, `elseif`, `=` in
-initializers and `!=`. Console I/O and `exit` hints describe the supported API or
-statement without fabricating edits that require unknown imports or values.
+initializers and `!=`. The catalogue also explains the following foreign forms:
+
+| Foreign form | FPAS guidance | Proposed edit |
+| --- | --- | --- |
+| Ada inequality `/=` | Use `<>` | Automatic replacement of the adjacent operator |
+| Pascal comments `{ ... }` and `(* ... *)` | Use one `//` line comment per line | No automatic multiline rewrite |
+| Pascal program ending `end.` | Close the entry body with `end;`, then the source with `end program;` | No structural rewrite |
+| Ada main `procedure Main is ...` | Start with `program Name;` and an explicit entry body | No guessed container rewrite |
+| Undeclared `Result := ...` in a value-returning function | Use `return Value;`; returning exits the function | No control-flow rewrite |
+
+These diagnostics reject the foreign forms; they do not add syntax aliases.
+The `Result` hint applies only to an undeclared, unescaped assignment target in
+a value-returning function. Declared mutable variables named `Result` remain
+ordinary storage; read-only storage retains its normal diagnostic. Procedures
+and program entry bodies do not receive a return-value hint.
+Comment and operator spellings inside strings or `//` comments remain data.
+Console I/O and `exit` hints describe the supported API or statement without
+fabricating edits that require unknown imports or values.
 
 ## Apply automatic corrections
 

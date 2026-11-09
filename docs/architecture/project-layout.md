@@ -95,6 +95,7 @@ src/
     Evaluation/
     Hosting/
     Batch/
+    Failures/
     Dap/
   Fpas.Build.Tasks/
     Fpas.Build.Tasks.csproj
@@ -163,7 +164,7 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | --- | --- |
 | `Fpas.Compiler` | C# library for source handling, lexing/parsing, name binding, type checking, lowering, and direct CIL/metadata/PDB generation; optional XML API documentation |
 | `Fpas.Cli` | Command binding, compiler invocation, diagnostics, debugger startup and exit status |
-| `Fpas.Debugging` | Shared native CLR debugger core, supervised workers, passive inspection, batch reports and DAP server |
+| `Fpas.Debugging` | Shared native CLR debugger core, supervised workers, passive inspection, batch/failure reports and DAP server |
 | `Fpas.Workspaces` | Evaluated MSBuild/solution contexts, explicit preparation policy, immutable text snapshots, checked edits and compiler-backed analysis/refactoring services |
 | `Fpas.LanguageServer` | Stdio LSP lifecycle, bounded protocol transport, document synchronization and diagnostics over the shared live workspace |
 | `Fpas.Processes` | Linux process-group/subreaper, Windows jobs and private native PTY/ConPTY ownership |

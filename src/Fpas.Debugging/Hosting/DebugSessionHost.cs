@@ -43,10 +43,11 @@ internal sealed class DebugSessionHost : IAsyncDisposable
     internal int WorkerProcessId => worker?.Id ?? 0;
 
     internal static async Task<DebugSessionHost> Start(WorkerLauncher launcher, string cwd, CancellationToken token, ReadOnlyMemory<byte>? stdin = null,
-        int outputLimit = OutputCapture.MaximumBytes, bool retainOutputPrefix = false, TimeSpan? shutdownGrace = null)
+        int outputLimit = OutputCapture.MaximumBytes, bool retainOutputPrefix = false, TimeSpan? shutdownGrace = null, ProcessStdio stdio = ProcessStdio.Capture)
     {
         token.ThrowIfCancellationRequested();
         if (stdin?.Length > 1_048_576) throw new ArgumentException("Explicit target input is bounded at 1 MiB.");
+        if (stdin is not null && stdio != ProcessStdio.Capture) throw new ArgumentException("Explicit input requires captured stdin.");
         var grace = shutdownGrace ?? TimeSpan.FromSeconds(5);
         if (grace <= TimeSpan.Zero || grace > TimeSpan.FromSeconds(5)) throw new ArgumentOutOfRangeException(nameof(shutdownGrace));
         var host = new DebugSessionHost(outputLimit, retainOutputPrefix, grace);
@@ -54,8 +55,8 @@ internal sealed class DebugSessionHost : IAsyncDisposable
         {
             using var startup = CancellationTokenSource.CreateLinkedTokenSource(token);
             startup.CancelAfter(TimeSpan.FromSeconds(30));
-            host.worker = OwnedProcess.Start(launcher.Executable, launcher.Arguments(host.pipeName), cwd);
-            if (stdin is { } data) host.input = host.WriteInput(data); else host.worker.Input.Close();
+            host.worker = OwnedProcess.Start(launcher.Executable, launcher.Arguments(host.pipeName), cwd, stdio: stdio);
+            if (stdin is { } data) host.input = host.WriteInput(data); else if (stdio == ProcessStdio.Capture) host.worker.Input.Close();
             host.stdout = host.Capture(host.worker.Output, "stdout"); host.stderr = host.Capture(host.worker.Error, "stderr");
             var connection = host.pipe.WaitForConnectionAsync(startup.Token);
             var exited = host.worker.WaitForExit(startup.Token);

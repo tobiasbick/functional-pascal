@@ -20,6 +20,7 @@ workflow to work on the compiler/toolchain.
 | Public CLR identities and language lowering | [CLR mapping](specs/clr-mapping.md) |
 | Project, dependency, diagnostic, incremental, and output contracts | [MSBuild specification](build/msbuild.md) |
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
+| Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
 | Practical limits encountered during maintenance | [Dogfooding gaps](future/dogfooding-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |

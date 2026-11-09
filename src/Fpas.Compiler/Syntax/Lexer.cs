@@ -83,6 +83,10 @@ internal sealed class Lexer(SourceText source, List<SourceComment>? comments = n
                 tokens.Add(ReadNumber());
             else
             {
+                if (Current == '/' && Peek == '=')
+                    throw source.Error("FP1001", "Ada inequality '/=' is not supported.", position, 2);
+                if (Current == '(' && Peek == '*')
+                    throw source.Error("FP1001", "Pascal block comments are not supported.", position, 2);
                 var start = position;
                 var symbol = Current.ToString();
                 // Keep generic closers separate from a following '=' or '=>'.

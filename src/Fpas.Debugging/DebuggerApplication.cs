@@ -1,9 +1,18 @@
 using Fpas.Debugging.Batch;
+using Fpas.Debugging.Failures;
 
 namespace Fpas.Debugging;
 
 public static class DebuggerApplication
 {
+    /// <summary>Run once with inherited or captured console streams, saving the first unhandled exception as debug JSON.</summary>
+    /// <param name="options">Target, console and report options; an existing report destination is rejected.</param>
+    /// <param name="dotnet">Absolute path to the installed .NET host.</param>
+    /// <param name="token">Cancellation for setup and execution; owned cleanup and report persistence still complete.</param>
+    /// <returns>The natural target exit, captured output and saved report path, if any.</returns>
+    public static Task<FailureRunResult> RunWithFailureReportAsync(FailureRunOptions options, string dotnet, CancellationToken token = default)
+        => FailureRunner.Run(options, dotnet, token);
+
     public static System.Text.Json.Nodes.JsonNode ReportSchema()
         => System.Text.Json.Schema.JsonSchemaExporter.GetJsonSchemaAsNode(BatchJson.Default.BatchReport);
     public static Task<int> RunDapAsync(string dotnet, Stream input, Stream output, CancellationToken token = default)

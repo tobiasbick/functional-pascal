@@ -53,7 +53,7 @@ internal sealed partial class ServerSession
         {
             signatures = result.Items.Select((signature, index) =>
             {
-                var documentation = index == result.ActiveSignature ? query.EditorDocumentation(selection, signature.Metadata, null, token) : null;
+                var documentation = index == result.ActiveSignature ? query.EditorDocumentation(selection, signature.Metadata, signature.Declaration, token) : null;
                 return new { label = Limit(signature.Label),
                     parameters = signature.Parameters.Select(parameter => new { label = Limit(parameter) }).ToArray(),
                     activeParameter = signature.ActiveParameter,

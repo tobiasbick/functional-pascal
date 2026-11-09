@@ -64,7 +64,9 @@ cannot select a linked file's owning project; choose a narrower initialization
 context when ownership is ambiguous.
 
 Hover shows the selected checked signature and available source or CLR XML
-documentation. Completion uses binder scope and receiver types. Use
+documentation. Source Markdown retains headings, lists and code indentation;
+line endings are normalized to LF. Text derived from CLR XML is escaped for
+literal display in Markdown. Completion uses binder scope and receiver types. Use
 `completionItem/resolve` to load documentation for a current item. Signature
 help uses binder candidates and argument slots, including named arguments,
 modes, optional and variadic parameters, and inferred CLR/FPAS types. Semantic

@@ -107,10 +107,14 @@ public sealed class CheckFixTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.Equal(Source, File.ReadAllText(path)); Assert.Empty(Directory.GetFiles(project.File("Game"), ".fpas-edit-*"));
     }
 
+    /// <summary>Apply exact syntax corrections and recheck the corrected project.</summary>
+    /// <param name="before">The original invalid source.</param>
+    /// <param name="after">The expected source after automatic corrections.</param>
     [Theory]
     [InlineData("Unit Demo.Bridge; public function Message(Value: int): int; begin return Value; end function; end unit;", "unit Demo.Bridge; public function Message(Value: int): int; begin return Value; end function; end unit;")]
     [InlineData("unit Demo.Bridge; public function Message(Value: int): int; begin return Value end function; end unit;", "unit Demo.Bridge; public function Message(Value: int): int; begin return Value ;end function; end unit;")]
-    public async Task Parser_corrections_are_applied_and_checked_again(string before, string after)
+    [InlineData("unit Demo.Bridge; public function Message(Value: int): int; begin if Value /= 0 then return 1; else return 0; end if; end function; end unit;", "unit Demo.Bridge; public function Message(Value: int): int; begin if Value <> 0 then return 1; else return 0; end if; end function; end unit;")]
+    public async Task Syntax_corrections_are_applied_and_checked_again(string before, string after)
     {
         using var project = sdk.CreateProject(); var path = project.File("Game/Bridge.fpas"); File.WriteAllText(path, before);
         var result = await Run(project, "--fix"); Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Empty(result.Error);

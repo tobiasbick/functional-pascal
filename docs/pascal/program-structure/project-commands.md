@@ -114,6 +114,43 @@ process exits, on cancellation or on a deadline.
 Run has no implicit deadline. `--timeout` accepts 0..3600 seconds for the entire
 operation; zero disables the deadline. Cancellation remains available.
 
+### Save the original failure
+
+```sh
+fpas run Game/Game.fpasproj --failure-report reports/failure.json -- level-3
+fpas run Game/bin/Debug/net10.0/Game.dll --failure-report failure.json --report json
+```
+
+`--failure-report PATH` enables the packaged CoreCLR debugger before execution.
+On the first unhandled managed exception, it passively captures the original
+exception, throw stack, managed threads/frames and available local values using
+the [debug report schema](../tools/batch-debugging.md#report). It saves the bounded
+JSON file before resuming the same process, then preserves its natural exit code.
+The program is executed once. An ordinary nonzero return or handled exception
+does not create a report. Text mode prints a saved report's path to stderr;
+JSON mode includes it as `failureReport` alongside the ordinary program result.
+
+The path is relative to the CLI caller, independently of `--working-directory`.
+Parent directories are created. The destination must not already exist; storage
+and debugger/symbol requirements are checked before target statements execute.
+This mode requires .NET 10, Windows x64 or Linux x64, matching portable PDBs and
+their unchanged sources. Debugger supervision changes timing. Native AOT,
+native crashes and a global inventory of .NET tasks are outside its capture.
+Async context is reported where the existing stack inspection exposes it;
+optimized, unwound or unavailable values cannot be reconstructed.
+
+Console inheritance and JSON output capture follow the normal run rules above.
+Inherited output remains on the console and is explicitly omitted from the
+failure file; JSON mode includes bounded captured output there. Output truncation
+does not stop the target. Snapshot inspection has a ten-second budget plus
+bounded worker cleanup; partial captures retain explicit issues/omissions.
+The file uses the batch report's diagnostic `exitCode` (3 for an exception);
+`targetExitCode` records the actual program exit. If execution or collection is
+interrupted, an already saved report remains available, with omissions and no
+invented target exit code. While the process has not yet ended, `termination` is
+`running`; final persistence records `natural` or `interrupted`.
+Reports use the existing 8 MiB ceiling and value limits.
+
 ## Resolve a runnable target
 
 `fpas target CONTEXT` evaluates the selected executable without restoring or

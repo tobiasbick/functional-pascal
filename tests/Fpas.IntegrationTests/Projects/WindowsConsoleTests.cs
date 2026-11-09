@@ -37,12 +37,14 @@ public sealed class WindowsConsoleTests(SdkPackageFixture sdk) : IClassFixture<S
         var built = await ProjectCliFixture.Cli(directory, "build", project, "--report", "json");
         Assert.True(built.ExitCode == 0, built.Output + built.Error);
         string[] arguments = ["Grüße 😀", "a b", "", "quoted \"value\"", "trailing\\"];
+        foreach (var captureFailure in new[] { false, true })
         foreach (var cancel in new[] { false, true })
         {
             var ready = directory.File("ready.pid"); File.Delete(ready);
             using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(1));
             await using var console = WindowsConsole.Start(TestEnvironment.DotnetHost,
-                [TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build", "--", .. arguments], directory.Path,
+                [TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build",
+                    .. captureFailure ? new[] { "--failure-report", directory.File("failure.json") } : [], "--", .. arguments], directory.Path,
                 capture: false, environment: new Dictionary<string, string> { ["FPAS_CONSOLE_READY"] = ready });
             while (!console.Transcript.Contains("ready", StringComparison.Ordinal))
             {
@@ -58,6 +60,7 @@ public sealed class WindowsConsoleTests(SdkPackageFixture sdk) : IClassFixture<S
             }
             await console.WaitForExit(deadline.Token);
             Assert.Equal(cancel ? 130 : 7, console.ExitCode);
+            Assert.False(File.Exists(directory.File("failure.json")));
             // Observe target cleanup before closing ConPTY or the harness job could terminate it.
             Assert.Throws<ArgumentException>(() => Process.GetProcessById(target));
             await console.DrainTerminal();

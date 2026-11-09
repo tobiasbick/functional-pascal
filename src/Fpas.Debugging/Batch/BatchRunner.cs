@@ -143,7 +143,7 @@ internal static class BatchRunner
             throw new DebugException(state.Error?.Code ?? "startup_failure", state.Error?.Message ?? "The target did not reach the internal entry stop.");
     }
 
-    private static async Task<ReportToolchain> Toolchain(string program, CancellationToken token)
+    internal static async Task<ReportToolchain> Toolchain(string program, CancellationToken token)
     {
         var deployment = await DebuggerDeployment.Inspect(token);
         if (deployment.Status != "available") throw new DebugException(deployment.Status, "The own debugger requires its packaged x64 shim on Windows or Linux and .NET 10.");

@@ -1,0 +1,34 @@
+unit Fpas.Ui.Styles;
+
+/// A semantic style supplied by the host's current theme.
+public type Role = enum: byte
+  /// Inherit the enclosing style.
+  Default;
+  /// A surface containing related controls.
+  Panel;
+  /// A title or section heading.
+  Heading;
+  /// Secondary text.
+  Muted;
+  /// The main accent.
+  Primary;
+  /// A supporting accent.
+  Secondary;
+  /// An error state.
+  Error;
+end enum;
+
+/// The role of a button within the application.
+public type ButtonVariant = enum: byte
+  /// An ordinary action.
+  Default;
+  /// The main action.
+  Primary;
+  /// A supporting action.
+  Secondary;
+  /// The action representing the current choice.
+  Active;
+  /// An action that discards or deletes data.
+  Destructive;
+end enum;
+end unit;

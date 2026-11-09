@@ -13,8 +13,9 @@ UTF-8 buffers and an automatic local native build. The
 [packaged FPAS fixture](../../../src/Fpas.Gui.Cui/README.md#packaged-publishing-fixture)
 passes in all five publish modes with software and OpenGL rendering on Windows
 x64 and Ubuntu x64 under WSL 2. The TUI uses the [shared MVU core](../../../src/Fpas.Mvu/README.md)
-for transitions, message delivery and background effects. The remaining phases
-define the shared widget contracts and build the public FPAS GUI host.
+for transitions, message delivery and background effects. The [shared widget
+library](../../../src/Fpas.Ui/README.md) provides the declarative tree, typed
+extensions and validation that the two adapters will use.
 
 ## Execution order
 
@@ -22,8 +23,7 @@ Follow this order and verify the acceptance criteria in each file.
 
 | Phase | Work | Prerequisites |
 | --- | --- | --- |
-| 5 | [Shared widget contracts](shared-widgets.md) | [MVU boundaries](../../../src/Fpas.Mvu/README.md) |
-| 6 | [GUI host](gui-host.md) | MVU core and widget contracts |
+| 6 | [GUI host](gui-host.md) | [MVU core](../../../src/Fpas.Mvu/README.md) and [widget contracts](../../../src/Fpas.Ui/README.md) |
 | 7 | [TUI alignment](tui-alignment.md) | Shared contracts and GUI host |
 | 8 | [Verification and documentation](verification-and-documentation.md) | All preceding work |
 

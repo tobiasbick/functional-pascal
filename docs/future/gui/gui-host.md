@@ -1,7 +1,7 @@
 # GUI MVU host
 
 Depends on the [managed binding](../../../src/Fpas.Gui.Cui/README.md), [MVU core](../../../src/Fpas.Mvu/README.md)
-and [widget contracts](shared-widgets.md). Implement `Fpas.Gui` as the FPAS
+and [widget contracts](../../../src/Fpas.Ui/README.md). Implement `Fpas.Gui` as the FPAS
 adapter from shared declarative views to CUI.
 
 ## Session and frame lifecycle
@@ -13,6 +13,10 @@ adapter from shared declarative views to CUI.
 - [ ] Translate the current widget tree into CUI calls with stable scoped IDs.
   Reconcile focus, controlled values, selection and editor state after model
   changes, including controls that disappear or move between modal scopes.
+- [ ] Run `Fpas.Ui.Validation.Prepare` with the graphical profile before issuing
+  widget calls. Check any CUI-specific option limits against the resolved tree
+  before drawing. Use the resolved cache for rendering and retain it after
+  successful presentation.
 - [ ] Queue native interactions as typed messages for processing after the frame.
   Rendering never directly mutates the application model or executes effects.
 - [ ] Distinguish application view invalidation from CUI animation repaint.
@@ -75,6 +79,8 @@ adapter from shared declarative views to CUI.
   verify that the window handles a redraw before final teardown.
 - [ ] Cover focus restoration, editor/document replacement, resize, control
   removal and repeated open/close. Assert ownership of native resources.
+- [ ] Verify GUI extension rendering, resource ownership and diagnostics for
+  unsupported host options at the adapter boundary.
 - [ ] Exercise the host under software and OpenGL rendering on Linux, then on
   Windows. Use virtual displays for cloud integration checks and retain screenshots.
 - [ ] Build and run the FPAS gallery, verify navigation and representative edits

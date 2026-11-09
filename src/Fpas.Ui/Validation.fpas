@@ -1,0 +1,458 @@
+unit Fpas.Ui.Validation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Choices as C,
+  Fpas.Ui.Editors as Ed, Fpas.Ui.Styles as S, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
+  System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections,
+  System.Text as Text;
+
+/// The capability profile to check before a host presents a view.
+public type Target = enum: byte
+  /// Accepts only widgets and options shared by both hosts.
+  Portable;
+  /// Allows cell units and terminal extension nodes.
+  Terminal;
+  /// Allows logical units and graphical extension nodes.
+  Graphical;
+end enum;
+
+/// A validated view and its resolved subtrees.
+/// <typeparam name="TMsg">The application message type.</typeparam>
+public type Prepared<TMsg> = record
+  /// The root view. Deferred nodes reference Subviews by ID.
+  public Tree: E.Element<TMsg>;
+  /// The resolved subtrees for this view, including nested deferred nodes.
+  public Subviews: Generic.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>;
+end record;
+
+const StrictUtf8: Text.UTF8Encoding := new Text.UTF8Encoding(false, true);
+
+procedure Reject(Location: string; Message: string);
+begin
+  raise new Sys.ArgumentException(Location + ' — ' + Message);
+end procedure;
+
+procedure CheckText(Value: string; Location: string);
+begin
+  if Value.Contains(Sys.Char.MinValue) then
+    Reject(Location, 'Text contains an embedded zero character.');
+  end if;
+
+  try
+    discard StrictUtf8.GetByteCount(Value);
+  catch Error: Text.EncoderFallbackException do
+    Reject(Location, 'Text contains an invalid UTF-16 sequence.');
+  end try;
+end procedure;
+
+function CheckMeasure(Value: L.Measure; Profile: Target; Location: string): int;
+begin
+  var Amount: int := 0;
+  case Value of
+    when L.Measure.Cells(const Cells: int):
+      if Profile <> Target.Terminal then
+        Reject(Location, 'Cell units require the terminal profile.');
+      end if;
+
+      Amount := Cells;
+    when L.Measure.Logical(const Units: int):
+      if Profile <> Target.Graphical then
+        Reject(Location, 'Logical units require the graphical profile.');
+      end if;
+
+      Amount := Units;
+  end case;
+
+  if Amount < 0 then
+    Reject(Location, 'A distance must be nonnegative.');
+  end if;
+
+  return Amount;
+end function;
+
+procedure CheckFlex(Settings: L.Flex; Profile: Target; Location: string);
+begin
+  if Settings.Grow < 0 or Settings.Shrink < 0 then
+    Reject(Location, 'Growth and shrinkage weights must be nonnegative.');
+  end if;
+
+  case Settings.Basis of
+    when L.Extent.Fixed(const Value: L.Measure):
+      discard CheckMeasure(Value, Profile, Location + '/basis');
+    else
+  end case;
+  const Min: L.Measure? := Settings.Minimum;
+  const Max: L.Measure? := Settings.Maximum;
+  const Minimum: int := if Min = null then 0
+    else CheckMeasure(
+      Min,
+      Profile,
+      Location + '/minimum'
+    )
+    end if;
+  const Maximum: int := if Max = null then int.MaxValue
+    else CheckMeasure(
+      Max,
+      Profile,
+      Location + '/maximum'
+    )
+    end if;
+  if Minimum > Maximum then
+    Reject(Location, 'The minimum exceeds the maximum.');
+  end if;
+end procedure;
+
+procedure CheckSpacing(Value: L.Spacing; Profile: Target; Location: string);
+begin
+  case Value of
+    when L.Spacing.Fixed(const Amount: L.Measure):
+      discard CheckMeasure(Amount, Profile, Location);
+    else
+  end case;
+end procedure;
+
+procedure CheckKey(Keys: Generic.HashSet<string>; Key: string; Location: string);
+begin
+  if Sys.String.IsNullOrWhiteSpace(Key) then
+    Reject(Location, 'Item keys must be nonempty.');
+  end if;
+
+  CheckText(Key, Location);
+  if not Keys.Add(Key) then
+    Reject(Location, 'Duplicate item key ' + Key + '.');
+  end if;
+end procedure;
+
+procedure CheckSelected(Keys: Generic.HashSet<string>; Key: string?; Location: string);
+begin
+  if Key <> null and not Keys.Contains(Key) then
+    Reject(Location, 'Unknown selected key ' + Key + '.');
+  end if;
+end procedure;
+
+procedure CheckEditor(Value: string; Position: Ed.EditorPosition; MultipleLines: bool; Location: string);
+begin
+  CheckText(Value, Location);
+  if Value.Contains(
+    cast<char>(13)
+  ) or Value.Contains(cast<char>(8232)) or Value.Contains(cast<char>(8233))
+  then
+    Reject(Location, 'Normalize document line breaks to LF before setting its selection.');
+  end if;
+
+  if not MultipleLines and Value.Contains(cast<char>(10)) then
+    Reject(Location, 'A single-line document contains a line break.');
+  end if;
+
+  if not Ed.ValidPosition(Value, Position) then
+    Reject(Location, 'Caret and anchor must be UTF-16 grapheme boundaries within the document.');
+  end if;
+end procedure;
+
+procedure RequireProfile(Profile: Target; Required: Target; Location: string);
+begin
+  if Profile <> Required then
+    Reject(Location, 'This extension requires the ' + Required.ToString() + ' profile.');
+  end if;
+end procedure;
+
+procedure CheckColor(Value: int?; Location: string);
+begin
+  if Value <> null and (Value < 0 or Value > 16777215) then
+    Reject(Location, 'Terminal colors must be 24-bit RGB values.');
+  end if;
+end procedure;
+
+procedure CheckViewport(Width: int; Height: int; Location: string);
+begin
+  if Width <= 0 or Height <= 0 then
+    Reject(Location, 'The graphical viewport needs positive dimensions.');
+  end if;
+end procedure;
+
+procedure CheckPaint(Paint: G.Paint; Location: string);
+begin
+  case Paint of
+    when G.Paint.FillRect(
+      const X: double, const Y: double, const Width: double, const Height: double, _
+    ):
+      if not (double.IsFinite(X) and double.IsFinite(Y) and double.IsFinite(Width)
+        and double.IsFinite(Height) and Width > 0.0 and Height > 0.0)
+      then
+        Reject(Location, 'A rectangle needs finite coordinates and positive extents.');
+      end if;
+    when G.Paint.Line(
+      const X1: double,
+      const Y1: double,
+      const X2: double,
+      const Y2: double,
+      const Thickness: double,
+      _
+    ):
+      if not (double.IsFinite(X1) and double.IsFinite(Y1) and double.IsFinite(X2)
+        and double.IsFinite(Y2) and double.IsFinite(Thickness) and Thickness > 0.0)
+      then
+        Reject(Location, 'A line needs finite coordinates and positive thickness.');
+      end if;
+  end case;
+end procedure;
+
+/// Validates the entire view and resolves deferred subtrees before presentation.
+/// <typeparam name="TMsg">The application message type.</typeparam>
+/// <param name="Tree">The view to check, including all modal layers.</param>
+/// <param name="Profile">The capabilities of the target.</param>
+/// <param name="Previous">The last successfully presented view, if available.</param>
+/// <returns>The view and the cache entries that its presenter should use.</returns>
+public function Prepare<TMsg>(
+  Tree: E.Element<TMsg>; Profile: Target; Previous: Prepared<TMsg>? := null
+): Prepared<TMsg>;
+requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Target.Graphical;
+  function Identify(Id: string; Location: string): string;
+  begin
+    if Sys.String.IsNullOrWhiteSpace(Id) then
+      Reject(Location, 'Control and subview IDs must be nonempty.');
+    end if;
+    const Named: string := Location + '[' + Id + ']';
+    CheckText(Id, Named);
+    if not Ids.Add(Id) then
+      Reject(Named, 'Duplicate ID ' + Id + '.');
+    end if;
+
+    return Named;
+  end function;
+
+  procedure CheckNode(Node: E.Element<TMsg>; Location: string);
+  begin
+    case Node of
+      when E.Element.Label(const Value: string):
+        CheckText(Value, Location + '/text');
+      when E.Element.Separator(const Title: string):
+        CheckText(Title, Location + '/divider');
+      when E.Element.Action(
+        const Id: string,
+        const Label: string,
+        _,
+        _,
+        const Variant: S.ButtonVariant
+      ):
+        const At: string := Identify(Id, Location + '/button');
+        CheckText(Label, At);
+        if not Sys.Enum.IsDefined<S.ButtonVariant>(Variant) then
+          Reject(At, 'Unknown button variant.');
+        end if;
+      when E.Element.Toggle(const Id: string, const Label: string, _, _, _):
+        CheckText(Label, Identify(Id, Location + '/checkbox'));
+      when E.Element.Editor(
+        const Id: string, const Value: string, const Position: Ed.EditorPosition, _, _,
+        const Placeholder: string, _, const MultipleLines: bool
+      ):
+        const At: string := Identify(Id, Location + '/editor');
+        CheckText(Placeholder, At + '/placeholder');
+        CheckEditor(Value, Position, MultipleLines, At);
+      when E.Element.ActionList(const Id: string, const Items: array of C.ListItem<TMsg>, _):
+        const At: string := Identify(Id, Location + '/list');
+        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+        for Item: C.ListItem<TMsg> in Items do
+          CheckKey(Keys, Item.Key, At);
+          CheckText(Item.Text, At + '/' + Item.Key);
+        end for;
+      when E.Element.Selectable(
+        const Id: string, const Items: array of C.SelectionItem, const Selected: string?, _, _, _
+      ):
+        const At: string := Identify(Id, Location + '/selection');
+        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+        for Item: C.SelectionItem in Items do
+          CheckKey(Keys, Item.Key, At);
+          CheckText(Item.Text, At + '/' + Item.Key);
+        end for;
+
+        CheckSelected(Keys, Selected, At);
+      when E.Element.TabSet(
+        const Id: string, const Items: array of C.TabItem, const Selected: string?, _,
+        const Panel: E.Element<TMsg>?, _
+      ):
+        const At: string := Identify(Id, Location + '/tabs');
+        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+        const Enabled: Generic.HashSet<string> := new Generic.HashSet<string>();
+        for Item: C.TabItem in Items do
+          CheckKey(Keys, Item.Key, At);
+          CheckText(Item.Label, At + '/' + Item.Key);
+          if Item.Enabled then
+            discard Enabled.Add(Item.Key);
+          end if;
+        end for;
+
+        if (Selected = null) <> (Panel = null) or (Selected = null and Enabled.Count > 0) then
+          Reject(At, 'A tab set with enabled tabs needs an active key and panel.');
+        end if;
+
+        CheckSelected(Enabled, Selected, At);
+        if Panel <> null then
+          Visit(Panel, At + '/panel');
+        end if;
+      when E.Element.TableView(
+        const Id: string, const Columns: array of C.TableColumn, const Rows: array of C.TableRow,
+        const Selected: string?, _, _, _
+      ):
+        const At: string := Identify(Id, Location + '/table');
+        if Columns.Length = 0 then
+          Reject(At, 'A table needs at least one column.');
+        end if;
+
+        for Index: int := 0 to Columns.Length - 1 do
+          const Column: C.TableColumn := Columns[Index];
+          const Path: string := At + '/column[' + Index.ToString() + ']';
+          CheckText(Column.Header, Path);
+          CheckFlex(Column.Sizing, Profile, Path);
+        end for;
+        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
+        for Row: C.TableRow in Rows do
+          CheckKey(Keys, Row.Key, At);
+          const Path: string := At + '/row[' + Row.Key + ']';
+          if Row.Cells.Length <> Columns.Length then
+            Reject(Path, 'Each row needs one cell per column.');
+          end if;
+
+          for Cell: string in Row.Cells do
+            CheckText(Cell, Path);
+          end for;
+        end for;
+
+        CheckSelected(Keys, Selected, At);
+      when E.Element.Progress(const Percent: int):
+        if Percent < 0 or Percent > 100 then
+          Reject(Location + '/progress', 'A percentage must be between 0 and 100.');
+        end if;
+      when E.Element.Stack(
+        const Children: array of E.Element<TMsg>,
+        const Horizontal: bool,
+        const Flow: L.Flow
+      ):
+        const At: string := Location + (if Horizontal then '/row' else '/column' end if);
+        if not Sys.Enum.IsDefined<L.Alignment>(Flow.Align) then
+          Reject(At, 'Unknown cross-axis alignment.');
+        end if;
+
+        CheckSpacing(Flow.Gap, Profile, At + '/gap');
+        CheckSpacing(Flow.Padding, Profile, At + '/padding');
+        for Index: int := 0 to Children.Length - 1 do
+          Visit(Children[Index], At + '[' + Index.ToString() + ']');
+        end for;
+      when E.Element.Sized(const Child: E.Element<TMsg>, const Flex: L.Flex):
+        CheckFlex(Flex, Profile, Location + '/size');
+        Visit(Child, Location + '/size');
+      when E.Element.Styled(const Child: E.Element<TMsg>, const Role: S.Role):
+        if not Sys.Enum.IsDefined<S.Role>(Role) then
+          Reject(Location + '/style', 'Unknown semantic style role.');
+        end if;
+
+        Visit(Child, Location + '/style');
+      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+        CheckText(Title, Location + '/border');
+        Visit(Child, Location + '/border');
+      when E.Element.Scroll(
+        const Id: string, const Child: E.Element<TMsg>, const Position: L.ScrollPosition?,
+        const OnScroll: Sys.Func<L.ScrollChange, TMsg>?, _
+      ):
+        const At: string := Identify(Id, Location + '/scroll');
+        if (Position = null) <> (OnScroll = null) then
+          Reject(At, 'Controlled scrolling needs a position and a callback.');
+        end if;
+
+        if Position <> null then
+          case Position of
+            when L.ScrollPosition.Offset(const Offset: L.Measure):
+              discard CheckMeasure(Offset, Profile, At + '/offset');
+            else
+          end case;
+        end if;
+
+        Visit(Child, At);
+      when E.Element.Modal(
+        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const InitialFocus: string?, _
+      ):
+        const At: string := Identify(Id, Location + '/modal');
+        if InitialFocus <> null then
+          CheckText(InitialFocus, At + '/initialFocus');
+        end if;
+
+        Visit(Base, At + '/base');
+        Visit(Content, At + '/content');
+      when E.Element.Deferred(
+        const Id: string,
+        const Resolve: function(E.CacheEntry<TMsg>?): E.CacheEntry<TMsg>
+      ):
+        const At: string := Identify(Id, Location + '/subview');
+        const Old: E.CacheEntry<TMsg>? := if Previous <> null and Previous.Subviews.ContainsKey(
+            Id
+          ) then Previous.Subviews[Id]
+          else null
+          end if;
+        const Current: E.CacheEntry<TMsg> := Resolve(Old);
+        Subviews.Add(Id, Current);
+        Visit(Current.Tree, At);
+      when E.Element.TerminalStyle(const Child: E.Element<TMsg>, const Colors: T.Style):
+        const At: string := Location + '/cellStyle';
+        RequireProfile(Profile, Target.Terminal, At);
+        CheckColor(Colors.Foreground, At);
+        CheckColor(Colors.Background, At);
+        Visit(Child, At);
+      when E.Element.TerminalCanvas(const Id: string, _, _):
+        RequireProfile(Profile, Target.Terminal, Identify(Id, Location + '/cellCanvas'));
+      when E.Element.GraphicImage(
+        const Id: string,
+        const Image: G.Pixels,
+        const Width: int,
+        const Height: int
+      ):
+        const At: string := Identify(Id, Location + '/image');
+        RequireProfile(Profile, Target.Graphical, At);
+        CheckViewport(Width, Height, At);
+        if Image.Width <= 0 or Image.Height <= 0 or Image.Rgba.Length mod 4 <> 0
+          or cast<long>(Image.Width) * cast<long>(Image.Height) <> cast<long>(Image.Rgba.Length div
+          4)
+        then
+          Reject(At, 'The image needs four tightly packed RGBA bytes per pixel.');
+        end if;
+      when E.Element.GraphicCanvas(
+        const Id: string, const Width: int, const Height: int, const Operations: array of G.Paint
+      ):
+        const At: string := Identify(Id, Location + '/canvas');
+        RequireProfile(Profile, Target.Graphical, At);
+        CheckViewport(Width, Height, At);
+        for Index: int := 0 to Operations.Length - 1 do
+          CheckPaint(Operations[Index], At + '[' + Index.ToString() + ']');
+        end for;
+    end case;
+  end procedure;
+
+  procedure Visit(Node: E.Element<TMsg>?; Location: string);
+  begin
+    if Node = null then
+      raise new Sys.ArgumentException(Location + ' — A view node is missing.');
+    end if;
+
+    if not Visiting.Add(Node) then
+      Reject(Location, 'A view cannot contain a cycle.');
+    end if;
+
+    try
+      CheckNode(Node, Location);
+    finally
+      discard Visiting.Remove(Node);
+    end try;
+  end procedure;
+begin
+  const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
+  const Visiting: Generic.HashSet<Sys.Object> := new Generic.HashSet<Sys.Object>(
+    Generic.ReferenceEqualityComparer.Instance
+  );
+  const Subviews: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
+  Visit(Tree, 'root');
+  return new Prepared<TMsg>(
+    Tree,
+    new Collections.ReadOnlyDictionary<string, E.CacheEntry<TMsg>>(Subviews)
+  );
+end function;
+end unit;

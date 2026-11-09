@@ -1,0 +1,237 @@
+program WidgetContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Editors as Ed, Fpas.Ui.Choices as C, Fpas.Ui.Terminal as T, Fpas.Ui.Graphics as G,
+  System as Sys, System.Console as Console;
+
+type Msg = union
+  Clicked;
+  Toggled(Value: bool);
+  Selected(Key: string);
+  Edited(Edit: Ed.TextEdit);
+  Navigated(Position: Ed.EditorPosition);
+  Scrolled(Change: L.ScrollChange);
+end union;
+
+var Builds: int := 0;
+var TabBuilds: int := 0;
+
+procedure Check(Condition: bool; Message: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Message);
+  end if;
+end procedure;
+
+function Change(Value: bool): Msg;
+begin
+  return Msg.Toggled(Value);
+end function;
+
+function SelectKey(Key: string): Msg;
+begin
+  return Msg.Selected(Key);
+end function;
+
+function EditText(Edit: Ed.TextEdit): Msg;
+begin
+  return Msg.Edited(Edit);
+end function;
+
+function Navigate(Position: Ed.EditorPosition): Msg;
+begin
+  return Msg.Navigated(Position);
+end function;
+
+function Scroll(Change: L.ScrollChange): Msg;
+begin
+  return Msg.Scrolled(Change);
+end function;
+
+function TabPanel(Key: string): E.Element<Msg>;
+begin
+  TabBuilds := TabBuilds + 1;
+  return E.Text<Msg>(Key);
+end function;
+
+function BuildSummary(Theme: string): E.Element<Msg>;
+begin
+  Builds := Builds + 1;
+  return E.Styled(E.Text<Msg>(Theme), S.Role.Heading);
+end function;
+
+function View(Theme: string; Viewport: L.Viewport): E.Element<Msg>;
+begin
+  const Gap: L.Spacing := if Viewport.Width = L.SizeClass.Compact then L.Spacing.Tight
+    else L.Spacing.Normal
+    end if;
+  return E.Column<Msg>(
+    new L.Flow(Gap := Gap),
+    E.CachedSubview<string, Msg>(
+      'summary',
+      Theme,
+      BuildSummary,
+      function(A: string; B: string): bool => A = B
+    ),
+    E.Button<Msg>('accept', 'Accept', Msg.Clicked, Variant := S.ButtonVariant.Primary),
+    E.Checkbox<Msg>('option', 'Option', true, Change),
+    E.TextInput<Msg>(
+      'title',
+      'A🙂',
+      new Ed.EditorPosition(Caret := 3, Anchor := 1),
+      EditText,
+      Navigate
+    ),
+    E.Multiline<Msg>('notes', 'á🙂', new Ed.EditorPosition(Caret := 2), EditText, Navigate),
+    E.SelectionList<Msg>('items', [new C.SelectionItem('one', 'One')], 'one', SelectKey),
+    E.Tabs<Msg>(
+      'tabs', [new C.TabItem('disabled', 'Disabled', false), new C.TabItem('details', 'Details')],
+      'disabled', SelectKey, TabPanel
+    ),
+    E.Table<Msg>(
+      'orders',
+      [new C.TableColumn('Number')],
+      [new C.TableRow('one', ['1'])],
+      'one',
+      SelectKey
+    ),
+    E.ScrollView<Msg>('scroll', E.Text<Msg>('Content'), L.ScrollPosition.End, Scroll)
+  );
+end function;
+
+procedure Rejects(Tree: E.Element<Msg>; Profile: V.Target; Location: string; Problem: string);
+begin
+  try
+    discard V.Prepare(Tree, Profile);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Location) and Error.Message.Contains(Problem), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Expected validation to reject ' + Location);
+end procedure;
+
+function Draw(Column: int; Row: int): T.Cell;
+begin
+  raise new Sys.InvalidOperationException('Preflight must not draw the canvas.');
+end function;
+
+procedure CheckPortable();
+begin
+  const Viewport: L.Viewport := new L.Viewport(L.SizeClass.Compact, L.SizeClass.Regular);
+  const Portable: E.Element<Msg> := View('dark', Viewport);
+  const First: V.Prepared<Msg> := V.Prepare(Portable, V.Target.Portable);
+  discard V.Prepare(Portable, V.Target.Terminal, First);
+  const Graphical: V.Prepared<Msg> := V.Prepare(Portable, V.Target.Graphical, First);
+  Check(Builds = 1 and TabBuilds = 1, 'Preparing a view replayed a cached subtree or tab panel.');
+
+  const Changed: V.Prepared<Msg> := V.Prepare(
+    View('amber', Viewport),
+    V.Target.Graphical,
+    Graphical
+  );
+  Check(Builds = 2, 'A changed theme dependency did not invalidate the cache.');
+  case Changed.Subviews['summary'].Tree of
+    when E.Element.Styled(const Child: E.Element<Msg>, const Role: S.Role):
+      case Child of
+        when E.Element.Label(const Text: string):
+          Check(
+            Text = 'amber' and Role = S.Role.Heading,
+            'The cache did not expose the new styled subtree.'
+          );
+        else
+          raise new Sys.InvalidOperationException('Expected a cached label.');
+      end case;
+    else
+      raise new Sys.InvalidOperationException('Expected a styled subtree.');
+  end case;
+  const Removed: V.Prepared<Msg> := V.Prepare(E.Text<Msg>('Empty'), V.Target.Portable, Changed);
+  Check(Removed.Subviews.Count = 0, 'An absent subview was retained.');
+end procedure;
+
+procedure CheckValidation();
+begin
+  const Duplicate: E.Element<Msg> := E.Overlay(
+    'modal', E.Button<Msg>('save', 'Save', Msg.Clicked),
+    E.CachedSubview<int, Msg>(
+      'summary',
+      1,
+      function(Dep: int): E.Element<Msg> => E.Button<Msg>('save', 'Again', Msg.Clicked),
+      function(A: int; B: int): bool => A = B
+    )
+  );
+  Rejects(
+    Duplicate,
+    V.Target.Portable,
+    '/modal[modal]/content/subview[summary]/button[save]',
+    'Duplicate ID save'
+  );
+  Rejects(
+    E.SelectionList<Msg>(
+      'items', [new C.SelectionItem('x', 'First'), new C.SelectionItem('x', 'Second')],
+      'x', SelectKey
+    ),
+    V.Target.Portable, 'selection[items]', 'Duplicate item key x'
+  );
+  Rejects(
+    E.SelectionList<Msg>('items', [new C.SelectionItem('x', 'First')], 'missing', SelectKey),
+    V.Target.Portable, 'selection[items]', 'Unknown selected key missing'
+  );
+  Rejects(
+    E.Table<Msg>(
+      'orders',
+      [new C.TableColumn('Number')],
+      [new C.TableRow('bad', [])],
+      null,
+      SelectKey
+    ),
+    V.Target.Portable, 'table[orders]/row[bad]', 'one cell per column'
+  );
+  Rejects(
+    E.Multiline<Msg>('notes', 'á🙂', new Ed.EditorPosition(Caret := 1), EditText, Navigate),
+    V.Target.Portable, 'editor[notes]', 'UTF-16 grapheme boundaries'
+  );
+  Rejects(
+    E.Element<Msg>.Scroll('list', E.Text<Msg>('Items'), L.ScrollPosition.Start, null, true),
+    V.Target.Portable, 'scroll[list]', 'needs a position and a callback'
+  );
+  Rejects(
+    E.Size(E.Text<Msg>('Fixed'), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(4)))),
+    V.Target.Graphical, 'size/basis', 'Cell units require the terminal profile'
+  );
+end procedure;
+
+procedure CheckExtensions();
+begin
+  const Canvas: E.Element<Msg> := E.CellCanvas<Msg>('cells', Draw, new T.CanvasEvents<Msg>());
+  discard V.Prepare(Canvas, V.Target.Terminal);
+  Rejects(Canvas, V.Target.Graphical, 'cellCanvas[cells]', 'requires the Terminal profile');
+  const Pixels: G.Pixels := new G.Pixels(1, 1, [255, 0, 0, 255]);
+  const Image: E.Element<Msg> := E.Image<Msg>('logo', Pixels, 16, 16);
+  discard V.Prepare(Image, V.Target.Graphical);
+  Rejects(Image, V.Target.Terminal, 'image[logo]', 'requires the Graphical profile');
+  Rejects(
+    E.Image<Msg>('bad', new G.Pixels(2, 2, []), 16, 16),
+    V.Target.Graphical,
+    'image[bad]',
+    'RGBA bytes'
+  );
+  const Red: G.Color := new G.Color(255, 0, 0);
+  discard V.Prepare(
+    E.Canvas<Msg>('plot', 20, 10, [G.Paint.Line(0.0, 0.0, 5.0, 5.0, 1.0, Red)]),
+    V.Target.Graphical
+  );
+  Rejects(
+    E.Canvas<Msg>('plot', 20, 10, [G.Paint.FillRect(0.0, 0.0, -1.0, 5.0, Red)]),
+    V.Target.Graphical, 'canvas[plot][0]', 'positive extents'
+  );
+end procedure;
+
+begin
+  CheckPortable();
+  CheckValidation();
+  CheckExtensions();
+  Console.WriteLine('shared widget contracts verified');
+end;
+end program;

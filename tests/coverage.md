@@ -83,6 +83,14 @@ Window cases are skipped on Linux without `DISPLAY`. Encoding tests still run.
 The [GUI plan](../docs/future/gui/verification-and-documentation.md) tracks OS
 input delivery, leak checks and final application publishing.
 
+## Shared widget contracts
+
+`WidgetContractTests` compiles [Fpas.Ui](../src/Fpas.Ui/README.md) as a
+standalone FPAS library and prepares one view under all three profiles.
+It checks typed cache reuse, invalidation and removal, and path-qualified
+diagnostics for incompatible units or extensions, duplicate IDs and keys,
+malformed tables, invalid selections and split graphemes.
+
 ## Terminal UI
 
 `HeadlessTuiTests` exercises the [TUI host](../src/Fpas.Tui/README.md), including

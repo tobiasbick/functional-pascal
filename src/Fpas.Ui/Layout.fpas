@@ -1,0 +1,108 @@
+unit Fpas.Ui.Layout;
+
+/// An explicit distance in the target host's coordinate system.
+public type Measure = union
+  /// A whole number of terminal cells.
+  Cells(Value: int);
+  /// A distance in GUI logical units.
+  Logical(Value: int);
+end union;
+
+/// The preferred extent of a child along its parent's main axis.
+public type Extent = union
+  /// Measure the child's content.
+  Content;
+  /// Use the available space, sharing it with other growing children.
+  Fill;
+  /// Start from an explicit backend distance.
+  Fixed(Value: Measure);
+end union;
+
+/// Main-axis constraints and allocation weights.
+public type Flex = record
+  /// The basis for allocation before distributing free space.
+  public Basis: Extent := Extent.Content;
+  /// An optional lower bound in explicit units.
+  public Minimum: Measure? := null;
+  /// An optional upper bound in explicit units.
+  public Maximum: Measure? := null;
+  /// A nonnegative share of extra space. Fill uses at least one.
+  public Grow: int := 0;
+  /// A nonnegative share of any required reduction.
+  public Shrink: int := 1;
+end record;
+
+/// Cross-axis placement inside a stack.
+public type Alignment = enum: byte
+  /// Fill the available cross-axis extent.
+  Stretch;
+  /// Place against the leading edge.
+  Start;
+  /// Center within the available extent.
+  Center;
+  /// Place against the trailing edge.
+  End;
+end enum;
+
+/// Spacing resolved by a host theme or supplied in explicit units.
+public type Spacing = union
+  /// Zero space.
+  None;
+  /// The host's compact separation.
+  Tight;
+  /// The host's ordinary separation.
+  Normal;
+  /// The host's spacious separation.
+  Loose;
+  /// An explicit gap or padding.
+  Fixed(Value: Measure);
+end union;
+
+/// Layout settings shared by rows and columns.
+public type Flow = record
+  /// The separation between consecutive children.
+  public Gap: Spacing := Spacing.None;
+  /// The inset on each edge of the stack.
+  public Padding: Spacing := Spacing.None;
+  /// The placement of children on the cross axis.
+  public Align: Alignment := Alignment.Stretch;
+end record;
+
+/// An application-facing size class for responsive views.
+public type SizeClass = enum: byte
+  /// The host has space for a compact arrangement.
+  Compact;
+  /// The host has space for a regular arrangement.
+  Regular;
+  /// The host has space for an expanded arrangement.
+  Expanded;
+end enum;
+
+/// Responsive information in portable size classes.
+public type Viewport = record
+  /// The size class for available width.
+  public Width: SizeClass;
+  /// The size class for available height.
+  public Height: SizeClass;
+end record;
+
+/// A model-owned vertical scroll request.
+public type ScrollPosition = union
+  /// Keep the view at the start.
+  Start;
+  /// Keep the view at the end as content grows.
+  End;
+  /// Request an explicit offset to clamp to the available range.
+  Offset(Value: Measure);
+end union;
+
+/// The request and resolution reported when the user scrolls.
+public type ScrollChange = record
+  /// The requested position to store in the model.
+  public Position: ScrollPosition;
+  /// The resolved offset in the host's units.
+  public Offset: Measure;
+  /// The maximum offset in the host's units.
+  public Maximum: Measure;
+end record;
+end unit;

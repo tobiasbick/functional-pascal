@@ -38,8 +38,8 @@ whole application path and makes it usable outside the repository.
   deterministic cleanup with one normal authoring path.
 - [ ] Link the GUI gallery from the GUI/library guidance and example index,
   alongside the TUI gallery. Document its pages and supported widget variants.
-- [ ] Document common widgets, the TUI support table, backend extensions, layout
-  units, editor positions and which views/models are portable.
+- [ ] Link the [widget reference](../../../src/Fpas.Ui/README.md) from both
+  host guides and document the options each implemented adapter supports.
 - [ ] Describe normal publishing versus NativeAOT static linking. State source
   build prerequisites, consumer asset delivery and OS/window/driver dependencies.
   Do not ask GUI consumers to download/build CUI manually.

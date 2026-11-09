@@ -1,0 +1,37 @@
+unit Fpas.Ui.Editors;
+
+uses System as Sys, System.Globalization as Global;
+
+/// A directional document selection at UTF-16 grapheme boundaries.
+public type EditorPosition = record
+  /// The moving end. An equal anchor denotes an insertion point.
+  public Caret: int := 0;
+  /// The fixed end of the selection.
+  public Anchor: int := 0;
+end record;
+
+/// The replacement document and selection requested by a text edit.
+public type TextEdit = record
+  /// The proposed document after the edit.
+  public Text: string;
+  /// The proposed selection in the replacement document.
+  public Position: EditorPosition;
+end record;
+
+/// Checks whether both ends of a selection are grapheme boundaries.
+/// <param name="Text">The document being edited.</param>
+/// <param name="Position">UTF-16 offsets into the document.</param>
+/// <returns>Whether the selection can be used with the document.</returns>
+public function ValidPosition(Text: string; Position: EditorPosition): bool;
+begin
+  const Boundaries: array of int := Global.StringInfo.ParseCombiningCharacters(Text);
+  return (Position.Caret = Text.Length or Sys.Array.BinarySearch<int>(
+    Boundaries,
+    Position.Caret
+  ) >= 0)
+    and (Position.Anchor = Text.Length or Sys.Array.BinarySearch<int>(
+    Boundaries,
+    Position.Anchor
+  ) >= 0);
+end function;
+end unit;

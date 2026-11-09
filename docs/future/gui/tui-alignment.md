@@ -1,6 +1,6 @@
 # TUI alignment
 
-Depends on [shared widget contracts](shared-widgets.md), the [MVU core](../../../src/Fpas.Mvu/README.md)
+Depends on [shared widget contracts](../../../src/Fpas.Ui/README.md), the [MVU core](../../../src/Fpas.Mvu/README.md)
 and the [GUI host](gui-host.md). Adapt `Fpas.Tui` to the common contracts while
 retaining its terminal renderer and supported behavior.
 
@@ -18,8 +18,11 @@ retaining its terminal renderer and supported behavior.
   and terminal-specific snapshots in the terminal extension surface.
 - [ ] Keep terminal layout, geometry reuse and painting native to the TUI.
   Shared contracts do not require it to call CUI or use GUI measurement/rendering.
-- [ ] Apply the support table before presentation. GUI-only nodes/options yield
-  the agreed diagnostic; existing terminal extensions remain valid on the TUI.
+- [ ] Run `Fpas.Ui.Validation.Prepare` with the terminal profile before
+  presentation. Check terminal-specific limits against the resolved view and
+  retain its cache after successful presentation. Verify that supported cell
+  extensions keep their behavior and incompatible graphical options produce
+  diagnostics.
 - [ ] Update affected apps, examples, FPAS tests and C#/F# callers in the same
   migration. Public CLR APIs may be reorganized; FPAS language syntax stays intact.
 
